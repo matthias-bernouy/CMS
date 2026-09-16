@@ -34,7 +34,7 @@ BEGIN
     ELSIF recorded_checksum IS NULL AND current_revision >= ${migration.toRevision} THEN
         RAISE EXCEPTION 'cms integration migration ledger is incomplete for current revision';
     ELSIF recorded_checksum IS NULL THEN
-${indent(guardedSql.execute, 8)}
+${renderDynamicSql(guardedSql, 8)}
 ${indent(insertLedger(integrationKind, provider, identity, migrationReference(migration), attemptId, execution), 8)}
     END IF;
 END
@@ -72,7 +72,7 @@ BEGIN
        AND lineage_id = ${literal(identity.lineageId)}
        AND repeatable_id = ${literal(repeatable.id)};
     IF recorded_checksum IS DISTINCT FROM ${literal(repeatable.checksum)} THEN
-${indent(guardedSql.execute, 8)}
+${renderDynamicSql(guardedSql, 8)}
         INSERT INTO ${RUNTIME_SCHEMA}.repeatable_ledger
             (connector_instance_id, integration_kind, connector_key, lineage_id, repeatable_id, checksum, attempt_id${provenanceColumns})
         VALUES (${literal(identity.connectorInstanceId)}, ${literal(integrationKind)}, ${literal(identity.connectorKey)},
@@ -112,4 +112,9 @@ function dynamicSql(
         blockTag,
         execute: `EXECUTE ${sqlTag}\n${body}\n${sqlTag};`,
     };
+}
+
+function renderDynamicSql(sql: Readonly<{ execute: string }>, spaces: number): string {
+    const [command, ...body] = sql.execute.split("\n");
+    return `${" ".repeat(spaces)}${command}\n${body.join("\n")}`;
 }

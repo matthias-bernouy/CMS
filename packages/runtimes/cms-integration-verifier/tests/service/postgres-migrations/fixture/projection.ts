@@ -13,6 +13,19 @@ export function clockEquivalence(): NonNullable<DeclarativeConnectorMigrationPla
     };
 }
 
+export function seedClockEquivalence(): NonNullable<DeclarativeConnectorMigrationPlan["equivalence"]> {
+    return {
+        dataProjections: [
+            {
+                kind: "database-clock-seed",
+                namespace: "migration_probe",
+                relation: "items",
+                columns: ["created_at", "published_at"],
+            },
+        ],
+    };
+}
+
 export function clockSchema() {
     return {
         namespaces: [
@@ -35,12 +48,46 @@ export function clockSchema() {
     };
 }
 
+export function seedClockSchema() {
+    return {
+        namespaces: [
+            {
+                name: "migration_probe",
+                relations: [
+                    {
+                        name: "items",
+                        kind: "table",
+                        columns: [
+                            { name: "created_at", type: "timestamptz", nullable: false, default: "now()" },
+                            { name: "description", type: "text", nullable: false },
+                            { name: "id", type: "bigint", nullable: false },
+                            { name: "published_at", type: "timestamptz", nullable: true },
+                        ],
+                        constraints: [{ kind: "primary-key", name: "items_pkey", columns: ["id"] }],
+                    },
+                ],
+            },
+        ],
+    };
+}
+
 export function clockTableSql(description: string): string {
     return `CREATE SCHEMA IF NOT EXISTS migration_probe;
 CREATE TABLE IF NOT EXISTS migration_probe.items (
     id bigint PRIMARY KEY, description text NOT NULL, created_at timestamptz NOT NULL DEFAULT now()
 );
 INSERT INTO migration_probe.items (id, description) VALUES (1, '${description}');
+`;
+}
+
+export function seedClockTableSql(clock: string): string {
+    return `CREATE SCHEMA IF NOT EXISTS migration_probe;
+CREATE TABLE IF NOT EXISTS migration_probe.items (
+    id bigint PRIMARY KEY, description text NOT NULL, created_at timestamptz NOT NULL DEFAULT now(),
+    published_at timestamptz
+);
+INSERT INTO migration_probe.items (id, description, created_at, published_at)
+VALUES (1, 'same', '${clock}', '${clock}');
 `;
 }
 

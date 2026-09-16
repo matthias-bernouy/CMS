@@ -10,7 +10,15 @@ import { disposablePostgresAvailable, startDisposablePostgres } from "../postgre
 import { withMigrationVerifier } from "./fixture/harness";
 import { migrationExecutionFixture } from "./fixture/input";
 import { MIGRATION_SQL, migrationPackageFixture } from "./fixture/packages";
-import { clockEquivalence, clockProjectionInvalidTargets, clockSchema, clockTableSql } from "./fixture/projection";
+import {
+    clockEquivalence,
+    clockProjectionInvalidTargets,
+    clockSchema,
+    clockTableSql,
+    seedClockEquivalence,
+    seedClockSchema,
+    seedClockTableSql,
+} from "./fixture/projection";
 
 const postgresTest = disposablePostgresAvailable ? test : test.skip;
 const WRONG_DIGEST = `sha256:${"0".repeat(64)}` as const;
@@ -99,6 +107,31 @@ postgresTest(
                 });
                 expect(result?.observations.equivalence.status).toBe("not-supported");
             }
+        });
+    },
+    60_000,
+);
+
+postgresTest(
+    "projects explicit database seed clocks while preserving the remaining row data",
+    async () => {
+        await withMigrationVerifier("cms-migration-seed-clock", async ({ verifier, database }) => {
+            const fixture = await migrationExecutionFixture(
+                database,
+                await migrationPackageFixture("SELECT 1;\n", {
+                    sourceSql: seedClockTableSql("2020-01-01T00:00:00Z"),
+                    targetSql: seedClockTableSql("2021-01-01T00:00:00Z"),
+                    sourceSchema: seedClockSchema(),
+                    targetSchema: seedClockSchema(),
+                    equivalence: seedClockEquivalence(),
+                }),
+            );
+            const [result] = await verifier.verify(fixture.input, new AbortController().signal);
+
+            expect(result?.observations.equivalence).toMatchObject({ status: "passed", equivalent: true });
+            expect(result?.observations.equivalence.diagnosticCodes).toContain(
+                "database-clock-seed-projection-applied",
+            );
         });
     },
     60_000,

@@ -1,5 +1,5 @@
 import type {
-    DeclarativeConnectorDatabaseClockDefaultProjection,
+    DeclarativeConnectorDatabaseClockProjection,
     DeclarativeConnectorMigrationEquivalence,
 } from "@bernouy/cms-integrations";
 import { boundedArray, strictRecord } from "../../../validation/structure";
@@ -24,12 +24,12 @@ export function parseMigrationEquivalence(
     assertCanonicalUniqueOrder(
         dataProjections,
         `${field}.dataProjections`,
-        (entry) => `${entry.namespace}\0${entry.relation}\0${entry.kind}`,
+        (entry) => `${entry.namespace}\0${entry.relation}`,
     );
     return { dataProjections };
 }
 
-function parseDataProjection(value: unknown, field: string): DeclarativeConnectorDatabaseClockDefaultProjection {
+function parseDataProjection(value: unknown, field: string): DeclarativeConnectorDatabaseClockProjection {
     const input = strictRecord(value, field, ["kind", "namespace", "relation", "columns"]);
     const columns = boundedArray(input.columns, `${field}.columns`, parseProjectionIdentifier, {
         minimum: 1,
@@ -37,7 +37,7 @@ function parseDataProjection(value: unknown, field: string): DeclarativeConnecto
     });
     assertCanonicalUniqueOrder(columns, `${field}.columns`, (entry) => entry);
     return {
-        kind: oneOf(input.kind, `${field}.kind`, ["database-clock-default"] as const),
+        kind: oneOf(input.kind, `${field}.kind`, ["database-clock-default", "database-clock-seed"] as const),
         namespace: parseProjectionIdentifier(input.namespace, `${field}.namespace`),
         relation: parseProjectionIdentifier(input.relation, `${field}.relation`),
         columns,

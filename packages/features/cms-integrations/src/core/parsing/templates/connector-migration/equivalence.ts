@@ -1,5 +1,5 @@
 import type {
-    DeclarativeConnectorDatabaseClockDefaultProjection,
+    DeclarativeConnectorDatabaseClockProjection,
     DeclarativeConnectorMigrationEquivalence,
 } from "../../../../interfaces/IntegrationConnectorDeployer";
 import { text } from "../../definition/values";
@@ -22,23 +22,23 @@ export function parseMigrationEquivalence(value: unknown, name: string): Declara
     assertCanonicalUniqueOrder(
         dataProjections,
         `${name}.dataProjections`,
-        (entry) => `${entry.namespace}\0${entry.relation}\0${entry.kind}`,
+        (entry) => `${entry.namespace}\0${entry.relation}`,
     );
     return { dataProjections };
 }
 
-function parseDataProjection(value: unknown, name: string): DeclarativeConnectorDatabaseClockDefaultProjection {
+function parseDataProjection(value: unknown, name: string): DeclarativeConnectorDatabaseClockProjection {
     const input = migrationRecord(value, name);
     assertRequiredMigrationKeys(input, ["kind", "namespace", "relation", "columns"], name);
-    if (input.kind !== "database-clock-default") {
-        invalidMigrationValue(`${name}.kind`, 'must be "database-clock-default"');
+    if (input.kind !== "database-clock-default" && input.kind !== "database-clock-seed") {
+        invalidMigrationValue(`${name}.kind`, 'must be "database-clock-default" or "database-clock-seed"');
     }
     const columns = boundedMigrationArray(input.columns, `${name}.columns`, 1, MAX_PROJECTION_COLUMNS).map(
         (entry, index) => parseProjectionIdentifier(entry, `${name}.columns.${index}`),
     );
     assertCanonicalUniqueOrder(columns, `${name}.columns`, (entry) => entry);
     return {
-        kind: "database-clock-default",
+        kind: input.kind,
         namespace: parseProjectionIdentifier(input.namespace, `${name}.namespace`),
         relation: parseProjectionIdentifier(input.relation, `${name}.relation`),
         columns,

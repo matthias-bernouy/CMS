@@ -1,18 +1,10 @@
 import type { SQL } from "bun";
-import { join } from "node:path";
-import {
-    buildSupabaseMigrationFenceRegistrationSql,
-    buildSupabaseMigrationPhaseSql,
-    buildSupabaseMigrationRuntimeSchemaSql,
-    loadSupabaseMigrationAssets,
-    loadSupabaseRepeatableAssets,
-    type SupabaseMigrationExecution,
-} from "@bernouy/cms-integrations/supabase";
 import { applyExactDependencies } from "./execution/dependencies";
 import type { ExecuteMigrationMatrixInput } from "./execution";
 import { installMigrationSource } from "./execution/install";
+import { buildFirstMigrationPhaseSql, pendingMigration } from "./execution/probePhase";
 import { applyTargetMigration } from "./execution/target";
-import { readMatrixState, readMigrationLedger } from "./state";
+import { readMatrixState, readMigrationLedger, readRepeatableLedger } from "./state";
 import type { LoadedMigrationPackage, TargetMigrationConnector } from "./types";
 
 type ProbeInput = ExecuteMigrationMatrixInput & {
@@ -23,16 +15,32 @@ type ProbeInput = ExecuteMigrationMatrixInput & {
 
 export async function runLedgerSafetyProbes(input: ProbeInput) {
     const migrationAndLedgerAtomic = await atomicityProbe(input);
+    if (!pendingMigration(input)) {
+        return {
+            ledgerSafety: {
+                kind: "repeatable-only" as const,
+                repeatableAndLedgerAtomic: migrationAndLedgerAtomic,
+            },
+        };
+    }
     const checksumMismatchRejected = await checksumProbe(input);
     const emptyLedgerRejected = await emptyLedgerProbe(input);
-    return { migrationAndLedgerAtomic, checksumMismatchRejected, emptyLedgerRejected };
+    return {
+        ledgerSafety: {
+            kind: "numbered" as const,
+            migrationAndLedgerAtomic,
+            checksumMismatchRejected,
+            emptyLedgerRejected,
+        },
+    };
 }
 
 async function atomicityProbe(input: ProbeInput): Promise<boolean> {
     await prepareSource(input);
     const before = await readMatrixState(input.database, input.selection, input.target, input.connector);
     const rowsBefore = await readMigrationLedger(input.database, input.migration);
-    const sql = await firstMigrationPhaseSql(input);
+    const repeatableRowsBefore = await readRepeatableLedger(input.database, input.migration);
+    const sql = await buildFirstMigrationPhaseSql(input);
     const injectedSql = sql.replace(/\nCOMMIT;\s*$/u, "\nSELECT 1 / 0;\nCOMMIT;");
     if (injectedSql === sql) {
         throw new Error("Migration atomicity probe could not place its transaction failure boundary");
@@ -46,14 +54,18 @@ async function atomicityProbe(input: ProbeInput): Promise<boolean> {
     }
     const after = await readMatrixState(input.database, input.selection, input.target, input.connector);
     const rowsAfter = await readMigrationLedger(input.database, input.migration);
+    const repeatableRowsAfter = await readRepeatableLedger(input.database, input.migration);
     return (
-        rejected && before.stateDigest === after.stateDigest && JSON.stringify(rowsBefore) === JSON.stringify(rowsAfter)
+        rejected &&
+        before.stateDigest === after.stateDigest &&
+        JSON.stringify(rowsBefore) === JSON.stringify(rowsAfter) &&
+        JSON.stringify(repeatableRowsBefore) === JSON.stringify(repeatableRowsAfter)
     );
 }
 
 async function checksumProbe(input: ProbeInput): Promise<boolean> {
     await prepareSource(input);
-    const descriptor = nextMigration(input);
+    const descriptor = requirePendingMigration(input);
     const invalidChecksum =
         descriptor.checksum === `sha256:${"0".repeat(64)}` ? `sha256:${"1".repeat(64)}` : `sha256:${"0".repeat(64)}`;
     await input.database.unsafe(
@@ -119,60 +131,12 @@ async function prepareSource(input: ProbeInput): Promise<void> {
     );
 }
 
-async function firstMigrationPhaseSql(input: ProbeInput): Promise<string> {
-    const descriptor = nextMigration(input);
-    const root = join(input.target.root, input.connector.connector.root ?? ".");
-    const migrations = await loadSupabaseMigrationAssets(root, [descriptor]);
-    const repeatables =
-        descriptor.phase === "expand"
-            ? await loadSupabaseRepeatableAssets(root, input.connector.plan.repeatables ?? [])
-            : [];
-    const execution = migrationExecution(input);
-    await input.database.unsafe(buildSupabaseMigrationRuntimeSchemaSql());
-    const deployment = {
-        connectorKey: input.migration.connectorKey,
-        lineageId: input.migration.lineageId,
-        connectorInstanceId: `verification-${input.migration.connectorKey}`,
-        migrationRevision: input.migration.sourceMigrationRevision,
-        plan: input.connector.plan,
-    };
-    await input.database.unsafe(
-        buildSupabaseMigrationFenceRegistrationSql({
-            integrationKind: input.migration.target.kind,
-            migration: deployment,
-            execution,
-        }),
-    );
-    return buildSupabaseMigrationPhaseSql({
-        integrationKind: input.migration.target.kind,
-        version: input.migration.target.version,
-        provider: "supabase",
-        migration: deployment,
-        migrations,
-        repeatables,
-        execution,
-        finalizeTargetPackageDigest: descriptor.phase === "contract",
-    });
-}
-
-function nextMigration(input: ProbeInput) {
-    const descriptor = input.connector.plan.migrations.find(
-        (entry) => entry.toRevision > input.migration.sourceMigrationRevision,
-    );
+function requirePendingMigration(input: ProbeInput) {
+    const descriptor = pendingMigration(input);
     if (!descriptor) {
         throw new TypeError("Migration proof has no source-to-target migration descriptor");
     }
     return descriptor;
-}
-
-function migrationExecution(input: ProbeInput): SupabaseMigrationExecution {
-    return {
-        sourcePackageDigest: input.migration.source.packageDigest,
-        targetPackageDigest: input.migration.target.packageDigest,
-        operationId: `verification-${input.attempt.jobId}`,
-        attemptId: input.attempt.attemptId,
-        fencingToken: input.attempt.fencingToken,
-    };
 }
 
 function postgresError(error: unknown, code: string, message: string): boolean {

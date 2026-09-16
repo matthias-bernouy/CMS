@@ -81,6 +81,32 @@ describe("Supabase integration migration ledger", () => {
         );
         expect(sql).toContain("ADD COLUMN IF NOT EXISTS source_package_digest");
     });
+
+    test("preserves dynamic SQL bytes instead of indenting routine bodies", () => {
+        const repeatable = {
+            id: "orders-routine",
+            checksum: CHECKSUM_B,
+            path: "repeatables/orders-routine.sql",
+            sql: `CREATE OR REPLACE FUNCTION public.order_count() RETURNS bigint LANGUAGE sql AS $$
+SELECT count(*) FROM public.orders;
+$$;`,
+        };
+        const sql = buildSupabaseMigrationPhaseSql({
+            integrationKind: "commerce",
+            version: "1.1.0",
+            provider: "supabase",
+            migration: migrationDeployment(1),
+            migrations: [],
+            repeatables: [repeatable],
+            attemptId: "attempt-2",
+        });
+
+        expect(sql).toContain(
+            "\nCREATE OR REPLACE FUNCTION public.order_count() RETURNS bigint LANGUAGE sql AS $$\n" +
+                "SELECT count(*) FROM public.orders;\n$$;\n",
+        );
+        expect(sql).not.toContain("\n        CREATE OR REPLACE FUNCTION public.order_count()");
+    });
 });
 
 function migrationDeployment(migrationRevision: number): IntegrationConnectorMigrationDeployment {

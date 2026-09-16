@@ -2,7 +2,7 @@ import type { SQL } from "bun";
 import type { MigrationVerificationInputV1 } from "@bernouy/cms-integration-verification";
 import { requireTargetConnector, type MigrationPackageLoader } from "../packages";
 import { runLedgerSafetyProbes } from "../probes";
-import { readMatrixState, readMigrationLedger, targetInstanceIsExact } from "../state";
+import { readMatrixState, readMigrationLedger, readRepeatableLedger, targetInstanceIsExact } from "../state";
 import type {
     ExactMigrationPackage,
     LoadedMigrationPackage,
@@ -60,6 +60,7 @@ export async function executeMigrationMatrix(input: ExecuteMigrationMatrixInput)
         return {
             migrated: await readMatrixState(input.database, input.selection, target, connector),
             ledgerRows: await readMigrationLedger(input.database, input.migration),
+            repeatableLedgerRows: await readRepeatableLedger(input.database, input.migration),
         };
     });
     const replayResult = await inMigrationVerificationPhase("replay", async () => {
@@ -67,6 +68,7 @@ export async function executeMigrationMatrix(input: ExecuteMigrationMatrixInput)
         return {
             replay: await readMatrixState(input.database, input.selection, target, connector),
             replayRows: await readMigrationLedger(input.database, input.migration),
+            replayRepeatableRows: await readRepeatableLedger(input.database, input.migration),
         };
     });
 
@@ -80,6 +82,8 @@ export async function executeMigrationMatrix(input: ExecuteMigrationMatrixInput)
         replay: replayResult.replay,
         ledgerRows: migrationResult.ledgerRows,
         replayLedgerRows: replayResult.replayRows,
+        repeatableLedgerRows: migrationResult.repeatableLedgerRows,
+        replayRepeatableLedgerRows: replayResult.replayRepeatableRows,
         ledgerRowsBefore: sourceLedger.length,
         freshBaselineRecorded: freshResult.freshBaselineRecorded,
         ...probes,

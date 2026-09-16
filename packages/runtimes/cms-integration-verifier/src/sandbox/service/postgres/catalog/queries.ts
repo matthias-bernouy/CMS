@@ -1,6 +1,10 @@
 const USER_NAMESPACE = `namespace.nspname !~ '^pg_' and namespace.nspname not in
     ('information_schema', 'cms_verifier_guard', 'extensions')`;
 
+const canonicalAcl = (column: string) =>
+    `coalesce((select array_agg(entries.entry::text order by entries.entry::text)::text
+                 from unnest(${column}) as entries(entry)), '')`;
+
 export const BOUNDARY_CATALOG_QUERY = `
 with user_namespaces as (
     select namespace.oid, namespace.nspname
@@ -10,13 +14,13 @@ with user_namespaces as (
 ), catalog_rows as (
     select 'namespace'::text as "objectType", namespace.nspname::text as namespace,
            namespace.nspname::text as object_identity,
-           concat(pg_catalog.pg_get_userbyid(namespace.nspowner), chr(31), coalesce(namespace.nspacl::text, '')) as definition
+           concat(pg_catalog.pg_get_userbyid(namespace.nspowner), chr(31), ${canonicalAcl("namespace.nspacl")}) as definition
     from pg_catalog.pg_namespace as namespace join user_namespaces on user_namespaces.oid = namespace.oid
     union all
     select 'relation', namespace.nspname, relation.relname,
            concat(relation.relkind::text, chr(31), pg_catalog.pg_get_userbyid(relation.relowner), chr(31),
                   relation.relrowsecurity::text, chr(31), relation.relforcerowsecurity::text, chr(31),
-                  coalesce(relation.reloptions::text, ''), chr(31), coalesce(relation.relacl::text, ''))
+                  coalesce(relation.reloptions::text, ''), chr(31), ${canonicalAcl("relation.relacl")})
     from pg_catalog.pg_class as relation join user_namespaces as namespace on namespace.oid = relation.relnamespace
     where relation.relkind in ('r', 'p', 'v', 'm', 'f', 'S')
     union all
@@ -49,7 +53,7 @@ with user_namespaces as (
     select 'routine', namespace.nspname,
            concat(procedure.proname, '(', pg_catalog.pg_get_function_identity_arguments(procedure.oid), ')'),
            concat(md5(pg_catalog.pg_get_functiondef(procedure.oid)), chr(31), procedure.prosecdef::text, chr(31),
-                  coalesce(procedure.proconfig::text, ''), chr(31), coalesce(procedure.proacl::text, ''))
+                  coalesce(procedure.proconfig::text, ''), chr(31), ${canonicalAcl("procedure.proacl")})
     from pg_catalog.pg_proc as procedure join user_namespaces as namespace on namespace.oid = procedure.pronamespace
     union all
     select 'trigger', namespace.nspname, concat(relation.relname, '.', trigger.tgname),

@@ -55,8 +55,19 @@ export type DeclarativeConnectorDatabaseClockDefaultProjection = {
     columns: string[];
 };
 
+export type DeclarativeConnectorDatabaseClockSeedProjection = {
+    kind: "database-clock-seed";
+    namespace: string;
+    relation: string;
+    columns: string[];
+};
+
+export type DeclarativeConnectorDatabaseClockProjection =
+    | DeclarativeConnectorDatabaseClockDefaultProjection
+    | DeclarativeConnectorDatabaseClockSeedProjection;
+
 export type DeclarativeConnectorMigrationEquivalence = {
-    dataProjections: DeclarativeConnectorDatabaseClockDefaultProjection[];
+    dataProjections: DeclarativeConnectorDatabaseClockProjection[];
 };
 
 export type DeclarativeConnectorLegacyAdoptionBaseline = {

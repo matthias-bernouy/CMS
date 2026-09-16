@@ -7,6 +7,7 @@ import {
 } from "@bernouy/cms-integration-verification";
 import type { MatrixMigrationEvidence, MigrationVerificationExecutionInput } from "../types";
 import { targetObservation, unsupportedCutover, unsupportedEvidence } from "./evidence";
+import { assessLedger } from "./ledger";
 
 export async function successfulResult(
     input: MigrationVerificationInputV1,
@@ -23,23 +24,15 @@ export async function successfulResult(
     const migratedSchemaDigest = await aggregateDigest(matrices, "migrated", "schemaDigest");
     const freshDataDigest = await aggregateDigest(matrices, "fresh", "dataDigest");
     const migratedDataDigest = await aggregateDigest(matrices, "migrated", "dataDigest");
-    const projectionDiagnostics = input.migrationPlan.plan.equivalence?.dataProjections.length
-        ? ["database-clock-default-projection-applied"]
-        : [];
+    const projectionDiagnostics = [
+        ...new Set(
+            (input.migrationPlan.plan.equivalence?.dataProjections ?? []).map(
+                (projection) => `${projection.kind}-projection-applied`,
+            ),
+        ),
+    ].toSorted();
     const differences = equivalenceDifferences(matrices);
-    const ledgerRows = requireSameLedger(matrices);
-    const ledgerPassed = matrices.every(
-        (entry) =>
-            entry.freshBaselineRecorded &&
-            entry.migrationAndLedgerAtomic &&
-            entry.checksumMismatchRejected &&
-            entry.emptyLedgerRejected,
-    );
-    const replayStateUnchanged = matrices.every(
-        (entry) =>
-            entry.migrated.stateDigest === entry.replay.stateDigest &&
-            sameCanonicalValue(entry.ledgerRows, entry.replayLedgerRows),
-    );
+    const ledger = assessLedger(input, matrices, evidenceDigests);
     const result: MigrationJobResultV1 = {
         schema: "cms.integration.migration-job-result.v1",
         ...attempt,
@@ -79,28 +72,17 @@ export async function successfulResult(
                 equivalent: differences.length === 0,
                 differences,
             },
-            ledger: {
-                status: ledgerPassed ? "passed" : "failed",
-                evidenceDigests,
-                diagnosticCodes: ["database-local-ledger-proof"],
-                sourceRevision: input.sourceMigrationRevision,
-                targetRevision: input.targetMigrationRevision,
-                freshBaselineRecorded: matrices.every((entry) => entry.freshBaselineRecorded),
-                migrationAndLedgerAtomic: matrices.every((entry) => entry.migrationAndLedgerAtomic),
-                checksumMismatchRejected: matrices.every((entry) => entry.checksumMismatchRejected),
-                emptyLedgerRejected: matrices.every((entry) => entry.emptyLedgerRejected),
-                rows: ledgerRows,
-            },
-            replay: ledgerPassed
+            ledger: ledger.observation,
+            replay: ledger.replaySafetyPassed
                 ? {
-                      status: replayStateUnchanged ? "passed" : "failed",
+                      status: ledger.replayStateUnchanged ? "passed" : "failed",
                       evidenceDigests,
                       diagnosticCodes: ["sql-only-reapply-proof"],
                       firstStateDigest: migratedStateDigest,
                       replayStateDigest,
-                      unchanged: replayStateUnchanged,
+                      unchanged: ledger.replayStateUnchanged,
                       ledgerRowsBefore: matrices[0]?.ledgerRowsBefore ?? 0,
-                      ledgerRowsAfterFirstRun: ledgerRows.length,
+                      ledgerRowsAfterFirstRun: ledger.rows.length,
                       ledgerRowsAfterReplay: matrices[0]?.replayLedgerRows.length ?? 0,
                   }
                 : unsupportedEvidence("ledger-safety-proof-failed"),
@@ -157,28 +139,4 @@ function equivalenceDifferences(
     return differences.toSorted((left, right) =>
         `${left.surface}\0${left.path}`.localeCompare(`${right.surface}\0${right.path}`),
     );
-}
-
-function sameCanonicalValue(left: unknown, right: unknown): boolean {
-    const leftBytes = canonicalJsonBytes(left);
-    const rightBytes = canonicalJsonBytes(right);
-    return (
-        leftBytes.byteLength === rightBytes.byteLength && leftBytes.every((byte, index) => byte === rightBytes[index])
-    );
-}
-
-function requireSameLedger(matrices: readonly MatrixMigrationEvidence[]) {
-    const first = matrices[0]?.ledgerRows ?? [];
-    const canonical = canonicalJsonBytes(first);
-    if (
-        matrices.some((entry) => {
-            const current = canonicalJsonBytes(entry.ledgerRows);
-            return (
-                current.byteLength !== canonical.byteLength || current.some((byte, index) => byte !== canonical[index])
-            );
-        })
-    ) {
-        throw new Error("Dependency matrices produced different migration ledgers");
-    }
-    return first;
 }

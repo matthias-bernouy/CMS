@@ -2,7 +2,7 @@ import type { SQL } from "bun";
 import type { CatalogFingerprintRow } from "../types";
 
 export type TableDataProjection = Readonly<{
-    kind: "database-clock-default";
+    kind: "database-clock-default" | "database-clock-seed";
     namespace: string;
     relation: string;
     columns: readonly string[];
@@ -120,8 +120,8 @@ async function assertProjectionCatalog(database: SQL, projection: TableDataProje
             (entry, index) =>
                 entry.name !== projection.columns[index] ||
                 !entry.validType ||
-                !entry.notNull ||
-                (entry.defaultValue !== "now()" && entry.defaultValue !== "CURRENT_TIMESTAMP"),
+                (projection.kind === "database-clock-default" &&
+                    (!entry.notNull || (entry.defaultValue !== "now()" && entry.defaultValue !== "CURRENT_TIMESTAMP"))),
         ) ||
         primaryKey.length !== projection.primaryKeyColumns.length ||
         primaryKey.some((entry, index) => entry.name !== projection.primaryKeyColumns[index])
@@ -142,7 +142,10 @@ async function readProjectedTableDigest(
         (expression, column) => `${expression} - ${quoteLiteral(column)}`,
         "to_jsonb(entry)",
     );
-    const valid = projection.columns.map((column) => `entry.${quoteIdentifier(column)} IS NOT NULL`).join(" AND ");
+    const valid =
+        projection.kind === "database-clock-default"
+            ? projection.columns.map((column) => `entry.${quoteIdentifier(column)} IS NOT NULL`).join(" AND ")
+            : "true";
     const [row] = (await database.unsafe(
         `select count(*)::text as count,
                 encode(extensions.digest(coalesce(string_agg(concat("rowKey", chr(31), value), E'\\n'

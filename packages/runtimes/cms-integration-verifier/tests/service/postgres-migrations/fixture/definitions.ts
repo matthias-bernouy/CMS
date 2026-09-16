@@ -75,13 +75,17 @@ export function legacyObservedSchema() {
     };
 }
 
-export function targetDefinition(plan: DeclarativeConnectorMigrationPlan, schema: unknown = targetSchema()) {
+export function targetDefinition(
+    plan: DeclarativeConnectorMigrationPlan,
+    schema: unknown = targetSchema(),
+    migrationRevision = 1,
+) {
     return {
         kind: KIND,
         label: "Migration Probe",
         version: "1.1.0",
         inputs: [],
-        connectors: [connectorDefinition(schema, 1, plan)],
+        connectors: [connectorDefinition(schema, migrationRevision, plan)],
     };
 }
 

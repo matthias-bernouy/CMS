@@ -203,6 +203,14 @@ describe("connector migration definitions", () => {
     });
 
     test("validates database-clock projections against the declared schema contract", () => {
+        const seededClock = migrationDefinition();
+        seededClock.connectors[0].migration.equivalence.dataProjections[0].kind = "database-clock-seed";
+        schemaColumn(seededClock, "created_at").nullable = true;
+        delete schemaColumn(seededClock, "created_at").default;
+        expect(
+            parseIntegrationDefinition(seededClock).connectors?.[0]?.migration?.equivalence?.dataProjections[0],
+        ).toMatchObject({ kind: "database-clock-seed", columns: ["created_at", "updated_at"] });
+
         const invalidType = migrationDefinition();
         schemaColumn(invalidType, "created_at").type = "text";
         expect(() => parseIntegrationDefinition(invalidType)).toThrow(/must use timestamp or timestamptz/);
@@ -240,6 +248,14 @@ describe("connector migration definitions", () => {
         const projection = duplicateProjections.connectors[0].migration.equivalence.dataProjections[0];
         duplicateProjections.connectors[0].migration.equivalence.dataProjections = [projection, { ...projection }];
         expect(() => parseIntegrationDefinition(duplicateProjections)).toThrow(/unique entries/);
+
+        const duplicateRelation = migrationDefinition();
+        const relationProjection = duplicateRelation.connectors[0].migration.equivalence.dataProjections[0];
+        duplicateRelation.connectors[0].migration.equivalence.dataProjections = [
+            relationProjection,
+            { ...relationProjection, kind: "database-clock-seed" },
+        ];
+        expect(() => parseIntegrationDefinition(duplicateRelation)).toThrow(/unique entries/);
 
         const empty = migrationDefinition();
         empty.connectors[0].migration.equivalence.dataProjections = [];

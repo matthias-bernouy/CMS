@@ -117,6 +117,28 @@ describe("migration verification input", () => {
         ).rejects.toThrow(/must advance sourceMigrationRevision when the migration plan has no repeatables/);
     });
 
+    test("preserves an explicit database seed clock projection", async () => {
+        const fixture = await migrationControlFixture();
+        const basePlan = fixture.input.migrationPlan.plan;
+        const projection = basePlan.equivalence!.dataProjections[0]!;
+        const identified = await identifyMigrationVerificationPlan(
+            {
+                ...basePlan,
+                equivalence: {
+                    dataProjections: [{ ...projection, kind: "database-clock-seed" as const }],
+                },
+            },
+            fixture.input.target.version,
+            fixture.input.targetMigrationRevision,
+        );
+        const input = await validateMigrationVerificationInput({
+            ...fixture.input,
+            migrationPlan: { digest: identified.digest, plan: identified.plan },
+        });
+
+        expect(input.migrationPlan.plan.equivalence?.dataProjections[0]?.kind).toBe("database-clock-seed");
+    });
+
     test("fails closed on substituted selection, plan, runner, policy, or environment", async () => {
         const fixture = await migrationControlFixture();
         const attempts = [

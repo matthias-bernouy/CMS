@@ -4,7 +4,7 @@ import type { MigrationJobResultV1, MigrationVerificationInputV1 } from "@bernou
 import { observeConnectorSchemas } from "../application";
 import { readBoundarySnapshot, type TableDataProjection } from "../catalog";
 import type { SqlConnectorPlan } from "../types";
-import type { LoadedMigrationPackage, MatrixState, TargetMigrationConnector } from "./types";
+import type { LoadedMigrationPackage, MatrixState, RepeatableLedgerRow, TargetMigrationConnector } from "./types";
 
 export async function readMatrixState(
     database: SQL,
@@ -78,6 +78,39 @@ export async function readMigrationLedger(
         attemptId: row.attemptId,
         ...(row.sourcePackageDigest === null ? {} : { sourcePackageDigest: row.sourcePackageDigest }),
         ...(row.targetPackageDigest === null ? {} : { targetPackageDigest: row.targetPackageDigest }),
+    }));
+}
+
+export async function readRepeatableLedger(
+    database: SQL,
+    input: MigrationVerificationInputV1,
+): Promise<readonly RepeatableLedgerRow[]> {
+    const rows = (await database.unsafe(
+        `select repeatable_id::text as "repeatableId", checksum::text as checksum,
+                attempt_id::text as "attemptId", source_package_digest::text as "sourcePackageDigest",
+                target_package_digest::text as "targetPackageDigest", operation_id::text as "operationId",
+                fencing_token::text as "fencingToken"
+           from cms_integration_runtime.repeatable_ledger
+          where integration_kind = $1 and connector_key = $2 and lineage_id = $3
+          order by repeatable_id collate "C"`,
+        [input.target.kind, input.connectorKey, input.lineageId],
+    )) as Array<{
+        repeatableId: string;
+        checksum: string;
+        attemptId: string;
+        sourcePackageDigest: string | null;
+        targetPackageDigest: string | null;
+        operationId: string | null;
+        fencingToken: string | null;
+    }>;
+    return rows.map((row) => ({
+        repeatableId: row.repeatableId,
+        checksum: row.checksum,
+        attemptId: row.attemptId,
+        ...(row.sourcePackageDigest === null ? {} : { sourcePackageDigest: row.sourcePackageDigest }),
+        ...(row.targetPackageDigest === null ? {} : { targetPackageDigest: row.targetPackageDigest }),
+        ...(row.operationId === null ? {} : { operationId: row.operationId }),
+        ...(row.fencingToken === null ? {} : { fencingToken: Number(row.fencingToken) }),
     }));
 }
 

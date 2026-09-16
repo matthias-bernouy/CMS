@@ -121,10 +121,14 @@ function validateDataProjections(
             if (column.type !== "timestamp" && column.type !== "timestamptz") {
                 invalidMigrationValue(field, `column "${columnName}" must use timestamp or timestamptz`);
             }
-            if (column.nullable) {
+            if (projection.kind === "database-clock-default" && column.nullable) {
                 invalidMigrationValue(field, `column "${columnName}" must be NOT NULL`);
             }
-            if (column.default !== "now()" && column.default !== "CURRENT_TIMESTAMP") {
+            if (
+                projection.kind === "database-clock-default" &&
+                column.default !== "now()" &&
+                column.default !== "CURRENT_TIMESTAMP"
+            ) {
                 invalidMigrationValue(
                     field,
                     `column "${columnName}" must use canonical now() or CURRENT_TIMESTAMP default`,

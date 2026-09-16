@@ -12,6 +12,8 @@ export type {
 } from "./declarations";
 export type {
     DeclarativeConnectorDatabaseClockDefaultProjection,
+    DeclarativeConnectorDatabaseClockProjection,
+    DeclarativeConnectorDatabaseClockSeedProjection,
     DeclarativeConnectorLegacyAdoptionBaseline,
     DeclarativeConnectorInstallBaseline,
     DeclarativeConnectorMigrationDescriptor,

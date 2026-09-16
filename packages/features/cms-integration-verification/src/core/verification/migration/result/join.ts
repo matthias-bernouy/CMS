@@ -56,15 +56,18 @@ function assertObservationDependencies(result: MigrationJobResultV1, input: Migr
     const sourceLedgerRows = input.migrationPlan.plan.install.coveredMigrations.filter(
         (entry) => entry.revision <= input.sourceMigrationRevision,
     ).length;
+    const repeatableOnly = isRepeatableOnlyMigration(input);
+    const replayLedgerRows = repeatableOnly ? sourceLedgerRows : observations.ledger.rows.length;
     if (
         replayObserved &&
         (observations.migratedTarget.status !== "passed" ||
-            observations.ledger.status !== "passed" ||
+            (repeatableOnly
+                ? observations.ledger.status !== "not-applicable"
+                : observations.ledger.status !== "passed") ||
             observations.replay.firstStateDigest !== observations.migratedTarget.stateDigest ||
             observations.replay.ledgerRowsBefore !== sourceLedgerRows ||
-            observations.replay.ledgerRowsAfterFirstRun !== observations.ledger.rows.length ||
-            (observations.replay.status === "passed" &&
-                observations.replay.ledgerRowsAfterReplay !== observations.ledger.rows.length))
+            observations.replay.ledgerRowsAfterFirstRun !== replayLedgerRows ||
+            (observations.replay.status === "passed" && observations.replay.ledgerRowsAfterReplay !== replayLedgerRows))
     ) {
         invalid(
             "migrationJobResult.observations.replay",
@@ -105,6 +108,12 @@ function assertLedger(
     input: MigrationVerificationInputV1,
     attempt: MigrationJobAttemptIdentityV1,
 ): void {
+    if (ledger.status === "not-applicable" && !isRepeatableOnlyMigration(input)) {
+        invalid(
+            "migrationJobResult.observations.ledger",
+            "may be not-applicable only for a repeatable-only migration plan",
+        );
+    }
     if (
         (ledger.sourceRevision !== undefined && ledger.sourceRevision !== input.sourceMigrationRevision) ||
         (ledger.targetRevision !== undefined && ledger.targetRevision !== input.targetMigrationRevision)
@@ -131,6 +140,17 @@ function assertLedger(
             invalid("migrationJobResult.observations.ledger.rows", "does not match the exact planned ledger");
         }
     }
+}
+
+function isRepeatableOnlyMigration(input: MigrationVerificationInputV1): boolean {
+    return (
+        input.sourceMigrationRevision === input.targetMigrationRevision &&
+        (input.migrationPlan.plan.repeatables?.length ?? 0) > 0 &&
+        !input.migrationPlan.plan.migrations.some(
+            (entry) =>
+                entry.toRevision > input.sourceMigrationRevision && entry.toRevision <= input.targetMigrationRevision,
+        )
+    );
 }
 
 function assertCutover(

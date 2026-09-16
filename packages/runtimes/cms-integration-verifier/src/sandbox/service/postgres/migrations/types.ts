@@ -44,6 +44,28 @@ export type MatrixState = Readonly<{
     functionDigests: readonly Readonly<{ functionId: string; digest: string }>[];
 }>;
 
+export type RepeatableLedgerRow = Readonly<{
+    repeatableId: string;
+    checksum: string;
+    attemptId: string;
+    sourcePackageDigest?: string;
+    targetPackageDigest?: string;
+    operationId?: string;
+    fencingToken?: number;
+}>;
+
+export type MatrixLedgerSafetyEvidence =
+    | Readonly<{
+          kind: "numbered";
+          migrationAndLedgerAtomic: boolean;
+          checksumMismatchRejected: boolean;
+          emptyLedgerRejected: boolean;
+      }>
+    | Readonly<{
+          kind: "repeatable-only";
+          repeatableAndLedgerAtomic: boolean;
+      }>;
+
 export type MatrixMigrationEvidence = Readonly<{
     selection: "minimum" | "stable";
     fresh: MatrixState;
@@ -51,10 +73,10 @@ export type MatrixMigrationEvidence = Readonly<{
     replay: MatrixState;
     ledgerRows: MigrationJobResultV1["observations"]["ledger"]["rows"];
     replayLedgerRows: MigrationJobResultV1["observations"]["ledger"]["rows"];
+    repeatableLedgerRows: readonly RepeatableLedgerRow[];
+    replayRepeatableLedgerRows: readonly RepeatableLedgerRow[];
     ledgerRowsBefore: number;
     freshBaselineRecorded: boolean;
-    migrationAndLedgerAtomic: boolean;
-    checksumMismatchRejected: boolean;
-    emptyLedgerRejected: boolean;
+    ledgerSafety: MatrixLedgerSafetyEvidence;
     evidenceDigests: readonly string[];
 }>;

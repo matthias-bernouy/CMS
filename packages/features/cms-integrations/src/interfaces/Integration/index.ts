@@ -44,6 +44,8 @@ export type {
 export { MAX_INTEGRATION_MIGRATION_SMOKE_BODY_BYTES } from "../IntegrationConnectorDeployer";
 export type {
     DeclarativeConnectorDatabaseClockDefaultProjection,
+    DeclarativeConnectorDatabaseClockProjection,
+    DeclarativeConnectorDatabaseClockSeedProjection,
     DeclarativeConnectorLegacyAdoptionBaseline,
     DeclarativeConnectorInstallBaseline,
     DeclarativeConnectorMigrationDescriptor,

@@ -21,6 +21,8 @@ export type {
     DeclarativeConnectorFunctionHttpStringFormat,
     DeclarativeConnectorFunctionTemplate,
     DeclarativeConnectorDatabaseClockDefaultProjection,
+    DeclarativeConnectorDatabaseClockProjection,
+    DeclarativeConnectorDatabaseClockSeedProjection,
     DeclarativeConnectorInstallBaseline,
     DeclarativeConnectorLegacyAdoptionBaseline,
     DeclarativeConnectorMigrationDescriptor,

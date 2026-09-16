@@ -122,7 +122,7 @@ export async function unrelatedPackage(index = 0) {
     return { digest: await computeIntegrationPackageDigest(envelope), envelope };
 }
 
-function packageEnvelope(
+export function packageEnvelope(
     version: string,
     definition: unknown,
     sql: string,
