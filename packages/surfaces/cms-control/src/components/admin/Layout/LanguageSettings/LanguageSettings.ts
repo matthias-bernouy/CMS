@@ -3,10 +3,11 @@ import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 
 export class CmsLanguageSettings extends HTMLElement {
-    static readonly observedAttributes = ["default-language", "additional-languages"];
+    static readonly observedAttributes = ["default-language", "additional-languages", "active-languages"];
 
     private defaultLanguage = "";
     private additionalLanguages = new Set<string>();
+    private activeLanguages = new Set<string>();
     private initialized = false;
 
     connectedCallback(): void {
@@ -15,11 +16,13 @@ export class CmsLanguageSettings extends HTMLElement {
             this.initialized = true;
         }
         this.addEventListener("click", this.onClick);
+        this.addEventListener("change", this.onChange);
         this.readSettings();
     }
 
     disconnectedCallback(): void {
         this.removeEventListener("click", this.onClick);
+        this.removeEventListener("change", this.onChange);
     }
 
     attributeChangedCallback(): void {
@@ -31,18 +34,56 @@ export class CmsLanguageSettings extends HTMLElement {
     private readSettings(): void {
         this.defaultLanguage = this.getAttribute("default-language")?.trim() ?? "";
         this.additionalLanguages = new Set(
-            readAdditionalLanguages(this.getAttribute("additional-languages")).filter(
+            readLanguages(this.getAttribute("additional-languages")).filter(
                 (code) => code.toLowerCase() !== this.defaultLanguage.toLowerCase(),
             ),
+        );
+        const activeCodes = new Set(
+            readLanguages(this.getAttribute("active-languages")).map((code) => code.toLowerCase()),
+        );
+        this.activeLanguages = new Set(
+            [...this.additionalLanguages].filter((code) => activeCodes.has(code.toLowerCase())),
         );
         this.render();
         this.syncForm(false);
     }
 
+    private readonly onChange = (event: Event): void => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.matches("p9r-select[data-default-select]")) {
+            const code = (target as HTMLElement & { value: string }).value;
+            if (code !== this.defaultLanguage && this.additionalLanguages.has(code)) {
+                this.additionalLanguages.delete(code);
+                this.activeLanguages.delete(code);
+                if (this.defaultLanguage) {
+                    this.additionalLanguages.add(this.defaultLanguage);
+                    this.activeLanguages.add(this.defaultLanguage);
+                }
+                this.defaultLanguage = code;
+                this.render();
+                this.syncForm(true);
+            }
+            return;
+        }
+        if (!(target instanceof HTMLElement) || target.localName !== "w13c-switch" || !this.contains(target)) {
+            return;
+        }
+        const code = target.dataset.languageCode ?? "";
+        if (!this.additionalLanguages.has(code)) {
+            return;
+        }
+        if (target.hasAttribute("checked")) {
+            this.activeLanguages.add(code);
+        } else {
+            this.activeLanguages.delete(code);
+        }
+        this.render();
+        this.syncForm(true);
+    };
+
     private readonly onClick = (event: Event): void => {
         const target = event.target;
-        const button =
-            target instanceof Element ? target.closest<HTMLElement>("p9r-button[data-language-action]") : null;
+        const button = target instanceof Element ? target.closest<HTMLElement>("[data-language-action]") : null;
         if (!button || !this.contains(button)) {
             return;
         }
@@ -60,13 +101,7 @@ export class CmsLanguageSettings extends HTMLElement {
                 break;
             case "remove":
                 this.additionalLanguages.delete(code);
-                break;
-            case "default":
-                this.additionalLanguages.delete(code);
-                if (this.defaultLanguage) {
-                    this.additionalLanguages.add(this.defaultLanguage);
-                }
-                this.defaultLanguage = code;
+                this.activeLanguages.delete(code);
                 break;
             default:
                 return;
@@ -79,6 +114,7 @@ export class CmsLanguageSettings extends HTMLElement {
         renderLanguageSettings(this, {
             defaultLanguage: this.defaultLanguage,
             additionalLanguages: this.additionalLanguages,
+            activeLanguages: this.activeLanguages,
         });
     }
 
@@ -86,18 +122,20 @@ export class CmsLanguageSettings extends HTMLElement {
         const form = this.closest("form");
         const defaultInput = form?.querySelector<HTMLInputElement>('input[name="site.language"]');
         const additionalInput = form?.querySelector<HTMLInputElement>('input[name="site.additionalLanguages"]');
-        if (!defaultInput || !additionalInput) {
+        const activeInput = form?.querySelector<HTMLInputElement>('input[name="site.activeLanguages"]');
+        if (!defaultInput || !additionalInput || !activeInput) {
             return;
         }
         defaultInput.value = this.defaultLanguage;
         additionalInput.value = [...this.additionalLanguages].join("\n");
+        activeInput.value = [...this.activeLanguages].join("\n");
         if (markDirty) {
             defaultInput.dispatchEvent(new Event("input", { bubbles: true }));
         }
     }
 }
 
-function readAdditionalLanguages(raw: string | null): string[] {
+function readLanguages(raw: string | null): string[] {
     try {
         const parsed: unknown = JSON.parse(raw ?? "[]");
         return Array.isArray(parsed)

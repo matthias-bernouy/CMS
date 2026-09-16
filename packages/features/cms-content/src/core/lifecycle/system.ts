@@ -11,6 +11,7 @@ export function defaultSystem(): TSystem {
             host: "",
             language: "",
             additionalLanguages: [],
+            activeLanguages: [],
             organization: emptySiteOrganization(),
             notFound: null,
             forbidden: null,
@@ -90,6 +91,10 @@ export function mergeSystemUpdate(current: TSystem, update: Partial<TSystem>): T
             };
             merged.site.additionalLanguages = (merged.site.additionalLanguages ?? []).filter(
                 (language) => language.toLowerCase() !== merged.site.language.toLowerCase(),
+            );
+            const selected = new Set(merged.site.additionalLanguages.map((language) => language.toLowerCase()));
+            merged.site.activeLanguages = (merged.site.activeLanguages ?? []).filter((language) =>
+                selected.has(language.toLowerCase()),
             );
         } else if (section === "email" && typeof value === "object" && value !== null) {
             const email = value as Partial<TSystem["email"]>;

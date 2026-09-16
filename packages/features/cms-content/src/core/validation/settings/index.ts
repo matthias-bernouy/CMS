@@ -46,7 +46,10 @@ export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
             site.organization = validateSiteOrganizationPatch(site.organization);
         }
         if (site.additionalLanguages !== undefined) {
-            site.additionalLanguages = validateAdditionalLanguages(site.additionalLanguages);
+            site.additionalLanguages = validateLanguageList(site.additionalLanguages, "site.additionalLanguages");
+        }
+        if (site.activeLanguages !== undefined) {
+            site.activeLanguages = validateLanguageList(site.activeLanguages, "site.activeLanguages");
         }
         normalized.site = site as TSystem["site"];
     }
@@ -73,14 +76,14 @@ export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
     return normalized;
 }
 
-function validateAdditionalLanguages(value: unknown): string[] {
+function validateLanguageList(value: unknown, field: string): string[] {
     if (!Array.isArray(value) || value.length > 32) {
-        throw new ContentValidationError("site.additionalLanguages", "expected up to 32 language tags");
+        throw new ContentValidationError(field, "expected up to 32 language tags");
     }
     const languages = new Set<string>();
     for (const tag of value) {
         if (typeof tag !== "string" || !tag.trim()) {
-            throw new ContentValidationError("site.additionalLanguages", "invalid language tag");
+            throw new ContentValidationError(field, "invalid language tag");
         }
         try {
             const canonical = Intl.getCanonicalLocales(tag.trim())[0];
@@ -89,7 +92,7 @@ function validateAdditionalLanguages(value: unknown): string[] {
             }
             languages.add(canonical);
         } catch {
-            throw new ContentValidationError("site.additionalLanguages", "invalid language tag");
+            throw new ContentValidationError(field, "invalid language tag");
         }
     }
     return [...languages].sort();

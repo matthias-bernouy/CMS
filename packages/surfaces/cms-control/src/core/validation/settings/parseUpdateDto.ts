@@ -102,6 +102,9 @@ function parseSiteSettings(body: Record<string, unknown>): TSystem["site"] {
     if ("site.additionalLanguages" in body) {
         site.additionalLanguages = parseTokenList(body["site.additionalLanguages"], "site.additionalLanguages");
     }
+    if ("site.activeLanguages" in body) {
+        site.activeLanguages = parseTokenList(body["site.activeLanguages"], "site.activeLanguages");
+    }
     if ("site.visible" in body) {
         site.visible = asBoolean(body["site.visible"], "site.visible");
     }

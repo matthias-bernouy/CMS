@@ -14,11 +14,18 @@
     --shell-detail-aside-width: var(--w-detail-aside-width, 285px);
     --shell-detail-gap: var(--w-detail-gap, 16px);
     --shell-detail-header-gap: var(--w-detail-header-gap, var(--shell-detail-gap));
+    --_shell-detail-max-width: calc(var(--shell-detail-main-width) + var(--shell-detail-aside-width) + var(--shell-detail-gap));
     display: grid;
     gap: var(--shell-detail-header-gap);
-    width: min(100%, calc(var(--shell-detail-main-width) + var(--shell-detail-aside-width) + var(--shell-detail-gap)));
+    width: min(100%, var(--_shell-detail-max-width));
     min-width: 0;
 }
+
+:host([size="sm"]) .shell-detail { --_shell-detail-max-width: var(--p9r-container-sm, 640px); }
+:host([size="md"]) .shell-detail { --_shell-detail-max-width: var(--p9r-container-md, 768px); }
+:host([size="lg"]) .shell-detail { --_shell-detail-max-width: var(--p9r-container-lg, 1024px); }
+:host([size="xl"]) .shell-detail { --_shell-detail-max-width: var(--p9r-container-xl, 1280px); }
+:host([size="full"]) .shell-detail { --_shell-detail-max-width: 100%; }
 
 .shell-detail-header {
     display: flex;

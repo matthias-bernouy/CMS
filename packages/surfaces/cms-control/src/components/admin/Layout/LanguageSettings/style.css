@@ -1,6 +1,6 @@
 cms-language-settings {
     display: grid;
-    gap: 28px;
+    gap: 16px;
     color: var(--text-main);
     container-type: inline-size;
 }
@@ -10,29 +10,36 @@ cms-language-settings * {
 }
 
 cms-language-settings .language-section {
-    display: grid;
-    gap: 12px;
+    --detail-section-body-start: 6px;
 }
 
-cms-language-settings .language-section-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-cms-language-settings h2,
 cms-language-settings p {
     margin: 0;
 }
 
-cms-language-settings h2 {
-    font-size: 14px;
-    font-weight: 760;
-}
-
 cms-language-settings .language-list {
     display: grid;
+}
+
+cms-language-settings .language-default-setting {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
     gap: 8px;
+    padding: 8px 0 14px;
+    border-bottom: 1px solid var(--border-default);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+cms-language-settings .language-default-setting[hidden] {
+    display: none;
+}
+
+cms-language-settings .language-default-setting p9r-select {
+    width: 180px;
+    flex: none;
 }
 
 cms-language-settings .language-row {
@@ -41,10 +48,11 @@ cms-language-settings .language-row {
     justify-content: space-between;
     gap: 16px;
     min-height: 64px;
-    padding: 10px 14px;
-    border: 1px solid var(--border-default);
-    border-radius: 8px;
-    background: var(--bg-surface);
+    padding: 10px 0;
+}
+
+cms-language-settings .language-row + .language-row {
+    border-top: 1px solid var(--border-default);
 }
 
 cms-language-settings .language-identity,
@@ -95,7 +103,22 @@ cms-language-settings .language-empty {
 
 cms-language-settings .language-actions {
     flex: none;
-    gap: 6px;
+    gap: 16px;
+}
+
+cms-language-settings .language-status-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    min-width: 108px;
+    min-height: 32px;
+}
+
+cms-language-settings .language-status-control w13c-switch {
+    display: block;
+    flex: none;
+    line-height: 0;
 }
 
 cms-language-settings .language-actions p9r-button {
@@ -106,6 +129,15 @@ cms-language-settings .language-actions p9r-button {
 }
 
 @container (max-width: 560px) {
+    cms-language-settings .language-default-setting {
+        align-items: flex-start;
+    }
+
+    cms-language-settings .language-default-setting p9r-select {
+        width: min(220px, 100%);
+        flex: 0 1 220px;
+    }
+
     cms-language-settings .language-row {
         flex-wrap: wrap;
     }

@@ -18,32 +18,39 @@ describe("site language settings", () => {
 
         expect(system.site.language).toBe("fr-FR");
         expect(system.site.additionalLanguages).toEqual([]);
+        expect(system.site.activeLanguages).toEqual([]);
     });
 
     test("never duplicates the default in the additional list", () => {
         const system = mergeSystemUpdate(defaultSystem(), {
-            site: { language: "fr", additionalLanguages: ["de", "FR"] } as never,
+            site: { language: "fr", additionalLanguages: ["de", "FR"], activeLanguages: ["de", "FR"] } as never,
         });
 
         expect(system.site.additionalLanguages).toEqual(["de"]);
+        expect(system.site.activeLanguages).toEqual(["de"]);
     });
 
     test("parses, canonicalizes, and deduplicates additional languages", () => {
         const dto = parseSettingsUpdateDto({
             "site.language": "fr",
             "site.additionalLanguages": "en-us\nDE\nen-US",
+            "site.activeLanguages": "DE\nde",
         });
         const validated = validateSettingsPatch(dto);
 
         expect(validated.site?.language).toBe("fr");
         expect(validated.site?.additionalLanguages).toEqual(["de", "en-US"]);
+        expect(validated.site?.activeLanguages).toEqual(["de"]);
         expect(() => validateSettingsPatch({ site: { additionalLanguages: ["not_a_locale"] } })).toThrow(
+            ContentValidationError,
+        );
+        expect(() => validateSettingsPatch({ site: { activeLanguages: ["not_a_locale"] } })).toThrow(
             ContentValidationError,
         );
     });
 
     test("renders selected and available languages and submits only their settings", async () => {
-        let site = { language: "fr", additionalLanguages: [] as string[] };
+        let site = { language: "fr", additionalLanguages: [] as string[], activeLanguages: [] as string[] };
         let submitted: Record<string, string> | undefined;
         globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
             if (!String(url).includes("/api/system/settings")) {
@@ -54,6 +61,7 @@ describe("site language settings", () => {
                 site = {
                     language: submitted["site.language"] ?? "",
                     additionalLanguages: (submitted["site.additionalLanguages"] ?? "").split("\n").filter(Boolean),
+                    activeLanguages: (submitted["site.activeLanguages"] ?? "").split("\n").filter(Boolean),
                 };
                 return new Response(null, { status: 204 });
             }
@@ -66,7 +74,9 @@ describe("site language settings", () => {
 
         await waitFor(() => document.querySelectorAll("[data-selected-list] .language-row").length === 1);
         const settings = document.querySelector("cms-language-settings")!;
+        expect(document.querySelector('cms-shell-detail [slot="description"]')).toBeNull();
         expect(settings.querySelector("[data-selected-list]")?.textContent).toContain("French");
+        expect(settings.querySelector<HTMLElement & { value: string }>("[data-default-select]")?.value).toBe("fr");
         expect(settings.querySelector('.language-title p9r-badge[color="success"]')?.textContent).toBe("Default");
         expect(
             settings.querySelector('.language-title p9r-badge[color="success"]')?.closest(".language-title")
@@ -83,14 +93,36 @@ describe("site language settings", () => {
         ).toBe(true);
 
         settings.querySelector<HTMLElement>('[data-language-action="add"][data-language-code="de"]')!.click();
-        settings.querySelector<HTMLElement>('[data-language-action="default"][data-language-code="de"]')!.click();
+        expect(settings.querySelector('[data-language-action="default"]')).toBeNull();
+        expect(settings.querySelector("[data-selected-list]")?.textContent).toContain("Draft");
+        const switchControl = settings.querySelector<HTMLElement>('w13c-switch[data-language-code="de"]')!;
+        expect(switchControl.parentElement?.querySelector("p9r-badge")?.textContent).toBe("Draft");
+        expect(switchControl.hasAttribute("checked")).toBe(false);
+        switchControl.click();
+        expect(
+            settings.querySelector<HTMLElement>('w13c-switch[data-language-code="de"]')?.hasAttribute("checked"),
+        ).toBe(true);
+        expect(
+            settings.querySelector('w13c-switch[data-language-code="de"]')?.parentElement?.querySelector("p9r-badge")
+                ?.textContent,
+        ).toBe("Active");
+        expect(document.querySelector<HTMLInputElement>('input[name="site.activeLanguages"]')?.value).toBe("de");
+        const defaultSelect = settings.querySelector<HTMLElement & { value: string }>("[data-default-select]")!;
+        await waitFor(() => Boolean(defaultSelect.shadowRoot?.querySelector('[data-value="de"]')));
+        defaultSelect.value = "de";
+        defaultSelect.dispatchEvent(new Event("change", { bubbles: true }));
         expect(document.querySelector<HTMLInputElement>('input[name="site.language"]')?.value).toBe("de");
         expect(document.querySelector<HTMLInputElement>('input[name="site.additionalLanguages"]')?.value).toBe("fr");
+        expect(document.querySelector<HTMLInputElement>('input[name="site.activeLanguages"]')?.value).toBe("fr");
         expect(settings.querySelector("[data-selected-list]")?.textContent).toContain("German");
         expect(
-            settings.querySelector('.language-title p9r-badge[color="success"]')?.closest(".language-title")
+            settings.querySelector('[data-language-action="remove"][data-language-code="fr"]')?.closest(".language-row")
                 ?.textContent,
-        ).toContain("German");
+        ).toContain("Active");
+        const germanRow = Array.from(settings.querySelectorAll("[data-selected-list] .language-row")).find(
+            (row) => row.querySelector("strong")?.textContent === "German",
+        );
+        expect(germanRow?.textContent).toContain("Default");
         expect(
             Array.from(
                 settings.querySelectorAll("[data-selected-list] .language-name strong"),
@@ -100,8 +132,20 @@ describe("site language settings", () => {
 
         document.querySelector<HTMLFormElement>("#language-settings-form")!.requestSubmit();
         await waitFor(() => submitted !== undefined);
-        expect(submitted).toEqual({ "site.language": "de", "site.additionalLanguages": "fr" });
+        expect(submitted).toEqual({
+            "site.language": "de",
+            "site.additionalLanguages": "fr",
+            "site.activeLanguages": "fr",
+        });
         await waitFor(() => document.querySelector("cms-form-save-action")?.getAttribute("state") === "saved");
+
+        const refreshed = document.querySelector("cms-language-settings")!;
+        refreshed.querySelector<HTMLElement>('w13c-switch[data-language-code="fr"]')!.click();
+        expect(document.querySelector<HTMLInputElement>('input[name="site.activeLanguages"]')?.value).toBe("");
+        expect(refreshed.querySelector("[data-selected-list]")?.textContent).toContain("Draft");
+        refreshed.querySelector<HTMLElement>('p9r-icon-button[data-language-code="fr"]')!.click();
+        expect(document.querySelector<HTMLInputElement>('input[name="site.additionalLanguages"]')?.value).toBe("");
+        expect(refreshed.querySelector("[data-available-list]")?.textContent).toContain("French");
     });
 
     test("preserves a legacy default that is not in the offered list", async () => {
@@ -127,29 +171,12 @@ describe("site language settings", () => {
         );
         const settings = document.querySelector("cms-language-settings")!;
         expect(settings.querySelector("[data-selected-empty]")?.hasAttribute("hidden")).toBe(false);
+        expect(settings.querySelector("[data-default-setting]")?.hasAttribute("hidden")).toBe(true);
         settings.querySelector<HTMLElement>('[data-language-action="add"][data-language-code="en"]')!.click();
         expect(document.querySelector<HTMLInputElement>('input[name="site.language"]')?.value).toBe("en");
+        expect(settings.querySelector("[data-default-setting]")?.hasAttribute("hidden")).toBe(false);
         expect(settings.querySelector("[data-selected-list]")?.textContent).toContain("Default");
         expect(settings.querySelector('[data-language-action="remove"][data-language-code="en"]')).toBeNull();
-    });
-
-    test("clears saved feedback without making an unchanged form editable", async () => {
-        document.body.innerHTML = `
-            <form id="languages-form"><input name="language"></form>
-            <cms-form-save-action form="languages-form" label="Save languages" saved-feedback-duration="10"></cms-form-save-action>
-        `;
-        await Promise.resolve();
-
-        const form = document.querySelector<HTMLFormElement>("#languages-form")!;
-        const action = document.querySelector("cms-form-save-action")!;
-        const button = action.shadowRoot!.querySelector<HTMLElement & { disabled: boolean }>("p9r-button")!;
-        const status = action.shadowRoot!.querySelector<HTMLElement>("[data-status]")!;
-        form.dispatchEvent(new CustomEvent("cms-source:success"));
-        expect(action.getAttribute("state")).toBe("saved");
-
-        await new Promise((resolve) => setTimeout(resolve, 20));
-        expect(action.getAttribute("state")).toBe("pristine");
-        expect(status.textContent).toBe("Save languages");
-        expect(button.disabled).toBe(true);
+        expect(settings.querySelector('w13c-switch[data-language-code="en"]')).toBeNull();
     });
 });

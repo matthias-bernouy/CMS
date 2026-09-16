@@ -47,6 +47,8 @@ export type TSystem = {
         language: string;
         /** Other languages enabled for authoring. Absent on older site records. */
         additionalLanguages?: string[];
+        /** Active additional languages. Others remain drafts; the default is always active. */
+        activeLanguages?: string[];
         /** Organization that owns or publishes this site. */
         organization: SiteOrganizationSettings;
         /** Page rendered when a dynamic route matches but the page is missing. */

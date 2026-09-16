@@ -1,16 +1,14 @@
-<section class="language-section" aria-labelledby="selected-languages-heading">
-    <header class="language-section-header">
-        <h2 id="selected-languages-heading">Selected languages</h2>
-        <p9r-badge data-selected-count></p9r-badge>
-    </header>
+<cms-detail-section class="language-section" heading="Selected languages">
+    <p9r-badge slot="actions" data-selected-count></p9r-badge>
+    <div class="language-default-setting" data-default-setting hidden>
+        <span>Default language</span>
+        <p9r-select aria-label="Default language" data-default-select></p9r-select>
+    </div>
     <p class="language-empty" data-selected-empty hidden>Choose a language below to make it your default.</p>
     <div class="language-list" data-selected-list></div>
-</section>
+</cms-detail-section>
 
-<section class="language-section" aria-labelledby="available-languages-heading">
-    <header class="language-section-header">
-        <h2 id="available-languages-heading">Available languages</h2>
-        <p9r-badge data-available-count></p9r-badge>
-    </header>
+<cms-detail-section class="language-section" heading="Available languages">
+    <p9r-badge slot="actions" data-available-count></p9r-badge>
     <div class="language-list" data-available-list></div>
-</section>
+</cms-detail-section>
