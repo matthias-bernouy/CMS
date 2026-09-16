@@ -62,6 +62,18 @@ describe("integration verifier runtime configuration", () => {
                 CMS_INTEGRATION_VERIFIER_REQUEST_TIMEOUT_MS: "1e3",
             }),
         ).toThrow(/integer/);
+        expect(
+            readIntegrationVerifierRuntimeEnv({
+                ...source,
+                CMS_INTEGRATION_VERIFIER_REQUEST_TIMEOUT_MS: "1800000",
+            }).requestTimeoutMs,
+        ).toBe(1_800_000);
+        expect(() =>
+            readIntegrationVerifierRuntimeEnv({
+                ...source,
+                CMS_INTEGRATION_VERIFIER_REQUEST_TIMEOUT_MS: "1800001",
+            }),
+        ).toThrow(/between 100 and 1800000/);
         expect(() =>
             readIntegrationVerifierRuntimeEnv({
                 ...source,

@@ -30,7 +30,7 @@ export function readIntegrationVerifierRuntimeEnv(source: IntegrationVerifierEnv
             "CMS_INTEGRATION_VERIFIER_REQUEST_TIMEOUT_MS",
             15_000,
             100,
-            120_000,
+            1_800_000,
         ),
         maxResponseBytes: boundedInteger(
             source.CMS_INTEGRATION_VERIFIER_MAX_RESPONSE_BYTES,
