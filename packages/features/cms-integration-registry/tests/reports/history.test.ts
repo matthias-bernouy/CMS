@@ -4,11 +4,39 @@ import { join } from "node:path";
 import { createCompatibilityFinding, identifyVerificationReport } from "@bernouy/cms-integration-verification";
 import { ReleaseReportConflictError } from "@bernouy/cms-integration-registry";
 import { cleanupRegistryFixtures, publicationPackage } from "../publication/fixtures";
-import { compatibilityReport, publishedReleaseFixture, releaseStores, verificationReport } from "./fixtures";
+import {
+    compatibilityReport,
+    migrationReport,
+    publishedReleaseFixture,
+    releaseStores,
+    verificationReport,
+} from "./fixtures";
 
 afterEach(cleanupRegistryFixtures);
 
 describe("filesystem release report histories", () => {
+    test("persists and reloads a repeatable-only migration report at revision zero", async () => {
+        const { fixture, source, target, stores } = await publishedReleaseFixture();
+        const report = await migrationReport(source.digest, target.digest, "a".repeat(64), {
+            migrationRevision: 0,
+        });
+        const appended = await stores.migrationReports.append({ report, expectedCurrent: null });
+        const key = {
+            sourceKind: "demo",
+            sourceVersion: "1.0.0",
+            sourcePackageDigest: source.digest,
+            targetKind: "demo",
+            targetVersion: "1.1.0",
+            targetPackageDigest: target.digest,
+            connectorKey: "primary",
+            lineageId: "demo-supabase-v1",
+            migrationRevision: 0,
+        };
+
+        expect(appended.current.migrationRevision).toBe(0);
+        expect((await releaseStores(fixture).migrationReports.get(key))?.current.migrationRevision).toBe(0);
+    });
+
     test("persists a legacy verification root and exact append-only revisions across restart", async () => {
         const { fixture, target, stores } = await publishedReleaseFixture();
         const root = verificationReport(target.digest);

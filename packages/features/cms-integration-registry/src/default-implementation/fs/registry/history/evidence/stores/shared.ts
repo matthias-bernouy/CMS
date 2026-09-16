@@ -61,7 +61,7 @@ export function parseMigrationKey(value: unknown): IntegrationMigrationReportLog
     if (!stableIdentifier(input.connectorKey) || !stableIdentifier(input.lineageId)) {
         throw new TypeError("Release migration report connector identity is invalid");
     }
-    if (!Number.isSafeInteger(input.migrationRevision) || (input.migrationRevision as number) < 1) {
+    if (!Number.isSafeInteger(input.migrationRevision) || (input.migrationRevision as number) < 0) {
         throw new TypeError("Release migration report revision is invalid");
     }
     return {

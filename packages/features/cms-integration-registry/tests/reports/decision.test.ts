@@ -5,6 +5,7 @@ import {
 } from "@bernouy/cms-integration-verification";
 import { ReleaseAdmissionDecisionStaleError } from "@bernouy/cms-integration-registry";
 import { FsReleaseAdmissionDecisionStore } from "@bernouy/cms-integration-registry/fs";
+import { currentRequiredMigrationReports } from "../../src/default-implementation/fs/registry/history/admission/migrations";
 import { cleanupRegistryFixtures } from "../publication/fixtures";
 import {
     completeDecisionEvidence,
@@ -17,6 +18,29 @@ import {
 afterEach(cleanupRegistryFixtures);
 
 describe("filesystem composite release admission decisions", () => {
+    test("finds required repeatable-only migration evidence at revision zero", async () => {
+        const { source, target, stores } = await publishedReleaseFixture();
+        const evidence = await completeDecisionEvidence(source.digest, target.digest);
+        const migration = { ...evidence.migration, migrationRevision: 0 };
+        await stores.migrationReports.append({ report: migration, expectedCurrent: null });
+        const snapshot = {
+            locateExactVersion: () => ({
+                package: { digest: target.digest },
+                definitionSnapshot: {
+                    connectors: [{ connectorKey: "primary", lineageId: "demo-supabase-v1", migrationRevision: 0 }],
+                },
+            }),
+        } as unknown as Parameters<typeof currentRequiredMigrationReports>[0]["snapshot"];
+
+        const reports = await currentRequiredMigrationReports({
+            snapshot,
+            migrations: stores.migrationReports,
+            current: evidence.decision,
+        });
+
+        expect(reports.map((history) => history.current.migrationRevision)).toEqual([0]);
+    });
+
     test("recomposes against exact current reports and rejects a stale decision", async () => {
         const { fixture, source, target, stores } = await publishedReleaseFixture();
         const evidence = await completeDecisionEvidence(source.digest, target.digest);

@@ -51,7 +51,7 @@ function targetMigrationRevision(
         (candidate) =>
             candidate.connectorKey === requirement.connectorKey && candidate.lineageId === requirement.lineageId,
     );
-    return connector && Number.isSafeInteger(connector.migrationRevision) && connector.migrationRevision! > 0
+    return connector && Number.isSafeInteger(connector.migrationRevision) && connector.migrationRevision! >= 0
         ? connector.migrationRevision!
         : null;
 }
