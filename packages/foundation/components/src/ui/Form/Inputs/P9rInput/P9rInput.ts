@@ -20,6 +20,7 @@ export class P9rInput extends ValidatableFormControlElement {
     private readonly counter: HTMLElement | null;
     private readonly count: HTMLElement | null;
     private readonly max: HTMLElement | null;
+    private readonly prefixElement: HTMLElement | null;
     private readonly helpController: InputHelpController;
     private readonly validityController: InputValidityController;
 
@@ -31,6 +32,7 @@ export class P9rInput extends ValidatableFormControlElement {
         this.counter = root.querySelector(".counter");
         this.count = root.querySelector(".count");
         this.max = root.querySelector(".max");
+        this.prefixElement = root.querySelector(".prefix");
         this.helpController = new InputHelpController(this, {
             row: root.querySelector(".label-row"),
             button: root.querySelector(".help-button"),
@@ -44,6 +46,7 @@ export class P9rInput extends ValidatableFormControlElement {
             error: root.querySelector(".error"),
             meta: root.querySelector(".meta"),
             counter: this.counter,
+            prefix: this.prefixElement,
         });
     }
 
@@ -52,7 +55,7 @@ export class P9rInput extends ValidatableFormControlElement {
         this.input?.addEventListener("input", this.onInput);
         this.input?.addEventListener("change", this.onChange);
         this.input?.addEventListener("keydown", this.onKeyDown);
-        syncAll(this, this.input, this.label, this.counter, this.max);
+        syncAll(this, this.input, this.label, this.counter, this.max, this.prefixElement);
         this.helpController.connect();
         this.validityController.connect();
         const initial = this.getAttribute("value");
@@ -84,7 +87,7 @@ export class P9rInput extends ValidatableFormControlElement {
             this.value = newValue;
             return;
         }
-        syncAll(this, this.input, this.label, this.counter, this.max);
+        syncAll(this, this.input, this.label, this.counter, this.max, this.prefixElement);
         if (name === "max-count") {
             updateCounter(this, this.input, this.counter, this.count);
         }

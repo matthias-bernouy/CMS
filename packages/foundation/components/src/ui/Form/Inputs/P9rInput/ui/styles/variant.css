@@ -1,4 +1,4 @@
-.input:hover:not(:disabled) {
+.input:hover:not(:disabled, :read-only) {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -19,6 +19,39 @@
     background: var(--bg-base, #f1f5f9);
     color: var(--text-muted, #94a3b8);
     cursor: not-allowed;
+}
+
+:host([prefix]:not([prefix=""])) .input-shell:hover:has(.input:not(:disabled, :read-only)) {
+    border-color: var(--text-muted, #94a3b8);
+}
+
+:host([prefix]:not([prefix=""])) .input-shell:focus-within {
+    border-color: var(--primary-base, #4361ee);
+    box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15));
+}
+
+:host([prefix]:not([prefix=""])) .input-shell:has(.input[aria-invalid="true"]) {
+    border-color: var(--danger-base, #ef4444);
+}
+
+:host([prefix]:not([prefix=""])) .input-shell:has(.input[aria-invalid="true"]):focus-within {
+    box-shadow: 0 0 0 3px rgb(239 68 68 / 0.15);
+}
+
+:host([prefix]:not([prefix=""])) .input-shell:has(.input:disabled),
+:host([prefix]:not([prefix=""])) .input-shell:has(.input:read-only) {
+    background: var(--bg-base, #f1f5f9);
+}
+
+:host([prefix]:not([prefix=""])) .input:focus-visible {
+    box-shadow: none;
+}
+
+:host([readonly]) .input {
+    background: var(--bg-base, #f1f5f9);
+    border-color: var(--border-subtle, #cbd5e1);
+    color: var(--text-muted, #64748b);
+    cursor: default;
 }
 
 .hint[data-level="error"] {

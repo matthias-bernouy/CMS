@@ -9,7 +9,10 @@
         <slot class="help-slot" name="help"></slot>
         <span class="help-text"></span>
     </div>
-    <input id="input" class="input" part="input" type="text" />
+    <div class="input-shell" part="input-shell">
+        <span id="prefix" class="prefix" part="prefix" hidden></span>
+        <input id="input" class="input" part="input" type="text" />
+    </div>
     <div class="meta" part="meta" hidden>
         <span class="feedback" part="feedback">
             <small id="hint" class="hint" part="hint"></small>

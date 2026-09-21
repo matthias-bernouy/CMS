@@ -156,6 +156,7 @@ export class InputHelpController {
 
 export function syncDescription(
     input: HTMLInputElement | null,
+    prefix: HTMLElement | null | undefined,
     hint: HTMLElement | null,
     error: HTMLElement | null,
     counter: HTMLElement | null,
@@ -163,7 +164,7 @@ export function syncDescription(
     if (!input) {
         return;
     }
-    const ids = [hint, error, counter]
+    const ids = [prefix, hint, error, counter]
         .filter((element): element is HTMLElement => !!element && !element.hidden && !!element.textContent)
         .map((element) => element.id)
         .filter(Boolean)

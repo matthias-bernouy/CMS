@@ -7,6 +7,7 @@ export type InputValidityElements = {
     error: HTMLElement | null;
     meta: HTMLElement | null;
     counter: HTMLElement | null;
+    prefix?: HTMLElement | null;
 };
 
 export class InputValidityController {
@@ -33,7 +34,7 @@ export class InputValidityController {
     }
 
     sync(): void {
-        const { input, hint, error, meta, counter } = this.elements;
+        const { input, hint, error, meta, counter, prefix } = this.elements;
         if (!input || !hint || !error) {
             return;
         }
@@ -70,7 +71,7 @@ export class InputValidityController {
             input.removeAttribute("aria-errormessage");
         }
         refreshMetaVisibility(hint, error, counter, meta);
-        syncDescription(input, hint, error, counter);
+        syncDescription(input, prefix, hint, error, counter);
     }
 
     get validity(): ValidityState {

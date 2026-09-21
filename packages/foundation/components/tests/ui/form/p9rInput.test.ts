@@ -14,6 +14,28 @@ if (!customElements.get(textareaTag)) {
 afterEach(() => document.body.replaceChildren());
 
 describe("P9rInput", () => {
+    test("shows a fixed prefix without changing the submitted value", () => {
+        const form = document.createElement("form");
+        const control = document.createElement(tag) as P9rInput;
+        control.setAttribute("name", "path");
+        control.setAttribute("prefix", "/en");
+        control.setAttribute("value", "/about");
+        form.append(control);
+        document.body.append(form);
+
+        const prefix = control.shadowRoot!.querySelector<HTMLElement>(".prefix")!;
+        const input = control.shadowRoot!.querySelector<HTMLInputElement>("input")!;
+        expect(prefix.textContent).toBe("/en");
+        expect(prefix.hidden).toBe(false);
+        expect(input.getAttribute("aria-describedby")).toBe("prefix");
+        expect(control.value).toBe("/about");
+        expect(input.value).toBe("/about");
+
+        control.removeAttribute("prefix");
+        expect(prefix.hidden).toBe(true);
+        expect(input.hasAttribute("aria-describedby")).toBe(false);
+    });
+
     test("associates its label, descriptions, and text-entry attributes", () => {
         const control = document.createElement(tag);
         control.setAttribute("label", "Email");

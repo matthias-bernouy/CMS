@@ -5,6 +5,7 @@ export const P9R_INPUT_ATTRIBUTES = [
     "label",
     "aria-label",
     "placeholder",
+    "prefix",
     "type",
     "inputmode",
     "enterkeyhint",
@@ -47,6 +48,15 @@ const syncPlaceholder = (host: HTMLElement, input: HTMLInputElement | null) => {
     } else {
         input.setAttribute("placeholder", value);
     }
+};
+
+const syncPrefix = (host: HTMLElement, prefix: HTMLElement | null | undefined) => {
+    if (!prefix) {
+        return;
+    }
+    const value = host.getAttribute("prefix") ?? "";
+    prefix.textContent = value;
+    prefix.hidden = value === "";
 };
 
 const syncTextAttributes = (host: HTMLElement, input: HTMLInputElement | null) => {
@@ -133,9 +143,11 @@ export const syncAll = (
     label: HTMLLabelElement | null,
     counter: HTMLElement | null,
     max: HTMLElement | null,
+    prefix?: HTMLElement | null,
 ) => {
     syncLabel(host, label);
     syncPlaceholder(host, input);
+    syncPrefix(host, prefix);
     syncTextAttributes(host, input);
     syncType(host, input);
     syncInputMode(host, input);

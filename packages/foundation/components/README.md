@@ -93,7 +93,7 @@ Two tag prefixes are currently in use across the library: `p9r-` (majority) and 
 | `FormSection` | `<p9r-section>` | Groups form fields under a section header. |
 | `IconButton` | `<p9r-icon-button>` | Square / round icon-only button with `variant` / `color` / `size`. |
 | `InputFile` | `<w13c-input-file>` | File picker input. |
-| `P9rInput` | `<p9r-input>` | Text input with validation. |
+| `P9rInput` | `<p9r-input>` | Text input with validation and an optional fixed `prefix` that does not alter the submitted value. |
 | `P9rRange` | `<p9r-range>` | Numeric range slider. |
 | `P9rSelect` | `<p9r-select>` | Select dropdown. |
 | `P9rSizesSelect` | `<p9r-sizes-select>` | Multi-size selector. |

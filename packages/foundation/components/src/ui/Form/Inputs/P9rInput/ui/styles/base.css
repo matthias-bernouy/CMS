@@ -67,6 +67,41 @@
     box-sizing: border-box;
 }
 
+.prefix[hidden] {
+    display: none;
+}
+
+:host([prefix]:not([prefix=""])) .input-shell {
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+}
+
+:host([prefix]:not([prefix=""])) .prefix {
+    display: flex;
+    align-items: center;
+    flex: none;
+    padding: 0 10px;
+    border-right: 1px solid var(--border-default, #e2e8f0);
+    background: var(--bg-base, #f1f5f9);
+    color: var(--text-muted, #64748b);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+:host([prefix]:not([prefix=""])) .input {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
 .input::placeholder {
     color: var(--text-muted, #94a3b8);
     font-weight: 400;
