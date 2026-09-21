@@ -9,12 +9,15 @@ export async function updatePageConfig(cms: ControlCms, dto: PageConfigUpdateDto
     if (!existing) {
         throw new InvalidParam("id", "Unknown page id.");
     }
+    if (dto.path !== existing.path) {
+        throw new InvalidParam("path", "Manage page languages to change a path.");
+    }
     const indexing = dto.indexingSelection
         ? await resolvePageIndexingSelection(existing, cms.optionalSources, dto.indexingSelection)
         : dto.indexing;
 
     await cms.repository.updatePage({
-        ...existing,
+        id: existing.id,
         title: dto.title,
         path: dto.path,
         description: dto.description,
@@ -23,6 +26,6 @@ export async function updatePageConfig(cms: ControlCms, dto: PageConfigUpdateDto
         ...(indexing !== undefined ? { indexing } : {}),
     });
 
-    invalidateUpdatedPage(cms, existing.path, dto.path);
+    await invalidateUpdatedPage(cms, existing);
     return (await cms.repository.getPage(dto.path))?.id ?? dto.id;
 }

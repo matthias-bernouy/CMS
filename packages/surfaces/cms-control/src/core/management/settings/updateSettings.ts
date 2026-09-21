@@ -22,6 +22,20 @@ export async function updateSettings(cms: ControlCms, dto: SettingsUpdateDto): P
             theme: reconcileSubmittedThemeSettings(current.theme, dto.theme, contributions),
         };
     }
+    if (update.site) {
+        const site = { ...update.site };
+        for (const field of ["notFound", "forbidden", "serverError", "login"] as const) {
+            const ref = site[field];
+            if (!ref?.path) {
+                continue;
+            }
+            const page = await cms.repository.getPage(ref.path);
+            if (page) {
+                site[field] = { id: page.id, path: page.path };
+            }
+        }
+        update = { ...update, site };
+    }
     await cms.repository.updateSystem(update);
     invalidateGlobalStyleAndPages(cms);
 }

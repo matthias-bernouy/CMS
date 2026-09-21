@@ -3,12 +3,13 @@ import putPage from "cms-control/api/_content/page/page.put";
 import { P9R_CACHE, type TPage } from "@bernouy/cms-content";
 
 function makeSystem(opts: { existing?: TPage | null } = {}) {
-    const updateCalls: TPage[] = [];
+    const updateCalls: Partial<TPage>[] = [];
     const deleteSpy: string[] = [];
     const cms: any = {
         repository: {
             getPageById: async (_id: string) => opts.existing ?? null,
-            updatePage: async (page: TPage) => {
+            getSystem: async () => ({ site: { language: "fr" } }),
+            updatePage: async (page: Partial<TPage>) => {
                 updateCalls.push(page);
             },
         },
@@ -70,7 +71,7 @@ describe("PUT /api/page (update)", () => {
             makeRequest({
                 id: "page-1",
                 title: "Published title",
-                path: "/published",
+                path: "/draft",
                 content: "<p>published</p>",
                 description: "published desc",
                 visible: true,
@@ -91,7 +92,7 @@ describe("PUT /api/page (update)", () => {
         const updated = updateCalls[0]!;
         expect(updated.id).toBe("page-1");
         expect(updated.title).toBe("Published title");
-        expect(updated.path).toBe("/published");
+        expect(updated.path).toBe("/draft");
         expect(updated.content).toBe("<p>published</p>");
         expect(updated.description).toBe("published desc");
         expect(updated.visible).toBe(true);
@@ -104,7 +105,7 @@ describe("PUT /api/page (update)", () => {
                 pageQueryParam: "product",
             },
         });
-        expect(deleteSpy).toEqual([P9R_CACHE.page("/draft"), P9R_CACHE.page("/published")]);
+        expect(deleteSpy).toEqual([P9R_CACHE.page("/draft")]);
     });
 
     test("invalidates the page once when path stays the same", async () => {
@@ -120,7 +121,15 @@ describe("PUT /api/page (update)", () => {
         );
 
         expect(res.ok).toBe(true);
-        expect(updateCalls[0]?.indexing).toEqual({ enabled: false });
+        expect(updateCalls[0]).not.toHaveProperty("indexing");
         expect(deleteSpy).toEqual([P9R_CACHE.page("/draft")]);
+    });
+
+    test("requires the language editor for path changes", async () => {
+        const { cms, updateCalls } = makeSystem({ existing: existingPage });
+        await expect(
+            putPage(makeRequest({ id: "page-1", title: "Renamed", path: "/renamed", content: "<p>x</p>" }), cms),
+        ).rejects.toThrow("Manage page languages");
+        expect(updateCalls).toHaveLength(0);
     });
 });

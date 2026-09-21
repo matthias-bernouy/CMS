@@ -13,9 +13,10 @@ function system() {
     const cms = {
         repository: {
             getAllPages: async () => [
-                { path: "/", content: "<site-header></site-header>" },
+                { path: "/", paths: { fr: "/", en: "/home" }, content: "<site-header></site-header>" },
                 { path: "/article", content: "<article-card></article-card>" },
             ],
+            getSystem: async () => ({ site: { language: "fr" } }),
             getBlocsList: async () => Object.keys(views).map((id) => ({ id })),
             getBlocViewJS: async (tag: string) => views[tag] ?? null,
         },
@@ -28,7 +29,7 @@ describe("invalidatePagesReferencingBloc", () => {
     test("invalidates a page that reaches the updated bloc transitively", async () => {
         const { cms, deleted } = system();
         await invalidatePagesReferencingBloc(cms as never, "base-link");
-        expect(deleted).toEqual([P9R_CACHE.page("/")]);
+        expect(deleted).toEqual([P9R_CACHE.page("/"), P9R_CACHE.page("/en/home")]);
     });
 
     test("keeps unrelated pages cached", async () => {

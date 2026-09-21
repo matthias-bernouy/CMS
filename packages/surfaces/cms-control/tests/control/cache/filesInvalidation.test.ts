@@ -19,7 +19,7 @@ function makeCms(opts: { pages?: TPage[]; favicon?: string }) {
     const cms: any = {
         repository: {
             getAllPages: async () => opts.pages ?? [],
-            getSystem: async () => ({ site: { favicon: opts.favicon ?? "" } }),
+            getSystem: async () => ({ site: { favicon: opts.favicon ?? "", language: "fr" } }),
         },
         cache: {
             delete: (k: string) => deleteSpy.push(k),
@@ -36,9 +36,10 @@ const imgRef = `<img src="/.cms/files/by-id/${FID}">`;
 
 describe("invalidatePagesReferencingFile", () => {
     test("invalidates a page that references the file directly, leaves others", async () => {
-        const { cms, deleteSpy } = makeCms({ pages: [page("/a", imgRef), page("/b", "<p>none</p>")] });
+        const localized = { ...page("/a", imgRef), paths: { fr: "/a", en: "/a" } };
+        const { cms, deleteSpy } = makeCms({ pages: [localized, page("/b", "<p>none</p>")] });
         await invalidatePagesReferencingFile(cms, FID);
-        expect(deleteSpy).toEqual([P9R_CACHE.page("/a")]);
+        expect(deleteSpy).toEqual([P9R_CACHE.page("/a"), P9R_CACHE.page("/en/a")]);
     });
 
     test("no invalidation when nothing references the file", async () => {

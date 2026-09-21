@@ -11,6 +11,6 @@ export async function updatePageContent(cms: ControlCms, dto: PageContentUpdateD
     }
 
     await assertContentRefsExist(cms.repository, dto.content);
-    await cms.repository.updatePage({ ...existing, content: dto.content });
-    invalidateUpdatedPage(cms, existing.path, existing.path);
+    await cms.repository.updatePage({ id: existing.id, content: dto.content });
+    await invalidateUpdatedPage(cms, existing);
 }

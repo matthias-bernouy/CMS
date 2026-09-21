@@ -1,5 +1,11 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { createBlocUsageResolver, findPagesReferencingText, P9R_CACHE } from "@bernouy/cms-content";
+import {
+    createBlocUsageResolver,
+    findPagesReferencingText,
+    P9R_CACHE,
+    publicPagePath,
+    type TPage,
+} from "@bernouy/cms-content";
 import { cmsFilesByIdRef } from "@bernouy/cms-files";
 
 /**
@@ -19,11 +25,12 @@ export async function invalidatePagesReferencingBloc(cms: ControlCms, blocTag: s
     const blocList = await cms.repository.getBlocsList({ includeInactive: true });
     const resolveUsage = createBlocUsageResolver(blocList, cms.repository);
     const usages = await Promise.all(pages.map((page) => resolveUsage(page.content)));
-    pages.forEach((page, index) => {
-        if (usages[index]?.includes(blocTag)) {
-            cms.cache.delete(P9R_CACHE.page(page.path));
-        }
-    });
+    const affected = pages.filter((_, index) => usages[index]?.includes(blocTag));
+    if (affected.length === 0) {
+        return;
+    }
+    const language = (await cms.repository.getSystem()).site.language;
+    await Promise.all(affected.map((page) => invalidateUpdatedPage(cms, page, language)));
 }
 
 export function invalidateBlocAssets(cms: ControlCms, blocTag: string): void {
@@ -33,10 +40,14 @@ export function invalidateBlocAssets(cms: ControlCms, blocTag: string): void {
     cms.cache.deleteMatching((key) => key.startsWith(P9R_CACHE.BLOCSET_PREFIX));
 }
 
-export function invalidateUpdatedPage(cms: ControlCms, previousPath: string, nextPath: string): void {
-    cms.cache.delete(P9R_CACHE.page(previousPath));
-    if (nextPath !== previousPath) {
-        cms.cache.delete(P9R_CACHE.page(nextPath));
+export async function invalidateUpdatedPage(cms: ControlCms, page: TPage, defaultLanguage?: string): Promise<void> {
+    const language = defaultLanguage ?? (await cms.repository.getSystem()).site.language;
+    const paths = new Set([page.path]);
+    for (const [code, local] of Object.entries(page.paths ?? {})) {
+        paths.add(publicPagePath(code, local, language));
+    }
+    for (const path of paths) {
+        cms.cache.delete(P9R_CACHE.page(path));
     }
 }
 
@@ -60,9 +71,11 @@ export async function invalidatePagesReferencingFile(cms: ControlCms, fileId: st
         return;
     }
     const pages = await findPagesReferencingText(cms.repository, ref);
-    for (const page of pages) {
-        cms.cache.delete(P9R_CACHE.page(page.path));
+    if (pages.length === 0) {
+        return;
     }
+    const language = settings.site.language;
+    await Promise.all(pages.map((page) => invalidateUpdatedPage(cms, page, language)));
 }
 
 /**

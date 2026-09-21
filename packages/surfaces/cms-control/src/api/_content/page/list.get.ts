@@ -1,6 +1,8 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { getPagesList, type PageListOptions } from "cms-control/core/content/page/getPagesList";
 
+export type PageListResponse = Awaited<ReturnType<typeof getPagesList>>;
+
 /** GET /api/page/list?search=&tag=&visible=&sortBy=&sortOrder= — the admin
  *  Pages table, server-filtered + sorted. All params are optional; unknown
  *  values are ignored (falls back to the default: all pages, title asc). */

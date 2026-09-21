@@ -23,8 +23,18 @@ export async function getSettings(cms: ControlCms): Promise<SettingsResponse> {
         getInstalledIntegrationThemeContributions(cms.configuredIntegrationInstallations),
     ]);
 
+    const site = { ...system.site };
+    for (const field of ["notFound", "forbidden", "serverError", "login"] as const) {
+        const ref = site[field];
+        if (ref?.id) {
+            const page = await cms.repository.getPageById(ref.id);
+            if (page) {
+                site[field] = { id: page.id, path: page.path };
+            }
+        }
+    }
     return {
-        site: system.site,
+        site,
         theme: composeThemeSettings(system.theme, themeContributions),
         security: system.security,
         email: system.email,

@@ -9,11 +9,14 @@ export async function updatePage(cms: ControlCms, dto: PageUpdateDto): Promise<v
     if (!existing) {
         throw new InvalidParam("id", "Unknown page id.");
     }
+    if (dto.path !== existing.path) {
+        throw new InvalidParam("path", "Manage page languages to change a path.");
+    }
 
     await assertContentRefsExist(cms.repository, dto.content);
 
     await cms.repository.updatePage({
-        ...existing,
+        id: existing.id,
         title: dto.title,
         path: dto.path,
         content: dto.content,
@@ -23,5 +26,5 @@ export async function updatePage(cms: ControlCms, dto: PageUpdateDto): Promise<v
         ...(dto.indexing !== undefined ? { indexing: dto.indexing } : {}),
     });
 
-    invalidateUpdatedPage(cms, existing.path, dto.path);
+    await invalidateUpdatedPage(cms, existing);
 }

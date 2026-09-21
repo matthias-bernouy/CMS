@@ -1,11 +1,12 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { P9R_CACHE } from "@bernouy/cms-content";
+import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
+import { invalidateAllPages } from "cms-control/core/admin/server/cache/invalidation";
 
-/** DELETE /api/page?id= — remove a page. Pages aren't referenced by other
- *  content, so no consumer conflict check is needed; the rendered-page cache is
- *  dropped. */
+/** Delete a page and retain its paths as redirects or 410 Gone tombstones. */
 export default async function deletePage(req: Request, cms: ControlCms) {
-    const id = new URL(req.url).searchParams.get("id");
+    const url = new URL(req.url);
+    const id = url.searchParams.get("id");
     if (!id) {
         return new Response("Missing id", { status: 400 });
     }
@@ -15,7 +16,19 @@ export default async function deletePage(req: Request, cms: ControlCms) {
         return new Response("Not found", { status: 404 });
     }
 
-    await cms.repository.deletePage(id);
+    const alternativeId = url.searchParams.get("alternativeId");
+    if (alternativeId) {
+        const alternative = await cms.repository.getPageById(alternativeId);
+        if (!alternative || !alternative.visible || alternative.id === id) {
+            throw new InvalidParam("alternativeId", "Choose another published page.");
+        }
+    }
+    if (cms.repository.deletePageWithAlternative) {
+        await cms.repository.deletePageWithAlternative(id, alternativeId);
+    } else {
+        await cms.repository.deletePage(id);
+    }
     cms.cache.delete(P9R_CACHE.page(page.path));
+    invalidateAllPages(cms);
     return new Response("Deleted", { status: 200 });
 }

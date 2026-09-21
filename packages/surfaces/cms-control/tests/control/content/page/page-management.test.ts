@@ -39,14 +39,15 @@ const existingPage: TPage = {
 };
 
 function makeCms() {
-    const updates: TPage[] = [];
+    const updates: Partial<TPage>[] = [];
     const invalidations: string[] = [];
     const cms = {
         repository: {
             getPageById: async (id: string) => (id === existingPage.id ? existingPage : null),
             getPage: async (path: string) =>
-                path === "/published" ? { ...existingPage, ...updates.at(-1), id: existingPage.id } : null,
-            updatePage: async (page: TPage) => {
+                path === "/draft" ? { ...existingPage, ...updates.at(-1), id: existingPage.id } : null,
+            getSystem: async () => ({ site: { language: "fr" } }),
+            updatePage: async (page: Partial<TPage>) => {
                 updates.push(page);
             },
         },
@@ -77,7 +78,7 @@ describe("page management writes", () => {
         const response = await putConfigDetail(
             jsonRequest("http://localhost/cms/api/page/configDetail?id=page-1", {
                 title: "${content.title} | Store",
-                path: "/published",
+                path: "/draft",
                 description: "Buy ${content.title}",
                 published: "true",
                 tags: "seo, landing",
@@ -91,9 +92,9 @@ describe("page management writes", () => {
         expect(await response.json()).toEqual({ id: existingPage.id });
         expect(updates).toEqual([
             {
-                ...existingPage,
+                id: existingPage.id,
                 title: "${content.title} | Store",
-                path: "/published",
+                path: "/draft",
                 description: "Buy ${content.title}",
                 visible: true,
                 tags: ["seo", " landing"],
@@ -107,8 +108,9 @@ describe("page management writes", () => {
                 },
             },
         ]);
-        expect(updates[0]!.content).toBe(existingPage.content);
-        expect(invalidations).toEqual([P9R_CACHE.page("/draft"), P9R_CACHE.page("/published")]);
+        expect(updates[0]).not.toHaveProperty("content");
+        expect(updates[0]).not.toHaveProperty("seo");
+        expect(invalidations).toEqual([P9R_CACHE.page("/draft")]);
     });
 
     test("rejects an entity binding that is no longer present in the page", async () => {
@@ -118,7 +120,7 @@ describe("page management writes", () => {
             putConfigDetail(
                 jsonRequest("http://localhost/cms/api/page/configDetail?id=page-1", {
                     title: "Published",
-                    path: "/published",
+                    path: "/draft",
                     description: "Published description",
                     published: true,
                     tags: [],
@@ -143,9 +145,9 @@ describe("page management writes", () => {
         );
 
         expect(response.status).toBe(204);
-        expect(updates).toEqual([{ ...existingPage, content: "<main>Updated content</main>" }]);
-        expect(updates[0]!.title).toBe(existingPage.title);
-        expect(updates[0]!.indexing).toEqual({ enabled: false });
+        expect(updates).toEqual([{ id: existingPage.id, content: "<main>Updated content</main>" }]);
+        expect(updates[0]).not.toHaveProperty("title");
+        expect(updates[0]).not.toHaveProperty("seo");
         expect(invalidations).toEqual([P9R_CACHE.page("/draft")]);
     });
 });
