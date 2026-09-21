@@ -39,6 +39,24 @@ export class DuplicatePagePathError extends ContentConflictError {
     }
 }
 
+export class PagePathUpdateConflictError extends ContentConflictError {
+    readonly publicCode = "page_path_update_in_progress";
+
+    constructor() {
+        super("Page URLs are already being updated. Reload the page and try again.");
+        this.name = "PagePathUpdateConflictError";
+    }
+}
+
+export class PagePathsStaleError extends ContentConflictError {
+    readonly publicCode = "page_paths_changed";
+
+    constructor() {
+        super("Page URLs changed since they were loaded. Reopen Languages before saving.");
+        this.name = "PagePathsStaleError";
+    }
+}
+
 export class BlocOwnershipConflictError extends ContentConflictError {
     constructor(tag: string) {
         super(`Bloc with tag "${tag}" belongs to a different owner`);

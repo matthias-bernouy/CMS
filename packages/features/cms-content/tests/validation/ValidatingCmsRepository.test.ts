@@ -42,6 +42,12 @@ describe("ValidatingCmsRepository — pages", () => {
         expect(calls.updatePage[0].title).toBe("Spaced");
     });
 
+    test("updatePage keeps language paths under the dedicated route writer", async () => {
+        const { repo, calls } = makeRepo();
+        await repo.updatePage({ id: "p1", title: "New title", paths: { fr: "/unreserved" } });
+        expect(calls.updatePage[0]).toEqual({ id: "p1", title: "New title" });
+    });
+
     test("updatePage rejects an empty title and an invalid path", async () => {
         const { repo } = makeRepo();
         await expect(repo.updatePage({ id: "p1", title: "   " })).rejects.toThrow(ContentValidationError);

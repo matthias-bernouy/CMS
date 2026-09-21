@@ -26,7 +26,9 @@ export {
     isPresentationImageBytes,
     blocThumbnailFromSource,
 } from "cms-content/core/validation/documents/presentationImage";
-export type { PageIndexingConfiguration, TPage, TPageRef } from "cms-content/interfaces/pages";
+export type { PageIndexingConfiguration, PageRoute, TPage, TPageRef } from "cms-content/interfaces/pages";
+export { languagePrefix, localPagePath, publicPagePath } from "cms-content/core/utils/localizedPagePath";
+export { pageSeoForLanguage } from "cms-content/core/lifecycle/pageSeo";
 export type { SiteOrganizationAddress, SiteOrganizationSettings, TSystem } from "cms-content/interfaces/settings";
 export type {
     IntegrationThemeContribution,
@@ -89,6 +91,8 @@ export {
     ContentConflictError,
     DuplicateBlocTagError,
     DuplicatePagePathError,
+    PagePathUpdateConflictError,
+    PagePathsStaleError,
     SiteBlocLifecycleConflictError,
     SiteBlocNotFoundError,
     SiteBlocPublishedSlotConflictError,
@@ -178,13 +182,14 @@ export {
     type ManagedNativeElementContract,
 } from "cms-content/core/validation/documents/managedNativeElements";
 export { hardenStoredHtml } from "cms-content/core/validation/hardenStoredHtml";
+export { validatePageSeo } from "cms-content/core/validation/documents/pages/seo";
 export { isSafeNavigationalUrl } from "cms-content/core/utils/safeUrl";
 export {
     validatePageIndexingConfiguration,
     validatePagePath,
     validatePageTitle,
     validatePagePatch,
-} from "cms-content/core/validation/documents/pages";
+} from "cms-content/core/validation/documents/pages/page";
 export { canonicalSiteBaseUrl, validateSettingsPatch } from "cms-content/core/validation/settings";
 export { coercePageRef, pageRefToString } from "cms-content/core/validation/documents/pageRef";
 export {

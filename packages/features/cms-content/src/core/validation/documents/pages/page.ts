@@ -2,7 +2,9 @@ import { isSourceUrn } from "@bernouy/cms-sources";
 import type { PageIndexingConfiguration, TPage } from "cms-content/interfaces/pages";
 import { ContentValidationError } from "cms-content/core/validation/errors";
 import { isValidPathFormat } from "cms-content/core/validation/predicates";
+import { assertPagePathNotReserved } from "cms-content/core/utils/localizedPagePath";
 import { isCmsQueryParamName } from "cms-content/interfaces/Editor/BindingSyntax";
+import { validatePageSeo } from "cms-content/core/validation/documents/pages/seo";
 import {
     validateLabel,
     validateOptionalText,
@@ -18,6 +20,7 @@ export function validatePagePath(value: string): string {
     if (!isValidPathFormat(value)) {
         throw new ContentValidationError("path", "must start with '/' and contain only [a-zA-Z0-9-/]");
     }
+    assertPagePathNotReserved(value);
     return value;
 }
 
@@ -63,6 +66,8 @@ export function validatePageIndexingConfiguration(value: unknown): PageIndexingC
  */
 export function validatePagePatch(page: Partial<TPage>): Partial<TPage> {
     const out: Partial<TPage> = { ...page };
+    // Language paths are managed by setPagePaths so route reservations stay in sync.
+    delete out.paths;
     if (page.id !== undefined) {
         out.id = validateId(page.id);
     }
@@ -77,6 +82,9 @@ export function validatePagePatch(page: Partial<TPage>): Partial<TPage> {
     }
     if (page.description !== undefined) {
         out.description = validateOptionalText("description", page.description, 200);
+    }
+    if (page.seo !== undefined) {
+        out.seo = validatePageSeo(page.seo);
     }
     if (page.tags !== undefined) {
         out.tags = validateTags(page.tags);

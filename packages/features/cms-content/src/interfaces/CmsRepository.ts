@@ -105,6 +105,13 @@ export interface CmsRepository extends ContentReader {
     insertPage(path: string, title: string, content?: string): Promise<void>;
     updatePage(page: Partial<TPage>): Promise<void>;
     deletePage(id: string): Promise<void>;
+    setPagePaths?(
+        id: string,
+        paths: Record<string, string>,
+        system?: TSystem,
+        expectedPaths?: Record<string, string>,
+    ): Promise<TPage>;
+    deletePageWithAlternative?(id: string, alternativeId: string | null): Promise<void>;
     getLinks(): Promise<PageLink[]>;
     getPagesMetadata(opts?: PagesQuery): Promise<PageMeta[]>;
     getTagCounts(): Promise<ValueCount[]>;

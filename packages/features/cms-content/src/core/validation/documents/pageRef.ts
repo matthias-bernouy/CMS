@@ -9,7 +9,10 @@ export function coercePageRef(raw: unknown): TPageRef {
     }
     if (typeof raw === "object" && raw !== null && "path" in raw) {
         const path = (raw as { path: unknown }).path;
-        return typeof path === "string" && path !== "" ? { path } : null;
+        const id = (raw as { id?: unknown }).id;
+        return typeof path === "string" && path !== ""
+            ? { path, ...(typeof id === "string" && id ? { id } : {}) }
+            : null;
     }
     return null;
 }

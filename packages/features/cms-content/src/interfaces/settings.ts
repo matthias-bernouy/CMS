@@ -29,6 +29,9 @@ export type SiteOrganizationSettings = {
 export type TSystem = {
     initializationStep: number;
 
+    /** Read-only signal while page routes are being migrated to new language settings. */
+    pageRoutesUpdating?: boolean;
+
     site: {
         name: string;
         favicon: string;

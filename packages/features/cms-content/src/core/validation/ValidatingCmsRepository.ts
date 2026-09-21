@@ -17,9 +17,15 @@ import type {
 } from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
 import { ContentValidationError } from "cms-content/core/validation/errors";
+import { planPagePaths } from "cms-content/core/lifecycle/pagePaths";
+import { assertPagePathNotReserved } from "cms-content/core/utils/localizedPagePath";
 import { validateSiteBlocCollectionInput } from "cms-content/core/lifecycle/siteBlocCollections";
 import type { TSystem } from "cms-content/interfaces/settings";
-import { validatePagePath, validatePageTitle, validatePagePatch } from "cms-content/core/validation/documents/pages";
+import {
+    validatePagePath,
+    validatePageTitle,
+    validatePagePatch,
+} from "cms-content/core/validation/documents/pages/page";
 import { assertContentRefsExist } from "cms-content/core/validation/documents/assertContentRefsExist";
 import { validateSettingsPatch } from "cms-content/core/validation/settings";
 import {
@@ -154,11 +160,36 @@ export class ValidatingCmsRepository implements CmsRepository {
     getPublishedPages() {
         return this.inner.getPublishedPages();
     }
+    getPageRoute(path: string) {
+        return this.inner.getPageRoute?.(path) ?? Promise.resolve(null);
+    }
     getPageById(id: string) {
         return this.inner.getPageById(id);
     }
     deletePage(id: string) {
         return this.inner.deletePage(id);
+    }
+    async setPagePaths(
+        id: string,
+        paths: Record<string, string>,
+        _system?: TSystem,
+        expectedPaths?: Record<string, string>,
+    ) {
+        if (!this.inner.setPagePaths) {
+            throw new Error("Page path management is not available.");
+        }
+        const system = await this.inner.getSystem();
+        const plan = planPagePaths(paths, system);
+        for (const route of plan.current) {
+            assertPagePathNotReserved(route.path, [system.site.language, ...(system.site.additionalLanguages ?? [])]);
+        }
+        return this.inner.setPagePaths(id, plan.paths, system, expectedPaths);
+    }
+    deletePageWithAlternative(id: string, alternativeId: string | null) {
+        if (!this.inner.deletePageWithAlternative) {
+            throw new Error("Page deletion with alternatives is not available.");
+        }
+        return this.inner.deletePageWithAlternative(id, alternativeId);
     }
     getLinks(): Promise<PageLink[]> {
         return this.inner.getLinks();

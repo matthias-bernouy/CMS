@@ -1,4 +1,4 @@
-import type { TPage } from "cms-content/interfaces/pages";
+import type { PageRoute, TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
 
 export type BlocListOptions = {
@@ -26,6 +26,8 @@ export interface ContentReader {
     getAllPages(): Promise<TPage[]>;
     getPublishedPage(path: string): Promise<TPage | null>;
     getPublishedPages(): Promise<TPage[]>;
+    /** Exact path lookup; implementations may lazily bridge legacy records. */
+    getPageRoute?(path: string): Promise<PageRoute | null>;
 
     // BLOC (view only — editor bundles live in the admin)
     getBlocsList(options?: BlocListOptions): Promise<
