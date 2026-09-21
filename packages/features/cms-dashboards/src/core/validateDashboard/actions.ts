@@ -37,23 +37,19 @@ export function validateAction(
     if (action.form !== undefined) {
         if (
             action.endpoint ||
-            Object.hasOwn(action, "management") ||
             action.selection ||
             action.download ||
             (action.after && Object.hasOwn(action.after, "resource"))
         ) {
-            errors.push(`${path}.form cannot combine endpoint, management, selection, download, or after.resource`);
+            errors.push(`${path}.form cannot combine endpoint, selection, download, or after.resource`);
         }
         validateFormOperation(action.form, `${path}.form`, dashboard, source, errors, action.form?.fields ?? []);
         if (action.form?.fields !== undefined) {
             validateOperationFields(action.form.fields, `${path}.form.fields`, dashboard, source, errors);
         }
     }
-    if (!action.endpoint && !action.selection && !Object.hasOwn(action, "management") && !action.form) {
-        errors.push(`${path} must declare endpoint, management, selection, or form`);
-    }
-    if (Object.hasOwn(action, "management")) {
-        errors.push(`${path}.management is obsolete: use a native form management target`);
+    if (!action.endpoint && !action.selection && !action.form) {
+        errors.push(`${path} must declare endpoint, selection, or form`);
     }
     if (action.endpoint) {
         validateEndpointRef(dashboard, action.endpoint, `${path}.endpoint`, source, errors);

@@ -28,8 +28,8 @@ export function validateActionSelection(
     if (!detail) {
         errors.push(`${path}.selection.row is only supported on detail actions`);
     }
-    if (action.endpoint || Object.hasOwn(action, "management") || action.form || action.download || action.after) {
-        errors.push(`${path}.selection.row cannot combine endpoint, management, form, download, or after`);
+    if (action.endpoint || action.form || action.download || action.after) {
+        errors.push(`${path}.selection.row cannot combine endpoint, form, download, or after`);
     }
     if (
         typeof selection.row !== "string" ||

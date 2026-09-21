@@ -47,14 +47,6 @@ export async function installNavigation(page: Page, bundle: string) {
             failed = false;
             await delayed;
             await route.fulfill(error ? { status: 503, json: { error: "Unavailable" } } : { json: value });
-        } else if (path === "/api/integrations/installations") {
-            reads.push(path);
-            await route.fulfill({
-                json: [
-                    { id: "commerce", label: "Commerce", sourceIds: ["store"] },
-                    { id: "shipping", label: "Shipping", extensionOf: { kind: "commerce" } },
-                ],
-            });
         } else {
             await route.fulfill({ json: [] });
         }

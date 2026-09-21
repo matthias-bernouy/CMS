@@ -17,16 +17,15 @@ const event: AnalyticsEvent = {
 };
 
 describe("MongoAnalyticsStore", () => {
-    test("initializes query and TTL indexes without analytics_seen", async () => {
+    test("initializes query and TTL indexes", async () => {
         const names: string[] = [];
         const createIndex = mock(async () => "index");
-        const deleteMany = mock(async () => ({ deletedCount: 0 }));
         const updateOne = mock(async () => ({}));
         const findOne = mock(async () => null);
         const db = {
             collection: (name: string) => {
                 names.push(name);
-                return { createIndex, deleteMany, updateOne, findOne };
+                return { createIndex, updateOne, findOne };
             },
         };
         await new MongoAnalyticsStore(db as never).init();
@@ -36,11 +35,9 @@ describe("MongoAnalyticsStore", () => {
                 "analytics_hll_sketches",
                 "analytics_referrer_buckets",
                 "analytics_governance",
-                "analytics_seen",
             ]),
         );
         expect(createIndex).toHaveBeenCalledWith({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-        expect(deleteMany).toHaveBeenCalledTimes(4);
     });
 
     test("records counters and one register-max update without storing the hash", async () => {
@@ -88,7 +85,6 @@ describe("MongoAnalyticsStore", () => {
         expect(summary).toMatchObject({
             views: 30,
             estimatedVisitors: 20,
-            uniqueVisitors: 20,
             avgMs: 30,
             errorRate: 0.15,
         });

@@ -16,7 +16,7 @@ Feature package for bloc validation and bundling.
 - Bloc registration is owned by the build wrapper. User bloc sources must not
   hardcode `customElements.define()`.
 - Keep validation errors actionable; they are shown to bloc authors during
-  integration audit/release or admin upload.
+  validation and admin upload.
 - Direct `location.*` mutation remains forbidden because the editor cannot
   intercept it safely. Prefer anchors or `history.pushState`.
 - `prepare_bloc` uses temporary directories under `os.tmpdir()`. Do not depend

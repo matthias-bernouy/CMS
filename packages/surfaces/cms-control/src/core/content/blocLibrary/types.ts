@@ -21,47 +21,23 @@ export type LibraryCollection = {
     key: string;
     name: string;
     description: string;
-    kind: "site" | "managed" | "code";
+    kind: "site" | "code";
     siteId?: string;
     icon?: string;
-    installationId?: string;
-    status?: string;
     blocCount: number;
     countLabel: string;
-    statusLabel?: string;
-    version?: string;
     isSite: boolean;
-    isManaged: boolean;
     isCode: boolean;
     href: string;
     active: boolean;
-    canCheckUpdates: boolean;
-    canManageAvailability: boolean;
-    coverUrl?: string;
-    iconUrl?: string;
-};
-
-export type AvailableLibraryCollection = {
-    kind: string;
-    label: string;
-    description: string;
-    category: string;
-    version?: string;
-    iconUrl?: string;
-    coverUrl?: string;
-    resourceCount: number;
-    canImport: boolean;
 };
 
 export type BlocLibraryResponse = {
-    isExplore: boolean;
-    explore: Array<AvailableLibraryCollection & { imported: boolean; href?: string }>;
     groups: Array<{ label: string; count: number; blocs: LibraryBloc[] }>;
     isOverview: boolean;
     isCollection: boolean;
     isAdd: boolean;
     hasSiteCollections: boolean;
-    hasManagedCollections: boolean;
     hasCodeCollections: boolean;
     collections: LibraryCollection[];
     visibleCollections: LibraryCollection[];
@@ -74,6 +50,4 @@ export type BlocLibraryResponse = {
     stateOptions: Array<{ value: string; label: string }>;
     emptyTitle: string;
     emptyDescription: string;
-    selectedResources: string[];
-    available: AvailableLibraryCollection[];
 };

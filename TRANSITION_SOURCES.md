@@ -38,9 +38,10 @@ records now contain identity only; view definitions will own authorization.
 The Ulvia CLI now starts only the local CMS and MongoDB; it no longer owns package
 pull, audit, release, publication, repository, or Supabase workflows.
 
-Integration-backed collection and dashboard test fixtures remain in the tree
-as migration references but are excluded from the active Control TypeScript
-project until those interfaces are rebuilt on contracts and providers.
+Obsolete integration-backed collection and dashboard fixtures have been
+removed. The current Collections UI is retained around private and code-backed
+collections; provider-backed catalogues will return only after contracts and
+provider installations exist.
 
 ### Why this redesign exists
 

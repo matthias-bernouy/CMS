@@ -32,8 +32,7 @@ export type SourceSecretResolver = (ref: string) => Promise<string | undefined>;
  *  - `resolveSecret`: resolves a `secret`-sourced config header's `ref` to its value
  *    server-side. When provided, `secret` headers ARE applied; when absent, the
  *    executor keeps the 500 seam (a raw `${KEY}` ref is never forwarded upstream).
- *  - response projection options: choose the global compatibility/strict policy
- *    and receive sanitized legacy-contract observability events.
+ *  - response projection options: receive sanitized contract-failure observability events.
  */
 export type ExecutorDeps = Omit<ResponseProjectionOptions, "allowPublicCacheWithUpstreamCookie"> & {
     fetchImpl?: typeof fetch;
@@ -59,8 +58,8 @@ export type ExecutorDeps = Omit<ResponseProjectionOptions, "allowPublicCacheWith
  *    seam — a raw `${KEY}` ref is never forwarded upstream until the store is wired).
  *  - Response headers: allowlist; `set-cookie` / `access-control-*` / hop-by-hop dropped;
  *  - The bounded endpoint timeout (15 s by default) covers the upstream headers
- *    and declared JSON body. Legacy/file bodies remain streamed; declared JSON
- *    bodies are bounded and projected; redirects are NOT followed.
+ *    and declared JSON body. File bodies remain streamed; declared JSON bodies
+ *    are bounded and projected; redirects are NOT followed.
  */
 export async function executeEndpoint(
     endpoint: SourceEndpoint,

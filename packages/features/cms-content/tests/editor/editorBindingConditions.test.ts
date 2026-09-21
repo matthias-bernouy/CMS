@@ -83,6 +83,7 @@ describe("editor binding conditions", () => {
             repeat: "cms-repeat",
             source: "cms-source",
             sourceBody: "cms-source-body",
+            sourceDelay: "cms-source-delay",
             sourceInheritQuery: "cms-source-inherit-query",
             sourceId: "cms-source-id",
             sourceMethod: "cms-source-method",

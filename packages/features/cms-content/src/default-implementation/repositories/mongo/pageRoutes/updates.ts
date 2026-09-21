@@ -2,7 +2,7 @@ import { randomUUIDv7 } from "bun";
 import type { Collection } from "mongodb";
 import type { PageRoute, TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
-import { migratedPagePaths, type PlannedPagePaths } from "cms-content/core/lifecycle/pagePaths";
+import { pagePathsForSystem, type PlannedPagePaths } from "cms-content/core/lifecycle/pagePaths";
 import {
     DuplicatePagePathError,
     PagePathUpdateConflictError,
@@ -25,7 +25,6 @@ export async function updateMongoPagePaths(
     id: string,
     plan: PlannedPagePaths,
     system: TSystem,
-    allowLegacyDefaultRoute: boolean,
     expectedPaths?: Record<string, string>,
 ): Promise<TPage> {
     const token = randomUUIDv7();
@@ -51,21 +50,17 @@ export async function updateMongoPagePaths(
             throw new PagePathUpdateConflictError();
         }
         const page = fromPageDoc(stored)!;
-        if (expectedPaths && !samePagePaths(page.paths ?? migratedPagePaths(page, system), expectedPaths)) {
+        if (expectedPaths && !samePagePaths(page.paths ?? pagePathsForSystem(page, system), expectedPaths)) {
             throw new PagePathsStaleError();
         }
         const current = await routes.find({ pageId: id, state: "current" }).toArray();
         for (const route of plan.current) {
             const match = await routes.findOne({ _id: route.path });
             if (match) {
-                const legacyDefault =
-                    allowLegacyDefaultRoute &&
-                    route.path === plan.primaryPath &&
-                    match.language === system.site.language;
-                if (!canUsePageRoute(match, id, legacyDefault)) {
+                if (!canUsePageRoute(match, id)) {
                     throw new DuplicatePagePathError(route.path);
                 }
-                if (match.state === "redirect" || match.language !== route.language || !match.ownerPageId) {
+                if (match.state === "redirect" || match.language !== route.language) {
                     modified.push(match);
                     await routes.updateOne(
                         { _id: route.path, pageId: id },
@@ -139,16 +134,11 @@ export async function releasePagePathClaim(pages: Pages, id: string, token: stri
     }
 }
 
-export function canUsePageRoute(
-    route: Pick<PageRoute, "pageId" | "ownerPageId" | "state">,
-    pageId: string,
-    allowLegacyDefaultRoute: boolean,
-): boolean {
+export function canUsePageRoute(route: Pick<PageRoute, "pageId" | "ownerPageId" | "state">, pageId: string): boolean {
     return (
         route.pageId === pageId &&
-        ((route.state === "current" && (!route.ownerPageId || route.ownerPageId === pageId)) ||
-            (route.state === "redirect" &&
-                (route.ownerPageId === pageId || (allowLegacyDefaultRoute && !route.ownerPageId))))
+        ((route.state === "current" && route.ownerPageId === pageId) ||
+            (route.state === "redirect" && route.ownerPageId === pageId))
     );
 }
 

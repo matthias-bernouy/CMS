@@ -4,12 +4,6 @@ import { BlocImportError, importBlocArtifact } from "cms-control/core/content/bl
 import { seedBloc, seedSiteBloc, siteBlocHarness } from "./fixtures";
 
 const codeOwner: BlocOwnership = { kind: "code-managed" };
-const integrationOwner = (installationId = "installation-1", definitionVersion = "1.0.0") => ({
-    kind: "integration" as const,
-    integrationKind: "catalogue",
-    installationId,
-    definitionVersion,
-});
 const siteOwner: BlocOwnership = { kind: "site-builder", definitionId: "definition-site-owned" };
 
 async function seedOwned(tag: string, ownership: BlocOwnership) {
@@ -39,10 +33,7 @@ async function forceImport(cms: ReturnType<typeof siteBlocHarness>["cms"], tag: 
 
 describe("force import ownership boundaries", () => {
     test.each([
-        ["code to integration", codeOwner, integrationOwner()],
-        ["integration to code", integrationOwner(), codeOwner],
         ["site builder to code", siteOwner, codeOwner],
-        ["site builder to integration", siteOwner, integrationOwner()],
         ["code to site builder", codeOwner, siteOwner],
     ] as const)("rejects a cross-owner force: %s", async (_label, current, incoming) => {
         const tag = `cross-${current.kind}-${incoming.kind}`;
@@ -61,15 +52,13 @@ describe("force import ownership boundaries", () => {
         expect(await repository.getBlocRecord(tag)).toEqual(before);
     });
 
-    test("allows force for the same integration installation across definition versions", async () => {
-        const { cms, repository } = await seedOwned("catalogue-grid", integrationOwner());
+    test("allows force for the same code-managed owner", async () => {
+        const { cms, repository } = await seedOwned("catalogue-grid", codeOwner);
 
-        await expect(forceImport(cms, "catalogue-grid", integrationOwner("installation-1", "1.1.0"))).resolves.toEqual({
+        await expect(forceImport(cms, "catalogue-grid", codeOwner)).resolves.toEqual({
             id: "catalogue-grid",
             action: "updated",
         });
-        expect((await repository.getBlocRecord("catalogue-grid"))?.ownership).toEqual(
-            integrationOwner("installation-1", "1.1.0"),
-        );
+        expect((await repository.getBlocRecord("catalogue-grid"))?.ownership).toEqual(codeOwner);
     });
 });

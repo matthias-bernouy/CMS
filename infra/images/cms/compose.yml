@@ -20,7 +20,6 @@
 #   CMS_SESSION_SECRET=$(openssl rand -hex 32)
 #   CMS_KEK_HEX=$(openssl rand -hex 32)
 #   CMS_ADMIN_PASSWORD=$(openssl rand -base64 18)
-#   P9R_INTEGRATION_REPOSITORY_URL=https://repository.example.com/.cms/repository
 #
 # `MONGO_URL` may instead target an external cluster. It remains explicit so
 # local shared-Mongo and managed-cluster deployments follow the same contract.
@@ -38,7 +37,6 @@ services:
             CONTROL_PUBLIC_URL:   "https://admin.${DOMAIN:?DOMAIN must be set}"
             DELIVERY_PUBLIC_URL:  "https://${DOMAIN}"
             CMS_FILES_DIR:        /var/lib/cms/files
-            CMS_INTEGRATION_PACKAGE_CACHE_DIR: ${CMS_INTEGRATION_PACKAGE_CACHE_DIR:-/var/lib/cms/integration-packages}
 
             # Application secrets are injected from `.env`; no secret value is
             # stored in this file or included in the image.
@@ -48,14 +46,6 @@ services:
             CMS_ADMIN_PASSWORD:   ${CMS_ADMIN_PASSWORD:?CMS_ADMIN_PASSWORD must be set}
             ANALYTICS_SALT_SECRET: ${ANALYTICS_SALT_SECRET:?ANALYTICS_SALT_SECRET must be set and shared by all replicas}
             ANALYTICS_TRUST_PROXY: ${ANALYTICS_TRUST_PROXY:-false}
-
-            # Public integration-package downloads are limited by client IP.
-            # nginx-proxy is the standard deployment's one trusted ingress
-            # hop; include every additional CDN or proxy in this count.
-            CMS_HTTP_CLIENT_ADDRESS_MODE:                    ${CMS_HTTP_CLIENT_ADDRESS_MODE:-trusted-proxy}
-            CMS_HTTP_TRUSTED_PROXY_HOPS:                     "${CMS_HTTP_TRUSTED_PROXY_HOPS:-1}"
-            CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT:          "${CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT:-60}"
-            CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: "${CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS:-60}"
 
             # Source-endpoint observability. The aggregate collector is enabled
             # by default; detailed diagnostics remain sampled separately.
@@ -82,12 +72,6 @@ services:
             CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL: ${CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL:-https://admin.${DOMAIN}/auth/verify-email}
             CMS_CONTROL_AUTH_PASSWORD_RESET_URL:     ${CMS_CONTROL_AUTH_PASSWORD_RESET_URL:-https://admin.${DOMAIN}/auth/reset-password}
 
-            # Every CMS consumes the canonical public integration repository.
-            # Ordinary Delivery listeners do not mirror these repository routes,
-            # and ordinary Control listeners never expose its management gateway.
-            P9R_INTEGRATION_REPOSITORY_URL: ${P9R_INTEGRATION_REPOSITORY_URL:?P9R_INTEGRATION_REPOSITORY_URL must point to the public integration repository API}
-            CMS_REPOSITORY_HUB_FACADE_ENABLED: "${CMS_REPOSITORY_HUB_FACADE_ENABLED:-false}"
-            CMS_REPOSITORY_MANAGEMENT_GATEWAY_ENABLED: "${CMS_REPOSITORY_MANAGEMENT_GATEWAY_ENABLED:-false}"
             SMTP_HOST:                      ${SMTP_HOST:-}
             SMTP_PORT:                      ${SMTP_PORT:-}
             SMTP_SECURE:                    ${SMTP_SECURE:-}
@@ -110,11 +94,6 @@ services:
             LETSENCRYPT_HOST: "${DOMAIN},admin.${DOMAIN}"
         volumes:
             - ./files:/var/lib/cms/files
-            - type: bind
-              source: ./integration-packages
-              target: ${CMS_INTEGRATION_PACKAGE_CACHE_DIR:-/var/lib/cms/integration-packages}
-              bind:
-                  create_host_path: false
         read_only: true
         tmpfs:
             - /tmp:rw,nosuid,nodev,noexec,size=256m

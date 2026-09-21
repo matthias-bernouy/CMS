@@ -10,7 +10,7 @@ describe("InMemoryPatRepository", () => {
         expect(token.startsWith("pat_")).toBe(true);
         expect(pat.sub).toBe("u1");
         const principal = await r.verify(token);
-        expect(principal).toEqual({ sub: "u1", scopes: [] });
+        expect(principal).toEqual({ sub: "u1" });
     });
 
     test("verify of an unknown token → null", async () => {
@@ -35,7 +35,7 @@ describe("InMemoryPatRepository", () => {
         const r = repo();
         const { token, pat } = await r.create({ sub: "u1", name: "cli" });
         expect(await r.revoke("u2", pat.id)).toBe(false);
-        expect(await r.verify(token)).toEqual({ sub: "u1", scopes: [] });
+        expect(await r.verify(token)).toEqual({ sub: "u1" });
     });
 
     test("list is scoped to the owner sub", async () => {

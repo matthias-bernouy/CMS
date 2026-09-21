@@ -55,7 +55,30 @@ export function offersSource(): Source {
                         { name: "offset", in: "query", schema: { type: "number" } },
                     ],
                 },
+                output: [offersOutput()],
             },
         ],
+    };
+}
+
+export function offersOutput() {
+    return {
+        status: "200",
+        body: {
+            type: "object" as const,
+            properties: {
+                items: {
+                    type: "array" as const,
+                    items: {
+                        type: "object" as const,
+                        properties: {
+                            id: { type: "string" as const },
+                            productId: { type: "string" as const },
+                        },
+                    },
+                },
+                total: { type: "number" as const },
+            },
+        },
     };
 }

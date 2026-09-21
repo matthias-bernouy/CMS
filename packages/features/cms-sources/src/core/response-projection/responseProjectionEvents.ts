@@ -2,13 +2,10 @@ import type { DataShape } from "../../interfaces/DataShape";
 import { safeUpstreamFailureResponse } from "cms-sources/core/upstream/upstreamFailure";
 import type { JsonValueType } from "./projectDataShape";
 
-export const RESPONSE_PROJECTION_MODES = ["compatibility", "strict"] as const;
-export type ResponseProjectionMode = (typeof RESPONSE_PROJECTION_MODES)[number];
-
-export type LegacyResponseContractReason = "missing_output" | "empty_output" | "unmatched_status";
-
 export type ResponseProjectionFailureReason =
-    | LegacyResponseContractReason
+    | "missing_output"
+    | "empty_output"
+    | "unmatched_status"
     | "unsupported_media_type"
     | "missing_body"
     | "body_too_large"
@@ -17,29 +14,20 @@ export type ResponseProjectionFailureReason =
     | "body_read_error"
     | "type_mismatch";
 
-export type ResponseProjectionEvent =
-    | {
-          kind: "legacy_response_contract";
-          endpointUrn: string;
-          upstreamStatus: number;
-          reason: LegacyResponseContractReason;
-          correlationId: string;
-      }
-    | {
-          kind: "response_projection_failure";
-          endpointUrn: string;
-          upstreamStatus: number;
-          reason: ResponseProjectionFailureReason;
-          correlationId: string;
-          path?: string;
-          expectedType?: DataShape["type"];
-          actualType?: JsonValueType;
-      };
+export type ResponseProjectionEvent = {
+    kind: "response_projection_failure";
+    endpointUrn: string;
+    upstreamStatus: number;
+    reason: ResponseProjectionFailureReason;
+    correlationId: string;
+    path?: string;
+    expectedType?: DataShape["type"];
+    actualType?: JsonValueType;
+};
 
 export type ResponseProjectionReporter = (event: ResponseProjectionEvent) => void | Promise<void>;
 
 export type ResponseProjectionOptions = {
-    responseProjectionMode?: ResponseProjectionMode;
     reportResponseProjectionEvent?: ResponseProjectionReporter;
     correlationId?: string;
     allowPublicCacheWithUpstreamCookie?: boolean;
@@ -76,12 +64,10 @@ export function reportResponseProjectionEvent(
     event: ResponseProjectionEvent,
 ): void {
     if (!options.reportResponseProjectionEvent) {
-        if (event.kind === "response_projection_failure") {
-            try {
-                console.error(JSON.stringify({ scope: "cms-sources", ...event }));
-            } catch {
-                // The generic response remains authoritative if diagnostics fail.
-            }
+        try {
+            console.error(JSON.stringify({ scope: "cms-sources", ...event }));
+        } catch {
+            // The generic response remains authoritative if diagnostics fail.
         }
         return;
     }

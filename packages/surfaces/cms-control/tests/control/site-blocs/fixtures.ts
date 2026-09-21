@@ -6,18 +6,6 @@ import {
 } from "@bernouy/cms-content";
 import type { ControlCms } from "cms-control/ControlCms";
 
-export class SiteBlocTestRepository extends InMemoryCmsRepository {
-    seedLegacyClaimable(tag: string): void {
-        const artifact = blocArtifact(tag);
-        this.blocs.set(tag, {
-            tag,
-            ownership: { kind: "code-managed" },
-            legacyOwnershipClaim: "unclaimed",
-            artifact,
-        } as never);
-    }
-}
-
 export class RecordingCache {
     readonly deleted: string[] = [];
     readonly keys = new Set<string>();
@@ -41,7 +29,7 @@ export class RecordingCache {
 }
 
 export function siteBlocHarness() {
-    const repository = new SiteBlocTestRepository();
+    const repository = new InMemoryCmsRepository();
     const cache = new RecordingCache();
     const cms = { repository, cache } as unknown as ControlCms;
     return { cms, repository, cache };

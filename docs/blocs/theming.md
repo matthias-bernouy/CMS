@@ -28,8 +28,7 @@ value sets, and one active theme. The default catalogue includes:
 
 Generic `--ctx-*` aliases are not a public cross-collection API. Consume the
 documented Ulvia vocabulary or a documented hook from the collection that owns
-the component. The complete ownership and naming rules live in
-[Integration theme contracts](../integrations/themes.md).
+the component.
 
 Control edits structured theme values. Delivery serves the document foundation
 and the active structured values through `/.cms/style`. The foundation does not

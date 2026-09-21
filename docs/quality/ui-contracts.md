@@ -144,6 +144,4 @@ This first version is intentionally bounded:
   interpolation, boolean attributes, official component usage, or CSS styles.
   It does not ban `innerHTML`, `createElement`, native controls, or local events.
 
-See the [initial reviewed inventory](./ui-contracts-audit-2026-09-06.md) for exact
-locations and the reasoning behind each migration candidate or exception
-candidate. Re-run the scanner for current counts.
+Re-run the scanner for the current inventory and counts.

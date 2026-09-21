@@ -1,4 +1,4 @@
-import { setState } from "@bernouy/components/binding";
+import { CMS_SOURCE_SUCCESS_EVENT, setState } from "@bernouy/components/binding";
 
 export class CmsDashboardMemberFilter extends HTMLElement {
     private observer: MutationObserver | null = null;
@@ -6,7 +6,7 @@ export class CmsDashboardMemberFilter extends HTMLElement {
     connectedCallback(): void {
         this.addEventListener("input", this.onInput);
         this.addEventListener("page-change", this.onPageChange);
-        this.addEventListener("form:success", this.onAssignmentSuccess);
+        this.addEventListener(CMS_SOURCE_SUCCESS_EVENT, this.onAssignmentSuccess);
         this.observer = new MutationObserver(() => this.apply());
         this.observer.observe(this, { childList: true, subtree: true });
         queueMicrotask(() => this.apply());
@@ -15,7 +15,7 @@ export class CmsDashboardMemberFilter extends HTMLElement {
     disconnectedCallback(): void {
         this.removeEventListener("input", this.onInput);
         this.removeEventListener("page-change", this.onPageChange);
-        this.removeEventListener("form:success", this.onAssignmentSuccess);
+        this.removeEventListener(CMS_SOURCE_SUCCESS_EVENT, this.onAssignmentSuccess);
         this.observer?.disconnect();
         this.observer = null;
     }

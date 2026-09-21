@@ -14,15 +14,7 @@ export function isBlocOwnership(value: unknown): value is BlocOwnership {
     if (ownership.kind === "site-builder") {
         return typeof ownership.definitionId === "string" && !!ownership.definitionId.trim();
     }
-    return (
-        ownership.kind === "integration" &&
-        typeof ownership.integrationKind === "string" &&
-        !!ownership.integrationKind.trim() &&
-        typeof ownership.installationId === "string" &&
-        !!ownership.installationId.trim() &&
-        typeof ownership.definitionVersion === "string" &&
-        !!ownership.definitionVersion.trim()
-    );
+    return false;
 }
 
 export function normalizeBlocWrite(bloc: TBlocWrite): TBloc {
@@ -39,9 +31,6 @@ export function sameBlocOwner(left: BlocOwnership, right: BlocOwnership): boolea
     if (left.kind === "site-builder" && right.kind === "site-builder") {
         return left.definitionId === right.definitionId;
     }
-    if (left.kind === "integration" && right.kind === "integration") {
-        return left.integrationKind === right.integrationKind && left.installationId === right.installationId;
-    }
     return left.kind === "code-managed" && right.kind === "code-managed";
 }
 
@@ -52,15 +41,5 @@ export function assertBlocOwner(tag: string, current: BlocOwnership, incoming: B
 }
 
 export function assertBlocRecordOwner(record: BlocRecord, incoming: BlocOwnership): void {
-    if (sameBlocOwner(record.ownership, incoming)) {
-        return;
-    }
-    if (
-        record.legacyOwnershipClaim === "unclaimed" &&
-        record.ownership.kind === "code-managed" &&
-        incoming.kind === "integration"
-    ) {
-        return;
-    }
-    throw new BlocOwnershipConflictError(record.tag);
+    assertBlocOwner(record.tag, record.ownership, incoming);
 }

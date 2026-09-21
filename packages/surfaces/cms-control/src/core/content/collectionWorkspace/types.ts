@@ -1,8 +1,4 @@
-import type {
-    AvailableLibraryCollection,
-    LibraryBloc,
-    LibraryCollection,
-} from "cms-control/core/content/blocLibrary/types";
+import type { LibraryBloc, LibraryCollection } from "cms-control/core/content/blocLibrary/types";
 import type { BlocDefaultAttribute } from "cms-control/core/content/bloc/defaultAttributes";
 import type { CollectionWorkspaceSection } from "./routes";
 
@@ -118,12 +114,6 @@ export type CollectionWorkspaceResponse = {
     isTexts: boolean;
     section: CollectionWorkspaceSection;
     collections: CollectionWorkspaceCollection[];
-    catalogCollections: Array<
-        Omit<AvailableLibraryCollection, "href"> & {
-            imported: boolean;
-            href?: string;
-        }
-    >;
     collection?: CollectionWorkspaceCollection;
     theme?: CollectionThemeSummaryView;
     themeDetail?: CollectionThemeDetailView;
@@ -132,6 +122,5 @@ export type CollectionWorkspaceResponse = {
     emptyTitle: string;
     emptyDescription: string;
     hasSiteCollections: boolean;
-    hasManagedCollections: boolean;
     hasCodeCollections: boolean;
 };

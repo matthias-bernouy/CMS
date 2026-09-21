@@ -44,7 +44,6 @@ describe("InMemoryAnalyticsStore", () => {
         await store.finalizeVisitors(new Date("2026-06-03T00:00:00.000Z"));
         const summary = await store.summary(FROM, TO);
         expect(summary.estimatedVisitors).toBe(3);
-        expect(summary.uniqueVisitors).toBe(3);
         await store.finalizeVisitors(new Date("2026-06-04T00:00:00.000Z"));
         expect((await store.summary(FROM, TO)).estimatedVisitors).toBe(3);
     });

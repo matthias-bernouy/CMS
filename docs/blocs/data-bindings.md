@@ -1,6 +1,6 @@
 # Bind Data And Sources
 
-Use declarative bindings for CMS and integration data. They let Control keep
+Use declarative bindings for CMS and provider data. They let Control keep
 authoring markup inert, let Delivery preflight Source access, and give both
 surfaces the same loading, error, repetition, and interpolation behavior.
 
@@ -261,18 +261,11 @@ target any compatible declared endpoint.
 
 Use an `endpoint-picker` setting when a site author may choose the endpoint.
 The setting writes the Source URL attribute and can coordinate a method
-attribute and default body. Keep fixed integration endpoints in `default.html`
+attribute and default body. Keep fixed Source endpoints in `default.html`
 when they are part of the Bloc contract, rather than presenting a meaningless
 choice. The picker type also exposes `OPTIONS`, but the binding submission
 runtime does not; when the picker writes `cms-source-method`, restrict its
 `methods` to the six runtime methods listed above.
-
-For Mossa, every fixed Source access in a Bloc view or binding must correlate
-with that resource's `endpoints` declaration: Source kind and version, endpoint
-URN and contract range, plus the input/output/error bindings it consumes. The
-audit checks this correlation. An installed Source is not blanket permission to
-invent another endpoint, and endpoint access control still applies to each
-runtime request.
 
 `dataScopes()` advertises expression names and fields to editor tools; it does
 not activate or fetch a Source. The saved `cms-source` markup remains the
@@ -285,13 +278,6 @@ management, measurement, or formatting. It may call a CMS Source imperatively
 for a multi-step workflow that bindings cannot express. That access must still
 use a declared endpoint, preserve Source authorization, expose deterministic
 loading/error behavior, and never embed a secret or call a provider directly.
-
-The current Mossa audit rejects a view or binding access that cannot be
-correlated to its resource declaration. It also rejects runtime/editor knobs
-that alter a Source prefix, endpoint name, or function ID. The sole installation
-alias currently retained is Mondial Relay's `source-id`; it is a validated,
-encoded single path segment and does not choose the endpoint itself. This is a
-Mossa release constraint, not yet a typed client guarantee for every collection.
 
 Bound image URLs use the same interpolation layer and have additional
 network-inert activation rules. Follow

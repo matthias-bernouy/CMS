@@ -14,7 +14,7 @@ export function libraryBlocs(items: Awaited<ReturnType<typeof siteBlocCatalogue>
         editPath: item.editPath ? `${basePath}${item.editPath}` : null,
         href: item.editPath
             ? `${basePath}${item.editPath}`
-            : `${basePath}/admin/collections/${encodeURIComponent(item.origin.kind === "integration" ? `managed:${item.origin.installationId}` : "code")}/blocs?${new URLSearchParams({ bloc: item.tag })}`,
+            : `${basePath}/admin/collections/code/blocs?${new URLSearchParams({ bloc: item.tag })}`,
     }));
 }
 

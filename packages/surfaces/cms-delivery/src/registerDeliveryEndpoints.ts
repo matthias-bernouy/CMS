@@ -45,11 +45,7 @@ import {
     analyticsSelfAssessment,
 } from "cms-delivery/core/analytics/privacyAnalyticsEndpoints";
 import { FAVICON_ROUTE } from "cms-delivery/core/assets/defaultFavicon";
-import {
-    matchRootSitemapChunkPath,
-    SITEMAP_CHUNKS_ROUTE,
-    SITEMAP_ROOT_CHUNK_ROUTE,
-} from "cms-delivery/core/seo/sitemap/manifest";
+import { matchRootSitemapChunkPath } from "cms-delivery/core/seo/sitemap/manifest";
 
 /**
  * Wire every Delivery endpoint onto `delivery.runner`. Called from the
@@ -108,10 +104,6 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
 
     runner.addEndpoint("GET", "/robots.txt", (req) => RobotsServer(req, delivery));
     runner.addEndpoint("GET", "/sitemap.xml", (req) => SitemapServer(req, delivery));
-    runner.addEndpoint("GET", SITEMAP_ROOT_CHUNK_ROUTE, (req) => SitemapChunkServer(req, delivery));
-    runner.group(SITEMAP_CHUNKS_ROUTE, (sitemapRunner) => {
-        sitemapRunner.setDefaultEndpoint("GET", (req) => SitemapChunkServer(req, delivery));
-    });
     runner.addEndpoint("GET", FAVICON_ROUTE, (req) => FaviconServer(req, delivery));
     runner.addEndpoint("HEAD", FAVICON_ROUTE, (req) => FaviconServer(req, delivery));
 

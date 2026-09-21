@@ -1,4 +1,5 @@
 import { readSourceData, reloadSource, showToast } from "@bernouy/components";
+import { CMS_SOURCE_SUCCESS_EVENT } from "@bernouy/components/binding";
 import type { DashboardDetailOpenRef } from "@bernouy/cms-dashboards";
 import type { RenderContext } from "../../../../../domain";
 import { detailElement } from "../../../../mounting/detail";
@@ -93,7 +94,7 @@ export function openDetailView(
             WIDGET_ROW_SELECT_EVENT,
             "cms-dashboard-widget:media-action",
             "cms-dashboard-widget:action",
-            "form:success",
+            CMS_SOURCE_SUCCESS_EVENT,
         ]) {
             modal.addEventListener(type, (event) => event.stopPropagation());
         }

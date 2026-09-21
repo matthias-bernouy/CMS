@@ -15,7 +15,7 @@ test("bound source navigation retains focused links through refresh, failure and
         const nav = page.locator("cms-dashboards-nav");
         const store = nav.locator('[data-source="store"]:not([data-nested])');
         const delivery = nav.locator('[data-source="delivery"]:not([data-nested])');
-        await nav.locator('w13c-lateral-menu-item[href*="integration=shipping"]').waitFor();
+        await store.waitFor();
         expect(await nav.locator("cms-dashboard-input").count()).toBe(0);
         expect(await store.evaluate((node) => node.getRootNode() === document)).toBe(true);
         const original = await delivery.elementHandle();
@@ -36,8 +36,6 @@ test("bound source navigation retains focused links through refresh, failure and
             expect(await delivery.evaluate((node) => node.matches(":focus"))).toBe(true);
         }
         expect(await original!.evaluate((node) => node.isConnected)).toBe(true);
-        await delivery.press("ArrowDown");
-        expect(await nav.locator("[data-add-source]").evaluate((node) => node.matches(":focus"))).toBe(true);
         await delivery.click();
         expect(new URL(page.url()).searchParams.get("source")).toBe("delivery");
         expect(await original!.evaluate((node) => node.isConnected)).toBe(true);

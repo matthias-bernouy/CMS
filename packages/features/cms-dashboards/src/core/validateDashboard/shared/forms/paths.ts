@@ -18,9 +18,6 @@ export function validateFormNames(
         name: field?.name,
         path: `${path}.hiddenFields.${index}.name`,
     }));
-    if (operation.management?.operation === "action") {
-        names.push({ name: "actionId", path: `${path}.management.actionId` });
-    }
     const prefix = formNameSegments(operation.valuesPath ?? "values") ?? [];
     for (const field of fields) {
         if (field.type === "media" && field.staging) {

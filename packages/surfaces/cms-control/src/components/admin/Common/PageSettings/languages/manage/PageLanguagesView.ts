@@ -1,4 +1,4 @@
-import { isReservedPublicPagePath, isValidPathFormat, publicPagePath } from "@bernouy/cms-content/page-path";
+import { isValidPathFormat } from "@bernouy/cms-content/page-path";
 import type { P9rInput, Textarea } from "@bernouy/components";
 import { languageRows, type PathsDetail, type SeoDetail } from "./languageRows";
 
@@ -51,7 +51,7 @@ export function createLanguagesForm(paths: PathsDetail, seo: SeoDetail, expanded
         const target = event.target;
         if (target instanceof HTMLElement && target.matches(".page-language-row p9r-input")) {
             const input = target as P9rInput;
-            setPathError(input, pathInputError(input, paths));
+            setPathError(input, pathInputError(input));
         }
         message.textContent = "";
         status.textContent = "";
@@ -72,21 +72,14 @@ export function setPathError(input: P9rInput, text: string): void {
     }
 }
 
-export function pathInputError(input: P9rInput, paths: PathsDetail): string {
+export function pathInputError(input: P9rInput): string {
     if (!input.value) {
         return "";
     }
     if (!isValidPathFormat(input.value)) {
         return "Use a path like /about-us.";
     }
-    const defaultLanguage = paths.languages.find((language) => language.default)?.code ?? "";
-    const publicPath = publicPagePath(input.name, input.value, defaultLanguage);
-    return isReservedPublicPagePath(
-        publicPath,
-        paths.languages.map((language) => language.code),
-    )
-        ? "This URL is reserved by the CMS."
-        : "";
+    return "";
 }
 
 export function readTranslations(form: HTMLFormElement): Record<string, Translation> {

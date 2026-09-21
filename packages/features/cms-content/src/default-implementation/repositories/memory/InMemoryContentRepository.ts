@@ -11,8 +11,8 @@ import {
     DuplicatePagePathError,
     PagePathsStaleError,
 } from "cms-content/core/validation/errors";
-import { migratedPagePaths, planPagePaths } from "cms-content/core/lifecycle/pagePaths";
-import { assertPagePathNotReserved, publicPagePath } from "cms-content/core/utils/localizedPagePath";
+import { pagePathsForSystem, planPagePaths } from "cms-content/core/lifecycle/pagePaths";
+import { publicPagePath } from "cms-content/core/utils/localizedPagePath";
 
 export class InMemoryContentRepository extends InMemoryBlocRepository {
     protected readonly pages = new Map<string, TPage>();
@@ -51,7 +51,6 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         this.assertPageRoutesReady();
         const language = this.system.site.language;
         const publicPath = publicPagePath(language, path, language);
-        assertPagePathNotReserved(publicPath, [language, ...(this.system.site.additionalLanguages ?? [])]);
         if (this.pageRoutes.has(publicPath) || this.pages.has(publicPath)) {
             throw new DuplicatePagePathError(publicPath);
         }
@@ -110,29 +109,22 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         paths: Record<string, string>,
         system = this.system,
         expectedPaths?: Record<string, string>,
-        allowLegacyDefaultRoute = false,
+        duringRouteReconfiguration = false,
     ): Promise<TPage> {
-        if (!allowLegacyDefaultRoute) {
+        if (!duringRouteReconfiguration) {
             this.assertPageRoutesReady();
         }
         const entry = this.findPageEntryById(id);
         if (!entry) {
             throw new Error("Unknown page id.");
         }
-        if (expectedPaths && !samePagePaths(entry[1].paths ?? migratedPagePaths(entry[1], system), expectedPaths)) {
+        if (expectedPaths && !samePagePaths(entry[1].paths ?? pagePathsForSystem(entry[1], system), expectedPaths)) {
             throw new PagePathsStaleError();
         }
         const plan = planPagePaths(paths, system);
-        const languages = [system.site.language, ...(system.site.additionalLanguages ?? [])];
-        for (const route of plan.current) {
-            const existing = this.pageRoutes.get(route.path);
-            assertPagePathNotReserved(route.path, languages);
-        }
         for (const { path } of plan.current) {
             const route = this.pageRoutes.get(path);
-            const legacyDefault =
-                allowLegacyDefaultRoute && path === plan.primaryPath && route?.language === system.site.language;
-            if (route && !canUsePageRoute(route, id, legacyDefault)) {
+            if (route && !canUsePageRoute(route, id)) {
                 throw new DuplicatePagePathError(path);
             }
         }
@@ -183,10 +175,9 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         this.pageKeysById.delete(id);
     }
 
-    protected async migrateLegacyPagePaths(
+    protected async reconfigurePageRoutes(
         system: TSystem,
         previousDefaultLanguage?: string,
-        validateReservedPaths = false,
         dryRun = false,
     ): Promise<void> {
         if (!system.site.language) {
@@ -194,25 +185,17 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         }
         const plans = [...this.pages.values()].map((page) => ({
             page,
-            plan: planPagePaths(migratedPagePaths(page, system, previousDefaultLanguage), system),
+            plan: planPagePaths(pagePathsForSystem(page, system, previousDefaultLanguage), system),
         }));
         const claims = new Map<string, string>();
         for (const { page, plan } of plans) {
             for (const { path } of plan.current) {
-                if (validateReservedPaths) {
-                    assertPagePathNotReserved(path, [system.site.language, ...(system.site.additionalLanguages ?? [])]);
-                }
                 const route = this.pageRoutes.get(path);
                 const occupant = this.pages.get(path);
                 const claimant = claims.get(path);
                 if (
                     (claimant && claimant !== page.id) ||
-                    (route &&
-                        !canUsePageRoute(
-                            route,
-                            page.id,
-                            path === plan.primaryPath && route.language === system.site.language,
-                        )) ||
+                    (route && !canUsePageRoute(route, page.id)) ||
                     (occupant && occupant.id !== page.id)
                 ) {
                     throw new DuplicatePagePathError(path);
@@ -265,11 +248,10 @@ function samePagePaths(left: Record<string, string>, right: Record<string, strin
     );
 }
 
-function canUsePageRoute(route: PageRoute, pageId: string, allowLegacyDefaultRoute: boolean): boolean {
+function canUsePageRoute(route: PageRoute, pageId: string): boolean {
     return (
         route.pageId === pageId &&
-        ((route.state === "current" && (!route.ownerPageId || route.ownerPageId === pageId)) ||
-            (route.state === "redirect" &&
-                (route.ownerPageId === pageId || (allowLegacyDefaultRoute && !route.ownerPageId))))
+        ((route.state === "current" && route.ownerPageId === pageId) ||
+            (route.state === "redirect" && route.ownerPageId === pageId))
     );
 }

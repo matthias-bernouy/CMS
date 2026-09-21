@@ -12,12 +12,7 @@ async function catalogueFixture() {
         name: "Catalogue grid",
         group: "Commerce",
         viewJS: `const template = "<basic-card></basic-card>";`,
-        ownership: {
-            kind: "integration",
-            integrationKind: "commerce",
-            installationId: "installation-1",
-            definitionVersion: "1.2.0",
-        },
+        ownership: { kind: "code-managed" },
     });
     await seedPublishedSiteBloc(
         repository,
@@ -68,7 +63,7 @@ describe("site bloc catalogue", () => {
         const { cms } = await catalogueFixture();
         const items = await siteBlocCatalogue(cms);
         const basic = items.find((item) => item.tag === "basic-card")!;
-        const integration = items.find((item) => item.tag === "catalogue-grid")!;
+        const codeManaged = items.find((item) => item.tag === "catalogue-grid")!;
         const site = items.find((item) => item.tag === "site-showcase")!;
 
         expect(basic.origin).toEqual({
@@ -80,15 +75,11 @@ describe("site bloc catalogue", () => {
         expect(basic.usages.blocs).toEqual([{ tag: "catalogue-grid", label: "Catalogue grid" }]);
         expect(basic.usageCount).toBe(2);
 
-        expect(integration.origin).toMatchObject({
-            kind: "integration",
-            label: "Integration",
-            detail: "commerce · 1.2.0",
-        });
-        expect(integration.directDependencies).toEqual(["basic-card"]);
-        expect(integration.transitiveDependencies).toEqual(["basic-card"]);
-        expect(integration.publishedTransitiveDependencies).toEqual(["basic-card"]);
-        expect(integration.usages.blocs).toEqual([{ tag: "site-showcase", label: "Editorial showcase" }]);
+        expect(codeManaged.origin).toMatchObject({ kind: "code-managed", label: "Code managed" });
+        expect(codeManaged.directDependencies).toEqual(["basic-card"]);
+        expect(codeManaged.transitiveDependencies).toEqual(["basic-card"]);
+        expect(codeManaged.publishedTransitiveDependencies).toEqual(["basic-card"]);
+        expect(codeManaged.usages.blocs).toEqual([{ tag: "site-showcase", label: "Editorial showcase" }]);
 
         expect(site.origin).toMatchObject({ kind: "site-builder", label: "Site builder" });
         expect(site.directDependencies).toEqual(["catalogue-grid"]);
@@ -100,7 +91,7 @@ describe("site bloc catalogue", () => {
     test("combines origin, group and search filters and exposes the groups view", async () => {
         const { cms } = await catalogueFixture();
         expect(
-            (await siteBlocCatalogue(cms, { origin: "integration", group: "Commerce", search: "grid" })).map(
+            (await siteBlocCatalogue(cms, { origin: "code-managed", group: "Commerce", search: "grid" })).map(
                 (item) => item.tag,
             ),
         ).toEqual(["catalogue-grid"]);
@@ -170,23 +161,5 @@ describe("site bloc catalogue", () => {
         expect(addingCandidate.transitiveDependencies).toEqual([ownerTag]);
         expect(addingCandidate.publishedTransitiveDependencies).toEqual([]);
         expect(eligibleStructureTags(addingItems, ownerTag)).toContain("site-draft-dependent");
-    });
-
-    test("does not expose the legacy claim marker as a public catalogue provenance", async () => {
-        const { cms, repository } = siteBlocHarness();
-        repository.seedLegacyClaimable("legacy-card");
-
-        const [item] = await siteBlocCatalogue(cms);
-
-        expect(item).toBeDefined();
-        if (!item) {
-            throw new Error("Expected the seeded legacy catalogue item");
-        }
-        expect(item.origin).toEqual({
-            kind: "code-managed",
-            label: "Code managed",
-            detail: "Managed through code or the CLI",
-        });
-        expect(item).not.toHaveProperty("legacyOwnershipClaim");
     });
 });

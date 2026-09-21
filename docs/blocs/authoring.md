@@ -1,14 +1,13 @@
 # Create A Bloc
 
-This guide uses a small `example-card` custom element owned by a collection
-integration.
+This guide uses a small `example-card` custom element owned by a collection.
 
 ## Folder And Manifest
 
 Put every Bloc below a group directory:
 
 ```text
-integrations/collections/example/
+collections/example/
 └── blocs/
     └── content/
         └── example-card/
@@ -37,7 +36,7 @@ the source hierarchy descriptive and declare its category metadata explicitly.
 ```
 
 `default-tag` is the persisted identity and must be a valid custom-element
-name. An integration cannot publish or replace a native HTML root. A collection
+name. A collection cannot publish or replace a native HTML root. A collection
 with kind `<kind>` owns both `<kind>/blocs/*` resource IDs and `<kind>-*` custom
 elements; definitions outside either namespace are rejected. For example,
 Mossa uses `mossa/blocs/*` and `mossa-*`. `bloc` defaults to `./Bloc.ts`;
@@ -94,7 +93,7 @@ template. It deliberately provides no reactive framework. Use standard custom
 element callbacks and DOM APIs when the Bloc needs behavior.
 
 Export one runtime class and do not call `customElements.define()`. The
-integration compiler selects the exported class and owns registration with the
+build wrapper selects the exported class and owns registration with the
 manifest tag. Likewise, `BlocEditor.ts` exports its editor class without
 registering it.
 
@@ -135,7 +134,7 @@ database adapters, secrets, or server-only feature modules.
 
 Native HTML is a platform capability, not a collection resource. The CMS editor
 owns its constructors, editor definitions, catalogue placement rules, media
-pickers, and attribute policy. The compiler rejects every integration artifact
+pickers, and attribute policy. The compiler rejects every collection artifact
 whose root tag is native HTML, including a legacy artifact marked `native`.
 Collections may still use semantic native elements inside a custom element's
 template.
@@ -212,22 +211,15 @@ See [Expose Editing Capabilities](./editor.md) for the editor API.
 ## Optional presentation images
 
 A bloc `manifest.json` may declare `"thumbnail": { "path": "assets/card.webp", "alt": "Card overview" }`.
-Collection definitions and their catalogue index may similarly declare optional
-`cover: { path, alt? }`. References use PNG, JPEG, WebP or SVG files under the
-integration version's `assets/` directory; they are package paths, not URLs.
-For standalone bloc imports, include the declared file at the same path in the
-base64 source bundle. The compiler retains thumbnail metadata, and import,
-repository list and CLI source export preserve it and its bundled bytes.
+Collection definitions may similarly declare optional cover metadata. References
+use PNG, JPEG, WebP or SVG files within the collection source. The provider
+protocol will define how released collection assets are addressed.
 
-Managed artwork is served through `/api/integrations/asset` using the owning
-integration kind, exact installed definition version and declared path. A
-standalone persisted bloc uses `/api/bloc/thumbnail?id=<tag>`. Control authenticates
-these requests, validates image paths and MIME signatures, and sends `nosniff`
-and a sandbox CSP. Standalone responses are private and are not cached;
-explicit version assets may be cached privately.
+A standalone persisted Bloc uses `/api/bloc/thumbnail?id=<tag>`. Control
+authenticates the request, validates image paths and MIME signatures, and sends
+`nosniff` with a sandbox CSP. Responses are private and are not cached.
 
 Images are optional. Missing files return 404 and do not prevent loading a
 collection; cards should fall back to the official icon or a plain card.
-Unsupported paths and mismatched image bytes are rejected. Malformed package
-images encountered during hydration fail validation rather than being served.
+Unsupported paths and mismatched image bytes are rejected.
 These references do not generate screenshots or synthetic example content.

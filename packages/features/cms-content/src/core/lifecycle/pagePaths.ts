@@ -52,7 +52,7 @@ export function planPagePaths(paths: Record<string, string>, system: TSystem): P
 }
 
 /** Preserve configured variants when the default language or language list changes. */
-export function migratedPagePaths(
+export function pagePathsForSystem(
     page: TPage,
     system: TSystem,
     previousDefaultLanguage?: string,

@@ -51,7 +51,7 @@ authoritative CMS file
   -> the browser selects one ready WebP
 ```
 
-For a CMS Source image declared by an integration effect:
+For a CMS Source image declared by a mutation effect:
 
 ```text
 successful upload or replacement declares the public image identity

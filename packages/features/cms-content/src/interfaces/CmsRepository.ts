@@ -1,7 +1,6 @@
 import type { ContentReader } from "cms-content/interfaces/ContentReader";
 import type { BlocListOptions } from "cms-content/interfaces/ContentReader";
 import type {
-    BlocOwnership,
     BlocRecord,
     SiteBlocCollection,
     SiteBlocDefinition,
@@ -73,8 +72,6 @@ export interface CmsRepository extends ContentReader {
     // BLOC
     createBloc(bloc: TBlocWrite): Promise<TBloc>;
     replaceBloc(bloc: TBlocWrite): Promise<TBloc>;
-    setBlocCatalogue(tag: string, ownership: BlocOwnership, catalogue: "active" | "inactive"): Promise<void>;
-    deleteBloc(tag: string, ownership: BlocOwnership): Promise<boolean>;
 
     getBlocRecord(tag: string): Promise<BlocRecord | null>;
     getBlocRecords(): Promise<BlocRecord[]>;

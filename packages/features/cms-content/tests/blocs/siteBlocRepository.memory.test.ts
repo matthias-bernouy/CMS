@@ -12,49 +12,18 @@ import {
 import { siteBlocArtifact, siteBlocDefinition, siteBlocSnapshot } from "./siteBlocFixture";
 
 describe("InMemoryCmsRepository site blocs", () => {
-    test("normalizes legacy writes and enforces one owner per tag", async () => {
+    test("defaults code writes and enforces one owner per tag", async () => {
         const repository = new InMemoryCmsRepository();
-        const legacy = { ...siteBlocArtifact(), id: "basic-card", ownership: undefined };
+        const codeWrite = { ...siteBlocArtifact(), id: "basic-card", ownership: undefined };
 
-        expect((await repository.createBloc(legacy)).ownership).toEqual({ kind: "code-managed" });
+        expect((await repository.createBloc(codeWrite)).ownership).toEqual({ kind: "code-managed" });
         await expect(
             repository.replaceBloc({
-                ...legacy,
-                ownership: {
-                    kind: "integration",
-                    integrationKind: "catalogue",
-                    installationId: "installation-1",
-                    definitionVersion: "1.0.0",
-                },
+                ...codeWrite,
+                ownership: { kind: "site-builder", definitionId: "definition-basic-card" },
             }),
         ).rejects.toBeInstanceOf(BlocOwnershipConflictError);
         expect((await repository.getBlocRecord("basic-card"))?.ownership).toEqual({ kind: "code-managed" });
-    });
-
-    test("allows integration upgrades only for the same installation", async () => {
-        const repository = new InMemoryCmsRepository();
-        const ownership = {
-            kind: "integration" as const,
-            integrationKind: "catalogue",
-            installationId: "installation-1",
-            definitionVersion: "1.0.0",
-        };
-        await repository.createBloc({ ...siteBlocArtifact(), id: "catalogue-grid", ownership });
-
-        await expect(
-            repository.replaceBloc({
-                ...siteBlocArtifact(),
-                id: "catalogue-grid",
-                ownership: { ...ownership, definitionVersion: "1.1.0" },
-            }),
-        ).resolves.toMatchObject({ ownership: { definitionVersion: "1.1.0" } });
-        await expect(
-            repository.replaceBloc({
-                ...siteBlocArtifact(),
-                id: "catalogue-grid",
-                ownership: { ...ownership, installationId: "installation-2" },
-            }),
-        ).rejects.toBeInstanceOf(BlocOwnershipConflictError);
     });
 
     test("keeps drafts out of runtime reads and publishes with revision CAS", async () => {

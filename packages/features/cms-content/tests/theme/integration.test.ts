@@ -58,14 +58,12 @@ describe("integration theme contributions", () => {
         const commerceAccent = integrationThemeTokenId("commerce", "accent");
         persisted.themes[0]!.values.light[brandAccent] = "#123456";
         persisted.themes[0]!.values.light[commerceAccent] = "#abcdef";
-        persisted.themes[0]!.values.light["integration-orphan-accent"] = "#000000";
 
         const composed = composeThemeSettings(persisted, [brandTheme()]);
 
         expect(composed.sources.some((source) => source.id === "integration-commerce")).toBeFalse();
         expect(composed.themes[0]!.values.light[brandAccent]).toBe("#123456");
         expect(composed.themes[0]!.values.light[commerceAccent]).toBeUndefined();
-        expect(composed.themes[0]!.values.light["integration-orphan-accent"]).toBeUndefined();
         expect(persisted.sources.some((source) => source.id === "integration-commerce")).toBeTrue();
         expect(persisted.themes[0]!.values.light[commerceAccent]).toBe("#abcdef");
     });
@@ -79,36 +77,6 @@ describe("integration theme contributions", () => {
         expect(reconciled.sources.some((source) => source.id === "integration-commerce")).toBeTrue();
         expect(removed.sources.some((source) => source.id === "integration-brand-kit")).toBeFalse();
         expect(removed.sources.some((source) => source.id === "integration-commerce")).toBeTrue();
-    });
-
-    test("replaces a legacy reserved source even when its owner metadata is missing", () => {
-        const base = defaultThemeSettings();
-        const legacy = createIntegrationThemeSource(brandTheme());
-        delete legacy.owner;
-        base.sources.push(legacy);
-        const tokenId = integrationThemeTokenId("brand-kit", "accent");
-        base.themes[0]!.values.light[tokenId] = "#123456";
-
-        const composed = composeThemeSettings(base, [brandTheme()]);
-
-        expect(composed.sources.filter((source) => source.id === "integration-brand-kit")).toHaveLength(1);
-        expect(composed.sources.at(-1)?.owner).toEqual({ kind: "integration", integrationId: "brand-kit" });
-        expect(composed.themes[0]!.values.light[tokenId]).toBe("#123456");
-    });
-
-    test("migrates configured values from the former integration-prefixed token names", () => {
-        const base = defaultThemeSettings();
-        const legacy = createIntegrationThemeSource(brandTheme());
-        const token = legacy.categories[0]!.tokens[0]!;
-        token.id = "integration-brand-kit-accent";
-        token.variable = token.id;
-        base.sources.push(legacy);
-        base.themes[0]!.values.light[token.id] = "#123456";
-
-        const composed = composeThemeSettings(base, [brandTheme()]);
-
-        expect(composed.themes[0]!.values.light["brand-kit-accent"]).toBe("#123456");
-        expect(composed.themes[0]!.values.light["integration-brand-kit-accent"]).toBeUndefined();
     });
 
     test("rejects duplicate owners, foreign names and malformed var references", () => {

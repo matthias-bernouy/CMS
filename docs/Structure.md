@@ -37,7 +37,7 @@ Foundation packages:
 Resources:
 
 - `packages/resources/sites`: retained declarative CMS site references built
-  from pages, themes, bindings, and integration Blocs. New sites are initialized
+  from pages, themes, bindings, and Blocs. New sites are initialized
   through the CMS onboarding flow rather than copied from repository templates.
 
 Feature packages:
@@ -112,19 +112,6 @@ feature contracts and helpers, not production adapters such as Mongo or S3.
 Runtimes are the only packages expected to read `process.env`, connect to
 databases, instantiate network adapters, choose storage roots, and call
 `runner.start()`.
-
-## Integration lifecycle
-
-Integration deployment remains generic. Integration-owned registered functions
-validate, persist, and apply settings and reconcile provider resources. Core
-supplies authenticated invocation, declared secret scopes, trusted published
-page resolution, and connector synchronization. A Source artifact is optional
-for an extension with declared management capabilities.
-
-Installation status describes deployment. Integration Health reports describe
-runtime readiness, while the Core observation envelope records freshness and
-reachability separately. Health checks do not invoke settings application.
-See [Integration settings and Health](./integrations/management.md).
 
 ## Build
 

@@ -30,19 +30,14 @@ describe("site bloc validation", () => {
     });
 
     test("rejects malformed runtime ownership without throwing native type errors", () => {
-        for (const ownership of [
-            null,
-            { kind: "unknown" },
-            { kind: "site-builder", definitionId: 42 },
-            { kind: "integration", integrationKind: "catalogue", installationId: "install-1" },
-        ]) {
+        for (const ownership of [null, { kind: "unknown" }, { kind: "site-builder", definitionId: 42 }]) {
             expect(() => validateBlocWrite({ ...siteBlocArtifact(), ownership } as never)).toThrow(
                 ContentValidationError,
             );
         }
 
-        const { ownership: _ownership, ...legacyWrite } = siteBlocArtifact();
-        expect(validateBlocWrite(legacyWrite).ownership).toEqual({ kind: "code-managed" });
+        const { ownership: _ownership, ...codeWrite } = siteBlocArtifact();
+        expect(validateBlocWrite(codeWrite).ownership).toEqual({ kind: "code-managed" });
     });
 
     test("accepts only site-prefixed definitions with matching ownership", () => {

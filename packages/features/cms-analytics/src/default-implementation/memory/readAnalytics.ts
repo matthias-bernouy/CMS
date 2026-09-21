@@ -24,7 +24,6 @@ export function readMemorySummary(rows: RollupRows, from: Date, to: Date): Analy
     const health = readMemoryHealth(rows, from, to);
     return {
         views,
-        uniqueVisitors: visitorDays,
         estimatedVisitors: visitorDays,
         visitorDays,
         averageDailyVisitors: average(visitorDays, dayBucketCount(from, to)),

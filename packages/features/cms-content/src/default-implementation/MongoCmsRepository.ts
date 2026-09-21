@@ -127,7 +127,7 @@ export class MongoCmsRepository extends MongoContentRepository implements CmsRep
             }
             try {
                 try {
-                    await this.migrateLegacyPagePaths(merged, current.site.language, true, true);
+                    await this.reconfigurePageRoutes(merged, current.site.language, true);
                 } catch (error) {
                     const released = await this.system.updateOne(
                         { _id: SYSTEM_ID, "routeMigration.token": token },
@@ -138,7 +138,7 @@ export class MongoCmsRepository extends MongoContentRepository implements CmsRep
                     }
                     throw error;
                 }
-                await this.migrateLegacyPagePaths(merged, current.site.language, true);
+                await this.reconfigurePageRoutes(merged, current.site.language);
                 const committed = await this.system.replaceOne(
                     { _id: SYSTEM_ID, "routeMigration.token": token, settingsRevision: revision },
                     { ...merged, settingsRevision: revision + 1, activePageWrites: 0 },

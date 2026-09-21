@@ -16,9 +16,9 @@ test("restores provider catalogs and filters stale integration overrides from su
 
     const submittedSource = submitted.sources.find((source) => source.id === "integration-brand-kit")!;
     submittedSource.label = "Forged label";
-    setLegacyOwner(submittedSource, "site");
+    setUntrustedOwner(submittedSource, "site");
     submittedSource.categories[0]!.tokens[0]!.variable = "primary-base";
-    setLegacyOwner(submitted.sources.find((source) => source.id === "custom")!, "core");
+    setUntrustedOwner(submitted.sources.find((source) => source.id === "custom")!, "core");
 
     const result = reconcileSubmittedThemeSettings(current, submitted, [contribution]);
     const source = result.sources.find((item) => item.id === "integration-brand-kit")!;
@@ -32,7 +32,7 @@ test("restores provider catalogs and filters stale integration overrides from su
     expect(submittedSource.label).toBe("Forged label");
 });
 
-function setLegacyOwner(source: object, kind: "core" | "site"): void {
+function setUntrustedOwner(source: object, kind: "core" | "site"): void {
     (source as { owner?: { kind: string } }).owner = { kind };
 }
 

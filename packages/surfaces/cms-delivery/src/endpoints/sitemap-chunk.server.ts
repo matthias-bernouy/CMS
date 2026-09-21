@@ -2,8 +2,6 @@ import type DeliveryCms from "cms-delivery/DeliveryCms";
 import {
     matchRootSitemapChunkPath,
     readSitemapManifest,
-    SITEMAP_CHUNKS_ROUTE,
-    SITEMAP_ROOT_CHUNK_ROUTE,
     sitemapChunkKey,
 } from "cms-delivery/core/seo/sitemap/manifest";
 
@@ -16,17 +14,7 @@ export default async function SitemapChunkServer(request: Request, delivery: Del
     }
     try {
         const url = new URL(request.url);
-        let route = matchRootSitemapChunkPath(url.pathname.slice(delivery.basePath.length));
-        const rootRoute = `${delivery.basePath}${SITEMAP_ROOT_CHUNK_ROUTE}`;
-        const legacyRoute = `${delivery.basePath}${SITEMAP_CHUNKS_ROUTE}/`;
-        if (!route && url.pathname === rootRoute) {
-            const match = /^([a-zA-Z0-9_-]{1,100})-([1-9]\d*)$/u.exec(url.searchParams.get("chunk") ?? "");
-            route = match ? { snapshotId: match[1]!, index: Number(match[2]) } : null;
-        }
-        if (!route && url.pathname.startsWith(legacyRoute)) {
-            const match = /^([a-zA-Z0-9_-]{1,100})\/([1-9]\d*)\.xml\.gz$/u.exec(url.pathname.slice(legacyRoute.length));
-            route = match ? { snapshotId: match[1]!, index: Number(match[2]) } : null;
-        }
+        const route = matchRootSitemapChunkPath(url.pathname.slice(delivery.basePath.length));
         if (!route) {
             return new Response("Not Found", { status: 404 });
         }
@@ -34,7 +22,7 @@ export default async function SitemapChunkServer(request: Request, delivery: Del
         const snapshot = manifest?.snapshots.find(({ id }) => id === route.snapshotId);
         const index = route.index;
         const chunk = snapshot?.chunks[index - 1];
-        if (!chunk || chunk.index !== index || (route.language !== undefined && chunk.language !== route.language)) {
+        if (!chunk || chunk.index !== index || chunk.language !== route.language) {
             return new Response("Not Found", { status: 404 });
         }
         const etag = `"${chunk.hash}"`;

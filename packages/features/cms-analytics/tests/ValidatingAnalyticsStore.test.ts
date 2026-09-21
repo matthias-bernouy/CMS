@@ -61,7 +61,7 @@ describe("ValidatingAnalyticsStore", () => {
         await analytics.record(event({ previousPageId: "page-home", entry: false }));
         await analytics.finalizeVisitors(new Date("2026-06-11"));
         const range = [new Date("2026-06-10"), new Date("2026-06-11")] as const;
-        expect(await analytics.topPaths(...range, 5)).toHaveLength(1);
+        expect(await analytics.topPages(...range, 5)).toHaveLength(1);
         expect(await analytics.breakdown("device", ...range)).toHaveLength(1);
         expect(await analytics.flows(...range, 5)).toHaveLength(1);
         expect((await analytics.health(...range)).requests).toBe(1);

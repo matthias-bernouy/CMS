@@ -1,4 +1,5 @@
 import type { GridMedia } from "../GridMedia/GridMedia";
+import { CMS_SOURCE_SUCCESS_EVENT } from "@bernouy/components/binding";
 import { uploadFiles, createFolder } from "../GridMedia/api/write";
 import BubblesEvent from "../../../core/dom/BubblesEvent";
 import template from "./MediaAdmin.html" with { type: "text" };
@@ -74,7 +75,7 @@ export class MediaAdmin extends HTMLElement {
         if (input) {
             input.value = "";
         }
-        button?.dispatchEvent(new BubblesEvent("form:success"));
+        button?.dispatchEvent(new BubblesEvent(CMS_SOURCE_SUCCESS_EVENT));
         this._grid?.refresh();
     }
 

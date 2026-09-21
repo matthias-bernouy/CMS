@@ -2,37 +2,10 @@
     <p9r-button type="button" variant="outlined">Create private collection</p9r-button>
 </p9r-open-modal>
 
-<p9r-stack gap="xl" trim cms-condition="workspace.isLanding">
-    <section class="collection-landing-section">
-        <header>
-            <h2>Discover collections</h2>
-            <p>Explore reusable blocs and design systems for your site.</p>
-        </header>
-        <p class="collection-discovery-empty" cms-condition="workspace.catalogCollections.length == 0">
-            No collection packages are available yet. You can create a private collection.
-        </p>
-        <p9r-grid class="collection-explore-grid" gap="lg" cms-condition="workspace.catalogCollections.length">
-            <p9r-card class="collection-explore-card" cms-repeat="workspace.catalogCollections as collection" padding="lg" stretch>
-                <cms-library-artwork slot="media" label="{{ collection.label }}">
-                    <img slot="image" cms-condition="collection.coverUrl" data-cms-src="{{ collection.coverUrl }}" alt="" loading="lazy">
-                </cms-library-artwork>
-                <div slot="title" class="collection-explore-title">
-                    <span class="collection-explore-category">{{ collection.category }}</span>
-                    <h3>{{ collection.label }}</h3>
-                </div>
-                <span slot="description">{{ collection.description }}</span>
-                <span slot="meta" cms-condition="collection.resourceCount">{{ collection.resourceCount }} blocs</span>
-                <a slot="actions" class="collection-explore-open" cms-condition="collection.imported" href="{{ collection.href }}">Open collection</a>
-                <form slot="actions" cms-condition="collection.canImport" data-import-collection-form cms-source="" cms-source-method="POST" cms-source-trigger="submit" cms-source-success-redirect="">
-                    <input type="hidden" name="kind" value="{{ collection.kind }}">
-                    <p9r-button type="submit" color="primary">Import collection</p9r-button>
-                    <span role="status" cms-condition="$source.loading">Importing…</span>
-                    <p class="collection-form-error" role="alert" cms-condition="$source.error">{{ $source.message }}</p>
-                </form>
-            </p9r-card>
-        </p9r-grid>
-    </section>
-</p9r-stack>
+<cms-empty-state cms-condition="workspace.isLanding">
+    <span slot="title">Organize your blocs</span>
+    <span slot="hint">Create a private collection or open an existing collection from the navigation.</span>
+</cms-empty-state>
 
 <p9r-modal id="new-collection-modal" cms-condition="workspace.isLanding" aria-label="Create private collection">
     <span slot="title">Create private collection</span>

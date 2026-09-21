@@ -2,47 +2,6 @@ cms-collection-workspace { display: contents; }
 cms-collection-workspace [hidden] { display: none !important; }
 cms-collection-workspace .collection-overview,
 cms-collection-workspace .collection-blocs { display: contents; }
-cms-collection-workspace .collection-landing-section { display: grid; gap: 1rem; }
-cms-collection-workspace .collection-landing-section > header { display: grid; gap: .25rem; }
-cms-collection-workspace .collection-landing-section h2,
-cms-collection-workspace .collection-landing-section p { margin: 0; }
-cms-collection-workspace .collection-landing-section p { color: var(--text-muted); }
-cms-collection-workspace .collection-explore-grid { --min: 430px; }
-cms-collection-workspace .collection-explore-card::part(card) { border-radius: 12px; }
-cms-collection-workspace .collection-explore-card::part(media) { border-bottom: 0; }
-cms-collection-workspace .collection-explore-card::part(body) { gap: .75rem; padding-top: 1.5rem; }
-cms-collection-workspace .collection-explore-card::part(actions) { padding-block: 1rem; }
-cms-collection-workspace .collection-explore-title { display: grid; gap: .4rem; }
-cms-collection-workspace .collection-explore-title h3 {
-    margin: 0;
-    color: var(--text-main);
-    font-size: 1.35rem;
-    line-height: 1.25;
-}
-cms-collection-workspace .collection-explore-category {
-    color: var(--text-muted);
-    font-size: .7rem;
-    font-weight: 700;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-}
-cms-collection-workspace .collection-explore-open {
-    padding: .55rem 1rem;
-    border: 1px solid var(--border-default);
-    border-radius: .5rem;
-    color: var(--text-main);
-    font-size: .8125rem;
-    font-weight: 700;
-    text-decoration: none;
-}
-cms-collection-workspace .collection-explore-open:hover { border-color: var(--primary-base); color: var(--primary-base); }
-cms-collection-workspace .collection-discovery-empty {
-    max-width: 36rem;
-    padding: 1.25rem 1.5rem;
-    border: 1px solid var(--border-default);
-    border-radius: 10px;
-    background: var(--bg-surface);
-}
 cms-collection-workspace .collection-form-error {
     margin: .5rem 0 0;
     color: var(--state-danger, #b42318);
@@ -130,21 +89,6 @@ cms-collection-workspace cms-detail-section[slot="aside"]::part(body) { padding-
 cms-collection-workspace .collection-navigated-body[compact] cms-detail-section[slot="aside"]::part(header) {
     display: none;
 }
-cms-collection-workspace .collection-availability {
-    display: flex;
-    align-items: center;
-    gap: .65rem;
-    padding-inline-start: 1rem;
-    border-inline-start: 1px solid var(--border-default);
-}
-cms-collection-workspace .collection-availability-copy { display: grid; gap: .15rem; text-align: end; }
-cms-collection-workspace .collection-availability-copy strong { font-size: .8125rem; }
-cms-collection-workspace .collection-availability p {
-    max-width: 15rem;
-    margin: 0;
-    color: var(--text-muted);
-    font-size: .75rem;
-}
 cms-collection-workspace cms-bloc-defaults { display: grid; gap: .25rem; }
 cms-collection-workspace cms-bloc-defaults[hidden] { display: none; }
 cms-collection-workspace .bloc-defaults { display: grid; gap: .2rem; margin: 0; }
@@ -194,7 +138,6 @@ cms-collection-workspace .bloc-defaults-group-count {
     font-size: .6875rem;
     font-variant-numeric: tabular-nums;
 }
-cms-collection-workspace [data-upgrade-status].is-error { color: var(--state-danger, #b42318); }
 cms-collection-workspace code { overflow-wrap: anywhere; }
 @media (min-width: 721px) {
     cms-collection-workspace .collection-section-nav {
@@ -220,5 +163,4 @@ cms-collection-workspace code { overflow-wrap: anywhere; }
     cms-collection-workspace .collection-details div { grid-template-columns: minmax(0, 1fr); gap: .25rem; }
     cms-collection-workspace .bloc-defaults div { grid-template-columns: minmax(0, 1fr); gap: .25rem; }
     cms-collection-workspace .collection-bloc-actions { flex-wrap: wrap; justify-content: space-between; }
-    cms-collection-workspace .collection-availability { margin-inline-start: auto; }
 }

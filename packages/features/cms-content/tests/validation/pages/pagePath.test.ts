@@ -50,14 +50,8 @@ describe("page path contract", () => {
         await expect(repository.setPagePaths("page", { fr: "/about", en: "invalid" })).rejects.toBeInstanceOf(
             ContentValidationError,
         );
-        await expect(repository.setPagePaths("page", { fr: "/sitemaps", en: "/about" })).rejects.toBeInstanceOf(
-            ContentValidationError,
-        );
-        await expect(repository.setPagePaths("page", { fr: "/about", en: "/sitemaps" })).rejects.toBeInstanceOf(
-            ContentValidationError,
-        );
-        await repository.setPagePaths("page", { fr: "/about", en: "/sitemaps-old" });
-        expect(writes.at(-1)).toEqual({ fr: "/about", en: "/sitemaps-old" });
+        await repository.setPagePaths("page", { fr: "/about", en: "/contact" });
+        expect(writes.at(-1)).toEqual({ fr: "/about", en: "/contact" });
         expect(writes).toHaveLength(2);
     });
 });

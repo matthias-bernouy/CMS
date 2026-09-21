@@ -1,6 +1,6 @@
 # @bernouy/cms-dashboards
 
-Feature package for declarative dashboards installed by integrations.
+Feature package for declarative dashboards.
 
 ## Boundaries
 

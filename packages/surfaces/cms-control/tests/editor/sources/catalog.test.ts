@@ -67,7 +67,7 @@ describe("GET /api/editor/sources contracts", () => {
         expect(body.map(({ url }) => url)).toEqual([
             "/cms/.cms/sources/address/search",
             "/cms/.cms/sources/address/reverse",
-            "/.cms/repository/api/integrations/catalog",
+            "/catalog/items",
         ]);
         expect(body[2]).toMatchObject(DIRECT_CATALOG_SOURCE);
     });

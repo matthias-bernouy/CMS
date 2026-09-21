@@ -99,7 +99,7 @@ change to the ladder, format, quality, metadata handling, or animation policy
 must receive a new recipe id. When the recipe id or encoder identity changes,
 incompatible bytes are not reused.
 
-An integration can declare a versioned `effects.producesMedia` contract on an
+A Source definition can declare a versioned `effects.producesMedia` contract on an
 upload or replacement endpoint. The bounded response projection supplies the
 image identity, revision and dimensions and maps them to a public Source image
 endpoint. A successful mutation immediately updates the global media index and

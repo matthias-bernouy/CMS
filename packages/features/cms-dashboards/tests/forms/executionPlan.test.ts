@@ -114,19 +114,3 @@ test("authorizes only declared form calls, including lookup and cross-source act
     expect(denied.plan).toBeUndefined();
     expect(denied.errors).toEqual(['system endpoint "workflow/review" cannot be delegated']);
 });
-
-test("integration management views cannot be published as delegated operator capabilities", async () => {
-    const copy = structuredClone(dashboard);
-    copy.views[0]!.widgets = [
-        {
-            widget: "w-detail",
-            id: "connection",
-            source: { endpoint: "read" },
-            save: { management: { installationId: "service", operation: "action", actionId: "repair" } },
-            main: [],
-        },
-    ];
-    const result = await compileDashboardExecutionPlan(copy, new InMemorySourceRepository());
-    expect(result.plan).toBeUndefined();
-    expect(result.errors).toContain("Integration management is Control-only and cannot be delegated");
-});

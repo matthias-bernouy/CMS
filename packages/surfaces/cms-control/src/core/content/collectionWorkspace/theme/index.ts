@@ -93,11 +93,7 @@ function themeDetail(
             active: selectedThemeId === settings.activeThemeId,
             themes: settings.themes.map(({ id, name }) => ({ id, name })),
         },
-        specimen: themeSpecimen(
-            token ? tokenViews : tokenViews.filter(({ catalogEditable }) => !catalogEditable),
-            token,
-            relatedTokens,
-        ),
+        specimen: themeSpecimen(tokenViews, token, relatedTokens),
     };
 }
 

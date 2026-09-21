@@ -38,7 +38,6 @@ describe("analytics dashboards", () => {
             if (url.includes("/summary")) {
                 return report({
                     views: 120,
-                    uniqueVisitors: 70,
                     estimatedVisitors: 70,
                     visitorDays: 70,
                     averageDailyVisitors: 10,

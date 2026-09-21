@@ -1,4 +1,4 @@
-import { derivePagePath, isReservedPublicPagePath, isValidPathFormat } from "@bernouy/cms-content/page-path";
+import { derivePagePath, isValidPathFormat } from "@bernouy/cms-content/page-path";
 import type {
     CMS_SOURCE_FAILED_EVENT as CmsSourceFailedEvent,
     CMS_SOURCE_SUCCESS_EVENT as CmsSourceSuccessEvent,
@@ -9,7 +9,6 @@ import { PagePathAvailability } from "./pagePathAvailability";
 
 const PATH_FORMAT_ERROR = 'Start with "/". Use only letters, numbers, hyphens and single slashes.';
 const PATH_TAKEN_ERROR = "A page already uses this path.";
-const PATH_RESERVED_ERROR = "This URL is reserved by the CMS.";
 const SOURCE_FAILED_EVENT: typeof CmsSourceFailedEvent = "cms-source:failed";
 const SOURCE_SUCCESS_EVENT: typeof CmsSourceSuccessEvent = "cms-source:success";
 
@@ -96,7 +95,7 @@ export class PageFormController extends HTMLElement {
     };
 
     private readonly onPathChange = (): void => {
-        if (this.path && isValidPathFormat(this.path.value) && !isReservedPublicPagePath(this.path.value)) {
+        if (this.path && isValidPathFormat(this.path.value)) {
             void this.checkAvailability();
         }
     };
@@ -137,10 +136,6 @@ export class PageFormController extends HTMLElement {
             this.setPathError(PATH_FORMAT_ERROR, "format");
             return false;
         }
-        if (isReservedPublicPagePath(value)) {
-            this.setPathError(PATH_RESERVED_ERROR, "format");
-            return false;
-        }
         this.setPathError("", null);
         return true;
     }
@@ -155,7 +150,7 @@ export class PageFormController extends HTMLElement {
             this.availabilityTimer = null;
         }
         const candidate = this.path?.value ?? "";
-        if (!candidate || !isValidPathFormat(candidate) || isReservedPublicPagePath(candidate) || !this.availability) {
+        if (!candidate || !isValidPathFormat(candidate) || !this.availability) {
             return;
         }
         const result = await this.availability.check(candidate);

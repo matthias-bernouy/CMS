@@ -23,18 +23,14 @@ test("source navigation preserves links, icons and selected states on desktop an
                     await Bun.file(mode === "before" ? baseline! : bundlePath).text(),
                 );
                 for (const [state, query] of [
-                    ["dashboard", "source=store&dashboard=store-settings"],
-                    ["integration", "source=store&integration=shipping"],
-                    ["catalogue", "tab=catalogue"],
+                    ["store", "source=store&dashboard=store-settings"],
+                    ["delivery", "source=delivery&dashboard=delivery-settings"],
                 ]) {
                     const start = performance.now();
                     await page.goto(`http://cms.test/admin/sources?${query}`);
                     await page
                         .locator('cms-dashboards-nav [data-source="store"]')
                         .first()
-                        .waitFor({ state: "attached" });
-                    await page
-                        .locator('cms-dashboards-nav w13c-lateral-menu-item[href*="integration=shipping"]')
                         .waitFor({ state: "attached" });
                     if (width === 390) {
                         await page.getByRole("button", { name: "Section", exact: true }).click();
@@ -59,7 +55,7 @@ test("source navigation preserves links, icons and selected states on desktop an
                     } else if (baseline) {
                         expect(geometry).toEqual(positions.get(key)!);
                     }
-                    expect(await items.count()).toBe(state === "catalogue" ? 5 : 7);
+                    expect(await items.count()).toBe(4);
                     expect(errors).toEqual([]);
                     if (captures) {
                         await page.screenshot({ path: `${captures}/${mode}-${key}.png`, animations: "disabled" });

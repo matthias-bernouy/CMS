@@ -7,7 +7,6 @@ import type {
     SiteBlocPublicationGuard,
 } from "cms-content/interfaces/CmsRepository";
 import type {
-    BlocOwnership,
     BlocRecord,
     SiteBlocCollection,
     SiteBlocDefinition,
@@ -18,7 +17,6 @@ import type {
 import type { TPage } from "cms-content/interfaces/pages";
 import { ContentValidationError } from "cms-content/core/validation/errors";
 import { planPagePaths } from "cms-content/core/lifecycle/pagePaths";
-import { assertPagePathNotReserved } from "cms-content/core/utils/localizedPagePath";
 import { validateSiteBlocCollectionInput } from "cms-content/core/lifecycle/siteBlocCollections";
 import type { TSystem } from "cms-content/interfaces/settings";
 import {
@@ -54,9 +52,6 @@ export class ValidatingCmsRepository implements CmsRepository {
     async updateSiteBlocCollection(id: string, input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection> {
         return this.inner.updateSiteBlocCollection(id, validateSiteBlocCollectionInput(input));
     }
-    async setBlocCatalogue(tag: string, ownership: BlocOwnership, catalogue: "active" | "inactive"): Promise<void> {
-        return this.inner.setBlocCatalogue(tag, ownership, catalogue);
-    }
     // ── Validated authored-content writes ─────────────────────────────────
     async insertPage(path: string, title: string, content?: string): Promise<void> {
         const validPath = validatePagePath(path);
@@ -83,9 +78,6 @@ export class ValidatingCmsRepository implements CmsRepository {
     }
     replaceBloc(bloc: TBlocWrite): Promise<TBloc> {
         return this.inner.replaceBloc(validateBlocWrite(bloc));
-    }
-    deleteBloc(tag: string, ownership: BlocOwnership): Promise<boolean> {
-        return this.inner.deleteBloc(tag, ownership);
     }
     getBlocRecord(tag: string): Promise<BlocRecord | null> {
         return this.inner.getBlocRecord(tag);
@@ -180,9 +172,6 @@ export class ValidatingCmsRepository implements CmsRepository {
         }
         const system = await this.inner.getSystem();
         const plan = planPagePaths(paths, system);
-        for (const route of plan.current) {
-            assertPagePathNotReserved(route.path, [system.site.language, ...(system.site.additionalLanguages ?? [])]);
-        }
         return this.inner.setPagePaths(id, plan.paths, system, expectedPaths);
     }
     deletePageWithAlternative(id: string, alternativeId: string | null) {

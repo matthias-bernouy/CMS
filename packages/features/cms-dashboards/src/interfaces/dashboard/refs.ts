@@ -6,12 +6,7 @@ export type DashboardMeta = {
 
 export type DashboardExpr = string;
 
-export type DashboardRequestTarget =
-    | { endpoint: string; management?: never }
-    | {
-          endpoint?: never;
-          management: { installationId: string; operation: "action"; actionId: string };
-      };
+export type DashboardRequestTarget = { endpoint: string };
 
 export type DashboardEndpointRef = DashboardRequestTarget & {
     sourceId?: string;

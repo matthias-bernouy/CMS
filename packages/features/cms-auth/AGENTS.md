@@ -24,4 +24,4 @@ signed session cookies, public auth flows, and membership stores.
   belongs to views and must not be added to authentication subjects.
 - Do not add browser components to this package.
 - Security-sensitive changes require tests around cookie behavior, rate limits,
-  token expiry, and last-admin protection.
+  and token expiry.

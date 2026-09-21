@@ -36,20 +36,16 @@ export async function blocLibrary(
               ["available", "Available"],
               ["hidden", "Hidden"],
           ];
-    const isExplore = !isCollection;
     const groups = [...new Set(blocs.map((bloc) => bloc.group || "Other"))].sort().map((label) => {
         const members = blocs.filter((bloc) => (bloc.group || "Other") === label);
         return { label, count: members.length, blocs: members };
     });
     return {
-        isExplore,
-        explore: [],
         groups,
         isOverview: !isAdd && !isCollection,
         isCollection,
         isAdd,
         hasSiteCollections: collections.some(({ isSite }) => isSite),
-        hasManagedCollections: collections.some(({ isManaged }) => isManaged),
         hasCodeCollections: collections.some(({ isCode }) => isCode),
         collections,
         visibleCollections: matchingCollections(collections, allBlocs, query.search),
@@ -75,7 +71,5 @@ export async function blocLibrary(
             : collection?.isSite
               ? "Create your first reusable composition."
               : "This collection does not provide any blocs.",
-        selectedResources: [],
-        available: [],
     };
 }

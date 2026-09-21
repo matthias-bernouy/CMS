@@ -1,14 +1,12 @@
-import type { BlocOwnership, BlocRecord, TBlocWrite } from "cms-content/interfaces/blocs";
-import { CODE_MANAGED_BLOC_OWNERSHIP, isBlocOwnership, normalizeBlocWrite } from "cms-content/core/blocs/records";
+import type { BlocRecord } from "cms-content/interfaces/blocs";
 import type { PageRoute, TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
 
 export const SYSTEM_ID = "singleton" as const;
 
 export type WithMongoId<T extends { id: string }> = Omit<T, "id"> & { _id: string };
-export type LegacyBlocDoc = WithMongoId<TBlocWrite>;
 export type BlocRecordDoc = Omit<BlocRecord, "tag"> & { _id: string };
-export type BlocDoc = LegacyBlocDoc | BlocRecordDoc;
+export type BlocDoc = BlocRecordDoc;
 export type PageDeletionIntent = {
     alternativeId: string | null;
     alternativePath: string | null;
@@ -59,7 +57,6 @@ export function toBlocDoc(record: BlocRecord): BlocRecordDoc {
     return structuredClone({
         _id: record.tag,
         ownership: record.ownership,
-        ...(record.legacyOwnershipClaim === "unclaimed" ? { legacyOwnershipClaim: record.legacyOwnershipClaim } : {}),
         artifact: record.artifact,
         ...(record.siteDefinition ? { siteDefinition: record.siteDefinition } : {}),
     });
@@ -69,39 +66,11 @@ export function fromBlocDoc(document: BlocDoc | null): BlocRecord | null {
     if (!document) {
         return null;
     }
-    if (isBlocRecordDoc(document)) {
-        const ownership = storedOwnership(document.ownership);
-        const claimable =
-            document.legacyOwnershipClaim === "unclaimed" &&
-            isBlocOwnership(document.ownership) &&
-            document.ownership.kind === "code-managed";
-        return {
-            tag: document._id,
-            ownership,
-            ...(claimable ? { legacyOwnershipClaim: "unclaimed" as const } : {}),
-            artifact: document.artifact ? { ...structuredClone(document.artifact), id: document._id, ownership } : null,
-            ...(document.siteDefinition ? { siteDefinition: structuredClone(document.siteDefinition) } : {}),
-        };
-    }
-
-    const ownerless = document.ownership === undefined;
-    const ownership = storedOwnership(document.ownership);
-    const { _id, ownership: _storedOwnership, ...legacy } = document;
-    const artifact = normalizeBlocWrite({ ...legacy, id: _id, ownership });
+    const { _id, ...record } = structuredClone(document);
     return {
         tag: _id,
-        ownership,
-        ...(ownerless ? { legacyOwnershipClaim: "unclaimed" } : {}),
-        artifact,
+        ...record,
     };
-}
-
-function storedOwnership(value: unknown): BlocOwnership {
-    return structuredClone(isBlocOwnership(value) ? value : CODE_MANAGED_BLOC_OWNERSHIP);
-}
-
-export function isBlocRecordDoc(document: BlocDoc): document is BlocRecordDoc {
-    return Object.prototype.hasOwnProperty.call(document, "artifact");
 }
 
 export function fromPageDoc(document: PageDoc | null): TPage | null {

@@ -49,11 +49,8 @@ export async function executeEndpointAction(
 export function endpointMethod(
     group: DashboardSourceGroup,
     groups: DashboardSourceGroup[],
-    ref: { sourceId?: string; endpoint?: string; management?: unknown },
+    ref: { sourceId?: string; endpoint: string },
 ): string {
-    if (ref.management) {
-        return "POST";
-    }
     const sourceId = ref.sourceId ?? group.source.id;
     const sourceGroup = groups.find((candidate) => candidate.source.id === sourceId);
     const endpoint = sourceGroup?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);

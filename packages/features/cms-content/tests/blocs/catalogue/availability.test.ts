@@ -12,12 +12,7 @@ describe("bloc catalogue availability", () => {
             catalogue: "inactive",
             viewJS: "customElements.define('collection-card', class extends HTMLElement {});",
             editorJS: "",
-            ownership: {
-                kind: "integration",
-                integrationKind: "ulvia",
-                installationId: "ulvia",
-                definitionVersion: "1.0.0",
-            },
+            ownership: { kind: "code-managed" },
         });
 
         expect(await repository.getBlocsList()).toEqual([]);

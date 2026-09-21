@@ -1,5 +1,5 @@
 <div class="collection-blocs" cms-condition="workspace.isBlocs">
-    <cms-shell-detail size="full" data-installation="{{ workspace.collection.installationId }}">
+    <cms-shell-detail size="full">
         <span slot="title" cms-condition="workspace.bloc">{{ workspace.bloc.name }}</span>
         <span slot="description" cms-condition="workspace.bloc.description">{{ workspace.bloc.description }}</span>
         <p9r-open-modal slot="actions" role="presentation" tabindex="-1" cms-condition="workspace.collection.isSite && !workspace.bloc" modal-target="new-composition-modal">
@@ -10,15 +10,6 @@
             <p9r-open-modal role="presentation" tabindex="-1" cms-condition="workspace.collection.isSite" modal-target="new-composition-modal">
                 <p9r-button type="button" color="primary">New composition</p9r-button>
             </p9r-open-modal>
-            <div class="collection-availability" cms-condition="workspace.bloc.selectable">
-                <div class="collection-availability-copy">
-                    <strong>Available in editor</strong>
-                    <p data-availability-note hidden>Existing pages remain unchanged.</p>
-                </div>
-                <cms-bloc-choice resource="{{ workspace.bloc.resourceId }}" selected="{{ workspace.bloc.selected }}">
-                    <w13c-switch aria-label="Available in editor: {{ workspace.bloc.name }}"></w13c-switch>
-                </cms-bloc-choice>
-            </div>
         </div>
 
         <cms-shell-detail-body slot="body" class="collection-navigated-body" tabbed main-label="Preview" aside-label="Defaults">
@@ -57,18 +48,4 @@
             </p9r-stack>
         </form>
     </p9r-modal>
-
-    <form data-availability-form cms-source="" cms-source-method="POST" cms-source-trigger="submit" cms-source-success-reset="false">
-        <input type="hidden" name="id">
-        <input type="hidden" name="resource">
-        <input type="hidden" name="active">
-        <p9r-toast-stack position="bottom-right">
-            <p9r-toast type="info" duration="0" role="status" cms-condition="$source.loading">Saving availability…</p9r-toast>
-            <p9r-toast type="error" duration="0" role="alert" cms-condition="$source.error">
-                <p>{{ $source.message }} Your latest change was not confirmed.</p>
-                <p9r-button type="button" variant="outlined" data-retry-availability>Retry saving</p9r-button>
-            </p9r-toast>
-            <p9r-toast type="success" duration="2500" role="status" cms-condition="$source.loaded">Availability saved.</p9r-toast>
-        </p9r-toast-stack>
-    </form>
 </div>

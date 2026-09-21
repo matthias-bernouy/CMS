@@ -1,0 +1,24 @@
+<span class="empty" cms-condition="$source.loading &amp;&amp; !navReady">Loading sources…</span>
+<p9r-alert type="error" cms-condition="$source.error || $source.refreshError">
+    Unable to load sources. {{ $source.message }}
+    <p9r-button data-nav-retry>Retry</p9r-button>
+</p9r-alert>
+<span class="empty" cms-condition="navEmpty">No sources</span>
+<w13c-lateral-menu-item
+    cms-repeat="navItems as item"
+    data-generated="true"
+    data-source="{{ item.source }}"
+    data-dashboard="{{ item.dashboard }}"
+    manual-active
+    cms-bind-boolean-active="item.active"
+    cms-bind-boolean-hidden="item.hidden"
+    cms-bind-boolean-data-nested="item.nested"
+>
+    <cms-dashboard-icon
+        slot="icon"
+        name="{{ item.icon }}"
+        svg="{{ item.svg }}"
+        cms-condition="item.icon || item.svg"
+    ></cms-dashboard-icon>
+    {{ item.label }}
+</w13c-lateral-menu-item>

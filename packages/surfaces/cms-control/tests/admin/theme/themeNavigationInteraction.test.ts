@@ -119,7 +119,7 @@ describe("theme navigation interaction", () => {
         try {
             await Promise.all([first.load(), second.load()]);
 
-            expect(calls).toBe(3);
+            expect(calls).toBe(1);
             expect(first.shadowRoot.querySelector("[data-source='colors'][data-category='brand']")).not.toBeNull();
             expect(
                 second.shadowRoot.querySelector("[data-source='integration-sample-brand'][data-category='gallery']"),
@@ -158,7 +158,7 @@ describe("theme navigation interaction", () => {
             await refreshing;
             await Promise.resolve();
 
-            expect(calls).toBe(2);
+            expect(calls).toBe(1);
             expect(editor.shadowRoot.querySelector("[data-category-section]")?.getAttribute("heading")).toBe("Viewer");
             expect(
                 nav.shadowRoot.querySelector(

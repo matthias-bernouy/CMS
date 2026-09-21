@@ -27,7 +27,6 @@ describe("executeEndpoint strict response projection", () => {
         const requestCorrelationId = "11d38c6a-0e6a-4f68-9dad-2a92c17b8300";
         const response = await executeEndpoint(ep(), new Request("http://local.test/source"), {
             fetchImpl,
-            responseProjectionMode: "strict",
             reportResponseProjectionEvent,
             observability: {
                 correlationId: requestCorrelationId,

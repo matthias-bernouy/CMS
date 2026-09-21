@@ -1,4 +1,5 @@
 import "./icons/Icon";
+import sources from "cms-control/static/admin/_content/sources/_runtime/navigation.html" with { type: "text" };
 import { readSourceData, refreshSourceContext, setSourceContext, setSourceData } from "@bernouy/components";
 import { navigationContext, exampleGroups } from "./binding/context";
 import { Component } from "@bernouy/components/base";
@@ -44,6 +45,11 @@ export class DashboardNav extends Component {
     }
 
     private startBoundSource(): void {
+        if (!this.querySelector("[data-generated]")) {
+            const template = document.createElement("template");
+            template.innerHTML = sources as unknown as string;
+            this.append(template.content.cloneNode(true));
+        }
         this.setAttribute("data-nav-list-source", "");
         this.setAttribute("cms-reload-on", "dashboard:definitions-changed");
         this.setAttribute("cms-source", this.isExampleMode() ? "" : `${route("/api/dashboards")} as dashboards`);

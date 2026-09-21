@@ -71,16 +71,6 @@ describe("GET /api/page-exists", () => {
         expect(await res.json()).toEqual({ exists: true, reason: "current" });
     });
 
-    test("reserves the sitemap namespace at the root and under language prefixes", async () => {
-        const cms = makeSystem([]);
-        const reserved = await pageExists(makeRequest({ path: "/sitemaps" }), cms);
-        expect(await reserved.json()).toEqual({ exists: true, reason: "reserved" });
-        const localized = await pageExists(makeRequest({ path: "/sitemaps", language: "fr" }), cms);
-        expect(await localized.json()).toEqual({ exists: true, reason: "reserved" });
-        const ordinary = await pageExists(makeRequest({ path: "/products/sitemaps" }), cms);
-        expect(await ordinary.json()).toEqual({ exists: false });
-    });
-
     test("allows the current route when the page id matches", async () => {
         const cms = makeSystem(["/article"]);
         const res = await pageExists(

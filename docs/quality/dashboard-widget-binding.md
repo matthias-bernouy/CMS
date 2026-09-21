@@ -5,9 +5,8 @@ binding core owns source reads, conditions, interpolation and repeats. Component
 may provide visual shells with shadow-DOM styles or light-DOM behavior without
 global styles. They must not introduce a second response-to-DOM renderer.
 
-See [dashboard view contracts](../integrations/dashboard-views.md),
-[data bindings](../blocs/data-bindings.md) and the
-[remaining migrations](./integration-views/all-integrations.md).
+See [data bindings](../blocs/data-bindings.md) and
+[UI contracts](./ui-contracts.md).
 
 ## Ownership
 
@@ -29,19 +28,15 @@ and existing boolean bindings. There is no `cms-bind-value`, `getFormValue()` or
 `setBindingValue()` component protocol.
 
 Read sources retain their content while refreshing. Controllers still own
-navigation, selection, drafts, mutation completion and integration-specific
-operation coordination. The presence of a controller is not itself a second
-rendering engine.
+navigation, selection, drafts and mutation completion. The presence of a
+controller is not itself a second rendering engine.
 
-## Remaining compatibility
+## Specialized transports
 
-`runtime/actions/forms/ActionForms` (implemented in `index.ts`) still composes
-hidden action forms for legacy scalar operations and multipart uploads.
-`submitEndpoint` falls back to `sendSourceJson` for legacy structured bodies.
-Those paths remain used by unmigrated definitions; they are not the native
-Save contract and cannot be removed while those consumers remain.
+`runtime/actions/forms/ActionForms` (implemented in `index.ts`) composes a
+short-lived hidden form for multipart uploads. The page binding still owns the
+request lifecycle and result events.
 
-Integration management actions retain their dedicated service and lifecycle.
 Binary downloads retain a narrow fetch path because they need Blob content and
 response headers. Removing these calls requires preserving their actual
 behavior, not suppressing a quality warning or inventing a hidden payload.

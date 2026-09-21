@@ -18,7 +18,7 @@ export async function saveLanguages(
 ): Promise<SeoDetail> {
     const inputs = pathInputs(form);
     for (const input of inputs) {
-        const error = pathInputError(input, paths);
+        const error = pathInputError(input);
         if (error) {
             setPathError(input, error);
             input.focus();

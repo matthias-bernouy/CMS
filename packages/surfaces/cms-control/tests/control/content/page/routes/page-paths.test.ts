@@ -19,19 +19,6 @@ test("page language routes are registered when Control discovers API files", asy
     expect(routes).toContain("GET /page/exists");
 });
 
-test("legacy page detail exposes its current URL in the old column", async () => {
-    const cms = {
-        repository: {
-            getPageById: async () => ({ id: "legacy", path: "/legacy", title: "Legacy" }),
-            getSystem: async () => ({ site: { language: "fr", additionalLanguages: ["en"] } }),
-        },
-    } as never;
-    const response = await getPaths(new Request("https://cms.test/api/page/paths?id=legacy"), cms);
-    const detail = await response.json();
-    expect(detail.paths).toEqual({ fr: "/legacy" });
-    expect(detail.languages[0]).toMatchObject({ code: "fr", publicPath: "/legacy" });
-});
-
 test("page path API edits one page and reserves every old URL", async () => {
     const repository = new InMemoryCmsRepository();
     await repository.updateSystem({

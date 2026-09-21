@@ -4,7 +4,6 @@ import {
     projectEndpointResponse,
     type ResponseProjectionEvent,
     type ResponseProjectionFailureReason,
-    type ResponseProjectionMode,
 } from "cms-sources/core/response-projection/projectEndpointResponse";
 import type { SourceEndpoint } from "cms-sources/interfaces/Source";
 
@@ -12,7 +11,6 @@ type FailureCase = {
     reason: ResponseProjectionFailureReason;
     endpoint: () => SourceEndpoint;
     upstream: () => Response;
-    mode?: ResponseProjectionMode;
     hasTypeMetadata?: boolean;
 };
 
@@ -21,19 +19,16 @@ const cases: FailureCase[] = [
         reason: "missing_output",
         endpoint: () => endpoint({ output: undefined }),
         upstream: () => Response.json({ private: true }),
-        mode: "strict",
     },
     {
         reason: "empty_output",
         endpoint: () => endpoint({ output: [] }),
         upstream: () => Response.json({ private: true }),
-        mode: "strict",
     },
     {
         reason: "unmatched_status",
         endpoint: () => endpoint({ output: [{ status: "201", body: { type: "object" } }] }),
         upstream: () => Response.json({ private: true }),
-        mode: "strict",
     },
     {
         reason: "unsupported_media_type",
@@ -96,7 +91,6 @@ describe("response projection failure reasons", () => {
                 new Request("http://local.test/source?private=person@example.test"),
                 failure.upstream(),
                 {
-                    responseProjectionMode: failure.mode,
                     reportResponseProjectionEvent: (event) => events.push(event),
                 },
             );

@@ -29,7 +29,6 @@ describe("projectEndpointResponse failures", () => {
         for (const [name, source, upstream] of cases) {
             const response = await projectEndpointResponse(source, new Request("http://local.test/source"), upstream, {
                 reportResponseProjectionEvent: () => undefined,
-                ...(name === "status" ? { responseProjectionMode: "strict" as const } : {}),
             });
             await expectGenericFailure(response, name);
         }

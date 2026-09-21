@@ -1,7 +1,7 @@
 import type { Page } from "playwright";
 import { installReadonlyRoutes } from "../fixture";
 export const subject = "OIDC:Tenant/User+Opaque==";
-export const aliceLabel = `Alice Martin — alice@example.test · Partner · ${subject}`;
+export const aliceLabel = `Alice Martin — alice@example.test · ${subject}`;
 export async function installUserRoutes(page: Page, bundle: string, styles: string, shown = false, long = false) {
     const fixture = await installReadonlyRoutes(page, bundle, styles, {
         resource: { id: "users", title: "CMS users", name: "Initial", shown, user: "", reviewer: "missing:subject" },

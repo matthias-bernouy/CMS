@@ -12,9 +12,9 @@ export type PageIndexingConfiguration = {
 
 export type TPage = {
     id: string;
-    /** Primary public path. Kept for existing consumers and older records. */
+    /** Primary public path used by delivery and route lookups. */
     path: string;
-    /** Local path per site language; non-default public paths add the language prefix. */
+    /** Local path per site language. Absent until the site has a default language. */
     paths?: Record<string, string>;
     content: string;
     title: string;
@@ -33,7 +33,7 @@ export type PageRoute = {
     /** The page currently serving this path or receiving its redirect. */
     pageId: string;
     /** Original owner, retained when deletion redirects this route to another page. */
-    ownerPageId?: string;
+    ownerPageId: string;
     language: string;
 };
 

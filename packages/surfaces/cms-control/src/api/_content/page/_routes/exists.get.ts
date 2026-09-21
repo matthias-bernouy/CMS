@@ -1,5 +1,4 @@
 import { publicPagePath } from "@bernouy/cms-content";
-import { isReservedPublicPagePath } from "@bernouy/cms-content/page-path";
 import type { ControlCms } from "cms-control/ControlCms";
 
 /** Check the indexed route registry before the path editor submits a change. */
@@ -15,10 +14,6 @@ export default async function pageExists(req: Request, cms: ControlCms) {
     const defaultLanguage = system.site.language;
     const language = url.searchParams.get("language") ?? defaultLanguage;
     const candidate = publicPagePath(language, path, defaultLanguage);
-    if (isReservedPublicPagePath(candidate, [defaultLanguage, ...(system.site.additionalLanguages ?? [])])) {
-        return json({ exists: true, reason: "reserved" });
-    }
-
     const route = await cms.repository.getPageRoute?.(candidate);
     if (route) {
         return route.pageId === pageId &&

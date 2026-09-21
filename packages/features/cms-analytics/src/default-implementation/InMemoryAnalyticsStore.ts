@@ -91,9 +91,6 @@ export class InMemoryAnalyticsStore implements AnalyticsStore {
         return readMemoryTimeseries([...this._rollups.values()], q);
     }
 
-    topPaths(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
-        return this.topPages(from, to, limit);
-    }
     topPages(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
         return Promise.resolve(readMemoryTop([...this._rollups.values()], "pv", "page", from, to, limit));
     }

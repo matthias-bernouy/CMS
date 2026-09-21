@@ -1,4 +1,5 @@
 import { Component, upgradeProperty } from "@bernouy/components/base";
+import { CMS_SOURCE_SUCCESS_EVENT } from "../../../../binding/source/submissionEvents";
 import { handleBackdropClick, handleCancel, handleClose } from "./listener";
 
 import template from "./template.html" with { type: "text" };
@@ -31,7 +32,7 @@ export class Modal extends Component {
         this._footerSlot?.addEventListener("slotchange", this._syncFooter);
         this._titleSlot?.addEventListener("slotchange", this._syncTitle);
         this._syncTitle();
-        this.addEventListener("form:success", this._onSuccess);
+        this.addEventListener(CMS_SOURCE_SUCCESS_EVENT, this._onSuccess);
         this._syncLabel();
         this._syncFooter();
         this._syncOpen();
@@ -43,7 +44,7 @@ export class Modal extends Component {
         this._dialog?.removeEventListener("close", this._onClose);
         this._footerSlot?.removeEventListener("slotchange", this._syncFooter);
         this._titleSlot?.removeEventListener("slotchange", this._syncTitle);
-        this.removeEventListener("form:success", this._onSuccess);
+        this.removeEventListener(CMS_SOURCE_SUCCESS_EVENT, this._onSuccess);
     }
 
     attributeChangedCallback(name: string, _old: string | null, _new: string | null) {

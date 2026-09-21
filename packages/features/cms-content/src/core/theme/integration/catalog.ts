@@ -63,11 +63,7 @@ export function composeThemeSettings(
 ): ThemeSettings {
     const sources = contributions.map(createIntegrationThemeSource);
     assertUniqueOwners(sources);
-    return replaceIntegrationSources(
-        base,
-        sources,
-        (source) => source.owner?.kind === "integration" || source.id.startsWith("integration-"),
-    );
+    return replaceIntegrationSources(base, sources, (source) => source.owner?.kind === "integration");
 }
 
 export function reconcileIntegrationTheme(
@@ -78,21 +74,16 @@ export function reconcileIntegrationTheme(
     return replaceIntegrationSources(
         base,
         [source],
-        (item) =>
-            (item.owner?.kind === "integration" && item.owner.integrationId === contribution.integrationId) ||
-            item.id === source.id,
+        (item) => item.owner?.kind === "integration" && item.owner.integrationId === contribution.integrationId,
     );
 }
 
 export function removeIntegrationTheme(base: ThemeSettings, integrationId: string): ThemeSettings {
     integrationThemeSourceId(integrationId);
-    const sourceId = integrationThemeSourceId(integrationId);
     return replaceIntegrationSources(
         base,
         [],
-        (source) =>
-            (source.owner?.kind === "integration" && source.owner.integrationId === integrationId) ||
-            source.id === sourceId,
+        (source) => source.owner?.kind === "integration" && source.owner.integrationId === integrationId,
     );
 }
 
@@ -102,7 +93,6 @@ function replaceIntegrationSources(
     shouldReplace: (source: ThemeSource) => boolean,
 ): ThemeSettings {
     const next = structuredClone(base);
-    migrateLegacyIntegrationValues(next, replacements);
     const replacedTokenIds = new Set(
         next.sources
             .filter(shouldReplace)
@@ -124,37 +114,13 @@ function replaceIntegrationSources(
                 continue;
             }
             for (const tokenId of Object.keys(values)) {
-                if (
-                    (!remainingTokenIds.has(tokenId) && replacedTokenIds.has(tokenId)) ||
-                    tokenId.startsWith("integration-")
-                ) {
+                if (!remainingTokenIds.has(tokenId) && replacedTokenIds.has(tokenId)) {
                     delete values[tokenId];
                 }
             }
         }
     }
     return validateThemeSettings(next);
-}
-
-function migrateLegacyIntegrationValues(settings: ThemeSettings, replacements: ThemeSource[]): void {
-    for (const source of replacements) {
-        const integrationId = source.owner?.kind === "integration" ? source.owner.integrationId : undefined;
-        if (!integrationId) {
-            continue;
-        }
-        for (const token of source.categories.flatMap((category) => category.tokens)) {
-            const localId = token.id.slice(integrationId.length + 1);
-            const legacyId = `integration-${integrationId}-${localId}`;
-            for (const theme of settings.themes) {
-                for (const mode of ["light", "dark"] as const) {
-                    const legacyValue = theme.values[mode]?.[legacyId];
-                    if (legacyValue !== undefined && theme.values[mode]![token.id] === undefined) {
-                        theme.values[mode]![token.id] = legacyValue;
-                    }
-                }
-            }
-        }
-    }
 }
 
 function assertContribution(contribution: IntegrationThemeContribution): void {

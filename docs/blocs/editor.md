@@ -50,13 +50,13 @@ export class ExampleCardEditor extends Editor {
 }
 ```
 
-The integration compiler discovers the exported class and registers it. Do not
+The build wrapper discovers the exported class and registers it. Do not
 call `registerEditor()` in a collection-owned editor.
 
 ## Platform-owned native editors
 
 Collection editors apply only to their custom elements. The CMS creates and
-merges its native editor catalogue independently, and an integration artifact
+merges its native editor catalogue independently, and a collection artifact
 with any native HTML root is rejected. Do not ship a collection editor for
 `p`, `a`, `img`, `form`, or another native tag.
 

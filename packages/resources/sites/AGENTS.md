@@ -7,7 +7,7 @@ Retained declarative site snapshots used as migration and visual references.
 - Keep each site below its own directory. Existing `p9r.config.json` and
   `.p9r-state.json` files are historical metadata, not an active deployment
   contract.
-- Site resources may consume installed integration Blocs and public CMS APIs.
+- Site resources may consume published Blocs and public CMS APIs.
   They must not mount routes, connect to databases, or select runtime adapters.
 - Do not embed credentials, deployment domains, repository origins, or other
   environment-specific values in site resources.
@@ -18,8 +18,8 @@ Retained declarative site snapshots used as migration and visual references.
   CMS theme tokens for site-specific design values. Free-form site CSS is not
   part of the CMS settings contract.
 - Do not add new deployable site projects or repository templates here. New
-  sites are initialized in the CMS and consume released collection and source
-  integrations.
+  sites are initialized in the CMS and consume released collections and data
+  providers.
 
 ## Reference Changes
 

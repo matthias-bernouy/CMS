@@ -18,7 +18,7 @@ layout and semantics.
 ## Choose A Starting Point
 
 - [Collection API](./collections.md) covers the library projection, site
-  compositions, managed availability, and collection updates.
+  compositions, and code-backed collections.
 
 - [Create a Bloc](./authoring.md) covers folders, the manifest, runtime code,
   templates, default content, registration, and browser constraints.
@@ -29,7 +29,7 @@ layout and semantics.
 - [Make A Bloc Themeable](./theming.md) covers global themes, tokens, local CSS
   variables, attributes, `::part`, slots, dark mode, and responsive layout.
 - [Develop, Validate, And Publish](./validation.md) covers the local loop,
-  validation rules, Delivery loading, audited releases, and publication.
+  validation rules, and Delivery loading during the provider transition.
 
 ## End-To-End Model
 
@@ -37,11 +37,11 @@ layout and semantics.
 manifest.json + Bloc.ts + BlocEditor.ts + default.html
                          |
                          v
-                ulvia audit / release
-                    |           |
-                    |           +--> ulvia dev loads the CMS editor
+                  validation
+                    |       |
+                    |       +--> ulvia dev loads the CMS editor
                     |
-                    +--------------> Delivery loads only required view bundles
+                    +----------> Delivery loads required view bundles
 
 site theme --------------------------------> inherited CSS custom properties
 saved Light DOM ---------------------------> slots, text, and bound attributes
@@ -53,12 +53,10 @@ view wait for authoring controls.
 
 ## Scope Of This Guide
 
-These pages document Blocs owned by collection integrations. Collections keep
-their source under their integration directory, declare selectable resources,
-and are audited and released with the `ulvia` CLI. Site-specific composition
+These pages document Blocs owned by collections. Site-specific composition
 lives as CMS data rather than as a copied repository template. Native HTML is
 the exception to collection ownership: the CMS supplies its constrained native
-catalogue, and integrations cannot publish native-root artifacts.
+catalogue, and collections cannot publish native-root artifacts.
 
 Responsive image behavior is documented separately in
 [Responsive Images](../images/README.md).

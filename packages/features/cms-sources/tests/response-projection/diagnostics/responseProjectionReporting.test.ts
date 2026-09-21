@@ -3,7 +3,7 @@ import { projectEndpointResponse } from "cms-sources/core/response-projection/pr
 import { nestedResponseEndpoint } from "../../helpers/responseProjectionFixtures";
 
 describe("response projection reporting", () => {
-    test("logs safe failures by default but never legacy compatibility events", async () => {
+    test("logs safe failures by default", async () => {
         const error = spyOn(console, "error").mockImplementation(() => {});
         try {
             const source = nestedResponseEndpoint();
@@ -52,14 +52,6 @@ describe("response projection reporting", () => {
             ]) {
                 expect(logged).not.toContain(privateValue);
             }
-
-            const legacy = await projectEndpointResponse(
-                { ...nestedResponseEndpoint(), output: undefined },
-                new Request("http://local.test/source"),
-                new Response("legacy body"),
-            );
-            expect(await legacy.text()).toBe("legacy body");
-            expect(error).toHaveBeenCalledTimes(1);
         } finally {
             error.mockRestore();
         }

@@ -1,12 +1,7 @@
 import type { SourceEndpoint } from "../../interfaces/Source";
 import { projectDataShape } from "./projectDataShape";
 import { readBoundedJson } from "./readBoundedJson";
-import {
-    projectionFailure,
-    reportResponseProjectionEvent,
-    type LegacyResponseContractReason,
-    type ResponseProjectionOptions,
-} from "./responseProjectionEvents";
+import { projectionFailure, type ResponseProjectionOptions } from "./responseProjectionEvents";
 import {
     cancelResponseBody,
     discardResponseBody,
@@ -16,11 +11,8 @@ import {
 } from "./projectedResponse";
 
 export {
-    RESPONSE_PROJECTION_MODES,
-    type LegacyResponseContractReason,
     type ResponseProjectionEvent,
     type ResponseProjectionFailureReason,
-    type ResponseProjectionMode,
     type ResponseProjectionOptions,
     type ResponseProjectionReporter,
 } from "./responseProjectionEvents";
@@ -36,14 +28,6 @@ export async function projectEndpointResponse(
 ): Promise<Response> {
     const output = endpoint.output;
     if (!output?.length) {
-        if ((options.responseProjectionMode ?? "compatibility") === "compatibility") {
-            reportLegacyContract(endpoint, upstream, output === undefined ? "missing_output" : "empty_output", options);
-            if (request.method === "HEAD") {
-                return discardResponseBody(upstream, options);
-            }
-            return passthroughResponse(upstream, options);
-        }
-
         await cancelResponseBody(upstream.body);
         return projectionFailure(
             endpoint.urn,
@@ -58,13 +42,6 @@ export async function projectEndpointResponse(
         output.find((candidate) => candidate.status === String(upstream.status)) ??
         output.find((candidate) => candidate.status === "default");
     if (!declared) {
-        if ((options.responseProjectionMode ?? "compatibility") === "compatibility") {
-            reportLegacyContract(endpoint, upstream, "unmatched_status", options);
-            if (request.method === "HEAD") {
-                return discardResponseBody(upstream, options);
-            }
-            return passthroughResponse(upstream, options);
-        }
         await cancelResponseBody(upstream.body);
         return projectionFailure(endpoint.urn, upstream.status, request.method === "HEAD", "unmatched_status", options);
     }
@@ -108,19 +85,4 @@ export async function projectEndpointResponse(
     }
 
     return projectedJsonResponse(upstream, projected.value, options);
-}
-
-function reportLegacyContract(
-    endpoint: SourceEndpoint,
-    upstream: Response,
-    reason: LegacyResponseContractReason,
-    options: ResponseProjectionOptions,
-): void {
-    reportResponseProjectionEvent(options, {
-        kind: "legacy_response_contract",
-        endpointUrn: endpoint.urn,
-        upstreamStatus: upstream.status,
-        reason,
-        correlationId: options.correlationId ?? crypto.randomUUID(),
-    });
 }

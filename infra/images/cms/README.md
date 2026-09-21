@@ -54,8 +54,8 @@ The public routes are:
   gateway while `cms_mongo` remains internal.
 - Ports 80 and 443 reachable from the internet.
 - `openssl`, `rsync`, `gzip`, and `sha256sum` on the deployment machines.
-- Enough disk space for the MongoDB volume, per-instance `files` and
-  `integration-packages` directories, image tarballs, staging, and backups.
+- Enough disk space for the MongoDB volume, per-instance `files` directories,
+  image tarballs, staging, and backups.
 - A clean CmsCore checkout and its complete workspace when building the image.
 
 Before starting an instance, create DNS records for both its public domain and
@@ -223,7 +223,6 @@ INSTANCE=client
 DATABASE="cms_${INSTANCE}"
 CMS_IMAGE=bernouy/cms:2026.07.15-1
 MONGO_APP_USERNAME=cms_runtime
-INTEGRATION_REPOSITORY_URL=https://repository.example.com/.cms/repository
 
 read -r -s -p 'Shared MongoDB application password: ' MONGO_APP_PASSWORD
 printf '\n'
@@ -240,28 +239,20 @@ CMS_ADMIN_PASSWORD="$(openssl rand -hex 24)"
     printf 'CMS_ADMIN_EMAIL=%s\n' "admin@${DOMAIN}"
     printf 'CMS_ADMIN_PASSWORD=%s\n' "${CMS_ADMIN_PASSWORD}"
     printf 'ANALYTICS_SALT_SECRET=%s\n' "$(openssl rand -hex 32)"
-    printf 'P9R_INTEGRATION_REPOSITORY_URL=%s\n' "${INTEGRATION_REPOSITORY_URL}"
-    printf 'CMS_HTTP_CLIENT_ADDRESS_MODE=%s\n' 'trusted-proxy'
-    printf 'CMS_HTTP_TRUSTED_PROXY_HOPS=%s\n' '1'
-    printf 'CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT=%s\n' '60'
-    printf 'CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS=%s\n' '60'
-    printf 'CMS_INTEGRATION_PACKAGE_CACHE_DIR=%s\n' '/var/lib/cms/integration-packages'
 } > .env
 
 chmod 600 .env
 unset MONGO_APP_PASSWORD CMS_ADMIN_PASSWORD
 
-sudo install -d -o 1000 -g 1000 -m 0750 files integration-packages
+sudo install -d -o 1000 -g 1000 -m 0750 files
 
 docker compose config --quiet
 docker compose up -d --wait
 docker compose ps
 ```
 
-The image runs with UID/GID 1000. The bind-mounted `files` and
-`integration-packages` directories must be writable by that identity and stay
-separate. The runtime resolves both roots and rejects aliases or parent/child
-overlap before connecting to MongoDB. Keep the generated initial admin password
+The image runs with UID/GID 1000. The bind-mounted `files` directory must be
+writable by that identity. Keep the generated initial admin password
 in a password manager before removing it from any operator workflow; it remains
 in the protected `.env` because Compose requires the variable on every start,
 but the runtime uses it only when bootstrapping a missing local credential.
@@ -311,7 +302,6 @@ environment file.
 | `CMS_KEK_HEX` | Exactly 32 random bytes encoded as 64 hexadecimal characters. |
 | `CMS_ADMIN_PASSWORD` | Initial local admin password; only used if the credential does not yet exist. |
 | `ANALYTICS_SALT_SECRET` | Stable HMAC secret shared by every Delivery replica for this site. |
-| `P9R_INTEGRATION_REPOSITORY_URL` | Public, anonymous canonical integration-repository API base URL. It is consumed server-to-server and must not contain credentials, a query, or a fragment. |
 
 ### Optional CMS and authentication settings
 
@@ -346,46 +336,6 @@ if their own switches are omitted or `true`. A markup-only configuration fails
 closed: the runtime keeps both responsive cohorts disabled, and a residual
 `cms-width` request receives a non-cacheable `503` instead of an original under
 a false width descriptor.
-
-### Public repository download protection
-
-Integration catalog reads are public and anonymous at the canonical repository
-origin. An ordinary CMS consumes that API server-to-server and does not mount or
-mirror `/.cms/repository` on its own Delivery domain. It therefore never exposes
-its integration cache, installation records, answers, secrets, or repository
-packages through those routes.
-
-The designated repository hub CMS is the sole exception: it mounts a
-same-origin `/.cms/repository` facade for the CMS-authored public hub. Exact
-packages include the complete integration sources, so that facade applies a
-fixed-window download limit before fetching a package from the canonical
-repository. No repository read token exists or needs to be configured.
-
-The standard deployment sets `CMS_HTTP_CLIENT_ADDRESS_MODE=trusted-proxy` and
-`CMS_HTTP_TRUSTED_PROXY_HOPS=1` because `nginx-proxy` is its only trusted public
-ingress hop. The hop count is the complete trusted suffix of the forwarding
-chain. If a CDN is added in front of `nginx-proxy`, set
-`CMS_HTTP_TRUSTED_PROXY_HOPS=2` and verify that the CDN overwrites or appends
-`X-Forwarded-For` as expected. Add one for every further trusted ingress hop;
-an incorrect count can group unrelated clients or reject valid downloads.
-
-`CMS_HTTP_CLIENT_ADDRESS_MODE` is intentionally independent of
-`ANALYTICS_TRUST_PROXY`. Do not enable trusted-proxy mode for a directly exposed
-listener, and do not rely on client-supplied forwarding headers. The base
-Compose file carries these settings because it is also used by the repository
-hub CMS; they are inert for ordinary CMS instances that do not mount the
-facade.
-The configuration-safe runtime default is `disabled`, but this Compose file
-configures client-address resolution for the repository hub facade even when no
-CDN is installed. Ordinary CMS instances do not mount that facade.
-
-`CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT` defaults to 60 accepted package GETs
-per client within the 60-second
-`CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS` window. A rejected download
-returns `429 Too Many Requests` with `Retry-After`; catalog metadata and `HEAD`
-requests do not consume this budget. Tune both values together using observed
-traffic. An ingress cache or CDN is recommended for immutable packages, but is
-not required for the origin limiter to be active.
 
 Treat the MongoDB URL, session secret, KEK, and any configured SMTP credentials
 as server-side secrets. Never expose them to browser code or commit them to the
@@ -459,7 +409,6 @@ umask 077
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 docker compose stop cms
 tar --numeric-owner -czf "client-media-${STAMP}.tar.gz" files .env compose.yml
-tar --numeric-owner -czf "client-integration-packages-${STAMP}.tar.gz" integration-packages
 docker compose up -d --wait
 ```
 
@@ -473,41 +422,9 @@ external MongoDB. Copy backups away from the application server.
 
 ### CMS image
 
-Build and transfer every release under a new tag. Before the first update that
-requires the global integration repository, add
-`P9R_INTEGRATION_REPOSITORY_URL` to the instance `.env` while the old container
-is still running. Point it at the canonical public API base, verify that the
-catalog is reachable from the deployment host, then install the matching
-Compose file. The new Compose contract fails during `docker compose config` if
-the variable is absent or empty, before replacing the working container:
-
-```bash
-cd /opt/cms-sites/client
-printf '%s\n' \
-    'P9R_INTEGRATION_REPOSITORY_URL=https://repository.example.com/.cms/repository' \
-    >> .env
-docker compose config --quiet
-```
-
-Do this for every existing site before upgrading its image. The repository must
-already contain every official version referenced by existing installations.
-Do not delete or recreate `integration-packages`: installations with a valid
-digest already present in that cache can rerun during a repository outage,
-whereas a legacy installation without a materialized digest and a missing or
-corrupt cache object now requires the canonical repository to recover.
-
-Before the first update that adds the integration package cache, prepare its
-dedicated bind mount explicitly; Compose is configured to fail instead of
-silently creating a root-owned directory:
-
-```bash
-cd /opt/cms-sites/client
-sudo install -d -o 1000 -g 1000 -m 0750 integration-packages
-```
-
-This one-time storage migration must complete before recreating the service.
-After loading or pulling subsequent images, edit only `CMS_IMAGE` in the
-instance `.env`, validate, and recreate the service:
+Build and transfer every release under a new tag. After loading or pulling the
+image, edit only `CMS_IMAGE` in the instance `.env`, validate, and recreate the
+service:
 
 ```bash
 cd /opt/cms-sites/client

@@ -30,25 +30,19 @@ describe("site collection API", () => {
             cms,
         );
         expect((await created.json()).collectionId).toBe(collection.id);
-        await repository.createSiteBloc(siteDefinition("site-legacy"));
-        await seedBloc(repository, "managed-card", {
-            ownership: {
-                kind: "integration",
-                installationId: "collection-a",
-                integrationKind: "collection-a",
-                definitionVersion: "1.0.0",
-            },
-        });
+        await repository.createSiteBloc(siteDefinition("site-default"));
+        await seedBloc(repository, "code-card");
+
         const selected = await (
             await getCatalogue(new Request(`${base}/bloc/catalogue?collection=${collection.id}`), cms)
         ).json();
         expect(selected.map((item: { tag: string }) => item.tag)).toEqual(["site-campaign"]);
-        const legacy = await (await getCatalogue(new Request(`${base}/bloc/catalogue?collection=site`), cms)).json();
-        expect(legacy.map((item: { tag: string }) => item.tag)).toEqual(["site-legacy"]);
+        const site = await (await getCatalogue(new Request(`${base}/bloc/catalogue?collection=site`), cms)).json();
+        expect(site.map((item: { tag: string }) => item.tag)).toEqual(["site-default"]);
         const all = await (await getCatalogue(new Request(`${base}/bloc/catalogue`), cms)).json();
-        expect(all.find((item: { tag: string }) => item.tag === "managed-card")).toMatchObject({
+        expect(all.find((item: { tag: string }) => item.tag === "code-card")).toMatchObject({
             collectionId: null,
-            origin: { installationId: "collection-a" },
+            origin: { kind: "code-managed" },
         });
     });
 

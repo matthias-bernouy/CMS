@@ -124,7 +124,6 @@ function publishSummary(
         data: {
             views: views.data,
             estimatedVisitors: visitors.data,
-            uniqueVisitors: visitors.data,
             visitorDays: visitors.data,
             averageDailyVisitors: visitors.data ? roundCount(summary.averageDailyVisitors) : 0,
             latestCompletedDayVisitors: latestDay.data,

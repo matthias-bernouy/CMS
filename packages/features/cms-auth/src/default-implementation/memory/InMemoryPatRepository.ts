@@ -18,7 +18,6 @@ export class InMemoryPatRepository implements PatRepository {
             id: randomUUIDv7(),
             sub: input.sub,
             name: input.name,
-            scopes: input.scopes ?? [],
             createdAt: new Date(),
             expiresAt: input.expiresAt ?? null,
         };
@@ -37,7 +36,7 @@ export class InMemoryPatRepository implements PatRepository {
             return null;
         }
         pat.lastUsedAt = new Date();
-        return { sub: pat.sub, scopes: [...pat.scopes] };
+        return { sub: pat.sub };
     }
 
     async list(sub: string): Promise<Pat[]> {

@@ -18,7 +18,7 @@ describe("platform native HTML policy", () => {
         expect(isPlatformNativeEditorTag("main")).toBe(false);
         expect(isSiteBlocNativeStructureTag("main")).toBe(true);
         expect(isSiteBlocNativeStructureTag("strong")).toBe(true);
-        expect(isSiteBlocNativeStructureTag("form")).toBe(false);
+        expect(isSiteBlocNativeStructureTag("form")).toBe(true);
         expect(isSiteBlocNativeStructureTag("div")).toBe(false);
         expect(isSiteBlocNativeStructureTag("table")).toBe(false);
     });

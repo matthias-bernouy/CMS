@@ -1,14 +1,6 @@
 import type { ContentSlot } from "cms-content/interfaces/Editor/document/ContentSlots";
 
-export type BlocOwnership =
-    | { kind: "site-builder"; definitionId: string }
-    | { kind: "code-managed" }
-    | {
-          kind: "integration";
-          integrationKind: string;
-          installationId: string;
-          definitionVersion: string;
-      };
+export type BlocOwnership = { kind: "site-builder"; definitionId: string } | { kind: "code-managed" };
 
 export type TBloc = {
     id: string;
@@ -42,10 +34,7 @@ export type TBloc = {
 
 export type PresentationImage = { path: string; alt?: string };
 
-/**
- * Backward-compatible write shape. Existing importers that predate explicit
- * ownership are treated as code-managed writers at the repository boundary.
- */
+/** Code imports default to code-managed ownership when it is omitted. */
 export type TBlocWrite = Omit<TBloc, "ownership"> & { ownership?: BlocOwnership };
 
 export type SiteBlocNode =
@@ -99,12 +88,6 @@ export type SiteBlocDefinition = {
 export type BlocRecord = {
     tag: string;
     ownership: BlocOwnership;
-    /**
-     * One-shot migration state for pre-ownership flat Mongo documents. It is
-     * consumed by the first explicit code or integration write and is never
-     * created for modern aggregates.
-     */
-    legacyOwnershipClaim?: "unclaimed";
     /** The active compiled publication. Draft-only records have no artifact. */
     artifact: TBloc | null;
     siteDefinition?: SiteBlocDefinition;

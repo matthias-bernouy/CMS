@@ -1,10 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { EndpointPerformanceObservation } from "@bernouy/cms-analytics";
-import {
-    createIntegrationPackageCacheObserver,
-    createSourceTelemetryOptions,
-    createTrustedConnectorTargetMatcher,
-} from "../../src/runtime/sourceTelemetry";
+import { createSourceTelemetryOptions } from "../../src/runtime/sourceTelemetry";
 
 describe("production source telemetry", () => {
     test("maps exhaustive observations without persisting correlation identifiers", () => {
@@ -70,63 +66,5 @@ describe("production source telemetry", () => {
         });
         expect(logs[0]).not.toContain("observedAt");
         expect(logs[0]).not.toContain("url");
-    });
-
-    test("trusts only previewed connector origins and path boundaries", async () => {
-        const matcher = await createTrustedConnectorTargetMatcher([
-            {
-                provider: "supabase",
-                async previewOutputs() {
-                    return { functionsBaseUrl: "https://project.supabase.co/functions/v1/" };
-                },
-                async deploy() {
-                    throw new Error("not used");
-                },
-            },
-            {
-                provider: "broken",
-                async previewOutputs() {
-                    throw new Error("configuration unavailable");
-                },
-                async deploy() {
-                    throw new Error("not used");
-                },
-            },
-        ]);
-        const endpoint = {} as never;
-
-        expect(matcher(endpoint, new URL("https://project.supabase.co/functions/v1/catalog"))).toBe(true);
-        expect(matcher(endpoint, new URL("https://project.supabase.co/functions/v10/catalog"))).toBe(false);
-        expect(matcher(endpoint, new URL("https://attacker.test/functions/v1/catalog"))).toBe(false);
-    });
-
-    test("logs only bounded integration package cache metric fields", () => {
-        const logs: string[] = [];
-        const observe = createIntegrationPackageCacheObserver((message) => logs.push(message));
-
-        observe({
-            type: "materialized",
-            digest: "a".repeat(64),
-            kind: "commerce",
-            version: "1.0.0",
-            bytes: 4_096,
-            durationMs: 17,
-            path: "/var/lib/cms/integration-packages/private",
-            token: "repository-secret",
-            packageContents: "do-not-log",
-        } as never);
-
-        expect(JSON.parse(logs[0]!)).toEqual({
-            event: "cms_integration_package_cache",
-            outcome: "materialized",
-            digest: "a".repeat(64),
-            kind: "commerce",
-            version: "1.0.0",
-            bytes: 4_096,
-            durationMs: 17,
-        });
-        expect(logs[0]).not.toContain("/var/lib/cms");
-        expect(logs[0]).not.toContain("repository-secret");
-        expect(logs[0]).not.toContain("do-not-log");
     });
 });

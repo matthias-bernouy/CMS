@@ -21,7 +21,6 @@ import { shortenMongoAnalyticsRetention } from "./mongo/counters/retention";
 import type { HllSketchDoc, ReferrerBucketDoc, RollupDoc } from "./mongo/types";
 import { isIgnoredReferrer } from "../core/collection/analyticsPolicy";
 import { mergeKeyCounts } from "../core/referrers/FrequentItems";
-import { migrateLegacyAnalytics } from "./mongo/migrateLegacyAnalytics";
 import type { AnalyticsComplianceSnapshot, AnalyticsSettings } from "../interfaces/AnalyticsGovernance";
 import { MongoAnalyticsGovernance } from "./mongo/MongoAnalyticsGovernance";
 
@@ -65,7 +64,6 @@ export class MongoAnalyticsStore implements AnalyticsStore {
         return this.db.collection<ReferrerBucketDoc>(this._prefix + "analytics_referrer_buckets");
     }
     async init(): Promise<void> {
-        await migrateLegacyAnalytics(this.db, this._prefix);
         await this.governance.init();
         await Promise.all([
             this.rollups.createIndex({ metric: 1, dim: 1, bucket: 1 }),
@@ -99,9 +97,6 @@ export class MongoAnalyticsStore implements AnalyticsStore {
         return readTimeseries(this.rollups, q);
     }
 
-    topPaths(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
-        return this.topPages(from, to, limit);
-    }
     topPages(from: Date, to: Date, limit: number): Promise<KeyCount[]> {
         return readTop(this.rollups, "pv", "page", from, to, limit);
     }

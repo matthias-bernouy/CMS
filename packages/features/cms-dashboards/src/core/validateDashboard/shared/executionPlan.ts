@@ -17,7 +17,7 @@ export async function compileDashboardExecutionPlan(
     }
     const references: EndpointReference[] = [];
     const errors: string[] = [];
-    dashboard.views.forEach((view) => collectViewReferences(view, references, errors));
+    dashboard.views.forEach((view) => collectViewReferences(view, references));
     const calls: DashboardAllowedCall[] = [];
     const seen = new Set<string>();
     for (const reference of references) {
@@ -53,33 +53,25 @@ export async function compileDashboardExecutionPlan(
     };
 }
 
-function collectViewReferences(view: ResolvedDashboardView, output: EndpointReference[], errors: string[]): void {
-    collectReferences(view.widgets, view.source, output, errors);
-    view.children.forEach((child) => collectViewReferences(child, output, errors));
+function collectViewReferences(view: ResolvedDashboardView, output: EndpointReference[]): void {
+    collectReferences(view.widgets, view.source, output);
+    view.children.forEach((child) => collectViewReferences(child, output));
 }
 
-function collectReferences(
-    value: unknown,
-    defaultSource: string | undefined,
-    output: EndpointReference[],
-    errors: string[],
-): void {
+function collectReferences(value: unknown, defaultSource: string | undefined, output: EndpointReference[]): void {
     if (Array.isArray(value)) {
-        value.forEach((item) => collectReferences(item, defaultSource, output, errors));
+        value.forEach((item) => collectReferences(item, defaultSource, output));
         return;
     }
     if (!value || typeof value !== "object") {
         return;
     }
     const record = value as Record<string, unknown>;
-    if (record.management && typeof record.management === "object") {
-        errors.push("Integration management is Control-only and cannot be delegated");
-    }
     if (typeof record.endpoint === "string") {
         const sourceId = typeof record.sourceId === "string" ? record.sourceId : defaultSource;
         if (sourceId) {
             output.push({ sourceId, endpointId: record.endpoint });
         }
     }
-    Object.values(record).forEach((child) => collectReferences(child, defaultSource, output, errors));
+    Object.values(record).forEach((child) => collectReferences(child, defaultSource, output));
 }

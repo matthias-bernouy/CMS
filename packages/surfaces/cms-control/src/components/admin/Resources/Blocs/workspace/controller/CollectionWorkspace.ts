@@ -15,10 +15,7 @@ import { ThemeProfileController } from "../ThemeEditing/Context/ProfileControlle
 import { SiteVariablesController } from "../ThemeEditing/Context/SiteVariablesController";
 import "../ThemeEditing/ThemeTokenEditor";
 import "../../preview/BlocPreview";
-import "../../BlocChoice";
-import "../../artwork/LibraryArtwork";
 import "../../icons/LibraryIcon";
-import { AvailabilityController } from "cms-control/components/admin/Resources/Blocs/availability/Controller";
 import {
     collectionWorkspacePath,
     collectionWorkspaceRouteFromPath,
@@ -31,7 +28,6 @@ import { filterWorkspaceNavigation } from "./navigation";
 const template = `<w13c-fixed-admin-layout data-collection-source>${chrome}${landingView}${overviewView}${themeView}${blocsView}${textsView}</w13c-fixed-admin-layout>`;
 
 export class CmsCollectionWorkspace extends HTMLElement {
-    private readonly availability = new AvailabilityController(this);
     private readonly themeProfiles = new ThemeProfileController(this);
     private readonly themeEditing = new ThemeEditingController(this, this.themeProfiles);
     private readonly siteVariables = new SiteVariablesController(this);
@@ -43,7 +39,6 @@ export class CmsCollectionWorkspace extends HTMLElement {
         }
         this.configureRoute();
         this.addEventListener("input", this.inputAction);
-        this.availability.connect();
         this.themeEditing.connect();
         this.themeProfiles.connect();
         this.siteVariables.connect();
@@ -51,7 +46,6 @@ export class CmsCollectionWorkspace extends HTMLElement {
 
     disconnectedCallback(): void {
         this.removeEventListener("input", this.inputAction);
-        this.availability.disconnect();
         this.themeEditing.disconnect();
         this.themeProfiles.disconnect();
         this.siteVariables.disconnect();
@@ -76,7 +70,7 @@ export class CmsCollectionWorkspace extends HTMLElement {
             "theme=#{theme}",
         ].join("&");
         source.setAttribute("cms-source", `${basePath}/api/collections/workspace?${query} as workspace`);
-        source.setAttribute("cms-reload-on", "collection:changed bloc:changed integration:updated theme:changed");
+        source.setAttribute("cms-reload-on", "collection:changed bloc:changed theme:changed");
         this.configureTabs(basePath, route.collection, route.section);
         home?.toggleAttribute("active", !route.collection);
     }

@@ -31,8 +31,6 @@ export type FlowCount = {
 /** Headline numbers for the dashboard cards over a period. */
 export type AnalyticsSummary = {
     views: number;
-    /** @deprecated Compatibility alias for `estimatedVisitors`. */
-    uniqueVisitors: number;
     /** Sum of closed-day HLL++ estimates in the selected range. */
     estimatedVisitors: number;
     visitorDays: number;
@@ -69,9 +67,7 @@ export interface AnalyticsStore {
     summary(from: Date, to: Date): Promise<AnalyticsSummary>;
     /** Views (+ latency) per bucket over the range. */
     timeseries(q: RangeQuery): Promise<TimeBucket[]>;
-    /** @deprecated Compatibility alias for `topPages`. */
-    topPaths(from: Date, to: Date, limit: number): Promise<KeyCount[]>;
-    /** Most-viewed stable page ids, falling back to paths for legacy producers. */
+    /** Most-viewed stable page ids. */
     topPages(from: Date, to: Date, limit: number): Promise<KeyCount[]>;
     /** Counts grouped by a dimension over [from, to); status covers all non-bot requests. */
     breakdown(

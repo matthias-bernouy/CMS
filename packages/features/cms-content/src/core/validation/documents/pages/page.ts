@@ -2,7 +2,6 @@ import { isSourceUrn } from "@bernouy/cms-sources";
 import type { PageIndexingConfiguration, TPage } from "cms-content/interfaces/pages";
 import { ContentValidationError } from "cms-content/core/validation/errors";
 import { isValidPathFormat } from "cms-content/core/validation/predicates";
-import { assertPagePathNotReserved } from "cms-content/core/utils/localizedPagePath";
 import { isCmsQueryParamName } from "cms-content/interfaces/Editor/BindingSyntax";
 import { validatePageSeo } from "cms-content/core/validation/documents/pages/seo";
 import {
@@ -20,7 +19,6 @@ export function validatePagePath(value: string): string {
     if (!isValidPathFormat(value)) {
         throw new ContentValidationError("path", "must start with '/' and contain only [a-zA-Z0-9-/]");
     }
-    assertPagePathNotReserved(value);
     return value;
 }
 

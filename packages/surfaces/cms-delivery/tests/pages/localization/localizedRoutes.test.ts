@@ -5,7 +5,7 @@ import { parseHTML } from "linkedom";
 import SitemapServer from "cms-delivery/endpoints/sitemap.xml.server";
 import { mountPublicPages } from "../publicPage.fixture";
 
-test("legacy and retired paths redirect while localized variants share one page", async () => {
+test("retired paths redirect while localized variants share one page", async () => {
     const repository = new InMemoryCmsRepository();
     await repository.insertPage("/about", "About", "<main>Shared content</main>");
     const page = (await repository.getPage("/about"))!;
@@ -21,12 +21,12 @@ test("legacy and retired paths redirect while localized variants share one page"
     await repository.setPagePaths(page.id, { fr: "/a-propos", en: "/about" });
     const mounted = mountPublicPages({ repository });
 
-    const legacy = await mounted.get(new Request("https://example.test/about?ref=old"));
-    expect(legacy.status).toBe(301);
-    expect(legacy.headers.get("location")).toBe("/a-propos?ref=old");
-    const legacyHead = await mounted.head(new Request("https://example.test/about", { method: "HEAD" }));
-    expect(legacyHead.status).toBe(301);
-    expect(await legacyHead.text()).toBe("");
+    const retired = await mounted.get(new Request("https://example.test/about?ref=old"));
+    expect(retired.status).toBe(301);
+    expect(retired.headers.get("location")).toBe("/a-propos?ref=old");
+    const retiredHead = await mounted.head(new Request("https://example.test/about", { method: "HEAD" }));
+    expect(retiredHead.status).toBe(301);
+    expect(await retiredHead.text()).toBe("");
 
     for (const [path, language] of [
         ["/a-propos", "fr"],
@@ -76,14 +76,13 @@ test("legacy and retired paths redirect while localized variants share one page"
     expect(inactiveXml).not.toContain("hreflang=");
 });
 
-test("public routes pause while the default language is being migrated", async () => {
-    class PausedMigrationRepository extends InMemoryCmsRepository {
+test("public routes pause while the default language routes are changing", async () => {
+    class PausedRouteChangeRepository extends InMemoryCmsRepository {
         pause: Promise<void> | null = null;
 
-        protected override async migrateLegacyPagePaths(
+        protected override async reconfigurePageRoutes(
             system: TSystem,
             previousDefaultLanguage?: string,
-            validateReservedPaths = false,
             dryRun = false,
         ): Promise<void> {
             if (!dryRun && this.pause) {
@@ -91,10 +90,10 @@ test("public routes pause while the default language is being migrated", async (
                 this.pause = null;
                 await pending;
             }
-            await super.migrateLegacyPagePaths(system, previousDefaultLanguage, validateReservedPaths, dryRun);
+            await super.reconfigurePageRoutes(system, previousDefaultLanguage, dryRun);
         }
     }
-    const repository = new PausedMigrationRepository();
+    const repository = new PausedRouteChangeRepository();
     await repository.updateSystem({ site: { language: "fr", additionalLanguages: ["en"] } as never });
     await repository.insertPage("/francais", "About");
     const page = (await repository.getPage("/francais"))!;

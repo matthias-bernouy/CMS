@@ -135,23 +135,3 @@ test("creation omits empty identity but validates response identity and staging 
     detail.save!.idPath = "__proto__.id";
     expect(validateDashboard(dashboard, { source })).toContain("views.1.save.idPath must be a safe dotted data path");
 });
-
-test("native management targets are explicit and cannot mix arbitrary source endpoints or bodies", () => {
-    const { dashboard, detail, source } = fixture();
-    detail.save = {
-        management: { installationId: "provider", operation: "action", actionId: "publish" },
-        valuesPath: "input",
-    };
-    expect(validateDashboard(dashboard, { source })).toEqual([]);
-    for (const invalid of [
-        { endpoint: "updateProduct" },
-        { params: { id: "$resource.id" } },
-        { sourceId: "other" },
-        { body: { values: "$field" } },
-        { management: { installationId: "provider", operation: "health" } },
-    ]) {
-        const copy = structuredClone(dashboard);
-        Object.assign((copy.views[1] as typeof detail).save!, invalid);
-        expect(validateDashboard(copy, { source }).length).toBeGreaterThan(0);
-    }
-});

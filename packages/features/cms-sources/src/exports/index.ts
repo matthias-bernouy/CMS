@@ -127,12 +127,9 @@ export {
 } from "../core/execution/executeEndpoint";
 export {
     MAX_PROJECTED_JSON_BYTES,
-    RESPONSE_PROJECTION_MODES,
     projectEndpointResponse,
-    type LegacyResponseContractReason,
     type ResponseProjectionEvent,
     type ResponseProjectionFailureReason,
-    type ResponseProjectionMode,
     type ResponseProjectionOptions,
     type ResponseProjectionReporter,
 } from "../core/response-projection/projectEndpointResponse";

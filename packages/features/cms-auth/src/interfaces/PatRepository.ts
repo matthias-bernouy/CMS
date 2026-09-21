@@ -15,16 +15,15 @@ export type Pat = {
     id: string; // opaque record id — for listing / revoking
     sub: string; // the user this token authenticates as
     name: string; // human label ("my laptop CLI")
-    scopes: string[]; // empty = full user scope
     createdAt: Date;
     lastUsedAt?: Date;
     expiresAt?: Date | null; // null = never expires
 };
 
 /** A successful verification — enough to resolve a `Subject` via `fromSub`. */
-export type PatPrincipal = { sub: string; scopes: string[] };
+export type PatPrincipal = { sub: string };
 
-export type NewPat = { sub: string; name: string; scopes?: string[]; expiresAt?: Date | null };
+export type NewPat = { sub: string; name: string; expiresAt?: Date | null };
 
 export interface PatRepository {
     /** Mint a token. Returns the one-time plaintext `token` + its stored record. */

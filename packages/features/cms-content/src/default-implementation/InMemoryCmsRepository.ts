@@ -64,18 +64,18 @@ export class InMemoryCmsRepository extends InMemoryContentRepository implements 
 
     private async applySystemUpdate(update: Partial<TSystem>): Promise<TSystem> {
         if (this.pendingSystem) {
-            await this.migrateLegacyPagePaths(this.pendingSystem, this.system.site.language, true);
+            await this.reconfigurePageRoutes(this.pendingSystem, this.system.site.language);
             this.system = this.pendingSystem;
             this.pendingSystem = null;
         }
         const merged = mergeSystemUpdate(this.system, update);
         delete merged.pageRoutesUpdating;
         if (languageRoutesChanged(this.system, merged)) {
-            await this.migrateLegacyPagePaths(merged, this.system.site.language, true, true);
+            await this.reconfigurePageRoutes(merged, this.system.site.language, true);
             const previous = this.system;
             this.pendingSystem = merged;
             this.system = { ...previous, pageRoutesUpdating: true };
-            await this.migrateLegacyPagePaths(merged, previous.site.language, true);
+            await this.reconfigurePageRoutes(merged, previous.site.language);
         }
         this.system = merged;
         this.pendingSystem = null;

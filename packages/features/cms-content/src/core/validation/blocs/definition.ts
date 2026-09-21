@@ -112,7 +112,7 @@ function validateOwnership(value: unknown): asserts value is BlocOwnership {
     if (!isBlocOwnership(value)) {
         throw new ContentValidationError(
             "ownership",
-            'expected "code-managed", "site-builder" or "integration" ownership with all required fields',
+            'expected "code-managed" or "site-builder" ownership with all required fields',
         );
     }
 }

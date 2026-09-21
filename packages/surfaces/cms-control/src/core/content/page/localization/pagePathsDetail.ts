@@ -1,4 +1,4 @@
-import { localPagePath, publicPagePath } from "@bernouy/cms-content";
+import { publicPagePath } from "@bernouy/cms-content";
 import type { ControlCms } from "cms-control/ControlCms";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 
@@ -10,9 +10,7 @@ export async function pagePathsDetail(cms: ControlCms, id: string) {
     const defaultLanguage = system.site.language;
     const languages = [...new Set([defaultLanguage, ...(system.site.additionalLanguages ?? [])].filter(Boolean))];
     const active = new Set([defaultLanguage, ...(system.site.activeLanguages ?? [])]);
-    const paths =
-        page.paths ??
-        (defaultLanguage ? { [defaultLanguage]: localPagePath(defaultLanguage, page.path) ?? page.path } : {});
+    const paths = page.paths ?? {};
     return {
         id: page.id,
         paths,

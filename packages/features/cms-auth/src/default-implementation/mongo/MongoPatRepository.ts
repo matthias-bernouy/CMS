@@ -39,7 +39,6 @@ export class MongoPatRepository implements PatRepository {
             hash: hashPatToken(token),
             sub: input.sub,
             name: input.name,
-            scopes: input.scopes ?? [],
             createdAt: new Date(),
             expiresAt: input.expiresAt ?? null,
         };
@@ -59,7 +58,7 @@ export class MongoPatRepository implements PatRepository {
         if (!doc) {
             return null;
         }
-        return { sub: doc.sub, scopes: [...doc.scopes] };
+        return { sub: doc.sub };
     }
 
     async list(sub: string): Promise<Pat[]> {

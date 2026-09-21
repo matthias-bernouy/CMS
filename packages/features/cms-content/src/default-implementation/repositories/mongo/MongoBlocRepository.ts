@@ -1,14 +1,6 @@
-import { ContentConflictError, ContentValidationError } from "cms-content/core/validation/errors";
 import type { BlocListItemResponse, SiteBlocPublicationGuard } from "cms-content/interfaces/CmsRepository";
 import type { BlocListOptions } from "cms-content/interfaces/ContentReader";
-import type {
-    BlocOwnership,
-    BlocRecord,
-    SiteBlocDefinition,
-    SiteBlocSnapshot,
-    TBloc,
-    TBlocWrite,
-} from "cms-content/interfaces/blocs";
+import type { BlocRecord, SiteBlocDefinition, SiteBlocSnapshot, TBloc, TBlocWrite } from "cms-content/interfaces/blocs";
 import {
     archivedSiteDefinition,
     assertBlocRecordOwner,
@@ -18,7 +10,6 @@ import {
 import { BlocOwnershipConflictError, SiteBlocPublicationRequiredError } from "cms-content/core/validation/errors";
 import {
     insertBlocRecord,
-    migrateLegacyBlocs,
     replaceBlocFilter,
     replaceSiteBlocRecord,
 } from "cms-content/default-implementation/repositories/mongo/blocPersistence";
@@ -34,29 +25,6 @@ import {
 } from "cms-content/default-implementation/repositories/mongo/siteBlocPublication";
 
 export class MongoBlocRepository extends MongoRepositoryStorage {
-    override async init(): Promise<void> {
-        await super.init();
-        await migrateLegacyBlocs(this.blocs);
-    }
-
-    async setBlocCatalogue(tag: string, ownership: BlocOwnership, catalogue: "active" | "inactive"): Promise<void> {
-        if (catalogue !== "active" && catalogue !== "inactive") {
-            throw new ContentValidationError("catalogue", "active or inactive expected");
-        }
-        const result = await this.blocs.updateOne(
-            {
-                _id: tag,
-                ...Object.fromEntries(Object.entries(ownership).map(([key, value]) => [`ownership.${key}`, value])),
-                artifact: { $exists: true, $ne: null },
-                siteDefinition: { $exists: false },
-            },
-            { $set: { "artifact.catalogue": catalogue } },
-        );
-        if (!result.matchedCount) {
-            throw new ContentConflictError("Installed bloc artifact is unavailable or its owner changed");
-        }
-    }
-
     async createBloc(write: TBlocWrite): Promise<TBloc> {
         const bloc = normalizeBlocWrite(write);
         if (bloc.ownership.kind === "site-builder") {
@@ -83,26 +51,12 @@ export class MongoBlocRepository extends MongoRepositoryStorage {
             ownership: structuredClone(bloc.ownership),
             artifact: structuredClone(bloc),
         };
-        const filter = replaceBlocFilter(document, current);
+        const filter = replaceBlocFilter(current);
         const result = await this.blocs.replaceOne(filter as never, toBlocDoc(next));
         if (result.matchedCount !== 1) {
             throw new BlocOwnershipConflictError(bloc.id);
         }
         return structuredClone(bloc);
-    }
-
-    async deleteBloc(tag: string, ownership: BlocOwnership): Promise<boolean> {
-        const document = await this.blocs.findOne({ _id: tag });
-        if (!document) {
-            return false;
-        }
-        const current = fromBlocDoc(document)!;
-        assertBlocRecordOwner(current, ownership);
-        const result = await this.blocs.deleteOne(replaceBlocFilter(document, current) as never);
-        if (result.deletedCount !== 1) {
-            throw new BlocOwnershipConflictError(tag);
-        }
-        return true;
     }
 
     async getBlocRecord(tag: string): Promise<BlocRecord | null> {

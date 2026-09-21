@@ -9,30 +9,6 @@ import { siteBlocArtifact, siteBlocDefinition, siteBlocSnapshot } from "../blocs
 import { createMongoContentRepository } from "./contentMongoFixture";
 
 describe("MongoCmsRepository site blocs", () => {
-    test("migrates legacy flat documents to code-managed aggregates", async () => {
-        const { db, repository } = createMongoContentRepository();
-        await db.get("blocs").insertOne({
-            _id: "legacy-card",
-            name: "Legacy card",
-            group: "Legacy",
-            description: "Pre-ownership document",
-            editorJS: "legacy-editor",
-            viewJS: "legacy-view",
-        });
-
-        await repository.init();
-
-        expect(await repository.getBlocRecord("legacy-card")).toMatchObject({
-            tag: "legacy-card",
-            ownership: { kind: "code-managed" },
-            artifact: { id: "legacy-card", ownership: { kind: "code-managed" } },
-        });
-        expect(await db.get("blocs").findOne({ _id: "legacy-card" })).toMatchObject({
-            ownership: { kind: "code-managed" },
-            artifact: { ownership: { kind: "code-managed" } },
-        });
-    });
-
     test("enforces ownership during replacements", async () => {
         const { repository } = createMongoContentRepository();
         await repository.createBloc({ ...siteBlocArtifact(), id: "basic-card", ownership: undefined });
@@ -41,12 +17,7 @@ describe("MongoCmsRepository site blocs", () => {
             repository.replaceBloc({
                 ...siteBlocArtifact(),
                 id: "basic-card",
-                ownership: {
-                    kind: "integration",
-                    integrationKind: "catalogue",
-                    installationId: "installation-1",
-                    definitionVersion: "1.0.0",
-                },
+                ownership: { kind: "site-builder", definitionId: "definition-basic-card" },
             }),
         ).rejects.toBeInstanceOf(BlocOwnershipConflictError);
         expect((await repository.getBlocRecord("basic-card"))?.ownership).toEqual({ kind: "code-managed" });

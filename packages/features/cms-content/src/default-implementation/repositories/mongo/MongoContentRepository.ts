@@ -3,8 +3,8 @@ import type { PageLink } from "cms-content/interfaces/CmsRepository";
 import type { PageRoute, TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
 import { isPublishedPage } from "cms-content/core/lifecycle/publication";
-import { migratedPagePaths, planPagePaths } from "cms-content/core/lifecycle/pagePaths";
-import { assertPagePathNotReserved, publicPagePath } from "cms-content/core/utils/localizedPagePath";
+import { pagePathsForSystem, planPagePaths } from "cms-content/core/lifecycle/pagePaths";
+import { publicPagePath } from "cms-content/core/utils/localizedPagePath";
 import { MongoBlocRepository } from "cms-content/default-implementation/repositories/mongo/MongoBlocRepository";
 import { fromPageDoc } from "cms-content/default-implementation/repositories/mongo/documents";
 import {
@@ -44,13 +44,14 @@ export class MongoContentRepository extends MongoBlocRepository {
         for (let attempt = 0; attempt < 20; attempt++) {
             const stored = await readSystemDocument(this.system);
             let revision = stored.settingsRevision ?? 0;
-            let migration = stored.routeMigration;
-            if (migration) {
+            let routeChange = stored.routeMigration;
+            const reconfigure = routeChange !== undefined;
+            if (routeChange) {
                 const recovered = await claimInterruptedRouteMigration(this.system);
                 if (!recovered) {
                     continue;
                 }
-                migration = recovered.migration;
+                routeChange = recovered.migration;
                 revision = recovered.revision;
             } else {
                 const target = systemFromDocument(stored);
@@ -71,26 +72,29 @@ export class MongoContentRepository extends MongoBlocRepository {
                     }
                     throw error;
                 }
-                migration = (await readSystemDocument(this.system)).routeMigration;
-                if (migration?.token !== token) {
-                    throw new Error("Page route recovery claim changed before it began.");
+                routeChange = (await readSystemDocument(this.system)).routeMigration;
+                if (routeChange?.token !== token) {
+                    throw new Error("Page route maintenance claim changed before it began.");
                 }
             }
-            if (!migration) {
+            if (!routeChange) {
                 continue;
             }
             try {
-                await this.migrateLegacyPagePaths(migration.target, migration.previousDefaultLanguage, true);
+                await this.recoverPendingPageWrites(routeChange.target);
+                if (reconfigure) {
+                    await this.reconfigurePageRoutes(routeChange.target, routeChange.previousDefaultLanguage);
+                }
                 const committed = await this.system.replaceOne(
-                    { _id: SYSTEM_ID, "routeMigration.token": migration.token },
-                    { ...migration.target, settingsRevision: revision + 1, activePageWrites: 0 },
+                    { _id: SYSTEM_ID, "routeMigration.token": routeChange.token },
+                    { ...routeChange.target, settingsRevision: revision + 1, activePageWrites: 0 },
                 );
                 if (!committed.matchedCount) {
-                    throw new Error("Page route migration changed during recovery.");
+                    throw new Error("Page route maintenance changed during recovery.");
                 }
                 return;
             } finally {
-                releaseRouteMigration(migration.token);
+                releaseRouteMigration(routeChange.token);
             }
         }
         throw new Error("Page route recovery could not claim the site.");
@@ -103,7 +107,7 @@ export class MongoContentRepository extends MongoBlocRepository {
                   path: route._id,
                   state: route.state,
                   pageId: route.pageId,
-                  ...(route.ownerPageId ? { ownerPageId: route.ownerPageId } : {}),
+                  ownerPageId: route.ownerPageId,
                   language: route.language,
               }
             : null;
@@ -139,7 +143,6 @@ export class MongoContentRepository extends MongoBlocRepository {
         return withPageRouteWrite(this.system, async (system) => {
             const language = system.site.language;
             const publicPath = publicPagePath(language, path, language);
-            assertPagePathNotReserved(publicPath, [language, ...(system.site.additionalLanguages ?? [])]);
             const id = randomUUIDv7();
             try {
                 await this.pageRoutes.insertOne({
@@ -234,25 +237,13 @@ export class MongoContentRepository extends MongoBlocRepository {
         paths: Record<string, string>,
         system?: TSystem,
         expectedPaths?: Record<string, string>,
-        allowLegacyDefaultRoute = false,
+        duringRouteReconfiguration = false,
     ): Promise<TPage> {
         const save = async (routeSystem: TSystem) => {
             const plan = planPagePaths(paths, routeSystem);
-            const languages = [routeSystem.site.language, ...(routeSystem.site.additionalLanguages ?? [])];
-            for (const route of plan.current) {
-                assertPagePathNotReserved(route.path, languages);
-            }
-            return updateMongoPagePaths(
-                this.pages,
-                this.pageRoutes,
-                id,
-                plan,
-                routeSystem,
-                allowLegacyDefaultRoute,
-                expectedPaths,
-            );
+            return updateMongoPagePaths(this.pages, this.pageRoutes, id, plan, routeSystem, expectedPaths);
         };
-        return allowLegacyDefaultRoute
+        return duringRouteReconfiguration
             ? save(system ?? (await this.routeSystem()))
             : withPageRouteWrite(this.system, save);
     }
@@ -270,32 +261,17 @@ export class MongoContentRepository extends MongoBlocRepository {
         return documents.map((document) => ({ path: document.path, title: document.title }));
     }
 
-    protected async migrateLegacyPagePaths(
+    protected async reconfigurePageRoutes(
         system: TSystem,
         previousDefaultLanguage?: string,
-        validateReservedPaths = false,
         dryRun = false,
     ): Promise<void> {
-        await recoverMongoPageInserts(this.pages, this.pageRoutes);
-        await recoverMongoPagePathUpdates(this.pages, this.pageRoutes);
-        await recoverMongoPageDeletions(this.pages, this.pageRoutes);
         const documents = await this.pages.find({}).toArray();
         if (!system.site.language) {
             if (dryRun) {
                 return;
             }
             for (const document of documents) {
-                const route = await this.getPageRoute(document.path);
-                if (
-                    route?.state === "redirect" &&
-                    route.pageId === document._id &&
-                    (!route.ownerPageId || route.ownerPageId === document._id)
-                ) {
-                    await this.pageRoutes.updateOne(
-                        { _id: document.path, pageId: document._id, state: "redirect" },
-                        { $set: { state: "current", ownerPageId: document._id, language: "" } },
-                    );
-                }
                 await this.ensureCurrentRoute(document.path, document._id, "");
                 for (const extra of await this.pageRoutes.find({ pageId: document._id, state: "current" }).toArray()) {
                     if (extra._id !== document.path) {
@@ -308,24 +284,16 @@ export class MongoContentRepository extends MongoBlocRepository {
         const pathOwners = new Map(documents.map((document) => [document.path, document._id]));
         const plans = documents.map((document) => ({
             document,
-            plan: planPagePaths(migratedPagePaths(fromPageDoc(document)!, system, previousDefaultLanguage), system),
+            plan: planPagePaths(pagePathsForSystem(fromPageDoc(document)!, system, previousDefaultLanguage), system),
         }));
         const claims = new Map<string, string>();
         for (const { document, plan } of plans) {
             for (const { path } of plan.current) {
-                if (validateReservedPaths) {
-                    assertPagePathNotReserved(path, [system.site.language, ...(system.site.additionalLanguages ?? [])]);
-                }
                 const route = await this.getPageRoute(path);
                 const claimant = claims.get(path);
                 if (
                     (claimant && claimant !== document._id) ||
-                    (route &&
-                        !canUsePageRoute(
-                            route,
-                            document._id,
-                            path === plan.primaryPath && route.language === system.site.language,
-                        )) ||
+                    (route && !canUsePageRoute(route, document._id)) ||
                     (pathOwners.has(path) && pathOwners.get(path) !== document._id)
                 ) {
                     throw new DuplicatePagePathError(path);
@@ -364,13 +332,19 @@ export class MongoContentRepository extends MongoBlocRepository {
         return systemFromDocument(await readSystemDocument(this.system));
     }
 
+    private async recoverPendingPageWrites(system: TSystem): Promise<void> {
+        await recoverMongoPageInserts(this.pages, this.pageRoutes);
+        await recoverMongoPagePathUpdates(this.pages, this.pageRoutes, system);
+        await recoverMongoPageDeletions(this.pages, this.pageRoutes);
+    }
+
     private async ensureCurrentRoute(path: string, pageId: string, language: string): Promise<void> {
         const existing = await this.getPageRoute(path);
         if (existing) {
             if (existing.pageId !== pageId || existing.state !== "current") {
                 throw new DuplicatePagePathError(path);
             }
-            if (existing.language !== language || !existing.ownerPageId) {
+            if (existing.language !== language) {
                 await this.pageRoutes.updateOne({ _id: path, pageId }, { $set: { language, ownerPageId: pageId } });
             }
             return;

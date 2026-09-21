@@ -94,13 +94,6 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
 }
 
 function ownershipView(ownership: BlocOwnership) {
-    if (ownership.kind === "integration") {
-        return {
-            ...ownership,
-            label: "Integration",
-            detail: `${ownership.integrationKind} · ${ownership.definitionVersion}`,
-        };
-    }
     if (ownership.kind === "site-builder") {
         return { ...ownership, label: "Site builder", detail: "Editable in this site" };
     }

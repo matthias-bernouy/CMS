@@ -13,7 +13,6 @@ export async function readSummary(rollups: Collection<RollupDoc>, from: Date, to
     const views = pv.count;
     return {
         views,
-        uniqueVisitors: visitors.count,
         estimatedVisitors: visitors.count,
         visitorDays: visitors.count,
         averageDailyVisitors: average(visitors.count, dayBucketCount(from, to)),

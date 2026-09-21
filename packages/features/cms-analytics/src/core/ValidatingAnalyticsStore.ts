@@ -96,9 +96,6 @@ export class ValidatingAnalyticsStore implements AnalyticsStore {
     timeseries(q: RangeQuery) {
         return this.inner.timeseries(q);
     }
-    topPaths(from: Date, to: Date, limit: number) {
-        return this.inner.topPaths(from, to, limit);
-    }
     topPages(from: Date, to: Date, limit: number) {
         return this.inner.topPages(from, to, limit);
     }

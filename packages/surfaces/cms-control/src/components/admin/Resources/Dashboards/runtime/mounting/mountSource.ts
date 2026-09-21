@@ -24,9 +24,6 @@ export function sourceWrapper(
 }
 
 export function requiredSourceParams(context: RenderContext, ref: SourceRef): string[] {
-    if (ref.management) {
-        return [];
-    }
     const sourceId = ref.sourceId ?? context.dashboard.source;
     const group = (context.groups ?? [context.group]).find((candidate) => candidate.source.id === sourceId);
     return (

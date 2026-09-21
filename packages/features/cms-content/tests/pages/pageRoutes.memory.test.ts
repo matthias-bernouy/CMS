@@ -81,15 +81,14 @@ test("changing the default language updates the primary path on the same page", 
     expect(await repo.getPageRoute("/about")).toMatchObject({ state: "current", pageId: page.id, language: "en" });
 });
 
-test("in-memory settings saves wait for a language migration before merging", async () => {
+test("in-memory settings saves wait for a language route change before merging", async () => {
     class PausedRepository extends InMemoryCmsRepository {
         pause: Promise<void> | null = null;
         entered: (() => void) | null = null;
 
-        protected override async migrateLegacyPagePaths(
+        protected override async reconfigurePageRoutes(
             system: TSystem,
             previousDefaultLanguage?: string,
-            validateReservedPaths = false,
             dryRun = false,
         ): Promise<void> {
             if (dryRun && this.pause) {
@@ -98,7 +97,7 @@ test("in-memory settings saves wait for a language migration before merging", as
                 this.entered?.();
                 await pending;
             }
-            await super.migrateLegacyPagePaths(system, previousDefaultLanguage, validateReservedPaths, dryRun);
+            await super.reconfigurePageRoutes(system, previousDefaultLanguage, dryRun);
         }
     }
     const repo = new PausedRepository();
@@ -161,45 +160,6 @@ test("a literal language-looking path survives a default language change in memo
     expect((await repo.getPageById(page.id))?.path).toBe("/en/about");
 });
 
-test("in-memory pages cannot claim prefixed sitemap paths", async () => {
-    const repo = new InMemoryCmsRepository();
-    await repo.updateSystem({ site: { language: "fr", additionalLanguages: ["en"] } as never });
-    await expect(repo.insertPage("/en/sitemaps", "Reserved")).rejects.toBeInstanceOf(ContentValidationError);
-    await repo.insertPage("/products/sitemaps", "Products sitemap guide");
-    expect((await repo.getPage("/products/sitemaps"))?.path).toBe("/products/sitemaps");
-    await repo.insertPage("/about", "About");
-    const page = (await repo.getPage("/about"))!;
-    await expect(repo.setPagePaths(page.id, { fr: "/about", en: "/sitemaps" })).rejects.toBeInstanceOf(
-        ContentValidationError,
-    );
-});
-
-test("in-memory migration rejects a newly reserved primary path", async () => {
-    class LegacyRepository extends InMemoryCmsRepository {
-        seedPreviousSitemapPath(id: string): void {
-            this.pages.get("/about")!.paths = { fr: "/about", en: "/sitemaps" };
-            this.pageRoutes.set("/en/sitemaps", {
-                path: "/en/sitemaps",
-                state: "current",
-                pageId: id,
-                ownerPageId: id,
-                language: "en",
-            });
-        }
-    }
-    const repo = new LegacyRepository();
-    await repo.updateSystem({ site: { language: "fr", additionalLanguages: ["en"] } as never });
-    await repo.insertPage("/about", "About");
-    const page = (await repo.getPage("/about"))!;
-    repo.seedPreviousSitemapPath(page.id);
-
-    await expect(
-        repo.updateSystem({ site: { language: "en", additionalLanguages: ["fr"] } as never }),
-    ).rejects.toBeInstanceOf(ContentValidationError);
-    expect((await repo.getSystem()).site.language).toBe("fr");
-    expect((await repo.getPageById(page.id))?.path).toBe("/about");
-});
-
 test("the language matrix rejects duplicate language codes with different casing", async () => {
     const repo = new InMemoryCmsRepository();
     await repo.updateSystem({ site: { language: "fr" } as never });
@@ -211,7 +171,7 @@ test("the language matrix rejects duplicate language codes with different casing
     expect((await repo.getPageById(page.id))?.paths).toEqual({ fr: "/about" });
 });
 
-test("root paths survive migration from sites without a language", async () => {
+test("root paths survive configuring the first site language", async () => {
     const repo = new InMemoryCmsRepository();
     await repo.insertPage("/about", "About");
     await repo.insertPage("/fr/about", "Already prefixed");

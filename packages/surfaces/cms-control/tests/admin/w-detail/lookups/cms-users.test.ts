@@ -135,7 +135,6 @@ describe("dashboard CMS user fields", () => {
                 {
                     sub: "oidc:known:opaque",
                     email: "known@example.test",
-                    roleLabel: "User",
                 },
             ])) as unknown as typeof fetch;
 

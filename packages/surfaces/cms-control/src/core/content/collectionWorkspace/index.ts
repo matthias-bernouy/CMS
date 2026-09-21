@@ -64,7 +64,6 @@ export async function collectionWorkspace(
         isTexts: isCollection && section === "texts",
         section,
         collections,
-        catalogCollections: library.explore,
         ...(collection
             ? {
                   collection,
@@ -77,7 +76,6 @@ export async function collectionWorkspace(
         emptyTitle: library.emptyTitle,
         emptyDescription: library.emptyDescription,
         hasSiteCollections: library.hasSiteCollections,
-        hasManagedCollections: library.hasManagedCollections,
         hasCodeCollections: library.hasCodeCollections,
     };
 }
@@ -86,13 +84,8 @@ function workspaceCollection(collection: LibraryCollection, basePath: string): C
     const path = (section: CollectionWorkspaceSection) => collectionWorkspacePath(basePath, collection.key, section);
     return {
         ...collection,
-        canCheckUpdates: false,
         href: path("overview"),
-        kindLabel: collection.isSite
-            ? "Private collection"
-            : collection.isManaged
-              ? "Imported collection"
-              : "Code collection",
+        kindLabel: collection.isSite ? "Private collection" : "Code collection",
         overviewHref: path("overview"),
         themeHref: path("theme"),
         blocsHref: path("blocs"),

@@ -31,6 +31,12 @@ describe("Control source dependency scope", () => {
                         { name: "x-token-a", source: { from: "secret", ref: "${TOKEN}" } },
                         { name: "x-token-b", source: { from: "secret", ref: "${TOKEN}" } },
                     ],
+                    output: [
+                        {
+                            status: "200",
+                            body: { type: "object", properties: { ok: { type: "boolean" } }, required: ["ok"] },
+                        },
+                    ],
                 },
             ],
         });

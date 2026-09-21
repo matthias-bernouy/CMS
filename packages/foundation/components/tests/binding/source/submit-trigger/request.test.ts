@@ -14,7 +14,7 @@ afterEach(resetDom);
 describe("Source — submit request", () => {
     test("form-owned submit source sends JSON without replacing form controls", async () => {
         let request: { url: string; init?: RequestInit } | null = null;
-        const events: Record<string, FormSubmitResult | undefined> = {};
+        let result: FormSubmitResult | undefined;
         location.href = "http://localhost/";
         globalThis.fetch = (async (url: string, init?: RequestInit) => {
             request = { url, init };
@@ -36,14 +36,7 @@ describe("Source — submit request", () => {
         document.body.addEventListener(
             CMS_SOURCE_SUCCESS_EVENT,
             (event) => {
-                events.source = event.detail;
-            },
-            { once: true },
-        );
-        document.body.addEventListener(
-            "form:success",
-            (event) => {
-                events.form = (event as CustomEvent<FormSubmitResult>).detail;
+                result = event.detail;
             },
             { once: true },
         );
@@ -64,8 +57,7 @@ describe("Source — submit request", () => {
         expect(captured.url).toBe("http://localhost/api/users");
         expect(captured.init?.method).toBe("POST");
         expect(captured.init?.body).toBe(JSON.stringify({ email: "ada@example.com" }));
-        expect(events.source?.status).toBe(201);
-        expect(events.form?.status).toBe(201);
+        expect(result?.status).toBe(201);
         expect(readSourceData(root)).toMatchObject({ ok: true, status: 201, body: { id: "42" } });
         expect(root.querySelector("input")).toBe(input);
         expect(input.value).toBe("");

@@ -28,8 +28,6 @@ implementation notes live in each package's `AGENTS.md`.
   paths, redirects, deletion tombstones, and public SEO behavior.
 - [Bloc Authoring](./blocs/README.md) documents how to create blocs, expose
   editor capabilities, bind Sources, design themeable CSS, test, and publish.
-- [Legacy integration documentation](./integrations/README.md) is retained only
-  as migration evidence for the removed package/install/repository system.
 - [auth-system-source.md](./auth-system-source.md) documents the readonly
   system auth source exposed through `/.cms/sources/system-auth/*`.
 
@@ -39,11 +37,7 @@ implementation notes live in each package's `AGENTS.md`.
   Delivery optimization, browser selection, caching, and rollout for responsive
   images.
 
-## Dashboard Implementation
+## UI Quality
 
-- [Dashboard detail forms](./integrations/dashboard-views.md) documents current
-  authoring contracts, creation, operations and related-resource panels.
-- [Dashboard binding verification](./quality/dashboard-widget-binding.md) explains
-  rendering ownership and the browser validation checklist.
-- [Integration migration status](./quality/integration-views/all-integrations.md)
-  records migrated views, remaining legacy consumers and validation limits.
+- [UI contracts](./quality/ui-contracts.md) documents binding ownership and
+  browser request diagnostics.

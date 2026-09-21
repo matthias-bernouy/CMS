@@ -11,10 +11,7 @@ export async function projectSourceResponse(
     allowPublicCacheWithUpstreamCookie: boolean,
 ): Promise<Response> {
     const declared = hasResponseContract(endpoint, upstream.status);
-    const legacyStrictFailure =
-        !declared && deps?.reportFailure !== undefined && deps.responseProjectionMode !== "compatibility";
     const projected = await projectEndpointResponse(endpoint, request, upstream, {
-        responseProjectionMode: legacyStrictFailure ? "strict" : deps?.responseProjectionMode,
         reportResponseProjectionEvent: deps?.reportResponseProjectionEvent,
         correlationId: deps?.observability?.correlationId,
         allowPublicCacheWithUpstreamCookie,

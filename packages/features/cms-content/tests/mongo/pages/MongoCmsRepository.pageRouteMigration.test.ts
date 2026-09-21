@@ -18,26 +18,14 @@ test("Mongo preserves a literal language-looking path when the default changes",
     expect((await repository.getPageById(page.id))?.path).toBe("/en/about");
 });
 
-test("Mongo refuses URL edits without a language and repairs older interrupted route edits", async () => {
-    const { db, repository } = createMongoContentRepository();
+test("Mongo refuses URL edits without a configured language", async () => {
+    const { repository } = createMongoContentRepository();
     await repository.init();
     await repository.insertPage("/before", "Before");
     const page = (await repository.getPage("/before"))!;
 
     await expect(repository.updatePage({ id: page.id, path: "/after" })).rejects.toBeInstanceOf(ContentValidationError);
     expect(await repository.getPageRoute("/after")).toBeNull();
-
-    await db.get("page_routes").updateOne({ _id: "/before" }, { $set: { state: "redirect" } });
-    await db.get("page_routes").insertOne({
-        _id: "/after",
-        state: "current",
-        pageId: page.id,
-        ownerPageId: page.id,
-        language: "",
-    });
-    await repository.init();
-    expect(await repository.getPageRoute("/before")).toMatchObject({ state: "current", pageId: page.id });
-    expect(await repository.getPageRoute("/after")).toMatchObject({ state: "redirect", pageId: page.id });
 });
 
 test("Mongo skips page route migration for unrelated settings changes", async () => {
@@ -52,23 +40,6 @@ test("Mongo skips page route migration for unrelated settings changes", async ()
 
     await repository.updateSystem({ site: { additionalLanguages: ["en", "de"] } as never });
     expect(db.requestedCollections.filter((name) => name === "pages").length).toBeGreaterThan(before);
-});
-
-test("Mongo rejects a default-language switch that would claim the sitemap namespace", async () => {
-    const { db, repository } = createMongoContentRepository();
-    await repository.init();
-    await repository.updateSystem({ site: { language: "fr", additionalLanguages: ["en"] } as never });
-    await repository.insertPage("/about", "About");
-    const page = (await repository.getPage("/about"))!;
-    await db.get("pages").updateOne({ _id: page.id }, { $set: { "paths.en": "/sitemaps" } });
-
-    await expect(
-        repository.updateSystem({ site: { language: "en", additionalLanguages: ["fr"] } as never }),
-    ).rejects.toBeInstanceOf(ContentValidationError);
-    expect((await repository.getSystem()).site.language).toBe("fr");
-    expect((await repository.getSystem()).pageRoutesUpdating).toBeUndefined();
-    expect((await repository.getPageById(page.id))?.path).toBe("/about");
-    expect(await repository.getPageRoute("/sitemaps")).toBeNull();
 });
 
 test("Mongo resumes an interrupted language migration before exposing its new settings", async () => {

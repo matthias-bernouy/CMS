@@ -19,12 +19,12 @@ export type EditorSourceTestDto = {
 };
 
 export const DIRECT_CATALOG_SOURCE: EditorDataSource = {
-    label: "Integration repository catalog",
-    url: "/.cms/repository/api/integrations/catalog",
+    label: "External catalog",
+    url: "/catalog/items",
     method: "GET",
-    provider: "repository",
+    provider: "catalog",
     params: [{ name: "q", in: "query", type: "string" }],
-    fields: [{ path: "integrations", type: "array", children: [{ path: "kind", type: "string" }] }],
+    fields: [{ path: "items", type: "array", children: [{ path: "kind", type: "string" }] }],
 };
 
 export const MIXED_PROVIDER: Source = {
