@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { TBloc } from "@bernouy/cms-content";
 import { DuplicateBlocTagError, DuplicatePagePathError } from "@bernouy/cms-content";
-import { createMongoContentRepository } from "./contentMongoFixture";
+import { createMongoContentRepository } from "../contentMongoFixture";
 
 const card: TBloc = {
     id: "site-card",
@@ -20,7 +20,11 @@ describe("MongoCmsRepository content persistence", () => {
 
         await repository.init();
 
-        expect(db.get("tenant_pages").indexes).toEqual([{ keys: { path: 1 }, options: { unique: true } }]);
+        expect(db.get("tenant_pages").indexes).toEqual([
+            { keys: { path: 1 }, options: { unique: true } },
+            { keys: { "deletionIntent.requestedAt": 1 }, options: { sparse: true } },
+            { keys: { "pathUpdateIntent.requestedAt": 1 }, options: { sparse: true } },
+        ]);
         expect(db.requestedCollections.every((name) => name.startsWith("tenant_"))).toBe(true);
     });
 
@@ -80,9 +84,10 @@ describe("MongoCmsRepository content persistence", () => {
         await expect(repository.insertPage("/taken", "Taken")).rejects.toBeInstanceOf(DuplicatePagePathError);
 
         delete pages.beforeInsertOne;
+        await repository.updateSystem({ site: { language: "fr" } as never });
         await repository.insertPage("/draft", "Draft");
         const draft = await repository.getPage("/draft");
-        pages.beforeUpdateOne = duplicateKey;
+        db.get("page_routes").beforeInsertOne = duplicateKey;
         await expect(repository.updatePage({ id: draft!.id, path: "/taken" })).rejects.toBeInstanceOf(
             DuplicatePagePathError,
         );

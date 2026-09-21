@@ -15,8 +15,10 @@ export class FakeContentCollection {
     }> = [];
     readonly usedSessions: unknown[] = [];
     beforeInsertOne?: (document: StoredDocument) => Promise<void>;
+    afterFindOne?: (filter: Filter, document: StoredDocument | null) => Promise<void>;
     beforeUpdateOne?: (update: { $set: Filter }) => Promise<void>;
     afterUpdateOne?: (update: { $set: Filter }) => Promise<void>;
+    beforeDeleteOne?: (filter: Filter) => Promise<void>;
     private readonly documents = new Map<string, StoredDocument>();
 
     async createIndex(keys: Filter, options: Filter): Promise<string> {
@@ -60,12 +62,14 @@ export class FakeContentCollection {
     async findOne(filter: Filter, options: { session?: unknown } = {}): Promise<StoredDocument | null> {
         this.recordSession(options.session);
         const document = this.findStored(filter);
-        return document ? structuredClone(document) : null;
+        const result = document ? structuredClone(document) : null;
+        await this.afterFindOne?.(structuredClone(filter), result);
+        return result;
     }
 
     async updateOne(
         filter: Filter,
-        update: { $set: Filter },
+        update: { $set: Filter; $unset?: Filter; $inc?: Filter },
         options: { session?: unknown } = {},
     ): Promise<{ matchedCount: number }> {
         this.recordSession(options.session);
@@ -81,6 +85,28 @@ export class FakeContentCollection {
                 }
                 target[segments.at(-1)!] = structuredClone(value);
             }
+            for (const [path, amount] of Object.entries(update.$inc ?? {})) {
+                const segments = path.split(".");
+                let target: Record<string, unknown> = next;
+                for (const segment of segments.slice(0, -1)) {
+                    target = (target[segment] ??= {}) as Record<string, unknown>;
+                }
+                const key = segments.at(-1)!;
+                target[key] = Number(target[key] ?? 0) + Number(amount);
+            }
+            for (const path of Object.keys(update.$unset ?? {})) {
+                const segments = path.split(".");
+                let target: Record<string, unknown> = next;
+                for (const segment of segments.slice(0, -1)) {
+                    target = target[segment] as Record<string, unknown>;
+                    if (!target) {
+                        break;
+                    }
+                }
+                if (target) {
+                    delete target[segments.at(-1)!];
+                }
+            }
             this.documents.set(document._id, next);
             await this.afterUpdateOne?.(structuredClone(update));
             return { matchedCount: 1 };
@@ -88,7 +114,16 @@ export class FakeContentCollection {
         return { matchedCount: 0 };
     }
 
+    async updateMany(filter: Filter, update: { $set: Filter; $unset?: Filter }): Promise<{ matchedCount: number }> {
+        const documents = await this.find(filter).toArray();
+        for (const document of documents) {
+            await this.updateOne({ _id: document._id }, update);
+        }
+        return { matchedCount: documents.length };
+    }
+
     async deleteOne(filter: Filter): Promise<{ deletedCount: number }> {
+        await this.beforeDeleteOne?.(structuredClone(filter));
         const document = this.findStored(filter);
         if (document) {
             this.documents.delete(document._id);

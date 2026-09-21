@@ -4,6 +4,7 @@ import {
     SYSTEM_ID,
     type BlocDoc,
     type PageDoc,
+    type PageRouteDoc,
     type SiteBlocPublicationLockDoc,
     type SystemDoc,
 } from "cms-content/default-implementation/repositories/mongo/documents";
@@ -26,6 +27,10 @@ export class MongoRepositoryStorage {
     /** Create the unique indexes required by the repository contract. */
     async init(): Promise<void> {
         await this.pages.createIndex({ path: 1 }, { unique: true });
+        await this.pages.createIndex({ "deletionIntent.requestedAt": 1 }, { sparse: true });
+        await this.pages.createIndex({ "pathUpdateIntent.requestedAt": 1 }, { sparse: true });
+        await this.pageRoutes.createIndex({ pageId: 1 });
+        await this.pageRoutes.createIndex({ pageInsertToken: 1 }, { sparse: true });
     }
 
     protected get siteBlocCollections(): Collection<Omit<SiteBlocCollection, "id"> & { _id: string }> {
@@ -38,6 +43,10 @@ export class MongoRepositoryStorage {
 
     protected get pages(): Collection<PageDoc> {
         return this.db.collection<PageDoc>(this.prefix + "pages");
+    }
+
+    protected get pageRoutes(): Collection<PageRouteDoc> {
+        return this.db.collection<PageRouteDoc>(this.prefix + "page_routes");
     }
 
     protected get system(): Collection<SystemDoc> {

@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import { ContentValidationError } from "cms-content/core/validation/errors";
 import type { CmsRepository, PageMeta, PagesQuery } from "cms-content/interfaces/CmsRepository";
 import type { SiteBlocCollection } from "cms-content/interfaces/blocs";
@@ -9,9 +10,18 @@ import {
 } from "cms-content/core/lifecycle/siteBlocCollections";
 import type { TSystem } from "cms-content/interfaces/settings";
 import { escapeRegex } from "cms-content/core/utils/escapeRegex";
-import { defaultSystem, mergeSystemUpdate } from "cms-content/core/lifecycle/system";
+import { mergeSystemUpdate } from "cms-content/core/lifecycle/system";
+import { languageRoutesChanged } from "cms-content/core/lifecycle/pagePaths";
 import { countValues, normalizeTags } from "cms-content/core/queries/counts";
 import { MongoContentRepository } from "cms-content/default-implementation/repositories/mongo/MongoContentRepository";
+import {
+    claimRouteMigration,
+    releaseRouteMigration,
+} from "cms-content/default-implementation/repositories/mongo/pageRoutes/migrationFence";
+import {
+    readSystemDocument,
+    systemFromDocument,
+} from "cms-content/default-implementation/repositories/mongo/pageRoutes/systemFence";
 import {
     SYSTEM_ID,
     type MongoCmsRepositoryConfig,
@@ -81,21 +91,66 @@ export class MongoCmsRepository extends MongoContentRepository implements CmsRep
     }
 
     async getSystem(): Promise<TSystem> {
-        const document = await this.system.findOne({ _id: SYSTEM_ID });
-        if (document) {
-            const { _id, ...stored } = document;
-            const rest = stored as Partial<TSystem> & { editor?: unknown };
-            delete rest.editor;
-            return mergeSystemUpdate(defaultSystem(), rest as Partial<TSystem>);
-        }
-        const fresh = defaultSystem();
-        await this.system.insertOne({ _id: SYSTEM_ID, ...fresh });
-        return fresh;
+        return systemFromDocument(await readSystemDocument(this.system));
     }
 
     async updateSystem(update: Partial<TSystem>): Promise<TSystem> {
-        const merged = mergeSystemUpdate(await this.getSystem(), update);
-        await this.system.replaceOne({ _id: SYSTEM_ID }, merged, { upsert: true });
-        return merged;
+        for (let attempt = 0; attempt < 20; attempt++) {
+            const stored = await readSystemDocument(this.system);
+            if (stored.routeMigration) {
+                throw new Error("Page route migration is in progress.");
+            }
+            const current = systemFromDocument(stored);
+            const merged = mergeSystemUpdate(current, update);
+            delete merged.pageRoutesUpdating;
+            const revision = stored.settingsRevision ?? 0;
+            if (!languageRoutesChanged(current, merged)) {
+                const saved = await this.system.updateOne(
+                    { _id: SYSTEM_ID, settingsRevision: revision, routeMigration: { $exists: false } },
+                    { $set: merged, $inc: { settingsRevision: 1 } },
+                );
+                if (saved.matchedCount) {
+                    return merged;
+                }
+                continue;
+            }
+
+            const token = randomUUIDv7();
+            const claimed = await claimRouteMigration(this.system, revision, {
+                token,
+                target: merged,
+                previousDefaultLanguage: current.site.language,
+                requestedAt: new Date(),
+            });
+            if (!claimed) {
+                continue;
+            }
+            try {
+                try {
+                    await this.migrateLegacyPagePaths(merged, current.site.language, true, true);
+                } catch (error) {
+                    const released = await this.system.updateOne(
+                        { _id: SYSTEM_ID, "routeMigration.token": token },
+                        { $set: {}, $unset: { routeMigration: "" } },
+                    );
+                    if (!released.matchedCount) {
+                        throw new Error("Page route migration changed during validation.");
+                    }
+                    throw error;
+                }
+                await this.migrateLegacyPagePaths(merged, current.site.language, true);
+                const committed = await this.system.replaceOne(
+                    { _id: SYSTEM_ID, "routeMigration.token": token, settingsRevision: revision },
+                    { ...merged, settingsRevision: revision + 1, activePageWrites: 0 },
+                );
+                if (!committed.matchedCount) {
+                    throw new Error("Page route migration changed before completion.");
+                }
+                return merged;
+            } finally {
+                releaseRouteMigration(token);
+            }
+        }
+        throw new Error("System settings changed repeatedly; retry the save.");
     }
 }

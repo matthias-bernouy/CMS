@@ -1,6 +1,6 @@
 import type { BlocOwnership, BlocRecord, TBlocWrite } from "cms-content/interfaces/blocs";
 import { CODE_MANAGED_BLOC_OWNERSHIP, isBlocOwnership, normalizeBlocWrite } from "cms-content/core/blocs/records";
-import type { TPage } from "cms-content/interfaces/pages";
+import type { PageRoute, TPage } from "cms-content/interfaces/pages";
 import type { TSystem } from "cms-content/interfaces/settings";
 
 export const SYSTEM_ID = "singleton" as const;
@@ -9,8 +9,39 @@ export type WithMongoId<T extends { id: string }> = Omit<T, "id"> & { _id: strin
 export type LegacyBlocDoc = WithMongoId<TBlocWrite>;
 export type BlocRecordDoc = Omit<BlocRecord, "tag"> & { _id: string };
 export type BlocDoc = LegacyBlocDoc | BlocRecordDoc;
-export type PageDoc = WithMongoId<TPage>;
-export type SystemDoc = TSystem & { _id: typeof SYSTEM_ID };
+export type PageDeletionIntent = {
+    alternativeId: string | null;
+    alternativePath: string | null;
+    requestedAt: Date;
+};
+export type PagePathUpdateIntent = {
+    token: string;
+    requestedAt: Date;
+    phase: "preparing" | "committed";
+};
+export type PageDoc = WithMongoId<TPage> & {
+    deletionIntent?: PageDeletionIntent;
+    pathUpdateIntent?: PagePathUpdateIntent;
+};
+export type PageRouteDoc = Omit<PageRoute, "path"> & {
+    _id: string;
+    pathUpdateToken?: string;
+    pageInsertToken?: string;
+};
+export type SystemDoc = TSystem & {
+    _id: typeof SYSTEM_ID;
+    settingsRevision?: number;
+    activePageWrites?: number;
+    activePageWritePermits?: Record<string, Date>;
+    pageDeletionLock?: string;
+    routeMigration?: {
+        token: string;
+        target: TSystem;
+        previousDefaultLanguage: string;
+        requestedAt: Date;
+        expiresAt?: Date;
+    };
+};
 export type SiteBlocPublicationLockDoc = {
     _id: "published-graph";
     token: string;
@@ -77,6 +108,6 @@ export function fromPageDoc(document: PageDoc | null): TPage | null {
     if (!document) {
         return null;
     }
-    const { _id, ...rest } = document;
-    return { id: _id, ...rest, visible: document.visible === true };
+    const { _id, deletionIntent: _deletionIntent, pathUpdateIntent: _pathUpdateIntent, ...rest } = document;
+    return { id: _id, ...rest, visible: document.visible === true && !document.deletionIntent };
 }
