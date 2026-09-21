@@ -24,6 +24,8 @@ implementation notes live in each package's `AGENTS.md`.
 
 ## Authoring And Sources
 
+- [Page languages and routes](./page-languages-and-routes.md) describes localized
+  paths, redirects, deletion tombstones, and public SEO behavior.
 - [Bloc Authoring](./blocs/README.md) documents how to create blocs, expose
   editor capabilities, bind Sources, design themeable CSS, test, and publish.
 - [Integration development](./integrations/README.md) documents local-first

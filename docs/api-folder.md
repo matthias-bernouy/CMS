@@ -1,7 +1,7 @@
 # API Folder
 
 `@bernouy/cms-control` routes `src/api/` through
-`src/core/registerEndpoints/serveApiFolder.ts`. This is a file router for the
+`src/core/admin/registerEndpoints/serveApiFolder.ts`. This is a file router for the
 admin REST API mounted under `<basePath>/api`.
 
 ## File Names
@@ -20,13 +20,14 @@ Examples:
 | File | Route |
 | --- | --- |
 | `page/page.get.ts` | `GET /page` |
-| `page/configDetail.get.ts` | `GET /page/configDetail` |
+| `_content/page/_editing/configDetail.get.ts` | `GET /page/configDetail` |
 | `files/upload.post.ts` | `POST /files/upload` |
 | `tags.get.ts` | `GET /tags` |
 
-The router collapses a duplicated directory/file segment. `dir/dir.get.ts`
-becomes `/dir`; otherwise the relative path before `.<method>.ts` becomes the
-route.
+The router omits directory segments beginning with `_`, then collapses a
+duplicated directory/file segment. `dir/dir.get.ts` becomes `/dir`;
+`_content/page/_routes/paths.get.ts` becomes `/page/paths`. Otherwise the
+relative path before `.<method>.ts` becomes the route.
 
 Files without a valid `.<method>.ts` suffix are ignored by the router. Helper
 files should therefore avoid HTTP method suffixes.
