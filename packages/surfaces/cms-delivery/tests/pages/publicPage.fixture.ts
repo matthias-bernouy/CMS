@@ -3,7 +3,6 @@ import { P9R_CACHE, type ContentReader, type TPage, type TSystem } from "@bernou
 import type { PublicPageProvider } from "@bernouy/cms-delivery";
 import type { CmsFilesBlobStore } from "@bernouy/cms-files";
 import type { SourceEndpointInterceptor, SourceRepository } from "@bernouy/cms-sources";
-import type { RolesRepository } from "@bernouy/cms-permissions";
 import { type CacheEntry, TtlCache } from "@bernouy/http-runner";
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { componentJsCacheKey } from "cms-delivery/core/assets/buildComponent";
@@ -27,7 +26,6 @@ type HarnessOptions = Readonly<{
     analytics?: boolean;
     sources?: SourceRepository;
     sourceInterceptor?: SourceEndpointInterceptor;
-    roles?: RolesRepository;
     sitemapStore?: CmsFilesBlobStore;
     siteHost?: string;
     repository?: ContentReader;
@@ -69,7 +67,6 @@ export function mountPublicPages(options: HarnessOptions = {}) {
         publicPageProviders: options.providers,
         sources: options.sources,
         sourceImageInterceptor: options.sourceInterceptor,
-        roles: options.roles,
         sitemapStore: options.sitemapStore,
         analytics: options.analytics
             ? ({

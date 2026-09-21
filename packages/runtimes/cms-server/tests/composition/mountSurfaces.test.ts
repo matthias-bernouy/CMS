@@ -116,7 +116,7 @@ describe("production surface mounting", () => {
             endpointPerformanceReports: options.features.endpointPerformanceReports,
             sourceTelemetry: expect.any(Object),
         });
-        expect(controlArguments[15]).toEqual({ local: options.authentication.auth });
+        expect(controlArguments[14]).toEqual({ local: options.authentication.auth });
         expect(controlConfig.editorDataSources).toBeUndefined();
 
         expect(deliveryConfig).toMatchObject({

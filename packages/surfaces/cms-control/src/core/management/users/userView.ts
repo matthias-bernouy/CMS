@@ -5,7 +5,6 @@ export type UserView = TUser & {
     email: string;
     provider: string;
     providerLabel: string;
-    roleLabel: string;
     emailVerifiedAt: Date | null;
     emailStatusLabel: string;
     createdAtLabel: string;
@@ -29,7 +28,6 @@ export async function userView(user: TUser, credentials: LocalCredentialStore): 
         email,
         provider: user.provider ?? "external",
         providerLabel: providerLabel(user.provider),
-        roleLabel: label(user.role),
         emailVerifiedAt: verifiedAt,
         emailStatusLabel: emailStatusLabel(local, email, verifiedAt),
         createdAtLabel: dateLabel(user.createdAt),

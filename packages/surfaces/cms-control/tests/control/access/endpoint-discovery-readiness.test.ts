@@ -3,7 +3,6 @@ import { InMemoryAuthentication } from "@bernouy/cms-auth";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 import { ControlCms } from "cms-control/ControlCms";
-import type { CMS_ROLES } from "types/roles";
 
 class NoopRunner implements Runner {
     readonly basePath = "/";
@@ -57,11 +56,7 @@ class NoopRunner implements Runner {
 }
 
 function createControl(): ControlCms {
-    return new ControlCms(
-        new NoopRunner(),
-        new InMemoryCmsRepository(),
-        new InMemoryAuthentication<CMS_ROLES>({ role: "admin" }),
-    );
+    return new ControlCms(new NoopRunner(), new InMemoryCmsRepository(), new InMemoryAuthentication());
 }
 
 function deferred(): { promise: Promise<void>; resolve: () => void } {

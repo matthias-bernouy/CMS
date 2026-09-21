@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { mountPublicPages } from "../publicPage.fixture";
-import { commercePublicRoles, COMMERCE_SOURCE, PRODUCT_PAGE } from "./fixtures";
+import { COMMERCE_SOURCE, PRODUCT_PAGE } from "./fixtures";
 
 describe("Delivery dynamic page metadata", () => {
     test("renders source variables, a precise canonical, and no shared path cache", async () => {
@@ -11,7 +11,6 @@ describe("Delivery dynamic page metadata", () => {
         const sourceRequests: URL[] = [];
         const mounted = mountPublicPages({
             sources,
-            roles: await commercePublicRoles(),
             storedPages: [PRODUCT_PAGE],
             sourceInterceptor: async (_endpoint, request) => {
                 sourceRequests.push(new URL(request.url));
@@ -61,7 +60,6 @@ describe("Delivery dynamic page metadata", () => {
         let sourceHeaders: Headers | undefined;
         const mounted = mountPublicPages({
             sources,
-            roles: await commercePublicRoles(),
             storedPages: [PRODUCT_PAGE],
             sourceInterceptor: async (_endpoint, request) => {
                 sourceHeaders = new Headers(request.headers);
@@ -102,7 +100,6 @@ describe("Delivery dynamic page metadata", () => {
         await sources.createSource(COMMERCE_SOURCE);
         const mounted = mountPublicPages({
             sources,
-            roles: await commercePublicRoles(),
             storedPages: [{ ...PRODUCT_PAGE, indexing: { ...PRODUCT_PAGE.indexing, enabled: false } }],
             sourceInterceptor: async () =>
                 Response.json({ slug: "chair", title: "Private chair", description: "Members only" }),
@@ -121,7 +118,6 @@ describe("Delivery dynamic page metadata", () => {
         await sources.createSource(COMMERCE_SOURCE);
         const mounted = mountPublicPages({
             sources,
-            roles: await commercePublicRoles(),
             storedPages: [PRODUCT_PAGE],
         });
 
@@ -146,7 +142,6 @@ describe("Delivery dynamic page metadata", () => {
         await sources.createSource(COMMERCE_SOURCE);
         const mounted = mountPublicPages({
             sources,
-            roles: await commercePublicRoles(),
             storedPages: [PRODUCT_PAGE],
             sourceInterceptor: async () => new Response(null, { status: sourceStatus }),
         });

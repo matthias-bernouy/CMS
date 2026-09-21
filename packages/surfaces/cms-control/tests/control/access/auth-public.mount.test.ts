@@ -2,9 +2,7 @@ import { describe, expect, spyOn, test } from "bun:test";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
 import { CompositeSourceRepository, InMemorySourceRepository, SYSTEM_SOURCES } from "@bernouy/cms-sources";
-import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { ControlCms } from "cms-control/ControlCms";
-import type { CMS_ROLES } from "types/roles";
 import { authSystem, CaptureRunner, mountedSourceHandler } from "./authPublicSupport";
 
 describe("Control public auth mount", () => {
@@ -27,7 +25,6 @@ describe("Control public auth mount", () => {
             credentials,
             undefined,
             undefined,
-            new InMemoryRolesRepository(),
             { local },
         );
         await cms.ready;
@@ -41,11 +38,11 @@ describe("Control public auth mount", () => {
         const repository = new InMemoryCmsRepository();
         const { local, credentials, users, publicAuth } = authSystem();
         const gateway = new CompositeSourceRepository(new InMemorySourceRepository(), SYSTEM_SOURCES);
-        const adminAuth = new InMemoryAuthentication<CMS_ROLES>({ role: "admin" });
+        const authenticated = new InMemoryAuthentication();
         const cms = new ControlCms(
             runner,
             repository,
-            adminAuth,
+            authenticated,
             { publicAuth },
             undefined,
             undefined,
@@ -57,7 +54,6 @@ describe("Control public auth mount", () => {
             credentials,
             gateway,
             undefined,
-            new InMemoryRolesRepository(),
             { local },
         );
         await cms.ready;
@@ -77,65 +73,7 @@ describe("Control public auth mount", () => {
         expect(await credentials.getByEmail("ada@example.com")).toBeNull();
     });
 
-    test("propagates the Control subject role to computed source values", async () => {
-        const runner = CaptureRunner.withoutFileApi();
-        const sources = new InMemorySourceRepository();
-        await sources.createSource({
-            urn: "urn:operator-context",
-            endpoints: [
-                {
-                    urn: "urn:operator-context:current",
-                    method: "GET",
-                    access: { mode: "admin" },
-                    targetUrl: "https://operator.test/context",
-                    input: {
-                        params: [
-                            {
-                                name: "role",
-                                in: "query",
-                                required: true,
-                                source: { from: "computed", ref: "userRole" },
-                                schema: { type: "string" },
-                            },
-                        ],
-                    },
-                    output: [{ status: "200", body: { type: "object" } }],
-                },
-            ],
-        });
-        const cms = new ControlCms(
-            runner,
-            new InMemoryCmsRepository(),
-            new InMemoryAuthentication<CMS_ROLES>({ role: "admin" }),
-            {},
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            sources,
-            undefined,
-            new InMemoryRolesRepository(),
-        );
-        await cms.ready;
-
-        const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(Response.json({ ok: true }));
-        try {
-            const handler = runner.handlers.get("GET /.cms/sources");
-            expect(handler).toBeDefined();
-            const response = await handler!(new Request("http://control/.cms/sources/operator-context/current"));
-
-            expect(response.status).toBe(200);
-            expect(fetchSpy.mock.calls[0]![0]).toBe("https://operator.test/context?role=admin");
-        } finally {
-            fetchSpy.mockRestore();
-        }
-    });
-
-    test("ignores removed endpoint role metadata and preserves the admin bypass", async () => {
+    test("allows authenticated members to call Control source endpoints", async () => {
         const sources = new InMemorySourceRepository();
         await sources.createSource({
             urn: "urn:operator-actions",
@@ -143,27 +81,27 @@ describe("Control public auth mount", () => {
                 {
                     urn: "urn:operator-actions:refund",
                     method: "POST",
-                    access: { mode: "admin", roles: ["legacy-role"] } as any,
+                    access: { mode: "auth" },
                     targetUrl: "https://operator.test/refund",
                     output: [{ status: "200", body: { type: "object" } }],
                 },
             ],
         });
-        const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(Response.json({ ok: true }));
+        const fetchSpy = spyOn(globalThis, "fetch").mockImplementation((async () =>
+            Response.json({ ok: true })) as unknown as typeof fetch);
         try {
-            const admin = await mountedSourceHandler("admin", sources);
-            const allowed = await admin(
+            const handler = await mountedSourceHandler(sources);
+            const allowed = await handler(
                 new Request("http://control/.cms/sources/operator-actions/refund", { method: "POST" }),
             );
             expect(allowed.status).toBe(200);
             expect(fetchSpy).toHaveBeenCalledTimes(1);
 
-            const legacy = await mountedSourceHandler("legacy-role", sources);
-            const denied = await legacy(
+            const second = await handler(
                 new Request("http://control/.cms/sources/operator-actions/refund", { method: "POST" }),
             );
-            expect(denied.status).toBe(403);
-            expect(fetchSpy).toHaveBeenCalledTimes(1);
+            expect(second.status).toBe(200);
+            expect(fetchSpy).toHaveBeenCalledTimes(2);
         } finally {
             fetchSpy.mockRestore();
         }

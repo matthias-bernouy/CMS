@@ -2,19 +2,14 @@
  * CMS-owned membership store, keyed by `sub` (the stable opaque identity from
  * the auth provider). One row per identity the CMS has ever seen.
  *
- * This is the boundary between authentication and authorization:
- *   - The auth provider does authn only — it yields an `Identity` (NO role).
- *   - The CMS does authz — this store assigns the role and is the sole source
- *     of truth for "what may this identity do". Guards read the role from here,
- *     never from the provider.
+ * This store records the CMS membership associated with identities returned by
+ * authentication providers. Authorization belongs to views and is not stored
+ * on the user record.
  *
- * The same rows are the user list shown to admins (`list`), so listing is
+ * The same rows are the back-office member list (`list`), so listing is
  * always available regardless of what the auth backend can do — it never has
  * to expose its own directory.
  *
- * Role granting is a server-side act: `upsert` only sets a role on first
- * insert (via `defaultRole`) and `setRole` is the explicit, admin-gated path.
- * A role is never derived from anything the user controls.
  */
 
 /** Authn output: identity only, never a role. Shared with the auth backends. */
@@ -26,8 +21,7 @@ export type Identity = {
     provider?: string;
 };
 
-export type TUser<Role extends string = string> = Identity & {
-    role: Role;
+export type TUser = Identity & {
     createdAt: Date;
     lastSeenAt: Date;
 };
@@ -37,37 +31,31 @@ export type UsersListOptions = {
      *  blind index exists), so substring search and email sorting are not
      *  possible — both implementations honor this. */
     search?: string;
-    /** Exact role filter. */
-    role?: string;
     sortBy?: "createdAt" | "lastSeenAt";
     sortOrder?: "asc" | "desc";
     /** 1-based. Omit for the full (unbounded) listing. */
     pagination?: { page: number; limit: number };
 };
 
-export type UsersPage<Role extends string = string> = {
-    users: TUser<Role>[];
+export type UsersPage = {
+    users: TUser[];
     total: number;
     page: number;
     limit: number;
     hasMore: boolean;
 };
 
-export interface UsersRepository<Role extends string = string> {
-    /** Login hook: create the user with `defaultRole` if `sub` is new, else
-     *  refresh its profile + `lastSeenAt` and KEEP its existing role. */
-    upsert(identity: Identity, defaultRole: Role): Promise<TUser<Role>>;
+export interface UsersRepository {
+    /** Login hook: create the member if `sub` is new, otherwise refresh its profile. */
+    upsert(identity: Identity): Promise<TUser>;
 
-    /** Role resolution for authz. `null` when `sub` is unknown. */
-    getBySub(sub: string): Promise<TUser<Role> | null>;
+    /** Membership lookup. `null` when `sub` is unknown. */
+    getBySub(sub: string): Promise<TUser | null>;
 
-    /** The explicit, server-side role grant/revoke. `null` when `sub` is unknown. */
-    setRole(sub: string, role: Role): Promise<TUser<Role> | null>;
-
-    /** Remove a user from the CMS membership (authz). Does NOT touch any auth
+    /** Remove a user from the CMS membership. Does NOT touch any auth
      *  backend / credential store. `false` when `sub` is unknown. */
     delete(sub: string): Promise<boolean>;
 
-    /** The admin user list — filtered / sorted / paged. */
-    list(opts?: UsersListOptions): Promise<UsersPage<Role>>;
+    /** The back-office member list — filtered / sorted / paged. */
+    list(opts?: UsersListOptions): Promise<UsersPage>;
 }

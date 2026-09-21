@@ -36,16 +36,4 @@ describe("production CMS composition", () => {
         expect(stores).toMatch(/const\s+relations\s*=\s*new\s+MongoRelationRepository\s*\(\s*db\s*\)\s*;/);
         expect(surfaces).toMatch(/relations\s*:\s*features\.relations\s*,/);
     });
-
-    test("migrates removed operator roles before mounting the surfaces", async () => {
-        const entrypoint = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
-        const stores = await Bun.file(new URL("../src/runtime/stores/core.ts", import.meta.url)).text();
-
-        const storesReady = entrypoint.search(/await\s+createCoreStores\s*\(\s*env\s*\)/);
-        const surfaces = entrypoint.search(/await\s+mountProductionSurfaces\s*\(\s*\{/);
-
-        expect(stores).toMatch(/await\s+migrateLegacyOperatorRoles\s*\(\s*users\s*,\s*mongoRoles\s*\)/);
-        expect(storesReady).toBeGreaterThan(-1);
-        expect(surfaces).toBeGreaterThan(storesReady);
-    });
 });

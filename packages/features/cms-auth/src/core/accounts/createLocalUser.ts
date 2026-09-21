@@ -3,30 +3,23 @@ import type { TUser, UsersRepository } from "cms-auth/interfaces/UsersRepository
 import { internalUserId } from "cms-auth/core/SubjectResolver";
 import { validatePassword } from "cms-auth/core/validation";
 
-export type CreateLocalUserStores<Role extends string = string> = {
+export type CreateLocalUserStores = {
     credentials: LocalCredentialStore;
-    users: UsersRepository<Role>;
+    users: UsersRepository;
 };
 
-export type CreateLocalUserInput<Role extends string = string> = {
+export type CreateLocalUserInput = {
     email: string;
     password: string;
-    role: Role;
     emailVerified?: boolean;
 };
 
-export async function createLocalUser<Role extends string>(
-    stores: CreateLocalUserStores<Role>,
-    input: CreateLocalUserInput<Role>,
-): Promise<TUser<Role>> {
+export async function createLocalUser(stores: CreateLocalUserStores, input: CreateLocalUserInput): Promise<TUser> {
     validatePassword(input.password);
     const identity = await stores.credentials.create({
         email: input.email,
         password: input.password,
         emailVerified: input.emailVerified ?? true,
     });
-    return stores.users.upsert(
-        { ...identity, sub: internalUserId("local", identity.sub), provider: "local" },
-        input.role,
-    );
+    return stores.users.upsert({ ...identity, sub: internalUserId("local", identity.sub), provider: "local" });
 }

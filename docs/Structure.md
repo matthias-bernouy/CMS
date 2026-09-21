@@ -48,8 +48,6 @@ Feature packages:
   storage, image variants, and file-serving handlers.
 - `@bernouy/cms-secrets`: secret storage contracts, `${VAR}` resolution, and
   encrypted Mongo storage.
-- `@bernouy/cms-permissions`: role definitions, grants, permission catalogue,
-  and role repository contracts.
 - `@bernouy/cms-auth`: local auth, OIDC auth, PATs, signed cookies, public auth
   flows, user/provider repositories, and auth route registrars.
 - `@bernouy/cms-sources`: data-source contracts, endpoint execution, system

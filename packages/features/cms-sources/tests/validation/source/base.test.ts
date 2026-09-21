@@ -41,11 +41,6 @@ describe("validateSource endpoint identity and configuration", () => {
         }
     });
 
-    test("keeps legacy stored role metadata readable during migration", () => {
-        const access = { mode: "admin", roles: ["legacy-role"] } as any;
-        expect(validateSource(source({ endpoints: [{ ...ep("urn:shop:x"), access }] }))).toEqual([]);
-    });
-
     test("accepts file endpoints and fully furnished endpoints", () => {
         const file = source({ endpoints: [{ ...ep("urn:shop:file"), responseKind: "file", mediaType: "image/*" }] });
         expect(validateSource(file)).toEqual([]);

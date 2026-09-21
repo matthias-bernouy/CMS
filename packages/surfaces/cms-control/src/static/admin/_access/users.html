@@ -1,8 +1,5 @@
 <w13c-fixed-admin-layout>
     <span slot="title">Users</span>
-    <a href="{{BASE_PATH}}/admin/roles" slot="action" style="text-decoration:none">
-        <p9r-button variant="ghost">Manage roles</p9r-button>
-    </a>
     <p9r-open-modal modal-target="create-user-modal" slot="action">
         <p9r-button color="primary">+ Add user</p9r-button>
     </p9r-open-modal>
@@ -10,7 +7,6 @@
     <p9r-table cms-source="{{BASE_PATH}}/api/users" cms-reload-on="user:updated">
         <p9r-row slot="header" cms-condition="$source.loaded">
             <p9r-cell><strong>User</strong></p9r-cell>
-            <p9r-cell><strong>Role</strong></p9r-cell>
             <p9r-cell><strong>Provider</strong></p9r-cell>
             <p9r-cell><strong>Email</strong></p9r-cell>
             <p9r-cell><strong>Last seen</strong></p9r-cell>
@@ -23,7 +19,6 @@
                     <span>{{ email }}</span>
                 </p9r-stack>
             </p9r-cell>
-            <p9r-cell><p9r-tag>{{ roleLabel }}</p9r-tag></p9r-cell>
             <p9r-cell>{{ providerLabel }}</p9r-cell>
             <p9r-cell>{{ emailStatusLabel }}</p9r-cell>
             <p9r-cell>{{ lastSeenAtLabel }}</p9r-cell>
@@ -42,7 +37,6 @@
         <p9r-stack gap="md">
             <p9r-input name="email" type="email" label="Email" placeholder="user@example.com" required></p9r-input>
             <p9r-input name="password" type="password" label="Password" placeholder="At least 8 characters" required></p9r-input>
-            <cms-role-select name="role" value="user" label="Role" list-url="{{BASE_PATH}}/api/roles/list"></cms-role-select>
             <p9r-button color="primary" fullWidth type="submit">Create user</p9r-button>
         </p9r-stack>
     </form>

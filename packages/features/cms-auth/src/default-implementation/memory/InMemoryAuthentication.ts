@@ -1,8 +1,7 @@
-import type { Authentication, DefaultRole, Subject } from "cms-auth/interfaces/Authentication";
+import type { Authentication, Subject } from "cms-auth/interfaces/Authentication";
 import { sanitizeReturnTo } from "cms-auth/core/cookies";
 
-export type InMemoryAuthConfig<Role extends string> = {
-    role: Role;
+export type InMemoryAuthConfig = {
     identifier?: string;
     email?: string;
 };
@@ -11,17 +10,16 @@ export type InMemoryAuthConfig<Role extends string> = {
  * Dev-only implementation of `Authentication`. No login flow, no session —
  * every request is considered authenticated as a fixed subject.
  */
-export class InMemoryAuthentication<Role extends string = DefaultRole> implements Authentication<Role> {
+export class InMemoryAuthentication implements Authentication {
     readonly loginUrl: string = "/__dev/login";
     readonly logoutUrl: string = "/__dev/logout";
     readonly profileUrl: string = "/__dev/profile";
 
-    private readonly _subject: Subject<Role>;
+    private readonly _subject: Subject;
 
-    constructor(config: InMemoryAuthConfig<Role>) {
+    constructor(config: InMemoryAuthConfig = {}) {
         this._subject = {
             identifier: config.identifier ?? "dev-user",
-            role: config.role,
             ...(config.email ? { email: config.email } : {}),
         };
     }
@@ -36,7 +34,7 @@ export class InMemoryAuthentication<Role extends string = DefaultRole> implement
         return `${this.logoutUrl}?returnTo=${encodeURIComponent(returnTo)}`;
     }
 
-    async getSubject(_req: Request): Promise<Subject<Role>> {
+    async getSubject(_req: Request): Promise<Subject> {
         return { ...this._subject };
     }
 }

@@ -5,8 +5,6 @@ import {
     type Subject,
 } from "@bernouy/cms-auth";
 import { executeSiteSystemSourceEndpoint } from "@bernouy/cms-content";
-import { ADMIN_ROLE, PUBLIC_ROLE, USER_ROLE, can, effectiveGrantsFor } from "@bernouy/cms-permissions";
-import { resolveRequestRoleDefinitions } from "@bernouy/cms-permissions/requestScope";
 import {
     CMS_SOURCES_ROUTE,
     SOURCE_PROXY_METHODS,
@@ -14,45 +12,29 @@ import {
     handleSourceRequest,
     measureActiveSourceTiming,
     sourceOverlaySchemaCacheFor,
-    sourceEndpointAccessAllows,
-    sourceEndpointAccessMode,
     sourcesPrefix,
     SYSTEM_SITE_SOURCE_URN,
     type SourceEndpoint,
-    type SourceEndpointAccessMode,
 } from "@bernouy/cms-sources";
 import type { Middleware } from "@bernouy/http-runner";
-import type { CMS_ROLES } from "types/roles";
 import { createControlSourceRequestScope } from "cms-control/core/admin/control/sourceProxy/scope";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
 
 export function mountControlSourceProxy(
     state: ControlCmsState,
     authGuard: Middleware,
-    controlPublicAuth: PublicAuthRoutesConfig<CMS_ROLES> | undefined,
+    controlPublicAuth: PublicAuthRoutesConfig | undefined,
 ): void {
     const runner = state.runner;
     const configuration = state.configuration ?? {};
     const schemaCache = state.sourceOverlays ? sourceOverlaySchemaCacheFor(state.sourceOverlays) : undefined;
-    const resolveSubject = (request: Request): Promise<Subject<CMS_ROLES> | null> =>
+    const resolveSubject = (request: Request): Promise<Subject | null> =>
         measureActiveSourceTiming(request, "cms_auth", () => resolveRequestSubject(state.auth, request)).catch(
             () => null,
         );
-    const authorizeEndpoint = async (endpoint: SourceEndpoint, req: Request) => {
+    const authorizeEndpoint = async (_endpoint: SourceEndpoint, req: Request) => {
         const subject = await resolveSubject(req);
-        if (!subject) {
-            return false;
-        }
-        if (!sourceEndpointAccessAllows(sourceEndpointAccessMode(endpoint), controlCallerAccessMode(subject.role))) {
-            return false;
-        }
-        if (subject.role === ADMIN_ROLE) {
-            return true;
-        }
-        const definitions = await measureActiveSourceTiming(req, "cms_roles", () =>
-            resolveRequestRoleDefinitions(state.roles, req),
-        );
-        return can(effectiveGrantsFor(subject.role, { definitions }), endpoint.urn);
+        return Boolean(subject);
     };
     runner.group(
         CMS_SOURCES_ROUTE,
@@ -98,14 +80,4 @@ export function mountControlSourceProxy(
             authGuard,
         ],
     );
-}
-
-function controlCallerAccessMode(roleId: string): SourceEndpointAccessMode {
-    if (roleId === PUBLIC_ROLE) {
-        return "public";
-    }
-    if (roleId === USER_ROLE) {
-        return "auth";
-    }
-    return "admin";
 }

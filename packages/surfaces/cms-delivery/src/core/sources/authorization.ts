@@ -1,7 +1,5 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { resolveRequestSubject, type Subject } from "@bernouy/cms-auth";
-import { ADMIN_ROLE, PUBLIC_ROLE, USER_ROLE, canRole } from "@bernouy/cms-permissions";
-import { resolveRequestRoleDefinitions } from "@bernouy/cms-permissions/requestScope";
 import {
     SYSTEM_AUTH_SOURCE_URN,
     SYSTEM_SITE_SOURCE_URN,
@@ -10,11 +8,10 @@ import {
     sourceUrnOf,
     measureActiveSourceTiming,
     type SourceAuthorizationResult,
-    type SourceEndpointAccessMode,
     type SourceEndpoint,
 } from "@bernouy/cms-sources";
 
-export async function resolveDeliverySubject(delivery: DeliveryCms, req: Request): Promise<Subject<string> | null> {
+export async function resolveDeliverySubject(delivery: DeliveryCms, req: Request): Promise<Subject | null> {
     const auth = delivery.auth;
     if (!auth) {
         return null;
@@ -27,61 +24,30 @@ export async function resolveDeliverySourceContext(
     req: Request,
 ): Promise<Record<string, string>> {
     const subject = await resolveDeliverySubject(delivery, req);
-    return subject ? { userID: subject.identifier, userRole: subject.role } : {};
+    return subject ? { userID: subject.identifier } : {};
 }
 
 export async function authorizeDeliverySourceEndpoint(
     delivery: DeliveryCms,
     endpoint: SourceEndpoint,
     req: Request,
-    options: { subject?: Subject<string> | null } = {},
+    options: { subject?: Subject | null } = {},
 ): Promise<SourceAuthorizationResult> {
     const sourceUrn = sourceUrnOf(endpoint.urn);
     if ((delivery.auth && sourceUrn === SYSTEM_AUTH_SOURCE_URN) || sourceUrn === SYSTEM_SITE_SOURCE_URN) {
         return true;
     }
 
-    const roles = delivery.roles;
-    if (!roles) {
-        return false;
-    }
-
     const subject = Object.prototype.hasOwnProperty.call(options, "subject")
         ? (options.subject ?? null)
         : await resolveDeliverySubject(delivery, req);
 
-    if (
-        !sourceEndpointAccessAllows(sourceEndpointAccessMode(endpoint), callerAccessMode(subject?.role ?? PUBLIC_ROLE))
-    ) {
+    if (!sourceEndpointAccessAllows(sourceEndpointAccessMode(endpoint), subject ? "auth" : "public")) {
         return {
             authorized: false,
             status: subject ? 403 : 401,
         };
     }
 
-    if (subject?.role === ADMIN_ROLE) {
-        return true;
-    }
-
-    const definitions = await measureActiveSourceTiming(req, "cms_roles", () =>
-        resolveRequestRoleDefinitions(roles, req),
-    );
-    if (canRole(subject?.role ?? PUBLIC_ROLE, { definitions }, endpoint.urn)) {
-        return true;
-    }
-
-    return {
-        authorized: false,
-        status: subject ? 403 : 401,
-    };
-}
-
-function callerAccessMode(roleId: string): SourceEndpointAccessMode {
-    if (roleId === PUBLIC_ROLE) {
-        return "public";
-    }
-    if (roleId === USER_ROLE) {
-        return "auth";
-    }
-    return "admin";
+    return true;
 }

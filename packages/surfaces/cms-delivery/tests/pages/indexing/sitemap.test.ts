@@ -7,7 +7,7 @@ import { materializeSitemapSnapshot } from "cms-delivery/core/seo/sitemap/materi
 import SitemapChunkServer from "cms-delivery/endpoints/sitemap-chunk.server";
 import SitemapServer from "cms-delivery/endpoints/sitemap.xml.server";
 import { mountPublicPages, publicPage } from "../publicPage.fixture";
-import { commercePublicRoles, COMMERCE_SOURCE, PRODUCT_PAGE } from "./fixtures";
+import { COMMERCE_SOURCE, PRODUCT_PAGE } from "./fixtures";
 
 describe("Delivery dynamic indexing sitemap", () => {
     test("publishes discovery as immutable chunks without querying sources on public requests", async () => {
@@ -21,7 +21,6 @@ describe("Delivery dynamic indexing sitemap", () => {
         };
         const mounted = mountPublicPages({
             providers: [provider],
-            roles: await commercePublicRoles(),
             sitemapStore,
             sources,
             storedPages: [
@@ -90,7 +89,6 @@ describe("Delivery dynamic indexing sitemap", () => {
         let fail = false;
         let cancelled = false;
         const mounted = mountPublicPages({
-            roles: await commercePublicRoles(),
             sitemapStore,
             sources,
             storedPages: [PRODUCT_PAGE],

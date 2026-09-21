@@ -3,7 +3,7 @@ import { appendIconSlot } from "../../Resources/Dashboards/navigation/icons";
 
 export type OperatorNavigationSurface = "switcher" | "primary" | "secondary" | "profile";
 
-export type OperatorSubject = { id: string; role: string; email?: string };
+export type OperatorSubject = { id: string; email?: string };
 
 type ValueControl = HTMLElement & { value: string };
 

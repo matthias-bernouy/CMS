@@ -14,12 +14,12 @@ import {
 } from "cms-auth/default-implementation/authentication/oidc/loginFlight";
 import { resolveOidcProvider } from "cms-auth/default-implementation/authentication/oidc/providerResolver";
 
-export type OidcAuthConfig<Role extends string> = {
+export type OidcAuthConfig = {
     /** Absolute base for callback URLs: `<appBaseUrl><pathPrefix>/auth`. */
     callbackBase: string;
     providers: IdentityProviderRepository;
     secrets: SecretReader;
-    resolver: SubjectResolver<Role>;
+    resolver: SubjectResolver;
     codec: SignedCookieCodec;
     cookieName: string; // shared CMS session cookie
     loginPagePath: string; // where to send on failure
@@ -43,11 +43,11 @@ export type OidcAuthConfig<Role extends string> = {
  * flows through `SubjectResolver` (keyed `provider:sub`) and the CMS issues
  * its shared session cookie.
  */
-export class OidcAuthentication<Role extends string = string> {
+export class OidcAuthentication {
     private readonly _ttl: number;
     private readonly metadata: OidcMetadataCache;
 
-    constructor(private readonly cfg: OidcAuthConfig<Role>) {
+    constructor(private readonly cfg: OidcAuthConfig) {
         this._ttl = cfg.sessionTtlSeconds ?? 3600;
         this.metadata = new OidcMetadataCache(cfg.allowInsecureIssuer ?? false);
     }

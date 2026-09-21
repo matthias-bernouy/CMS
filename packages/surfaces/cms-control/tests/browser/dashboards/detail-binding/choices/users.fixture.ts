@@ -47,8 +47,8 @@ export async function installUserRoutes(page: Page, bundle: string, styles: stri
         } else {
             await route.fulfill({
                 json: [
-                    { sub: subject, displayName: "Alice Martin", email: "alice@example.test", roleLabel: "Partner" },
-                    { sub: "user:bob", email: "bob@example.test", role: "user" },
+                    { sub: subject, displayName: "Alice Martin", email: "alice@example.test" },
+                    { sub: "user:bob", email: "bob@example.test" },
                 ],
             });
         }

@@ -18,7 +18,6 @@ import type {
 import type { EditorDataSource } from "@bernouy/cms-editor-system-v2";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { IdentityService } from "@bernouy/cms-identities";
-import type { RolesRepository } from "@bernouy/cms-permissions";
 import type { RelationRepository } from "@bernouy/cms-relations";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type {
@@ -30,12 +29,11 @@ import type {
     SourceTargetUrlValidationOptions,
 } from "@bernouy/cms-sources";
 import type { Cache, Runner } from "@bernouy/http-runner";
-import type { CMS_ROLES } from "types/roles";
 
 type Configuration = {
     deliveryUrl?: string;
     analyticsCompliance?: AnalyticsComplianceContext;
-    publicAuth?: PublicAuthRoutesConfig<CMS_ROLES>;
+    publicAuth?: PublicAuthRoutesConfig;
 };
 
 export type ControlCmsOptions = Configuration & {
@@ -59,26 +57,25 @@ export type ControlCmsOptions = Configuration & {
 };
 
 export type ControlAuthBackends = {
-    local?: LocalAuthentication<CMS_ROLES>;
-    oidc?: OidcAuthentication<CMS_ROLES>;
+    local?: LocalAuthentication;
+    oidc?: OidcAuthentication;
 };
 
 export type ControlCmsState = {
     configuration: ControlCmsOptions;
     runner: Runner;
     repository: CmsRepository;
-    auth: Authentication<CMS_ROLES>;
+    auth: Authentication;
     cache: Cache;
     secrets: SecretStore;
     filesMetadata: CmsFilesMetadataRepository | null;
     filesBlob: CmsFilesBlobStore | null;
-    users: UsersRepository<CMS_ROLES> | null;
+    users: UsersRepository | null;
     identityProviders: IdentityProviderRepository | null;
     pats: PatRepository | null;
     credentials: LocalCredentialStore | null;
     sources: SourceRepository | null;
     analytics: AnalyticsStore | null;
-    roles: RolesRepository;
     dashboards: DashboardRepository;
     dashboardViews: DashboardViewRepository;
     dashboardAssignments: DashboardAssignmentRepository;

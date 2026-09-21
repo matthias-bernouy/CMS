@@ -15,15 +15,15 @@ type SignupActivationContext = {
     emailDeliveryEnabled: boolean;
 };
 
-export async function activateOrResumeLocalSignup<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
+export async function activateOrResumeLocalSignup(
+    cfg: PublicAuthFlowConfig,
     context: SignupActivationContext,
 ): Promise<SignupLocalUserResult> {
     return (await prepareOrResumeLocalSignup(cfg, context)).finalize();
 }
 
-export async function prepareOrResumeLocalSignup<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
+export async function prepareOrResumeLocalSignup(
+    cfg: PublicAuthFlowConfig,
     context: SignupActivationContext,
 ): Promise<PreparedSignupLocalUser> {
     const existing = await cfg.credentials.getByEmail(context.email);
@@ -48,8 +48,8 @@ export async function prepareOrResumeLocalSignup<Role extends string>(
     return prepareMembershipActivation(cfg, context, identity, null, true);
 }
 
-async function prepareResumeOrActiveSignup<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
+async function prepareResumeOrActiveSignup(
+    cfg: PublicAuthFlowConfig,
     context: SignupActivationContext,
     credential: LocalCredential,
 ): Promise<PreparedSignupLocalUser> {
@@ -72,8 +72,8 @@ async function prepareResumeOrActiveSignup<Role extends string>(
     return prepareMembershipActivation(cfg, context, identity, credential, false);
 }
 
-async function verifyPendingPassword<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
+async function verifyPendingPassword(
+    cfg: PublicAuthFlowConfig,
     context: Pick<SignupActivationContext, "email" | "password">,
 ): Promise<Identity | null> {
     if (cfg.credentials.verifyPassword) {
@@ -85,8 +85,8 @@ async function verifyPendingPassword<Role extends string>(
     return cfg.credentials.verify(context.email, context.password);
 }
 
-function prepareMembershipActivation<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
+function prepareMembershipActivation(
+    cfg: PublicAuthFlowConfig,
     context: SignupActivationContext,
     identity: Identity,
     credential: LocalCredential | null,
@@ -99,7 +99,7 @@ function prepareMembershipActivation<Role extends string>(
         emailVerifiedAt: null,
     };
     return preparedSignup(cmsUserId, async () => {
-        await cfg.users.upsert({ ...identity, sub: cmsUserId, provider: "local" }, cfg.defaultRole);
+        await cfg.users.upsert({ ...identity, sub: cmsUserId, provider: "local" });
         return finishSignup(cfg, verificationTarget, context.emailDeliveryEnabled, created, cmsUserId);
     });
 }
@@ -115,8 +115,8 @@ function preparedSignup(
     };
 }
 
-async function finishSignup<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
+async function finishSignup(
+    cfg: PublicAuthFlowConfig,
     credential: VerificationTarget,
     emailDeliveryEnabled: boolean,
     created: boolean,

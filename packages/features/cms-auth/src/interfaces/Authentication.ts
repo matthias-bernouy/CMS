@@ -1,21 +1,9 @@
 /**
- * Role set assumed by the default providers shipped with this package.
- * Consumers needing custom roles should parameterize the generic
- * interfaces with their own string union, e.g.
- * `Authentication<'admin' | 'editor' | 'viewer'>`.
- */
-export type DefaultRole = "admin" | "user";
-
-/**
  * Minimal view of an authenticated user, returned by `getSubject`.
- *
- * @typeParam Role - String union of roles. Defaults to `DefaultRole`.
  */
-export interface Subject<Role extends string = DefaultRole> {
+export interface Subject {
     /** Stable, opaque identifier for the user (not an email or display name). */
     identifier: string;
-    /** Role assigned to this user. */
-    role: Role;
     /** Authentication email when the provider exposes one. */
     email?: string;
 }
@@ -27,9 +15,8 @@ export interface Subject<Role extends string = DefaultRole> {
  * reads the session from a standard Request, but never writes to a Response.
  * Applications remain in control of HTTP side-effects (redirects, cookies).
  *
- * @typeParam Role - String union of roles supported by the implementation.
  */
-export interface Authentication<Role extends string = DefaultRole> {
+export interface Authentication {
     /**
      * URL of the login page. Suitable for use in anchor tags or client-side
      * navigation. Use `buildLoginUrl` when a post-login redirect is needed.
@@ -82,5 +69,5 @@ export interface Authentication<Role extends string = DefaultRole> {
      * @returns The authenticated Subject, or `null` if the session is absent,
      *          expired, or otherwise invalid.
      */
-    getSubject(req: Request): Promise<Subject<Role> | null>;
+    getSubject(req: Request): Promise<Subject | null>;
 }

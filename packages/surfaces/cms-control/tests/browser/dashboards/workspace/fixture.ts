@@ -43,7 +43,7 @@ export async function installDashboardRoutes(page: Page): Promise<DashboardBrows
         if (url.pathname === "/api/dashboard-session") {
             await route.fulfill({
                 json: {
-                    subject: { id: "operator-1", role: "user", email: "support@example.com" },
+                    subject: { id: "operator-1", email: "support@example.com" },
                     logoutUrl: "/auth/logout?returnTo=%2Fdashboards",
                     dashboards: [site[0], integration],
                 },
@@ -59,8 +59,6 @@ export async function installDashboardRoutes(page: Page): Promise<DashboardBrows
                 json: {
                     logoutUrl: "/auth/logout?returnTo=%2Fdashboards",
                     email: "support@example.com",
-                    role: "user",
-                    roleLabel: "User",
                     provider: "local",
                     passwordCard: [{}],
                 },

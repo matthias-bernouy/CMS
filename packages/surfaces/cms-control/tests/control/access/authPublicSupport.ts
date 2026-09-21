@@ -10,11 +10,9 @@ import {
     type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
-import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import type { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
 import { ControlCms } from "cms-control/ControlCms";
-import type { CMS_ROLES } from "types/roles";
 
 export class CaptureRunner implements Runner {
     readonly endpoints = new Map<string, number>();
@@ -120,12 +118,12 @@ class GroupRunner extends CaptureRunner {
     }
 }
 
-export async function mountedSourceHandler(role: CMS_ROLES, sources: InMemorySourceRepository): Promise<RouteHandler> {
+export async function mountedSourceHandler(sources: InMemorySourceRepository): Promise<RouteHandler> {
     const runner = CaptureRunner.withoutFileApi();
     const cms = new ControlCms(
         runner,
         new InMemoryCmsRepository(),
-        new InMemoryAuthentication<CMS_ROLES>({ role }),
+        new InMemoryAuthentication(),
         {},
         undefined,
         undefined,
@@ -136,8 +134,6 @@ export async function mountedSourceHandler(role: CMS_ROLES, sources: InMemorySou
         undefined,
         undefined,
         sources,
-        undefined,
-        new InMemoryRolesRepository(),
     );
     await cms.ready;
     const handler = runner.handlers.get("POST /.cms/sources");
@@ -148,10 +144,10 @@ export async function mountedSourceHandler(role: CMS_ROLES, sources: InMemorySou
 }
 
 export function authSystem() {
-    const users = new InMemoryUsersRepository<CMS_ROLES>();
+    const users = new InMemoryUsersRepository();
     const credentials = new InMemoryLocalCredentialStore();
-    const resolver = new SubjectResolver<CMS_ROLES>(users, "user");
-    const local = new LocalAuthentication<CMS_ROLES>({
+    const resolver = new SubjectResolver(users);
+    const local = new LocalAuthentication({
         providerId: "local",
         loginPagePath: "/login",
         logoutPath: "/auth/logout",
@@ -160,13 +156,12 @@ export function authSystem() {
         codec: new SignedCookieCodec(new TextEncoder().encode("test-secret-key-at-least-16-bytes")),
         cookieName: "cms-session",
     });
-    const publicAuth: PublicAuthRoutesConfig<CMS_ROLES> = {
+    const publicAuth: PublicAuthRoutesConfig = {
         local,
         credentials,
         users,
         tokens: new InMemoryAuthTokenStore(),
         emailer: new InMemoryEmailer(),
-        defaultRole: "user",
         emailVerificationUrl: "http://control.test/auth/verify-email",
         passwordResetUrl: "http://control.test/auth/reset-password",
     };

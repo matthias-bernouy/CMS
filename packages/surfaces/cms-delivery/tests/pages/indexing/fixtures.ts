@@ -1,5 +1,4 @@
 import type { TPage } from "@bernouy/cms-content";
-import { InMemoryRolesRepository, PUBLIC_ROLE } from "@bernouy/cms-permissions";
 import type { Source } from "@bernouy/cms-sources";
 
 export const COMMERCE_SOURCE: Source = {
@@ -75,14 +74,3 @@ export const PRODUCT_PAGE = {
         },
     },
 } satisfies TPage;
-
-export async function commercePublicRoles(): Promise<InMemoryRolesRepository> {
-    const roles = new InMemoryRolesRepository();
-    await roles.upsert({
-        id: PUBLIC_ROLE,
-        label: "Public",
-        builtin: true,
-        grants: [{ permission: "urn:commerce:product" }, { permission: "urn:commerce:products" }],
-    });
-    return roles;
-}

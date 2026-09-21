@@ -10,11 +10,11 @@ import { readBearer, readCredentials } from "cms-auth/default-implementation/aut
 
 type SessionPayload = { kind: "session"; sub: string };
 type LoginError = "invalid_credentials" | "rate_limited";
-type LoginResult<Role extends string> =
-    | { ok: true; subject: Subject<Role>; token: string; returnTo?: string }
+type LoginResult =
+    | { ok: true; subject: Subject; token: string; returnTo?: string }
     | { ok: false; error: LoginError; returnTo?: string };
 
-export type LocalAuthConfig<Role extends string> = {
+export type LocalAuthConfig = {
     /** Identity-provider id this backend represents (provenance tag, e.g. "local"). */
     providerId: string;
     /** Page to send unauthenticated users to (used by `buildLoginUrl`). Full path. */
@@ -23,7 +23,7 @@ export type LocalAuthConfig<Role extends string> = {
      *  where the surface mounts `localLogoutHandler`. */
     logoutPath: string;
     credentials: LocalCredentialStore;
-    resolver: SubjectResolver<Role>;
+    resolver: SubjectResolver;
     codec: SignedCookieCodec;
     cookieName: string;
     cookieSecure?: boolean;
@@ -46,18 +46,16 @@ export type LocalAuthConfig<Role extends string> = {
  * paths, runner, and middlewares.
  *
  * The CMS terminates the session: on a successful `verify`, the identity flows
- * through `SubjectResolver` (authn → authz) and a signed session cookie is
- * issued. `getSubject` re-reads the role from the store every call, so role
- * changes take effect without re-login.
+ * through `SubjectResolver` and a signed session cookie is issued.
  */
-export class LocalAuthentication<Role extends string = string> implements Authentication<Role> {
+export class LocalAuthentication implements Authentication {
     readonly loginUrl: string;
     readonly logoutUrl: string;
     readonly profileUrl = "";
 
     private readonly _ttl: number;
 
-    constructor(private readonly cfg: LocalAuthConfig<Role>) {
+    constructor(private readonly cfg: LocalAuthConfig) {
         this._ttl = cfg.sessionTtlSeconds ?? 3600;
         this.loginUrl = cfg.loginPagePath;
         this.logoutUrl = cfg.logoutPath;
@@ -71,7 +69,7 @@ export class LocalAuthentication<Role extends string = string> implements Authen
         return `${this.logoutUrl}?returnTo=${encodeURIComponent(returnTo)}`;
     }
 
-    async getSubject(req: Request): Promise<Subject<Role> | null> {
+    async getSubject(req: Request): Promise<Subject | null> {
         // Bearer (CLI / server-to-server) takes precedence over the cookie. A
         // presented-but-invalid PAT is rejected outright — it must not silently
         // fall through to whatever cookie the same request happens to carry.
@@ -140,7 +138,7 @@ export class LocalAuthentication<Role extends string = string> implements Authen
         });
     }
 
-    private async _authenticate(req: Request): Promise<LoginResult<Role>> {
+    private async _authenticate(req: Request): Promise<LoginResult> {
         const { email, password, returnTo } = await readCredentials(req);
 
         // Throttle by email BEFORE the expensive argon2 verify (brute-force + CPU-DoS).

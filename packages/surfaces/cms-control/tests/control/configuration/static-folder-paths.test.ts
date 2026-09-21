@@ -23,7 +23,7 @@ describe("file-backed route paths", () => {
 
     test("removes organizational segments without changing public routes", () => {
         expect(deriveRoute("_content/page/page")).toBe("page");
-        expect(deriveRoute("_access/roles/roles")).toBe("roles");
+        expect(deriveRoute("_access/users/users")).toBe("users");
         expect(publicStaticPath("admin/_content/pages.html")).toBe("admin/pages.html");
         expect(publicStaticPath("admin/_content/pages/detail.html")).toBe("admin/pages/detail.html");
         expect(publicStaticPath("admin/_access/users.html")).toBe("admin/users.html");

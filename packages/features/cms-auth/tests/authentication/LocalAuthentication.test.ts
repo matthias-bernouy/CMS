@@ -8,16 +8,15 @@ import { InMemoryLocalCredentialStore } from "cms-auth/default-implementation/me
 import { InMemoryPatRepository } from "cms-auth/default-implementation/memory/InMemoryPatRepository";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 
-type Role = "admin" | "user";
 type Handler = (req: Request) => Promise<Response> | Response;
 
 function setup(opts: { rateLimit?: InMemoryRateLimiter } = {}) {
-    const users = new InMemoryUsersRepository<Role>();
-    const resolver = new SubjectResolver<Role>(users, "user");
+    const users = new InMemoryUsersRepository();
+    const resolver = new SubjectResolver(users);
     const credentials = new InMemoryLocalCredentialStore();
     const pats = new InMemoryPatRepository();
     const codec = new SignedCookieCodec(new TextEncoder().encode("test-secret-key-at-least-16-bytes"));
-    const auth = new LocalAuthentication<Role>({
+    const auth = new LocalAuthentication({
         providerId: "local",
         loginPagePath: "/cms/t/login",
         logoutPath: "/cms/t/auth/logout",
@@ -103,7 +102,7 @@ describe("LocalAuthentication login", () => {
 });
 
 describe("LocalAuthentication.getSubject", () => {
-    test("valid session cookie → subject (role read from the store)", async () => {
+    test("valid session cookie resolves the member subject", async () => {
         const { auth, resolver, codec } = setup();
         const subject = await resolver.fromIdentity({ sub: "u1", provider: "local", email: "bob@example.com" });
         const token = await codec.sign({ kind: "session", sub: subject.identifier }, 3600);
@@ -111,7 +110,6 @@ describe("LocalAuthentication.getSubject", () => {
             new Request("http://x/cms/t/admin", { headers: { cookie: `cms-t-session=${token}` } }),
         );
         expect(got?.identifier).toBe("local:u1");
-        expect(got?.role).toBe("user");
     });
 
     test("valid bearer PAT → subject", async () => {

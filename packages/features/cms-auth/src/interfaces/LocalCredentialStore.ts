@@ -4,8 +4,7 @@ import type { Identity } from "cms-auth/interfaces/UsersRepository";
  * Local email/password credentials — the backing store of the built-in
  * `local` identity provider. This is an AUTHENTICATION-secret store: it holds
  * password hashes (never plaintext) and owns their lifecycle (hashing, change,
- * deletion). It is SEPARATE from `UsersRepository` (authz roles); the two link
- * by `sub`.
+ * deletion). It is separate from `UsersRepository`; the two link by `sub`.
  *
  * `sub` is a generated, stable id (NOT the email — emails can change). On a
  * successful `verify`, the returned `Identity` flows through `SubjectResolver`

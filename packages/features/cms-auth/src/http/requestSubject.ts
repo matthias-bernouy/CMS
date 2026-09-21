@@ -1,6 +1,6 @@
 import type { Authentication, Subject } from "cms-auth/interfaces/Authentication";
 
-type SubjectSnapshot = Readonly<Subject<string>>;
+type SubjectSnapshot = Readonly<Subject>;
 
 const subjectsByRequest = new WeakMap<Request, WeakMap<object, Promise<SubjectSnapshot | null>>>();
 
@@ -8,10 +8,7 @@ const subjectsByRequest = new WeakMap<Request, WeakMap<object, Promise<SubjectSn
  * Resolves one stable subject snapshot for one ingress request and one
  * authentication backend. Failed lookups are evicted so callers may retry.
  */
-export async function resolveRequestSubject<Role extends string>(
-    authentication: Authentication<Role>,
-    request: Request,
-): Promise<Subject<Role> | null> {
+export async function resolveRequestSubject(authentication: Authentication, request: Request): Promise<Subject | null> {
     const subjectsByAuthentication = authenticationCache(request);
     let pending = subjectsByAuthentication.get(authentication);
     if (!pending) {
@@ -26,7 +23,7 @@ export async function resolveRequestSubject<Role extends string>(
     }
 
     const subject = await pending;
-    return subject ? ({ ...subject } as Subject<Role>) : null;
+    return subject ? { ...subject } : null;
 }
 
 function authenticationCache(request: Request): WeakMap<object, Promise<SubjectSnapshot | null>> {
@@ -39,6 +36,6 @@ function authenticationCache(request: Request): WeakMap<object, Promise<SubjectS
     return created;
 }
 
-function snapshotSubject(subject: Subject<string> | null): SubjectSnapshot | null {
+function snapshotSubject(subject: Subject | null): SubjectSnapshot | null {
     return subject ? Object.freeze({ ...subject }) : null;
 }

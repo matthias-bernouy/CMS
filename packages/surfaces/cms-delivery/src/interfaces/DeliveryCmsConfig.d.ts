@@ -3,7 +3,6 @@ import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
 import type { ContentReader } from "@bernouy/cms-content";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { IdentityService } from "@bernouy/cms-identities";
-import type { RolesRepository } from "@bernouy/cms-permissions";
 import type {
     ExecutorDeps,
     SourceEndpointInterceptor,
@@ -49,9 +48,7 @@ export type DeliveryCmsConfig = {
     /** Runtime-owned allowlist for forwarding the opaque correlation header. */
     sourceTrustedConnectorTarget?: NonNullable<ExecutorDeps["isTrustedConnectorTarget"]>;
     /** Optional first-party public authentication routes and system source. */
-    auth?: PublicAuthRoutesConfig<string>;
-    /** Role definitions used to authorize public source endpoint calls. */
-    roles?: RolesRepository;
+    auth?: PublicAuthRoutesConfig;
     /** Optional strict aggregate analytics writer. */
     analytics?: AnalyticsStore;
     /** Stable shared HMAC secret. Required by the production runtime. */

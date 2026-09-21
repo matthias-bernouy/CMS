@@ -10,11 +10,9 @@ import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { Cache, Runner } from "@bernouy/http-runner";
-import type { RolesRepository } from "@bernouy/cms-permissions";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type { SourceRepository } from "@bernouy/cms-sources";
 import { join } from "node:path";
-import type { CMS_ROLES } from "types/roles";
 import { controlCmsAccessors } from "cms-control/core/admin/control/accessors";
 import { mountControlCmsRoutes } from "cms-control/core/admin/control/mountRoutes";
 import { createControlCmsState } from "cms-control/core/admin/control/state";
@@ -29,19 +27,18 @@ export class ControlCms {
     constructor(
         runner: Runner,
         repository: CmsRepository,
-        auth: Authentication<CMS_ROLES>,
+        auth: Authentication,
         configuration: ControlCmsOptions = {},
         cache?: Cache,
         secrets?: SecretStore,
         filesMetadata?: CmsFilesMetadataRepository,
         filesBlob?: CmsFilesBlobStore,
-        users?: UsersRepository<CMS_ROLES>,
+        users?: UsersRepository,
         identityProviders?: IdentityProviderRepository,
         pats?: PatRepository,
         credentials?: LocalCredentialStore,
         sources?: SourceRepository,
         analytics?: AnalyticsStore,
-        roles?: RolesRepository,
         authBackends: ControlAuthBackends = {},
     ) {
         const state = createControlCmsState({
@@ -59,7 +56,6 @@ export class ControlCms {
             credentials,
             sources,
             analytics,
-            roles,
             authBackends,
         });
         this.state = state;
@@ -83,9 +79,6 @@ export class ControlCms {
     }
     get secrets() {
         return controlCmsAccessors.secrets(this.state);
-    }
-    get roles() {
-        return controlCmsAccessors.roles(this.state);
     }
     get editorDataSources() {
         return controlCmsAccessors.editorDataSources(this.state);

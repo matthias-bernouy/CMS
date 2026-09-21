@@ -32,7 +32,6 @@ CmsCore/
 |   |   |-- cms-content/       @bernouy/cms-content
 |   |   |-- cms-files/         @bernouy/cms-files
 |   |   |-- cms-secrets/       @bernouy/cms-secrets
-|   |   |-- cms-permissions/   @bernouy/cms-permissions
 |   |   |-- cms-auth/          @bernouy/cms-auth
 |   |   |-- cms-sources/       @bernouy/cms-sources
 |   |   |-- cms-analytics/     @bernouy/cms-analytics
@@ -62,7 +61,7 @@ CmsCore/
   upward, never surface→surface (compose through features).
 - Lateral feature→feature edges are allowed when one feature consumes
   another's contract (e.g. cms-auth → cms-secrets for `SecretReader`,
-  cms-content → cms-permissions for `RolesConfig`).
+  cms-dashboards → cms-sources for endpoint contracts).
 - Network adapters are only imported by runtimes (`./mongo`, `./s3`
   subpaths); surfaces consume contracts and receive instances injected.
 - Features may define HTTP values (handlers, registrars under `src/http/`)

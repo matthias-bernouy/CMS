@@ -58,7 +58,7 @@ describe("dashboard workspace navigation", () => {
         const root = navigationRoot();
         renderOperatorProfile(
             root,
-            { id: "operator-1", role: "user", email: "support@example.com" },
+            { id: "operator-1", email: "support@example.com" },
             "support",
             "operations/support/orders",
         );

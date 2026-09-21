@@ -9,8 +9,6 @@ import {
     type PublicAuthFlowConfig,
 } from "@bernouy/cms-auth";
 
-type Role = "user";
-
 describe("public auth mutation failure boundaries", () => {
     test.failing("allows email verification to retry after the credential write fails", async () => {
         const credentials = new InMemoryLocalCredentialStore();
@@ -89,22 +87,18 @@ async function flowConfig(
     credentials: InMemoryLocalCredentialStore,
     tokens: InMemoryAuthTokenStore,
     identity: { sub: string; email?: string },
-): Promise<PublicAuthFlowConfig<Role>> {
-    const users = new InMemoryUsersRepository<Role>();
-    await users.upsert(
-        {
-            ...identity,
-            sub: `local:${identity.sub}`,
-            provider: "local",
-        },
-        "user",
-    );
+): Promise<PublicAuthFlowConfig> {
+    const users = new InMemoryUsersRepository();
+    await users.upsert({
+        ...identity,
+        sub: `local:${identity.sub}`,
+        provider: "local",
+    });
     return {
         credentials,
         tokens,
         users,
         emailer: new InMemoryEmailer(),
-        defaultRole: "user",
         emailVerificationUrl: "https://example.test/verify-email",
         passwordResetUrl: "https://example.test/reset-password",
     };

@@ -1,5 +1,3 @@
-import { type CMS_ROLES, ValidatingRolesRepository } from "@bernouy/cms-permissions";
-import { MongoRolesRepository } from "@bernouy/cms-permissions/mongo";
 import {
     MongoAuthTokenStore,
     MongoIdentityProviderRepository,
@@ -21,7 +19,6 @@ import { ValidatingSecretStore } from "@bernouy/cms-secrets";
 import { EncryptedMongoSecretStore } from "@bernouy/cms-secrets/mongo";
 import { MongoClient } from "mongodb";
 import { join } from "node:path";
-import { migrateLegacyOperatorRoles } from "../../migrateLegacyOperatorRoles";
 import type { RuntimeEnv } from "../../runtimeEnv";
 
 const SCOPE_ID = "default";
@@ -51,7 +48,7 @@ export async function createCoreStores(env: RuntimeEnv) {
     const sourceMediaIndex = new MongoSourceMediaIndex(db);
     await Promise.all([sourceImageJobs.init(), sourceMediaIndex.init()]);
 
-    const users = new MongoUsersRepository<CMS_ROLES>(db, fieldCrypto);
+    const users = new MongoUsersRepository(db, fieldCrypto);
     const identityProviders = new MongoIdentityProviderRepository(db);
     const credentials = new MongoLocalCredentialStore(db, fieldCrypto);
     await credentials.init();
@@ -62,15 +59,6 @@ export async function createCoreStores(env: RuntimeEnv) {
 
     const rateLimit = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 });
     await rateLimit.init();
-    const mongoRoles = new MongoRolesRepository(db.collection("cms_roles"));
-    await mongoRoles.init();
-    const migration = await migrateLegacyOperatorRoles(users, mongoRoles);
-    if (migration.promotedUsers || migration.removedRoleDefinitions.length) {
-        console.log(
-            `Migrated ${migration.promotedUsers} legacy operators to admin; removed roles: ${migration.removedRoleDefinitions.join(", ") || "none"}`,
-        );
-    }
-    const roles = new ValidatingRolesRepository(mongoRoles);
     const secrets = new ValidatingSecretStore(
         new EncryptedMongoSecretStore({
             scopeId: SCOPE_ID,
@@ -96,7 +84,6 @@ export async function createCoreStores(env: RuntimeEnv) {
         pats,
         authTokens,
         rateLimit,
-        roles,
         secrets,
         cache: new InMemoryCache(),
     };

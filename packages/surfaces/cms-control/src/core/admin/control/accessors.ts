@@ -9,7 +9,6 @@ export const controlCmsAccessors = {
     runner: (state: ControlCmsState) => state.runner,
     cache: (state: ControlCmsState) => state.cache,
     secrets: (state: ControlCmsState) => state.secrets,
-    roles: (state: ControlCmsState) => state.roles,
     editorDataSources: (state: ControlCmsState) => state.configuration.editorDataSources ?? [],
     dashboards: (state: ControlCmsState) => state.dashboards,
     dashboardViews: (state: ControlCmsState) => state.dashboardViews,

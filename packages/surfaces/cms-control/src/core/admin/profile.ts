@@ -6,8 +6,6 @@ import { readJsonBody } from "cms-control/core/admin/http/readJsonBody";
 export type CurrentProfile = {
     logoutUrl: string;
     email: string;
-    role: string;
-    roleLabel: string;
     provider: string;
     passwordCard: Record<string, never>[];
 };
@@ -19,12 +17,9 @@ export async function readCurrentProfile(req: Request, cms: ControlCms, returnTo
     }
     const user = await cms.users.getBySub(subject.identifier);
     const provider = user?.provider ?? "";
-    const role = user?.role ?? subject.role;
     return {
         logoutUrl: cms.auth.buildLogoutUrl(returnTo),
         email: user?.email ?? subject.email ?? "",
-        role,
-        roleLabel: role.charAt(0).toUpperCase() + role.slice(1),
         provider,
         passwordCard: provider === "local" ? [{}] : [],
     };

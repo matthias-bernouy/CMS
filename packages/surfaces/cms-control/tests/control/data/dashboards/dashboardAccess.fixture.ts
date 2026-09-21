@@ -7,15 +7,13 @@ import {
     InMemoryDashboardViewRepository,
     normalizeLegacyDashboardView,
 } from "@bernouy/cms-dashboards";
-import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import type { Middleware, RouteHandler } from "@bernouy/http-runner";
 import { ControlCms } from "cms-control/ControlCms";
-import type { CMS_ROLES } from "types/roles";
 import { CaptureRunner } from "../../access/authPublicSupport";
 
 export async function mounted(
-    role: CMS_ROLES | null,
+    role: string | null,
     assigned: boolean,
     access: "admin" | "system" = "admin",
     totalUsers = 1,
@@ -79,17 +77,16 @@ export async function mounted(
     if (assigned) {
         await dashboardAssignments.assign({ subjectId: "operator-1", dashboardId: "support" });
     }
-    const auth = role
-        ? new InMemoryAuthentication<CMS_ROLES>({ role, identifier: "operator-1" })
-        : new AnonymousAuthentication();
-    const users = new InMemoryUsersRepository<CMS_ROLES>();
+    const auth = role ? new InMemoryAuthentication({ identifier: "operator-1" }) : new AnonymousAuthentication();
+    const users = new InMemoryUsersRepository();
     if (role) {
-        await users.upsert({ sub: "operator-1", email: "operator@example.com", provider: "oidc" }, role);
+        await users.upsert({ sub: "operator-1", email: "operator@example.com", provider: "oidc" });
         for (let index = 2; index <= totalUsers; index += 1) {
-            await users.upsert(
-                { sub: `operator-${index}`, email: `operator-${index}@example.com`, provider: "oidc" },
-                "user",
-            );
+            await users.upsert({
+                sub: `operator-${index}`,
+                email: `operator-${index}@example.com`,
+                provider: "oidc",
+            });
         }
     }
     const cms = new ControlCms(
@@ -111,8 +108,6 @@ export async function mounted(
         undefined,
         undefined,
         sources,
-        undefined,
-        new InMemoryRolesRepository(),
     );
     await cms.ready;
     return {
@@ -153,7 +148,7 @@ async function runMiddleware(request: Request, handler: RouteHandler, chain: Mid
     return await next();
 }
 
-class AnonymousAuthentication implements Authentication<CMS_ROLES> {
+class AnonymousAuthentication implements Authentication {
     readonly loginUrl = "/login";
     readonly logoutUrl = "/logout";
     readonly profileUrl = "/profile";

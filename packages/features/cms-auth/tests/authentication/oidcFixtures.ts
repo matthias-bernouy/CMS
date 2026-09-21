@@ -7,8 +7,6 @@ import { InMemoryIdentityProviderRepository } from "cms-auth/default-implementat
 import { InMemoryUsersRepository } from "cms-auth/default-implementation/memory/InMemoryUsersRepository";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 
-type Role = "admin" | "user";
-
 export const ISSUER = "https://issuer.example";
 export const ISSUER_PATH = "https://cms.example/auth/sso";
 const CLIENT_ID = "cms-client";
@@ -50,10 +48,10 @@ export async function setupOidc() {
     });
     const secrets = new InMemorySecretStore();
     await secrets.set("oidc-secret", "secret");
-    const users = new InMemoryUsersRepository<Role>();
-    const resolver = new SubjectResolver<Role>(users, "user");
+    const users = new InMemoryUsersRepository();
+    const resolver = new SubjectResolver(users);
     const signedCookieCodec = codec();
-    const auth = new OidcAuthentication<Role>({
+    const auth = new OidcAuthentication({
         callbackBase: "https://cms.example/auth",
         providers,
         secrets,

@@ -8,7 +8,7 @@ export type ChangeOwnPasswordStores = {
 
 export async function changeOwnPassword(
     stores: ChangeOwnPasswordStores,
-    user: TUser<string>,
+    user: TUser,
     currentPassword: string,
     newPassword: string,
 ): Promise<void> {

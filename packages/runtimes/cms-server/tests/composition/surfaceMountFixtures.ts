@@ -50,7 +50,6 @@ export function surfaceMountFixtures() {
             identityProviders: token("identity-providers"),
             pats: token("pats"),
             credentials: token("credentials"),
-            roles: token("roles"),
             db: { databaseName: "cms-test" },
         },
         features: {

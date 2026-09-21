@@ -4,21 +4,16 @@ import type { Middleware } from "@bernouy/http-runner";
 import { measureRequestTiming } from "@bernouy/http-runner/observability";
 
 /**
- * What `createAuthGuard` needs from the host runtime — kept narrow so any
- * surface (CMS `ControlCms`, hub composition root, …) can satisfy it without
- * importing the host. The required role IS host-specific: the CMS gates on
- * `admin`, the hub on `superadmin`, etc.
+ * What `createAuthGuard` needs from the host runtime. Authorization is resolved
+ * by views; this middleware only establishes that a request is authenticated.
  */
-export interface AuthGuardContext<Role extends string> {
+export interface AuthGuardContext {
     basePath: string;
-    auth: Authentication<Role>;
-    requiredRole: Role;
+    auth: Authentication;
     onUnauthenticated?: (req: Request, ctx: { loginUrl: string }) => Response | Promise<Response>;
-    onApiForbidden?: (req: Request, ctx: { basePath: string; logoutUrl: string }) => Response | Promise<Response>;
-    onForbidden?: (req: Request, ctx: { basePath: string; logoutUrl: string }) => Response | Promise<Response>;
 }
 
-export const createAuthGuard = <Role extends string>(ctx: AuthGuardContext<Role>): Middleware => {
+export const createAuthGuard = (ctx: AuthGuardContext): Middleware => {
     return async (req, next) => {
         const url = new URL(req.url);
 
@@ -73,25 +68,6 @@ export const createAuthGuard = <Role extends string>(ctx: AuthGuardContext<Role>
                 headers: { "Location": loginUrl },
             });
         }
-        if (subject.role !== ctx.requiredRole) {
-            if (url.pathname.startsWith(`${ctx.basePath}/api/`)) {
-                if (ctx.onApiForbidden) {
-                    return ctx.onApiForbidden(req, {
-                        basePath: ctx.basePath,
-                        logoutUrl: ctx.auth.buildLogoutUrl(`${ctx.basePath}/login`),
-                    });
-                }
-                return new Response("Forbidden", { status: 403 });
-            }
-            if (ctx.onForbidden) {
-                return ctx.onForbidden(req, {
-                    basePath: ctx.basePath,
-                    logoutUrl: ctx.auth.buildLogoutUrl(`${ctx.basePath}/login`),
-                });
-            }
-            return new Response("Forbidden", { status: 403 });
-        }
-
         return await next();
     };
 };

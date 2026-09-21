@@ -1,13 +1,11 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
 import { InMemoryIdentityService } from "@bernouy/cms-identities";
-import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 import { mountControlSourceProxy } from "cms-control/core/admin/control/sourceProxy";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
-import type { CMS_ROLES } from "types/roles";
 
 describe("Control source proxy identity contract", () => {
     test.each([
@@ -47,8 +45,7 @@ describe("Control source proxy identity contract", () => {
             {
                 runner: mounted.runner,
                 sources,
-                auth: new InMemoryAuthentication<CMS_ROLES>({ role: "admin", identifier: "subject-seller" }),
-                roles: new InMemoryRolesRepository(),
+                auth: new InMemoryAuthentication({ identifier: "subject-seller" }),
                 secrets: new InMemorySecretStore(),
                 identities,
             } as unknown as ControlCmsState,

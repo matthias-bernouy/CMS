@@ -1,12 +1,10 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
-import HttpError from "cms-control/core/admin/http/errors/HttpError";
-import { deleteUserCompletely, isLastAdmin, resolveRequestSubject } from "@bernouy/cms-auth";
+import { deleteUserCompletely, resolveRequestSubject } from "@bernouy/cms-auth";
 
-/** DELETE /api/profil — the current user deletes their OWN account. Refuses if
- *  they are the last admin (no one would be left to administer the tenant).
- *  The session cookie outlives the row but now resolves to no user, so the
+/** DELETE /api/profil — the current user deletes their own account. The session
+ *  cookie outlives the row but now resolves to no user, so the
  *  client redirects to logout afterwards to clear it. */
 export default async function deleteOwnAccount(req: Request, cms: ControlCms) {
     const subject = await resolveRequestSubject(cms.auth, req);
@@ -18,10 +16,6 @@ export default async function deleteOwnAccount(req: Request, cms: ControlCms) {
     if (!user) {
         throw new InvalidParam("session", "unknown user");
     }
-    if (await isLastAdmin(cms.users, subject.identifier)) {
-        throw new HttpError(403, "You are the last admin — promote another admin first to delete your account.");
-    }
-
     await deleteUserCompletely(
         {
             users: cms.users,

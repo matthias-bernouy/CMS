@@ -10,13 +10,12 @@ export type VerificationTarget = {
     emailVerifiedAt: Date | null;
 };
 
-export type PublicAuthFlowConfig<Role extends string = string> = {
+export type PublicAuthFlowConfig = {
     credentials: LocalCredentialStore;
-    users: UsersRepository<Role>;
+    users: UsersRepository;
     tokens: AuthTokenStore;
     emailer: Emailer;
     emailComposer?: AuthEmailComposer;
-    defaultRole: Role;
     /** Frontend page where users land after clicking a verification email. */
     emailVerificationUrl: string;
     /** Frontend page where users land after clicking a password-reset email. */

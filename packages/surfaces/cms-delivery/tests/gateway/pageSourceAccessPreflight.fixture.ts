@@ -1,6 +1,5 @@
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { P9R_CACHE, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
-import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySourceRepository, seedSources, type Source, type SourceRepository } from "@bernouy/cms-sources";
 import { compress, InMemoryCache, type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
 
@@ -19,6 +18,13 @@ const SHOP_SOURCE: Source = {
             method: "POST",
             access: { mode: "system" },
             targetUrl: "https://api.example.com/orders",
+            output: [{ status: "200", body: { type: "object" } }],
+        },
+        {
+            urn: "urn:shop:myProducts",
+            method: "GET",
+            access: { mode: "auth" },
+            targetUrl: "https://api.example.com/my-products",
             output: [{ status: "200", body: { type: "object" } }],
         },
     ],
@@ -94,13 +100,11 @@ class CaptureRunner implements Runner {
 
 export async function mountPage(options: {
     content: string;
-    roles?: InMemoryRolesRepository;
     auth?: unknown;
     systemPages?: Partial<Pick<TSystem["site"], "notFound" | "forbidden" | "serverError" | "login">>;
     decorateSources?: (sources: InMemorySourceRepository) => SourceRepository;
-}): Promise<{ handler: RouteHandler; roles: InMemoryRolesRepository }> {
+}): Promise<{ handler: RouteHandler }> {
     const runner = new CaptureRunner();
-    const roles = options.roles ?? new InMemoryRolesRepository();
     const sources = new InMemorySourceRepository();
     const cache = new InMemoryCache();
     cache.set(P9R_CACHE.js("/.cms/assets/component.js"), compress("component", "text/javascript"));
@@ -113,13 +117,12 @@ export async function mountPage(options: {
         repository: pageRepository(options.content, options.systemPages),
         cache,
         sources: deliverySources,
-        roles,
         auth: options.auth as never,
     });
-    return { handler: runner.defaultHandler("GET", "/"), roles };
+    return { handler: runner.defaultHandler("GET", "/") };
 }
 
-export function authSubject(subject: { identifier: string; role: string } | null): unknown {
+export function authSubject(subject: { identifier: string } | null): unknown {
     return {
         local: {
             getSubject: async () => subject,

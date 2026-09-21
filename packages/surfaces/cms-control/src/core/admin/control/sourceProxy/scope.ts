@@ -16,9 +16,8 @@ import {
     RequestScopedSourceRepository,
 } from "@bernouy/cms-sources/requestScope";
 import type { ControlCmsOptions, ControlCmsState } from "cms-control/core/admin/control/types";
-import type { CMS_ROLES } from "types/roles";
 
-type ResolveSubject = (request: Request) => Promise<Subject<CMS_ROLES> | null>;
+type ResolveSubject = (request: Request) => Promise<Subject | null>;
 
 export type ControlSourceRequestScope = {
     deps: ExecutorDeps;
@@ -40,7 +39,7 @@ export function createControlSourceRequestScope(
     const observability = activeSourceObservability(request);
     const resolveContext = createRequestScopedSourceContextResolver(async (candidate) => {
         const subject = await resolveSubject(candidate);
-        return subject ? { userID: subject.identifier, userRole: subject.role } : {};
+        return subject ? { userID: subject.identifier } : {};
     });
     const resolveSecret = createRequestScopedSecretResolver(
         createSecretResolver(state.secrets),

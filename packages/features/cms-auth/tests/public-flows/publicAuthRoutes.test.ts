@@ -23,15 +23,13 @@ describe("public auth routes", () => {
             expect(loggedIn.status).toBe(200);
             const cookie = sessionCookie(loggedIn);
             expect(cookie).toContain("site-session=");
-            expect(((await loggedIn.json()) as { subject: { email: string; role: string } }).subject).toMatchObject({
+            expect(((await loggedIn.json()) as { subject: { email: string } }).subject).toMatchObject({
                 email: "a@x.com",
-                role: "user",
             });
 
             const me = await server.request("GET", "/me", { headers: { cookie } });
-            expect(((await me.json()) as { subject: { email: string; role: string } | null }).subject).toMatchObject({
+            expect(((await me.json()) as { subject: { email: string } | null }).subject).toMatchObject({
                 email: "a@x.com",
-                role: "user",
             });
 
             const logout = await post(server, "/logout", {});

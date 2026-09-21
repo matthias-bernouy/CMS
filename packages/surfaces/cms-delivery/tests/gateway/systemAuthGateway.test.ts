@@ -11,20 +11,17 @@ import {
     type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
 import { InMemorySourceRepository, type SourceEndpointInterceptor } from "@bernouy/cms-sources";
-import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { getRequestIP, requestCorrelationId, setRequestIP } from "@bernouy/http-runner";
 import { CaptureRunner } from "./support/CaptureRunner";
 
-type Role = "user";
-
 async function setup(options: { sourceImageInterceptor?: SourceEndpointInterceptor } = {}) {
     const runner = new CaptureRunner();
-    const users = new InMemoryUsersRepository<Role>();
+    const users = new InMemoryUsersRepository();
     const credentials = new InMemoryLocalCredentialStore();
     const emailer = new InMemoryEmailer();
-    const resolver = new SubjectResolver<Role>(users, "user");
-    const auth: PublicAuthRoutesConfig<Role> = {
-        local: new LocalAuthentication<Role>({
+    const resolver = new SubjectResolver(users);
+    const auth: PublicAuthRoutesConfig = {
+        local: new LocalAuthentication({
             providerId: "local",
             loginPagePath: "/login",
             logoutPath: "/.cms/auth/logout",
@@ -37,19 +34,16 @@ async function setup(options: { sourceImageInterceptor?: SourceEndpointIntercept
         users,
         tokens: new InMemoryAuthTokenStore(),
         emailer,
-        defaultRole: "user",
         emailVerificationUrl: "http://site.test/auth/verify-email",
         passwordResetUrl: "http://site.test/auth/reset-password",
         authEmailCooldownSeconds: 0,
     };
     const gateway = new InMemorySourceRepository();
-    const roles = new InMemoryRolesRepository();
     new DeliveryCms({
         runner,
         repository: {} as any,
         auth,
         sources: gateway,
-        roles,
         ...(options.sourceImageInterceptor ? { sourceImageInterceptor: options.sourceImageInterceptor } : {}),
     });
     return {
@@ -105,9 +99,8 @@ describe("Delivery system auth gateway", () => {
         expect(cookie).toContain("site-session=");
 
         const me = await get(new Request(url("/me"), { headers: { cookie } }));
-        expect(((await me.json()) as { subject: { email: string; role: string } | null }).subject).toMatchObject({
+        expect(((await me.json()) as { subject: { email: string } | null }).subject).toMatchObject({
             email: "ada@example.com",
-            role: "user",
         });
 
         const logout = await post(jsonRequest("/logout", {}));

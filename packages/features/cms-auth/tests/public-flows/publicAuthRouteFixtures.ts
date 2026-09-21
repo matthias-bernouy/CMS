@@ -14,17 +14,15 @@ import {
     type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
 
-type Role = "user" | "admin";
-
 export function setupPublicAuthRoutes(opts: { authEmailCooldownSeconds?: number; emailer?: Emailer } = {}) {
     const runner = new BunRunner();
-    const users = new InMemoryUsersRepository<Role>();
+    const users = new InMemoryUsersRepository();
     const credentials = new InMemoryLocalCredentialStore();
     const tokens = new InMemoryAuthTokenStore();
     const captureEmailer = new InMemoryEmailer();
     const emailer = opts.emailer ?? captureEmailer;
-    const resolver = new SubjectResolver<Role>(users, "user");
-    const local = new LocalAuthentication<Role>({
+    const resolver = new SubjectResolver(users);
+    const local = new LocalAuthentication({
         providerId: "local",
         loginPagePath: "/login",
         logoutPath: "/.cms/auth/logout",
@@ -34,13 +32,12 @@ export function setupPublicAuthRoutes(opts: { authEmailCooldownSeconds?: number;
         cookieName: "site-session",
         defaultHome: "/",
     });
-    const config: PublicAuthRoutesConfig<Role> = {
+    const config: PublicAuthRoutesConfig = {
         local,
         credentials,
         users,
         tokens,
         emailer,
-        defaultRole: "user",
         emailVerificationUrl: "http://site.test/auth/verify-email",
         passwordResetUrl: "http://site.test/auth/reset-password",
         ...opts,

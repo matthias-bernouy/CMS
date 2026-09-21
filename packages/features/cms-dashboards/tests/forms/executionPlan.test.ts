@@ -128,5 +128,5 @@ test("integration management views cannot be published as delegated operator cap
     ];
     const result = await compileDashboardExecutionPlan(copy, new InMemorySourceRepository());
     expect(result.plan).toBeUndefined();
-    expect(result.errors).toContain("Integration management is administrator-only and cannot be delegated");
+    expect(result.errors).toContain("Integration management is Control-only and cannot be delegated");
 });

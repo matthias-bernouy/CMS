@@ -16,8 +16,8 @@ type SystemSourceEndpoint = {
     targetUrl: string;
 };
 
-export async function executeAuthSystemSourceEndpoint<Role extends string>(
-    cfg: PublicAuthRoutesConfig<Role>,
+export async function executeAuthSystemSourceEndpoint(
+    cfg: PublicAuthRoutesConfig,
     endpoint: SystemSourceEndpoint,
     req: Request,
 ): Promise<Response> {

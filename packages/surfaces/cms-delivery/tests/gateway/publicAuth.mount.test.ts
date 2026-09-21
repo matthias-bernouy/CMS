@@ -134,7 +134,6 @@ function authConfig(): PublicAuthRoutesConfig<Role> {
         users,
         tokens: new InMemoryAuthTokenStore(),
         emailer: new InMemoryEmailer(),
-        defaultRole: "user",
         emailVerificationUrl: "http://site.test/auth/verify-email",
         passwordResetUrl: "http://site.test/auth/reset-password",
     };

@@ -20,28 +20,19 @@ export const AUTH_ROUTES = {
     methods: "/methods",
 } as const;
 
-export function localLoginHandler<Role extends string>(
-    local: LocalAuthentication<Role>,
-    req: Request,
-): Promise<Response> {
+export function localLoginHandler(local: LocalAuthentication, req: Request): Promise<Response> {
     return local.login(req);
 }
 
-export function localLogoutHandler<Role extends string>(local: LocalAuthentication<Role>, req: Request): Response {
+export function localLogoutHandler(local: LocalAuthentication, req: Request): Response {
     return local.logout(req);
 }
 
-export function oidcLoginHandler<Role extends string>(
-    oidc: OidcAuthentication<Role>,
-    req: Request,
-): Promise<Response> | Response {
+export function oidcLoginHandler(oidc: OidcAuthentication, req: Request): Promise<Response> | Response {
     return oidc.login(req);
 }
 
-export function oidcCallbackHandler<Role extends string>(
-    oidc: OidcAuthentication<Role>,
-    req: Request,
-): Promise<Response> | Response {
+export function oidcCallbackHandler(oidc: OidcAuthentication, req: Request): Promise<Response> | Response {
     return oidc.callback(req);
 }
 

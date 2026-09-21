@@ -24,8 +24,8 @@ export const PUBLIC_AUTH_ROUTES = {
     confirmPasswordReset: "/password/reset/confirm",
 } as const;
 
-export type PublicAuthRoutesConfig<Role extends string = string> = PublicAuthFlowConfig<Role> & {
-    local: LocalAuthentication<Role>;
+export type PublicAuthRoutesConfig = PublicAuthFlowConfig & {
+    local: LocalAuthentication;
     allowSignup?: boolean;
 };
 
@@ -33,9 +33,9 @@ export type PublicAuthRouteOverrides = {
     signup?: (request: Request) => Response | Promise<Response>;
 };
 
-export function registerPublicAuthRoutes<Role extends string>(
+export function registerPublicAuthRoutes(
     runner: Runner,
-    cfg: PublicAuthRoutesConfig<Role>,
+    cfg: PublicAuthRoutesConfig,
     overrides: PublicAuthRouteOverrides = {},
 ): void {
     if (cfg.allowSignup !== false) {
@@ -76,7 +76,7 @@ export function registerPublicAuthRoutes<Role extends string>(
     });
 }
 
-async function signup<Role extends string>(req: Request, cfg: PublicAuthRoutesConfig<Role>): Promise<Response> {
+async function signup(req: Request, cfg: PublicAuthRoutesConfig): Promise<Response> {
     const body = await readJsonObject(req);
     await signupLocalUser(cfg, {
         email: requiredString(body, "email"),

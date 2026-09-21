@@ -16,28 +16,25 @@ import { InMemoryIdentityService } from "@bernouy/cms-identities";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import { InMemoryCache, type Cache, type Runner } from "@bernouy/http-runner";
 import { InMemoryRelationRepository } from "@bernouy/cms-relations";
-import { InMemoryRolesRepository, type RolesRepository, ValidatingRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore, type SecretStore, ValidatingSecretStore } from "@bernouy/cms-secrets";
 import type { SourceRepository } from "@bernouy/cms-sources";
-import type { CMS_ROLES } from "types/roles";
 import type { ControlAuthBackends, ControlCmsOptions, ControlCmsState } from "cms-control/core/admin/control/types";
 
 export type ControlCmsConstructorInput = {
     runner: Runner;
     repository: CmsRepository;
-    auth: Authentication<CMS_ROLES>;
+    auth: Authentication;
     configuration: ControlCmsOptions;
     cache?: Cache;
     secrets?: SecretStore;
     filesMetadata?: CmsFilesMetadataRepository;
     filesBlob?: CmsFilesBlobStore;
-    users?: UsersRepository<CMS_ROLES>;
+    users?: UsersRepository;
     identityProviders?: IdentityProviderRepository;
     pats?: PatRepository;
     credentials?: LocalCredentialStore;
     sources?: SourceRepository;
     analytics?: AnalyticsStore;
-    roles?: RolesRepository;
     authBackends: ControlAuthBackends;
 };
 
@@ -58,7 +55,6 @@ export function createControlCmsState(input: ControlCmsConstructorInput): Contro
         credentials: input.credentials ?? null,
         sources: input.sources ?? null,
         analytics: input.analytics ?? null,
-        roles: input.roles ?? new ValidatingRolesRepository(new InMemoryRolesRepository()),
         dashboards: configuration.dashboards ?? new InMemoryDashboardRepository(),
         dashboardViews: configuration.dashboardViews ?? new InMemoryDashboardViewRepository(),
         dashboardAssignments: configuration.dashboardAssignments ?? new InMemoryDashboardAssignmentRepository(),

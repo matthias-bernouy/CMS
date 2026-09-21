@@ -8,12 +8,12 @@ const DEFAULT_PASSWORD_RESET_TTL_SECONDS = 60 * 60;
 const DEFAULT_AUTH_EMAIL_COOLDOWN_SECONDS = 5 * 60;
 const DEFAULT_EMAIL_COMPOSER = new DefaultAuthEmailComposer();
 
-export async function isEmailDeliveryEnabled<Role extends string>(cfg: PublicAuthFlowConfig<Role>): Promise<boolean> {
+export async function isEmailDeliveryEnabled(cfg: PublicAuthFlowConfig): Promise<boolean> {
     return cfg.emailer.isEnabled ? cfg.emailer.isEnabled() : true;
 }
 
-export async function sendVerificationForCredential<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
+export async function sendVerificationForCredential(
+    cfg: PublicAuthFlowConfig,
     credential: VerificationTarget,
 ): Promise<boolean> {
     if (credential.emailVerifiedAt || (await inEmailCooldown(cfg, "email_verification", credential.sub))) {
@@ -42,8 +42,8 @@ export async function sendVerificationForCredential<Role extends string>(
     return sent;
 }
 
-export async function sendPasswordResetForCredential<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
+export async function sendPasswordResetForCredential(
+    cfg: PublicAuthFlowConfig,
     credential: Pick<VerificationTarget, "sub" | "email">,
 ): Promise<boolean> {
     if (await inEmailCooldown(cfg, "password_reset", credential.sub)) {
@@ -71,8 +71,8 @@ export async function sendPasswordResetForCredential<Role extends string>(
     return sent;
 }
 
-async function sendAuthEmail<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
+async function sendAuthEmail(
+    cfg: PublicAuthFlowConfig,
     email: Awaited<ReturnType<AuthEmailComposer["compose"]>>,
 ): Promise<boolean> {
     try {
@@ -86,8 +86,8 @@ async function sendAuthEmail<Role extends string>(
     }
 }
 
-async function inEmailCooldown<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
+async function inEmailCooldown(
+    cfg: PublicAuthFlowConfig,
     purpose: "email_verification" | "password_reset",
     sub: string,
 ): Promise<boolean> {
@@ -99,7 +99,7 @@ async function inEmailCooldown<Role extends string>(
     return Boolean(active && Date.now() - active.createdAt.getTime() < cooldownSeconds * 1000);
 }
 
-function emailComposer<Role extends string>(cfg: PublicAuthFlowConfig<Role>): AuthEmailComposer {
+function emailComposer(cfg: PublicAuthFlowConfig): AuthEmailComposer {
     return cfg.emailComposer ?? DEFAULT_EMAIL_COMPOSER;
 }
 

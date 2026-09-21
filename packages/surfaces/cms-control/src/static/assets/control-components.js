@@ -23179,102 +23179,6 @@ input {
   }
   customElements.define("cms-provider-actions", CmsProviderActions);
 
-  // ../../foundation/http-runner/src/core/html.ts
-  function escapeHtml2(str) {
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-  }
-  var escapeAttr = escapeHtml2;
-  // src/components/admin/Common/RoleSelect/RoleSelect.ts
-  class CmsRoleSelect extends HTMLElement {
-    static formAssociated = true;
-    static get observedAttributes() {
-      return ["sub", "value", "label", "aria-label", "disabled"];
-    }
-    internals;
-    roles = [];
-    constructor() {
-      super();
-      this.internals = this.attachInternals();
-    }
-    connectedCallback() {
-      this.internals.setFormValue(this._value);
-      this._load();
-    }
-    attributeChangedCallback() {
-      if (this.isConnected) {
-        this._render();
-      }
-    }
-    get _url() {
-      return this.getAttribute("url") ?? "/api/users/role";
-    }
-    get _listUrl() {
-      return this.getAttribute("list-url") ?? "/api/roles/list";
-    }
-    get _sub() {
-      return this.getAttribute("sub") ?? "";
-    }
-    get _value() {
-      return this.getAttribute("value") ?? "user";
-    }
-    get _emit() {
-      return this.getAttribute("emit");
-    }
-    async _load() {
-      try {
-        const res = await fetch(this._listUrl, { headers: { Accept: "application/json" } });
-        this.roles = res.ok ? await res.json() : [];
-      } catch {
-        this.roles = [];
-      }
-      this._render();
-    }
-    _render() {
-      const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
-      const current = this._value;
-      const opts = this.roles.length ? this.roles : [{ id: current, label: current }];
-      root.innerHTML = `
-        <p9r-select value="${escapeHtml2(current)}" label="${escapeHtml2(this.getAttribute("label") ?? "Role")}"${this.getAttribute("aria-label") ? ` aria-label="${escapeHtml2(this.getAttribute("aria-label"))}"` : ""}${this.hasAttribute("disabled") ? " disabled" : ""}>
-          ${opts.map((r) => `<option value="${escapeHtml2(r.id)}"${r.id === current ? " selected" : ""}>${escapeHtml2(r.label)}</option>`).join("")}
-        </p9r-select>`;
-      const sel = root.querySelector("p9r-select");
-      this.internals.setFormValue(sel.value);
-      sel.addEventListener("change", () => this._onChange(sel.value));
-    }
-    _onChange(role) {
-      this.internals.setFormValue(role);
-      if (this._sub) {
-        this._save(role);
-      }
-    }
-    async _save(role) {
-      try {
-        const res = await fetch(this._url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sub: this._sub, role })
-        });
-        if (res.ok) {
-          kb("Role updated", { type: "success" });
-          if (this._emit) {
-            document.dispatchEvent(new Event(this._emit, { bubbles: true }));
-          }
-        } else {
-          kb("Failed to update role", { type: "error" });
-        }
-      } catch {
-        kb("Network error", { type: "error" });
-      }
-    }
-    get name() {
-      return this.getAttribute("name");
-    }
-    focus() {
-      this.shadowRoot?.querySelector("p9r-select")?.focus();
-    }
-  }
-  customElements.define("cms-role-select", CmsRoleSelect);
-
   // src/components/admin/Common/PageSettings/PageIndexingVariables.ts
   class PageIndexingVariables extends HTMLElement {
     text;
@@ -23301,6 +23205,11 @@ input {
     customElements.define("cms-page-indexing-variables", PageIndexingVariables);
   }
 
+  // ../../foundation/http-runner/src/core/html.ts
+  function escapeHtml2(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  var escapeAttr = escapeHtml2;
   // src/components/admin/Common/PageSettings/view.ts
   function pageIndexingSettingsView(model) {
     const notice = editorNotice(model, model.selection);
@@ -23509,124 +23418,6 @@ input {
   if (!customElements.get("cms-page-indexing-settings")) {
     customElements.define("cms-page-indexing-settings", PageIndexingSettings);
   }
-
-  // src/components/admin/RoleEditor/RoleEditor.ts
-  class CmsRoleEditor extends HTMLElement {
-    data = null;
-    get _api() {
-      return this.getAttribute("api") ?? "/api/roles";
-    }
-    get _back() {
-      return this.getAttribute("back") ?? "/admin/roles";
-    }
-    get _id() {
-      return new URLSearchParams(location.search).get("id") ?? "";
-    }
-    connectedCallback() {
-      this._load();
-    }
-    async _load() {
-      const id2 = this._id;
-      if (!id2) {
-        location.href = this._back;
-        return;
-      }
-      try {
-        const res = await fetch(`${this._api}/editor?id=${encodeURIComponent(id2)}`, {
-          headers: { Accept: "application/json" }
-        });
-        if (!res.ok) {
-          throw new Error;
-        }
-        this.data = await res.json();
-      } catch {
-        const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
-        root.innerHTML = `<p>Could not load this role.</p>`;
-        return;
-      }
-      this._render();
-    }
-    _render() {
-      const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
-      const d3 = this.data;
-      const checked = new Set(d3.role.grants);
-      const cb = (id2, label) => `<w13c-checkbox value="${escapeHtml2(id2)}"${checked.has(id2) ? " checked" : ""}>${escapeHtml2(label)}</w13c-checkbox>`;
-      const section = (label, items) => {
-        const n = items.filter((i) => checked.has(i.id)).length;
-        return `
-              <p9r-accordion-item>
-                <span slot="header" class="grp">${escapeHtml2(label)}<span class="badge"${n ? "" : " hidden"}>${n}</span></span>
-                <div class="grid">${items.map((i) => cb(i.id, i.label)).join("")}</div>
-              </p9r-accordion-item>`;
-      };
-      const cmsItems = d3.catalog.cms.map((g3) => section(g3.label, g3.permissions.map((p3) => ({ id: p3.id, label: p3.verb })))).join("");
-      const gwBlock = d3.catalog.gateway.length ? `<p9r-accordion multiple>${d3.catalog.gateway.map((g3) => section(g3.label, g3.endpoints)).join("")}</p9r-accordion>` : `<p class="muted">No gateway providers configured.</p>`;
-      root.innerHTML = `
-          <style>
-            :host { display:block; max-width: 64rem; }
-            .intro { margin: 0 0 1.25rem; color: var(--text-body,#333); }
-            .intro code { background: var(--bg-muted,#f3f4f6); padding: .1rem .4rem; border-radius: 4px; }
-            section { margin: 0 0 1.5rem; }
-            h3 { margin: 0 0 .6rem; font-size: 1rem; }
-            p9r-accordion-item { display:block; }
-            .grp { display:inline-flex; align-items:center; gap:.5rem; font-weight:600; }
-            .badge { display:inline-flex; min-width:1.3rem; height:1.3rem; padding:0 .4rem; align-items:center; justify-content:center;
-                     font-size:.72rem; font-weight:700; border-radius:999px; background: var(--bg-muted,#eef0f4); color: var(--text-body,#333); }
-            .grid { display:flex; flex-wrap:wrap; gap:.55rem 1.75rem; padding:.5rem .25rem; }
-            .muted { color: var(--text-muted,#666); }
-            .bar { display:flex; align-items:center; gap:1rem; margin-top:1.75rem; }
-            .cancel { text-decoration:none; color: var(--text-muted,#666); font:inherit; }
-          </style>
-          <p class="intro">Editing role <strong>${escapeHtml2(d3.role.label)}</strong> <code>${escapeHtml2(d3.role.id)}</code></p>
-
-          <section>
-            <h3>CMS capabilities</h3>
-            <p9r-accordion multiple>${cmsItems}</p9r-accordion>
-          </section>
-
-          <section>
-            <h3>Gateway endpoints</h3>
-            ${gwBlock}
-          </section>
-
-          <div class="bar">
-            <p9r-button color="primary" class="save">Save</p9r-button>
-            <a class="cancel" href="${escapeHtml2(this._back)}">Cancel</a>
-          </div>`;
-      root.querySelector(".save").addEventListener("click", () => void this._save());
-      root.addEventListener("change", () => this._refreshBadges());
-    }
-    _refreshBadges() {
-      this.shadowRoot.querySelectorAll("p9r-accordion-item").forEach((item) => {
-        const n = item.querySelectorAll("w13c-checkbox[checked]").length;
-        const badge = item.querySelector(".badge");
-        if (!badge) {
-          return;
-        }
-        badge.textContent = String(n);
-        badge.toggleAttribute("hidden", n === 0);
-      });
-    }
-    async _save() {
-      const grants = Array.from(this.shadowRoot.querySelectorAll("w13c-checkbox")).filter((el) => el.hasAttribute("checked")).map((el) => ({ permission: el.getAttribute("value") }));
-      try {
-        const res = await fetch(this._api, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: this.data.role.id, label: this.data.role.label, grants })
-        });
-        if (res.ok) {
-          kb("Role permissions saved", { type: "success" });
-          location.href = this._back;
-        } else {
-          kb("Failed to save permissions", { type: "error" });
-        }
-      } catch {
-        kb("Network error", { type: "error" });
-      }
-    }
-  }
-  customElements.define("cms-role-editor", CmsRoleEditor);
 
   // src/components/admin/Actions/UserActions/style.css
   var style_default4 = `:host {
@@ -27269,7 +27060,6 @@ w13c-lateral-menu-item {
     cms_auth: "Authentication",
     cms_endpoint_auth_lookup: "Authorization endpoint lookup",
     cms_authorize: "Authorization",
-    cms_roles: "Roles",
     cms_endpoint_resolve: "Source resolution",
     cms_source: "Source read",
     cms_overlays: "Overlays",
@@ -28589,8 +28379,7 @@ svg { width: 100%; height: 100%; stroke: currentColor; fill: none; }
       const fallbackLabel = cleanText(user.label);
       const name = cleanText(user.displayName) || (fallbackLabel !== email ? fallbackLabel : "");
       const humanLabel = name && email ? `${name} — ${email}` : name || email || sub;
-      const role = cleanText(user.roleLabel) || cleanText(user.role);
-      const metadata = [role, sub].filter((value2) => value2 && value2 !== humanLabel).join(" · ");
+      const metadata = sub !== humanLabel ? sub : "";
       return [{ value: sub, label: metadata ? `${humanLabel} · ${metadata}` : humanLabel }];
     });
   }

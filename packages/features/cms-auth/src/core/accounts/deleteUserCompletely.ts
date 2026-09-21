@@ -2,11 +2,11 @@ import type { UsersRepository, TUser } from "cms-auth/interfaces/UsersRepository
 import type { LocalCredentialStore } from "cms-auth/interfaces/LocalCredentialStore";
 import type { PatRepository } from "cms-auth/interfaces/PatRepository";
 
-export type UserDeletionStores<Role extends string> = {
-    users: UsersRepository<Role>;
+export type UserDeletionStores = {
+    users: UsersRepository;
     credentials: LocalCredentialStore;
     pats: PatRepository;
-    beforeMembershipDelete?: (user: TUser<Role>) => Promise<void>;
+    beforeMembershipDelete?: (user: TUser) => Promise<void>;
 };
 
 /**
@@ -18,12 +18,8 @@ export type UserDeletionStores<Role extends string> = {
  *   - the membership row (authz) — done LAST so a failure mid-way leaves the
  *     user still listed (and thus retry-able) rather than a half-deleted ghost.
  *
- * Callers must enforce the last-admin guard (`isLastAdmin`) BEFORE calling this.
  */
-export async function deleteUserCompletely<Role extends string>(
-    stores: UserDeletionStores<Role>,
-    user: TUser<Role>,
-): Promise<void> {
+export async function deleteUserCompletely(stores: UserDeletionStores, user: TUser): Promise<void> {
     if (user.provider === "local" && user.email) {
         const cred = await stores.credentials.getByEmail(user.email);
         if (cred) {

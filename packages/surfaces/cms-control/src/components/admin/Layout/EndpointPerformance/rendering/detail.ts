@@ -11,7 +11,6 @@ const STAGE_LABELS: Record<string, string> = {
     cms_auth: "Authentication",
     cms_endpoint_auth_lookup: "Authorization endpoint lookup",
     cms_authorize: "Authorization",
-    cms_roles: "Roles",
     cms_endpoint_resolve: "Source resolution",
     cms_source: "Source read",
     cms_overlays: "Overlays",

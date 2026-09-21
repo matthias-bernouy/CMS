@@ -23,15 +23,15 @@ export type {
     SignupLocalUserResult,
 } from "cms-auth/core/public-auth/types";
 
-export async function signupLocalUser<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
+export async function signupLocalUser(
+    cfg: PublicAuthFlowConfig,
     input: SignupLocalUserInput,
 ): Promise<SignupLocalUserResult> {
     return (await prepareSignupLocalUser(cfg, input)).finalize();
 }
 
-export async function prepareSignupLocalUser<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
+export async function prepareSignupLocalUser(
+    cfg: PublicAuthFlowConfig,
     input: SignupLocalUserInput,
 ): Promise<PreparedSignupLocalUser> {
     const email = normalizeEmail(input.email);
@@ -45,8 +45,8 @@ export async function prepareSignupLocalUser<Role extends string>(
     });
 }
 
-export async function requestEmailVerification<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
+export async function requestEmailVerification(
+    cfg: PublicAuthFlowConfig,
     input: { email: string },
 ): Promise<PublicAuthSendResult> {
     const email = normalizeEmail(input.email);
@@ -62,10 +62,7 @@ export async function requestEmailVerification<Role extends string>(
     return { sent: await sendVerificationForCredential(cfg, credential) };
 }
 
-export async function confirmEmailVerification<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
-    input: { token: string },
-): Promise<void> {
+export async function confirmEmailVerification(cfg: PublicAuthFlowConfig, input: { token: string }): Promise<void> {
     const authToken = await cfg.tokens.consume("email_verification", requireToken(input.token));
     if (!authToken) {
         throw new AuthValidationError("token", "invalid or expired");
@@ -81,8 +78,8 @@ export async function confirmEmailVerification<Role extends string>(
     await cfg.tokens.deleteForSub(authToken.sub, "email_verification");
 }
 
-export async function requestPasswordReset<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
+export async function requestPasswordReset(
+    cfg: PublicAuthFlowConfig,
     input: { email: string },
 ): Promise<PublicAuthSendResult> {
     const email = normalizeEmail(input.email);
@@ -94,8 +91,8 @@ export async function requestPasswordReset<Role extends string>(
     return { sent: await sendPasswordResetForCredential(cfg, credential) };
 }
 
-export async function confirmPasswordReset<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
+export async function confirmPasswordReset(
+    cfg: PublicAuthFlowConfig,
     input: { token: string; password: string },
 ): Promise<void> {
     const token = requireToken(input.token);
@@ -116,9 +113,6 @@ export async function confirmPasswordReset<Role extends string>(
     await cfg.tokens.deleteForSub(authToken.sub, "password_reset");
 }
 
-async function hasActivatedMembership<Role extends string>(
-    cfg: PublicAuthFlowConfig<Role>,
-    credentialSub: string,
-): Promise<boolean> {
+async function hasActivatedMembership(cfg: PublicAuthFlowConfig, credentialSub: string): Promise<boolean> {
     return Boolean(await cfg.users.getBySub(internalUserId("local", credentialSub)));
 }

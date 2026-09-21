@@ -21,9 +21,8 @@ import type { FieldCrypto } from "@bernouy/envelope-crypto";
  */
 export type MongoUsersConfig = { collectionPrefix?: string };
 
-type UserDoc<Role extends string> = {
+type UserDoc = {
     _id: string;
-    role: Role;
     createdAt: Date;
     lastSeenAt: Date;
     provider?: string; // provenance (not PII): "local", "google"…
@@ -31,7 +30,7 @@ type UserDoc<Role extends string> = {
     emailIndex?: string; // HMAC(email) — exact-match lookup
 };
 
-export class MongoUsersRepository<Role extends string = string> implements UsersRepository<Role> {
+export class MongoUsersRepository implements UsersRepository {
     private readonly _prefix: string;
 
     constructor(
@@ -42,13 +41,13 @@ export class MongoUsersRepository<Role extends string = string> implements Users
         this._prefix = config.collectionPrefix ?? "";
     }
 
-    private get col(): Collection<UserDoc<Role>> {
-        return this.db.collection<UserDoc<Role>>(this._prefix + "users");
+    private get col(): Collection<UserDoc> {
+        return this.db.collection<UserDoc>(this._prefix + "users");
     }
 
-    async upsert(identity: Identity, defaultRole: Role): Promise<TUser<Role>> {
+    async upsert(identity: Identity): Promise<TUser> {
         const now = new Date();
-        const $set: Partial<UserDoc<Role>> = { lastSeenAt: now };
+        const $set: Partial<UserDoc> = { lastSeenAt: now };
         if (identity.email !== undefined) {
             $set.emailEnc = await this.fieldCrypto.encrypt(identity.email);
             $set.emailIndex = this.fieldCrypto.blindIndex(identity.email);
@@ -58,23 +57,14 @@ export class MongoUsersRepository<Role extends string = string> implements Users
         }
         const d = await this.col.findOneAndUpdate(
             { _id: identity.sub },
-            { $set, $setOnInsert: { role: defaultRole, createdAt: now } },
+            { $set, $setOnInsert: { createdAt: now } },
             { upsert: true, returnDocument: "after" },
         );
         return this._fromDoc(d!);
     }
 
-    async getBySub(sub: string): Promise<TUser<Role> | null> {
+    async getBySub(sub: string): Promise<TUser | null> {
         const d = await this.col.findOne({ _id: sub });
-        return d ? this._fromDoc(d) : null;
-    }
-
-    async setRole(sub: string, role: Role): Promise<TUser<Role> | null> {
-        const d = await this.col.findOneAndUpdate(
-            { _id: sub },
-            { $set: { role } as Partial<UserDoc<Role>> },
-            { returnDocument: "after" },
-        );
         return d ? this._fromDoc(d) : null;
     }
 
@@ -83,11 +73,8 @@ export class MongoUsersRepository<Role extends string = string> implements Users
         return r.deletedCount === 1;
     }
 
-    async list(opts: UsersListOptions = {}): Promise<UsersPage<Role>> {
+    async list(opts: UsersListOptions = {}): Promise<UsersPage> {
         const filter: Record<string, unknown> = {};
-        if (opts.role) {
-            filter.role = opts.role;
-        }
         if (opts.search) {
             filter.emailIndex = this.fieldCrypto.blindIndex(opts.search); // exact email only
         }
@@ -109,8 +96,8 @@ export class MongoUsersRepository<Role extends string = string> implements Users
         return { users, total, page, limit, hasMore: (page - 1) * limit + docs.length < total };
     }
 
-    private async _fromDoc(d: UserDoc<Role>): Promise<TUser<Role>> {
-        const out: TUser<Role> = { sub: d._id, role: d.role, createdAt: d.createdAt, lastSeenAt: d.lastSeenAt };
+    private async _fromDoc(d: UserDoc): Promise<TUser> {
+        const out: TUser = { sub: d._id, createdAt: d.createdAt, lastSeenAt: d.lastSeenAt };
         if (d.provider) {
             out.provider = d.provider;
         }

@@ -27,25 +27,11 @@
                     </cms-user-actions>
 
                     <cms-shell-detail-body slot="body">
-                        <cms-detail-section slot="main" heading="Access">
-                            <p9r-stack gap="md">
-                                <span>Role</span>
-                                <cms-role-select
-                                    sub="{{ sub }}"
-                                    value="{{ role }}"
-                                    url="{{BASE_PATH}}/api/users/role"
-                                    list-url="{{BASE_PATH}}/api/roles/list"
-                                    emit="user:updated">
-                                </cms-role-select>
-                            </p9r-stack>
-                        </cms-detail-section>
-
                         <cms-detail-section slot="aside" heading="Profile">
                             <p9r-stack gap="sm">
                                 <strong>{{ label }}</strong>
                                 <span>{{ email }}</span>
                                 <span>{{ providerLabel }}</span>
-                                <span>{{ roleLabel }}</span>
                                 <p9r-tag>{{ emailStatusLabel }}</p9r-tag>
                             </p9r-stack>
                         </cms-detail-section>

@@ -1,6 +1,5 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { InMemoryAuthentication, type Subject } from "@bernouy/cms-auth";
-import { InMemoryRolesRepository, USER_ROLE } from "@bernouy/cms-permissions";
 import { InMemorySourceRepository, type SourceRequestObservation } from "@bernouy/cms-sources";
 import type { RouteHandler, Runner } from "@bernouy/http-runner";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
@@ -9,13 +8,6 @@ import { registerDeliverySourceProxy } from "cms-delivery/core/sources/registerS
 describe("Delivery source subject scope", () => {
     test("shares one subject through authorization and source context", async () => {
         const authentication = new CountingAuthentication();
-        const roles = new InMemoryRolesRepository();
-        await roles.upsert({
-            id: USER_ROLE,
-            label: "User",
-            builtin: true,
-            grants: [{ permission: "urn:orders:create" }],
-        });
         const sources = new InMemorySourceRepository();
         await sources.createSource({
             urn: "urn:orders",
@@ -35,7 +27,6 @@ describe("Delivery source subject scope", () => {
         registerDeliverySourceProxy({
             runner: mounted.runner,
             sources,
-            roles,
             auth: { local: authentication },
             sourceTelemetry: {
                 observe(observation: SourceRequestObservation) {
@@ -63,21 +54,20 @@ describe("Delivery source subject scope", () => {
             expect(upstream).toHaveBeenCalledTimes(2);
             expect(observations).toHaveLength(2);
             expect(observations.every((observation) => observation.stagesMs.cms_auth !== undefined)).toBe(true);
-            expect(observations.every((observation) => observation.stagesMs.cms_roles !== undefined)).toBe(true);
         } finally {
             upstream.mockRestore();
         }
     });
 });
 
-class CountingAuthentication extends InMemoryAuthentication<string> {
+class CountingAuthentication extends InMemoryAuthentication {
     calls = 0;
 
     constructor() {
-        super({ identifier: "member-1", role: USER_ROLE });
+        super({ identifier: "member-1" });
     }
 
-    override async getSubject(request: Request): Promise<Subject<string>> {
+    override async getSubject(request: Request): Promise<Subject> {
         this.calls += 1;
         return super.getSubject(request);
     }

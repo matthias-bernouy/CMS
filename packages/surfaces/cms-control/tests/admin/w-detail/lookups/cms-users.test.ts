@@ -28,14 +28,10 @@ describe("dashboard CMS user fields", () => {
                     sub: "local:alice:opaque",
                     displayName: "Alice Martin",
                     email: "alice@example.test",
-                    role: "sales_partner",
-                    roleLabel: "Sales partner",
                 },
                 {
                     sub: "oidc:bob:opaque",
                     email: "bob@example.test",
-                    role: "user",
-                    roleLabel: "User",
                 },
             ]);
         }) as typeof fetch;
@@ -52,7 +48,7 @@ describe("dashboard CMS user fields", () => {
         expect(requests).toEqual(["/api/users"]);
         const combobox = detail.querySelector<HTMLElement & { value: string; shadowRoot: ShadowRoot }>("p9r-combobox")!;
         const alice = combobox.querySelector<HTMLOptionElement>("option[value='local:alice:opaque']")!;
-        expect(alice.textContent).toBe("Alice Martin — alice@example.test · Sales partner · local:alice:opaque");
+        expect(alice.textContent).toBe("Alice Martin — alice@example.test · local:alice:opaque");
 
         const input = combobox.shadowRoot.querySelector<HTMLInputElement>("input")!;
         expect(input.getAttribute("role")).toBe("combobox");
@@ -151,7 +147,7 @@ describe("dashboard CMS user fields", () => {
         )!;
         expect(knownCombobox.value).toBe("oidc:known:opaque");
         expect(knownCombobox.shadowRoot.querySelector<HTMLInputElement>("input")?.value).toBe(
-            "known@example.test · User · oidc:known:opaque",
+            "known@example.test · oidc:known:opaque",
         );
 
         known.remove();

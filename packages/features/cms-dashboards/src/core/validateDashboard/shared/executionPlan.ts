@@ -73,7 +73,7 @@ function collectReferences(
     }
     const record = value as Record<string, unknown>;
     if (record.management && typeof record.management === "object") {
-        errors.push("Integration management is administrator-only and cannot be delegated");
+        errors.push("Integration management is Control-only and cannot be delegated");
     }
     if (typeof record.endpoint === "string") {
         const sourceId = typeof record.sourceId === "string" ? record.sourceId : defaultSource;

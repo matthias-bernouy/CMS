@@ -8,7 +8,6 @@ function user(patch: Partial<TUser> = {}): TUser {
         sub: "local:u1",
         provider: "local",
         email: "a@x.com",
-        role: "user",
         createdAt: new Date(),
         lastSeenAt: new Date(),
         ...patch,

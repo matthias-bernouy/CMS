@@ -31,9 +31,11 @@ production-ready.
 
 ### Transition status
 
-The legacy function, trigger, integration package, registry, verification,
-repository, and official-integration resource stacks have been removed. The
-Ulvia CLI now starts only the local CMS and MongoDB; it no longer owns package
+The legacy function, trigger, notification-dispatch, integration package,
+registry, verification, repository, official-integration resource, role, and
+permission stacks have been removed. Authentication subjects and CMS membership
+records now contain identity only; view definitions will own authorization.
+The Ulvia CLI now starts only the local CMS and MongoDB; it no longer owns package
 pull, audit, release, publication, repository, or Supabase workflows.
 
 Integration-backed collection and dashboard test fixtures remain in the tree
@@ -119,7 +121,7 @@ explicit and testable.
 
 ### 1. Provider manifests and approved installations
 
-The runtime provider report must not be the authority for permissions. In the
+The runtime provider report must not define the allowed capability set. In the
 sandbox, a provider can currently report its own `requires` list, and the
 gateway then uses that list as the provider's allowlist. A provider could gain
 new access during an ordinary refresh.
@@ -148,7 +150,7 @@ Rules:
   provider-to-gateway credential.
 
 The registry may later sign manifests cryptographically. The first invariant
-is that a provider cannot grant permissions to itself.
+is that a provider cannot approve new capability requirements for itself.
 
 ### 2. Exhaustive binding compilation
 
@@ -263,7 +265,7 @@ a delivery mechanism, not a second event model.
 
 The gateway creates an invocation context that providers cannot override. It
 contains a request ID, installation ID, optional trace ID, origin, and one
-actor type: anonymous, user, admin, provider, or system.
+actor type: anonymous, user, provider, or system.
 
 Important rules:
 
@@ -271,9 +273,10 @@ Important rules:
 - they never inherit an end user implicitly;
 - future user delegation requires a separate short-lived scoped token;
 - pairwise user aliases are stored when reverse translation is required;
-- admin remains a CMS boundary, not a provider-defined role;
-- later dashboard grants narrow capability inputs and outputs without
-  recreating the old role/permission system.
+- back-office access is described by views rather than a global administrator
+  role or permission catalogue;
+- view access may narrow capability inputs and outputs without recreating a
+  generic role/permission system.
 
 Every command produces a CMS audit entry with request, actor, origin,
 installation, contract release, capability, outcome, duration, input hash,
@@ -335,7 +338,8 @@ without relying on the old integration model.
 - implement compatibility reports and lifecycle metadata;
 - add negative tests for every malformed binding and incompatible release.
 
-Exit condition: a malformed or permission-expanding release cannot become
+Exit condition: a malformed release or one with unapproved capability
+requirements cannot become
 installable.
 
 ### Phase 2 — Installation and gateway runtime
@@ -369,8 +373,8 @@ duplicating effects or silently losing changes.
 - run conformance in isolated disposable tenants;
 - make conformance coverage warnings blocking for official releases;
 - exercise end-to-end flows across several provider installations;
-- remove superseded source, integration, function, trigger, role, and
-  permission paths only after their replacement behavior is covered.
+- remove the remaining superseded source paths after their replacement behavior
+  is covered.
 
 Exit condition: official contracts work exclusively through the new gateway,
 and the old runtime is no longer part of the composition root.
@@ -389,7 +393,7 @@ Only after the provider protocol is stable:
 
 Protocol v1 is ready to become CmsCore's integration foundation when:
 
-- permissions come only from an approved manifest;
+- provider requirements come only from an approved manifest;
 - every installed contract and provider manifest is digest-pinned;
 - malformed bindings are unpublishable;
 - compatibility checks detect every removed supported operation;

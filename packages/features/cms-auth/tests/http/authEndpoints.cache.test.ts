@@ -15,11 +15,9 @@ import {
     type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
 
-type Role = "user";
-
 describe("authentication endpoint cache policy", () => {
     test("protects direct and system-source current-user responses", async () => {
-        const subject = { identifier: "local:user-1", role: "user" as const, displayName: "Ada" };
+        const subject = { identifier: "local:user-1", email: "ada@example.test" };
         const cfg = {
             local: {
                 getSubject: async () => subject,
@@ -30,7 +28,7 @@ describe("authentication endpoint cache policy", () => {
                     throw new Error("not used");
                 },
             },
-        } as unknown as PublicAuthRoutesConfig<Role>;
+        } as unknown as PublicAuthRoutesConfig;
         const routes = new Map<string, RouteHandler>();
         registerPublicAuthRoutes(
             {
@@ -61,7 +59,7 @@ describe("authentication endpoint cache policy", () => {
     });
 
     test("protects disabled system signup without changing its response", async () => {
-        const cfg = { allowSignup: false } as PublicAuthRoutesConfig<Role>;
+        const cfg = { allowSignup: false } as PublicAuthRoutesConfig;
         const response = await executeAuthSystemSourceEndpoint(
             cfg,
             {
@@ -104,12 +102,12 @@ describe("authentication endpoint cache policy", () => {
         expect(await methods.json()).toEqual([]);
         expectPrivatePolicy(methods);
 
-        const users = new InMemoryUsersRepository<Role>();
-        const oidc = new OidcAuthentication<Role>({
+        const users = new InMemoryUsersRepository();
+        const oidc = new OidcAuthentication({
             callbackBase: "https://site.test/auth",
             providers: new InMemoryIdentityProviderRepository(),
             secrets: new InMemorySecretStore(),
-            resolver: new SubjectResolver(users, "user"),
+            resolver: new SubjectResolver(users),
             codec: codec(),
             cookieName: "cms-session",
             loginPagePath: "/login",
@@ -123,14 +121,14 @@ describe("authentication endpoint cache policy", () => {
 });
 
 function localAuth() {
-    const users = new InMemoryUsersRepository<Role>();
+    const users = new InMemoryUsersRepository();
     const credentials = new InMemoryLocalCredentialStore();
-    const auth = new LocalAuthentication<Role>({
+    const auth = new LocalAuthentication({
         providerId: "local",
         loginPagePath: "/login",
         logoutPath: "/auth/logout",
         credentials,
-        resolver: new SubjectResolver(users, "user"),
+        resolver: new SubjectResolver(users),
         codec: codec(),
         cookieName: "cms-session",
         defaultHome: "/admin",

@@ -17,9 +17,7 @@
         { "path": "../../features/cms-sources" },
         { "path": "../../features/cms-source-images" },
         { "path": "../../features/cms-relations" },
-        { "path": "../../features/cms-notifications" },
         { "path": "../../features/cms-analytics" },
-        { "path": "../../features/cms-permissions" },
         { "path": "../../surfaces/cms-control" },
         { "path": "../../surfaces/cms-delivery" }
     ]

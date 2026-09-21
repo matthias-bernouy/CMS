@@ -7,17 +7,16 @@ import {
 } from "@bernouy/cms-analytics";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { ControlCms } from "cms-control/ControlCms";
-import type { CMS_ROLES } from "types/roles";
 import { CaptureRunner } from "../access/authPublicSupport";
 
 describe("Control analytics routes", () => {
-    test("mounts every counter report behind the admin guard", async () => {
+    test("mounts every counter report behind the authenticated Control guard", async () => {
         const runner = new CaptureRunner();
         const analytics = new InMemoryAnalyticsStore();
         const cms = new ControlCms(
             runner,
             new InMemoryCmsRepository(),
-            new InMemoryAuthentication<CMS_ROLES>({ role: "admin" }),
+            new InMemoryAuthentication(),
             {},
             undefined,
             undefined,
@@ -65,23 +64,18 @@ describe("Control analytics routes", () => {
         });
     });
 
-    test("mounts endpoint performance independently behind the admin guard", async () => {
+    test("mounts endpoint performance independently behind the authenticated Control guard", async () => {
         const runner = new CaptureRunner();
         const queries: EndpointPerformanceQuery[] = [];
         const dashboard = emptyEndpointDashboard();
-        const cms = new ControlCms(
-            runner,
-            new InMemoryCmsRepository(),
-            new InMemoryAuthentication<CMS_ROLES>({ role: "admin" }),
-            {
-                endpointPerformanceReports: {
-                    async dashboard(query) {
-                        queries.push(query);
-                        return dashboard;
-                    },
+        const cms = new ControlCms(runner, new InMemoryCmsRepository(), new InMemoryAuthentication(), {
+            endpointPerformanceReports: {
+                async dashboard(query) {
+                    queries.push(query);
+                    return dashboard;
                 },
             },
-        );
+        });
         await cms.ready;
 
         expect(runner.endpoints.get("GET /api/analytics/endpoints")).toBe(1);
@@ -98,22 +92,17 @@ describe("Control analytics routes", () => {
         ]);
     });
 
-    test("rejects non-admin endpoint performance requests before reporting", async () => {
+    test("allows authenticated endpoint performance requests", async () => {
         const runner = new CaptureRunner();
         let reportCalls = 0;
-        const cms = new ControlCms(
-            runner,
-            new InMemoryCmsRepository(),
-            new InMemoryAuthentication<CMS_ROLES>({ role: "user" }),
-            {
-                endpointPerformanceReports: {
-                    async dashboard() {
-                        reportCalls++;
-                        return emptyEndpointDashboard();
-                    },
+        const cms = new ControlCms(runner, new InMemoryCmsRepository(), new InMemoryAuthentication(), {
+            endpointPerformanceReports: {
+                async dashboard() {
+                    reportCalls++;
+                    return emptyEndpointDashboard();
                 },
             },
-        );
+        });
         await cms.ready;
 
         const key = "GET /api/analytics/endpoints";
@@ -126,8 +115,8 @@ describe("Control analytics routes", () => {
         }
         const response = await next();
 
-        expect(response.status).toBe(403);
-        expect(reportCalls).toBe(0);
+        expect(response.status).toBe(200);
+        expect(reportCalls).toBe(1);
     });
 });
 

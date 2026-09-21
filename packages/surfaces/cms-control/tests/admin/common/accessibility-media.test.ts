@@ -105,6 +105,7 @@ describe("admin media accessibility", () => {
 
         expect(general).not.toContain('name="site.theme"');
         expect(general).not.toContain('heading="Theme CSS"');
-        expect(users).toContain('<cms-role-select name="role" value="user" label="Role"');
+        expect(users).not.toContain("cms-role-select");
+        expect(users).not.toContain("Manage roles");
     });
 });

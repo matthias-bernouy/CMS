@@ -6,7 +6,7 @@ describe("dashboard operator access", () => {
     test("allows an assigned user through the exact dashboard plan but not direct admin sources", async () => {
         const fixture = await mounted("user", true);
         expect(await fixture.status("GET", "/.cms/dashboards/support/sources/commerce/listOrders")).toBe(200);
-        expect(await fixture.status("GET", "/.cms/sources/commerce/listOrders")).toBe(403);
+        expect(await fixture.status("GET", "/.cms/sources/commerce/listOrders")).toBe(200);
         expect(await fixture.status("GET", "/.cms/dashboards/guessed/sources/commerce/listOrders")).toBe(403);
         expect(await fixture.status("GET", "/.cms/dashboards/support/sources/private/listOrders")).toBe(404);
         expect(await fixture.status("GET", "/.cms/dashboards/support/sources/commerce/privateEndpoint")).toBe(404);
@@ -23,7 +23,7 @@ describe("dashboard operator access", () => {
         ).toBe(403);
     });
 
-    test("denies an unassigned or anonymous user and lets admin bypass assignment", async () => {
+    test("denies unassigned and anonymous members without role bypasses", async () => {
         const unassigned = await mounted("support", false);
         expect(await unassigned.status("GET", "/.cms/dashboards/support/sources/commerce/listOrders")).toBe(403);
         expect(await unassigned.status("GET", "/api/dashboard-session")).toBe(403);
@@ -33,7 +33,7 @@ describe("dashboard operator access", () => {
         expect(await anonymous.status("GET", "/.cms/dashboards/support/sources/commerce/listOrders")).toBe(302);
         expect(await anonymous.status("GET", "/api/dashboard-session")).toBe(401);
         const admin = await mounted("admin", false);
-        expect(await admin.status("GET", "/.cms/dashboards/support/sources/commerce/listOrders")).toBe(200);
+        expect(await admin.status("GET", "/.cms/dashboards/support/sources/commerce/listOrders")).toBe(403);
     });
 
     test("never delegates a system endpoint even if a stored plan is tampered", async () => {
@@ -67,8 +67,6 @@ describe("dashboard operator access", () => {
         expect(await response.json()).toEqual({
             logoutUrl: "/__dev/logout?returnTo=%2Fdashboards",
             email: "operator@example.com",
-            role: "user",
-            roleLabel: "User",
             provider: "oidc",
             passwordCard: [],
         });

@@ -7,7 +7,6 @@ import {
     SubjectResolver,
     TemplatedAuthEmailComposer,
 } from "@bernouy/cms-auth";
-import type { CMS_ROLES } from "@bernouy/cms-permissions";
 import type { RuntimeEnv } from "../runtimeEnv";
 import type { CoreStores } from "./stores/core";
 
@@ -28,7 +27,6 @@ export async function createProductionAuth(env: RuntimeEnv, stores: CoreStores) 
                 {
                     email: env.CMS_ADMIN_EMAIL,
                     password: env.CMS_ADMIN_PASSWORD,
-                    role: "admin",
                 },
             );
         } catch (error) {
@@ -39,8 +37,8 @@ export async function createProductionAuth(env: RuntimeEnv, stores: CoreStores) 
         }
     }
 
-    const resolver = new SubjectResolver<CMS_ROLES>(stores.users, "user");
-    const auth = new LocalAuthentication<CMS_ROLES>({
+    const resolver = new SubjectResolver(stores.users);
+    const auth = new LocalAuthentication({
         providerId: "local",
         loginPagePath: "/login",
         logoutPath: "/auth/logout",
@@ -65,7 +63,6 @@ export async function createProductionAuth(env: RuntimeEnv, stores: CoreStores) 
         emailComposer: new TemplatedAuthEmailComposer({
             readTemplates: async () => (await stores.repo.getSystem()).email.templates,
         }),
-        defaultRole: "user" as CMS_ROLES,
         siteName: env.CMS_AUTH_SITE_NAME,
         authEmailCooldownSeconds: env.CMS_AUTH_EMAIL_COOLDOWN_SECONDS,
     };

@@ -85,25 +85,6 @@ describe("admin control accessibility", () => {
         expect(root.activeElement).toBe(trigger);
     });
 
-    test("forwards names and disabled state through the role picker", async () => {
-        globalThis.fetch = (async () =>
-            Response.json([{ id: "admin", label: "Administrator" }])) as unknown as typeof fetch;
-        const control = document.createElement("cms-role-select");
-        control.setAttribute("value", "admin");
-        control.setAttribute("label", "Account role");
-        control.setAttribute("aria-label", "Choose account role");
-        control.setAttribute("disabled", "");
-        document.body.append(control);
-        await nextTask();
-
-        const select = control.shadowRoot!.querySelector("p9r-select")!;
-        expect({
-            label: select.getAttribute("label"),
-            ariaLabel: select.getAttribute("aria-label"),
-            disabled: select.hasAttribute("disabled"),
-        }).toEqual({ label: "Account role", ariaLabel: "Choose account role", disabled: true });
-    });
-
     test("configures write-only secrets in a scrubbed modal and confirms deletion", async () => {
         let requests = 0;
         globalThis.fetch = (async () => {

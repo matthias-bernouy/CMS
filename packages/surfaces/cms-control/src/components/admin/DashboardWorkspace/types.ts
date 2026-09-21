@@ -2,7 +2,7 @@ import type { DashboardDefinition, ResolvedDashboard } from "@bernouy/cms-dashbo
 import type { DashboardSourceGroup } from "../Resources/Dashboards/types";
 
 export type DashboardSessionModel = {
-    subject: { id: string; role: string; email?: string };
+    subject: { id: string; email?: string };
     logoutUrl: string;
     dashboards: DashboardDefinition[];
 };

@@ -8,7 +8,7 @@ export type DashboardNavigationState = {
     dashboards: DashboardDefinition[];
     dashboard: ResolvedDashboard | null;
     path: string;
-    subject: { id: string; role: string; email?: string } | null;
+    subject: { id: string; email?: string } | null;
     logoutUrl: string;
 };
 

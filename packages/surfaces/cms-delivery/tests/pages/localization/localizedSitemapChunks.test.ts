@@ -8,7 +8,7 @@ import { materializeSitemapSnapshot } from "cms-delivery/core/seo/sitemap/materi
 import { readSitemapManifest, sitemapChunkPath } from "cms-delivery/core/seo/sitemap/manifest";
 import SitemapServer from "cms-delivery/endpoints/sitemap.xml.server";
 import { mountPublicPages } from "../publicPage.fixture";
-import { commercePublicRoles, COMMERCE_SOURCE, PRODUCT_PAGE } from "../indexing/fixtures";
+import { COMMERCE_SOURCE, PRODUCT_PAGE } from "../indexing/fixtures";
 
 test("sitemap snapshots separate languages and common URLs while retaining reciprocal links", async () => {
     const repository = new InMemoryCmsRepository();
@@ -43,7 +43,6 @@ test("sitemap snapshots separate languages and common URLs while retaining recip
         repository,
         sources,
         providers: [provider],
-        roles: await commercePublicRoles(),
         sitemapStore: new InMemoryCmsFilesBlob(),
         sourceInterceptor: async () => Response.json({ items: [{ slug: "oak & chair" }], total: 1 }),
     });

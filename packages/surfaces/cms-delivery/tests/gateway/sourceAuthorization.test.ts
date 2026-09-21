@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 import { defaultSystem } from "@bernouy/cms-content";
-import { InMemoryRolesRepository, PUBLIC_ROLE, USER_ROLE } from "@bernouy/cms-permissions";
 import { InMemorySourceRepository, SYSTEM_SITE_SOURCE, type SourceEndpoint } from "@bernouy/cms-sources";
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { authorizeDeliverySourceEndpoint } from "cms-delivery/core/sources/authorization";
@@ -9,15 +8,14 @@ import { CaptureRunner } from "./support/CaptureRunner";
 describe("authorizeDeliverySourceEndpoint", () => {
     test("always exposes the public site organization system endpoint", async () => {
         const result = await authorizeDeliverySourceEndpoint(
-            { roles: undefined } as unknown as DeliveryCms,
+            {} as DeliveryCms,
             SYSTEM_SITE_SOURCE.endpoints[0]!,
             new Request("http://site/.cms/sources/system-site/organization"),
         );
-
         expect(result).toBe(true);
     });
 
-    test("serves the organization without auth or role configuration", async () => {
+    test("serves the organization without authentication", async () => {
         const settings = defaultSystem();
         settings.site.organization.name = "Public organization";
         const runner = new CaptureRunner();
@@ -31,76 +29,26 @@ describe("authorizeDeliverySourceEndpoint", () => {
             "GET",
             "/.cms/sources",
         )(new Request("http://site/.cms/sources/system-site/organization"));
-
         expect(response.status).toBe(200);
         expect(await response.json()).toMatchObject({ name: "Public organization" });
     });
 
-    test("ignores stale grants above the caller access mode", async () => {
-        const roles = new InMemoryRolesRepository();
-        await roles.upsert({
-            id: PUBLIC_ROLE,
-            label: "Public",
-            builtin: true,
-            grants: [{ permission: "urn:shop:adminProducts" }],
+    test("uses only the endpoint exposure mode and authentication state", async () => {
+        const request = new Request("http://site/.cms/sources/shop/products");
+        expect(await authorizeDeliverySourceEndpoint({} as DeliveryCms, endpoint("products", "public"), request)).toBe(
+            true,
+        );
+        expect(await authorizeDeliverySourceEndpoint({} as DeliveryCms, endpoint("orders", "auth"), request)).toEqual({
+            authorized: false,
+            status: 401,
         });
-
-        const result = await authorizeDeliverySourceEndpoint(
-            cmsWithRoles(roles),
-            endpoint("adminProducts", "admin"),
-            new Request("http://site/.cms/sources/shop/adminProducts"),
-        );
-
-        expect(result).toEqual({ authorized: false, status: 401 });
-    });
-
-    test("allows grants within the caller access mode", async () => {
-        const roles = new InMemoryRolesRepository();
-        await roles.upsert({
-            id: USER_ROLE,
-            label: "User",
-            builtin: true,
-            grants: [{ permission: "urn:shop:myOrders" }],
-        });
-
-        const result = await authorizeDeliverySourceEndpoint(
-            cmsWithRoles(roles),
-            endpoint("myOrders", "auth"),
-            new Request("http://site/.cms/sources/shop/myOrders"),
-            { subject: { identifier: "user-1", role: USER_ROLE } as never },
-        );
-
-        expect(result).toBe(true);
-    });
-
-    test("ignores removed role metadata and keeps the admin bypass", async () => {
-        const roles = new InMemoryRolesRepository();
-        const restricted = {
-            ...endpoint("refund", "admin"),
-            access: { mode: "admin" as const, roles: ["legacy-role"] } as any,
-        };
-
-        const legacy = await authorizeDeliverySourceEndpoint(
-            cmsWithRoles(roles),
-            restricted,
-            new Request("http://site/.cms/sources/shop/refund"),
-            { subject: { identifier: "legacy-1", role: "legacy-role" } as never },
-        );
-        const admin = await authorizeDeliverySourceEndpoint(
-            cmsWithRoles(roles),
-            restricted,
-            new Request("http://site/.cms/sources/shop/refund"),
-            { subject: { identifier: "admin-1", role: "admin" } as never },
-        );
-
-        expect(legacy).toEqual({ authorized: false, status: 403 });
-        expect(admin).toBe(true);
+        expect(
+            await authorizeDeliverySourceEndpoint({} as DeliveryCms, endpoint("orders", "auth"), request, {
+                subject: { identifier: "member-1" },
+            }),
+        ).toBe(true);
     });
 });
-
-function cmsWithRoles(roles: InMemoryRolesRepository): DeliveryCms {
-    return { roles } as unknown as DeliveryCms;
-}
 
 function endpoint(id: string, mode: SourceEndpoint["access"]["mode"]): SourceEndpoint {
     return {

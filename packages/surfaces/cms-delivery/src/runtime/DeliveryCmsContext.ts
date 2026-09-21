@@ -3,7 +3,6 @@ import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
 import type { ContentReader } from "@bernouy/cms-content";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { IdentityService } from "@bernouy/cms-identities";
-import type { RolesRepository } from "@bernouy/cms-permissions";
 import type {
     ExecutorDeps,
     SourceEndpointInterceptor,
@@ -101,12 +100,8 @@ export class DeliveryCmsContext {
         return this.config.identities;
     }
 
-    get auth(): PublicAuthRoutesConfig<string> | undefined {
+    get auth(): PublicAuthRoutesConfig | undefined {
         return this.config.auth;
-    }
-
-    get roles(): RolesRepository | undefined {
-        return this.config.roles;
     }
 
     get analytics(): AnalyticsStore | undefined {

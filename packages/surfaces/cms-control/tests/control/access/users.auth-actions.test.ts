@@ -18,31 +18,29 @@ import resendVerification from "cms-control/api/_access/users/email-verification
 import sendReset from "cms-control/api/_access/users/password-reset.post";
 import deleteUser from "cms-control/api/_access/users/users.delete";
 import listUsers from "cms-control/api/_access/users/users.get";
-import type { CMS_ROLES } from "types/roles";
 
 function setup() {
-    const users = new InMemoryUsersRepository<CMS_ROLES>();
+    const users = new InMemoryUsersRepository();
     const credentials = new InMemoryLocalCredentialStore();
     const pats = new InMemoryPatRepository();
     const tokens = new InMemoryAuthTokenStore();
     const emailer = new InMemoryEmailer();
     const dashboardAssignments = new InMemoryDashboardAssignmentRepository();
-    const local = new LocalAuthentication<CMS_ROLES>({
+    const local = new LocalAuthentication({
         providerId: "local",
         loginPagePath: "/login",
         logoutPath: "/auth/logout",
         credentials,
-        resolver: new SubjectResolver<CMS_ROLES>(users, "user"),
+        resolver: new SubjectResolver(users),
         codec: new SignedCookieCodec(new TextEncoder().encode("test-secret-key-at-least-16-bytes")),
         cookieName: "cms-session",
     });
-    const publicAuth: PublicAuthRoutesConfig<CMS_ROLES> = {
+    const publicAuth: PublicAuthRoutesConfig = {
         local,
         credentials,
         users,
         tokens,
         emailer,
-        defaultRole: "user",
         emailVerificationUrl: "http://control.test/auth/verify-email",
         passwordResetUrl: "http://control.test/auth/reset-password",
         authEmailCooldownSeconds: 0,
@@ -66,7 +64,6 @@ describe("admin user auth actions", () => {
             {
                 email: "ada@example.com",
                 password: "password-1",
-                role: "user",
                 emailVerified: false,
             },
         );
@@ -86,7 +83,6 @@ describe("admin user auth actions", () => {
             {
                 email: "reset@example.com",
                 password: "password-1",
-                role: "user",
             },
         );
 
@@ -106,7 +102,6 @@ describe("admin user auth actions", () => {
             {
                 email: "detail@example.com",
                 password: "password-1",
-                role: "user",
             },
         );
 
@@ -114,7 +109,6 @@ describe("admin user auth actions", () => {
         const row = (await res.json()) as {
             sub: string;
             label: string;
-            roleLabel: string;
             providerLabel: string;
             emailStatusLabel: string;
             subParam: string;
@@ -122,7 +116,6 @@ describe("admin user auth actions", () => {
 
         expect(row.sub).toBe(user.sub);
         expect(row.label).toBe("detail@example.com");
-        expect(row.roleLabel).toBe("User");
         expect(row.providerLabel).toBe("Local");
         expect(row.emailStatusLabel).toBe("Verified");
         expect(row.subParam).toBe(encodeURIComponent(user.sub));
@@ -130,19 +123,15 @@ describe("admin user auth actions", () => {
 
     test("rejects non-local users", async () => {
         const { cms, users } = setup();
-        await users.upsert({ sub: "oidc:1", provider: "oidc", email: "sso@example.com" }, "user");
+        await users.upsert({ sub: "oidc:1", provider: "oidc", email: "sso@example.com" });
         await expect(sendReset(req({ sub: "oidc:1" }), cms)).rejects.toThrow(/not a local user/);
     });
 
-    test("deletes a user while protecting the last admin", async () => {
+    test("deletes a member and its dependent records", async () => {
         const { cms, credentials, users, dashboardAssignments } = setup();
-        const admin = await createLocalUser(
-            { credentials, users },
-            { email: "admin@example.com", password: "password-1", role: "admin" },
-        );
         const user = await createLocalUser(
             { credentials, users },
-            { email: "member@example.com", password: "password-1", role: "user" },
+            { email: "member@example.com", password: "password-1" },
         );
         await dashboardAssignments.assign({ subjectId: user.sub, dashboardId: "support" });
 
@@ -152,8 +141,5 @@ describe("admin user auth actions", () => {
         expect(await users.getBySub(user.sub)).toBeNull();
         expect(await credentials.getByEmail("member@example.com")).toBeNull();
         expect(await dashboardAssignments.getDashboardIdsForSubject(user.sub)).toEqual([]);
-        await expect(deleteUser(new Request(`http://control/api/users?sub=${admin.sub}`), cms)).rejects.toThrow(
-            /last admin/,
-        );
     });
 });

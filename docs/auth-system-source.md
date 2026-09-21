@@ -24,9 +24,9 @@ these endpoints are available on the site origin:
 | `POST` | `/.cms/sources/system-auth/requestPasswordReset` | `{ "email": string }` | `{ "ok": true }` |
 | `POST` | `/.cms/sources/system-auth/confirmPasswordReset` | `{ "token": string, "password": string }` | `{ "ok": true }` |
 
-`@bernouy/cms-control` mounts the same provider behind the admin guard and keeps
-signup disabled there. `@bernouy/cms-delivery` can expose signup when its public
-auth config allows it.
+`@bernouy/cms-control` mounts the same provider behind its authenticated access
+boundary and keeps signup disabled there. `@bernouy/cms-delivery` can expose
+signup when its public auth config allows it.
 
 Signup has no policy or legal-document knowledge. Integrations can attach
 synchronous request and response triggers to `system-auth/signup`. Additional

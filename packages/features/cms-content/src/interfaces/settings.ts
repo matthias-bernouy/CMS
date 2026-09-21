@@ -107,10 +107,6 @@ export type TSystem = {
             passwordReset: TEmailTemplate;
         };
     };
-
-    // Roles are NOT stored here — they live in their own `RolesRepository`
-    // (@bernouy/cms-permissions), a dedicated collection independent of the
-    // content aggregate.
 };
 
 export function wrapBindingCore(content: string): string {

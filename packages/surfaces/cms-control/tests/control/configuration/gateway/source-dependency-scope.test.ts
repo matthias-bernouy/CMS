@@ -1,6 +1,5 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
-import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import {
     InMemorySourceOverlayRepository,
@@ -10,7 +9,6 @@ import {
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 import { mountControlSourceProxy } from "cms-control/core/admin/control/sourceProxy";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
-import type { CMS_ROLES } from "types/roles";
 
 describe("Control source dependency scope", () => {
     test("shares dependency reads within one request and refreshes them for the next", async () => {
@@ -45,8 +43,7 @@ describe("Control source dependency scope", () => {
                 runner: mounted.runner,
                 sources,
                 sourceOverlays: overlays,
-                auth: new InMemoryAuthentication<CMS_ROLES>({ role: "admin" }),
-                roles: new InMemoryRolesRepository(),
+                auth: new InMemoryAuthentication(),
                 secrets,
             } as unknown as ControlCmsState,
             (async (_request, next) => next()) satisfies Middleware,

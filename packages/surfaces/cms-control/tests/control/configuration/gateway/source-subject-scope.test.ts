@@ -1,6 +1,5 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { InMemoryAuthentication, type Subject } from "@bernouy/cms-auth";
-import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import {
     createSourceRequestTelemetryMiddleware,
@@ -11,7 +10,6 @@ import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 import { createControlAccessGuard } from "cms-control/core/admin/control/adminAccess";
 import { mountControlSourceProxy } from "cms-control/core/admin/control/sourceProxy";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
-import type { CMS_ROLES } from "types/roles";
 
 describe("Control source subject scope", () => {
     test("shares one subject through guard, authorization, and source context", async () => {
@@ -44,7 +42,6 @@ describe("Control source subject scope", () => {
                 runner: mounted.runner,
                 sources,
                 auth: authentication,
-                roles: new InMemoryRolesRepository(),
                 secrets: new InMemorySecretStore(),
             } as unknown as ControlCmsState,
             guard,
@@ -77,14 +74,14 @@ describe("Control source subject scope", () => {
     });
 });
 
-class CountingAuthentication extends InMemoryAuthentication<CMS_ROLES> {
+class CountingAuthentication extends InMemoryAuthentication {
     calls = 0;
 
     constructor() {
-        super({ identifier: "operator-1", role: "admin" });
+        super({ identifier: "operator-1" });
     }
 
-    override async getSubject(request: Request): Promise<Subject<CMS_ROLES>> {
+    override async getSubject(request: Request): Promise<Subject> {
         this.calls += 1;
         return super.getSubject(request);
     }

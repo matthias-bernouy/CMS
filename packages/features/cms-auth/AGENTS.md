@@ -20,8 +20,8 @@ signed session cookies, public auth flows, and membership stores.
   password reset tokens.
 - Public auth routes are mounted under `PUBLIC_AUTH_ROUTES.base` by a surface.
   Control disables signup for its guarded admin context.
-- Assignment of users to roles lives here; role definitions and grants live in
-  `@bernouy/cms-permissions`.
+- Membership records contain identity and activity metadata only. Authorization
+  belongs to views and must not be added to authentication subjects.
 - Do not add browser components to this package.
 - Security-sensitive changes require tests around cookie behavior, rate limits,
   token expiry, and last-admin protection.

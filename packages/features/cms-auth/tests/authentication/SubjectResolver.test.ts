@@ -2,10 +2,9 @@ import { describe, test, expect } from "bun:test";
 import { SubjectResolver, internalUserId } from "cms-auth/core/SubjectResolver";
 import { InMemoryUsersRepository } from "cms-auth/default-implementation/memory/InMemoryUsersRepository";
 
-type Role = "admin" | "user";
 const make = () => {
-    const users = new InMemoryUsersRepository<Role>();
-    return { users, resolver: new SubjectResolver<Role>(users, "user") };
+    const users = new InMemoryUsersRepository();
+    return { users, resolver: new SubjectResolver(users) };
 };
 
 describe("internalUserId", () => {
@@ -17,11 +16,10 @@ describe("internalUserId", () => {
 });
 
 describe("SubjectResolver", () => {
-    test("fromIdentity records under provider:sub and assigns the default role", async () => {
+    test("fromIdentity records a namespaced member", async () => {
         const { resolver } = make();
         const subject = await resolver.fromIdentity({ sub: "123", provider: "local", email: "bob@example.com" });
         expect(subject.identifier).toBe("local:123");
-        expect(subject.role).toBe("user");
         expect(subject.email).toBe("bob@example.com");
         expect(subject).not.toHaveProperty("displayName");
     });
@@ -33,12 +31,12 @@ describe("SubjectResolver", () => {
         expect(await resolver.fromSub("local:999")).toBeNull();
     });
 
-    test("a re-login keeps the role assigned in the CMS (authz never from the provider)", async () => {
+    test("a re-login refreshes the same member", async () => {
         const { users, resolver } = make();
         await resolver.fromIdentity({ sub: "123", provider: "local" });
-        await users.setRole("local:123", "admin");
         const subject = await resolver.fromIdentity({ sub: "123", provider: "local" });
-        expect(subject.role).toBe("admin");
+        expect(subject.identifier).toBe("local:123");
+        expect((await users.list()).total).toBe(1);
     });
 
     test("two providers with the same sub stay distinct users", async () => {

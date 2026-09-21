@@ -6,7 +6,7 @@
  * stored, so it is unrecoverable and cheaply revocable (delete the row).
  *
  * This is an AUTHENTICATION-secret store (hashes, expiry, revocation) — a
- * separate lifecycle from `UsersRepository` (authz roles). They link by `sub`.
+ * separate lifecycle from `UsersRepository`. They link by `sub`.
  *
  * NOTE: verifying an EXTERNAL IdP's bearer JWT is a different path (JWKS +
  * issuer-allowlist, the `_sdk` model) — not this store.

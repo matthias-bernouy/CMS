@@ -109,7 +109,6 @@ export async function mountProductionSurfaces(
         core.credentials,
         features.sources,
         features.analytics,
-        core.roles,
         { local: authentication.auth },
     );
     await controlCms.ready;
@@ -133,7 +132,6 @@ export async function mountProductionSurfaces(
         analyticsTrustedProxyVerified: env.ANALYTICS_TRUSTED_PROXY_VERIFIED,
         analyticsCmsVersion: "0.1.0",
         sourceResolveSecret: features.resolveSecret,
-        roles: core.roles,
         filesMetadata: core.filesMetadata,
         filesBlob: core.filesBlob,
         variantStore: core.variantStore,

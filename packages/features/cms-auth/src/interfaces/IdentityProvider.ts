@@ -5,8 +5,8 @@
  * `SecretStore`, pointed at by `clientSecretRef` (a key into that store) —
  * the secret value itself is NEVER stored here.
  *
- * This is AUTHN configuration ONLY. It never carries roles or users (authz):
- * a provider is just the SOURCE that, on login, produces an `Identity` which
+ * This is authentication configuration only. It never carries membership or
+ * view authorization: a provider only produces an `Identity`, which
  * then flows into `UsersRepository`. Removing a provider never deletes users.
  */
 export type IdentityProviderKind = "local" | "oidc";

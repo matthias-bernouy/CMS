@@ -1,30 +1,20 @@
 import { describe, test, expect } from "bun:test";
 import { InMemoryUsersRepository } from "cms-auth/default-implementation/memory/InMemoryUsersRepository";
 
-type Role = "admin" | "user";
-const repo = () => new InMemoryUsersRepository<Role>();
+const repo = () => new InMemoryUsersRepository();
 
 describe("InMemoryUsersRepository.upsert", () => {
-    test("creates with the default role on first insert", async () => {
+    test("creates a member on first insert", async () => {
         const r = repo();
-        const u = await r.upsert({ sub: "s1", email: "a@x.com" }, "user");
-        expect(u.role).toBe("user");
+        const u = await r.upsert({ sub: "s1", email: "a@x.com" });
         expect(u.email).toBe("a@x.com");
         expect(u.createdAt).toBeInstanceOf(Date);
     });
 
-    test("preserves the role on re-upsert (login never re-grants)", async () => {
-        const r = repo();
-        await r.upsert({ sub: "s1" }, "user");
-        await r.setRole("s1", "admin");
-        const again = await r.upsert({ sub: "s1" }, "user"); // re-login with default "user"
-        expect(again.role).toBe("admin");
-    });
-
     test("only updates fields the identity carries (no clobber to undefined)", async () => {
         const r = repo();
-        await r.upsert({ sub: "s1", email: "a@x.com" }, "user");
-        await r.upsert({ sub: "s1" }, "user"); // re-login without email
+        await r.upsert({ sub: "s1", email: "a@x.com" });
+        await r.upsert({ sub: "s1" }); // re-login without email
         const u = await r.getBySub("s1");
         expect(u?.email).toBe("a@x.com");
     });
@@ -35,13 +25,9 @@ describe("InMemoryUsersRepository basic ops", () => {
         expect(await repo().getBySub("nope")).toBeNull();
     });
 
-    test("setRole on unknown returns null", async () => {
-        expect(await repo().setRole("nope", "admin")).toBeNull();
-    });
-
     test("delete removes the user", async () => {
         const r = repo();
-        await r.upsert({ sub: "s1" }, "user");
+        await r.upsert({ sub: "s1" });
         expect(await r.delete("s1")).toBe(true);
         expect(await r.getBySub("s1")).toBeNull();
         expect(await r.delete("s1")).toBe(false);
@@ -51,17 +37,11 @@ describe("InMemoryUsersRepository basic ops", () => {
 describe("InMemoryUsersRepository.list", () => {
     async function seeded() {
         const r = repo();
-        await r.upsert({ sub: "s1", email: "alice@x.com" }, "admin");
-        await r.upsert({ sub: "s2", email: "bob@x.com" }, "user");
-        await r.upsert({ sub: "s3", email: "carol@x.com" }, "user");
+        await r.upsert({ sub: "s1", email: "alice@x.com" });
+        await r.upsert({ sub: "s2", email: "bob@x.com" });
+        await r.upsert({ sub: "s3", email: "carol@x.com" });
         return r;
     }
-
-    test("filters by role", async () => {
-        const { users, total } = await (await seeded()).list({ role: "user" });
-        expect(total).toBe(2);
-        expect(users.every((u) => u.role === "user")).toBe(true);
-    });
 
     test("search is an EXACT (case-insensitive) email match, not substring", async () => {
         const r = await seeded();

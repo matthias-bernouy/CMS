@@ -46,7 +46,6 @@ import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-files";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
-import type { CMS_ROLES } from "@bernouy/cms-permissions";
 
 const runner = new BunRunner();
 
@@ -54,11 +53,11 @@ runner.group("/cms", (sub) => {
     // Wire the auth chain. For a 5-minute demo, swap LocalAuthentication
     // for InMemoryAuthentication and skip the seeding step below.
     const codec    = new SignedCookieCodec(new TextEncoder().encode(SESSION_SECRET));
-    const users    = new InMemoryUsersRepository<CMS_ROLES>();
+    const users    = new InMemoryUsersRepository();
     const pats     = new InMemoryPatRepository();
-    const resolver = new SubjectResolver<CMS_ROLES>(users, "user");
+    const resolver = new SubjectResolver(users);
 
-    const auth = new LocalAuthentication<CMS_ROLES>({
+    const auth = new LocalAuthentication({
         providerId:    "local",
         loginPagePath: "/cms/login",
         logoutPath:    "/cms/auth/logout",
@@ -98,20 +97,19 @@ runner.start(3000);
 new ControlCms(
     runner:              Runner,
     repository:          CmsRepository,
-    auth:                Authentication<CMS_ROLES>,
-    options:             { publicAuth?: PublicAuthRoutesConfig<CMS_ROLES>; integrationCatalog?: IntegrationDefinitionRepository } = {},
+    auth:                Authentication,
+    options:             { publicAuth?: PublicAuthRoutesConfig } = {},
     cache?:              Cache,
     secrets?:            SecretStore,
     filesMetadata?:      CmsFilesMetadataRepository,
     filesBlob?:          CmsFilesBlobStore,
-    users?:              UsersRepository<CMS_ROLES>,
+    users?:              UsersRepository,
     identityProviders?:  IdentityProviderRepository,
     pats?:               PatRepository,
     credentials?:        LocalCredentialStore,
     sources?:            SourceRepository,
     analytics?:          AnalyticsStore,
-    roles?:              RolesRepository,
-    authBackends?:       { local?: LocalAuthentication<CMS_ROLES>; oidc?: OidcAuthentication<CMS_ROLES> },
+    authBackends?:       { local?: LocalAuthentication; oidc?: OidcAuthentication },
 )
 ```
 
@@ -132,7 +130,7 @@ silently disables the admin surface that needs it:
 
 ### `InMemoryAuthentication` (dev only)
 
-Use it as a drop-in `Authentication<CMS_ROLES>` when you want to skip
+Use it as a drop-in `Authentication` when you want to skip
 the login flow during local dev or in the manual test harness. It
 returns a fixed `Subject` for every request — never use it in
 production. Import it from `@bernouy/cms-auth`.
@@ -140,7 +138,7 @@ production. Import it from `@bernouy/cms-auth`.
 ```ts
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
 
-const auth = new InMemoryAuthentication({ role: "admin", displayName: "Ulvia local development" });
+const auth = new InMemoryAuthentication({ identifier: "ulvia-local-development" });
 new ControlCms(sub, repo, auth, {}, …);
 ```
 

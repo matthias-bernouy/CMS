@@ -1,6 +1,5 @@
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { InMemorySourceRepository, seedSources, type Source } from "@bernouy/cms-sources";
-import { InMemoryRolesRepository, PUBLIC_ROLE, USER_ROLE, type RolesRepository } from "@bernouy/cms-permissions";
 import { CaptureRunner } from "./CaptureRunner";
 
 const SECURED: Source = {
@@ -36,13 +35,6 @@ export const COMPUTED: Source = {
                         source: { from: "computed", ref: "userID" },
                         schema: { type: "string" },
                     },
-                    {
-                        name: "user_role",
-                        in: "query",
-                        required: true,
-                        source: { from: "computed", ref: "userRole" },
-                        schema: { type: "string" },
-                    },
                 ],
             },
             output: [{ status: "200" }],
@@ -50,28 +42,8 @@ export const COMPUTED: Source = {
     ],
 };
 
-export async function publicGatewayRoles(permission = "urn:secured:get"): Promise<RolesRepository> {
-    return gatewayRoles(PUBLIC_ROLE, permission);
-}
-
-export async function gatewayRoles(role: string, permission: string): Promise<RolesRepository> {
-    const roles = new InMemoryRolesRepository();
-    await roles.upsert({
-        id: role,
-        label: role,
-        builtin: role === PUBLIC_ROLE || role === USER_ROLE,
-        grants: [{ permission }],
-    });
-    return roles;
-}
-
 export async function mountDeliveryGateway(
-    opts: {
-        resolveSecret?: (ref: string) => Promise<string | undefined>;
-        roles?: RolesRepository;
-        providers?: Source[];
-        auth?: unknown;
-    } = {},
+    opts: { resolveSecret?: (ref: string) => Promise<string | undefined>; providers?: Source[]; auth?: unknown } = {},
 ) {
     const gateway = new InMemorySourceRepository();
     await seedSources(gateway, opts.providers ?? [SECURED]);
@@ -81,7 +53,6 @@ export async function mountDeliveryGateway(
         repository: {} as any,
         sources: gateway,
         sourceResolveSecret: opts.resolveSecret,
-        roles: opts.roles,
         auth: opts.auth as any,
     });
     return runner.defaultHandler("GET", "/.cms/sources");

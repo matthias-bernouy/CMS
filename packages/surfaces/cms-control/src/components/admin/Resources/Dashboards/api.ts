@@ -8,8 +8,6 @@ export type DashboardUserOption = {
     label?: string;
     displayName?: string;
     email?: string;
-    role?: string;
-    roleLabel?: string;
 };
 
 export type DashboardSelection = {
@@ -101,8 +99,7 @@ export function dashboardUserOptions(users: DashboardUserOption[]): DashboardOpt
         const fallbackLabel = cleanText(user.label);
         const name = cleanText(user.displayName) || (fallbackLabel !== email ? fallbackLabel : "");
         const humanLabel = name && email ? `${name} — ${email}` : name || email || sub;
-        const role = cleanText(user.roleLabel) || cleanText(user.role);
-        const metadata = [role, sub].filter((value) => value && value !== humanLabel).join(" · ");
+        const metadata = sub !== humanLabel ? sub : "";
         return [{ value: sub, label: metadata ? `${humanLabel} · ${metadata}` : humanLabel }];
     });
 }

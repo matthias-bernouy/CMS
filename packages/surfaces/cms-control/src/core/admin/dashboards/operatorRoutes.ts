@@ -22,7 +22,6 @@ export function mountDashboardOperatorRoutes(cms: ControlCms, guard: Middleware)
                 {
                     subject: {
                         id: subject.identifier,
-                        role: subject.role,
                         ...(subject.email ? { email: subject.email } : {}),
                     },
                     logoutUrl: cms.auth.buildLogoutUrl(`${cms.basePath}/dashboards`),

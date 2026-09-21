@@ -1,6 +1,5 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
-import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import {
     InMemorySourceOverlayRepository,
@@ -10,7 +9,6 @@ import {
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 import { mountControlSourceProxy } from "cms-control/core/admin/control/sourceProxy";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
-import type { CMS_ROLES } from "types/roles";
 
 describe("Control source schema invalidation contract", () => {
     test("refreshes overlays after a source endpoint invalidates its schema", async () => {
@@ -68,8 +66,7 @@ async function controlHarness() {
             runner: mounted.runner,
             sources,
             sourceOverlays,
-            auth: new InMemoryAuthentication<CMS_ROLES>({ role: "admin" }),
-            roles: new InMemoryRolesRepository(),
+            auth: new InMemoryAuthentication(),
             secrets: new InMemorySecretStore(),
         } as unknown as ControlCmsState,
         (async (_request, next) => next()) satisfies Middleware,

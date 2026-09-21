@@ -11,36 +11,27 @@ export const internalUserId = (provider: string | undefined, sub: string): strin
     provider ? `${provider}:${sub}` : sub;
 
 /**
- * Turns an authenticated `Identity` into an authorized `Subject` — the CMS-side
- * authorization step, decoupled from any backend. Every backend does authn only
- * and feeds an `Identity` here; the role is resolved from `UsersRepository`,
- * keyed by `provider:sub`.
- *
- * Authorization is **per identity** (managed via the admin Users surface) — it
- * is never derived from claims or the email. A fresh identity defaults to
- * `defaultRole`; an existing one keeps its stored role.
+ * Turns an authenticated `Identity` into a CMS member subject. Authorization is
+ * resolved by views outside the authentication package.
  */
-export class SubjectResolver<Role extends string = string> {
-    constructor(
-        private readonly users: UsersRepository<Role>,
-        private readonly defaultRole: Role,
-    ) {}
+export class SubjectResolver {
+    constructor(private readonly users: UsersRepository) {}
 
     /** Fresh login: record the identity under its `provider:sub` key, return the Subject. */
-    async fromIdentity(identity: Identity): Promise<Subject<Role>> {
+    async fromIdentity(identity: Identity): Promise<Subject> {
         const id = internalUserId(identity.provider, identity.sub);
-        const user = await this.users.upsert({ ...identity, sub: id }, this.defaultRole);
+        const user = await this.users.upsert({ ...identity, sub: id });
         return toSubject(user);
     }
 
     /** Already-authenticated principal (session cookie / PAT). `null` when the
      *  `sub` is unknown — e.g. the user was deleted while a session is in flight. */
-    async fromSub(sub: string): Promise<Subject<Role> | null> {
+    async fromSub(sub: string): Promise<Subject | null> {
         const user = await this.users.getBySub(sub);
         return user ? toSubject(user) : null;
     }
 }
 
-function toSubject<Role extends string>(u: TUser<Role>): Subject<Role> {
-    return { identifier: u.sub, role: u.role, ...(u.email ? { email: u.email } : {}) };
+function toSubject(u: TUser): Subject {
+    return { identifier: u.sub, ...(u.email ? { email: u.email } : {}) };
 }

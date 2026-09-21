@@ -9,8 +9,6 @@ import {
 } from "@bernouy/cms-auth";
 import { prepareSignupLocalUser } from "cms-auth/core/public-auth/flows";
 
-type Role = "user";
-
 describe("signup activation", () => {
     test("keeps a new credential pending until the prepared signup is finalized", async () => {
         const cfg = flowConfig();
@@ -34,12 +32,12 @@ describe("signup activation", () => {
         const cfg = flowConfig();
         const upsert = cfg.users.upsert.bind(cfg.users);
         let failOnce = true;
-        cfg.users.upsert = async (identity, role) => {
+        cfg.users.upsert = async (identity) => {
             if (failOnce) {
                 failOnce = false;
                 throw new Error("membership unavailable");
             }
-            return upsert(identity, role);
+            return upsert(identity);
         };
 
         await expect(signupLocalUser(cfg, input("pending@x.com", "password-1"))).rejects.toThrow(
@@ -97,10 +95,7 @@ describe("signup activation", () => {
             password: "password-1",
             emailVerified: true,
         });
-        await cfg.users.upsert(
-            { ...activeIdentity, sub: `local:${activeIdentity.sub}`, provider: "local" },
-            cfg.defaultRole,
-        );
+        await cfg.users.upsert({ ...activeIdentity, sub: `local:${activeIdentity.sub}`, provider: "local" });
         await credentials.create({
             email: "legacy-store@x.com",
             password: "password-1",
@@ -134,13 +129,12 @@ describe("signup activation", () => {
     });
 });
 
-function flowConfig(): PublicAuthFlowConfig<Role> {
+function flowConfig(): PublicAuthFlowConfig {
     return {
         credentials: new InMemoryLocalCredentialStore(),
-        users: new InMemoryUsersRepository<Role>(),
+        users: new InMemoryUsersRepository(),
         tokens: new InMemoryAuthTokenStore(),
         emailer: new InMemoryEmailer(),
-        defaultRole: "user",
         emailVerificationUrl: "https://example.test/verify",
         passwordResetUrl: "https://example.test/reset",
     };

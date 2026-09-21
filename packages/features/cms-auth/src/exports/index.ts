@@ -12,7 +12,7 @@
  */
 
 // ── Authentication ─────────────────────────────────────────────────────
-export type { Authentication, Subject, DefaultRole } from "cms-auth/interfaces/Authentication";
+export type { Authentication, Subject } from "cms-auth/interfaces/Authentication";
 export { SignedCookieCodec } from "cms-auth/core/SignedCookieCodec";
 export {
     LocalAuthentication,
@@ -53,7 +53,6 @@ export {
     updateIdentityProvider,
     type IdentityProviderStores,
 } from "cms-auth/core/accounts/identityProviderRules";
-export { isLastAdmin } from "cms-auth/core/accounts/isLastAdmin";
 
 // ── Interfaces ─────────────────────────────────────────────────────────
 export type {
