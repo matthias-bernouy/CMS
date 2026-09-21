@@ -1,6 +1,5 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
-import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import {
@@ -8,7 +7,6 @@ import {
     InMemorySourceRepository,
     type SourceEndpointInterceptor,
 } from "@bernouy/cms-sources";
-import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 import { mountControlSourceProxy } from "cms-control/core/admin/control/sourceProxy";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
@@ -18,8 +16,6 @@ describe("Control source dependency scope", () => {
     test("shares dependency reads within one request and refreshes them for the next", async () => {
         const sources = new CountingSources();
         const overlays = new CountingOverlays();
-        const functions = new CountingFunctions();
-        const triggers = new CountingTriggers();
         const secrets = new CountingSecrets();
         let imageCalls = 0;
         const sourceImageInterceptor: SourceEndpointInterceptor = async (_endpoint, candidate, next) => {
@@ -40,16 +36,6 @@ describe("Control source dependency scope", () => {
                 },
             ],
         });
-        await functions.createFunction({ id: "audit", method: "POST", steps: [], return: {} });
-        for (const id of ["audit-a", "audit-b"]) {
-            await triggers.createTrigger({
-                id,
-                enabled: true,
-                event: { kind: "endpoint", source: "orders", endpoint: "list", phase: "response" },
-                mode: "sync",
-                function: { id: "audit" },
-            });
-        }
         const mounted = captureGetHandler();
         mountControlSourceProxy(
             {
@@ -59,8 +45,6 @@ describe("Control source dependency scope", () => {
                 runner: mounted.runner,
                 sources,
                 sourceOverlays: overlays,
-                functions,
-                triggers,
                 auth: new InMemoryAuthentication<CMS_ROLES>({ role: "admin" }),
                 roles: new InMemoryRolesRepository(),
                 secrets,
@@ -93,15 +77,11 @@ describe("Control source dependency scope", () => {
             sourceReads: sources.sourceReads,
             overlayReads: overlays.sourceReads,
             secretReads: secrets.reads,
-            functionReads: functions.reads,
-            triggerReads: triggers.reads,
         }).toEqual({
             endpointReads: 2,
             sourceReads: 2,
             overlayReads: 2,
             secretReads: 2,
-            functionReads: 2,
-            triggerReads: 2,
         });
     });
 });
@@ -124,22 +104,6 @@ class CountingOverlays extends InMemorySourceOverlayRepository {
     override async getOverlaysForSource(sourceId: string) {
         this.sourceReads++;
         return super.getOverlaysForSource(sourceId);
-    }
-}
-
-class CountingFunctions extends InMemoryFunctionRepository {
-    reads = 0;
-    override async getFunction(id: string) {
-        this.reads++;
-        return super.getFunction(id);
-    }
-}
-
-class CountingTriggers extends InMemoryTriggerRepository {
-    reads = 0;
-    override async findEndpointTriggers(source: string, endpoint: string) {
-        this.reads++;
-        return super.findEndpointTriggers(source, endpoint);
     }
 }
 

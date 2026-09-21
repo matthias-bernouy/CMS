@@ -12,8 +12,6 @@
         "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
-        "@bernouy/cms-functions": "workspace:*",
-        "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-identities": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",

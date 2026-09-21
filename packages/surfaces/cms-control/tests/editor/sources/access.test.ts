@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryFunctionRepository, withFunctionsSource } from "@bernouy/cms-functions";
 import {
     CompositeSourceRepository,
     InMemorySourceRepository,
@@ -76,25 +75,6 @@ describe("GET /api/editor/sources access", () => {
         ]);
     });
 
-    test("applies the same boundary to projected functions", async () => {
-        const functions = new InMemoryFunctionRepository();
-        await Promise.all([
-            functions.createFunction(cmsFunction("publicFunction", "public")),
-            functions.createFunction(cmsFunction("authFunction", "auth")),
-            functions.createFunction(cmsFunction("adminFunction", "admin")),
-            functions.createFunction(cmsFunction("systemFunction", "system")),
-            functions.createFunction(cmsFunction("implicitAdminFunction")),
-        ]);
-        const sources = withFunctionsSource(new InMemorySourceRepository(), functions);
-
-        const body = await listEditorSources(sources);
-
-        expect(body.map((source) => source.endpointUrn)).toEqual([
-            "urn:system-functions:publicFunction",
-            "urn:system-functions:authFunction",
-        ]);
-    });
-
     test("keeps injected direct routes when sources are not configured", async () => {
         const response = await getEditorSources(new Request("http://admin/cms/api/editor/sources"), {
             get sources(): never {
@@ -135,16 +115,6 @@ function endpoint(id: string, mode?: SourceEndpointAccessMode): Source["endpoint
         method: "GET",
         targetUrl: `https://api.example.com/${id}`,
         output: [{ status: "200", body: { type: "object" } }],
-        ...(mode ? { access: { mode } } : {}),
-    };
-}
-
-function cmsFunction(id: string, mode?: SourceEndpointAccessMode) {
-    return {
-        id,
-        method: "POST" as const,
-        steps: [],
-        return: {},
         ...(mode ? { access: { mode } } : {}),
     };
 }

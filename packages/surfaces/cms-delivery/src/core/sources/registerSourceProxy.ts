@@ -1,8 +1,6 @@
 import {
     CMS_SOURCES_ROUTE,
     SOURCE_PROXY_METHODS,
-    attachTriggerResponseBody,
-    attachTriggerResponseFinalizer,
     createSourceRequestTelemetryMiddleware,
     handleSourceRequest,
     sourcesPrefix,
@@ -11,13 +9,11 @@ import {
 } from "@bernouy/cms-sources";
 import { executeAuthSystemSourceEndpoint } from "@bernouy/cms-auth";
 import { executeSiteSystemSourceEndpoint } from "@bernouy/cms-content";
-import { executeFunctionSystemSourceEndpoint, SYSTEM_FUNCTIONS_SOURCE_URN } from "@bernouy/cms-functions";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { authorizeDeliverySourceEndpoint, resolveDeliverySubject } from "cms-delivery/core/sources/authorization";
+import { authorizeDeliverySourceEndpoint } from "cms-delivery/core/sources/authorization";
 import {
     createDeliverySourceRequestScope,
     deliverySourceOverlaySchemaCache,
-    type DeliverySourceRequestScope,
 } from "cms-delivery/core/sources/requestScope";
 
 export function registerDeliverySourceProxy(delivery: DeliveryCms): void {
@@ -56,7 +52,7 @@ export function handleDeliverySourceRequest(
     const deps = {
         ...scope.deps,
         executeSystemEndpoint: (endpoint: SourceEndpoint, systemRequest: Request) =>
-            executeSystemEndpoint(delivery, scope, endpoint, systemRequest),
+            executeSystemEndpoint(delivery, endpoint, systemRequest),
         authorizeEndpoint: (endpoint: SourceEndpoint, sourceRequest: Request) =>
             authorizeDeliverySourceEndpoint(delivery, endpoint, sourceRequest),
         ...(scope.interceptEndpoint ? { interceptEndpoint: scope.interceptEndpoint } : {}),
@@ -69,30 +65,14 @@ export function handleDeliverySourceRequest(
 
 async function executeSystemEndpoint(
     delivery: DeliveryCms,
-    scope: DeliverySourceRequestScope,
     endpoint: SourceEndpoint,
     request: Request,
 ): Promise<Response> {
-    if (endpoint.urn.startsWith(`${SYSTEM_FUNCTIONS_SOURCE_URN}:`)) {
-        if (!scope.functions || !scope.sources) {
-            return new Response("function executor not configured", { status: 501 });
-        }
-        const subject = await resolveDeliverySubject(delivery, request);
-        return executeFunctionSystemSourceEndpoint(endpoint, request, {
-            functions: scope.functions,
-            sources: scope.sources,
-            deps: scope.deps,
-            resolveUser: async () => (subject ? { id: subject.identifier, role: subject.role } : {}),
-        });
-    }
     if (endpoint.urn.startsWith(`${SYSTEM_SITE_SOURCE_URN}:`)) {
         return executeSiteSystemSourceEndpoint(delivery.repository, endpoint);
     }
     if (delivery.auth) {
-        return executeAuthSystemSourceEndpoint(delivery.auth, endpoint, request, {
-            attachTriggerResponseBody,
-            ...(scope.deferSystemResponseFinalization ? { attachTriggerResponseFinalizer } : {}),
-        });
+        return executeAuthSystemSourceEndpoint(delivery.auth, endpoint, request);
     }
     return new Response("system source executor not configured", { status: 501 });
 }

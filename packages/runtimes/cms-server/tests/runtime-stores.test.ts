@@ -40,8 +40,6 @@ describe("production runtime stores", () => {
             expect.arrayContaining([
                 "sources",
                 "sourceOverlays",
-                "functions",
-                "triggers",
                 "cms_identity_aliases",
                 "dashboards",
                 "relations",

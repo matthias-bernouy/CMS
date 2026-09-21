@@ -70,8 +70,6 @@ export function createControlCmsState(input: ControlCmsConstructorInput): Contro
         dashboardViews: configuration.dashboardViews ?? new InMemoryDashboardViewRepository(),
         dashboardAssignments: configuration.dashboardAssignments ?? new InMemoryDashboardAssignmentRepository(),
         relations: configuration.relations ?? new InMemoryRelationRepository(),
-        functions: configuration.functions ?? null,
-        triggers: configuration.triggers ?? null,
         identities: configuration.identities ?? new InMemoryIdentityService(),
         sourceOverlays: configuration.sourceOverlays ?? null,
         integrationBlocRepository: configuration.integrationBlocRepository ?? null,

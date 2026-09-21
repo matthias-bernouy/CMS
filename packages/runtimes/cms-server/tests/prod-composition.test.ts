@@ -63,16 +63,12 @@ describe("production CMS composition", () => {
         expect(entrypoint).toContain("packageCacheObserve: createIntegrationPackageCacheObserver()");
     });
 
-    test("wires durable functions and triggers into Control and Delivery", async () => {
+    test("wires durable relations into Control and Delivery", async () => {
         const stores = await Bun.file(new URL("../src/runtime/stores/features.ts", import.meta.url)).text();
         const surfaces = await Bun.file(new URL("../src/runtime/mountSurfaces.ts", import.meta.url)).text();
 
-        expect(stores).toMatch(/const\s+functions\s*=\s*new\s+MongoFunctionRepository\s*\(\s*db\s*\)\s*;/);
-        expect(stores).toMatch(/const\s+triggers\s*=\s*new\s+MongoTriggerRepository\s*\(\s*db\s*\)\s*;/);
         expect(stores).toMatch(/const\s+relations\s*=\s*new\s+MongoRelationRepository\s*\(\s*db\s*\)\s*;/);
-        expect(surfaces).toMatch(/functions\s*:\s*features\.functions\s*,/);
-        expect(surfaces).toMatch(/triggers\s*:\s*features\.triggers\s*,/);
-        expect(surfaces).toMatch(/runtime\.startWorkers\s*\(\s*\{/);
+        expect(surfaces).toMatch(/relations\s*:\s*features\.relations\s*,/);
     });
 
     test("migrates removed operator roles before mounting the surfaces", async () => {

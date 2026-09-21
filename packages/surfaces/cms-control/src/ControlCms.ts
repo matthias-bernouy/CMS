@@ -111,12 +111,6 @@ export class ControlCms {
     get relations() {
         return controlCmsAccessors.relations(this.state);
     }
-    get functions() {
-        return controlCmsAccessors.functions(this.state);
-    }
-    get triggers() {
-        return controlCmsAccessors.triggers(this.state);
-    }
     get identities() {
         return controlCmsAccessors.identities(this.state);
     }

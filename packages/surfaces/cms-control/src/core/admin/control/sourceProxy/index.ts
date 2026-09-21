@@ -5,14 +5,11 @@ import {
     type Subject,
 } from "@bernouy/cms-auth";
 import { executeSiteSystemSourceEndpoint } from "@bernouy/cms-content";
-import { executeFunctionSystemSourceEndpoint, SYSTEM_FUNCTIONS_SOURCE_URN } from "@bernouy/cms-functions";
 import { ADMIN_ROLE, PUBLIC_ROLE, USER_ROLE, can, effectiveGrantsFor } from "@bernouy/cms-permissions";
 import { resolveRequestRoleDefinitions } from "@bernouy/cms-permissions/requestScope";
 import {
     CMS_SOURCES_ROUTE,
     SOURCE_PROXY_METHODS,
-    attachTriggerResponseBody,
-    attachTriggerResponseFinalizer,
     createSourceRequestTelemetryMiddleware,
     handleSourceRequest,
     measureActiveSourceTiming,
@@ -71,29 +68,11 @@ export function mountControlSourceProxy(
                         schemaCache,
                     );
                     const executeSystemEndpoint = async (endpoint: SourceEndpoint, request: Request) => {
-                        if (endpoint.urn.startsWith(`${SYSTEM_FUNCTIONS_SOURCE_URN}:`)) {
-                            if (!scope.functions || !scope.overlaySources) {
-                                return new Response("function executor not configured", {
-                                    status: 501,
-                                });
-                            }
-                            const subject = await resolveSubject(request);
-                            return executeFunctionSystemSourceEndpoint(endpoint, request, {
-                                functions: scope.functions,
-                                sources: scope.overlaySources,
-                                deps: scope.deps,
-                                resolveUser: async () =>
-                                    subject ? { id: subject.identifier, role: subject.role } : {},
-                            });
-                        }
                         if (endpoint.urn.startsWith(`${SYSTEM_SITE_SOURCE_URN}:`)) {
                             return executeSiteSystemSourceEndpoint(state.repository, endpoint);
                         }
                         if (controlPublicAuth) {
-                            return executeAuthSystemSourceEndpoint(controlPublicAuth, endpoint, request, {
-                                attachTriggerResponseBody,
-                                ...(scope.deferSystemResponseFinalization ? { attachTriggerResponseFinalizer } : {}),
-                            });
+                            return executeAuthSystemSourceEndpoint(controlPublicAuth, endpoint, request);
                         }
                         return new Response("system source executor not configured", {
                             status: 501,

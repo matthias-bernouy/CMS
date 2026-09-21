@@ -16,18 +16,10 @@ type SystemSourceEndpoint = {
     targetUrl: string;
 };
 
-export type AuthSystemSourceHooks = {
-    /** Keeps integration-only response data in-process and out of the public HTTP body. */
-    attachTriggerResponseBody?: (response: Response, body: unknown) => void;
-    /** Defers activation until synchronous response policies have succeeded. */
-    attachTriggerResponseFinalizer?: (response: Response, finalizer: () => Promise<void>) => void;
-};
-
 export async function executeAuthSystemSourceEndpoint<Role extends string>(
     cfg: PublicAuthRoutesConfig<Role>,
     endpoint: SystemSourceEndpoint,
     req: Request,
-    hooks: AuthSystemSourceHooks = {},
 ): Promise<Response> {
     const target = parseSystemAuthTarget(endpoint);
     switch (target) {
@@ -48,19 +40,8 @@ export async function executeAuthSystemSourceEndpoint<Role extends string>(
                 email: requiredString(body, "email"),
                 password: requiredString(body, "password"),
             });
-            const response = ok();
-            hooks.attachTriggerResponseBody?.(response, {
-                ok: true,
-                cmsUserId: prepared.cmsUserId,
-            });
-            if (hooks.attachTriggerResponseFinalizer) {
-                hooks.attachTriggerResponseFinalizer(response, async () => {
-                    await prepared.finalize();
-                });
-            } else {
-                await prepared.finalize();
-            }
-            return response;
+            await prepared.finalize();
+            return ok();
         }
         case "/email/verification/request": {
             const body = await readJsonObject(req);

@@ -1,4 +1,3 @@
-import { withFunctionsSource } from "@bernouy/cms-functions";
 import { collectIntegrationInstallationCspExtras } from "@bernouy/cms-integrations";
 import { createSecretResolver } from "@bernouy/cms-secrets";
 import { SourceOverlaySourceRepository } from "@bernouy/cms-sources";
@@ -21,8 +20,6 @@ export const controlCmsAccessors = {
     dashboardViews: (state: ControlCmsState) => state.dashboardViews,
     dashboardAssignments: (state: ControlCmsState) => state.dashboardAssignments,
     relations: (state: ControlCmsState) => state.relations,
-    functions: (state: ControlCmsState) => state.functions,
-    triggers: (state: ControlCmsState) => state.triggers,
     identities: (state: ControlCmsState) => state.identities,
     sourceOverlays: (state: ControlCmsState) => state.sourceOverlays,
     configuredIntegrationInstallations: (state: ControlCmsState) => state.integrationInstallations,
@@ -77,7 +74,7 @@ function effectiveSources(state: ControlCmsState) {
               deps: controlCmsAccessors.sourceExecutorDeps(state),
           })
         : state.sources;
-    return state.functions ? withFunctionsSource(overlays, state.functions) : overlays;
+    return overlays;
 }
 
 function required<T>(value: T, message: string): NonNullable<T> {

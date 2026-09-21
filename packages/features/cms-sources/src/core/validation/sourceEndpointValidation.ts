@@ -2,7 +2,6 @@ import type { SourceEndpoint } from "cms-sources/interfaces/Source";
 import { HTTP_METHODS, MAX_SOURCE_ENDPOINT_TIMEOUT_MS, RESPONSE_KINDS } from "cms-sources/interfaces/Source";
 import { isSourceEndpointAccessMode } from "cms-sources/core/execution/access";
 import { dataShapeAtPath } from "cms-sources/core/validation/parseDataShape";
-import { validateTriggerResponse } from "cms-sources/core/response-projection/validateTriggerResponse";
 import {
     type SourceTargetUrlValidationOptions,
     validateSourceTargetUrl,
@@ -113,7 +112,6 @@ function validateResponses(endpoint: SourceEndpoint, errors: string[]): void {
         if (seen.has(response.status)) {
             errors.push(`duplicate response status for "${endpoint.urn}": "${response.status}"`);
         }
-        validateTriggerResponse(endpoint, response, errors);
         seen.add(response.status);
     }
 }

@@ -72,20 +72,20 @@
       ["\\d", MAX_LENGTH],
       [LETTERDASHNUMBER, MAX_SAFE_BUILD_LENGTH]
     ];
-    var makeSafeRegex = (value3) => {
+    var makeSafeRegex = (value2) => {
       for (const [token, max] of safeRegexReplacements) {
-        value3 = value3.split(`${token}*`).join(`${token}{0,${max}}`).split(`${token}+`).join(`${token}{1,${max}}`);
+        value2 = value2.split(`${token}*`).join(`${token}{0,${max}}`).split(`${token}+`).join(`${token}{1,${max}}`);
       }
-      return value3;
+      return value2;
     };
-    var createToken = (name, value3, isGlobal) => {
-      const safe = makeSafeRegex(value3);
+    var createToken = (name, value2, isGlobal) => {
+      const safe = makeSafeRegex(value2);
       const index = R4++;
-      debug(name, index, value3);
+      debug(name, index, value2);
       t[name] = index;
-      src[index] = value3;
+      src[index] = value2;
       safeSrc[index] = safe;
-      re2[index] = new RegExp(value3, isGlobal ? "g" : undefined);
+      re2[index] = new RegExp(value2, isGlobal ? "g" : undefined);
       safeRe[index] = new RegExp(safe, isGlobal ? "g" : undefined);
     };
     createToken("NUMERICIDENTIFIER", "0|[1-9]\\d*");
@@ -181,8 +181,8 @@
     var { safeRe: re2, t } = require_re();
     var parseOptions = require_parse_options();
     var { compareIdentifiers } = require_identifiers();
-    var isPrereleaseIdentifier = (prerelease, identifier2) => {
-      const identifiers = identifier2.split(".");
+    var isPrereleaseIdentifier = (prerelease, identifier) => {
+      const identifiers = identifier.split(".");
       if (identifiers.length > prerelease.length) {
         return false;
       }
@@ -344,15 +344,15 @@
           }
         } while (++i);
       }
-      inc(release, identifier2, identifierBase) {
+      inc(release, identifier, identifierBase) {
         if (release.startsWith("pre")) {
-          if (!identifier2 && identifierBase === false) {
+          if (!identifier && identifierBase === false) {
             throw new Error("invalid increment argument: identifier is empty");
           }
-          if (identifier2) {
-            const match = `-${identifier2}`.match(this.options.loose ? re2[t.PRERELEASELOOSE] : re2[t.PRERELEASE]);
-            if (!match || match[1] !== identifier2) {
-              throw new Error(`invalid identifier: ${identifier2}`);
+          if (identifier) {
+            const match = `-${identifier}`.match(this.options.loose ? re2[t.PRERELEASELOOSE] : re2[t.PRERELEASE]);
+            if (!match || match[1] !== identifier) {
+              throw new Error(`invalid identifier: ${identifier}`);
             }
           }
         }
@@ -362,24 +362,24 @@
             this.patch = 0;
             this.minor = 0;
             this.major++;
-            this.inc("pre", identifier2, identifierBase);
+            this.inc("pre", identifier, identifierBase);
             break;
           case "preminor":
             this.prerelease.length = 0;
             this.patch = 0;
             this.minor++;
-            this.inc("pre", identifier2, identifierBase);
+            this.inc("pre", identifier, identifierBase);
             break;
           case "prepatch":
             this.prerelease.length = 0;
-            this.inc("patch", identifier2, identifierBase);
-            this.inc("pre", identifier2, identifierBase);
+            this.inc("patch", identifier, identifierBase);
+            this.inc("pre", identifier, identifierBase);
             break;
           case "prerelease":
             if (this.prerelease.length === 0) {
-              this.inc("patch", identifier2, identifierBase);
+              this.inc("patch", identifier, identifierBase);
             }
-            this.inc("pre", identifier2, identifierBase);
+            this.inc("pre", identifier, identifierBase);
             break;
           case "release":
             if (this.prerelease.length === 0) {
@@ -421,19 +421,19 @@
                 }
               }
               if (i === -1) {
-                if (identifier2 === this.prerelease.join(".") && identifierBase === false) {
+                if (identifier === this.prerelease.join(".") && identifierBase === false) {
                   throw new Error("invalid increment argument: identifier already exists");
                 }
                 this.prerelease.push(base);
               }
             }
-            if (identifier2) {
-              let prerelease = [identifier2, base];
+            if (identifier) {
+              let prerelease = [identifier, base];
               if (identifierBase === false) {
-                prerelease = [identifier2];
+                prerelease = [identifier];
               }
-              if (isPrereleaseIdentifier(this.prerelease, identifier2)) {
-                const prereleaseBase = this.prerelease[identifier2.split(".").length];
+              if (isPrereleaseIdentifier(this.prerelease, identifier)) {
+                const prereleaseBase = this.prerelease[identifier.split(".").length];
                 if (isNaN(prereleaseBase)) {
                   this.prerelease = prerelease;
                 }
@@ -498,14 +498,14 @@
   // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/inc.js
   var require_inc = __commonJS((exports, module) => {
     var SemVer = require_semver();
-    var inc = (version, release, options2, identifier2, identifierBase) => {
+    var inc = (version, release, options2, identifier, identifierBase) => {
       if (typeof options2 === "string") {
-        identifierBase = identifier2;
-        identifier2 = options2;
+        identifierBase = identifier;
+        identifier = options2;
         options2 = undefined;
       }
       try {
-        return new SemVer(version instanceof SemVer ? version.version : version, options2).inc(release, identifier2, identifierBase).version;
+        return new SemVer(version instanceof SemVer ? version.version : version, options2).inc(release, identifier, identifierBase).version;
       } catch (er3) {
         return null;
       }
@@ -809,26 +809,26 @@
         this.map = new Map;
       }
       get(key) {
-        const value3 = this.map.get(key);
-        if (value3 === undefined) {
+        const value2 = this.map.get(key);
+        if (value2 === undefined) {
           return;
         } else {
           this.map.delete(key);
-          this.map.set(key, value3);
-          return value3;
+          this.map.set(key, value2);
+          return value2;
         }
       }
       delete(key) {
         return this.map.delete(key);
       }
-      set(key, value3) {
+      set(key, value2) {
         const deleted = this.delete(key);
-        if (!deleted && value3 !== undefined) {
+        if (!deleted && value2 !== undefined) {
           if (this.map.size >= this.max) {
             const firstKey = this.map.keys().next().value;
             this.delete(firstKey);
           }
-          this.map.set(key, value3);
+          this.map.set(key, value2);
         }
         return this;
       }
@@ -18255,13 +18255,7 @@ ${layout_default}`;
             password: stringShape2()
           }, ["email", "password"])
         },
-        output: [
-          {
-            status: "200",
-            body: okShape,
-            triggerBody: objectShape({ cmsUserId: { ...stringShape2(), nullable: true } }, ["cmsUserId"])
-          }
-        ]
+        output: [{ status: "200", body: okShape }]
       },
       {
         urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "requestEmailVerification"),
@@ -22255,28 +22249,6 @@ slot[name="secondary-lateral-nav"]::slotted(*) {
                 <line x1="6" y1="20" x2="6" y2="14" />
             </svg>
             Analytics
-        </w13c-lateral-menu-item>
-
-        <w13c-lateral-menu-item data-route="functions">
-            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.35"
-                stroke-linecap="round">
-                <path d="M9 5c-2.3 2-3.4 4.3-3.4 7S6.7 17 9 19" />
-                <path d="M15 5c2.3 2 3.4 4.3 3.4 7S17.3 17 15 19" />
-            </svg>
-            Functions
-        </w13c-lateral-menu-item>
-
-        <w13c-lateral-menu-item data-route="triggers">
-            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05"
-                stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="6" cy="12" r="2.5" />
-                <circle cx="17" cy="7" r="2.5" />
-                <circle cx="17" cy="17" r="2.5" />
-                <path d="M8.5 12h3.5" />
-                <path d="m12 12 2.8-3.1" />
-                <path d="m12 12 2.8 3.1" />
-            </svg>
-            Triggers
         </w13c-lateral-menu-item>
 
         <w13c-lateral-menu-item data-route="sources">
@@ -41292,2181 +41264,6 @@ p9r-modal {
     };
   }
 
-  // src/components/admin/Resources/Functions/api.ts
-  function basePath2() {
-    const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
-    return raw.replace(/\/+$/, "");
-  }
-  function route2(path) {
-    return `${basePath2()}${path}`;
-  }
-  function currentFunctionId() {
-    return new URL(window.location.href).searchParams.get("id")?.trim() ?? "";
-  }
-  async function fetchFunctionDetail(id2) {
-    const response = await fetch(route2(`/api/functions/detail?id=${encodeURIComponent(id2)}`), {
-      headers: { Accept: "application/json" }
-    });
-    if (!response.ok) {
-      throw new Error(await response.text());
-    }
-    return response.json();
-  }
-  async function fetchFunctionCatalog() {
-    const response = await fetch(route2("/api/functions/catalog"), { headers: { Accept: "application/json" } });
-    if (!response.ok) {
-      throw new Error(await response.text());
-    }
-    return response.json();
-  }
-  async function createFunctionDefinition(definition) {
-    const response = await fetch(route2("/api/functions/create"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ definition })
-    });
-    if (!response.ok) {
-      throw new Error(await response.text());
-    }
-    return response.json();
-  }
-  async function executeFunctionDetail(input) {
-    const payload = { id: input.id, params: input.params };
-    if (input.includeBody) {
-      payload.body = input.body;
-    }
-    const response = await fetch(route2("/api/functions/execute"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    const contentType = response.headers.get("content-type") ?? "";
-    return {
-      ok: response.ok,
-      status: response.status,
-      body: await readResponseBody(response, contentType),
-      contentType
-    };
-  }
-  async function fetchSourceEndpoint(source2, endpoint, params = {}) {
-    const url = new URL(route2(`/.cms/sources/${encodeURIComponent(source2)}/${encodeURIComponent(endpoint)}`), window.location.origin);
-    for (const [key, value2] of Object.entries(params)) {
-      if (value2 !== "") {
-        url.searchParams.set(key, value2);
-      }
-    }
-    const response = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!response.ok) {
-      throw new Error(await response.text());
-    }
-    const contentType = response.headers.get("content-type") ?? "";
-    return readResponseBody(response, contentType);
-  }
-  async function readResponseBody(response, contentType) {
-    if (response.status === 204) {
-      return null;
-    }
-    if (contentType.includes("application/json")) {
-      return response.json().catch(() => null);
-    }
-    const text4 = await response.text();
-    return text4 || null;
-  }
-
-  // src/components/admin/Resources/Functions/create/draft.ts
-  function initialDraft(params, body) {
-    return { params: structuredClone(params), body: structuredClone(body ?? {}) };
-  }
-  function readFallbackDraft(root, hasBody) {
-    return {
-      params: parseObject(root.querySelector("[data-role='params']")?.value ?? "{}", "Params"),
-      body: hasBody ? parseJson2(root.querySelector("[data-role='body']")?.value ?? "{}", "Body") : undefined
-    };
-  }
-  function readPathDraft(root, draft) {
-    const next = structuredClone(draft);
-    for (const input of Array.from(root.querySelectorAll("[data-path]"))) {
-      const path = input.dataset.path ?? "";
-      const value2 = input instanceof HTMLTextAreaElement ? parseObject(input.value || "{}", path || "JSON") : input.value;
-      setDraftValue(next, path, value2);
-    }
-    return next;
-  }
-  function resolvedParams(params, draft) {
-    const out = {};
-    for (const [key, value2] of Object.entries(params ?? {})) {
-      const resolved = resolveUiValue(value2, draft);
-      if (resolved !== undefined && resolved !== null) {
-        out[key] = String(resolved);
-      }
-    }
-    return out;
-  }
-  function valueAtDraft(draft, path) {
-    if (path === "body") {
-      return draft.body;
-    }
-    if (path === "params") {
-      return draft.params;
-    }
-    if (path.startsWith("body.")) {
-      return valueAt2(draft.body, path.slice("body.".length));
-    }
-    if (path.startsWith("params.")) {
-      return valueAt2(draft.params, path.slice("params.".length));
-    }
-    return;
-  }
-  function setDraftValue(draft, path, value2) {
-    if (path === "body") {
-      draft.body = value2;
-      return;
-    }
-    if (path.startsWith("body.")) {
-      if (!isRecord5(draft.body)) {
-        draft.body = {};
-      }
-      setPathValue(draft.body, path.slice("body.".length), value2);
-      return;
-    }
-    if (path.startsWith("params.")) {
-      setPathValue(draft.params, path.slice("params.".length), value2);
-    }
-  }
-  function setPathValue(target2, path, value2) {
-    if (!isRecord5(target2)) {
-      return;
-    }
-    const parts = path.split(".").filter(Boolean);
-    let current = target2;
-    for (const [index, part] of parts.entries()) {
-      if (index === parts.length - 1) {
-        current[part] = value2;
-        return;
-      }
-      if (!isRecord5(current[part])) {
-        current[part] = {};
-      }
-      current = current[part];
-    }
-  }
-  function valueAt2(value2, path) {
-    if (!path) {
-      return value2;
-    }
-    return path.split(".").filter(Boolean).reduce((current, part) => {
-      if (current === null || current === undefined) {
-        return;
-      }
-      if (Array.isArray(current) && /^\d+$/.test(part)) {
-        return current[Number(part)];
-      }
-      if (!isRecord5(current)) {
-        return;
-      }
-      return current[part];
-    }, value2);
-  }
-  function arrayAt2(value2, path) {
-    const found = valueAt2(value2, path);
-    return Array.isArray(found) ? found : [];
-  }
-  function stringify(value2) {
-    return JSON.stringify(value2, null, 2);
-  }
-  function parseObject(value2, label2) {
-    const parsed = parseJson2(value2 || "{}", label2);
-    if (!isRecord5(parsed)) {
-      throw new Error(`${label2} must be a JSON object.`);
-    }
-    return parsed;
-  }
-  function parseJson2(value2, label2) {
-    try {
-      return JSON.parse(value2);
-    } catch {
-      throw new Error(`${label2} is not valid JSON.`);
-    }
-  }
-  function stringValue(value2) {
-    return typeof value2 === "string" || typeof value2 === "number" || typeof value2 === "boolean" ? String(value2) : "";
-  }
-  function labelFromPath(path) {
-    const last = path.split(".").filter(Boolean).at(-1) ?? path;
-    return last.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
-  }
-  function cssEscape(value2) {
-    return globalThis.CSS?.escape?.(value2) ?? value2.replace(/["\\]/g, "\\$&");
-  }
-  function resolveUiValue(value2, draft) {
-    if (typeof value2 === "string" && value2.startsWith("$")) {
-      return valueAtDraft(draft, value2.slice(1));
-    }
-    return value2;
-  }
-  function isRecord5(value2) {
-    return typeof value2 === "object" && value2 !== null && !Array.isArray(value2);
-  }
-
-  // src/components/admin/Resources/Functions/dom.ts
-  function styleNode(css) {
-    const el = document.createElement("style");
-    el.textContent = css;
-    return el;
-  }
-  function state(message) {
-    return div("state", message);
-  }
-  function backLink() {
-    const back = document.createElement("a");
-    back.slot = "back";
-    back.href = route2("/admin/functions");
-    back.textContent = "<";
-    back.title = "Back to functions";
-    back.setAttribute("aria-label", "Back to functions");
-    return back;
-  }
-  function title(detail) {
-    const wrap = document.createElement("span");
-    wrap.slot = "title";
-    wrap.textContent = detail.label;
-    return wrap;
-  }
-  function detailSection(slot, heading) {
-    const section2 = document.createElement("cms-detail-section");
-    section2.slot = slot;
-    section2.setAttribute("heading", heading);
-    return section2;
-  }
-  function fieldWrap(titleText, control, hint) {
-    control.id ||= `function-field-${++fieldId}`;
-    const title2 = label2(titleText);
-    title2.htmlFor = control.id;
-    const wrap = div("field", title2, control);
-    if (hint) {
-      wrap.append(hint);
-    }
-    return wrap;
-  }
-  var fieldId = 0;
-  function schemaBlock(titleText, value2) {
-    return div("schema-block", label2(titleText), pre(value2 === null ? "None" : stringify(value2)));
-  }
-  function keyValues(rows) {
-    const list = document.createElement("dl");
-    list.className = "kv";
-    for (const [key, value2] of rows) {
-      const dt3 = document.createElement("dt");
-      const dd2 = document.createElement("dd");
-      dt3.textContent = key;
-      dd2.textContent = value2;
-      list.append(dt3, dd2);
-    }
-    return list;
-  }
-  function label2(text4) {
-    const el = document.createElement("label");
-    el.textContent = text4;
-    return el;
-  }
-  function helper(text4) {
-    return div("helper", text4);
-  }
-  function textarea(role, value2) {
-    const el = document.createElement("textarea");
-    el.dataset.role = role;
-    el.spellcheck = false;
-    el.value = value2;
-    return el;
-  }
-  function button(text4, tone) {
-    const el = document.createElement("button");
-    el.type = "button";
-    el.className = `button ${tone}`;
-    el.textContent = text4;
-    return el;
-  }
-  function option2(value2, text4) {
-    const el = document.createElement("option");
-    el.value = value2;
-    el.textContent = text4;
-    return el;
-  }
-  function pre(text4) {
-    const el = document.createElement("pre");
-    el.textContent = text4;
-    return el;
-  }
-  function div(className, ...children) {
-    const el = document.createElement("div");
-    el.className = className;
-    for (const child of children) {
-      el.append(typeof child === "string" ? document.createTextNode(child) : child);
-    }
-    return el;
-  }
-
-  // src/components/admin/Resources/Functions/create/fields.ts
-  function executeFields(detail, draft, onChange) {
-    const fields = detail.ui?.execute?.fields ?? [];
-    if (!fields.length) {
-      return fallbackJsonFields(detail);
-    }
-    return div("fields-stack", ...fields.map((field2) => executeField(field2, draft, onChange)));
-  }
-  async function hydrateExecuteFields(root, detail, draft) {
-    for (const field2 of detail.ui?.execute?.fields ?? []) {
-      if (field2.control === "source-select") {
-        await hydrateSourceSelect(root, field2, draft);
-      }
-    }
-  }
-  async function seedDependents(root, detail, path, draft) {
-    for (const field2 of detail.ui?.execute?.fields ?? []) {
-      if (field2.control !== "json-object" || field2.seed?.dependsOn !== path) {
-        continue;
-      }
-      const input = root.querySelector(`textarea[data-path="${cssEscape(field2.path)}"]`);
-      if (!input || !field2.seed) {
-        continue;
-      }
-      const seed = await seedObject(field2.seed, draft).catch(() => null);
-      if (seed === null) {
-        continue;
-      }
-      setDraftValue(draft, field2.path, seed);
-      input.value = stringify(seed);
-    }
-  }
-  function executeField(field2, draft, onChange) {
-    if (field2.control === "source-select") {
-      return sourceSelectField(field2, draft, onChange);
-    }
-    if (field2.control === "json-object") {
-      return jsonObjectField(field2, draft, onChange);
-    }
-    return textField(field2, draft, onChange);
-  }
-  function sourceSelectField(field2, draft, onChange) {
-    const select = document.createElement("select");
-    select.dataset.path = field2.path;
-    select.append(option2("", "Loading..."));
-    select.value = String(valueAtDraft(draft, field2.path) ?? "");
-    select.addEventListener("change", () => {
-      setDraftValue(draft, field2.path, select.value);
-      onChange(field2.path);
-    });
-    return fieldWrap(field2.label ?? labelFromPath(field2.path), select, helper("Choose a configured source value."));
-  }
-  function jsonObjectField(field2, draft, onChange) {
-    const input = textarea("json-field", stringify(valueAtDraft(draft, field2.path) ?? {}));
-    input.dataset.path = field2.path;
-    input.addEventListener("input", () => onChange());
-    const hint = field2.seed ? "Seeded from the selected value when available." : "Edit a JSON object.";
-    return fieldWrap(field2.label ?? labelFromPath(field2.path), input, helper(hint));
-  }
-  function textField(field2, draft, onChange) {
-    const input = document.createElement("input");
-    input.type = "text";
-    input.dataset.path = field2.path;
-    input.value = String(valueAtDraft(draft, field2.path) ?? "");
-    input.addEventListener("input", () => {
-      setDraftValue(draft, field2.path, input.value);
-      onChange(field2.path);
-    });
-    return fieldWrap(field2.label ?? labelFromPath(field2.path), input);
-  }
-  async function hydrateSourceSelect(root, field2, draft) {
-    const select = root.querySelector(`select[data-path="${cssEscape(field2.path)}"]`);
-    if (!select) {
-      return;
-    }
-    try {
-      const response = await fetchSourceEndpoint(field2.source, field2.endpoint, resolvedParams(field2.params, draft));
-      const items = arrayAt2(response, field2.itemsPath ?? "items");
-      select.replaceChildren(option2("", "Select..."));
-      for (const item of items) {
-        const value2 = stringValue(valueAt2(item, field2.valuePath ?? "id"));
-        if (!value2) {
-          continue;
-        }
-        const label3 = stringValue(valueAt2(item, field2.labelPath ?? field2.valuePath ?? "id")) || value2;
-        select.append(option2(value2, label3));
-      }
-      select.value = String(valueAtDraft(draft, field2.path) ?? "");
-    } catch (error) {
-      select.replaceChildren(option2("", error instanceof Error ? error.message : "Failed to load options"));
-    }
-  }
-  async function seedObject(seed, draft) {
-    const response = await fetchSourceEndpoint(seed.source, seed.endpoint, resolvedParams(seed.params, draft));
-    const out = {};
-    for (const token of arrayAt2(response, seed.pathsPath)) {
-      const path = typeof token === "string" ? token : stringValue(valueAt2(token, seed.pathNamePath ?? "name"));
-      if (!path) {
-        continue;
-      }
-      const sample = typeof token === "string" ? "" : valueAt2(token, seed.samplePath ?? "sample") ?? "";
-      setPathValue(out, path, sample);
-    }
-    return out;
-  }
-  function fallbackJsonFields(detail) {
-    const fields = [fieldWrap("Params JSON", textarea("params", stringify(detail.paramsSample)))];
-    if (detail.body) {
-      fields.push(fieldWrap("Body JSON", textarea("body", stringify(detail.bodySample ?? {}))));
-    }
-    return div("fields-stack", ...fields);
-  }
-
-  // src/components/admin/Resources/Functions/result.ts
-  function readableResult(result) {
-    if (!result.ok) {
-      return nestedError(result.body) ?? `Function failed with status ${result.status}`;
-    }
-    const count = sentCount(result.body);
-    if (count !== null) {
-      return `${count} email${count === 1 ? "" : "s"} sent.`;
-    }
-    return result.status === 204 ? "Function completed without response body." : "Function completed.";
-  }
-  function nestedError(value2) {
-    for (const candidate of [valueAt2(value2, "details.body.error"), valueAt2(value2, "error")]) {
-      if (typeof candidate === "string" && candidate.trim()) {
-        return candidate;
-      }
-    }
-    return null;
-  }
-  function sentCount(value2) {
-    const messages = valueAt2(value2, "messages");
-    return Array.isArray(messages) ? messages.length : null;
-  }
-
-  // src/components/admin/Resources/Functions/detail/style.css
-  var style_default16 = `:host {
-    display: block;
-}
-* {
-    box-sizing: border-box;
-}
-.functions-shell {
-    --w-detail-main-width: 640px;
-    --w-detail-aside-width: 300px;
-}
-.state {
-    color: var(--p9r-color-muted, #64748b);
-    padding: 1rem 0;
-}
-.header-actions,
-.result-header {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-}
-.fields-stack,
-.field,
-.schema-block,
-.raw-result {
-    display: grid;
-    gap: .5rem;
-}
-.fields-stack {
-    gap: 1rem;
-}
-label {
-    color: var(--p9r-color-muted, #64748b);
-    font-size: .75rem;
-    font-weight: 700;
-}
-input,
-select,
-textarea,
-pre {
-    width: 100%;
-    border: 1px solid var(--p9r-color-border, #d8e1ea);
-    border-radius: 6px;
-    background: #fff;
-    color: var(--p9r-color-text, #0f172a);
-    font: inherit;
-}
-input,
-select {
-    min-height: 2.25rem;
-    padding: 0 .625rem;
-}
-textarea,
-pre {
-    font: 500 .8125rem/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-}
-textarea {
-    min-height: 8rem;
-    padding: .75rem;
-    resize: vertical;
-}
-pre {
-    min-height: 5rem;
-    margin: 0;
-    overflow: auto;
-    padding: .75rem;
-    white-space: pre-wrap;
-}
-.button {
-    min-height: 2rem;
-    border: 1px solid #047857;
-    border-radius: 6px;
-    font: inherit;
-    font-size: .8125rem;
-    font-weight: 700;
-    padding: 0 .75rem;
-    cursor: pointer;
-}
-.button.primary {
-    background: #047857;
-    color: #fff;
-}
-.button.secondary {
-    background: #fff;
-    color: #047857;
-}
-.button:disabled {
-    cursor: wait;
-    opacity: .65;
-}
-.status {
-    display: inline-flex;
-    align-items: center;
-    min-height: 1.5rem;
-    padding: 0 .5rem;
-    border-radius: 999px;
-    background: #f1f5f9;
-    color: #475569;
-    font-size: .75rem;
-    font-weight: 700;
-}
-.status.ok {
-    background: #ecfdf5;
-    color: #047857;
-}
-.status.error {
-    background: #fef2f2;
-    color: #b91c1c;
-}
-.helper,
-.result-message,
-.kv dt {
-    color: var(--p9r-color-muted, #64748b);
-    font-size: .8125rem;
-}
-.result-message.error {
-    color: #b91c1c;
-    font-weight: 700;
-}
-.result-message.ok {
-    color: #047857;
-    font-weight: 700;
-}
-.kv {
-    display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    gap: .5rem .75rem;
-    margin: 0;
-}
-.kv dd {
-    margin: 0;
-    overflow-wrap: anywhere;
-    font-weight: 650;
-}
-`;
-
-  // src/components/admin/Resources/Functions/detail/view.ts
-  function headerActions() {
-    const wrap = div("header-actions");
-    wrap.slot = "actions";
-    const reset = button("Reset draft", "secondary");
-    const run = button("Run", "primary");
-    reset.dataset.role = "reset";
-    run.dataset.role = "run";
-    wrap.append(reset, run);
-    return wrap;
-  }
-  function inputsSection(detail, draft, onInputChange) {
-    const section2 = detailSection("main", "Inputs");
-    section2.append(executeFields(detail, draft, onInputChange));
-    return section2;
-  }
-  function resultSection() {
-    const section2 = detailSection("main", "Result");
-    const status = div("status", "Not executed");
-    const message = div("result-message empty", "Run the function to see its result.");
-    const raw = document.createElement("details");
-    status.dataset.role = "result-status";
-    message.dataset.role = "result-message";
-    raw.className = "raw-result";
-    raw.append(summary("Raw response"), pre(""));
-    raw.querySelector("pre").dataset.role = "result-body";
-    section2.append(div("result-header", status), message, raw);
-    return section2;
-  }
-  function functionSummarySection(detail) {
-    const section2 = detailSection("aside", "Function");
-    section2.append(keyValues([
-      ["Id", detail.id],
-      ["Method", detail.method],
-      ["Access", detail.access],
-      ["Input", detail.inputLabel],
-      ["Steps", detail.stepsLabel],
-      ["Return", detail.returnLabel]
-    ]));
-    return section2;
-  }
-  function contractSection(detail) {
-    const section2 = detailSection("aside", "Contract");
-    const details = document.createElement("details");
-    details.append(summary("Schemas"), schemaBlock("Params", detail.params ?? null), schemaBlock("Body", detail.body ?? null), schemaBlock("Output", detail.output ?? null));
-    section2.append(details);
-    return section2;
-  }
-  function summary(text4) {
-    const element = document.createElement("summary");
-    element.textContent = text4;
-    return element;
-  }
-
-  // src/components/admin/Resources/Functions/detail/FunctionDetail.ts
-  class CmsFunctionDetail extends HTMLElement {
-    initialized = false;
-    detail = null;
-    draft = { params: {}, body: {} };
-    runButton = null;
-    resultStatus = null;
-    resultMessage = null;
-    resultBody = null;
-    connectedCallback() {
-      if (this.initialized) {
-        return;
-      }
-      this.initialized = true;
-      this.load();
-    }
-    async load() {
-      const id2 = currentFunctionId();
-      if (!id2) {
-        return this.renderState("Missing function id.");
-      }
-      this.renderState("Loading function...");
-      try {
-        this.detail = await fetchFunctionDetail(id2);
-        this.resetDraft();
-        this.renderDetail();
-      } catch (error) {
-        this.renderState(error instanceof Error ? error.message : "Failed to load function.");
-      }
-    }
-    resetDraft() {
-      if (this.detail) {
-        this.draft = initialDraft(this.detail.paramsSample, this.detail.bodySample ?? {});
-      }
-    }
-    renderState(message) {
-      this.replaceChildren(styleNode(style_default16), state(message));
-    }
-    renderDetail() {
-      if (!this.detail) {
-        return;
-      }
-      const shell = document.createElement("cms-shell-detail");
-      shell.className = "functions-shell";
-      const body = document.createElement("cms-shell-detail-body");
-      body.slot = "body";
-      body.append(inputsSection(this.detail, this.draft, (path) => void this.onInputChange(path)), resultSection(), functionSummarySection(this.detail), contractSection(this.detail));
-      shell.append(backLink(), title(this.detail), headerActions(), body);
-      this.replaceChildren(styleNode(style_default16), shell);
-      this.bindRefs();
-      hydrateExecuteFields(this, this.detail, this.draft);
-    }
-    bindRefs() {
-      this.runButton = this.querySelector("[data-role='run']");
-      this.resultStatus = this.querySelector("[data-role='result-status']");
-      this.resultMessage = this.querySelector("[data-role='result-message']");
-      this.resultBody = this.querySelector("[data-role='result-body']");
-      this.runButton?.addEventListener("click", () => void this.execute());
-      this.querySelector("[data-role='reset']")?.addEventListener("click", () => {
-        this.resetDraft();
-        this.renderDetail();
-      });
-    }
-    async onInputChange(path) {
-      this.clearResult();
-      if (path && this.detail) {
-        await seedDependents(this, this.detail, path, this.draft);
-      }
-    }
-    async execute() {
-      if (!this.detail || !this.runButton) {
-        return;
-      }
-      try {
-        this.draft = this.detail.ui?.execute?.fields?.length ? readPathDraft(this, this.draft) : readFallbackDraft(this, Boolean(this.detail.body));
-      } catch (error) {
-        this.showResult({
-          ok: false,
-          status: 0,
-          contentType: "application/json",
-          body: { error: error instanceof Error ? error.message : "Invalid input" }
-        });
-        return;
-      }
-      this.runButton.disabled = true;
-      this.runButton.textContent = "Running...";
-      this.showPending();
-      try {
-        this.showResult(await executeFunctionDetail({
-          id: this.detail.id,
-          params: this.draft.params,
-          body: this.draft.body,
-          includeBody: Boolean(this.detail.body)
-        }));
-      } catch (error) {
-        this.showResult({
-          ok: false,
-          status: 0,
-          contentType: "application/json",
-          body: { error: error instanceof Error ? error.message : "Execution failed" }
-        });
-      } finally {
-        this.runButton.disabled = false;
-        this.runButton.textContent = "Run";
-      }
-    }
-    showPending() {
-      this.setResult("status", "Running", "Waiting for response...", "");
-    }
-    clearResult() {
-      this.setResult("status", "Not executed", "Run the function to see its result.", "");
-    }
-    showResult(result) {
-      this.setResult(`status ${result.ok ? "ok" : "error"}`, result.status ? String(result.status) : "Invalid input", readableResult(result), stringify(result.body));
-    }
-    setResult(statusClass, status, message, body) {
-      if (this.resultStatus) {
-        this.resultStatus.className = statusClass;
-        this.resultStatus.textContent = status;
-      }
-      if (this.resultMessage) {
-        this.resultMessage.textContent = message;
-      }
-      if (this.resultBody) {
-        this.resultBody.textContent = body;
-      }
-    }
-  }
-  if (!customElements.get("cms-function-detail")) {
-    customElements.define("cms-function-detail", CmsFunctionDetail);
-  }
-
-  // src/components/admin/Resources/WorkflowEditor/mappingValues.ts
-  function mappedObject(draft) {
-    const result = {};
-    for (const [path, value2] of Object.entries(draft)) {
-      if (!value2.value) {
-        continue;
-      }
-      setPath(result, path, resolvedDraftValue(value2));
-    }
-    return result;
-  }
-  function resolvedDraftValue(draft) {
-    if (draft.mode === "reference") {
-      return draft.value;
-    }
-    const raw = draft.value.trim();
-    if (!raw) {
-      return "";
-    }
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return raw;
-    }
-  }
-  function setPath(target2, path, value2) {
-    if (!path) {
-      target2.value = value2;
-      return;
-    }
-    const parts = path.split(".").filter(Boolean);
-    let current = target2;
-    for (const [index, part] of parts.entries()) {
-      if (index === parts.length - 1) {
-        current[part] = value2;
-        return;
-      }
-      const existing = current[part];
-      if (!existing || typeof existing !== "object" || Array.isArray(existing)) {
-        current[part] = {};
-      }
-      current = current[part];
-    }
-  }
-
-  // src/components/admin/Resources/WorkflowEditor/mapping.ts
-  function referencesFromShape(shape, prefix, label3) {
-    if (!shape) {
-      return [];
-    }
-    const options2 = [{ value: prefix, label: label3, shape }];
-    if (shape.type !== "object") {
-      return options2;
-    }
-    for (const [name, child] of Object.entries(shape.properties ?? {})) {
-      options2.push(...referencesFromShape(child, `${prefix}.${name}`, `${label3} / ${name}`));
-    }
-    return options2;
-  }
-  function targetsFromShape(shape, prefix = "") {
-    if (!shape) {
-      return [];
-    }
-    if (shape.type !== "object" || !Object.keys(shape.properties ?? {}).length) {
-      return [{ path: prefix, label: prefix || "Value", shape }];
-    }
-    return Object.entries(shape.properties ?? {}).flatMap(([name, child]) => {
-      const path = prefix ? `${prefix}.${name}` : name;
-      if (child.type === "object" && Object.keys(child.properties ?? {}).length) {
-        return targetsFromShape(child, path);
-      }
-      return [
-        {
-          path,
-          label: path,
-          required: shape.required?.includes(name),
-          shape: child
-        }
-      ];
-    });
-  }
-  function mappingEditor(targets, references, draft, emptyMessage) {
-    const root = document.createElement("div");
-    root.className = "mapping-editor";
-    if (!targets.length) {
-      const empty = document.createElement("div");
-      empty.className = "mapping-empty";
-      empty.textContent = emptyMessage;
-      root.append(empty);
-      return root;
-    }
-    for (const target2 of targets) {
-      draft[target2.path] ??= { mode: "reference", value: "" };
-      root.append(mappingRow(target2, references, draft[target2.path]));
-    }
-    return root;
-  }
-  function valuePicker(draft, references, label3 = "Choose a value") {
-    const wrap = document.createElement("div");
-    wrap.className = "value-picker";
-    const select = document.createElement("select");
-    select.setAttribute("aria-label", label3);
-    select.append(option3("", label3));
-    for (const reference of references) {
-      select.append(option3(reference.value, reference.label));
-    }
-    select.append(option3("__literal__", "Fixed value…"));
-    select.value = draft.mode === "literal" ? "__literal__" : draft.value;
-    const literal = document.createElement("input");
-    literal.type = "text";
-    literal.setAttribute("aria-label", `${label3}: fixed value`);
-    literal.placeholder = "Text, number, boolean, or JSON";
-    literal.value = draft.mode === "literal" ? draft.value : "";
-    literal.hidden = draft.mode !== "literal";
-    select.addEventListener("change", () => {
-      if (select.value === "__literal__") {
-        draft.mode = "literal";
-        draft.value = literal.value;
-        literal.hidden = false;
-        literal.focus();
-        return;
-      }
-      draft.mode = "reference";
-      draft.value = select.value;
-      literal.hidden = true;
-    });
-    literal.addEventListener("input", () => draft.value = literal.value);
-    wrap.append(select, literal);
-    return wrap;
-  }
-  function mappingRow(target2, references, draft) {
-    const row = document.createElement("div");
-    row.className = "mapping-row";
-    const identity = document.createElement("div");
-    identity.className = "mapping-target";
-    const name = document.createElement("strong");
-    name.textContent = target2.label;
-    const meta = document.createElement("span");
-    const semantic = target2.shape?.semantic?.kind === "user-id" ? " · user identity" : "";
-    meta.textContent = `${target2.shape?.type ?? "value"}${semantic}${target2.required ? " · required" : ""}`;
-    identity.append(name, meta);
-    row.append(identity, valuePicker(draft, compatibleReferences(references, target2.shape), `${target2.label} source`));
-    return row;
-  }
-  function compatibleReferences(references, shape) {
-    if (!shape) {
-      return references;
-    }
-    return references.filter((reference) => {
-      if (!reference.shape) {
-        return true;
-      }
-      if (shape.semantic?.kind === "user-id") {
-        return reference.shape.semantic?.kind === "user-id";
-      }
-      return reference.shape.type === shape.type && reference.shape.semantic?.kind !== "user-id";
-    });
-  }
-  function option3(value2, label3) {
-    const el = document.createElement("option");
-    el.value = value2;
-    el.textContent = label3;
-    return el;
-  }
-
-  // src/components/admin/Resources/WorkflowEditor/schemaFields.ts
-  function schemaFieldsEditor(fields, onChange, showRequired = true) {
-    const root = document.createElement("div");
-    root.className = "schema-fields";
-    if (!fields.length) {
-      const empty = document.createElement("div");
-      empty.className = "mapping-empty";
-      empty.textContent = "No fields defined.";
-      root.append(empty);
-    }
-    fields.forEach((field2, index) => root.append(schemaFieldRow(field2, index, fields, onChange, showRequired)));
-    const add = document.createElement("button");
-    add.type = "button";
-    add.className = "button secondary small";
-    add.textContent = "+ Add field";
-    add.addEventListener("click", () => {
-      fields.push({ name: `field${fields.length + 1}`, type: "string", required: false });
-      onChange();
-    });
-    root.append(add);
-    return root;
-  }
-  function paramsFromFields(fields) {
-    return Object.fromEntries(fields.filter((field2) => field2.name.trim()).map((field2) => [field2.name.trim(), { type: field2.type }]));
-  }
-  function objectShapeFromFields(fields) {
-    const properties = paramsFromFields(fields);
-    if (!Object.keys(properties).length) {
-      return;
-    }
-    const required = fields.filter((field2) => field2.required && field2.name.trim()).map((field2) => field2.name.trim());
-    return {
-      type: "object",
-      properties,
-      ...required.length ? { required } : {}
-    };
-  }
-  function schemaFieldRow(field2, index, fields, onChange, showRequired) {
-    const row = document.createElement("div");
-    row.className = "schema-field-row";
-    const name = document.createElement("input");
-    name.value = field2.name;
-    name.placeholder = "fieldName";
-    name.setAttribute("aria-label", "Field name");
-    name.addEventListener("input", () => field2.name = name.value);
-    name.addEventListener("change", onChange);
-    const type = document.createElement("select");
-    for (const value2 of ["string", "number", "boolean", "object", "array"]) {
-      const option4 = document.createElement("option");
-      option4.value = value2;
-      option4.textContent = value2;
-      type.append(option4);
-    }
-    type.value = field2.type;
-    type.setAttribute("aria-label", "Field type");
-    type.addEventListener("change", () => {
-      field2.type = type.value;
-      onChange();
-    });
-    const requiredLabel = document.createElement("label");
-    requiredLabel.className = "check compact-check";
-    const required = document.createElement("input");
-    required.type = "checkbox";
-    required.checked = field2.required;
-    required.addEventListener("change", () => {
-      field2.required = required.checked;
-      onChange();
-    });
-    requiredLabel.append(required, document.createTextNode("Required"));
-    requiredLabel.hidden = !showRequired;
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "icon-button";
-    remove.textContent = "×";
-    remove.setAttribute("aria-label", `Remove ${field2.name || `field ${index + 1}`}`);
-    remove.addEventListener("click", () => {
-      fields.splice(index, 1);
-      onChange();
-    });
-    row.append(name, type, requiredLabel, remove);
-    return row;
-  }
-
-  // src/components/admin/Resources/Functions/create/editor/controls.ts
-  function value2(root, fieldName) {
-    return root.querySelector(`[data-field="${fieldName}"]`)?.value ?? "";
-  }
-  function parseOptional(raw, label3) {
-    return raw.trim() ? parseJson3(raw, label3) : undefined;
-  }
-  function field2(labelText, control) {
-    const label3 = document.createElement("label");
-    label3.append(document.createTextNode(labelText), control);
-    return label3;
-  }
-  function mappingGroup(title2, editor) {
-    const group = document.createElement("div");
-    group.className = "mapping-group";
-    const heading = document.createElement("strong");
-    heading.textContent = title2;
-    group.append(heading, editor);
-    return group;
-  }
-  function grid(...children) {
-    const element = document.createElement("div");
-    element.className = "grid";
-    element.append(...children);
-    return element;
-  }
-  function input(current, onChange, placeholder = "", type = "text") {
-    const element = document.createElement("input");
-    element.type = type;
-    element.value = current;
-    element.placeholder = placeholder;
-    element.addEventListener("input", () => onChange(element.value));
-    return element;
-  }
-  function select(options2, current, onChange) {
-    const element = document.createElement("select");
-    for (const [optionValue, label3] of options2) {
-      const option4 = document.createElement("option");
-      option4.value = optionValue;
-      option4.textContent = label3;
-      element.append(option4);
-    }
-    element.value = current;
-    element.addEventListener("change", () => onChange(element.value));
-    return element;
-  }
-  function identifier(value3) {
-    const words = value3.normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[A-Za-z0-9]+/g) ?? [];
-    return words.map((word, index) => index ? word[0]?.toUpperCase() + word.slice(1) : word.toLowerCase()).join("");
-  }
-  function dataShapeType(value3) {
-    return value3 === "number" || value3 === "boolean" || value3 === "object" || value3 === "array" ? value3 : "string";
-  }
-  function parseJson3(raw, label3) {
-    try {
-      return JSON.parse(raw);
-    } catch {
-      throw new Error(`${label3} is not valid JSON.`);
-    }
-  }
-
-  // src/components/admin/Resources/Functions/create/editor/references.ts
-  function referencesBefore(context, stepIndex) {
-    const params = paramsFromFields(context.paramsFields);
-    const body = objectShapeFromFields(context.bodyFields);
-    const references = [
-      ...Object.entries(params).flatMap(([name, shape]) => referencesFromShape(shape, `$input.params.${name}`, `Input parameter / ${name}`)),
-      ...referencesFromShape(body, "$input.body", "Input body"),
-      {
-        value: "$ctx.user.id",
-        label: "Current user / id",
-        shape: { type: "string", semantic: { kind: "user-id", authority: "cms" } }
-      },
-      { value: "$ctx.user.role", label: "Current user / role", shape: { type: "string" } }
-    ];
-    context.steps.slice(0, stepIndex).forEach((step) => {
-      if (step.kind !== "call") {
-        return;
-      }
-      const endpoint = endpointContract(context.catalog, step);
-      const output = endpoint?.output?.find((entry) => /^2\d\d$/.test(entry.status))?.body ?? endpoint?.output?.find((entry) => entry.status === "default")?.body;
-      references.push(...referencesFromShape(output, `$steps.${step.id}`, `Step ${step.id}`));
-    });
-    return references;
-  }
-  function endpointContract(catalog, step) {
-    return catalog.find((source2) => source2.id === step.source)?.endpoints.find((endpoint) => endpoint.endpointId === step.endpoint);
-  }
-
-  // src/components/admin/Resources/Functions/create/editor/definition.ts
-  function buildDefinition(root, context, returnValue) {
-    const id2 = value2(root, "id").trim();
-    const name = value2(root, "name").trim();
-    const description = value2(root, "description").trim();
-    const advancedParams = parseOptional(value2(root, "params"), "Params schema");
-    const advancedBody = parseOptional(value2(root, "body"), "Body schema");
-    const params = advancedParams ?? paramsFromFields(context.paramsFields);
-    const body = advancedBody ?? objectShapeFromFields(context.bodyFields);
-    const advancedOutput = parseOptional(value2(root, "output"), "Output contract");
-    const returnBody = returnValue.value ? resolvedDraftValue(returnValue) : undefined;
-    const returnShape = referencesBefore(context, context.steps.length).find((reference) => reference.value === returnValue.value)?.shape;
-    const returnStatus = Number(value2(root, "return-status") || 200);
-    const output = advancedOutput ?? (returnShape ? [{ status: String(returnStatus), body: returnShape }] : undefined);
-    return {
-      id: id2,
-      method: value2(root, "method"),
-      access: { mode: value2(root, "access") },
-      meta: { name: name || id2, ...description ? { description } : {} },
-      input: {
-        ...Object.keys(params).length ? { params } : {},
-        ...body !== undefined ? { body } : {}
-      },
-      ...output !== undefined ? { output } : {},
-      steps: context.steps.map((step) => buildStep(step)),
-      return: {
-        status: returnStatus,
-        ...returnBody !== undefined ? { body: returnBody } : {}
-      }
-    };
-  }
-  function buildStep(step) {
-    if (step.kind === "call") {
-      const params = mappedObject(step.params);
-      const body = mappedDraft(step.body);
-      return {
-        id: step.id,
-        call: {
-          source: step.source,
-          endpoint: step.endpoint,
-          ...Object.keys(params).length ? { params } : {},
-          ...body !== undefined ? { body } : {}
-        }
-      };
-    }
-    const left = resolvedDraftValue(step.left);
-    const condition = step.operator === "exists" ? { exists: left } : { [step.operator]: [left, resolvedDraftValue(step.right)] };
-    return {
-      assert: {
-        condition,
-        failure: { status: Number(step.status || 403), error: step.error || "Condition failed" }
-      }
-    };
-  }
-  function mappedDraft(draft) {
-    const root = draft[""];
-    if (root?.value) {
-      return resolvedDraftValue(root);
-    }
-    const mapped = mappedObject(draft);
-    return Object.keys(mapped).length ? mapped : undefined;
-  }
-
-  // src/components/admin/Resources/Functions/create/styles/controls.css
-  var controls_default2 = `.workflow-help {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: .65rem;
-}
-
-.workflow-help > div {
-    display: grid;
-    gap: .2rem;
-    padding: .7rem .8rem;
-    border-radius: 7px;
-    background: #f1f5f9;
-    font-size: .8rem;
-}
-
-.workflow-help span {
-    color: #64748b;
-}
-
-.grid {
-    display: grid;
-    gap: 1rem;
-}
-
-.short-row {
-    display: grid;
-    grid-template-columns: minmax(0, 180px) minmax(0, 260px);
-    gap: 1rem;
-}
-
-.narrow-field {
-    max-width: 180px;
-}
-
-label {
-    display: grid;
-    gap: .4rem;
-    color: var(--p9r-color-muted, #64748b);
-    font-size: .75rem;
-    font-weight: 700;
-}
-
-label span {
-    font-weight: 500;
-}
-
-label.check {
-    display: flex;
-    align-items: center;
-    gap: .4rem;
-    color: var(--p9r-color-text, #0f172a);
-}
-
-input,
-select,
-textarea {
-    width: 100%;
-    border: 1px solid var(--p9r-color-border, #d8e1ea);
-    border-radius: 6px;
-    background: #fff;
-    color: var(--p9r-color-text, #0f172a);
-    font: inherit;
-}
-
-input,
-select {
-    min-height: 2.35rem;
-    padding: 0 .625rem;
-}
-
-input[type="checkbox"] {
-    width: 1rem;
-    min-height: 1rem;
-    padding: 0;
-}
-
-textarea {
-    min-height: 6.5rem;
-    padding: .75rem;
-    resize: vertical;
-    font: 500 .8125rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
-textarea.compact {
-    min-height: 4.5rem;
-    font-family: inherit;
-}
-
-.button {
-    min-height: 2.1rem;
-    border: 1px solid #047857;
-    border-radius: 6px;
-    padding: 0 .75rem;
-    cursor: pointer;
-    font: inherit;
-    font-size: .8125rem;
-    font-weight: 700;
-}
-
-.button.primary {
-    background: #047857;
-    color: #fff;
-}
-
-.button.secondary {
-    background: #fff;
-    color: #047857;
-}
-
-.button.quiet {
-    border-color: transparent;
-    background: transparent;
-    color: #475569;
-}
-
-.button:disabled {
-    cursor: wait;
-    opacity: .65;
-}
-`;
-
-  // src/components/admin/Resources/Functions/create/styles/layout.css
-  var layout_default3 = `:host {
-    display: block;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-.create-shell {
-    --w-detail-main-width: 780px;
-    --w-detail-aside-width: 290px;
-}
-
-.state {
-    color: var(--p9r-color-muted, #64748b);
-    padding: 1rem 0;
-}
-
-.back {
-    color: inherit;
-    font-size: 1.25rem;
-    text-decoration: none;
-}
-
-.header-actions,
-.toolbar {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-}
-
-.journey-intro {
-    display: grid;
-    gap: .25rem;
-    padding: .25rem .1rem .75rem;
-}
-
-.journey-intro strong {
-    color: var(--p9r-color-text, #0f172a);
-    font-size: 1rem;
-}
-
-.journey-intro span {
-    color: var(--p9r-color-muted, #64748b);
-    font-size: .875rem;
-}
-
-.editor-panel,
-.side-panel,
-.status-panel {
-    overflow: hidden;
-    border: 1px solid var(--p9r-color-border, #d8e1ea);
-    border-radius: 10px;
-    background: #fff;
-}
-
-.editor-panel + .editor-panel,
-.side-panel + .side-panel,
-.status-panel {
-    margin-top: .75rem;
-}
-
-.editor-panel > summary,
-.side-panel > summary,
-.step-card > summary {
-    display: flex;
-    align-items: center;
-    gap: .8rem;
-    cursor: pointer;
-    list-style: none;
-}
-
-.editor-panel > summary::-webkit-details-marker,
-.side-panel > summary::-webkit-details-marker,
-.step-card > summary::-webkit-details-marker {
-    display: none;
-}
-
-.editor-panel > summary {
-    min-height: 4.5rem;
-    padding: .8rem 1rem;
-}
-
-.editor-panel > summary > span:nth-child(2) {
-    display: grid;
-    flex: 1;
-    gap: .2rem;
-}
-
-.editor-panel > summary small,
-.step-card > summary small {
-    color: var(--p9r-color-muted, #64748b);
-    font-size: .78rem;
-    font-weight: 500;
-}
-
-.step-number {
-    display: grid;
-    place-items: center;
-    flex: 0 0 2rem;
-    width: 2rem;
-    height: 2rem;
-    border-radius: 50%;
-    background: #ecfdf5;
-    color: #047857;
-    font-weight: 800;
-}
-
-.chevron {
-    margin-left: auto;
-    color: #64748b;
-    transition: transform .16s ease;
-}
-
-details[open] > summary > .chevron {
-    transform: rotate(180deg);
-}
-
-.panel-body {
-    display: grid;
-    gap: 1rem;
-    padding: 1rem;
-    border-top: 1px solid var(--p9r-color-border, #e2e8f0);
-    background: #fbfdff;
-}
-`;
-
-  // src/components/admin/Resources/Functions/create/styles/mapping.css
-  var mapping_default = `.callout {
-    padding: .7rem .8rem;
-    border-left: 3px solid #0f766e;
-    background: #f0fdfa;
-    color: #115e59;
-    font-size: .82rem;
-}
-
-.contract-group,
-.mapping-group {
-    display: grid;
-    gap: .65rem;
-}
-
-.group-heading {
-    display: grid;
-    gap: .2rem;
-}
-
-.group-heading span,
-.mapping-target span,
-.mapping-empty {
-    color: var(--p9r-color-muted, #64748b);
-    font-size: .78rem;
-}
-
-.schema-fields,
-.mapping-editor {
-    display: grid;
-    gap: .55rem;
-}
-
-.schema-field-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 140px auto 32px;
-    align-items: center;
-    gap: .55rem;
-}
-
-.mapping-row {
-    display: grid;
-    grid-template-columns: minmax(150px, .65fr) minmax(240px, 1fr);
-    align-items: start;
-    gap: .75rem;
-    padding: .65rem;
-    border: 1px solid var(--p9r-color-border, #e2e8f0);
-    border-radius: 7px;
-    background: #fff;
-}
-
-.mapping-target,
-.value-picker {
-    display: grid;
-    gap: .3rem;
-}
-
-.mapping-empty {
-    padding: .7rem;
-    border: 1px dashed #cbd5e1;
-    border-radius: 7px;
-}
-
-.icon-button {
-    width: 2rem;
-    height: 2rem;
-    border: 0;
-    background: transparent;
-    color: #64748b;
-    cursor: pointer;
-    font-size: 1.1rem;
-}
-
-.compact-check {
-    white-space: nowrap;
-}
-
-.button.small {
-    width: max-content;
-}
-
-.advanced-panel {
-    border-top: 1px solid var(--p9r-color-border, #e2e8f0);
-    padding-top: .75rem;
-}
-
-.advanced-panel > summary {
-    cursor: pointer;
-    color: #64748b;
-    font-size: .8rem;
-    font-weight: 700;
-}
-
-.advanced-body {
-    display: grid;
-    gap: 1rem;
-    padding-top: .8rem;
-}
-`;
-
-  // src/components/admin/Resources/Functions/create/styles/steps.css
-  var steps_default = `.steps {
-    display: grid;
-    gap: .75rem;
-    margin-top: 1rem;
-}
-
-.step-card {
-    overflow: hidden;
-    border: 1px solid var(--p9r-color-border, #d8e1ea);
-    border-radius: 8px;
-    background: #fff;
-}
-
-.step-card > summary {
-    min-height: 3.5rem;
-    padding: .6rem .75rem;
-    background: #fff;
-}
-
-.step-summary {
-    display: grid;
-    flex: 1;
-    gap: .1rem;
-}
-
-.step-kind {
-    min-width: 3.2rem;
-    padding: .25rem .4rem;
-    border-radius: 4px;
-    background: #ecfdf5;
-    color: #047857;
-    font-size: .68rem;
-    font-weight: 800;
-    text-align: center;
-}
-
-.step-actions {
-    display: flex;
-}
-
-.step-actions button {
-    border: 0;
-    background: transparent;
-    color: #64748b;
-    cursor: pointer;
-    font-size: 1rem;
-}
-
-.step-fields {
-    padding: .85rem;
-    border-top: 1px solid var(--p9r-color-border, #e2e8f0);
-}
-
-.empty,
-.message,
-.reference-list,
-.checklist {
-    color: var(--p9r-color-muted, #64748b);
-    font-size: .8125rem;
-}
-
-.empty {
-    display: grid;
-    gap: .2rem;
-    margin-top: 1rem;
-    padding: 1.25rem;
-    border: 1px dashed #cbd5e1;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.empty strong {
-    color: #334155;
-}
-
-.message.error {
-    color: #b91c1c;
-    white-space: pre-wrap;
-}
-
-.reference-list,
-.checklist {
-    display: grid;
-    gap: .55rem;
-}
-
-.reference-list code {
-    overflow-wrap: anywhere;
-}
-
-.side-panel > summary {
-    padding: .8rem .9rem;
-}
-
-.side-body,
-.status-panel {
-    padding: .85rem .9rem;
-    border-top: 1px solid var(--p9r-color-border, #e2e8f0);
-}
-
-.status-panel {
-    display: grid;
-    gap: .45rem;
-    border-top: 1px solid var(--p9r-color-border, #d8e1ea);
-}
-
-@media (max-width: 760px) {
-    .short-row,
-    .workflow-help {
-        grid-template-columns: 1fr;
-    }
-
-    .schema-field-row,
-    .mapping-row {
-        grid-template-columns: 1fr;
-    }
-}
-`;
-
-  // src/components/admin/Resources/Functions/create/styles/index.ts
-  var styles_default4 = [layout_default3, mapping_default, controls_default2, steps_default].join(`
-`);
-
-  // src/components/admin/Resources/Functions/create/templates/aside.html
-  var aside_default = `
-<details slot="aside" class="side-panel" open>
-    <summary>
-        <strong>Reference guide</strong>
-        <span class="chevron">⌄</span>
-    </summary>
-    <div class="side-body reference-list">
-        <span>Use these values in mappings:</span>
-        <code>$input.params.name</code>
-        <code>$input.body.field</code>
-        <code>$ctx.user.id</code>
-        <code>$ctx.user.role</code>
-        <code>$steps.stepId.field</code>
-    </div>
-</details>
-
-<details slot="aside" class="side-panel">
-    <summary>
-        <strong>Before creating</strong>
-        <span class="chevron">⌄</span>
-    </summary>
-    <div class="side-body checklist">
-        <span>✓ Give every call a unique identifier</span>
-        <span>✓ Reference only earlier steps</span>
-        <span>✓ Keep GET functions free of side effects</span>
-    </div>
-</details>
-
-<div slot="aside" class="status-panel">
-    <strong>Status</strong>
-    <div class="message" data-role="message">Complete the four sections, then create the function.</div>
-</div>
-`;
-
-  // src/components/admin/Resources/Functions/create/templates/general.html
-  var general_default = `<a slot="back" class="back" aria-label="Back to functions">&lt;</a>
-
-<span slot="title">Create function</span>
-
-<div slot="actions" class="header-actions">
-    <button type="button" class="button quiet" data-role="collapse">Collapse all</button>
-    <button type="button" class="button primary" data-role="save">Create function</button>
-</div>
-
-<div slot="main" class="journey-intro">
-    <strong>Build a workflow in four steps</strong>
-    <span>Complete one section at a time. Close it when you are done.</span>
-</div>
-
-<details slot="main" class="editor-panel" open data-panel="general">
-    <summary>
-        <span class="step-number">1</span>
-        <span>
-            <strong>Describe the function</strong>
-            <small>Name the workflow and choose who can execute it.</small>
-        </span>
-        <span class="chevron">⌄</span>
-    </summary>
-
-    <div class="panel-body">
-        <label>
-            Function name
-            <input data-field="name" placeholder="Ship paid order" />
-        </label>
-
-        <label>
-            Identifier
-            <span>Generated from the name. You can adjust it before creation.</span>
-            <input data-field="id" placeholder="shipPaidOrder" />
-        </label>
-
-        <label>
-            Description
-            <span>Explain the outcome, not the implementation.</span>
-            <textarea class="compact" data-field="description"
-                placeholder="Creates a shipment after checking that the order is paid."></textarea>
-        </label>
-
-        <div class="short-row">
-            <label>
-                HTTP method
-                <select data-field="method">
-                    <option>GET</option>
-                    <option selected>POST</option>
-                    <option>PUT</option>
-                    <option>PATCH</option>
-                    <option>DELETE</option>
-                </select>
-            </label>
-
-            <label>
-                Who can execute it?
-                <select data-field="access">
-                    <option value="admin">Administrators</option>
-                    <option value="auth">Authenticated users</option>
-                    <option value="public">Everyone</option>
-                    <option value="system">System only</option>
-                </select>
-            </label>
-        </div>
-    </div>
-</details>
-`;
-
-  // src/components/admin/Resources/Functions/create/templates/input.html
-  var input_default = `
-<details slot="main" class="editor-panel" data-panel="input">
-    <summary>
-        <span class="step-number">2</span>
-        <span>
-            <strong>Define what it receives</strong>
-            <small>Skip this section when callers do not provide data.</small>
-        </span>
-        <span class="chevron">⌄</span>
-    </summary>
-
-    <div class="panel-body">
-        <div class="callout">
-            No input is required by default. Add a schema only when the workflow needs caller-provided data.
-        </div>
-
-        <div class="contract-group">
-            <div class="group-heading">
-                <strong>URL parameters</strong>
-                <span>Each parameter becomes available as <code>$input.params.name</code>.</span>
-            </div>
-            <div data-role="params-schema"></div>
-        </div>
-
-        <div class="contract-group">
-            <div class="group-heading">
-                <strong>Request body fields</strong>
-                <span>Each field becomes available as <code>$input.body.field</code>.</span>
-            </div>
-            <div data-role="body-schema"></div>
-        </div>
-
-        <details class="advanced-panel">
-            <summary>Advanced JSON override</summary>
-            <div class="advanced-body">
-                <label>
-                    Parameters schema
-                    <span>Leave empty to use the visual fields above.</span>
-                    <textarea data-field="params"></textarea>
-                </label>
-                <label>
-                    Body schema
-                    <span>Leave empty to use the visual fields above.</span>
-                    <textarea data-field="body"></textarea>
-                </label>
-            </div>
-        </details>
-    </div>
-</details>
-`;
-
-  // src/components/admin/Resources/Functions/create/templates/return.html
-  var return_default = `
-<details slot="main" class="editor-panel" data-panel="return">
-    <summary>
-        <span class="step-number">4</span>
-        <span>
-            <strong>Choose the result</strong>
-            <small>Return a status and optionally expose workflow data.</small>
-        </span>
-        <span class="chevron">⌄</span>
-    </summary>
-
-    <div class="panel-body">
-        <label class="narrow-field">
-            Success status
-            <input data-field="return-status" type="number" min="200" max="599" value="200" />
-        </label>
-
-        <label>
-            Returned value
-            <span>Choose one of the values produced by the workflow.</span>
-            <div data-role="return-picker"></div>
-        </label>
-
-        <label>
-            Documented responses
-            <span>Optional JSON response contract.</span>
-            <textarea data-field="output"
-                placeholder='Advanced override: [{"status":"200","body":{"type":"object"}}]'></textarea>
-        </label>
-    </div>
-</details>
-`;
-
-  // src/components/admin/Resources/Functions/create/templates/workflow.html
-  var workflow_default = `
-<details slot="main" class="editor-panel" data-panel="workflow">
-    <summary>
-        <span class="step-number">3</span>
-        <span>
-            <strong>Build the workflow</strong>
-            <small>Call endpoints and add business rules in execution order.</small>
-        </span>
-        <span class="chevron">⌄</span>
-    </summary>
-
-    <div class="panel-body">
-        <div class="workflow-help">
-            <div>
-                <strong>Call endpoint</strong>
-                <span>Reads or changes data through an installed source.</span>
-            </div>
-            <div>
-                <strong>Add rule</strong>
-                <span>Stops the function when a condition fails.</span>
-            </div>
-        </div>
-
-        <div class="toolbar">
-            <button type="button" class="button secondary" data-role="add-call">+ Call endpoint</button>
-            <button type="button" class="button secondary" data-role="add-assert">+ Add rule</button>
-        </div>
-
-        <div class="steps" data-role="steps"></div>
-
-        <div class="empty" data-role="steps-empty">
-            <strong>No workflow steps yet.</strong>
-            <span>Add an endpoint call or a business rule above.</span>
-        </div>
-    </div>
-</details>
-`;
-
-  // src/components/admin/Resources/Functions/create/templates/index.ts
-  var templateHtml = [general_default, input_default, workflow_default, return_default, aside_default].join("");
-  function appendCreateTemplate(shell) {
-    const template6 = document.createElement("template");
-    template6.innerHTML = templateHtml;
-    const body = document.createElement("cms-shell-detail-body");
-    body.slot = "body";
-    for (const child of Array.from(template6.content.children)) {
-      (child.slot === "main" || child.slot === "aside" ? body : shell).append(child);
-    }
-    shell.append(body);
-  }
-
-  // src/components/admin/Resources/Functions/create/editor/shell.ts
-  function renderCreateShell(host, state2) {
-    const style = document.createElement("style");
-    style.textContent = styles_default4;
-    if (state2) {
-      const message = document.createElement("div");
-      message.className = "state";
-      message.textContent = state2;
-      host.replaceChildren(style, message);
-      return false;
-    }
-    const shell = document.createElement("cms-shell-detail");
-    shell.className = "create-shell";
-    appendCreateTemplate(shell);
-    shell.querySelector(".back").href = route2("/admin/functions");
-    host.replaceChildren(style, shell);
-    return true;
-  }
-
-  // src/components/admin/Resources/Functions/create/templates/step.html
-  var step_default = `<summary>
-    <span class="step-kind" data-role="kind"></span>
-    <span class="step-summary">
-        <strong data-role="title"></strong>
-        <small data-role="subtitle"></small>
-    </span>
-    <div class="step-actions">
-        <button type="button" data-move="up" aria-label="Move up">↑</button>
-        <button type="button" data-move="down" aria-label="Move down">↓</button>
-        <button type="button" data-remove aria-label="Remove">×</button>
-    </div>
-    <span class="chevron">⌄</span>
-</summary>
-
-<div class="step-fields"></div>
-`;
-
-  // src/components/admin/Resources/Functions/create/editor/callFields.ts
-  function renderCallFields(root, step, context) {
-    const id2 = input(step.id, (value3) => step.id = value3);
-    const source2 = select(context.catalog.map((item) => [item.id, item.label]), step.source, (value3) => {
-      step.source = value3;
-      step.endpoint = context.catalog.find((item) => item.id === value3)?.endpoints[0]?.endpointId ?? "";
-      step.params = {};
-      step.body = {};
-      context.renderSteps();
-    });
-    const endpoints = context.catalog.find((item) => item.id === step.source)?.endpoints ?? [];
-    const endpoint = select(endpoints.map((item) => [item.endpointId, `${item.method} ${item.meta?.name ?? item.endpointId}`]), step.endpoint, (value3) => {
-      step.endpoint = value3;
-      step.params = {};
-      step.body = {};
-      context.renderSteps();
-    });
-    const contract = endpoints.find((item) => item.endpointId === step.endpoint);
-    const references = referencesBefore(context, context.steps.indexOf(step));
-    const paramTargets = (contract?.params ?? []).map((param) => ({
-      path: param.name,
-      label: param.name,
-      required: param.required,
-      shape: {
-        type: dataShapeType(param.type),
-        ...param.semantic ? { semantic: param.semantic } : {}
-      }
-    }));
-    const bodyTargets = targetsFromShape(contract?.body);
-    root.append(grid(field2("Step identifier", id2), field2("Source", source2), field2("Endpoint", endpoint), mappingGroup("Parameter mapping", mappingEditor(paramTargets, references, step.params, "This endpoint has no request parameters.")), mappingGroup("Body mapping", mappingEditor(bodyTargets, references, step.body, "This endpoint has no request body."))));
-  }
-
-  // src/components/admin/Resources/Functions/create/editor/stepCards.ts
-  function stepCard(step, index, context) {
-    const card = document.createElement("details");
-    card.className = "step-card";
-    card.open = true;
-    const body = document.createElement("template");
-    body.innerHTML = step_default;
-    card.append(body.content.cloneNode(true));
-    card.querySelector("[data-role='kind']").textContent = step.kind === "call" ? "CALL" : "RULE";
-    card.querySelector("[data-role='title']").textContent = step.kind === "call" ? step.id || `Step ${index + 1}` : `Business rule ${index + 1}`;
-    card.querySelector("[data-role='subtitle']").textContent = step.kind === "call" ? `${step.source || "Choose a source"}.${step.endpoint || "endpoint"}` : "Execution stops when this condition fails";
-    const fields = card.querySelector(".step-fields");
-    if (step.kind === "call") {
-      renderCallFields(fields, step, context);
-    } else {
-      renderAssertFields(fields, step, context);
-    }
-    card.querySelector("[data-remove]")?.addEventListener("click", (event) => {
-      event.preventDefault();
-      context.steps.splice(index, 1);
-      context.renderSteps();
-    });
-    card.querySelector("[data-move='up']")?.addEventListener("click", (event) => {
-      event.preventDefault();
-      context.moveStep(index, -1);
-    });
-    card.querySelector("[data-move='down']")?.addEventListener("click", (event) => {
-      event.preventDefault();
-      context.moveStep(index, 1);
-    });
-    return card;
-  }
-  function renderAssertFields(root, step, context) {
-    const operator = select([
-      ["equals", "Equals"],
-      ["notEquals", "Not equals"],
-      ["exists", "Exists"],
-      ["in", "In"],
-      ["gt", "Greater than"],
-      ["gte", "Greater or equal"],
-      ["lt", "Less than"],
-      ["lte", "Less or equal"]
-    ], step.operator, (value3) => {
-      step.operator = value3;
-      context.renderSteps();
-    });
-    const references = referencesBefore(context, context.steps.indexOf(step));
-    const children = [field2("Operator", operator), field2("Value to inspect", valuePicker(step.left, references))];
-    if (step.operator !== "exists") {
-      children.push(field2("Expected value", valuePicker(step.right, references)));
-    }
-    children.push(field2("Failure status", input(step.status, (value3) => step.status = value3, "403", "number")));
-    children.push(field2("Failure message", input(step.error, (value3) => step.error = value3, "Condition failed")));
-    root.append(grid(...children));
-  }
-
-  // src/components/admin/Resources/Functions/create/editor/types.ts
-  function newCall(catalog, index) {
-    const source2 = catalog[0];
-    return {
-      kind: "call",
-      id: `step${index + 1}`,
-      source: source2?.id ?? "",
-      endpoint: source2?.endpoints[0]?.endpointId ?? "",
-      params: {},
-      body: {}
-    };
-  }
-  function newAssert() {
-    return {
-      kind: "assert",
-      operator: "equals",
-      left: { mode: "reference", value: "" },
-      right: { mode: "literal", value: "ready" },
-      status: "403",
-      error: "Condition failed"
-    };
-  }
-
-  // src/components/admin/Resources/Functions/create/FunctionCreate.ts
-  class CmsFunctionCreate extends HTMLElement {
-    initialized = false;
-    catalog = [];
-    steps = [];
-    paramsFields = [];
-    bodyFields = [];
-    returnValue = { mode: "reference", value: "" };
-    stepsRoot = null;
-    message = null;
-    saveButton = null;
-    connectedCallback() {
-      if (this.initialized) {
-        return;
-      }
-      this.initialized = true;
-      this.load();
-    }
-    async load() {
-      this.render("Loading source catalog...");
-      try {
-        this.catalog = await fetchFunctionCatalog();
-        this.render();
-      } catch (error) {
-        this.render(error instanceof Error ? error.message : "Failed to load source catalog.");
-      }
-    }
-    render(state2) {
-      if (!renderCreateShell(this, state2)) {
-        return;
-      }
-      this.stepsRoot = this.querySelector("[data-role='steps']");
-      this.message = this.querySelector("[data-role='message']");
-      this.saveButton = this.querySelector("[data-role='save']");
-      this.bindActions();
-      this.renderInputSchemas();
-      this.renderSteps();
-    }
-    bindActions() {
-      this.querySelector("[data-role='add-call']")?.addEventListener("click", () => {
-        this.steps.push(newCall(this.catalog, this.steps.length));
-        this.renderSteps();
-      });
-      this.querySelector("[data-role='add-assert']")?.addEventListener("click", () => {
-        this.steps.push(newAssert());
-        this.renderSteps();
-      });
-      this.querySelector("[data-role='collapse']")?.addEventListener("click", (event) => this.togglePanels(event.currentTarget));
-      this.bindGuidance();
-      this.saveButton?.addEventListener("click", () => void this.save());
-    }
-    bindGuidance() {
-      const name = this.querySelector("[data-field='name']");
-      const id2 = this.querySelector("[data-field='id']");
-      let idWasEdited = false;
-      id2?.addEventListener("input", () => idWasEdited = true);
-      name?.addEventListener("input", () => {
-        if (id2 && !idWasEdited) {
-          id2.value = identifier(name.value);
-        }
-      });
-    }
-    togglePanels(button2) {
-      const panels = Array.from(this.querySelectorAll("details.editor-panel"));
-      const shouldOpen = panels.some((panel) => !panel.open);
-      for (const panel of panels) {
-        panel.open = shouldOpen;
-      }
-      button2.textContent = shouldOpen ? "Collapse all" : "Expand all";
-    }
-    renderSteps() {
-      if (!this.stepsRoot) {
-        return;
-      }
-      const context = this.editorContext();
-      this.stepsRoot.replaceChildren(...this.steps.map((step, index) => stepCard(step, index, context)));
-      const empty = this.querySelector("[data-role='steps-empty']");
-      if (empty) {
-        empty.hidden = this.steps.length > 0;
-      }
-      this.renderReturnPicker();
-    }
-    renderInputSchemas() {
-      const refresh = () => {
-        this.renderInputSchemas();
-        this.renderSteps();
-      };
-      this.querySelector("[data-role='params-schema']")?.replaceChildren(schemaFieldsEditor(this.paramsFields, refresh, false));
-      this.querySelector("[data-role='body-schema']")?.replaceChildren(schemaFieldsEditor(this.bodyFields, refresh));
-    }
-    renderReturnPicker() {
-      this.querySelector("[data-role='return-picker']")?.replaceChildren(valuePicker(this.returnValue, referencesBefore(this.editorContext(), this.steps.length), "No response body"));
-    }
-    move(index, offset) {
-      const target2 = index + offset;
-      if (target2 < 0 || target2 >= this.steps.length) {
-        return;
-      }
-      [this.steps[index], this.steps[target2]] = [this.steps[target2], this.steps[index]];
-      this.renderSteps();
-    }
-    async save() {
-      if (!this.saveButton) {
-        return;
-      }
-      this.setMessage("Validating function...", "");
-      this.saveButton.disabled = true;
-      try {
-        const created = await createFunctionDefinition(buildDefinition(this, this.editorContext(), this.returnValue));
-        window.location.href = route2(`/admin/functions/detail?id=${encodeURIComponent(created.id)}`);
-      } catch (error) {
-        this.setMessage(error instanceof Error ? error.message : "Failed to create function.", "error");
-        this.saveButton.disabled = false;
-      }
-    }
-    editorContext() {
-      return {
-        catalog: this.catalog,
-        steps: this.steps,
-        paramsFields: this.paramsFields,
-        bodyFields: this.bodyFields,
-        renderSteps: () => this.renderSteps(),
-        moveStep: (index, offset) => this.move(index, offset)
-      };
-    }
-    setMessage(text4, kind) {
-      if (!this.message) {
-        return;
-      }
-      this.message.className = `message ${kind}`.trim();
-      this.message.textContent = text4;
-    }
-  }
-  if (!customElements.get("cms-function-create")) {
-    customElements.define("cms-function-create", CmsFunctionCreate);
-  }
-
   // src/components/admin/Resources/Integrations/template.html
   var template_default20 = `<div class="integrations-root">
     <div class="binding-feeds" aria-hidden="true">
@@ -43552,12 +41349,12 @@ details[open] > summary > .chevron {
 `;
 
   // src/components/admin/Resources/Integrations/api.ts
-  function basePath3() {
+  function basePath2() {
     const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
     return raw.replace(/\/+$/, "");
   }
-  function route3(path) {
-    return `${basePath3()}${path}`;
+  function route2(path) {
+    return `${basePath2()}${path}`;
   }
   function currentIntegrationRoute() {
     const params = new URL(window.location.href).searchParams;
@@ -43581,7 +41378,7 @@ details[open] > summary > .chevron {
       params.set("tab", next.tab);
     }
     const suffix = params.toString() ? `?${params.toString()}` : "";
-    return route3(`/admin/sources${suffix}`);
+    return route2(`/admin/sources${suffix}`);
   }
   function pushIntegrationRoute(next) {
     history.pushState(null, "", integrationRouteUrl(next));
@@ -43592,21 +41389,21 @@ details[open] > summary > .chevron {
     window.dispatchEvent(new Event("cms-resources:route"));
   }
   async function importIntegration(payload) {
-    const result = await postJson(route3("/api/integrations/import"), payload);
+    const result = await postJson(route2("/api/integrations/import"), payload);
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     return result;
   }
   async function rerunIntegrationInstallation(id2, answers, resources) {
     const body = { ...answers ? { answers } : {}, ...resources ? { resources } : {} };
-    await postJson(`${route3("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id2)}`, body);
+    await postJson(`${route2("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id2)}`, body);
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
   }
   async function integrationUpgradeVersions(id2) {
-    return getJson(`${route3("/api/integrations/installations/versions")}?id=${encodeURIComponent(id2)}`);
+    return getJson(`${route2("/api/integrations/installations/versions")}?id=${encodeURIComponent(id2)}`);
   }
   async function upgradeIntegrationInstallation(id2, version) {
-    await postJson(`${route3("/api/integrations/installations/upgrade")}?id=${encodeURIComponent(id2)}`, { version });
+    await postJson(`${route2("/api/integrations/installations/upgrade")}?id=${encodeURIComponent(id2)}`, { version });
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
     document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
   }
@@ -43654,9 +41451,9 @@ details[open] > summary > .chevron {
     const definitions = host.query("[data-definitions-source]");
     const installations = host.query("[data-installations-source]");
     const catalogue = host.query("[data-catalogue-source]");
-    definitions.setAttribute("cms-source", `${route3("/api/integrations/list")} as definitions`);
-    installations.setAttribute("cms-source", `${route3("/api/integrations/installations")} as installations`);
-    catalogue.setAttribute("cms-source", `${route3("/api/integrations/catalogue")}?scope=sources&q=#{integrationSearch}&category=#{integrationCategory} as catalogue`);
+    definitions.setAttribute("cms-source", `${route2("/api/integrations/list")} as definitions`);
+    installations.setAttribute("cms-source", `${route2("/api/integrations/installations")} as installations`);
+    catalogue.setAttribute("cms-source", `${route2("/api/integrations/catalogue")}?scope=sources&q=#{integrationSearch}&category=#{integrationCategory} as catalogue`);
     host.observer = new MutationObserver(() => readBoundData(host));
     host.observer.observe(definitions, { attributes: true, childList: true, subtree: true });
     host.observer.observe(installations, { attributes: true, childList: true, subtree: true });
@@ -43723,12 +41520,12 @@ details[open] > summary > .chevron {
       waiter.resolve();
     }
   }
-  function parseArray(value3) {
-    if (!value3) {
+  function parseArray(value2) {
+    if (!value2) {
       return null;
     }
     try {
-      const parsed = JSON.parse(value3);
+      const parsed = JSON.parse(value2);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
@@ -43743,7 +41540,7 @@ details[open] > summary > .chevron {
       return;
     }
     const link = document.createElement("a");
-    link.href = route3("/admin/sources");
+    link.href = route2("/admin/sources");
     link.textContent = "Open sources";
     root.replaceChildren(link);
   }
@@ -43921,10 +41718,10 @@ details[open] > summary > .chevron {
     }
     return icon;
   }
-  function text4(root, selector, value3) {
+  function text4(root, selector, value2) {
     const element = root.querySelector(selector);
     if (element) {
-      element.textContent = String(value3 ?? "");
+      element.textContent = String(value2 ?? "");
     }
   }
   function fillIcon(root, selector, icon) {
@@ -43939,13 +41736,13 @@ details[open] > summary > .chevron {
     const types2 = Array.from(new Set((definition.artifacts ?? []).map((artifact) => artifact.type)));
     return types2.length ? types2.map(typeLabel) : ["No artifacts"];
   }
-  function formatRelativeDate(value3) {
-    if (!value3) {
+  function formatRelativeDate(value2) {
+    if (!value2) {
       return "Never";
     }
-    const date = new Date(value3);
+    const date = new Date(value2);
     if (Number.isNaN(date.getTime())) {
-      return value3;
+      return value2;
     }
     const now = new Date;
     const yesterday = new Date(now);
@@ -44027,15 +41824,15 @@ details[open] > summary > .chevron {
     if (definition.version) {
       params.set("version", definition.version);
     }
-    return route3(`/api/integrations/asset?${params.toString()}`);
+    return route2(`/api/integrations/asset?${params.toString()}`);
   }
   // src/components/admin/Resources/Integrations/ui/resources/render.ts
   function appendBadges(root, labels) {
     root.replaceChildren();
     const visible = labels.slice(0, 4);
     const remaining = labels.length - visible.length;
-    for (const label3 of visible) {
-      root.append(badge(label3));
+    for (const label2 of visible) {
+      root.append(badge(label2));
     }
     if (remaining > 0) {
       const more = badge(`+${remaining} others`);
@@ -44059,14 +41856,14 @@ details[open] > summary > .chevron {
     }
   }
   function renderSummary(root, rows) {
-    const grid2 = cloneElement("summary-grid");
+    const grid = cloneElement("summary-grid");
     for (const row of rows) {
       const element = cloneElement("summary-row");
       text4(element, "[data-label]", row.label);
       text4(element, "[data-value]", row.value);
-      grid2.append(element);
+      grid.append(element);
     }
-    root.replaceChildren(grid2);
+    root.replaceChildren(grid);
   }
   function empty(message) {
     const element = document.createElement("p");
@@ -44074,15 +41871,15 @@ details[open] > summary > .chevron {
     element.textContent = message;
     return element;
   }
-  function badge(label3) {
+  function badge(label2) {
     const element = cloneElement("badge");
-    element.textContent = label3;
+    element.textContent = label2;
     return element;
   }
   // src/components/admin/Resources/Integrations/ui/resources/rows.ts
   function resourceRows(definition) {
     return [
-      ...(definition.artifacts ?? []).map(artifactRow),
+      ...(definition.artifacts ?? []).map(artifactRow).filter((row) => row !== null),
       ...(definition.secrets ?? []).map((secret) => ({
         type: "Secret",
         label: inputLabel(definition, secret.input),
@@ -44101,6 +41898,9 @@ details[open] > summary > .chevron {
     ];
   }
   function artifactRow(artifact) {
+    if (artifact.type === "function" || artifact.type === "trigger") {
+      return null;
+    }
     if (artifact.type === "dashboard") {
       return {
         type: "Dashboard",
@@ -44117,21 +41917,6 @@ details[open] > summary > .chevron {
     }
     if (artifact.type === "bloc") {
       return { type: "Bloc", label: artifact.bloc.name, detail: `Tag: ${artifact.bloc.tag}` };
-    }
-    if (artifact.type === "function") {
-      return {
-        type: "Function",
-        label: artifact.function.meta?.name ?? artifact.function.id,
-        detail: `${artifact.function.method} ${artifact.function.id}`
-      };
-    }
-    if (artifact.type === "trigger") {
-      const event = artifact.trigger.event;
-      return {
-        type: "Trigger",
-        label: artifact.trigger.label ?? artifact.trigger.id,
-        detail: event.kind === "schedule" ? `every ${event.intervalMs}ms -> ${triggerTarget(artifact.trigger)}` : `${event.phase} ${event.source ?? "*"}.${event.endpoint ?? "*"} -> ${triggerTarget(artifact.trigger)}`
-      };
     }
     if (artifact.type === "sourceOverlay") {
       return {
@@ -44160,11 +41945,8 @@ details[open] > summary > .chevron {
       detail: `Source id: ${artifact.source.id}`
     };
   }
-  function triggerTarget(trigger) {
-    return trigger.function?.id ?? trigger.task?.id ?? "unknown";
-  }
   function inputLabel(definition, inputName) {
-    return definition.inputs.find((input2) => input2.name === inputName)?.label ?? inputName;
+    return definition.inputs.find((input) => input.name === inputName)?.label ?? inputName;
   }
   // ../../features/cms-integrations/src/core/definitions/versioning.ts
   var import_semver = __toESM(require_semver2(), 1);
@@ -44195,14 +41977,14 @@ details[open] > summary > .chevron {
       fieldset.append(legend);
       for (const resource of categoryResources) {
         const artifact = artifacts.get(resource.artifact);
-        const label3 = toggle(artifact?.name ?? resource.artifact, "resource", resource.id, active.has(resource.id));
-        label3.classList.add("collection-resource");
+        const label2 = toggle(artifact?.name ?? resource.artifact, "resource", resource.id, active.has(resource.id));
+        label2.classList.add("collection-resource");
         if (resource.endpoints?.length) {
           const hint = document.createElement("small");
           hint.textContent = `Requires ${[...new Set(resource.endpoints.map(({ source: source2 }) => source2))].join(", ")}`;
-          label3.append(hint);
+          label2.append(hint);
         }
-        fieldset.append(label3);
+        fieldset.append(label2);
       }
       root.append(fieldset);
     }
@@ -44219,10 +42001,10 @@ details[open] > summary > .chevron {
       return true;
     }
     if (category) {
-      for (const input2 of Array.from(root.querySelectorAll("[data-collection-resource]"))) {
-        const definitionResource = definition.resources.find(({ id: id2 }) => id2 === input2.dataset.collectionResource);
+      for (const input of Array.from(root.querySelectorAll("[data-collection-resource]"))) {
+        const definitionResource = definition.resources.find(({ id: id2 }) => id2 === input.dataset.collectionResource);
         if (definitionResource?.category === category.dataset.collectionCategory) {
-          input2.checked = category.checked;
+          input.checked = category.checked;
         }
       }
     }
@@ -44248,23 +42030,23 @@ details[open] > summary > .chevron {
     plan.textContent = sources.size ? `Required sources: ${[...sources].map(([kind, version]) => `${kind} ${version}`).join(", ")}` : "This selection does not require a source integration.";
   }
   function syncCategoryToggles(root, definition) {
-    for (const input2 of Array.from(root.querySelectorAll("[data-collection-category]"))) {
-      const ids = collectionSelectableResources(definition).filter(({ category }) => category === input2.dataset.collectionCategory).map(({ id: id2 }) => id2);
+    for (const input of Array.from(root.querySelectorAll("[data-collection-category]"))) {
+      const ids = collectionSelectableResources(definition).filter(({ category }) => category === input.dataset.collectionCategory).map(({ id: id2 }) => id2);
       const selected2 = new Set(selectedCollectionResources(root));
-      input2.checked = ids.every((id2) => selected2.has(id2));
-      input2.indeterminate = !input2.checked && ids.some((id2) => selected2.has(id2));
+      input.checked = ids.every((id2) => selected2.has(id2));
+      input.indeterminate = !input.checked && ids.some((id2) => selected2.has(id2));
     }
   }
   function toggle(labelText, kind, id2, checked) {
-    const label3 = document.createElement("label");
-    const input2 = document.createElement("input");
-    input2.type = "checkbox";
-    input2.checked = checked;
-    input2.dataset[kind === "category" ? "collectionCategory" : "collectionResource"] = id2;
+    const label2 = document.createElement("label");
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = checked;
+    input.dataset[kind === "category" ? "collectionCategory" : "collectionResource"] = id2;
     const text5 = document.createElement("span");
     text5.textContent = labelText;
-    label3.append(input2, text5);
-    return label3;
+    label2.append(input, text5);
+    return label2;
   }
   // src/components/admin/Resources/Integrations/ui/setup.ts
   function renderSetup(host, definition, options2 = {}) {
@@ -44301,43 +42083,43 @@ details[open] > summary > .chevron {
   }
 
   // src/components/admin/Resources/Integrations/ui/actions/installation.ts
-  async function runIntegrationSync(host, button2) {
-    const id2 = button2.dataset.integrationId;
+  async function runIntegrationSync(host, button) {
+    const id2 = button.dataset.integrationId;
     if (!id2) {
       return;
     }
     const status = host.querySelector("[data-action-status]");
-    setBusy(button2, true, "Syncing");
+    setBusy(button, true, "Syncing");
     setStatus(status, "");
     try {
       await rerunIntegrationInstallation(id2);
-      setBusy(button2, false, "Run sync");
+      setBusy(button, false, "Run sync");
       setStatus(status, "Synced");
     } catch (error) {
-      setBusy(button2, false, "Run sync");
+      setBusy(button, false, "Run sync");
       setStatus(status, error instanceof Error ? error.message : "Sync failed", true);
     }
   }
-  async function openIntegrationUpgrade(button2) {
-    const panel = upgradePanel(button2);
+  async function openIntegrationUpgrade(button) {
+    const panel = upgradePanel(button);
     const id2 = panel?.dataset.integrationId;
     if (!panel || !id2) {
       return;
     }
-    setBusy(button2, true, "Checking");
+    setBusy(button, true, "Checking");
     setStatus(statusElement(panel), "Checking available versions...");
     try {
       const choices = await integrationUpgradeVersions(id2);
       renderUpgradeChoices(panel, choices);
-      button2.hidden = choices.versions.length > 0;
-      setBusy(button2, false, choices.versions.length ? "Check again" : "Up to date");
+      button.hidden = choices.versions.length > 0;
+      setBusy(button, false, choices.versions.length ? "Check again" : "Up to date");
     } catch (error) {
-      setBusy(button2, false, "Try again");
+      setBusy(button, false, "Try again");
       setStatus(statusElement(panel), integrationUpgradeErrorMessage(error), true);
     }
   }
-  function cancelIntegrationUpgrade(button2) {
-    const panel = upgradePanel(button2);
+  function cancelIntegrationUpgrade(button) {
+    const panel = upgradePanel(button);
     if (!panel) {
       return;
     }
@@ -44345,37 +42127,37 @@ details[open] > summary > .chevron {
     panel.querySelector("[data-upgrade-open]").hidden = false;
     setStatus(statusElement(panel), "Upgrade cancelled.");
   }
-  async function confirmIntegrationUpgrade(button2) {
-    const panel = upgradePanel(button2);
+  async function confirmIntegrationUpgrade(button) {
+    const panel = upgradePanel(button);
     const id2 = panel?.dataset.integrationId;
-    const select2 = panel?.querySelector("[data-upgrade-target]");
+    const select = panel?.querySelector("[data-upgrade-target]");
     const confirmation = panel?.querySelector("[data-upgrade-confirmation]");
-    if (!panel || !id2 || !select2 || !confirmation) {
+    if (!panel || !id2 || !select || !confirmation) {
       return;
     }
-    const target2 = select2.value;
+    const target2 = select.value;
     if (!target2 || confirmation.value.trim() !== target2) {
       setStatus(statusElement(panel), `Type ${target2 || "the target version"} exactly to confirm.`, true);
       return;
     }
-    setBusy(button2, true, "Upgrading");
+    setBusy(button, true, "Upgrading");
     setStatus(statusElement(panel), `Upgrading to ${target2}...`);
     try {
       await upgradeIntegrationInstallation(id2, target2);
-      setBusy(button2, false, "Upgrade complete");
+      setBusy(button, false, "Upgrade complete");
       setStatus(statusElement(panel), `Upgraded to ${target2}. Installation data is refreshing.`);
     } catch (error) {
-      setBusy(button2, false, "Upgrade");
+      setBusy(button, false, "Upgrade");
       setStatus(statusElement(panel), integrationUpgradeErrorMessage(error), true);
     }
   }
   function renderUpgradeChoices(panel, choices) {
     const form = panel.querySelector("[data-upgrade-form]");
-    const select2 = panel.querySelector("[data-upgrade-target]");
+    const select = panel.querySelector("[data-upgrade-target]");
     const confirmation = panel.querySelector("[data-upgrade-confirmation]");
-    select2.replaceChildren(...choices.versions.map((version) => versionOption(version, choices)));
+    select.replaceChildren(...choices.versions.map((version) => versionOption(version, choices)));
     const preferred = choices.stable ?? choices.latest ?? choices.versions[0] ?? "";
-    select2.value = preferred;
+    select.value = preferred;
     confirmation.value = "";
     confirmation.placeholder = preferred;
     form.hidden = choices.versions.length === 0;
@@ -44397,16 +42179,16 @@ details[open] > summary > .chevron {
     return error.message;
   }
   function versionOption(version, choices) {
-    const option4 = document.createElement("option");
-    option4.value = version;
+    const option2 = document.createElement("option");
+    option2.value = version;
     const channels = [choices.stable === version ? "stable" : "", choices.latest === version ? "latest" : ""].filter(Boolean);
     const target2 = choices.targets?.find((candidate) => candidate.version === version);
     const labels = [
       ...channels,
       ...target2?.migrations.map((migration) => `${migration.connectorKey} from ${migration.supportedSourceRange}; rollback ${migration.rollback}`) ?? []
     ];
-    option4.textContent = labels.length ? `${version} (${labels.join(", ")})` : version;
-    return option4;
+    option2.textContent = labels.length ? `${version} (${labels.join(", ")})` : version;
+    return option2;
   }
   function upgradeSummary(choices) {
     const unavailable = choices.targets?.filter((target2) => !target2.eligible) ?? [];
@@ -44421,7 +42203,7 @@ details[open] > summary > .chevron {
     ].join(" ");
   }
   function migrationSummary(version, migration) {
-    const drains = [migration.cmsDrainSeconds, migration.providerDrainSeconds].filter((value3) => value3 !== undefined);
+    const drains = [migration.cmsDrainSeconds, migration.providerDrainSeconds].filter((value2) => value2 !== undefined);
     const drain = drains.length > 0 ? `; drain ${Math.max(...drains)}s` : "; drain not declared";
     const downtime = migration.downtimeStatus === undefined ? "; downtime evidence not recorded" : migration.downtimeStatus === "not-measured" ? "; downtime not measured" : migration.observedDowntimeSeconds === undefined ? `; downtime ${migration.downtimeStatus}` : `; downtime ${migration.downtimeStatus} ${migration.observedDowntimeSeconds}s`;
     const pointObservation = migration.pointOfNoReturnObservation ?? "not recorded";
@@ -44430,11 +42212,11 @@ details[open] > summary > .chevron {
     const activation = executionStatusSummary("activation", migration.activationOutcome);
     return `${version} / ${migration.connectorKey}: tested migration ${migration.supportedSourceRange}; ${cmsCutover}; ${providerCutover}; ${activation}; ${migration.rollback} rollback (${migration.rollbackVerified ? "verified" : "not verified"}); PONR ${migration.pointOfNoReturn} (${pointObservation})${drain}${downtime}`;
   }
-  function cutoverExecutionSummary(label3, strategy, outcome) {
-    return `${label3} ${strategy} (${executionStatus(outcome)})`;
+  function cutoverExecutionSummary(label2, strategy, outcome) {
+    return `${label2} ${strategy} (${executionStatus(outcome)})`;
   }
-  function executionStatusSummary(label3, outcome) {
-    return `${label3} ${executionStatus(outcome)}`;
+  function executionStatusSummary(label2, outcome) {
+    return `${label2} ${executionStatus(outcome)}`;
   }
   function executionStatus(outcome) {
     if (outcome === undefined) {
@@ -44458,9 +42240,9 @@ details[open] > summary > .chevron {
   function statusElement(panel) {
     return panel.querySelector("[data-upgrade-status]");
   }
-  function setBusy(element, busy, label3) {
+  function setBusy(element, busy, label2) {
     element.toggleAttribute("aria-busy", busy);
-    element.textContent = label3;
+    element.textContent = label2;
   }
   function setStatus(element, message, error = false) {
     if (!element) {
@@ -45404,7 +43186,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Integrations/ui/styles/index.ts
-  var styles_default5 = [base_default4, browser_default2, detail_default, setup_default2, states_default2, responsive_default].join(`
+  var styles_default4 = [base_default4, browser_default2, detail_default, setup_default2, states_default2, responsive_default].join(`
 `);
 
   // src/components/admin/Resources/Integrations/IntegrationBrowser.ts
@@ -45476,14 +43258,14 @@ button[slot="back"]:disabled {
       this.addEventListener("click", (event) => void handleClick(this, event));
     }
     renderRoute() {
-      const route4 = currentIntegrationRoute();
-      if (route4.view === "installation") {
-        return this.showInstallation(route4.id);
+      const route3 = currentIntegrationRoute();
+      if (route3.view === "installation") {
+        return this.showInstallation(route3.id);
       }
-      if (route4.view === "setup") {
-        return this.showSetup(route4.kind);
+      if (route3.view === "setup") {
+        return this.showSetup(route3.kind);
       }
-      this.showList(route4.tab);
+      this.showList(route3.tab);
     }
     showList(tab) {
       this.selectedIntegrationId = "";
@@ -45523,7 +43305,7 @@ button[slot="back"]:disabled {
     onPopState = () => this.renderAll();
     mountTemplate() {
       const style = document.createElement("style");
-      style.textContent = styles_default5;
+      style.textContent = styles_default4;
       const body = document.createElement("template");
       body.innerHTML = template_default20;
       this.replaceChildren(style, body.content.cloneNode(true));
@@ -45568,8 +43350,8 @@ button[slot="back"]:disabled {
     const fresh = !failed && health?.observation === "valid" && health.freshness === "fresh";
     const ready = fresh && report?.status === "ready" && report.checks.every((check) => check.status === "ok");
     const count = report ? `${report.checks.filter((check) => check.status === "ok").length}/${report.checks.length} checks passed${fresh ? "" : " · last observation"}` : "No check results";
-    const label3 = failed ? "Unavailable" : !health ? "Checking service…" : !fresh ? health.freshness === "stale" ? "Stale observation" : "Not observed" : report?.status.replaceAll("_", " ") ?? "Unknown";
-    return { ready, observed: Boolean(fresh && report), label: ready ? "✓ Ready" : label3, count };
+    const label2 = failed ? "Unavailable" : !health ? "Checking service…" : !fresh ? health.freshness === "stale" ? "Stale observation" : "Not observed" : report?.status.replaceAll("_", " ") ?? "Unknown";
+    return { ready, observed: Boolean(fresh && report), label: ready ? "✓ Ready" : label2, count };
   }
 
   // src/static/admin/_operations/health/summary.html
@@ -45591,18 +43373,18 @@ button[slot="back"]:disabled {
         template6.innerHTML = summary_default;
         this.replaceChildren(template6.content.cloneNode(true));
         hc(this, () => {
-          const summary2 = summarizeHealth(et(this));
-          return { healthStatus: summary2.label, healthCount: summary2.count };
+          const summary = summarizeHealth(et(this));
+          return { healthStatus: summary.label, healthCount: summary.count };
         });
         this.mounted = true;
       }
       this.sync();
-      this.stop = qd(this, (state2) => {
-        const summary2 = summarizeHealth(state2.data, Boolean(state2.error || state2.refreshError));
-        this.closest("cms-health-row")?.setAttribute("health-state", summary2.ready ? "ready" : summary2.observed ? "attention" : "unknown");
+      this.stop = qd(this, (state) => {
+        const summary = summarizeHealth(state.data, Boolean(state.error || state.refreshError));
+        this.closest("cms-health-row")?.setAttribute("health-state", summary.ready ? "ready" : summary.observed ? "attention" : "unknown");
         this.dispatchEvent(new CustomEvent("health:observation", {
           bubbles: true,
-          detail: { id: this.getAttribute("installation-id"), ...summary2 }
+          detail: { id: this.getAttribute("installation-id"), ...summary }
         }));
       });
     }
@@ -45623,7 +43405,7 @@ button[slot="back"]:disabled {
         return;
       }
       const event = `health:summary:${encodeURIComponent(id2)}`;
-      const source2 = `${route3("/api/integrations/management/health")}?id=${encodeURIComponent(id2)}${refresh ? "&refresh=true" : ""} as health`;
+      const source2 = `${route2("/api/integrations/management/health")}?id=${encodeURIComponent(id2)}${refresh ? "&refresh=true" : ""} as health`;
       this.setAttribute("cms-reload-on", event);
       if (this.getAttribute("cms-source") !== source2) {
         this.setAttribute("cms-source", source2);
@@ -45666,7 +43448,7 @@ details[open] svg { transform: rotate(180deg); }
       checks = (report?.checks ?? []).map((check, index) => {
         const previous = checks[index];
         const row = previous?.id === check.id ? previous : { id: check.id, summary: "", actions: [] };
-        row.summary = `${label3(check.status)} · ${check.message || check.code || check.id}`;
+        row.summary = `${label2(check.status)} · ${check.message || check.code || check.id}`;
         row.actions = (check.actionIds ?? []).flatMap((id2) => {
           const action = actions.get(id2);
           return action ? [action] : [];
@@ -45676,7 +43458,7 @@ details[open] svg { transform: rotate(180deg); }
       steps = (report?.operation?.steps ?? []).map((step, index) => {
         const previous = steps[index];
         const row = previous?.id === step.id ? previous : { id: step.id, status: "" };
-        row.status = label3(step.status);
+        row.status = label2(step.status);
         return row;
       });
       return {
@@ -45685,23 +43467,23 @@ details[open] svg { transform: rotate(180deg); }
           hasReport: Boolean(report),
           checks,
           steps,
-          observation: health ? `Observation: ${label3(health.observation)} · ${label3(health.freshness)} · ${date(health.observedAt)}` : "",
-          issue: health?.reason ? `Observation issue: ${label3(health.reason)}${health.httpStatus ? ` (HTTP ${health.httpStatus})` : ""}` : "",
+          observation: health ? `Observation: ${label2(health.observation)} · ${label2(health.freshness)} · ${date(health.observedAt)}` : "",
+          issue: health?.reason ? `Observation issue: ${label2(health.reason)}${health.httpStatus ? ` (HTTP ${health.httpStatus})` : ""}` : "",
           version: health?.reportDefinitionVersion ?? "",
-          service: report ? `${health.freshness === "fresh" ? "Service" : "Last observed service"}: ${label3(report.status)}` : "",
+          service: report ? `${health.freshness === "fresh" ? "Service" : "Last observed service"}: ${label2(report.status)}` : "",
           checked: report ? `Checked ${date(report.checkedAt)}` : "",
           configuration: report ? configurationStatus(health) : "",
-          operation: report?.operation ? `Operation ${report.operation.id}: ${label3(report.operation.status)}` : ""
+          operation: report?.operation ? `Operation ${report.operation.id}: ${label2(report.operation.status)}` : ""
         }
       };
     };
   }
-  function date(value3) {
-    const parsed = new Date(value3);
-    return Number.isNaN(parsed.getTime()) ? value3 : parsed.toLocaleString();
+  function date(value2) {
+    const parsed = new Date(value2);
+    return Number.isNaN(parsed.getTime()) ? value2 : parsed.toLocaleString();
   }
-  function label3(value3) {
-    return value3.replaceAll("_", " ");
+  function label2(value2) {
+    return value2.replaceAll("_", " ");
   }
   function configurationStatus(health) {
     const { savedRevision, appliedRevision } = health.report.configuration;
@@ -45759,7 +43541,7 @@ details[open] svg { transform: rotate(180deg); }
   function mountHealth(root, id2, management, run) {
     const host = document.createElement("div");
     host.dataset.integrationHealth = "";
-    const url = `${route3("/api/integrations/management/health")}?id=${encodeURIComponent(id2)}`;
+    const url = `${route2("/api/integrations/management/health")}?id=${encodeURIComponent(id2)}`;
     const reload = `integration:${encodeURIComponent(id2)}:health:reload`;
     host.setAttribute("cms-source", `${url} as health`);
     host.setAttribute("cms-reload-on", reload);
@@ -45769,15 +43551,15 @@ details[open] svg { transform: rotate(180deg); }
     let loading = true;
     const project = healthContext(management);
     hc(host, () => {
-      const value3 = et(host);
-      return { ...project(value3 ?? undefined), healthBusy: loading };
+      const value2 = et(host);
+      return { ...project(value2 ?? undefined), healthBusy: loading };
     });
-    const stop = qd(host, (state2) => {
-      if (state2.disposed) {
+    const stop = qd(host, (state) => {
+      if (state.disposed) {
         stop();
         return;
       }
-      const pending = state2.loading || state2.refreshing === true;
+      const pending = state.loading || state.refreshing === true;
       if (loading !== pending) {
         loading = pending;
         Zi(host);
@@ -45817,16 +43599,16 @@ details[open] svg { transform: rotate(180deg); }
       modal.setAttribute("aria-label", action.label);
       modal.querySelector('[slot="title"]').textContent = action.label;
       const form = modal.querySelector("form");
-      form.setAttribute("cms-source", `${route3("/api/integrations/management/action")}?id=${encodeURIComponent(id2)} as result`);
+      form.setAttribute("cms-source", `${route2("/api/integrations/management/action")}?id=${encodeURIComponent(id2)} as result`);
       form.setAttribute("cms-source-method", "POST");
-      const input2 = document.createElement("input");
-      input2.type = "hidden";
-      input2.name = "actionId";
-      input2.value = action.id;
-      form.prepend(input2);
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "actionId";
+      input.value = action.id;
+      form.prepend(input);
       const stack = form.querySelector("[data-operation-fields]");
-      for (const field3 of action.fields ?? []) {
-        stack.append(fieldElement(field3, "actionValues", { valuesPath: "input" }));
+      for (const field2 of action.fields ?? []) {
+        stack.append(fieldElement(field2, "actionValues", { valuesPath: "input" }));
       }
       hc(form, () => ({ actionValues: {} }));
       const submit = formPart("submit");
@@ -45889,19 +43671,19 @@ details[open] svg { transform: rotate(180deg); }
       template6.innerHTML = operations_default;
       this.replaceChildren(template6.content.cloneNode(true));
       this.id = `health-installation-${encodeURIComponent(id2)}`;
-      this.setAttribute("cms-source", `${route3("/api/integrations/installations")}?id=${encodeURIComponent(id2)} as integration`);
+      this.setAttribute("cms-source", `${route2("/api/integrations/installations")}?id=${encodeURIComponent(id2)} as integration`);
       this.setAttribute("cms-reload-on", `health:detail:${encodeURIComponent(this.getAttribute("installation-id"))}`);
       const sync = this.querySelector("[data-sync-form]");
-      sync.setAttribute("cms-source", `${route3("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id2)} as result`);
+      sync.setAttribute("cms-source", `${route2("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id2)} as result`);
       sync.setAttribute("cms-source-success-reload", `#${this.id}`);
       this.querySelector("[data-upgrade-panel]").dataset.integrationId = id2;
       hc(this, () => {
         const installation = et(this);
         return { healthHasActions: Boolean(installation?.definition?.management?.actions?.length) };
       });
-      this.stop = qd(this, (state2) => {
-        const installation = state2.data;
-        if (installation?.id === id2 && !state2.loading && !state2.error) {
+      this.stop = qd(this, (state) => {
+        const installation = state.data;
+        if (installation?.id === id2 && !state.loading && !state.error) {
           const management = installation.definition?.management ?? { schemaVersion: 1 };
           const signature = JSON.stringify(management);
           if (this.health && signature === this.managementSignature) {
@@ -46133,15 +43915,15 @@ details[open] svg { transform: rotate(180deg); }
           return previous?.id === item.id ? Object.assign(previous, values) : values;
         });
         const statuses = items.map((item) => this.observations.get(item.id));
-        const ready = statuses.filter((state2, index) => state2?.ready && rows[index]?.status === "success").length;
-        const observed = statuses.filter((state2) => state2?.observed).length;
+        const ready = statuses.filter((state, index) => state?.ready && rows[index]?.status === "success").length;
+        const observed = statuses.filter((state) => state?.observed).length;
         return {
           healthItems: items,
           healthTotal: `${ready}/${items.length} integrations ready`,
           healthCoverage: `${observed} observed · ${items.length - observed} awaiting valid checks`
         };
       });
-      this.setAttribute("cms-source", `${route3("/api/integrations/installations")} as installations`);
+      this.setAttribute("cms-source", `${route2("/api/integrations/installations")} as installations`);
       this.setAttribute("cms-reload-on", "health:installations");
       this.addEventListener("click", this.refresh);
       this.addEventListener("health:observation", this.observation);
@@ -46165,8 +43947,8 @@ details[open] svg { transform: rotate(180deg); }
     };
     reload = () => {
       this.ownerDocument.dispatchEvent(new Event("health:installations"));
-      for (const summary2 of Array.from(this.querySelectorAll("cms-health-summary, cms-health-operations"))) {
-        summary2.refresh();
+      for (const summary of Array.from(this.querySelectorAll("cms-health-summary, cms-health-operations"))) {
+        summary.refresh();
       }
     };
   }
@@ -46215,7 +43997,7 @@ details[open] svg { transform: rotate(180deg); }
   }
 
   // src/components/admin/Resources/Blocs/workspace/style.css
-  var style_default17 = `cms-collection-workspace { display: contents; }
+  var style_default16 = `cms-collection-workspace { display: contents; }
 cms-collection-workspace [hidden] { display: none !important; }
 cms-collection-workspace .collection-overview,
 cms-collection-workspace .collection-blocs { display: contents; }
@@ -47160,8 +44942,8 @@ cms-collection-workspace .collection-text-table tbody td {
   // src/components/admin/Resources/Blocs/workspace/ThemeSpecimen/mode.ts
   var MODES = new Set(["compare", "light", "dark"]);
   var STORAGE_KEY = "cms:collection-theme-preview-mode";
-  function isPreviewMode(value3) {
-    return Boolean(value3 && MODES.has(value3));
+  function isPreviewMode(value2) {
+    return Boolean(value2 && MODES.has(value2));
   }
   function initialPreviewMode() {
     const stored = sessionStorage.getItem(STORAGE_KEY) ?? undefined;
@@ -47175,17 +44957,17 @@ cms-collection-workspace .collection-text-table tbody td {
     if (persist) {
       sessionStorage.setItem(STORAGE_KEY, mode);
     }
-    for (const button2 of Array.from(host.shadowRoot.querySelectorAll("[data-preview-mode]"))) {
-      button2.setAttribute("aria-pressed", String(button2.dataset.previewMode === mode));
+    for (const button of Array.from(host.shadowRoot.querySelectorAll("[data-preview-mode]"))) {
+      button.setAttribute("aria-pressed", String(button.dataset.previewMode === mode));
     }
     const sharedFocusValue = host.dataset.previewView === "focus" && host.hasAttribute("data-shared-value");
     for (const panel of panels) {
       const panelMode = panel.dataset.themePanel;
       const visible = mode === "compare" ? !sharedFocusValue || panelMode === "light" : mode === panelMode;
       panel.toggleAttribute("hidden", !visible);
-      const label4 = panel.querySelector(".mode-label");
-      if (label4) {
-        label4.textContent = mode === "compare" && sharedFocusValue && panelMode === "light" ? "Light and dark" : panelMode === "light" ? "Light" : "Dark";
+      const label3 = panel.querySelector(".mode-label");
+      if (label3) {
+        label3.textContent = mode === "compare" && sharedFocusValue && panelMode === "light" ? "Light and dark" : panelMode === "light" ? "Light" : "Dark";
       }
     }
   }
@@ -47193,37 +44975,37 @@ cms-collection-workspace .collection-text-table tbody td {
   // src/components/admin/Resources/Blocs/workspace/ThemeSpecimen/model.ts
   var VARIABLE = /^[a-z][a-z0-9-]*$/;
   function readPreviewBindings(raw) {
-    const value3 = parseJson4(raw, {});
-    if (!value3 || typeof value3 !== "object" || Array.isArray(value3)) {
+    const value2 = parseJson2(raw, {});
+    if (!value2 || typeof value2 !== "object" || Array.isArray(value2)) {
       return {};
     }
-    return Object.fromEntries(Object.entries(value3).filter((entry) => VARIABLE.test(entry[0]) && typeof entry[1] === "string" && VARIABLE.test(entry[1])));
+    return Object.fromEntries(Object.entries(value2).filter((entry) => VARIABLE.test(entry[0]) && typeof entry[1] === "string" && VARIABLE.test(entry[1])));
   }
   function readPreviewTokens(raw) {
-    const value3 = parseJson4(raw, []);
-    return Array.isArray(value3) ? value3.filter(isPreviewToken) : [];
+    const value2 = parseJson2(raw, []);
+    return Array.isArray(value2) ? value2.filter(isPreviewToken) : [];
   }
   function readPreviewVariables(raw) {
-    const value3 = parseJson4(raw, []);
-    return new Set(Array.isArray(value3) ? value3.filter((variable) => typeof variable === "string" && VARIABLE.test(variable)) : []);
+    const value2 = parseJson2(raw, []);
+    return new Set(Array.isArray(value2) ? value2.filter((variable) => typeof variable === "string" && VARIABLE.test(variable)) : []);
   }
-  function parseJson4(raw, fallback) {
+  function parseJson2(raw, fallback) {
     try {
       return JSON.parse(raw ?? JSON.stringify(fallback));
     } catch {
       return fallback;
     }
   }
-  function isPreviewToken(value3) {
-    if (!value3 || typeof value3 !== "object") {
+  function isPreviewToken(value2) {
+    if (!value2 || typeof value2 !== "object") {
       return false;
     }
-    const token = value3;
+    const token = value2;
     return Boolean(token.variable && VARIABLE.test(token.variable) && typeof token.light === "string" && typeof token.dark === "string");
   }
 
   // src/components/admin/Resources/Blocs/workspace/ThemeSpecimen/style.css
-  var style_default18 = `:host { display: block; min-width: 0; color: var(--text-main); }
+  var style_default17 = `:host { display: block; min-width: 0; color: var(--text-main); }
 [hidden] { display: none !important; }
 .workbench { min-width: 0; overflow: hidden; background: var(--bg-base); }
 .toolbar {
@@ -47559,7 +45341,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
     panels;
     appliedVariables = new Set;
     constructor() {
-      super({ css: style_default18, template: template_default21 });
+      super({ css: style_default17, template: template_default21 });
       this.panels = this.createPanels();
     }
     static get observedAttributes() {
@@ -47638,13 +45420,13 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
       applyPreviewBindings(panel, bindings, byVariable);
       panel.style.setProperty("--spec-active", active ? `var(--${active.variable})` : "transparent");
       const visual = panel.querySelector("[data-active-visual]");
-      const value3 = panel.querySelector("[data-active-value]");
+      const value2 = panel.querySelector("[data-active-value]");
       if (visual) {
         visual.dataset.activeType = this.getAttribute("token-type") ?? "value";
         visual.querySelector("span").textContent = activeGlyph(visual.dataset.activeType);
       }
-      if (value3) {
-        value3.textContent = active?.[mode] ?? "";
+      if (value2) {
+        value2.textContent = active?.[mode] ?? "";
       }
     }
     applySelection(bindings, view, active) {
@@ -47680,7 +45462,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
   }
 
   // src/components/admin/Resources/Blocs/workspace/TokenPreview/style.css
-  var style_default19 = `:host {
+  var style_default18 = `:host {
     display: inline-grid;
     width: 38px;
     height: 38px;
@@ -47780,7 +45562,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
     measure;
     surface;
     constructor() {
-      super({ css: style_default19, template: template_default22 });
+      super({ css: style_default18, template: template_default22 });
       this.lightColor = this.shadowRoot.querySelector(".color-light");
       this.darkColor = this.shadowRoot.querySelector(".color-dark");
       this.glyph = this.shadowRoot.querySelector(".glyph");
@@ -47811,12 +45593,12 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
       this.measure.style.width = type === "length" ? light : "";
     }
   }
-  function glyphFor(type, value3) {
+  function glyphFor(type, value2) {
     if (type === "font-family") {
       return "Aa";
     }
     if (type === "number") {
-      return value3 || "1.0";
+      return value2 || "1.0";
     }
     return type === "value" ? "••" : "";
   }
@@ -48136,7 +45918,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/styles/index.ts
-  var styles_default6 = [String(part_1_default3), String(part_2_default3)].join(`
+  var styles_default5 = [String(part_1_default3), String(part_2_default3)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/topBarEvents.ts
@@ -48148,35 +45930,35 @@ button:hover {
   var TOPBAR_DELETE_EVENT = "editor-v2:topbar-delete-document";
   var TOPBAR_PAGE_SETTINGS_EVENT = "editor-v2:page-settings";
   function handleTopBarClick(host, event, handlers) {
-    const button2 = event.target?.closest("button");
-    if (!button2) {
+    const button = event.target?.closest("button");
+    if (!button) {
       return;
     }
-    const viewport = button2.dataset.viewport;
+    const viewport = button.dataset.viewport;
     if (viewport) {
       handlers.setViewport(viewport);
       return;
     }
-    const mode = button2.dataset.editorMode;
+    const mode = button.dataset.editorMode;
     if (mode) {
       handlers.setMode(mode);
       return;
     }
-    const sourceState = button2.dataset.sourceState;
+    const sourceState = button.dataset.sourceState;
     if (sourceState) {
       handlers.setSourceState(sourceState);
       return;
     }
-    const eventName = actionEventName(button2.dataset.action);
+    const eventName = actionEventName(button.dataset.action);
     if (eventName) {
       host.dispatchEvent(new CustomEvent(eventName, { bubbles: true, composed: true }));
     }
   }
-  function syncTopBarButtonGroup(root, selector, dataKey, value3) {
-    for (const button2 of Array.from(root.querySelectorAll(selector))) {
-      const isActive = button2.dataset[dataKey] === value3;
-      button2.classList.toggle("active", isActive);
-      button2.setAttribute("aria-pressed", String(isActive));
+  function syncTopBarButtonGroup(root, selector, dataKey, value2) {
+    for (const button of Array.from(root.querySelectorAll(selector))) {
+      const isActive = button.dataset[dataKey] === value2;
+      button.classList.toggle("active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
     }
   }
   function actionEventName(action) {
@@ -48197,7 +45979,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
   var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(styles_default6)}</style>${String(template_default23)}`;
+  template6.innerHTML = `<style>${String(styles_default5)}</style>${String(template_default23)}`;
 
   class TopBar extends HTMLElement {
     _viewport = "bleed";
@@ -48233,21 +46015,21 @@ button:hover {
     set sourceState(sourceState) {
       this._setSourceState(sourceState, false);
     }
-    set saveStatus(label4) {
+    set saveStatus(label3) {
       const target2 = this.shadowRoot.querySelector(".save-label") ?? this.shadowRoot.querySelector('[data-action="save"]');
       if (target2) {
-        target2.textContent = label4;
+        target2.textContent = label3;
       }
     }
-    setPageTitle(title2, path) {
-      this.shadowRoot.querySelector(".name").textContent = title2;
+    setPageTitle(title, path) {
+      this.shadowRoot.querySelector(".name").textContent = title;
       this.shadowRoot.querySelector(".path").textContent = path;
     }
-    setNavigation(input2) {
+    setNavigation(input) {
       const back = this.shadowRoot.querySelector(".back");
-      back.setAttribute("href", input2.backHref);
-      this.shadowRoot.querySelector(".back-label").textContent = input2.backLabel;
-      this.shadowRoot.querySelector(".settings-label").textContent = input2.settingsLabel;
+      back.setAttribute("href", input.backHref);
+      this.shadowRoot.querySelector(".back-label").textContent = input.backLabel;
+      this.shadowRoot.querySelector(".settings-label").textContent = input.settingsLabel;
     }
     setDeleteVisible(visible) {
       this.shadowRoot.querySelector('[data-action="delete"]').hidden = !visible;
@@ -48342,7 +46124,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
-  var style_default20 = `:host {
+  var style_default19 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -48442,7 +46224,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default20)}</style>${String(template_default24)}`;
+  template7.innerHTML = `<style>${String(style_default19)}</style>${String(template_default24)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -48453,9 +46235,9 @@ button:hover {
       this._syncHeaderVisibility();
     }
     _syncHeaderVisibility() {
-      const title2 = this.querySelector("[slot='title']");
+      const title = this.querySelector("[slot='title']");
       const action = this.querySelector("[slot='action']");
-      this.toggleAttribute("has-header", Boolean(title2 || action));
+      this.toggleAttribute("has-header", Boolean(title || action));
     }
   }
   if (!customElements.get("cms-editor-v2-panel")) {
@@ -48487,24 +46269,24 @@ button:hover {
       return {};
     }
     const params = {};
-    for (const [name, value3] of new URLSearchParams(query4).entries()) {
-      params[name] = paramValue(value3);
+    for (const [name, value2] of new URLSearchParams(query4).entries()) {
+      params[name] = paramValue(value2);
     }
     return params;
   }
-  function paramValue(value3) {
-    const queryParam = parseQueryParamToken(value3);
+  function paramValue(value2) {
+    const queryParam = parseQueryParamToken(value2);
     if (queryParam) {
       return { from: "queryParam", name: queryParam };
     }
-    const state2 = tokenValue2(value3, "@");
-    if (state2) {
-      return { from: "state", name: state2 };
+    const state = tokenValue2(value2, "@");
+    if (state) {
+      return { from: "state", name: state };
     }
-    return { from: "raw", value: value3 };
+    return { from: "raw", value: value2 };
   }
-  function tokenValue2(value3, prefix) {
-    const match = new RegExp(`^\\${prefix}\\{([^}]+)\\}$`).exec(value3);
+  function tokenValue2(value2, prefix) {
+    const match = new RegExp(`^\\${prefix}\\{([^}]+)\\}$`).exec(value2);
     return match?.[1]?.trim() || null;
   }
   function bindingQuery(sourceUrl2, bindingUrl) {
@@ -48547,14 +46329,14 @@ button:hover {
       const name = row.dataset.paramName;
       const modeElement = row.querySelector(".param-mode");
       const mode = modeElement ? selectedMode(modeElement) : "queryParam";
-      const input2 = row.querySelector(".param-value");
-      const rawValue = input2?.value.trim();
-      setQueryParamValidity(input2, true);
+      const input = row.querySelector(".param-value");
+      const rawValue = input?.value.trim();
+      setQueryParamValidity(input, true);
       if (!name || !rawValue) {
         continue;
       }
       if (kind === "param" && mode === "queryParam" && !isCmsQueryParamName(rawValue)) {
-        setQueryParamValidity(input2, false);
+        setQueryParamValidity(input, false);
         valid = false;
         continue;
       }
@@ -48566,28 +46348,28 @@ button:hover {
     }
     return valid ? params : null;
   }
-  function setQueryParamValidity(input2, valid) {
-    if (!input2) {
+  function setQueryParamValidity(input, valid) {
+    if (!input) {
       return;
     }
     if (valid) {
-      input2.removeAttribute("aria-invalid");
+      input.removeAttribute("aria-invalid");
     } else {
-      input2.setAttribute("aria-invalid", "true");
+      input.setAttribute("aria-invalid", "true");
     }
-    input2.setCustomValidity?.(valid ? "" : QUERY_PARAM_ERROR);
+    input.setCustomValidity?.(valid ? "" : QUERY_PARAM_ERROR);
     if (!valid) {
-      input2.focus();
-      input2.reportValidity?.();
+      input.focus();
+      input.reportValidity?.();
     }
   }
-  function selectedMode(select2) {
-    const value3 = select2.options[select2.selectedIndex]?.value;
-    return value3 === "raw" || value3 === "state" ? value3 : "queryParam";
+  function selectedMode(select) {
+    const value2 = select.options[select.selectedIndex]?.value;
+    return value2 === "raw" || value2 === "state" ? value2 : "queryParam";
   }
-  function selectedTrigger(select2) {
-    const value3 = select2?.options[select2.selectedIndex]?.value;
-    return value3 === "submit" || value3 === "change" ? value3 : "auto";
+  function selectedTrigger(select) {
+    const value2 = select?.options[select.selectedIndex]?.value;
+    return value2 === "submit" || value2 === "change" ? value2 : "auto";
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerEvents.ts
@@ -48629,13 +46411,13 @@ button:hover {
       return;
     }
     for (const group of groups) {
-      const button2 = document.createElement("button");
-      button2.className = "provider";
-      button2.type = "button";
-      button2.ariaPressed = String(group.key === activeProvider);
-      button2.innerHTML = `<span>${escapeHtml3(group.label)}</span><span class="count">${group.count}</span>`;
-      button2.addEventListener("click", () => onSelect(group.key));
-      container.append(button2);
+      const button = document.createElement("button");
+      button.className = "provider";
+      button.type = "button";
+      button.ariaPressed = String(group.key === activeProvider);
+      button.innerHTML = `<span>${escapeHtml3(group.label)}</span><span class="count">${group.count}</span>`;
+      button.addEventListener("click", () => onSelect(group.key));
+      container.append(button);
     }
   }
   function renderSourceButtons(container, sources, activeSource, onSelect, onConfirm) {
@@ -48645,10 +46427,10 @@ button:hover {
       return;
     }
     for (const source2 of sources) {
-      const button2 = document.createElement("button");
-      button2.className = "source";
-      button2.type = "button";
-      button2.ariaSelected = String(source2 === activeSource);
+      const button = document.createElement("button");
+      button.className = "source";
+      button.type = "button";
+      button.ariaSelected = String(source2 === activeSource);
       const header = document.createElement("span");
       header.className = "source-header";
       const method = document.createElement("span");
@@ -48664,10 +46446,10 @@ button:hover {
       const url = document.createElement("span");
       url.className = "url";
       url.textContent = source2.url;
-      button2.append(header, description, url);
-      button2.addEventListener("click", () => onSelect(source2));
-      button2.addEventListener("dblclick", () => onConfirm(source2));
-      container.append(button2);
+      button.append(header, description, url);
+      button.addEventListener("click", () => onSelect(source2));
+      button.addEventListener("dblclick", () => onConfirm(source2));
+      container.append(button);
     }
   }
   function empty2(message) {
@@ -48676,8 +46458,8 @@ button:hover {
     element.textContent = message;
     return element;
   }
-  function escapeHtml3(value3) {
-    return value3.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+  function escapeHtml3(value2) {
+    return value2.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceBindingRows.ts
@@ -48697,9 +46479,9 @@ button:hover {
   }
   function bodyBindingFields(fields) {
     const rows = [];
-    for (const field3 of fields) {
-      if (field3.path !== "." && field3.type !== "object" && field3.type !== "array") {
-        rows.push({ name: field3.path, type: field3.type, required: field3.required });
+    for (const field2 of fields) {
+      if (field2.path !== "." && field2.type !== "object" && field2.type !== "array") {
+        rows.push({ name: field2.path, type: field2.type, required: field2.required });
       }
     }
     return rows;
@@ -48727,32 +46509,32 @@ button:hover {
     controls.className = "param-controls";
     const mode = document.createElement("select");
     mode.className = "param-mode";
-    mode.append(option4("queryParam", "Query param"), option4("raw", "Raw value"), option4("state", "Page state"));
-    const value3 = document.createElement("input");
-    value3.className = "param-value";
-    value3.placeholder = name;
+    mode.append(option2("queryParam", "Query param"), option2("raw", "Raw value"), option2("state", "Page state"));
+    const value2 = document.createElement("input");
+    value2.className = "param-value";
+    value2.placeholder = name;
     if (initialValue) {
       selectOption(mode, initialValue.from);
-      value3.value = String(initialValue.from === "raw" ? initialValue.value : initialValue.name);
+      value2.value = String(initialValue.from === "raw" ? initialValue.value : initialValue.name);
     }
-    controls.append(mode, value3);
+    controls.append(mode, value2);
     return controls;
   }
-  function option4(value3, label4) {
+  function option2(value2, label3) {
     const element = document.createElement("option");
-    element.value = value3;
-    element.textContent = label4;
+    element.value = value2;
+    element.textContent = label3;
     return element;
   }
-  function textSpan(value3) {
+  function textSpan(value2) {
     const element = document.createElement("span");
-    element.textContent = value3;
+    element.textContent = value2;
     return element;
   }
-  function selectOption(select2, value3) {
-    const index = Array.from(select2.options).findIndex((option5) => option5.value === value3);
+  function selectOption(select, value2) {
+    const index = Array.from(select.options).findIndex((option3) => option3.value === value2);
     if (index >= 0) {
-      select2.selectedIndex = index;
+      select.selectedIndex = index;
     }
   }
 
@@ -48762,7 +46544,7 @@ button:hover {
     if (!normalized) {
       return sources;
     }
-    return sources.filter((source2) => [source2.label, source2.description, source2.provider, source2.providerLabel, source2.url].some((value3) => value3?.toLowerCase().includes(normalized)));
+    return sources.filter((source2) => [source2.label, source2.description, source2.provider, source2.providerLabel, source2.url].some((value2) => value2?.toLowerCase().includes(normalized)));
   }
   function providerGroups(sources) {
     const groups = new Map;
@@ -48789,9 +46571,9 @@ button:hover {
     }));
   }
   function cloneBodyFields(fields) {
-    return fields.map((field3) => ({
-      ...field3,
-      children: field3.children ? cloneBodyFields(field3.children) : undefined
+    return fields.map((field2) => ({
+      ...field2,
+      children: field2.children ? cloneBodyFields(field2.children) : undefined
     }));
   }
   function firstProviderKey(sources, query4) {
@@ -48813,25 +46595,25 @@ button:hover {
     renderRequestBody(section2, source2, initialBinding);
     return section2;
   }
-  function renderAliasInput(value3) {
+  function renderAliasInput(value2) {
     const aliasLabel = document.createElement("label");
     aliasLabel.textContent = "Alias";
     const alias = document.createElement("input");
     alias.className = "source-alias";
-    alias.value = value3;
+    alias.value = value2;
     alias.placeholder = "data";
     aliasLabel.append(alias);
     return aliasLabel;
   }
-  function renderTriggerSelect(value3) {
-    const label4 = document.createElement("label");
-    label4.textContent = "Trigger";
+  function renderTriggerSelect(value2) {
+    const label3 = document.createElement("label");
+    label3.textContent = "Trigger";
     const trigger = document.createElement("select");
     trigger.className = "source-trigger";
-    trigger.append(option5("auto", "Auto"), option5("submit", "Submit"), option5("change", "Change"));
-    selectOption2(trigger, value3);
-    label4.append(trigger);
-    return label4;
+    trigger.append(option3("auto", "Auto"), option3("submit", "Submit"), option3("change", "Change"));
+    selectOption2(trigger, value2);
+    label3.append(trigger);
+    return label3;
   }
   function defaultTrigger(source2) {
     return (source2.method ?? "GET") === "GET" ? "auto" : "submit";
@@ -48860,26 +46642,26 @@ button:hover {
       return;
     }
     section2.append(renderBindingHeading("Request body"));
-    for (const field3 of fields) {
+    for (const field2 of fields) {
       section2.append(renderBindingRow({
         kind: "body",
-        name: field3.name,
+        name: field2.name,
         location: "body",
-        type: field3.type,
-        required: field3.required
-      }, initialBinding?.body?.[field3.name]));
+        type: field2.type,
+        required: field2.required
+      }, initialBinding?.body?.[field2.name]));
     }
   }
-  function option5(value3, label4) {
+  function option3(value2, label3) {
     const element = document.createElement("option");
-    element.value = value3;
-    element.textContent = label4;
+    element.value = value2;
+    element.textContent = label3;
     return element;
   }
-  function selectOption2(select2, value3) {
-    const index = Array.from(select2.options).findIndex((option6) => option6.value === value3);
+  function selectOption2(select, value2) {
+    const index = Array.from(select.options).findIndex((option4) => option4.value === value2);
     if (index >= 0) {
-      select2.selectedIndex = index;
+      select.selectedIndex = index;
     }
   }
 
@@ -48893,8 +46675,8 @@ button:hover {
   function renderFieldList(fields, emptyMessage) {
     const list = document.createElement("ul");
     list.className = "fields";
-    for (const field3 of fields) {
-      list.append(renderField(field3, 0));
+    for (const field2 of fields) {
+      list.append(renderField(field2, 0));
     }
     if (list.children.length === 0) {
       const empty3 = document.createElement("p");
@@ -48904,27 +46686,27 @@ button:hover {
     }
     return list;
   }
-  function renderField(field3, depth) {
+  function renderField(field2, depth) {
     const item = document.createElement("li");
     item.className = "field";
     item.style.setProperty("--field-depth", String(depth));
     const path = document.createElement("span");
     path.className = "field-path";
-    path.textContent = field3.path;
+    path.textContent = field2.path;
     const type = document.createElement("span");
     type.className = "field-type";
-    type.textContent = field3.type ?? "unknown";
+    type.textContent = field2.type ?? "unknown";
     item.append(path, type);
-    if (field3.required) {
+    if (field2.required) {
       const required = document.createElement("span");
       required.className = "field-required";
       required.textContent = "required";
       item.append(required);
     }
-    if (field3.children?.length) {
+    if (field2.children?.length) {
       const children = document.createElement("ul");
       children.className = "field-children";
-      for (const child of field3.children) {
+      for (const child of field2.children) {
         children.append(renderField(child, depth + 1));
       }
       item.append(children);
@@ -48956,12 +46738,12 @@ button:hover {
       container.append(detailsEmpty("Select a source to configure its binding."));
       return;
     }
-    const title2 = document.createElement("div");
-    title2.className = "config-heading";
-    title2.textContent = "Binding";
+    const title = document.createElement("div");
+    title.className = "config-heading";
+    title.textContent = "Binding";
     const scroll = document.createElement("div");
     scroll.className = "binding-scroll";
-    scroll.append(title2, renderBindingConfig(source2, options2.initialBinding));
+    scroll.append(title, renderBindingConfig(source2, options2.initialBinding));
     const footer = document.createElement("footer");
     footer.className = "binding-footer";
     if (options2.canRemove) {
@@ -48994,14 +46776,14 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Renderers/dataSourcePickerRenderer.ts
-  function renderDataSourcePicker(state2, handlers) {
-    const activeSource = normalizeActiveSource(state2.activeSource, state2.visibleSources);
-    renderProviderButtons(state2.providers, state2.groups, state2.activeProvider, handlers.providerSelect);
-    renderSourceButtons(state2.sourcesList, state2.visibleSources, activeSource, handlers.sourceSelect, handlers.sourceConfirm);
-    renderDetailsPanel(state2.details, activeSource);
-    renderBindingPanel(state2.binding, activeSource, {
-      canRemove: state2.canRemove,
-      initialBinding: state2.initialBinding,
+  function renderDataSourcePicker(state, handlers) {
+    const activeSource = normalizeActiveSource(state.activeSource, state.visibleSources);
+    renderProviderButtons(state.providers, state.groups, state.activeProvider, handlers.providerSelect);
+    renderSourceButtons(state.sourcesList, state.visibleSources, activeSource, handlers.sourceSelect, handlers.sourceConfirm);
+    renderDetailsPanel(state.details, activeSource);
+    renderBindingPanel(state.binding, activeSource, {
+      canRemove: state.canRemove,
+      initialBinding: state.initialBinding,
       onSelect: handlers.bindingSelect,
       onRemove: handlers.remove
     });
@@ -49027,19 +46809,19 @@ button:hover {
   function pickerVisibleSources(sources, activeMethod, query4, activeProvider) {
     return visibleSources(methodSources(sources, activeMethod), query4, activeProvider);
   }
-  function selectMethodFilter(filter, value3) {
+  function selectMethodFilter(filter, value2) {
     const options2 = Array.from(filter.options);
-    const index = options2.findIndex((option6) => option6.value === value3);
+    const index = options2.findIndex((option4) => option4.value === value2);
     filter.selectedIndex = index >= 0 ? index : 0;
-    options2.forEach((option6, optionIndex) => {
-      option6.selected = optionIndex === filter.selectedIndex;
-      option6.toggleAttribute("selected", option6.selected);
+    options2.forEach((option4, optionIndex) => {
+      option4.selected = optionIndex === filter.selectedIndex;
+      option4.toggleAttribute("selected", option4.selected);
     });
     filter.setAttribute("value", options2[filter.selectedIndex]?.value ?? "GET");
   }
   function selectedMethodFilter(filter) {
     const options2 = Array.from(filter.options);
-    const selected2 = options2.find((option6) => option6.selected);
+    const selected2 = options2.find((option4) => option4.selected);
     if (selected2?.value) {
       return selected2.value;
     }
@@ -49047,7 +46829,7 @@ button:hover {
     if (selectedIndexValue) {
       return selectedIndexValue;
     }
-    const selectedAttribute = options2.find((option6) => option6.hasAttribute("selected"));
+    const selectedAttribute = options2.find((option4) => option4.hasAttribute("selected"));
     return selectedAttribute?.value ?? filter.getAttribute("value") ?? "GET";
   }
 
@@ -49606,12 +47388,12 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/index.ts
-  var styles_default7 = [String(part_1_default4), String(part_2_default4), String(part_3_default3), String(part_4_default)].join(`
+  var styles_default6 = [String(part_1_default4), String(part_2_default4), String(part_3_default3), String(part_4_default)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/DataSourcePicker.ts
   var template8 = document.createElement("template");
-  template8.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default25)}`;
+  template8.innerHTML = `<style>${String(styles_default6)}</style>${String(template_default25)}`;
 
   class DataSourcePicker extends HTMLElement {
     _sources = [];
@@ -49754,7 +47536,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/style.css
-  var style_default21 = `:host { display: contents; }
+  var style_default20 = `:host { display: contents; }
 * { box-sizing: border-box; }
 
 .backdrop {
@@ -49901,17 +47683,17 @@ textarea { min-height: 92px; resize: vertical; }
   function renderAdvancedMode(expression, onInput) {
     const root = document.createElement("div");
     root.className = "mode-panel form-grid";
-    const label4 = document.createElement("label");
-    label4.className = "control";
+    const label3 = document.createElement("label");
+    label3.className = "control";
     const text5 = document.createElement("span");
     text5.textContent = "Expression";
-    const textarea2 = document.createElement("textarea");
-    textarea2.className = "advanced-expression";
-    textarea2.value = expression;
-    textarea2.placeholder = 'plan.status == "active" && $source.loaded';
-    textarea2.addEventListener("input", () => onInput(textarea2.value));
-    label4.append(text5, textarea2);
-    root.append(label4);
+    const textarea = document.createElement("textarea");
+    textarea.className = "advanced-expression";
+    textarea.value = expression;
+    textarea.placeholder = 'plan.status == "active" && $source.loaded';
+    textarea.addEventListener("input", () => onInput(textarea.value));
+    label3.append(text5, textarea);
+    root.append(label3);
     return root;
   }
 
@@ -49962,47 +47744,47 @@ textarea { min-height: 92px; resize: vertical; }
     return { path: fields[0]?.path ?? "", operator: "truthy", value: "" };
   }
   function fieldSelect(fields, draft, onChange) {
-    const select2 = document.createElement("select");
-    select2.className = "field-path";
-    for (const field3 of fields) {
-      const option6 = document.createElement("option");
-      option6.value = field3.path;
-      option6.textContent = `${field3.scopeLabel}: ${field3.path}`;
-      select2.append(option6);
+    const select = document.createElement("select");
+    select.className = "field-path";
+    for (const field2 of fields) {
+      const option4 = document.createElement("option");
+      option4.value = field2.path;
+      option4.textContent = `${field2.scopeLabel}: ${field2.path}`;
+      select.append(option4);
     }
-    select2.selectedIndex = Math.max(0, fields.findIndex((field3) => field3.path === draft.path));
-    select2.addEventListener("change", () => {
-      draft.path = select2.options.item(select2.selectedIndex)?.value ?? "";
+    select.selectedIndex = Math.max(0, fields.findIndex((field2) => field2.path === draft.path));
+    select.addEventListener("change", () => {
+      draft.path = select.options.item(select.selectedIndex)?.value ?? "";
       onChange(false);
     });
-    return control("Field", select2);
+    return control("Field", select);
   }
   function operatorSelect(draft, onChange) {
-    const select2 = document.createElement("select");
-    select2.className = "field-operator";
+    const select = document.createElement("select");
+    select.className = "field-operator";
     for (const operator of OPERATORS) {
-      const option6 = document.createElement("option");
-      option6.value = operator.value;
-      option6.textContent = operator.label;
-      select2.append(option6);
+      const option4 = document.createElement("option");
+      option4.value = operator.value;
+      option4.textContent = operator.label;
+      select.append(option4);
     }
-    select2.selectedIndex = Math.max(0, OPERATORS.findIndex((operator) => operator.value === draft.operator));
-    select2.addEventListener("change", () => {
-      draft.operator = select2.options.item(select2.selectedIndex)?.value ?? "truthy";
+    select.selectedIndex = Math.max(0, OPERATORS.findIndex((operator) => operator.value === draft.operator));
+    select.addEventListener("change", () => {
+      draft.operator = select.options.item(select.selectedIndex)?.value ?? "truthy";
       onChange(true);
     });
-    return control("Operator", select2);
+    return control("Operator", select);
   }
   function valueInput(draft, onChange) {
-    const input2 = document.createElement("input");
-    input2.className = "field-value";
-    input2.placeholder = "Value";
-    input2.value = draft.value;
-    input2.addEventListener("input", () => {
-      draft.value = input2.value;
+    const input = document.createElement("input");
+    input.className = "field-value";
+    input.placeholder = "Value";
+    input.value = draft.value;
+    input.addEventListener("input", () => {
+      draft.value = input.value;
       onChange(false);
     });
-    return control("Value", input2);
+    return control("Value", input);
   }
   function operatorNeedsValue(operator) {
     return OPERATORS.find((candidate) => candidate.value === operator)?.needsValue === true;
@@ -50015,8 +47797,8 @@ textarea { min-height: 92px; resize: vertical; }
     wrapper.append(text5, controlElement);
     return wrapper;
   }
-  function parseValue(value3) {
-    const trimmed = value3.trim();
+  function parseValue(value2) {
+    const trimmed = value2.trim();
     if (trimmed === "true") {
       return true;
     }
@@ -50040,8 +47822,8 @@ textarea { min-height: 92px; resize: vertical; }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/sourceStateMode.ts
   var STATES = ["loaded", "loading", "empty", "error"];
-  function sourceStateKey(sources, editor, state2) {
-    return `${sources.findIndex((source2) => source2.editor === editor)}:${state2}`;
+  function sourceStateKey(sources, editor, state) {
+    return `${sources.findIndex((source2) => source2.editor === editor)}:${state}`;
   }
   function renderSourceStateMode(options2) {
     const root = document.createElement("div");
@@ -50061,9 +47843,9 @@ textarea { min-height: 92px; resize: vertical; }
   function selectedSourceConditions(sources, selected2) {
     const conditions2 = [];
     for (const source2 of sources) {
-      for (const state2 of STATES) {
-        if (selected2.has(sourceStateKey(sources, source2.editor, state2))) {
-          conditions2.push({ sourceEditor: source2.editor, sourceState: state2 });
+      for (const state of STATES) {
+        if (selected2.has(sourceStateKey(sources, source2.editor, state))) {
+          conditions2.push({ sourceEditor: source2.editor, sourceState: state });
         }
       }
     }
@@ -50078,26 +47860,26 @@ textarea { min-height: 92px; resize: vertical; }
     }
     const states2 = document.createElement("div");
     states2.className = "states";
-    for (const state2 of STATES) {
-      states2.append(renderState(source2, state2, options2));
+    for (const state of STATES) {
+      states2.append(renderState(source2, state, options2));
     }
     section2.append(states2);
     return section2;
   }
-  function renderState(source2, state2, options2) {
-    const key = sourceStateKey(options2.sources, source2.editor, state2);
-    const label4 = document.createElement("label");
-    const input2 = document.createElement("input");
-    input2.type = "checkbox";
-    input2.checked = options2.selected.has(key);
-    input2.addEventListener("change", () => {
-      input2.checked ? options2.selected.add(key) : options2.selected.delete(key);
+  function renderState(source2, state, options2) {
+    const key = sourceStateKey(options2.sources, source2.editor, state);
+    const label3 = document.createElement("label");
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = options2.selected.has(key);
+    input.addEventListener("change", () => {
+      input.checked ? options2.selected.add(key) : options2.selected.delete(key);
       options2.onChange();
     });
     const text5 = document.createElement("span");
-    text5.textContent = state2;
-    label4.append(input2, text5);
-    return label4;
+    text5.textContent = state;
+    label3.append(input, text5);
+    return label3;
   }
   function textBlock(className, text5) {
     const element = document.createElement("div");
@@ -50118,14 +47900,14 @@ textarea { min-height: 92px; resize: vertical; }
       subtitle: query4(".subtitle")
     };
   }
-  function conditionExpression(input2) {
-    if (input2.mode === "advanced") {
-      return input2.advancedExpression.trim();
+  function conditionExpression(input) {
+    if (input.mode === "advanced") {
+      return input.advancedExpression.trim();
     }
-    if (input2.mode === "field" && input2.fieldDraft.path) {
-      return fieldExpression(input2.fieldDraft);
+    if (input.mode === "field" && input.fieldDraft.path) {
+      return fieldExpression(input.fieldDraft);
     }
-    return selectedSourceConditions(input2.sources, input2.selected).map((condition) => `${condition.sourceEditor.target.localName}.${condition.sourceState}`).join(" || ");
+    return selectedSourceConditions(input.sources, input.selected).map((condition) => `${condition.sourceEditor.target.localName}.${condition.sourceState}`).join(" || ");
   }
   function renderConditionModes(activeMode, onSelect) {
     const group = document.createElement("div");
@@ -50134,31 +47916,31 @@ textarea { min-height: 92px; resize: vertical; }
     return group;
   }
   function renderConditionSummary(expression) {
-    const summary2 = document.createElement("div");
-    summary2.className = "summary";
-    summary2.append(...conditionSummaryParts(expression));
-    return summary2;
+    const summary = document.createElement("div");
+    summary.className = "summary";
+    summary.append(...conditionSummaryParts(expression));
+    return summary;
   }
   function conditionSummaryParts(expression) {
-    const label4 = document.createElement("span");
-    label4.textContent = "Expression";
+    const label3 = document.createElement("span");
+    label3.textContent = "Expression";
     const code = document.createElement("code");
     code.textContent = expression || "No condition selected.";
-    return [label4, code];
+    return [label3, code];
   }
-  function modeButton(mode, label4, activeMode, onSelect) {
-    const button2 = document.createElement("button");
-    button2.type = "button";
-    button2.className = "mode";
-    button2.textContent = label4;
-    button2.setAttribute("aria-pressed", String(activeMode === mode));
-    button2.addEventListener("click", () => onSelect(mode));
-    return button2;
+  function modeButton(mode, label3, activeMode, onSelect) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "mode";
+    button.textContent = label3;
+    button.setAttribute("aria-pressed", String(activeMode === mode));
+    button.addEventListener("click", () => onSelect(mode));
+    return button;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
   var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${String(style_default21)}</style>${String(template_default26)}`;
+  template9.innerHTML = `<style>${String(style_default20)}</style>${String(template_default26)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -50212,8 +47994,8 @@ textarea { min-height: 92px; resize: vertical; }
         return renderFieldMode(this._fields, this._fieldDraft, (render) => render ? this.render() : this.syncSummary());
       }
       if (this._mode === "advanced") {
-        return renderAdvancedMode(this._advancedExpression, (value3) => {
-          this._advancedExpression = value3;
+        return renderAdvancedMode(this._advancedExpression, (value2) => {
+          this._advancedExpression = value2;
           this.syncSummary();
         });
       }
@@ -50779,37 +48561,37 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/styles/index.ts
-  var styles_default8 = [String(part_1_default5), String(part_2_default5), String(part_3_default4)].join(`
+  var styles_default7 = [String(part_1_default5), String(part_2_default5), String(part_3_default4)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerItems.ts
-  function normalizeBlockPickerOption(option6) {
-    if (option6.item) {
+  function normalizeBlockPickerOption(option4) {
+    if (option4.item) {
       return {
-        ...option6,
-        kind: option6.item.kind
+        ...option4,
+        kind: option4.item.kind
       };
     }
-    if (!option6.entry) {
+    if (!option4.entry) {
       throw new Error("Block picker option requires either item or entry.");
     }
     return {
-      ...option6,
+      ...option4,
       kind: "block",
       item: {
         kind: "block",
-        entry: option6.entry
+        entry: option4.entry
       }
     };
   }
-  function blockPickerOptionItem(option6) {
-    if (option6.item) {
-      return option6.item;
+  function blockPickerOptionItem(option4) {
+    if (option4.item) {
+      return option4.item;
     }
-    if (option6.entry) {
+    if (option4.entry) {
       return {
         kind: "block",
-        entry: option6.entry
+        entry: option4.entry
       };
     }
     throw new Error("Block picker option requires either item or entry.");
@@ -50847,54 +48629,54 @@ dd {
   function blockPickerIconText(item) {
     return (blockPickerItemIcon(item) ?? blockPickerItemLabel(item)).slice(0, 1).toUpperCase();
   }
-  function blockPickerCategoryLabel(option6) {
-    const item = blockPickerOptionItem(option6);
+  function blockPickerCategoryLabel(option4) {
+    const item = blockPickerOptionItem(option4);
     const category = blockPickerItemCategory(item) ?? blockPickerSourceLabel(item.kind);
     const subCategory = blockPickerItemSubCategory(item);
     return subCategory ? `${category} / ${subCategory}` : category;
   }
-  function blockPickerOptionMatches(option6, query4) {
+  function blockPickerOptionMatches(option4, query4) {
     if (!query4) {
       return true;
     }
-    const item = blockPickerOptionItem(option6);
+    const item = blockPickerOptionItem(option4);
     return [
       blockPickerItemLabel(item),
       blockPickerItemDescription(item),
       blockPickerItemCategory(item),
       blockPickerItemSubCategory(item),
       blockPickerItemHandle(item),
-      option6.slotLabel
-    ].some((value3) => value3?.toLowerCase().includes(query4));
+      option4.slotLabel
+    ].some((value2) => value2?.toLowerCase().includes(query4));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerState.ts
   function blockPickerVisibleOptions(group, source2, category, query4) {
-    return group?.options.filter((option6) => {
-      const item = blockPickerOptionItem(option6);
+    return group?.options.filter((option4) => {
+      const item = blockPickerOptionItem(option4);
       if (item.kind !== source2) {
         return false;
       }
-      if (category && blockPickerCategoryLabel(option6) !== category) {
+      if (category && blockPickerCategoryLabel(option4) !== category) {
         return false;
       }
-      return blockPickerOptionMatches(option6, query4);
+      return blockPickerOptionMatches(option4, query4);
     }) ?? [];
   }
   function blockPickerOptionsForSource(group, source2) {
-    return group?.options.filter((option6) => blockPickerOptionItem(option6).kind === source2) ?? [];
+    return group?.options.filter((option4) => blockPickerOptionItem(option4).kind === source2) ?? [];
   }
   function blockPickerSourceCount(group, source2) {
     return blockPickerOptionsForSource(group, source2).length;
   }
   function blockPickerCategoryCount(group, source2, category) {
-    return group?.options.filter((option6) => blockPickerOptionItem(option6).kind === source2 && blockPickerCategoryLabel(option6) === category).length ?? 0;
+    return group?.options.filter((option4) => blockPickerOptionItem(option4).kind === source2 && blockPickerCategoryLabel(option4) === category).length ?? 0;
   }
   function blockPickerCategories(group, source2) {
     const categories = new Set;
-    for (const option6 of group?.options ?? []) {
-      if (blockPickerOptionItem(option6).kind === source2) {
-        categories.add(blockPickerCategoryLabel(option6));
+    for (const option4 of group?.options ?? []) {
+      if (blockPickerOptionItem(option4).kind === source2) {
+        categories.add(blockPickerCategoryLabel(option4));
       }
     }
     return [...categories].sort((left, right) => left.localeCompare(right));
@@ -50910,21 +48692,21 @@ dd {
   var BLOCK_PICKER_SELECT_EVENT = "editor-v2:block-picker-select";
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerView.ts
-  function renderBlockPickerDetails(container, option6, onSelect) {
+  function renderBlockPickerDetails(container, option4, onSelect) {
     container.replaceChildren();
-    if (!option6) {
+    if (!option4) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select content to see details.";
       container.append(empty4);
       return;
     }
-    const item = blockPickerOptionItem(option6);
+    const item = blockPickerOptionItem(option4);
     const eyebrow = document.createElement("div");
     eyebrow.className = "details-eyebrow";
     eyebrow.textContent = blockPickerSourceLabel(item.kind);
-    const title2 = document.createElement("h3");
-    title2.textContent = blockPickerItemLabel(item);
+    const title = document.createElement("h3");
+    title.textContent = blockPickerItemLabel(item);
     const description = document.createElement("p");
     description.textContent = blockPickerItemDescription(item);
     const preview = document.createElement("div");
@@ -50934,22 +48716,22 @@ dd {
     previewIcon.textContent = blockPickerIconText(item);
     preview.append(previewIcon);
     const meta = document.createElement("dl");
-    meta.append(metaRow("Source", blockPickerSourceLabel(item.kind)), metaRow("Handle", blockPickerItemHandle(item)), metaRow("Slot", option6.slotLabel), metaRow("Category", blockPickerCategoryLabel(option6)));
+    meta.append(metaRow("Source", blockPickerSourceLabel(item.kind)), metaRow("Handle", blockPickerItemHandle(item)), metaRow("Slot", option4.slotLabel), metaRow("Category", blockPickerCategoryLabel(option4)));
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
     insert.textContent = "Insert";
-    insert.addEventListener("click", () => onSelect(option6));
-    container.append(preview, eyebrow, title2, description, meta, insert);
+    insert.addEventListener("click", () => onSelect(option4));
+    container.append(preview, eyebrow, title, description, meta, insert);
   }
-  function renderBlockPickerOption(option6, activeOption, onActivate, onSelect) {
-    const button2 = document.createElement("button");
-    button2.className = "block";
-    button2.type = "button";
-    button2.ariaSelected = String(option6 === activeOption);
-    button2.addEventListener("click", () => onActivate(option6));
-    button2.addEventListener("dblclick", () => onSelect(option6));
-    const item = blockPickerOptionItem(option6);
+  function renderBlockPickerOption(option4, activeOption, onActivate, onSelect) {
+    const button = document.createElement("button");
+    button.className = "block";
+    button.type = "button";
+    button.ariaSelected = String(option4 === activeOption);
+    button.addEventListener("click", () => onActivate(option4));
+    button.addEventListener("dblclick", () => onSelect(option4));
+    const item = blockPickerOptionItem(option4);
     const icon = document.createElement("span");
     icon.className = "icon";
     icon.textContent = blockPickerIconText(item);
@@ -50962,100 +48744,100 @@ dd {
     description.textContent = blockPickerItemDescription(item);
     const category = document.createElement("span");
     category.className = "category";
-    category.textContent = blockPickerCategoryLabel(option6);
+    category.textContent = blockPickerCategoryLabel(option4);
     body.append(name, description, category);
-    button2.append(icon, body);
-    return button2;
+    button.append(icon, body);
+    return button;
   }
   function renderBlockPickerTabs(container, groups, activeSlotKey, onSelect) {
     container.replaceChildren();
     for (const group of groups) {
-      const button2 = document.createElement("button");
+      const button = document.createElement("button");
       const slotKey = group.slot ?? "";
-      button2.className = "tab";
-      button2.type = "button";
-      button2.role = "tab";
-      button2.textContent = group.label;
-      button2.disabled = Boolean(group.disabledReason);
-      button2.ariaSelected = String(slotKey === activeSlotKey);
+      button.className = "tab";
+      button.type = "button";
+      button.role = "tab";
+      button.textContent = group.label;
+      button.disabled = Boolean(group.disabledReason);
+      button.ariaSelected = String(slotKey === activeSlotKey);
       if (group.disabledReason) {
-        button2.title = group.disabledReason;
+        button.title = group.disabledReason;
       }
-      button2.addEventListener("click", () => {
-        if (!button2.disabled) {
+      button.addEventListener("click", () => {
+        if (!button.disabled) {
           onSelect(slotKey);
         }
       });
-      container.append(button2);
+      container.append(button);
     }
   }
-  function metaRow(label4, value3) {
+  function metaRow(label3, value2) {
     const wrapper = document.createElement("div");
     const term = document.createElement("dt");
     const detail = document.createElement("dd");
-    term.textContent = label4;
-    detail.textContent = value3;
+    term.textContent = label3;
+    detail.textContent = value2;
     wrapper.append(term, detail);
     return wrapper;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerResults.ts
-  function renderBlockPickerResults(input2) {
-    const options2 = blockPickerVisibleOptions(input2.group, input2.activeSource, input2.activeCategory, input2.query);
-    input2.results.replaceChildren();
-    if (input2.group?.disabledReason || options2.length === 0) {
+  function renderBlockPickerResults(input) {
+    const options2 = blockPickerVisibleOptions(input.group, input.activeSource, input.activeCategory, input.query);
+    input.results.replaceChildren();
+    if (input.group?.disabledReason || options2.length === 0) {
       const empty4 = document.createElement("div");
       empty4.className = "empty";
-      empty4.textContent = input2.group?.disabledReason ?? "No content available";
-      input2.results.append(empty4);
-      renderBlockPickerDetails(input2.details, null, input2.onSelect);
+      empty4.textContent = input.group?.disabledReason ?? "No content available";
+      input.results.append(empty4);
+      renderBlockPickerDetails(input.details, null, input.onSelect);
       return null;
     }
-    const activeOption = input2.activeOption && options2.includes(input2.activeOption) ? input2.activeOption : options2[0];
-    for (const option6 of options2) {
-      input2.results.append(renderBlockPickerOption(option6, activeOption, input2.onActivate, input2.onSelect));
+    const activeOption = input.activeOption && options2.includes(input.activeOption) ? input.activeOption : options2[0];
+    for (const option4 of options2) {
+      input.results.append(renderBlockPickerOption(option4, activeOption, input.onActivate, input.onSelect));
     }
-    renderBlockPickerDetails(input2.details, activeOption, input2.onSelect);
+    renderBlockPickerDetails(input.details, activeOption, input.onSelect);
     return activeOption;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerSidebar.ts
-  function renderBlockPickerSidebar(input2) {
-    input2.sources.replaceChildren();
-    input2.categories.replaceChildren();
-    input2.sources.append(sourceButton("Blocks", "block", input2), sourceButton("Media", "media", input2));
-    input2.categories.append(filterButton("All", input2.activeCategory === "", () => input2.onCategory(""), blockPickerSourceCount(input2.group, input2.activeSource)));
-    for (const category of blockPickerCategories(input2.group, input2.activeSource)) {
-      input2.categories.append(filterButton(category, input2.activeCategory === category, () => input2.onCategory(category), blockPickerCategoryCount(input2.group, input2.activeSource, category)));
+  function renderBlockPickerSidebar(input) {
+    input.sources.replaceChildren();
+    input.categories.replaceChildren();
+    input.sources.append(sourceButton("Blocks", "block", input), sourceButton("Media", "media", input));
+    input.categories.append(filterButton("All", input.activeCategory === "", () => input.onCategory(""), blockPickerSourceCount(input.group, input.activeSource)));
+    for (const category of blockPickerCategories(input.group, input.activeSource)) {
+      input.categories.append(filterButton(category, input.activeCategory === category, () => input.onCategory(category), blockPickerCategoryCount(input.group, input.activeSource, category)));
     }
   }
-  function sourceButton(label4, source2, input2) {
-    const count = blockPickerSourceCount(input2.group, source2);
-    return filterButton(label4, input2.activeSource === source2, () => {
-      if (source2 === "media" && input2.onSingleMedia()) {
+  function sourceButton(label3, source2, input) {
+    const count = blockPickerSourceCount(input.group, source2);
+    return filterButton(label3, input.activeSource === source2, () => {
+      if (source2 === "media" && input.onSingleMedia()) {
         return;
       }
-      input2.onSource(source2);
+      input.onSource(source2);
     }, count, source2 !== "block" && count === 0);
   }
-  function filterButton(label4, active, onClick, count, disabled = false) {
-    const button2 = document.createElement("button");
-    button2.className = "filter";
-    button2.type = "button";
-    button2.disabled = disabled;
-    button2.ariaPressed = String(active);
-    button2.addEventListener("click", () => {
-      if (!button2.disabled) {
+  function filterButton(label3, active, onClick, count, disabled = false) {
+    const button = document.createElement("button");
+    button.className = "filter";
+    button.type = "button";
+    button.disabled = disabled;
+    button.ariaPressed = String(active);
+    button.addEventListener("click", () => {
+      if (!button.disabled) {
         onClick();
       }
     });
     const text5 = document.createElement("span");
-    text5.textContent = label4;
+    text5.textContent = label3;
     const badge2 = document.createElement("span");
     badge2.className = "count";
     badge2.textContent = String(count);
-    button2.append(text5, badge2);
-    return button2;
+    button.append(text5, badge2);
+    return button;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerElements.ts
@@ -51076,7 +48858,7 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/BlockPickerModal.ts
   var template10 = document.createElement("template");
-  template10.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default27)}`;
+  template10.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default27)}`;
 
   class BlockPickerModal extends HTMLElement {
     _groups = [];
@@ -51106,7 +48888,7 @@ dd {
     open(groups, contextLabel) {
       this._groups = groups.map((group) => ({
         ...group,
-        options: group.options.map((option6) => normalizeBlockPickerOption(option6))
+        options: group.options.map((option4) => normalizeBlockPickerOption(option4))
       }));
       this._activeSlotKey = firstEnabledBlockPickerGroup(this._groups)?.slot ?? "";
       this._activeSource = "block";
@@ -51142,11 +48924,11 @@ dd {
         activeSource: this._activeSource,
         details: this.elements.details,
         group: this._activeGroup(),
-        onActivate: (option6) => {
-          this._activeOption = option6;
+        onActivate: (option4) => {
+          this._activeOption = option4;
           this._renderEntries();
         },
-        onSelect: (option6) => this._selectOption(option6),
+        onSelect: (option4) => this._selectOption(option4),
         query: this.elements.search.value.trim().toLowerCase(),
         results: this.elements.results
       });
@@ -51175,11 +48957,11 @@ dd {
         sources: this.elements.sources
       });
     }
-    _selectOption(option6) {
+    _selectOption(option4) {
       this.dispatchEvent(new CustomEvent(BLOCK_PICKER_SELECT_EVENT, {
         bubbles: true,
         composed: true,
-        detail: { option: option6 }
+        detail: { option: option4 }
       }));
       this.close();
     }
@@ -51229,49 +49011,49 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureDragDrop.ts
-  function onStructureDragStart(state2, node, event) {
-    state2.draggedNode = node;
+  function onStructureDragStart(state, node, event) {
+    state.draggedNode = node;
     event.dataTransfer?.setData("text/plain", node.label);
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = "move";
     }
   }
-  function onStructureDragOver(state2, node, row, event, context) {
-    if (!canDropOnNode(state2, node, context)) {
+  function onStructureDragOver(state, node, row, event, context) {
+    if (!canDropOnNode(state, node, context)) {
       return;
     }
     event.preventDefault();
     context.clearDropRow();
     const position = structureDropPosition(row, event);
     row.classList.add(position === "before" ? "drop-before" : "drop-after");
-    state2.dropRow = row;
+    state.dropRow = row;
     if (event.dataTransfer) {
       event.dataTransfer.dropEffect = "move";
     }
   }
-  function onStructureDrop(state2, node, event, context) {
-    if (!canDropOnNode(state2, node, context)) {
+  function onStructureDrop(state, node, event, context) {
+    if (!canDropOnNode(state, node, context)) {
       return;
     }
     event.preventDefault();
     const position = structureDropPosition(event.currentTarget, event);
-    context.emitMove(position === "before" ? "move-before" : "move-after", node, state2.draggedNode);
-    clearStructureDragState(state2);
+    context.emitMove(position === "before" ? "move-before" : "move-after", node, state.draggedNode);
+    clearStructureDragState(state);
   }
   function structureDropPosition(target2, event) {
     const rect = target2.getBoundingClientRect();
     return event.clientY < rect.top + rect.height / 2 ? "before" : "after";
   }
-  function clearStructureDragState(state2) {
-    state2.draggedNode = null;
-    clearStructureDropRow(state2);
+  function clearStructureDragState(state) {
+    state.draggedNode = null;
+    clearStructureDropRow(state);
   }
-  function clearStructureDropRow(state2) {
-    state2.dropRow?.classList.remove("drop-before", "drop-after");
-    state2.dropRow = null;
+  function clearStructureDropRow(state) {
+    state.dropRow?.classList.remove("drop-before", "drop-after");
+    state.dropRow = null;
   }
-  function canDropOnNode(state2, node, context) {
-    return Boolean(state2.draggedNode && state2.draggedNode !== node && !context.isDescendantNode(node, state2.draggedNode));
+  function canDropOnNode(state, node, context) {
+    return Boolean(state.draggedNode && state.draggedNode !== node && !context.isDescendantNode(node, state.draggedNode));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/Support/structureTreeDragEvents.ts
@@ -51408,22 +49190,22 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureContextMenuItems.ts
-  function contextMenuButton(label4, action, closeContextMenu, variant, disabled = false) {
-    const button2 = document.createElement("button");
-    button2.className = variant ? `context-item ${variant}` : "context-item";
-    button2.role = "menuitem";
-    button2.type = "button";
-    button2.disabled = disabled;
-    button2.textContent = label4;
-    button2.addEventListener("click", (event) => {
+  function contextMenuButton(label3, action, closeContextMenu, variant, disabled = false) {
+    const button = document.createElement("button");
+    button.className = variant ? `context-item ${variant}` : "context-item";
+    button.role = "menuitem";
+    button.type = "button";
+    button.disabled = disabled;
+    button.textContent = label3;
+    button.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (button2.disabled) {
+      if (button.disabled) {
         return;
       }
       closeContextMenu();
       action();
     });
-    return button2;
+    return button;
   }
   function contextSeparator() {
     const separator = document.createElement("div");
@@ -51507,32 +49289,32 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Renderers/structureTreePresentation.ts
-  function renderStructureBadge(value3) {
+  function renderStructureBadge(value2) {
     const badge2 = document.createElement("span");
-    badge2.className = structureBadgeClass(value3);
-    const icon = structureBadgeIcon(value3);
+    badge2.className = structureBadgeClass(value2);
+    const icon = structureBadgeIcon(value2);
     if (icon) {
       const iconEl = document.createElement("span");
       iconEl.className = "badge-icon";
       iconEl.textContent = icon;
       badge2.append(iconEl);
     }
-    const label4 = document.createElement("span");
-    label4.textContent = value3;
-    badge2.append(label4);
+    const label3 = document.createElement("span");
+    label3.textContent = value2;
+    badge2.append(label3);
     return badge2;
   }
-  function structureBadgeClass(value3) {
-    if (CMS_SOURCE_STATES.includes(value3)) {
-      return `badge source-status ${value3}`;
+  function structureBadgeClass(value2) {
+    if (CMS_SOURCE_STATES.includes(value2)) {
+      return `badge source-status ${value2}`;
     }
-    return value3 === "Source" || value3 === "Repeat" ? "badge data" : "badge";
+    return value2 === "Source" || value2 === "Repeat" ? "badge data" : "badge";
   }
-  function structureBadgeIcon(value3) {
-    if (value3 === "Source") {
+  function structureBadgeIcon(value2) {
+    if (value2 === "Source") {
       return "▦";
     }
-    if (value3 === "Repeat") {
+    if (value2 === "Repeat") {
       return "↻";
     }
     return null;
@@ -51759,8 +49541,8 @@ dd {
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeNodes.ts
   class StructureTreeNodes {
     state;
-    constructor(state2) {
-      this.state = state2;
+    constructor(state) {
+      this.state = state;
     }
     canDuplicate(node) {
       return canDuplicateNode(node, (child) => this.parentNode(child), (parent, child) => this.slotForChild(parent, child), (parent, slot) => this.slotChildCount(parent, slot));
@@ -51775,7 +49557,7 @@ dd {
       return sameSlot(left, right);
     }
     slotChildCount(parent, slot) {
-      return slotChildCount(parent, slot, (value3) => this.editorChildrenOf(value3));
+      return slotChildCount(parent, slot, (value2) => this.editorChildrenOf(value2));
     }
     editorChildrenOf(parent) {
       return editorChildrenOf(parent);
@@ -51866,9 +49648,9 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureBlockPicker.ts
   function openPickerOrEmitSingleMedia(action, groups, contextLabel, context) {
-    const option6 = singleEnabledOption(groups);
-    if (option6?.item?.kind === "media") {
-      context.emitAction(action.action, option6.item, option6.slot);
+    const option4 = singleEnabledOption(groups);
+    if (option4?.item?.kind === "media") {
+      context.emitAction(action.action, option4.item, option4.slot);
       return;
     }
     context.setPendingPickerAction(action);
@@ -52100,8 +49882,8 @@ dd {
       }
     ] : [];
     return [
-      ...blockOptions.filter((option6) => canFitItem(context, parent, slot, option6.item, replaced)),
-      ...mediaOptions.filter((option6) => option6.item && canFitItem(context, parent, slot, option6.item, replaced))
+      ...blockOptions.filter((option4) => canFitItem(context, parent, slot, option4.item, replaced)),
+      ...mediaOptions.filter((option4) => option4.item && canFitItem(context, parent, slot, option4.item, replaced))
     ];
   }
   function canFitItem(context, parent, slot, item, replaced) {
@@ -52208,9 +49990,9 @@ dd {
   function conditionFieldOptions(scopes) {
     const byPath = new Map;
     for (const scope of scopes) {
-      for (const option6 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
-        if (!byPath.has(option6.path)) {
-          byPath.set(option6.path, option6);
+      for (const option4 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
+        if (!byPath.has(option4.path)) {
+          byPath.set(option4.path, option4);
         }
       }
     }
@@ -52218,16 +50000,16 @@ dd {
   }
   function fieldOptions(fields, scopeName, scopeLabel, prefix = "") {
     const options2 = [];
-    for (const field3 of fields) {
-      const relative = relativePath(field3.path, prefix);
+    for (const field2 of fields) {
+      const relative = relativePath(field2.path, prefix);
       const path = relative ? `${scopeName}.${relative}` : scopeName;
       options2.push({
         path,
-        label: field3.label ?? field3.path,
+        label: field2.label ?? field2.path,
         scopeLabel,
-        type: field3.type
+        type: field2.type
       });
-      options2.push(...fieldOptions(field3.children ?? [], scopeName, scopeLabel, relative));
+      options2.push(...fieldOptions(field2.children ?? [], scopeName, scopeLabel, relative));
     }
     return options2;
   }
@@ -52283,8 +50065,8 @@ dd {
     return nodes.flatMap((candidate) => candidate.editor.getDataScopes());
   }
   function customConditionExpression(node) {
-    const value3 = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.condition)?.trim() ?? "";
-    return value3 && sourceStatusConditionsFromElement(node.target).length === 0 ? value3 : "";
+    const value2 = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.condition)?.trim() ?? "";
+    return value2 && sourceStatusConditionsFromElement(node.target).length === 0 ? value2 : "";
   }
   function sourceUrlMatchesBinding(sourceUrl2, bindingUrl) {
     return bindingUrl === sourceUrl2 || bindingUrl.startsWith(`${sourceUrl2}?`) || sourceUrl2.includes("?") && bindingUrl.startsWith(`${sourceUrl2}&`);
@@ -52424,14 +50206,14 @@ dd {
   function renderEmptyStructureTree(context) {
     const empty4 = document.createElement("div");
     empty4.className = "empty";
-    const button2 = document.createElement("button");
-    button2.type = "button";
-    button2.textContent = "Add block";
-    button2.addEventListener("click", (event) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Add block";
+    button.addEventListener("click", (event) => {
       event.stopPropagation();
       context.openRootPicker();
     });
-    empty4.append("No editable elements", button2);
+    empty4.append("No editable elements", button);
     return empty4;
   }
 
@@ -52474,29 +50256,29 @@ dd {
     const icon = document.createElement("span");
     icon.className = context.iconClass(node);
     icon.textContent = context.iconText(node);
-    const label4 = document.createElement("span");
-    label4.className = "label";
-    label4.textContent = context.nodeLabel(node);
+    const label3 = document.createElement("span");
+    label3.className = "label";
+    label3.textContent = context.nodeLabel(node);
     const badges = document.createElement("span");
     badges.className = "badges";
     appendBadges2(badges, node, context);
-    item.append(icon, label4, badges);
+    item.append(icon, label3, badges);
     row.append(item, actionsButton(node, context));
     return row;
   }
   function actionsButton(node, context) {
-    const button2 = document.createElement("button");
-    button2.className = "row-actions";
-    button2.type = "button";
-    button2.textContent = "⋯";
-    button2.setAttribute("aria-label", `Actions for ${context.nodeLabel(node)}`);
-    button2.setAttribute("aria-haspopup", "menu");
-    button2.addEventListener("click", (event) => {
+    const button = document.createElement("button");
+    button.className = "row-actions";
+    button.type = "button";
+    button.textContent = "⋯";
+    button.setAttribute("aria-label", `Actions for ${context.nodeLabel(node)}`);
+    button.setAttribute("aria-haspopup", "menu");
+    button.addEventListener("click", (event) => {
       event.stopPropagation();
-      const bounds = button2.getBoundingClientRect();
+      const bounds = button.getBoundingClientRect();
       context.openContextMenu(node, bounds.left, bounds.bottom, true);
     });
-    return button2;
+    return button;
   }
   function appendToggle(row, node, context) {
     if (node.children.length > 0) {
@@ -52517,8 +50299,8 @@ dd {
   }
   function appendBadges2(badges, node, context) {
     const visibleBadges = context.visibleBadges(node);
-    for (const value3 of visibleBadges) {
-      badges.append(context.renderBadge(value3));
+    for (const value2 of visibleBadges) {
+      badges.append(context.renderBadge(value2));
     }
     const hiddenCount = node.badges.length - visibleBadges.length;
     if (hiddenCount > 0) {
@@ -52582,20 +50364,20 @@ dd {
         clearDropRow: () => this.tree.events.clearDropRow(),
         iconClass: structureIconClass,
         iconText: structureIconText,
-        isCollapsed: (value3) => this.tree.nodes.isCollapsed(value3),
+        isCollapsed: (value2) => this.tree.nodes.isCollapsed(value2),
         itemClass: structureItemClass,
         nodeLabel: structureNodeLabel,
-        onDragOver: (value3, row, event) => this.tree.events.onDragOver(value3, row, event),
-        onDragStart: (value3, event) => this.tree.events.onDragStart(value3, event),
-        onDrop: (value3, event) => this.tree.events.onDrop(value3, event),
-        openContextMenu: (value3, clientX, clientY, focusMenu) => this.tree.menus.openContextMenu(value3, clientX, clientY, focusMenu),
-        renderBadge: (value3) => renderStructureBadge(value3),
+        onDragOver: (value2, row, event) => this.tree.events.onDragOver(value2, row, event),
+        onDragStart: (value2, event) => this.tree.events.onDragStart(value2, event),
+        onDrop: (value2, event) => this.tree.events.onDrop(value2, event),
+        openContextMenu: (value2, clientX, clientY, focusMenu) => this.tree.menus.openContextMenu(value2, clientX, clientY, focusMenu),
+        renderBadge: (value2) => renderStructureBadge(value2),
         rowClass: structureRowClass,
         selectEditor: (editor) => this.tree.emitter.selectEditor(editor),
-        toggleBadges: (value3) => this.toggleBadges(value3),
-        toggleNode: (value3) => this.toggleNode(value3),
-        trackRenderedRow: (value3, row) => this.trackRenderedRow(value3, row),
-        visibleBadges: (value3) => this.tree.nodes.visibleBadges(value3)
+        toggleBadges: (value2) => this.toggleBadges(value2),
+        toggleNode: (value2) => this.toggleNode(value2),
+        trackRenderedRow: (value2, row) => this.trackRenderedRow(value2, row),
+        visibleBadges: (value2) => this.tree.nodes.visibleBadges(value2)
       });
     }
     toggleNode(node) {
@@ -52911,7 +50693,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/style.css
-  var style_default22 = `:host {
+  var style_default21 = `:host {
     display: block;
     position: relative;
     min-height: 100%;
@@ -53082,7 +50864,7 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template11 = document.createElement("template");
-  template11.innerHTML = `<style>${[style_default22, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
+  template11.innerHTML = `<style>${[style_default21, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default28)}`;
 
   class StructureTree extends HTMLElement {
@@ -53133,7 +50915,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
-  var style_default23 = `:host {
+  var style_default22 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -53221,19 +51003,19 @@ iframe {
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/canvasFrame.ts
   var EDITOR_FORM_GUARD_KEY = "__cmsEditorFormGuardInstalled";
   function installEditorFormGuard(document2) {
-    const state2 = document2;
-    if (state2[EDITOR_FORM_GUARD_KEY]) {
+    const state = document2;
+    if (state[EDITOR_FORM_GUARD_KEY]) {
       return;
     }
-    state2[EDITOR_FORM_GUARD_KEY] = true;
+    state[EDITOR_FORM_GUARD_KEY] = true;
     document2.addEventListener("submit", (event) => {
       if (!event.defaultPrevented) {
         event.preventDefault();
       }
     }, true);
   }
-  function cssViewportSize(value3) {
-    const size = value3?.trim();
+  function cssViewportSize(value2) {
+    const size = value2?.trim();
     if (!size) {
       return null;
     }
@@ -53242,7 +51024,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template12 = document.createElement("template");
-  template12.innerHTML = `<style>${String(style_default23)}</style>${String(template_default29)}`;
+  template12.innerHTML = `<style>${String(style_default22)}</style>${String(template_default29)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -53395,7 +51177,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/style.css
-  var style_default24 = `:host {
+  var style_default23 = `:host {
     display: block;
 }
 
@@ -53461,9 +51243,9 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/fieldElement.ts
-  function createFieldTemplate(templateHtml2, componentCss) {
+  function createFieldTemplate(templateHtml, componentCss) {
     const template13 = document.createElement("template");
-    template13.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml2)}`;
+    template13.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
     return template13;
   }
   function attachFieldShadow(host, template13) {
@@ -53472,19 +51254,19 @@ iframe {
     return root;
   }
   function syncFieldCopy(host) {
-    const label4 = host.getAttribute("label") ?? "";
-    host.shadowRoot.querySelector(".label").textContent = label4;
+    const label3 = host.getAttribute("label") ?? "";
+    host.shadowRoot.querySelector(".label").textContent = label3;
     host.shadowRoot.querySelector(".hint").textContent = host.getAttribute("hint") ?? "";
     const labelDisplay = host.getAttribute("label-display") ?? "visible";
     const ariaLabel = host.getAttribute("aria-label");
     if (ariaLabel || labelDisplay !== "visible") {
       const control2 = host.shadowRoot.querySelector("input, select, textarea, button");
-      control2?.setAttribute("aria-label", ariaLabel ?? label4);
+      control2?.setAttribute("aria-label", ariaLabel ?? label3);
     }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template13 = createFieldTemplate(template_default30, style_default24);
+  var template13 = createFieldTemplate(template_default30, style_default23);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -53529,7 +51311,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/style.css
-  var style_default25 = `:host {
+  var style_default24 = `:host {
     display: block;
 }
 
@@ -53764,7 +51546,7 @@ input:disabled {
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
   function matchingDynamicDataOptions(options2, query4) {
     const normalized = query4.trim().toLowerCase();
-    return normalized ? options2.filter((option6) => `${option6.label} ${option6.path}`.toLowerCase().includes(normalized)) : options2;
+    return normalized ? options2.filter((option4) => `${option4.label} ${option4.path}`.toLowerCase().includes(normalized)) : options2;
   }
   function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
     list.replaceChildren();
@@ -53775,19 +51557,19 @@ input:disabled {
       list.append(empty4);
       return;
     }
-    for (const option6 of options2) {
-      const button2 = document.createElement("button");
-      button2.className = "data-option";
-      button2.type = "button";
-      button2.dataset.path = option6.path;
-      const label4 = document.createElement("span");
-      label4.className = "data-label";
-      label4.textContent = option6.label;
+    for (const option4 of options2) {
+      const button = document.createElement("button");
+      button.className = "data-option";
+      button.type = "button";
+      button.dataset.path = option4.path;
+      const label3 = document.createElement("span");
+      label3.className = "data-label";
+      label3.textContent = option4.label;
       const path = document.createElement("code");
-      path.textContent = option6.path;
-      button2.append(label4, path);
-      button2.addEventListener("click", () => onSelect(option6.path));
-      list.append(button2);
+      path.textContent = option4.path;
+      button.append(label3, path);
+      button.addEventListener("click", () => onSelect(option4.path));
+      list.append(button);
     }
   }
 
@@ -53796,27 +51578,27 @@ input:disabled {
     const byPath = new Map;
     for (const scope of scopes) {
       const options2 = fieldOptions2(scope.fields, scope.name, scope.label ?? scope.name);
-      for (const option6 of options2) {
-        if (!byPath.has(option6.path)) {
-          byPath.set(option6.path, option6);
+      for (const option4 of options2) {
+        if (!byPath.has(option4.path)) {
+          byPath.set(option4.path, option4);
         }
       }
     }
     return [...byPath.values()];
   }
   function fieldOptions2(fields, scopeName, scopeLabel, prefix = "") {
-    return fields.flatMap((field3) => {
-      const relativePath2 = prefix && field3.path !== "." ? `${prefix}.${field3.path}` : field3.path === "." ? prefix : field3.path;
+    return fields.flatMap((field2) => {
+      const relativePath2 = prefix && field2.path !== "." ? `${prefix}.${field2.path}` : field2.path === "." ? prefix : field2.path;
       const path = relativePath2 ? `${scopeName}.${relativePath2}` : scopeName;
-      if (field3.type === "array") {
+      if (field2.type === "array") {
         return [];
       }
-      const children = fieldOptions2(field3.children ?? [], scopeName, scopeLabel, relativePath2);
-      if (field3.type === "object" || field3.children?.length) {
+      const children = fieldOptions2(field2.children ?? [], scopeName, scopeLabel, relativePath2);
+      if (field2.type === "object" || field2.children?.length) {
         return children;
       }
-      const label4 = field3.label ? `${scopeLabel} / ${field3.label}` : `${scopeLabel} / ${relativePath2}`;
-      return [{ label: label4, path }, ...children];
+      const label3 = field2.label ? `${scopeLabel} / ${field2.label}` : `${scopeLabel} / ${relativePath2}`;
+      return [{ label: label3, path }, ...children];
     });
   }
 
@@ -53966,7 +51748,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template14 = createFieldTemplate(template_default31, `${String(style_default25)}${String(dynamicDataPicker_default)}`);
+  var template14 = createFieldTemplate(template_default31, `${String(style_default24)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -53985,9 +51767,9 @@ input:disabled {
     }
     connectedCallback() {
       syncFieldCopy(this);
-      const input2 = this.shadowRoot.querySelector("input");
-      input2.value = this.getAttribute("value") ?? "";
-      input2.placeholder = this.getAttribute("placeholder") ?? "";
+      const input = this.shadowRoot.querySelector("input");
+      input.value = this.getAttribute("value") ?? "";
+      input.placeholder = this.getAttribute("placeholder") ?? "";
       if (this._connected) {
         this._dynamicData.sync();
         return;
@@ -54047,7 +51829,7 @@ input:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/style.css
-  var style_default26 = `:host {
+  var style_default25 = `:host {
     display: block;
 }
 
@@ -54119,7 +51901,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template15 = createFieldTemplate(template_default32, `${String(style_default26)}${String(dynamicDataPicker_default)}`);
+  var template15 = createFieldTemplate(template_default32, `${String(style_default25)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -54295,8 +52077,8 @@ textarea:disabled {
   function wrapRangeContents(range, tagName, attributes = {}) {
     const document2 = range.startContainer.ownerDocument;
     const wrapper = document2.createElement(tagName);
-    for (const [name, value3] of Object.entries(attributes)) {
-      wrapper.setAttribute(name, value3);
+    for (const [name, value2] of Object.entries(attributes)) {
+      wrapper.setAttribute(name, value2);
     }
     wrapper.append(range.extractContents());
     range.insertNode(wrapper);
@@ -54523,31 +52305,31 @@ textarea:disabled {
       toolbar.append(renderSizeButton(toolbar.ownerDocument, "decrease", handlers.textSize), renderSizeButton(toolbar.ownerDocument, "increase", handlers.textSize));
     }
     for (const action of richTextActions(capability)) {
-      const button2 = toolbar.ownerDocument.createElement("button");
-      button2.className = "tool";
-      button2.type = "button";
-      button2.innerHTML = richTextActionIcon(action);
-      button2.title = richTextActionTitle(action);
-      bindToolButton(button2, () => handlers.action(action));
-      toolbar.append(button2);
+      const button = toolbar.ownerDocument.createElement("button");
+      button.className = "tool";
+      button.type = "button";
+      button.innerHTML = richTextActionIcon(action);
+      button.title = richTextActionTitle(action);
+      bindToolButton(button, () => handlers.action(action));
+      toolbar.append(button);
     }
   }
   function renderSizeButton(document2, direction, onSelect) {
-    const button2 = document2.createElement("button");
-    button2.className = "tool size-tool";
-    button2.type = "button";
-    button2.title = direction === "increase" ? "Increase text size" : "Decrease text size";
-    button2.textContent = direction === "increase" ? "+" : "-";
-    bindToolButton(button2, () => onSelect(direction));
-    return button2;
+    const button = document2.createElement("button");
+    button.className = "tool size-tool";
+    button.type = "button";
+    button.title = direction === "increase" ? "Increase text size" : "Decrease text size";
+    button.textContent = direction === "increase" ? "+" : "-";
+    bindToolButton(button, () => onSelect(direction));
+    return button;
   }
-  function bindToolButton(button2, onSelect) {
-    button2.addEventListener("pointerdown", (event) => {
+  function bindToolButton(button, onSelect) {
+    button.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       event.stopPropagation();
       onSelect();
     });
-    button2.addEventListener("click", (event) => {
+    button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
     });
@@ -54805,12 +52587,12 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/styles/index.ts
-  var styles_default9 = [String(part_1_default6), String(part_2_default6)].join(`
+  var styles_default8 = [String(part_1_default6), String(part_2_default6)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
   var template16 = document.createElement("template");
-  template16.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default33)}`;
+  template16.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default33)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -54951,7 +52733,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/style.css
-  var style_default27 = `:host {
+  var style_default26 = `:host {
     display: block;
 }
 
@@ -55055,7 +52837,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template17 = createFieldTemplate(template_default34, style_default27);
+  var template17 = createFieldTemplate(template_default34, style_default26);
 
   class Select extends HTMLElement {
     constructor() {
@@ -55066,11 +52848,11 @@ select:disabled {
       syncFieldCopy(this);
       const current = this.getAttribute("value");
       const options2 = this._parseOptions();
-      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option6) => {
+      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option4) => {
         const element = document.createElement("option");
-        element.textContent = option6.label;
-        element.value = option6.value;
-        element.selected = option6.value === current;
+        element.textContent = option4.label;
+        element.value = option4.value;
+        element.selected = option4.value === current;
         return element;
       }));
     }
@@ -55102,7 +52884,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/style.css
-  var style_default28 = `:host {
+  var style_default27 = `:host {
     display: block;
 }
 
@@ -55215,7 +52997,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template18 = createFieldTemplate(template_default35, style_default28);
+  var template18 = createFieldTemplate(template_default35, style_default27);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -55238,7 +53020,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/style.css
-  var style_default29 = `:host {
+  var style_default28 = `:host {
     display: block;
 }
 
@@ -55284,7 +53066,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template19 = createFieldTemplate(template_default36, style_default29);
+  var template19 = createFieldTemplate(template_default36, style_default28);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -55332,8 +53114,8 @@ select:disabled {
   function endpointValue(setting, detail) {
     return usesSourceBinding(setting) ? asSource(detail.binding) : detail.source.url;
   }
-  function endpointAttributes(setting, detail, value3) {
-    const attributes = { [setting.attribute]: value3 };
+  function endpointAttributes(setting, detail, value2) {
+    const attributes = { [setting.attribute]: value2 };
     if (setting.methodAttribute) {
       attributes[setting.methodAttribute] = detail.binding.method ?? endpointMethod2(detail.source);
     }
@@ -55381,20 +53163,20 @@ select:disabled {
     render(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "field endpoint-field";
-      const label4 = this.renderFieldLabel(setting.label, setting.labelDisplay);
-      const button2 = document.createElement("button");
-      button2.className = "endpoint-button";
-      button2.type = "button";
-      button2.ariaLabel = setting.ariaLabel ?? setting.label;
-      button2.disabled = setting.disabled === true;
-      this.syncButton(button2, setting);
+      const label3 = this.renderFieldLabel(setting.label, setting.labelDisplay);
+      const button = document.createElement("button");
+      button.className = "endpoint-button";
+      button.type = "button";
+      button.ariaLabel = setting.ariaLabel ?? setting.label;
+      button.disabled = setting.disabled === true;
+      this.syncButton(button, setting);
       if (!setting.disabled) {
-        button2.addEventListener("click", () => this.open(setting, button2));
+        button.addEventListener("click", () => this.open(setting, button));
       }
-      if (label4) {
-        wrapper.append(label4);
+      if (label3) {
+        wrapper.append(label3);
       }
-      wrapper.append(button2);
+      wrapper.append(button);
       if (setting.help) {
         const help = document.createElement("div");
         help.className = "field-help";
@@ -55403,33 +53185,33 @@ select:disabled {
       }
       return wrapper;
     }
-    syncButton(button2, setting, selected2 = selectedEndpoint(setting, this.dataSources), fallbackValue = setting.defaultValue) {
-      button2.replaceChildren();
+    syncButton(button, setting, selected2 = selectedEndpoint(setting, this.dataSources), fallbackValue = setting.defaultValue) {
+      button.replaceChildren();
       const method = selected2?.method ?? setting.defaultMethod;
       if (method) {
         const badge2 = document.createElement("span");
         badge2.className = "endpoint-method";
         badge2.textContent = method;
-        button2.append(badge2);
+        button.append(badge2);
       }
-      const value3 = document.createElement("span");
-      value3.className = selected2 ? "endpoint-value" : "endpoint-placeholder";
-      value3.textContent = selected2?.label ?? fallbackValue ?? setting.placeholder ?? "Select endpoint";
-      button2.append(value3);
+      const value2 = document.createElement("span");
+      value2.className = selected2 ? "endpoint-value" : "endpoint-placeholder";
+      value2.textContent = selected2?.label ?? fallbackValue ?? setting.placeholder ?? "Select endpoint";
+      button.append(value2);
     }
-    open(setting, button2) {
+    open(setting, button) {
       const picker = this.ensurePicker();
       this.disconnectPickerEvents?.();
       const onSelect = (event) => {
         this.disconnectPickerEvents?.();
         const detail = event.detail;
-        const value3 = endpointValue(setting, detail);
-        this.syncButton(button2, setting, detail.source, value3);
-        this.emitSettingChange(setting, value3, endpointAttributes(setting, detail, value3));
+        const value2 = endpointValue(setting, detail);
+        this.syncButton(button, setting, detail.source, value2);
+        this.emitSettingChange(setting, value2, endpointAttributes(setting, detail, value2));
       };
       const onRemove = () => {
         this.disconnectPickerEvents?.();
-        this.syncButton(button2, setting, null, "");
+        this.syncButton(button, setting, null, "");
         this.emitSettingChange(setting, "", removedEndpointAttributes(setting));
       };
       const cleanup = () => {
@@ -55461,17 +53243,17 @@ select:disabled {
   function renderColorSetting(setting, themeTokens, renderFieldLabel, emitColorChange) {
     const wrapper = document.createElement("div");
     wrapper.className = "field color-field";
-    const label4 = renderFieldLabel(setting.label, setting.labelDisplay);
-    if (label4) {
-      wrapper.append(label4);
+    const label3 = renderFieldLabel(setting.label, setting.labelDisplay);
+    if (label3) {
+      wrapper.append(label3);
     }
     const controls = document.createElement("div");
     controls.className = "color-custom";
     const picker = createColorPicker(setting);
-    const input2 = createColorInput(setting);
-    wireColorInputs(setting, picker, input2, emitColorChange);
+    const input = createColorInput(setting);
+    wireColorInputs(setting, picker, input, emitColorChange);
     if (themeTokens.length) {
-      wrapper.append(createTokenSelect(setting, themeTokens, picker, input2, emitColorChange));
+      wrapper.append(createTokenSelect(setting, themeTokens, picker, input, emitColorChange));
     }
     const apply = document.createElement("button");
     apply.className = "color-custom-apply";
@@ -55480,10 +53262,10 @@ select:disabled {
     apply.disabled = setting.disabled === true;
     apply.addEventListener("click", () => {
       if (!setting.disabled) {
-        emitColorChange(input2.value.trim());
+        emitColorChange(input.value.trim());
       }
     });
-    controls.append(picker, input2, apply);
+    controls.append(picker, input, apply);
     wrapper.append(controls);
     if (setting.help) {
       const help = document.createElement("div");
@@ -55493,23 +53275,23 @@ select:disabled {
     }
     return wrapper;
   }
-  function createTokenSelect(setting, tokens, picker, input2, emitColorChange) {
-    const select2 = document.createElement("select");
-    select2.className = "color-token-select";
-    select2.ariaLabel = `${setting.label} theme token`;
-    select2.disabled = setting.disabled === true;
+  function createTokenSelect(setting, tokens, picker, input, emitColorChange) {
+    const select = document.createElement("select");
+    select.className = "color-token-select";
+    select.ariaLabel = `${setting.label} theme token`;
+    select.disabled = setting.disabled === true;
     const custom = document.createElement("option");
     custom.value = "";
     custom.textContent = "Custom color";
-    select2.append(custom);
+    select.append(custom);
     const groups = new Map;
     for (const token of tokens) {
-      const option6 = document.createElement("option");
-      option6.value = `var(--${token.variable})`;
-      option6.textContent = token.label;
+      const option4 = document.createElement("option");
+      option4.value = `var(--${token.variable})`;
+      option4.textContent = token.label;
       const category = token.category?.trim();
       if (!category) {
-        select2.append(option6);
+        select.append(option4);
         continue;
       }
       let group = groups.get(category);
@@ -55517,23 +53299,23 @@ select:disabled {
         group = document.createElement("optgroup");
         group.label = category;
         groups.set(category, group);
-        select2.append(group);
+        select.append(group);
       }
-      group.append(option6);
+      group.append(option4);
     }
-    const selected2 = Array.from(select2.querySelectorAll("option")).find((option6) => option6.value === (setting.defaultValue ?? ""));
+    const selected2 = Array.from(select.querySelectorAll("option")).find((option4) => option4.value === (setting.defaultValue ?? ""));
     if (selected2) {
       selected2.selected = true;
     }
-    select2.addEventListener("change", () => {
-      if (setting.disabled || !select2.value) {
+    select.addEventListener("change", () => {
+      if (setting.disabled || !select.value) {
         return;
       }
-      input2.value = select2.value;
-      picker.value = colorPickerValue(select2.value);
-      emitColorChange(select2.value);
+      input.value = select.value;
+      picker.value = colorPickerValue(select.value);
+      emitColorChange(select.value);
     });
-    return select2;
+    return select;
   }
   function createColorPicker(setting) {
     const picker = document.createElement("input");
@@ -55545,32 +53327,32 @@ select:disabled {
     return picker;
   }
   function createColorInput(setting) {
-    const input2 = document.createElement("input");
-    input2.className = "color-custom-input";
-    input2.type = "text";
-    input2.placeholder = setting.placeholder ?? "#f6f7f8";
-    input2.value = setting.defaultValue ?? "";
-    input2.disabled = setting.disabled === true;
-    return input2;
+    const input = document.createElement("input");
+    input.className = "color-custom-input";
+    input.type = "text";
+    input.placeholder = setting.placeholder ?? "#f6f7f8";
+    input.value = setting.defaultValue ?? "";
+    input.disabled = setting.disabled === true;
+    return input;
   }
-  function wireColorInputs(setting, picker, input2, emitColorChange) {
+  function wireColorInputs(setting, picker, input, emitColorChange) {
     picker.addEventListener("input", () => {
       if (setting.disabled) {
         return;
       }
-      input2.value = picker.value;
+      input.value = picker.value;
       emitColorChange(picker.value);
     });
-    input2.addEventListener("change", () => {
+    input.addEventListener("change", () => {
       if (setting.disabled) {
         return;
       }
-      picker.value = colorPickerValue(input2.value);
-      emitColorChange(input2.value.trim());
+      picker.value = colorPickerValue(input.value);
+      emitColorChange(input.value.trim());
     });
   }
-  function colorPickerValue(value3) {
-    const normalized = value3?.trim() ?? "";
+  function colorPickerValue(value2) {
+    const normalized = value2?.trim() ?? "";
     if (/^#[\da-f]{6}$/i.test(normalized)) {
       return normalized;
     }
@@ -55583,34 +53365,34 @@ select:disabled {
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/controlWiring.ts
   function wireTextControl(control2, selector, setting, emitValue) {
     whenDefined(control2, () => {
-      const input2 = control2.shadowRoot?.querySelector(selector);
-      if (!input2) {
+      const input = control2.shadowRoot?.querySelector(selector);
+      if (!input) {
         return;
       }
-      input2.disabled = setting.disabled === true;
+      input.disabled = setting.disabled === true;
       if (setting.disabled) {
         return;
       }
-      input2.addEventListener("input", () => emitValue(input2.value));
-      input2.addEventListener("change", () => emitValue(input2.value));
+      input.addEventListener("input", () => emitValue(input.value));
+      input.addEventListener("change", () => emitValue(input.value));
     });
   }
   function wireContentControl(control2, selector, emitValue) {
     whenDefined(control2, () => {
-      const input2 = control2.shadowRoot?.querySelector(selector);
-      if (!input2) {
+      const input = control2.shadowRoot?.querySelector(selector);
+      if (!input) {
         return;
       }
-      input2.addEventListener("input", () => emitValue(input2.value));
-      input2.addEventListener("change", () => emitValue(input2.value));
+      input.addEventListener("input", () => emitValue(input.value));
+      input.addEventListener("change", () => emitValue(input.value));
     });
   }
   function wireRichTextControl(control2, emitValue) {
     whenDefined(control2, () => {
       control2.addEventListener("input", (event) => {
-        const value3 = event.detail?.value;
-        if (typeof value3 === "string") {
-          emitValue(value3);
+        const value2 = event.detail?.value;
+        if (typeof value2 === "string") {
+          emitValue(value2);
         }
       });
     });
@@ -55621,26 +53403,26 @@ select:disabled {
         return;
       }
       control2.addEventListener("input", (event) => {
-        const value3 = event.detail?.value;
-        if (typeof value3 === "string") {
-          emitValue(value3);
+        const value2 = event.detail?.value;
+        if (typeof value2 === "string") {
+          emitValue(value2);
         }
       });
     });
   }
   function wireToggleControl(control2, setting, emitValue) {
     whenDefined(control2, () => {
-      const button2 = control2.shadowRoot?.querySelector("button");
-      if (!button2) {
+      const button = control2.shadowRoot?.querySelector("button");
+      if (!button) {
         return;
       }
-      button2.disabled = setting.disabled === true;
+      button.disabled = setting.disabled === true;
       if (setting.disabled) {
         return;
       }
-      button2.addEventListener("click", () => {
-        const checked = button2.ariaPressed !== "true";
-        button2.ariaPressed = String(checked);
+      button.addEventListener("click", () => {
+        const checked = button.ariaPressed !== "true";
+        button.ariaPressed = String(checked);
         control2.toggleAttribute("checked", checked);
         emitValue(checked);
       });
@@ -55722,11 +53504,11 @@ select:disabled {
     renderRow(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "setting-row";
-      const label4 = setting.label ? renderFieldLabel(setting.label, setting.labelDisplay) : null;
-      if (label4) {
-        label4.classList.add("setting-row-label");
+      const label3 = setting.label ? renderFieldLabel(setting.label, setting.labelDisplay) : null;
+      if (label3) {
+        label3.classList.add("setting-row-label");
         wrapper.classList.add("setting-row-labeled");
-        wrapper.append(label4);
+        wrapper.append(label3);
       }
       const controls = document.createElement("div");
       controls.className = "setting-row-controls";
@@ -55740,7 +53522,7 @@ select:disabled {
       return wrapper;
     }
     renderControl(setting) {
-      const emit = (value3) => this.emitSettingChange(setting, value3);
+      const emit = (value2) => this.emitSettingChange(setting, value2);
       if (setting.type === "textarea" || setting.type === "select") {
         const tag = setting.type === "textarea" ? "cms-editor-v2-textarea" : "cms-editor-v2-select";
         const selector = setting.type === "textarea" ? "textarea" : "select";
@@ -55789,31 +53571,31 @@ select:disabled {
     renderSegmented(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "field";
-      const label4 = renderFieldLabel(setting.label, setting.labelDisplay);
+      const label3 = renderFieldLabel(setting.label, setting.labelDisplay);
       const control2 = document.createElement("cms-editor-v2-segmented-control");
       control2.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
-      for (const option6 of setting.options) {
-        const button2 = document.createElement("button");
-        button2.type = "button";
-        button2.value = option6.value;
-        button2.disabled = setting.disabled === true;
-        button2.title = option6.ariaLabel ?? option6.label;
-        button2.ariaLabel = option6.ariaLabel ?? option6.label;
-        button2.ariaPressed = String(option6.value === setting.defaultValue);
-        button2.append(...renderOptionContent(setting.display, option6.display, option6.icon ?? setting.icon, option6.label));
-        button2.addEventListener("click", () => {
+      for (const option4 of setting.options) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.value = option4.value;
+        button.disabled = setting.disabled === true;
+        button.title = option4.ariaLabel ?? option4.label;
+        button.ariaLabel = option4.ariaLabel ?? option4.label;
+        button.ariaPressed = String(option4.value === setting.defaultValue);
+        button.append(...renderOptionContent(setting.display, option4.display, option4.icon ?? setting.icon, option4.label));
+        button.addEventListener("click", () => {
           if (setting.disabled) {
             return;
           }
           for (const item of Array.from(control2.querySelectorAll("button"))) {
-            item.ariaPressed = String(item === button2);
+            item.ariaPressed = String(item === button);
           }
-          this.emitSettingChange(setting, option6.value);
+          this.emitSettingChange(setting, option4.value);
         });
-        control2.append(button2);
+        control2.append(button);
       }
-      if (label4) {
-        wrapper.append(label4);
+      if (label3) {
+        wrapper.append(label3);
       }
       wrapper.append(control2);
       return wrapper;
@@ -55836,22 +53618,22 @@ select:disabled {
     applyDisabled(control2, setting);
     return control2;
   }
-  function renderFieldLabel(label4, display) {
+  function renderFieldLabel(label3, display) {
     if (display === "hidden") {
       return null;
     }
     const element = document.createElement("div");
     element.className = display === "sr-only" ? "field-label sr-only" : "field-label";
-    element.textContent = label4;
+    element.textContent = label3;
     return element;
   }
-  function renderOptionContent(settingDisplay, optionDisplay, iconName, label4) {
+  function renderOptionContent(settingDisplay, optionDisplay, iconName, label3) {
     const display = optionDisplay ?? settingDisplay ?? (iconName ? "icon-label" : "label");
     const icon = iconName ? settingIcon(iconName) : null;
     const nodes = icon && (display === "icon" || display === "icon-label") ? [icon] : [];
     if (display !== "icon" || !icon) {
       const text5 = document.createElement("span");
-      text5.textContent = label4;
+      text5.textContent = label3;
       nodes.push(text5);
     }
     return nodes;
@@ -55871,12 +53653,12 @@ select:disabled {
       return visibleChildren.length > 0 ? [{ ...setting, settings: visibleChildren }] : [];
     });
   }
-  function attributesForSettingValue(setting, value3) {
-    const matchingRules = setting.attributesOnValue?.filter((rule) => visibilityValueMatches(value3, rule.value)) ?? [];
+  function attributesForSettingValue(setting, value2) {
+    const matchingRules = setting.attributesOnValue?.filter((rule) => visibilityValueMatches(value2, rule.value)) ?? [];
     if (matchingRules.length === 0) {
       return;
     }
-    const attributes = { [setting.attribute]: value3 };
+    const attributes = { [setting.attribute]: value2 };
     for (const rule of matchingRules) {
       Object.assign(attributes, rule.attributes);
     }
@@ -55913,30 +53695,30 @@ select:disabled {
   }
   function visibilityValueMatches(actual, expected) {
     const expectedValues = Array.isArray(expected) ? expected : [expected];
-    return expectedValues.some((value3) => normalizeVisibilityValue(actual) === normalizeVisibilityValue(value3));
+    return expectedValues.some((value2) => normalizeVisibilityValue(actual) === normalizeVisibilityValue(value2));
   }
-  function normalizeVisibilityValue(value3) {
-    return typeof value3 === "boolean" ? value3 : String(value3 ?? "");
+  function normalizeVisibilityValue(value2) {
+    return typeof value2 === "boolean" ? value2 : String(value2 ?? "");
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/settingsSections.ts
   function renderSettingsStates(states2, onToggle) {
     const section2 = document.createElement("cms-editor-v2-section");
     section2.setAttribute("label", "States");
-    for (const state2 of states2) {
-      const button2 = document.createElement("button");
-      button2.className = "state-button";
-      button2.type = "button";
-      button2.ariaPressed = String(state2.isActive());
-      const label4 = document.createElement("span");
-      label4.className = "state-label";
-      label4.textContent = state2.label;
+    for (const state of states2) {
+      const button = document.createElement("button");
+      button.className = "state-button";
+      button.type = "button";
+      button.ariaPressed = String(state.isActive());
+      const label3 = document.createElement("span");
+      label3.className = "state-label";
+      label3.textContent = state.label;
       const description = document.createElement("span");
       description.className = "state-description";
-      description.textContent = state2.description ?? (state2.isActive() ? "Active" : "Inactive");
-      button2.append(label4, description);
-      button2.addEventListener("click", () => onToggle(state2));
-      section2.append(button2);
+      description.textContent = state.description ?? (state.isActive() ? "Active" : "Inactive");
+      button.append(label3, description);
+      button.addEventListener("click", () => onToggle(state));
+      section2.append(button);
     }
     return section2;
   }
@@ -55958,14 +53740,14 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/textCapability.ts
-  function renderTextCapability(capability, value3, dataScopes2, emitContentChange) {
+  function renderTextCapability(capability, value2, dataScopes2, emitContentChange) {
     const section2 = document.createElement("cms-editor-v2-section");
     section2.setAttribute("label", "Content");
     const setting = {
       type: "text",
       label: capability.format === "richtext" ? "Rich text" : "Text",
       attribute: "__text",
-      defaultValue: value3,
+      defaultValue: value2,
       help: capability.format === "richtext" ? undefined : formatTextCapability(capability)
     };
     const control2 = createSettingControl(capability.format === "richtext" ? "cms-editor-v2-rich-text-editor" : "cms-editor-v2-text-input", setting);
@@ -55989,7 +53771,7 @@ select:disabled {
       capability.link ? "link" : null,
       capability.code ? "code" : null,
       capability.dynamic ? "dynamic" : null
-    ].filter((option6) => Boolean(option6));
+    ].filter((option4) => Boolean(option4));
     return options2.length > 0 ? options2.join(", ") : "Plain text";
   }
 
@@ -56271,12 +54053,12 @@ cms-editor-v2-segmented-control button svg:only-child {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/styles/index.ts
-  var styles_default10 = [String(part_1_default7), String(part_2_default7)].join(`
+  var styles_default9 = [String(part_1_default7), String(part_2_default7)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
   var template20 = document.createElement("template");
-  template20.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default37)}`;
+  template20.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default37)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
@@ -56290,8 +54072,8 @@ cms-editor-v2-segmented-control button svg:only-child {
       super();
       const shadowRoot = this.attachShadow({ mode: "open" });
       shadowRoot.append(template20.content.cloneNode(true));
-      this._endpointSettings = new EndpointSettingController(shadowRoot, renderFieldLabel, (setting, value3, attributes) => this._emitSettingChange(setting, value3, attributes));
-      this._settingControls = new SettingControlRenderer(this._endpointSettings, () => this._dataScopes, () => this._themeTokens, (setting, value3) => this._emitSettingChange(setting, value3));
+      this._endpointSettings = new EndpointSettingController(shadowRoot, renderFieldLabel, (setting, value2, attributes) => this._emitSettingChange(setting, value2, attributes));
+      this._settingControls = new SettingControlRenderer(this._endpointSettings, () => this._dataScopes, () => this._themeTokens, (setting, value2) => this._emitSettingChange(setting, value2));
     }
     setThemeTokens(tokens) {
       this._themeTokens = tokens.filter((token) => token.label && /^[a-z][a-z0-9-]*$/.test(token.variable));
@@ -56312,35 +54094,35 @@ cms-editor-v2-segmented-control button svg:only-child {
         return;
       }
       if (shouldRenderText) {
-        view.append(renderTextCapability(textCapability, textValue3, dataScopes2, (value3, format) => this._emitContentChange(value3, format)));
+        view.append(renderTextCapability(textCapability, textValue3, dataScopes2, (value2, format) => this._emitContentChange(value2, format)));
       }
       if (shouldRenderStates) {
-        view.append(renderSettingsStates(states2, (state2) => this._emitStateToggle(state2)));
+        view.append(renderSettingsStates(states2, (state) => this._emitStateToggle(state)));
       }
       for (const section2 of visibleSections) {
         view.append(renderSettingSection(section2, this._settingControls));
       }
     }
-    _emitStateToggle(state2) {
+    _emitStateToggle(state) {
       this.dispatchEvent(new CustomEvent(SETTINGS_VIEW_STATE_TOGGLE_EVENT, {
         bubbles: true,
         composed: true,
-        detail: { state: state2 }
+        detail: { state }
       }));
     }
-    _emitSettingChange(setting, value3, attributes) {
-      const changes = attributes ?? attributesForSettingValue(setting, value3);
+    _emitSettingChange(setting, value2, attributes) {
+      const changes = attributes ?? attributesForSettingValue(setting, value2);
       this.dispatchEvent(new CustomEvent(SETTINGS_VIEW_SETTING_CHANGE_EVENT, {
         bubbles: true,
         composed: true,
-        detail: changes ? { setting, value: value3, attributes: changes } : { setting, value: value3 }
+        detail: changes ? { setting, value: value2, attributes: changes } : { setting, value: value2 }
       }));
     }
-    _emitContentChange(value3, format) {
+    _emitContentChange(value2, format) {
       this.dispatchEvent(new CustomEvent(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, {
         bubbles: true,
         composed: true,
-        detail: { value: value3, format }
+        detail: { value: value2, format }
       }));
     }
   }
@@ -56741,32 +54523,32 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/styles/index.ts
-  var styles_default11 = [String(part_1_default8), String(part_2_default8), String(part_3_default5)].join(`
+  var styles_default10 = [String(part_1_default8), String(part_2_default8), String(part_3_default5)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatOptions.ts
   function repeatArrayOptions(scopes) {
     const byPath = new Map;
-    for (const option6 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
-      if (!byPath.has(option6.path)) {
-        byPath.set(option6.path, option6);
+    for (const option4 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
+      if (!byPath.has(option4.path)) {
+        byPath.set(option4.path, option4);
       }
     }
     return [...byPath.values()];
   }
   function repeatArrayFields(fields, scopeName, scopeLabel, prefix = "") {
-    return fields.flatMap((field3) => {
-      const relativePath2 = prefix && field3.path !== "." ? `${prefix}.${field3.path}` : field3.path === "." ? prefix : field3.path;
+    return fields.flatMap((field2) => {
+      const relativePath2 = prefix && field2.path !== "." ? `${prefix}.${field2.path}` : field2.path === "." ? prefix : field2.path;
       const fullPath = relativePath2 ? `${scopeName}.${relativePath2}` : scopeName;
-      if (field3.type !== "array") {
-        return repeatArrayFields(field3.children ?? [], scopeName, scopeLabel, relativePath2);
+      if (field2.type !== "array") {
+        return repeatArrayFields(field2.children ?? [], scopeName, scopeLabel, relativePath2);
       }
       return [
         {
           path: fullPath,
-          label: field3.path,
+          label: field2.path,
           scopeLabel,
-          fields: field3.children ?? []
+          fields: field2.children ?? []
         }
       ];
     });
@@ -56776,7 +54558,7 @@ label {
     if (!normalizedQuery) {
       return options2;
     }
-    return options2.filter((option6) => [option6.path, option6.label, option6.scopeLabel].some((value3) => value3.toLowerCase().includes(normalizedQuery)));
+    return options2.filter((option4) => [option4.path, option4.label, option4.scopeLabel].some((value2) => value2.toLowerCase().includes(normalizedQuery)));
   }
   function defaultRepeatAlias(path) {
     const segment = path.split(".").filter(Boolean).at(-1) ?? "item";
@@ -56794,26 +54576,26 @@ label {
       container.append(empty4);
       return;
     }
-    for (const option6 of options2) {
-      const button2 = document.createElement("button");
-      button2.className = "array";
-      button2.type = "button";
-      button2.ariaSelected = String(option6 === activeOption);
+    for (const option4 of options2) {
+      const button = document.createElement("button");
+      button.className = "array";
+      button.type = "button";
+      button.ariaSelected = String(option4 === activeOption);
       const name = document.createElement("span");
       name.className = "name";
-      name.textContent = option6.path;
+      name.textContent = option4.path;
       const scope = document.createElement("span");
       scope.className = "scope";
-      scope.textContent = option6.scopeLabel;
-      button2.append(name, scope);
-      button2.addEventListener("click", () => onActivate(option6));
-      button2.addEventListener("dblclick", () => onSelect(option6));
-      container.append(button2);
+      scope.textContent = option4.scopeLabel;
+      button.append(name, scope);
+      button.addEventListener("click", () => onActivate(option4));
+      button.addEventListener("dblclick", () => onSelect(option4));
+      container.append(button);
     }
   }
-  function renderRepeatDetails(container, option6) {
+  function renderRepeatDetails(container, option4) {
     container.replaceChildren();
-    if (!option6) {
+    if (!option4) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select an array field to inspect item fields.";
@@ -56823,11 +54605,11 @@ label {
     const heading = document.createElement("div");
     heading.className = "details-eyebrow";
     heading.textContent = "Response fields";
-    container.append(heading, renderFields(option6.fields));
+    container.append(heading, renderFields(option4.fields));
   }
-  function renderRepeatBinding(container, option6, onSelect) {
+  function renderRepeatBinding(container, option4, onSelect) {
     container.replaceChildren();
-    if (!option6) {
+    if (!option4) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select an array field to configure repeat.";
@@ -56842,22 +54624,22 @@ label {
     const pathLabel = document.createElement("span");
     pathLabel.textContent = "Array";
     const pathValue = document.createElement("strong");
-    pathValue.textContent = option6.path;
+    pathValue.textContent = option4.path;
     path.append(pathLabel, pathValue);
     const config = document.createElement("section");
     config.className = "binding-config";
-    const label4 = document.createElement("label");
-    label4.textContent = "Alias";
+    const label3 = document.createElement("label");
+    label3.textContent = "Alias";
     const alias = document.createElement("input");
     alias.className = "alias";
-    alias.value = defaultRepeatAlias(option6.path);
-    label4.append(alias);
-    config.append(label4);
+    alias.value = defaultRepeatAlias(option4.path);
+    label3.append(alias);
+    config.append(label3);
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
     insert.textContent = "Use repeat";
-    insert.addEventListener("click", () => onSelect(option6, alias.value));
+    insert.addEventListener("click", () => onSelect(option4, alias.value));
     const scroll = document.createElement("div");
     scroll.className = "binding-scroll";
     scroll.append(heading, path, config);
@@ -56869,8 +54651,8 @@ label {
   function renderFields(fields) {
     const list = document.createElement("ul");
     list.className = "fields";
-    for (const field3 of fields) {
-      list.append(renderField2(field3, 0));
+    for (const field2 of fields) {
+      list.append(renderField2(field2, 0));
     }
     if (list.children.length === 0) {
       const empty4 = document.createElement("p");
@@ -56880,21 +54662,21 @@ label {
     }
     return list;
   }
-  function renderField2(field3, depth) {
+  function renderField2(field2, depth) {
     const item = document.createElement("li");
     item.className = "field";
     item.style.setProperty("--field-depth", String(depth));
     const path = document.createElement("span");
     path.className = "field-path";
-    path.textContent = field3.path;
+    path.textContent = field2.path;
     const type = document.createElement("span");
     type.className = "field-type";
-    type.textContent = field3.type ?? "unknown";
+    type.textContent = field2.type ?? "unknown";
     item.append(path, type);
-    if (field3.children?.length) {
+    if (field2.children?.length) {
       const children = document.createElement("ul");
       children.className = "field-children";
-      for (const child of field3.children) {
+      for (const child of field2.children) {
         children.append(renderField2(child, depth + 1));
       }
       item.append(children);
@@ -56951,35 +54733,35 @@ label {
     footer.append(insert);
     container.append(scroll, footer);
   }
-  function numberInput(text5, value3) {
-    const label4 = document.createElement("label");
-    label4.textContent = text5;
-    const input2 = document.createElement("input");
-    input2.className = "count";
-    input2.type = "number";
-    input2.min = "0";
-    input2.max = String(CMS_REPEAT_RANGE_MAX);
-    input2.step = "1";
-    input2.required = true;
-    input2.value = String(value3);
-    label4.append(input2);
-    return { label: label4, input: input2 };
+  function numberInput(text5, value2) {
+    const label3 = document.createElement("label");
+    label3.textContent = text5;
+    const input = document.createElement("input");
+    input.className = "count";
+    input.type = "number";
+    input.min = "0";
+    input.max = String(CMS_REPEAT_RANGE_MAX);
+    input.step = "1";
+    input.required = true;
+    input.value = String(value2);
+    label3.append(input);
+    return { label: label3, input };
   }
-  function textInput(text5, value3) {
-    const label4 = document.createElement("label");
-    label4.textContent = text5;
-    const input2 = document.createElement("input");
-    input2.className = "alias";
-    input2.pattern = "[A-Za-z_$][A-Za-z0-9_$]*";
-    input2.required = true;
-    input2.value = value3;
-    label4.append(input2);
-    return { label: label4, input: input2 };
+  function textInput(text5, value2) {
+    const label3 = document.createElement("label");
+    label3.textContent = text5;
+    const input = document.createElement("input");
+    input.className = "alias";
+    input.pattern = "[A-Za-z_$][A-Za-z0-9_$]*";
+    input.required = true;
+    input.value = value2;
+    label3.append(input);
+    return { label: label3, input };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/RepeatPicker.ts
   var template21 = document.createElement("template");
-  template21.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default38)}`;
+  template21.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default38)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -56994,14 +54776,14 @@ label {
       this.closeButton.addEventListener("click", this.close);
       this.backdrop.addEventListener("click", this._onBackdropClick);
       this.search.addEventListener("input", this._onSearchInput);
-      this.modeButtons.forEach((button2) => button2.addEventListener("click", this._onModeClick));
+      this.modeButtons.forEach((button) => button.addEventListener("click", this._onModeClick));
       this.ownerDocument.addEventListener("keydown", this._onKeydown);
     }
     disconnectedCallback() {
       this.closeButton.removeEventListener("click", this.close);
       this.backdrop.removeEventListener("click", this._onBackdropClick);
       this.search.removeEventListener("input", this._onSearchInput);
-      this.modeButtons.forEach((button2) => button2.removeEventListener("click", this._onModeClick));
+      this.modeButtons.forEach((button) => button.removeEventListener("click", this._onModeClick));
       this.ownerDocument.removeEventListener("keydown", this._onKeydown);
     }
     open(scopes, contextLabel) {
@@ -57020,8 +54802,8 @@ label {
     _render() {
       this.shadowRoot.querySelector(".body").dataset.mode = this._mode;
       this.search.hidden = this._mode === "range";
-      for (const button2 of this.modeButtons) {
-        button2.ariaPressed = String(button2.dataset.mode === this._mode);
+      for (const button of this.modeButtons) {
+        button.ariaPressed = String(button.dataset.mode === this._mode);
       }
       if (this._mode === "range") {
         this.arrays.replaceChildren();
@@ -57031,17 +54813,17 @@ label {
       }
       this._renderOptions();
       renderRepeatDetails(this.details, this._activeOption);
-      renderRepeatBinding(this.binding, this._activeOption, (option6, alias) => this._selectPath(option6.path, alias));
+      renderRepeatBinding(this.binding, this._activeOption, (option4, alias) => this._selectPath(option4.path, alias));
     }
     _renderOptions() {
       const options2 = visibleRepeatOptions(this._options, this.search.value);
       if (!this._activeOption || !options2.includes(this._activeOption)) {
         this._activeOption = options2[0] ?? null;
       }
-      renderRepeatOptions(this.arrays, options2, this._activeOption, (option6) => {
-        this._activeOption = option6;
+      renderRepeatOptions(this.arrays, options2, this._activeOption, (option4) => {
+        this._activeOption = option4;
         this._render();
-      }, (option6) => this._selectPath(option6.path, defaultRepeatAlias(option6.path)));
+      }, (option4) => this._selectPath(option4.path, defaultRepeatAlias(option4.path)));
     }
     _selectPath(path, alias) {
       const cleanAlias = alias.trim();
@@ -57371,8 +55153,8 @@ label {
 
   // ../../features/cms-editor-system-v2/src/native/mediaSettingChanges.ts
   var accessibleNameDrafts = new WeakMap;
-  function prepareNativeMediaSettingChange(editor, setting, value3, attributes) {
-    if (typeof value3 !== "string") {
+  function prepareNativeMediaSettingChange(editor, setting, value2, attributes) {
+    if (typeof value2 !== "string") {
       return null;
     }
     const media2 = mediaAccessibility(editor.target);
@@ -57380,20 +55162,20 @@ label {
       return null;
     }
     if (setting.type === "text" && setting.attribute === media2.accessibleName && media2.isDecorative) {
-      accessibleNameDrafts.set(editor.target, value3);
+      accessibleNameDrafts.set(editor.target, value2);
       return { kind: "accessible-name-draft" };
     }
     if (setting.type !== "segmented" || setting.attribute !== "role") {
       return null;
     }
-    if (value3 === media2.decorativeRole) {
+    if (value2 === media2.decorativeRole) {
       rememberCurrentAccessibleName(editor, media2.accessibleName);
       return {
         kind: "attributes",
         attributes: decorativeAttributes(editor.target.localName, attributes)
       };
     }
-    if (value3 !== media2.informativeRole) {
+    if (value2 !== media2.informativeRole) {
       return null;
     }
     const changes = informativeAttributes(editor.target.localName, attributes);
@@ -57455,9 +55237,9 @@ label {
       return false;
     }
     try {
-      const value3 = target2.value;
-      target2.value = value3;
-      return typeof value3 === "string";
+      const value2 = target2.value;
+      target2.value = value2;
+      return typeof value2 === "string";
     } catch {
       return false;
     }
@@ -57466,15 +55248,15 @@ label {
     const propertyName = "name" in target2 ? target2.name : undefined;
     return String(typeof propertyName === "string" ? propertyName : target2.getAttribute("name") ?? target2.id ?? "").trim();
   }
-  function isValidValueKey(value3) {
-    return VALUE_KEY_PATTERN.test(value3.trim());
+  function isValidValueKey(value2) {
+    return VALUE_KEY_PATTERN.test(value2.trim());
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/paramSync.ts
   var PARAM_SYNC_ENABLE_SETTING = "__cms-param-sync-enabled";
   var PARAM_SYNC_USE_NAME_SETTING = "__cms-param-sync-use-name";
   var PARAM_SYNC_NAME_SETTING = "__cms-param-sync-name";
-  function applyParamSyncSetting(editor, setting, value3) {
+  function applyParamSyncSetting(editor, setting, value2) {
     if (!isParamSyncSetting(setting)) {
       return false;
     }
@@ -57482,7 +55264,7 @@ label {
     const current = target2.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
     const fieldName = valueSurfaceName(target2);
     if (setting.attribute === PARAM_SYNC_ENABLE_SETTING) {
-      if (value3 !== true) {
+      if (value2 !== true) {
         target2.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
         return true;
       }
@@ -57493,15 +55275,15 @@ label {
       return true;
     }
     if (setting.attribute === PARAM_SYNC_USE_NAME_SETTING) {
-      if (value3 === true && isCmsQueryParamName(fieldName)) {
+      if (value2 === true && isCmsQueryParamName(fieldName)) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, fieldName);
       } else if (current === fieldName) {
         target2.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
       }
       return true;
     }
-    if (typeof value3 === "string") {
-      const next = value3.trim();
+    if (typeof value2 === "string") {
+      const next = value2.trim();
       if (isCmsQueryParamName(next)) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
       }
@@ -57564,7 +55346,7 @@ label {
   var PAGE_STATE_ENABLE_SETTING = "__cms-page-state-enabled";
   var PAGE_STATE_USE_NAME_SETTING = "__cms-page-state-use-name";
   var PAGE_STATE_NAME_SETTING = "__cms-page-state-name";
-  function applyPageStateSetting(editor, setting, value3) {
+  function applyPageStateSetting(editor, setting, value2) {
     if (!isPageStateSetting(setting)) {
       return false;
     }
@@ -57572,7 +55354,7 @@ label {
     const current = target2.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)?.trim() ?? "";
     const fieldName = valueSurfaceName(target2);
     if (setting.attribute === PAGE_STATE_ENABLE_SETTING) {
-      if (value3 !== true) {
+      if (value2 !== true) {
         target2.removeAttribute(CMS_BINDING_ATTRIBUTES.pageState);
         return true;
       }
@@ -57583,15 +55365,15 @@ label {
       return true;
     }
     if (setting.attribute === PAGE_STATE_USE_NAME_SETTING) {
-      if (value3 === true && isValidValueKey(fieldName)) {
+      if (value2 === true && isValidValueKey(fieldName)) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, fieldName);
       } else if (current === fieldName) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, "");
       }
       return true;
     }
-    if (typeof value3 === "string") {
-      const next = value3.trim();
+    if (typeof value2 === "string") {
+      const next = value2.trim();
       if (isValidValueKey(next)) {
         target2.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, next);
       }
@@ -57661,10 +55443,10 @@ label {
     if (format === "richtext") {
       sanitizeNativeRichTextFragment(textFragment, editor.target.localName);
     }
-    const value3 = format === "richtext" ? textFragment.innerHTML : textFragment.textContent ?? "";
-    return editor.getContentSlots().length > 0 ? value3.trim() : value3;
+    const value2 = format === "richtext" ? textFragment.innerHTML : textFragment.textContent ?? "";
+    return editor.getContentSlots().length > 0 ? value2.trim() : value2;
   }
-  function setTextValue(editor, format, value3) {
+  function setTextValue(editor, format, value2) {
     editor = textTargetEditor(editor);
     assertTextSlotCompatibility(editor);
     const reserved = reservedSlotNames2(editor.getContentSlots());
@@ -57673,12 +55455,12 @@ label {
     const fragment2 = editor.target.ownerDocument.createDocumentFragment();
     if (format === "richtext") {
       const template22 = editor.target.ownerDocument.createElement("template");
-      template22.innerHTML = value3;
+      template22.innerHTML = value2;
       sanitizeNativeRichTextFragment(template22.content, editor.target.localName);
       L3(template22.content);
       fragment2.append(template22.content.cloneNode(true));
-    } else if (value3 !== "") {
-      fragment2.append(editor.target.ownerDocument.createTextNode(value3));
+    } else if (value2 !== "") {
+      fragment2.append(editor.target.ownerDocument.createTextNode(value2));
     }
     editor.target.insertBefore(fragment2, referenceNode);
     for (const node of currentNodes) {
@@ -58131,11 +55913,11 @@ label {
     const core = `${CMS_BINDING_CORE_TAG}[${CMS_BINDING_ATTRIBUTES.bindingDisabled}]`;
     const source2 = `[${CMS_BINDING_ATTRIBUTES.source}]`;
     const condition = CMS_BINDING_ATTRIBUTES.condition;
-    const state2 = CMS_BINDING_ATTRIBUTES.sourceStateForce;
+    const state = CMS_BINDING_ATTRIBUTES.sourceStateForce;
     const hiddenFor = (current) => {
       const selectors = [
-        `${core}[${state2}="${current}"] ${source2} [${condition}^="$source."]:not([${condition}*=".${current}"])`,
-        `${core}[${state2}="${current}"] ${source2} [${condition}^="$sources."]:not([${condition}*=".${current}"])`
+        `${core}[${state}="${current}"] ${source2} [${condition}^="$source."]:not([${condition}*=".${current}"])`,
+        `${core}[${state}="${current}"] ${source2} [${condition}^="$sources."]:not([${condition}*=".${current}"])`
       ];
       return `${selectors.join(",")}{display:none!important}`;
     };
@@ -58495,10 +56277,10 @@ label {
     return imported;
   }
   function normalizeAccessibility(root) {
-    const label4 = root.getAttribute("aria-label")?.trim() || root.querySelector("title")?.textContent?.trim() || "";
-    if (label4) {
+    const label3 = root.getAttribute("aria-label")?.trim() || root.querySelector("title")?.textContent?.trim() || "";
+    if (label3) {
       root.setAttribute("role", "img");
-      root.setAttribute("aria-label", label4);
+      root.setAttribute("aria-label", label3);
       root.removeAttribute("aria-hidden");
       return;
     }
@@ -58844,9 +56626,9 @@ label {
       if (!document2.contentRoot.contains(editor.target)) {
         return;
       }
-      if (!canInsertSibling(this.context.runtime(), editor, clone, this.context.catalog(), (element, state2) => {
-        if (state2.length) {
-          applySourceStatusConditions(element, state2);
+      if (!canInsertSibling(this.context.runtime(), editor, clone, this.context.catalog(), (element, state) => {
+        if (state.length) {
+          applySourceStatusConditions(element, state);
         }
       }, (reference) => sourceStatusConditionsFromElement(reference.target))) {
         return;
@@ -58879,42 +56661,42 @@ label {
       return this.context.runtime()?.getClosestEditor(parent)?.target ?? null;
     }
   }
-  function applySiblingSourceStatus(target2, state2) {
-    if (state2.length) {
-      applySourceStatusConditions(target2, state2);
+  function applySiblingSourceStatus(target2, state) {
+    if (state.length) {
+      applySourceStatusConditions(target2, state);
     } else if (sourceStatusConditionsFromElement(target2).length) {
       target2.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
     }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Bindings/sourceDependencyExpressions.ts
-  function bindingTextDependsOn(value3, scope) {
+  function bindingTextDependsOn(value2, scope) {
     for (const alias of scope.aliases) {
-      if (expressionReferencesScope(value3, alias)) {
+      if (expressionReferencesScope(value2, alias)) {
         return true;
       }
     }
     if (!scope.sourceLocal) {
       return false;
     }
-    return containsBindingSyntax(value3, scope);
+    return containsBindingSyntax(value2, scope);
   }
-  function withoutBindingExpressions(value3) {
-    return value3.replace(/\{\{\s*[\s\S]*?\s*\}\}/g, "").replace(/\s+/g, " ").trim();
+  function withoutBindingExpressions(value2) {
+    return value2.replace(/\{\{\s*[\s\S]*?\s*\}\}/g, "").replace(/\s+/g, " ").trim();
   }
-  function expressionReferencesScope(value3, scope) {
+  function expressionReferencesScope(value2, scope) {
     const escaped = scope.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    return new RegExp(`(?:^|[^A-Za-z0-9_$])${escaped}(?:\\b|\\s*\\.)`).test(value3);
+    return new RegExp(`(?:^|[^A-Za-z0-9_$])${escaped}(?:\\b|\\s*\\.)`).test(value2);
   }
-  function containsBindingSyntax(value3, scope) {
-    const statusConditions = parseSourceStatusConditions(value3);
+  function containsBindingSyntax(value2, scope) {
+    const statusConditions = parseSourceStatusConditions(value2);
     if (statusConditions.length > 0) {
       return statusConditions.some((condition) => !condition.sourceId || condition.sourceId === scope.sourceId);
     }
-    if (/\S+\s+as\s+[A-Za-z_$][\w$]*\s*$/.test(value3)) {
+    if (/\S+\s+as\s+[A-Za-z_$][\w$]*\s*$/.test(value2)) {
       return true;
     }
-    const matches = value3.matchAll(/\{\{\s*([\s\S]*?)\s*\}\}/g);
+    const matches = value2.matchAll(/\{\{\s*([\s\S]*?)\s*\}\}/g);
     for (const match of matches) {
       const expression = match[1]?.trim() ?? "";
       const head = /^[A-Za-z_$][\w$]*/.exec(expression)?.[0] ?? "";
@@ -59053,7 +56835,7 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/Bindings/sourceStatusBindings.ts
-  function setSourceStatusCondition(editor, sourceEditor, state2) {
+  function setSourceStatusCondition(editor, sourceEditor, state) {
     if (!canUseSourceForStatusCondition(editor.target, sourceEditor.target)) {
       return false;
     }
@@ -59064,7 +56846,7 @@ label {
     if (hasSourceStatusConditionAncestor2(editor.target, sourceEditor.target)) {
       return false;
     }
-    applySourceStatusCondition(editor.target, state2, sourceId);
+    applySourceStatusCondition(editor.target, state, sourceId);
     return true;
   }
   function setSourceStatusConditions(editor, conditions2) {
@@ -59154,11 +56936,11 @@ label {
     }
     return false;
   }
-  function normalizeSourceId(value3) {
-    return value3.trim().replace(/[^A-Za-z0-9_$-]+/g, "-").replace(/^-+|-+$/g, "").replace(/^[^A-Za-z_$]+/, "");
+  function normalizeSourceId(value2) {
+    return value2.trim().replace(/[^A-Za-z0-9_$-]+/g, "-").replace(/^-+|-+$/g, "").replace(/^[^A-Za-z_$]+/, "");
   }
-  function isSourceId(value3) {
-    return /^[A-Za-z_$][\w$-]*$/.test(value3);
+  function isSourceId(value2) {
+    return /^[A-Za-z_$][\w$-]*$/.test(value2);
   }
   function dedupeSourceStatusConditions(conditions2) {
     const seen = new Set;
@@ -59282,8 +57064,8 @@ label {
       setRepeat(editor, path, alias);
       this.reload(editor.target);
     }
-    setSourceStatusCondition(editor, sourceEditor, state2) {
-      if (!setSourceStatusCondition(editor, sourceEditor, state2)) {
+    setSourceStatusCondition(editor, sourceEditor, state) {
+      if (!setSourceStatusCondition(editor, sourceEditor, state)) {
         return;
       }
       this.reload(editor.target);
@@ -59295,11 +57077,11 @@ label {
       this.reload(editor.target);
     }
     setCondition(editor, expression) {
-      const value3 = expression.trim();
-      if (!value3) {
+      const value2 = expression.trim();
+      if (!value2) {
         return;
       }
-      editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.condition, value3);
+      editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.condition, value2);
       this.reload(editor.target);
     }
     removeSourceStatusCondition(editor) {
@@ -59423,9 +57205,9 @@ label {
         this.bindings.removeSource(editor);
       }
     }
-    setSourceStatusCondition(editor, sourceEditor, state2) {
+    setSourceStatusCondition(editor, sourceEditor, state) {
       if (this.canUseConditions()) {
-        this.bindings.setSourceStatusCondition(editor, sourceEditor, state2);
+        this.bindings.setSourceStatusCondition(editor, sourceEditor, state);
       }
     }
     setCondition(editor, expression) {
@@ -59617,26 +57399,26 @@ label {
     }
     return range.getBoundingClientRect?.() ?? null;
   }
-  function clamp(value3, min, max) {
-    return Math.max(min, Math.min(Math.max(min, max), value3));
+  function clamp(value2, min, max) {
+    return Math.max(min, Math.min(Math.max(min, max), value2));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/stateSessions.ts
-  function toggleStateSession(sessionsByEditor, editor, state2) {
+  function toggleStateSession(sessionsByEditor, editor, state) {
     const sessions = sessionsByEditor.get(editor) ?? new Map;
-    if (sessions.has(state2.id)) {
-      exitStateSession(sessionsByEditor, editor, state2.id);
+    if (sessions.has(state.id)) {
+      exitStateSession(sessionsByEditor, editor, state.id);
       return;
     }
-    if (state2.group) {
+    if (state.group) {
       for (const candidate of editor.getStates()) {
-        if (candidate.id !== state2.id && candidate.group === state2.group) {
+        if (candidate.id !== state.id && candidate.group === state.group) {
           exitStateSession(sessionsByEditor, editor, candidate.id);
         }
       }
     }
-    const session = state2.enter();
-    sessions.set(state2.id, session);
+    const session = state.enter();
+    sessions.set(state.id, session);
     sessionsByEditor.set(editor, sessions);
   }
   function exitStateSession(sessionsByEditor, editor, stateId) {
@@ -59665,15 +57447,15 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/settingAttributes.ts
-  function writeSettingAttribute(element, name, value3) {
+  function writeSettingAttribute(element, name, value2) {
     if (isNetworkBindingAttribute2(name)) {
-      p3(element, name, value3);
+      p3(element, name, value2);
       return;
     }
-    if (value3 === null) {
+    if (value2 === null) {
       element.removeAttribute(name);
     } else {
-      element.setAttribute(name, value3);
+      element.setAttribute(name, value2);
     }
   }
   function isNetworkBindingAttribute2(name) {
@@ -59777,7 +57559,7 @@ label {
     }
     const controlled = CONTROLLED_VALUES[tag]?.[attribute];
     if (controlled && (setting.type === "select" || setting.type === "segmented")) {
-      return setting.options.length > 0 && setting.options.every((option6) => controlled.has(option6.value));
+      return setting.options.length > 0 && setting.options.every((option4) => controlled.has(option4.value));
     }
     if (setting.type === "page-link") {
       return pageLinkSettingIsControlled(tag, attribute, setting);
@@ -59787,57 +57569,57 @@ label {
     }
     return true;
   }
-  function isNativeEditorSettingValueAllowed(target2, setting, value3) {
+  function isNativeEditorSettingValueAllowed(target2, setting, value2) {
     if (!isNativeHtmlEditorTag(target2.localName)) {
       return true;
     }
     if (!isNativeEditorSettingAllowed(target2, setting)) {
       return false;
     }
-    if (typeof value3 === "boolean") {
+    if (typeof value2 === "boolean") {
       return setting.type === "toggle" && target2.localName === "button" && setting.attribute === "disabled";
     }
-    if (setting.required && !value3.trim()) {
+    if (setting.required && !value2.trim()) {
       return false;
     }
     const tag = target2.localName.toLowerCase();
     const attribute = setting.attribute.toLowerCase();
     if (attribute === CMS_BINDING_ATTRIBUTES.sourceSuccessReload) {
-      return value3 === "" || nativeBindingAttributeIssue(attribute, value3) === null;
+      return value2 === "" || nativeBindingAttributeIssue(attribute, value2) === null;
     }
-    if (attribute === CMS_BINDING_ATTRIBUTES.sourceSerialization && value3 === "typed-json") {
+    if (attribute === CMS_BINDING_ATTRIBUTES.sourceSerialization && value2 === "typed-json") {
       return ["POST", "PUT", "PATCH", "DELETE"].includes(target2.getAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod) ?? "");
     }
     const controlled = CONTROLLED_VALUES[tag]?.[attribute];
     if (controlled) {
-      return controlled.has(value3);
+      return controlled.has(value2);
     }
     if (setting.type === "page-link") {
-      return pageLinkValueAllowed(tag, attribute, value3);
+      return pageLinkValueAllowed(tag, attribute, value2);
     }
     if (setting.type === "endpoint-picker") {
-      return parseSource(value3) !== null;
+      return parseSource(value2) !== null;
     }
-    return !/[\u0000-\u001F\u007F]/.test(value3);
+    return !/[\u0000-\u001F\u007F]/.test(value2);
   }
-  function isNativeEditorAttributeValueAllowed(tag, attribute, value3) {
-    if (!isNativeHtmlEditorTag(tag) || value3 === null) {
+  function isNativeEditorAttributeValueAllowed(tag, attribute, value2) {
+    if (!isNativeHtmlEditorTag(tag) || value2 === null) {
       return true;
     }
     const normalizedAttribute = attribute.toLowerCase();
-    if (typeof value3 === "boolean") {
+    if (typeof value2 === "boolean") {
       return tag.toLowerCase() === "button" && normalizedAttribute === "disabled";
     }
-    if (value3 === "" && normalizedAttribute !== "alt" && normalizedAttribute !== "disabled") {
+    if (value2 === "" && normalizedAttribute !== "alt" && normalizedAttribute !== "disabled") {
       return true;
     }
     if (SYSTEM_GENERATED_ATTRIBUTES.has(normalizedAttribute)) {
-      return systemAttributeValueAllowed(tag.toLowerCase(), normalizedAttribute, value3);
+      return systemAttributeValueAllowed(tag.toLowerCase(), normalizedAttribute, value2);
     }
     if (tag.toLowerCase() === "a" && normalizedAttribute === "href" || tag.toLowerCase() === "img" && normalizedAttribute === "src") {
-      return pageLinkValueAllowed(tag.toLowerCase(), normalizedAttribute, value3);
+      return pageLinkValueAllowed(tag.toLowerCase(), normalizedAttribute, value2);
     }
-    return nativeAttributeValueIssue(tag, normalizedAttribute, value3) === null;
+    return nativeAttributeValueIssue(tag, normalizedAttribute, value2) === null;
   }
   function isNativeEditorAttributeMutationAllowed(target2, changes) {
     const tag = target2.localName.toLowerCase();
@@ -59851,15 +57633,15 @@ label {
         attributes[name] = attribute.value;
       }
     }
-    for (const [rawName, value3] of Object.entries(canonicalizeNativeEditorAttributeChanges(changes))) {
+    for (const [rawName, value2] of Object.entries(canonicalizeNativeEditorAttributeChanges(changes))) {
       const name = rawName.toLowerCase();
       if (name !== "slot" && !isMutableNativeAttribute(tag, name)) {
         continue;
       }
-      if (value3 === null || value3 === false) {
+      if (value2 === null || value2 === false) {
         delete attributes[name];
       } else {
-        attributes[name] = value3 === true ? "" : value3;
+        attributes[name] = value2 === true ? "" : value2;
       }
     }
     if (tag === "form") {
@@ -59872,9 +57654,9 @@ label {
     return nativeAttributeSetIssue(tag, attributes) === null;
   }
   function canonicalizeNativeEditorAttributeChanges(changes) {
-    return Object.fromEntries(Object.entries(changes).map(([attribute, value3]) => {
-      const removesAttribute = value3 === null || value3 === false || value3 === "" && !EMPTY_VALUE_ATTRIBUTES.has(attribute.toLowerCase());
-      return [attribute, removesAttribute ? null : value3];
+    return Object.fromEntries(Object.entries(changes).map(([attribute, value2]) => {
+      const removesAttribute = value2 === null || value2 === false || value2 === "" && !EMPTY_VALUE_ATTRIBUTES.has(attribute.toLowerCase());
+      return [attribute, removesAttribute ? null : value2];
     }));
   }
   function filterNativeEditorSettingSections(target2, sections2, managedNativeTarget) {
@@ -59914,17 +57696,17 @@ label {
     });
     return settings.length > 0 ? [{ ...setting, settings }] : [];
   }
-  function pageLinkValueAllowed(tag, attribute, value3) {
-    if (!value3.trim()) {
+  function pageLinkValueAllowed(tag, attribute, value2) {
+    if (!value2.trim()) {
       return false;
     }
     if (tag === "img" && attribute === "src") {
-      return isCmsMediaSource(value3);
+      return isCmsMediaSource(value2);
     }
     if (tag === "form" && attribute === CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect) {
-      return nativeBindingAttributeIssue(attribute, value3) === null;
+      return nativeBindingAttributeIssue(attribute, value2) === null;
     }
-    return isSafeNavigationalUrl(value3);
+    return isSafeNavigationalUrl(value2);
   }
   function pageLinkSettingIsControlled(tag, attribute, setting) {
     if (tag === "img" && attribute === "src") {
@@ -59935,27 +57717,27 @@ label {
     }
     return tag === "a" && attribute === "href" && setting.required === true;
   }
-  function systemAttributeValueAllowed(tag, attribute, value3) {
+  function systemAttributeValueAllowed(tag, attribute, value2) {
     if (tag !== "form") {
       return false;
     }
     if (attribute === CMS_BINDING_ATTRIBUTES.source) {
-      return nativeBindingAttributeIssue(attribute, value3) === null;
+      return nativeBindingAttributeIssue(attribute, value2) === null;
     }
     if (attribute === CMS_BINDING_ATTRIBUTES.sourceMethod) {
-      return ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"].includes(value3);
+      return ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"].includes(value2);
     }
     if (attribute === CMS_BINDING_ATTRIBUTES.sourceTrigger) {
-      return value3 === "submit";
+      return value2 === "submit";
     }
     if (attribute === CMS_BINDING_ATTRIBUTES.sourceSuccessReload || attribute === CMS_BINDING_ATTRIBUTES.sourceSerialization || attribute === CMS_BINDING_ATTRIBUTES.sourceSuccessReset || attribute === CMS_BINDING_ATTRIBUTES.sourceInheritQuery) {
-      return nativeBindingAttributeIssue(attribute, value3) === null;
+      return nativeBindingAttributeIssue(attribute, value2) === null;
     }
     if (attribute === CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect) {
-      return nativeBindingAttributeIssue(attribute, value3) === null;
+      return nativeBindingAttributeIssue(attribute, value2) === null;
     }
     if (attribute === CMS_BINDING_ATTRIBUTES.sourceBody) {
-      return value3 === "" || nativeBindingAttributeIssue(attribute, value3) === null;
+      return value2 === "" || nativeBindingAttributeIssue(attribute, value2) === null;
     }
     return false;
   }
@@ -60000,13 +57782,13 @@ label {
       const settings = filterSettingSections(policy, filterNativeEditorSettingSections(selection.editor.target, resolveSettingsValues(selection.editor, settingsWithPageState(selection.editor, settingsWithParamSync(selection.editor, selection.settings))), selection.editor.getManagedNativeEditor()?.target));
       this.context.settings().setSettings(settings, selection.textCapability, selection.textCapability ? getTextValue(selection.editor, selection.textCapability.format) : "", this.context.settingsMode(), selection.states, policy.bindings ? runtime2.getSelectedDataScopes() : [], policy.bindings ? this.context.dataSources() : []);
     }
-    applySetting(editor, setting, value3, attributes) {
+    applySetting(editor, setting, value2, attributes) {
       const policy = this.editingPolicy();
       const targetEditor = settingTargetEditor(editor, setting);
-      if (!isSettingAllowed(policy, setting) || !isNativeEditorSettingAllowed(targetEditor.target, setting) || !isNativeEditorSettingValueAllowed(targetEditor.target, setting, value3) || !isDeclaredNativeEndpoint(this.context.dataSources?.() ?? [], targetEditor.target, setting, value3, attributes)) {
+      if (!isSettingAllowed(policy, setting) || !isNativeEditorSettingAllowed(targetEditor.target, setting) || !isNativeEditorSettingValueAllowed(targetEditor.target, setting, value2) || !isDeclaredNativeEndpoint(this.context.dataSources?.() ?? [], targetEditor.target, setting, value2, attributes)) {
         return;
       }
-      const mediaChange = prepareNativeMediaSettingChange(targetEditor, setting, value3, attributes);
+      const mediaChange = prepareNativeMediaSettingChange(targetEditor, setting, value2, attributes);
       if (mediaChange?.kind === "accessible-name-draft") {
         return;
       }
@@ -60015,21 +57797,21 @@ label {
         this.applyAttributes(targetEditor, normalizeNativeAttributeChanges(targetEditor.target, setting, attributeChanges), policy);
         return;
       }
-      if (applyParamSyncSetting(targetEditor, setting, value3) || applyPageStateSetting(targetEditor, setting, value3)) {
+      if (applyParamSyncSetting(targetEditor, setting, value2) || applyPageStateSetting(targetEditor, setting, value2)) {
         this.renderSettings();
         this.context.syncViewFrameContent();
         this.context.highlight().show(editor);
         return;
       }
       const attribute = setting.attribute;
-      const mutationValue = typeof value3 === "boolean" ? value3 : value3 || null;
+      const mutationValue = typeof value2 === "boolean" ? value2 : value2 || null;
       if (!isNativeEditorAttributeMutationAllowed(targetEditor.target, { [attribute]: mutationValue })) {
         return;
       }
-      if (typeof value3 === "boolean") {
-        targetEditor.target.toggleAttribute(attribute, value3);
+      if (typeof value2 === "boolean") {
+        targetEditor.target.toggleAttribute(attribute, value2);
       } else {
-        writeSettingAttribute(targetEditor.target, attribute, value3 || null);
+        writeSettingAttribute(targetEditor.target, attribute, value2 || null);
       }
       applyNativeEditorAttributeEffects(targetEditor.target, attribute);
       if (setting.type === "select" || setting.type === "segmented" || setting.type === "toggle") {
@@ -60039,27 +57821,27 @@ label {
     applyAttributes(editor, attributes, policy) {
       const canonicalAttributes = canonicalizeNativeEditorAttributeChanges(attributes);
       const accepted = {};
-      for (const [attribute, value3] of Object.entries(canonicalAttributes)) {
-        if (!isAttributeAllowed(policy, attribute) || !isNativeEditorAttributeAllowed(editor.target.localName, attribute) || !isNativeEditorAttributeValueAllowed(editor.target.localName, attribute, value3)) {
+      for (const [attribute, value2] of Object.entries(canonicalAttributes)) {
+        if (!isAttributeAllowed(policy, attribute) || !isNativeEditorAttributeAllowed(editor.target.localName, attribute) || !isNativeEditorAttributeValueAllowed(editor.target.localName, attribute, value2)) {
           continue;
         }
-        accepted[attribute] = value3;
+        accepted[attribute] = value2;
       }
       if (!isNativeEditorAttributeMutationAllowed(editor.target, accepted)) {
         return;
       }
-      for (const [attribute, value3] of Object.entries(accepted)) {
-        if (typeof value3 === "boolean") {
-          editor.target.toggleAttribute(attribute, value3);
+      for (const [attribute, value2] of Object.entries(accepted)) {
+        if (typeof value2 === "boolean") {
+          editor.target.toggleAttribute(attribute, value2);
         } else {
-          writeSettingAttribute(editor.target, attribute, value3);
+          writeSettingAttribute(editor.target, attribute, value2);
         }
         applyNativeEditorAttributeEffects(editor.target, attribute);
       }
       this.renderSettings();
     }
-    toggleState(editor, state2) {
-      toggleStateSession(this.context.stateSessions(), editor, state2);
+    toggleState(editor, state) {
+      toggleStateSession(this.context.stateSessions(), editor, state);
     }
     exitAllStateSessions() {
       const runtime2 = this.context.runtime();
@@ -60078,15 +57860,15 @@ label {
     }
     return { ...attributes, [CMS_BINDING_ATTRIBUTES.sourceTrigger]: "submit" };
   }
-  function isDeclaredNativeEndpoint(dataSources, target2, setting, value3, attributes) {
+  function isDeclaredNativeEndpoint(dataSources, target2, setting, value2, attributes) {
     if (target2.localName !== "form" || setting.type !== "endpoint-picker" || setting.attribute !== CMS_BINDING_ATTRIBUTES.source) {
       return true;
     }
-    if (typeof value3 !== "string") {
+    if (typeof value2 !== "string") {
       return false;
     }
-    const binding2 = parseSource(value3);
-    if (!binding2 || !attributes || attributes[CMS_BINDING_ATTRIBUTES.source] !== value3) {
+    const binding2 = parseSource(value2);
+    if (!binding2 || !attributes || attributes[CMS_BINDING_ATTRIBUTES.source] !== value2) {
       return false;
     }
     const requestedMethod = attributes?.[CMS_BINDING_ATTRIBUTES.sourceMethod];
@@ -60170,15 +57952,15 @@ label {
       topBar.setPageTitle(config.title, config.path);
     }
   }
-  function parseTags(value3) {
+  function parseTags(value2) {
     return [
-      ...new Set(value3.split(",").map((tag) => tag.trim()).filter(Boolean))
+      ...new Set(value2.split(",").map((tag) => tag.trim()).filter(Boolean))
     ];
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellStructureTreeSync.ts
-  function isStructureTree(value3) {
-    return Boolean(value3 && "catalog" in value3 && "setStructure" in value3 && "setEditingPolicy" in value3);
+  function isStructureTree(value2) {
+    return Boolean(value2 && "catalog" in value2 && "setStructure" in value2 && "setEditingPolicy" in value2);
   }
   function syncStructureTreeEditingPolicy(root, policy) {
     withStructureTree(root, (tree) => tree.setEditingPolicy(policy));
@@ -60309,8 +58091,8 @@ label {
       this.context.state.pageConfig = pageConfig;
       applyPageSettingsTitle(this.context.refs.topBar, pageConfig);
     }
-    setSaveStatus(label4) {
-      this.context.refs.topBar.saveStatus = label4;
+    setSaveStatus(label3) {
+      this.context.refs.topBar.saveStatus = label3;
     }
     syncStructureTreeCatalog() {
       syncStructureTreeCatalog(this.context.host.shadowRoot, this.context.state.catalog);
@@ -60324,8 +58106,8 @@ label {
     findStructureNodeLabel(editor) {
       return findStructureNodeLabel(this.context.state.runtime, editor);
     }
-    isStructureTree(value3) {
-      return isStructureTree(value3);
+    isStructureTree(value2) {
+      return isStructureTree(value2);
     }
     applyChromeLabels(topBar, resource, defaults) {
       applyShellChromeLabels(this.context.host, topBar, resource, defaults, (name) => this.pageField(name));
@@ -60351,8 +58133,8 @@ label {
     pageField(name) {
       return this.context.refs.pageField(name);
     }
-    isTopBar(value3) {
-      return Boolean(value3 && "setNavigation" in value3);
+    isTopBar(value2) {
+      return Boolean(value2 && "setNavigation" in value2);
     }
   }
 
@@ -60370,11 +58152,11 @@ label {
       });
     };
     onSettingsTabsClick = (event) => {
-      const button2 = event.target?.closest("[data-settings-mode]");
-      if (!button2) {
+      const button = event.target?.closest("[data-settings-mode]");
+      if (!button) {
         return;
       }
-      this.context.state.settingsMode = button2.dataset.settingsMode === "overrides" ? "overrides" : "settings";
+      this.context.state.settingsMode = button.dataset.settingsMode === "overrides" ? "overrides" : "settings";
       this.context.commands.syncSettingsTabs();
       this.context.commands.renderSettings();
     };
@@ -60823,8 +58605,8 @@ label {
     }
     return RuntimeEditorClass;
   }
-  function toList(value3) {
-    return Array.isArray(value3) ? value3 : [value3];
+  function toList(value2) {
+    return Array.isArray(value2) ? value2 : [value2];
   }
 
   // ../../features/cms-editor-system-v2/src/runtime/EditorRuntime/createRuntimeEditor.ts
@@ -60855,31 +58637,31 @@ label {
       fields: dataSource?.fields ?? []
     });
   }
-  function parseSourceBinding(value3) {
-    const parsed = parseSource(value3);
+  function parseSourceBinding(value2) {
+    const parsed = parseSource(value2);
     if (!parsed) {
       return null;
     }
     return typeof parsed === "string" ? { url: parsed } : parsed;
   }
   function declareRepeatDataScope(editor, registry2) {
-    const value3 = editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.repeat) ?? "";
-    const repeat2 = parseRepeat(value3);
+    const value2 = editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.repeat) ?? "";
+    const repeat2 = parseRepeat(value2);
     if (!repeat2?.alias) {
       return;
     }
-    const range = parseRepeatRange(value3);
-    const field3 = findDataField(registry2.collectDataScopes(editor.target), repeat2.path);
+    const range = parseRepeatRange(value2);
+    const field2 = findDataField(registry2.collectDataScopes(editor.target), repeat2.path);
     editor.declareDataScope({
       name: repeat2.alias,
       label: repeat2.alias,
-      fields: range ? [{ path: ".", type: "number" }] : field3?.children ?? []
+      fields: range ? [{ path: ".", type: "number" }] : field2?.children ?? []
     });
   }
   function findDataField(scopes, path) {
     for (const scope of scopes) {
-      const field3 = path === scope.name ? findDataFieldInList(scope.fields, ".") : undefined;
-      const match = field3 ?? findDataFieldInList(scope.fields, path) ?? findDataFieldInList(scope.fields, stripScopeName(scope.name, path));
+      const field2 = path === scope.name ? findDataFieldInList(scope.fields, ".") : undefined;
+      const match = field2 ?? findDataFieldInList(scope.fields, path) ?? findDataFieldInList(scope.fields, stripScopeName(scope.name, path));
       if (match) {
         return match;
       }
@@ -60887,11 +58669,11 @@ label {
     return;
   }
   function findDataFieldInList(fields, path) {
-    for (const field3 of fields) {
-      if (field3.path === path) {
-        return field3;
+    for (const field2 of fields) {
+      if (field2.path === path) {
+        return field2;
       }
-      const child = field3.children ? findDataFieldInList(field3.children, path) : undefined;
+      const child = field2.children ? findDataFieldInList(field2.children, path) : undefined;
       if (child) {
         return child;
       }
@@ -61294,7 +59076,7 @@ label {
         pageConfig: () => this.context.state.pageConfig,
         contentHtml: () => this.getContentHtml(),
         syncEditorMode: () => this.syncEditorMode(),
-        setSaveStatus: (label4) => this.setSaveStatus(label4),
+        setSaveStatus: (label3) => this.setSaveStatus(label3),
         saveEventName: this.context.saveEventName
       });
     }
@@ -61319,11 +59101,11 @@ label {
     renderSettings() {
       this.context.selection.renderSettings();
     }
-    applySetting(editor, setting, value3, attributes) {
-      this.context.selection.applySetting(editor, setting, value3, attributes);
+    applySetting(editor, setting, value2, attributes) {
+      this.context.selection.applySetting(editor, setting, value2, attributes);
     }
-    toggleState(editor, state2) {
-      this.context.selection.toggleState(editor, state2);
+    toggleState(editor, state) {
+      this.context.selection.toggleState(editor, state);
     }
     exitAllStateSessions() {
       this.context.selection.exitAllStateSessions();
@@ -61382,8 +59164,8 @@ label {
     getContentHtml() {
       return this.context.renderSync.getContentHtml();
     }
-    setSaveStatus(label4) {
-      this.context.renderSync.setSaveStatus(label4);
+    setSaveStatus(label3) {
+      this.context.renderSync.setSaveStatus(label3);
     }
   }
 
@@ -61448,10 +59230,10 @@ label {
     }
     syncSettingsTabs() {
       const buttons = this.context.refs.settingsTabs.querySelectorAll("[data-settings-mode]");
-      for (const button2 of Array.from(buttons)) {
-        const isActive = button2.dataset.settingsMode === this.context.state.settingsMode;
-        button2.classList.toggle("active", isActive);
-        button2.ariaPressed = String(isActive);
+      for (const button of Array.from(buttons)) {
+        const isActive = button.dataset.settingsMode === this.context.state.settingsMode;
+        button.classList.toggle("active", isActive);
+        button.ariaPressed = String(isActive);
       }
     }
     syncViewport() {
@@ -61488,8 +59270,8 @@ label {
     getContentHtml() {
       return this.context.frames.contentHtml();
     }
-    setSaveStatus(label4) {
-      this.context.sync.setSaveStatus(label4);
+    setSaveStatus(label3) {
+      this.context.sync.setSaveStatus(label3);
     }
     syncStructureTreeCatalog() {
       this.context.sync.syncStructureTreeCatalog();
@@ -61509,20 +59291,20 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Services/shellServices.ts
-  function createShellControllerServices(host, state2, refs, frames, highlight, stateSessions) {
+  function createShellControllerServices(host, state, refs, frames, highlight, stateSessions) {
     let events;
     let inlineTextEvents;
     const mutations = new ShellMutations({
       frameDocument: () => frames.frameDocument,
-      editorDocument: () => state2.editorDocument,
-      runtime: () => state2.runtime,
-      catalog: () => state2.catalog,
-      dataSources: () => state2.dataSources,
+      editorDocument: () => state.editorDocument,
+      runtime: () => state.runtime,
+      catalog: () => state.catalog,
+      dataSources: () => state.dataSources,
       rootEditor: () => {
-        const contentRoot = state2.editorDocument?.contentRoot;
-        return contentRoot && state2.runtime ? state2.runtime.getEditor(contentRoot) ?? null : null;
+        const contentRoot = state.editorDocument?.contentRoot;
+        return contentRoot && state.runtime ? state.runtime.getEditor(contentRoot) ?? null : null;
       },
-      editingPolicy: () => state2.editingPolicy,
+      editingPolicy: () => state.editingPolicy,
       repeatPicker: () => refs.repeatPicker,
       findStructureNodeLabel: (editor) => renderSync.findStructureNodeLabel(editor),
       isEmptyDocumentContent: () => renderSync.isEmptyDocumentContent(),
@@ -61530,11 +59312,11 @@ label {
       syncViewFrameContent: () => renderSync.syncViewFrameContent()
     });
     const selection = new ShellSelection({
-      runtime: () => state2.runtime,
+      runtime: () => state.runtime,
       settings: () => refs.settings,
-      dataSources: () => state2.dataSources,
-      editingPolicy: () => state2.editingPolicy,
-      settingsMode: () => state2.settingsMode,
+      dataSources: () => state.dataSources,
+      editingPolicy: () => state.editingPolicy,
+      settingsMode: () => state.settingsMode,
       stateSessions: () => stateSessions,
       highlight: () => highlight,
       renderStructure: (options2) => renderSync.renderStructure(options2),
@@ -61542,12 +59324,12 @@ label {
     });
     const sync = new ShellSync({
       host,
-      state: state2,
+      state,
       refs
     });
-    const renderSync = new ShellRenderSyncCommands({ host, state: state2, refs, frames, sync });
+    const renderSync = new ShellRenderSyncCommands({ host, state, refs, frames, sync });
     const inlineText = new InlineTextEditing(new InlineRichTextToolbar(refs.inlineRichText, {
-      dataScopes: () => state2.runtime?.getSelectedDataScopes() ?? [],
+      dataScopes: () => state.runtime?.getSelectedDataScopes() ?? [],
       changed: (editor) => {
         selection.renderSettings();
         renderSync.syncViewFrameContent();
@@ -61556,7 +59338,7 @@ label {
     }));
     const commands = new ShellCommands({
       host,
-      state: state2,
+      state,
       frames,
       selection,
       renderSync,
@@ -61574,14 +59356,14 @@ label {
     });
     events = new ShellEvents({
       host,
-      state: state2,
+      state,
       refs,
       mutations,
       commands,
       renderSync,
       highlight
     });
-    inlineTextEvents = new ShellInlineTextEvents({ state: state2, commands, highlight, inlineText });
+    inlineTextEvents = new ShellInlineTextEvents({ state, commands, highlight, inlineText });
     return {
       mutations,
       selection,
@@ -61591,7 +59373,7 @@ label {
       events,
       api: new ShellApi({
         host,
-        state: state2,
+        state,
         refs,
         renderSync,
         commands
@@ -62001,7 +59783,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
-  var style_default30 = `:host {
+  var style_default29 = `:host {
     --editor-v2-bg: #f6f7f7;
     --editor-v2-surface: #ffffff;
     --editor-v2-surface-muted: #f9faf9;
@@ -62129,7 +59911,7 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTemplate.ts
   function createShellTemplate() {
     const template22 = document.createElement("template");
-    template22.innerHTML = `<style>${[style_default30, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
+    template22.innerHTML = `<style>${[style_default29, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default39)}`;
     return template22;
   }
@@ -62137,14 +59919,14 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Services/shellControllerParts.ts
   function createShellControllerParts(host) {
     host.attachShadow({ mode: "open" }).append(createShellTemplate().content.cloneNode(true));
-    const state2 = createShellState();
+    const state = createShellState();
     const refs = new ShellDomRefs(host);
     const frames = new ShellFrames;
     const highlight = new FrameHighlight;
     const stateSessions = new WeakMap;
-    const services = createShellControllerServices(host, state2, refs, frames, highlight, stateSessions);
+    const services = createShellControllerServices(host, state, refs, frames, highlight, stateSessions);
     return {
-      state: state2,
+      state,
       refs,
       frames,
       mutations: services.mutations,
@@ -62159,9 +59941,9 @@ label {
         commands: services.commands,
         renderSync: services.renderSync,
         highlight,
-        runtime: () => state2.runtime,
+        runtime: () => state.runtime,
         setRuntime: (runtime2) => {
-          state2.runtime = runtime2;
+          state.runtime = runtime2;
         }
       }
     };
@@ -62321,8 +60103,8 @@ label {
     setPageConfig(config) {
       this._parts.api.setPageConfig(config);
     }
-    setSaveStatus(label4) {
-      this._parts.renderSync.setSaveStatus(label4);
+    setSaveStatus(label3) {
+      this._parts.renderSync.setSaveStatus(label3);
     }
     loadDocument(document2, selectedTarget = null) {
       this._parts.api.loadDocument(document2, selectedTarget);
@@ -62625,12 +60407,12 @@ label {
     }
   }
   function seoRelationshipOptions(required) {
-    const value3 = (relationship) => [required, relationship].filter(Boolean).join(" ");
+    const value2 = (relationship) => [required, relationship].filter(Boolean).join(" ");
     return [
-      { label: "Follow", value: value3("") },
-      { label: "No follow", value: value3("nofollow") },
-      { label: "Sponsored", value: value3("sponsored") },
-      { label: "User-generated", value: value3("ugc") }
+      { label: "Follow", value: value2("") },
+      { label: "No follow", value: value2("nofollow") },
+      { label: "Sponsored", value: value2("sponsored") },
+      { label: "User-generated", value: value2("ugc") }
     ];
   }
 
@@ -62715,10 +60497,10 @@ label {
   function semanticLabel(tag) {
     return tag.charAt(0).toUpperCase() + tag.slice(1);
   }
-  function entry(tag, label4, description, defaultContent, bloc, editor) {
+  function entry(tag, label3, description, defaultContent, bloc, editor) {
     return {
       tag,
-      label: label4,
+      label: label3,
       description,
       category: "Content",
       defaultContent,
@@ -62950,14 +60732,14 @@ label {
         const details = document.createElement("details");
         details.className = "bloc-defaults-group";
         details.open = index === 0;
-        const summary2 = document.createElement("summary");
-        const label4 = document.createElement("span");
+        const summary = document.createElement("summary");
+        const label3 = document.createElement("span");
         const count = document.createElement("span");
-        label4.textContent = group.label;
+        label3.textContent = group.label;
         count.className = "bloc-defaults-group-count";
         count.textContent = String(group.rows.length);
-        summary2.append(label4, count);
-        details.append(summary2, renderRows(group.rows));
+        summary.append(label3, count);
+        details.append(summary, renderRows(group.rows));
         this.append(details);
       }
     }
@@ -62968,13 +60750,13 @@ label {
     for (const row of rows) {
       const item = document.createElement("div");
       const term = document.createElement("dt");
-      const value3 = document.createElement("dd");
+      const value2 = document.createElement("dd");
       const display = document.createElement("span");
       term.textContent = row.label;
       display.className = "bloc-default-value";
       display.textContent = row.value;
-      value3.append(display);
-      item.append(term, value3);
+      value2.append(display);
+      item.append(term, value2);
       list.append(item);
     }
     return list;
@@ -63022,25 +60804,25 @@ label {
     }
     return groups;
   }
-  function parseExplicitDefaults(value3) {
-    if (!value3 || value3.includes("{{")) {
+  function parseExplicitDefaults(value2) {
+    if (!value2 || value2.includes("{{")) {
       return [];
     }
     try {
-      const parsed = JSON.parse(value3);
+      const parsed = JSON.parse(value2);
       return Array.isArray(parsed) ? parsed.filter((item) => typeof item?.name === "string" && typeof item.value === "string" && typeof item.hasValue === "boolean") : [];
     } catch {
       return [];
     }
   }
-  function displayValue(value3) {
-    if (value3 === true || value3 === "true") {
+  function displayValue(value2) {
+    if (value2 === true || value2 === "true") {
       return "On";
     }
-    if (value3 === false || value3 === "false") {
+    if (value2 === false || value2 === "false") {
       return "Off";
     }
-    return value3 || "Empty";
+    return value2 || "Empty";
   }
   function displayExplicitValue(attribute) {
     if (!attribute.hasValue || attribute.value === "true") {
@@ -63051,9 +60833,9 @@ label {
     }
     return attribute.value || "Empty";
   }
-  function humanize(value3) {
-    const label4 = value3.replaceAll("-", " ");
-    return label4.charAt(0).toUpperCase() + label4.slice(1);
+  function humanize(value2) {
+    const label3 = value2.replaceAll("-", " ");
+    return label3.charAt(0).toUpperCase() + label3.slice(1);
   }
   if (!customElements.get("cms-bloc-defaults")) {
     customElements.define("cms-bloc-defaults", BlocDefaults);
@@ -63090,19 +60872,19 @@ label {
       this.host.removeEventListener(THEME_TOKEN_EDITOR_STATE_EVENT, this.onState);
     }
     onClick = (event) => {
-      const button2 = event.target instanceof Element ? event.target.closest("[data-theme-save]") : null;
-      if (!button2 || button2.hasAttribute("disabled")) {
+      const button = event.target instanceof Element ? event.target.closest("[data-theme-save]") : null;
+      if (!button || button.hasAttribute("disabled")) {
         return;
       }
       this.host.querySelector("cms-theme-token-editor")?.save();
     };
     onState = (event) => {
-      const button2 = this.host.querySelector("[data-theme-save]");
-      if (!button2) {
+      const button = this.host.querySelector("[data-theme-save]");
+      if (!button) {
         return;
       }
-      button2.toggleAttribute("disabled", !event.detail.dirty || event.detail.saving);
-      button2.toggleAttribute("aria-busy", event.detail.saving);
+      button.toggleAttribute("disabled", !event.detail.dirty || event.detail.saving);
+      button.toggleAttribute("aria-busy", event.detail.saving);
       this.profiles?.setLocked(event.detail.dirty || event.detail.saving);
     };
     onDraft = (event) => {
@@ -63159,7 +60941,7 @@ label {
     theme.name = normalized;
     return true;
   }
-  function addCategory(settings, selection, label4, description) {
+  function addCategory(settings, selection, label3, description) {
     const source2 = currentSource2(settings, selection);
     if (!isThemeCatalogEditable(source2)) {
       return;
@@ -63168,17 +60950,17 @@ label {
     const id2 = uniqueId2(`${source2.id}-category-${number}`, new Set(source2.categories.map((item) => item.id)));
     const category = {
       id: id2,
-      label: label4?.trim() || `New group ${number}`,
+      label: label3?.trim() || `New group ${number}`,
       description: description?.trim() || `Variables for ${source2.label}.`,
       tokens: []
     };
     source2.categories.push(category);
     return { sourceId: source2.id, category };
   }
-  function updateCategory(settings, selection, label4, description) {
+  function updateCategory(settings, selection, label3, description) {
     const source2 = currentSource2(settings, selection);
     const category = currentCategory(settings, selection);
-    const normalized = label4.trim();
+    const normalized = label3.trim();
     if (!source2 || !category || !isThemeCatalogEditable(source2) || !normalized) {
       return;
     }
@@ -63204,10 +60986,10 @@ label {
     });
     return true;
   }
-  function updateToken(settings, selection, tokenId, label4, description) {
+  function updateToken(settings, selection, tokenId, label3, description) {
     const source2 = currentSource2(settings, selection);
     const token = currentToken(settings, selection, tokenId);
-    const normalized = label4.trim();
+    const normalized = label3.trim();
     if (!isThemeCatalogEditable(source2) || !token || !normalized) {
       return false;
     }
@@ -63281,12 +61063,12 @@ label {
     }
   }
   function uniqueId2(base, existing) {
-    let value3 = base;
+    let value2 = base;
     let suffix = 2;
-    while (existing.has(value3)) {
-      value3 = `${base}-${suffix++}`;
+    while (existing.has(value2)) {
+      value2 = `${base}-${suffix++}`;
     }
-    return value3;
+    return value2;
   }
 
   // src/components/admin/Theme/events.ts
@@ -63308,8 +61090,8 @@ label {
   }
 
   // ../../features/cms-content/src/core/theme/tokens/references.ts
-  function parseDirectTokenReference(value3) {
-    const match = /^\s*var\(\s*--([a-z][a-z0-9-]*)\s*(?:,\s*(.+))?\)\s*$/is.exec(value3);
+  function parseDirectTokenReference(value2) {
+    const match = /^\s*var\(\s*--([a-z][a-z0-9-]*)\s*(?:,\s*(.+))?\)\s*$/is.exec(value2);
     if (!match) {
       return;
     }
@@ -63319,8 +61101,8 @@ label {
       ...fallback ? { fallback } : {}
     };
   }
-  function directTokenReference(value3) {
-    return parseDirectTokenReference(value3)?.variable;
+  function directTokenReference(value2) {
+    return parseDirectTokenReference(value2)?.variable;
   }
 
   // ../../features/cms-content/src/core/theme/tokens/values.ts
@@ -63414,45 +61196,45 @@ label {
     ["Strong", "0 .75rem 2rem rgb(18 30 24 / 18%)"]
   ];
   var LENGTH_UNITS = ["px", "rem", "em", "%", "vw", "vh", "vmin", "vmax", "ch"];
-  function renderManualControl(token, value3) {
+  function renderManualControl(token, value2) {
     const editor = document.createElement("div");
     editor.className = "token-editor-panel manual-editor";
     editor.dataset.manualEditor = "true";
-    editor.append(manualControl(token, value3));
+    editor.append(manualControl(token, value2));
     return editor;
   }
-  function manualControl(token, value3) {
+  function manualControl(token, value2) {
     if (token.type === "color") {
-      return colorControl(token, value3);
+      return colorControl(token, value2);
     }
     if (token.type === "font-family") {
-      return presetCombobox(token, value3, FONT_STACKS, "Choose or enter a font stack");
+      return presetCombobox(token, value2, FONT_STACKS, "Choose or enter a font stack");
     }
     if (token.type === "length") {
-      return lengthControl(token, value3);
+      return lengthControl(token, value2);
     }
     if (token.type === "number") {
-      return textControl(token, value3, "number", "1");
+      return textControl(token, value2, "number", "1");
     }
     if (token.type === "shadow") {
-      return presetCombobox(token, value3, SHADOW_PRESETS, "Choose or enter a shadow");
+      return presetCombobox(token, value2, SHADOW_PRESETS, "Choose or enter a shadow");
     }
-    return textControl(token, value3, "text", "Enter a value");
+    return textControl(token, value2, "text", "Enter a value");
   }
-  function colorControl(token, value3) {
+  function colorControl(token, value2) {
     const control2 = document.createElement("div");
     control2.className = "color-control";
     const picker = document.createElement("input");
-    const hasPreview = /^#[0-9a-f]{6}$/i.test(value3);
+    const hasPreview = /^#[0-9a-f]{6}$/i.test(value2);
     picker.type = "color";
-    picker.value = hasPreview ? value3 : "#000000";
+    picker.value = hasPreview ? value2 : "#000000";
     picker.dataset.valueControl = "true";
     picker.ariaLabel = `${token.label} color picker`;
-    control2.append(picker, textControl(token, value3, "text", "#000000"));
+    control2.append(picker, textControl(token, value2, "text", "#000000"));
     return control2;
   }
-  function lengthControl(token, value3) {
-    const parsed = parseLength(value3);
+  function lengthControl(token, value2) {
+    const parsed = parseLength(value2);
     const control2 = document.createElement("div");
     control2.className = "length-editor";
     const number = textControl(token, parsed?.number ?? "", "number", "1");
@@ -63465,50 +61247,50 @@ label {
     unit.className = "length-unit";
     unit.dataset.lengthUnit = "true";
     unit.setAttribute("aria-label", `${token.label} unit`);
-    unit.append(option6("", "Unitless"), ...LENGTH_UNITS.map((value4) => option6(value4, value4)), option6("advanced", "CSS expression"));
+    unit.append(option4("", "Unitless"), ...LENGTH_UNITS.map((value3) => option4(value3, value3)), option4("advanced", "CSS expression"));
     unit.setAttribute("value", parsed?.unit ?? "advanced");
     unit.value = parsed?.unit ?? "advanced";
-    const advanced = textControl(token, value3, "text", "calc(100% - 2rem)");
+    const advanced = textControl(token, value2, "text", "calc(100% - 2rem)");
     advanced.classList.add("length-expression");
     advanced.dataset.lengthExpression = "true";
     advanced.hidden = Boolean(parsed);
     control2.append(number, unit, advanced);
     return control2;
   }
-  function textControl(token, value3, type, placeholder) {
-    const input2 = document.createElement("p9r-input");
-    input2.className = `value-control ${token.type}-control`;
-    input2.dataset.valueEditorControl = "true";
-    input2.setAttribute("aria-label", `${token.label} ${controlLabel(token.type)}`);
-    input2.setAttribute("type", type);
-    input2.setAttribute("placeholder", placeholder);
+  function textControl(token, value2, type, placeholder) {
+    const input = document.createElement("p9r-input");
+    input.className = `value-control ${token.type}-control`;
+    input.dataset.valueEditorControl = "true";
+    input.setAttribute("aria-label", `${token.label} ${controlLabel(token.type)}`);
+    input.setAttribute("type", type);
+    input.setAttribute("placeholder", placeholder);
     if (type === "number") {
-      input2.setAttribute("step", "any");
+      input.setAttribute("step", "any");
     }
-    input2.setAttribute("value", value3);
-    input2.value = value3;
-    return input2;
+    input.setAttribute("value", value2);
+    input.value = value2;
+    return input;
   }
-  function presetCombobox(token, value3, presets, placeholder) {
-    const input2 = document.createElement("p9r-combobox");
-    input2.className = `value-control ${token.type}-control`;
-    input2.dataset.valueEditorControl = "true";
-    input2.setAttribute("aria-label", `${token.label} ${controlLabel(token.type)}`);
-    input2.setAttribute("creatable", "");
-    input2.setAttribute("placeholder", placeholder);
-    input2.append(...presets.map(([label4, value4]) => option6(value4, label4)));
-    input2.setAttribute("value", value3);
-    input2.value = value3;
-    return input2;
+  function presetCombobox(token, value2, presets, placeholder) {
+    const input = document.createElement("p9r-combobox");
+    input.className = `value-control ${token.type}-control`;
+    input.dataset.valueEditorControl = "true";
+    input.setAttribute("aria-label", `${token.label} ${controlLabel(token.type)}`);
+    input.setAttribute("creatable", "");
+    input.setAttribute("placeholder", placeholder);
+    input.append(...presets.map(([label3, value3]) => option4(value3, label3)));
+    input.setAttribute("value", value2);
+    input.value = value2;
+    return input;
   }
-  function option6(value3, label4) {
+  function option4(value2, label3) {
     const item = document.createElement("option");
-    item.value = value3;
-    item.textContent = label4;
+    item.value = value2;
+    item.textContent = label3;
     return item;
   }
-  function parseLength(value3) {
-    const match = /^(-?(?:\d+(?:\.\d+)?|\.\d+))(px|rem|em|%|vw|vh|vmin|vmax|ch)?$/iu.exec(value3.trim());
+  function parseLength(value2) {
+    const match = /^(-?(?:\d+(?:\.\d+)?|\.\d+))(px|rem|em|%|vw|vh|vmin|vmax|ch)?$/iu.exec(value2.trim());
     return match ? { number: match[1], unit: match[2] ?? "" } : undefined;
   }
   function controlLabel(type) {
@@ -63524,53 +61306,53 @@ label {
   }
 
   // src/components/admin/Theme/editor/tokens/referenceControl.ts
-  function renderReferenceControl(token, settings, theme, mode, value3, resolved) {
+  function renderReferenceControl(token, settings, theme, mode, value2, resolved) {
     const editor = document.createElement("div");
     editor.className = "token-editor-panel reference-editor";
     editor.dataset.referenceEditor = "true";
-    const input2 = document.createElement("p9r-combobox");
-    input2.className = "value-control reference-control";
-    input2.dataset.valueEditorControl = "true";
-    input2.setAttribute("aria-label", `Reference for ${token.label}`);
-    input2.setAttribute("placeholder", "Select a variable");
+    const input = document.createElement("p9r-combobox");
+    input.className = "value-control reference-control";
+    input.dataset.valueEditorControl = "true";
+    input.setAttribute("aria-label", `Reference for ${token.label}`);
+    input.setAttribute("placeholder", "Select a variable");
     const entries = themeTokenEntries(settings);
     const options2 = referenceEntries(token, settings, theme, mode, entries);
-    input2.append(...options2.map(referenceOption));
-    const reference = parseDirectTokenReference(value3);
+    input.append(...options2.map(referenceOption));
+    const reference = parseDirectTokenReference(value2);
     if (reference) {
       const current = entries.find((entry2) => entry2.token.variable === reference.variable);
-      if (!options2.some((entry2) => `var(--${entry2.token.variable})` === value3)) {
-        input2.prepend(currentReferenceOption(value3, current));
+      if (!options2.some((entry2) => `var(--${entry2.token.variable})` === value2)) {
+        input.prepend(currentReferenceOption(value2, current));
       }
-      input2.setAttribute("value", value3);
-      input2.value = value3;
+      input.setAttribute("value", value2);
+      input.value = value2;
     } else if (options2.length === 0) {
-      input2.setAttribute("disabled", "");
-      input2.setAttribute("placeholder", "No compatible variables");
+      input.setAttribute("disabled", "");
+      input.setAttribute("placeholder", "No compatible variables");
     }
     const error = referenceError(resolved);
     if (error) {
-      input2.setAttribute("invalid", "");
-      input2.setAttribute("hint", error);
-      input2.setAttribute("hint-level", "error");
+      input.setAttribute("invalid", "");
+      input.setAttribute("hint", error);
+      input.setAttribute("hint-level", "error");
     }
-    editor.append(input2);
+    editor.append(input);
     return editor;
   }
   function referenceEntries(token, settings, theme, mode, entries) {
     return entries.filter((entry2) => canReferenceThemeToken(settings, theme, mode, token.id, entry2.token.id));
   }
   function referenceOption(entry2) {
-    const option7 = document.createElement("option");
-    option7.value = `var(--${entry2.token.variable})`;
-    option7.textContent = referenceLabel(entry2);
-    return option7;
+    const option5 = document.createElement("option");
+    option5.value = `var(--${entry2.token.variable})`;
+    option5.textContent = referenceLabel(entry2);
+    return option5;
   }
-  function currentReferenceOption(value3, entry2) {
-    const option7 = document.createElement("option");
-    option7.value = value3;
-    option7.textContent = entry2 ? referenceLabel(entry2) : "Unavailable reference";
-    return option7;
+  function currentReferenceOption(value2, entry2) {
+    const option5 = document.createElement("option");
+    option5.value = value2;
+    option5.textContent = entry2 ? referenceLabel(entry2) : "Unavailable reference";
+    return option5;
   }
   function referenceLabel(entry2) {
     return `${entry2.source.label} · ${entry2.category.label} · ${entry2.token.label}`;
@@ -63584,9 +61366,9 @@ label {
 
   // src/components/admin/Theme/editor/tokens/controls.ts
   function renderTokenControls(token, settings, theme, mode) {
-    const value3 = effectiveTokenValue(token, theme, mode);
+    const value2 = effectiveTokenValue(token, theme, mode);
     const resolved = resolveThemeTokenValue(settings, theme, mode, token.id);
-    const inputMode = parseDirectTokenReference(value3) ? "reference" : "manual";
+    const inputMode = parseDirectTokenReference(value2) ? "reference" : "manual";
     const group = document.createElement("div");
     group.className = "token-controls";
     group.dataset.tokenControlMode = inputMode;
@@ -63594,8 +61376,8 @@ label {
     valueLine.className = "token-value-line";
     const editor = document.createElement("div");
     editor.className = "token-value-editor";
-    const manual = renderManualControl(token, manualValue(value3, resolved.state, resolved.value));
-    const reference = renderReferenceControl(token, settings, theme, mode, value3, resolved);
+    const manual = renderManualControl(token, manualValue(value2, resolved.state, resolved.value));
+    const reference = renderReferenceControl(token, settings, theme, mode, value2, resolved);
     setEditorActive(manual, inputMode === "manual");
     setEditorActive(reference, inputMode === "reference");
     editor.append(manual, reference);
@@ -63612,20 +61394,20 @@ label {
       control2.toggleAttribute("data-token-value-control", active && !control2.hidden);
     });
   }
-  function valueModeSwitch(token, value3) {
+  function valueModeSwitch(token, value2) {
     const switcher = document.createElement("p9r-segmented-switch");
     switcher.className = "token-value-mode";
     switcher.dataset.tokenInputMode = "true";
     switcher.setAttribute("aria-label", `Choose how ${token.label} is defined`);
-    switcher.setAttribute("value", value3);
+    switcher.setAttribute("value", value2);
     switcher.innerHTML = `<option value="manual">Manual</option><option value="reference">Reference</option>`;
     return switcher;
   }
-  function manualValue(raw, state2, resolved) {
+  function manualValue(raw, state, resolved) {
     if (!parseDirectTokenReference(raw)) {
       return raw;
     }
-    return state2 === "resolved" ? resolved : "";
+    return state === "resolved" ? resolved : "";
   }
   function renderReset(token) {
     const line3 = document.createElement("div");
@@ -63713,13 +61495,13 @@ label {
       this.saveProfile(form);
     };
     open(action) {
-      const input2 = this.input();
-      const title2 = this.host.querySelector("[data-theme-profile-modal-title]");
+      const input = this.input();
+      const title = this.host.querySelector("[data-theme-profile-modal-title]");
       this.action = action;
-      input2.value = action === "rename" ? this.selectedName() : "";
-      input2.removeAttribute("invalid");
-      if (title2) {
-        title2.textContent = action === "create" ? "New theme" : "Rename theme";
+      input.value = action === "rename" ? this.selectedName() : "";
+      input.removeAttribute("invalid");
+      if (title) {
+        title.textContent = action === "create" ? "New theme" : "Rename theme";
       }
       const modal = this.modal();
       if (typeof modal.show === "function") {
@@ -63727,7 +61509,7 @@ label {
       } else {
         modal.setAttribute("open", "");
       }
-      queueMicrotask(() => input2.focus());
+      queueMicrotask(() => input.focus());
     }
     close() {
       this.modal().removeAttribute("open");
@@ -63786,7 +61568,7 @@ label {
     }
     selectedName() {
       const selectedThemeId = this.selectedThemeId();
-      return Array.from(this.host.querySelectorAll("[data-theme-profile-select] option")).find(({ value: value3 }) => value3 === selectedThemeId)?.textContent?.trim() ?? "";
+      return Array.from(this.host.querySelectorAll("[data-theme-profile-select] option")).find(({ value: value2 }) => value2 === selectedThemeId)?.textContent?.trim() ?? "";
     }
     input() {
       return this.host.querySelector("[data-theme-profile-name]");
@@ -63824,15 +61606,15 @@ label {
   function control2(host, selector) {
     return host.querySelector(selector);
   }
-  function setText3(host, selector, value3) {
+  function setText3(host, selector, value2) {
     const element = host.querySelector(selector);
     if (element) {
-      element.textContent = value3;
+      element.textContent = value2;
     }
   }
   function setBusy2(host, busy) {
-    for (const button2 of Array.from(host.querySelectorAll("[data-site-variable-submit]"))) {
-      button2.toggleAttribute("disabled", busy);
+    for (const button of Array.from(host.querySelectorAll("[data-site-variable-submit]"))) {
+      button.toggleAttribute("disabled", busy);
     }
   }
   function setStatus2(host, selector, message, error = false) {
@@ -63935,8 +61717,8 @@ label {
       return this.action === "create-group" ? addCategory(this.settings, this.selection, name, description) : this.action === "edit-group" ? updateCategory(this.settings, this.selection, name, description) : this.action === "create-token" ? addToken(this.settings, this.selection, { label: name, description, type }) : updateToken(this.settings, this.selection, this.tokenId, name, description);
     }
   }
-  function isThemeTokenType(value3) {
-    return ["color", "font-family", "length", "number", "shadow", "value"].includes(value3);
+  function isThemeTokenType(value2) {
+    return ["color", "font-family", "length", "number", "shadow", "value"].includes(value2);
   }
 
   // src/components/admin/Resources/Blocs/workspace/ThemeEditing/Context/SiteVariableRemoval.ts
@@ -64019,11 +61801,11 @@ label {
     section2.className = "site-variable-group";
     const header = document.createElement("header");
     const copy = document.createElement("div");
-    const title2 = document.createElement("h3");
+    const title = document.createElement("h3");
     const description = document.createElement("p");
-    title2.textContent = category.label;
+    title.textContent = category.label;
     description.textContent = category.description;
-    copy.append(title2, description);
+    copy.append(title, description);
     const actions = document.createElement("div");
     actions.append(action("Add variable", "create-token", sourceId, category.id), action("Edit group", "edit-group", sourceId, category.id), action("Delete group", "remove-group", sourceId, category.id, categoryCount <= 1, "danger"));
     header.append(copy, actions);
@@ -64039,11 +61821,11 @@ label {
       for (const token of category.tokens) {
         const row = document.createElement("div");
         const details = document.createElement("div");
-        const label4 = document.createElement("strong");
+        const label3 = document.createElement("strong");
         const description2 = document.createElement("span");
-        label4.textContent = token.label;
+        label3.textContent = token.label;
         description2.textContent = token.description;
-        details.append(label4, description2);
+        details.append(label3, description2);
         const rowActions2 = document.createElement("div");
         rowActions2.append(action("Edit", "edit-token", sourceId, category.id, false, undefined, token.id), action("Delete", "remove-token", sourceId, category.id, false, "danger", token.id));
         row.append(details, rowActions2);
@@ -64053,22 +61835,22 @@ label {
     }
     return section2;
   }
-  function action(label4, actionName, sourceId, categoryId, disabled = false, color, tokenId) {
-    const button2 = document.createElement("p9r-button");
-    button2.setAttribute("type", "button");
-    button2.setAttribute("variant", "ghost");
-    button2.toggleAttribute("disabled", disabled);
-    button2.dataset.siteVariableAction = actionName;
-    button2.dataset.sourceId = sourceId;
-    button2.dataset.categoryId = categoryId;
+  function action(label3, actionName, sourceId, categoryId, disabled = false, color, tokenId) {
+    const button = document.createElement("p9r-button");
+    button.setAttribute("type", "button");
+    button.setAttribute("variant", "ghost");
+    button.toggleAttribute("disabled", disabled);
+    button.dataset.siteVariableAction = actionName;
+    button.dataset.sourceId = sourceId;
+    button.dataset.categoryId = categoryId;
     if (tokenId) {
-      button2.dataset.tokenId = tokenId;
+      button.dataset.tokenId = tokenId;
     }
     if (color) {
-      button2.setAttribute("color", color);
+      button.setAttribute("color", color);
     }
-    button2.textContent = label4;
-    return button2;
+    button.textContent = label3;
+    return button;
   }
 
   // src/components/admin/Resources/Blocs/workspace/ThemeEditing/Context/SiteVariablesController.ts
@@ -64129,34 +61911,34 @@ label {
 
   // src/components/admin/Theme/editor/controller/inputEvents.ts
   function handleThemeInput(event, context) {
-    const input2 = event.target;
+    const input = event.target;
     const theme = currentTheme(context.settings, context.selectedThemeId);
-    if (!input2 || !theme) {
+    if (!input || !theme) {
       return;
     }
-    const tokenValueControl = input2.matches("[data-token-value-control]");
-    const lengthControl2 = input2.matches("[data-length-number], [data-length-unit]");
-    if (!input2.matches("[data-value-control]") && !tokenValueControl && !lengthControl2) {
+    const tokenValueControl = input.matches("[data-token-value-control]");
+    const lengthControl2 = input.matches("[data-length-number], [data-length-unit]");
+    if (!input.matches("[data-value-control]") && !tokenValueControl && !lengthControl2) {
       return;
     }
     if (tokenValueControl && event.type !== "change") {
       return;
     }
-    const tokenId = input2.closest("[data-token-id]")?.dataset.tokenId;
+    const tokenId = input.closest("[data-token-id]")?.dataset.tokenId;
     if (!tokenId) {
       return;
     }
-    const value3 = lengthControl2 ? lengthValue(input2) : input2.value;
-    if (value3 === undefined) {
+    const value2 = lengthControl2 ? lengthValue(input) : input.value;
+    if (value2 === undefined) {
       return;
     }
     theme.values[context.mode] ??= {};
-    theme.values[context.mode][tokenId] = value3;
-    if (input2.type === "color") {
-      const text5 = input2.closest("[data-token-id]")?.querySelector("[data-token-value-control]");
+    theme.values[context.mode][tokenId] = value2;
+    if (input.type === "color") {
+      const text5 = input.closest("[data-token-id]")?.querySelector("[data-token-value-control]");
       if (text5) {
-        text5.value = input2.value;
-        text5.setAttribute("value", input2.value);
+        text5.value = input.value;
+        text5.setAttribute("value", input.value);
       }
     }
   }
@@ -64204,8 +61986,8 @@ label {
     }
     return advanced;
   }
-  function lengthValue(input2) {
-    const editor = input2.closest(".length-editor");
+  function lengthValue(input) {
+    const editor = input.closest(".length-editor");
     const number = editor?.querySelector("[data-length-number]")?.value.trim();
     const unit = editor?.querySelector("[data-length-unit]")?.value;
     return number !== undefined && unit !== undefined && unit !== "advanced" ? `${number}${unit}` : undefined;
@@ -64374,7 +62156,7 @@ label {
 `;
 
   // src/components/admin/Resources/Blocs/workspace/ThemeEditing/style.css
-  var style_default31 = `:host {
+  var style_default30 = `:host {
     display: block;
     min-width: 0;
     container: theme-editor / inline-size;
@@ -64546,11 +62328,11 @@ label {
     const status = query4(root, `[data-mode-status="${mode}"]`);
     status.textContent = customized ? "Customized" : "Default";
     status.toggleAttribute("data-customized", customized);
-    const value3 = effectiveTokenValue(entry2.token, theme, mode);
+    const value2 = effectiveTokenValue(entry2.token, theme, mode);
     const resolved = resolveThemeTokenValue(settings, theme, mode, entry2.token.id);
     const resolvedValue = query4(root, `[data-resolved-value="${mode}"]`);
     resolvedValue.textContent = resolved.value;
-    resolvedValue.hidden = !parseDirectTokenReference(value3);
+    resolvedValue.hidden = !parseDirectTokenReference(value2);
     resolvedValue.toggleAttribute("data-error", resolved.state === "missing" || resolved.state === "cycle");
     if (mode === "dark") {
       const fallback = query4(root, "[data-dark-fallback]");
@@ -64575,7 +62357,7 @@ label {
     constructor() {
       super({
         css: `${tokens_default}
-${style_default31}`,
+${style_default30}`,
         template: template_default40
       });
     }
@@ -64746,7 +62528,7 @@ ${style_default31}`,
   }
 
   // src/components/admin/Resources/Blocs/preview/style.css
-  var style_default32 = `:host {
+  var style_default31 = `:host {
     --_bloc-preview-inset: 0px;
 
     display: block;
@@ -64801,7 +62583,7 @@ iframe {
   // src/components/admin/Resources/Blocs/preview/BlocPreview.ts
   class BlocPreview extends l {
     constructor() {
-      super({ css: style_default32, template: template_default41 });
+      super({ css: style_default31, template: template_default41 });
     }
     static get observedAttributes() {
       return ["src"];
@@ -64814,17 +62596,17 @@ iframe {
     }
     attributeChangedCallback() {
       const frame = this.shadowRoot?.querySelector("iframe");
-      const value3 = this.getAttribute("src");
+      const value2 = this.getAttribute("src");
       if (!frame) {
         return;
       }
-      if (!value3 || value3.includes("{{")) {
+      if (!value2 || value2.includes("{{")) {
         frame.removeAttribute("src");
         return;
       }
       delete this.dataset.previewLayout;
       this.style.removeProperty("--bloc-preview-content-height");
-      const url = new URL(value3, location.href);
+      const url = new URL(value2, location.href);
       if (url.origin === location.origin) {
         frame.src = url.href;
       } else {
@@ -64840,9 +62622,9 @@ iframe {
       this.style.setProperty("--bloc-preview-content-height", `${Math.max(180, event.data.height)}px`);
     };
   }
-  function isLayoutMessage(value3) {
-    const message = value3;
-    return !!value3 && typeof value3 === "object" && message.type === "cms:bloc-preview-layout" && ["compact", "section", "page"].includes(String(message.layout)) && typeof message.height === "number" && Number.isFinite(message.height);
+  function isLayoutMessage(value2) {
+    const message = value2;
+    return !!value2 && typeof value2 === "object" && message.type === "cms:bloc-preview-layout" && ["compact", "section", "page"].includes(String(message.layout)) && typeof message.height === "number" && Number.isFinite(message.height);
   }
   customElements.define("cms-bloc-preview", BlocPreview);
 
@@ -64868,7 +62650,7 @@ iframe {
   customElements.define("cms-bloc-choice", BlocChoice);
 
   // src/components/admin/Resources/Blocs/artwork/style.css
-  var style_default33 = `:host { display: block; width: 100%; }
+  var style_default32 = `:host { display: block; width: 100%; }
 .artwork {
     position: relative;
     aspect-ratio: 16 / 9;
@@ -64934,7 +62716,7 @@ iframe {
   // src/components/admin/Resources/Blocs/artwork/LibraryArtwork.ts
   class LibraryArtwork extends l {
     constructor() {
-      super({ css: style_default33, template: template_default42 });
+      super({ css: style_default32, template: template_default42 });
     }
     static get observedAttributes() {
       return ["label"];
@@ -64949,9 +62731,9 @@ iframe {
       this.removeEventListener("load", this.imageLoaded, true);
     }
     attributeChangedCallback() {
-      const label4 = this.getAttribute("label") ?? "Collection";
-      this.shadowRoot.querySelector(".name").textContent = label4;
-      this.shadowRoot.querySelector(".monogram").textContent = label4.slice(0, 1).toUpperCase();
+      const label3 = this.getAttribute("label") ?? "Collection";
+      this.shadowRoot.querySelector(".name").textContent = label3;
+      this.shadowRoot.querySelector(".monogram").textContent = label3.slice(0, 1).toUpperCase();
     }
     imageFailed = (event) => {
       if (event.target instanceof HTMLImageElement) {
@@ -64967,7 +62749,7 @@ iframe {
   customElements.define("cms-library-artwork", LibraryArtwork);
 
   // src/components/admin/Resources/Blocs/icons/style.css
-  var style_default34 = `:host { display: inline-flex; width: 16px; height: 16px; flex: none; }
+  var style_default33 = `:host { display: inline-flex; width: 16px; height: 16px; flex: none; }
 svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 `;
 
@@ -64984,7 +62766,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
 
   class LibraryIcon extends l {
     constructor() {
-      super({ css: style_default34, template: '<svg viewBox="0 0 24 24" aria-hidden="true"><path/></svg>' });
+      super({ css: style_default33, template: '<svg viewBox="0 0 24 24" aria-hidden="true"><path/></svg>' });
     }
     static get observedAttributes() {
       return ["name"];
@@ -65084,8 +62866,8 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
       }
       this.queued.delete(key(change));
       this.pending = change;
-      for (const field3 of ["id", "resource", "active"]) {
-        form.querySelector(`input[name="${field3}"]`).value = String(change[field3]);
+      for (const field2 of ["id", "resource", "active"]) {
+        form.querySelector(`input[name="${field2}"]`).value = String(change[field2]);
       }
       form.requestSubmit();
     }
@@ -65145,12 +62927,12 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
 
   // src/core/content/collectionWorkspace/routes.ts
   var COLLECTION_WORKSPACE_SECTIONS = ["overview", "theme", "blocs", "texts"];
-  function collectionWorkspacePath(basePath4, collection, section2 = "overview") {
-    const root = `${normalizeBasePath(basePath4)}/admin/collections`;
+  function collectionWorkspacePath(basePath3, collection, section2 = "overview") {
+    const root = `${normalizeBasePath(basePath3)}/admin/collections`;
     return collection ? `${root}/${encodeURIComponent(collection)}/${section2}` : root;
   }
-  function collectionWorkspaceRouteFromPath(pathname, basePath4) {
-    const root = `${normalizeBasePath(basePath4)}/admin/collections`;
+  function collectionWorkspaceRouteFromPath(pathname, basePath3) {
+    const root = `${normalizeBasePath(basePath3)}/admin/collections`;
     const normalized = pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
     if (normalized === root) {
       return {};
@@ -65170,23 +62952,23 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
       return null;
     }
   }
-  function isCollectionWorkspaceSection(value3) {
-    return COLLECTION_WORKSPACE_SECTIONS.includes(value3);
+  function isCollectionWorkspaceSection(value2) {
+    return COLLECTION_WORKSPACE_SECTIONS.includes(value2);
   }
-  function normalizeBasePath(basePath4) {
-    const normalized = basePath4.replace(/\/+$/, "");
+  function normalizeBasePath(basePath3) {
+    const normalized = basePath3.replace(/\/+$/, "");
     return normalized === "/" ? "" : normalized;
   }
 
   // src/components/admin/Resources/Blocs/workspace/controller/forms.ts
-  function configureWorkspaceForms(host, basePath4) {
-    configure(host, "[data-new-composition-form]", `${basePath4}/api/site-bloc as created`, `${basePath4}/editor/bloc?id={{ created.body.tag }}`);
-    configure(host, "[data-new-collection-form]", `${basePath4}/api/bloc/collections as created`, `${basePath4}/admin/collections/site:{{ created.body.id }}/overview`);
+  function configureWorkspaceForms(host, basePath3) {
+    configure(host, "[data-new-composition-form]", `${basePath3}/api/site-bloc as created`, `${basePath3}/editor/bloc?id={{ created.body.tag }}`);
+    configure(host, "[data-new-collection-form]", `${basePath3}/api/bloc/collections as created`, `${basePath3}/admin/collections/site:{{ created.body.id }}/overview`);
     for (const form of Array.from(host.querySelectorAll("[data-import-collection-form]"))) {
-      configureElement(form, `${basePath4}/api/integrations/import as imported`, `${basePath4}/admin/collections/managed:{{ imported.body.installation.id }}/overview`);
+      configureElement(form, `${basePath3}/api/integrations/import as imported`, `${basePath3}/admin/collections/managed:{{ imported.body.installation.id }}/overview`);
     }
-    configure(host, "[data-collection-settings-form]", `${basePath4}/api/bloc/collections?id={{ workspace.collection.siteId }} as updated`, `${basePath4}/admin/collections/site:{{ updated.body.id }}/overview`);
-    host.querySelector("[data-availability-form]")?.setAttribute("cms-source", `${basePath4}/api/bloc/collections/availability as saved`);
+    configure(host, "[data-collection-settings-form]", `${basePath3}/api/bloc/collections?id={{ workspace.collection.siteId }} as updated`, `${basePath3}/admin/collections/site:{{ updated.body.id }}/overview`);
+    host.querySelector("[data-availability-form]")?.setAttribute("cms-source", `${basePath3}/api/bloc/collections/availability as saved`);
   }
   function configure(host, selector, source2, redirect2) {
     const form = host.querySelector(selector);
@@ -65200,8 +62982,8 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
   }
 
   // src/components/admin/Resources/Blocs/workspace/controller/navigation.ts
-  function filterWorkspaceNavigation(menu, value3) {
-    const query5 = normalizeSearch(value3);
+  function filterWorkspaceNavigation(menu, value2) {
+    const query5 = normalizeSearch(value2);
     let visible = 0;
     for (const section2 of Array.from(menu.querySelectorAll("w13c-lateral-menu-section"))) {
       if (query5 && section2.dataset.searchOpen === undefined) {
@@ -65228,8 +63010,8 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
     }
     menu.querySelector("[data-collection-nav-search-empty]")?.toggleAttribute("hidden", !query5 || visible > 0);
   }
-  function normalizeSearch(value3) {
-    return value3.normalize("NFD").replaceAll(/[\u0300-\u036f]/g, "").trim().toLocaleLowerCase();
+  function normalizeSearch(value2) {
+    return value2.normalize("NFD").replaceAll(/[\u0300-\u036f]/g, "").trim().toLocaleLowerCase();
   }
 
   // src/components/admin/Resources/Blocs/workspace/controller/CollectionWorkspace.ts
@@ -65242,7 +63024,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
     siteVariables = new SiteVariablesController(this);
     connectedCallback() {
       if (!this.hasAttribute("data-rendered")) {
-        this.innerHTML = `<style>${String(style_default17)}${String(theme_default)}${String(texts_default)}</style>${template22}`;
+        this.innerHTML = `<style>${String(style_default16)}${String(theme_default)}${String(texts_default)}</style>${template22}`;
         this.setAttribute("data-rendered", "");
       }
       this.configureRoute();
@@ -65262,34 +63044,34 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
       this.siteVariables.disconnect();
     }
     configureRoute() {
-      const basePath4 = getMetaBasePath();
-      const route4 = collectionWorkspaceRouteFromPath(window.location.pathname, basePath4);
+      const basePath3 = getMetaBasePath();
+      const route3 = collectionWorkspaceRouteFromPath(window.location.pathname, basePath3);
       const source2 = this.querySelector("[data-collection-source]");
       const home = this.querySelector("[data-collections-home]");
-      home?.setAttribute("href", `${basePath4}/admin/collections`);
-      configureWorkspaceForms(this, basePath4);
-      if (!route4 || !source2) {
+      home?.setAttribute("href", `${basePath3}/admin/collections`);
+      configureWorkspaceForms(this, basePath3);
+      if (!route3 || !source2) {
         this.querySelector("[data-invalid-route]")?.removeAttribute("hidden");
         return;
       }
       const query5 = [
-        ...route4.collection ? [`collection=${encodeURIComponent(route4.collection)}`] : [],
-        ...route4.section ? [`section=${route4.section}`] : [],
+        ...route3.collection ? [`collection=${encodeURIComponent(route3.collection)}`] : [],
+        ...route3.section ? [`section=${route3.section}`] : [],
         "bloc=#{bloc}",
         "token=#{token}",
         "theme=#{theme}"
       ].join("&");
-      source2.setAttribute("cms-source", `${basePath4}/api/collections/workspace?${query5} as workspace`);
+      source2.setAttribute("cms-source", `${basePath3}/api/collections/workspace?${query5} as workspace`);
       source2.setAttribute("cms-reload-on", "collection:changed bloc:changed integration:updated theme:changed");
-      this.configureTabs(basePath4, route4.collection, route4.section);
-      home?.toggleAttribute("active", !route4.collection);
+      this.configureTabs(basePath3, route3.collection, route3.section);
+      home?.toggleAttribute("active", !route3.collection);
     }
-    configureTabs(basePath4, collection, active) {
+    configureTabs(basePath3, collection, active) {
       this.querySelector("[data-collection-tabs]")?.toggleAttribute("hidden", !collection);
       for (const link of Array.from(this.querySelectorAll("[data-collection-section]"))) {
         const section2 = link.dataset.collectionSection;
         if (collection && section2 && isCollectionWorkspaceSection(section2)) {
-          link.setAttribute("href", collectionWorkspacePath(basePath4, collection, section2));
+          link.setAttribute("href", collectionWorkspacePath(basePath3, collection, section2));
           link.toggleAttribute("active", active === section2);
         }
       }
@@ -65311,1284 +63093,13 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
       const target2 = event.target instanceof Element ? event.target.closest("[data-collection-nav-search]") : null;
       const menu = target2?.closest("w13c-lateral-menu");
       if (target2 && menu) {
-        const value3 = "value" in target2 && typeof target2.value === "string" ? target2.value : "";
-        filterWorkspaceNavigation(menu, value3);
+        const value2 = "value" in target2 && typeof target2.value === "string" ? target2.value : "";
+        filterWorkspaceNavigation(menu, value2);
       }
     };
   }
   if (!customElements.get("cms-collection-workspace")) {
     customElements.define("cms-collection-workspace", CmsCollectionWorkspace);
-  }
-
-  // src/components/admin/Resources/Triggers/template.html
-  var template_default43 = `<section class="triggers-surface">
-    <div data-state="loading" class="state">Loading triggers...</div>
-    <div data-state="error" class="state" hidden>Failed to load triggers.</div>
-    <div data-state="empty" class="state" hidden>No triggers installed.</div>
-    <div data-state="list" class="table-wrap" hidden>
-        <table>
-            <thead>
-                <tr>
-                    <th>Enabled</th>
-                    <th>Trigger</th>
-                    <th>Schedule / event</th>
-                    <th>Target</th>
-                    <th>Runtime</th>
-                    <th>Last run</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody data-role="rows"></tbody>
-        </table>
-    </div>
-</section>
-`;
-
-  // src/components/admin/Resources/Triggers/style.css
-  var style_default35 = `.triggers-surface {
-    max-width: 1120px;
-}
-
-.state {
-    color: var(--p9r-color-muted, #64748b);
-    padding: 1rem 0;
-}
-
-.table-wrap {
-    overflow-x: auto;
-    border: 1px solid var(--p9r-color-border, #e2e8f0);
-    border-radius: 8px;
-    background: var(--p9r-color-surface, #fff);
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: .875rem;
-}
-
-th,
-td {
-    padding: .75rem .875rem;
-    text-align: left;
-    border-bottom: 1px solid var(--p9r-color-border, #e2e8f0);
-    vertical-align: middle;
-    white-space: nowrap;
-}
-
-th {
-    color: var(--p9r-color-muted, #64748b);
-    font-weight: 600;
-    font-size: .75rem;
-}
-
-tr:last-child td {
-    border-bottom: 0;
-}
-
-.primary {
-    color: var(--p9r-color-text, #0f172a);
-    font-weight: 600;
-}
-
-.muted {
-    color: var(--p9r-color-muted, #64748b);
-}
-
-.status {
-    display: inline-flex;
-    align-items: center;
-    min-height: 1.5rem;
-    padding: 0 .5rem;
-    border-radius: 999px;
-    background: var(--p9r-color-muted-bg, #f1f5f9);
-    color: var(--p9r-color-muted, #475569);
-    font-size: .75rem;
-    font-weight: 600;
-}
-
-.status.ok {
-    background: #ecfdf5;
-    color: #047857;
-}
-
-.status.error {
-    background: #fef2f2;
-    color: #b91c1c;
-}
-
-input[type="checkbox"] {
-    width: 1rem;
-    height: 1rem;
-}
-
-button.run {
-    border: 1px solid var(--p9r-color-border, #cbd5e1);
-    border-radius: 6px;
-    background: var(--p9r-color-surface, #fff);
-    color: var(--p9r-color-text, #0f172a);
-    cursor: pointer;
-    padding: .375rem .625rem;
-}
-
-button.run:disabled {
-    cursor: not-allowed;
-    opacity: .5;
-}
-`;
-
-  // src/components/admin/Resources/Triggers/api.ts
-  function basePath4() {
-    const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
-    return raw.replace(/\/+$/, "");
-  }
-  function route4(path) {
-    return `${basePath4()}${path}`;
-  }
-  async function fetchTriggers() {
-    const response = await fetch(route4("/api/triggers"), { headers: { Accept: "application/json" } });
-    if (!response.ok) {
-      throw new Error(await response.text());
-    }
-    return response.json();
-  }
-  async function fetchTriggerCatalog() {
-    const [sourcesResponse, functionsResponse] = await Promise.all([
-      fetch(route4("/api/functions/catalog"), { headers: { Accept: "application/json" } }),
-      fetch(route4("/api/functions"), { headers: { Accept: "application/json" } })
-    ]);
-    if (!sourcesResponse.ok) {
-      throw new Error(await sourcesResponse.text());
-    }
-    if (!functionsResponse.ok) {
-      throw new Error(await functionsResponse.text());
-    }
-    return {
-      sources: await sourcesResponse.json(),
-      functions: await functionsResponse.json()
-    };
-  }
-  async function createTriggerDefinition(definition, enabled) {
-    const response = await fetch(route4("/api/triggers/create"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ definition, enabled })
-    });
-    if (!response.ok) {
-      throw new Error(await response.text());
-    }
-    return response.json();
-  }
-  async function setTriggerEnabled(id2, enabled) {
-    const response = await fetch(route4("/api/triggers/enabled"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: id2, enabled })
-    });
-    if (!response.ok) {
-      throw new Error(await response.text());
-    }
-    return response.json();
-  }
-  async function runScheduledTrigger(id2) {
-    const response = await fetch(route4("/api/triggers/run"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: id2 })
-    });
-    if (!response.ok) {
-      throw new Error(await response.text());
-    }
-    return response.json();
-  }
-
-  // src/components/admin/Resources/Triggers/presentation.ts
-  function eventLabel(trigger) {
-    const event = trigger.event;
-    return event.kind === "schedule" ? `Every ${formatDuration(event.intervalMs)}` : `${event.phase} ${event.source ?? "*"}.${event.endpoint ?? "*"}`;
-  }
-  function cell(content) {
-    const td2 = document.createElement("td");
-    if (typeof content === "string") {
-      td2.textContent = content;
-    } else {
-      td2.append(content);
-    }
-    return td2;
-  }
-  function textBlock2(primary, secondary) {
-    const wrap = document.createElement("div");
-    const top = document.createElement("div");
-    const bottom = document.createElement("div");
-    top.className = "primary";
-    bottom.className = "muted";
-    top.textContent = primary;
-    bottom.textContent = secondary;
-    wrap.append(top, bottom);
-    return wrap;
-  }
-  function lastRun(trigger) {
-    const badge2 = document.createElement("span");
-    badge2.className = `status ${trigger.lastRun?.status ?? ""}`.trim();
-    badge2.textContent = trigger.lastRun ? `${trigger.lastRun.status} · ${formatDate3(trigger.lastRun.at)}${trigger.lastRun.durationMs === undefined ? "" : ` · ${formatDuration(trigger.lastRun.durationMs)}`}` : "Never";
-    if (trigger.lastRun?.error) {
-      badge2.title = trigger.lastRun.error;
-    }
-    return badge2;
-  }
-  function runtimeState(trigger) {
-    if (trigger.event.kind !== "schedule") {
-      return textBlock2(trigger.mode ?? "async", trigger.failureMode ?? "ignore");
-    }
-    if (!trigger.schedulerAvailable) {
-      return textBlock2("Scheduler paused", "This runtime used --no-workers");
-    }
-    if (trigger.scheduleState?.running) {
-      return textBlock2("Running", `Since ${formatDate3(trigger.scheduleState.running.startedAt)}`);
-    }
-    if (!trigger.enabled) {
-      return textBlock2("Disabled", "No future runs");
-    }
-    return textBlock2("Scheduled", trigger.scheduleState ? `Next ${formatDate3(trigger.scheduleState.nextRunAt)}` : "Pending");
-  }
-  function formatDuration(value3) {
-    if (value3 < 1000) {
-      return `${value3} ms`;
-    }
-    return value3 % 60000 === 0 ? `${value3 / 60000} min` : `${value3 / 1000} s`;
-  }
-  function formatDate3(value3) {
-    const date2 = new Date(value3);
-    if (Number.isNaN(date2.getTime())) {
-      return value3;
-    }
-    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date2);
-  }
-
-  // src/components/admin/Resources/Triggers/TriggersAdmin.ts
-  class TriggersAdmin extends HTMLElement {
-    initialized = false;
-    rows = null;
-    connectedCallback() {
-      if (!this.initialized) {
-        this.mount();
-        this.initialized = true;
-      }
-      this.reload();
-    }
-    mount() {
-      const style = document.createElement("style");
-      style.textContent = style_default35;
-      const body = document.createElement("template");
-      body.innerHTML = template_default43;
-      this.replaceChildren(style, body.content.cloneNode(true));
-      this.rows = this.querySelector("[data-role='rows']");
-    }
-    async reload() {
-      this.show("loading");
-      try {
-        const triggers = await fetchTriggers();
-        this.renderRows(triggers);
-        this.show(triggers.length ? "list" : "empty");
-      } catch {
-        this.show("error");
-      }
-    }
-    renderRows(triggers) {
-      this.rows?.replaceChildren(...triggers.map((trigger) => this.row(trigger)));
-    }
-    row(trigger) {
-      const row = document.createElement("tr");
-      const enabled = document.createElement("input");
-      enabled.type = "checkbox";
-      enabled.checked = trigger.enabled;
-      enabled.setAttribute("aria-label", `Enable ${trigger.label ?? trigger.id}`);
-      enabled.addEventListener("change", () => void this.toggle(trigger, enabled));
-      row.append(cell(enabled), cell(textBlock2(trigger.label ?? trigger.id, [trigger.id, trigger.integration?.label].filter(Boolean).join(" · "))), cell(eventLabel(trigger)), cell(trigger.function?.id ?? trigger.task?.id ?? "Unknown"), cell(runtimeState(trigger)), cell(lastRun(trigger)), cell(trigger.event.kind === "schedule" ? this.runButton(trigger) : ""));
-      return row;
-    }
-    runButton(trigger) {
-      const button2 = document.createElement("button");
-      button2.type = "button";
-      button2.className = "run";
-      button2.textContent = "Run now";
-      button2.disabled = !trigger.enabled || !trigger.schedulerAvailable || !!trigger.scheduleState?.running;
-      button2.addEventListener("click", async () => {
-        button2.disabled = true;
-        try {
-          await runScheduledTrigger(trigger.id);
-        } finally {
-          await this.reload();
-        }
-      });
-      return button2;
-    }
-    async toggle(trigger, input2) {
-      if (!input2.checked && trigger.critical && !window.confirm(`Disable critical trigger "${trigger.label ?? trigger.id}"?`)) {
-        input2.checked = true;
-        return;
-      }
-      input2.disabled = true;
-      try {
-        await setTriggerEnabled(trigger.id, input2.checked);
-      } catch {
-        input2.checked = !input2.checked;
-      } finally {
-        input2.disabled = false;
-      }
-    }
-    show(state2) {
-      for (const el of Array.from(this.querySelectorAll("[data-state]"))) {
-        el.hidden = el.dataset.state !== state2;
-      }
-    }
-  }
-  if (!customElements.get("cms-triggers-admin")) {
-    customElements.define("cms-triggers-admin", TriggersAdmin);
-  }
-
-  // src/components/admin/Resources/Triggers/create/controls.ts
-  function input2(root, name) {
-    return root.querySelector(`[data-field="${name}"]`);
-  }
-  function textarea2(root, name) {
-    return root.querySelector(`[data-field="${name}"]`);
-  }
-  function select2(root, name) {
-    return root.querySelector(`[data-field="${name}"]`);
-  }
-  function checkbox(root, name) {
-    return input2(root, name);
-  }
-  function option7(value3, label4) {
-    const element = document.createElement("option");
-    element.value = value3;
-    element.textContent = label4;
-    return element;
-  }
-  function parseOptionalObject(raw, label4) {
-    if (!raw.trim()) {
-      return;
-    }
-    try {
-      const value3 = JSON.parse(raw);
-      if (!value3 || typeof value3 !== "object" || Array.isArray(value3)) {
-        throw new Error;
-      }
-      return value3;
-    } catch {
-      throw new Error(`${label4} must be a JSON object.`);
-    }
-  }
-  function mappedDraft2(draft) {
-    const root = draft[""];
-    if (root?.value) {
-      return resolvedDraftValue(root);
-    }
-    const mapped = mappedObject(draft);
-    return Object.keys(mapped).length ? mapped : undefined;
-  }
-  function parseOptionalValue(raw) {
-    if (!raw.trim()) {
-      return;
-    }
-    const text5 = raw.trim();
-    if (text5.startsWith("$")) {
-      return text5;
-    }
-    try {
-      return JSON.parse(text5);
-    } catch {
-      return text5;
-    }
-  }
-  function identifier2(value3) {
-    const words = value3.normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[A-Za-z0-9]+/g) ?? [];
-    return words.map((word) => word.toLowerCase()).join("-");
-  }
-  function dataShapeType2(value3) {
-    return value3 === "number" || value3 === "boolean" || value3 === "object" || value3 === "array" ? value3 : "string";
-  }
-  function uniqueReferences(references) {
-    const seen = new Set;
-    return references.filter((reference) => {
-      if (seen.has(reference.value)) {
-        return false;
-      }
-      seen.add(reference.value);
-      return true;
-    });
-  }
-
-  // src/components/admin/Resources/Triggers/create/definition.ts
-  function buildTriggerDefinition(root, conditionLeft, conditionRight, functionParams, functionBody) {
-    const id2 = input2(root, "id").value.trim();
-    const label4 = input2(root, "label").value.trim();
-    const advancedParams = parseOptionalObject(textarea2(root, "params").value, "Params mapping");
-    const advancedBody = parseOptionalValue(textarea2(root, "body").value);
-    const params = advancedParams ?? mappedObject(functionParams);
-    const body = advancedBody ?? mappedDraft2(functionBody);
-    const mode = select2(root, "mode").value;
-    return {
-      id: id2,
-      ...label4 ? { label: label4 } : {},
-      event: {
-        kind: "endpoint",
-        source: select2(root, "source").value,
-        endpoint: select2(root, "endpoint").value,
-        phase: select2(root, "phase").value
-      },
-      mode,
-      failureMode: select2(root, "failure").value,
-      ...checkbox(root, "condition-enabled").checked ? { condition: buildCondition(root, conditionLeft, conditionRight) } : {},
-      function: {
-        id: select2(root, "function").value,
-        ...Object.keys(params).length ? { params } : {},
-        ...body !== undefined ? { body } : {}
-      }
-    };
-  }
-  function buildCondition(root, leftDraft, rightDraft) {
-    const operator = select2(root, "operator").value;
-    const left = resolvedDraftValue(leftDraft);
-    if (operator === "exists") {
-      return { exists: left };
-    }
-    return { [operator]: [left, resolvedDraftValue(rightDraft)] };
-  }
-
-  // src/components/admin/Resources/Triggers/create/references.ts
-  function eventReferences(root, sources) {
-    const endpoint = selectedEndpoint2(root, sources);
-    const references = [
-      { value: "$request.method", label: "Request / method", shape: { type: "string" } },
-      { value: "$endpoint.urn", label: "Endpoint / URN", shape: { type: "string" } },
-      { value: "$endpoint.source", label: "Endpoint / source", shape: { type: "string" } },
-      { value: "$endpoint.endpoint", label: "Endpoint / identifier", shape: { type: "string" } },
-      {
-        value: "$ctx.user.id",
-        label: "Current user / id",
-        shape: { type: "string", semantic: { kind: "user-id", authority: "cms" } }
-      },
-      { value: "$ctx.user.role", label: "Current user / role", shape: { type: "string" } }
-    ];
-    for (const param of endpoint?.params ?? []) {
-      references.push({
-        value: `$request.params.${param.name}`,
-        label: `Request parameter / ${param.name}`,
-        shape: {
-          type: dataShapeType2(param.type),
-          ...param.semantic ? { semantic: param.semantic } : {}
-        }
-      });
-    }
-    references.push(...referencesFromShape(endpoint?.body, "$request.body", "Request body"));
-    if (select2(root, "phase").value === "response") {
-      references.push({ value: "$response.status", label: "Response / status", shape: { type: "number" } });
-      const output = endpoint?.output?.find((entry2) => /^2\d\d$/.test(entry2.status)) ?? endpoint?.output?.find((entry2) => entry2.status === "default");
-      references.push(...referencesFromShape(output?.body, "$response.body", "Response body"));
-      references.push(...referencesFromShape(output?.triggerBody, "$response.body", "Response body / trigger-only"));
-    }
-    return uniqueReferences(references);
-  }
-  function selectedEndpoint2(root, sources) {
-    return sources.find((item) => item.id === select2(root, "source").value)?.endpoints.find((endpoint) => endpoint.endpointId === select2(root, "endpoint").value);
-  }
-
-  // src/components/admin/Resources/Triggers/create/mappings.ts
-  function renderConditionPickers(root, sources, left, right) {
-    const references = eventReferences(root, sources);
-    root.querySelector("[data-role='condition-left']")?.replaceChildren(valuePicker(left, references, "Choose an event value"));
-    root.querySelector("[data-role='condition-right']")?.replaceChildren(valuePicker(right, references, "Choose a value"));
-  }
-  function renderFunctionMappings(root, sources, functions, functionParams, functionBody) {
-    const fn2 = functions.find((item) => item.id === select2(root, "function").value);
-    const references = eventReferences(root, sources);
-    const params = Object.entries(fn2?.params ?? {}).map(([name, shape]) => ({
-      path: name,
-      label: name,
-      shape
-    }));
-    const body = targetsFromShape(fn2?.body);
-    root.querySelector("[data-role='function-params']")?.replaceChildren(mappingEditor(params, references, functionParams, "This function has no parameters."));
-    root.querySelector("[data-role='function-body']")?.replaceChildren(mappingEditor(body, references, functionBody, "This function has no request body."));
-  }
-
-  // src/components/admin/Resources/Triggers/create/styles/controls.css
-  var controls_default3 = `.narrow-field {
-    max-width: 320px;
-}
-
-label {
-    display: grid;
-    gap: .4rem;
-    color: var(--p9r-color-muted, #64748b);
-    font-size: .75rem;
-    font-weight: 700;
-}
-
-label span {
-    font-weight: 500;
-}
-
-label.check {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    color: var(--p9r-color-text, #0f172a);
-}
-
-input,
-select,
-textarea {
-    width: 100%;
-    border: 1px solid var(--p9r-color-border, #d8e1ea);
-    border-radius: 6px;
-    background: #fff;
-    color: var(--p9r-color-text, #0f172a);
-    font: inherit;
-}
-
-input,
-select {
-    min-height: 2.35rem;
-    padding: 0 .625rem;
-}
-
-input[type="checkbox"] {
-    width: 1rem;
-    min-height: 1rem;
-    padding: 0;
-}
-
-textarea {
-    min-height: 7rem;
-    padding: .75rem;
-    resize: vertical;
-    font: 500 .8125rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
-.button {
-    min-height: 2.1rem;
-    border: 1px solid #047857;
-    border-radius: 6px;
-    padding: 0 .75rem;
-    cursor: pointer;
-    font: inherit;
-    font-size: .8125rem;
-    font-weight: 700;
-}
-
-.button.primary {
-    background: #047857;
-    color: #fff;
-}
-
-.button.quiet {
-    border-color: transparent;
-    background: transparent;
-    color: #475569;
-}
-
-.button:disabled {
-    cursor: wait;
-    opacity: .65;
-}
-`;
-
-  // src/components/admin/Resources/Triggers/create/styles/feedback.css
-  var feedback_default = `.callout,
-.function-contract,
-.message,
-.reference-list {
-    color: var(--p9r-color-muted, #64748b);
-    font-size: .8125rem;
-}
-
-.callout {
-    padding: .7rem .8rem;
-    border-left: 3px solid #0f766e;
-    background: #f0fdfa;
-    color: #115e59;
-}
-
-.function-contract {
-    padding: .65rem .75rem;
-    border-radius: 6px;
-    background: #f1f5f9;
-}
-
-.reference-list {
-    display: grid;
-    gap: .55rem;
-}
-
-.reference-list code {
-    overflow-wrap: anywhere;
-}
-
-.status-panel {
-    display: grid;
-    gap: .45rem;
-    padding: .85rem .9rem;
-}
-
-.message.error {
-    color: #b91c1c;
-    white-space: pre-wrap;
-}
-
-@media (max-width: 760px) {
-    .mapping-row {
-        grid-template-columns: 1fr;
-    }
-}
-`;
-
-  // src/components/admin/Resources/Triggers/create/styles/layout.css
-  var layout_default4 = `:host {
-    display: block;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-.create-shell {
-    --w-detail-main-width: 760px;
-    --w-detail-aside-width: 290px;
-}
-
-.state {
-    color: var(--p9r-color-muted, #64748b);
-    padding: 1rem 0;
-}
-
-.back {
-    color: inherit;
-    font-size: 1.25rem;
-    text-decoration: none;
-}
-
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-}
-
-.journey-intro {
-    display: grid;
-    gap: .25rem;
-    padding: .25rem .1rem .75rem;
-}
-
-.journey-intro strong {
-    color: var(--p9r-color-text, #0f172a);
-    font-size: 1rem;
-}
-
-.journey-intro span {
-    color: var(--p9r-color-muted, #64748b);
-    font-size: .875rem;
-}
-
-.editor-panel,
-.side-panel,
-.status-panel {
-    overflow: hidden;
-    border: 1px solid var(--p9r-color-border, #d8e1ea);
-    border-radius: 10px;
-    background: #fff;
-}
-
-.editor-panel + .editor-panel,
-.side-panel + .side-panel,
-.status-panel {
-    margin-top: .75rem;
-}
-
-.editor-panel > summary,
-.side-panel > summary {
-    display: flex;
-    align-items: center;
-    gap: .8rem;
-    cursor: pointer;
-    list-style: none;
-}
-
-.editor-panel > summary::-webkit-details-marker,
-.side-panel > summary::-webkit-details-marker {
-    display: none;
-}
-
-.editor-panel > summary {
-    min-height: 4.5rem;
-    padding: .8rem 1rem;
-}
-
-.side-panel > summary {
-    padding: .8rem .9rem;
-}
-
-.summary-copy {
-    display: grid;
-    flex: 1;
-    gap: .2rem;
-}
-
-.summary-copy small {
-    color: var(--p9r-color-muted, #64748b);
-    font-size: .78rem;
-    font-weight: 500;
-}
-
-.step-number {
-    display: grid;
-    place-items: center;
-    flex: 0 0 2rem;
-    width: 2rem;
-    height: 2rem;
-    border-radius: 50%;
-    background: #ecfdf5;
-    color: #047857;
-    font-weight: 800;
-}
-
-.step-number.optional {
-    background: #f1f5f9;
-    color: #64748b;
-}
-
-.chevron {
-    margin-left: auto;
-    color: #64748b;
-    transition: transform .16s ease;
-}
-
-details[open] > summary > .chevron {
-    transform: rotate(180deg);
-}
-
-.panel-body,
-.side-body {
-    display: grid;
-    gap: 1rem;
-    padding: 1rem;
-    border-top: 1px solid var(--p9r-color-border, #e2e8f0);
-    background: #fbfdff;
-}
-`;
-
-  // src/components/admin/Resources/Triggers/create/styles/mapping.css
-  var mapping_default2 = `.condition-fields {
-    display: grid;
-    gap: 1rem;
-    padding-top: .25rem;
-}
-
-.mapping-group,
-.mapping-editor,
-.value-picker {
-    display: grid;
-    gap: .55rem;
-}
-
-.mapping-group > span,
-.mapping-target span,
-.mapping-empty {
-    color: var(--p9r-color-muted, #64748b);
-    font-size: .78rem;
-}
-
-.mapping-row {
-    display: grid;
-    grid-template-columns: minmax(150px, .65fr) minmax(240px, 1fr);
-    align-items: start;
-    gap: .75rem;
-    padding: .65rem;
-    border: 1px solid var(--p9r-color-border, #e2e8f0);
-    border-radius: 7px;
-    background: #fff;
-}
-
-.mapping-target {
-    display: grid;
-    gap: .3rem;
-}
-
-.mapping-empty {
-    padding: .7rem;
-    border: 1px dashed #cbd5e1;
-    border-radius: 7px;
-}
-
-.advanced-panel {
-    border-top: 1px solid var(--p9r-color-border, #e2e8f0);
-    padding-top: .75rem;
-}
-
-.advanced-panel > summary {
-    cursor: pointer;
-    color: #64748b;
-    font-size: .8rem;
-    font-weight: 700;
-}
-
-.advanced-body {
-    display: grid;
-    gap: 1rem;
-    padding-top: .8rem;
-}
-`;
-
-  // src/components/admin/Resources/Triggers/create/styles/index.ts
-  var styles_default12 = [layout_default4, mapping_default2, controls_default3, feedback_default].join(`
-`);
-
-  // src/components/admin/Resources/Triggers/create/templates/aside.html
-  var aside_default2 = `
-<details slot="aside" class="side-panel" open>
-    <summary>
-        <strong>Execution</strong>
-        <span class="chevron">⌄</span>
-    </summary>
-
-    <div class="side-body">
-        <label>
-            Mode
-            <select data-field="mode">
-                <option value="async">Async — recommended</option>
-                <option value="sync">Synchronous</option>
-            </select>
-        </label>
-
-        <label>
-            On failure
-            <select data-field="failure">
-                <option value="ignore">Record and continue</option>
-                <option value="block">Block the source response</option>
-            </select>
-        </label>
-
-        <label class="check">
-            <input type="checkbox" data-field="enabled" />
-            Enable immediately
-        </label>
-    </div>
-</details>
-
-<details slot="aside" class="side-panel">
-    <summary>
-        <strong>Available references</strong>
-        <span class="chevron">⌄</span>
-    </summary>
-    <div class="side-body reference-list">
-        <code>$request.method</code>
-        <code>$request.params.name</code>
-        <code>$request.body.field</code>
-        <code>$response.status</code>
-        <code>$response.body.field</code>
-        <code>$ctx.user.id</code>
-        <code>$endpoint.urn</code>
-    </div>
-</details>
-
-<div slot="aside" class="status-panel">
-    <strong>Status</strong>
-    <div class="message" data-role="message">New triggers are disabled unless explicitly enabled.</div>
-</div>
-`;
-
-  // src/components/admin/Resources/Triggers/create/templates/condition.html
-  var condition_default = `
-<details slot="main" class="editor-panel" data-panel="condition">
-    <summary>
-        <span class="step-number optional">3</span>
-        <span class="summary-copy">
-            <strong>Add a condition</strong>
-            <small>Optional — fire only when a value matches your rule.</small>
-        </span>
-        <span class="chevron">⌄</span>
-    </summary>
-
-    <div class="panel-body">
-        <label class="check">
-            <input type="checkbox" data-field="condition-enabled" />
-            Fire only when a condition matches
-        </label>
-
-        <div class="condition-fields" data-role="condition" hidden>
-            <label>
-                Value to inspect
-                <div data-role="condition-left"></div>
-            </label>
-
-            <label>
-                Comparison
-                <select data-field="operator">
-                    <option value="equals">Equals</option>
-                    <option value="notEquals">Does not equal</option>
-                    <option value="exists">Exists</option>
-                    <option value="in">Is contained in</option>
-                    <option value="gt">Is greater than</option>
-                    <option value="gte">Is greater than or equal</option>
-                    <option value="lt">Is less than</option>
-                    <option value="lte">Is less than or equal</option>
-                </select>
-            </label>
-
-            <label data-role="right-field">
-                Expected value
-                <div data-role="condition-right"></div>
-            </label>
-        </div>
-    </div>
-</details>
-`;
-
-  // src/components/admin/Resources/Triggers/create/templates/event.html
-  var event_default = `<a slot="back" class="back" aria-label="Back to triggers">&lt;</a>
-
-<span slot="title">Create trigger</span>
-
-<div slot="actions" class="header-actions">
-    <button type="button" class="button quiet" data-role="collapse">Collapse all</button>
-    <button type="button" class="button primary" data-role="save">Create trigger</button>
-</div>
-
-<div slot="main" class="journey-intro">
-    <strong>Connect an event to a function</strong>
-    <span>Choose what happens, when the trigger fires, then what it should call.</span>
-</div>
-
-<details slot="main" class="editor-panel" open data-panel="general">
-    <summary>
-        <span class="step-number">1</span>
-        <span class="summary-copy">
-            <strong>Name the trigger</strong>
-            <small>Use a clear name that describes the event and its outcome.</small>
-        </span>
-        <span class="chevron">⌄</span>
-    </summary>
-
-    <div class="panel-body">
-        <label>
-            Trigger name
-            <input data-field="label" placeholder="Notify on new order" />
-        </label>
-
-        <label>
-            Identifier
-            <span>Generated from the name. You can adjust it before creation.</span>
-            <input data-field="id" placeholder="notify-on-order" />
-        </label>
-    </div>
-</details>
-
-<details slot="main" class="editor-panel" open data-panel="event">
-    <summary>
-        <span class="step-number">2</span>
-        <span class="summary-copy">
-            <strong>Choose the event</strong>
-            <small>Select the endpoint and whether to fire before or after it runs.</small>
-        </span>
-        <span class="chevron">⌄</span>
-    </summary>
-
-    <div class="panel-body">
-        <label>
-            Source
-            <select data-field="source"></select>
-        </label>
-
-        <label>
-            Endpoint
-            <select data-field="endpoint"></select>
-        </label>
-
-        <label class="narrow-field">
-            When should it fire?
-            <select data-field="phase">
-                <option value="response">After a successful response</option>
-                <option value="request">Before the request</option>
-            </select>
-        </label>
-
-        <div class="callout" data-role="phase-help">
-            Response triggers can inspect both the request and response.
-        </div>
-    </div>
-</details>
-`;
-
-  // src/components/admin/Resources/Triggers/create/templates/function.html
-  var function_default = `
-<details slot="main" class="editor-panel" open data-panel="function">
-    <summary>
-        <span class="step-number">4</span>
-        <span class="summary-copy">
-            <strong>Choose what happens</strong>
-            <small>Select a function and map event data to its inputs.</small>
-        </span>
-        <span class="chevron">⌄</span>
-    </summary>
-
-    <div class="panel-body">
-        <label>
-            Function
-            <select data-field="function"></select>
-        </label>
-
-        <div class="function-contract" data-role="function-contract"></div>
-
-        <div class="mapping-group">
-            <strong>Parameter mapping</strong>
-            <span>Choose which event value fills each function parameter.</span>
-            <div data-role="function-params"></div>
-        </div>
-
-        <div class="mapping-group">
-            <strong>Body mapping</strong>
-            <span>Choose which event value fills each function body field.</span>
-            <div data-role="function-body"></div>
-        </div>
-
-        <details class="advanced-panel">
-            <summary>Advanced JSON override</summary>
-            <div class="advanced-body">
-                <label>
-                    Parameter mapping
-                    <span>Leave empty to use the selectors above.</span>
-                    <textarea data-field="params"></textarea>
-                </label>
-                <label>
-                    Body mapping
-                    <span>Leave empty to use the selectors above.</span>
-                    <textarea data-field="body"></textarea>
-                </label>
-            </div>
-        </details>
-    </div>
-</details>
-`;
-
-  // src/components/admin/Resources/Triggers/create/templates/index.ts
-  var templateHtml2 = [event_default, condition_default, function_default, aside_default2].join("");
-  function appendCreateTemplate2(shell) {
-    const template23 = document.createElement("template");
-    template23.innerHTML = templateHtml2;
-    const body = document.createElement("cms-shell-detail-body");
-    body.slot = "body";
-    for (const child of Array.from(template23.content.children)) {
-      (child.slot === "main" || child.slot === "aside" ? body : shell).append(child);
-    }
-    shell.append(body);
-  }
-
-  // src/components/admin/Resources/Triggers/create/view.ts
-  function renderState2(host, text5) {
-    const style = document.createElement("style");
-    style.textContent = styles_default12;
-    const state2 = document.createElement("div");
-    state2.className = "state";
-    state2.textContent = text5;
-    host.replaceChildren(style, state2);
-  }
-  function renderShell(host) {
-    const style = document.createElement("style");
-    style.textContent = styles_default12;
-    const shell = document.createElement("cms-shell-detail");
-    shell.className = "create-shell";
-    appendCreateTemplate2(shell);
-    shell.querySelector(".back").href = route4("/admin/triggers");
-    host.replaceChildren(style, shell);
-  }
-  function populateSources(host, sources) {
-    const sourceSelect = select2(host, "source");
-    for (const source2 of sources) {
-      sourceSelect.append(option7(source2.id, source2.label));
-    }
-  }
-  function syncEndpointOptions(host, sources) {
-    const endpointSelect = select2(host, "endpoint");
-    const source2 = sources.find((item) => item.id === select2(host, "source").value);
-    endpointSelect.replaceChildren(...(source2?.endpoints ?? []).map((endpoint) => option7(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`)));
-  }
-  function populateFunctions(host, functions) {
-    const functionSelect = select2(host, "function");
-    for (const fn2 of functions) {
-      functionSelect.append(option7(fn2.id, `${fn2.label} (${fn2.method})`));
-    }
-  }
-  function syncFunctionContract(host, functions) {
-    const root = host.querySelector("[data-role='function-contract']");
-    const fn2 = functions.find((item) => item.id === select2(host, "function").value);
-    if (!root) {
-      return;
-    }
-    if (!fn2) {
-      root.textContent = "Create a function before creating a trigger.";
-      return;
-    }
-    const params = Object.keys(fn2.params ?? {});
-    root.textContent = `${params.length ? `Params: ${params.join(", ")}` : "No params"} · ${fn2.body ? "Accepts a body" : "No body"}`;
-  }
-  function syncPhaseHelp(host) {
-    const help = host.querySelector("[data-role='phase-help']");
-    if (help) {
-      help.textContent = select2(host, "phase").value === "request" ? "Request triggers run before the endpoint and cannot inspect $response values." : "Response triggers can inspect both the request and response.";
-    }
-  }
-  function syncExecutionOptions(host) {
-    const failure = select2(host, "failure");
-    const asyncMode = select2(host, "mode").value === "async";
-    const block = failure.querySelector('option[value="block"]');
-    if (block) {
-      block.disabled = asyncMode;
-    }
-    if (asyncMode && failure.value === "block") {
-      failure.value = "ignore";
-    }
-  }
-  function syncConditionVisibility(host) {
-    const enabled = checkbox(host, "condition-enabled").checked;
-    const root = host.querySelector("[data-role='condition']");
-    const right = host.querySelector("[data-role='right-field']");
-    if (root) {
-      root.hidden = !enabled;
-    }
-    if (right) {
-      right.hidden = select2(host, "operator").value === "exists";
-    }
-  }
-
-  // src/components/admin/Resources/Triggers/TriggerCreate.ts
-  class CmsTriggerCreate extends HTMLElement {
-    initialized = false;
-    sources = [];
-    functions = [];
-    conditionLeft = { mode: "reference", value: "$response.status" };
-    conditionRight = { mode: "literal", value: "200" };
-    functionParams = {};
-    functionBody = {};
-    message = null;
-    saveButton = null;
-    connectedCallback() {
-      if (this.initialized) {
-        return;
-      }
-      this.initialized = true;
-      this.load();
-    }
-    async load() {
-      renderState2(this, "Loading sources and functions...");
-      try {
-        const catalog = await fetchTriggerCatalog();
-        this.sources = catalog.sources;
-        this.functions = catalog.functions;
-        this.render();
-      } catch (error) {
-        renderState2(this, error instanceof Error ? error.message : "Failed to load trigger catalog.");
-      }
-    }
-    render() {
-      renderShell(this);
-      this.message = this.querySelector("[data-role='message']");
-      this.saveButton = this.querySelector("[data-role='save']");
-      populateSources(this, this.sources);
-      populateFunctions(this, this.functions);
-      this.bind();
-      syncEndpointOptions(this, this.sources);
-      syncFunctionContract(this, this.functions);
-      syncExecutionOptions(this);
-      syncPhaseHelp(this);
-      this.renderCondition();
-      this.renderMappings();
-    }
-    bind() {
-      select2(this, "source").addEventListener("change", () => {
-        syncEndpointOptions(this, this.sources);
-        this.resetEventMappings();
-      });
-      select2(this, "endpoint").addEventListener("change", () => this.resetEventMappings());
-      select2(this, "function").addEventListener("change", () => {
-        this.functionParams = {};
-        this.functionBody = {};
-        syncFunctionContract(this, this.functions);
-        this.renderMappings();
-      });
-      select2(this, "mode").addEventListener("change", () => syncExecutionOptions(this));
-      select2(this, "phase").addEventListener("change", () => {
-        syncPhaseHelp(this);
-        this.resetEventMappings();
-      });
-      select2(this, "operator").addEventListener("change", () => this.renderCondition());
-      checkbox(this, "condition-enabled").addEventListener("change", () => this.renderCondition());
-      this.querySelector("[data-role='collapse']")?.addEventListener("click", (event) => {
-        this.togglePanels(event.currentTarget);
-      });
-      this.bindIdentifier();
-      this.saveButton?.addEventListener("click", () => void this.save());
-    }
-    bindIdentifier() {
-      const label4 = input2(this, "label");
-      const id2 = input2(this, "id");
-      let idWasEdited = false;
-      id2.addEventListener("input", () => idWasEdited = true);
-      label4.addEventListener("input", () => {
-        if (!idWasEdited) {
-          id2.value = identifier2(label4.value);
-        }
-      });
-    }
-    togglePanels(button2) {
-      const panels = Array.from(this.querySelectorAll("details.editor-panel"));
-      const shouldOpen = panels.some((panel) => !panel.open);
-      for (const panel of panels) {
-        panel.open = shouldOpen;
-      }
-      button2.textContent = shouldOpen ? "Collapse all" : "Expand all";
-    }
-    resetEventMappings() {
-      this.conditionLeft.value = "";
-      this.conditionLeft.mode = "reference";
-      this.functionParams = {};
-      this.functionBody = {};
-      this.renderCondition();
-      this.renderMappings();
-    }
-    renderCondition() {
-      syncConditionVisibility(this);
-      renderConditionPickers(this, this.sources, this.conditionLeft, this.conditionRight);
-    }
-    renderMappings() {
-      renderFunctionMappings(this, this.sources, this.functions, this.functionParams, this.functionBody);
-    }
-    async save() {
-      if (!this.saveButton) {
-        return;
-      }
-      this.saveButton.disabled = true;
-      this.setMessage("Validating trigger...", "");
-      try {
-        const definition = buildTriggerDefinition(this, this.conditionLeft, this.conditionRight, this.functionParams, this.functionBody);
-        await createTriggerDefinition(definition, checkbox(this, "enabled").checked);
-        window.location.href = route4("/admin/triggers");
-      } catch (error) {
-        this.setMessage(error instanceof Error ? error.message : "Failed to create trigger.", "error");
-        this.saveButton.disabled = false;
-      }
-    }
-    setMessage(text5, kind) {
-      if (!this.message) {
-        return;
-      }
-      this.message.className = `message ${kind}`.trim();
-      this.message.textContent = text5;
-    }
-  }
-  if (!customElements.get("cms-trigger-create")) {
-    customElements.define("cms-trigger-create", CmsTriggerCreate);
   }
 
   // src/components/editorSystemV2/resource.ts
@@ -66715,28 +63226,28 @@ details[open] > summary > .chevron {
         archive.textContent = definition.lifecycle === "archived" ? "Restore" : "Archive";
       }
     }
-    setControls(input3) {
-      this.require(".builder").setAttribute("aria-busy", String(input3.busy));
-      const disabled = input3.busy || !input3.ready || !input3.definition;
-      const archived = input3.definition?.lifecycle === "archived";
+    setControls(input) {
+      this.require(".builder").setAttribute("aria-busy", String(input.busy));
+      const disabled = input.busy || !input.ready || !input.definition;
+      const archived = input.definition?.lifecycle === "archived";
       const settings = this.chromeButton('[data-action="page-settings"]');
       const save = this.chromeButton('[data-action="save"]');
       const archive = this.chromeButton('[data-action="delete"]');
       if (settings) {
-        settings.disabled = input3.busy || !input3.definition || Boolean(archived);
+        settings.disabled = input.busy || !input.definition || Boolean(archived);
       }
       if (save) {
         save.disabled = disabled || Boolean(archived);
       }
       if (archive) {
-        archive.disabled = input3.busy || !input3.definition || !input3.ready && !archived;
+        archive.disabled = input.busy || !input.definition || !input.ready && !archived;
       }
       if (this.publishButton) {
         this.publishButton.disabled = disabled || Boolean(archived);
       }
-      if (input3.definition && this.publishButton) {
-        const unpublished = input3.definition.publishedRevision !== input3.definition.draftRevision;
-        this.publishButton.disabled = disabled || Boolean(archived) || !input3.dirty && !unpublished;
+      if (input.definition && this.publishButton) {
+        const unpublished = input.definition.publishedRevision !== input.definition.draftRevision;
+        this.publishButton.disabled = disabled || Boolean(archived) || !input.dirty && !unpublished;
       }
     }
     setStatus(message) {
@@ -66950,7 +63461,7 @@ details[open] > summary > .chevron {
       return true;
     }
     const id2 = element.id;
-    return Boolean(id2 && Array.from(root.querySelectorAll("label[for]")).some((label4) => label4.getAttribute("for") === id2));
+    return Boolean(id2 && Array.from(root.querySelectorAll("label[for]")).some((label3) => label3.getAttribute("for") === id2));
   }
   function needsControlLabel(element) {
     if (element.localName !== "input") {
@@ -67183,7 +63694,7 @@ details[open] > summary > .chevron {
   }
 
   // src/components/editorSystemV2/siteBloc/template.html
-  var template_default44 = `<div class="builder" aria-busy="true">
+  var template_default43 = `<div class="builder" aria-busy="true">
     <div class="feedback">
         <p class="status" data-status role="status" aria-live="polite">Loading bloc…</p>
         <p class="error" data-error role="alert" hidden></p>
@@ -67208,7 +63719,7 @@ details[open] > summary > .chevron {
 `;
 
   // src/components/editorSystemV2/siteBloc/style.css
-  var style_default36 = `:host {
+  var style_default34 = `:host {
     --builder-accent: #165f4b;
     --builder-border: #dfe5e2;
     --builder-muted: #697873;
@@ -67256,7 +63767,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 
   // src/components/editorSystemV2/siteBloc/SiteBlocBuilder.ts
   var template23 = document.createElement("template");
-  template23.innerHTML = `<style>${String(style_default36)}</style>${String(template_default44)}`;
+  template23.innerHTML = `<style>${String(style_default34)}</style>${String(template_default43)}`;
 
   class SiteBlocBuilder extends HTMLElement {
     controller;
@@ -67395,7 +63906,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/CardMedia/template.html
-  var template_default45 = `<div class="card">
+  var template_default44 = `<div class="card">
     <div class="preview">
         <slot name="image">
             <span class="placeholder">
@@ -67417,7 +63928,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default37 = `:host {
+  var style_default35 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -67542,8 +64053,8 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class CardMedia extends l {
     constructor() {
       super({
-        css: style_default37,
-        template: template_default45
+        css: style_default35,
+        template: template_default44
       });
     }
   }
@@ -67552,7 +64063,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/CropSystem/template.html
-  var template_default46 = `<div class="backdrop" id="backdrop">
+  var template_default45 = `<div class="backdrop" id="backdrop">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="crop-title">
         <div class="header">
             <h3 id="crop-title">Crop image</h3>
@@ -67591,7 +64102,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/CropSystem/styles/controls.css
-  var controls_default4 = `.ratio-buttons {
+  var controls_default2 = `.ratio-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
@@ -67665,7 +64176,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/CropSystem/styles/layout.css
-  var layout_default5 = `:host {
+  var layout_default3 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -67795,9 +64306,9 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class CropSystem extends l {
     constructor() {
       super({
-        css: [layout_default5, controls_default4].join(`
+        css: [layout_default3, controls_default2].join(`
 `),
-        template: template_default46
+        template: template_default45
       });
     }
     connectedCallback() {
@@ -67835,7 +64346,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/components/media/DetailMedia/template.html
-  var template_default47 = `<div class="backdrop" id="backdrop">
+  var template_default46 = `<div class="backdrop" id="backdrop">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="title">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -67877,7 +64388,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/DetailMedia/styles/layout.css
-  var layout_default6 = `:host {
+  var layout_default4 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -68092,9 +64603,9 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class DetailMedia extends l {
     constructor() {
       super({
-        css: [layout_default6, tools_default].join(`
+        css: [layout_default4, tools_default].join(`
 `),
-        template: template_default47
+        template: template_default46
       });
     }
     connectedCallback() {
@@ -68112,9 +64623,9 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
         }
       });
     }
-    open(label4) {
-      if (label4) {
-        this.shadowRoot.getElementById("title").textContent = label4;
+    open(label3) {
+      if (label3) {
+        this.shadowRoot.getElementById("title").textContent = label3;
       }
       this.setAttribute("open", "");
     }
@@ -68128,7 +64639,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/GridMedia/view/template.html
-  var template_default48 = `<div class="toolbar">
+  var template_default47 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -68668,13 +65179,13 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
     return trail;
   }
   // src/components/media/GridMedia/api/write.ts
-  async function renameItem(id2, label4) {
+  async function renameItem(id2, label3) {
     const url = new URL(filesBase(), window.location.origin);
     url.searchParams.set("id", id2);
     const res = await fetch(url.toString(), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: label4 })
+      body: JSON.stringify({ name: label3 })
     });
     return res.ok;
   }
@@ -68685,11 +65196,11 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
     const res = await fetch(url.toString(), { method: "DELETE" });
     return res.ok;
   }
-  async function createFolder(label4, parent) {
+  async function createFolder(label3, parent) {
     const res = await fetch(`${filesBase()}/folder`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: label4, parentId: parent })
+      body: JSON.stringify({ name: label3, parentId: parent })
     });
     return res.ok;
   }
@@ -68764,8 +65275,8 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/GridMedia/view/render.ts
-  function renderGrid(grid2, items) {
-    grid2.innerHTML = "";
+  function renderGrid(grid, items) {
+    grid.innerHTML = "";
     for (const item of items) {
       const card = document.createElement("p9r-card-media");
       card.setAttribute("data-id", item.id);
@@ -68775,11 +65286,11 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       } else {
         appendMediaPreview(card, item);
       }
-      const label4 = document.createElement("span");
-      label4.slot = "label";
-      label4.textContent = item.label;
-      card.appendChild(label4);
-      grid2.appendChild(card);
+      const label3 = document.createElement("span");
+      label3.slot = "label";
+      label3.textContent = item.label;
+      card.appendChild(label3);
+      grid.appendChild(card);
     }
   }
   function appendMediaPreview(card, item) {
@@ -68857,7 +65368,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   // src/components/media/GridMedia/features/rename.ts
   function setupRename(s2, callbacks) {
     const backdrop = s2.getElementById("rename-backdrop");
-    const input3 = s2.getElementById("rename-input");
+    const input = s2.getElementById("rename-input");
     const confirmBtn = s2.getElementById("rename-confirm");
     const cancelBtn = s2.getElementById("rename-cancel");
     let currentItem = null;
@@ -68866,7 +65377,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       currentItem = null;
     };
     const apply = () => {
-      const name = input3.value.trim();
+      const name = input.value.trim();
       if (!name || !currentItem) {
         return;
       }
@@ -68881,7 +65392,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
         hide();
       }
     });
-    input3.addEventListener("keydown", (e) => {
+    input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         apply();
       }
@@ -68892,11 +65403,11 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
     return {
       open(item) {
         currentItem = item;
-        input3.value = item.label;
+        input.value = item.label;
         backdrop.classList.add("visible");
         requestAnimationFrame(() => {
-          input3.focus();
-          input3.select();
+          input.focus();
+          input.select();
         });
       }
     };
@@ -68905,17 +65416,17 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   // src/components/media/GridMedia/features/new-folder.ts
   function setupNewFolder(host, s2, callbacks) {
     const backdrop = s2.getElementById("nf-backdrop");
-    const input3 = s2.getElementById("nf-input");
+    const input = s2.getElementById("nf-input");
     const confirmBtn = s2.getElementById("nf-confirm");
     const cancelBtn = s2.getElementById("nf-cancel");
     const hide = () => backdrop.classList.remove("visible");
     const show = () => {
-      input3.value = "";
+      input.value = "";
       backdrop.classList.add("visible");
-      requestAnimationFrame(() => input3.focus());
+      requestAnimationFrame(() => input.focus());
     };
     const create = () => {
-      const name = input3.value.trim();
+      const name = input.value.trim();
       if (!name) {
         return;
       }
@@ -68930,7 +65441,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
         hide();
       }
     });
-    input3.addEventListener("keydown", (e) => {
+    input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         create();
       }
@@ -69118,13 +65629,13 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
   function pickFile(accept) {
     return new Promise((resolve) => {
-      const input3 = document.createElement("input");
-      input3.type = "file";
+      const input = document.createElement("input");
+      input.type = "file";
       if (accept) {
-        input3.accept = accept;
+        input.accept = accept;
       }
-      input3.addEventListener("change", () => resolve(input3.files?.[0] ?? null), { once: true });
-      input3.click();
+      input.addEventListener("change", () => resolve(input.files?.[0] ?? null), { once: true });
+      input.click();
     });
   }
   function readFields(detail) {
@@ -69190,8 +65701,8 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 
   // src/components/media/GridMedia/events/grid.ts
   function wireGrid(host, s2, ctxMenu, detail) {
-    const grid2 = s2.getElementById("grid");
-    grid2.addEventListener("click", (e) => {
+    const grid = s2.getElementById("grid");
+    grid.addEventListener("click", (e) => {
       const card = e.target.closest("p9r-card-media");
       if (!card) {
         return;
@@ -69207,7 +65718,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
         }
       }
     });
-    grid2.addEventListener("contextmenu", (e) => {
+    grid.addEventListener("contextmenu", (e) => {
       const card = e.target.closest("p9r-card-media");
       if (!card) {
         return;
@@ -69244,7 +65755,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       super({
         css: [navigation_default3, interactions_default, detail_default2].join(`
 `),
-        template: template_default48
+        template: template_default47
       });
     }
     get detail() {
@@ -69280,7 +65791,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       renderGrid(this.shadowRoot.getElementById("grid"), this._items);
       renderBreadcrumb(this.shadowRoot.getElementById("breadcrumb"), this._folder, this._breadcrumb);
     }
-    _navigateTo(folderId, label4) {
+    _navigateTo(folderId, label3) {
       const url = new URL(window.location.href);
       if (folderId) {
         url.searchParams.set("folder", folderId);
@@ -69291,8 +65802,8 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       this._folder = folderId;
       if (!folderId) {
         this._breadcrumb = [];
-      } else if (label4) {
-        this._breadcrumb.push({ id: folderId, label: label4 });
+      } else if (label3) {
+        this._breadcrumb.push({ id: folderId, label: label3 });
       }
       this._refresh();
     }
@@ -69371,9 +65882,9 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       this._grid?.refresh();
     }
     async _handleCreateFolder() {
-      const button2 = this.querySelector('[data-action="create-folder"]');
-      const input3 = this.querySelector('[data-role="folder-name"]');
-      const name = input3?.value?.trim();
+      const button = this.querySelector('[data-action="create-folder"]');
+      const input = this.querySelector('[data-role="folder-name"]');
+      const name = input?.value?.trim();
       if (!name) {
         return;
       }
@@ -69381,10 +65892,10 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       if (!ok) {
         return;
       }
-      if (input3) {
-        input3.value = "";
+      if (input) {
+        input.value = "";
       }
-      button2?.dispatchEvent(new BubblesEvent("form:success"));
+      button?.dispatchEvent(new BubblesEvent("form:success"));
       this._grid?.refresh();
     }
     _currentFolder() {
@@ -69396,7 +65907,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/MediaCenter/template.html
-  var template_default49 = `<dialog>
+  var template_default48 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
             <h2>Media Center</h2>
@@ -69885,12 +66396,12 @@ dialog::backdrop {
     const { root } = bindings;
     root.getElementById("btnCreateFolder").addEventListener("click", bindings.openNewFolder);
     const backdrop = root.getElementById("nf-backdrop");
-    const input3 = root.getElementById("nf-input");
+    const input = root.getElementById("nf-input");
     root.getElementById("nf-cancel").addEventListener("click", () => backdrop.classList.remove("open"));
-    root.getElementById("nf-confirm").addEventListener("click", () => bindings.createFolder(input3, backdrop));
-    input3.addEventListener("keydown", (event) => {
+    root.getElementById("nf-confirm").addEventListener("click", () => bindings.createFolder(input, backdrop));
+    input.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
-        bindings.createFolder(input3, backdrop);
+        bindings.createFolder(input, backdrop);
       }
       if (event.key === "Escape") {
         backdrop.classList.remove("open");
@@ -69898,14 +66409,14 @@ dialog::backdrop {
     });
   }
   function wireUploads(bindings) {
-    const input3 = bindings.root.getElementById("file-input");
-    bindings.root.getElementById("btnUpload").addEventListener("click", () => input3.click());
-    input3.addEventListener("change", async () => {
-      if (!input3.files?.length) {
+    const input = bindings.root.getElementById("file-input");
+    bindings.root.getElementById("btnUpload").addEventListener("click", () => input.click());
+    input.addEventListener("change", async () => {
+      if (!input.files?.length) {
         return;
       }
-      await uploadFiles(input3.files, bindings.getFolder());
-      input3.value = "";
+      await uploadFiles(input.files, bindings.getFolder());
+      input.value = "";
       bindings.refresh();
     });
   }
@@ -69982,7 +66493,7 @@ dialog::backdrop {
       super({
         css: [chrome_default2, content_default2, folder_default].join(`
 `),
-        template: template_default49
+        template: template_default48
       });
     }
     connectedCallback() {
@@ -69997,7 +66508,7 @@ dialog::backdrop {
         grid: this._grid,
         getFolder: () => this._folder,
         findItem: (id2) => this._items.find((item) => item.id === id2),
-        navigate: (folderId, label4) => this._navigateTo(folderId, label4),
+        navigate: (folderId, label3) => this._navigateTo(folderId, label3),
         navigateBreadcrumb: (folderId, index) => {
           this._breadcrumb = this._breadcrumb.slice(0, index + 1);
           this._navigateTo(folderId);
@@ -70005,7 +66516,7 @@ dialog::backdrop {
         select: (card, id2) => this._select(card, id2),
         confirmSelection: () => this._confirmSelection(),
         openNewFolder: () => this._openNewFolder(),
-        createFolder: (input3, backdrop) => this._createFolder(input3, backdrop),
+        createFolder: (input, backdrop) => this._createFolder(input, backdrop),
         refresh: () => this._refresh()
       });
     }
@@ -70062,25 +66573,25 @@ dialog::backdrop {
       }));
       this._dialog?.close();
     }
-    _navigateTo(folderId, label4) {
+    _navigateTo(folderId, label3) {
       this._folder = folderId;
       if (!folderId) {
         this._breadcrumb = [];
-      } else if (label4) {
-        this._breadcrumb.push({ id: folderId, label: label4 });
+      } else if (label3) {
+        this._breadcrumb.push({ id: folderId, label: label3 });
       }
       this._refresh();
     }
     _openNewFolder() {
       const s2 = this.shadowRoot;
       const backdrop = s2.getElementById("nf-backdrop");
-      const input3 = s2.getElementById("nf-input");
-      input3.value = "";
+      const input = s2.getElementById("nf-input");
+      input.value = "";
       backdrop.classList.add("open");
-      setTimeout(() => input3.focus(), 50);
+      setTimeout(() => input.focus(), 50);
     }
-    async _createFolder(input3, backdrop) {
-      const name = input3.value.trim();
+    async _createFolder(input, backdrop) {
+      const name = input.value.trim();
       if (!name) {
         return;
       }
@@ -70217,16 +66728,16 @@ dialog::backdrop {
       for (const property of ["value", "disabled"]) {
         m(this, property);
       }
-      const value3 = this.getAttribute("value") ?? this._value;
-      this._defaultValue = value3;
-      this._setValue(value3);
+      const value2 = this.getAttribute("value") ?? this._value;
+      this._defaultValue = value2;
+      this._setValue(value2);
       this._syncAttributes();
     }
     attributeChangedCallback(name, _oldValue, newValue) {
       if (name === "value") {
-        const value3 = newValue ?? "";
-        this._defaultValue = value3;
-        this._setValue(value3);
+        const value2 = newValue ?? "";
+        this._defaultValue = value2;
+        this._setValue(value2);
         return;
       }
       if (this.shadowRoot) {
@@ -70248,8 +66759,8 @@ dialog::backdrop {
     get disabled() {
       return this.hasAttribute("disabled");
     }
-    set disabled(value3) {
-      this.toggleAttribute("disabled", value3);
+    set disabled(value2) {
+      this.toggleAttribute("disabled", value2);
     }
     focus() {
       this._tile?.focus();
@@ -70292,28 +66803,28 @@ dialog::backdrop {
       center.addEventListener("select-item", handler);
       center.show(this._types);
     }
-    _setValue(value3) {
-      this._value = value3;
-      this._internals.setFormValue(value3);
+    _setValue(value2) {
+      this._value = value2;
+      this._internals.setFormValue(value2);
       if (!this._preview) {
         return;
       }
-      if (value3) {
-        this._preview.src = value3;
+      if (value2) {
+        this._preview.src = value2;
       } else {
         this._preview.removeAttribute("src");
       }
-      this._tile.classList.toggle("has-value", value3 !== "");
-      this._clearBtn.style.display = value3 ? "flex" : "none";
+      this._tile.classList.toggle("has-value", value2 !== "");
+      this._clearBtn.style.display = value2 ? "flex" : "none";
     }
     _syncAttributes() {
       if (!this._tile) {
         return;
       }
-      const label4 = this.getAttribute("label") ?? "";
+      const label3 = this.getAttribute("label") ?? "";
       const size = Number.parseInt(this.getAttribute("size") ?? "64", 10);
-      this._label.textContent = label4;
-      this._label.hidden = label4 === "";
+      this._label.textContent = label3;
+      this._label.hidden = label3 === "";
       this._tile.disabled = this.disabled;
       this._clearBtn.disabled = this.disabled;
       const accessibleName2 = this.getAttribute("aria-label");
@@ -70322,7 +66833,7 @@ dialog::backdrop {
       } else {
         this._tile.removeAttribute("aria-label");
       }
-      this._clearBtn.setAttribute("aria-label", label4 ? `Remove ${label4}` : "Remove selected file");
+      this._clearBtn.setAttribute("aria-label", label3 ? `Remove ${label3}` : "Remove selected file");
       this._tile.parentElement?.style.setProperty("--tile-size", `${size > 0 ? size : 64}px`);
     }
   }
@@ -70343,10 +66854,10 @@ dialog::backdrop {
   define("cms-page-detail-sync", PageDetailSync);
   Bm({
     ...dashboardDisplayFilters,
-    json: (value3) => value3 === undefined ? undefined : JSON.stringify(value3),
-    jsonurl: (value3) => value3 === undefined ? undefined : encodeURIComponent(JSON.stringify(value3)),
-    lines: (value3) => Array.isArray(value3) ? value3.join(`
-`) : value3
+    json: (value2) => value2 === undefined ? undefined : JSON.stringify(value2),
+    jsonurl: (value2) => value2 === undefined ? undefined : encodeURIComponent(JSON.stringify(value2)),
+    lines: (value2) => Array.isArray(value2) ? value2.join(`
+`) : value2
   });
   define(CMS_BINDING_CORE_TAG, Rc);
   define("p9r-accordion", Lr);

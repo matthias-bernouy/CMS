@@ -1,6 +1,5 @@
 import { integrationEndpointInterceptor } from "./integration";
 import type { Subject } from "@bernouy/cms-auth";
-import { RequestScopedFunctionRepository, withFunctionsSource, type FunctionRepository } from "@bernouy/cms-functions";
 import { RequestScopedIdentityService } from "@bernouy/cms-identities/requestScope";
 import { createSecretResolver, secretRefToKey } from "@bernouy/cms-secrets";
 import {
@@ -18,8 +17,6 @@ import {
     RequestScopedSourceOverlayRepository,
     RequestScopedSourceRepository,
 } from "@bernouy/cms-sources/requestScope";
-import { createTriggerInterceptor } from "@bernouy/cms-triggers";
-import { RequestScopedTriggerRepository } from "@bernouy/cms-triggers/requestScope";
 import type { ControlCmsOptions, ControlCmsState } from "cms-control/core/admin/control/types";
 import type { CMS_ROLES } from "types/roles";
 
@@ -27,10 +24,8 @@ type ResolveSubject = (request: Request) => Promise<Subject<CMS_ROLES> | null>;
 
 export type ControlSourceRequestScope = {
     deps: ExecutorDeps;
-    functions: FunctionRepository | undefined;
     overlaySources: SourceRepository | null;
     proxiedSources: SourceRepository | null;
-    deferSystemResponseFinalization: boolean;
     interceptEndpoint: SourceEndpointInterceptor | undefined;
 };
 
@@ -43,8 +38,6 @@ export function createControlSourceRequestScope(
 ): ControlSourceRequestScope {
     const sources = state.sources ? new RequestScopedSourceRepository(state.sources) : null;
     const overlays = state.sourceOverlays ? new RequestScopedSourceOverlayRepository(state.sourceOverlays) : undefined;
-    const functions = state.functions ? new RequestScopedFunctionRepository(state.functions) : undefined;
-    const triggers = state.triggers ? new RequestScopedTriggerRepository(state.triggers) : undefined;
     const identities = state.identities ? new RequestScopedIdentityService(state.identities) : undefined;
     const observability = activeSourceObservability(request);
     const resolveContext = createRequestScopedSourceContextResolver(async (candidate) => {
@@ -71,33 +64,15 @@ export function createControlSourceRequestScope(
                   ...(schemaCache ? { schemaCache } : {}),
               })
             : sources;
-    const proxiedSources =
-        overlaySources && functions ? withFunctionsSource(overlaySources, functions) : overlaySources;
-    const triggerInterceptor =
-        triggers && functions && overlaySources
-            ? createTriggerInterceptor({
-                  triggers,
-                  functions,
-                  sources: overlaySources,
-                  deps,
-                  resolveUser: async (candidate) => {
-                      const subject = await resolveSubject(candidate);
-                      return subject ? { id: subject.identifier, role: subject.role } : {};
-                  },
-              })
-            : undefined;
     const interceptEndpoint = composeSourceEndpointInterceptors(
-        triggerInterceptor,
         integrationEndpointInterceptor(state, resolveSubject),
         configuration.sourceImageInterceptor,
     );
 
     return {
         deps,
-        functions,
         overlaySources,
-        proxiedSources,
-        deferSystemResponseFinalization: Boolean(triggerInterceptor),
+        proxiedSources: overlaySources,
         interceptEndpoint,
     };
 }

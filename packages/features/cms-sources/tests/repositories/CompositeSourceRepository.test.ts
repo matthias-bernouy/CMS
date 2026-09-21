@@ -30,10 +30,9 @@ describe("CompositeSourceRepository", () => {
         expect(await repo.getEndpoint("urn:system-auth:signupLegalRequirements")).toBeNull();
         const signup = await repo.getEndpoint("urn:system-auth:signup");
         expect(Object.keys(signup?.input?.body.properties ?? {})).toEqual(["email", "password"]);
-        expect(signup?.output?.[0]?.triggerBody).toEqual({
+        expect(signup?.output?.[0]?.body).toEqual({
             type: "object",
-            properties: { cmsUserId: { type: "string", nullable: true } },
-            required: ["cmsUserId"],
+            properties: { ok: { type: "boolean" } },
         });
     });
 

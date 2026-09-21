@@ -3,7 +3,6 @@ import {
     mountCmsRepositoryManagementGateway,
     type RepositoryManagementGatewayTransport,
 } from "@bernouy/cms-repository-management/gateway";
-import type { ScheduledTriggerRunner } from "@bernouy/cms-triggers";
 import {
     CmsSourceBindingMigrationHandler,
     CmsSourceFunctionalMigrationProbe,
@@ -28,6 +27,10 @@ import { composeSourceEndpointInterceptors } from "@bernouy/cms-sources";
 
 export type { ProductionSurfaceRuntime } from "./surfaceRuntime";
 
+export type ProductionSurfaceHandle = {
+    stop(): Promise<void>;
+};
+
 type MountOptions = {
     env: RuntimeEnv;
     analyticsVisitorSecret: string;
@@ -41,7 +44,7 @@ type MountOptions = {
 export async function mountProductionSurfaces(
     options: MountOptions,
     runtime: ProductionSurfaceRuntime = PRODUCTION_SURFACE_RUNTIME,
-): Promise<ScheduledTriggerRunner> {
+): Promise<ProductionSurfaceHandle> {
     const { env, core, features, integrations, authentication } = options;
     const integrationInstallations = injectLocalMigrationReconciliationAuditFault(
         features.integrationInstallations,
@@ -50,16 +53,6 @@ export async function mountProductionSurfaces(
     const repositoryCatalog = env.CMS_REPOSITORY_HUB_FACADE_ENABLED
         ? createProductionRepositoryCatalogReader(integrations)
         : undefined;
-    const scheduledTriggers = runtime.startWorkers({
-        enabled: env.CMS_SCHEDULED_TRIGGERS_ENABLED,
-        functions: features.functions,
-        sources: features.deliverySources,
-        deps: { resolveSecret: features.resolveSecret, identities: features.identities },
-        users: core.users,
-        installations: integrationInstallations,
-        triggers: features.triggers,
-    });
-    await scheduledTriggers.ready;
     const trustedConnectorTarget = await createTrustedConnectorTargetMatcher(
         integrations.integrationConnectorDeployers,
     );
@@ -70,7 +63,6 @@ export async function mountProductionSurfaces(
     });
     const cmsBindingDeps = {
         sources: features.sources,
-        functions: features.functions,
         roles: core.roles,
         secrets: core.secrets,
         dashboards: features.dashboards,
@@ -78,7 +70,6 @@ export async function mountProductionSurfaces(
         dashboardAssignments: features.dashboardAssignments,
         relations: features.relations,
         installations: integrationInstallations,
-        triggers: features.triggers,
         sourceOverlays: features.sourceOverlays,
         connectorDeployers: integrations.integrationConnectorDeployers,
         provisioners: integrations.integrationProvisioners,
@@ -172,12 +163,6 @@ export async function mountProductionSurfaces(
             dashboardViews: features.dashboardViews,
             dashboardAssignments: features.dashboardAssignments,
             relations: features.relations,
-            functions: features.functions,
-            triggers: features.triggers,
-            scheduledTriggers: {
-                enabled: env.CMS_SCHEDULED_TRIGGERS_ENABLED,
-                ...(env.CMS_SCHEDULED_TRIGGERS_ENABLED ? { runNow: scheduledTriggers.runNow } : {}),
-            },
             identities: features.identities,
             sourceOverlays: features.sourceOverlays,
             endpointPerformanceReports: features.endpointPerformanceReports,
@@ -234,8 +219,6 @@ export async function mountProductionSurfaces(
         responsivePrivateSourceImagesEnabled,
         sourceTrustedConnectorTarget: trustedConnectorTarget,
         analytics: features.analytics,
-        functions: features.functions,
-        triggers: features.triggers,
         identities: features.identities,
         integrationInstallations,
         analyticsVisitorSecret: options.analyticsVisitorSecret,
@@ -274,8 +257,6 @@ export async function mountProductionSurfaces(
     runtime.log(`   public site:  ${env.DELIVERY_PUBLIC_URL}/`);
     runtime.log(`   storage:      mongo=${core.db.databaseName}, files=${env.CMS_FILES_DIR}`);
     return {
-        ready: scheduledTriggers.ready,
-        runNow: scheduledTriggers.runNow,
         async stop() {
             endpointPerformanceFlusher.stop();
             await Promise.all([
@@ -284,7 +265,6 @@ export async function mountProductionSurfaces(
                 deliveryRunner.stopGracefully(),
             ]);
             await endpointPerformanceFlusher.run();
-            await scheduledTriggers.stop();
             await sourceImageWorkers?.stop();
             await core.sourceImageCache?.dispose();
         },

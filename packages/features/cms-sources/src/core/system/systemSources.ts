@@ -85,13 +85,7 @@ export const SYSTEM_AUTH_SOURCE: Source = {
                     ["email", "password"],
                 ),
             },
-            output: [
-                {
-                    status: "200",
-                    body: okShape,
-                    triggerBody: objectShape({ cmsUserId: { ...stringShape(), nullable: true } }, ["cmsUserId"]),
-                },
-            ],
+            output: [{ status: "200", body: okShape }],
         },
         {
             urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "requestEmailVerification"),

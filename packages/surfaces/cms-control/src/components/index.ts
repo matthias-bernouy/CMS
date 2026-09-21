@@ -170,14 +170,10 @@ define("cms-dashboard-icon", CmsDashboardIcon);
 define("cms-dashboard-create-controller", CmsDashboardCreateController);
 define("cms-dashboard-member-filter", CmsDashboardMemberFilter);
 define("cms-dashboard-navigation-editor", CmsDashboardNavigationEditor);
-import "./admin/Resources/Functions/detail/FunctionDetail";
-import "./admin/Resources/Functions/create/FunctionCreate";
 import "./admin/Resources/Integrations/IntegrationBrowser";
 import "./admin/Resources/Integrations/health/HealthPage";
 import "./admin/Resources/Sources/ResourceWorkspace";
 import "./admin/Resources/Blocs/workspace/controller/CollectionWorkspace";
-import "./admin/Resources/Triggers/TriggersAdmin";
-import "./admin/Resources/Triggers/TriggerCreate";
 
 // Editor
 import "./editorSystemV2/siteBloc/SiteBlocBuilder";

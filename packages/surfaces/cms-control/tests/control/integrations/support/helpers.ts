@@ -1,6 +1,5 @@
 import { InMemoryIntegrationInstallationRepository } from "@bernouy/cms-integrations";
 import { InMemoryDashboardRepository, InMemoryDashboardViewRepository } from "@bernouy/cms-dashboards";
-import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemoryRelationRepository } from "@bernouy/cms-relations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
@@ -15,7 +14,6 @@ import type {
 export {
     TEST_SECRET_SOURCE_DEFINITION,
     manualSourceDefinition,
-    sourceWithFunctionDefinition,
 } from "./definitions";
 import { TEST_SECRET_SOURCE_DEFINITION } from "./definitions";
 
@@ -25,7 +23,6 @@ export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET
     const dashboards = new InMemoryDashboardRepository();
     const dashboardViews = new InMemoryDashboardViewRepository();
     const relations = new InMemoryRelationRepository();
-    const functions = new InMemoryFunctionRepository();
     const integrationInstallations = new InMemoryIntegrationInstallationRepository();
     const integrationCatalog = integrationDefinitionRepository(siteIntegrations);
     const cache = new InMemoryCache();
@@ -39,7 +36,6 @@ export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET
         dashboards,
         dashboardViews,
         relations,
-        functions,
         integrationCatalog,
         integrationInstallations,
         configuredIntegrationInstallations: integrationInstallations,
@@ -53,7 +49,6 @@ export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET
         dashboards,
         dashboardViews,
         relations,
-        functions,
         integrationInstallations,
         integrationCatalog,
         cache,

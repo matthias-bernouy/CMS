@@ -19,7 +19,6 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
     const blocRepository = cms.integrationBlocRepository ?? cms.repository;
     const deps: IntegrationImportDeps = {
         sources: cms.sources,
-        ...(cms.functions ? { functions: cms.functions } : {}),
         roles: cms.roles,
         secrets: cms.secrets,
         dashboards: cms.dashboards,
@@ -27,7 +26,6 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
         dashboardAssignments: cms.dashboardAssignments,
         relations: cms.relations,
         installations: cms.integrationInstallations,
-        ...(cms.triggers ? { triggers: cms.triggers } : {}),
         ...(cms.sourceOverlays ? { sourceOverlays: cms.sourceOverlays } : {}),
         blocs: {
             importBloc: (artifact, options, context) =>

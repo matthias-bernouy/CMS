@@ -44,7 +44,6 @@ describe("source DTO canonical views", () => {
                         {
                             status: "200",
                             body: { type: "string", semantic: { kind: "user-id" } },
-                            triggerBody: { type: "string", semantic: { kind: "user-id" } },
                         },
                     ],
                     meta: { name: "Update account" },
@@ -64,7 +63,6 @@ describe("source DTO canonical views", () => {
         });
         expect(endpoint.input?.body?.properties?.owner?.semantic?.authority).toBe("crm-users");
         expect(endpoint.output?.[0]?.body?.semantic?.authority).toBe("crm-users");
-        expect(endpoint.output?.[0]?.triggerBody?.semantic?.authority).toBe("crm-users");
 
         const roundTrip = sourceToDto(source);
         expect(roundTrip.id).toBe("accounts");

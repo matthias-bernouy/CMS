@@ -83,8 +83,8 @@ function artifactView(context: IntegrationArtifactContext, artifact: Integration
 }
 
 function artifactExists(context: IntegrationArtifactContext, artifact: IntegrationArtifactResult): boolean | "unknown" {
-    if (artifact.type === "function") {
-        return context.functionIds?.has(artifact.id) ?? "unknown";
+    if (artifact.type === "function" || artifact.type === "trigger") {
+        return "unknown";
     }
     if (artifact.type === "dashboard") {
         return context.dashboardIds?.has(artifact.id) ?? "unknown";
@@ -103,9 +103,6 @@ function artifactExists(context: IntegrationArtifactContext, artifact: Integrati
     }
     if (artifact.type === "bloc") {
         return context.blocIds?.has(artifact.id) ?? "unknown";
-    }
-    if (artifact.type === "trigger") {
-        return context.triggerIds?.has(artifact.id) ?? "unknown";
     }
     return context.sourceUrns?.has(artifact.id) ?? "unknown";
 }

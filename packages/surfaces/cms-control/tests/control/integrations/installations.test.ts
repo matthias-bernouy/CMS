@@ -1,14 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import getIntegrationInstallations from "cms-control/api/_platform/integrations/installations.get";
 import postIntegrationImport from "cms-control/api/_platform/integrations/import.post";
-import {
-    createInstallation,
-    getInstallations,
-    makeCms,
-    manualSourceDefinition,
-    postImport,
-    sourceWithFunctionDefinition,
-} from "./support/helpers";
+import { createInstallation, getInstallations, makeCms, manualSourceDefinition, postImport } from "./support/helpers";
 
 describe("GET /api/integrations/installations", () => {
     test("lists persisted package provenance without fabricating it for legacy installations", async () => {
@@ -108,28 +101,6 @@ describe("GET /api/integrations/installations", () => {
 
         expect(body.definition.kind).toBe("manual-source");
         expect(body.definition.artifacts[0].source.id).toBe("{{answers.id}}");
-    });
-
-    test("reconciles function artifacts against the function repository", async () => {
-        const { cms, functions } = makeCms();
-
-        await postIntegrationImport(
-            postImport({
-                definition: sourceWithFunctionDefinition(),
-                answers: { id: "owned-items", targetUrl: "https://api.example.com/items" },
-            }),
-            cms,
-        );
-
-        let res = await getIntegrationInstallations(getInstallations("function-source"), cms);
-        let body = await res.json();
-        expect(body.artifacts.find((artifact: { type: string }) => artifact.type === "function").exists).toBe(true);
-
-        await functions.deleteFunction("readOwnedItem");
-        res = await getIntegrationInstallations(getInstallations("function-source"), cms);
-        body = await res.json();
-        expect(body.artifacts.find((artifact: { type: string }) => artifact.type === "function").exists).toBe(false);
-        expect(body.missingArtifactCount).toBe(1);
     });
 
     test("returns 404 for missing installation details", async () => {

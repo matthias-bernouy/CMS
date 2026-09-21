@@ -17,7 +17,6 @@ import type {
 } from "@bernouy/cms-dashboards";
 import type { EditorDataSource } from "@bernouy/cms-editor-system-v2";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
-import type { FunctionRepository } from "@bernouy/cms-functions";
 import type { IdentityService } from "@bernouy/cms-identities";
 import type {
     IntegrationConnectorBaselineAdopter,
@@ -41,7 +40,6 @@ import type {
     SourceRequestTelemetryOptions,
     SourceTargetUrlValidationOptions,
 } from "@bernouy/cms-sources";
-import type { ScheduledTriggerRunResult, TriggerRepository } from "@bernouy/cms-triggers";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { CMS_ROLES } from "types/roles";
 import type { IntegrationUpgradeReleaseReader } from "cms-control/core/management/integrations/upgrade/contracts";
@@ -68,12 +66,6 @@ export type ControlCmsOptions = Configuration & {
     dashboardViews?: DashboardViewRepository;
     dashboardAssignments?: DashboardAssignmentRepository;
     relations?: RelationRepository;
-    functions?: FunctionRepository;
-    triggers?: TriggerRepository;
-    scheduledTriggers?: {
-        enabled: boolean;
-        runNow?: (triggerId: string) => Promise<ScheduledTriggerRunResult>;
-    };
     identities?: IdentityService;
     sourceOverlays?: SourceOverlayRepository;
     endpointPerformanceReports?: EndpointPerformanceReports;
@@ -118,8 +110,6 @@ export type ControlCmsState = {
     dashboardViews: DashboardViewRepository;
     dashboardAssignments: DashboardAssignmentRepository;
     relations: RelationRepository;
-    functions: FunctionRepository | null;
-    triggers: TriggerRepository | null;
     identities: IdentityService;
     sourceOverlays: SourceOverlayRepository | null;
     integrationBlocRepository: CmsRepository | null;

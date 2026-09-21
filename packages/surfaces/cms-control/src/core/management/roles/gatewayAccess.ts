@@ -1,6 +1,5 @@
 import { ADMIN_ROLE, PUBLIC_ROLE, USER_ROLE } from "@bernouy/cms-permissions";
 import type { Grant } from "@bernouy/cms-permissions";
-import { SYSTEM_FUNCTIONS_SOURCE_URN } from "@bernouy/cms-functions";
 import {
     isEndpointUrn,
     isSystemSourceUrn,
@@ -32,7 +31,7 @@ export function roleCanBeGrantedEndpoint(roleId: string, endpoint: SourceEndpoin
 }
 
 export function isGrantableGatewaySource(source: Source): boolean {
-    return !isSystemSourceUrn(source.urn) || source.urn === SYSTEM_FUNCTIONS_SOURCE_URN;
+    return !isSystemSourceUrn(source.urn);
 }
 
 export function isGatewayPermission(permission: string): boolean {

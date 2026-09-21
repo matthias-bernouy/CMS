@@ -2,7 +2,6 @@ import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
 import type { ContentReader } from "@bernouy/cms-content";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
-import type { FunctionRepository } from "@bernouy/cms-functions";
 import type { IdentityService } from "@bernouy/cms-identities";
 import type { IntegrationInstallationRepository } from "@bernouy/cms-integrations";
 import type { RolesRepository } from "@bernouy/cms-permissions";
@@ -16,7 +15,6 @@ import type {
 } from "@bernouy/cms-sources";
 import { CompositeSourceRepository, SYSTEM_SOURCES } from "@bernouy/cms-sources";
 import type { ResponsiveSourceImageRollout } from "@bernouy/cms-source-images/browser-host";
-import type { TriggerRepository } from "@bernouy/cms-triggers";
 import { BunRunner, type Cache, type Runner, TtlCache } from "@bernouy/http-runner";
 import { PageOptimizer } from "cms-delivery/core/pages/PageOptimizer";
 import type { DeliveryCmsConfig } from "cms-delivery/interfaces/DeliveryCmsConfig";
@@ -98,14 +96,6 @@ export class DeliveryCmsContext {
 
     get sourceTrustedConnectorTarget(): NonNullable<ExecutorDeps["isTrustedConnectorTarget"]> | undefined {
         return this.config.sourceTrustedConnectorTarget;
-    }
-
-    get functions(): FunctionRepository | undefined {
-        return this.config.functions;
-    }
-
-    get triggers(): TriggerRepository | undefined {
-        return this.config.triggers;
     }
 
     get identities(): IdentityService | undefined {

@@ -5,7 +5,6 @@ import {
     MongoDashboardRepository,
     MongoDashboardViewRepository,
 } from "@bernouy/cms-dashboards/mongo";
-import { MongoFunctionRepository } from "@bernouy/cms-functions/mongo";
 import { MongoIdentityService } from "@bernouy/cms-identities/mongo";
 import {
     MongoIntegrationConnectorProviderRepository,
@@ -21,7 +20,6 @@ import {
     ValidatingSourceRepository,
 } from "@bernouy/cms-sources";
 import { MongoSourceOverlayRepository, MongoSourceRepository } from "@bernouy/cms-sources/mongo";
-import { MongoTriggerRepository } from "@bernouy/cms-triggers/mongo";
 import type { Db } from "mongodb";
 
 type FeatureStoreOptions = {
@@ -39,10 +37,6 @@ export async function createFeatureStores(db: Db, secrets: SecretStore, options:
     const sourceOverlays = new MongoSourceOverlayRepository(db);
     await sourceOverlays.init();
 
-    const functions = new MongoFunctionRepository(db);
-    await functions.init();
-    const triggers = new MongoTriggerRepository(db);
-    await triggers.init();
     const identities = new MongoIdentityService(db);
     await identities.init();
     const dashboards = new MongoDashboardRepository(db);
@@ -74,8 +68,6 @@ export async function createFeatureStores(db: Db, secrets: SecretStore, options:
     return {
         sources,
         sourceOverlays,
-        functions,
-        triggers,
         identities,
         dashboards,
         dashboardViews,

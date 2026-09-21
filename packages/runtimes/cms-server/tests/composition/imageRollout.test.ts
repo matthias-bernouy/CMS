@@ -43,11 +43,6 @@ function capturingRuntime(captured: CapturedSurfaces): ProductionSurfaceRuntime 
                 captured.delivery = config;
             }
         },
-        startWorkers: () => ({
-            ready: Promise.resolve(),
-            runNow: async () => ({ status: "succeeded" as const }),
-            stop: async () => undefined,
-        }),
         startAnalyticsFinalizer: () => ({}),
         startEndpointPerformanceFlusher: () => ({
             stop() {},

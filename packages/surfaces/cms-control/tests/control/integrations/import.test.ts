@@ -3,13 +3,7 @@ import { P9R_CACHE } from "@bernouy/cms-content";
 import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 import { compress } from "@bernouy/http-runner";
 import postIntegrationImport from "cms-control/api/_platform/integrations/import.post";
-import {
-    makeCms,
-    manualSourceDefinition,
-    postImport,
-    recordingPackageResolver,
-    sourceWithFunctionDefinition,
-} from "./support/helpers";
+import { makeCms, manualSourceDefinition, postImport, recordingPackageResolver } from "./support/helpers";
 
 describe("POST /api/integrations/import", () => {
     for (const status of ["blocked", "inadmissible", "unverified"] as const) {
@@ -125,38 +119,6 @@ describe("POST /api/integrations/import", () => {
         expect(body.artifacts).toEqual([{ type: "source", id: "urn:manual", action: "created" }]);
         expect((await sources.getSource("urn:manual"))?.endpoints[0]?.targetUrl).toBe("https://api.example.com/items");
         expect(await integrationInstallations.get("manual-source")).not.toBeNull();
-    });
-
-    test("imports function artifacts through the configured function repository", async () => {
-        const { cms, functions } = makeCms();
-
-        const res = await postIntegrationImport(
-            postImport({
-                definition: sourceWithFunctionDefinition(),
-                answers: { id: "owned-items", targetUrl: "https://api.example.com/items" },
-            }),
-            cms,
-        );
-        const body = await res.json();
-
-        expect(res.status).toBe(200);
-        expect(body.artifacts).toEqual([
-            { type: "source", id: "urn:owned-items", action: "created" },
-            { type: "function", id: "readOwnedItem", action: "created" },
-        ]);
-        expect(await functions.getFunction("readOwnedItem")).toMatchObject({
-            id: "readOwnedItem",
-            steps: [
-                {
-                    id: "item",
-                    call: {
-                        source: "owned-items",
-                        endpoint: "read",
-                        params: { itemId: "$input.params.itemId" },
-                    },
-                },
-            ],
-        });
     });
 
     test("uses the integration kind as the installation id", async () => {

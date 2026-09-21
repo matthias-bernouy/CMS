@@ -19,7 +19,6 @@ export function integrationInstallationDeps(cms: ControlCms): IntegrationImportD
     const blocRepository = cms.integrationBlocRepository ?? cms.repository;
     return {
         sources: cms.sources,
-        ...(cms.functions ? { functions: cms.functions } : {}),
         roles: cms.roles,
         secrets: cms.secrets,
         dashboards: cms.dashboards,
@@ -27,7 +26,6 @@ export function integrationInstallationDeps(cms: ControlCms): IntegrationImportD
         dashboardAssignments: cms.dashboardAssignments,
         relations: cms.relations,
         installations: cms.integrationInstallations,
-        ...(cms.triggers ? { triggers: cms.triggers } : {}),
         ...(cms.sourceOverlays ? { sourceOverlays: cms.sourceOverlays } : {}),
         blocs: {
             importBloc: (artifact, options, context) =>

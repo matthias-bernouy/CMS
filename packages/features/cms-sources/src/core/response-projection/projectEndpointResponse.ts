@@ -1,5 +1,4 @@
 import type { SourceEndpoint } from "../../interfaces/Source";
-import { DataShapeProjectionError } from "../model/projectStrictDataShape";
 import { projectDataShape } from "./projectDataShape";
 import { readBoundedJson } from "./readBoundedJson";
 import {
@@ -8,7 +7,6 @@ import {
     type LegacyResponseContractReason,
     type ResponseProjectionOptions,
 } from "./responseProjectionEvents";
-import { attachProjectedTriggerResponseBody } from "./triggerResponseBody";
 import {
     cancelResponseBody,
     discardResponseBody,
@@ -109,21 +107,7 @@ export async function projectEndpointResponse(
         });
     }
 
-    const response = projectedJsonResponse(upstream, projected.value, options);
-    if (declared.triggerBody) {
-        try {
-            attachProjectedTriggerResponseBody(response, parsed.value, projected.value, declared.triggerBody);
-        } catch (error) {
-            if (!(error instanceof DataShapeProjectionError)) {
-                throw error;
-            }
-            return projectionFailure(endpoint.urn, upstream.status, false, "type_mismatch", options, {
-                path: "$trigger",
-                expectedType: declared.triggerBody.type,
-            });
-        }
-    }
-    return response;
+    return projectedJsonResponse(upstream, projected.value, options);
 }
 
 function reportLegacyContract(

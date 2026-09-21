@@ -1,7 +1,5 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
-import { InMemoryFunctionRepository, type CmsFunction } from "@bernouy/cms-functions";
-import { InMemoryIdentityService } from "@bernouy/cms-identities";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import {
@@ -9,25 +7,21 @@ import {
     InMemorySourceRepository,
     SourceOverlaySourceRepository,
 } from "@bernouy/cms-sources";
-import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 import { mountControlSourceProxy } from "cms-control/core/admin/control/sourceProxy";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
 import type { CMS_ROLES } from "types/roles";
 
 describe("Control source schema invalidation contract", () => {
-    test.each([
-        ["a directly invoked system function", "system-functions/refreshCatalog", "POST"],
-        ["a synchronous response trigger", "catalog/touchProduct", "POST"],
-    ] as const)("refreshes overlays after %s", async (_name, path, method) => {
+    test("refreshes overlays after a source endpoint invalidates its schema", async () => {
         const harness = await controlHarness();
         const fetchSpy = spyOn(globalThis, "fetch").mockImplementation(harness.fetchImpl);
         try {
             expect(await harness.fieldIds()).toEqual(["legacyCode"]);
             expect(harness.fieldSourceCalls()).toBe(1);
 
-            const response = await harness.handler(method)(
-                new Request(`http://control/.cms/sources/${path}`, { method }),
+            const response = await harness.handler("POST")(
+                new Request("http://control/.cms/sources/catalog/refreshSchema", { method: "POST" }),
             );
 
             expect(response.status).toBe(200);
@@ -59,8 +53,6 @@ async function controlHarness() {
     }) as typeof fetch;
     const sources = new InMemorySourceRepository();
     const sourceOverlays = new InMemorySourceOverlayRepository();
-    const functions = new InMemoryFunctionRepository();
-    const triggers = new InMemoryTriggerRepository();
     await sources.createSource(catalogSource());
     await sourceOverlays.upsertOverlay({
         id: "catalog-fields",
@@ -69,14 +61,6 @@ async function controlHarness() {
         fieldSource: { endpointId: "listFields" },
         fields: [],
     });
-    await functions.createFunction(refreshFunction);
-    await triggers.createTrigger({
-        id: "refresh-after-touch",
-        enabled: true,
-        event: { kind: "endpoint", source: "catalog", endpoint: "touchProduct", phase: "response" },
-        mode: "sync",
-        function: { id: refreshFunction.id },
-    });
     const mounted = captureSourceHandlers();
     const overlaySources = new SourceOverlaySourceRepository(sources, sourceOverlays, { deps: { fetchImpl } });
     mountControlSourceProxy(
@@ -84,12 +68,9 @@ async function controlHarness() {
             runner: mounted.runner,
             sources,
             sourceOverlays,
-            functions,
-            triggers,
             auth: new InMemoryAuthentication<CMS_ROLES>({ role: "admin" }),
             roles: new InMemoryRolesRepository(),
             secrets: new InMemorySecretStore(),
-            identities: new InMemoryIdentityService(),
         } as unknown as ControlCmsState,
         (async (_request, next) => next()) satisfies Middleware,
         undefined,
@@ -139,13 +120,6 @@ function catalogSource() {
         ],
     };
 }
-
-const refreshFunction: CmsFunction = {
-    id: "refreshCatalog",
-    method: "POST",
-    steps: [{ id: "refreshed", call: { source: "catalog", endpoint: "refreshSchema" } }],
-    return: { body: "$steps.refreshed" },
-};
 
 function captureSourceHandlers() {
     const handlers = new Map<string, RouteHandler>();

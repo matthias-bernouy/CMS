@@ -141,14 +141,6 @@ export {
     type DataShapeProjectionResult,
 } from "../core/response-projection/projectDataShape";
 export {
-    attachTriggerResponseBody,
-    attachTriggerResponseFinalizer,
-    runTriggerResponseFinalizers,
-    triggerResponseProjection,
-    type TriggerResponseFinalizer,
-    type TriggerResponseProjection,
-} from "../core/response-projection/triggerResponseBody";
-export {
     CMS_SOURCES_ROUTE,
     SOURCE_PROXY_METHODS,
     sourcesPrefix,

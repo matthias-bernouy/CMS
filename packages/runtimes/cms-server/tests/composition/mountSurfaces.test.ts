@@ -4,7 +4,7 @@ import { mountProductionSurfaces, type ProductionSurfaceRuntime } from "../../sr
 import { surfaceMountFixtures, waitFor } from "./surfaceMountFixtures";
 
 describe("production surface mounting", () => {
-    test.each([true, false])("mounts with scheduler enabled=%s", async (schedulerEnabled) => {
+    test("mounts and stops production surfaces", async () => {
         const events: string[] = [];
         const starts: Array<[string, number]> = [];
         const logs: string[] = [];
@@ -12,14 +12,12 @@ describe("production surface mounting", () => {
         let repositoryConfig: Record<string, unknown> | undefined;
         let controlArguments: unknown[] = [];
         let deliveryConfig: Record<string, unknown> | undefined;
-        let workerOptions: Record<string, unknown> | undefined;
         let finalizerStore: unknown;
         let flusherRecorder: unknown;
         let flushes = 0;
         let flusherStopped = false;
         let sitemapRefreshOptions: Record<string, unknown> | undefined;
         let sitemapRefreshStopped = false;
-        const runNow = async () => ({ status: "succeeded" });
         let releaseControl!: () => void;
         const controlReady = new Promise<void>((resolve) => {
             releaseControl = resolve;
@@ -73,11 +71,6 @@ describe("production surface mounting", () => {
             Repository: FakeRepository,
             Control: FakeControl,
             Delivery: FakeDelivery,
-            startWorkers(options: Record<string, unknown>) {
-                workerOptions = options;
-                events.push("workers");
-                return { ready: Promise.resolve(), runNow, stop: async () => undefined };
-            },
             startAnalyticsFinalizer(store: unknown) {
                 finalizerStore = store;
                 return {};
@@ -109,12 +102,11 @@ describe("production surface mounting", () => {
             reportError() {},
         } as unknown as ProductionSurfaceRuntime;
         const options = surfaceMountFixtures();
-        options.env.CMS_SCHEDULED_TRIGGERS_ENABLED = schedulerEnabled;
 
         const mounting = mountProductionSurfaces(options as never, runtime);
         await waitFor(() => events.includes("control"));
 
-        expect(events).toEqual(["workers", "runner:control", "control"]);
+        expect(events).toEqual(["runner:control", "control"]);
         expect(repositoryConfig).toBeUndefined();
 
         releaseControl();
@@ -137,17 +129,12 @@ describe("production surface mounting", () => {
                 passwordResetUrl: options.env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
                 allowSignup: false,
             },
-            scheduledTriggers: { enabled: schedulerEnabled },
             endpointPerformanceReports: options.features.endpointPerformanceReports,
             sourceTelemetry: expect.any(Object),
             sourceTrustedConnectorTarget: expect.any(Function),
         });
         expect(controlArguments[15]).toEqual({ local: options.authentication.auth });
         expect(controlConfig.editorDataSources).toBeUndefined();
-        expect(controlConfig.scheduledTriggers).toEqual({
-            enabled: schedulerEnabled,
-            ...(schedulerEnabled ? { runNow } : {}),
-        });
         expect(repositoryConfig).toBeUndefined();
 
         expect(deliveryConfig).toMatchObject({
@@ -169,18 +156,6 @@ describe("production surface mounting", () => {
             },
         });
         expect(deliveryConfig?.publicPageProviders).toBeUndefined();
-        expect(workerOptions).toEqual({
-            enabled: schedulerEnabled,
-            functions: options.features.functions,
-            sources: options.features.deliverySources,
-            deps: {
-                resolveSecret: options.features.resolveSecret,
-                identities: options.features.identities,
-            },
-            users: options.core.users,
-            installations: options.features.integrationInstallations,
-            triggers: options.features.triggers,
-        });
         expect(finalizerStore).toBe(options.features.analytics);
         expect(flusherRecorder).toBe(options.features.endpointPerformanceRecorder);
         expect(sitemapRefreshOptions).toEqual({ reportError: expect.any(Function) });

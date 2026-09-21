@@ -10,23 +10,14 @@ import {
     SubjectResolver,
     type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
-import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemorySourceRepository, type SourceEndpointInterceptor } from "@bernouy/cms-sources";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
-import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import { getRequestIP, requestCorrelationId, setRequestIP } from "@bernouy/http-runner";
 import { CaptureRunner } from "./support/CaptureRunner";
 
 type Role = "user";
 
-async function setup(
-    options: {
-        blockSignup?: boolean;
-        blockResponseSignup?: boolean;
-        installResponseTrigger?: boolean;
-        sourceImageInterceptor?: SourceEndpointInterceptor;
-    } = {},
-) {
+async function setup(options: { sourceImageInterceptor?: SourceEndpointInterceptor } = {}) {
     const runner = new CaptureRunner();
     const users = new InMemoryUsersRepository<Role>();
     const credentials = new InMemoryLocalCredentialStore();
@@ -53,71 +44,18 @@ async function setup(
     };
     const gateway = new InMemorySourceRepository();
     const roles = new InMemoryRolesRepository();
-    const functions = new InMemoryFunctionRepository();
-    const triggers = new InMemoryTriggerRepository();
-    await functions.createFunction({
-        id: "record-signup-subject",
-        method: "POST",
-        input: {
-            body: {
-                type: "object",
-                properties: { cmsUserId: { type: "string" } },
-                required: ["cmsUserId"],
-            },
-        },
-        steps: [],
-        return: { status: 204 },
-    });
-    if (options.installResponseTrigger !== false) {
-        await triggers.createTrigger({
-            id: "record-signup-subject",
-            enabled: true,
-            event: { kind: "endpoint", source: "system-auth", endpoint: "signup", phase: "response" },
-            mode: "sync",
-            failureMode: "block",
-            condition: { exists: "$response.body.cmsUserId" },
-            function: {
-                id: "record-signup-subject",
-                body: { cmsUserId: "$response.body.cmsUserId" },
-            },
-        });
-    }
-    if (options.blockSignup) {
-        await triggers.createTrigger({
-            id: "block-signup",
-            enabled: true,
-            event: { kind: "endpoint", source: "system-auth", endpoint: "signup", phase: "request" },
-            mode: "sync",
-            failureMode: "block",
-            function: { id: "missing-signup-policy" },
-        });
-    }
-    if (options.blockResponseSignup) {
-        await triggers.createTrigger({
-            id: "block-signup-response",
-            enabled: true,
-            event: { kind: "endpoint", source: "system-auth", endpoint: "signup", phase: "response" },
-            mode: "sync",
-            failureMode: "block",
-            condition: { exists: "$response.body.cmsUserId" },
-            function: { id: "missing-signup-commit" },
-        });
-    }
     new DeliveryCms({
         runner,
         repository: {} as any,
         auth,
         sources: gateway,
         roles,
-        functions,
-        triggers,
         ...(options.sourceImageInterceptor ? { sourceImageInterceptor: options.sourceImageInterceptor } : {}),
     });
     return {
         emailer,
         credentials,
         users,
-        triggers,
         get: runner.defaultHandler("GET", "/.cms/sources"),
         post: runner.defaultHandler("POST", "/.cms/sources"),
         legacySignup: runner.endpointHandler("POST", "/.cms/auth/signup"),
@@ -126,7 +64,7 @@ async function setup(
 
 describe("Delivery system auth gateway", () => {
     test("adds the system auth overlay to a plain user source repository", async () => {
-        const { post, legacySignup, credentials } = await setup({ installResponseTrigger: false });
+        const { post, legacySignup, credentials } = await setup();
 
         expect(
             (await post(jsonRequest("/signup", { email: "source@example.com", password: "password-1" }))).status,
@@ -147,12 +85,11 @@ describe("Delivery system auth gateway", () => {
     });
 
     test("signup, verification, login, me and logout run through system-auth", async () => {
-        const { post, get, emailer, triggers } = await setup();
+        const { post, get, emailer } = await setup();
 
         const signup = await post(jsonRequest("/signup", { email: "Ada@Example.com", password: "password-1" }));
         expect(signup.status).toBe(200);
         expect(await signup.clone().json()).toEqual({ ok: true });
-        expect((await triggers.getTrigger("record-signup-subject"))?.lastRun?.status).toBe("ok");
         expect(emailer.sent).toHaveLength(1);
 
         const blocked = await post(jsonRequest("/login", { email: "ada@example.com", password: "password-1" }));
@@ -198,68 +135,14 @@ describe("Delivery system auth gateway", () => {
         ).toBe(200);
     });
 
-    test("finalizes signup when the trigger runtime is configured without endpoint triggers", async () => {
-        const { post, users, emailer } = await setup({ installResponseTrigger: false });
+    test("finalizes signup immediately", async () => {
+        const { post, users, emailer } = await setup();
 
         const response = await post(jsonRequest("/signup", { email: "plain@example.com", password: "password-1" }));
 
         expect(response.status).toBe(200);
         expect((await users.list()).users).toHaveLength(1);
         expect(emailer.sent).toHaveLength(1);
-    });
-
-    test("keeps credentials pending until blocking response triggers succeed on canonical and legacy routes", async () => {
-        const { post, legacySignup, credentials, users, emailer, triggers } = await setup({
-            blockResponseSignup: true,
-        });
-        const canonicalRequest = jsonRequest("/signup", {
-            email: "canonical-pending@example.com",
-            password: "password-1",
-        });
-        const legacyRequest = new Request("http://site/.cms/auth/signup", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ email: "legacy-pending@example.com", password: "password-1" }),
-        });
-
-        expect((await post(canonicalRequest)).status).toBe(502);
-        expect((await legacySignup(legacyRequest)).status).toBe(502);
-        const canonicalCredential = await credentials.getByEmail("canonical-pending@example.com");
-        const legacyCredential = await credentials.getByEmail("legacy-pending@example.com");
-        expect(canonicalCredential).not.toBeNull();
-        expect(legacyCredential).not.toBeNull();
-        expect((await users.list()).users).toEqual([]);
-        expect(emailer.sent).toEqual([]);
-
-        await triggers.deleteTrigger("block-signup-response");
-        expect(
-            (
-                await post(
-                    jsonRequest("/signup", {
-                        email: "canonical-pending@example.com",
-                        password: "password-1",
-                    }),
-                )
-            ).status,
-        ).toBe(200);
-        expect(
-            (
-                await legacySignup(
-                    new Request("http://site/.cms/auth/signup", {
-                        method: "POST",
-                        headers: { "content-type": "application/json" },
-                        body: JSON.stringify({
-                            email: "legacy-pending@example.com",
-                            password: "password-1",
-                        }),
-                    }),
-                )
-            ).status,
-        ).toBe(200);
-        expect((await users.list()).users.map((user) => user.sub).sort()).toEqual(
-            [`local:${canonicalCredential!.sub}`, `local:${legacyCredential!.sub}`].sort(),
-        );
-        expect(emailer.sent).toHaveLength(2);
     });
 
     test("preserves request correlation and peer IP when the legacy route enters the source gateway", async () => {
@@ -283,34 +166,6 @@ describe("Delivery system auth gateway", () => {
         expect((await legacySignup(request)).status).toBe(200);
         expect(canonicalCorrelation).toBe(correlation);
         expect(canonicalIP).toBe("203.0.113.42");
-    });
-
-    test("applies the same blocking signup trigger to canonical and legacy routes", async () => {
-        const { post, legacySignup, credentials } = await setup({ blockSignup: true });
-
-        const canonical = await post(
-            jsonRequest("/signup", {
-                email: "canonical@example.com",
-                password: "password-1",
-                consentVersionIds: ["version-1"],
-            }),
-        );
-        const legacy = await legacySignup(
-            new Request("http://site/.cms/auth/signup", {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({
-                    email: "legacy@example.com",
-                    password: "password-1",
-                    consentVersionIds: ["version-1"],
-                }),
-            }),
-        );
-
-        expect(canonical.status).toBe(502);
-        expect(legacy.status).toBe(502);
-        expect(await credentials.getByEmail("canonical@example.com")).toBeNull();
-        expect(await credentials.getByEmail("legacy@example.com")).toBeNull();
     });
 });
 

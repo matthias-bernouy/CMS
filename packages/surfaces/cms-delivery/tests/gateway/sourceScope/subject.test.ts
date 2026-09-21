@@ -1,15 +1,13 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { InMemoryAuthentication, type Subject } from "@bernouy/cms-auth";
-import { InMemoryFunctionRepository } from "@bernouy/cms-functions";
 import { InMemoryRolesRepository, USER_ROLE } from "@bernouy/cms-permissions";
 import { InMemorySourceRepository, type SourceRequestObservation } from "@bernouy/cms-sources";
-import { InMemoryTriggerRepository } from "@bernouy/cms-triggers";
 import type { RouteHandler, Runner } from "@bernouy/http-runner";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { registerDeliverySourceProxy } from "cms-delivery/core/sources/registerSourceProxy";
 
 describe("Delivery source subject scope", () => {
-    test("shares one subject through authorization, context, and a trigger", async () => {
+    test("shares one subject through authorization and source context", async () => {
         const authentication = new CountingAuthentication();
         const roles = new InMemoryRolesRepository();
         await roles.upsert({
@@ -32,23 +30,11 @@ describe("Delivery source subject scope", () => {
                 },
             ],
         });
-        const functions = new InMemoryFunctionRepository();
-        await functions.createFunction({ id: "audit", method: "POST", steps: [], return: {} });
-        const triggers = new InMemoryTriggerRepository();
-        await triggers.createTrigger({
-            id: "audit-order",
-            enabled: true,
-            event: { kind: "endpoint", source: "orders", endpoint: "create", phase: "response" },
-            mode: "sync",
-            function: { id: "audit" },
-        });
         const mounted = captureSourceHandler();
         const observations: SourceRequestObservation[] = [];
         registerDeliverySourceProxy({
             runner: mounted.runner,
             sources,
-            functions,
-            triggers,
             roles,
             auth: { local: authentication },
             sourceTelemetry: {
@@ -75,7 +61,6 @@ describe("Delivery source subject scope", () => {
                 expect(authentication.calls).toBe(expectedCalls);
             }
             expect(upstream).toHaveBeenCalledTimes(2);
-            expect((await triggers.getTrigger("audit-order"))?.lastRun?.status).toBe("ok");
             expect(observations).toHaveLength(2);
             expect(observations.every((observation) => observation.stagesMs.cms_auth !== undefined)).toBe(true);
             expect(observations.every((observation) => observation.stagesMs.cms_roles !== undefined)).toBe(true);

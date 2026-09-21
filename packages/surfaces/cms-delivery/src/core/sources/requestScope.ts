@@ -1,4 +1,3 @@
-import { RequestScopedFunctionRepository, withFunctionsSource, type FunctionRepository } from "@bernouy/cms-functions";
 import { RequestScopedIdentityService } from "@bernouy/cms-identities/requestScope";
 import { secretRefToKey } from "@bernouy/cms-secrets";
 import {
@@ -17,17 +16,12 @@ import {
     createRequestScopedSecretResolver,
     createRequestScopedSourceContextResolver,
 } from "@bernouy/cms-sources/requestScope";
-import { createTriggerInterceptor } from "@bernouy/cms-triggers";
-import { RequestScopedTriggerRepository } from "@bernouy/cms-triggers/requestScope";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { resolveDeliverySourceContext, resolveDeliverySubject } from "cms-delivery/core/sources/authorization";
+import { resolveDeliverySourceContext } from "cms-delivery/core/sources/authorization";
 
 export type DeliverySourceRequestScope = {
-    sources: SourceRepository | undefined;
     proxiedSources: SourceRepository | undefined;
-    functions: FunctionRepository | undefined;
     deps: ExecutorDeps;
-    deferSystemResponseFinalization: boolean;
     interceptEndpoint?: SourceEndpointInterceptor;
 };
 
@@ -70,30 +64,11 @@ export function createDeliverySourceRequestScope(
                   ...(schemaCache ? { schemaCache } : {}),
               })
             : storedSources;
-    const functions = delivery.functions ? new RequestScopedFunctionRepository(delivery.functions) : undefined;
-    const proxiedSources = sources && functions ? withFunctionsSource(sources, functions) : sources;
-    const triggers = delivery.triggers ? new RequestScopedTriggerRepository(delivery.triggers) : undefined;
-    const triggerInterceptor =
-        triggers && functions && sources
-            ? createTriggerInterceptor({
-                  triggers,
-                  functions,
-                  sources,
-                  deps,
-                  resolveUser: async (candidate) => {
-                      const subject = await resolveDeliverySubject(delivery, candidate);
-                      return subject ? { id: subject.identifier, role: subject.role } : {};
-                  },
-              })
-            : undefined;
-    const interceptEndpoint = composeSourceEndpointInterceptors(triggerInterceptor, delivery.sourceImageInterceptor);
+    const interceptEndpoint = composeSourceEndpointInterceptors(delivery.sourceImageInterceptor);
 
     return {
-        sources,
-        proxiedSources,
-        functions,
+        proxiedSources: sources,
         deps,
-        deferSystemResponseFinalization: Boolean(triggerInterceptor),
         ...(interceptEndpoint ? { interceptEndpoint } : {}),
     };
 }
