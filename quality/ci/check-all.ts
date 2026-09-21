@@ -18,11 +18,6 @@ export type CheckExecutor = (check: CheckDefinition) => Promise<CheckExecution>;
 export const REPOSITORY_ROOT = resolve(import.meta.dir, "../..");
 export const ALL_CHECKS: CheckDefinition[] = [
     { id: "architecture", label: "Workspace architecture", args: ["run", "check:architecture"] },
-    {
-        id: "integration-ownership",
-        label: "Integration ownership",
-        args: ["run", "quality/integration-ownership/check.ts"],
-    },
     { id: "ui-contracts", label: "UI binding contracts", args: ["run", "check:ui-contracts"] },
     { id: "repository-shape", label: "Repository shape guidance", args: ["run", "check:repository-shape"] },
     { id: "style", label: "Code style", args: ["run", "check:style"] },

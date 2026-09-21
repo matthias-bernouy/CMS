@@ -36,10 +36,6 @@ Foundation packages:
 
 Resources:
 
-- `@bernouy/cms-official-integrations`: local repository of official,
-  versioned CMS integration resources. It stores manifests, source contracts,
-  connector assets, and deployment blueprints without executing installs. It may
-  depend on feature contracts to express typed integration definitions.
 - `packages/resources/sites`: retained declarative CMS site references built
   from pages, themes, bindings, and integration Blocs. New sites are initialized
   through the CMS onboarding flow rather than copied from repository templates.
@@ -60,9 +56,6 @@ Feature packages:
   sources, and source proxy helpers.
 - `@bernouy/cms-source-images`: bounded responsive Source image recipes,
   browser activation, derivative caches, and image transformers.
-- `@bernouy/cms-integrations`: declarative integration definitions, install
-  artifacts, installation state, scoped management, Health observations, and
-  repository contracts.
 - `@bernouy/cms-analytics`: privacy-first server-side analytics events,
   counters, stores, and dashboard handlers.
 - `@bernouy/cms-bloc-compile`: bloc validation, view/editor bundling, and the
@@ -73,21 +66,15 @@ Feature packages:
 Surface packages:
 
 - `@bernouy/cms-control`: admin UI, REST API, authenticated static pages, media
-  admin, settings, users, sources admin, integrations admin, and editor
-  endpoints.
+  admin, settings, users, sources admin, and editor endpoints.
 - `@bernouy/cms-delivery`: public rendering, page lookup, bloc bundles,
   component runtime, source proxy, media serving, sitemap, robots, and
   analytics collection.
-- `@bernouy/cms-repository`: HTTP surface for browsing repository-backed CMS
-  resources such as official integration catalogues.
-
 Runtime packages:
 
-- `@bernouy/ulvia-cli`: local-first `ulvia` CLI for the persistent integration
-  package store, audited release and publication workflows, and isolated CMS
-  development infrastructure.
+- `@bernouy/ulvia-cli`: local CMS development launcher backed by MongoDB.
 - `@bernouy/cms-server`: production composition root. It reads environment,
-  wires Mongo/local filesystem/crypto/auth/sources/integrations/analytics, and starts
+  wires Mongo/local filesystem/crypto/auth/sources/analytics, and starts
   Control and Delivery runners.
 
 ## Feature Anatomy

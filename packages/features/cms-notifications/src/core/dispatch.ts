@@ -1,6 +1,6 @@
 import type { SourceEndpoint } from "@bernouy/cms-sources";
 import { asRecord, dispatchResult, parseNotification, safeError } from "./dispatchValues";
-import { callJson, installedEndpoint } from "./sourceCalls";
+import { callJson, sourceEndpoint } from "./sourceCalls";
 import { provisionTemplates } from "./templateProvisioning";
 import type { ClaimedNotification, NotificationDispatchOptions, NotificationDispatchResult } from "./types";
 
@@ -39,17 +39,12 @@ export async function dispatchNotificationsOnce(
 
 async function resolveEndpoints(options: NotificationDispatchOptions) {
     const [claim, complete, fail, templates, install, send] = await Promise.all([
-        installedEndpoint(options.installations, options.sources, options.notificationKind, "claimNotifications"),
-        installedEndpoint(options.installations, options.sources, options.notificationKind, "completeNotification"),
-        installedEndpoint(options.installations, options.sources, options.notificationKind, "failNotification"),
-        installedEndpoint(
-            options.installations,
-            options.sources,
-            options.notificationKind,
-            "listDefaultNotificationTemplates",
-        ),
-        installedEndpoint(options.installations, options.sources, options.emailerKind, "installTemplates"),
-        installedEndpoint(options.installations, options.sources, options.emailerKind, "sendTemplateEmail"),
+        sourceEndpoint(options.sources, options.notificationSourceId, "claimNotifications"),
+        sourceEndpoint(options.sources, options.notificationSourceId, "completeNotification"),
+        sourceEndpoint(options.sources, options.notificationSourceId, "failNotification"),
+        sourceEndpoint(options.sources, options.notificationSourceId, "listDefaultNotificationTemplates"),
+        sourceEndpoint(options.sources, options.emailerSourceId, "installTemplates"),
+        sourceEndpoint(options.sources, options.emailerSourceId, "sendTemplateEmail"),
     ]);
     return claim && complete && fail && templates && install && send
         ? { claim, complete, fail, templates, install, send }

@@ -1,1 +1,0 @@
-1.1.0: publish authoritative seller shipping actions, block labels and handoff while fulfillment or settlement is under review, and add an audited administrator command for reopening eligible shipping windows.

@@ -65,20 +65,6 @@ function categorizedException(path: string): string | undefined {
     if (generatedLockfiles.has(name)) {
         return "generated dependency lockfile";
     }
-    if (
-        /^packages\/resources\/official-integrations\/integrations\/(?:[^/]+\/)+versions\/[^/]+\/definition\.json$/.test(
-            path,
-        )
-    ) {
-        return "atomic official-integration definition";
-    }
-    if (
-        /^packages\/resources\/official-integrations\/integrations\/(?:[^/]+\/)+versions\/[^/]+\/connectors\/[^/]+\/schema\.sql$/.test(
-            path,
-        )
-    ) {
-        return "atomic official-integration database schema";
-    }
     return undefined;
 }
 

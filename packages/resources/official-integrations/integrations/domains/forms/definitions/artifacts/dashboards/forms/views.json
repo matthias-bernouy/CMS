@@ -1,8 +1,0 @@
-{
-    "$files": [
-        "views/forms-table.json",
-        "views/form-detail.json",
-        "views/section-detail.json",
-        "views/question-detail.json"
-    ]
-}

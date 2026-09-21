@@ -1,9 +1,0 @@
-{
-    "type": "dashboard-view",
-    "view": {
-        "id": "consent-contexts",
-        "source": "consent",
-        "meta": { "name": "Consent policies", "icon": "file-check" },
-        "views": { "$include": "views.json" }
-    }
-}

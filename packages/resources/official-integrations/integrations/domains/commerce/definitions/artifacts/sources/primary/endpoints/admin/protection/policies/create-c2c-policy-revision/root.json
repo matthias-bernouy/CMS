@@ -1,5 +1,0 @@
-[
-    {
-        "$include": "create-c2c-policy-revision/root.json"
-    }
-]

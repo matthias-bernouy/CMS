@@ -1,8 +1,0 @@
-{
-    "$files": [
-        "protected/list.json",
-        "protected/detail.json",
-        "provider/list.json",
-        "provider/detail/root.json"
-    ]
-}

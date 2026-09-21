@@ -1,5 +1,0 @@
-[
-    {
-        "$include": "shipment-tracking-context/root.json"
-    }
-]

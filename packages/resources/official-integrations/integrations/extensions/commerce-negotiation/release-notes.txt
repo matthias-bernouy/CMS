@@ -1,1 +1,0 @@
-Initial Commerce Negotiation release: publish the negotiation contracts and reusable operator views on top of Commerce.

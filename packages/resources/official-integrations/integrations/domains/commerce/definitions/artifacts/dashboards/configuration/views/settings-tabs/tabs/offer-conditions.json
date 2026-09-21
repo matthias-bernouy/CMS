@@ -1,7 +1,0 @@
-{
-    "id": "offerConditions",
-    "label": "Offer conditions",
-    "children": {
-        "$include": "../../condition-management.json"
-    }
-}

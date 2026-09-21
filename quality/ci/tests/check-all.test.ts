@@ -17,7 +17,6 @@ const checks: CheckDefinition[] = [
 test("check:all declares every fast workspace diagnostic in a stable order", () => {
     expect(ALL_CHECKS.map(({ id }) => id)).toEqual([
         "architecture",
-        "integration-ownership",
         "ui-contracts",
         "repository-shape",
         "style",
@@ -27,7 +26,6 @@ test("check:all declares every fast workspace diagnostic in a stable order", () 
     ]);
     expect(ALL_CHECKS.map(({ args }) => args)).toEqual([
         ["run", "check:architecture"],
-        ["run", "quality/integration-ownership/check.ts"],
         ["run", "check:ui-contracts"],
         ["run", "check:repository-shape"],
         ["run", "check:style"],

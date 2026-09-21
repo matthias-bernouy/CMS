@@ -26,12 +26,6 @@ export const IMAGE_PERFORMANCE_CODE_INPUTS = [
     "packages/runtimes/cms-server/src/runtime/sourceImageTelemetry.ts",
     "packages/runtimes/cms-server/src/runtime/stores/core.ts",
     "packages/runtimes/cms-server/src/runtime/mountSurfaces.ts",
-    "packages/resources/official-integrations/integrations/domains/commerce/versions/1.0.0/blocs/commerce-offer-list/default.html",
-    "packages/resources/official-integrations/integrations/domains/commerce/versions/1.0.0/blocs/commerce-offer-preview/Bloc.ts",
-    "packages/resources/official-integrations/integrations/domains/commerce/versions/1.0.0/blocs/commerce-account-offers/Bloc.ts",
-    "packages/resources/official-integrations/integrations/domains/commerce/versions/1.0.0/blocs/commerce-account-offers/presentation.ts",
-    "packages/resources/official-integrations/integrations/domains/commerce/versions/1.0.0/blocs/commerce-account-offers/template.html",
-    "packages/resources/official-integrations/integrations/extensions/commerce-negotiation/versions/1.0.0/blocs/commerce-negotiation-list/Bloc.ts",
 ] as const;
 
 export function fingerprint(value: unknown): string {

@@ -1,8 +1,0 @@
-{
-    "default-tag": "mossa-commerce-sale-detail-controller",
-    "bloc": "./Bloc.ts",
-    "meta": {
-        "title": "Commerce sale detail controller",
-        "description": "Internal presentation controller for the Commerce sale detail composition."
-    }
-}

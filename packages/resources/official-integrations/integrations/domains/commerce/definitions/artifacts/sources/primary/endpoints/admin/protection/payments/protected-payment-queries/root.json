@@ -1,8 +1,0 @@
-[
-    {
-        "$include": "protected-payments/root.json"
-    },
-    {
-        "$include": "protected-payment/root.json"
-    }
-]

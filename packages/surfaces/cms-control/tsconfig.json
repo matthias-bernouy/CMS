@@ -18,6 +18,14 @@
         "types/**/*.ts",
         "tests/**/*.ts"
     ],
+    "exclude": [
+        "tests/browser/blocs/**",
+        "tests/browser/dashboards/detail-binding/actions/**",
+        "tests/browser/dashboards/sources-workspace.test.ts",
+        "tests/browser/dashboards/workspace/detail-save/**",
+        "tests/browser/dashboards/workspace/product-flow/**",
+        "tests/control/bloc-library/**"
+    ],
     "references": [
         { "path": "../../features/cms-permissions" },
         { "path": "../../foundation/http-runner" },

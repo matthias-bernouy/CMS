@@ -1,7 +1,0 @@
-{
-    "id": "refunds",
-    "label": "Refunds",
-    "children": {
-        "$include": "../refunds/views.json"
-    }
-}

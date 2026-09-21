@@ -1,7 +1,0 @@
-{
-    "$files": [
-        "endpoints/subscriptions/subscription-management/root.json",
-        "endpoints/subscriptions/delete-subscription.json",
-        "endpoints/health/health.json"
-    ]
-}

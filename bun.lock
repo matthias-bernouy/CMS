@@ -13,23 +13,12 @@
         "@bernouy/cms-dashboards": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
-        "@bernouy/cms-functions": "workspace:*",
         "@bernouy/cms-identities": "workspace:*",
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integration-registry": "workspace:*",
-        "@bernouy/cms-integration-verification": "workspace:*",
-        "@bernouy/cms-integration-verifier": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
-        "@bernouy/cms-official-integrations": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-relations": "workspace:*",
-        "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/cms-repository-management": "workspace:*",
-        "@bernouy/cms-repository-server": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
-        "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
@@ -144,81 +133,9 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/features/cms-functions": {
-      "name": "@bernouy/cms-functions",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cms-identities": "workspace:*",
-        "@bernouy/cms-sources": "workspace:*",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.2.0",
-        "typescript": "^5.9.3",
-      },
-    },
     "packages/features/cms-identities": {
       "name": "@bernouy/cms-identities",
       "version": "0.1.0",
-      "peerDependencies": {
-        "mongodb": "^7.2.0",
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/features/cms-integration-packages": {
-      "name": "@bernouy/cms-integration-packages",
-      "version": "0.1.0",
-      "dependencies": {
-        "canonicalize": "^3.0.0",
-        "jsonc-parser": "^3.3.1",
-        "semver": "^7.8.2",
-      },
-      "devDependencies": {
-        "@types/semver": "^7.7.1",
-      },
-      "peerDependencies": {
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/features/cms-integration-registry": {
-      "name": "@bernouy/cms-integration-registry",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integration-verification": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
-      },
-      "peerDependencies": {
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/features/cms-integration-verification": {
-      "name": "@bernouy/cms-integration-verification",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/features/cms-integrations": {
-      "name": "@bernouy/cms-integrations",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-dashboards": "workspace:*",
-        "@bernouy/cms-functions": "workspace:*",
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-permissions": "workspace:*",
-        "@bernouy/cms-relations": "workspace:*",
-        "@bernouy/cms-secrets": "workspace:*",
-        "@bernouy/cms-sources": "workspace:*",
-        "@bernouy/cms-triggers": "workspace:*",
-        "semver": "^7.8.2",
-      },
-      "devDependencies": {
-        "@types/semver": "^7.7.1",
-      },
       "peerDependencies": {
         "mongodb": "^7.2.0",
         "typescript": "^5.9.3",
@@ -229,9 +146,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
-        "@bernouy/cms-triggers": "workspace:*",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",
@@ -294,18 +209,6 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/features/cms-triggers": {
-      "name": "@bernouy/cms-triggers",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cms-functions": "workspace:*",
-        "@bernouy/cms-sources": "workspace:*",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.2.0",
-        "typescript": "^5.9.3",
-      },
-    },
     "packages/foundation/components": {
       "name": "@bernouy/components",
       "version": "0.1.2",
@@ -341,49 +244,6 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/resources/official-integrations": {
-      "name": "@bernouy/cms-official-integrations",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
-        "semver": "^7.8.2",
-      },
-      "devDependencies": {
-        "@bernouy/cms-integration-verification": "workspace:*",
-        "@types/semver": "^7.7.1",
-      },
-    },
-    "packages/runtimes/cms-integration-verifier": {
-      "name": "@bernouy/cms-integration-verifier",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integration-verification": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
-        "@bernouy/cms-repository-management": "workspace:*",
-        "@bernouy/ulvia-cli": "workspace:*",
-      },
-      "peerDependencies": {
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/runtimes/cms-repository-server": {
-      "name": "@bernouy/cms-repository-server",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integration-registry": "workspace:*",
-        "@bernouy/cms-integration-verification": "workspace:*",
-        "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/cms-repository-management": "workspace:*",
-        "@bernouy/http-runner": "workspace:*",
-        "@bernouy/rate-limiter": "workspace:*",
-      },
-      "peerDependencies": {
-        "typescript": "^5.9.3",
-      },
-    },
     "packages/runtimes/cms-server": {
       "name": "@bernouy/cms-server",
       "version": "0.1.0",
@@ -395,27 +255,17 @@
         "@bernouy/cms-dashboards": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
-        "@bernouy/cms-functions": "workspace:*",
         "@bernouy/cms-identities": "workspace:*",
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integration-verification": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-notifications": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-relations": "workspace:*",
-        "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/cms-repository-management": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
-        "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "mongodb": "^7.2.0",
-      },
-      "devDependencies": {
-        "@bernouy/cms-integration-registry": "workspace:*",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",
@@ -428,18 +278,7 @@
         "ulvia": "./src/index.ts",
       },
       "dependencies": {
-        "@bernouy/cms-bloc-compile": "workspace:*",
-        "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integration-registry": "workspace:*",
-        "@bernouy/cms-integration-verification": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-server": "workspace:*",
-        "semver": "^7.8.2",
-        "supabase": "2.116.0",
-      },
-      "devDependencies": {
-        "@types/semver": "^7.7.1",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",
@@ -456,16 +295,12 @@
         "@bernouy/cms-dashboards": "workspace:*",
         "@bernouy/cms-editor-system-v2": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
-        "@bernouy/cms-functions": "workspace:*",
         "@bernouy/cms-identities": "workspace:*",
-        "@bernouy/cms-integration-verification": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
-        "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "linkedom": "^0.18.12",
@@ -489,53 +324,17 @@
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
-        "@bernouy/cms-functions": "workspace:*",
         "@bernouy/cms-identities": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
-        "@bernouy/cms-triggers": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "linkedom": "^0.18.12",
       },
       "devDependencies": {
         "sharp": "^0.34.5",
-      },
-      "peerDependencies": {
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/surfaces/cms-repository": {
-      "name": "@bernouy/cms-repository",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-editor-system-v2": "workspace:*",
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integration-registry": "workspace:*",
-        "@bernouy/cms-integration-verification": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
-        "@bernouy/http-runner": "workspace:*",
-        "@bernouy/rate-limiter": "workspace:*",
-      },
-      "peerDependencies": {
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/surfaces/cms-repository-management": {
-      "name": "@bernouy/cms-repository-management",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integration-registry": "workspace:*",
-        "@bernouy/cms-integration-verification": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
-        "@bernouy/http-runner": "workspace:*",
-        "@bernouy/rate-limiter": "workspace:*",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",
@@ -564,33 +363,13 @@
 
     "@bernouy/cms-files": ["@bernouy/cms-files@workspace:packages/features/cms-files"],
 
-    "@bernouy/cms-functions": ["@bernouy/cms-functions@workspace:packages/features/cms-functions"],
-
     "@bernouy/cms-identities": ["@bernouy/cms-identities@workspace:packages/features/cms-identities"],
 
-    "@bernouy/cms-integration-packages": ["@bernouy/cms-integration-packages@workspace:packages/features/cms-integration-packages"],
-
-    "@bernouy/cms-integration-registry": ["@bernouy/cms-integration-registry@workspace:packages/features/cms-integration-registry"],
-
-    "@bernouy/cms-integration-verification": ["@bernouy/cms-integration-verification@workspace:packages/features/cms-integration-verification"],
-
-    "@bernouy/cms-integration-verifier": ["@bernouy/cms-integration-verifier@workspace:packages/runtimes/cms-integration-verifier"],
-
-    "@bernouy/cms-integrations": ["@bernouy/cms-integrations@workspace:packages/features/cms-integrations"],
-
     "@bernouy/cms-notifications": ["@bernouy/cms-notifications@workspace:packages/features/cms-notifications"],
-
-    "@bernouy/cms-official-integrations": ["@bernouy/cms-official-integrations@workspace:packages/resources/official-integrations"],
 
     "@bernouy/cms-permissions": ["@bernouy/cms-permissions@workspace:packages/features/cms-permissions"],
 
     "@bernouy/cms-relations": ["@bernouy/cms-relations@workspace:packages/features/cms-relations"],
-
-    "@bernouy/cms-repository": ["@bernouy/cms-repository@workspace:packages/surfaces/cms-repository"],
-
-    "@bernouy/cms-repository-management": ["@bernouy/cms-repository-management@workspace:packages/surfaces/cms-repository-management"],
-
-    "@bernouy/cms-repository-server": ["@bernouy/cms-repository-server@workspace:packages/runtimes/cms-repository-server"],
 
     "@bernouy/cms-secrets": ["@bernouy/cms-secrets@workspace:packages/features/cms-secrets"],
 
@@ -599,8 +378,6 @@
     "@bernouy/cms-source-images": ["@bernouy/cms-source-images@workspace:packages/features/cms-source-images"],
 
     "@bernouy/cms-sources": ["@bernouy/cms-sources@workspace:packages/features/cms-sources"],
-
-    "@bernouy/cms-triggers": ["@bernouy/cms-triggers@workspace:packages/features/cms-triggers"],
 
     "@bernouy/components": ["@bernouy/components@workspace:packages/foundation/components"],
 
@@ -629,8 +406,6 @@
     "@biomejs/cli-win32-arm64": ["@biomejs/cli-win32-arm64@2.5.4", "", { "os": "win32", "cpu": "arm64" }, "sha512-emoXexPZIPAZkz2RKmA95WJUqK3I5MJNYtwEbL5ESciRzhmFMMyekDhNG8hpeOaK+ZGRDxAU4wvGuA5IHQ0h0w=="],
 
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.5.4", "", { "os": "win32", "cpu": "x64" }, "sha512-U1jaluLw1qQc2Tx7/CeSoL9N5XcqIH+GWjpUAy1ouB5nVjSCMNO+NNHdY3RAs8zxNurLWAdj6pehQdCA2zyU+Q=="],
-
-    "@ecies/ciphers": ["@ecies/ciphers@0.2.6", "", { "peerDependencies": { "@noble/ciphers": "^1.0.0" } }, "sha512-patgsRPKGkhhoBjETV4XxD0En4ui5fbX0hzayqI3M8tvNMGUoUvmyYAIWwlxBc1KX5cturfqByYdj5bYGRpN9g=="],
 
     "@emnapi/runtime": ["@emnapi/runtime@1.11.0", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-55coeOFKHv1ywEcUXJtWU5f+Jr/W5tZDvZig8DLKSwUN1JpROQ4rk/SNOQiFWmaR/VKF4zuFyW1B8JduOSv6Pg=="],
 
@@ -688,28 +463,6 @@
 
     "@mongodb-js/saslprep": ["@mongodb-js/saslprep@1.4.11", "", { "dependencies": { "sparse-bitfield": "^3.0.3" } }, "sha512-o9rAHc0IpIjuPSxRutWpE1F62x7n+4mVS4rCNHkzhIUMQcc18bb6xEq5wd2NdN0WjepIyXIppRshYI2kQDOZVA=="],
 
-    "@noble/ciphers": ["@noble/ciphers@1.3.0", "", {}, "sha512-2I0gnIVPtfnMw9ee9h1dJG7tp81+8Ob3OJb3Mv37rx5L40/b0i7djjCVvGOVqc9AEIQyvyu1i6ypKdFw8R8gQw=="],
-
-    "@noble/curves": ["@noble/curves@1.9.7", "", { "dependencies": { "@noble/hashes": "1.8.0" } }, "sha512-gbKGcRUYIjA3/zCCNaWDciTMFI0dCkvou3TL8Zmy5Nc7sJ47a0jtOeZoTaMxkuqRo9cRhjOdZJXegxYE5FN/xw=="],
-
-    "@noble/hashes": ["@noble/hashes@1.8.0", "", {}, "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="],
-
-    "@supabase/cli-darwin-arm64": ["@supabase/cli-darwin-arm64@2.116.0", "", { "os": "darwin", "cpu": "arm64" }, "sha512-Mvfxf5q7oQ1KR59ndFFyGkh12IfwKH5ZOv7OWtHsFkBuwHtHiJgY6Zwd3w09tnat4spkpDTFavclBlLsOQnh2A=="],
-
-    "@supabase/cli-darwin-x64": ["@supabase/cli-darwin-x64@2.116.0", "", { "os": "darwin", "cpu": "x64" }, "sha512-dxKmIPcVunC8sPTuU+eVWj2SOB5tLoRTE5FX6J/KMZhGH03khTn6ptHvaanZp0YwaACbm//uoffUlJKZrAgt0w=="],
-
-    "@supabase/cli-linux-arm64": ["@supabase/cli-linux-arm64@2.116.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-ZmV96NQqcgx1MH4jWdfyqqjLghy57mRI5bysy6lM7MezsirQh+eXaOdWI0xCy7r7FA09k2fKLGh+r7r0X3mxBg=="],
-
-    "@supabase/cli-linux-arm64-musl": ["@supabase/cli-linux-arm64-musl@2.116.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-6lYrbKFJT5NKbEKGBJTArEc1F3oMfWxnQeq8+RZ4wSLjCq4uwluh6+fzKCsLVxZgPOg4r+RZRqDdb+/cLi0yyg=="],
-
-    "@supabase/cli-linux-x64": ["@supabase/cli-linux-x64@2.116.0", "", { "os": "linux", "cpu": "x64" }, "sha512-o0PvHKyQSKEuC3jJqeV2qorgyMIFGDWQ1Bj+OXf0p80ddgktnJFlDElCU+VDKZkuwLC6vO/LMoBql34zFHzXhw=="],
-
-    "@supabase/cli-linux-x64-musl": ["@supabase/cli-linux-x64-musl@2.116.0", "", { "os": "linux", "cpu": "x64" }, "sha512-EtPJPHUvLHvXHkvZHAEr+i6w/bDVm5BOPD+09uXgUffsUbNAzfZ8r7Fb94+SfWI+dQwivw4WmijsX7tlx61Zcg=="],
-
-    "@supabase/cli-windows-arm64": ["@supabase/cli-windows-arm64@2.116.0", "", { "os": "win32", "cpu": "arm64" }, "sha512-IiglNMXXssDiZbeSRvixYH7eYDDvhiEa2CrOSj419jO5vLrMKvzi1ATxe8E4i7MpKuI9S5U/3tA3rFlIMHtwrg=="],
-
-    "@supabase/cli-windows-x64": ["@supabase/cli-windows-x64@2.116.0", "", { "os": "win32", "cpu": "x64" }, "sha512-pz4zNDs3KCEx0l9JS9Xaiuzd5WXrISajVlBSxC5/2Jyo2+g+N/ftQJDYTHQ6Jir5fNelIqSHIXZelmGds14upw=="],
-
     "@types/bun": ["@types/bun@1.3.14", "", { "dependencies": { "bun-types": "1.3.14" } }, "sha512-h1hFqFVcvAvD9j9K7ZW7vd82aSA+rTdznZa+5bwvCwqSB1jmmfLcbIWhOLx1/+boy/xmjgCs/OMUL8hRJSmnPw=="],
 
     "@types/linkify-it": ["@types/linkify-it@5.0.0", "", {}, "sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q=="],
@@ -719,8 +472,6 @@
     "@types/mdurl": ["@types/mdurl@2.0.0", "", {}, "sha512-RGdgjQUZba5p6QEFAVx2OGb8rQDL/cPRG7GiedRzMcJ1tYnUANBncjbSB1NRGwbvjcPeikRABz2nshyPk1bhWg=="],
 
     "@types/node": ["@types/node@25.9.1", "", { "dependencies": { "undici-types": ">=7.24.0 <7.24.7" } }, "sha512-xfrlY7UD5rMJk3ZVJP8BNzS28J36YJg+xp+LPXV1TdWxr8uMH5A860QNxYDGQe/ylDSgjxE52Q9VnO7p75tJxg=="],
-
-    "@types/semver": ["@types/semver@7.7.1", "", {}, "sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA=="],
 
     "@types/webidl-conversions": ["@types/webidl-conversions@7.0.3", "", {}, "sha512-CiJJvcRtIgzadHCYXw7dqEnMNRjhGZlYK05Mj9OyktqV8uVT8fD2BFOB7S1uwBE3Kj2Z+4UyPmFw/Ixgw/LAlA=="],
 
@@ -738,8 +489,6 @@
 
     "bun-types": ["bun-types@1.3.14", "", { "dependencies": { "@types/node": "*" } }, "sha512-4N0ig0fEomHt5R0KCFWjovxow98rIoRwKolrYdCcknNwMekCXRnWEUvgu5soYV8QXtVsrUD8B95MBOZGPvr6KQ=="],
 
-    "canonicalize": ["canonicalize@3.0.0", "", { "bin": { "canonicalize": "bin/canonicalize.js" } }, "sha512-yYLfHyDMIXRyRqsKBRLX023riFLpXY2YOfdtqKXZRZy9qsfOJ9U+4F9YZL7MEzL5+ziN2x2nlBvY/Voi3EBljA=="],
-
     "css-select": ["css-select@5.2.2", "", { "dependencies": { "boolbase": "^1.0.0", "css-what": "^6.1.0", "domhandler": "^5.0.2", "domutils": "^3.0.1", "nth-check": "^2.0.1" } }, "sha512-TizTzUddG/xYLA3NXodFM0fSbNizXjOKhqiQQwvhlspadZokn1KDy0NZFS0wuEubIYAV5/c1/lAr0TaaFXEXzw=="],
 
     "css-what": ["css-what@6.2.2", "", {}, "sha512-u/O3vwbptzhMs3L1fQE82ZSLHQQfto5gyZzwteVIEyeaY5Fc7R4dapF/BvRoSYFeqfBk4m0V1Vafq5Pjv25wvA=="],
@@ -756,8 +505,6 @@
 
     "domutils": ["domutils@3.2.2", "", { "dependencies": { "dom-serializer": "^2.0.0", "domelementtype": "^2.3.0", "domhandler": "^5.0.3" } }, "sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw=="],
 
-    "eciesjs": ["eciesjs@0.5.0", "", { "dependencies": { "@ecies/ciphers": "^0.2.6", "@noble/ciphers": "^1.3.0", "@noble/curves": "^1.9.7", "@noble/hashes": "^1.8.0" } }, "sha512-s0J9SEVYAEPg7J63GFMApLYzPH9VNIQIyC6s15JpnqVc0TqcKWdbgFlnAweEBRyMmko2dcs2sfC83Hj4J43tuA=="],
-
     "entities": ["entities@4.5.0", "", {}, "sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw=="],
 
     "fsevents": ["fsevents@2.3.2", "", { "os": "darwin" }, "sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA=="],
@@ -771,8 +518,6 @@
     "image-size": ["image-size@2.0.2", "", { "bin": { "image-size": "bin/image-size.js" } }, "sha512-IRqXKlaXwgSMAMtpNzZa1ZAe8m+Sa1770Dhk8VkSsP9LS+iHD62Zd8FQKs8fbPiagBE7BzoFX23cxFnwshpV6w=="],
 
     "jose": ["jose@6.2.3", "", {}, "sha512-YYVDInQKFJfR/xa3ojUTl8c2KoTwiL1R5Wg9YCydwH0x0B9grbzlg5HC7mMjCtUJjbQ/YnGEZIhI5tCgfTb4Hw=="],
-
-    "jsonc-parser": ["jsonc-parser@3.3.1", "", {}, "sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ=="],
 
     "linkedom": ["linkedom@0.18.12", "", { "dependencies": { "css-select": "^5.1.0", "cssom": "^0.5.0", "html-escaper": "^3.0.3", "htmlparser2": "^10.0.0", "uhyphen": "^0.2.0" }, "peerDependencies": { "canvas": ">= 2" }, "optionalPeers": ["canvas"] }, "sha512-jalJsOwIKuQJSeTvsgzPe9iJzyfVaEJiEXl+25EkKevsULHvMJzpNqwvj1jOESWdmgKDiXObyjOYwlUqG7wo1Q=="],
 
@@ -800,13 +545,11 @@
 
     "punycode.js": ["punycode.js@2.3.1", "", {}, "sha512-uxFIHU0YlHYhDQtV4R9J6a52SLx28BCjT+4ieh7IGbgwVJWO+km431c4yRlREUAsAmt/uMjQUyQHNEPf0M39CA=="],
 
-    "semver": ["semver@7.8.5", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA=="],
+    "semver": ["semver@7.8.2", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-c8jsqUZm3omBOI66G90z1Dyw5z622G8oLG+omfsHBJf3CWQTlOcwOjvOG6wtiNfW6anKm/eA39LMwMtMez2TiQ=="],
 
     "sharp": ["sharp@0.34.5", "", { "dependencies": { "@img/colour": "^1.0.0", "detect-libc": "^2.1.2", "semver": "^7.7.3" }, "optionalDependencies": { "@img/sharp-darwin-arm64": "0.34.5", "@img/sharp-darwin-x64": "0.34.5", "@img/sharp-libvips-darwin-arm64": "1.2.4", "@img/sharp-libvips-darwin-x64": "1.2.4", "@img/sharp-libvips-linux-arm": "1.2.4", "@img/sharp-libvips-linux-arm64": "1.2.4", "@img/sharp-libvips-linux-ppc64": "1.2.4", "@img/sharp-libvips-linux-riscv64": "1.2.4", "@img/sharp-libvips-linux-s390x": "1.2.4", "@img/sharp-libvips-linux-x64": "1.2.4", "@img/sharp-libvips-linuxmusl-arm64": "1.2.4", "@img/sharp-libvips-linuxmusl-x64": "1.2.4", "@img/sharp-linux-arm": "0.34.5", "@img/sharp-linux-arm64": "0.34.5", "@img/sharp-linux-ppc64": "0.34.5", "@img/sharp-linux-riscv64": "0.34.5", "@img/sharp-linux-s390x": "0.34.5", "@img/sharp-linux-x64": "0.34.5", "@img/sharp-linuxmusl-arm64": "0.34.5", "@img/sharp-linuxmusl-x64": "0.34.5", "@img/sharp-wasm32": "0.34.5", "@img/sharp-win32-arm64": "0.34.5", "@img/sharp-win32-ia32": "0.34.5", "@img/sharp-win32-x64": "0.34.5" } }, "sha512-Ou9I5Ft9WNcCbXrU9cMgPBcCK8LiwLqcbywW3t4oDV37n1pzpuNLsYiAV8eODnjbtQlSDwZ2cUEeQz4E54Hltg=="],
 
     "sparse-bitfield": ["sparse-bitfield@3.0.3", "", { "dependencies": { "memory-pager": "^1.0.2" } }, "sha512-kvzhi7vqKTfkh0PZU+2D2PIllw2ymqJKujUcyPMd9Y75Nv4nPbGJZXNhxsgdQab2BmlDct1YnfQCguEvHr7VsQ=="],
-
-    "supabase": ["supabase@2.116.0", "", { "dependencies": { "eciesjs": "^0.5.0", "jose": "^6.2.9" }, "optionalDependencies": { "@supabase/cli-darwin-arm64": "2.116.0", "@supabase/cli-darwin-x64": "2.116.0", "@supabase/cli-linux-arm64": "2.116.0", "@supabase/cli-linux-arm64-musl": "2.116.0", "@supabase/cli-linux-x64": "2.116.0", "@supabase/cli-linux-x64-musl": "2.116.0", "@supabase/cli-windows-arm64": "2.116.0", "@supabase/cli-windows-x64": "2.116.0" }, "bin": { "supabase": "dist/supabase.js" } }, "sha512-cMUHkpjBacq4oLGWnMM2HC2drmUlAlfN/PQb31RARoIdYJ8sqA0xONvqBR6yd5v7w8dXuCPwvfd4N1NTHjBKEw=="],
 
     "tldts": ["tldts@7.4.9", "", { "dependencies": { "tldts-core": "^7.4.9" }, "bin": { "tldts": "bin/cli.js" } }, "sha512-3kZ8wQQ/k5DrChD4X4FVvr2D7E5uoRgAqkPyLpSCGUvqOvqu+JEdr3mwMUaVWb+vMHZaKhF5fp2PBigKsui7hA=="],
 
@@ -837,9 +580,5 @@
     "happy-dom/entities": ["entities@7.0.1", "", {}, "sha512-TWrgLOFUQTH994YUyl1yT4uyavY5nNB5muff+RtWaqNVCAK408b5ZnnbNAUEWLTCpum9w6arT70i1XdQ4UeOPA=="],
 
     "htmlparser2/entities": ["entities@7.0.1", "", {}, "sha512-TWrgLOFUQTH994YUyl1yT4uyavY5nNB5muff+RtWaqNVCAK408b5ZnnbNAUEWLTCpum9w6arT70i1XdQ4UeOPA=="],
-
-    "sharp/semver": ["semver@7.8.2", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-c8jsqUZm3omBOI66G90z1Dyw5z622G8oLG+omfsHBJf3CWQTlOcwOjvOG6wtiNfW6anKm/eA39LMwMtMez2TiQ=="],
-
-    "supabase/jose": ["jose@6.2.10", "", {}, "sha512-iiW7J9qRFlGxvCOIBDBDxFePQSn7ZMAnrYGhrrOo6siO/MIqwfyilLR27pkfDgUk+raLuzADS8A3S/KLBisc0g=="],
   }
 }

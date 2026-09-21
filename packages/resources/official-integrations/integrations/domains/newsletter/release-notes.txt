@@ -1,1 +1,0 @@
-Initial Newsletter release: publish the source contracts and reusable operator view while dashboard composition remains CMS-owned.

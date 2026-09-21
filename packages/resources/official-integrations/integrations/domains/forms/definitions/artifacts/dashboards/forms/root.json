@@ -1,9 +1,0 @@
-{
-    "type": "dashboard-view",
-    "view": {
-        "id": "forms-forms",
-        "source": "forms",
-        "meta": { "name": "Forms", "icon": "list-checks" },
-        "views": { "$include": "views.json" }
-    }
-}

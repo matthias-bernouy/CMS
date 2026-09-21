@@ -1,5 +1,0 @@
-[
-    {
-        "$include": "get-provider-payment/root.json"
-    }
-]

@@ -1,1 +1,0 @@
-Initial Commerce Stripe Payments release: compose Commerce and Stripe Connect with protected-payment capability refresh.

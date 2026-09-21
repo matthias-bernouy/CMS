@@ -1,1 +1,0 @@
-1.1.0: derive seller shipment actions from Commerce authorization, expose manual-review state to presentation blocks, and reject handoff mutations before calling Delivery when Commerce has blocked the order.

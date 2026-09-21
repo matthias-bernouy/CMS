@@ -10,8 +10,7 @@
     },
     "dependencies": {
         "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-sources": "workspace:*",
-        "@bernouy/cms-triggers": "workspace:*"
+        "@bernouy/cms-sources": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^5.9.3"

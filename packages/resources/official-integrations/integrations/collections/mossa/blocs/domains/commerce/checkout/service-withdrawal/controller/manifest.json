@@ -1,9 +1,0 @@
-{
-    "internal": true,
-    "default-tag": "mossa-service-withdrawal-controller",
-    "bloc": "./Bloc.ts",
-    "meta": {
-        "title": "Mossa service withdrawal controller",
-        "description": "Internal interaction controller for mossa-service-withdrawal."
-    }
-}

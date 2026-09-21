@@ -1,9 +1,0 @@
-{
-    "internal": true,
-    "default-tag": "mossa-purchases-controller",
-    "bloc": "./Bloc.ts",
-    "meta": {
-        "title": "Mossa purchases controller",
-        "description": "Internal presentation and pagination controller for mossa-purchases."
-    }
-}

@@ -1,7 +1,0 @@
-{
-    "$files": [
-        "payment-state.json",
-        "financial-snapshot.json",
-        "settlement-ledger/root.json"
-    ]
-}

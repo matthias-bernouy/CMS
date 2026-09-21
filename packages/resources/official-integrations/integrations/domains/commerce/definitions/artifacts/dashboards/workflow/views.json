@@ -1,6 +1,0 @@
-{
-    "$files": [
-        "views/workflow-management/root.json",
-        "views/workflow-transition-detail.json"
-    ]
-}

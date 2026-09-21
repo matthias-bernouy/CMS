@@ -1,6 +1,4 @@
 import { describe, expect, mock, test } from "bun:test";
-import { REPOSITORY_CATALOG_EDITOR_DATA_SOURCE } from "@bernouy/cms-repository/catalog";
-import { HttpRepositoryCatalogReader } from "../../src/repositoryCatalog";
 import type { SourceEndpoint, SourceEndpointInterceptor } from "@bernouy/cms-sources";
 import { mountProductionSurfaces, type ProductionSurfaceRuntime } from "../../src/runtime/mountSurfaces";
 import { surfaceMountFixtures } from "./surfaceMountFixtures";
@@ -8,7 +6,6 @@ import { surfaceMountFixtures } from "./surfaceMountFixtures";
 type CapturedSurfaces = {
     control?: Record<string, unknown>;
     delivery?: Record<string, unknown>;
-    repository?: Record<string, unknown>;
 };
 
 function capturingRuntime(captured: CapturedSurfaces): ProductionSurfaceRuntime {
@@ -26,11 +23,6 @@ function capturingRuntime(captured: CapturedSurfaces): ProductionSurfaceRuntime 
 
     return {
         Runner: FakeRunner,
-        Repository: class {
-            constructor(config: Record<string, unknown>) {
-                captured.repository = config;
-            }
-        },
         Control: class {
             readonly ready = Promise.resolve();
 
@@ -54,20 +46,6 @@ function capturingRuntime(captured: CapturedSurfaces): ProductionSurfaceRuntime 
 }
 
 describe("production image rollout composition", () => {
-    test("enables the public catalog facade only for the configured repository hub CMS", async () => {
-        const options = surfaceMountFixtures();
-        options.env.CMS_REPOSITORY_HUB_FACADE_ENABLED = true;
-        options.integrations.repositoryUrl = "http://cms-repository:3001/.cms/repository";
-        const captured: CapturedSurfaces = {};
-
-        const mounted = await mountProductionSurfaces(options as never, capturingRuntime(captured));
-
-        expect(captured.control?.editorDataSources).toEqual([REPOSITORY_CATALOG_EDITOR_DATA_SOURCE]);
-        expect(captured.repository?.repositoryCatalog).toBeInstanceOf(HttpRepositoryCatalogReader);
-        expect(captured.delivery?.publicPageProviders).toBeUndefined();
-        await mounted.stop();
-    });
-
     test.each([
         ["dark", false, false, false, false, false],
         ["transform only", true, false, false, false, false],

@@ -1,30 +1,17 @@
 import {
     executeEndpoint,
     makeEndpointUrn,
-    parseUrn,
     type ExecutorDeps,
     type SourceEndpoint,
     type SourceRepository,
 } from "@bernouy/cms-sources";
-import type { IntegrationInstallation, IntegrationInstallationRepository } from "@bernouy/cms-integrations";
 
-export async function installedEndpoint(
-    installations: IntegrationInstallationRepository,
+export async function sourceEndpoint(
     sources: SourceRepository,
-    kind: string,
+    sourceId: string,
     endpointId: string,
 ): Promise<SourceEndpoint | null> {
-    const installation = await installations.get(kind);
-    if (!installation || installation.status !== "success") {
-        return null;
-    }
-    for (const sourceId of installedSourceIds(installation)) {
-        const endpoint = await sources.getEndpoint(makeEndpointUrn(sourceId, endpointId));
-        if (endpoint) {
-            return endpoint;
-        }
-    }
-    return null;
+    return await sources.getEndpoint(makeEndpointUrn(sourceId, endpointId));
 }
 
 export async function callJson(
@@ -54,13 +41,6 @@ export async function callJson(
         throw new Error(`notification endpoint returned invalid JSON (${response.status})`);
     }
     return payload as Record<string, unknown>;
-}
-
-function installedSourceIds(installation: IntegrationInstallation): string[] {
-    return installation.artifacts
-        .filter((artifact) => artifact.type === "source")
-        .map((artifact) => parseUrn(artifact.id)?.source)
-        .filter((sourceId): sourceId is string => !!sourceId);
 }
 
 function responseError(payload: unknown, status: number): string {

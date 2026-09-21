@@ -1,9 +1,0 @@
-{
-    "$files": [
-        "admin/forms.json",
-        "admin/sections.json",
-        "admin/questions.json",
-        "admin/submissions.json",
-        "admin/media.json"
-    ]
-}

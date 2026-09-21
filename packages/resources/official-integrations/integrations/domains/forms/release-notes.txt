@@ -1,1 +1,0 @@
-Initial Forms release: publish the source-only form contracts, submission inputs, and operator views.

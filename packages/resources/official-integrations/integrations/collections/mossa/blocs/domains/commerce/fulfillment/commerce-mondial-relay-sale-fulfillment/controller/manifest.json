@@ -1,8 +1,0 @@
-{
-    "default-tag": "mossa-commerce-mondial-relay-sale-fulfillment-controller",
-    "bloc": "./Bloc.ts",
-    "meta": {
-        "title": "Commerce Mondial Relay sale fulfillment controller",
-        "description": "Internal presentation controller for the seller fulfillment composition."
-    }
-}

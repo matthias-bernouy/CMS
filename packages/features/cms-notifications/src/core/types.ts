@@ -1,5 +1,4 @@
 import type { UsersRepository } from "@bernouy/cms-auth";
-import type { IntegrationInstallationRepository } from "@bernouy/cms-integrations";
 import type { ExecutorDeps, SourceRepository } from "@bernouy/cms-sources";
 
 export type NotificationDispatchResult = {
@@ -20,11 +19,10 @@ export type NotificationLogger = {
 
 export type NotificationDispatchOptions = {
     users: Pick<UsersRepository<string>, "getBySub">;
-    installations: IntegrationInstallationRepository;
     sources: SourceRepository;
     deps: ExecutorDeps;
-    notificationKind: string;
-    emailerKind: string;
+    notificationSourceId: string;
+    emailerSourceId: string;
     workerId?: string;
     limit?: number;
     logger?: NotificationLogger;

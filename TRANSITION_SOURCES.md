@@ -29,6 +29,17 @@ tests pass, and every generated contract passes its local verifier. This gives
 us a substantial behavioral reference, but it does not yet make the protocol
 production-ready.
 
+### Transition status
+
+The legacy function, trigger, integration package, registry, verification,
+repository, and official-integration resource stacks have been removed. The
+Ulvia CLI now starts only the local CMS and MongoDB; it no longer owns package
+pull, audit, release, publication, repository, or Supabase workflows.
+
+Integration-backed collection and dashboard test fixtures remain in the tree
+as migration references but are excluded from the active Control TypeScript
+project until those interfaces are rebuilt on contracts and providers.
+
 ### Why this redesign exists
 
 The current CmsCore integration system combines too many concerns: integration

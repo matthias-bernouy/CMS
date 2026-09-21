@@ -1,26 +1,17 @@
-import { LocalRepositoryCatalog } from "../repository/catalog";
-import { randomBytes } from "node:crypto";
-import type { LocalIntegrationRepository } from "../repository/local";
-import { startLocalRepositoryServer } from "../repository/server";
-import { startLocalCms, stopLocalCms, type DevPorts } from "../runtime/cms";
 import { loadOrCreateDevRuntimeConfig } from "../runtime/config";
+import { startLocalCms, stopLocalCms, type DevPorts } from "../runtime/cms";
 import { localMongoStatus, startLocalMongo, stopLocalMongo } from "../runtime/mongo";
 import type { UlviaPaths } from "../runtime/paths";
-import { localSupabaseStatus, startLocalSupabase, stopLocalSupabase } from "../runtime/supabase";
-import { startLocalSupabaseManagementServer } from "../runtime/supabase-local";
 
 const DEFAULT_PORTS: DevPorts = Object.freeze({
     control: 5100,
     delivery: 5101,
-    repository: 5102,
-    supabaseManagement: 5103,
     mongo: 27019,
 });
 
 export async function devCommand(
     args: readonly string[],
     paths: UlviaPaths,
-    repository: LocalIntegrationRepository,
     log: (message: string) => void,
     environment: Record<string, string | undefined> = process.env,
 ): Promise<void> {
@@ -29,7 +20,7 @@ export async function devCommand(
         throw new Error("dev accepts only one action: status, credentials, or stop");
     }
     if (action === "start") {
-        await runDev(paths, repository, log, resolveDevPorts(environment));
+        await runDev(paths, log, resolveDevPorts(environment));
         return;
     }
     if (action === "status") {
@@ -43,73 +34,29 @@ export async function devCommand(
         return;
     }
     if (action === "stop") {
-        const supabase = await stopLocalSupabase(paths.supabase);
         const mongo = await stopLocalMongo(paths.mongo);
-        log(`Supabase: ${supabase ? "stopped" : "not running"}`);
         log(`MongoDB: ${mongo ? "stopped" : "not running"}`);
         return;
     }
     throw new Error(`Unknown dev action: ${action}`);
 }
 
-async function runDev(
-    paths: UlviaPaths,
-    repository: LocalIntegrationRepository,
-    log: (message: string) => void,
-    ports: DevPorts,
-): Promise<void> {
-    log("Starting persistent local Supabase services...");
-    const supabaseEnvironment = await startLocalSupabase(paths.supabase);
+async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: DevPorts): Promise<void> {
     log("Starting persistent local MongoDB...");
     const mongo = await startLocalMongo(paths.mongo, ports.mongo);
-    const bridge = startLocalRepositoryServer(repository, new LocalRepositoryCatalog(repository), ports.repository);
-    const supabaseToken = randomBytes(32).toString("base64url");
-    const supabaseManagement = await startLocalSupabaseManagementServer({
-        projectRoot: paths.supabase,
-        projectRef: "local",
-        accessToken: supabaseToken,
-        databaseUrl: supabaseEnvironment.databaseUrl,
-        port: ports.supabaseManagement,
-    });
-    try {
-        const config = await loadOrCreateDevRuntimeConfig(paths.dev);
-        const cms = await startLocalCms(
-            paths,
-            config,
-            mongo,
-            bridge.url,
-            {
-                managementUrl: supabaseManagement.url,
-                stripeApiUrl: supabaseManagement.stripeApiUrl,
-                accessToken: supabaseToken,
-                projectRef: "local",
-                environment: supabaseEnvironment,
-            },
-            ports,
-        );
-        log("");
-        log(`CMS Control: http://127.0.0.1:${ports.control}`);
-        log(`CMS Delivery: http://127.0.0.1:${ports.delivery}`);
-        log("Credentials: bun run ulvia -- dev credentials");
-        log("The CMS repository is local-only; pull integrations in another terminal when needed.");
-        log("Supabase-backed integration installs target the local database, Storage, and Edge Runtime.");
-        await superviseCms(cms);
-    } finally {
-        bridge.stop();
-        await supabaseManagement.stop();
-    }
+    const config = await loadOrCreateDevRuntimeConfig(paths.dev);
+    const cms = await startLocalCms(paths, config, mongo, ports);
+    log("");
+    log(`CMS Control: http://127.0.0.1:${ports.control}`);
+    log(`CMS Delivery: http://127.0.0.1:${ports.delivery}`);
+    log("Credentials: bun run ulvia -- dev credentials");
+    await superviseCms(cms);
 }
 
 export function resolveDevPorts(environment: Record<string, string | undefined>): DevPorts {
     const ports: DevPorts = {
         control: readPort(environment, "ULVIA_DEV_CONTROL_PORT", DEFAULT_PORTS.control),
         delivery: readPort(environment, "ULVIA_DEV_DELIVERY_PORT", DEFAULT_PORTS.delivery),
-        repository: readPort(environment, "ULVIA_DEV_REPOSITORY_PORT", DEFAULT_PORTS.repository),
-        supabaseManagement: readPort(
-            environment,
-            "ULVIA_DEV_SUPABASE_MANAGEMENT_PORT",
-            DEFAULT_PORTS.supabaseManagement,
-        ),
         mongo: readPort(environment, "ULVIA_DEV_MONGO_PORT", DEFAULT_PORTS.mongo),
     };
     if (new Set(Object.values(ports)).size !== Object.values(ports).length) {
@@ -151,13 +98,5 @@ async function superviseCms(cms: Awaited<ReturnType<typeof startLocalCms>>): Pro
 }
 
 async function devStatus(paths: UlviaPaths, log: (message: string) => void): Promise<void> {
-    const [supabase, mongo] = await Promise.all([localSupabaseStatus(paths.supabase), localMongoStatus(paths.mongo)]);
-    log(`Supabase: ${supabase ? "running" : "not running"}`);
-    if (supabase?.apiUrl) {
-        log(`  API: ${supabase.apiUrl}`);
-    }
-    if (supabase?.studioUrl) {
-        log(`  Studio: ${supabase.studioUrl}`);
-    }
-    log(`MongoDB: ${mongo ?? "not created"}`);
+    log(`MongoDB: ${(await localMongoStatus(paths.mongo)) ?? "not created"}`);
 }

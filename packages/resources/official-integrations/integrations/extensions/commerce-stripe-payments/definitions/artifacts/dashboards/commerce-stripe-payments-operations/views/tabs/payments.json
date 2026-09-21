@@ -1,7 +1,0 @@
-{
-    "id": "payments",
-    "label": "Payments",
-    "children": {
-        "$include": "../payments/views.json"
-    }
-}

@@ -1,9 +1,0 @@
-{
-    "internal": true,
-    "default-tag": "mossa-commerce-offer-filter-controller",
-    "bloc": "./Bloc.ts",
-    "meta": {
-        "title": "Mossa commerce offer filter controller",
-        "description": "Internal schema and range controller for mossa-commerce-offer-filter."
-    }
-}

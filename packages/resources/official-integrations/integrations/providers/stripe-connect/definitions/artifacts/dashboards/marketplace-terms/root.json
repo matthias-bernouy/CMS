@@ -1,9 +1,0 @@
-{
-    "type": "dashboard-view",
-    "view": {
-        "id": "stripe-connect-marketplace-terms",
-        "source": "stripe-connect",
-        "meta": { "name": "Seller terms", "icon": "file-check" },
-        "views": { "$include": "views.json" }
-    }
-}

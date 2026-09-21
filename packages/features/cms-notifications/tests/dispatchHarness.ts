@@ -1,13 +1,9 @@
 import { InMemoryUsersRepository } from "@bernouy/cms-auth";
-import { InMemoryIntegrationInstallationRepository } from "@bernouy/cms-integrations";
 import { InMemorySourceRepository, type Source } from "@bernouy/cms-sources";
 
 export async function createHarness(email: string | undefined, contractVersion = 1, hasClaim = true) {
     const users = new InMemoryUsersRepository<string>();
     await users.upsert({ sub: "buyer-1", ...(email ? { email } : {}) }, "user");
-    const installations = new InMemoryIntegrationInstallationRepository();
-    await installations.create(installation("commerce", "commerce"));
-    await installations.create(installation("emailer", "mailer"));
     const sources = new InMemorySourceRepository();
     await sources.createSource(notificationSource());
     await sources.createSource(emailerSource());
@@ -69,26 +65,11 @@ export async function createHarness(email: string | undefined, contractVersion =
         failed,
         options: {
             users,
-            installations,
             sources,
             deps: { fetchImpl },
-            notificationKind: "commerce",
-            emailerKind: "emailer",
+            notificationSourceId: "commerce",
+            emailerSourceId: "mailer",
         },
-    };
-}
-
-function installation(id: string, sourceId: string) {
-    return {
-        id,
-        label: id,
-        definitionVersion: "1.0.0",
-        status: "success" as const,
-        answersSnapshot: { id: sourceId },
-        secretRefs: {},
-        secretInputs: [],
-        artifacts: [{ type: "source" as const, id: `urn:${sourceId}`, action: "created" as const }],
-        runs: [],
     };
 }
 

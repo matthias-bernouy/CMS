@@ -4,7 +4,6 @@
         { "path": "packages/foundation/http-runner" },
         { "path": "packages/foundation/envelope-crypto" },
         { "path": "packages/foundation/rate-limiter" },
-        { "path": "packages/resources/official-integrations" },
         { "path": "packages/features/cms-auth" },
         { "path": "packages/features/cms-secrets" },
         { "path": "packages/features/cms-files" },
@@ -19,12 +18,9 @@
         { "path": "packages/features/cms-notifications" },
         { "path": "packages/features/cms-analytics" },
         { "path": "packages/foundation/components" },
-        { "path": "packages/surfaces/cms-repository" },
-        { "path": "packages/surfaces/cms-repository-management" },
         { "path": "packages/surfaces/cms-delivery" },
         { "path": "packages/surfaces/cms-control" },
         { "path": "packages/runtimes/ulvia-cli" },
-        { "path": "packages/runtimes/cms-repository-server" },
         { "path": "packages/runtimes/cms-server" }
     ]
 }

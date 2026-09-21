@@ -1,4 +1,9 @@
-# Integration development
+# Legacy integration development
+
+> Archived during the Sources transition. The package, installation,
+> repository, trigger, and function APIs described below no longer exist in
+> the active workspace. Keep this material only as migration evidence until
+> the new contract/provider documentation replaces it.
 
 Ulvia integrations are authored as one current source tree and released as
 immutable packages. Released history belongs to repositories, not to copied

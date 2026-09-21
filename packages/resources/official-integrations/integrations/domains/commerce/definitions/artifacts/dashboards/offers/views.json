@@ -1,6 +1,0 @@
-{
-    "$files": [
-        "views/offers-table.json",
-        "views/offer-detail/root.json"
-    ]
-}

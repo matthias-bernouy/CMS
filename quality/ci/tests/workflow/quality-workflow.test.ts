@@ -61,15 +61,10 @@ test("quality workflow keeps every G0 check visible", async () => {
         "bun run quality/ci/coverage/ratchet.ts",
         "bun run --cwd packages/foundation/components build",
         "docker compose version",
-        "bun run packages/resources/official-integrations/tests/helpers/postgres/runPostgresContracts.ts --filter commerce-media",
-        "bun run packages/resources/official-integrations/tests/helpers/postgres/runPostgresContracts.ts --filter commerce-negotiated-checkout",
-        "bun run packages/resources/official-integrations/tests/helpers/postgres/schema-calibration/execution/baselines/generateBaselines.ts --check",
         "bun test packages/features/cms-source-images/tests",
         "packages/features/cms-sources/tests/http/interceptors",
         "packages/features/cms-sources/tests/http/observability/sourceImageTelemetry.test.ts",
         "packages/features/cms-sources/tests/validation/validateSource.reservedParams.test.ts",
-        "packages/resources/official-integrations/tests/commerce/selling/media/uploads",
-        "packages/resources/official-integrations/tests/commerce/selling/blocs/offer-preview-money.test.ts",
         "bun test quality/image-performance/tests",
         "bun node_modules/playwright/cli.js install --with-deps chromium",
         "--synthetic 2",
@@ -100,27 +95,7 @@ test("quality workflow keeps every G0 check visible", async () => {
         /name: Install Chromium for surface browser tests\s+if: matrix\.name == 'surfaces'\s+run: bun node_modules\/playwright\/cli\.js install --with-deps chromium/,
     );
     expect(workflow).toContain("uses: ./.github/workflows/quality-integration-contracts.yml");
-    expect(integrationWorkflow).toContain("name: PostgreSQL integration contracts");
-    expect(integrationWorkflow).toContain(
-        "image: postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
-    );
-    expect(integrationWorkflow).toContain("POSTGRES_DB: cmscore_contracts");
-    expect(integrationWorkflow).toContain("ALLOW_POSTGRES_CONTRACT_SCHEMA_RESET: cmscore-postgres-contracts");
-    expect(integrationWorkflow).toContain(
-        "DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/cmscore_contracts",
-    );
-    expect(integrationWorkflow).toContain("name: Calibrate and verify all official PostgreSQL schema baselines");
-    expect(integrationWorkflow).toContain("docker run --rm --network host");
-    expect(integrationWorkflow).toContain('--volume "$GITHUB_WORKSPACE:/workspace:ro"');
-    expect(integrationWorkflow).toContain(
-        "oven/bun:1.3.14-alpine@sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0",
-    );
-    expect(integrationWorkflow).toContain(
-        "CMS_SCHEMA_BASELINE_GENERATOR_IMAGE: oven/bun:1.3.14-alpine@sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0",
-    );
-    expect(integrationWorkflow).toContain("--env CMS_SCHEMA_BASELINE_GENERATOR_IMAGE");
-    expect(integrationWorkflow).not.toContain("generateBaselines.ts --check --filter");
-    expect(integrationWorkflow).toMatch(/postgres-contracts:[\s\S]*fetch-depth: 0/);
+    expect(integrationWorkflow).toContain("name: Quality runtime contracts");
     expect(integrationWorkflow).toContain("name: Source image safety and Chromium smoke");
     expect(integrationWorkflow).toContain("PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/playwright");
     expect(integrationWorkflow).toContain("--suite-id source-images-ci-smoke");
@@ -137,7 +112,6 @@ test("source image CI uses the real adapter with deterministic public fixtures o
 
     expect(job).toBeDefined();
     expect(job).toContain("bun test packages/features/cms-source-images/tests");
-    expect(job).toContain("packages/resources/official-integrations/tests/commerce/selling/media/uploads");
     expect(job).toContain("bun test quality/image-performance/tests");
     expect(job).toContain("bun node_modules/playwright/cli.js install --with-deps chromium");
     expect(job).toContain("--adapter module:quality/image-performance/core/sourceImagesAdapter.ts");

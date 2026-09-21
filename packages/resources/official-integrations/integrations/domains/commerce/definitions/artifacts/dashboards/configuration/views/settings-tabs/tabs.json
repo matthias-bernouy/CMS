@@ -1,8 +1,0 @@
-{
-    "$files": [
-        "tabs/general.json",
-        "tabs/notifications.json",
-        "tabs/protected-c2c.json",
-        "tabs/offer-conditions.json"
-    ]
-}

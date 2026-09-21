@@ -1,25 +1,13 @@
 import { fileURLToPath } from "node:url";
-import type { IntegrationMigrationPhase } from "@bernouy/cms-integrations";
-import type { LocalMongo } from "./mongo";
 import type { DevRuntimeConfig } from "./config";
+import type { LocalMongo } from "./mongo";
 import type { UlviaPaths } from "./paths";
-import type { LocalSupabaseEnvironment } from "./supabase";
 import { spawnCommand } from "./process";
 
 export type DevPorts = Readonly<{
     control: number;
     delivery: number;
-    repository: number;
-    supabaseManagement: number;
     mongo: number;
-}>;
-
-export type LocalSupabaseCmsConfig = Readonly<{
-    managementUrl: string;
-    stripeApiUrl: string;
-    accessToken: string;
-    projectRef: string;
-    environment: LocalSupabaseEnvironment;
 }>;
 
 export type CmsProcess = ReturnType<typeof Bun.spawn>;
@@ -28,13 +16,8 @@ export async function startLocalCms(
     paths: UlviaPaths,
     config: DevRuntimeConfig,
     mongo: LocalMongo,
-    repositoryUrl: string,
-    supabase: LocalSupabaseCmsConfig,
     ports: DevPorts,
-    options: Readonly<{
-        inheritOutput?: boolean;
-        faultAfterMigrationPhase?: IntegrationMigrationPhase;
-    }> = {},
+    options: Readonly<{ inheritOutput?: boolean }> = {},
 ): Promise<CmsProcess> {
     const entrypoint = fileURLToPath(import.meta.resolve("@bernouy/cms-server"));
     const controlUrl = `http://127.0.0.1:${ports.control}`;
@@ -55,7 +38,6 @@ export async function startLocalCms(
             CMS_ADMIN_EMAIL: config.adminEmail,
             CMS_ADMIN_PASSWORD: config.adminPassword,
             CMS_FILES_DIR: paths.cmsFiles,
-            CMS_INTEGRATION_PACKAGE_CACHE_DIR: paths.packages,
             MONGO_URL: mongo.url,
             CMS_AUTH_SITE_NAME: "Ulvia local CMS",
             CMS_AUTH_EMAIL_COOLDOWN_SECONDS: "0",
@@ -65,14 +47,6 @@ export async function startLocalCms(
             CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: "false",
             CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: "false",
             CMS_HTTP_CLIENT_ADDRESS_MODE: "disabled",
-            CMS_REPOSITORY_HUB_FACADE_ENABLED: "false",
-            P9R_INTEGRATION_REPOSITORY_URL: repositoryUrl,
-            CMS_LOCAL_SUPABASE_MANAGEMENT_URL: supabase.managementUrl,
-            CMS_LOCAL_SUPABASE_FUNCTIONS_URL: supabase.environment.functionsUrl,
-            CMS_LOCAL_SUPABASE_PROJECT_REF: supabase.projectRef,
-            CMS_LOCAL_SUPABASE_ACCESS_TOKEN: supabase.accessToken,
-            CMS_LOCAL_STRIPE_API_URL: supabase.stripeApiUrl,
-            CMS_LOCAL_MIGRATION_AUDIT_FAULT_AFTER_PHASE: options.faultAfterMigrationPhase ?? "",
         },
     });
     try {

@@ -387,70 +387,14 @@ requests do not consume this budget. Tune both values together using observed
 traffic. An ingress cache or CDN is recommended for immutable packages, but is
 not required for the origin limiter to be active.
 
-### Integrations and SMTP
-
-| Variable | Purpose |
-| --- | --- |
-| `CMS_REPOSITORY_HUB_FACADE_ENABLED` | Defaults to `false`. Set only through `repository-hub.override.yml` on the CMS-authored public repository hub. |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` | Optional SMTP connection settings forwarded when deploying Supabase connector functions. |
-| `SMTP_USER`, `SMTP_PASSWORD` | Optional SMTP credentials forwarded to those functions. |
-| `SMTP_FROM`, `SMTP_REPLY_TO` | Optional sender settings forwarded to those functions. |
-
-Every CMS reads metadata, definitions, upgrade evidence, and requested exact
-packages directly from `P9R_INTEGRATION_REPOSITORY_URL`. There is no embedded
-repository mode and no Delivery loopback. Metadata is fetched lazily when
-Control lists integrations or checks upgrades; a complete package is fetched
-only when an exact version must be installed, upgraded, or recovered into the
-durable cache. Neither operation uses a repository read token.
-
-The package cache remains private to the CMS. A rerun whose exact digest is
-already materialized continues to work while the repository is offline. Public
-site Delivery also continues serving normal content. Catalog and upgrade views
-report repository unavailability, and an install, upgrade, legacy rerun without
-a materialized digest, or recovery from a missing/corrupt cache object fails
-closed until the exact package is available again. The runtime never substitutes
-an image-embedded package for the recorded version.
-
-The designated hub CMS additionally mounts the same-origin public repository
-facade. Deploy `packages/resources/sites/cms-repository-hub` to that instance to
-publish the searchable `/integrations` page; the runtime has no generated UI
-fallback when this CMS resource has not been pushed. The hub exposes only
-public catalog data and never receives repository management, maintenance, or
-verifier credentials.
-
-Use `infra/images/cms-repository/repository-hub.override.yml` only for that CMS
-instance. Every ordinary CMS configures the anonymous
-`P9R_INTEGRATION_REPOSITORY_URL` but leaves
-`CMS_REPOSITORY_HUB_FACADE_ENABLED=false`, so its Delivery listener never
-mirrors repository routes. Remote publication is an `ulvia push` concern; the
-repository deployment and authenticated management gateway are documented in
-`infra/images/cms-repository/README.md`.
-
-Configure Supabase connector deployments after the CMS is running: open
-**Settings → Connector providers → Supabase**, then enter the project reference
-and access token. The token is write-only in the UI and is stored in the CMS
-SecretStore (encrypted at rest in production). Leaving the token field empty
-when saving keeps the currently stored token. SMTP settings are not migrated by
-this change; connector functions continue to receive the existing `SMTP_*`
-environment values listed above.
-
-Treat the SMTP password, MongoDB URL, session secret, and KEK as server-side
-secrets. Never expose them to browser code or commit them to the repository.
+Treat the MongoDB URL, session secret, KEK, and any configured SMTP credentials
+as server-side secrets. Never expose them to browser code or commit them to the
+repository.
 
 ## Backups
 
 Back up MongoDB, every instance's `files` directory, and the protected `.env`
-files. The `integration-packages` cache has a separate recovery policy: it is
-reconstructible while every pinned repository package remains available, but a
-backup is required to guarantee connector reruns during an outage or after a
-historical package disappears. Keep cache backups separate from authoritative
-media backups, encrypted, and restore them with UID/GID 1000 and mode `0750`.
-
-Lot 0 performs no automatic object garbage collection. Monitor the capacity of
-each `integration-packages` bind mount and retain headroom for one complete
-staging object in addition to committed packages. A full cache must fail before
-an installation pin changes; it must never spill into `/tmp`, the image root,
-or the media directory.
+files.
 
 Test restoration regularly. To obtain a cross-store consistent backup, pause
 the affected CMS containers while dumping their databases and archiving their

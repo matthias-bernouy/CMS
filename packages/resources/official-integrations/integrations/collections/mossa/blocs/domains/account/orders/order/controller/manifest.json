@@ -1,8 +1,0 @@
-{
-    "default-tag": "mossa-order-controller",
-    "bloc": "./Bloc.ts",
-    "meta": {
-        "title": "Order controller",
-        "description": "Internal presentation controller for the order composition."
-    }
-}

@@ -1,1 +1,0 @@
-Initial User Account release: publish the source-only account contracts without presentation dependencies.

@@ -28,12 +28,8 @@ implementation notes live in each package's `AGENTS.md`.
   paths, redirects, deletion tombstones, and public SEO behavior.
 - [Bloc Authoring](./blocs/README.md) documents how to create blocs, expose
   editor capabilities, bind Sources, design themeable CSS, test, and publish.
-- [Integration development](./integrations/README.md) documents local-first
-  integration versioning, audits, upgrade fixtures, releases, and the remote
-  publication contract.
-- [Integration settings and Health](./integrations/management.md) documents
-  integration-owned configuration, scoped references, declared actions, and
-  read-only health observations after installation.
+- [Legacy integration documentation](./integrations/README.md) is retained only
+  as migration evidence for the removed package/install/repository system.
 - [auth-system-source.md](./auth-system-source.md) documents the readonly
   system auth source exposed through `/.cms/sources/system-auth/*`.
 

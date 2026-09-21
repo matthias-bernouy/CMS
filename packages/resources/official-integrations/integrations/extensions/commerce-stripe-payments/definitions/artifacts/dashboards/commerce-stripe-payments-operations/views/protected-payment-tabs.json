@@ -1,7 +1,0 @@
-{
-    "widget": "w-tabs",
-    "id": "protectedPaymentTabs",
-    "tabs": {
-        "$include": "tabs.json"
-    }
-}
