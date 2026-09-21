@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test";
 import { InMemoryCmsRepository, ValidatingCmsRepository } from "@bernouy/cms-content";
+import { InMemoryCache } from "@bernouy/http-runner";
+import type { ControlCms } from "cms-control/ControlCms";
 import getSettings from "cms-control/api/system/settings.get";
 import postSettings from "cms-control/api/system/settings.post";
-import { makeCms } from "../../integrations/support/helpers";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
@@ -17,8 +18,10 @@ test("language activation survives Save and a full page reload", async () => {
         await repository.updateSystem({
             site: { language: "fr", additionalLanguages: ["en"], activeLanguages: [] } as never,
         });
-        const cms = makeCms([]).cms;
-        cms.repository = new ValidatingCmsRepository(repository);
+        const cms = {
+            repository: new ValidatingCmsRepository(repository),
+            cache: new InMemoryCache(),
+        } as unknown as ControlCms;
         const [markup, bundle, styles] = await Promise.all([
             readFile(pagePath, "utf8"),
             readFile(resolve(assets, "control-components.js"), "utf8"),

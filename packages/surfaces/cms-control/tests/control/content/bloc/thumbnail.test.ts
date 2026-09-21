@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 import { parsePresentationImage } from "@bernouy/cms-content";
-import { parseIntegrationDefinition } from "@bernouy/cms-integrations";
 import { importBlocArtifact } from "cms-control/core/content/bloc/importBlocArtifact";
 import { cliBlocSource, cliBlocList } from "cms-control/core/content/bloc/cliExport";
 import getBlocThumbnail from "cms-control/api/_content/bloc/_runtime/thumbnail.get";
@@ -57,8 +56,7 @@ describe("authored presentation images", () => {
 
     test("preserves optional cover metadata and rejects external, traversing or unsupported image references", () => {
         const cover = { path: "assets/covers/collection.webp", alt: "Collection overview" };
-        const definition = parseIntegrationDefinition({ kind: "example", label: "Example", inputs: [], cover });
-        expect(definition.cover).toEqual(cover);
+        expect(parsePresentationImage(cover)).toEqual(cover);
         expect(parsePresentationImage(undefined)).toBeUndefined();
         for (const path of [
             "../cover.png",
@@ -69,9 +67,6 @@ describe("authored presentation images", () => {
             "assets/cover.html",
         ]) {
             expect(() => parsePresentationImage({ path })).toThrow();
-            expect(() =>
-                parseIntegrationDefinition({ kind: "example", label: "Example", inputs: [], cover: { path } }),
-            ).toThrow();
         }
         expect(() => parsePresentationImage({ path: "assets/cover.png", alt: 42 })).toThrow();
     });

@@ -44,7 +44,6 @@ import {
     analyticsPrivacyPage,
     analyticsSelfAssessment,
 } from "cms-delivery/core/analytics/privacyAnalyticsEndpoints";
-import { getDeliveryIntegrationThemeContributions } from "cms-delivery/core/assets/resolveAssets";
 import { FAVICON_ROUTE } from "cms-delivery/core/assets/defaultFavicon";
 import {
     matchRootSitemapChunkPath,
@@ -127,11 +126,7 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
             req,
             P9R_CACHE.STYLE,
             delivery.cache,
-            async () =>
-                generateStyleEntry(
-                    delivery.repository,
-                    await getDeliveryIntegrationThemeContributions(delivery.integrationInstallations),
-                ),
+            async () => generateStyleEntry(delivery.repository),
             publicAssetCacheControl(req),
         ),
     );

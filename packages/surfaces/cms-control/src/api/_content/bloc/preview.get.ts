@@ -4,7 +4,6 @@ import { blocPreview } from "cms-control/core/content/bloc/preview/render";
 import { generateStyleEntry } from "@bernouy/cms-content";
 import editorComponentGet from "cms-control/api/editor/component.js.get";
 import editorBindingCoreGet from "cms-control/api/editor/binding-core.js.get";
-import { getInstalledIntegrationThemeContributions } from "cms-control/core/management/integrations/themeContributions";
 
 export default async function getBlocPreview(req: Request, cms: ControlCms): Promise<Response> {
     const url = new URL(req.url);
@@ -16,9 +15,7 @@ export default async function getBlocPreview(req: Request, cms: ControlCms): Pro
     const [component, bindings, style] = await Promise.all([
         editorComponentGet(identityRequest, cms).then((response) => response.text()),
         editorBindingCoreGet(identityRequest, cms).then((response) => response.text()),
-        getInstalledIntegrationThemeContributions(cms.integrationInstallations).then((contributions) =>
-            generateStyleEntry(cms.repository, contributions),
-        ),
+        generateStyleEntry(cms.repository),
     ]);
     return blocPreview(cms.repository, tag, basePath, {
         scripts: [component, bindings],

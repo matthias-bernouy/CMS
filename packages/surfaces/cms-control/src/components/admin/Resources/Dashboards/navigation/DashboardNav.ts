@@ -1,10 +1,6 @@
-import sources from "cms-control/static/admin/_content/sources/_runtime/navigation.html" with { type: "text" };
-import "./binding/Installations";
 import "./icons/Icon";
 import { readSourceData, refreshSourceContext, setSourceContext, setSourceData } from "@bernouy/components";
 import { navigationContext, exampleGroups } from "./binding/context";
-import { sourceForInstallation } from "./management";
-import type { IntegrationInstallationRow } from "../../Integrations/model";
 import { Component } from "@bernouy/components/base";
 import {
     currentSelection,
@@ -20,7 +16,6 @@ import template from "./nav.html" with { type: "text" };
 import type { DashboardSourceGroup } from "../types";
 
 export class DashboardNav extends Component {
-    private installations: IntegrationInstallationRow[] = [];
     private groups: DashboardSourceGroup[] = [];
     private selectedSource = "";
     private selectedDashboard = "";
@@ -49,11 +44,6 @@ export class DashboardNav extends Component {
     }
 
     private startBoundSource(): void {
-        if (!this.querySelector("[data-add-source]")) {
-            const template = document.createElement("template");
-            template.innerHTML = sources as unknown as string;
-            this.append(template.content.cloneNode(true));
-        }
         this.setAttribute("data-nav-list-source", "");
         this.setAttribute("cms-reload-on", "dashboard:definitions-changed");
         this.setAttribute("cms-source", this.isExampleMode() ? "" : `${route("/api/dashboards")} as dashboards`);
@@ -86,28 +76,12 @@ export class DashboardNav extends Component {
     private context(): Record<string, unknown> {
         const data = readSourceData(this);
         this.groups = Array.isArray(data) ? data : [];
-        const installationSource = this.querySelector("[data-nav-installations-source]");
-        const installations = installationSource ? readSourceData(installationSource) : undefined;
-        this.installations = Array.isArray(installations) ? installations : [];
-        const params = new URL(window.location.href).searchParams;
-        const installation = params.get("integration");
         this.selectedSource ||= defaultDashboardSource(this.groups);
-        if (installation) {
-            this.selectedSource = sourceForInstallation(installation, this.installations) ?? this.selectedSource;
-        }
         if (Array.isArray(data)) {
             this.ensureDashboardSelection();
         }
         return {
-            ...this.project(
-                this.groups,
-                this.installations,
-                this.selectedSource,
-                this.selectedDashboard,
-                params.has("tab") || params.has("setup"),
-                installation,
-                this.isExampleMode(),
-            ),
+            ...this.project(this.groups, this.selectedSource, this.selectedDashboard, this.isExampleMode()),
             navReady: Array.isArray(data),
             navEmpty: Array.isArray(data) && this.groups.length === 0,
         };

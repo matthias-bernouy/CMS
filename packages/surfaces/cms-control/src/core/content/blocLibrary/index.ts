@@ -1,9 +1,6 @@
-import type { IntegrationInstallation } from "@bernouy/cms-integrations";
 import type { ControlCms } from "cms-control/ControlCms";
 import { siteBlocCatalogue } from "cms-control/core/content/siteBloc/catalogue";
-import { availableLibraryCollections, exploreLibraryCollections } from "./available";
-import { resolvedCollectionInstallations } from "./availability";
-import { filterLibraryBlocs, libraryBlocs, selectableBlocs, selectedCollectionResources } from "./blocs";
+import { filterLibraryBlocs, libraryBlocs } from "./blocs";
 import { belongsToCollection, libraryCollectionRows, matchingCollections } from "./collections";
 import type { BlocLibraryQuery, BlocLibraryResponse } from "./types";
 
@@ -11,26 +8,15 @@ export async function blocLibrary(
     cms: ControlCms,
     query: BlocLibraryQuery,
     basePath: string,
-    dependencies: { installations?: IntegrationInstallation[] | Promise<IntegrationInstallation[]> } = {},
 ): Promise<BlocLibraryResponse> {
-    const [sites, items, storedInstallations] = await Promise.all([
-        cms.repository.getSiteBlocCollections(),
-        siteBlocCatalogue(cms),
-        dependencies.installations ?? cms.integrationInstallations.list(),
-    ]);
-    const installations = await resolvedCollectionInstallations(cms, storedInstallations);
+    const [sites, items] = await Promise.all([cms.repository.getSiteBlocCollections(), siteBlocCatalogue(cms)]);
     const allBlocs = libraryBlocs(items, basePath);
-    const collections = libraryCollectionRows(sites, allBlocs, installations, query.collection, basePath);
+    const collections = libraryCollectionRows(sites, allBlocs, query.collection, basePath);
     const collection = collections.find(({ key }) => key === query.collection);
     if (query.collection && !collection) {
         throw Object.assign(new Error("Collection not found"), { status: 404 });
     }
-    const installation = installations.find(({ id }) => id === collection?.installationId);
-    const scope = selectableBlocs(
-        collection ? allBlocs.filter((bloc) => belongsToCollection(bloc, collection)) : allBlocs,
-        collection,
-        installation,
-    );
+    const scope = collection ? allBlocs.filter((bloc) => belongsToCollection(bloc, collection)) : allBlocs;
     const blocs = filterLibraryBlocs(scope, query);
     const bloc = query.bloc ? scope.find(({ tag }) => tag === query.bloc) : undefined;
     if (query.bloc && !bloc) {
@@ -57,9 +43,7 @@ export async function blocLibrary(
     });
     return {
         isExplore,
-        explore: isExplore
-            ? await exploreLibraryCollections(cms, installations, basePath, query.search, query.visibility)
-            : [],
+        explore: [],
         groups,
         isOverview: !isAdd && !isCollection,
         isCollection,
@@ -91,7 +75,7 @@ export async function blocLibrary(
             : collection?.isSite
               ? "Create your first reusable composition."
               : "This collection does not provide any blocs.",
-        selectedResources: selectedCollectionResources(installation),
-        available: isAdd ? await availableLibraryCollections(cms, installations, basePath, query.search) : [],
+        selectedResources: [],
+        available: [],
     };
 }

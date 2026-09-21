@@ -9,10 +9,8 @@ const validEnv = () => ({
     CMS_ADMIN_EMAIL: "admin@example.com",
     CMS_ADMIN_PASSWORD: "password",
     CMS_FILES_DIR: "/data/files",
-    CMS_INTEGRATION_PACKAGE_CACHE_DIR: "/data/integration-packages",
     MONGO_URL: "mongodb://mongo:27017/cms",
     ANALYTICS_SALT_SECRET: "shared-analytics-secret",
-    P9R_INTEGRATION_REPOSITORY_URL: "https://repository.example.com/.cms/repository",
 });
 
 describe("runtime env validation", () => {
@@ -31,7 +29,6 @@ describe("runtime env validation", () => {
         expect(env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED).toBe(true);
         expect(env.CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED).toBe(true);
         expect(env.CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED).toBe(true);
-        expect(env.CMS_REPOSITORY_HUB_FACADE_ENABLED).toBe(false);
         expect(
             readRuntimeEnv({
                 ...validEnv(),
@@ -73,21 +70,12 @@ describe("runtime env validation", () => {
         expect(() => readRuntimeEnv({ ...validEnv(), CMS_AUTH_PASSWORD_RESET_URL: "not a url" })).toThrow(
             /CMS_AUTH_PASSWORD_RESET_URL must be a valid URL/,
         );
-        expect(() =>
-            readRuntimeEnv({ ...validEnv(), P9R_INTEGRATION_REPOSITORY_URL: "ftp://repository.example.com" }),
-        ).toThrow(/P9R_INTEGRATION_REPOSITORY_URL must use http/);
     });
 
     test("rejects missing required values and invalid email cooldowns", () => {
         expect(() => readRuntimeEnv({ ...validEnv(), CMS_FILES_DIR: " " })).toThrow(/env CMS_FILES_DIR missing/);
-        expect(() => readRuntimeEnv({ ...validEnv(), CMS_INTEGRATION_PACKAGE_CACHE_DIR: " " })).toThrow(
-            /env CMS_INTEGRATION_PACKAGE_CACHE_DIR missing/,
-        );
         expect(() => readRuntimeEnv({ ...validEnv(), ANALYTICS_SALT_SECRET: " " })).toThrow(
             /env ANALYTICS_SALT_SECRET missing/,
-        );
-        expect(() => readRuntimeEnv({ ...validEnv(), P9R_INTEGRATION_REPOSITORY_URL: " " })).toThrow(
-            /env P9R_INTEGRATION_REPOSITORY_URL missing/,
         );
         expect(() => readRuntimeEnv({ ...validEnv(), CMS_AUTH_EMAIL_COOLDOWN_SECONDS: "-1" })).toThrow(
             /must be a non-negative integer/,
@@ -149,76 +137,5 @@ describe("runtime env validation", () => {
                 CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: "1",
             }),
         ).toThrow(/CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED must be true or false/);
-    });
-
-    test("keeps the repository hub facade opt-in with strict boolean parsing", () => {
-        expect(
-            readRuntimeEnv({
-                ...validEnv(),
-                CMS_REPOSITORY_HUB_FACADE_ENABLED: "true",
-            }).CMS_REPOSITORY_HUB_FACADE_ENABLED,
-        ).toBe(true);
-        expect(() =>
-            readRuntimeEnv({
-                ...validEnv(),
-                CMS_REPOSITORY_HUB_FACADE_ENABLED: "1",
-            }),
-        ).toThrow(/CMS_REPOSITORY_HUB_FACADE_ENABLED must be true or false/);
-    });
-
-    test("accepts a complete loopback-only Supabase connector in development", () => {
-        const parsed = readRuntimeEnv({
-            ...validEnv(),
-            MODE: "DEV",
-            CMS_LOCAL_SUPABASE_MANAGEMENT_URL: "http://127.0.0.1:5103",
-            CMS_LOCAL_SUPABASE_FUNCTIONS_URL: "http://localhost:54321/functions/v1/",
-            CMS_LOCAL_SUPABASE_PROJECT_REF: "local",
-            CMS_LOCAL_SUPABASE_ACCESS_TOKEN: "local-management-token-at-least-24",
-            CMS_LOCAL_STRIPE_API_URL: "http://127.0.0.1:5103/_stripe/",
-            CMS_LOCAL_MIGRATION_AUDIT_FAULT_AFTER_PHASE: "deploy-functions",
-        });
-        expect(parsed.localSupabase).toEqual({
-            managementApiUrl: "http://127.0.0.1:5103",
-            functionsBaseUrl: "http://localhost:54321/functions/v1",
-            projectRef: "local",
-            accessToken: "local-management-token-at-least-24",
-            stripeApiUrl: "http://127.0.0.1:5103/_stripe",
-        });
-        expect(parsed.localMigrationAuditFault).toBe("deploy-functions");
-    });
-
-    test("rejects incomplete, remote, or production local Supabase configuration", () => {
-        const local = {
-            CMS_LOCAL_SUPABASE_MANAGEMENT_URL: "http://127.0.0.1:5103",
-            CMS_LOCAL_SUPABASE_FUNCTIONS_URL: "http://127.0.0.1:54321/functions/v1",
-            CMS_LOCAL_SUPABASE_PROJECT_REF: "local",
-            CMS_LOCAL_SUPABASE_ACCESS_TOKEN: "local-management-token-at-least-24",
-        };
-        expect(() => readRuntimeEnv({ ...validEnv(), ...local })).toThrow(/only when MODE=DEV/);
-        expect(() =>
-            readRuntimeEnv({ ...validEnv(), ...local, MODE: "DEV", CMS_LOCAL_SUPABASE_FUNCTIONS_URL: undefined }),
-        ).toThrow(/CMS_LOCAL_SUPABASE_FUNCTIONS_URL missing/);
-        expect(() =>
-            readRuntimeEnv({
-                ...validEnv(),
-                ...local,
-                MODE: "DEV",
-                CMS_LOCAL_SUPABASE_MANAGEMENT_URL: "https://api.supabase.com",
-            }),
-        ).toThrow(/loopback host/);
-        expect(() =>
-            readRuntimeEnv({
-                ...validEnv(),
-                ...local,
-                MODE: "DEV",
-                CMS_LOCAL_MIGRATION_AUDIT_FAULT_AFTER_PHASE: "publish",
-            }),
-        ).toThrow(/supported integration migration phase/);
-        expect(() =>
-            readRuntimeEnv({
-                ...validEnv(),
-                CMS_LOCAL_MIGRATION_AUDIT_FAULT_AFTER_PHASE: "expand",
-            }),
-        ).toThrow(/requires MODE=DEV and the local Supabase runtime/);
     });
 });

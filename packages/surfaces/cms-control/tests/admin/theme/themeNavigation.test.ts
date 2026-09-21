@@ -24,7 +24,7 @@ describe("theme navigation", () => {
         expect(group.tagName).toBe("DIV");
         expect(group.classList.contains("menu-section")).toBeTrue();
         expect(group.textContent).toBe("Sample Brand");
-        expect(group.querySelector(".integration-icon svg")).not.toBeNull();
+        expect(group.querySelector(".integration-icon")).toBeNull();
         expect(group.hasAttribute("role")).toBeFalse();
         const siteCategory = root.querySelector("[data-source='site-brand'][data-category='general']")!;
         expect(siteCategory.querySelector("[slot='icon']")).toBeNull();

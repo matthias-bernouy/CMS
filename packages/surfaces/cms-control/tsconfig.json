@@ -32,7 +32,6 @@
         { "path": "../../features/cms-sources" },
         { "path": "../../features/cms-dashboards" },
         { "path": "../../features/cms-relations" },
-        { "path": "../../features/cms-integrations" },
         { "path": "../../features/cms-analytics" }
     ]
 }

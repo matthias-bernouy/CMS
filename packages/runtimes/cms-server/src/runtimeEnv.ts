@@ -9,11 +9,6 @@ import {
     requiredEnv,
     type RuntimeEnvSource,
 } from "./runtimeEnvParsing";
-import { INTEGRATION_MIGRATION_PHASES, type IntegrationMigrationPhase } from "@bernouy/cms-integrations";
-import {
-    parseRepositoryManagementGatewayConfig,
-    type RepositoryManagementGatewayRuntimeConfig,
-} from "./runtime/repository";
 
 export { parsePort } from "./runtimeEnvParsing";
 
@@ -27,7 +22,6 @@ export type RuntimeEnv = {
     CMS_ADMIN_EMAIL: string;
     CMS_ADMIN_PASSWORD: string;
     CMS_FILES_DIR: string;
-    CMS_INTEGRATION_PACKAGE_CACHE_DIR: string;
     MONGO_URL: string;
     CMS_AUTH_SITE_NAME: string;
     CMS_AUTH_EMAIL_COOLDOWN_SECONDS: number;
@@ -46,22 +40,7 @@ export type RuntimeEnv = {
     CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: boolean;
     CMS_HTTP_CLIENT_ADDRESS_MODE: "direct" | "disabled" | "trusted-proxy";
     CMS_HTTP_TRUSTED_PROXY_HOPS: number;
-    CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT: number;
-    CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: number;
-    CMS_REPOSITORY_HUB_FACADE_ENABLED: boolean;
-    localSupabase?: LocalSupabaseRuntimeConfig;
-    repositoryManagementGateway?: RepositoryManagementGatewayRuntimeConfig;
-    localMigrationAuditFault?: IntegrationMigrationPhase;
-    integrationRepository: Readonly<{ url: string }>;
 };
-
-export type LocalSupabaseRuntimeConfig = Readonly<{
-    managementApiUrl: string;
-    functionsBaseUrl: string;
-    projectRef: string;
-    accessToken: string;
-    stripeApiUrl?: string;
-}>;
 
 export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     const CONTROL_PORT = parsePort(source.CONTROL_PORT, "CONTROL_PORT", 3000);
@@ -73,9 +52,6 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     const CONTROL_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "CONTROL_PUBLIC_URL"), "CONTROL_PUBLIC_URL");
     const DELIVERY_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "DELIVERY_PUBLIC_URL"), "DELIVERY_PUBLIC_URL");
     const clientAddress = parseClientAddressConfig(source);
-    const localSupabase = parseLocalSupabase(source);
-    const localMigrationAuditFault = parseLocalMigrationAuditFault(source, localSupabase);
-    const repositoryManagementGateway = parseRepositoryManagementGatewayConfig(source);
 
     return {
         CONTROL_PORT,
@@ -87,7 +63,6 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         CMS_ADMIN_EMAIL: requiredEnv(source, "CMS_ADMIN_EMAIL"),
         CMS_ADMIN_PASSWORD: requiredEnv(source, "CMS_ADMIN_PASSWORD"),
         CMS_FILES_DIR: requiredEnv(source, "CMS_FILES_DIR"),
-        CMS_INTEGRATION_PACKAGE_CACHE_DIR: requiredEnv(source, "CMS_INTEGRATION_PACKAGE_CACHE_DIR"),
         MONGO_URL: requiredEnv(source, "MONGO_URL"),
         CMS_AUTH_SITE_NAME: source.CMS_AUTH_SITE_NAME?.trim() || "CMS",
         CMS_AUTH_EMAIL_COOLDOWN_SECONDS: parseNonNegativeInteger(
@@ -157,101 +132,7 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
             true,
         ),
         ...clientAddress,
-        CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT: parsePositiveInteger(
-            source.CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT,
-            "CMS_INTEGRATION_PACKAGE_DOWNLOAD_LIMIT",
-            60,
-        ),
-        CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS: parsePositiveInteger(
-            source.CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS,
-            "CMS_INTEGRATION_PACKAGE_DOWNLOAD_WINDOW_SECONDS",
-            60,
-        ),
-        CMS_REPOSITORY_HUB_FACADE_ENABLED: parseBoolean(
-            source.CMS_REPOSITORY_HUB_FACADE_ENABLED,
-            "CMS_REPOSITORY_HUB_FACADE_ENABLED",
-            false,
-        ),
-        ...(localSupabase ? { localSupabase } : {}),
-        ...(repositoryManagementGateway ? { repositoryManagementGateway } : {}),
-        ...(localMigrationAuditFault ? { localMigrationAuditFault } : {}),
-        integrationRepository: parseIntegrationRepository(source),
     };
-}
-
-function parseLocalMigrationAuditFault(
-    source: RuntimeEnvSource,
-    localSupabase: LocalSupabaseRuntimeConfig | undefined,
-): IntegrationMigrationPhase | undefined {
-    const name = "CMS_LOCAL_MIGRATION_AUDIT_FAULT_AFTER_PHASE";
-    const value = source[name]?.trim();
-    if (!value) {
-        return undefined;
-    }
-    if (source.MODE?.trim() !== "DEV" || !localSupabase) {
-        throw new Error(`${name} requires MODE=DEV and the local Supabase runtime`);
-    }
-    if (!INTEGRATION_MIGRATION_PHASES.some((phase) => phase === value)) {
-        throw new Error(`${name} must name a supported integration migration phase`);
-    }
-    return value as IntegrationMigrationPhase;
-}
-
-function parseLocalSupabase(source: RuntimeEnvSource): LocalSupabaseRuntimeConfig | undefined {
-    const names = [
-        "CMS_LOCAL_SUPABASE_MANAGEMENT_URL",
-        "CMS_LOCAL_SUPABASE_FUNCTIONS_URL",
-        "CMS_LOCAL_SUPABASE_PROJECT_REF",
-        "CMS_LOCAL_SUPABASE_ACCESS_TOKEN",
-        "CMS_LOCAL_STRIPE_API_URL",
-    ] as const;
-    if (!names.some((name) => source[name]?.trim())) {
-        return undefined;
-    }
-    if (source.MODE?.trim() !== "DEV") {
-        throw new Error("CMS_LOCAL_SUPABASE_* is available only when MODE=DEV");
-    }
-    const managementApiUrl = parseLoopbackUrl(requiredEnv(source, names[0]), names[0], false);
-    const functionsBaseUrl = parseLoopbackUrl(requiredEnv(source, names[1]), names[1], true);
-    const projectRef = requiredEnv(source, names[2]);
-    if (!/^[a-z0-9][a-z0-9-]{0,62}$/u.test(projectRef)) {
-        throw new Error(`${names[2]} must be a lowercase project identifier`);
-    }
-    const accessToken = requiredEnv(source, names[3]);
-    if (accessToken.length < 24 || accessToken.length > 256) {
-        throw new Error(`${names[3]} must contain between 24 and 256 characters`);
-    }
-    const stripeApiUrl = source.CMS_LOCAL_STRIPE_API_URL?.trim();
-    return Object.freeze({
-        managementApiUrl,
-        functionsBaseUrl,
-        projectRef,
-        accessToken,
-        ...(stripeApiUrl ? { stripeApiUrl: parseLoopbackUrl(stripeApiUrl, "CMS_LOCAL_STRIPE_API_URL", true) } : {}),
-    });
-}
-
-function parseLoopbackUrl(value: string, name: string, allowPath: boolean): string {
-    const url = new URL(parseHttpUrl(value, name));
-    if (url.hostname !== "127.0.0.1" && url.hostname !== "localhost" && url.hostname !== "[::1]") {
-        throw new Error(`${name} must use a loopback host`);
-    }
-    if (url.username || url.password || url.search || url.hash || (!allowPath && url.pathname !== "/")) {
-        throw new Error(`${name} contains unsupported URL components`);
-    }
-    url.pathname = url.pathname.replace(/\/+$/u, "") || "/";
-    return url.href.replace(/\/$/u, "");
-}
-
-function parseIntegrationRepository(source: RuntimeEnvSource): RuntimeEnv["integrationRepository"] {
-    const name = "P9R_INTEGRATION_REPOSITORY_URL";
-    const raw = requiredEnv(source, name);
-    const parsed = new URL(parseHttpUrl(raw, name));
-    if (parsed.username || parsed.password || parsed.search || parsed.hash || raw.includes("?") || raw.includes("#")) {
-        throw new Error(`${name} must not contain credentials, query, or fragment`);
-    }
-    parsed.pathname = parsed.pathname.replace(/\/+$/u, "") || "/";
-    return Object.freeze({ url: parsed.href.replace(/\/$/u, "") });
 }
 
 function parseClientAddressConfig(

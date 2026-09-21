@@ -90,15 +90,6 @@ export class ControlCms {
     get editorDataSources() {
         return controlCmsAccessors.editorDataSources(this.state);
     }
-    get integrationCatalog() {
-        return controlCmsAccessors.integrationCatalog(this.state);
-    }
-    get integrationPackageResolver() {
-        return controlCmsAccessors.integrationPackageResolver(this.state);
-    }
-    get integrationUpgradeReleases() {
-        return controlCmsAccessors.integrationUpgradeReleases(this.state);
-    }
     get dashboards() {
         return controlCmsAccessors.dashboards(this.state);
     }
@@ -116,30 +107,6 @@ export class ControlCms {
     }
     get sourceOverlays() {
         return controlCmsAccessors.sourceOverlays(this.state);
-    }
-    get configuredIntegrationInstallations() {
-        return controlCmsAccessors.configuredIntegrationInstallations(this.state);
-    }
-    get integrationConnectorDeployers() {
-        return controlCmsAccessors.integrationConnectorDeployers(this.state);
-    }
-    get integrationMigrationRuntime() {
-        return controlCmsAccessors.integrationMigrationRuntime(this.state);
-    }
-    get integrationConnectorBaselineAdopters() {
-        return controlCmsAccessors.integrationConnectorBaselineAdopters(this.state);
-    }
-    get integrationConnectorSchemaBaselines() {
-        return controlCmsAccessors.integrationConnectorSchemaBaselines(this.state);
-    }
-    get integrationProvisioners() {
-        return controlCmsAccessors.integrationProvisioners(this.state);
-    }
-    get integrationConnectorProviders() {
-        return controlCmsAccessors.integrationConnectorProviders(this.state);
-    }
-    get integrationBlocRepository() {
-        return controlCmsAccessors.integrationBlocRepository(this.state);
     }
     get sourceExecutorDeps() {
         return controlCmsAccessors.sourceExecutorDeps(this.state);
@@ -164,9 +131,6 @@ export class ControlCms {
     }
     get publicAuth() {
         return controlCmsAccessors.publicAuth(this.state);
-    }
-    get integrationInstallations() {
-        return controlCmsAccessors.integrationInstallations(this.state);
     }
     get sources() {
         return controlCmsAccessors.sources(this.state);

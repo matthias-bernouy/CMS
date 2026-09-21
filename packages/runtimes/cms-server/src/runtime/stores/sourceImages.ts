@@ -1,4 +1,3 @@
-import type { IntegrationInstallationRepository } from "@bernouy/cms-integrations";
 import {
     createSourceMediaEffectInterceptor,
     DefaultSourceImageMediaCoordinator,
@@ -26,10 +25,8 @@ export function createRuntimeSourceImageWorkers(options: {
     queue: SourceImageJobQueue;
     index: SourceMediaIndex;
     sources: SourceRepository;
-    installations: IntegrationInstallationRepository;
     reportError?: (error: unknown) => void;
 }): RuntimeSourceImageWorkers {
-    const installationId = sourceInstallationResolver(options.installations);
     const coordinatorTransformer = new SharpSourceImageTransformer();
     const coordinator = new DefaultSourceImageMediaCoordinator({
         scope: options.scope,
@@ -39,7 +36,6 @@ export function createRuntimeSourceImageWorkers(options: {
         recipe: SOURCE_RESPONSIVE_WEBP_V1,
         encoderIdentity: coordinatorTransformer.encoderIdentity,
         resolveEndpoint: (sourceId, endpointId) => options.sources.getEndpoint(`urn:${sourceId}:${endpointId}`),
-        resolveInstallationId: installationId,
     });
     const createWorker = () =>
         new SourceImageJobWorker({
@@ -74,31 +70,5 @@ export function createRuntimeSourceImageWorkers(options: {
         async stop() {
             await Promise.all([critical.stop(), cache.stop()]);
         },
-    };
-}
-
-function sourceInstallationResolver(installations: IntegrationInstallationRepository) {
-    let sourceOwners = new Map<string, string>();
-    let loaded = false;
-    return async (sourceId: string): Promise<string | null> => {
-        if (!loaded || !sourceOwners.has(sourceId)) {
-            const refreshed = new Map<string, string>();
-            for (const installation of await installations.list()) {
-                if (installation.status !== "success") {
-                    continue;
-                }
-                for (const artifact of installation.artifacts) {
-                    if (artifact.type === "source") {
-                        const ownedSourceId = artifact.id.split(":")[1];
-                        if (ownedSourceId) {
-                            refreshed.set(ownedSourceId, installation.id);
-                        }
-                    }
-                }
-            }
-            sourceOwners = refreshed;
-            loaded = true;
-        }
-        return sourceOwners.get(sourceId) ?? null;
     };
 }

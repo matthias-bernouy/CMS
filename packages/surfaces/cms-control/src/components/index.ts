@@ -170,8 +170,6 @@ define("cms-dashboard-icon", CmsDashboardIcon);
 define("cms-dashboard-create-controller", CmsDashboardCreateController);
 define("cms-dashboard-member-filter", CmsDashboardMemberFilter);
 define("cms-dashboard-navigation-editor", CmsDashboardNavigationEditor);
-import "./admin/Resources/Integrations/IntegrationBrowser";
-import "./admin/Resources/Integrations/health/HealthPage";
 import "./admin/Resources/Sources/ResourceWorkspace";
 import "./admin/Resources/Blocs/workspace/controller/CollectionWorkspace";
 

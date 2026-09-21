@@ -3,7 +3,6 @@ import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
 import type { ContentReader } from "@bernouy/cms-content";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { IdentityService } from "@bernouy/cms-identities";
-import type { IntegrationInstallationRepository } from "@bernouy/cms-integrations";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import type {
     ExecutorDeps,
@@ -53,8 +52,6 @@ export type DeliveryCmsConfig = {
     auth?: PublicAuthRoutesConfig<string>;
     /** Role definitions used to authorize public source endpoint calls. */
     roles?: RolesRepository;
-    /** Successful integration snapshots used to extend the page CSP. */
-    integrationInstallations?: IntegrationInstallationRepository;
     /** Optional strict aggregate analytics writer. */
     analytics?: AnalyticsStore;
     /** Stable shared HMAC secret. Required by the production runtime. */

@@ -42,12 +42,9 @@
         "./integrations/user-account/*": "./integrations/domains/user-account/*"
     },
     "dependencies": {
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
         "semver": "^7.8.2"
     },
     "devDependencies": {
-        "@bernouy/cms-integration-verification": "workspace:*",
         "@types/semver": "^7.7.1"
     }
 }

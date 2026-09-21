@@ -20,9 +20,6 @@
         "start": "bun run src/index.ts"
     },
     "dependencies": {
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integration-registry": "workspace:*",
-        "@bernouy/cms-integration-verification": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-repository-management": "workspace:*",
         "@bernouy/http-runner": "workspace:*",

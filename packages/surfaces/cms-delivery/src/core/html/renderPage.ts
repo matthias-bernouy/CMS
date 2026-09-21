@@ -6,7 +6,6 @@ import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import { expandCompositions, sanitizeDomTree, wrapBindingCore } from "@bernouy/cms-content";
 import { injectMediaVersions } from "@bernouy/cms-files";
 import { createBlocUsageResolver } from "@bernouy/cms-content";
-import { collectIntegrationInstallationCspExtras } from "@bernouy/cms-integrations";
 import { prepareNetworkInertBindings } from "@bernouy/components/binding-dom";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
 import { buildMetaCsp } from "cms-delivery/core/head/buildMetaCsp";
@@ -83,15 +82,12 @@ export async function renderPage(
     // unique-host set naturally drops them via Set semantics.
     const styleHosts = uniqueOrigins([assets.styleUrl]);
     const scriptHosts = uniqueOrigins([...assets.scriptUrls, ...(hasBindingCore ? [assets.bindingCoreUrl] : [])]);
-    const integrationCsp = ctx.integrationInstallations
-        ? collectIntegrationInstallationCspExtras(await ctx.integrationInstallations.list())
-        : null;
     const cspExtras = {
-        connectExtras: mergeUnique(settings.security.connectExtras, integrationCsp?.connectExtras),
-        mediaExtras: mergeUnique(settings.security.mediaExtras, integrationCsp?.mediaExtras),
-        styleExtras: mergeUnique(styleHosts, integrationCsp?.styleExtras),
-        scriptExtras: mergeUnique(scriptHosts, integrationCsp?.scriptExtras),
-        frameExtras: mergeUnique([], integrationCsp?.frameExtras),
+        connectExtras: [...settings.security.connectExtras],
+        mediaExtras: [...settings.security.mediaExtras],
+        styleExtras: styleHosts,
+        scriptExtras: scriptHosts,
+        frameExtras: [],
     };
 
     // <head> assembly, in exact document order. Consumer-supplied head
@@ -142,8 +138,4 @@ function uniqueOrigins(urls: string[]): string[] {
         }
     }
     return [...out];
-}
-
-function mergeUnique(primary: readonly string[], secondary: readonly string[] | undefined): string[] {
-    return [...new Set([...primary, ...(secondary ?? [])])];
 }

@@ -13,7 +13,6 @@ import {
     InMemoryDashboardViewRepository,
 } from "@bernouy/cms-dashboards";
 import { InMemoryIdentityService } from "@bernouy/cms-identities";
-import { InMemoryIntegrationConnectorProviderRepository } from "@bernouy/cms-integrations";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import { InMemoryCache, type Cache, type Runner } from "@bernouy/http-runner";
 import { InMemoryRelationRepository } from "@bernouy/cms-relations";
@@ -21,7 +20,6 @@ import { InMemoryRolesRepository, type RolesRepository, ValidatingRolesRepositor
 import { InMemorySecretStore, type SecretStore, ValidatingSecretStore } from "@bernouy/cms-secrets";
 import type { SourceRepository } from "@bernouy/cms-sources";
 import type { CMS_ROLES } from "types/roles";
-import { EMPTY_INTEGRATION_CATALOG } from "cms-control/core/admin/control/defaults";
 import type { ControlAuthBackends, ControlCmsOptions, ControlCmsState } from "cms-control/core/admin/control/types";
 
 export type ControlCmsConstructorInput = {
@@ -61,17 +59,11 @@ export function createControlCmsState(input: ControlCmsConstructorInput): Contro
         sources: input.sources ?? null,
         analytics: input.analytics ?? null,
         roles: input.roles ?? new ValidatingRolesRepository(new InMemoryRolesRepository()),
-        integrationCatalog: configuration.integrationCatalog ?? EMPTY_INTEGRATION_CATALOG,
-        integrationPackageResolver: configuration.integrationPackageResolver,
-        integrationInstallations: configuration.integrationInstallations ?? null,
-        integrationConnectorProviders:
-            configuration.integrationConnectorProviders ?? new InMemoryIntegrationConnectorProviderRepository(),
         dashboards: configuration.dashboards ?? new InMemoryDashboardRepository(),
         dashboardViews: configuration.dashboardViews ?? new InMemoryDashboardViewRepository(),
         dashboardAssignments: configuration.dashboardAssignments ?? new InMemoryDashboardAssignmentRepository(),
         relations: configuration.relations ?? new InMemoryRelationRepository(),
         identities: configuration.identities ?? new InMemoryIdentityService(),
         sourceOverlays: configuration.sourceOverlays ?? null,
-        integrationBlocRepository: configuration.integrationBlocRepository ?? null,
     };
 }

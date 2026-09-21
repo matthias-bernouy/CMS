@@ -1,6 +1,5 @@
 import { composeThemeSettings, type PageLink, type TSystem } from "@bernouy/cms-content";
 import type { ControlCms } from "cms-control/ControlCms";
-import { getInstalledIntegrationThemeContributions } from "cms-control/core/management/integrations/themeContributions";
 
 export type SettingsResponse = {
     site: TSystem["site"];
@@ -17,11 +16,7 @@ export type SettingsResponse = {
  * complete page documents.
  */
 export async function getSettings(cms: ControlCms): Promise<SettingsResponse> {
-    const [system, pages, themeContributions] = await Promise.all([
-        cms.repository.getSystem(),
-        cms.repository.getLinks(),
-        getInstalledIntegrationThemeContributions(cms.configuredIntegrationInstallations),
-    ]);
+    const [system, pages] = await Promise.all([cms.repository.getSystem(), cms.repository.getLinks()]);
 
     const site = { ...system.site };
     for (const field of ["notFound", "forbidden", "serverError", "login"] as const) {
@@ -35,7 +30,7 @@ export async function getSettings(cms: ControlCms): Promise<SettingsResponse> {
     }
     return {
         site,
-        theme: composeThemeSettings(system.theme, themeContributions),
+        theme: composeThemeSettings(system.theme, []),
         security: system.security,
         email: system.email,
         pages,

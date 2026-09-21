@@ -1,7 +1,5 @@
 import { describe, expect, mock, test } from "bun:test";
-import { defaultSystem, P9R_CACHE, type TSystem } from "@bernouy/cms-content";
-import { composeThemeSettings, integrationThemeTokenId } from "@bernouy/cms-content";
-import type { IntegrationInstallation } from "@bernouy/cms-integrations";
+import { defaultSystem, P9R_CACHE } from "@bernouy/cms-content";
 import type { ControlCms } from "cms-control/ControlCms";
 import { getSettings } from "cms-control/core/management/settings/getSettings";
 import { updateSettings } from "cms-control/core/management/settings/updateSettings";
@@ -29,29 +27,6 @@ describe("settings runtime", () => {
         expect(getLinks).toHaveBeenCalledTimes(1);
     });
 
-    test("composes successful installation Theme catalogs for the editor", async () => {
-        const system = defaultSystem();
-        const cms = {
-            repository: {
-                getSystem: async () => system,
-                getLinks: async () => [],
-            },
-            configuredIntegrationInstallations: {
-                list: async () => [successfulThemeInstallation()],
-            },
-        } as unknown as ControlCms;
-
-        const settings = await getSettings(cms);
-        const source = settings.theme.sources.find((item) => item.id === "integration-sample-brand");
-
-        expect(source).toMatchObject({
-            label: "Sample Brand",
-            owner: { kind: "integration", integrationId: "sample-brand" },
-            categories: [{ tokens: [{ id: "sample-brand-accent" }] }],
-        });
-        expect(system.theme.sources.some((item) => item.id === "integration-sample-brand")).toBeFalse();
-    });
-
     test("persists updates and invalidates style and rendered page caches", async () => {
         const updateSystem = mock(async () => defaultSystem());
         const deleteKey = mock((_key: string) => {});
@@ -71,74 +46,4 @@ describe("settings runtime", () => {
         expect(deleteKey).toHaveBeenCalledWith(P9R_CACHE.STYLE);
         expect(deleteMatching).toHaveBeenCalledTimes(1);
     });
-
-    test("restores installed provider catalogs before persisting Theme overrides", async () => {
-        const system = defaultSystem();
-        const installation = successfulThemeInstallation();
-        const contribution = {
-            integrationId: "sample-brand",
-            label: "Sample Brand",
-            categories: installation.definitionSnapshot!.theme!.categories,
-        };
-        const submitted = composeThemeSettings(system.theme, [contribution]);
-        const tokenId = integrationThemeTokenId("sample-brand", "accent");
-        submitted.themes[0]!.values.light[tokenId] = "var(--danger-base)";
-        submitted.themes[0]!.values.light["sample-brand-retired"] = "red";
-        const submittedSource = submitted.sources.find((source) => source.id === "integration-sample-brand")!;
-        submittedSource.label = "Forged";
-        delete submittedSource.owner;
-        const updateSystem = mock(async (_update: Partial<TSystem>) => system);
-        const cms = {
-            repository: { getSystem: async () => system, updateSystem },
-            configuredIntegrationInstallations: { list: async () => [installation] },
-            cache: { delete: () => {}, deleteMatching: () => {} },
-        } as unknown as ControlCms;
-
-        await updateSettings(cms, { theme: submitted });
-
-        const persisted = updateSystem.mock.calls[0]![0]!.theme!;
-        const source = persisted.sources.find((item) => item.id === "integration-sample-brand")!;
-        expect(source.label).toBe("Sample Brand");
-        expect(source.owner).toEqual({ kind: "integration", integrationId: "sample-brand" });
-        expect(persisted.themes[0]!.values.light[tokenId]).toBe("var(--danger-base)");
-        expect(persisted.themes[0]!.values.light["sample-brand-retired"]).toBeUndefined();
-    });
 });
-
-function successfulThemeInstallation(): IntegrationInstallation {
-    return {
-        id: "sample-brand",
-        label: "Sample Brand",
-        definitionVersion: "1.0.0",
-        status: "success",
-        definitionSnapshot: {
-            kind: "sample-brand",
-            label: "Sample Brand",
-            inputs: [],
-            theme: {
-                categories: [
-                    {
-                        id: "gallery",
-                        label: "Gallery",
-                        tokens: [
-                            {
-                                id: "accent",
-                                label: "Accent",
-                                type: "color",
-                                defaults: { light: "var(--primary-base)" },
-                            },
-                        ],
-                    },
-                ],
-            },
-        },
-        createdAt: new Date(0),
-        updatedAt: new Date(0),
-        runCount: 1,
-        answersSnapshot: {},
-        secretRefs: {},
-        secretInputs: [],
-        artifacts: [],
-        runs: [],
-    };
-}

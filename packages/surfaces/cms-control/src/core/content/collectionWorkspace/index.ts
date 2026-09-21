@@ -1,12 +1,7 @@
 import { composeThemeSettings } from "@bernouy/cms-content";
-import {
-    collectIntegrationInstallationThemeContributions,
-    type IntegrationInstallation,
-} from "@bernouy/cms-integrations";
 import type { ControlCms } from "cms-control/ControlCms";
 import { blocDefaultAttributes } from "cms-control/core/content/bloc/defaultAttributes";
 import { blocLibrary } from "cms-control/core/content/blocLibrary";
-import { resolvedCollectionInstallations } from "cms-control/core/content/blocLibrary/availability";
 import type { LibraryBloc, LibraryCollection } from "cms-control/core/content/blocLibrary/types";
 import { collectionWorkspacePath, type CollectionWorkspaceSection } from "./routes";
 import { collectionThemeProjection } from "./theme";
@@ -26,10 +21,7 @@ export async function collectionWorkspace(
     basePath: string,
 ): Promise<CollectionWorkspaceResponse> {
     const section = query.section ?? "overview";
-    const installationsPromise = cms.integrationInstallations
-        .list()
-        .then((installations) => resolvedCollectionInstallations(cms, installations));
-    const [library, installations, system] = await Promise.all([
+    const [library, system] = await Promise.all([
         blocLibrary(
             cms,
             {
@@ -37,17 +29,11 @@ export async function collectionWorkspace(
                 ...(section === "blocs" ? { bloc: query.bloc } : {}),
             },
             basePath,
-            { installations: installationsPromise },
         ),
-        installationsPromise,
         section === "theme" && query.collection ? cms.repository.getSystem() : Promise.resolve(undefined),
     ]);
-    const collections = library.collections.map((collection) =>
-        workspaceCollection(collection, installations, basePath),
-    );
-    const collection = library.collection
-        ? workspaceCollection(library.collection, installations, basePath)
-        : undefined;
+    const collections = library.collections.map((collection) => workspaceCollection(collection, basePath));
+    const collection = library.collection ? workspaceCollection(library.collection, basePath) : undefined;
     const isCollection = Boolean(collection);
     const showsBlocs = collection && section === "blocs";
     const selectedTag = showsBlocs ? (library.bloc?.tag ?? library.groups[0]?.blocs[0]?.tag) : undefined;
@@ -63,10 +49,7 @@ export async function collectionWorkspace(
     const themeProjection = collection
         ? collectionThemeProjection(
               library.collection!,
-              installations,
-              system
-                  ? composeThemeSettings(system.theme, collectIntegrationInstallationThemeContributions(installations))
-                  : undefined,
+              system ? composeThemeSettings(system.theme, []) : undefined,
               query.token,
               query.theme,
               basePath,
@@ -99,16 +82,11 @@ export async function collectionWorkspace(
     };
 }
 
-function workspaceCollection(
-    collection: LibraryCollection,
-    installations: IntegrationInstallation[],
-    basePath: string,
-): CollectionWorkspaceCollection {
+function workspaceCollection(collection: LibraryCollection, basePath: string): CollectionWorkspaceCollection {
     const path = (section: CollectionWorkspaceSection) => collectionWorkspacePath(basePath, collection.key, section);
-    const installation = installations.find(({ id }) => id === collection.installationId);
     return {
         ...collection,
-        canCheckUpdates: collection.isManaged && installation?.status === "success",
+        canCheckUpdates: false,
         href: path("overview"),
         kindLabel: collection.isSite
             ? "Private collection"

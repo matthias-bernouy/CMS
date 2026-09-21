@@ -1,6 +1,5 @@
 import { Component } from "@bernouy/components/base";
 import type { ThemeSource } from "@bernouy/cms-content";
-import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 import { adminSystemSettingsStore } from "../Common/SystemSettings/store";
 
 import {
@@ -16,14 +15,12 @@ import {
     type ThemeSelection,
 } from "./events";
 import template from "./nav/ThemeNav.html" with { type: "text" };
-import { loadIntegrationThemeIcons } from "./nav/integrationIcons";
 import css from "./nav/styles";
 import { renderThemeNav, type ThemeNavActionRequest } from "./nav/view";
 
 export class CmsThemeNav extends Component {
     private sources: ThemeSource[] = [];
     private selection: ThemeSelection = { sourceId: "", categoryId: "" };
-    private integrationDefinitions: ReadonlyMap<string, IntegrationDefinition> = new Map();
 
     constructor() {
         super({ css: css as unknown as string, template: template as unknown as string });
@@ -55,15 +52,13 @@ export class CmsThemeNav extends Component {
             this.sources = structuredClone(page.theme.sources);
             this.selection = themeSelectionFromUrl(this.sources);
             this.render();
-            this.integrationDefinitions = await loadIntegrationThemeIcons(this.sources);
-            this.render();
         } catch {
             // The editor displays the actionable load error; navigation stays empty.
         }
     }
 
     private render(): void {
-        renderThemeNav(this.shadowRoot, this.sources, this.selection, this.integrationDefinitions, this.requestAction);
+        renderThemeNav(this.shadowRoot, this.sources, this.selection, this.requestAction);
     }
 
     private select(sourceId: string, categoryId?: string): void {

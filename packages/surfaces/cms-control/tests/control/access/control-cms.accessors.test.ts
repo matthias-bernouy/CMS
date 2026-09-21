@@ -5,10 +5,7 @@ import type { ControlCmsState } from "cms-control/core/admin/control/types";
 describe("ControlCms accessor delegation", () => {
     test("maps every directly injected dependency without substitution", () => {
         const dependency = {};
-        const configuration = {
-            integrationConnectorDeployers: dependency,
-            integrationProvisioners: dependency,
-        };
+        const configuration = {};
         const state = {
             configuration,
             repository: dependency,
@@ -17,17 +14,10 @@ describe("ControlCms accessor delegation", () => {
             cache: dependency,
             secrets: dependency,
             roles: dependency,
-            integrationCatalog: dependency,
-            integrationPackageResolver: dependency,
             dashboards: dependency,
             relations: dependency,
-            functions: dependency,
-            triggers: dependency,
             identities: dependency,
             sourceOverlays: dependency,
-            integrationInstallations: dependency,
-            integrationConnectorProviders: dependency,
-            integrationBlocRepository: dependency,
         } as unknown as ControlCmsState;
 
         const expectations = [
@@ -38,19 +28,10 @@ describe("ControlCms accessor delegation", () => {
             ["cache", dependency],
             ["secrets", dependency],
             ["roles", dependency],
-            ["integrationCatalog", dependency],
-            ["integrationPackageResolver", dependency],
             ["dashboards", dependency],
             ["relations", dependency],
-            ["functions", dependency],
-            ["triggers", dependency],
             ["identities", dependency],
             ["sourceOverlays", dependency],
-            ["configuredIntegrationInstallations", dependency],
-            ["integrationConnectorDeployers", dependency],
-            ["integrationProvisioners", dependency],
-            ["integrationConnectorProviders", dependency],
-            ["integrationBlocRepository", dependency],
         ] as const;
 
         for (const [name, expected] of expectations) {

@@ -19,10 +19,6 @@
     "dependencies": {
         "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integration-registry": "workspace:*",
-        "@bernouy/cms-integration-verification": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-server": "workspace:*",
         "semver": "^7.8.2",
         "supabase": "2.116.0"

@@ -1,4 +1,3 @@
-import type { CollectionThemeSource } from "../themeSources";
 import type { CollectionThemeDetailView, CollectionThemeTokenView } from "../types";
 
 const AUTOMATIC_OVERVIEW_BINDINGS: Record<string, readonly string[]> = {
@@ -26,23 +25,13 @@ const AUTOMATIC_OVERVIEW_BINDINGS: Record<string, readonly string[]> = {
 };
 
 export function themeSpecimen(
-    sources: CollectionThemeSource[],
     tokens: CollectionThemeTokenView[],
     active: CollectionThemeTokenView | undefined,
     related: CollectionThemeDetailView["relatedTokens"],
 ): CollectionThemeDetailView["specimen"] {
-    const previewSource = [...sources].reverse().find(({ definition }) => definition.theme?.preview);
-    const preview = previewSource?.definition.theme?.preview;
-    const bindings = preview
-        ? Object.fromEntries(
-              Object.entries(preview.bindings).map(([slot, tokenId]) => [
-                  slot,
-                  `${previewSource!.integrationId}-${tokenId}`,
-              ]),
-          )
-        : automaticPreviewBindings(active, tokens);
+    const bindings = automaticPreviewBindings(active, tokens);
     return {
-        kind: preview?.kind ?? "interface",
+        kind: "interface",
         view: active ? "focus" : "overview",
         bindings,
         tokens: tokens.map(({ variable, lightResolved, darkResolved }) => ({

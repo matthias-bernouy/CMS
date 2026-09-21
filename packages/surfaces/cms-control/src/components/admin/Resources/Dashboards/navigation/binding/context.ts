@@ -1,6 +1,4 @@
 import type { DashboardSourceGroup } from "../../types";
-import type { IntegrationInstallationRow } from "../../../Integrations/model";
-import { route } from "../../api";
 
 type Item = {
     identity: string;
@@ -18,15 +16,7 @@ type Item = {
 /** Project navigation values; existing positional items survive selection and equal-definition refreshes. */
 export function navigationContext() {
     let items: Item[] = [];
-    return (
-        groups: DashboardSourceGroup[],
-        _installations: IntegrationInstallationRow[],
-        source: string,
-        dashboard: string,
-        catalogue: boolean,
-        selectedInstallation: string | null,
-        example: boolean,
-    ) => {
+    return (groups: DashboardSourceGroup[], source: string, dashboard: string, example: boolean) => {
         const next: Item[] = [];
         const append = (item: Item) => {
             const previous = items[next.length];
@@ -43,7 +33,7 @@ export function navigationContext() {
                 icon: group.source.icon ?? "database",
                 svg: group.source.svg ?? "",
                 nested: false,
-                active: id === source && !catalogue,
+                active: id === source,
                 hidden: false,
             });
             for (const entry of group.dashboards) {
@@ -56,8 +46,8 @@ export function navigationContext() {
                     icon: entry.meta?.icon ?? "layout",
                     svg: entry.meta?.svg ?? "",
                     nested: true,
-                    active: !selectedInstallation && entry.id === dashboard,
-                    hidden: catalogue || id !== source || (!example && group.dashboards.length < 2),
+                    active: entry.id === dashboard,
+                    hidden: id !== source || (!example && group.dashboards.length < 2),
                 });
             }
         }
@@ -65,8 +55,6 @@ export function navigationContext() {
         return {
             navItems: items,
             navEmpty: groups.length === 0,
-            navAddActive: catalogue,
-            navAddHref: route("/admin/sources?tab=catalogue"),
         };
     };
 }

@@ -20,11 +20,6 @@ import "../../artwork/LibraryArtwork";
 import "../../icons/LibraryIcon";
 import { AvailabilityController } from "cms-control/components/admin/Resources/Blocs/availability/Controller";
 import {
-    cancelIntegrationUpgrade,
-    confirmIntegrationUpgrade,
-    openIntegrationUpgrade,
-} from "cms-control/components/admin/Resources/Integrations/ui/actions/installation";
-import {
     collectionWorkspacePath,
     collectionWorkspaceRouteFromPath,
     isCollectionWorkspaceSection,
@@ -47,7 +42,6 @@ export class CmsCollectionWorkspace extends HTMLElement {
             this.setAttribute("data-rendered", "");
         }
         this.configureRoute();
-        this.addEventListener("click", this.clickAction);
         this.addEventListener("input", this.inputAction);
         this.availability.connect();
         this.themeEditing.connect();
@@ -56,7 +50,6 @@ export class CmsCollectionWorkspace extends HTMLElement {
     }
 
     disconnectedCallback(): void {
-        this.removeEventListener("click", this.clickAction);
         this.removeEventListener("input", this.inputAction);
         this.availability.disconnect();
         this.themeEditing.disconnect();
@@ -98,20 +91,6 @@ export class CmsCollectionWorkspace extends HTMLElement {
             }
         }
     }
-
-    private readonly clickAction = (event: Event): void => {
-        const target = event.target instanceof Element ? event.target : null;
-        const open = target?.closest<HTMLElement>("[data-upgrade-open]");
-        const cancel = target?.closest<HTMLElement>("[data-upgrade-cancel]");
-        const confirm = target?.closest<HTMLElement>("[data-upgrade-confirm]");
-        if (open) {
-            void openIntegrationUpgrade(open);
-        } else if (cancel) {
-            cancelIntegrationUpgrade(cancel);
-        } else if (confirm) {
-            void confirmIntegrationUpgrade(confirm);
-        }
-    };
 
     private readonly inputAction = (event: Event): void => {
         const target =

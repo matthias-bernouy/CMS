@@ -18,17 +18,6 @@ import type {
 import type { EditorDataSource } from "@bernouy/cms-editor-system-v2";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { IdentityService } from "@bernouy/cms-identities";
-import type {
-    IntegrationConnectorBaselineAdopter,
-    IntegrationConnectorDeployer,
-    IntegrationConnectorProviderRepository,
-    IntegrationConnectorSchemaBaselineReader,
-    IntegrationDefinitionRepository,
-    IntegrationInstallationRepository,
-    IntegrationPackageResolver,
-    IntegrationProvisioner,
-    IntegrationMigrationRuntime,
-} from "@bernouy/cms-integrations";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import type { RelationRepository } from "@bernouy/cms-relations";
 import type { SecretStore } from "@bernouy/cms-secrets";
@@ -42,7 +31,6 @@ import type {
 } from "@bernouy/cms-sources";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { CMS_ROLES } from "types/roles";
-import type { IntegrationUpgradeReleaseReader } from "cms-control/core/management/integrations/upgrade/contracts";
 
 type Configuration = {
     deliveryUrl?: string;
@@ -52,16 +40,6 @@ type Configuration = {
 
 export type ControlCmsOptions = Configuration & {
     editorDataSources?: readonly EditorDataSource[];
-    integrationCatalog?: IntegrationDefinitionRepository;
-    integrationPackageResolver?: IntegrationPackageResolver;
-    integrationUpgradeReleases?: IntegrationUpgradeReleaseReader;
-    integrationInstallations?: IntegrationInstallationRepository;
-    integrationConnectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
-    integrationMigrationRuntime?: IntegrationMigrationRuntime;
-    integrationConnectorBaselineAdopters?: IntegrationConnectorBaselineAdopter[];
-    integrationConnectorSchemaBaselines?: IntegrationConnectorSchemaBaselineReader;
-    integrationProvisioners?: IntegrationProvisioner[] | Record<string, IntegrationProvisioner>;
-    integrationConnectorProviders?: IntegrationConnectorProviderRepository;
     dashboards?: DashboardRepository;
     dashboardViews?: DashboardViewRepository;
     dashboardAssignments?: DashboardAssignmentRepository;
@@ -78,7 +56,6 @@ export type ControlCmsOptions = Configuration & {
     responsivePrivateSourceImagesEnabled?: boolean;
     sourceTrustedConnectorTarget?: NonNullable<ExecutorDeps["isTrustedConnectorTarget"]>;
     sourceTargetValidation?: SourceTargetUrlValidationOptions;
-    integrationBlocRepository?: CmsRepository;
 };
 
 export type ControlAuthBackends = {
@@ -102,15 +79,10 @@ export type ControlCmsState = {
     sources: SourceRepository | null;
     analytics: AnalyticsStore | null;
     roles: RolesRepository;
-    integrationCatalog: IntegrationDefinitionRepository;
-    integrationPackageResolver: IntegrationPackageResolver | undefined;
-    integrationInstallations: IntegrationInstallationRepository | null;
-    integrationConnectorProviders: IntegrationConnectorProviderRepository;
     dashboards: DashboardRepository;
     dashboardViews: DashboardViewRepository;
     dashboardAssignments: DashboardAssignmentRepository;
     relations: RelationRepository;
     identities: IdentityService;
     sourceOverlays: SourceOverlayRepository | null;
-    integrationBlocRepository: CmsRepository | null;
 };

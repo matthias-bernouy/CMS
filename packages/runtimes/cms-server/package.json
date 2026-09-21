@@ -22,14 +22,9 @@
         "@bernouy/cms-sources":     "workspace:*",
         "@bernouy/cms-dashboards":  "workspace:*",
         "@bernouy/cms-relations":   "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
-        "@bernouy/cms-integration-packages": "workspace:*",
-        "@bernouy/cms-integration-verification": "workspace:*",
         "@bernouy/cms-notifications": "workspace:*",
         "@bernouy/cms-identities": "workspace:*",
         "@bernouy/cms-analytics":   "workspace:*",
-        "@bernouy/cms-repository":  "workspace:*",
-        "@bernouy/cms-repository-management": "workspace:*",
         "@bernouy/cms-control":     "workspace:*",
         "@bernouy/cms-delivery":    "workspace:*",
         "mongodb": "^7.2.0"
@@ -37,7 +32,5 @@
     "peerDependencies": {
         "typescript": "^5.9.3"
     },
-    "devDependencies": {
-        "@bernouy/cms-integration-registry": "workspace:*"
-    }
+    "devDependencies": {}
 }

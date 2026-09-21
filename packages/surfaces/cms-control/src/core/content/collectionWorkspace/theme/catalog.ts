@@ -1,6 +1,4 @@
 import type { ThemeSettings, ThemeTokenDefaults } from "@bernouy/cms-content";
-import type { IntegrationThemeCategory } from "@bernouy/cms-integrations";
-import type { CollectionThemeSource } from "../themeSources";
 import { projectThemeValues } from "../themeValues";
 import type { CollectionThemeTokenView } from "../types";
 
@@ -15,32 +13,6 @@ export type RawThemeCategory = {
 export type RawThemeToken = Omit<CollectionThemeTokenView, keyof ReturnType<typeof projectThemeValues>> & {
     defaults: ThemeTokenDefaults;
 };
-
-export function collectionThemeCategories(sources: CollectionThemeSource[]): RawThemeCategory[] {
-    const categories = new Map<string, RawThemeCategory>();
-    for (const source of sources) {
-        for (const category of source.definition.theme?.categories ?? []) {
-            const current = categories.get(category.id);
-            const tokens = integrationTokens(category, source);
-            if (!current) {
-                categories.set(category.id, {
-                    id: category.id,
-                    label: category.label,
-                    description: category.description ?? "",
-                    siteOwned: false,
-                    tokens,
-                });
-            } else {
-                current.tokens.push(...tokens);
-                if (!source.inherited) {
-                    current.label = category.label;
-                    current.description = category.description ?? current.description;
-                }
-            }
-        }
-    }
-    return [...categories.values()];
-}
 
 export function siteThemeCategories(settings: ThemeSettings): RawThemeCategory[] {
     return settings.sources.flatMap((source) => {
@@ -83,21 +55,4 @@ export function projectThemeToken(
 ): CollectionThemeTokenView {
     const { defaults, ...metadata } = token;
     return { ...metadata, ...projectThemeValues(settings, token.variable, defaults, selectedThemeId) };
-}
-
-function integrationTokens(category: IntegrationThemeCategory, source: CollectionThemeSource): RawThemeToken[] {
-    return category.tokens.map((token) => ({
-        id: token.id,
-        variable: `${source.integrationId}-${token.id}`,
-        label: token.label,
-        description: token.description ?? "",
-        type: token.type,
-        sourceLabel: source.label,
-        sourceDescription: source.inherited ? `Inherited from ${source.label}` : `Defined by ${source.label}`,
-        inherited: source.inherited,
-        catalogEditable: false,
-        sourceId: `integration-${source.integrationId}`,
-        categoryId: category.id,
-        defaults: token.defaults,
-    }));
 }

@@ -6,10 +6,6 @@ import {
     MongoDashboardViewRepository,
 } from "@bernouy/cms-dashboards/mongo";
 import { MongoIdentityService } from "@bernouy/cms-identities/mongo";
-import {
-    MongoIntegrationConnectorProviderRepository,
-    MongoIntegrationInstallationRepository,
-} from "@bernouy/cms-integrations/mongo";
 import { MongoRelationRepository } from "@bernouy/cms-relations/mongo";
 import { createSecretResolver, type SecretStore } from "@bernouy/cms-secrets";
 import {
@@ -56,10 +52,6 @@ export async function createFeatureStores(db: Db, secrets: SecretStore, options:
     const endpointPerformanceRecorder = new BufferedEndpointPerformanceRecorder(endpointPerformanceReports, {
         enabled: options.endpointPerformanceEnabled,
     });
-    const integrationInstallations = new MongoIntegrationInstallationRepository(db);
-    await integrationInstallations.init();
-    const integrationConnectorProviders = new MongoIntegrationConnectorProviderRepository(db);
-
     const resolveSecret = createSecretResolver(secrets);
     const deliverySources = new SourceOverlaySourceRepository(sources, sourceOverlays, {
         deps: { resolveSecret, identities },
@@ -76,8 +68,6 @@ export async function createFeatureStores(db: Db, secrets: SecretStore, options:
         analytics,
         endpointPerformanceRecorder,
         endpointPerformanceReports,
-        integrationInstallations,
-        integrationConnectorProviders,
         resolveSecret,
         deliverySources,
     };

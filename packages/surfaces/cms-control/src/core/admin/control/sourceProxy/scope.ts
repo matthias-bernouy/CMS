@@ -1,11 +1,9 @@
-import { integrationEndpointInterceptor } from "./integration";
 import type { Subject } from "@bernouy/cms-auth";
 import { RequestScopedIdentityService } from "@bernouy/cms-identities/requestScope";
 import { createSecretResolver, secretRefToKey } from "@bernouy/cms-secrets";
 import {
     SourceOverlaySourceRepository,
     activeSourceObservability,
-    composeSourceEndpointInterceptors,
     type ExecutorDeps,
     type SourceEndpointInterceptor,
     type SourceOverlaySchemaCache,
@@ -64,10 +62,7 @@ export function createControlSourceRequestScope(
                   ...(schemaCache ? { schemaCache } : {}),
               })
             : sources;
-    const interceptEndpoint = composeSourceEndpointInterceptors(
-        integrationEndpointInterceptor(state, resolveSubject),
-        configuration.sourceImageInterceptor,
-    );
+    const interceptEndpoint = configuration.sourceImageInterceptor;
 
     return {
         deps,

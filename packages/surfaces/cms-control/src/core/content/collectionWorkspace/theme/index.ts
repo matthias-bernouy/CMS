@@ -1,13 +1,7 @@
 import type { ThemeSettings } from "@bernouy/cms-content";
-import type { IntegrationInstallation } from "@bernouy/cms-integrations";
 import type { LibraryCollection } from "cms-control/core/content/blocLibrary/types";
 import { collectionWorkspacePath } from "../routes";
 import { relatedThemeTokens } from "../themeRelations";
-import {
-    collectionThemeProviderLabel,
-    resolveCollectionThemeSources,
-    type CollectionThemeSource,
-} from "../themeSources";
 import type {
     CollectionThemeDetailView,
     CollectionThemeNavigationCategoryView,
@@ -15,7 +9,7 @@ import type {
     CollectionThemeTokenView,
 } from "../types";
 import { themeSpecimen } from "./specimen";
-import { collectionThemeCategories, projectThemeToken, type RawThemeCategory, siteThemeCategories } from "./catalog";
+import { projectThemeToken, type RawThemeCategory, siteThemeCategories } from "./catalog";
 
 export type CollectionThemeProjection = {
     summary: CollectionThemeSummaryView;
@@ -24,52 +18,26 @@ export type CollectionThemeProjection = {
 
 export function collectionThemeProjection(
     collection: LibraryCollection,
-    installations: readonly IntegrationInstallation[],
     settings: ThemeSettings | undefined,
     requestedToken: string | undefined,
     requestedTheme: string | undefined,
     basePath: string,
 ): CollectionThemeProjection {
-    const resolvedSources = resolveCollectionThemeSources(collection, installations);
-    const { own, dependencies, sources } = resolvedSources;
-    const collectionCategories = collectionThemeCategories(sources);
-    const tokenCount = collectionCategories.reduce((count, category) => count + category.tokens.length, 0);
-    const inherited = sources.filter(({ inherited }) => inherited);
-    const providerLabel = collectionThemeProviderLabel(resolvedSources, collection);
-    const ownHasTokens = Boolean(own?.theme?.categories.length);
-    const mode = ownHasTokens ? (inherited.length ? "extended" : "declared") : "inherited";
+    const categories = settings ? siteThemeCategories(settings) : [];
+    const tokenCount = categories.reduce((count, category) => count + category.tokens.length, 0);
     const summary: CollectionThemeSummaryView = {
-        mode,
-        statusLabel:
-            mode === "declared"
-                ? `Defined by ${own?.label ?? collection.name}`
-                : mode === "extended"
-                  ? `Extends ${providerLabel}`
-                  : `Inherited from ${providerLabel}`,
-        description:
-            mode === "inherited"
-                ? `${collection.name} uses the shared ${providerLabel} theme contract without declaring collection-specific tokens.`
-                : mode === "extended"
-                  ? `${collection.name} keeps the ${providerLabel} contract and adds its own collection tokens.`
-                  : `${collection.name} declares the theme contract used by its blocs.`,
-        providerLabel,
-        ...(dependencies[0]?.versionRange ? { dependencyRange: dependencies[0].versionRange } : {}),
-        categoryCount: collectionCategories.length,
+        mode: "inherited",
+        statusLabel: "Uses site theme",
+        description: `${collection.name} currently uses the site theme while collection contracts are being rebuilt.`,
+        providerLabel: "Site",
+        categoryCount: categories.length,
         tokenCount,
     };
     return {
         summary,
         ...(settings
             ? {
-                  detail: themeDetail(
-                      [...siteThemeCategories(settings), ...collectionCategories],
-                      sources,
-                      settings,
-                      requestedToken,
-                      requestedTheme,
-                      collection,
-                      basePath,
-                  ),
+                  detail: themeDetail(categories, settings, requestedToken, requestedTheme, collection, basePath),
               }
             : {}),
     };
@@ -77,7 +45,6 @@ export function collectionThemeProjection(
 
 function themeDetail(
     rawCategories: RawThemeCategory[],
-    sources: CollectionThemeSource[],
     settings: ThemeSettings,
     requestedToken: string | undefined,
     requestedTheme: string | undefined,
@@ -127,7 +94,6 @@ function themeDetail(
             themes: settings.themes.map(({ id, name }) => ({ id, name })),
         },
         specimen: themeSpecimen(
-            sources,
             token ? tokenViews : tokenViews.filter(({ catalogEditable }) => !catalogEditable),
             token,
             relatedTokens,

@@ -11,7 +11,6 @@ const SETTINGS_SECTIONS = [
     "privacy-analytics",
     "secrets",
     "authentication",
-    "connectors",
 ] as const;
 const DEFAULT_SECTION: SettingsSection = "general";
 

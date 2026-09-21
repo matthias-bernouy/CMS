@@ -1,7 +1,5 @@
-import { collectIntegrationInstallationCspExtras } from "@bernouy/cms-integrations";
 import { createSecretResolver } from "@bernouy/cms-secrets";
 import { SourceOverlaySourceRepository } from "@bernouy/cms-sources";
-import { mergeUnique } from "./defaults";
 import type { ControlCmsState } from "./types";
 
 export const controlCmsAccessors = {
@@ -13,25 +11,12 @@ export const controlCmsAccessors = {
     secrets: (state: ControlCmsState) => state.secrets,
     roles: (state: ControlCmsState) => state.roles,
     editorDataSources: (state: ControlCmsState) => state.configuration.editorDataSources ?? [],
-    integrationCatalog: (state: ControlCmsState) => state.integrationCatalog,
-    integrationPackageResolver: (state: ControlCmsState) => state.integrationPackageResolver,
-    integrationUpgradeReleases: (state: ControlCmsState) => state.configuration.integrationUpgradeReleases,
     dashboards: (state: ControlCmsState) => state.dashboards,
     dashboardViews: (state: ControlCmsState) => state.dashboardViews,
     dashboardAssignments: (state: ControlCmsState) => state.dashboardAssignments,
     relations: (state: ControlCmsState) => state.relations,
     identities: (state: ControlCmsState) => state.identities,
     sourceOverlays: (state: ControlCmsState) => state.sourceOverlays,
-    configuredIntegrationInstallations: (state: ControlCmsState) => state.integrationInstallations,
-    integrationConnectorDeployers: (state: ControlCmsState) => state.configuration.integrationConnectorDeployers,
-    integrationMigrationRuntime: (state: ControlCmsState) => state.configuration.integrationMigrationRuntime,
-    integrationConnectorBaselineAdopters: (state: ControlCmsState) =>
-        state.configuration.integrationConnectorBaselineAdopters ?? [],
-    integrationConnectorSchemaBaselines: (state: ControlCmsState) =>
-        state.configuration.integrationConnectorSchemaBaselines,
-    integrationProvisioners: (state: ControlCmsState) => state.configuration.integrationProvisioners,
-    integrationConnectorProviders: (state: ControlCmsState) => state.integrationConnectorProviders,
-    integrationBlocRepository: (state: ControlCmsState) => state.integrationBlocRepository,
     sourceExecutorDeps: (state: ControlCmsState) => ({
         resolveSecret: createSecretResolver(state.secrets),
         identities: state.identities,
@@ -44,23 +29,18 @@ export const controlCmsAccessors = {
     pats: (state: ControlCmsState) => required(state.pats, "PAT repository not configured"),
     credentials: (state: ControlCmsState) => required(state.credentials, "local credential store not configured"),
     publicAuth: (state: ControlCmsState) => required(state.configuration.publicAuth, "public auth not configured"),
-    integrationInstallations: (state: ControlCmsState) =>
-        required(state.integrationInstallations, "integration installations repository not configured"),
     optionalSources: effectiveSources,
     sources: (state: ControlCmsState) => required(effectiveSources(state), "sources repository not configured"),
     analytics: (state: ControlCmsState) => required(state.analytics, "analytics store not configured"),
     basePath: (state: ControlCmsState) => (state.runner.basePath === "/" ? "" : state.runner.basePath),
     getCspExtras: async (state: ControlCmsState) => {
         const settings = await state.repository.getSystem();
-        const integrationCsp = state.integrationInstallations
-            ? collectIntegrationInstallationCspExtras(await state.integrationInstallations.list())
-            : null;
         return {
-            connectExtras: mergeUnique(settings.security.connectExtras, integrationCsp?.connectExtras),
-            mediaExtras: mergeUnique(settings.security.mediaExtras, integrationCsp?.mediaExtras),
-            styleExtras: mergeUnique([], integrationCsp?.styleExtras),
-            scriptExtras: mergeUnique([], integrationCsp?.scriptExtras),
-            frameExtras: mergeUnique([], integrationCsp?.frameExtras),
+            connectExtras: [...settings.security.connectExtras],
+            mediaExtras: [...settings.security.mediaExtras],
+            styleExtras: [],
+            scriptExtras: [],
+            frameExtras: [],
         };
     },
 };

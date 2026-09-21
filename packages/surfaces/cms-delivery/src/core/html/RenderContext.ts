@@ -1,6 +1,5 @@
 import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-files";
 import type { ContentReader } from "@bernouy/cms-content";
-import type { IntegrationInstallationRepository } from "@bernouy/cms-integrations";
 import type { HeadInjector } from "cms-delivery/interfaces/HeadInjector";
 import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
 
@@ -20,9 +19,6 @@ export type RenderContext = {
     /** Public stable URL emitted as `<link rel="icon">`. */
     faviconUrl: string;
     headInjectors: readonly HeadInjector[];
-    /** Installed integration installations. Used only to include integration-owned
-     *  CSP origins in rendered public pages. */
-    integrationInstallations?: IntegrationInstallationRepository;
     /** Files metadata, used to resolve each `by-id` media URL's `contentHash`
      *  for the cache-busting `?v=` token. Optional — absent when no files
      *  backend is wired, in which case media URLs render unversioned. */

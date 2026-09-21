@@ -73,35 +73,6 @@ describe("renderPage — binding core wrapper", () => {
         ]);
     });
 
-    test("includes CSP origins declared by successful integration installations", async () => {
-        const ctx = makeCtx();
-        ctx.integrationInstallations = {
-            list: async () => [
-                {
-                    id: "secure-embed",
-                    status: "success",
-                    definitionSnapshot: {
-                        kind: "secure-embed",
-                        label: "Secure Embed",
-                        inputs: [],
-                        security: {
-                            csp: {
-                                script: ["https://connect-js.stripe.com"],
-                                frame: ["https://connect.stripe.com"],
-                            },
-                        },
-                    },
-                },
-            ],
-        } as RenderContext["integrationInstallations"];
-
-        const entry = await renderPage(page, ctx);
-        const html = new TextDecoder().decode(entry.raw);
-        expect(html).toContain("script-src 'self' https://connect-js.stripe.com");
-        expect(html).toContain("frame-src 'self' https://connect.stripe.com");
-        expect(html).not.toContain("frame-ancestors");
-    });
-
     test("passes transitive composition dependencies to asset resolution", async () => {
         const ctx = makeCtx();
         const repository = ctx.repository as unknown as {

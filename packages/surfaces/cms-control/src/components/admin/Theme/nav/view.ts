@@ -1,7 +1,5 @@
-import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 import type { ThemeCategory, ThemeSource } from "@bernouy/cms-content";
 
-import { integrationIcon } from "../../Resources/Integrations/ui/resources";
 import type { ThemeNavAction, ThemeSelection } from "../events";
 import { isIntegrationSource } from "../ownership";
 
@@ -16,7 +14,6 @@ export function renderThemeNav(
     root: ShadowRoot | null,
     sources: ThemeSource[],
     selection: ThemeSelection,
-    definitions: ReadonlyMap<string, IntegrationDefinition> = new Map(),
     requestAction?: RequestAction,
 ): void {
     const menu = root?.querySelector("w13c-lateral-menu");
@@ -24,14 +21,13 @@ export function renderThemeNav(
         return;
     }
     menu.querySelectorAll("[data-generated]").forEach((item) => item.remove());
-    renderSources(menu, sources, selection, definitions, requestAction);
+    renderSources(menu, sources, selection, requestAction);
 }
 
 function renderSources(
     menu: Element,
     sources: ThemeSource[],
     selection: ThemeSelection,
-    definitions: ReadonlyMap<string, IntegrationDefinition>,
     requestAction: RequestAction | undefined,
 ): void {
     const siteSources = sources.filter((source) => !isIntegrationSource(source));
@@ -41,7 +37,7 @@ function renderSources(
         menu.append(newGroupAction(siteSources, selection, requestAction));
     }
     for (const source of sources.filter(isIntegrationSource)) {
-        menu.append(integrationHeading(source, definitions.get(source.owner.integrationId)));
+        menu.append(integrationHeading(source));
         renderCategories(menu, [source], selection, false, requestAction);
     }
 }
@@ -191,13 +187,13 @@ function siteHeading(): HTMLElement {
     return heading;
 }
 
-function integrationHeading(source: ThemeSource, definition: IntegrationDefinition | undefined): HTMLElement {
+function integrationHeading(source: ThemeSource): HTMLElement {
     const heading = document.createElement("div");
     heading.className = "menu-section theme-source-heading";
     heading.dataset.generated = "true";
     heading.dataset.themeGroup = source.id;
     const label = document.createElement("span");
     label.textContent = source.label;
-    heading.append(integrationIcon(definition), label);
+    heading.append(label);
     return heading;
 }

@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { ProductionIntegrationMigrationRuntime } from "@bernouy/cms-integrations";
 import { mountProductionSurfaces, type ProductionSurfaceRuntime } from "../../src/runtime/mountSurfaces";
 import { surfaceMountFixtures, waitFor } from "./surfaceMountFixtures";
 
@@ -9,7 +8,6 @@ describe("production surface mounting", () => {
         const starts: Array<[string, number]> = [];
         const logs: string[] = [];
         const runners: FakeRunner[] = [];
-        let repositoryConfig: Record<string, unknown> | undefined;
         let controlArguments: unknown[] = [];
         let deliveryConfig: Record<string, unknown> | undefined;
         let finalizerStore: unknown;
@@ -43,13 +41,6 @@ describe("production surface mounting", () => {
             }
         }
 
-        class FakeRepository {
-            constructor(config: Record<string, unknown>) {
-                repositoryConfig = config;
-                events.push("repository");
-            }
-        }
-
         class FakeControl {
             readonly ready = controlReady;
 
@@ -68,7 +59,6 @@ describe("production surface mounting", () => {
 
         const runtime = {
             Runner: FakeRunner,
-            Repository: FakeRepository,
             Control: FakeControl,
             Delivery: FakeDelivery,
             startAnalyticsFinalizer(store: unknown) {
@@ -107,7 +97,6 @@ describe("production surface mounting", () => {
         await waitFor(() => events.includes("control"));
 
         expect(events).toEqual(["runner:control", "control"]);
-        expect(repositoryConfig).toBeUndefined();
 
         releaseControl();
         const mounted = await mounting;
@@ -118,11 +107,6 @@ describe("production surface mounting", () => {
         expect(controlArguments[2]).toBe(options.authentication.auth);
         expect(controlConfig).toMatchObject({
             deliveryUrl: options.env.DELIVERY_PUBLIC_URL,
-            integrationCatalog: options.integrations.integrationCatalog,
-            integrationPackageResolver: options.integrations.integrationPackageResolver,
-            integrationUpgradeReleases: options.integrations.integrationUpgradeReleases,
-            integrationMigrationRuntime: expect.any(ProductionIntegrationMigrationRuntime),
-            integrationConnectorBaselineAdopters: options.integrations.integrationConnectorBaselineAdopters,
             publicAuth: {
                 marker: "public-auth",
                 emailVerificationUrl: options.env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
@@ -131,11 +115,9 @@ describe("production surface mounting", () => {
             },
             endpointPerformanceReports: options.features.endpointPerformanceReports,
             sourceTelemetry: expect.any(Object),
-            sourceTrustedConnectorTarget: expect.any(Function),
         });
         expect(controlArguments[15]).toEqual({ local: options.authentication.auth });
         expect(controlConfig.editorDataSources).toBeUndefined();
-        expect(repositoryConfig).toBeUndefined();
 
         expect(deliveryConfig).toMatchObject({
             runner: runners[1],
@@ -143,7 +125,6 @@ describe("production surface mounting", () => {
             sources: options.features.sources,
             sourceOverlays: options.features.sourceOverlays,
             sourceTelemetry: expect.any(Object),
-            sourceTrustedConnectorTarget: expect.any(Function),
             analyticsVisitorSecret: options.analyticsVisitorSecret,
             analyticsSiteScope: options.env.DELIVERY_PUBLIC_URL,
             analyticsTrustProxy: false,

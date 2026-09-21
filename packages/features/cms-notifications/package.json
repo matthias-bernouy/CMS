@@ -10,7 +10,6 @@
     },
     "dependencies": {
         "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-triggers": "workspace:*"
     },

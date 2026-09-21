@@ -1,1866 +1,4 @@
 (() => {
-  var __create = Object.create;
-  var __getProtoOf = Object.getPrototypeOf;
-  var __defProp = Object.defineProperty;
-  var __getOwnPropNames = Object.getOwnPropertyNames;
-  var __hasOwnProp = Object.prototype.hasOwnProperty;
-  var __toESM = (mod, isNodeMode, target) => {
-    target = mod != null ? __create(__getProtoOf(mod)) : {};
-    const to = isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target;
-    for (let key of __getOwnPropNames(mod))
-      if (!__hasOwnProp.call(to, key))
-        __defProp(to, key, {
-          get: () => mod[key],
-          enumerable: true
-        });
-    return to;
-  };
-  var __commonJS = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/internal/constants.js
-  var require_constants = __commonJS((exports, module) => {
-    var SEMVER_SPEC_VERSION = "2.0.0";
-    var MAX_LENGTH = 256;
-    var MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
-    var MAX_SAFE_COMPONENT_LENGTH = 16;
-    var MAX_SAFE_BUILD_LENGTH = MAX_LENGTH - 6;
-    var RELEASE_TYPES = [
-      "major",
-      "premajor",
-      "minor",
-      "preminor",
-      "patch",
-      "prepatch",
-      "prerelease"
-    ];
-    module.exports = {
-      MAX_LENGTH,
-      MAX_SAFE_COMPONENT_LENGTH,
-      MAX_SAFE_BUILD_LENGTH,
-      MAX_SAFE_INTEGER,
-      RELEASE_TYPES,
-      SEMVER_SPEC_VERSION,
-      FLAG_INCLUDE_PRERELEASE: 1,
-      FLAG_LOOSE: 2
-    };
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/internal/debug.js
-  var require_debug = __commonJS((exports, module) => {
-    var debug = typeof process === "object" && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...args) => console.error("SEMVER", ...args) : () => {};
-    module.exports = debug;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/internal/re.js
-  var require_re = __commonJS((exports, module) => {
-    var {
-      MAX_SAFE_COMPONENT_LENGTH,
-      MAX_SAFE_BUILD_LENGTH,
-      MAX_LENGTH
-    } = require_constants();
-    var debug = require_debug();
-    exports = module.exports = {};
-    var re2 = exports.re = [];
-    var safeRe = exports.safeRe = [];
-    var src = exports.src = [];
-    var safeSrc = exports.safeSrc = [];
-    var t = exports.t = {};
-    var R4 = 0;
-    var LETTERDASHNUMBER = "[a-zA-Z0-9-]";
-    var safeRegexReplacements = [
-      ["\\s", 1],
-      ["\\d", MAX_LENGTH],
-      [LETTERDASHNUMBER, MAX_SAFE_BUILD_LENGTH]
-    ];
-    var makeSafeRegex = (value2) => {
-      for (const [token, max] of safeRegexReplacements) {
-        value2 = value2.split(`${token}*`).join(`${token}{0,${max}}`).split(`${token}+`).join(`${token}{1,${max}}`);
-      }
-      return value2;
-    };
-    var createToken = (name, value2, isGlobal) => {
-      const safe = makeSafeRegex(value2);
-      const index = R4++;
-      debug(name, index, value2);
-      t[name] = index;
-      src[index] = value2;
-      safeSrc[index] = safe;
-      re2[index] = new RegExp(value2, isGlobal ? "g" : undefined);
-      safeRe[index] = new RegExp(safe, isGlobal ? "g" : undefined);
-    };
-    createToken("NUMERICIDENTIFIER", "0|[1-9]\\d*");
-    createToken("NUMERICIDENTIFIERLOOSE", "\\d+");
-    createToken("NONNUMERICIDENTIFIER", `\\d*[a-zA-Z-]${LETTERDASHNUMBER}*`);
-    createToken("MAINVERSION", `(${src[t.NUMERICIDENTIFIER]})\\.` + `(${src[t.NUMERICIDENTIFIER]})\\.` + `(${src[t.NUMERICIDENTIFIER]})`);
-    createToken("MAINVERSIONLOOSE", `(${src[t.NUMERICIDENTIFIERLOOSE]})\\.` + `(${src[t.NUMERICIDENTIFIERLOOSE]})\\.` + `(${src[t.NUMERICIDENTIFIERLOOSE]})`);
-    createToken("PRERELEASEIDENTIFIER", `(?:${src[t.NONNUMERICIDENTIFIER]}|${src[t.NUMERICIDENTIFIER]})`);
-    createToken("PRERELEASEIDENTIFIERLOOSE", `(?:${src[t.NONNUMERICIDENTIFIER]}|${src[t.NUMERICIDENTIFIERLOOSE]})`);
-    createToken("PRERELEASE", `(?:-(${src[t.PRERELEASEIDENTIFIER]}(?:\\.${src[t.PRERELEASEIDENTIFIER]})*))`);
-    createToken("PRERELEASELOOSE", `(?:-?(${src[t.PRERELEASEIDENTIFIERLOOSE]}(?:\\.${src[t.PRERELEASEIDENTIFIERLOOSE]})*))`);
-    createToken("BUILDIDENTIFIER", `${LETTERDASHNUMBER}+`);
-    createToken("BUILD", `(?:\\+(${src[t.BUILDIDENTIFIER]}(?:\\.${src[t.BUILDIDENTIFIER]})*))`);
-    createToken("FULLPLAIN", `v?${src[t.MAINVERSION]}${src[t.PRERELEASE]}?${src[t.BUILD]}?`);
-    createToken("FULL", `^${src[t.FULLPLAIN]}$`);
-    createToken("LOOSEPLAIN", `[v=\\s]*${src[t.MAINVERSIONLOOSE]}${src[t.PRERELEASELOOSE]}?${src[t.BUILD]}?`);
-    createToken("LOOSE", `^${src[t.LOOSEPLAIN]}$`);
-    createToken("GTLT", "((?:<|>)?=?)");
-    createToken("XRANGEIDENTIFIERLOOSE", `${src[t.NUMERICIDENTIFIERLOOSE]}|x|X|\\*`);
-    createToken("XRANGEIDENTIFIER", `${src[t.NUMERICIDENTIFIER]}|x|X|\\*`);
-    createToken("XRANGEPLAIN", `[v=\\s]*(${src[t.XRANGEIDENTIFIER]})` + `(?:\\.(${src[t.XRANGEIDENTIFIER]})` + `(?:\\.(${src[t.XRANGEIDENTIFIER]})` + `(?:${src[t.PRERELEASE]})?${src[t.BUILD]}?` + `)?)?`);
-    createToken("XRANGEPLAINLOOSE", `[v=\\s]*(${src[t.XRANGEIDENTIFIERLOOSE]})` + `(?:\\.(${src[t.XRANGEIDENTIFIERLOOSE]})` + `(?:\\.(${src[t.XRANGEIDENTIFIERLOOSE]})` + `(?:${src[t.PRERELEASELOOSE]})?${src[t.BUILD]}?` + `)?)?`);
-    createToken("XRANGE", `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAIN]}$`);
-    createToken("XRANGELOOSE", `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAINLOOSE]}$`);
-    createToken("COERCEPLAIN", `${"(^|[^\\d])" + "(\\d{1,"}${MAX_SAFE_COMPONENT_LENGTH}})` + `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?` + `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?`);
-    createToken("COERCE", `${src[t.COERCEPLAIN]}(?:$|[^\\d])`);
-    createToken("COERCEFULL", src[t.COERCEPLAIN] + `(?:${src[t.PRERELEASE]})?` + `(?:${src[t.BUILD]})?` + `(?:$|[^\\d])`);
-    createToken("COERCERTL", src[t.COERCE], true);
-    createToken("COERCERTLFULL", src[t.COERCEFULL], true);
-    createToken("LONETILDE", "(?:~>?)");
-    createToken("TILDETRIM", `(\\s*)${src[t.LONETILDE]}\\s+`, true);
-    exports.tildeTrimReplace = "$1~";
-    createToken("TILDE", `^${src[t.LONETILDE]}${src[t.XRANGEPLAIN]}$`);
-    createToken("TILDELOOSE", `^${src[t.LONETILDE]}${src[t.XRANGEPLAINLOOSE]}$`);
-    createToken("LONECARET", "(?:\\^)");
-    createToken("CARETTRIM", `(\\s*)${src[t.LONECARET]}\\s+`, true);
-    exports.caretTrimReplace = "$1^";
-    createToken("CARET", `^${src[t.LONECARET]}${src[t.XRANGEPLAIN]}$`);
-    createToken("CARETLOOSE", `^${src[t.LONECARET]}${src[t.XRANGEPLAINLOOSE]}$`);
-    createToken("COMPARATORLOOSE", `^${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]})$|^$`);
-    createToken("COMPARATOR", `^${src[t.GTLT]}\\s*(${src[t.FULLPLAIN]})$|^$`);
-    createToken("COMPARATORTRIM", `(\\s*)${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]}|${src[t.XRANGEPLAIN]})`, true);
-    exports.comparatorTrimReplace = "$1$2$3";
-    createToken("HYPHENRANGE", `^\\s*(${src[t.XRANGEPLAIN]})` + `\\s+-\\s+` + `(${src[t.XRANGEPLAIN]})` + `\\s*$`);
-    createToken("HYPHENRANGELOOSE", `^\\s*(${src[t.XRANGEPLAINLOOSE]})` + `\\s+-\\s+` + `(${src[t.XRANGEPLAINLOOSE]})` + `\\s*$`);
-    createToken("STAR", "(<|>)?=?\\s*\\*");
-    createToken("GTE0", "^\\s*>=\\s*0\\.0\\.0\\s*$");
-    createToken("GTE0PRE", "^\\s*>=\\s*0\\.0\\.0-0\\s*$");
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/internal/parse-options.js
-  var require_parse_options = __commonJS((exports, module) => {
-    var looseOption = Object.freeze({ loose: true });
-    var emptyOpts = Object.freeze({});
-    var parseOptions = (options2) => {
-      if (!options2) {
-        return emptyOpts;
-      }
-      if (typeof options2 !== "object") {
-        return looseOption;
-      }
-      return options2;
-    };
-    module.exports = parseOptions;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/internal/identifiers.js
-  var require_identifiers = __commonJS((exports, module) => {
-    var numeric = /^[0-9]+$/;
-    var compareIdentifiers = (a2, b3) => {
-      if (typeof a2 === "number" && typeof b3 === "number") {
-        return a2 === b3 ? 0 : a2 < b3 ? -1 : 1;
-      }
-      const anum = numeric.test(a2);
-      const bnum = numeric.test(b3);
-      if (anum && bnum) {
-        a2 = +a2;
-        b3 = +b3;
-      }
-      return a2 === b3 ? 0 : anum && !bnum ? -1 : bnum && !anum ? 1 : a2 < b3 ? -1 : 1;
-    };
-    var rcompareIdentifiers = (a2, b3) => compareIdentifiers(b3, a2);
-    module.exports = {
-      compareIdentifiers,
-      rcompareIdentifiers
-    };
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/classes/semver.js
-  var require_semver = __commonJS((exports, module) => {
-    var debug = require_debug();
-    var { MAX_LENGTH, MAX_SAFE_INTEGER } = require_constants();
-    var { safeRe: re2, t } = require_re();
-    var parseOptions = require_parse_options();
-    var { compareIdentifiers } = require_identifiers();
-    var isPrereleaseIdentifier = (prerelease, identifier) => {
-      const identifiers = identifier.split(".");
-      if (identifiers.length > prerelease.length) {
-        return false;
-      }
-      for (let i = 0;i < identifiers.length; i++) {
-        if (compareIdentifiers(prerelease[i], identifiers[i]) !== 0) {
-          return false;
-        }
-      }
-      return true;
-    };
-
-    class SemVer {
-      constructor(version, options2) {
-        options2 = parseOptions(options2);
-        if (version instanceof SemVer) {
-          if (version.loose === !!options2.loose && version.includePrerelease === !!options2.includePrerelease) {
-            return version;
-          } else {
-            version = version.version;
-          }
-        } else if (typeof version !== "string") {
-          throw new TypeError(`Invalid version. Must be a string. Got type "${typeof version}".`);
-        }
-        if (version.length > MAX_LENGTH) {
-          throw new TypeError(`version is longer than ${MAX_LENGTH} characters`);
-        }
-        debug("SemVer", version, options2);
-        this.options = options2;
-        this.loose = !!options2.loose;
-        this.includePrerelease = !!options2.includePrerelease;
-        const m3 = version.trim().match(options2.loose ? re2[t.LOOSE] : re2[t.FULL]);
-        if (!m3) {
-          throw new TypeError(`Invalid Version: ${version}`);
-        }
-        this.raw = version;
-        this.major = +m3[1];
-        this.minor = +m3[2];
-        this.patch = +m3[3];
-        if (this.major > MAX_SAFE_INTEGER || this.major < 0) {
-          throw new TypeError("Invalid major version");
-        }
-        if (this.minor > MAX_SAFE_INTEGER || this.minor < 0) {
-          throw new TypeError("Invalid minor version");
-        }
-        if (this.patch > MAX_SAFE_INTEGER || this.patch < 0) {
-          throw new TypeError("Invalid patch version");
-        }
-        if (!m3[4]) {
-          this.prerelease = [];
-        } else {
-          this.prerelease = m3[4].split(".").map((id2) => {
-            if (/^[0-9]+$/.test(id2)) {
-              const num = +id2;
-              if (num >= 0 && num < MAX_SAFE_INTEGER) {
-                return num;
-              }
-            }
-            return id2;
-          });
-        }
-        this.build = m3[5] ? m3[5].split(".") : [];
-        this.format();
-      }
-      format() {
-        this.version = `${this.major}.${this.minor}.${this.patch}`;
-        if (this.prerelease.length) {
-          this.version += `-${this.prerelease.join(".")}`;
-        }
-        return this.version;
-      }
-      toString() {
-        return this.version;
-      }
-      compare(other) {
-        debug("SemVer.compare", this.version, this.options, other);
-        if (!(other instanceof SemVer)) {
-          if (typeof other === "string" && other === this.version) {
-            return 0;
-          }
-          other = new SemVer(other, this.options);
-        }
-        if (other.version === this.version) {
-          return 0;
-        }
-        return this.compareMain(other) || this.comparePre(other);
-      }
-      compareMain(other) {
-        if (!(other instanceof SemVer)) {
-          other = new SemVer(other, this.options);
-        }
-        if (this.major < other.major) {
-          return -1;
-        }
-        if (this.major > other.major) {
-          return 1;
-        }
-        if (this.minor < other.minor) {
-          return -1;
-        }
-        if (this.minor > other.minor) {
-          return 1;
-        }
-        if (this.patch < other.patch) {
-          return -1;
-        }
-        if (this.patch > other.patch) {
-          return 1;
-        }
-        return 0;
-      }
-      comparePre(other) {
-        if (!(other instanceof SemVer)) {
-          other = new SemVer(other, this.options);
-        }
-        if (this.prerelease.length && !other.prerelease.length) {
-          return -1;
-        } else if (!this.prerelease.length && other.prerelease.length) {
-          return 1;
-        } else if (!this.prerelease.length && !other.prerelease.length) {
-          return 0;
-        }
-        let i = 0;
-        do {
-          const a2 = this.prerelease[i];
-          const b3 = other.prerelease[i];
-          debug("prerelease compare", i, a2, b3);
-          if (a2 === undefined && b3 === undefined) {
-            return 0;
-          } else if (b3 === undefined) {
-            return 1;
-          } else if (a2 === undefined) {
-            return -1;
-          } else if (a2 === b3) {
-            continue;
-          } else {
-            return compareIdentifiers(a2, b3);
-          }
-        } while (++i);
-      }
-      compareBuild(other) {
-        if (!(other instanceof SemVer)) {
-          other = new SemVer(other, this.options);
-        }
-        let i = 0;
-        do {
-          const a2 = this.build[i];
-          const b3 = other.build[i];
-          debug("build compare", i, a2, b3);
-          if (a2 === undefined && b3 === undefined) {
-            return 0;
-          } else if (b3 === undefined) {
-            return 1;
-          } else if (a2 === undefined) {
-            return -1;
-          } else if (a2 === b3) {
-            continue;
-          } else {
-            return compareIdentifiers(a2, b3);
-          }
-        } while (++i);
-      }
-      inc(release, identifier, identifierBase) {
-        if (release.startsWith("pre")) {
-          if (!identifier && identifierBase === false) {
-            throw new Error("invalid increment argument: identifier is empty");
-          }
-          if (identifier) {
-            const match = `-${identifier}`.match(this.options.loose ? re2[t.PRERELEASELOOSE] : re2[t.PRERELEASE]);
-            if (!match || match[1] !== identifier) {
-              throw new Error(`invalid identifier: ${identifier}`);
-            }
-          }
-        }
-        switch (release) {
-          case "premajor":
-            this.prerelease.length = 0;
-            this.patch = 0;
-            this.minor = 0;
-            this.major++;
-            this.inc("pre", identifier, identifierBase);
-            break;
-          case "preminor":
-            this.prerelease.length = 0;
-            this.patch = 0;
-            this.minor++;
-            this.inc("pre", identifier, identifierBase);
-            break;
-          case "prepatch":
-            this.prerelease.length = 0;
-            this.inc("patch", identifier, identifierBase);
-            this.inc("pre", identifier, identifierBase);
-            break;
-          case "prerelease":
-            if (this.prerelease.length === 0) {
-              this.inc("patch", identifier, identifierBase);
-            }
-            this.inc("pre", identifier, identifierBase);
-            break;
-          case "release":
-            if (this.prerelease.length === 0) {
-              throw new Error(`version ${this.raw} is not a prerelease`);
-            }
-            this.prerelease.length = 0;
-            break;
-          case "major":
-            if (this.minor !== 0 || this.patch !== 0 || this.prerelease.length === 0) {
-              this.major++;
-            }
-            this.minor = 0;
-            this.patch = 0;
-            this.prerelease = [];
-            break;
-          case "minor":
-            if (this.patch !== 0 || this.prerelease.length === 0) {
-              this.minor++;
-            }
-            this.patch = 0;
-            this.prerelease = [];
-            break;
-          case "patch":
-            if (this.prerelease.length === 0) {
-              this.patch++;
-            }
-            this.prerelease = [];
-            break;
-          case "pre": {
-            const base = Number(identifierBase) ? 1 : 0;
-            if (this.prerelease.length === 0) {
-              this.prerelease = [base];
-            } else {
-              let i = this.prerelease.length;
-              while (--i >= 0) {
-                if (typeof this.prerelease[i] === "number") {
-                  this.prerelease[i]++;
-                  i = -2;
-                }
-              }
-              if (i === -1) {
-                if (identifier === this.prerelease.join(".") && identifierBase === false) {
-                  throw new Error("invalid increment argument: identifier already exists");
-                }
-                this.prerelease.push(base);
-              }
-            }
-            if (identifier) {
-              let prerelease = [identifier, base];
-              if (identifierBase === false) {
-                prerelease = [identifier];
-              }
-              if (isPrereleaseIdentifier(this.prerelease, identifier)) {
-                const prereleaseBase = this.prerelease[identifier.split(".").length];
-                if (isNaN(prereleaseBase)) {
-                  this.prerelease = prerelease;
-                }
-              } else {
-                this.prerelease = prerelease;
-              }
-            }
-            break;
-          }
-          default:
-            throw new Error(`invalid increment argument: ${release}`);
-        }
-        this.raw = this.format();
-        if (this.build.length) {
-          this.raw += `+${this.build.join(".")}`;
-        }
-        return this;
-      }
-    }
-    module.exports = SemVer;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/parse.js
-  var require_parse = __commonJS((exports, module) => {
-    var SemVer = require_semver();
-    var parse = (version, options2, throwErrors = false) => {
-      if (version instanceof SemVer) {
-        return version;
-      }
-      try {
-        return new SemVer(version, options2);
-      } catch (er3) {
-        if (!throwErrors) {
-          return null;
-        }
-        throw er3;
-      }
-    };
-    module.exports = parse;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/valid.js
-  var require_valid = __commonJS((exports, module) => {
-    var parse = require_parse();
-    var valid = (version, options2) => {
-      const v2 = parse(version, options2);
-      return v2 ? v2.version : null;
-    };
-    module.exports = valid;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/clean.js
-  var require_clean = __commonJS((exports, module) => {
-    var parse = require_parse();
-    var clean = (version, options2) => {
-      const s2 = parse(version.trim().replace(/^[=v]+/, ""), options2);
-      return s2 ? s2.version : null;
-    };
-    module.exports = clean;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/inc.js
-  var require_inc = __commonJS((exports, module) => {
-    var SemVer = require_semver();
-    var inc = (version, release, options2, identifier, identifierBase) => {
-      if (typeof options2 === "string") {
-        identifierBase = identifier;
-        identifier = options2;
-        options2 = undefined;
-      }
-      try {
-        return new SemVer(version instanceof SemVer ? version.version : version, options2).inc(release, identifier, identifierBase).version;
-      } catch (er3) {
-        return null;
-      }
-    };
-    module.exports = inc;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/diff.js
-  var require_diff = __commonJS((exports, module) => {
-    var parse = require_parse();
-    var diff = (version1, version2) => {
-      const v1 = parse(version1, null, true);
-      const v2 = parse(version2, null, true);
-      const comparison = v1.compare(v2);
-      if (comparison === 0) {
-        return null;
-      }
-      const v1Higher = comparison > 0;
-      const highVersion = v1Higher ? v1 : v2;
-      const lowVersion = v1Higher ? v2 : v1;
-      const highHasPre = !!highVersion.prerelease.length;
-      const lowHasPre = !!lowVersion.prerelease.length;
-      if (lowHasPre && !highHasPre) {
-        if (!lowVersion.patch && !lowVersion.minor) {
-          return "major";
-        }
-        if (lowVersion.compareMain(highVersion) === 0) {
-          if (lowVersion.minor && !lowVersion.patch) {
-            return "minor";
-          }
-          return "patch";
-        }
-      }
-      const prefix = highHasPre ? "pre" : "";
-      if (v1.major !== v2.major) {
-        return prefix + "major";
-      }
-      if (v1.minor !== v2.minor) {
-        return prefix + "minor";
-      }
-      if (v1.patch !== v2.patch) {
-        return prefix + "patch";
-      }
-      return "prerelease";
-    };
-    module.exports = diff;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/major.js
-  var require_major = __commonJS((exports, module) => {
-    var SemVer = require_semver();
-    var major = (a2, loose) => new SemVer(a2, loose).major;
-    module.exports = major;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/minor.js
-  var require_minor = __commonJS((exports, module) => {
-    var SemVer = require_semver();
-    var minor = (a2, loose) => new SemVer(a2, loose).minor;
-    module.exports = minor;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/patch.js
-  var require_patch = __commonJS((exports, module) => {
-    var SemVer = require_semver();
-    var patch = (a2, loose) => new SemVer(a2, loose).patch;
-    module.exports = patch;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/prerelease.js
-  var require_prerelease = __commonJS((exports, module) => {
-    var parse = require_parse();
-    var prerelease = (version, options2) => {
-      const parsed = parse(version, options2);
-      return parsed && parsed.prerelease.length ? parsed.prerelease : null;
-    };
-    module.exports = prerelease;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/compare.js
-  var require_compare = __commonJS((exports, module) => {
-    var SemVer = require_semver();
-    var compare = (a2, b3, loose) => new SemVer(a2, loose).compare(new SemVer(b3, loose));
-    module.exports = compare;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/rcompare.js
-  var require_rcompare = __commonJS((exports, module) => {
-    var compare = require_compare();
-    var rcompare = (a2, b3, loose) => compare(b3, a2, loose);
-    module.exports = rcompare;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/compare-loose.js
-  var require_compare_loose = __commonJS((exports, module) => {
-    var compare = require_compare();
-    var compareLoose = (a2, b3) => compare(a2, b3, true);
-    module.exports = compareLoose;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/compare-build.js
-  var require_compare_build = __commonJS((exports, module) => {
-    var SemVer = require_semver();
-    var compareBuild = (a2, b3, loose) => {
-      const versionA = new SemVer(a2, loose);
-      const versionB = new SemVer(b3, loose);
-      return versionA.compare(versionB) || versionA.compareBuild(versionB);
-    };
-    module.exports = compareBuild;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/sort.js
-  var require_sort = __commonJS((exports, module) => {
-    var compareBuild = require_compare_build();
-    var sort = (list, loose) => list.sort((a2, b3) => compareBuild(a2, b3, loose));
-    module.exports = sort;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/rsort.js
-  var require_rsort = __commonJS((exports, module) => {
-    var compareBuild = require_compare_build();
-    var rsort = (list, loose) => list.sort((a2, b3) => compareBuild(b3, a2, loose));
-    module.exports = rsort;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/gt.js
-  var require_gt = __commonJS((exports, module) => {
-    var compare = require_compare();
-    var gt3 = (a2, b3, loose) => compare(a2, b3, loose) > 0;
-    module.exports = gt3;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/lt.js
-  var require_lt = __commonJS((exports, module) => {
-    var compare = require_compare();
-    var lt3 = (a2, b3, loose) => compare(a2, b3, loose) < 0;
-    module.exports = lt3;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/eq.js
-  var require_eq = __commonJS((exports, module) => {
-    var compare = require_compare();
-    var eq = (a2, b3, loose) => compare(a2, b3, loose) === 0;
-    module.exports = eq;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/neq.js
-  var require_neq = __commonJS((exports, module) => {
-    var compare = require_compare();
-    var neq = (a2, b3, loose) => compare(a2, b3, loose) !== 0;
-    module.exports = neq;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/gte.js
-  var require_gte = __commonJS((exports, module) => {
-    var compare = require_compare();
-    var gte = (a2, b3, loose) => compare(a2, b3, loose) >= 0;
-    module.exports = gte;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/lte.js
-  var require_lte = __commonJS((exports, module) => {
-    var compare = require_compare();
-    var lte = (a2, b3, loose) => compare(a2, b3, loose) <= 0;
-    module.exports = lte;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/cmp.js
-  var require_cmp = __commonJS((exports, module) => {
-    var eq = require_eq();
-    var neq = require_neq();
-    var gt3 = require_gt();
-    var gte = require_gte();
-    var lt3 = require_lt();
-    var lte = require_lte();
-    var cmp = (a2, op, b3, loose) => {
-      switch (op) {
-        case "===":
-          if (typeof a2 === "object") {
-            a2 = a2.version;
-          }
-          if (typeof b3 === "object") {
-            b3 = b3.version;
-          }
-          return a2 === b3;
-        case "!==":
-          if (typeof a2 === "object") {
-            a2 = a2.version;
-          }
-          if (typeof b3 === "object") {
-            b3 = b3.version;
-          }
-          return a2 !== b3;
-        case "":
-        case "=":
-        case "==":
-          return eq(a2, b3, loose);
-        case "!=":
-          return neq(a2, b3, loose);
-        case ">":
-          return gt3(a2, b3, loose);
-        case ">=":
-          return gte(a2, b3, loose);
-        case "<":
-          return lt3(a2, b3, loose);
-        case "<=":
-          return lte(a2, b3, loose);
-        default:
-          throw new TypeError(`Invalid operator: ${op}`);
-      }
-    };
-    module.exports = cmp;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/coerce.js
-  var require_coerce = __commonJS((exports, module) => {
-    var SemVer = require_semver();
-    var parse = require_parse();
-    var { safeRe: re2, t } = require_re();
-    var coerce = (version, options2) => {
-      if (version instanceof SemVer) {
-        return version;
-      }
-      if (typeof version === "number") {
-        version = String(version);
-      }
-      if (typeof version !== "string") {
-        return null;
-      }
-      options2 = options2 || {};
-      let match = null;
-      if (!options2.rtl) {
-        match = version.match(options2.includePrerelease ? re2[t.COERCEFULL] : re2[t.COERCE]);
-      } else {
-        const coerceRtlRegex = options2.includePrerelease ? re2[t.COERCERTLFULL] : re2[t.COERCERTL];
-        let next;
-        while ((next = coerceRtlRegex.exec(version)) && (!match || match.index + match[0].length !== version.length)) {
-          if (!match || next.index + next[0].length !== match.index + match[0].length) {
-            match = next;
-          }
-          coerceRtlRegex.lastIndex = next.index + next[1].length + next[2].length;
-        }
-        coerceRtlRegex.lastIndex = -1;
-      }
-      if (match === null) {
-        return null;
-      }
-      const major = match[2];
-      const minor = match[3] || "0";
-      const patch = match[4] || "0";
-      const prerelease = options2.includePrerelease && match[5] ? `-${match[5]}` : "";
-      const build = options2.includePrerelease && match[6] ? `+${match[6]}` : "";
-      return parse(`${major}.${minor}.${patch}${prerelease}${build}`, options2);
-    };
-    module.exports = coerce;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/truncate.js
-  var require_truncate = __commonJS((exports, module) => {
-    var parse = require_parse();
-    var constants = require_constants();
-    var SemVer = require_semver();
-    var truncate = (version, truncation, options2) => {
-      if (!constants.RELEASE_TYPES.includes(truncation)) {
-        return null;
-      }
-      const clonedVersion = cloneInputVersion(version, options2);
-      return clonedVersion && doTruncation(clonedVersion, truncation);
-    };
-    var cloneInputVersion = (version, options2) => {
-      const versionStringToParse = version instanceof SemVer ? version.version : version;
-      return parse(versionStringToParse, options2);
-    };
-    var doTruncation = (version, truncation) => {
-      if (isPrerelease(truncation)) {
-        return version.version;
-      }
-      version.prerelease = [];
-      switch (truncation) {
-        case "major":
-          version.minor = 0;
-          version.patch = 0;
-          break;
-        case "minor":
-          version.patch = 0;
-          break;
-      }
-      return version.format();
-    };
-    var isPrerelease = (type) => {
-      return type.startsWith("pre");
-    };
-    module.exports = truncate;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/internal/lrucache.js
-  var require_lrucache = __commonJS((exports, module) => {
-    class LRUCache {
-      constructor() {
-        this.max = 1000;
-        this.map = new Map;
-      }
-      get(key) {
-        const value2 = this.map.get(key);
-        if (value2 === undefined) {
-          return;
-        } else {
-          this.map.delete(key);
-          this.map.set(key, value2);
-          return value2;
-        }
-      }
-      delete(key) {
-        return this.map.delete(key);
-      }
-      set(key, value2) {
-        const deleted = this.delete(key);
-        if (!deleted && value2 !== undefined) {
-          if (this.map.size >= this.max) {
-            const firstKey = this.map.keys().next().value;
-            this.delete(firstKey);
-          }
-          this.map.set(key, value2);
-        }
-        return this;
-      }
-    }
-    module.exports = LRUCache;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/classes/range.js
-  var require_range = __commonJS((exports, module) => {
-    var SPACE_CHARACTERS = /\s+/g;
-
-    class Range {
-      constructor(range, options2) {
-        options2 = parseOptions(options2);
-        if (range instanceof Range) {
-          if (range.loose === !!options2.loose && range.includePrerelease === !!options2.includePrerelease) {
-            return range;
-          } else {
-            return new Range(range.raw, options2);
-          }
-        }
-        if (range instanceof Comparator) {
-          this.raw = range.value;
-          this.set = [[range]];
-          this.formatted = undefined;
-          return this;
-        }
-        this.options = options2;
-        this.loose = !!options2.loose;
-        this.includePrerelease = !!options2.includePrerelease;
-        this.raw = range.trim().replace(SPACE_CHARACTERS, " ");
-        this.set = this.raw.split("||").map((r) => this.parseRange(r.trim())).filter((c2) => c2.length);
-        if (!this.set.length) {
-          throw new TypeError(`Invalid SemVer Range: ${this.raw}`);
-        }
-        if (this.set.length > 1) {
-          const first = this.set[0];
-          this.set = this.set.filter((c2) => !isNullSet(c2[0]));
-          if (this.set.length === 0) {
-            this.set = [first];
-          } else if (this.set.length > 1) {
-            for (const c2 of this.set) {
-              if (c2.length === 1 && isAny(c2[0])) {
-                this.set = [c2];
-                break;
-              }
-            }
-          }
-        }
-        this.formatted = undefined;
-      }
-      get range() {
-        if (this.formatted === undefined) {
-          this.formatted = "";
-          for (let i = 0;i < this.set.length; i++) {
-            if (i > 0) {
-              this.formatted += "||";
-            }
-            const comps = this.set[i];
-            for (let k3 = 0;k3 < comps.length; k3++) {
-              if (k3 > 0) {
-                this.formatted += " ";
-              }
-              this.formatted += comps[k3].toString().trim();
-            }
-          }
-        }
-        return this.formatted;
-      }
-      format() {
-        return this.range;
-      }
-      toString() {
-        return this.range;
-      }
-      parseRange(range) {
-        range = range.replace(BUILDSTRIPRE, "");
-        const memoOpts = (this.options.includePrerelease && FLAG_INCLUDE_PRERELEASE) | (this.options.loose && FLAG_LOOSE);
-        const memoKey = memoOpts + ":" + range;
-        const cached = cache2.get(memoKey);
-        if (cached) {
-          return cached;
-        }
-        const loose = this.options.loose;
-        const hr3 = loose ? re2[t.HYPHENRANGELOOSE] : re2[t.HYPHENRANGE];
-        range = range.replace(hr3, hyphenReplace(this.options.includePrerelease));
-        debug("hyphen replace", range);
-        range = range.replace(re2[t.COMPARATORTRIM], comparatorTrimReplace);
-        debug("comparator trim", range);
-        range = range.replace(re2[t.TILDETRIM], tildeTrimReplace);
-        debug("tilde trim", range);
-        range = range.replace(re2[t.CARETTRIM], caretTrimReplace);
-        debug("caret trim", range);
-        let rangeList = range.split(" ").map((comp) => parseComparator(comp, this.options)).join(" ").split(/\s+/).map((comp) => replaceGTE0(comp, this.options));
-        if (loose) {
-          rangeList = rangeList.filter((comp) => {
-            debug("loose invalid filter", comp, this.options);
-            return !!comp.match(re2[t.COMPARATORLOOSE]);
-          });
-        }
-        debug("range list", rangeList);
-        const rangeMap = new Map;
-        const comparators = rangeList.map((comp) => new Comparator(comp, this.options));
-        for (const comp of comparators) {
-          if (isNullSet(comp)) {
-            return [comp];
-          }
-          rangeMap.set(comp.value, comp);
-        }
-        if (rangeMap.size > 1 && rangeMap.has("")) {
-          rangeMap.delete("");
-        }
-        const result = [...rangeMap.values()];
-        cache2.set(memoKey, result);
-        return result;
-      }
-      intersects(range, options2) {
-        if (!(range instanceof Range)) {
-          throw new TypeError("a Range is required");
-        }
-        return this.set.some((thisComparators) => {
-          return isSatisfiable(thisComparators, options2) && range.set.some((rangeComparators) => {
-            return isSatisfiable(rangeComparators, options2) && thisComparators.every((thisComparator) => {
-              return rangeComparators.every((rangeComparator) => {
-                return thisComparator.intersects(rangeComparator, options2);
-              });
-            });
-          });
-        });
-      }
-      test(version) {
-        if (!version) {
-          return false;
-        }
-        if (typeof version === "string") {
-          try {
-            version = new SemVer(version, this.options);
-          } catch (er3) {
-            return false;
-          }
-        }
-        for (let i = 0;i < this.set.length; i++) {
-          if (testSet(this.set[i], version, this.options)) {
-            return true;
-          }
-        }
-        return false;
-      }
-    }
-    module.exports = Range;
-    var LRU = require_lrucache();
-    var cache2 = new LRU;
-    var parseOptions = require_parse_options();
-    var Comparator = require_comparator();
-    var debug = require_debug();
-    var SemVer = require_semver();
-    var {
-      safeRe: re2,
-      src,
-      t,
-      comparatorTrimReplace,
-      tildeTrimReplace,
-      caretTrimReplace
-    } = require_re();
-    var { FLAG_INCLUDE_PRERELEASE, FLAG_LOOSE } = require_constants();
-    var BUILDSTRIPRE = new RegExp(src[t.BUILD], "g");
-    var isNullSet = (c2) => c2.value === "<0.0.0-0";
-    var isAny = (c2) => c2.value === "";
-    var isSatisfiable = (comparators, options2) => {
-      let result = true;
-      const remainingComparators = comparators.slice();
-      let testComparator = remainingComparators.pop();
-      while (result && remainingComparators.length) {
-        result = remainingComparators.every((otherComparator) => {
-          return testComparator.intersects(otherComparator, options2);
-        });
-        testComparator = remainingComparators.pop();
-      }
-      return result;
-    };
-    var parseComparator = (comp, options2) => {
-      comp = comp.replace(re2[t.BUILD], "");
-      debug("comp", comp, options2);
-      comp = replaceCarets(comp, options2);
-      debug("caret", comp);
-      comp = replaceTildes(comp, options2);
-      debug("tildes", comp);
-      comp = replaceXRanges(comp, options2);
-      debug("xrange", comp);
-      comp = replaceStars(comp, options2);
-      debug("stars", comp);
-      return comp;
-    };
-    var isX = (id2) => !id2 || id2.toLowerCase() === "x" || id2 === "*";
-    var invalidXRangeOrder = (M3, m3, p3) => isX(M3) && !isX(m3) || isX(m3) && p3 && !isX(p3);
-    var replaceTildes = (comp, options2) => {
-      return comp.trim().split(/\s+/).map((c2) => replaceTilde(c2, options2)).join(" ");
-    };
-    var replaceTilde = (comp, options2) => {
-      const r = options2.loose ? re2[t.TILDELOOSE] : re2[t.TILDE];
-      const z2 = options2.includePrerelease ? "-0" : "";
-      return comp.replace(r, (_3, M3, m3, p3, pr3) => {
-        debug("tilde", comp, _3, M3, m3, p3, pr3);
-        let ret;
-        if (isX(M3)) {
-          ret = "";
-        } else if (isX(m3)) {
-          ret = `>=${M3}.0.0${z2} <${+M3 + 1}.0.0-0`;
-        } else if (isX(p3)) {
-          ret = `>=${M3}.${m3}.0${z2} <${M3}.${+m3 + 1}.0-0`;
-        } else if (pr3) {
-          debug("replaceTilde pr", pr3);
-          ret = `>=${M3}.${m3}.${p3}-${pr3} <${M3}.${+m3 + 1}.0-0`;
-        } else {
-          ret = `>=${M3}.${m3}.${p3} <${M3}.${+m3 + 1}.0-0`;
-        }
-        debug("tilde return", ret);
-        return ret;
-      });
-    };
-    var replaceCarets = (comp, options2) => {
-      return comp.trim().split(/\s+/).map((c2) => replaceCaret(c2, options2)).join(" ");
-    };
-    var replaceCaret = (comp, options2) => {
-      debug("caret", comp, options2);
-      const r = options2.loose ? re2[t.CARETLOOSE] : re2[t.CARET];
-      const z2 = options2.includePrerelease ? "-0" : "";
-      return comp.replace(r, (_3, M3, m3, p3, pr3) => {
-        debug("caret", comp, _3, M3, m3, p3, pr3);
-        let ret;
-        if (isX(M3)) {
-          ret = "";
-        } else if (isX(m3)) {
-          ret = `>=${M3}.0.0${z2} <${+M3 + 1}.0.0-0`;
-        } else if (isX(p3)) {
-          if (M3 === "0") {
-            ret = `>=${M3}.${m3}.0${z2} <${M3}.${+m3 + 1}.0-0`;
-          } else {
-            ret = `>=${M3}.${m3}.0${z2} <${+M3 + 1}.0.0-0`;
-          }
-        } else if (pr3) {
-          debug("replaceCaret pr", pr3);
-          if (M3 === "0") {
-            if (m3 === "0") {
-              ret = `>=${M3}.${m3}.${p3}-${pr3} <${M3}.${m3}.${+p3 + 1}-0`;
-            } else {
-              ret = `>=${M3}.${m3}.${p3}-${pr3} <${M3}.${+m3 + 1}.0-0`;
-            }
-          } else {
-            ret = `>=${M3}.${m3}.${p3}-${pr3} <${+M3 + 1}.0.0-0`;
-          }
-        } else {
-          debug("no pr");
-          if (M3 === "0") {
-            if (m3 === "0") {
-              ret = `>=${M3}.${m3}.${p3} <${M3}.${m3}.${+p3 + 1}-0`;
-            } else {
-              ret = `>=${M3}.${m3}.${p3} <${M3}.${+m3 + 1}.0-0`;
-            }
-          } else {
-            ret = `>=${M3}.${m3}.${p3} <${+M3 + 1}.0.0-0`;
-          }
-        }
-        debug("caret return", ret);
-        return ret;
-      });
-    };
-    var replaceXRanges = (comp, options2) => {
-      debug("replaceXRanges", comp, options2);
-      return comp.split(/\s+/).map((c2) => replaceXRange(c2, options2)).join(" ");
-    };
-    var replaceXRange = (comp, options2) => {
-      comp = comp.trim();
-      const r = options2.loose ? re2[t.XRANGELOOSE] : re2[t.XRANGE];
-      return comp.replace(r, (ret, gtlt, M3, m3, p3, pr3) => {
-        debug("xRange", comp, ret, gtlt, M3, m3, p3, pr3);
-        if (invalidXRangeOrder(M3, m3, p3)) {
-          return comp;
-        }
-        const xM = isX(M3);
-        const xm2 = xM || isX(m3);
-        const xp = xm2 || isX(p3);
-        const anyX = xp;
-        if (gtlt === "=" && anyX) {
-          gtlt = "";
-        }
-        pr3 = options2.includePrerelease ? "-0" : "";
-        if (xM) {
-          if (gtlt === ">" || gtlt === "<") {
-            ret = "<0.0.0-0";
-          } else {
-            ret = "*";
-          }
-        } else if (gtlt && anyX) {
-          if (xm2) {
-            m3 = 0;
-          }
-          p3 = 0;
-          if (gtlt === ">") {
-            gtlt = ">=";
-            if (xm2) {
-              M3 = +M3 + 1;
-              m3 = 0;
-              p3 = 0;
-            } else {
-              m3 = +m3 + 1;
-              p3 = 0;
-            }
-          } else if (gtlt === "<=") {
-            gtlt = "<";
-            if (xm2) {
-              M3 = +M3 + 1;
-            } else {
-              m3 = +m3 + 1;
-            }
-          }
-          if (gtlt === "<") {
-            pr3 = "-0";
-          }
-          ret = `${gtlt + M3}.${m3}.${p3}${pr3}`;
-        } else if (xm2) {
-          ret = `>=${M3}.0.0${pr3} <${+M3 + 1}.0.0-0`;
-        } else if (xp) {
-          ret = `>=${M3}.${m3}.0${pr3} <${M3}.${+m3 + 1}.0-0`;
-        }
-        debug("xRange return", ret);
-        return ret;
-      });
-    };
-    var replaceStars = (comp, options2) => {
-      debug("replaceStars", comp, options2);
-      return comp.trim().replace(re2[t.STAR], "");
-    };
-    var replaceGTE0 = (comp, options2) => {
-      debug("replaceGTE0", comp, options2);
-      return comp.trim().replace(re2[options2.includePrerelease ? t.GTE0PRE : t.GTE0], "");
-    };
-    var hyphenReplace = (incPr) => ($0, from, fM, fm2, fp, fpr, fb, to, tM, tm2, tp, tpr) => {
-      if (isX(fM)) {
-        from = "";
-      } else if (isX(fm2)) {
-        from = `>=${fM}.0.0${incPr ? "-0" : ""}`;
-      } else if (isX(fp)) {
-        from = `>=${fM}.${fm2}.0${incPr ? "-0" : ""}`;
-      } else if (fpr) {
-        from = `>=${from}`;
-      } else {
-        from = `>=${from}${incPr ? "-0" : ""}`;
-      }
-      if (isX(tM)) {
-        to = "";
-      } else if (isX(tm2)) {
-        to = `<${+tM + 1}.0.0-0`;
-      } else if (isX(tp)) {
-        to = `<${tM}.${+tm2 + 1}.0-0`;
-      } else if (tpr) {
-        to = `<=${tM}.${tm2}.${tp}-${tpr}`;
-      } else if (incPr) {
-        to = `<${tM}.${tm2}.${+tp + 1}-0`;
-      } else {
-        to = `<=${to}`;
-      }
-      return `${from} ${to}`.trim();
-    };
-    var testSet = (set, version, options2) => {
-      for (let i = 0;i < set.length; i++) {
-        if (!set[i].test(version)) {
-          return false;
-        }
-      }
-      if (version.prerelease.length && !options2.includePrerelease) {
-        for (let i = 0;i < set.length; i++) {
-          debug(set[i].semver);
-          if (set[i].semver === Comparator.ANY) {
-            continue;
-          }
-          if (set[i].semver.prerelease.length > 0) {
-            const allowed = set[i].semver;
-            if (allowed.major === version.major && allowed.minor === version.minor && allowed.patch === version.patch) {
-              return true;
-            }
-          }
-        }
-        return false;
-      }
-      return true;
-    };
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/classes/comparator.js
-  var require_comparator = __commonJS((exports, module) => {
-    var ANY = Symbol("SemVer ANY");
-
-    class Comparator {
-      static get ANY() {
-        return ANY;
-      }
-      constructor(comp, options2) {
-        options2 = parseOptions(options2);
-        if (comp instanceof Comparator) {
-          if (comp.loose === !!options2.loose) {
-            return comp;
-          } else {
-            comp = comp.value;
-          }
-        }
-        comp = comp.trim().split(/\s+/).join(" ");
-        debug("comparator", comp, options2);
-        this.options = options2;
-        this.loose = !!options2.loose;
-        this.parse(comp);
-        if (this.semver === ANY) {
-          this.value = "";
-        } else {
-          this.value = this.operator + this.semver.version;
-        }
-        debug("comp", this);
-      }
-      parse(comp) {
-        const r = this.options.loose ? re2[t.COMPARATORLOOSE] : re2[t.COMPARATOR];
-        const m3 = comp.match(r);
-        if (!m3) {
-          throw new TypeError(`Invalid comparator: ${comp}`);
-        }
-        this.operator = m3[1] !== undefined ? m3[1] : "";
-        if (this.operator === "=") {
-          this.operator = "";
-        }
-        if (!m3[2]) {
-          this.semver = ANY;
-        } else {
-          this.semver = new SemVer(m3[2], this.options.loose);
-        }
-      }
-      toString() {
-        return this.value;
-      }
-      test(version) {
-        debug("Comparator.test", version, this.options.loose);
-        if (this.semver === ANY || version === ANY) {
-          return true;
-        }
-        if (typeof version === "string") {
-          try {
-            version = new SemVer(version, this.options);
-          } catch (er3) {
-            return false;
-          }
-        }
-        return cmp(version, this.operator, this.semver, this.options);
-      }
-      intersects(comp, options2) {
-        if (!(comp instanceof Comparator)) {
-          throw new TypeError("a Comparator is required");
-        }
-        if (this.operator === "") {
-          if (this.value === "") {
-            return true;
-          }
-          return new Range(comp.value, options2).test(this.value);
-        } else if (comp.operator === "") {
-          if (comp.value === "") {
-            return true;
-          }
-          return new Range(this.value, options2).test(comp.semver);
-        }
-        options2 = parseOptions(options2);
-        if (options2.includePrerelease && (this.value === "<0.0.0-0" || comp.value === "<0.0.0-0")) {
-          return false;
-        }
-        if (!options2.includePrerelease && (this.value.startsWith("<0.0.0") || comp.value.startsWith("<0.0.0"))) {
-          return false;
-        }
-        if (this.operator.startsWith(">") && comp.operator.startsWith(">")) {
-          return true;
-        }
-        if (this.operator.startsWith("<") && comp.operator.startsWith("<")) {
-          return true;
-        }
-        if (this.semver.version === comp.semver.version && this.operator.includes("=") && comp.operator.includes("=")) {
-          return true;
-        }
-        if (cmp(this.semver, "<", comp.semver, options2) && this.operator.startsWith(">") && comp.operator.startsWith("<")) {
-          return true;
-        }
-        if (cmp(this.semver, ">", comp.semver, options2) && this.operator.startsWith("<") && comp.operator.startsWith(">")) {
-          return true;
-        }
-        return false;
-      }
-    }
-    module.exports = Comparator;
-    var parseOptions = require_parse_options();
-    var { safeRe: re2, t } = require_re();
-    var cmp = require_cmp();
-    var debug = require_debug();
-    var SemVer = require_semver();
-    var Range = require_range();
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/functions/satisfies.js
-  var require_satisfies = __commonJS((exports, module) => {
-    var Range = require_range();
-    var satisfies = (version, range, options2) => {
-      try {
-        range = new Range(range, options2);
-      } catch (er3) {
-        return false;
-      }
-      return range.test(version);
-    };
-    module.exports = satisfies;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/ranges/to-comparators.js
-  var require_to_comparators = __commonJS((exports, module) => {
-    var Range = require_range();
-    var toComparators = (range, options2) => new Range(range, options2).set.map((comp) => comp.map((c2) => c2.value).join(" ").trim().split(" "));
-    module.exports = toComparators;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/ranges/max-satisfying.js
-  var require_max_satisfying = __commonJS((exports, module) => {
-    var SemVer = require_semver();
-    var Range = require_range();
-    var maxSatisfying = (versions, range, options2) => {
-      let max = null;
-      let maxSV = null;
-      let rangeObj = null;
-      try {
-        rangeObj = new Range(range, options2);
-      } catch (er3) {
-        return null;
-      }
-      versions.forEach((v2) => {
-        if (rangeObj.test(v2)) {
-          if (!max || maxSV.compare(v2) === -1) {
-            max = v2;
-            maxSV = new SemVer(max, options2);
-          }
-        }
-      });
-      return max;
-    };
-    module.exports = maxSatisfying;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/ranges/min-satisfying.js
-  var require_min_satisfying = __commonJS((exports, module) => {
-    var SemVer = require_semver();
-    var Range = require_range();
-    var minSatisfying = (versions, range, options2) => {
-      let min = null;
-      let minSV = null;
-      let rangeObj = null;
-      try {
-        rangeObj = new Range(range, options2);
-      } catch (er3) {
-        return null;
-      }
-      versions.forEach((v2) => {
-        if (rangeObj.test(v2)) {
-          if (!min || minSV.compare(v2) === 1) {
-            min = v2;
-            minSV = new SemVer(min, options2);
-          }
-        }
-      });
-      return min;
-    };
-    module.exports = minSatisfying;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/ranges/min-version.js
-  var require_min_version = __commonJS((exports, module) => {
-    var SemVer = require_semver();
-    var Range = require_range();
-    var gt3 = require_gt();
-    var minVersion = (range, loose) => {
-      range = new Range(range, loose);
-      let minver = new SemVer("0.0.0");
-      if (range.test(minver)) {
-        return minver;
-      }
-      minver = new SemVer("0.0.0-0");
-      if (range.test(minver)) {
-        return minver;
-      }
-      minver = null;
-      for (let i = 0;i < range.set.length; ++i) {
-        const comparators = range.set[i];
-        let setMin = null;
-        comparators.forEach((comparator) => {
-          const compver = new SemVer(comparator.semver.version);
-          switch (comparator.operator) {
-            case ">":
-              if (compver.prerelease.length === 0) {
-                compver.patch++;
-              } else {
-                compver.prerelease.push(0);
-              }
-              compver.raw = compver.format();
-            case "":
-            case ">=":
-              if (!setMin || gt3(compver, setMin)) {
-                setMin = compver;
-              }
-              break;
-            case "<":
-            case "<=":
-              break;
-            default:
-              throw new Error(`Unexpected operation: ${comparator.operator}`);
-          }
-        });
-        if (setMin && (!minver || gt3(minver, setMin))) {
-          minver = setMin;
-        }
-      }
-      if (minver && range.test(minver)) {
-        return minver;
-      }
-      return null;
-    };
-    module.exports = minVersion;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/ranges/valid.js
-  var require_valid2 = __commonJS((exports, module) => {
-    var Range = require_range();
-    var validRange = (range, options2) => {
-      try {
-        return new Range(range, options2).range || "*";
-      } catch (er3) {
-        return null;
-      }
-    };
-    module.exports = validRange;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/ranges/outside.js
-  var require_outside = __commonJS((exports, module) => {
-    var SemVer = require_semver();
-    var Comparator = require_comparator();
-    var { ANY } = Comparator;
-    var Range = require_range();
-    var satisfies = require_satisfies();
-    var gt3 = require_gt();
-    var lt3 = require_lt();
-    var lte = require_lte();
-    var gte = require_gte();
-    var outside = (version, range, hilo, options2) => {
-      version = new SemVer(version, options2);
-      range = new Range(range, options2);
-      let gtfn, ltefn, ltfn, comp, ecomp;
-      switch (hilo) {
-        case ">":
-          gtfn = gt3;
-          ltefn = lte;
-          ltfn = lt3;
-          comp = ">";
-          ecomp = ">=";
-          break;
-        case "<":
-          gtfn = lt3;
-          ltefn = gte;
-          ltfn = gt3;
-          comp = "<";
-          ecomp = "<=";
-          break;
-        default:
-          throw new TypeError('Must provide a hilo val of "<" or ">"');
-      }
-      if (satisfies(version, range, options2)) {
-        return false;
-      }
-      for (let i = 0;i < range.set.length; ++i) {
-        const comparators = range.set[i];
-        let high = null;
-        let low = null;
-        comparators.forEach((comparator) => {
-          if (comparator.semver === ANY) {
-            comparator = new Comparator(">=0.0.0");
-          }
-          high = high || comparator;
-          low = low || comparator;
-          if (gtfn(comparator.semver, high.semver, options2)) {
-            high = comparator;
-          } else if (ltfn(comparator.semver, low.semver, options2)) {
-            low = comparator;
-          }
-        });
-        if (high.operator === comp || high.operator === ecomp) {
-          return false;
-        }
-        if ((!low.operator || low.operator === comp) && ltefn(version, low.semver)) {
-          return false;
-        } else if (low.operator === ecomp && ltfn(version, low.semver)) {
-          return false;
-        }
-      }
-      return true;
-    };
-    module.exports = outside;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/ranges/gtr.js
-  var require_gtr = __commonJS((exports, module) => {
-    var outside = require_outside();
-    var gtr = (version, range, options2) => outside(version, range, ">", options2);
-    module.exports = gtr;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/ranges/ltr.js
-  var require_ltr = __commonJS((exports, module) => {
-    var outside = require_outside();
-    var ltr = (version, range, options2) => outside(version, range, "<", options2);
-    module.exports = ltr;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/ranges/intersects.js
-  var require_intersects = __commonJS((exports, module) => {
-    var Range = require_range();
-    var intersects = (r1, r2, options2) => {
-      r1 = new Range(r1, options2);
-      r2 = new Range(r2, options2);
-      return r1.intersects(r2, options2);
-    };
-    module.exports = intersects;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/ranges/simplify.js
-  var require_simplify = __commonJS((exports, module) => {
-    var satisfies = require_satisfies();
-    var compare = require_compare();
-    module.exports = (versions, range, options2) => {
-      const set = [];
-      let first = null;
-      let prev = null;
-      const v2 = versions.sort((a2, b3) => compare(a2, b3, options2));
-      for (const version of v2) {
-        const included = satisfies(version, range, options2);
-        if (included) {
-          prev = version;
-          if (!first) {
-            first = version;
-          }
-        } else {
-          if (prev) {
-            set.push([first, prev]);
-          }
-          prev = null;
-          first = null;
-        }
-      }
-      if (first) {
-        set.push([first, null]);
-      }
-      const ranges = [];
-      for (const [min, max] of set) {
-        if (min === max) {
-          ranges.push(min);
-        } else if (!max && min === v2[0]) {
-          ranges.push("*");
-        } else if (!max) {
-          ranges.push(`>=${min}`);
-        } else if (min === v2[0]) {
-          ranges.push(`<=${max}`);
-        } else {
-          ranges.push(`${min} - ${max}`);
-        }
-      }
-      const simplified = ranges.join(" || ");
-      const original = typeof range.raw === "string" ? range.raw : String(range);
-      return simplified.length < original.length ? simplified : range;
-    };
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/ranges/subset.js
-  var require_subset = __commonJS((exports, module) => {
-    var Range = require_range();
-    var Comparator = require_comparator();
-    var { ANY } = Comparator;
-    var satisfies = require_satisfies();
-    var compare = require_compare();
-    var subset = (sub, dom, options2 = {}) => {
-      if (sub === dom) {
-        return true;
-      }
-      sub = new Range(sub, options2);
-      dom = new Range(dom, options2);
-      let sawNonNull = false;
-      OUTER:
-        for (const simpleSub of sub.set) {
-          for (const simpleDom of dom.set) {
-            const isSub = simpleSubset(simpleSub, simpleDom, options2);
-            sawNonNull = sawNonNull || isSub !== null;
-            if (isSub) {
-              continue OUTER;
-            }
-          }
-          if (sawNonNull) {
-            return false;
-          }
-        }
-      return true;
-    };
-    var minimumVersionWithPreRelease = [new Comparator(">=0.0.0-0")];
-    var minimumVersion = [new Comparator(">=0.0.0")];
-    var simpleSubset = (sub, dom, options2) => {
-      if (sub === dom) {
-        return true;
-      }
-      if (sub.length === 1 && sub[0].semver === ANY) {
-        if (dom.length === 1 && dom[0].semver === ANY) {
-          return true;
-        } else if (options2.includePrerelease) {
-          sub = minimumVersionWithPreRelease;
-        } else {
-          sub = minimumVersion;
-        }
-      }
-      if (dom.length === 1 && dom[0].semver === ANY) {
-        if (options2.includePrerelease) {
-          return true;
-        } else {
-          dom = minimumVersion;
-        }
-      }
-      const eqSet = new Set;
-      let gt3, lt3;
-      for (const c2 of sub) {
-        if (c2.operator === ">" || c2.operator === ">=") {
-          gt3 = higherGT(gt3, c2, options2);
-        } else if (c2.operator === "<" || c2.operator === "<=") {
-          lt3 = lowerLT(lt3, c2, options2);
-        } else {
-          eqSet.add(c2.semver);
-        }
-      }
-      if (eqSet.size > 1) {
-        return null;
-      }
-      let gtltComp;
-      if (gt3 && lt3) {
-        gtltComp = compare(gt3.semver, lt3.semver, options2);
-        if (gtltComp > 0) {
-          return null;
-        } else if (gtltComp === 0 && (gt3.operator !== ">=" || lt3.operator !== "<=")) {
-          return null;
-        }
-      }
-      for (const eq of eqSet) {
-        if (gt3 && !satisfies(eq, String(gt3), options2)) {
-          return null;
-        }
-        if (lt3 && !satisfies(eq, String(lt3), options2)) {
-          return null;
-        }
-        for (const c2 of dom) {
-          if (!satisfies(eq, String(c2), options2)) {
-            return false;
-          }
-        }
-        return true;
-      }
-      let higher, lower;
-      let hasDomLT, hasDomGT;
-      let needDomLTPre = lt3 && !options2.includePrerelease && lt3.semver.prerelease.length ? lt3.semver : false;
-      let needDomGTPre = gt3 && !options2.includePrerelease && gt3.semver.prerelease.length ? gt3.semver : false;
-      if (needDomLTPre && needDomLTPre.prerelease.length === 1 && lt3.operator === "<" && needDomLTPre.prerelease[0] === 0) {
-        needDomLTPre = false;
-      }
-      for (const c2 of dom) {
-        hasDomGT = hasDomGT || c2.operator === ">" || c2.operator === ">=";
-        hasDomLT = hasDomLT || c2.operator === "<" || c2.operator === "<=";
-        if (gt3) {
-          if (needDomGTPre) {
-            if (c2.semver.prerelease && c2.semver.prerelease.length && c2.semver.major === needDomGTPre.major && c2.semver.minor === needDomGTPre.minor && c2.semver.patch === needDomGTPre.patch) {
-              needDomGTPre = false;
-            }
-          }
-          if (c2.operator === ">" || c2.operator === ">=") {
-            higher = higherGT(gt3, c2, options2);
-            if (higher === c2 && higher !== gt3) {
-              return false;
-            }
-          } else if (gt3.operator === ">=" && !c2.test(gt3.semver)) {
-            return false;
-          }
-        }
-        if (lt3) {
-          if (needDomLTPre) {
-            if (c2.semver.prerelease && c2.semver.prerelease.length && c2.semver.major === needDomLTPre.major && c2.semver.minor === needDomLTPre.minor && c2.semver.patch === needDomLTPre.patch) {
-              needDomLTPre = false;
-            }
-          }
-          if (c2.operator === "<" || c2.operator === "<=") {
-            lower = lowerLT(lt3, c2, options2);
-            if (lower === c2 && lower !== lt3) {
-              return false;
-            }
-          } else if (lt3.operator === "<=" && !c2.test(lt3.semver)) {
-            return false;
-          }
-        }
-        if (!c2.operator && (lt3 || gt3) && gtltComp !== 0) {
-          return false;
-        }
-      }
-      if (gt3 && hasDomLT && !lt3 && gtltComp !== 0) {
-        return false;
-      }
-      if (lt3 && hasDomGT && !gt3 && gtltComp !== 0) {
-        return false;
-      }
-      if (needDomGTPre || needDomLTPre) {
-        return false;
-      }
-      return true;
-    };
-    var higherGT = (a2, b3, options2) => {
-      if (!a2) {
-        return b3;
-      }
-      const comp = compare(a2.semver, b3.semver, options2);
-      return comp > 0 ? a2 : comp < 0 ? b3 : b3.operator === ">" && a2.operator === ">=" ? b3 : a2;
-    };
-    var lowerLT = (a2, b3, options2) => {
-      if (!a2) {
-        return b3;
-      }
-      const comp = compare(a2.semver, b3.semver, options2);
-      return comp < 0 ? a2 : comp > 0 ? b3 : b3.operator === "<" && a2.operator === "<=" ? b3 : a2;
-    };
-    module.exports = subset;
-  });
-
-  // ../../../node_modules/.bun/semver@7.8.5/node_modules/semver/index.js
-  var require_semver2 = __commonJS((exports, module) => {
-    var internalRe = require_re();
-    var constants = require_constants();
-    var SemVer = require_semver();
-    var identifiers = require_identifiers();
-    var parse = require_parse();
-    var valid = require_valid();
-    var clean = require_clean();
-    var inc = require_inc();
-    var diff = require_diff();
-    var major = require_major();
-    var minor = require_minor();
-    var patch = require_patch();
-    var prerelease = require_prerelease();
-    var compare = require_compare();
-    var rcompare = require_rcompare();
-    var compareLoose = require_compare_loose();
-    var compareBuild = require_compare_build();
-    var sort = require_sort();
-    var rsort = require_rsort();
-    var gt3 = require_gt();
-    var lt3 = require_lt();
-    var eq = require_eq();
-    var neq = require_neq();
-    var gte = require_gte();
-    var lte = require_lte();
-    var cmp = require_cmp();
-    var coerce = require_coerce();
-    var truncate = require_truncate();
-    var Comparator = require_comparator();
-    var Range = require_range();
-    var satisfies = require_satisfies();
-    var toComparators = require_to_comparators();
-    var maxSatisfying = require_max_satisfying();
-    var minSatisfying = require_min_satisfying();
-    var minVersion = require_min_version();
-    var validRange = require_valid2();
-    var outside = require_outside();
-    var gtr = require_gtr();
-    var ltr = require_ltr();
-    var intersects = require_intersects();
-    var simplifyRange = require_simplify();
-    var subset = require_subset();
-    module.exports = {
-      parse,
-      valid,
-      clean,
-      inc,
-      diff,
-      major,
-      minor,
-      patch,
-      prerelease,
-      compare,
-      rcompare,
-      compareLoose,
-      compareBuild,
-      sort,
-      rsort,
-      gt: gt3,
-      lt: lt3,
-      eq,
-      neq,
-      gte,
-      lte,
-      cmp,
-      coerce,
-      truncate,
-      Comparator,
-      Range,
-      satisfies,
-      toComparators,
-      maxSatisfying,
-      minSatisfying,
-      minVersion,
-      validRange,
-      outside,
-      gtr,
-      ltr,
-      intersects,
-      simplifyRange,
-      subset,
-      SemVer,
-      re: internalRe.re,
-      src: internalRe.src,
-      tokens: internalRe.t,
-      SEMVER_SPEC_VERSION: constants.SEMVER_SPEC_VERSION,
-      RELEASE_TYPES: constants.RELEASE_TYPES,
-      compareIdentifiers: identifiers.compareIdentifiers,
-      rcompareIdentifiers: identifiers.rcompareIdentifiers
-    };
-  });
-
   // ../../features/cms-content/src/interfaces/Editor/Editor.ts
   class Editor {
     target;
@@ -26105,17 +24243,6 @@ w13c-lateral-menu-item {
         </svg>
         Authentication
     </w13c-lateral-menu-item>
-
-    <w13c-lateral-menu-item data-settings-section="connectors">
-        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 7H5a2 2 0 0 0-2 2v2a4 4 0 0 0 4 4h2" />
-            <path d="M15 17h4a2 2 0 0 0 2-2v-2a4 4 0 0 0-4-4h-2" />
-            <path d="M8 12h8" />
-            <path d="M12 8v8" />
-        </svg>
-        Connector providers
-    </w13c-lateral-menu-item>
 </w13c-lateral-menu>
 `;
 
@@ -26127,8 +24254,7 @@ w13c-lateral-menu-item {
     "email",
     "privacy-analytics",
     "secrets",
-    "authentication",
-    "connectors"
+    "authentication"
   ];
   var DEFAULT_SECTION = "general";
 
@@ -30147,129 +28273,6 @@ circle.endpoint-timeline__errors {
     return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
   }
 
-  // src/static/admin/_content/sources/_runtime/navigation.html
-  var navigation_default = `<w13c-lateral-menu-item data-add-source manual-active href="{{ navAddHref }}" cms-bind-boolean-active="navAddActive">Add a source</w13c-lateral-menu-item>
-<cms-dashboard-nav-installations hidden data-nav-installations-source cms-reload-on="integration:updated"></cms-dashboard-nav-installations>
-<span class="empty" cms-condition="$source.loading &amp;&amp; !navReady">Loading sources…</span>
-<p9r-alert type="error" cms-condition="$source.error || $source.refreshError">Unable to load sources. {{ $source.message }}<p9r-button data-nav-retry>Retry</p9r-button></p9r-alert>
-<span class="empty" cms-condition="navEmpty">No sources</span>
-<w13c-lateral-menu-item cms-repeat="navItems as item" data-generated="true" data-source="{{ item.source }}" data-dashboard="{{ item.dashboard }}" href="{{ item.href }}" manual-active cms-bind-boolean-active="item.active" cms-bind-boolean-hidden="item.hidden" cms-bind-boolean-data-nested="item.nested">
-    <cms-dashboard-icon slot="icon" name="{{ item.icon }}" svg="{{ item.svg }}" cms-condition="item.icon || item.svg"></cms-dashboard-icon>
-    {{ item.label }}
-</w13c-lateral-menu-item>
-`;
-
-  // src/components/admin/Resources/Dashboards/api.ts
-  var DASHBOARD_SELECTION_EVENT = "cms-dashboards:selection";
-  function basePath() {
-    const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
-    return raw.replace(/\/+$/, "");
-  }
-  function route(path) {
-    return `${basePath()}${path}`;
-  }
-  function currentSource() {
-    return new URL(window.location.href).searchParams.get("source") ?? "";
-  }
-  function currentDashboard() {
-    return new URL(window.location.href).searchParams.get("dashboard") ?? "";
-  }
-  function currentCollection() {
-    return new URL(window.location.href).searchParams.get("collection") ?? "";
-  }
-  function currentRow() {
-    return new URL(window.location.href).searchParams.get("row") ?? "";
-  }
-  function currentSelection() {
-    const collection = currentCollection();
-    const row = currentRow();
-    return {
-      source: currentSource(),
-      dashboard: currentDashboard(),
-      ...collection && row ? { collection, row } : {}
-    };
-  }
-  function defaultDashboardSource(groups) {
-    return groups.find((group) => group.dashboards.length > 0)?.source.id ?? groups[0]?.source.id ?? "";
-  }
-  function replaceSelectionUrl(selection) {
-    history.replaceState(null, "", selectionUrl(selection));
-  }
-  function pushSelectionUrl(selection) {
-    history.pushState(null, "", selectionUrl(selection));
-  }
-  function selectionUrl(selection) {
-    const scoped = Boolean(document.documentElement.dataset.dashboardScope);
-    const target2 = scoped ? new URL(window.location.href) : new URL(route("/admin/sources"), window.location.origin);
-    const params = target2.searchParams;
-    for (const key of ["source", "dashboard", "collection", "row"]) {
-      params.delete(key);
-    }
-    if (selection.source) {
-      params.set("source", selection.source);
-    }
-    if (selection.dashboard) {
-      params.set("dashboard", selection.dashboard);
-    }
-    if (selection.collection && selection.row) {
-      params.set("collection", selection.collection);
-      params.set("row", selection.row);
-    }
-    target2.search = params.toString();
-    return `${target2.pathname}${target2.search}`;
-  }
-  function dispatchDashboardSelection(selection) {
-    window.dispatchEvent(new CustomEvent(DASHBOARD_SELECTION_EVENT, { detail: selection }));
-  }
-  function dashboardUserOptions(users) {
-    return users.flatMap((user) => {
-      const sub = typeof user.sub === "string" ? user.sub : "";
-      if (!sub) {
-        return [];
-      }
-      const email = cleanText(user.email);
-      const fallbackLabel = cleanText(user.label);
-      const name = cleanText(user.displayName) || (fallbackLabel !== email ? fallbackLabel : "");
-      const humanLabel = name && email ? `${name} — ${email}` : name || email || sub;
-      const role = cleanText(user.roleLabel) || cleanText(user.role);
-      const metadata = [role, sub].filter((value2) => value2 && value2 !== humanLabel).join(" · ");
-      return [{ value: sub, label: metadata ? `${humanLabel} · ${metadata}` : humanLabel }];
-    });
-  }
-  function cleanText(value2) {
-    return typeof value2 === "string" ? value2.trim() : "";
-  }
-
-  // src/components/admin/Resources/Dashboards/navigation/mode.ts
-  function isDashboardExampleMode(host) {
-    return host.hasAttribute("example") || window.location.pathname.replace(/\/+$/, "").endsWith("/admin/sources/example");
-  }
-
-  // src/components/admin/Resources/Dashboards/navigation/binding/Installations.ts
-  class NavigationInstallations extends HTMLElement {
-    queued = false;
-    connectedCallback() {
-      const owner = this.closest("cms-dashboards-nav");
-      if (!owner || isDashboardExampleMode(owner)) {
-        return;
-      }
-      hc(this, () => {
-        if (!this.queued) {
-          this.queued = true;
-          queueMicrotask(() => {
-            this.queued = false;
-            if (this.isConnected) {
-              Zi(owner);
-            }
-          });
-        }
-        return {};
-      });
-      this.setAttribute("cms-source", `${route("/api/integrations/installations")} as installations`);
-    }
-  }
-  customElements.define("cms-dashboard-nav-installations", NavigationInstallations);
-
   // src/components/admin/Resources/Dashboards/navigation/icons/catalog.ts
   var DASHBOARD_ICONS = {
     database: svg(`
@@ -30454,7 +28457,7 @@ svg { width: 100%; height: 100%; stroke: currentColor; fill: none; }
   // src/components/admin/Resources/Dashboards/navigation/binding/context.ts
   function navigationContext() {
     let items = [];
-    return (groups, _installations, source2, dashboard, catalogue, selectedInstallation, example) => {
+    return (groups, source2, dashboard, example) => {
       const next = [];
       const append = (item) => {
         const previous = items[next.length];
@@ -30471,7 +28474,7 @@ svg { width: 100%; height: 100%; stroke: currentColor; fill: none; }
           icon: group.source.icon ?? "database",
           svg: group.source.svg ?? "",
           nested: false,
-          active: id2 === source2 && !catalogue,
+          active: id2 === source2,
           hidden: false
         });
         for (const entry of group.dashboards) {
@@ -30484,17 +28487,15 @@ svg { width: 100%; height: 100%; stroke: currentColor; fill: none; }
             icon: entry.meta?.icon ?? "layout",
             svg: entry.meta?.svg ?? "",
             nested: true,
-            active: !selectedInstallation && entry.id === dashboard,
-            hidden: catalogue || id2 !== source2 || !example && group.dashboards.length < 2
+            active: entry.id === dashboard,
+            hidden: id2 !== source2 || !example && group.dashboards.length < 2
           });
         }
       }
       items = next;
       return {
         navItems: items,
-        navEmpty: groups.length === 0,
-        navAddActive: catalogue,
-        navAddHref: route("/admin/sources?tab=catalogue")
+        navEmpty: groups.length === 0
       };
     };
   }
@@ -30516,10 +28517,85 @@ svg { width: 100%; height: 100%; stroke: currentColor; fill: none; }
     }
   ];
 
-  // src/components/admin/Resources/Dashboards/navigation/management.ts
-  function sourceForInstallation(id2, installations) {
-    const item = installations.find((item2) => item2.id === id2);
-    return item?.sourceIds?.[0] ?? installations.find((parent) => parent.id === item?.extensionOf?.kind)?.sourceIds?.[0];
+  // src/components/admin/Resources/Dashboards/api.ts
+  var DASHBOARD_SELECTION_EVENT = "cms-dashboards:selection";
+  function basePath() {
+    const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
+    return raw.replace(/\/+$/, "");
+  }
+  function route(path) {
+    return `${basePath()}${path}`;
+  }
+  function currentSource() {
+    return new URL(window.location.href).searchParams.get("source") ?? "";
+  }
+  function currentDashboard() {
+    return new URL(window.location.href).searchParams.get("dashboard") ?? "";
+  }
+  function currentCollection() {
+    return new URL(window.location.href).searchParams.get("collection") ?? "";
+  }
+  function currentRow() {
+    return new URL(window.location.href).searchParams.get("row") ?? "";
+  }
+  function currentSelection() {
+    const collection = currentCollection();
+    const row = currentRow();
+    return {
+      source: currentSource(),
+      dashboard: currentDashboard(),
+      ...collection && row ? { collection, row } : {}
+    };
+  }
+  function defaultDashboardSource(groups) {
+    return groups.find((group) => group.dashboards.length > 0)?.source.id ?? groups[0]?.source.id ?? "";
+  }
+  function replaceSelectionUrl(selection) {
+    history.replaceState(null, "", selectionUrl(selection));
+  }
+  function pushSelectionUrl(selection) {
+    history.pushState(null, "", selectionUrl(selection));
+  }
+  function selectionUrl(selection) {
+    const scoped = Boolean(document.documentElement.dataset.dashboardScope);
+    const target2 = scoped ? new URL(window.location.href) : new URL(route("/admin/sources"), window.location.origin);
+    const params = target2.searchParams;
+    for (const key of ["source", "dashboard", "collection", "row"]) {
+      params.delete(key);
+    }
+    if (selection.source) {
+      params.set("source", selection.source);
+    }
+    if (selection.dashboard) {
+      params.set("dashboard", selection.dashboard);
+    }
+    if (selection.collection && selection.row) {
+      params.set("collection", selection.collection);
+      params.set("row", selection.row);
+    }
+    target2.search = params.toString();
+    return `${target2.pathname}${target2.search}`;
+  }
+  function dispatchDashboardSelection(selection) {
+    window.dispatchEvent(new CustomEvent(DASHBOARD_SELECTION_EVENT, { detail: selection }));
+  }
+  function dashboardUserOptions(users) {
+    return users.flatMap((user) => {
+      const sub = typeof user.sub === "string" ? user.sub : "";
+      if (!sub) {
+        return [];
+      }
+      const email = cleanText(user.email);
+      const fallbackLabel = cleanText(user.label);
+      const name = cleanText(user.displayName) || (fallbackLabel !== email ? fallbackLabel : "");
+      const humanLabel = name && email ? `${name} — ${email}` : name || email || sub;
+      const role = cleanText(user.roleLabel) || cleanText(user.role);
+      const metadata = [role, sub].filter((value2) => value2 && value2 !== humanLabel).join(" · ");
+      return [{ value: sub, label: metadata ? `${humanLabel} · ${metadata}` : humanLabel }];
+    });
+  }
+  function cleanText(value2) {
+    return typeof value2 === "string" ? value2.trim() : "";
   }
 
   // src/components/admin/Resources/Dashboards/navigation/nav.css
@@ -30571,7 +28647,6 @@ w13c-lateral-menu {
 
   // src/components/admin/Resources/Dashboards/navigation/DashboardNav.ts
   class DashboardNav extends l {
-    installations = [];
     groups = [];
     selectedSource = "";
     selectedDashboard = "";
@@ -30596,11 +28671,6 @@ w13c-lateral-menu {
       window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection);
     }
     startBoundSource() {
-      if (!this.querySelector("[data-add-source]")) {
-        const template3 = document.createElement("template");
-        template3.innerHTML = navigation_default;
-        this.append(template3.content.cloneNode(true));
-      }
       this.setAttribute("data-nav-list-source", "");
       this.setAttribute("cms-reload-on", "dashboard:definitions-changed");
       this.setAttribute("cms-source", this.isExampleMode() ? "" : `${route("/api/dashboards")} as dashboards`);
@@ -30630,20 +28700,12 @@ w13c-lateral-menu {
     context() {
       const data = et(this);
       this.groups = Array.isArray(data) ? data : [];
-      const installationSource = this.querySelector("[data-nav-installations-source]");
-      const installations = installationSource ? et(installationSource) : undefined;
-      this.installations = Array.isArray(installations) ? installations : [];
-      const params = new URL(window.location.href).searchParams;
-      const installation = params.get("integration");
       this.selectedSource ||= defaultDashboardSource(this.groups);
-      if (installation) {
-        this.selectedSource = sourceForInstallation(installation, this.installations) ?? this.selectedSource;
-      }
       if (Array.isArray(data)) {
         this.ensureDashboardSelection();
       }
       return {
-        ...this.project(this.groups, this.installations, this.selectedSource, this.selectedDashboard, params.has("tab") || params.has("setup"), installation, this.isExampleMode()),
+        ...this.project(this.groups, this.selectedSource, this.selectedDashboard, this.isExampleMode()),
         navReady: Array.isArray(data),
         navEmpty: Array.isArray(data) && this.groups.length === 0
       };
@@ -38557,6 +36619,11 @@ slot { display: contents; }
     return selector === "[data-widgets]" ? root.host.querySelector(selector) : root.querySelector(selector);
   }
 
+  // src/components/admin/Resources/Dashboards/navigation/mode.ts
+  function isDashboardExampleMode(host) {
+    return host.hasAttribute("example") || window.location.pathname.replace(/\/+$/, "").endsWith("/admin/sources/example");
+  }
+
   // src/components/admin/Resources/Dashboards/view/controller/DashboardStateController.ts
   class DashboardStateController extends l {
     groups = [];
@@ -39547,7 +37614,7 @@ slot[name="profile"]::slotted(*) {
 `;
 
   // src/components/admin/DashboardWorkspace/workspace/styles/navigation.css
-  var navigation_default2 = `.dashboard-navigation-list,
+  var navigation_default = `.dashboard-navigation-list,
 .readonly-navigation {
     display: grid;
     gap: .4rem;
@@ -39868,7 +37935,7 @@ slot[name="profile"]::slotted(*) {
     session = null;
     sources = new WorkspaceSources;
     constructor() {
-      super({ css: `${base_default3}${navigation_default2}`, template: template_default18 });
+      super({ css: `${base_default3}${navigation_default}`, template: template_default18 });
     }
     disconnectWorkspace() {
       this.sources.disconnect();
@@ -41075,7 +39142,7 @@ p9r-modal {
     views = [];
     internals = this.attachInternals();
     constructor() {
-      super({ css: `${style_default15}${navigation_default2}`, template: template_default19 });
+      super({ css: `${style_default15}${navigation_default}`, template: template_default19 });
     }
     attributeChangedCallback() {
       if (this.isConnected) {
@@ -41264,2733 +39331,20 @@ p9r-modal {
     };
   }
 
-  // src/components/admin/Resources/Integrations/template.html
-  var template_default20 = `<div class="integrations-root">
-    <div class="binding-feeds" aria-hidden="true">
-        <div data-installations-source cms-reload-on="integration:updated">
-            <template>
-                <span cms-condition="$source.loaded || $source.empty" data-installations-json="{{ installations | json }}"></span>
-            </template>
-        </div>
-    </div>
-
-    <section class="integrations-browser" data-browser>
-        <nav class="integration-tabs" aria-label="Resource views">
-            <button type="button" class="integration-tab is-active" data-tab="installed">
-                Installed <span data-installed-count></span>
-            </button>
-            <button type="button" class="integration-tab" data-tab="catalogue">
-                Catalogue <span data-catalogue-count></span>
-            </button>
-        </nav>
-
-        <section class="installed-view" data-installed-view>
-            <section class="definitions-source" data-definitions-source cms-reload-on="integration:updated">
-                <template>
-                    <span hidden cms-condition="$source.loaded || $source.empty" data-definitions-json="{{ definitions | json }}"></span>
-                    <div class="repository-error" data-repository-error="definitions" cms-condition="$source.error" role="alert" aria-atomic="true">
-                        <span class="repository-error-copy">
-                            <strong>Integration repository unavailable</strong>
-                            <span>Installed integrations remain available, but repository definitions could not be loaded.</span>
-                            <small>{{ $source.message }}</small>
-                        </span>
-                        <button type="button" data-repository-retry>Retry</button>
-                    </div>
-                </template>
-            </section>
-            <div class="installed-table" data-installations></div>
-            <p class="empty" data-installations-empty hidden>No installed integrations yet.</p>
-        </section>
-
-        <section class="catalogue-view" data-catalogue-view hidden>
-            <section data-catalogue-source cms-reload-on="integration:updated">
-                <template>
-                    <div class="repository-error" data-repository-error="catalogue" cms-condition="$source.error" role="alert" aria-atomic="true">
-                        <span class="repository-error-copy">
-                            <strong>Integration repository unavailable</strong>
-                            <span>The integration catalogue could not be loaded. Installed integrations remain available.</span>
-                            <small>{{ $source.message }}</small>
-                        </span>
-                        <button type="button" data-repository-retry>Retry</button>
-                    </div>
-                    <div class="catalogue-content" cms-condition="$source.loaded || $source.empty">
-                        <div class="filters">
-                            <p9r-input type="search" label="Search" placeholder="Search sources and extensions" data-search cms-param-sync="integrationSearch"></p9r-input>
-                            <p9r-select label="Category" data-category cms-param-sync="integrationCategory">
-                                <option value="">All categories</option>
-                                <option cms-repeat="catalogue.categories as category" value="{{ category }}">{{ category }}</option>
-                            </p9r-select>
-                        </div>
-                        <p9r-grid class="catalogue-grid" data-catalogue min="lg" max="lg" gap="sm">
-                            <a class="catalogue-card" href="{{ integration.setupUrl }}" data-definition-kind="{{ integration.kind }}" cms-repeat="catalogue.items as integration">
-                                <span class="card-head">
-                                    <span data-icon-host>{{ integration.iconHtml | innerHTML }}</span>
-                                    <span>
-                                        <strong>{{ integration.label }}</strong>
-                                        <small>{{ integration.description }}</small>
-                                    </span>
-                                </span>
-                                <span class="badge-row">
-                                    <span class="{{ badge.className }}" cms-repeat="integration.badges as badge">{{ badge.label }}</span>
-                                </span>
-                            </a>
-                        </p9r-grid>
-                        <p class="empty" data-catalogue-empty cms-condition="$source.loaded && !catalogue.hasItems">No matching integrations.</p>
-                    </div>
-                </template>
-            </section>
-        </section>
-    </section>
-
-    <section class="integration-detail" data-detail-view hidden></section>
-
-
-</div>
-`;
-
-  // src/components/admin/Resources/Integrations/api.ts
-  function basePath2() {
-    const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
-    return raw.replace(/\/+$/, "");
-  }
-  function route2(path) {
-    return `${basePath2()}${path}`;
-  }
-  function currentIntegrationRoute() {
-    const params = new URL(window.location.href).searchParams;
-    const installation = params.get("integration")?.trim();
-    if (installation) {
-      return { view: "installation", id: installation };
-    }
-    const setup = params.get("setup")?.trim();
-    if (setup) {
-      return { view: "setup", kind: setup };
-    }
-    return { view: "list", tab: params.get("tab") === "catalogue" ? "catalogue" : "installed" };
-  }
-  function integrationRouteUrl(next) {
-    const params = new URLSearchParams;
-    if (next.view === "installation") {
-      params.set("integration", next.id);
-    } else if (next.view === "setup") {
-      params.set("setup", next.kind);
-    } else {
-      params.set("tab", next.tab);
-    }
-    const suffix = params.toString() ? `?${params.toString()}` : "";
-    return route2(`/admin/sources${suffix}`);
-  }
-  function pushIntegrationRoute(next) {
-    history.pushState(null, "", integrationRouteUrl(next));
-    window.dispatchEvent(new Event("cms-resources:route"));
-  }
-  function replaceIntegrationRoute(next) {
-    history.replaceState(null, "", integrationRouteUrl(next));
-    window.dispatchEvent(new Event("cms-resources:route"));
-  }
-  async function importIntegration(payload) {
-    const result = await postJson(route2("/api/integrations/import"), payload);
-    document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
-    return result;
-  }
-  async function rerunIntegrationInstallation(id2, answers, resources) {
-    const body = { ...answers ? { answers } : {}, ...resources ? { resources } : {} };
-    await postJson(`${route2("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id2)}`, body);
-    document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
-    document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
-  }
-  async function integrationUpgradeVersions(id2) {
-    return getJson(`${route2("/api/integrations/installations/versions")}?id=${encodeURIComponent(id2)}`);
-  }
-  async function upgradeIntegrationInstallation(id2, version) {
-    await postJson(`${route2("/api/integrations/installations/upgrade")}?id=${encodeURIComponent(id2)}`, { version });
-    document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
-    document.dispatchEvent(new Event("cms-source:reload", { bubbles: true }));
-  }
-
-  class IntegrationApiError extends Error {
-    status;
-    constructor(status, message) {
-      super(message);
-      this.status = status;
-      this.name = "IntegrationApiError";
-    }
-  }
-  async function getJson(url) {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw await responseError(response);
-    }
-    return response.json();
-  }
-  async function postJson(url, body) {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    if (!response.ok) {
-      throw await responseError(response);
-    }
-    return response.json();
-  }
-  async function responseError(response) {
-    const fallback = `Request failed (HTTP ${response.status})`;
-    const contentType = response.headers.get("content-type") ?? "";
-    if (contentType.includes("application/json")) {
-      const body = await response.json().catch(() => null);
-      const message = typeof body?.error === "string" ? body.error : typeof body?.message === "string" ? body.message : null;
-      return new IntegrationApiError(response.status, message?.slice(0, 500) || fallback);
-    }
-    const text4 = (await response.text()).trim();
-    return new IntegrationApiError(response.status, text4 && !text4.startsWith("<") ? text4.slice(0, 500) : fallback);
-  }
-
-  // src/components/admin/Resources/Integrations/ui/data.ts
-  function startBoundSources(host) {
-    const definitions = host.query("[data-definitions-source]");
-    const installations = host.query("[data-installations-source]");
-    const catalogue = host.query("[data-catalogue-source]");
-    definitions.setAttribute("cms-source", `${route2("/api/integrations/list")} as definitions`);
-    installations.setAttribute("cms-source", `${route2("/api/integrations/installations")} as installations`);
-    catalogue.setAttribute("cms-source", `${route2("/api/integrations/catalogue")}?scope=sources&q=#{integrationSearch}&category=#{integrationCategory} as catalogue`);
-    host.observer = new MutationObserver(() => readBoundData(host));
-    host.observer.observe(definitions, { attributes: true, childList: true, subtree: true });
-    host.observer.observe(installations, { attributes: true, childList: true, subtree: true });
-    readBoundData(host);
-  }
-  function disconnectBoundSources(host) {
-    host.observer?.disconnect();
-    host.observer = null;
-    for (const waiter of host.waiters) {
-      clearTimeout(waiter.timeout);
-      waiter.reject(new Error("Integration data source disconnected."));
-    }
-    host.waiters = [];
-  }
-  function readBoundData(host) {
-    let changed = false;
-    const definitions = parseArray(host.querySelector("[data-definitions-json]")?.dataset.definitionsJson ?? "");
-    if (definitions) {
-      host.definitions = definitions;
-      host.definitionsLoaded = true;
-      changed = true;
-    }
-    const installations = parseArray(host.querySelector("[data-installations-json]")?.dataset.installationsJson ?? "");
-    if (installations) {
-      host.installations = installations;
-      host.installationsLoaded = true;
-      changed = true;
-    }
-    if (!changed) {
-      return;
-    }
-    if (host.installationsLoaded) {
-      host.renderAll();
-    }
-    resolveWaiters(host);
-  }
-  function retryBoundSources(host) {
-    host.ownerDocument.dispatchEvent(new Event("cms-source:reload"));
-  }
-  function waitForBoundData(host, predicate, timeoutMs = 5000) {
-    if (predicate()) {
-      return Promise.resolve();
-    }
-    return new Promise((resolve, reject) => {
-      const waiter = {
-        predicate,
-        resolve,
-        reject,
-        timeout: setTimeout(() => {
-          host.waiters = host.waiters.filter((item) => item !== waiter);
-          reject(new Error("Timed out waiting for integration data reload."));
-        }, timeoutMs)
-      };
-      host.waiters.push(waiter);
-    });
-  }
-  function resolveWaiters(host) {
-    for (const waiter of [...host.waiters]) {
-      if (!waiter.predicate()) {
-        continue;
-      }
-      clearTimeout(waiter.timeout);
-      host.waiters = host.waiters.filter((item) => item !== waiter);
-      waiter.resolve();
-    }
-  }
-  function parseArray(value2) {
-    if (!value2) {
-      return null;
-    }
-    try {
-      const parsed = JSON.parse(value2);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }
-
-  // src/components/admin/Resources/Integrations/ui/detail.ts
-  function renderDetail(host) {
-    const root = host.query("[data-detail-view]");
-    const installation = host.installations.find((item) => item.id === host.selectedIntegrationId);
-    if (!installation) {
-      return;
-    }
-    const link = document.createElement("a");
-    link.href = route2("/admin/sources");
-    link.textContent = "Open sources";
-    root.replaceChildren(link);
-  }
-  function renderLinkedResources(root, host, definition) {
-    const dependencies = definition?.dependencies ?? [];
-    root.replaceChildren();
-    for (const dependency of dependencies) {
-      const installed = host.installations.find((item2) => item2.id === dependency.kind);
-      const item = document.createElement(installed ? "a" : "p");
-      item.textContent = `${dependency.name || dependency.kind}: ${installed ? "Installed" : dependency.optional ? "Optional" : "Required"}${dependency.versionRange ? ` (${dependency.versionRange})` : ""}`;
-      if (installed) {
-        item.setAttribute("href", integrationRouteUrl({ view: "installation", id: installed.id }));
-      }
-      root.append(item);
-    }
-    if (!dependencies.length) {
-      root.textContent = "No related resources declared.";
-    }
-  }
-
-  // src/components/admin/Resources/Integrations/ui/templates/browser.html
-  var browser_default = `<template data-template="installed-head">
-    <div class="installed-head" aria-hidden="true">
-        <span>Integration</span>
-        <span>Status</span>
-        <span>Artifacts</span>
-        <span>Last sync</span>
-    </div>
-</template>
-
-<template data-template="installed-row">
-    <a class="installed-row">
-        <span class="integration-title-cell">
-            <span data-icon-host></span>
-            <span class="integration-title-copy">
-                <strong data-label></strong>
-                <small data-kind></small>
-            </span>
-        </span>
-        <span><span class="status-pill" data-status></span></span>
-        <span class="badge-row" data-badges></span>
-        <span class="muted" data-updated></span>
-    </a>
-</template>
-`;
-
-  // src/components/admin/Resources/Integrations/ui/templates/icons.html
-  var icons_default = `<template data-icon="chevron"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></template>
-<template data-icon="table"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M8 9h8"></path><path d="M8 13h5"></path></svg></template>
-<template data-icon="receipt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18l-2-1-2 1-2-1-2 1-2-1V3z"></path><path d="M9 8h6"></path><path d="M9 12h6"></path><path d="M9 16h4"></path></svg></template>
-<template data-icon="cube"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 8-9-5-9 5 9 5 9-5z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path></svg></template>
-<template data-icon="tag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13 11 4H4v7l9 9 7-7z"></path><path d="M7.5 7.5h.01"></path></svg></template>
-<template data-icon="mail"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="16" height="12" rx="2"></rect><path d="m4 8 8 6 8-6"></path></svg></template>
-<template data-icon="user"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M5 21a7 7 0 0 1 14 0"></path></svg></template>
-<template data-icon="card"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"></rect><path d="M3 10h18"></path><path d="M7 15h3"></path></svg></template>
-<template data-icon="truck"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v10H3z"></path><path d="M14 11h4l3 3v3h-7z"></path><circle cx="7" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></template>
-<template data-icon="pin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-5.2 7-11a7 7 0 0 0-14 0c0 5.8 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg></template>
-<template data-icon="grid"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect></svg></template>
-<template data-icon="spark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"></path><path d="m19 15 .9 2.6 2.6.9-2.6.9L19 23l-.9-2.6-2.6-.9 2.6-.9L19 15z"></path></svg></template>
-<template data-icon="key"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="14.5" r="3.5"></circle><path d="M10 12 21 1"></path><path d="m16 6 2 2"></path><path d="m14 8 2 2"></path></svg></template>
-`;
-
-  // src/components/admin/Resources/Integrations/ui/templates/importing.html
-  var importing_default = `<template data-template="importing-shell">
-    <cms-shell-detail class="integration-setup-shell">
-        <button type="button" slot="back" aria-label="Back to catalogue" disabled data-back-icon></button>
-        <span slot="title" data-title></span>
-        <div slot="actions" class="integration-detail-actions">
-            <p9r-button type="button" variant="outlined" disabled>Cancel</p9r-button>
-            <p9r-button type="button" color="primary" disabled>
-                <span class="spinner"></span> Importing
-            </p9r-button>
-        </div>
-
-        <cms-shell-detail-body slot="body">
-            <cms-detail-section slot="main" heading="Installing integration" description="This can take a moment when connector deployment is required.">
-                <div class="installing-state">
-                    <span class="spinner"></span>
-                    <strong>Installation in progress</strong>
-                    <small>The installed detail opens automatically when the import completes.</small>
-                </div>
-            </cms-detail-section>
-
-            <cms-detail-section slot="aside" heading="Import summary" description="The server is creating these resources now.">
-                <div data-summary></div>
-            </cms-detail-section>
-        </cms-shell-detail-body>
-    </cms-shell-detail>
-</template>
-`;
-
-  // src/components/admin/Resources/Integrations/ui/templates/items.html
-  var items_default = `<template data-template="badge">
-    <span class="badge"></span>
-</template>
-
-<template data-template="resource-row">
-    <article class="resource-row">
-        <span class="resource-icon" data-icon-host aria-hidden="true"></span>
-        <span>
-            <strong data-label></strong>
-            <small data-detail></small>
-        </span>
-        <span class="resource-state" data-type></span>
-    </article>
-</template>
-
-<template data-template="summary-grid">
-    <dl class="summary-grid"></dl>
-</template>
-
-<template data-template="summary-row">
-    <div><dt data-label></dt><dd data-value></dd></div>
-</template>
-
-<template data-template="placeholder">
-    <div class="placeholder-note">
-        <strong data-title></strong>
-        <small data-copy></small>
-    </div>
-</template>
-`;
-
-  // src/components/admin/Resources/Integrations/ui/templates/setup.html
-  var setup_default = `<template data-template="setup-shell">
-    <cms-shell-detail class="integration-setup-shell">
-        <button type="button" slot="back" data-setup-cancel aria-label="Back to catalogue" data-back-icon></button>
-        <span slot="title" data-title></span>
-        <div slot="actions" class="integration-detail-actions">
-            <p9r-button type="button" variant="outlined" data-setup-cancel>Cancel</p9r-button>
-            <p9r-button type="button" color="primary" data-import-setup>Install</p9r-button>
-            <span class="action-status" data-setup-status></span>
-        </div>
-
-        <cms-shell-detail-body slot="body">
-            <p slot="main">Install first, then configure the connection from its settings.</p>
-
-            <cms-detail-section slot="main" heading="Resources to create" description="The import will create or update these integration resources.">
-                <div class="collection-selection" data-collection-selection hidden>
-                    <p class="collection-source-plan" data-collection-source-plan></p>
-                </div>
-                <div class="resource-list" data-resources></div>
-            </cms-detail-section>
-
-            <cms-detail-section slot="aside" heading="Related resources" description="Related integrations stay available from this setup flow.">
-                <div data-linked></div>
-            </cms-detail-section>
-
-            <cms-detail-section slot="aside" heading="Import summary" description="The server creates the resources and deploys connectors when needed.">
-                <div data-summary></div>
-            </cms-detail-section>
-        </cms-shell-detail-body>
-    </cms-shell-detail>
-</template>
-`;
-
-  // src/components/admin/Resources/Integrations/ui/templates/index.ts
-  var registry = document.createElement("template");
-  registry.innerHTML = [browser_default, icons_default, importing_default, items_default, setup_default].join("");
-  function cloneElement(name) {
-    const template6 = registry.content.querySelector(`template[data-template="${name}"]`);
-    const container = document.createElement("div");
-    container.innerHTML = template6?.innerHTML ?? "";
-    const element = container.firstElementChild;
-    if (!(element instanceof HTMLElement)) {
-      throw new Error(`Missing integration template: ${name}`);
-    }
-    return element;
-  }
-  function cloneIcon(name) {
-    const template6 = registry.content.querySelector(`template[data-icon="${name}"]`) ?? registry.content.querySelector('template[data-icon="grid"]');
-    const icon = template6?.content.firstElementChild?.cloneNode(true);
-    if (!icon) {
-      throw new Error(`Missing integration icon: ${name}`);
-    }
-    return icon;
-  }
-  function text4(root, selector, value2) {
-    const element = root.querySelector(selector);
-    if (element) {
-      element.textContent = String(value2 ?? "");
-    }
-  }
-  function fillIcon(root, selector, icon) {
-    const element = root.querySelector(selector);
-    if (element) {
-      element.replaceChildren(cloneIcon(icon));
-    }
-  }
-
-  // src/components/admin/Resources/Integrations/ui/resources/format.ts
-  function artifactLabels(definition) {
-    const types2 = Array.from(new Set((definition.artifacts ?? []).map((artifact) => artifact.type)));
-    return types2.length ? types2.map(typeLabel) : ["No artifacts"];
-  }
-  function formatRelativeDate(value2) {
-    if (!value2) {
-      return "Never";
-    }
-    const date = new Date(value2);
-    if (Number.isNaN(date.getTime())) {
-      return value2;
-    }
-    const now = new Date;
-    const yesterday = new Date(now);
-    yesterday.setDate(now.getDate() - 1);
-    const time = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(date);
-    if (date.toDateString() === now.toDateString()) {
-      return `Today ${time}`;
-    }
-    if (date.toDateString() === yesterday.toDateString()) {
-      return `Yesterday ${time}`;
-    }
-    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
-  }
-  function statusLabel(status) {
-    if (status === "success") {
-      return "Active";
-    }
-    if (status === "failed") {
-      return "Failed";
-    }
-    return "Pending";
-  }
-  function typeLabel(type) {
-    if (type === "sourceOverlay") {
-      return "Source overlay";
-    }
-    if (type === "dashboardRelation") {
-      return "Dashboard relation";
-    }
-    return type[0].toUpperCase() + type.slice(1);
-  }
-  // src/components/admin/Resources/Integrations/ui/resources/icons.ts
-  function integrationIcon(definition) {
-    const icon = document.createElement("span");
-    icon.className = "integration-icon";
-    const path = definition?.icon?.path;
-    if (definition && path) {
-      const image = document.createElement("img");
-      image.src = integrationAssetUrl(definition, path);
-      image.alt = "";
-      image.decoding = "async";
-      image.addEventListener("error", () => icon.replaceChildren(fallbackIcon()));
-      icon.append(image);
-    } else {
-      icon.append(fallbackIcon());
-    }
-    return icon;
-  }
-  function iconForResourceType(type) {
-    const normalized = type.toLowerCase();
-    if (normalized === "dashboard") {
-      return "table";
-    }
-    if (normalized === "source") {
-      return "receipt";
-    }
-    if (normalized === "bloc") {
-      return "grid";
-    }
-    if (normalized === "function") {
-      return "spark";
-    }
-    if (normalized === "trigger") {
-      return "share";
-    }
-    if (normalized === "secret") {
-      return "key";
-    }
-    if (normalized === "connector") {
-      return "truck";
-    }
-    return "grid";
-  }
-  function fallbackIcon() {
-    return cloneIcon("grid");
-  }
-  function integrationAssetUrl(definition, path) {
-    const params = new URLSearchParams({ kind: definition.kind, path });
-    if (definition.version) {
-      params.set("version", definition.version);
-    }
-    return route2(`/api/integrations/asset?${params.toString()}`);
-  }
-  // src/components/admin/Resources/Integrations/ui/resources/render.ts
-  function appendBadges(root, labels) {
-    root.replaceChildren();
-    const visible = labels.slice(0, 4);
-    const remaining = labels.length - visible.length;
-    for (const label2 of visible) {
-      root.append(badge(label2));
-    }
-    if (remaining > 0) {
-      const more = badge(`+${remaining} others`);
-      more.classList.add("badge-muted");
-      root.append(more);
-    }
-  }
-  function renderResourceRows(root, rows) {
-    root.replaceChildren();
-    if (!rows.length) {
-      root.append(empty("No resources declared by this integration."));
-      return;
-    }
-    for (const row of rows) {
-      const element = cloneElement("resource-row");
-      fillIcon(element, "[data-icon-host]", iconForResourceType(row.type));
-      text4(element, "[data-label]", row.label);
-      text4(element, "[data-detail]", row.detail);
-      text4(element, "[data-type]", row.type);
-      root.append(element);
-    }
-  }
-  function renderSummary(root, rows) {
-    const grid = cloneElement("summary-grid");
-    for (const row of rows) {
-      const element = cloneElement("summary-row");
-      text4(element, "[data-label]", row.label);
-      text4(element, "[data-value]", row.value);
-      grid.append(element);
-    }
-    root.replaceChildren(grid);
-  }
-  function empty(message) {
-    const element = document.createElement("p");
-    element.className = "empty";
-    element.textContent = message;
-    return element;
-  }
-  function badge(label2) {
-    const element = cloneElement("badge");
-    element.textContent = label2;
-    return element;
-  }
-  // src/components/admin/Resources/Integrations/ui/resources/rows.ts
-  function resourceRows(definition) {
-    return [
-      ...(definition.artifacts ?? []).map(artifactRow).filter((row) => row !== null),
-      ...(definition.secrets ?? []).map((secret) => ({
-        type: "Secret",
-        label: inputLabel(definition, secret.input),
-        detail: `Secret key: ${secret.key}`
-      })),
-      ...(definition.generatedSecrets ?? []).map((secret) => ({
-        type: "Secret",
-        label: secret.name,
-        detail: `Generated key: ${secret.key}`
-      })),
-      ...(definition.connectors ?? []).map((connector) => ({
-        type: "Connector",
-        label: connector.provider,
-        detail: connector.root ? `Connector root: ${connector.root}` : "Connector deployment"
-      }))
-    ];
-  }
-  function artifactRow(artifact) {
-    if (artifact.type === "function" || artifact.type === "trigger") {
-      return null;
-    }
-    if (artifact.type === "dashboard") {
-      return {
-        type: "Dashboard",
-        label: artifact.dashboard.meta?.name ?? artifact.dashboard.id,
-        detail: `Dashboard id: ${artifact.dashboard.id}`
-      };
-    }
-    if (artifact.type === "dashboard-view") {
-      return {
-        type: "Dashboard view",
-        label: artifact.view.meta.name,
-        detail: `View id: ${artifact.view.id}`
-      };
-    }
-    if (artifact.type === "bloc") {
-      return { type: "Bloc", label: artifact.bloc.name, detail: `Tag: ${artifact.bloc.tag}` };
-    }
-    if (artifact.type === "sourceOverlay") {
-      return {
-        type: "Source overlay",
-        label: artifact.overlay.label ?? artifact.overlay.id,
-        detail: `Overlay id: ${artifact.overlay.id}`
-      };
-    }
-    if (artifact.type === "relation") {
-      return {
-        type: "Relation",
-        label: artifact.relation.label ?? artifact.relation.id,
-        detail: `Relation id: ${artifact.relation.id}`
-      };
-    }
-    if (artifact.type === "dashboardRelation") {
-      return {
-        type: "Dashboard relation",
-        label: artifact.projection.title ?? artifact.projection.relationId,
-        detail: `${artifact.projection.dashboardId}.${artifact.projection.viewId}`
-      };
-    }
-    return {
-      type: "Source",
-      label: artifact.source.meta?.name ?? artifact.source.id,
-      detail: `Source id: ${artifact.source.id}`
-    };
-  }
-  function inputLabel(definition, inputName) {
-    return definition.inputs.find((input) => input.name === inputName)?.label ?? inputName;
-  }
-  // ../../features/cms-integrations/src/core/definitions/versioning.ts
-  var import_semver = __toESM(require_semver2(), 1);
-
-  // ../../features/cms-integrations/src/core/resources/dependencySelection.ts
-  var import_semver2 = __toESM(require_semver2(), 1);
-
-  // ../../features/cms-integrations/src/core/resources/selection.ts
-  function collectionSelectableResources(definition) {
-    const internalArtifacts = new Set((definition.artifacts ?? []).filter((artifact) => artifact.type === "bloc" && artifact.bloc.internal).map((artifact) => artifact.bloc.tag));
-    return definition.resources.filter((resource) => !internalArtifacts.has(resource.artifact));
-  }
-  // src/components/admin/Resources/Integrations/ui/resources/selection.ts
-  function renderCollectionSelection(root, definition, selected2) {
-    root.hidden = false;
-    const resources = collectionSelectableResources(definition);
-    const active = new Set(selected2 ?? resources.filter(({ defaultActive }) => defaultActive).map(({ id: id2 }) => id2));
-    const artifacts = new Map((definition.artifacts ?? []).map(({ bloc }) => [bloc.tag, bloc]));
-    for (const category of definition.resourceCategories) {
-      const categoryResources = resources.filter((resource) => resource.category === category.id);
-      if (!categoryResources.length) {
-        continue;
-      }
-      const fieldset = document.createElement("fieldset");
-      fieldset.className = "collection-category";
-      const legend = document.createElement("legend");
-      legend.append(toggle(category.label, "category", category.id, categoryResources.every(({ id: id2 }) => active.has(id2))));
-      fieldset.append(legend);
-      for (const resource of categoryResources) {
-        const artifact = artifacts.get(resource.artifact);
-        const label2 = toggle(artifact?.name ?? resource.artifact, "resource", resource.id, active.has(resource.id));
-        label2.classList.add("collection-resource");
-        if (resource.endpoints?.length) {
-          const hint = document.createElement("small");
-          hint.textContent = `Requires ${[...new Set(resource.endpoints.map(({ source: source2 }) => source2))].join(", ")}`;
-          label2.append(hint);
-        }
-        fieldset.append(label2);
-      }
-      root.append(fieldset);
-    }
-    updateCollectionPlan(root, definition);
-  }
-  function handleCollectionSelection(target2, definition) {
-    const category = target2.closest("[data-collection-category]");
-    const resource = target2.closest("[data-collection-resource]");
-    if (!category && !resource) {
-      return false;
-    }
-    const root = target2.closest("[data-collection-selection]");
-    if (!root) {
-      return true;
-    }
-    if (category) {
-      for (const input of Array.from(root.querySelectorAll("[data-collection-resource]"))) {
-        const definitionResource = definition.resources.find(({ id: id2 }) => id2 === input.dataset.collectionResource);
-        if (definitionResource?.category === category.dataset.collectionCategory) {
-          input.checked = category.checked;
-        }
-      }
-    }
-    syncCategoryToggles(root, definition);
-    updateCollectionPlan(root, definition);
-    return true;
-  }
-  function selectedCollectionResources(root) {
-    return Array.from(root.querySelectorAll("[data-collection-resource]:checked")).map(({ dataset }) => dataset.collectionResource).sort();
-  }
-  function updateCollectionPlan(root, definition) {
-    const plan = root.querySelector("[data-collection-source-plan]");
-    if (!plan) {
-      return;
-    }
-    const selected2 = new Set(selectedCollectionResources(root));
-    const sources = new Map;
-    for (const resource of collectionSelectableResources(definition).filter(({ id: id2 }) => selected2.has(id2))) {
-      for (const endpoint of resource.endpoints ?? []) {
-        sources.set(endpoint.source, endpoint.sourceVersion);
-      }
-    }
-    plan.textContent = sources.size ? `Required sources: ${[...sources].map(([kind, version]) => `${kind} ${version}`).join(", ")}` : "This selection does not require a source integration.";
-  }
-  function syncCategoryToggles(root, definition) {
-    for (const input of Array.from(root.querySelectorAll("[data-collection-category]"))) {
-      const ids = collectionSelectableResources(definition).filter(({ category }) => category === input.dataset.collectionCategory).map(({ id: id2 }) => id2);
-      const selected2 = new Set(selectedCollectionResources(root));
-      input.checked = ids.every((id2) => selected2.has(id2));
-      input.indeterminate = !input.checked && ids.some((id2) => selected2.has(id2));
-    }
-  }
-  function toggle(labelText, kind, id2, checked) {
-    const label2 = document.createElement("label");
-    const input = document.createElement("input");
-    input.type = "checkbox";
-    input.checked = checked;
-    input.dataset[kind === "category" ? "collectionCategory" : "collectionResource"] = id2;
-    const text5 = document.createElement("span");
-    text5.textContent = labelText;
-    label2.append(input, text5);
-    return label2;
-  }
-  // src/components/admin/Resources/Integrations/ui/setup.ts
-  function renderSetup(host, definition, options2 = {}) {
-    const shell = cloneElement("setup-shell");
-    text4(shell, "[data-title]", `Install ${definition.label}`);
-    fillIcon(shell, "[data-back-icon]", "table");
-    const status = shell.querySelector("[data-setup-status]");
-    status.textContent = options2.error ?? "";
-    status.classList.toggle("is-error", Boolean(options2.error));
-    renderResourceRows(shell.querySelector("[data-resources]"), resourceRows(definition));
-    if (definition.schema === "cms.integration.definition.v2" && definition.type === "collection") {
-      renderCollectionSelection(shell.querySelector("[data-collection-selection]"), definition, options2.resources);
-    }
-    renderLinkedResources(shell.querySelector("[data-linked]"), host, definition);
-    renderSummary(shell.querySelector("[data-summary]"), summaryRows(definition));
-    host.query("[data-detail-view]").replaceChildren(shell);
-  }
-  function renderImporting(host, definition, answers) {
-    const shell = cloneElement("importing-shell");
-    text4(shell, "[data-title]", `Installing ${definition.label}`);
-    fillIcon(shell, "[data-back-icon]", "table");
-    renderSummary(shell.querySelector("[data-summary]"), summaryRows(definition));
-    host.query("[data-detail-view]").replaceChildren(shell);
-  }
-  function summaryRows(definition) {
-    const rows = resourceRows(definition);
-    return [
-      { label: "Integration", value: definition.label },
-      { label: "Identifier", value: definition.kind },
-      { label: "Resources", value: rows.filter((row) => !["Secret", "Connector"].includes(row.type)).length },
-      { label: "Secrets", value: rows.filter((row) => row.type === "Secret").length },
-      { label: "Connectors", value: rows.filter((row) => row.type === "Connector").length }
-    ];
-  }
-
-  // src/components/admin/Resources/Integrations/ui/actions/installation.ts
-  async function runIntegrationSync(host, button) {
-    const id2 = button.dataset.integrationId;
-    if (!id2) {
-      return;
-    }
-    const status = host.querySelector("[data-action-status]");
-    setBusy(button, true, "Syncing");
-    setStatus(status, "");
-    try {
-      await rerunIntegrationInstallation(id2);
-      setBusy(button, false, "Run sync");
-      setStatus(status, "Synced");
-    } catch (error) {
-      setBusy(button, false, "Run sync");
-      setStatus(status, error instanceof Error ? error.message : "Sync failed", true);
-    }
-  }
-  async function openIntegrationUpgrade(button) {
-    const panel = upgradePanel(button);
-    const id2 = panel?.dataset.integrationId;
-    if (!panel || !id2) {
-      return;
-    }
-    setBusy(button, true, "Checking");
-    setStatus(statusElement(panel), "Checking available versions...");
-    try {
-      const choices = await integrationUpgradeVersions(id2);
-      renderUpgradeChoices(panel, choices);
-      button.hidden = choices.versions.length > 0;
-      setBusy(button, false, choices.versions.length ? "Check again" : "Up to date");
-    } catch (error) {
-      setBusy(button, false, "Try again");
-      setStatus(statusElement(panel), integrationUpgradeErrorMessage(error), true);
-    }
-  }
-  function cancelIntegrationUpgrade(button) {
-    const panel = upgradePanel(button);
-    if (!panel) {
-      return;
-    }
-    panel.querySelector("[data-upgrade-form]").hidden = true;
-    panel.querySelector("[data-upgrade-open]").hidden = false;
-    setStatus(statusElement(panel), "Upgrade cancelled.");
-  }
-  async function confirmIntegrationUpgrade(button) {
-    const panel = upgradePanel(button);
-    const id2 = panel?.dataset.integrationId;
-    const select = panel?.querySelector("[data-upgrade-target]");
-    const confirmation = panel?.querySelector("[data-upgrade-confirmation]");
-    if (!panel || !id2 || !select || !confirmation) {
-      return;
-    }
-    const target2 = select.value;
-    if (!target2 || confirmation.value.trim() !== target2) {
-      setStatus(statusElement(panel), `Type ${target2 || "the target version"} exactly to confirm.`, true);
-      return;
-    }
-    setBusy(button, true, "Upgrading");
-    setStatus(statusElement(panel), `Upgrading to ${target2}...`);
-    try {
-      await upgradeIntegrationInstallation(id2, target2);
-      setBusy(button, false, "Upgrade complete");
-      setStatus(statusElement(panel), `Upgraded to ${target2}. Installation data is refreshing.`);
-    } catch (error) {
-      setBusy(button, false, "Upgrade");
-      setStatus(statusElement(panel), integrationUpgradeErrorMessage(error), true);
-    }
-  }
-  function renderUpgradeChoices(panel, choices) {
-    const form = panel.querySelector("[data-upgrade-form]");
-    const select = panel.querySelector("[data-upgrade-target]");
-    const confirmation = panel.querySelector("[data-upgrade-confirmation]");
-    select.replaceChildren(...choices.versions.map((version) => versionOption(version, choices)));
-    const preferred = choices.stable ?? choices.latest ?? choices.versions[0] ?? "";
-    select.value = preferred;
-    confirmation.value = "";
-    confirmation.placeholder = preferred;
-    form.hidden = choices.versions.length === 0;
-    setStatus(statusElement(panel), choices.versions.length ? upgradeSummary(choices) : unavailableUpgradeSummary(choices));
-  }
-  function integrationUpgradeErrorMessage(error) {
-    if (!(error instanceof IntegrationApiError)) {
-      return error instanceof Error ? error.message : "Upgrade failed.";
-    }
-    if (error.status === 409) {
-      return "The repository state changed. Reload the available versions before trying again.";
-    }
-    if (error.status === 422) {
-      return `The upgrade was rejected: ${error.message}`;
-    }
-    if (error.status === 503) {
-      return "The integration repository is unavailable. The installed version remains unchanged.";
-    }
-    return error.message;
-  }
-  function versionOption(version, choices) {
-    const option2 = document.createElement("option");
-    option2.value = version;
-    const channels = [choices.stable === version ? "stable" : "", choices.latest === version ? "latest" : ""].filter(Boolean);
-    const target2 = choices.targets?.find((candidate) => candidate.version === version);
-    const labels = [
-      ...channels,
-      ...target2?.migrations.map((migration) => `${migration.connectorKey} from ${migration.supportedSourceRange}; rollback ${migration.rollback}`) ?? []
-    ];
-    option2.textContent = labels.length ? `${version} (${labels.join(", ")})` : version;
-    return option2;
-  }
-  function upgradeSummary(choices) {
-    const unavailable = choices.targets?.filter((target2) => !target2.eligible) ?? [];
-    const eligible = choices.versions.flatMap((version) => {
-      const target2 = choices.targets?.find((candidate) => candidate.version === version);
-      return target2?.migrations.map((migration) => migrationSummary(target2.version, migration)) ?? [];
-    });
-    return [
-      `Installed: ${choices.current}. Select and confirm an exact target version.`,
-      ...eligible,
-      ...unavailable.map((target2) => `${target2.version}: ${target2.reasons.join(" ")}`)
-    ].join(" ");
-  }
-  function migrationSummary(version, migration) {
-    const drains = [migration.cmsDrainSeconds, migration.providerDrainSeconds].filter((value2) => value2 !== undefined);
-    const drain = drains.length > 0 ? `; drain ${Math.max(...drains)}s` : "; drain not declared";
-    const downtime = migration.downtimeStatus === undefined ? "; downtime evidence not recorded" : migration.downtimeStatus === "not-measured" ? "; downtime not measured" : migration.observedDowntimeSeconds === undefined ? `; downtime ${migration.downtimeStatus}` : `; downtime ${migration.downtimeStatus} ${migration.observedDowntimeSeconds}s`;
-    const pointObservation = migration.pointOfNoReturnObservation ?? "not recorded";
-    const cmsCutover = cutoverExecutionSummary("CMS-mediated", migration.cmsMediatedCutover, migration.cmsMediatedCutoverOutcome);
-    const providerCutover = cutoverExecutionSummary("provider-direct", migration.providerDirectCutover, migration.providerDirectCutoverOutcome);
-    const activation = executionStatusSummary("activation", migration.activationOutcome);
-    return `${version} / ${migration.connectorKey}: tested migration ${migration.supportedSourceRange}; ${cmsCutover}; ${providerCutover}; ${activation}; ${migration.rollback} rollback (${migration.rollbackVerified ? "verified" : "not verified"}); PONR ${migration.pointOfNoReturn} (${pointObservation})${drain}${downtime}`;
-  }
-  function cutoverExecutionSummary(label2, strategy, outcome) {
-    return `${label2} ${strategy} (${executionStatus(outcome)})`;
-  }
-  function executionStatusSummary(label2, outcome) {
-    return `${label2} ${executionStatus(outcome)}`;
-  }
-  function executionStatus(outcome) {
-    if (outcome === undefined) {
-      return "execution status not recorded by legacy report";
-    }
-    if (outcome === "not-supported") {
-      return "not-supported: declared, not executed by current runner";
-    }
-    if (outcome === "passed") {
-      return "passed: executed by runner";
-    }
-    return outcome;
-  }
-  function unavailableUpgradeSummary(choices) {
-    const reasons = choices.targets?.flatMap((target2) => target2.reasons.map((reason) => `${target2.version}: ${reason}`));
-    return reasons?.length ? `No eligible upgrade. ${reasons.join(" ")}` : `Version ${choices.current} is up to date.`;
-  }
-  function upgradePanel(element) {
-    return element.closest("[data-upgrade-panel]");
-  }
-  function statusElement(panel) {
-    return panel.querySelector("[data-upgrade-status]");
-  }
-  function setBusy(element, busy, label2) {
-    element.toggleAttribute("aria-busy", busy);
-    element.textContent = label2;
-  }
-  function setStatus(element, message, error = false) {
-    if (!element) {
-      return;
-    }
-    element.textContent = message;
-    element.classList.toggle("is-error", error);
-  }
-
-  // src/components/admin/Resources/Integrations/ui/actions/index.ts
-  async function handleClick(host, event) {
-    const target2 = event.target instanceof Element ? event.target : null;
-    if (!target2) {
-      return;
-    }
-    if (host.activeDefinition?.schema === "cms.integration.definition.v2" && host.activeDefinition.type === "collection" && handleCollectionSelection(target2, host.activeDefinition)) {
-      return;
-    }
-    if (target2.closest("[data-repository-retry]")) {
-      retryBoundSources(host);
-      return;
-    }
-    const tab = target2.closest("[data-tab]");
-    if (tab) {
-      return closeAndSetTab(host, tab.dataset.tab ?? "installed");
-    }
-    if (target2.closest("[data-detail-back]")) {
-      return closeAndSetTab(host, "installed");
-    }
-    if (target2.closest("[data-setup-cancel]")) {
-      return closeAndSetTab(host, "catalogue");
-    }
-    if (target2.closest("[data-import-setup]")) {
-      return importActive(host);
-    }
-    const upgradeOpen = target2.closest("[data-upgrade-open]");
-    if (upgradeOpen) {
-      return openIntegrationUpgrade(upgradeOpen);
-    }
-    const upgradeCancel = target2.closest("[data-upgrade-cancel]");
-    if (upgradeCancel) {
-      cancelIntegrationUpgrade(upgradeCancel);
-      return;
-    }
-    const upgradeConfirm = target2.closest("[data-upgrade-confirm]");
-    if (upgradeConfirm) {
-      return confirmIntegrationUpgrade(upgradeConfirm);
-    }
-    const runSync = target2.closest("[data-run-sync]");
-    if (runSync) {
-      return runIntegrationSync(host, runSync);
-    }
-    const installation = target2.closest("[data-integration-id]");
-    if (installation?.dataset.integrationId) {
-      if (!shouldInterceptNavigation(event)) {
-        return;
-      }
-      event.preventDefault();
-      return host.openDetail(installation.dataset.integrationId);
-    }
-    const definition = target2.closest("[data-definition-kind]");
-    if (definition?.dataset.definitionKind) {
-      if (!shouldInterceptNavigation(event)) {
-        return;
-      }
-      const known = host.definitions.find((item) => item.kind === definition.dataset.definitionKind);
-      if (!known) {
-        return;
-      }
-      event.preventDefault();
-      host.openSetup(known);
-    }
-  }
-  function openSetup(host, definition, options2 = {}) {
-    host.activeDefinition = definition;
-    host.selectedIntegrationId = "";
-    host.query("[data-browser]").hidden = true;
-    host.query("[data-detail-view]").hidden = false;
-    renderSetup(host, definition, options2);
-  }
-  async function importActive(host) {
-    if (!host.activeDefinition) {
-      return;
-    }
-    const definition = host.activeDefinition;
-    const answers = {};
-    const resources = definition.schema === "cms.integration.definition.v2" && definition.type === "collection" ? selectedCollectionResources(host) : undefined;
-    renderImporting(host, definition, answers);
-    try {
-      const result = await importIntegration({ kind: definition.kind, answers, ...resources ? { resources } : {} });
-      host.tab = "installed";
-      const id2 = result.installation?.id ?? "";
-      await host.waitForBoundData(() => id2 ? host.installations.some((installation) => installation.id === id2) : host.installations.some((installation) => installation.id === definition.kind));
-      host.openDetail(id2 || host.installations.find((installation) => installation.id === definition.kind)?.id || "");
-    } catch (error) {
-      openSetup(host, definition, {
-        answers,
-        ...resources ? { resources } : {},
-        error: error instanceof Error ? error.message : "Import failed"
-      });
-    }
-  }
-  function closeAndSetTab(host, tab) {
-    pushIntegrationRoute({ view: "list", tab });
-    host.renderAll();
-  }
-  function shouldInterceptNavigation(event) {
-    if (!(event instanceof MouseEvent)) {
-      return true;
-    }
-    return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
-  }
-
-  // src/components/admin/Resources/Integrations/domain.ts
-  function installedCounts(installations) {
-    const counts = new Map;
-    for (const installation of installations) {
-      counts.set(installation.id, (counts.get(installation.id) ?? 0) + 1);
-    }
-    return counts;
-  }
-
-  // src/components/admin/Resources/Integrations/ui/browser.ts
-  function renderBrowser(host) {
-    renderInstallations(host);
-    renderCounts(host);
-  }
-  function renderCounts(host) {
-    text4(host, "[data-installed-count]", host.installations.filter((row) => inScope(row.integrationType)).length);
-    text4(host, "[data-catalogue-count]", availableDefinitions(host).length);
-  }
-  function renderInstallations(host) {
-    const root = host.query("[data-installations]");
-    const rows = host.installations.filter((row) => inScope(row.integrationType)).sort((left, right) => left.label.localeCompare(right.label));
-    root.replaceChildren();
-    if (rows.length) {
-      root.append(cloneElement("installed-head"), ...rows.map((row) => installationRow(host, row)));
-    }
-    host.query("[data-installations-empty]").hidden = rows.length > 0;
-  }
-  function availableDefinitions(host) {
-    const counts = installedCounts(host.installations);
-    return host.definitions.filter((definition) => !counts.has(definition.kind) && inScope(definition.type) && (!definition.extensionOf || counts.has(definition.extensionOf.kind)));
-  }
-  function definitionFor(host, installation) {
-    return host.definitions.find((definition) => definition.kind === installation.id);
-  }
-  function installationRow(host, installation) {
-    const definition = definitionFor(host, installation);
-    const row = cloneElement("installed-row");
-    row.href = integrationRouteUrl({ view: "installation", id: installation.id });
-    row.dataset.integrationId = installation.id;
-    row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
-    text4(row, "[data-label]", installation.label);
-    text4(row, "[data-kind]", installation.id);
-    const status = row.querySelector("[data-status]");
-    if (status) {
-      status.textContent = statusLabel(installation.status);
-      status.classList.add(`status-${installation.status}`);
-    }
-    appendBadges(row.querySelector("[data-badges]"), definition ? artifactLabels(definition) : ["Unknown"]);
-    text4(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
-    return row;
-  }
-  function inScope(type) {
-    return type !== "collection";
-  }
-
-  // src/components/admin/Resources/Integrations/ui/styles/base.css
-  var base_default4 = `cms-integrations-admin {
-    display: block;
-}
-
-.integrations-root {
-    display: grid;
-    gap: 16px;
-    width: min(100%, 1140px);
-}
-
-.binding-feeds {
-    display: none;
-}
-
-.integrations-root h3,
-.integrations-root h4,
-.integrations-root h5,
-.integrations-root p {
-    margin: 0;
-}
-
-.integrations-root h4 {
-    font-size: 14px;
-}
-
-.integrations-root h5 {
-    color: #66736f;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-}
-
-.muted,
-.empty,
-.integrations-root small,
-.summary-grid dt,
-.resource-row small,
-.activity-row small,
-.installing-state small {
-    color: #66736f;
-}
-
-.integration-icon,
-.resource-icon {
-    display: inline-grid;
-    width: 36px;
-    min-width: 36px;
-    height: 36px;
-    place-items: center;
-    border-radius: 7px;
-    background: #e4f2eb;
-    color: #0f6d56;
-}
-
-.resource-icon {
-    width: 34px;
-    min-width: 34px;
-    height: 34px;
-    background: #eef3f7;
-    color: #326c93;
-}
-
-.integration-icon svg,
-.integration-icon img,
-.resource-icon svg,
-.chevron svg,
-button[slot="back"] svg {
-    width: 18px;
-    height: 18px;
-}
-
-.integration-icon img {
-    object-fit: contain;
-}
-
-.integration-icon svg,
-.resource-icon svg,
-.chevron svg,
-button[slot="back"] svg {
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 2;
-}
-
-.status-pill,
-.badge,
-.resource-state {
-    display: inline-flex;
-    align-items: center;
-    width: fit-content;
-    min-height: 22px;
-    border-radius: 999px;
-    background: #edf3f0;
-    color: #3f504a;
-    font-size: 12px;
-    font-weight: 800;
-    padding: 2px 8px;
-}
-
-.status-success {
-    background: #d9f0e7;
-    color: #0f6d56;
-}
-
-.status-failed {
-    background: #f9e3de;
-    color: #9b2a1a;
-}
-
-.status-pending {
-    background: #f6ecd2;
-    color: #7b5718;
-}
-
-.badge {
-    background: #f1f5f3;
-    color: #40504b;
-}
-
-.badge-muted {
-    background: #eef3f7;
-    color: #326c93;
-}
-`;
-
-  // src/components/admin/Resources/Integrations/ui/styles/browser.css
-  var browser_default2 = `.integration-tabs {
-    display: flex;
-    gap: 18px;
-    border-bottom: 1px solid #dfe5e2;
-}
-
-.integrations-browser,
-.installed-view,
-.catalogue-view,
-.integration-detail {
-    display: grid;
-    gap: 14px;
-}
-
-.definitions-source {
-    display: contents;
-}
-
-.catalogue-view > [data-catalogue-source] {
-    display: grid;
-    gap: 14px;
-}
-
-.catalogue-content {
-    display: grid;
-    gap: 14px;
-}
-
-.integration-tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 38px;
-    border: 0;
-    border-bottom: 2px solid transparent;
-    background: transparent;
-    color: #66736f;
-    cursor: pointer;
-    font: inherit;
-    font-weight: 800;
-    padding: 0 0 9px;
-}
-
-.integration-tab.is-active {
-    border-bottom-color: #0f6d56;
-    color: #0f6d56;
-}
-
-.integration-tab span {
-    display: inline-grid;
-    min-width: 20px;
-    height: 20px;
-    place-items: center;
-    border-radius: 999px;
-    background: #edf3f0;
-    color: #52615c;
-    font-size: 12px;
-}
-
-.installed-table {
-    overflow: hidden;
-    border: 1px solid #dfe5e2;
-    border-radius: 8px;
-    background: #fff;
-}
-
-.installed-head,
-.installed-row {
-    display: grid;
-    grid-template-columns: minmax(270px, 1.4fr) minmax(110px, 0.45fr) minmax(220px, 0.9fr) minmax(120px, 0.45fr);
-    gap: 16px;
-    align-items: center;
-}
-
-.installed-head {
-    min-height: 42px;
-    padding: 0 16px;
-    border-bottom: 1px solid #dfe5e2;
-    color: #66736f;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0;
-    text-transform: uppercase;
-}
-
-.installed-row,
-.catalogue-card {
-    background: #fff;
-    color: inherit;
-    cursor: pointer;
-    font: inherit;
-    text-decoration: none;
-    text-align: left;
-}
-
-.installed-row {
-    width: 100%;
-    min-height: 58px;
-    border: 0;
-    border-bottom: 1px solid #dfe5e2;
-    padding: 8px 16px;
-}
-
-.installed-row:last-child {
-    border-bottom: 0;
-}
-
-.catalogue-card:hover {
-    background: #f7faf8;
-}
-
-.installed-row:hover .integration-title-copy strong {
-    color: #0f6d56;
-}
-
-.integration-title-cell,
-.card-head {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-}
-
-.integration-title-copy,
-.card-head > span:last-child {
-    display: grid;
-    gap: 2px;
-    min-width: 0;
-}
-
-.integration-title-copy strong,
-.card-head strong {
-    overflow: hidden;
-    color: #101c18;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.integration-title-copy small,
-.card-head small {
-    overflow: hidden;
-    line-height: 1.35;
-    text-overflow: ellipsis;
-}
-
-.catalogue-card .card-head small {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-}
-`;
-
-  // src/components/admin/Resources/Integrations/ui/styles/detail.css
-  var detail_default = `.badge-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    min-width: 0;
-}
-
-.chevron {
-    display: inline-grid;
-    place-items: center;
-    color: #7b8984;
-}
-
-.filters {
-    display: grid;
-    grid-template-columns: minmax(220px, 1fr) minmax(170px, 220px);
-    gap: 10px;
-}
-
-.catalogue-card {
-    display: grid;
-    gap: 14px;
-    width: 100%;
-    min-height: 116px;
-    border: 1px solid #dfe5e2;
-    border-radius: 8px;
-    padding: 14px;
-}
-
-.detail-source,
-.detail-source > cms-shell-detail {
-    display: block;
-}
-
-.integration-detail cms-shell-detail {
-    --w-detail-main-width: 660px;
-    --w-detail-aside-width: 360px;
-    --w-detail-gap: 16px;
-}
-
-.integration-detail-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.integration-detail-actions p9r-button {
-    --_btn-padding-y: 0.48rem;
-    --_btn-padding-x: 0.82rem;
-    --_btn-font-size: 12px;
-    --_btn-radius: 6px;
-}
-
-.integration-detail-actions p9r-action-menu {
-    --action-menu-panel-min-width: 220px;
-}
-
-.action-status {
-    color: #66736f;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.action-status.is-error {
-    color: #9b2a1a;
-}
-
-.upgrade-panel,
-.upgrade-form,
-.upgrade-panel label {
-    display: grid;
-    gap: 8px;
-}
-
-.upgrade-panel > p {
-    margin: 0;
-    color: #66736f;
-    font-size: 13px;
-}
-
-.upgrade-form {
-    border-top: 1px solid #dfe5e2;
-    padding-top: 12px;
-}
-
-.upgrade-panel label {
-    color: #42504b;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.upgrade-panel select,
-.upgrade-panel input {
-    width: 100%;
-    border: 1px solid #bdc9c4;
-    border-radius: 6px;
-    background: #fff;
-    padding: 8px 10px;
-    color: #1e2925;
-    font: inherit;
-}
-
-.upgrade-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.secondary-action {
-    border: 0;
-    background: transparent;
-    padding: 8px;
-    color: #42504b;
-    font: inherit;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.upgrade-status {
-    min-height: 18px;
-}
-
-.upgrade-status.is-error {
-    color: #9b2a1a;
-}
-
-.resource-list,
-.activity-list,
-.summary-grid,
-.fields {
-    display: grid;
-    gap: 8px;
-}
-
-.resource-row,
-.activity-row {
-    min-width: 0;
-    border: 1px solid #dfe5e2;
-    border-radius: 7px;
-    background: #fff;
-}
-
-.placeholder-note {
-    display: grid;
-    gap: 3px;
-    border: 1px dashed #d1dad6;
-    border-radius: 7px;
-    background: #f8fbfa;
-    padding: 12px;
-}
-
-.detail-loading {
-    color: #66736f;
-    font-weight: 700;
-}
-`;
-
-  // src/components/admin/Resources/Integrations/ui/styles/setup.css
-  var setup_default2 = `.resource-row {
-    display: grid;
-    grid-template-columns: 42px minmax(0, 1fr) auto;
-    gap: 10px;
-    align-items: center;
-    min-height: 58px;
-    padding: 8px 10px;
-}
-
-.resource-row strong,
-.summary-grid dd {
-    overflow-wrap: anywhere;
-}
-
-.resource-state {
-    background: #f1f5f3;
-    color: #40504b;
-    text-transform: capitalize;
-}
-
-.activity-row {
-    display: grid;
-    grid-template-columns: 12px minmax(0, 1fr);
-    gap: 10px;
-    align-items: start;
-    padding: 10px;
-}
-
-.activity-dot {
-    width: 8px;
-    height: 8px;
-    margin-top: 5px;
-    border-radius: 50%;
-    background: #0f6d56;
-}
-
-.summary-grid {
-    margin: 0;
-}
-
-.summary-grid div {
-    display: grid;
-    grid-template-columns: 100px minmax(0, 1fr);
-    gap: 12px;
-    align-items: baseline;
-}
-
-.summary-grid dt {
-    font-size: 12px;
-    font-weight: 750;
-}
-
-.summary-grid dd {
-    margin: 0;
-    font-weight: 750;
-}
-
-.setup-fields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-}
-
-.setup-fields .empty,
-.setup-fields .field:has(textarea),
-.object-list-fieldset {
-    grid-column: 1 / -1;
-}
-
-.object-list-fieldset {
-    display: grid;
-    gap: 8px;
-}
-
-.object-list {
-    display: grid;
-    gap: 10px;
-}
-
-.object-list-items {
-    display: grid;
-    gap: 10px;
-}
-
-.object-list-item {
-    display: grid;
-    gap: 10px;
-    border: 1px solid #dfe5e2;
-    border-radius: 7px;
-    padding: 12px;
-}
-
-.object-list-item-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.object-list-item-fields {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-}
-
-.object-list-item-field {
-    display: grid;
-    gap: 5px;
-}
-
-.object-list-item-field:has(textarea),
-.object-list-item-field:has(select[multiple]) {
-    grid-column: 1 / -1;
-}
-
-.object-list-add,
-.object-list-remove {
-    width: fit-content;
-    border: 1px solid #cad4d0;
-    border-radius: 6px;
-    background: #fff;
-    padding: 7px 10px;
-    color: #24332e;
-    font: inherit;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.object-list-remove {
-    color: #8f2929;
-}
-
-.object-list-add:disabled,
-.object-list-remove:disabled {
-    cursor: not-allowed;
-    opacity: 0.45;
-}
-
-.installing-state {
-    display: grid;
-    gap: 8px;
-    justify-items: center;
-    border: 1px solid #dfe5e2;
-    border-radius: 7px;
-    background: #fbfefd;
-    padding: 24px 16px;
-    text-align: center;
-}
-
-.collection-selection {
-    display: grid;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.collection-category {
-    display: grid;
-    gap: 8px;
-    border: 1px solid #dfe5e2;
-    border-radius: 7px;
-    padding: 10px 12px;
-}
-
-.collection-category label {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.collection-category legend label {
-    font-weight: 750;
-}
-
-.collection-resource {
-    padding-left: 8px;
-}
-
-.collection-resource small {
-    margin-left: auto;
-    color: #5d6d67;
-}
-
-.collection-source-plan {
-    margin: 0;
-    color: #40504b;
-    font-size: 13px;
-}
-`;
-
-  // src/components/admin/Resources/Integrations/ui/styles/states.css
-  var states_default2 = `.repository-error {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    justify-content: space-between;
-    border: 1px solid #e4b8ad;
-    border-radius: 8px;
-    background: #fff5f2;
-    color: #742719;
-    padding: 14px 16px;
-}
-
-.repository-error-copy {
-    display: grid;
-    gap: 3px;
-}
-
-.repository-error-copy small {
-    color: #8d4b3d;
-}
-
-.repository-error button {
-    min-height: 34px;
-    border: 1px solid currentColor;
-    border-radius: 6px;
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
-    font: inherit;
-    font-weight: 800;
-    padding: 5px 12px;
-}
-
-.repository-error button:hover {
-    background: #f9e3de;
-}
-
-@media (max-width: 600px) {
-    .repository-error {
-        align-items: stretch;
-        flex-direction: column;
-    }
-}
-`;
-
-  // src/components/admin/Resources/Integrations/ui/styles/responsive.css
-  var responsive_default = `.spinner {
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    border: 2px solid #bdd8ce;
-    border-top-color: #0f6d56;
-    border-radius: 50%;
-    animation: integration-spin 0.8s linear infinite;
-}
-
-@keyframes integration-spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-button[slot="back"]:disabled {
-    cursor: default;
-    opacity: 0.55;
-}
-
-.integrations-root input,
-.integrations-root select,
-.integrations-root textarea {
-    min-height: 34px;
-    border: 1px solid #dfe5e2;
-    border-radius: 6px;
-    background: #fff;
-    color: inherit;
-    font: inherit;
-}
-
-.field {
-    display: grid;
-    gap: 6px;
-}
-
-.field input,
-.field select,
-.field textarea,
-.integrations-root textarea {
-    box-sizing: border-box;
-    width: 100%;
-    padding: 8px;
-}
-
-.integrations-root [hidden] {
-    display: none !important;
-}
-
-@media (max-width: 940px) {
-    .integrations-root {
-        width: 100%;
-    }
-
-    .installed-table {
-        border: 0;
-        background: transparent;
-    }
-
-    .installed-head {
-        display: none;
-    }
-
-    .installed-row {
-        grid-template-columns: minmax(0, 1fr) 24px;
-        gap: 8px;
-        margin-bottom: 10px;
-        border: 1px solid #dfe5e2;
-        border-radius: 8px;
-    }
-
-    .installed-row > span:nth-child(2),
-    .installed-row > span:nth-child(3),
-    .installed-row > span:nth-child(4) {
-        grid-column: 1 / -1;
-    }
-
-    .installed-row > .chevron {
-        grid-column: 2;
-        grid-row: 1;
-    }
-
-    .filters,
-    .setup-fields,
-    .reconfigure-fields,
-    .object-list-item-fields {
-        grid-template-columns: 1fr;
-    }
-
-    .resource-row,
-    .summary-grid div {
-        grid-template-columns: 1fr;
-    }
-}
-`;
-
-  // src/components/admin/Resources/Integrations/ui/styles/index.ts
-  var styles_default4 = [base_default4, browser_default2, detail_default, setup_default2, states_default2, responsive_default].join(`
-`);
-
-  // src/components/admin/Resources/Integrations/IntegrationBrowser.ts
-  class IntegrationBrowser extends HTMLElement {
-    definitions = [];
-    installations = [];
-    activeDefinition = null;
-    definitionsLoaded = false;
-    installationsLoaded = false;
-    observer = null;
-    waiters = [];
-    tab = "installed";
-    selectedIntegrationId = "";
-    initialized = false;
-    connectedCallback() {
-      if (!this.initialized) {
-        this.mountTemplate();
-        this.bind();
-        startBoundSources(this);
-        window.addEventListener("popstate", this.onPopState);
-        this.initialized = true;
-      } else if (!this.observer) {
-        startBoundSources(this);
-      }
-    }
-    disconnectedCallback() {
-      disconnectBoundSources(this);
-      window.removeEventListener("popstate", this.onPopState);
-    }
-    renderAll() {
-      renderBrowser(this);
-      this.renderRoute();
-    }
-    setTab(tab) {
-      this.tab = tab;
-      this.query("[data-installed-view]").hidden = tab !== "installed";
-      this.query("[data-catalogue-view]").hidden = tab !== "catalogue";
-      for (const item of Array.from(this.querySelectorAll("[data-tab]"))) {
-        item.classList.toggle("is-active", item.dataset.tab === tab);
-      }
-    }
-    openDetail(integrationId) {
-      pushIntegrationRoute({ view: "installation", id: integrationId });
-      this.renderRoute();
-    }
-    openSetup(definition, options2 = {}) {
-      if (options2.answers || options2.error) {
-        openSetup(this, definition, options2);
-        return;
-      }
-      pushIntegrationRoute({ view: "setup", kind: definition.kind });
-      this.renderRoute();
-    }
-    closeDetail() {
-      pushIntegrationRoute({ view: "list", tab: this.tab });
-      this.renderRoute();
-    }
-    waitForBoundData(predicate, timeoutMs) {
-      return waitForBoundData(this, predicate, timeoutMs);
-    }
-    query(selector) {
-      const element = this.querySelector(selector);
-      if (!element) {
-        throw new Error(`Missing element: ${selector}`);
-      }
-      return element;
-    }
-    bind() {
-      this.addEventListener("click", (event) => void handleClick(this, event));
-    }
-    renderRoute() {
-      const route3 = currentIntegrationRoute();
-      if (route3.view === "installation") {
-        return this.showInstallation(route3.id);
-      }
-      if (route3.view === "setup") {
-        return this.showSetup(route3.kind);
-      }
-      this.showList(route3.tab);
-    }
-    showList(tab) {
-      this.selectedIntegrationId = "";
-      this.activeDefinition = null;
-      this.query("[data-detail-view]").replaceChildren();
-      this.query("[data-detail-view]").hidden = true;
-      this.query("[data-browser]").hidden = false;
-      this.setTab(tab);
-    }
-    showInstallation(integrationId) {
-      if (!this.installations.some((installation) => installation.id === integrationId)) {
-        replaceIntegrationRoute({ view: "list", tab: "installed" });
-        this.showList("installed");
-        return;
-      }
-      this.activeDefinition = null;
-      this.selectedIntegrationId = integrationId;
-      this.query("[data-browser]").hidden = true;
-      this.query("[data-detail-view]").hidden = false;
-      this.tab = "installed";
-      renderDetail(this);
-    }
-    showSetup(kind) {
-      const definition = this.definitions.find((item) => item.kind === kind);
-      if (!definition) {
-        replaceIntegrationRoute({ view: "list", tab: "catalogue" });
-        this.showList("catalogue");
-        return;
-      }
-      this.activeDefinition = definition;
-      this.selectedIntegrationId = "";
-      this.query("[data-browser]").hidden = true;
-      this.query("[data-detail-view]").hidden = false;
-      this.tab = "catalogue";
-      renderSetup(this, definition);
-    }
-    onPopState = () => this.renderAll();
-    mountTemplate() {
-      const style = document.createElement("style");
-      style.textContent = styles_default4;
-      const body = document.createElement("template");
-      body.innerHTML = template_default20;
-      this.replaceChildren(style, body.content.cloneNode(true));
-    }
-  }
-  if (!customElements.get("cms-integrations-admin")) {
-    customElements.define("cms-integrations-admin", IntegrationBrowser);
-  }
-
-  // src/static/admin/_operations/health/overview.html
-  var overview_default2 = `<p9r-stack gap="lg" trim>
-    <p9r-stack direction="row" wrap align-items="center" justify="between" gap="md">
-        <span>Monitor your integrations and keep them up to date.</span>
-        <p9r-stack direction="row" wrap align-items="center" gap="sm" trim>
-            <p9r-button type="button" variant="outlined" data-health-check-upgrades>Check upgrades</p9r-button>
-            <p9r-button type="button" variant="outlined" data-health-refresh-all>Reload health</p9r-button>
-            <p9r-button type="button" color="primary" data-health-upgrade-all>Upgrade all</p9r-button>
-        </p9r-stack>
-    </p9r-stack>
-    <cms-detail-section heading="Overall health">
-        <p9r-stack direction="row" wrap align-items="center" justify="between" gap="md" trim>
-            <strong role="status" data-health-total>{{ healthTotal }}</strong>
-            <span>{{ healthCoverage }}</span>
-        </p9r-stack>
-    </cms-detail-section>
-    <p cms-condition="$source.loading">Loading integrations…</p>
-    <p9r-alert cms-condition="$source.error || $source.refreshError" type="error" role="alert">{{ $source.message }}</p9r-alert>
-    <p cms-condition="$source.empty">No integrations are installed.</p>
-    <p9r-stack gap="sm" trim>
-        <cms-health-row cms-repeat="healthItems as item" installation-id="{{ item.id }}">
-            <p9r-stack slot="heading" gap="xs" trim><strong>{{ item.label }}</strong><small>v{{ item.version }} · Deployment: {{ item.deployment }}</small></p9r-stack>
-            <cms-health-summary slot="status" installation-id="{{ item.id }}"></cms-health-summary>
-        </cms-health-row>
-    </p9r-stack>
-    <cms-health-upgrades></cms-health-upgrades>
-</p9r-stack>
-`;
-
-  // src/components/admin/Resources/Integrations/health/presentation/summary.ts
-  function summarizeHealth(health, failed = false) {
-    const report = health?.report;
-    const fresh = !failed && health?.observation === "valid" && health.freshness === "fresh";
-    const ready = fresh && report?.status === "ready" && report.checks.every((check) => check.status === "ok");
-    const count = report ? `${report.checks.filter((check) => check.status === "ok").length}/${report.checks.length} checks passed${fresh ? "" : " · last observation"}` : "No check results";
-    const label2 = failed ? "Unavailable" : !health ? "Checking service…" : !fresh ? health.freshness === "stale" ? "Stale observation" : "Not observed" : report?.status.replaceAll("_", " ") ?? "Unknown";
-    return { ready, observed: Boolean(fresh && report), label: ready ? "✓ Ready" : label2, count };
-  }
-
-  // src/static/admin/_operations/health/summary.html
-  var summary_default = `<p9r-stack gap="xs" trim>
-    <strong>{{ healthStatus }}</strong>
-    <small>{{ healthCount }}</small>
-    <span cms-condition="$source.error || $source.refreshError" role="alert">Health unavailable. {{ $source.message }}</span>
-</p9r-stack>
-`;
-
-  // src/components/admin/Resources/Integrations/health/HealthSummary.ts
-  class HealthSummary extends HTMLElement {
-    static observedAttributes = ["installation-id"];
-    mounted = false;
-    stop;
-    connectedCallback() {
-      if (!this.mounted) {
-        const template6 = document.createElement("template");
-        template6.innerHTML = summary_default;
-        this.replaceChildren(template6.content.cloneNode(true));
-        hc(this, () => {
-          const summary = summarizeHealth(et(this));
-          return { healthStatus: summary.label, healthCount: summary.count };
-        });
-        this.mounted = true;
-      }
-      this.sync();
-      this.stop = qd(this, (state) => {
-        const summary = summarizeHealth(state.data, Boolean(state.error || state.refreshError));
-        this.closest("cms-health-row")?.setAttribute("health-state", summary.ready ? "ready" : summary.observed ? "attention" : "unknown");
-        this.dispatchEvent(new CustomEvent("health:observation", {
-          bubbles: true,
-          detail: { id: this.getAttribute("installation-id"), ...summary }
-        }));
-      });
-    }
-    disconnectedCallback() {
-      this.stop?.();
-    }
-    attributeChangedCallback() {
-      if (this.isConnected) {
-        this.sync();
-      }
-    }
-    refresh() {
-      this.sync(true);
-    }
-    sync(refresh = false) {
-      const id2 = this.getAttribute("installation-id");
-      if (!id2 || id2.includes("{{")) {
-        return;
-      }
-      const event = `health:summary:${encodeURIComponent(id2)}`;
-      const source2 = `${route2("/api/integrations/management/health")}?id=${encodeURIComponent(id2)}${refresh ? "&refresh=true" : ""} as health`;
-      this.setAttribute("cms-reload-on", event);
-      if (this.getAttribute("cms-source") !== source2) {
-        this.setAttribute("cms-source", source2);
-      } else if (refresh) {
-        this.ownerDocument.dispatchEvent(new Event(event));
-      }
-    }
-  }
-  customElements.define("cms-health-summary", HealthSummary);
-
-  // src/components/admin/Resources/Integrations/health/presentation/healthRow.css
-  var healthRow_default = `:host { display: block; min-width: 0; border: 1px solid var(--border-default, #e0e5e4); border-radius: 12px; background: var(--bg-surface, #fff); overflow: clip; }
-summary { display: flex; align-items: center; gap: 24px; padding: 20px 24px; cursor: pointer; list-style: none; }
-summary::-webkit-details-marker { display: none; }
-summary:hover { background: var(--bg-base, #f6f8f7); }
-summary:focus-visible { outline: 2px solid var(--primary-base, #176451); outline-offset: -3px; }
-summary > slot { display: block; flex: 1; min-width: 0; overflow-wrap: anywhere; }
-summary > slot[name="status"] { flex: 0 0 170px; }
-svg { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.7; transition: transform 150ms; }
-details[open] svg { transform: rotate(180deg); }
-.content { padding: 24px; border-top: 1px solid var(--border-default, #e0e5e4); background: var(--bg-base, #f6f8f7); }
-@media (max-width: 600px) { summary, .content { padding: 16px; } summary { gap: 12px; } summary > slot[name="status"] { flex-basis: 96px; } }
-@media (prefers-reduced-motion: reduce) { svg { transition: none; } }
-
-.indicator { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; color: var(--text-muted); background: var(--secondary-muted); font-size: 18px; font-weight: 600; }
-.indicator::before { content: "–"; }
-:host([health-state="ready"]) .indicator { color: var(--success-base); background: var(--success-muted); }
-:host([health-state="ready"]) .indicator::before { content: "✓"; }
-:host([health-state="attention"]) .indicator { color: var(--warning-base); background: var(--warning-muted); }
-:host([health-state="attention"]) .indicator::before { content: "!"; }
-`;
-
-  // src/components/admin/Resources/Integrations/health/presentation/healthContext.ts
-  function healthContext(management) {
-    const actions = new Map((management.actions ?? []).map((action) => [action.id, { id: action.id, label: action.label }]));
-    let checks = [];
-    let steps = [];
-    return (health) => {
-      const report = health?.report;
-      checks = (report?.checks ?? []).map((check, index) => {
-        const previous = checks[index];
-        const row = previous?.id === check.id ? previous : { id: check.id, summary: "", actions: [] };
-        row.summary = `${label2(check.status)} · ${check.message || check.code || check.id}`;
-        row.actions = (check.actionIds ?? []).flatMap((id2) => {
-          const action = actions.get(id2);
-          return action ? [action] : [];
-        });
-        return row;
-      });
-      steps = (report?.operation?.steps ?? []).map((step, index) => {
-        const previous = steps[index];
-        const row = previous?.id === step.id ? previous : { id: step.id, status: "" };
-        row.status = label2(step.status);
-        return row;
-      });
-      return {
-        healthView: {
-          available: Boolean(health),
-          hasReport: Boolean(report),
-          checks,
-          steps,
-          observation: health ? `Observation: ${label2(health.observation)} · ${label2(health.freshness)} · ${date(health.observedAt)}` : "",
-          issue: health?.reason ? `Observation issue: ${label2(health.reason)}${health.httpStatus ? ` (HTTP ${health.httpStatus})` : ""}` : "",
-          version: health?.reportDefinitionVersion ?? "",
-          service: report ? `${health.freshness === "fresh" ? "Service" : "Last observed service"}: ${label2(report.status)}` : "",
-          checked: report ? `Checked ${date(report.checkedAt)}` : "",
-          configuration: report ? configurationStatus(health) : "",
-          operation: report?.operation ? `Operation ${report.operation.id}: ${label2(report.operation.status)}` : ""
-        }
-      };
-    };
-  }
-  function date(value2) {
-    const parsed = new Date(value2);
-    return Number.isNaN(parsed.getTime()) ? value2 : parsed.toLocaleString();
-  }
-  function label2(value2) {
-    return value2.replaceAll("_", " ");
-  }
-  function configurationStatus(health) {
-    const { savedRevision, appliedRevision } = health.report.configuration;
-    if (savedRevision === null) {
-      return "No saved configuration revision was reported.";
-    }
-    if (savedRevision !== appliedRevision) {
-      return health.freshness === "fresh" ? "Saved changes are waiting to be applied." : "Saved changes were waiting to be applied at the last observation.";
-    }
-    return health.freshness === "fresh" ? "The saved configuration is applied." : "The saved configuration was applied at the last observation.";
-  }
-
-  // src/static/admin/_operations/health/checks.html
-  var checks_default = `<p9r-stack gap="sm" trim>
-<span cms-condition="$source.loading &amp;&amp; !healthView.available">Loading…</span>
-<p cms-condition="$source.error || $source.refreshError" role="alert">Unable to load health. {{ $source.message }}</p>
-<p9r-button variant="outlined" type="button" data-health-refresh aria-disabled="{{ healthBusy }}" cms-condition="healthView.available || $source.error || $source.empty">Refresh health</p9r-button>
-<p cms-condition="healthView.available">{{ healthView.observation }}</p>
-<p cms-condition="healthView.issue">{{ healthView.issue }}</p>
-<p cms-condition="healthView.version">Observed version: {{ healthView.version }}</p>
-<p cms-condition="healthView.available &amp;&amp; !healthView.hasReport || $source.empty">No valid service observation is available.</p>
-<h3 cms-condition="healthView.hasReport">{{ healthView.service }}</h3>
-<p cms-condition="healthView.hasReport">{{ healthView.checked }}</p>
-<p cms-condition="healthView.hasReport">{{ healthView.configuration }}</p>
-<cms-integration-health-check cms-repeat="healthView.checks as check" data-check-id="{{ check.id }}">
-    <strong>{{ check.summary }}</strong>
-    <p9r-button variant="outlined" type="button" cms-repeat="check.actions as action" data-health-action="{{ action.id }}" aria-disabled="{{ healthBusy }}">{{ action.label }}</p9r-button>
-</cms-integration-health-check>
-<h3 cms-condition="healthView.operation">{{ healthView.operation }}</h3>
-<p cms-repeat="healthView.steps as step">{{ step.id }}: {{ step.status }}</p>
-
-</p9r-stack>
-`;
-
-  // src/components/admin/Resources/Integrations/health/presentation/healthCheck.css
-  var healthCheck_default = `:host {
-    display: flex;
-    gap: 1rem;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    padding: .75rem 0;
-    border-bottom: 1px solid var(--border-default);
-}
-`;
-
-  // src/components/admin/Resources/Integrations/health/presentation/HealthCheck.ts
-  class HealthCheck extends l {
-    constructor() {
-      super({ css: healthCheck_default, template: "<slot></slot>" });
-    }
-  }
-  customElements.define("cms-integration-health-check", HealthCheck);
-
-  // src/components/admin/Resources/Integrations/health/presentation/health.ts
-  function mountHealth(root, id2, management, run) {
-    const host = document.createElement("div");
-    host.dataset.integrationHealth = "";
-    const url = `${route2("/api/integrations/management/health")}?id=${encodeURIComponent(id2)}`;
-    const reload = `integration:${encodeURIComponent(id2)}:health:reload`;
-    host.setAttribute("cms-source", `${url} as health`);
-    host.setAttribute("cms-reload-on", reload);
-    const template6 = document.createElement("template");
-    template6.innerHTML = checks_default;
-    host.append(template6.content.cloneNode(true));
-    let loading = true;
-    const project = healthContext(management);
-    hc(host, () => {
-      const value2 = et(host);
-      return { ...project(value2 ?? undefined), healthBusy: loading };
-    });
-    const stop = qd(host, (state) => {
-      if (state.disposed) {
-        stop();
-        return;
-      }
-      const pending = state.loading || state.refreshing === true;
-      if (loading !== pending) {
-        loading = pending;
-        Zi(host);
-      }
-    });
-    const refresh = () => {
-      if (!host.isConnected) {
-        return;
-      }
-      loading = true;
-      const next = `${url}&refresh=true as health`;
-      if (host.getAttribute("cms-source") !== next) {
-        host.setAttribute("cms-source", next);
-      } else {
-        host.ownerDocument.dispatchEvent(new Event(reload));
-      }
-    };
-    host.addEventListener("click", (event) => {
-      const target2 = event.target?.closest("[data-health-refresh], [data-health-action]");
-      if (!loading && target2?.hasAttribute("data-health-refresh")) {
-        refresh();
-      } else if (!loading && target2?.dataset.healthAction) {
-        run(target2.dataset.healthAction);
-      }
-    });
-    root.replaceChildren(host);
-    return { element: host, refresh };
-  }
-
-  // src/components/admin/Resources/Integrations/health/actions.ts
-  function healthActions(root, id2, management) {
-    const forms = new Map;
-    const actions = [...management.actions ?? []];
-    for (const action of actions) {
-      const modal = formPart("modal");
-      modal.id = formId();
-      modal.setAttribute("aria-label", action.label);
-      modal.querySelector('[slot="title"]').textContent = action.label;
-      const form = modal.querySelector("form");
-      form.setAttribute("cms-source", `${route2("/api/integrations/management/action")}?id=${encodeURIComponent(id2)} as result`);
-      form.setAttribute("cms-source-method", "POST");
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = "actionId";
-      input.value = action.id;
-      form.prepend(input);
-      const stack = form.querySelector("[data-operation-fields]");
-      for (const field2 of action.fields ?? []) {
-        stack.append(fieldElement(field2, "actionValues", { valuesPath: "input" }));
-      }
-      hc(form, () => ({ actionValues: {} }));
-      const submit = formPart("submit");
-      submit.textContent = action.label;
-      stack.append(submit);
-      const opener = formPart("opener");
-      opener.setAttribute("modal-target", modal.id);
-      opener.querySelector("p9r-button").textContent = action.label;
-      root.append(opener, modal);
-      forms.set(action.id, { form, modal });
-    }
-    return (actionId) => {
-      const entry = forms.get(actionId);
-      if (!entry) {
-        return;
-      }
-      entry.modal.setAttribute("open", "");
-    };
-  }
-
-  // src/static/admin/_operations/health/operations.html
-  var operations_default = `<p9r-stack gap="md" trim>
-    <p cms-condition="$source.loading">Loading controls…</p>
-    <p9r-alert cms-condition="$source.error || $source.refreshError" type="error" role="alert">{{ $source.message }}<p9r-button variant="outlined" type="button" data-health-retry-installation>Retry</p9r-button></p9r-alert>
-    <div data-health-content></div>
-    <p9r-stack gap="md" trim>
-        <p9r-stack direction="row" wrap align-items="center" gap="sm" trim data-health-actions></p9r-stack>
-        <form data-sync-form cms-source-trigger="submit" cms-source-method="POST" cms-source-serialization="typed-json" cms-source-inherit-query="false" cms-source-success-reset="false">
-            <p9r-button type="submit" variant="outlined">Run sync</p9r-button>
-            <p9r-alert cms-condition="$source.error" type="error" role="alert">{{ $source.message }}</p9r-alert>
-        </form>
-                    <p9r-stack gap="md" trim data-upgrade-panel>
-                        <span>Check available releases, then confirm an exact version to upgrade.</span>
-                        <p9r-button type="button" variant="outlined" data-upgrade-open>Check for upgrades</p9r-button>
-                        <div data-upgrade-form hidden>
-                            <p9r-stack gap="md">
-                                <p9r-select label="Target version" data-upgrade-target></p9r-select>
-                                <p9r-input label="Type the target version to confirm" data-upgrade-confirmation autocomplete="off"></p9r-input>
-                                <p9r-button type="button" color="primary" data-upgrade-confirm>Upgrade</p9r-button>
-                                <p9r-button type="button" variant="ghost" data-upgrade-cancel>Cancel</p9r-button>
-                            </p9r-stack>
-                        </div>
-                        <span data-upgrade-status role="status" aria-live="polite"></span>
-                    </p9r-stack>
-    </p9r-stack>
-</p9r-stack>
-`;
-
-  // src/components/admin/Resources/Integrations/health/HealthOperations.ts
-  class HealthOperations extends HTMLElement {
-    stop;
-    managementSignature = "";
-    health;
-    connectedCallback() {
-      const id2 = this.getAttribute("installation-id");
-      if (!id2) {
-        return;
-      }
-      const template6 = document.createElement("template");
-      template6.innerHTML = operations_default;
-      this.replaceChildren(template6.content.cloneNode(true));
-      this.id = `health-installation-${encodeURIComponent(id2)}`;
-      this.setAttribute("cms-source", `${route2("/api/integrations/installations")}?id=${encodeURIComponent(id2)} as integration`);
-      this.setAttribute("cms-reload-on", `health:detail:${encodeURIComponent(this.getAttribute("installation-id"))}`);
-      const sync = this.querySelector("[data-sync-form]");
-      sync.setAttribute("cms-source", `${route2("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id2)} as result`);
-      sync.setAttribute("cms-source-success-reload", `#${this.id}`);
-      this.querySelector("[data-upgrade-panel]").dataset.integrationId = id2;
-      hc(this, () => {
-        const installation = et(this);
-        return { healthHasActions: Boolean(installation?.definition?.management?.actions?.length) };
-      });
-      this.stop = qd(this, (state) => {
-        const installation = state.data;
-        if (installation?.id === id2 && !state.loading && !state.error) {
-          const management = installation.definition?.management ?? { schemaVersion: 1 };
-          const signature = JSON.stringify(management);
-          if (this.health && signature === this.managementSignature) {
-            return;
-          }
-          this.managementSignature = signature;
-          const actions = this.querySelector("[data-health-actions]");
-          actions?.replaceChildren();
-          const run = actions ? healthActions(actions, id2, management) : () => {};
-          this.health = mountHealth(this.querySelector("[data-health-content]"), id2, management, run);
-        }
-      });
-      this.addEventListener("click", this.onClick);
-      this.addEventListener(X2, this.success);
-      document.addEventListener("integration:updated", this.reload);
-    }
-    refresh() {
-      this.health?.refresh();
-    }
-    disconnectedCallback() {
-      this.stop?.();
-      this.health = undefined;
-      this.removeEventListener("click", this.onClick);
-      this.removeEventListener(X2, this.success);
-      document.removeEventListener("integration:updated", this.reload);
-    }
-    reload = () => {
-      this.ownerDocument.dispatchEvent(new Event(`health:detail:${encodeURIComponent(this.getAttribute("installation-id"))}`));
-      this.health?.refresh();
-      this.closest("cms-health-row")?.querySelector("cms-health-summary")?.refresh();
-    };
-    success = (event) => {
-      if (event.target.matches("[data-sync-form]")) {
-        this.health?.refresh();
-        this.closest("cms-health-row")?.querySelector("cms-health-summary")?.refresh();
-      } else if (event.target.closest("[data-health-actions]")) {
-        this.reload();
-      }
-    };
-    onClick = (event) => {
-      if (event.target.closest("[data-health-retry-installation]")) {
-        this.reload();
-        return;
-      }
-      const target2 = event.target.closest("[data-upgrade-open], [data-upgrade-cancel], [data-upgrade-confirm]");
-      if (target2?.hasAttribute("data-upgrade-open")) {
-        openIntegrationUpgrade(target2);
-      } else if (target2?.hasAttribute("data-upgrade-cancel")) {
-        cancelIntegrationUpgrade(target2);
-      } else if (target2?.hasAttribute("data-upgrade-confirm")) {
-        confirmIntegrationUpgrade(target2);
-      }
-    };
-  }
-  customElements.define("cms-health-operations", HealthOperations);
-
-  // src/components/admin/Resources/Integrations/health/HealthRow.ts
-  class HealthRow extends l {
-    constructor() {
-      super({
-        css: healthRow_default,
-        template: '<details><summary><span class="indicator" aria-hidden="true"></span><slot name="heading"></slot><slot name="status"></slot><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></summary><div class="content"><slot></slot></div></details>'
-      });
-    }
-    connectedCallback() {
-      super.connectedCallback();
-      this.shadowRoot.querySelector("details").addEventListener("toggle", this.expand);
-    }
-    disconnectedCallback() {
-      this.shadowRoot?.querySelector("details")?.removeEventListener("toggle", this.expand);
-    }
-    expand = () => {
-      if (!this.shadowRoot.querySelector("details").open || this.querySelector("cms-health-operations")) {
-        return;
-      }
-      const operations = document.createElement("cms-health-operations");
-      operations.setAttribute("installation-id", this.getAttribute("installation-id"));
-      this.append(operations);
-    };
-  }
-  customElements.define("cms-health-row", HealthRow);
-
-  // src/static/admin/_operations/health/upgrades.html
-  var upgrades_default = `<p9r-modal aria-label="Integration upgrades">
-    <span slot="title">Integration upgrades</span>
-    <p9r-stack gap="md" trim>
-        <p role="status">{{ upgradeMessage }}</p>
-        <cms-detail-section cms-repeat="upgradeItems as upgrade" heading="{{ upgrade.label }}">
-            <span>{{ upgrade.message }}</span>
-        </cms-detail-section>
-        <p9r-button type="button" color="primary" data-health-upgrade-confirm disabled>Confirm upgrades</p9r-button>
-    </p9r-stack>
-</p9r-modal>
-`;
-
-  // src/components/admin/Resources/Integrations/health/HealthUpgrades.ts
-  class HealthUpgrades extends HTMLElement {
-    candidates = [];
-    busy = false;
-    message = "";
-    page;
-    connectedCallback() {
-      const template6 = document.createElement("template");
-      template6.innerHTML = upgrades_default;
-      this.replaceChildren(template6.content.cloneNode(true));
-      hc(this, () => ({
-        upgradeItems: this.candidates,
-        upgradeMessage: this.message,
-        upgradeBusy: this.busy,
-        upgradeAvailable: this.candidates.some((item) => item.target && !item.done)
-      }));
-      this.setAttribute("cms-source", "");
-      Pd(this, {});
-      this.page = this.closest("cms-health-page");
-      this.page.addEventListener("click", this.onClick);
-    }
-    disconnectedCallback() {
-      this.page?.removeEventListener("click", this.onClick);
-    }
-    update() {
-      Zi(this);
-      this.querySelector("[data-health-upgrade-confirm]")?.toggleAttribute("disabled", this.busy || !this.candidates.some((item) => item.target && !item.done));
-    }
-    onClick = (event) => {
-      const target2 = event.target.closest("[data-health-check-upgrades], [data-health-upgrade-all], [data-health-upgrade-confirm]");
-      if (!target2 || this.busy) {
-        return;
-      }
-      if (target2.hasAttribute("data-health-upgrade-confirm")) {
-        this.apply();
-      } else {
-        this.check();
-      }
-    };
-    async check() {
-      const rows = et(this.page);
-      this.candidates = (rows ?? []).map((row) => ({
-        id: row.id,
-        label: row.label,
-        current: row.definitionVersion,
-        target: "",
-        message: "Checking…",
-        done: false
-      }));
-      this.busy = true;
-      this.message = "Checking available releases…";
-      this.querySelector("p9r-modal").setAttribute("open", "");
-      this.update();
-      const pending = [...this.candidates];
-      await Promise.all(Array.from({ length: 3 }, async () => {
-        while (pending.length) {
-          const item = pending.shift();
-          try {
-            const choices = await integrationUpgradeVersions(item.id);
-            const preferred = choices.stable ?? choices.latest;
-            const target2 = preferred && choices.versions.includes(preferred) ? preferred : choices.versions[0];
-            const evidence = choices.targets?.find((entry) => entry.version === target2);
-            item.target = target2 && target2 !== choices.current && evidence?.eligible !== false ? target2 : "";
-            item.message = item.target ? `${choices.current} → ${item.target}` : "No eligible upgrade";
-            const reasons = choices.targets?.filter((entry) => !entry.eligible).flatMap((entry) => entry.reasons) ?? [];
-            const migrations = evidence?.migrations.map((entry) => `${entry.connectorKey}: rollback ${entry.rollback} (${entry.rollbackVerified ? "verified" : "not verified"}), point of no return ${entry.pointOfNoReturn}`) ?? [];
-            item.message += [...migrations, ...reasons].length ? ` · ${[...migrations, ...reasons].join("; ")}` : "";
-          } catch (error) {
-            item.message = integrationUpgradeErrorMessage(error);
-          }
-          this.update();
-        }
-      }));
-      this.busy = false;
-      const count = this.candidates.filter((item) => item.target).length;
-      this.message = count ? `${count} upgrades available. Review the exact versions below before confirming. Upgrades run one at a time and stop if one fails.` : "No eligible upgrades found. Review any unavailable repositories below.";
-      this.update();
-    }
-    async apply() {
-      if (!this.candidates.some((item) => item.target && !item.done)) {
-        return;
-      }
-      this.busy = true;
-      this.message = "Applying the reviewed upgrades…";
-      this.update();
-      for (const item of this.candidates.filter((entry) => entry.target && !entry.done)) {
-        try {
-          item.message = `Upgrading to ${item.target}…`;
-          this.update();
-          await upgradeIntegrationInstallation(item.id, item.target);
-          item.done = true;
-          item.message = `Upgraded to ${item.target}`;
-        } catch (error) {
-          item.message = integrationUpgradeErrorMessage(error);
-          this.message = "Stopped after an upgrade failed. Completed upgrades remain applied. Check releases again before retrying.";
-          item.target = "";
-          for (const remaining of this.candidates) {
-            if (!remaining.done) {
-              remaining.target = "";
-            }
-          }
-          this.busy = false;
-          this.update();
-          return;
-        }
-      }
-      this.busy = false;
-      this.message = "The reviewed upgrades are complete.";
-      this.ownerDocument.dispatchEvent(new Event("health:installations"));
-      this.update();
-    }
-  }
-  customElements.define("cms-health-upgrades", HealthUpgrades);
-
-  // src/components/admin/Resources/Integrations/health/HealthPage.ts
-  class HealthPage extends HTMLElement {
-    observations = new Map;
-    connectedCallback() {
-      const template6 = document.createElement("template");
-      template6.innerHTML = overview_default2;
-      this.replaceChildren(template6.content.cloneNode(true));
-      let items = [];
-      hc(this, () => {
-        const data = et(this);
-        const rows = Array.isArray(data) ? data : [];
-        items = rows.map((item, index) => {
-          const previous = items[index];
-          const values = {
-            id: item.id,
-            label: item.label,
-            version: item.definitionVersion,
-            deployment: item.status.replaceAll("_", " ")
-          };
-          return previous?.id === item.id ? Object.assign(previous, values) : values;
-        });
-        const statuses = items.map((item) => this.observations.get(item.id));
-        const ready = statuses.filter((state, index) => state?.ready && rows[index]?.status === "success").length;
-        const observed = statuses.filter((state) => state?.observed).length;
-        return {
-          healthItems: items,
-          healthTotal: `${ready}/${items.length} integrations ready`,
-          healthCoverage: `${observed} observed · ${items.length - observed} awaiting valid checks`
-        };
-      });
-      this.setAttribute("cms-source", `${route2("/api/integrations/installations")} as installations`);
-      this.setAttribute("cms-reload-on", "health:installations");
-      this.addEventListener("click", this.refresh);
-      this.addEventListener("health:observation", this.observation);
-      document.addEventListener("integration:updated", this.reload);
-    }
-    disconnectedCallback() {
-      this.removeEventListener("click", this.refresh);
-      this.removeEventListener("health:observation", this.observation);
-      document.removeEventListener("integration:updated", this.reload);
-    }
-    observation = (event) => {
-      const detail = event.detail;
-      this.observations.set(detail.id, detail);
-      Zi(this);
-    };
-    refresh = (event) => {
-      if (!event.target.closest("[data-health-refresh-all]")) {
-        return;
-      }
-      this.reload();
-    };
-    reload = () => {
-      this.ownerDocument.dispatchEvent(new Event("health:installations"));
-      for (const summary of Array.from(this.querySelectorAll("cms-health-summary, cms-health-operations"))) {
-        summary.refresh();
-      }
-    };
-  }
-  customElements.define("cms-health-page", HealthPage);
-
   // src/components/admin/Resources/Sources/ResourceWorkspace.ts
   class ResourceWorkspace extends HTMLElement {
-    browser;
-    observer;
     connectedCallback() {
       if (!this.querySelector(":scope > style")) {
         const style = document.createElement("style");
         style.textContent = "cms-resource-workspace { display: block; } cms-resource-workspace > [hidden] { display: none !important; }";
         this.prepend(style);
       }
-      window.addEventListener("popstate", this.sync);
-      window.addEventListener("cms-resources:route", this.sync);
-      window.addEventListener("cms-dashboards:selection", this.sync);
-      this.observer = new MutationObserver(this.sync);
-      this.observer.observe(this, { childList: true });
-      this.sync();
-    }
-    disconnectedCallback() {
-      this.observer?.disconnect();
-      this.observer = undefined;
-      window.removeEventListener("popstate", this.sync);
-      window.removeEventListener("cms-resources:route", this.sync);
-      window.removeEventListener("cms-dashboards:selection", this.sync);
-    }
-    sync = () => {
-      const params = new URL(window.location.href).searchParams;
-      const catalogue = params.has("integration") || params.has("setup") || params.has("tab");
-      if (catalogue && !this.browser) {
-        this.browser = document.createElement("cms-integrations-admin");
-        this.append(this.browser);
-      }
       for (const child of Array.from(this.children)) {
         if (child instanceof HTMLElement) {
-          child.hidden = child === this.browser !== catalogue;
+          child.hidden = false;
         }
       }
-    };
+    }
   }
   if (!customElements.get("cms-resource-workspace")) {
     customElements.define("cms-resource-workspace", ResourceWorkspace);
@@ -44640,7 +39994,7 @@ cms-collection-workspace .collection-text-table tbody td {
 `;
 
   // src/components/admin/Resources/Blocs/workspace/views/overview.html
-  var overview_default3 = `<div class="collection-overview" cms-condition="workspace.isOverview" data-upgrade-panel data-integration-id="{{ workspace.collection.installationId }}">
+  var overview_default2 = `<div class="collection-overview" cms-condition="workspace.isOverview" data-upgrade-panel data-integration-id="{{ workspace.collection.installationId }}">
     <cms-shell-detail size="md">
         <cms-shell-detail-body slot="body">
             <cms-detail-section slot="main" heading="About" description="{{ workspace.collection.description }}">
@@ -44965,9 +40319,9 @@ cms-collection-workspace .collection-text-table tbody td {
       const panelMode = panel.dataset.themePanel;
       const visible = mode === "compare" ? !sharedFocusValue || panelMode === "light" : mode === panelMode;
       panel.toggleAttribute("hidden", !visible);
-      const label3 = panel.querySelector(".mode-label");
-      if (label3) {
-        label3.textContent = mode === "compare" && sharedFocusValue && panelMode === "light" ? "Light and dark" : panelMode === "light" ? "Light" : "Dark";
+      const label2 = panel.querySelector(".mode-label");
+      if (label2) {
+        label2.textContent = mode === "compare" && sharedFocusValue && panelMode === "light" ? "Light and dark" : panelMode === "light" ? "Light" : "Dark";
       }
     }
   }
@@ -45233,7 +40587,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
 `;
 
   // src/components/admin/Resources/Blocs/workspace/ThemeSpecimen/template.html
-  var template_default21 = `<section class="workbench" aria-label="Theme preview">
+  var template_default20 = `<section class="workbench" aria-label="Theme preview">
     <header class="toolbar">
         <div>
             <strong data-preview-heading>Light and dark</strong>
@@ -45341,7 +40695,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
     panels;
     appliedVariables = new Set;
     constructor() {
-      super({ css: style_default17, template: template_default21 });
+      super({ css: style_default17, template: template_default20 });
       this.panels = this.createPanels();
     }
     static get observedAttributes() {
@@ -45543,7 +40897,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
 `;
 
   // src/components/admin/Resources/Blocs/workspace/TokenPreview/template.html
-  var template_default22 = `<span class="preview">
+  var template_default21 = `<span class="preview">
     <span class="color color-light"></span>
     <span class="color color-dark"></span>
     <span class="glyph"></span>
@@ -45562,7 +40916,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
     measure;
     surface;
     constructor() {
-      super({ css: style_default18, template: template_default22 });
+      super({ css: style_default18, template: template_default21 });
       this.lightColor = this.shadowRoot.querySelector(".color-light");
       this.darkColor = this.shadowRoot.querySelector(".color-dark");
       this.glyph = this.shadowRoot.querySelector(".glyph");
@@ -45607,7 +40961,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/template.html
-  var template_default23 = `<header class="topbar">
+  var template_default22 = `<header class="topbar">
     <div class="start">
         <a class="back" href="#">
             <span class="chevron">‹</span>
@@ -45918,7 +41272,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/styles/index.ts
-  var styles_default5 = [String(part_1_default3), String(part_2_default3)].join(`
+  var styles_default4 = [String(part_1_default3), String(part_2_default3)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/topBarEvents.ts
@@ -45979,7 +41333,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
   var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(styles_default5)}</style>${String(template_default23)}`;
+  template6.innerHTML = `<style>${String(styles_default4)}</style>${String(template_default22)}`;
 
   class TopBar extends HTMLElement {
     _viewport = "bleed";
@@ -46015,10 +41369,10 @@ button:hover {
     set sourceState(sourceState) {
       this._setSourceState(sourceState, false);
     }
-    set saveStatus(label3) {
+    set saveStatus(label2) {
       const target2 = this.shadowRoot.querySelector(".save-label") ?? this.shadowRoot.querySelector('[data-action="save"]');
       if (target2) {
-        target2.textContent = label3;
+        target2.textContent = label2;
       }
     }
     setPageTitle(title, path) {
@@ -46108,7 +41462,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/template.html
-  var template_default24 = `<aside class="panel">
+  var template_default23 = `<aside class="panel">
     <div class="panel-head">
         <div class="title">
             <slot name="title"></slot>
@@ -46224,7 +41578,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default19)}</style>${String(template_default24)}`;
+  template7.innerHTML = `<style>${String(style_default19)}</style>${String(template_default23)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -46407,7 +41761,7 @@ button:hover {
   function renderProviderButtons(container, groups, activeProvider, onSelect) {
     container.replaceChildren();
     if (groups.length === 0) {
-      container.append(empty2("No sources available."));
+      container.append(empty("No sources available."));
       return;
     }
     for (const group of groups) {
@@ -46423,7 +41777,7 @@ button:hover {
   function renderSourceButtons(container, sources, activeSource, onSelect, onConfirm) {
     container.replaceChildren();
     if (sources.length === 0) {
-      container.append(empty2("No matching sources."));
+      container.append(empty("No matching sources."));
       return;
     }
     for (const source2 of sources) {
@@ -46452,7 +41806,7 @@ button:hover {
       container.append(button);
     }
   }
-  function empty2(message) {
+  function empty(message) {
     const element = document.createElement("div");
     element.className = "empty";
     element.textContent = message;
@@ -46471,10 +41825,10 @@ button:hover {
     row.append(renderParamHeader(rowConfig), renderParamDescription(rowConfig), renderParamControls(rowConfig.name, initialValue));
     return row;
   }
-  function renderBindingHeading(text5) {
+  function renderBindingHeading(text4) {
     const heading = document.createElement("div");
     heading.className = "config-heading";
-    heading.textContent = text5;
+    heading.textContent = text4;
     return heading;
   }
   function bodyBindingFields(fields) {
@@ -46520,10 +41874,10 @@ button:hover {
     controls.append(mode, value2);
     return controls;
   }
-  function option2(value2, label3) {
+  function option2(value2, label2) {
     const element = document.createElement("option");
     element.value = value2;
-    element.textContent = label3;
+    element.textContent = label2;
     return element;
   }
   function textSpan(value2) {
@@ -46606,14 +41960,14 @@ button:hover {
     return aliasLabel;
   }
   function renderTriggerSelect(value2) {
-    const label3 = document.createElement("label");
-    label3.textContent = "Trigger";
+    const label2 = document.createElement("label");
+    label2.textContent = "Trigger";
     const trigger = document.createElement("select");
     trigger.className = "source-trigger";
     trigger.append(option3("auto", "Auto"), option3("submit", "Submit"), option3("change", "Change"));
     selectOption2(trigger, value2);
-    label3.append(trigger);
-    return label3;
+    label2.append(trigger);
+    return label2;
   }
   function defaultTrigger(source2) {
     return (source2.method ?? "GET") === "GET" ? "auto" : "submit";
@@ -46652,10 +42006,10 @@ button:hover {
       }, initialBinding?.body?.[field2.name]));
     }
   }
-  function option3(value2, label3) {
+  function option3(value2, label2) {
     const element = document.createElement("option");
     element.value = value2;
-    element.textContent = label3;
+    element.textContent = label2;
     return element;
   }
   function selectOption2(select, value2) {
@@ -46679,10 +42033,10 @@ button:hover {
       list.append(renderField(field2, 0));
     }
     if (list.children.length === 0) {
-      const empty3 = document.createElement("p");
-      empty3.className = "details-empty";
-      empty3.textContent = emptyMessage;
-      return empty3;
+      const empty2 = document.createElement("p");
+      empty2.className = "details-empty";
+      empty2.textContent = emptyMessage;
+      return empty2;
     }
     return list;
   }
@@ -46753,10 +42107,10 @@ button:hover {
     container.append(scroll, footer);
   }
   function detailsEmpty(message) {
-    const empty3 = document.createElement("div");
-    empty3.className = "details-empty";
-    empty3.textContent = message;
-    return empty3;
+    const empty2 = document.createElement("div");
+    empty2.className = "details-empty";
+    empty2.textContent = message;
+    return empty2;
   }
   function insertButton(onSelect) {
     const insert = document.createElement("button");
@@ -46850,7 +42204,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/template.html
-  var template_default25 = `<div class="backdrop" hidden>
+  var template_default24 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="data-source-picker-title">
         <header class="header">
             <div>
@@ -47388,12 +42742,12 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/index.ts
-  var styles_default6 = [String(part_1_default4), String(part_2_default4), String(part_3_default3), String(part_4_default)].join(`
+  var styles_default5 = [String(part_1_default4), String(part_2_default4), String(part_3_default3), String(part_4_default)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/DataSourcePicker.ts
   var template8 = document.createElement("template");
-  template8.innerHTML = `<style>${String(styles_default6)}</style>${String(template_default25)}`;
+  template8.innerHTML = `<style>${String(styles_default5)}</style>${String(template_default24)}`;
 
   class DataSourcePicker extends HTMLElement {
     _sources = [];
@@ -47517,7 +42871,7 @@ h2 {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/template.html
-  var template_default26 = `<div class="backdrop" hidden>
+  var template_default25 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="condition-picker-title">
         <header class="header">
             <div>
@@ -47683,17 +43037,17 @@ textarea { min-height: 92px; resize: vertical; }
   function renderAdvancedMode(expression, onInput) {
     const root = document.createElement("div");
     root.className = "mode-panel form-grid";
-    const label3 = document.createElement("label");
-    label3.className = "control";
-    const text5 = document.createElement("span");
-    text5.textContent = "Expression";
+    const label2 = document.createElement("label");
+    label2.className = "control";
+    const text4 = document.createElement("span");
+    text4.textContent = "Expression";
     const textarea = document.createElement("textarea");
     textarea.className = "advanced-expression";
     textarea.value = expression;
     textarea.placeholder = 'plan.status == "active" && $source.loaded';
     textarea.addEventListener("input", () => onInput(textarea.value));
-    label3.append(text5, textarea);
-    root.append(label3);
+    label2.append(text4, textarea);
+    root.append(label2);
     return root;
   }
 
@@ -47728,7 +43082,7 @@ textarea { min-height: 92px; resize: vertical; }
     const root = document.createElement("div");
     root.className = "mode-panel form-grid";
     if (fields.length === 0) {
-      root.append(empty3("No data field available."));
+      root.append(empty2("No data field available."));
       return root;
     }
     root.append(fieldSelect(fields, draft, onChange), operatorSelect(draft, onChange));
@@ -47792,9 +43146,9 @@ textarea { min-height: 92px; resize: vertical; }
   function control(labelText, controlElement) {
     const wrapper = document.createElement("label");
     wrapper.className = "control";
-    const text5 = document.createElement("span");
-    text5.textContent = labelText;
-    wrapper.append(text5, controlElement);
+    const text4 = document.createElement("span");
+    text4.textContent = labelText;
+    wrapper.append(text4, controlElement);
     return wrapper;
   }
   function parseValue(value2) {
@@ -47813,10 +43167,10 @@ textarea { min-height: 92px; resize: vertical; }
     }
     return trimmed;
   }
-  function empty3(text5) {
+  function empty2(text4) {
     const element = document.createElement("div");
     element.className = "empty";
-    element.textContent = text5;
+    element.textContent = text4;
     return element;
   }
 
@@ -47829,10 +43183,10 @@ textarea { min-height: 92px; resize: vertical; }
     const root = document.createElement("div");
     root.className = "mode-panel";
     if (options2.sources.length === 0) {
-      const empty4 = document.createElement("div");
-      empty4.className = "empty";
-      empty4.textContent = "No source available.";
-      root.append(empty4);
+      const empty3 = document.createElement("div");
+      empty3.className = "empty";
+      empty3.textContent = "No source available.";
+      root.append(empty3);
       return root;
     }
     for (const source2 of options2.sources) {
@@ -47868,7 +43222,7 @@ textarea { min-height: 92px; resize: vertical; }
   }
   function renderState(source2, state, options2) {
     const key = sourceStateKey(options2.sources, source2.editor, state);
-    const label3 = document.createElement("label");
+    const label2 = document.createElement("label");
     const input = document.createElement("input");
     input.type = "checkbox";
     input.checked = options2.selected.has(key);
@@ -47876,15 +43230,15 @@ textarea { min-height: 92px; resize: vertical; }
       input.checked ? options2.selected.add(key) : options2.selected.delete(key);
       options2.onChange();
     });
-    const text5 = document.createElement("span");
-    text5.textContent = state;
-    label3.append(input, text5);
-    return label3;
+    const text4 = document.createElement("span");
+    text4.textContent = state;
+    label2.append(input, text4);
+    return label2;
   }
-  function textBlock(className, text5) {
+  function textBlock(className, text4) {
     const element = document.createElement("div");
     element.className = className;
-    element.textContent = text5;
+    element.textContent = text4;
     return element;
   }
 
@@ -47922,17 +43276,17 @@ textarea { min-height: 92px; resize: vertical; }
     return summary;
   }
   function conditionSummaryParts(expression) {
-    const label3 = document.createElement("span");
-    label3.textContent = "Expression";
+    const label2 = document.createElement("span");
+    label2.textContent = "Expression";
     const code = document.createElement("code");
     code.textContent = expression || "No condition selected.";
-    return [label3, code];
+    return [label2, code];
   }
-  function modeButton(mode, label3, activeMode, onSelect) {
+  function modeButton(mode, label2, activeMode, onSelect) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "mode";
-    button.textContent = label3;
+    button.textContent = label2;
     button.setAttribute("aria-pressed", String(activeMode === mode));
     button.addEventListener("click", () => onSelect(mode));
     return button;
@@ -47940,7 +43294,7 @@ textarea { min-height: 92px; resize: vertical; }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
   var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${String(style_default20)}</style>${String(template_default26)}`;
+  template9.innerHTML = `<style>${String(style_default20)}</style>${String(template_default25)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -48133,7 +43487,7 @@ textarea { min-height: 92px; resize: vertical; }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/template.html
-  var template_default27 = `<div class="backdrop" hidden>
+  var template_default26 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="block-picker-title">
         <header class="header">
             <div>
@@ -48561,7 +43915,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/styles/index.ts
-  var styles_default7 = [String(part_1_default5), String(part_2_default5), String(part_3_default4)].join(`
+  var styles_default6 = [String(part_1_default5), String(part_2_default5), String(part_3_default4)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerItems.ts
@@ -48695,10 +44049,10 @@ dd {
   function renderBlockPickerDetails(container, option4, onSelect) {
     container.replaceChildren();
     if (!option4) {
-      const empty4 = document.createElement("div");
-      empty4.className = "details-empty";
-      empty4.textContent = "Select content to see details.";
-      container.append(empty4);
+      const empty3 = document.createElement("div");
+      empty3.className = "details-empty";
+      empty3.textContent = "Select content to see details.";
+      container.append(empty3);
       return;
     }
     const item = blockPickerOptionItem(option4);
@@ -48771,11 +44125,11 @@ dd {
       container.append(button);
     }
   }
-  function metaRow(label3, value2) {
+  function metaRow(label2, value2) {
     const wrapper = document.createElement("div");
     const term = document.createElement("dt");
     const detail = document.createElement("dd");
-    term.textContent = label3;
+    term.textContent = label2;
     detail.textContent = value2;
     wrapper.append(term, detail);
     return wrapper;
@@ -48786,10 +44140,10 @@ dd {
     const options2 = blockPickerVisibleOptions(input.group, input.activeSource, input.activeCategory, input.query);
     input.results.replaceChildren();
     if (input.group?.disabledReason || options2.length === 0) {
-      const empty4 = document.createElement("div");
-      empty4.className = "empty";
-      empty4.textContent = input.group?.disabledReason ?? "No content available";
-      input.results.append(empty4);
+      const empty3 = document.createElement("div");
+      empty3.className = "empty";
+      empty3.textContent = input.group?.disabledReason ?? "No content available";
+      input.results.append(empty3);
       renderBlockPickerDetails(input.details, null, input.onSelect);
       return null;
     }
@@ -48811,16 +44165,16 @@ dd {
       input.categories.append(filterButton(category, input.activeCategory === category, () => input.onCategory(category), blockPickerCategoryCount(input.group, input.activeSource, category)));
     }
   }
-  function sourceButton(label3, source2, input) {
+  function sourceButton(label2, source2, input) {
     const count = blockPickerSourceCount(input.group, source2);
-    return filterButton(label3, input.activeSource === source2, () => {
+    return filterButton(label2, input.activeSource === source2, () => {
       if (source2 === "media" && input.onSingleMedia()) {
         return;
       }
       input.onSource(source2);
     }, count, source2 !== "block" && count === 0);
   }
-  function filterButton(label3, active, onClick, count, disabled = false) {
+  function filterButton(label2, active, onClick, count, disabled = false) {
     const button = document.createElement("button");
     button.className = "filter";
     button.type = "button";
@@ -48831,12 +44185,12 @@ dd {
         onClick();
       }
     });
-    const text5 = document.createElement("span");
-    text5.textContent = label3;
-    const badge2 = document.createElement("span");
-    badge2.className = "count";
-    badge2.textContent = String(count);
-    button.append(text5, badge2);
+    const text4 = document.createElement("span");
+    text4.textContent = label2;
+    const badge = document.createElement("span");
+    badge.className = "count";
+    badge.textContent = String(count);
+    button.append(text4, badge);
     return button;
   }
 
@@ -48858,7 +44212,7 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/BlockPickerModal.ts
   var template10 = document.createElement("template");
-  template10.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default27)}`;
+  template10.innerHTML = `<style>${String(styles_default6)}</style>${String(template_default26)}`;
 
   class BlockPickerModal extends HTMLElement {
     _groups = [];
@@ -49190,13 +44544,13 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureContextMenuItems.ts
-  function contextMenuButton(label3, action, closeContextMenu, variant, disabled = false) {
+  function contextMenuButton(label2, action, closeContextMenu, variant, disabled = false) {
     const button = document.createElement("button");
     button.className = variant ? `context-item ${variant}` : "context-item";
     button.role = "menuitem";
     button.type = "button";
     button.disabled = disabled;
-    button.textContent = label3;
+    button.textContent = label2;
     button.addEventListener("click", (event) => {
       event.stopPropagation();
       if (button.disabled) {
@@ -49290,19 +44644,19 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Renderers/structureTreePresentation.ts
   function renderStructureBadge(value2) {
-    const badge2 = document.createElement("span");
-    badge2.className = structureBadgeClass(value2);
+    const badge = document.createElement("span");
+    badge.className = structureBadgeClass(value2);
     const icon = structureBadgeIcon(value2);
     if (icon) {
       const iconEl = document.createElement("span");
       iconEl.className = "badge-icon";
       iconEl.textContent = icon;
-      badge2.append(iconEl);
+      badge.append(iconEl);
     }
-    const label3 = document.createElement("span");
-    label3.textContent = value2;
-    badge2.append(label3);
-    return badge2;
+    const label2 = document.createElement("span");
+    label2.textContent = value2;
+    badge.append(label2);
+    return badge;
   }
   function structureBadgeClass(value2) {
     if (CMS_SOURCE_STATES.includes(value2)) {
@@ -50204,8 +45558,8 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Renderers/structureEmptyTree.ts
   function renderEmptyStructureTree(context) {
-    const empty4 = document.createElement("div");
-    empty4.className = "empty";
+    const empty3 = document.createElement("div");
+    empty3.className = "empty";
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = "Add block";
@@ -50213,8 +45567,8 @@ dd {
       event.stopPropagation();
       context.openRootPicker();
     });
-    empty4.append("No editable elements", button);
-    return empty4;
+    empty3.append("No editable elements", button);
+    return empty3;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Renderers/structureTreeRow.ts
@@ -50256,13 +45610,13 @@ dd {
     const icon = document.createElement("span");
     icon.className = context.iconClass(node);
     icon.textContent = context.iconText(node);
-    const label3 = document.createElement("span");
-    label3.className = "label";
-    label3.textContent = context.nodeLabel(node);
+    const label2 = document.createElement("span");
+    label2.className = "label";
+    label2.textContent = context.nodeLabel(node);
     const badges = document.createElement("span");
     badges.className = "badges";
-    appendBadges2(badges, node, context);
-    item.append(icon, label3, badges);
+    appendBadges(badges, node, context);
+    item.append(icon, label2, badges);
     row.append(item, actionsButton(node, context));
     return row;
   }
@@ -50282,22 +45636,22 @@ dd {
   }
   function appendToggle(row, node, context) {
     if (node.children.length > 0) {
-      const toggle2 = document.createElement("button");
-      toggle2.className = "toggle";
-      toggle2.type = "button";
-      toggle2.textContent = context.isCollapsed(node) ? "›" : "⌄";
-      toggle2.setAttribute("aria-label", context.isCollapsed(node) ? "Expand" : "Collapse");
-      toggle2.addEventListener("click", () => {
+      const toggle = document.createElement("button");
+      toggle.className = "toggle";
+      toggle.type = "button";
+      toggle.textContent = context.isCollapsed(node) ? "›" : "⌄";
+      toggle.setAttribute("aria-label", context.isCollapsed(node) ? "Expand" : "Collapse");
+      toggle.addEventListener("click", () => {
         context.toggleNode(node);
       });
-      row.append(toggle2);
+      row.append(toggle);
     } else {
       const spacer = document.createElement("span");
       spacer.className = "toggle-spacer";
       row.append(spacer);
     }
   }
-  function appendBadges2(badges, node, context) {
+  function appendBadges(badges, node, context) {
     const visibleBadges = context.visibleBadges(node);
     for (const value2 of visibleBadges) {
       badges.append(context.renderBadge(value2));
@@ -50687,7 +46041,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/template.html
-  var template_default28 = `<nav class="structure-tree" aria-label="Page structure">
+  var template_default27 = `<nav class="structure-tree" aria-label="Page structure">
     <div class="empty">No editable elements</div>
 </nav>
 `;
@@ -50865,7 +46219,7 @@ dd {
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template11 = document.createElement("template");
   template11.innerHTML = `<style>${[style_default21, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default28)}`;
+`)}</style>${String(template_default27)}`;
 
   class StructureTree extends HTMLElement {
     controller;
@@ -50904,7 +46258,7 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/template.html
-  var template_default29 = `<main class="canvas">
+  var template_default28 = `<main class="canvas">
     <div class="viewport">
         <div class="page">
             <iframe class="editor-frame" data-frame-kind="editor" title="Page editor canvas" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
@@ -51024,7 +46378,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template12 = document.createElement("template");
-  template12.innerHTML = `<style>${String(style_default22)}</style>${String(template_default29)}`;
+  template12.innerHTML = `<style>${String(style_default22)}</style>${String(template_default28)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -51165,7 +46519,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/template.html
-  var template_default30 = `<section class="section">
+  var template_default29 = `<section class="section">
     <button class="head" type="button" aria-expanded="true">
         <span class="label"></span>
         <span class="chevron">⌄</span>
@@ -51254,19 +46608,19 @@ iframe {
     return root;
   }
   function syncFieldCopy(host) {
-    const label3 = host.getAttribute("label") ?? "";
-    host.shadowRoot.querySelector(".label").textContent = label3;
+    const label2 = host.getAttribute("label") ?? "";
+    host.shadowRoot.querySelector(".label").textContent = label2;
     host.shadowRoot.querySelector(".hint").textContent = host.getAttribute("hint") ?? "";
     const labelDisplay = host.getAttribute("label-display") ?? "visible";
     const ariaLabel = host.getAttribute("aria-label");
     if (ariaLabel || labelDisplay !== "visible") {
       const control2 = host.shadowRoot.querySelector("input, select, textarea, button");
-      control2?.setAttribute("aria-label", ariaLabel ?? label3);
+      control2?.setAttribute("aria-label", ariaLabel ?? label2);
     }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template13 = createFieldTemplate(template_default30, style_default23);
+  var template13 = createFieldTemplate(template_default29, style_default23);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -51290,7 +46644,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/template.html
-  var template_default31 = `<div class="field">
+  var template_default30 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <input>
@@ -51551,10 +46905,10 @@ input:disabled {
   function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
     list.replaceChildren();
     if (options2.length === 0) {
-      const empty4 = document.createElement("p");
-      empty4.className = "data-empty";
-      empty4.textContent = totalOptions === 0 ? "No data available here." : "No matching data.";
-      list.append(empty4);
+      const empty3 = document.createElement("p");
+      empty3.className = "data-empty";
+      empty3.textContent = totalOptions === 0 ? "No data available here." : "No matching data.";
+      list.append(empty3);
       return;
     }
     for (const option4 of options2) {
@@ -51562,12 +46916,12 @@ input:disabled {
       button.className = "data-option";
       button.type = "button";
       button.dataset.path = option4.path;
-      const label3 = document.createElement("span");
-      label3.className = "data-label";
-      label3.textContent = option4.label;
+      const label2 = document.createElement("span");
+      label2.className = "data-label";
+      label2.textContent = option4.label;
       const path = document.createElement("code");
       path.textContent = option4.path;
-      button.append(label3, path);
+      button.append(label2, path);
       button.addEventListener("click", () => onSelect(option4.path));
       list.append(button);
     }
@@ -51597,8 +46951,8 @@ input:disabled {
       if (field2.type === "object" || field2.children?.length) {
         return children;
       }
-      const label3 = field2.label ? `${scopeLabel} / ${field2.label}` : `${scopeLabel} / ${relativePath2}`;
-      return [{ label: label3, path }, ...children];
+      const label2 = field2.label ? `${scopeLabel} / ${field2.label}` : `${scopeLabel} / ${relativePath2}`;
+      return [{ label: label2, path }, ...children];
     });
   }
 
@@ -51682,7 +47036,7 @@ input:disabled {
       }, {
         saveSelection: this.saveSelection,
         restoreSelection: this.restoreSelection,
-        insertText: (text5) => this.insertText(text5),
+        insertText: (text4) => this.insertText(text4),
         focusControl: () => this._refs.control().focus(),
         finish: this.emitInput
       });
@@ -51731,12 +47085,12 @@ input:disabled {
     restoreSelection = () => {
       this._refs.control().setSelectionRange?.(this._selectionStart, this._selectionEnd);
     };
-    insertText(text5) {
+    insertText(text4) {
       const control2 = this._refs.control();
       const start = control2.selectionStart ?? this._selectionStart;
       const end = control2.selectionEnd ?? this._selectionEnd;
-      control2.value = `${control2.value.slice(0, start)}${text5}${control2.value.slice(end)}`;
-      const next = start + text5.length;
+      control2.value = `${control2.value.slice(0, start)}${text4}${control2.value.slice(end)}`;
+      const next = start + text4.length;
       control2.setSelectionRange?.(next, next);
       this.saveSelection();
     }
@@ -51748,7 +47102,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template14 = createFieldTemplate(template_default31, `${String(style_default24)}${String(dynamicDataPicker_default)}`);
+  var template14 = createFieldTemplate(template_default30, `${String(style_default24)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -51808,7 +47162,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/template.html
-  var template_default32 = `<div class="field">
+  var template_default31 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <textarea rows="3"></textarea>
@@ -51901,7 +47255,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template15 = createFieldTemplate(template_default32, `${String(style_default25)}${String(dynamicDataPicker_default)}`);
+  var template15 = createFieldTemplate(template_default31, `${String(style_default25)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -52189,10 +47543,10 @@ textarea:disabled {
       this.setSavedRange(unwrapElement(this._editor(), wrapper));
       return true;
     }
-    insertText(text5) {
+    insertText(text4) {
       const range = this.getUsableRange();
       if (!range) {
-        this._editor().append(text5);
+        this._editor().append(text4);
         const nextRange2 = this._editor().ownerDocument.createRange();
         nextRange2.selectNodeContents(this._editor());
         nextRange2.collapse(false);
@@ -52201,7 +47555,7 @@ textarea:disabled {
       }
       range.deleteContents();
       const document2 = this._editor().ownerDocument;
-      const node = document2.createTextNode(text5);
+      const node = document2.createTextNode(text4);
       range.insertNode(node);
       const nextRange = document2.createRange();
       nextRange.setStartAfter(node);
@@ -52336,7 +47690,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/template.html
-  var template_default33 = `<div class="field">
+  var template_default32 = `<div class="field">
     <span class="label"></span>
     <span class="toolbar" aria-label="Rich text tools"></span>
     <div class="data-picker" hidden role="dialog" aria-label="Insert data">
@@ -52587,12 +47941,12 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/styles/index.ts
-  var styles_default8 = [String(part_1_default6), String(part_2_default6)].join(`
+  var styles_default7 = [String(part_1_default6), String(part_2_default6)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
   var template16 = document.createElement("template");
-  template16.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default33)}`;
+  template16.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default32)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -52605,7 +47959,7 @@ textarea:disabled {
     }, {
       saveSelection: this._range.saveSelection,
       restoreSelection: () => this._range.restoreSelection(),
-      insertText: (text5) => this._range.insertText(text5),
+      insertText: (text4) => this._range.insertText(text4),
       focusControl: () => this.editor.focus(),
       finish: () => this.finishAction()
     });
@@ -52725,7 +48079,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/template.html
-  var template_default34 = `<label class="field">
+  var template_default33 = `<label class="field">
     <span class="label"></span>
     <select></select>
     <span class="hint"></span>
@@ -52837,7 +48191,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template17 = createFieldTemplate(template_default34, style_default26);
+  var template17 = createFieldTemplate(template_default33, style_default26);
 
   class Select extends HTMLElement {
     constructor() {
@@ -52874,7 +48228,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/template.html
-  var template_default35 = `<button class="toggle" type="button" aria-pressed="false">
+  var template_default34 = `<button class="toggle" type="button" aria-pressed="false">
     <span class="copy">
         <span class="label"></span>
         <span class="hint"></span>
@@ -52997,7 +48351,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template18 = createFieldTemplate(template_default35, style_default27);
+  var template18 = createFieldTemplate(template_default34, style_default27);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -53014,7 +48368,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/template.html
-  var template_default36 = `<div class="segmented">
+  var template_default35 = `<div class="segmented">
     <slot></slot>
 </div>
 `;
@@ -53066,7 +48420,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template19 = createFieldTemplate(template_default36, style_default28);
+  var template19 = createFieldTemplate(template_default35, style_default28);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -53163,7 +48517,7 @@ select:disabled {
     render(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "field endpoint-field";
-      const label3 = this.renderFieldLabel(setting.label, setting.labelDisplay);
+      const label2 = this.renderFieldLabel(setting.label, setting.labelDisplay);
       const button = document.createElement("button");
       button.className = "endpoint-button";
       button.type = "button";
@@ -53173,8 +48527,8 @@ select:disabled {
       if (!setting.disabled) {
         button.addEventListener("click", () => this.open(setting, button));
       }
-      if (label3) {
-        wrapper.append(label3);
+      if (label2) {
+        wrapper.append(label2);
       }
       wrapper.append(button);
       if (setting.help) {
@@ -53189,10 +48543,10 @@ select:disabled {
       button.replaceChildren();
       const method = selected2?.method ?? setting.defaultMethod;
       if (method) {
-        const badge2 = document.createElement("span");
-        badge2.className = "endpoint-method";
-        badge2.textContent = method;
-        button.append(badge2);
+        const badge = document.createElement("span");
+        badge.className = "endpoint-method";
+        badge.textContent = method;
+        button.append(badge);
       }
       const value2 = document.createElement("span");
       value2.className = selected2 ? "endpoint-value" : "endpoint-placeholder";
@@ -53243,9 +48597,9 @@ select:disabled {
   function renderColorSetting(setting, themeTokens, renderFieldLabel, emitColorChange) {
     const wrapper = document.createElement("div");
     wrapper.className = "field color-field";
-    const label3 = renderFieldLabel(setting.label, setting.labelDisplay);
-    if (label3) {
-      wrapper.append(label3);
+    const label2 = renderFieldLabel(setting.label, setting.labelDisplay);
+    if (label2) {
+      wrapper.append(label2);
     }
     const controls = document.createElement("div");
     controls.className = "color-custom";
@@ -53504,11 +48858,11 @@ select:disabled {
     renderRow(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "setting-row";
-      const label3 = setting.label ? renderFieldLabel(setting.label, setting.labelDisplay) : null;
-      if (label3) {
-        label3.classList.add("setting-row-label");
+      const label2 = setting.label ? renderFieldLabel(setting.label, setting.labelDisplay) : null;
+      if (label2) {
+        label2.classList.add("setting-row-label");
         wrapper.classList.add("setting-row-labeled");
-        wrapper.append(label3);
+        wrapper.append(label2);
       }
       const controls = document.createElement("div");
       controls.className = "setting-row-controls";
@@ -53571,7 +48925,7 @@ select:disabled {
     renderSegmented(setting) {
       const wrapper = document.createElement("div");
       wrapper.className = "field";
-      const label3 = renderFieldLabel(setting.label, setting.labelDisplay);
+      const label2 = renderFieldLabel(setting.label, setting.labelDisplay);
       const control2 = document.createElement("cms-editor-v2-segmented-control");
       control2.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
       for (const option4 of setting.options) {
@@ -53594,8 +48948,8 @@ select:disabled {
         });
         control2.append(button);
       }
-      if (label3) {
-        wrapper.append(label3);
+      if (label2) {
+        wrapper.append(label2);
       }
       wrapper.append(control2);
       return wrapper;
@@ -53618,23 +48972,23 @@ select:disabled {
     applyDisabled(control2, setting);
     return control2;
   }
-  function renderFieldLabel(label3, display) {
+  function renderFieldLabel(label2, display) {
     if (display === "hidden") {
       return null;
     }
     const element = document.createElement("div");
     element.className = display === "sr-only" ? "field-label sr-only" : "field-label";
-    element.textContent = label3;
+    element.textContent = label2;
     return element;
   }
-  function renderOptionContent(settingDisplay, optionDisplay, iconName, label3) {
+  function renderOptionContent(settingDisplay, optionDisplay, iconName, label2) {
     const display = optionDisplay ?? settingDisplay ?? (iconName ? "icon-label" : "label");
     const icon = iconName ? settingIcon(iconName) : null;
     const nodes = icon && (display === "icon" || display === "icon-label") ? [icon] : [];
     if (display !== "icon" || !icon) {
-      const text5 = document.createElement("span");
-      text5.textContent = label3;
-      nodes.push(text5);
+      const text4 = document.createElement("span");
+      text4.textContent = label2;
+      nodes.push(text4);
     }
     return nodes;
   }
@@ -53710,13 +49064,13 @@ select:disabled {
       button.className = "state-button";
       button.type = "button";
       button.ariaPressed = String(state.isActive());
-      const label3 = document.createElement("span");
-      label3.className = "state-label";
-      label3.textContent = state.label;
+      const label2 = document.createElement("span");
+      label2.className = "state-label";
+      label2.textContent = state.label;
       const description = document.createElement("span");
       description.className = "state-description";
       description.textContent = state.description ?? (state.isActive() ? "Active" : "Inactive");
-      button.append(label3, description);
+      button.append(label2, description);
       button.addEventListener("click", () => onToggle(state));
       section2.append(button);
     }
@@ -53727,10 +49081,10 @@ select:disabled {
     element.setAttribute("label", section2.kind === "surcharge" ? `${section2.label} override` : section2.label);
     const settings = visibleSettings(section2.settings);
     if (settings.length === 0) {
-      const empty4 = document.createElement("div");
-      empty4.className = "section-empty";
-      empty4.textContent = "No settings";
-      element.append(empty4);
+      const empty3 = document.createElement("div");
+      empty3.className = "section-empty";
+      empty3.textContent = "No settings";
+      element.append(empty3);
       return element;
     }
     for (const setting of settings) {
@@ -53776,7 +49130,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/template.html
-  var template_default37 = `<div class="settings-view">
+  var template_default36 = `<div class="settings-view">
     <div class="empty">Select an editable element</div>
 </div>
 `;
@@ -54053,12 +49407,12 @@ cms-editor-v2-segmented-control button svg:only-child {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/styles/index.ts
-  var styles_default9 = [String(part_1_default7), String(part_2_default7)].join(`
+  var styles_default8 = [String(part_1_default7), String(part_2_default7)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
   var template20 = document.createElement("template");
-  template20.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default37)}`;
+  template20.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default36)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
@@ -54087,10 +49441,10 @@ cms-editor-v2-segmented-control button svg:only-child {
       const shouldRenderText = mode === "settings" && textCapability;
       const shouldRenderStates = mode === "settings" && states2.length > 0;
       if (visibleSections.length === 0 && !shouldRenderText && !shouldRenderStates) {
-        const empty4 = document.createElement("div");
-        empty4.className = "empty";
-        empty4.textContent = sections2.length === 0 && !textCapability ? "Select an editable element" : mode === "settings" ? "No settings" : "No overrides";
-        view.append(empty4);
+        const empty3 = document.createElement("div");
+        empty3.className = "empty";
+        empty3.textContent = sections2.length === 0 && !textCapability ? "Select an editable element" : mode === "settings" ? "No settings" : "No overrides";
+        view.append(empty3);
         return;
       }
       if (shouldRenderText) {
@@ -54131,7 +49485,7 @@ cms-editor-v2-segmented-control button svg:only-child {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/template.html
-  var template_default38 = `<div class="backdrop" hidden>
+  var template_default37 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="repeat-picker-title">
         <header class="header">
             <div>
@@ -54523,7 +49877,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/styles/index.ts
-  var styles_default10 = [String(part_1_default8), String(part_2_default8), String(part_3_default5)].join(`
+  var styles_default9 = [String(part_1_default8), String(part_2_default8), String(part_3_default5)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatOptions.ts
@@ -54570,10 +49924,10 @@ label {
   function renderRepeatOptions(container, options2, activeOption, onActivate, onSelect) {
     container.replaceChildren();
     if (options2.length === 0) {
-      const empty4 = document.createElement("div");
-      empty4.className = "empty";
-      empty4.textContent = "No array fields available.";
-      container.append(empty4);
+      const empty3 = document.createElement("div");
+      empty3.className = "empty";
+      empty3.textContent = "No array fields available.";
+      container.append(empty3);
       return;
     }
     for (const option4 of options2) {
@@ -54596,10 +49950,10 @@ label {
   function renderRepeatDetails(container, option4) {
     container.replaceChildren();
     if (!option4) {
-      const empty4 = document.createElement("div");
-      empty4.className = "details-empty";
-      empty4.textContent = "Select an array field to inspect item fields.";
-      container.append(empty4);
+      const empty3 = document.createElement("div");
+      empty3.className = "details-empty";
+      empty3.textContent = "Select an array field to inspect item fields.";
+      container.append(empty3);
       return;
     }
     const heading = document.createElement("div");
@@ -54610,10 +49964,10 @@ label {
   function renderRepeatBinding(container, option4, onSelect) {
     container.replaceChildren();
     if (!option4) {
-      const empty4 = document.createElement("div");
-      empty4.className = "details-empty";
-      empty4.textContent = "Select an array field to configure repeat.";
-      container.append(empty4);
+      const empty3 = document.createElement("div");
+      empty3.className = "details-empty";
+      empty3.textContent = "Select an array field to configure repeat.";
+      container.append(empty3);
       return;
     }
     const heading = document.createElement("div");
@@ -54628,13 +49982,13 @@ label {
     path.append(pathLabel, pathValue);
     const config = document.createElement("section");
     config.className = "binding-config";
-    const label3 = document.createElement("label");
-    label3.textContent = "Alias";
+    const label2 = document.createElement("label");
+    label2.textContent = "Alias";
     const alias = document.createElement("input");
     alias.className = "alias";
     alias.value = defaultRepeatAlias(option4.path);
-    label3.append(alias);
-    config.append(label3);
+    label2.append(alias);
+    config.append(label2);
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
@@ -54655,10 +50009,10 @@ label {
       list.append(renderField2(field2, 0));
     }
     if (list.children.length === 0) {
-      const empty4 = document.createElement("p");
-      empty4.className = "details-empty";
-      empty4.textContent = "No item fields declared.";
-      return empty4;
+      const empty3 = document.createElement("p");
+      empty3.className = "details-empty";
+      empty3.textContent = "No item fields declared.";
+      return empty3;
     }
     return list;
   }
@@ -54733,9 +50087,9 @@ label {
     footer.append(insert);
     container.append(scroll, footer);
   }
-  function numberInput(text5, value2) {
-    const label3 = document.createElement("label");
-    label3.textContent = text5;
+  function numberInput(text4, value2) {
+    const label2 = document.createElement("label");
+    label2.textContent = text4;
     const input = document.createElement("input");
     input.className = "count";
     input.type = "number";
@@ -54744,24 +50098,24 @@ label {
     input.step = "1";
     input.required = true;
     input.value = String(value2);
-    label3.append(input);
-    return { label: label3, input };
+    label2.append(input);
+    return { label: label2, input };
   }
-  function textInput(text5, value2) {
-    const label3 = document.createElement("label");
-    label3.textContent = text5;
+  function textInput(text4, value2) {
+    const label2 = document.createElement("label");
+    label2.textContent = text4;
     const input = document.createElement("input");
     input.className = "alias";
     input.pattern = "[A-Za-z_$][A-Za-z0-9_$]*";
     input.required = true;
     input.value = value2;
-    label3.append(input);
-    return { label: label3, input };
+    label2.append(input);
+    return { label: label2, input };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/RepeatPicker.ts
   var template21 = document.createElement("template");
-  template21.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default38)}`;
+  template21.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default37)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -55601,8 +50955,8 @@ label {
     preservesFocusOut(target2) {
       return this.richTextToolbar?.preservesFocusOut(target2) ?? false;
     }
-    insertPastedText(event, text5) {
-      return this.activeFormatFor(event) === "richtext" && Boolean(this.richTextToolbar?.insertPlainText(text5));
+    insertPastedText(event, text4) {
+      return this.activeFormatFor(event) === "richtext" && Boolean(this.richTextToolbar?.insertPlainText(text4));
     }
     stopUnless(editor) {
       if (this.activeEditor !== editor) {
@@ -56277,10 +51631,10 @@ label {
     return imported;
   }
   function normalizeAccessibility(root) {
-    const label3 = root.getAttribute("aria-label")?.trim() || root.querySelector("title")?.textContent?.trim() || "";
-    if (label3) {
+    const label2 = root.getAttribute("aria-label")?.trim() || root.querySelector("title")?.textContent?.trim() || "";
+    if (label2) {
       root.setAttribute("role", "img");
-      root.setAttribute("aria-label", label3);
+      root.setAttribute("aria-label", label2);
       root.removeAttribute("aria-hidden");
       return;
     }
@@ -56746,9 +52100,9 @@ label {
   function collectBindingDependencies(root, inheritedScope, usages) {
     for (const child of Array.from(root.childNodes)) {
       if (child.nodeType === Node.TEXT_NODE) {
-        const text5 = child;
-        if (bindingTextDependsOn(text5.data, inheritedScope)) {
-          usages.push({ target: text5 });
+        const text4 = child;
+        if (bindingTextDependsOn(text4.data, inheritedScope)) {
+          usages.push({ target: text4 });
         }
         continue;
       }
@@ -57257,7 +52611,7 @@ label {
       }, {
         saveSelection: () => this.commands?.saveSelection(),
         restoreSelection: () => this.commands?.restoreSelection(),
-        insertText: (text5) => this.commands?.insertText(text5),
+        insertText: (text4) => this.commands?.insertText(text4),
         focusControl: () => {
           if (this.editor) {
             textTargetEditor(this.editor).target.focus({ preventScroll: true });
@@ -57302,12 +52656,12 @@ label {
     preservesFocusOut(target2) {
       return this.contains(target2) || !this.refs.picker.hidden;
     }
-    insertPlainText(text5) {
+    insertPlainText(text4) {
       if (!this.editor || !this.commands) {
         return false;
       }
       this.commands.saveSelection();
-      this.commands.insertText(text5);
+      this.commands.insertText(text4);
       this.finishAction();
       return true;
     }
@@ -57902,7 +53256,7 @@ label {
     pageField("path").disabled = !isPage;
     pageField("published").closest("label").hidden = !isPage;
   }
-  function chromeDefaults(backLabel, backHref, settingsTitle, settingsDescription, pathLabel, tagsLabel, statusLabel2, descriptionLabel) {
+  function chromeDefaults(backLabel, backHref, settingsTitle, settingsDescription, pathLabel, tagsLabel, statusLabel, descriptionLabel) {
     return {
       backHref,
       backLabel,
@@ -57911,7 +53265,7 @@ label {
       settingsDescription,
       pathLabel,
       tagsLabel,
-      statusLabel: statusLabel2,
+      statusLabel,
       descriptionLabel
     };
   }
@@ -58091,8 +53445,8 @@ label {
       this.context.state.pageConfig = pageConfig;
       applyPageSettingsTitle(this.context.refs.topBar, pageConfig);
     }
-    setSaveStatus(label3) {
-      this.context.refs.topBar.saveStatus = label3;
+    setSaveStatus(label2) {
+      this.context.refs.topBar.saveStatus = label2;
     }
     syncStructureTreeCatalog() {
       syncStructureTreeCatalog(this.context.host.shadowRoot, this.context.state.catalog);
@@ -58301,8 +53655,8 @@ label {
       this.context.highlight.show(editor);
     };
     onFramePaste = (event) => {
-      const text5 = event.clipboardData?.getData("text/plain");
-      if (text5 === undefined || !this.context.inlineText.insertPastedText(event, text5)) {
+      const text4 = event.clipboardData?.getData("text/plain");
+      if (text4 === undefined || !this.context.inlineText.insertPastedText(event, text4)) {
         return;
       }
       event.preventDefault();
@@ -58610,18 +53964,18 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/runtime/EditorRuntime/createRuntimeEditor.ts
-  function createRuntimeEditor(entry, target2, registry2) {
+  function createRuntimeEditor(entry, target2, registry) {
     const RuntimeEditorClass = createRuntimeEditorClass(entry.editor);
-    const editor = new RuntimeEditorClass(target2, registry2);
+    const editor = new RuntimeEditorClass(target2, registry);
     editor.catalogEntry = entry;
-    registry2.register(editor);
+    registry.register(editor);
     return editor;
   }
 
   // ../../features/cms-editor-system-v2/src/runtime/EditorRuntime/dataScopes.ts
-  function declareBindingDataScopes(editor, registry2, dataSources) {
+  function declareBindingDataScopes(editor, registry, dataSources) {
     declareSourceDataScope(editor, dataSources);
-    declareRepeatDataScope(editor, registry2);
+    declareRepeatDataScope(editor, registry);
   }
   function declareSourceDataScope(editor, dataSources) {
     const source2 = parseSourceBinding(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
@@ -58644,14 +53998,14 @@ label {
     }
     return typeof parsed === "string" ? { url: parsed } : parsed;
   }
-  function declareRepeatDataScope(editor, registry2) {
+  function declareRepeatDataScope(editor, registry) {
     const value2 = editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.repeat) ?? "";
     const repeat2 = parseRepeat(value2);
     if (!repeat2?.alias) {
       return;
     }
     const range = parseRepeatRange(value2);
-    const field2 = findDataField(registry2.collectDataScopes(editor.target), repeat2.path);
+    const field2 = findDataField(registry.collectDataScopes(editor.target), repeat2.path);
     editor.declareDataScope({
       name: repeat2.alias,
       label: repeat2.alias,
@@ -58690,17 +54044,17 @@ label {
     return [root, ...Array.from(root.querySelectorAll("*"))].filter((element) => !hasCompositionAncestor(element));
   }
   function findClosestRuntimeEditor(context, target2) {
-    const { document: document2, registry: registry2 } = context;
+    const { document: document2, registry } = context;
     if (!target2 || !document2.contentRoot.contains(target2)) {
       return;
     }
-    const closest = registry2.getClosestEditor(target2, document2.contentRoot);
+    const closest = registry.getClosestEditor(target2, document2.contentRoot);
     if (!closest) {
       return;
     }
     let current = closest.target;
     while (current && document2.contentRoot.contains(current)) {
-      const editor = registry2.getEditor(current);
+      const editor = registry.getEditor(current);
       if (editor?.getStructureMode() === "opaque") {
         return editor;
       }
@@ -59076,7 +54430,7 @@ label {
         pageConfig: () => this.context.state.pageConfig,
         contentHtml: () => this.getContentHtml(),
         syncEditorMode: () => this.syncEditorMode(),
-        setSaveStatus: (label3) => this.setSaveStatus(label3),
+        setSaveStatus: (label2) => this.setSaveStatus(label2),
         saveEventName: this.context.saveEventName
       });
     }
@@ -59164,8 +54518,8 @@ label {
     getContentHtml() {
       return this.context.renderSync.getContentHtml();
     }
-    setSaveStatus(label3) {
-      this.context.renderSync.setSaveStatus(label3);
+    setSaveStatus(label2) {
+      this.context.renderSync.setSaveStatus(label2);
     }
   }
 
@@ -59270,8 +54624,8 @@ label {
     getContentHtml() {
       return this.context.frames.contentHtml();
     }
-    setSaveStatus(label3) {
-      this.context.sync.setSaveStatus(label3);
+    setSaveStatus(label2) {
+      this.context.sync.setSaveStatus(label2);
     }
     syncStructureTreeCatalog() {
       this.context.sync.syncStructureTreeCatalog();
@@ -59710,7 +55064,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/template.html
-  var template_default39 = `<div class="shell">
+  var template_default38 = `<div class="shell">
     <cms-editor-v2-topbar></cms-editor-v2-topbar>
     <div class="workspace">
         <cms-editor-v2-panel class="structure-panel" side="left">
@@ -59912,7 +55266,7 @@ label {
   function createShellTemplate() {
     const template22 = document.createElement("template");
     template22.innerHTML = `<style>${[style_default29, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default39)}`;
+`)}</style>${String(template_default38)}`;
     return template22;
   }
 
@@ -60103,8 +55457,8 @@ label {
     setPageConfig(config) {
       this._parts.api.setPageConfig(config);
     }
-    setSaveStatus(label3) {
-      this._parts.renderSync.setSaveStatus(label3);
+    setSaveStatus(label2) {
+      this._parts.renderSync.setSaveStatus(label2);
     }
     loadDocument(document2, selectedTarget = null) {
       this._parts.api.loadDocument(document2, selectedTarget);
@@ -60497,10 +55851,10 @@ label {
   function semanticLabel(tag) {
     return tag.charAt(0).toUpperCase() + tag.slice(1);
   }
-  function entry(tag, label3, description, defaultContent, bloc, editor) {
+  function entry(tag, label2, description, defaultContent, bloc, editor) {
     return {
       tag,
-      label: label3,
+      label: label2,
       description,
       category: "Content",
       defaultContent,
@@ -60733,12 +56087,12 @@ label {
         details.className = "bloc-defaults-group";
         details.open = index === 0;
         const summary = document.createElement("summary");
-        const label3 = document.createElement("span");
+        const label2 = document.createElement("span");
         const count = document.createElement("span");
-        label3.textContent = group.label;
+        label2.textContent = group.label;
         count.className = "bloc-defaults-group-count";
         count.textContent = String(group.rows.length);
-        summary.append(label3, count);
+        summary.append(label2, count);
         details.append(summary, renderRows(group.rows));
         this.append(details);
       }
@@ -60834,8 +56188,8 @@ label {
     return attribute.value || "Empty";
   }
   function humanize(value2) {
-    const label3 = value2.replaceAll("-", " ");
-    return label3.charAt(0).toUpperCase() + label3.slice(1);
+    const label2 = value2.replaceAll("-", " ");
+    return label2.charAt(0).toUpperCase() + label2.slice(1);
   }
   if (!customElements.get("cms-bloc-defaults")) {
     customElements.define("cms-bloc-defaults", BlocDefaults);
@@ -60941,7 +56295,7 @@ label {
     theme.name = normalized;
     return true;
   }
-  function addCategory(settings, selection, label3, description) {
+  function addCategory(settings, selection, label2, description) {
     const source2 = currentSource2(settings, selection);
     if (!isThemeCatalogEditable(source2)) {
       return;
@@ -60950,17 +56304,17 @@ label {
     const id2 = uniqueId2(`${source2.id}-category-${number}`, new Set(source2.categories.map((item) => item.id)));
     const category = {
       id: id2,
-      label: label3?.trim() || `New group ${number}`,
+      label: label2?.trim() || `New group ${number}`,
       description: description?.trim() || `Variables for ${source2.label}.`,
       tokens: []
     };
     source2.categories.push(category);
     return { sourceId: source2.id, category };
   }
-  function updateCategory(settings, selection, label3, description) {
+  function updateCategory(settings, selection, label2, description) {
     const source2 = currentSource2(settings, selection);
     const category = currentCategory(settings, selection);
-    const normalized = label3.trim();
+    const normalized = label2.trim();
     if (!source2 || !category || !isThemeCatalogEditable(source2) || !normalized) {
       return;
     }
@@ -60986,10 +56340,10 @@ label {
     });
     return true;
   }
-  function updateToken(settings, selection, tokenId, label3, description) {
+  function updateToken(settings, selection, tokenId, label2, description) {
     const source2 = currentSource2(settings, selection);
     const token = currentToken(settings, selection, tokenId);
-    const normalized = label3.trim();
+    const normalized = label2.trim();
     if (!isThemeCatalogEditable(source2) || !token || !normalized) {
       return false;
     }
@@ -61278,15 +56632,15 @@ label {
     input.setAttribute("aria-label", `${token.label} ${controlLabel(token.type)}`);
     input.setAttribute("creatable", "");
     input.setAttribute("placeholder", placeholder);
-    input.append(...presets.map(([label3, value3]) => option4(value3, label3)));
+    input.append(...presets.map(([label2, value3]) => option4(value3, label2)));
     input.setAttribute("value", value2);
     input.value = value2;
     return input;
   }
-  function option4(value2, label3) {
+  function option4(value2, label2) {
     const item = document.createElement("option");
     item.value = value2;
-    item.textContent = label3;
+    item.textContent = label2;
     return item;
   }
   function parseLength(value2) {
@@ -61612,12 +56966,12 @@ label {
       element.textContent = value2;
     }
   }
-  function setBusy2(host, busy) {
+  function setBusy(host, busy) {
     for (const button of Array.from(host.querySelectorAll("[data-site-variable-submit]"))) {
       button.toggleAttribute("disabled", busy);
     }
   }
-  function setStatus2(host, selector, message, error = false) {
+  function setStatus(host, selector, message, error = false) {
     const status = host.querySelector(selector);
     if (status) {
       status.textContent = message;
@@ -61649,7 +57003,7 @@ label {
     open(action, trigger, settings) {
       this.settings = settings;
       this.action = action;
-      setStatus2(this.host, "[data-site-variable-editor-status]", "");
+      setStatus(this.host, "[data-site-variable-editor-status]", "");
       this.selection = {
         sourceId: trigger.dataset.sourceId ?? "",
         categoryId: trigger.dataset.categoryId ?? ""
@@ -61698,19 +57052,19 @@ label {
       }
       const tokenType = isThemeTokenType(type) ? type : "value";
       if (!this.apply(name, description, tokenType)) {
-        setStatus2(this.host, "[data-site-variable-editor-status]", "This site variable could not be changed.", true);
+        setStatus(this.host, "[data-site-variable-editor-status]", "This site variable could not be changed.", true);
         return;
       }
-      setBusy2(this.host, true);
+      setBusy(this.host, true);
       try {
         await persistThemeEditingDraft(this.settings, this.host.ownerDocument);
         closeModal(this.host, "[data-site-variable-editor-modal]");
         this.action = undefined;
         await this.returnToCatalog();
       } catch (error) {
-        setStatus2(this.host, "[data-site-variable-editor-status]", error instanceof Error ? error.message : "Unable to save site variables.", true);
+        setStatus(this.host, "[data-site-variable-editor-status]", error instanceof Error ? error.message : "Unable to save site variables.", true);
       } finally {
-        setBusy2(this.host, false);
+        setBusy(this.host, false);
       }
     }
     apply(name, description, type) {
@@ -61739,7 +57093,7 @@ label {
     }
     open(action, trigger, settings) {
       this.settings = settings;
-      setStatus2(this.host, "[data-site-variable-remove-status]", "");
+      setStatus(this.host, "[data-site-variable-remove-status]", "");
       const kind = action === "remove-group" ? "group" : "token";
       const selection = {
         sourceId: trigger.dataset.sourceId ?? "",
@@ -61770,19 +57124,19 @@ label {
       }
       const removed = this.removal.kind === "group" ? removeCategory(this.settings, this.removal.selection) : removeToken(this.settings, this.removal.selection, this.removal.tokenId ?? "");
       if (!removed) {
-        setStatus2(this.host, "[data-site-variable-remove-status]", "Keep at least one site variable group.", true);
+        setStatus(this.host, "[data-site-variable-remove-status]", "Keep at least one site variable group.", true);
         return;
       }
-      setBusy2(this.host, true);
+      setBusy(this.host, true);
       try {
         await persistThemeEditingDraft(this.settings, this.host.ownerDocument);
         closeModal(this.host, "[data-site-variable-remove-modal]");
         this.removal = undefined;
         await this.returnToCatalog();
       } catch (error) {
-        setStatus2(this.host, "[data-site-variable-remove-status]", error instanceof Error ? error.message : "Unable to save site variables.", true);
+        setStatus(this.host, "[data-site-variable-remove-status]", error instanceof Error ? error.message : "Unable to save site variables.", true);
       } finally {
-        setBusy2(this.host, false);
+        setBusy(this.host, false);
       }
     }
   }
@@ -61811,21 +57165,21 @@ label {
     header.append(copy, actions);
     section2.append(header);
     if (category.tokens.length === 0) {
-      const empty4 = document.createElement("p");
-      empty4.className = "site-variable-empty";
-      empty4.textContent = "No variables in this group.";
-      section2.append(empty4);
+      const empty3 = document.createElement("p");
+      empty3.className = "site-variable-empty";
+      empty3.textContent = "No variables in this group.";
+      section2.append(empty3);
     } else {
       const list = document.createElement("div");
       list.className = "site-variable-list";
       for (const token of category.tokens) {
         const row = document.createElement("div");
         const details = document.createElement("div");
-        const label3 = document.createElement("strong");
+        const label2 = document.createElement("strong");
         const description2 = document.createElement("span");
-        label3.textContent = token.label;
+        label2.textContent = token.label;
         description2.textContent = token.description;
-        details.append(label3, description2);
+        details.append(label2, description2);
         const rowActions2 = document.createElement("div");
         rowActions2.append(action("Edit", "edit-token", sourceId, category.id, false, undefined, token.id), action("Delete", "remove-token", sourceId, category.id, false, "danger", token.id));
         row.append(details, rowActions2);
@@ -61835,7 +57189,7 @@ label {
     }
     return section2;
   }
-  function action(label3, actionName, sourceId, categoryId, disabled = false, color, tokenId) {
+  function action(label2, actionName, sourceId, categoryId, disabled = false, color, tokenId) {
     const button = document.createElement("p9r-button");
     button.setAttribute("type", "button");
     button.setAttribute("variant", "ghost");
@@ -61849,7 +57203,7 @@ label {
     if (color) {
       button.setAttribute("color", color);
     }
-    button.textContent = label3;
+    button.textContent = label2;
     return button;
   }
 
@@ -61894,7 +57248,7 @@ label {
       }
     }
     async openCatalog() {
-      setStatus2(this.host, "[data-site-variable-status]", "Loading site variables…");
+      setStatus(this.host, "[data-site-variable-status]", "Loading site variables…");
       openModal(this.host, "[data-site-variable-catalog-modal]");
       try {
         this.settings = await loadThemeEditingDraft();
@@ -61902,9 +57256,9 @@ label {
         if (catalog) {
           renderSiteVariableCatalog(catalog, this.settings);
         }
-        setStatus2(this.host, "[data-site-variable-status]", "");
+        setStatus(this.host, "[data-site-variable-status]", "");
       } catch (error) {
-        setStatus2(this.host, "[data-site-variable-status]", error instanceof Error ? error.message : "Unable to load site variables.", true);
+        setStatus(this.host, "[data-site-variable-status]", error instanceof Error ? error.message : "Unable to load site variables.", true);
       }
     }
   }
@@ -61935,10 +57289,10 @@ label {
     theme.values[context.mode] ??= {};
     theme.values[context.mode][tokenId] = value2;
     if (input.type === "color") {
-      const text5 = input.closest("[data-token-id]")?.querySelector("[data-token-value-control]");
-      if (text5) {
-        text5.value = input.value;
-        text5.setAttribute("value", input.value);
+      const text4 = input.closest("[data-token-id]")?.querySelector("[data-token-value-control]");
+      if (text4) {
+        text4.value = input.value;
+        text4.setAttribute("value", input.value);
       }
     }
   }
@@ -62267,7 +57621,7 @@ label {
 `;
 
   // src/components/admin/Resources/Blocs/workspace/ThemeEditing/template.html
-  var template_default40 = `<p class="editor-status" data-status role="status" aria-live="polite">Loading values…</p>
+  var template_default39 = `<p class="editor-status" data-status role="status" aria-live="polite">Loading values…</p>
 <div class="editor" data-editor hidden>
     <p9r-segmented-switch data-value-mode value="light" aria-label="Select the value mode">
         <option value="light">Light</option>
@@ -62358,7 +57712,7 @@ label {
       super({
         css: `${tokens_default}
 ${style_default30}`,
-        template: template_default40
+        template: template_default39
       });
     }
     static get observedAttributes() {
@@ -62577,13 +57931,13 @@ iframe {
 `;
 
   // src/components/admin/Resources/Blocs/preview/template.html
-  var template_default41 = `<iframe loading="lazy" title="Read-only bloc preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
+  var template_default40 = `<iframe loading="lazy" title="Read-only bloc preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
 `;
 
   // src/components/admin/Resources/Blocs/preview/BlocPreview.ts
   class BlocPreview extends l {
     constructor() {
-      super({ css: style_default31, template: template_default41 });
+      super({ css: style_default31, template: template_default40 });
     }
     static get observedAttributes() {
       return ["src"];
@@ -62703,7 +58057,7 @@ iframe {
 `;
 
   // src/components/admin/Resources/Blocs/artwork/template.html
-  var template_default42 = `<div class="artwork">
+  var template_default41 = `<div class="artwork">
     <div class="illustration" aria-hidden="true">
         <div class="shape shape-back"></div>
         <div class="shape shape-front"><span class="monogram"></span></div>
@@ -62716,7 +58070,7 @@ iframe {
   // src/components/admin/Resources/Blocs/artwork/LibraryArtwork.ts
   class LibraryArtwork extends l {
     constructor() {
-      super({ css: style_default32, template: template_default42 });
+      super({ css: style_default32, template: template_default41 });
     }
     static get observedAttributes() {
       return ["label"];
@@ -62731,9 +58085,9 @@ iframe {
       this.removeEventListener("load", this.imageLoaded, true);
     }
     attributeChangedCallback() {
-      const label3 = this.getAttribute("label") ?? "Collection";
-      this.shadowRoot.querySelector(".name").textContent = label3;
-      this.shadowRoot.querySelector(".monogram").textContent = label3.slice(0, 1).toUpperCase();
+      const label2 = this.getAttribute("label") ?? "Collection";
+      this.shadowRoot.querySelector(".name").textContent = label2;
+      this.shadowRoot.querySelector(".monogram").textContent = label2.slice(0, 1).toUpperCase();
     }
     imageFailed = (event) => {
       if (event.target instanceof HTMLImageElement) {
@@ -62794,11 +58148,11 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
     change(root, choice) {
       const id2 = choice.closest("[data-installation]")?.dataset.installation;
       const resource = choice.getAttribute("resource");
-      const toggle2 = choice.querySelector("w13c-switch");
-      if (!id2 || !resource || !toggle2) {
+      const toggle = choice.querySelector("w13c-switch");
+      if (!id2 || !resource || !toggle) {
         return;
       }
-      const change = { id: id2, resource, active: toggle2.checked };
+      const change = { id: id2, resource, active: toggle.checked };
       this.retryChanges = [];
       this.queued.set(key(change), change);
       this.pump(root);
@@ -62808,10 +58162,10 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
         const id2 = choice.closest("[data-installation]")?.dataset.installation ?? "";
         const changeKey = key({ id: id2, resource: choice.getAttribute("resource") ?? "" });
         const intent = this.queued.get(changeKey) ?? (this.pending && key(this.pending) === changeKey ? this.pending : undefined);
-        const toggle2 = choice.querySelector("w13c-switch");
-        if (toggle2) {
-          toggle2.checked = intent?.active ?? choice.getAttribute("selected") === "true";
-          choice.closest(".collection-availability")?.querySelector("[data-availability-note]")?.toggleAttribute("hidden", toggle2.checked);
+        const toggle = choice.querySelector("w13c-switch");
+        if (toggle) {
+          toggle.checked = intent?.active ?? choice.getAttribute("selected") === "true";
+          choice.closest(".collection-availability")?.querySelector("[data-availability-note]")?.toggleAttribute("hidden", toggle.checked);
         }
       }
     }
@@ -62927,12 +58281,12 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
 
   // src/core/content/collectionWorkspace/routes.ts
   var COLLECTION_WORKSPACE_SECTIONS = ["overview", "theme", "blocs", "texts"];
-  function collectionWorkspacePath(basePath3, collection, section2 = "overview") {
-    const root = `${normalizeBasePath(basePath3)}/admin/collections`;
+  function collectionWorkspacePath(basePath2, collection, section2 = "overview") {
+    const root = `${normalizeBasePath(basePath2)}/admin/collections`;
     return collection ? `${root}/${encodeURIComponent(collection)}/${section2}` : root;
   }
-  function collectionWorkspaceRouteFromPath(pathname, basePath3) {
-    const root = `${normalizeBasePath(basePath3)}/admin/collections`;
+  function collectionWorkspaceRouteFromPath(pathname, basePath2) {
+    const root = `${normalizeBasePath(basePath2)}/admin/collections`;
     const normalized = pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
     if (normalized === root) {
       return {};
@@ -62955,20 +58309,20 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
   function isCollectionWorkspaceSection(value2) {
     return COLLECTION_WORKSPACE_SECTIONS.includes(value2);
   }
-  function normalizeBasePath(basePath3) {
-    const normalized = basePath3.replace(/\/+$/, "");
+  function normalizeBasePath(basePath2) {
+    const normalized = basePath2.replace(/\/+$/, "");
     return normalized === "/" ? "" : normalized;
   }
 
   // src/components/admin/Resources/Blocs/workspace/controller/forms.ts
-  function configureWorkspaceForms(host, basePath3) {
-    configure(host, "[data-new-composition-form]", `${basePath3}/api/site-bloc as created`, `${basePath3}/editor/bloc?id={{ created.body.tag }}`);
-    configure(host, "[data-new-collection-form]", `${basePath3}/api/bloc/collections as created`, `${basePath3}/admin/collections/site:{{ created.body.id }}/overview`);
+  function configureWorkspaceForms(host, basePath2) {
+    configure(host, "[data-new-composition-form]", `${basePath2}/api/site-bloc as created`, `${basePath2}/editor/bloc?id={{ created.body.tag }}`);
+    configure(host, "[data-new-collection-form]", `${basePath2}/api/bloc/collections as created`, `${basePath2}/admin/collections/site:{{ created.body.id }}/overview`);
     for (const form of Array.from(host.querySelectorAll("[data-import-collection-form]"))) {
-      configureElement(form, `${basePath3}/api/integrations/import as imported`, `${basePath3}/admin/collections/managed:{{ imported.body.installation.id }}/overview`);
+      configureElement(form, `${basePath2}/api/integrations/import as imported`, `${basePath2}/admin/collections/managed:{{ imported.body.installation.id }}/overview`);
     }
-    configure(host, "[data-collection-settings-form]", `${basePath3}/api/bloc/collections?id={{ workspace.collection.siteId }} as updated`, `${basePath3}/admin/collections/site:{{ updated.body.id }}/overview`);
-    host.querySelector("[data-availability-form]")?.setAttribute("cms-source", `${basePath3}/api/bloc/collections/availability as saved`);
+    configure(host, "[data-collection-settings-form]", `${basePath2}/api/bloc/collections?id={{ workspace.collection.siteId }} as updated`, `${basePath2}/admin/collections/site:{{ updated.body.id }}/overview`);
+    host.querySelector("[data-availability-form]")?.setAttribute("cms-source", `${basePath2}/api/bloc/collections/availability as saved`);
   }
   function configure(host, selector, source2, redirect2) {
     const form = host.querySelector(selector);
@@ -63015,7 +58369,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
   }
 
   // src/components/admin/Resources/Blocs/workspace/controller/CollectionWorkspace.ts
-  var template22 = `<w13c-fixed-admin-layout data-collection-source>${chrome_default}${landing_default}${overview_default3}${theme_default2}${blocs_default}${texts_default2}</w13c-fixed-admin-layout>`;
+  var template22 = `<w13c-fixed-admin-layout data-collection-source>${chrome_default}${landing_default}${overview_default2}${theme_default2}${blocs_default}${texts_default2}</w13c-fixed-admin-layout>`;
 
   class CmsCollectionWorkspace extends HTMLElement {
     availability = new AvailabilityController(this);
@@ -63028,7 +58382,6 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
         this.setAttribute("data-rendered", "");
       }
       this.configureRoute();
-      this.addEventListener("click", this.clickAction);
       this.addEventListener("input", this.inputAction);
       this.availability.connect();
       this.themeEditing.connect();
@@ -63036,7 +58389,6 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
       this.siteVariables.connect();
     }
     disconnectedCallback() {
-      this.removeEventListener("click", this.clickAction);
       this.removeEventListener("input", this.inputAction);
       this.availability.disconnect();
       this.themeEditing.disconnect();
@@ -63044,51 +58396,38 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
       this.siteVariables.disconnect();
     }
     configureRoute() {
-      const basePath3 = getMetaBasePath();
-      const route3 = collectionWorkspaceRouteFromPath(window.location.pathname, basePath3);
+      const basePath2 = getMetaBasePath();
+      const route2 = collectionWorkspaceRouteFromPath(window.location.pathname, basePath2);
       const source2 = this.querySelector("[data-collection-source]");
       const home = this.querySelector("[data-collections-home]");
-      home?.setAttribute("href", `${basePath3}/admin/collections`);
-      configureWorkspaceForms(this, basePath3);
-      if (!route3 || !source2) {
+      home?.setAttribute("href", `${basePath2}/admin/collections`);
+      configureWorkspaceForms(this, basePath2);
+      if (!route2 || !source2) {
         this.querySelector("[data-invalid-route]")?.removeAttribute("hidden");
         return;
       }
       const query5 = [
-        ...route3.collection ? [`collection=${encodeURIComponent(route3.collection)}`] : [],
-        ...route3.section ? [`section=${route3.section}`] : [],
+        ...route2.collection ? [`collection=${encodeURIComponent(route2.collection)}`] : [],
+        ...route2.section ? [`section=${route2.section}`] : [],
         "bloc=#{bloc}",
         "token=#{token}",
         "theme=#{theme}"
       ].join("&");
-      source2.setAttribute("cms-source", `${basePath3}/api/collections/workspace?${query5} as workspace`);
+      source2.setAttribute("cms-source", `${basePath2}/api/collections/workspace?${query5} as workspace`);
       source2.setAttribute("cms-reload-on", "collection:changed bloc:changed integration:updated theme:changed");
-      this.configureTabs(basePath3, route3.collection, route3.section);
-      home?.toggleAttribute("active", !route3.collection);
+      this.configureTabs(basePath2, route2.collection, route2.section);
+      home?.toggleAttribute("active", !route2.collection);
     }
-    configureTabs(basePath3, collection, active) {
+    configureTabs(basePath2, collection, active) {
       this.querySelector("[data-collection-tabs]")?.toggleAttribute("hidden", !collection);
       for (const link of Array.from(this.querySelectorAll("[data-collection-section]"))) {
         const section2 = link.dataset.collectionSection;
         if (collection && section2 && isCollectionWorkspaceSection(section2)) {
-          link.setAttribute("href", collectionWorkspacePath(basePath3, collection, section2));
+          link.setAttribute("href", collectionWorkspacePath(basePath2, collection, section2));
           link.toggleAttribute("active", active === section2);
         }
       }
     }
-    clickAction = (event) => {
-      const target2 = event.target instanceof Element ? event.target : null;
-      const open = target2?.closest("[data-upgrade-open]");
-      const cancel = target2?.closest("[data-upgrade-cancel]");
-      const confirm2 = target2?.closest("[data-upgrade-confirm]");
-      if (open) {
-        openIntegrationUpgrade(open);
-      } else if (cancel) {
-        cancelIntegrationUpgrade(cancel);
-      } else if (confirm2) {
-        confirmIntegrationUpgrade(confirm2);
-      }
-    };
     inputAction = (event) => {
       const target2 = event.target instanceof Element ? event.target.closest("[data-collection-nav-search]") : null;
       const menu = target2?.closest("w13c-lateral-menu");
@@ -63461,7 +58800,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
       return true;
     }
     const id2 = element.id;
-    return Boolean(id2 && Array.from(root.querySelectorAll("label[for]")).some((label3) => label3.getAttribute("for") === id2));
+    return Boolean(id2 && Array.from(root.querySelectorAll("label[for]")).some((label2) => label2.getAttribute("for") === id2));
   }
   function needsControlLabel(element) {
     if (element.localName !== "input") {
@@ -63694,7 +59033,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
   }
 
   // src/components/editorSystemV2/siteBloc/template.html
-  var template_default43 = `<div class="builder" aria-busy="true">
+  var template_default42 = `<div class="builder" aria-busy="true">
     <div class="feedback">
         <p class="status" data-status role="status" aria-live="polite">Loading bloc…</p>
         <p class="error" data-error role="alert" hidden></p>
@@ -63767,7 +59106,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 
   // src/components/editorSystemV2/siteBloc/SiteBlocBuilder.ts
   var template23 = document.createElement("template");
-  template23.innerHTML = `<style>${String(style_default34)}</style>${String(template_default43)}`;
+  template23.innerHTML = `<style>${String(style_default34)}</style>${String(template_default42)}`;
 
   class SiteBlocBuilder extends HTMLElement {
     controller;
@@ -63906,7 +59245,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/CardMedia/template.html
-  var template_default44 = `<div class="card">
+  var template_default43 = `<div class="card">
     <div class="preview">
         <slot name="image">
             <span class="placeholder">
@@ -64054,7 +59393,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
     constructor() {
       super({
         css: style_default35,
-        template: template_default44
+        template: template_default43
       });
     }
   }
@@ -64063,7 +59402,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/CropSystem/template.html
-  var template_default45 = `<div class="backdrop" id="backdrop">
+  var template_default44 = `<div class="backdrop" id="backdrop">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="crop-title">
         <div class="header">
             <h3 id="crop-title">Crop image</h3>
@@ -64308,7 +59647,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       super({
         css: [layout_default3, controls_default2].join(`
 `),
-        template: template_default45
+        template: template_default44
       });
     }
     connectedCallback() {
@@ -64346,7 +59685,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/components/media/DetailMedia/template.html
-  var template_default46 = `<div class="backdrop" id="backdrop">
+  var template_default45 = `<div class="backdrop" id="backdrop">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="title">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -64605,7 +59944,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       super({
         css: [layout_default4, tools_default].join(`
 `),
-        template: template_default46
+        template: template_default45
       });
     }
     connectedCallback() {
@@ -64623,9 +59962,9 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
         }
       });
     }
-    open(label3) {
-      if (label3) {
-        this.shadowRoot.getElementById("title").textContent = label3;
+    open(label2) {
+      if (label2) {
+        this.shadowRoot.getElementById("title").textContent = label2;
       }
       this.setAttribute("open", "");
     }
@@ -64639,7 +59978,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/GridMedia/view/template.html
-  var template_default47 = `<div class="toolbar">
+  var template_default46 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -64701,7 +60040,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/GridMedia/view/styles/detail.css
-  var detail_default2 = `/* ── Detail fields (injected into detail-media slot) ── */
+  var detail_default = `/* ── Detail fields (injected into detail-media slot) ── */
 .detail-field {
     display: flex;
     flex-direction: column;
@@ -64913,7 +60252,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/GridMedia/view/styles/navigation.css
-  var navigation_default3 = `:host {
+  var navigation_default2 = `:host {
     --grid-gap: 16px;
     --grid-min-col: 180px;
     --grid-max-col: 240px;
@@ -65179,13 +60518,13 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
     return trail;
   }
   // src/components/media/GridMedia/api/write.ts
-  async function renameItem(id2, label3) {
+  async function renameItem(id2, label2) {
     const url = new URL(filesBase(), window.location.origin);
     url.searchParams.set("id", id2);
     const res = await fetch(url.toString(), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: label3 })
+      body: JSON.stringify({ name: label2 })
     });
     return res.ok;
   }
@@ -65196,11 +60535,11 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
     const res = await fetch(url.toString(), { method: "DELETE" });
     return res.ok;
   }
-  async function createFolder(label3, parent) {
+  async function createFolder(label2, parent) {
     const res = await fetch(`${filesBase()}/folder`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: label3, parentId: parent })
+      body: JSON.stringify({ name: label2, parentId: parent })
     });
     return res.ok;
   }
@@ -65286,10 +60625,10 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       } else {
         appendMediaPreview(card, item);
       }
-      const label3 = document.createElement("span");
-      label3.slot = "label";
-      label3.textContent = item.label;
-      card.appendChild(label3);
+      const label2 = document.createElement("span");
+      label2.slot = "label";
+      label2.textContent = item.label;
+      card.appendChild(label2);
       grid.appendChild(card);
     }
   }
@@ -65753,9 +61092,9 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
     _items = [];
     constructor() {
       super({
-        css: [navigation_default3, interactions_default, detail_default2].join(`
+        css: [navigation_default2, interactions_default, detail_default].join(`
 `),
-        template: template_default47
+        template: template_default46
       });
     }
     get detail() {
@@ -65791,7 +61130,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       renderGrid(this.shadowRoot.getElementById("grid"), this._items);
       renderBreadcrumb(this.shadowRoot.getElementById("breadcrumb"), this._folder, this._breadcrumb);
     }
-    _navigateTo(folderId, label3) {
+    _navigateTo(folderId, label2) {
       const url = new URL(window.location.href);
       if (folderId) {
         url.searchParams.set("folder", folderId);
@@ -65802,8 +61141,8 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       this._folder = folderId;
       if (!folderId) {
         this._breadcrumb = [];
-      } else if (label3) {
-        this._breadcrumb.push({ id: folderId, label: label3 });
+      } else if (label2) {
+        this._breadcrumb.push({ id: folderId, label: label2 });
       }
       this._refresh();
     }
@@ -65907,7 +61246,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/MediaCenter/template.html
-  var template_default48 = `<dialog>
+  var template_default47 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
             <h2>Media Center</h2>
@@ -66493,7 +61832,7 @@ dialog::backdrop {
       super({
         css: [chrome_default2, content_default2, folder_default].join(`
 `),
-        template: template_default48
+        template: template_default47
       });
     }
     connectedCallback() {
@@ -66508,7 +61847,7 @@ dialog::backdrop {
         grid: this._grid,
         getFolder: () => this._folder,
         findItem: (id2) => this._items.find((item) => item.id === id2),
-        navigate: (folderId, label3) => this._navigateTo(folderId, label3),
+        navigate: (folderId, label2) => this._navigateTo(folderId, label2),
         navigateBreadcrumb: (folderId, index) => {
           this._breadcrumb = this._breadcrumb.slice(0, index + 1);
           this._navigateTo(folderId);
@@ -66541,8 +61880,8 @@ dialog::backdrop {
     _render() {
       renderGrid(this._grid, this._items);
       renderBreadcrumb(this.shadowRoot.getElementById("breadcrumb"), this._folder, this._breadcrumb);
-      const empty4 = this.shadowRoot.getElementById("empty");
-      empty4.style.display = this._items.length === 0 ? "flex" : "none";
+      const empty3 = this.shadowRoot.getElementById("empty");
+      empty3.style.display = this._items.length === 0 ? "flex" : "none";
       const pathDisplay = this.shadowRoot.getElementById("pathDisplay");
       if (this._breadcrumb.length > 0) {
         pathDisplay.textContent = this._breadcrumb.map((b3) => b3.label).join(" / ");
@@ -66573,12 +61912,12 @@ dialog::backdrop {
       }));
       this._dialog?.close();
     }
-    _navigateTo(folderId, label3) {
+    _navigateTo(folderId, label2) {
       this._folder = folderId;
       if (!folderId) {
         this._breadcrumb = [];
-      } else if (label3) {
-        this._breadcrumb.push({ id: folderId, label: label3 });
+      } else if (label2) {
+        this._breadcrumb.push({ id: folderId, label: label2 });
       }
       this._refresh();
     }
@@ -66821,10 +62160,10 @@ dialog::backdrop {
       if (!this._tile) {
         return;
       }
-      const label3 = this.getAttribute("label") ?? "";
+      const label2 = this.getAttribute("label") ?? "";
       const size = Number.parseInt(this.getAttribute("size") ?? "64", 10);
-      this._label.textContent = label3;
-      this._label.hidden = label3 === "";
+      this._label.textContent = label2;
+      this._label.hidden = label2 === "";
       this._tile.disabled = this.disabled;
       this._clearBtn.disabled = this.disabled;
       const accessibleName2 = this.getAttribute("aria-label");
@@ -66833,7 +62172,7 @@ dialog::backdrop {
       } else {
         this._tile.removeAttribute("aria-label");
       }
-      this._clearBtn.setAttribute("aria-label", label3 ? `Remove ${label3}` : "Remove selected file");
+      this._clearBtn.setAttribute("aria-label", label2 ? `Remove ${label2}` : "Remove selected file");
       this._tile.parentElement?.style.setProperty("--tile-size", `${size > 0 ? size : 64}px`);
     }
   }

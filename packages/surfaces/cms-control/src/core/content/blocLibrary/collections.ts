@@ -1,12 +1,9 @@
 import type { SiteBlocCollection } from "@bernouy/cms-content";
-import type { IntegrationInstallation } from "@bernouy/cms-integrations";
 import type { LibraryBloc, LibraryCollection } from "./types";
-import { collectionAssets } from "./assets";
 
 export function libraryCollectionRows(
     sites: SiteBlocCollection[],
     blocs: LibraryBloc[],
-    installations: IntegrationInstallation[],
     selected: string | undefined,
     basePath: string,
 ): LibraryCollection[] {
@@ -24,50 +21,7 @@ export function libraryCollectionRows(
             basePath,
         ),
     );
-    const owners = new Set([
-        ...installations
-            .filter(({ definitionSnapshot }) => definitionSnapshot?.type === "collection")
-            .map(({ id }) => id),
-        ...blocs.flatMap(({ origin }) => (origin.kind === "integration" ? [origin.installationId] : [])),
-    ]);
-    for (const id of owners) {
-        const installation = installations.find((item) => item.id === id);
-        const definition = installation?.definitionSnapshot;
-        const managed = definition?.schema === "cms.integration.definition.v2" && definition.type === "collection";
-        rows.push(
-            row(
-                {
-                    key: `managed:${id}`,
-                    name: installation?.label ?? id,
-                    kind: "managed",
-                    description:
-                        definition?.description ??
-                        (installation
-                            ? "A managed collection of reusable blocs."
-                            : "Its managed installation is unavailable. Existing blocs are preserved."),
-                    ...(installation
-                        ? {
-                              installationId: id,
-                              status: installation.status,
-                              statusLabel:
-                                  installation.status === "success"
-                                      ? "Active"
-                                      : installation.status === "pending"
-                                        ? "Pending"
-                                        : "Failed",
-                              version: installation.definitionVersion,
-                          }
-                        : {}),
-                    canCheckUpdates: managed && installation?.status === "success",
-                    canManageAvailability: managed && installation?.status === "success",
-                    ...collectionAssets(basePath, definition, installation?.definitionVersion),
-                },
-                selected,
-                basePath,
-            ),
-        );
-    }
-    if (blocs.some(({ origin }) => origin.kind === "code-managed")) {
+    if (blocs.some(({ origin }) => origin.kind !== "site-builder")) {
         rows.push(
             row(
                 { key: "code", name: "Custom code", description: "Blocs maintained in your codebase.", kind: "code" },
@@ -106,10 +60,7 @@ export function belongsToCollection(bloc: LibraryBloc, collection: LibraryCollec
     if (collection.isSite) {
         return bloc.origin.kind === "site-builder" && (bloc.collectionId ?? "site") === collection.siteId;
     }
-    if (collection.isManaged) {
-        return bloc.origin.kind === "integration" && `managed:${bloc.origin.installationId}` === collection.key;
-    }
-    return bloc.origin.kind === "code-managed";
+    return bloc.origin.kind !== "site-builder";
 }
 
 export function matchingCollections(

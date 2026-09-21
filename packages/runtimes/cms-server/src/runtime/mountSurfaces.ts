@@ -1,28 +1,11 @@
 import type { RuntimeEnv } from "../runtimeEnv";
-import {
-    mountCmsRepositoryManagementGateway,
-    type RepositoryManagementGatewayTransport,
-} from "@bernouy/cms-repository-management/gateway";
-import {
-    CmsSourceBindingMigrationHandler,
-    CmsSourceFunctionalMigrationProbe,
-    ProductionIntegrationMigrationRuntime,
-} from "@bernouy/cms-integrations";
 import type { ProductionAuthentication } from "./auth";
-import type { ProductionIntegrationServices } from "./integrations";
 import type { CoreStores } from "./stores/core";
 import type { FeatureStores } from "./stores/features";
-import { productionRepositoryReadConfig } from "./repository";
-import { createSurfaceSourceTelemetry, createTrustedConnectorTargetMatcher } from "./sourceTelemetry";
+import { createSurfaceSourceTelemetry } from "./sourceTelemetry";
 import { createRuntimeSourceImageComposition } from "./sourceImageTelemetry";
 import { createRuntimeSourceImageWorkers } from "./stores/sourceImages";
-import {
-    injectLocalMigrationAuditFault,
-    injectLocalMigrationReconciliationAuditFault,
-} from "./integrations/auditFault";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
-import { REPOSITORY_CATALOG_EDITOR_DATA_SOURCE } from "@bernouy/cms-repository/catalog";
-import { createProductionRepositoryCatalogReader } from "../repositoryCatalog";
 import { composeSourceEndpointInterceptors } from "@bernouy/cms-sources";
 
 export type { ProductionSurfaceRuntime } from "./surfaceRuntime";
@@ -36,60 +19,19 @@ type MountOptions = {
     analyticsVisitorSecret: string;
     core: CoreStores;
     features: FeatureStores;
-    integrations: ProductionIntegrationServices;
     authentication: ProductionAuthentication;
-    repositoryManagementGateway?: RepositoryManagementGatewayTransport;
 };
 
 export async function mountProductionSurfaces(
     options: MountOptions,
     runtime: ProductionSurfaceRuntime = PRODUCTION_SURFACE_RUNTIME,
 ): Promise<ProductionSurfaceHandle> {
-    const { env, core, features, integrations, authentication } = options;
-    const integrationInstallations = injectLocalMigrationReconciliationAuditFault(
-        features.integrationInstallations,
-        env.localMigrationAuditFault,
-    );
-    const repositoryCatalog = env.CMS_REPOSITORY_HUB_FACADE_ENABLED
-        ? createProductionRepositoryCatalogReader(integrations)
-        : undefined;
-    const trustedConnectorTarget = await createTrustedConnectorTargetMatcher(
-        integrations.integrationConnectorDeployers,
-    );
+    const { env, core, features, authentication } = options;
     const sourceTelemetry = createSurfaceSourceTelemetry(features.endpointPerformanceRecorder, {
         uniformSampleRate: env.SOURCE_TIMING_SAMPLE_RATE,
         slowRequestThresholdMs: env.SOURCE_SLOW_REQUEST_THRESHOLD_MS,
         reportDiagnostic: runtime.log,
     });
-    const cmsBindingDeps = {
-        sources: features.sources,
-        roles: core.roles,
-        secrets: core.secrets,
-        dashboards: features.dashboards,
-        dashboardViews: features.dashboardViews,
-        dashboardAssignments: features.dashboardAssignments,
-        relations: features.relations,
-        installations: integrationInstallations,
-        sourceOverlays: features.sourceOverlays,
-        connectorDeployers: integrations.integrationConnectorDeployers,
-        provisioners: integrations.integrationProvisioners,
-        sourceExecutorDeps: { resolveSecret: features.resolveSecret, identities: features.identities },
-        ...(env.localSupabase
-            ? { sourceTargetValidation: { allowBlockedTargetUrlPrefixes: [env.localSupabase.functionsBaseUrl] } }
-            : {}),
-    };
-    const cmsSmokeDeps = { ...cmsBindingDeps, sources: features.deliverySources };
-    const cmsBindingMigration = new CmsSourceBindingMigrationHandler(cmsBindingDeps);
-    const integrationMigrationRuntime = injectLocalMigrationAuditFault(
-        new ProductionIntegrationMigrationRuntime({
-            connectorAdapters: integrations.integrationConnectorMigrationAdapters,
-            functionDeployment: integrations.integrationFunctionMigrationHandler,
-            targetSmoke: new CmsSourceFunctionalMigrationProbe(cmsBindingDeps, "target"),
-            cmsBinding: cmsBindingMigration,
-            cmsSmoke: new CmsSourceFunctionalMigrationProbe(cmsSmokeDeps, "stable"),
-        }),
-        env.localMigrationAuditFault,
-    );
     const sourceImageWorkers =
         env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED && core.sourceImageCache
             ? createRuntimeSourceImageWorkers({
@@ -98,7 +40,6 @@ export async function mountProductionSurfaces(
                   queue: core.sourceImageJobs,
                   index: core.sourceMediaIndex,
                   sources: features.sources,
-                  installations: integrationInstallations,
                   reportError: (error) => runtime.reportError("Source image worker failed", error),
               })
             : null;
@@ -125,14 +66,6 @@ export async function mountProductionSurfaces(
         sourceImageComposition.sourceImageInterceptor;
     const { responsivePublicSourceImagesEnabled, responsivePrivateSourceImagesEnabled } = sourceImageComposition;
     const controlRunner = new runtime.Runner();
-    if (options.repositoryManagementGateway) {
-        mountCmsRepositoryManagementGateway({
-            runner: controlRunner,
-            authentication: authentication.auth,
-            requiredRole: "admin",
-            transport: options.repositoryManagementGateway,
-        });
-    }
     const controlCms = new runtime.Control(
         controlRunner,
         core.repo,
@@ -148,17 +81,6 @@ export async function mountProductionSurfaces(
                 secureCookie: new URL(env.DELIVERY_PUBLIC_URL).protocol === "https:",
                 optOutUrl: `${env.DELIVERY_PUBLIC_URL}/.cms/privacy/analytics`,
             },
-            integrationCatalog: integrations.integrationCatalog,
-            integrationPackageResolver: integrations.integrationPackageResolver,
-            ...(env.localSupabase ? {} : { integrationUpgradeReleases: integrations.integrationUpgradeReleases }),
-            integrationInstallations,
-            integrationConnectorProviders: features.integrationConnectorProviders,
-            integrationConnectorDeployers: integrations.integrationConnectorDeployers,
-            integrationMigrationRuntime,
-            integrationConnectorBaselineAdopters: integrations.integrationConnectorBaselineAdopters,
-            integrationConnectorSchemaBaselines: integrations.publicRepositorySchemaBaselines,
-            integrationProvisioners: integrations.integrationProvisioners,
-            ...(repositoryCatalog ? { editorDataSources: [REPOSITORY_CATALOG_EDITOR_DATA_SOURCE] } : {}),
             dashboards: features.dashboards,
             dashboardViews: features.dashboardViews,
             dashboardAssignments: features.dashboardAssignments,
@@ -170,10 +92,6 @@ export async function mountProductionSurfaces(
             sourceImageInterceptor,
             responsivePublicSourceImagesEnabled,
             responsivePrivateSourceImagesEnabled,
-            sourceTrustedConnectorTarget: trustedConnectorTarget,
-            ...(env.localSupabase
-                ? { sourceTargetValidation: { allowBlockedTargetUrlPrefixes: [env.localSupabase.functionsBaseUrl] } }
-                : {}),
             publicAuth: {
                 ...authentication.publicAuthBase,
                 emailVerificationUrl: env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
@@ -197,16 +115,6 @@ export async function mountProductionSurfaces(
     await controlCms.ready;
 
     const deliveryRunner = new runtime.Runner();
-    if (repositoryCatalog) {
-        const repositoryReads = productionRepositoryReadConfig(env, integrations, core, runtime.log);
-        deliveryRunner.group("/.cms/repository", (repositoryRunner) => {
-            new runtime.Repository({
-                runner: repositoryRunner,
-                ...repositoryReads,
-                repositoryCatalog,
-            });
-        });
-    }
     const deliveryCms = new runtime.Delivery({
         runner: deliveryRunner,
         repository: core.repo,
@@ -217,10 +125,8 @@ export async function mountProductionSurfaces(
         sourceImageInterceptor,
         responsivePublicSourceImagesEnabled,
         responsivePrivateSourceImagesEnabled,
-        sourceTrustedConnectorTarget: trustedConnectorTarget,
         analytics: features.analytics,
         identities: features.identities,
-        integrationInstallations,
         analyticsVisitorSecret: options.analyticsVisitorSecret,
         analyticsSiteScope: env.DELIVERY_PUBLIC_URL,
         analyticsTrustProxy: env.ANALYTICS_TRUST_PROXY,
