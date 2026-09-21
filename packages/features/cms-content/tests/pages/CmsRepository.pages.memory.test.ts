@@ -70,6 +70,7 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
 
     test("rejects duplicate paths without replacing either page", async () => {
         const repo = new InMemoryCmsRepository();
+        await repo.updateSystem({ site: { language: "fr" } as never });
         await repo.insertPage("/about", "About");
         await expect(repo.insertPage("/about", "Replacement")).rejects.toBeInstanceOf(DuplicatePagePathError);
         await repo.insertPage("/contact", "Contact");
