@@ -45,7 +45,10 @@ export async function renderPage(
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     const head = document.head;
 
-    const settings = await ctx.repository.getSystem();
+    const storedSettings = await ctx.repository.getSystem();
+    const settings = runtimeMetadata.language
+        ? { ...storedSettings, site: { ...storedSettings.site, language: runtimeMetadata.language } }
+        : storedSettings;
     const metadata = resolvePageMetadata(page, settings, runtimeMetadata);
 
     const composed = wrapBindingCore(page.content);
@@ -110,7 +113,7 @@ export async function renderPage(
     buildAssetPreloads(document, head, assets, { includeBindingCore: hasBindingCore });
     buildBindingCloak(document, head, hasBindingCore);
     buildFoucShell(document, head, usedTags);
-    defineMetaTags(document, head, page, settings, ctx.faviconUrl, metadata);
+    defineMetaTags(document, head, page, settings, ctx.faviconUrl, metadata, storedSettings.site);
     definePageStructuredData(document, head, settings, metadata);
     buildStylesheetLink(document, head, assets);
     buildScriptTags(document, head, assets, { includeBindingCore: hasBindingCore });

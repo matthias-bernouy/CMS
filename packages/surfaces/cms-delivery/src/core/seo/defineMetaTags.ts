@@ -1,4 +1,4 @@
-import { canonicalSiteBaseUrl, type TPage, type TSystem } from "@bernouy/cms-content";
+import { canonicalSiteBaseUrl, publicPagePath, type TPage, type TSystem } from "@bernouy/cms-content";
 
 export type PageMetaTagOverrides = {
     title?: string;
@@ -19,6 +19,7 @@ export function defineMetaTags(
     settings: TSystem,
     faviconUrl: string,
     overrides: PageMetaTagOverrides = {},
+    routeLanguages: Pick<TSystem["site"], "language" | "activeLanguages"> = settings.site,
 ): void {
     const title = document.createElement("title");
     title.textContent = overrides.title ?? page.title;
@@ -42,6 +43,35 @@ export function defineMetaTags(
         canonical.setAttribute("rel", "canonical");
         canonical.setAttribute("href", canonicalUrl);
         head.appendChild(canonical);
+    }
+
+    if (canonicalUrl && !overrides.robots?.includes("noindex") && page.paths) {
+        const active = new Set([routeLanguages.language, ...(routeLanguages.activeLanguages ?? [])]);
+        const variants = Object.entries(page.paths).filter(([language]) => active.has(language));
+        if (variants.length > 1) {
+            const search = new URL(canonicalUrl).search;
+            for (const [language, local] of variants) {
+                const alternate = document.createElement("link");
+                alternate.setAttribute("rel", "alternate");
+                alternate.setAttribute("hreflang", language);
+                alternate.setAttribute(
+                    "href",
+                    `${host}${publicPagePath(language, local, routeLanguages.language)}${search}`,
+                );
+                head.appendChild(alternate);
+            }
+            const defaultPath = page.paths[routeLanguages.language];
+            if (defaultPath) {
+                const fallback = document.createElement("link");
+                fallback.setAttribute("rel", "alternate");
+                fallback.setAttribute("hreflang", "x-default");
+                fallback.setAttribute(
+                    "href",
+                    `${host}${publicPagePath(routeLanguages.language, defaultPath, routeLanguages.language)}${search}`,
+                );
+                head.appendChild(fallback);
+            }
+        }
     }
 
     if (overrides.robots) {

@@ -5,6 +5,7 @@ import {
     type PageMetadataScope,
     type TPage,
     type TSystem,
+    pageSeoForLanguage,
 } from "@bernouy/cms-content";
 
 export type PageCanonicalIdentity = {
@@ -18,6 +19,8 @@ export type PageRenderMetadata = {
     canonical?: PageCanonicalIdentity | null;
     indexable?: boolean;
     fallbackTitle?: string;
+    /** Language selected by the current public path. */
+    language?: string;
 };
 
 export type ResolvedPageMetadata = {
@@ -42,8 +45,12 @@ export function resolvePageMetadata(
             name: settings.site.name,
         },
     };
-    const titleTemplate = resolvePageMetadataTemplateResult(page.title, context);
-    const descriptionTemplate = resolvePageMetadataTemplateResult(page.description, context);
+    const translation = pageSeoForLanguage(page, runtime.language ?? settings.site.language);
+    const titleTemplate = resolvePageMetadataTemplateResult(translation?.title ?? page.title, context);
+    const descriptionTemplate = resolvePageMetadataTemplateResult(
+        translation?.description ?? page.description,
+        context,
+    );
     const title = titleTemplate.complete ? titleTemplate.value.trim() : "";
     const description = descriptionTemplate.complete ? descriptionTemplate.value.trim() : "";
     const canonical = runtime.canonical === undefined && page.indexing?.entity ? null : runtime.canonical;

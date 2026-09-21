@@ -1,6 +1,7 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { cachedResponseAsync, compress, sendCompressed } from "@bernouy/http-runner";
 import { P9R_CACHE } from "@bernouy/cms-content";
+import { isPublishedPage } from "@bernouy/cms-content";
 import { renderPage } from "cms-delivery/core/html/renderPage";
 import { makeRuntimeRenderContext } from "cms-delivery/core/html/runtimeContext";
 
@@ -31,16 +32,30 @@ export async function renderRef(
     field: "notFound" | "forbidden" | "serverError",
     status: number,
     fallbackText: string,
+    language?: string,
 ): Promise<Response> {
     try {
         const settings = await delivery.repository.getSystem();
         const ref = settings.site?.[field] ?? null;
         if (ref) {
-            const page = await delivery.repository.getPublishedPage(ref.path);
-            if (page) {
+            const byId = ref.id ? await delivery.repository.getPageById(ref.id) : null;
+            const page = isPublishedPage(byId) ? byId : await delivery.repository.getPublishedPage(ref.path);
+            if (isPublishedPage(page)) {
+                if (status === 410) {
+                    return sendCompressed(
+                        req,
+                        await renderPage(page, makeRuntimeRenderContext(delivery), {
+                            canonical: null,
+                            indexable: false,
+                            ...(language ? { language } : {}),
+                        }),
+                        "no-store",
+                        { status, skipCspHeader: true },
+                    );
+                }
                 return await cachedResponseAsync(
                     req,
-                    P9R_CACHE.page(ref.path),
+                    P9R_CACHE.page(page.path),
                     delivery.cache,
                     () => renderPage(page, makeRuntimeRenderContext(delivery)),
                     undefined,
@@ -51,5 +66,5 @@ export async function renderRef(
     } catch (err) {
         console.error(`Failed to render ${field} fallback:`, err);
     }
-    return sendCompressed(req, textFallbackEntry(fallbackText), undefined, { status });
+    return sendCompressed(req, textFallbackEntry(fallbackText), status === 410 ? "no-store" : undefined, { status });
 }

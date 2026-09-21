@@ -10,6 +10,7 @@ import { publicPageCacheKey, resolvePublicPage } from "cms-delivery/core/pages/r
 import { InvalidPublicPageRequestError } from "cms-delivery/core/pages/publicPageRequest";
 import type { PageRenderMetadata } from "cms-delivery/core/seo/pageMetadata";
 import { resolveRuntimePageIndexingMetadata } from "cms-delivery/core/seo/resolveRuntimePageIndexingMetadata";
+import { resolveStoredRoute } from "cms-delivery/core/pages/resolveStoredRoute";
 
 /**
  * Shared entry point for every public page GET registered by Delivery.
@@ -46,7 +47,31 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
         return { response: new Response("Not Found", { status: 404 }) };
     }
 
-    const page = await delivery.repository.getPublishedPage(pathname);
+    const storedRoute = await resolveStoredRoute(pathname, delivery.repository);
+    if (storedRoute?.kind === "updating") {
+        return {
+            response: new Response("Service unavailable", {
+                status: 503,
+                headers: { "Cache-Control": "no-store", "Retry-After": "5" },
+            }),
+        };
+    }
+    if (storedRoute?.kind === "gone") {
+        return { response: await renderRef(req, delivery, "notFound", 410, "Page not found", storedRoute.language) };
+    }
+    if (storedRoute?.kind === "unavailable") {
+        return { response: await renderRef(req, delivery, "notFound", 404, "Page not found") };
+    }
+    if (storedRoute?.kind === "redirect") {
+        return {
+            response: new Response(null, {
+                status: 301,
+                headers: { Location: `${storedRoute.path}${url.search}`, "Cache-Control": "no-store" },
+            }),
+        };
+    }
+    const page =
+        storedRoute?.kind === "current" ? storedRoute.page : await delivery.repository.getPublishedPage(pathname);
     if (page) {
         const sourceAccess = await preflightPageSourceAccess(req, page, delivery);
         if (sourceAccess) {
@@ -54,7 +79,7 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
         }
 
         return {
-            response: await renderIndexedPage(req, page, pathname, delivery, null, 200),
+            response: await renderIndexedPage(req, page, pathname, delivery, null, 200, storedRoute?.language),
             pageId: page.id,
         };
     }
@@ -104,6 +129,7 @@ async function renderIndexedPage(
     delivery: DeliveryCms,
     publicCacheIdentity: string | undefined | null,
     status: number,
+    language?: string,
 ): Promise<Response> {
     const indexing = await resolveRuntimePageIndexingMetadata(req, page, delivery);
     if (indexing.kind === "not-found") {
@@ -126,7 +152,7 @@ async function renderIndexedPage(
         delivery,
         indexing.dynamic ? undefined : publicCacheIdentity,
         status,
-        indexing.metadata,
+        { ...indexing.metadata, ...(language ? { language } : {}) },
     );
 }
 

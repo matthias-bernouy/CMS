@@ -76,7 +76,9 @@ async function sourceAccessDenied(req: Request, delivery: DeliveryCms, status: 4
         const url = new URL(req.url);
         const returnTo = `${url.pathname}${url.search}`;
         const settings = await delivery.repository.getSystem().catch(() => null);
-        const loginPath = settings?.site.login?.path;
+        const loginRef = settings?.site.login;
+        const loginPage = loginRef?.id ? await delivery.repository.getPageById(loginRef.id) : null;
+        const loginPath = loginPage?.path ?? loginRef?.path;
         if (loginPath === url.pathname) {
             return new Response("Unauthorized", { status });
         }

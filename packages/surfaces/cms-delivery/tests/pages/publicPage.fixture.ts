@@ -30,6 +30,7 @@ type HarnessOptions = Readonly<{
     roles?: RolesRepository;
     sitemapStore?: CmsFilesBlobStore;
     siteHost?: string;
+    repository?: ContentReader;
 }>;
 
 export function mountPublicPages(options: HarnessOptions = {}) {
@@ -48,7 +49,7 @@ export function mountPublicPages(options: HarnessOptions = {}) {
     const recorded = new Promise<void>((resolve) => {
         notifyRecorded = resolve;
     });
-    const repository: ContentReader = {
+    const repository: ContentReader = options.repository ?? {
         getPage: async (path) => storedPages.find((page) => page.path === path) ?? null,
         getAllPages: async () => storedPages,
         getPublishedPage: async (path) => {
