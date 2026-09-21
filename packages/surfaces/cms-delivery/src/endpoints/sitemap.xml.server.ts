@@ -5,6 +5,7 @@ import { isDeliveryReservedPath } from "cms-delivery/core/pages/publicPagePaths"
 import { storedSitemapLocations } from "cms-delivery/core/seo/sitemap/materialize";
 import { readSitemapManifest } from "cms-delivery/core/seo/sitemap/manifest";
 import { MAX_SITEMAP_URLS_PER_CHUNK, sitemapIndexXml, staticSitemapXml } from "cms-delivery/core/seo/sitemap/xml";
+import { localizedSitemapAlternates, localizedSitemapPages } from "cms-delivery/core/seo/sitemap/localizedPages";
 
 export default async function SitemapServer(request: Request, delivery: DeliveryCms): Promise<Response> {
     try {
@@ -39,8 +40,10 @@ export default async function SitemapServer(request: Request, delivery: Delivery
 }
 
 async function buildStaticFallback(request: Request, delivery: DeliveryCms, publicBaseUrl: string): Promise<Response> {
-    const pages = await delivery.repository.getPublishedPages();
-    const candidates = await storedSitemapLocations(delivery, pages);
+    const system = await delivery.repository.getSystem();
+    const published = await delivery.repository.getPublishedPages();
+    const pages = localizedSitemapPages(published, system);
+    const candidates = await storedSitemapLocations(delivery, pages, localizedSitemapAlternates(published, system));
     const entries = [];
     const seen = new Set<string>();
     for (const entry of candidates) {

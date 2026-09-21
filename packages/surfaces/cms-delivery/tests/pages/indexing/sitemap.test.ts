@@ -64,7 +64,7 @@ describe("Delivery dynamic indexing sitemap", () => {
         const indexXml = await response.text();
         const chunkUrl = indexXml.match(/<loc>([^<]+\.xml\.gz)<\/loc>/u)?.[1];
         expect(response.headers.get("cache-control")).toBe("public, no-cache");
-        expect(chunkUrl).toBe(`https://example.test/sitemaps/${materialized.snapshot.id}/1.xml.gz`);
+        expect(chunkUrl).toBe(`https://example.test/sitemap-common.${materialized.snapshot.id}.1.xml.gz`);
         expect(sourceRequests).toHaveLength(2);
 
         const chunk = await SitemapChunkServer(new Request(chunkUrl!), mounted.delivery);

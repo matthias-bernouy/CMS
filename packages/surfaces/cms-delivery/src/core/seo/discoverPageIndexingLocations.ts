@@ -13,6 +13,8 @@ const DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:
 export type PageIndexingLocation = {
     location: string;
     lastModified?: string;
+    language?: string;
+    alternates?: readonly { language: string; location: string }[];
 };
 
 export { PageIndexingDiscoveryError };

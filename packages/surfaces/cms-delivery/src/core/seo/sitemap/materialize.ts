@@ -15,6 +15,7 @@ import {
     type SitemapSnapshotDescriptor,
 } from "./manifest";
 import { deleteSitemapSnapshot, SitemapChunkWriter } from "./snapshotChunks";
+import { localizedSitemapAlternates, localizedSitemapPages, withSitemapAlternates } from "./localizedPages";
 
 const ENCODER = new TextEncoder();
 
@@ -48,10 +49,12 @@ export async function materializeSitemapSnapshot(
         headers: { accept: "application/json" },
         signal,
     });
-    const pages = await delivery.repository.getPublishedPages();
+    const published = await delivery.repository.getPublishedPages();
+    const pages = localizedSitemapPages(published, settings);
+    const alternates = localizedSitemapAlternates(published, settings);
     const writer = new SitemapChunkWriter(store, baseUrl, signal);
     try {
-        for (const entry of await storedSitemapLocations(delivery, pages)) {
+        for (const entry of await storedSitemapLocations(delivery, pages, alternates)) {
             await writer.append(entry, delivery.cmsPathPrefix);
         }
         for await (const entry of iteratePageIndexingLocations(pages, delivery.sources, (endpointUrn, params) =>
@@ -60,7 +63,7 @@ export async function materializeSitemapSnapshot(
                 forwardLanguage: false,
             }),
         )) {
-            await writer.append(entry, delivery.cmsPathPrefix);
+            await writer.append(withSitemapAlternates(entry, alternates), delivery.cmsPathPrefix);
         }
         const snapshot = await writer.finish();
         return publishSnapshot(store, snapshot);
@@ -73,6 +76,7 @@ export async function materializeSitemapSnapshot(
 export async function storedSitemapLocations(
     delivery: DeliveryCms,
     pages: readonly TPage[],
+    alternates?: ReturnType<typeof localizedSitemapAlternates>,
 ): Promise<PageIndexingLocation[]> {
     const providerPaths = await collectPublicPageProviderPaths(delivery.publicPageProviders, delivery.cmsPathPrefix);
     const blocked = new Set<string>();
@@ -81,11 +85,12 @@ export async function storedSitemapLocations(
         if (page.indexing?.enabled === false || page.indexing?.entity) {
             blocked.add(page.path);
         } else {
-            locations.push({ location: page.path });
+            const entry = { location: page.path };
+            locations.push(alternates ? withSitemapAlternates(entry, alternates) : entry);
         }
     }
     for (const path of providerPaths) {
-        if (!blocked.has(path)) {
+        if (!blocked.has(path) && !(await delivery.repository.getPageRoute?.(path))) {
             locations.push({ location: path });
         }
     }
@@ -118,6 +123,9 @@ function sameSnapshotContent(left: SitemapSnapshotDescriptor, right: SitemapSnap
     return (
         left.publicBaseUrl === right.publicBaseUrl &&
         left.chunks.length === right.chunks.length &&
-        left.chunks.every((chunk, index) => chunk.hash === right.chunks[index]?.hash)
+        left.chunks.every(
+            (chunk, index) =>
+                chunk.hash === right.chunks[index]?.hash && chunk.language === right.chunks[index]?.language,
+        )
     );
 }

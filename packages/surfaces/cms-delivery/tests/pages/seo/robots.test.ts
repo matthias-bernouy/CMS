@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { ContentReader } from "@bernouy/cms-content";
 import { InMemorySourceRepository, type SourceEndpoint } from "@bernouy/cms-sources";
 import DeliveryCms from "cms-delivery/DeliveryCms";
-import { CaptureRunner } from "../gateway/support/CaptureRunner";
+import { CaptureRunner } from "../../gateway/support/CaptureRunner";
 
 describe("Delivery robots", () => {
     test("allows rendering assets, public files, variants, and only declared public Source images", async () => {

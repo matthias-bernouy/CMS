@@ -1,11 +1,15 @@
 import type { CmsFilesBlobStore } from "@bernouy/cms-files";
+import { PUBLIC_SITEMAP_CHUNKS_ROUTE } from "@bernouy/cms-content/page-path";
 
 export const SITEMAP_MANIFEST_KEY = "manifest.json";
-export const SITEMAP_CHUNKS_ROUTE = "/sitemaps";
+export const SITEMAP_CHUNKS_ROUTE = PUBLIC_SITEMAP_CHUNKS_ROUTE;
+export const SITEMAP_ROOT_CHUNK_ROUTE = "/sitemap.xml.gz";
 export const SITEMAP_RETAINED_SNAPSHOTS = 5;
 
 export type SitemapChunkDescriptor = {
     index: number;
+    /** Undefined identifies a snapshot written before language grouping. */
+    language?: string | null;
     urlCount: number;
     compressedBytes: number;
     hash: string;
@@ -27,8 +31,30 @@ export function sitemapChunkKey(snapshotId: string, index: number): string {
     return `${snapshotId}-${String(index).padStart(5, "0")}.xml.gz`;
 }
 
-export function sitemapChunkPath(snapshotId: string, index: number): string {
-    return `${SITEMAP_CHUNKS_ROUTE}/${encodeURIComponent(snapshotId)}/${index}.xml.gz`;
+export function sitemapChunkPath(snapshotId: string, index: number, language?: string | null): string {
+    if (language === undefined) {
+        return `/sitemap-${encodeURIComponent(snapshotId)}-${index}.xml.gz`;
+    }
+    if (language === null) {
+        return `/sitemap-common.${encodeURIComponent(snapshotId)}.${index}.xml.gz`;
+    }
+    if (!/^[A-Za-z0-9-]+$/u.test(language)) {
+        throw new TypeError("sitemap language is invalid");
+    }
+    return `/sitemap-lang-${language}.${encodeURIComponent(snapshotId)}.${index}.xml.gz`;
+}
+
+export function matchRootSitemapChunkPath(
+    path: string,
+): { snapshotId: string; index: number; language?: string | null } | null {
+    const grouped = /^\/sitemap-(?:lang-([A-Za-z0-9-]+)|common)\.([a-zA-Z0-9_-]{1,100})\.([1-9]\d*)\.xml\.gz$/u.exec(
+        path,
+    );
+    if (grouped) {
+        return { snapshotId: grouped[2]!, index: Number(grouped[3]), language: grouped[1] ?? null };
+    }
+    const legacy = /^\/sitemap-([a-zA-Z0-9_-]{1,100})-([1-9]\d*)\.xml\.gz$/u.exec(path);
+    return legacy ? { snapshotId: legacy[1]!, index: Number(legacy[2]) } : null;
 }
 
 export async function readSitemapManifest(store: CmsFilesBlobStore): Promise<SitemapManifest | null> {
@@ -77,6 +103,9 @@ function isChunk(value: unknown, expectedIndex: number): value is SitemapChunkDe
     return (
         isRecord(value) &&
         value.index === expectedIndex &&
+        (value.language === undefined ||
+            value.language === null ||
+            (typeof value.language === "string" && /^[A-Za-z0-9-]+$/u.test(value.language))) &&
         Number.isSafeInteger(value.urlCount) &&
         (value.urlCount as number) >= 0 &&
         (value.urlCount as number) <= 50_000 &&

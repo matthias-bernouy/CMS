@@ -3,7 +3,7 @@ import { parseHTML } from "linkedom";
 import type { PublicPageProvider } from "@bernouy/cms-delivery";
 import RobotsServer from "cms-delivery/endpoints/robots.txt.server";
 import SitemapServer from "cms-delivery/endpoints/sitemap.xml.server";
-import { mountPublicPages, publicPage } from "./publicPage.fixture";
+import { mountPublicPages, publicPage } from "../publicPage.fixture";
 
 describe("Delivery public page provider sitemap", () => {
     test("uses the configured site host consistently across every SEO URL", async () => {

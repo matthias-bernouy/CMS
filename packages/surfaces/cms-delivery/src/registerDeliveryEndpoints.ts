@@ -46,7 +46,11 @@ import {
 } from "cms-delivery/core/analytics/privacyAnalyticsEndpoints";
 import { getDeliveryIntegrationThemeContributions } from "cms-delivery/core/assets/resolveAssets";
 import { FAVICON_ROUTE } from "cms-delivery/core/assets/defaultFavicon";
-import { SITEMAP_CHUNKS_ROUTE } from "cms-delivery/core/seo/sitemap/manifest";
+import {
+    matchRootSitemapChunkPath,
+    SITEMAP_CHUNKS_ROUTE,
+    SITEMAP_ROOT_CHUNK_ROUTE,
+} from "cms-delivery/core/seo/sitemap/manifest";
 
 /**
  * Wire every Delivery endpoint onto `delivery.runner`. Called from the
@@ -105,6 +109,7 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
 
     runner.addEndpoint("GET", "/robots.txt", (req) => RobotsServer(req, delivery));
     runner.addEndpoint("GET", "/sitemap.xml", (req) => SitemapServer(req, delivery));
+    runner.addEndpoint("GET", SITEMAP_ROOT_CHUNK_ROUTE, (req) => SitemapChunkServer(req, delivery));
     runner.group(SITEMAP_CHUNKS_ROUTE, (sitemapRunner) => {
         sitemapRunner.setDefaultEndpoint("GET", (req) => SitemapChunkServer(req, delivery));
     });
@@ -159,8 +164,21 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
         });
     }
 
-    runner.setDefaultEndpoint("GET", (req) => recordPageView(req, delivery));
-    runner.setDefaultEndpoint("HEAD", async (req) => withoutBody(await handlePageRequest(req, delivery)));
+    runner.setDefaultEndpoint("GET", (req) =>
+        isRootSitemapChunkRequest(req, delivery) ? SitemapChunkServer(req, delivery) : recordPageView(req, delivery),
+    );
+    runner.setDefaultEndpoint("HEAD", async (req) =>
+        withoutBody(
+            await (isRootSitemapChunkRequest(req, delivery)
+                ? SitemapChunkServer(req, delivery)
+                : handlePageRequest(req, delivery)),
+        ),
+    );
+}
+
+function isRootSitemapChunkRequest(request: Request, delivery: DeliveryCms): boolean {
+    const pathname = new URL(request.url).pathname.slice(delivery.basePath.length);
+    return !!matchRootSitemapChunkPath(pathname);
 }
 
 function withoutBody(response: Response): Response {
