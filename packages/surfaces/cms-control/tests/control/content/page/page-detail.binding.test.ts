@@ -29,9 +29,8 @@ describe("admin page detail", () => {
         );
         const settingsForm = document.querySelector('#page-settings-form[cms-source^="/api/page/configDetail"]');
         expect(settingsForm?.getAttribute("cms-source-method")).toBe("PUT");
-        expect(settingsForm?.getAttribute("cms-source-success-redirect")).toBe(
-            "/admin/pages/detail?id={{ result.body.id }}",
-        );
+        expect(settingsForm?.hasAttribute("cms-source-success-redirect")).toBe(false);
+        expect(document.querySelector('[cms-reload-on="page:paths-saved"]')).toBeNull();
         expect(document.querySelector('p9r-button[form="page-settings-form"]')?.textContent).toContain("Save settings");
         expect(document.querySelector('p9r-action-menu-item[data-action="view-public"]')?.getAttribute("href")).toBe(
             "https://site.test/pricing",
@@ -40,7 +39,7 @@ describe("admin page detail", () => {
             "View public page",
         );
         expect(
-            document.querySelector('p9r-action-menu[label="More actions"] [data-action="delete"]')?.textContent,
+            document.querySelector('p9r-action-menu-item[data-modal-target="delete-page-modal"]')?.textContent,
         ).toContain("Delete page");
         expect(document.querySelector('p9r-input[name="title"]')?.getAttribute("value")).toBe("Pricing");
         expect(document.querySelector('p9r-input[name="title"]')?.getAttribute("maxlength")).toBe("70");
@@ -54,11 +53,13 @@ describe("admin page detail", () => {
                 .querySelector('cms-detail-section[heading="Page configuration"] p9r-input[name="path"]')
                 ?.getAttribute("form"),
         ).toBe("page-settings-form");
-        expect(document.querySelector('p9r-input[name="path"]')?.hasAttribute("hint")).toBe(true);
-        expect(document.querySelector('p9r-input[name="path"]')?.hasAttribute("help")).toBe(true);
-        expect(document.querySelector('cms-page-form-controller[mode="edit"]')?.getAttribute("current-path")).toBe(
-            "/pricing",
-        );
+        expect(document.querySelector('p9r-input[name="path"]')?.hasAttribute("readonly")).toBe(true);
+        expect(document.querySelector('p9r-input[name="path"]')?.getAttribute("label")).toContain("read-only");
+        expect(
+            document.querySelector('p9r-action-menu-item[data-modal-target="manage-page-languages-modal"]'),
+        ).not.toBeNull();
+        expect(document.querySelector('p9r-action-menu-item[data-modal-target="manage-page-seo-modal"]')).toBeNull();
+        expect(document.querySelector('cms-page-languages[page-id="page-1"]')).not.toBeNull();
         expect(document.querySelector('p9r-select[name="published"]')?.getAttribute("form")).toBe("page-settings-form");
         expect(document.querySelector('p9r-token-input[name="tags"]')?.getAttribute("value")).toBe("pricing,landing");
         expect(document.querySelector('p9r-token-input[name="tags"]')?.getAttribute("resource")).toBe("pages");
@@ -95,9 +96,7 @@ describe("admin page detail", () => {
         expect(
             (document.querySelector("[data-indexing-variables]") as HTMLElement & { value: string }).value,
         ).toContain("${site.name}");
-        expect(document.querySelector('cms-confirm-form[method="DELETE"]')?.getAttribute("target")).toBe(
-            "/api/page?id=page-1",
-        );
+        expect(document.querySelector('cms-page-delete[page-id="page-1"]')).not.toBeNull();
     });
 
     test("does not submit an ambiguous binding until the user selects it", async () => {
@@ -248,6 +247,25 @@ function mockPageDetailFetch(
                 { value: "pricing", count: 1 },
                 { value: "landing", count: 1 },
             ]);
+        }
+        if (url.includes("/api/page/paths")) {
+            return Response.json({
+                id: "page-1",
+                paths: { en: "/pricing" },
+                languages: [{ code: "en", active: true, default: true, publicPath: "/pricing" }],
+            });
+        }
+        if (url.includes("/api/page/seo")) {
+            return Response.json({
+                id: "page-1",
+                defaultLanguage: "en",
+                defaults: { title: options.title ?? "Pricing", description: options.description ?? "Pricing page" },
+                languages: [],
+                translations: {},
+            });
+        }
+        if (url.includes("/api/page/list")) {
+            return Response.json([]);
         }
         return Response.json({
             id: "page-1",

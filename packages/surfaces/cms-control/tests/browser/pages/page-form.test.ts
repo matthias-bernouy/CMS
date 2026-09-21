@@ -3,8 +3,8 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
 
-const bundlePath = resolve(import.meta.dir, "../../src/static/assets/control-components.js");
-const pagesPath = resolve(import.meta.dir, "../../src/static/admin/_content/pages.html");
+const bundlePath = resolve(import.meta.dir, "../../../src/static/assets/control-components.js");
+const pagesPath = resolve(import.meta.dir, "../../../src/static/admin/_content/pages.html");
 const waitOptions = { timeout: 5_000 };
 
 async function waitFor(condition: () => boolean): Promise<void> {
@@ -34,8 +34,7 @@ test("page forms derive, validate, and check paths in a real browser", async () 
             } else if (url.pathname === "/api/page/exists") {
                 availabilityRequests.push(url);
                 const path = url.searchParams.get("path");
-                const currentPath = url.searchParams.get("current-path");
-                await route.fulfill({ json: { exists: path === "/taken" && currentPath !== path } });
+                await route.fulfill({ json: { exists: path === "/taken" } });
             } else if (url.pathname === "/api/page/links") {
                 pageLinksRequests += 1;
                 await route.fulfill({ json: pageLinks });
@@ -62,8 +61,8 @@ test("page forms derive, validate, and check paths in a real browser", async () 
 
         expect(await titleControl.getAttribute("maxlength")).toBe("70");
         expect(await titleControl.getAttribute("required")).not.toBeNull();
-        expect(await pathControl.getAttribute("hint")).toContain("single slashes");
-        expect(await pathControl.getAttribute("help")).toContain("public URL");
+        expect(await pathControl.getAttribute("hint")).toContain("without a language prefix");
+        expect(await pathControl.getAttribute("help")).toContain("single slashes");
 
         const copyToggle = form.locator("[data-page-copy-toggle]");
         const copyField = form.locator("[data-page-copy-field]");
@@ -176,52 +175,6 @@ test("page forms derive, validate, and check paths in a real browser", async () 
             waitOptions,
         );
 
-        await page.locator("body").evaluate((body) => {
-            body.insertAdjacentHTML(
-                "beforeend",
-                `<form id="edit-page-form"><p9r-input name="title" value="Existing title"></p9r-input></form>
-                 <p9r-input form="edit-page-form" name="path" value="/existing"></p9r-input>
-                 <cms-page-form-controller form="edit-page-form" mode="edit" current-path="/existing" availability-url="/api/page/exists" hidden></cms-page-form-controller>`,
-            );
-        });
-        const editTitleControl = page.locator('#edit-page-form p9r-input[name="title"]');
-        const editPathControl = page.locator('p9r-input[form="edit-page-form"][name="path"]');
-        expect(
-            await editPathControl.evaluate(
-                (control: HTMLElement & { form: HTMLFormElement | null }) => control.form?.id,
-            ),
-        ).toBe("edit-page-form");
-        await editTitleControl.evaluate((control: HTMLElement & { value: string }) => {
-            control.value = "Changed title";
-            control.dispatchEvent(new Event("input", { bubbles: true }));
-        });
-        expect(await editPathControl.evaluate((control: HTMLElement & { value: string }) => control.value)).toBe(
-            "/existing",
-        );
-        await editPathControl.evaluate((control: HTMLElement & { value: string }) => {
-            control.value = "/bad path";
-            control.dispatchEvent(new Event("input", { bubbles: true }));
-        });
-        expect(await editPathControl.getAttribute("error")).toContain("Use only letters, numbers, hyphens");
-        await editPathControl.evaluate((control: HTMLElement & { value: string }) => {
-            control.value = "/existing";
-            control.dispatchEvent(new Event("input", { bubbles: true }));
-            control.dispatchEvent(new Event("change", { bubbles: true }));
-        });
-        await waitFor(() =>
-            availabilityRequests.some(
-                (url) =>
-                    url.searchParams.get("path") === "/existing" &&
-                    url.searchParams.get("current-path") === "/existing",
-            ),
-        );
-        expect(
-            availabilityRequests.some(
-                (url) =>
-                    url.searchParams.get("path") === "/existing" &&
-                    url.searchParams.get("current-path") === "/existing",
-            ),
-        ).toBe(true);
         expect(pageErrors).toEqual([]);
     } finally {
         await browser.close();

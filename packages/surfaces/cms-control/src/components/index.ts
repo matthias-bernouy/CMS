@@ -53,6 +53,9 @@ import {
 } from "@bernouy/components";
 import { PageFormController } from "./admin/Common/PageSettings/PageFormController";
 import { PageCopySource } from "./admin/Common/PageSettings/PageCopySource";
+import { PageLanguages } from "./admin/Common/PageSettings/languages/manage/PageLanguages";
+import { PageDelete } from "./admin/Common/PageSettings/languages/PageDelete";
+import { PageDetailSync } from "./admin/Common/PageSettings/languages/PageDetailSync";
 import { dashboardDisplayFilters } from "./admin/Resources/Dashboards/widgets/w-detail/binding/filters";
 
 function define(tag: string, constructor: CustomElementConstructor) {
@@ -63,6 +66,9 @@ function define(tag: string, constructor: CustomElementConstructor) {
 
 define("cms-page-form-controller", PageFormController);
 define("cms-page-copy-source", PageCopySource);
+define("cms-page-languages", PageLanguages);
+define("cms-page-delete", PageDelete);
+define("cms-page-detail-sync", PageDetailSync);
 setBindingFilters({
     ...dashboardDisplayFilters,
     json: (value) => (value === undefined ? undefined : JSON.stringify(value)),

@@ -1,0 +1,14 @@
+cms-page-delete {
+    display: block;
+    color: var(--text-main, #1e293b);
+    font-family: inherit;
+}
+
+.page-delete-form {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.page-path-error {
+    color: var(--danger-base, #b42318);
+}

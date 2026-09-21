@@ -1,4 +1,4 @@
-import { derivePagePath, isValidPathFormat } from "@bernouy/cms-content/page-path";
+import { derivePagePath, isReservedPublicPagePath, isValidPathFormat } from "@bernouy/cms-content/page-path";
 import type {
     CMS_SOURCE_FAILED_EVENT as CmsSourceFailedEvent,
     CMS_SOURCE_SUCCESS_EVENT as CmsSourceSuccessEvent,
@@ -9,11 +9,12 @@ import { PagePathAvailability } from "./pagePathAvailability";
 
 const PATH_FORMAT_ERROR = 'Start with "/". Use only letters, numbers, hyphens and single slashes.';
 const PATH_TAKEN_ERROR = "A page already uses this path.";
+const PATH_RESERVED_ERROR = "This URL is reserved by the CMS.";
 const SOURCE_FAILED_EVENT: typeof CmsSourceFailedEvent = "cms-source:failed";
 const SOURCE_SUCCESS_EVENT: typeof CmsSourceSuccessEvent = "cms-source:success";
 
 export class PageFormController extends HTMLElement {
-    static readonly observedAttributes = ["form", "mode", "availability-url", "current-path"];
+    static readonly observedAttributes = ["form", "availability-url"];
 
     private form: HTMLFormElement | null = null;
     private titleControl: PageInputControl | null = null;
@@ -48,11 +49,10 @@ export class PageFormController extends HTMLElement {
         this.form = form;
         this.titleControl = title;
         this.path = path;
-        this.pathEditedByUser = this.getAttribute("mode") !== "create" || path.value !== "";
+        this.pathEditedByUser = path.value !== "";
         this.availability = new PagePathAvailability(
             this.ownerDocument,
             () => this.getAttribute("availability-url")?.trim() ?? "",
-            () => this.getAttribute("current-path")?.trim() ?? "",
         );
         title.addEventListener("input", this.onTitleInput);
         path.addEventListener("input", this.onPathInput);
@@ -96,7 +96,7 @@ export class PageFormController extends HTMLElement {
     };
 
     private readonly onPathChange = (): void => {
-        if (this.path && isValidPathFormat(this.path.value)) {
+        if (this.path && isValidPathFormat(this.path.value) && !isReservedPublicPagePath(this.path.value)) {
             void this.checkAvailability();
         }
     };
@@ -122,7 +122,7 @@ export class PageFormController extends HTMLElement {
         queueMicrotask(() => {
             this.titleControl?.setCustomValidity("");
             this.setPathError("", null);
-            this.pathEditedByUser = this.getAttribute("mode") !== "create";
+            this.pathEditedByUser = false;
         });
     };
 
@@ -135,6 +135,10 @@ export class PageFormController extends HTMLElement {
         }
         if (!isValidPathFormat(value)) {
             this.setPathError(PATH_FORMAT_ERROR, "format");
+            return false;
+        }
+        if (isReservedPublicPagePath(value)) {
+            this.setPathError(PATH_RESERVED_ERROR, "format");
             return false;
         }
         this.setPathError("", null);
@@ -151,7 +155,7 @@ export class PageFormController extends HTMLElement {
             this.availabilityTimer = null;
         }
         const candidate = this.path?.value ?? "";
-        if (!candidate || !isValidPathFormat(candidate) || !this.availability) {
+        if (!candidate || !isValidPathFormat(candidate) || isReservedPublicPagePath(candidate) || !this.availability) {
             return;
         }
         const result = await this.availability.check(candidate);

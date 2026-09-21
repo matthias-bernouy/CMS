@@ -3308,7 +3308,7 @@
 }
 `;
 
-  class Sr extends d {
+  class Tr extends d {
     _toggles;
     _titleToggle;
     static get observedAttributes() {
@@ -3368,7 +3368,7 @@
         this.removeAttribute("disabled");
     }
   }
-  var Tr = `<div class="alert" part="alert" role="alert">
+  var Sr = `<div class="alert" part="alert" role="alert">
     <span class="icon" part="icon" aria-hidden="true">
         <slot name="icon"></slot>
     </span>
@@ -3540,7 +3540,7 @@
       return ["dismissible"];
     }
     constructor() {
-      super({ css: ep, template: Tr });
+      super({ css: ep, template: Sr });
       this._close = this.shadowRoot?.querySelector(".close") ?? null, this._message = this.shadowRoot?.querySelector(".message") ?? null, this._messageSlot = this.shadowRoot?.querySelector(".message slot") ?? null;
     }
     connectedCallback() {
@@ -4694,7 +4694,7 @@ dialog[open]::backdrop { opacity: 1; }
   width: 1.2rem;
 }
 `;
-  var So = `:host([color="primary"]) {
+  var To = `:host([color="primary"]) {
   --_accent-base: var(--primary-base);
   --_accent-muted: var(--primary-muted);
   --_accent-contrast: var(--primary-foreground, var(--primary-contrasted));
@@ -4805,14 +4805,14 @@ dialog[open]::backdrop { opacity: 1; }
 
 :host([variant="link"]) .button:active { transform: none; }
 `;
-  var Tp = Co + So;
+  var Sp = Co + To;
 
-  class To extends d {
+  class So extends d {
     static formAssociated = true;
     _internals;
     _btn;
     constructor() {
-      super({ css: Tp, template: Mo });
+      super({ css: Sp, template: Mo });
       this._internals = this.attachInternals(), this._btn = this.shadowRoot?.querySelector("button") ?? null;
     }
     static get observedAttributes() {
@@ -6050,7 +6050,10 @@ input:disabled {
         <slot class="help-slot" name="help"></slot>
         <span class="help-text"></span>
     </div>
-    <input id="input" class="input" part="input" type="text" />
+    <div class="input-shell" part="input-shell">
+        <span id="prefix" class="prefix" part="prefix" hidden></span>
+        <input id="input" class="input" part="input" type="text" />
+    </div>
     <div class="meta" part="meta" hidden>
         <span class="feedback" part="feedback">
             <small id="hint" class="hint" part="hint"></small>
@@ -6127,6 +6130,41 @@ input:disabled {
     background: var(--bg-surface, #fff);
     outline: none;
     box-sizing: border-box;
+}
+
+.prefix[hidden] {
+    display: none;
+}
+
+:host([prefix]:not([prefix=""])) .input-shell {
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+}
+
+:host([prefix]:not([prefix=""])) .prefix {
+    display: flex;
+    align-items: center;
+    flex: none;
+    padding: 0 10px;
+    border-right: 1px solid var(--border-default, #e2e8f0);
+    background: var(--bg-base, #f1f5f9);
+    color: var(--text-muted, #64748b);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+:host([prefix]:not([prefix=""])) .input {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
 }
 
 .input::placeholder {
@@ -6240,7 +6278,7 @@ input:disabled {
     display: none;
 }
 `;
-  var $t = `.input:hover:not(:disabled) {
+  var $t = `.input:hover:not(:disabled, :read-only) {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -6261,6 +6299,39 @@ input:disabled {
     background: var(--bg-base, #f1f5f9);
     color: var(--text-muted, #94a3b8);
     cursor: not-allowed;
+}
+
+:host([prefix]:not([prefix=""])) .input-shell:hover:has(.input:not(:disabled, :read-only)) {
+    border-color: var(--text-muted, #94a3b8);
+}
+
+:host([prefix]:not([prefix=""])) .input-shell:focus-within {
+    border-color: var(--primary-base, #4361ee);
+    box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15));
+}
+
+:host([prefix]:not([prefix=""])) .input-shell:has(.input[aria-invalid="true"]) {
+    border-color: var(--danger-base, #ef4444);
+}
+
+:host([prefix]:not([prefix=""])) .input-shell:has(.input[aria-invalid="true"]):focus-within {
+    box-shadow: 0 0 0 3px rgb(239 68 68 / 0.15);
+}
+
+:host([prefix]:not([prefix=""])) .input-shell:has(.input:disabled),
+:host([prefix]:not([prefix=""])) .input-shell:has(.input:read-only) {
+    background: var(--bg-base, #f1f5f9);
+}
+
+:host([prefix]:not([prefix=""])) .input:focus-visible {
+    box-shadow: none;
+}
+
+:host([readonly]) .input {
+    background: var(--bg-base, #f1f5f9);
+    border-color: var(--border-subtle, #cbd5e1);
+    color: var(--text-muted, #64748b);
+    cursor: default;
 }
 
 .hint[data-level="error"] {
@@ -6390,12 +6461,12 @@ input:disabled {
       e.style.left = `${a}px`, e.style.top = `${s}px`;
     }
   }
-  function cn(t, e, i, r) {
+  function cn(t, e, i, r, o) {
     if (!t)
       return;
-    let o = [e, i, r].filter((n) => !!n && !n.hidden && !!n.textContent).map((n) => n.id).filter(Boolean).join(" ");
-    if (o)
-      t.setAttribute("aria-describedby", o);
+    let n = [e, i, r, o].filter((a) => !!a && !a.hidden && !!a.textContent).map((a) => a.id).filter(Boolean).join(" ");
+    if (n)
+      t.setAttribute("aria-describedby", n);
     else
       t.removeAttribute("aria-describedby");
   }
@@ -6423,7 +6494,7 @@ input:disabled {
       return false;
     return ["text", "search", "url", "tel", "email", "password", "number"].includes(e.type);
   }
-  var hn = ["value", "label", "aria-label", "placeholder", "type", "inputmode", "enterkeyhint", "autocomplete", "autocapitalize", "spellcheck", "min", "max", "step", "minlength", "maxlength", "pattern", "readonly", "hint", "hint-level", "help", "error", "max-count", "invalid", "disabled", "required"];
+  var hn = ["value", "label", "aria-label", "placeholder", "prefix", "type", "inputmode", "enterkeyhint", "autocomplete", "autocapitalize", "spellcheck", "min", "max", "step", "minlength", "maxlength", "pattern", "readonly", "hint", "hint-level", "help", "error", "max-count", "invalid", "disabled", "required"];
   var Qp = (t, e) => {
     if (!e)
       return;
@@ -6442,6 +6513,12 @@ input:disabled {
   var Gp = (t, e) => {
     if (!e)
       return;
+    let i = t.getAttribute("prefix") ?? "";
+    e.textContent = i, e.hidden = i === "";
+  };
+  var Jp = (t, e) => {
+    if (!e)
+      return;
     for (let i of ["aria-label", "autocomplete", "autocapitalize", "enterkeyhint", "spellcheck", "minlength", "maxlength", "pattern"]) {
       let r = t.getAttribute(i);
       if (r === null)
@@ -6451,10 +6528,10 @@ input:disabled {
     }
     e.readOnly = t.hasAttribute("readonly");
   };
-  var Jp = (t, e) => {
+  var tu = (t, e) => {
     e?.setAttribute("type", t.getAttribute("type") ?? "text");
   };
-  var tu = (t, e) => {
+  var eu = (t, e) => {
     if (!e)
       return;
     let i = t.getAttribute("inputmode");
@@ -6463,7 +6540,7 @@ input:disabled {
     else
       e.setAttribute("inputmode", i);
   };
-  var eu = (t, e) => {
+  var iu = (t, e) => {
     if (!e)
       return;
     for (let i of ["min", "max", "step"]) {
@@ -6474,7 +6551,7 @@ input:disabled {
         e.setAttribute(i, r);
     }
   };
-  var iu = (t, e) => {
+  var ru = (t, e) => {
     if (!e)
       return;
     if (e.disabled = t.hasAttribute("disabled"), e.required = t.hasAttribute("required"), e.required)
@@ -6482,15 +6559,15 @@ input:disabled {
     else
       e.removeAttribute("aria-required");
   };
-  var ru = (t, e, i) => {
+  var ou = (t, e, i) => {
     if (!e || !i)
       return;
     let r = ze(t);
     if (e.hidden = r === null, r !== null)
       i.textContent = String(r);
   };
-  var dt = (t, e, i, r, o) => {
-    Qp(t, i), Yp(t, e), Gp(t, e), Jp(t, e), tu(t, e), eu(t, e), iu(t, e), ru(t, r, o);
+  var dt = (t, e, i, r, o, n) => {
+    Qp(t, i), Yp(t, e), Gp(t, n), Jp(t, e), tu(t, e), eu(t, e), iu(t, e), ru(t, e), ou(t, r, o);
   };
 
   class ct {
@@ -6513,32 +6590,32 @@ input:disabled {
       this.showNativeMessage = false, this.sync();
     }
     sync() {
-      let { input: t, hint: e, error: i, meta: r, counter: o } = this.elements;
+      let { input: t, hint: e, error: i, meta: r, counter: o, prefix: n } = this.elements;
       if (!t || !e || !i)
         return;
-      let n = this.customMessage, a = bn(t);
-      if (n)
-        this.internals.setValidity({ customError: true }, n, t);
+      let a = this.customMessage, s = bn(t);
+      if (a)
+        this.internals.setValidity({ customError: true }, a, t);
       else if (!t.validity.valid)
-        this.internals.setValidity(t.validity, a, t);
+        this.internals.setValidity(t.validity, s, t);
       else
         this.internals.setValidity({}), this.showNativeMessage = false;
-      let s = n || (this.showNativeMessage && !t.validity.valid ? a : "");
-      i.textContent = s, i.hidden = s === "";
-      let l = this.host.getAttribute("hint") ?? "";
-      if (e.textContent = l, e.dataset.level = this.host.getAttribute("hint-level") ?? "info", e.hidden = s !== "" || l === "", s !== "" || this.host.hasAttribute("invalid"))
+      let l = a || (this.showNativeMessage && !t.validity.valid ? s : "");
+      i.textContent = l, i.hidden = l === "";
+      let c = this.host.getAttribute("hint") ?? "";
+      if (e.textContent = c, e.dataset.level = this.host.getAttribute("hint-level") ?? "info", e.hidden = l !== "" || c === "", l !== "" || this.host.hasAttribute("invalid"))
         t.setAttribute("aria-invalid", "true");
       else
         t.removeAttribute("aria-invalid");
-      if (s)
+      if (l)
         t.setAttribute("aria-errormessage", i.id);
       else
         t.removeAttribute("aria-errormessage");
-      dn(e, i, o, r), cn(t, e, i, o);
+      dn(e, i, o, r), cn(t, n, e, i, o);
     }
     get validity() {
-      let t = this.elements.input?.validity ?? ou();
-      return this.customMessage ? nu(t) : t;
+      let t = this.elements.input?.validity ?? nu();
+      return this.customMessage ? au(t) : t;
     }
     get validationMessage() {
       if (this.customMessage)
@@ -6554,10 +6631,10 @@ input:disabled {
         this.showNativeMessage = true, this.sync();
     };
   }
-  function ou() {
+  function nu() {
     return { badInput: false, customError: false, patternMismatch: false, rangeOverflow: false, rangeUnderflow: false, stepMismatch: false, tooLong: false, tooShort: false, typeMismatch: false, valid: true, valueMissing: false };
   }
-  function nu(t) {
+  function au(t) {
     return { badInput: t.badInput, customError: true, patternMismatch: t.patternMismatch, rangeOverflow: t.rangeOverflow, rangeUnderflow: t.rangeUnderflow, stepMismatch: t.stepMismatch, tooLong: t.tooLong, tooShort: t.tooShort, typeMismatch: t.typeMismatch, valid: false, valueMissing: t.valueMissing };
   }
   function bn(t) {
@@ -6589,7 +6666,7 @@ input:disabled {
       return "Enter a valid value.";
     return "Enter a valid value.";
   }
-  var au = Rt + Dt + $t + jt;
+  var su = Rt + Dt + $t + jt;
 
   class mn extends lt {
     static observedAttributes = hn;
@@ -6598,15 +6675,16 @@ input:disabled {
     counter;
     count;
     max;
+    prefixElement;
     helpController;
     validityController;
     constructor() {
-      super({ css: au, template: Ot });
+      super({ css: su, template: Ot });
       let t = this.shadowRoot;
-      this.input = t.querySelector(".input"), this.label = t.querySelector(".label"), this.counter = t.querySelector(".counter"), this.count = t.querySelector(".count"), this.max = t.querySelector(".max"), this.helpController = new Ie(this, { row: t.querySelector(".label-row"), button: t.querySelector(".help-button"), popover: t.querySelector(".help-popover"), slot: t.querySelector(".help-slot"), text: t.querySelector(".help-text") }), this.validityController = new ct(this, this._internals, { input: this.input, hint: t.querySelector(".hint"), error: t.querySelector(".error"), meta: t.querySelector(".meta"), counter: this.counter });
+      this.input = t.querySelector(".input"), this.label = t.querySelector(".label"), this.counter = t.querySelector(".counter"), this.count = t.querySelector(".count"), this.max = t.querySelector(".max"), this.prefixElement = t.querySelector(".prefix"), this.helpController = new Ie(this, { row: t.querySelector(".label-row"), button: t.querySelector(".help-button"), popover: t.querySelector(".help-popover"), slot: t.querySelector(".help-slot"), text: t.querySelector(".help-text") }), this.validityController = new ct(this, this._internals, { input: this.input, hint: t.querySelector(".hint"), error: t.querySelector(".error"), meta: t.querySelector(".meta"), counter: this.counter, prefix: this.prefixElement });
     }
     connectedCallback() {
-      ["value", "disabled", "required"].forEach((e) => p(this, e)), this.input?.addEventListener("input", this.onInput), this.input?.addEventListener("change", this.onChange), this.input?.addEventListener("keydown", this.onKeyDown), dt(this, this.input, this.label, this.counter, this.max), this.helpController.connect(), this.validityController.connect();
+      ["value", "disabled", "required"].forEach((e) => p(this, e)), this.input?.addEventListener("input", this.onInput), this.input?.addEventListener("change", this.onChange), this.input?.addEventListener("keydown", this.onKeyDown), dt(this, this.input, this.label, this.counter, this.max, this.prefixElement), this.helpController.connect(), this.validityController.connect();
       let t = this.getAttribute("value");
       if (t !== null)
         this.value = t;
@@ -6626,7 +6704,7 @@ input:disabled {
         this.value = i;
         return;
       }
-      if (dt(this, this.input, this.label, this.counter, this.max), t === "max-count")
+      if (dt(this, this.input, this.label, this.counter, this.max, this.prefixElement), t === "max-count")
         j(this, this.input, this.counter, this.count);
       this.helpController.sync(), this.validityController.sync();
     }
@@ -6843,7 +6921,7 @@ input:disabled {
     .slider::-webkit-slider-thumb { transition: transform 0.1s; }
 }
 `;
-  var pu = gn + vn + xn;
+  var uu = gn + vn + xn;
   var Ln = `<div class="field">
     <label class="label" for="trigger"></label>
     <button id="trigger" class="trigger" type="button"
@@ -7095,13 +7173,13 @@ input:disabled {
       this.activeIndex = t, this.view.setActive(t, this.getOptions());
     }
   }
-  var Sn = (t, e) => {
+  var Tn = (t, e) => {
     t.forEach((i) => {
       let r = i.dataset.value === e;
       i.classList.toggle("selected", r), i.setAttribute("aria-selected", String(r));
     });
   };
-  var Tn = (t, e) => {
+  var Sn = (t, e) => {
     if (!t)
       return;
     let i = e.getAttribute("label") ?? e.getAttribute("name") ?? "";
@@ -7126,7 +7204,7 @@ input:disabled {
   var zn = (t, e, i, r) => {
     if (e)
       e.textContent = r;
-    Sn(t, i);
+    Tn(t, i);
   };
 
   class Ne {
@@ -7183,7 +7261,7 @@ input:disabled {
       this.trigger = t.querySelector(".trigger"), this.display = t.querySelector(".value"), this.list = t.querySelector(".list"), this.panel = t.querySelector(".panel"), this.label = t.querySelector(".label"), this.hint = t.querySelector(".hint");
     }
     syncAttributes(t, e, i, r) {
-      if (Tn(this.label, t), !this.trigger)
+      if (Sn(this.label, t), !this.trigger)
         return;
       this.trigger.disabled = i, In(this.trigger, "aria-label", t.getAttribute("aria-label")), Pn(this.trigger, "aria-required", t.hasAttribute("required")), this.syncValidity(t, e, r);
     }
@@ -7243,7 +7321,7 @@ input:disabled {
     else
       t.removeAttribute(e);
   }
-  var mu = Mn + Cn;
+  var fu = Mn + Cn;
 
   class Bn extends d {
     static formAssociated = true;
@@ -7259,7 +7337,7 @@ input:disabled {
     formDisabled = false;
     showValidationMessage = false;
     constructor() {
-      super({ css: mu, template: Ln });
+      super({ css: fu, template: Ln });
       this.internals = this.attachInternals(), this.view = new Oe(this.shadowRoot, this.internals), this.keyboard = new Ve(this.view, () => this.options, () => this.currentValue, this.select), this.popoverController = new Ne(this.view, this.keyboard);
     }
     connectedCallback() {
@@ -8150,7 +8228,7 @@ p9r-tag:hover {
         bt(t, n);
     }
   };
-  var Cu = ra + oa;
+  var Tu = ra + oa;
 
   class ga extends d {
     static formAssociated = true;
@@ -8171,7 +8249,7 @@ p9r-tag:hover {
     _defaultsCaptured = false;
     _silent = false;
     constructor() {
-      super({ css: Cu, template: ia });
+      super({ css: Tu, template: ia });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       if (this._input = t.querySelector("#main-input"), this._display = t.querySelector("#tags-display"), this._suggestionsEl = t.querySelector("#suggestions"), this._liveRegion = t.querySelector("#live-region"), this._uid = `ts-${Math.random().toString(36).slice(2, 9)}`, this._suggestionsEl)
@@ -8430,13 +8508,13 @@ p9r-tag:hover {
       return;
     e.style.height = "auto", e.style.height = `${e.scrollHeight}px`;
   };
-  var zu = (t, e) => {
+  var Iu = (t, e) => {
     if (!e)
       return;
     let i = t.getAttribute("label") ?? "";
     e.textContent = i, e.hidden = i === "";
   };
-  var Iu = (t, e) => {
+  var Pu = (t, e) => {
     if (!e)
       return;
     let i = t.getAttribute("placeholder");
@@ -8445,7 +8523,7 @@ p9r-tag:hover {
     else
       e.setAttribute("placeholder", i);
   };
-  var Pu = (t, e) => {
+  var Bu = (t, e) => {
     if (!e)
       return;
     for (let i of ["aria-label", "autocomplete", "spellcheck", "minlength"]) {
@@ -8457,14 +8535,14 @@ p9r-tag:hover {
     }
     e.readOnly = t.hasAttribute("readonly");
   };
-  var Bu = (t, e) => {
+  var Fu = (t, e) => {
     if (!e)
       return;
     let i = t.getAttribute("rows");
     if (i)
       e.rows = Number(i) || 3;
   };
-  var Fu = (t, e) => {
+  var qu = (t, e) => {
     if (!e)
       return;
     let i = t.getAttribute("maxlength");
@@ -8473,11 +8551,11 @@ p9r-tag:hover {
     else
       e.setAttribute("maxlength", i);
   };
-  var qu = (t, e) => {
+  var Vu = (t, e) => {
     if (e)
       e.disabled = t.hasAttribute("disabled");
   };
-  var Vu = (t, e) => {
+  var Nu = (t, e) => {
     if (!e)
       return;
     let i = t.hasAttribute("required");
@@ -8524,7 +8602,7 @@ p9r-tag:hover {
       t.removeAttribute("aria-describedby");
   };
   var ii = (t, e, i, r, o, n, a) => {
-    zu(t, i), Iu(t, e), Pu(t, e), Bu(t, e), Fu(t, e), qu(t, e), Vu(t, e), Ye(t, r, n, o), Ge(t, r), Je(t, e), ti(t, n, a, r, o), ei(e, r, n);
+    Iu(t, i), Pu(t, e), Bu(t, e), Fu(t, e), qu(t, e), Vu(t, e), Nu(t, e), Ye(t, r, n, o), Ge(t, r), Je(t, e), ti(t, n, a, r, o), ei(e, r, n);
   };
   var _a = (t, e, i, r, o) => {
     if (!e)
@@ -8553,7 +8631,7 @@ p9r-tag:hover {
       Ye(t, n, s, a), Ge(t, n), Je(t, o);
     return ei(o, n, s), r;
   }
-  var Nu = xa + ya;
+  var Ou = xa + ya;
 
   class Ea extends d {
     static formAssociated = true;
@@ -8570,7 +8648,7 @@ p9r-tag:hover {
     _max;
     _showValidationMessage = false;
     constructor() {
-      super({ css: Nu, template: va });
+      super({ css: Ou, template: va });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       this._textarea = t.querySelector("textarea"), this._label = t.querySelector(".label"), this._hint = t.querySelector(".hint"), this._meta = t.querySelector(".meta"), this._counter = t.querySelector(".counter"), this._count = t.querySelector(".count"), this._max = t.querySelector(".max");
@@ -8821,7 +8899,7 @@ input:hover:not(:disabled) {
     }
     reload() {
       let t = ++this.load;
-      this.options = [], this.onChange(), Du(this.host).then((e) => {
+      this.options = [], this.onChange(), $u(this.host).then((e) => {
         if (t !== this.load || !this.host.isConnected)
           return;
         this.options = e, this.onChange();
@@ -8832,7 +8910,7 @@ input:hover:not(:disabled) {
       return [...t, ...this.options.filter((i) => !e.has(i.value))];
     }
   }
-  async function Du(t) {
+  async function $u(t) {
     let e = t.getAttribute("api");
     if (!e)
       return [];
@@ -8844,12 +8922,12 @@ input:hover:not(:disabled) {
       if (!o.ok)
         return [];
       let n = await o.json();
-      return $u(n);
+      return ju(n);
     } catch {
       return [];
     }
   }
-  function $u(t) {
+  function ju(t) {
     if (!Array.isArray(t))
       return [];
     let e = new Map;
@@ -8868,10 +8946,10 @@ input:hover:not(:disabled) {
   function Ca(t) {
     return t.join(",");
   }
-  function Sa(t, e) {
+  function Ta(t, e) {
     return t.map((i) => e.find((r) => r.value === i) ?? { value: i, label: i, disabled: false });
   }
-  function Ta(t, e, i, r) {
+  function Sa(t, e, i, r) {
     let o = t.filter((a) => !e.includes(a.value)), n = Ft(o, i);
     if (n.length > 0 || !i || !r || e.includes(i))
       return n;
@@ -8923,7 +9001,7 @@ input:hover:not(:disabled) {
         this.labelRow.hidden = o === "" && !r && !t.querySelector('[slot="label-actions"]');
     }
     syncDisplay(t, e, i, r, o) {
-      if (this.tokens?.replaceChildren(...Sa(e, i).map((n) => Ha(n, r))), o?.endsWith("[]")) {
+      if (this.tokens?.replaceChildren(...Ta(e, i).map((n) => Ha(n, r))), o?.endsWith("[]")) {
         let n = new FormData;
         for (let a of e)
           n.append(o, a);
@@ -9068,7 +9146,7 @@ input:hover:not(:disabled) {
         this.hideList();
         return;
       }
-      this.items = Ta(this.options, this.selected, t, this.hasAttribute("creatable"));
+      this.items = Sa(this.options, this.selected, t, this.hasAttribute("creatable"));
       let e = this.hasAttribute("creatable") ? Ro("Type to create", () => this.view.input?.focus()) : Vt();
       this.view.renderList(this.items, this.activeIndex, this.selectItem, e);
     }
@@ -9592,7 +9670,7 @@ input:hover:not(:disabled) {
     }
 }
 `;
-  var Gu = "(max-width: 720px)";
+  var Ju = "(max-width: 720px)";
 
   class Ka extends d {
     _sidebar;
@@ -9615,7 +9693,7 @@ input:hover:not(:disabled) {
     connectedCallback() {
       for (let t of ["collapsed"])
         p(this, t);
-      this._syncAriaState(), this._observeSecondaryNavigation(), this._syncSecondarySidebar(), this._mobileMedia = window.matchMedia(Gu), this._syncMobileNavigation(), this._secondarySlot?.addEventListener("slotchange", this._onSecondarySlotChange), this._primaryMobileToggle?.addEventListener("click", this._onPrimaryMobileToggle), this._secondaryMobileToggle?.addEventListener("click", this._onSecondaryMobileToggle), this._mobileBackdrop?.addEventListener("click", this._onMobileBackdropClick), this._skipLink?.addEventListener("click", this._onSkipLinkClick), this.addEventListener("click", this._onNavigationClick), this.shadowRoot?.addEventListener("keydown", this._onKeyDown), this._mobileMedia.addEventListener("change", this._onMobileMediaChange);
+      this._syncAriaState(), this._observeSecondaryNavigation(), this._syncSecondarySidebar(), this._mobileMedia = window.matchMedia(Ju), this._syncMobileNavigation(), this._secondarySlot?.addEventListener("slotchange", this._onSecondarySlotChange), this._primaryMobileToggle?.addEventListener("click", this._onPrimaryMobileToggle), this._secondaryMobileToggle?.addEventListener("click", this._onSecondaryMobileToggle), this._mobileBackdrop?.addEventListener("click", this._onMobileBackdropClick), this._skipLink?.addEventListener("click", this._onSkipLinkClick), this.addEventListener("click", this._onNavigationClick), this.shadowRoot?.addEventListener("keydown", this._onKeyDown), this._mobileMedia.addEventListener("change", this._onMobileMediaChange);
     }
     disconnectedCallback() {
       this._secondarySlot?.removeEventListener("slotchange", this._onSecondarySlotChange), this._secondaryNavigationObserver?.disconnect(), this._secondaryNavigationObserver = null, this._primaryMobileToggle?.removeEventListener("click", this._onPrimaryMobileToggle), this._secondaryMobileToggle?.removeEventListener("click", this._onSecondaryMobileToggle), this._mobileBackdrop?.removeEventListener("click", this._onMobileBackdropClick), this._skipLink?.removeEventListener("click", this._onSkipLinkClick), this.removeEventListener("click", this._onNavigationClick), this.shadowRoot?.removeEventListener("keydown", this._onKeyDown), this._mobileMedia?.removeEventListener("change", this._onMobileMediaChange), this._mobileMedia = null;
@@ -9666,7 +9744,7 @@ input:hover:not(:disabled) {
     };
     _onNavigationClick = (t) => {
       let e = t.composedPath(), i = this.hasAttribute("mobile-primary-open") || this.hasAttribute("mobile-secondary-open"), r = [this._primaryMobileToggle, this._secondaryMobileToggle, this._mobileBackdrop].some((o) => o !== null && e.includes(o));
-      if (!this._mobileMedia?.matches || !i || r || !this._isNavigationPath(t, e) || !Ju(e))
+      if (!this._mobileMedia?.matches || !i || r || !this._isNavigationPath(t, e) || !th(e))
         return;
       this._closeMobileNavigation(false), this._content?.focus();
     };
@@ -9731,7 +9809,7 @@ input:hover:not(:disabled) {
       this._content?.focus();
     }
   }
-  function Ju(t) {
+  function th(t) {
     return t.some((e) => {
       if (!(e instanceof Element))
         return false;
@@ -10187,7 +10265,7 @@ input:hover:not(:disabled) {
       return this.slot.assignedElements({ flatten: true }).filter((t) => t instanceof HTMLImageElement);
     }
     syncAlbum(t, e) {
-      this.album.hidden = e, this.legendAlbum.hidden = !e, this.legendAlbum.replaceChildren(...e ? t.map(ah) : []);
+      this.album.hidden = e, this.legendAlbum.hidden = !e, this.legendAlbum.replaceChildren(...e ? t.map(sh) : []);
     }
     showActive(t, e, i) {
       let r = t[e];
@@ -10203,7 +10281,7 @@ input:hover:not(:disabled) {
       this.strip.replaceChildren(...i), this.strip.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest", inline: "center" });
     }
   }
-  function ah(t, e) {
+  function sh(t, e) {
     let i = document.createElement("figure");
     i.className = "figure", i.setAttribute("part", "figure");
     let r = document.createElement("button");
@@ -10216,7 +10294,7 @@ input:hover:not(:disabled) {
     let n = document.createElement("figcaption");
     return n.setAttribute("part", "legend"), n.textContent = t.alt, n.hidden = t.alt.trim() === "", r.append(o), i.append(r, n), i;
   }
-  var sh = [Qa, Ya, Ga].join(`
+  var lh = [Qa, Ya, Ga].join(`
 `);
 
   class es extends d {
@@ -10227,7 +10305,7 @@ input:hover:not(:disabled) {
       return ["view-legend"];
     }
     constructor() {
-      super({ css: sh, template: Wa });
+      super({ css: lh, template: Wa });
       this.view = new si(this.shadowRoot);
     }
     connectedCallback() {
@@ -10433,7 +10511,7 @@ input:hover:not(:disabled) {
         this.open = !this.open;
     };
     _onMenuClick = (t) => {
-      let e = t.composedPath().find(ch);
+      let e = t.composedPath().find(ph);
       if (e && !e.hasAttribute("disabled"))
         this.open = false;
     };
@@ -10448,7 +10526,7 @@ input:hover:not(:disabled) {
       this.open = false, this._trigger?.focus();
     };
   }
-  function ch(t) {
+  function ph(t) {
     return t instanceof HTMLElement && t.tagName.toLowerCase() === "p9r-action-menu-item";
   }
   var ns = `<button class="item" type="button" role="menuitem" part="item">
@@ -10926,7 +11004,7 @@ p {
   };
   function fs(t) {
     let e = new URL(window.location.href);
-    return Array.from(t.querySelectorAll("w13c-lateral-menu-item[href]")).filter((i) => i.closest("w13c-lateral-menu") === t && !i.hidden && !i.hasAttribute("disabled")).flatMap((i) => vh(i, e));
+    return Array.from(t.querySelectorAll("w13c-lateral-menu-item[href]")).filter((i) => i.closest("w13c-lateral-menu") === t && !i.hidden && !i.hasAttribute("disabled")).flatMap((i) => xh(i, e));
   }
   function li(t) {
     let e = t.getAttribute("scrollspy-offset") ?? getComputedStyle(t).getPropertyValue("--menu-scrollspy-offset"), i = Number.parseFloat(e || "16");
@@ -10944,7 +11022,7 @@ p {
       return;
     history.replaceState(history.state, "", `${location.pathname}${location.search}${t}`);
   }
-  function vh(t, e) {
+  function xh(t, e) {
     try {
       let i = new URL(t.getAttribute("href"), e), r = gt(i.hash), o = r ? document.getElementById(r) : null, n = i.origin === e.origin && i.pathname === e.pathname && i.search === e.search;
       return o && n ? [{ item: t, target: o, hash: i.hash }] : [];
@@ -10973,7 +11051,7 @@ p {
       this.onScroll = e;
     }
     refresh() {
-      let t = xh(this.host);
+      let t = yh(this.host);
       if (this.root === t)
         return;
       ci(this.root)?.removeEventListener("scroll", this.onScroll), this.root = t, ci(this.root)?.addEventListener("scroll", this.onScroll, { passive: true });
@@ -10992,7 +11070,7 @@ p {
       return (this.root?.getBoundingClientRect().top ?? 0) + t;
     }
   }
-  function xh(t) {
+  function yh(t) {
     for (let e = xs(t);e; e = xs(e))
       if (e instanceof HTMLElement && /(auto|scroll|overlay)/.test(getComputedStyle(e).overflowY))
         return e;
@@ -11009,7 +11087,7 @@ p {
   function ci(t) {
     return t === undefined ? undefined : t ?? window;
   }
-  var yh = "w13c-lateral-menu-scrollspy-change";
+  var _h = "w13c-lateral-menu-scrollspy-change";
 
   class ui {
     host;
@@ -11107,7 +11185,7 @@ p {
         r.toggleAttribute("active", r === t?.item);
       if (this.onSelection(t?.item), !t || !i)
         return;
-      this.activeItem = t.item, this.host.dispatchEvent(new CustomEvent(yh, { bubbles: true, composed: true, detail: t }));
+      this.activeItem = t.item, this.host.dispatchEvent(new CustomEvent(_h, { bubbles: true, composed: true, detail: t }));
     }
   }
   var ys = `<div class="menu-item" part="item">
@@ -11380,7 +11458,7 @@ p {
       return;
     i.preventDefault(), e?.click();
   };
-  var Eh = _s + ws;
+  var Ah = _s + ws;
   var Jt = "w13c-lateral-menu-item-change";
 
   class Es extends d {
@@ -11389,7 +11467,7 @@ p {
     _quickActionsSlot;
     _moreActionsSlot;
     constructor() {
-      super({ css: Eh, template: ys });
+      super({ css: Ah, template: ys });
       this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null, this._quickActionsSlot = this.shadowRoot?.querySelector('slot[name="quick-actions"]') ?? null, this._moreActionsSlot = this.shadowRoot?.querySelector('slot[name="more-actions"]') ?? null;
     }
     static get observedAttributes() {
@@ -11489,7 +11567,7 @@ p {
       return [this._quickActionsSlot, this._moreActionsSlot].filter((t) => t !== null);
     }
   }
-  var Ah = us + hs;
+  var Lh = us + hs;
 
   class As extends d {
     _sidebar;
@@ -11498,7 +11576,7 @@ p {
     _scrollSpyItem;
     _scrollSpy;
     constructor() {
-      super({ css: Ah, template: ps });
+      super({ css: Lh, template: ps });
       this._sidebar = this.shadowRoot?.querySelector(".sidebar") ?? null, this._embeddedToggle = this.shadowRoot?.querySelector(".embedded-toggle") ?? null, this._itemSlot = this.shadowRoot?.querySelector("slot:not([name])") ?? null, this._scrollSpy = new ui(this, this._onScrollSpySelection);
     }
     static get observedAttributes() {
@@ -11744,7 +11822,7 @@ button:focus-visible {
       this.labelElement.textContent = this.label, this.countElement.textContent = this.count, this.countElement.hidden = !this.count, this.button.setAttribute("aria-expanded", String(this.open)), this.content.hidden = !this.open;
     }
   }
-  var Ss = `:host { display: block; min-width: 0; }
+  var Ts = `:host { display: block; min-width: 0; }
 
 a {
     position: relative;
@@ -11791,7 +11869,7 @@ a:focus-visible {
     a { transition: color .15s ease; }
 }
 `;
-  var Ts = `<a part="link">
+  var Ss = `<a part="link">
     <slot></slot>
     <span class="count" part="count" hidden></span>
 </a>
@@ -11805,7 +11883,7 @@ a:focus-visible {
       return ["href", "active", "count", "aria-label"];
     }
     constructor() {
-      super({ css: Ss, template: Ts });
+      super({ css: Ts, template: Ss });
       this.link = this.shadowRoot.querySelector("a"), this.countElement = this.shadowRoot.querySelector(".count");
     }
     connectedCallback() {
@@ -11939,11 +12017,11 @@ nav {
         cancelAnimationFrame(this.revealFrame);
       this.revealFrame = requestAnimationFrame(() => {
         if (this.revealFrame = undefined, this.isConnected)
-          zh(this.navigation, t);
+          Ih(this.navigation, t);
       });
     }
   }
-  function zh(t, e) {
+  function Ih(t, e) {
     if (t.clientWidth >= t.scrollWidth)
       return;
     let i = t.getBoundingClientRect(), r = e.getBoundingClientRect(), o = r.left - i.left + t.scrollLeft, n = r.right - i.left + t.scrollLeft;
@@ -12182,7 +12260,7 @@ nav {
   margin-top: 0.4rem;
 }
 `;
-  var Uh = il + rl;
+  var Xh = il + rl;
   var nl = `<div class="table-container">
   <div class="p9r-table">
     <slot name="header"></slot>
@@ -12417,7 +12495,7 @@ nav {
   background: var(--bg-base, #eee);
 }
 `;
-  var tb = (t) => {
+  var eb = (t) => {
     let e = t.getAttribute("filter-name");
     if (!e)
       return "";
@@ -12432,7 +12510,7 @@ nav {
       return;
     }
     e.removeAttribute("hidden");
-    let o = tb(t);
+    let o = eb(t);
     if (i)
       i.value = o;
     if (o)
@@ -12479,7 +12557,7 @@ nav {
   var xl = (t, e) => {
     e?.setAttribute("hidden", ""), t?.setAttribute("aria-expanded", "false");
   };
-  var eb = ul + hl;
+  var ib = ul + hl;
 
   class yl extends d {
     _sortTrigger;
@@ -12490,7 +12568,7 @@ nav {
       return ["sort", "filter-name"];
     }
     constructor() {
-      super({ css: eb, template: pl });
+      super({ css: ib, template: pl });
       this._sortTrigger = this.shadowRoot?.querySelector("#sort-trigger") ?? null, this._filterBtn = this.shadowRoot?.querySelector("#filter-btn") ?? null, this._filterPopover = this.shadowRoot?.querySelector("#filter-popover") ?? null, this._filterInput = this.shadowRoot?.querySelector("#filter-input") ?? null;
     }
     connectedCallback() {
@@ -12743,9 +12821,9 @@ nav {
       return [];
     return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-TAB-PANEL");
   };
-  var sb = 0;
-  var Sl = () => `tabpanel-${sb++}`;
-  var Tl = (t, e) => {
+  var lb = 0;
+  var Tl = () => `tabpanel-${lb++}`;
+  var Sl = (t, e) => {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { active: e } }));
   };
   var ie = (t, e, i) => {
@@ -12756,7 +12834,7 @@ nav {
     if (!o && r.length > 0)
       o = r[0]?.getAttribute("id") ?? null;
     if (r.forEach((n, a) => {
-      let s = n.getAttribute("id") ?? Sl();
+      let s = n.getAttribute("id") ?? Tl();
       if (!n.id)
         n.id = s;
       let l = n.getAttribute("label") ?? `Tab ${a + 1}`, c = document.createElement("button");
@@ -12780,7 +12858,7 @@ nav {
       let l = s.dataset.target === r;
       s.setAttribute("aria-selected", String(l)), s.setAttribute("tabindex", l ? "0" : "-1");
     }), a && t.getAttribute("active") !== r)
-      t.setAttribute("active", r), Tl(t, r);
+      t.setAttribute("active", r), Sl(t, r);
   };
   var Hl = (t, e, i, r) => {
     let o = r.target.closest(".tab");
@@ -12814,7 +12892,7 @@ nav {
       W(t, e, i, c);
     l.focus();
   };
-  var lb = Ml + Cl;
+  var db = Ml + Cl;
 
   class Il extends d {
     _tablist;
@@ -12823,7 +12901,7 @@ nav {
       return ["active", "expanded"];
     }
     constructor() {
-      super({ css: lb, template: Ll });
+      super({ css: db, template: Ll });
       this._tablist = this.shadowRoot?.querySelector(".tablist") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
     }
     connectedCallback() {
@@ -12998,7 +13076,7 @@ nav {
     --_tag-border: var(--secondary-contrasted, oklch(25% 0.08 265));
 }
 `;
-  var bb = Vl + Nl;
+  var mb = Vl + Nl;
 
   class Ol extends d {
     _removeBtn;
@@ -13006,7 +13084,7 @@ nav {
       return ["removable"];
     }
     constructor() {
-      super({ css: bb, template: ql });
+      super({ css: mb, template: ql });
       this._removeBtn = this.shadowRoot?.querySelector(".remove") ?? null;
     }
     connectedCallback() {
@@ -13173,12 +13251,12 @@ nav {
     to   { opacity: 0; transform: translateX(-20px); }
 }
 `;
-  var vb = Dl + $l;
+  var xb = Dl + $l;
 
   class jl extends d {
     _timer = null;
     constructor() {
-      super({ css: vb, template: Rl });
+      super({ css: xb, template: Rl });
     }
     connectedCallback() {
       this.shadowRoot?.querySelector(".close")?.addEventListener("click", () => this.dismiss());
@@ -13271,15 +13349,15 @@ nav {
     }
   }
   var C = null;
-  function _b() {
+  function wb() {
     if (C && C.isConnected)
       return C;
     if (C = document.querySelector("p9r-toast-stack"), C)
       return C;
     return C = document.createElement("p9r-toast-stack"), document.body.appendChild(C), C;
   }
-  function wb(t, e = {}) {
-    return _b().push(t, e);
+  function kb(t, e = {}) {
+    return wb().push(t, e);
   }
   var Wl = `:host {
   display: inline-block;
@@ -13399,7 +13477,7 @@ nav {
   border-right-color: var(--_bg);
 }
 `;
-  var Lb = Wl + Ql;
+  var Mb = Wl + Ql;
   function Gl(t) {
     let e = new URL(t, window.location.href);
     for (let [i, r] of new URLSearchParams(window.location.search))
@@ -13414,29 +13492,29 @@ nav {
       return null;
     }
   }
-  var Mb = new Intl.NumberFormat("fr-FR");
-  var Cb = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
-  var S = (t) => t.replace(/[&<>"]/g, (e) => e === "&" ? "&amp;" : e === "<" ? "&lt;" : e === ">" ? "&gt;" : "&quot;");
+  var Cb = new Intl.NumberFormat("fr-FR");
+  var Tb = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
+  var T = (t) => t.replace(/[&<>"]/g, (e) => e === "&" ? "&amp;" : e === "<" ? "&lt;" : e === ">" ? "&gt;" : "&quot;");
   var Sb = (t) => t >= 1e6 ? `${(t / 1e6).toFixed(1)}M` : t >= 1000 ? `${(t / 1000).toFixed(1)}k` : String(Math.round(t));
   function xi(t, e) {
     if (e === "ms")
       return `${Math.round(t)} ms`;
     if (e === "pct")
       return `${(t * 100).toFixed(1).replace(".", ",")} %`;
-    return Mb.format(Math.round(t));
+    return Cb.format(Math.round(t));
   }
   var Jl = (t) => {
     let e = new Date(t);
-    return Number.isNaN(e.getTime()) ? t : Cb.format(e);
+    return Number.isNaN(e.getTime()) ? t : Tb.format(e);
   };
   function re(t, e) {
-    return `<div class="empty"><svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p class="empty-title">${S(t)}</p>${e ? `<p class="empty-hint">${S(e)}</p>` : ""}</div>`;
+    return `<div class="empty"><svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p class="empty-title">${T(t)}</p>${e ? `<p class="empty-hint">${T(e)}</p>` : ""}</div>`;
   }
   function td(t) {
     if (t.length === 0)
       return "";
     let e = 320, i = 140, r = 32, o = 8, n = 10, a = 22, s = e - r - o, l = i - n - a, c = n + l, u = Math.max(...t.map((V) => V.value), 1), m = t.length, h = t.map((V, at) => [r + (m === 1 ? s / 2 : at / (m - 1) * s), n + (1 - V.value / u) * l]), v = h.map(([V, at]) => `${V.toFixed(1)},${at.toFixed(1)}`).join(" "), $c = `${h[0][0].toFixed(1)},${c} ${v} ${h[m - 1][0].toFixed(1)},${c}`, jc = h.map(([V, at]) => `<circle class="dot" cx="${V.toFixed(1)}" cy="${at.toFixed(1)}" r="2.5"/>`).join("");
-    return `<svg class="line" viewBox="0 0 ${e} ${i}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${r}" y1="${n}" x2="${r}" y2="${c}"/><line class="axis" x1="${r}" y1="${c}" x2="${e - o}" y2="${c}"/><text class="tick" x="${r - 4}" y="${n + 3}" text-anchor="end">${Sb(u)}</text><text class="tick" x="${r - 4}" y="${c}" text-anchor="end">0</text><polygon class="area" points="${$c}" fill="url(#lc-grad)"/><polyline class="stroke" points="${v}"/>${jc}<text class="tick" x="${r}" y="${i - 6}">${S(t[0].label)}</text><text class="tick" x="${e - o}" y="${i - 6}" text-anchor="end">${S(t[m - 1].label)}</text></svg>`;
+    return `<svg class="line" viewBox="0 0 ${e} ${i}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${r}" y1="${n}" x2="${r}" y2="${c}"/><line class="axis" x1="${r}" y1="${c}" x2="${e - o}" y2="${c}"/><text class="tick" x="${r - 4}" y="${n + 3}" text-anchor="end">${Sb(u)}</text><text class="tick" x="${r - 4}" y="${c}" text-anchor="end">0</text><polygon class="area" points="${$c}" fill="url(#lc-grad)"/><polyline class="stroke" points="${v}"/>${jc}<text class="tick" x="${r}" y="${i - 6}">${T(t[0].label)}</text><text class="tick" x="${e - o}" y="${i - 6}" text-anchor="end">${T(t[m - 1].label)}</text></svg>`;
   }
   function ed(t, e) {
     if (t.length === 0)
@@ -13444,7 +13522,7 @@ nav {
     let i = t.reduce((r, o) => r + o.value, 0) || 1;
     return t.map((r) => {
       let o = r.value / i * 100, n = `${o.toFixed(1).replace(".", ",")} %`;
-      return `<div class="bar"><span class="bar-key" title="${S(r.label)}">${S(r.label)}</span><svg class="bar-svg" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect height="8" width="${o.toFixed(1)}"/></svg><span class="bar-val">${e ? `${xi(r.value, "int")} · ${n}` : n}</span></div>`;
+      return `<div class="bar"><span class="bar-key" title="${T(r.label)}">${T(r.label)}</span><svg class="bar-svg" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect height="8" width="${o.toFixed(1)}"/></svg><span class="bar-val">${e ? `${xi(r.value, "int")} · ${n}` : n}</span></div>`;
     }).join("");
   }
   var id = `<div class="stat">
@@ -13749,7 +13827,7 @@ nav {
     }
     connectedCallback() {
       let t = this.getAttribute("param") ?? "range", e = new URLSearchParams(window.location.search).get(t) ?? this.getAttribute("default") ?? "", i = (this.getAttribute("tabs") ?? "").split(",").map((o) => o.split(":")).filter((o) => o[0]), r = this.shadowRoot.querySelector(".tabs");
-      r.innerHTML = i.map(([o, n]) => `<button type="button" data-v="${S(o)}"${o === e ? ' class="active"' : ""}>${S(n ?? o)}</button>`).join(""), r.addEventListener("click", (o) => {
+      r.innerHTML = i.map(([o, n]) => `<button type="button" data-v="${T(o)}"${o === e ? ' class="active"' : ""}>${T(n ?? o)}</button>`).join(""), r.addEventListener("click", (o) => {
         let n = o.target.closest("button")?.dataset.v;
         if (!n)
           return;
@@ -13774,27 +13852,27 @@ nav {
   var ae = "cms-source-serialization";
   var xd = "cms-source-success-redirect";
   var yd = "cms-source-success-redirect-param";
-  var T = "cms-repeat";
+  var S = "cms-repeat";
   var P = "cms-condition";
   var x = "cms-page-state";
-  var Vb = ["loaded", "loading", "empty", "error"];
-  var Nb = ["auto", "submit", "change"];
+  var Nb = ["loaded", "loading", "empty", "error"];
+  var Ob = ["auto", "submit", "change"];
   var w = "cms-bind-stop";
   var g = "cms-ready";
   function _d(t) {
-    return Vb.includes(t ?? "");
+    return Nb.includes(t ?? "");
   }
   function wd(t) {
-    return Nb.includes(t ?? "");
+    return Ob.includes(t ?? "");
   }
   var O = "cms-params:change";
   var B = "cms-state:change";
-  var Ob = new RegExp("#\\{\\s*([A-Za-z0-9_][A-Za-z0-9_.:-]*)\\s*\\}", "g");
-  var Rb = new RegExp("#\\{\\s*[A-Za-z0-9_][A-Za-z0-9_.:-]*\\s*\\}");
-  var Db = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
+  var Rb = new RegExp("#\\{\\s*([A-Za-z0-9_][A-Za-z0-9_.:-]*)\\s*\\}", "g");
+  var Db = new RegExp("#\\{\\s*[A-Za-z0-9_][A-Za-z0-9_.:-]*\\s*\\}");
+  var $b = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
   var kd = new WeakMap;
   function Ed(t) {
-    return Rb.test(t);
+    return Db.test(t);
   }
   function Ad(t) {
     return /@\{\s*[A-Za-z0-9_.-]+\s*\}/.test(t);
@@ -13803,11 +13881,11 @@ nav {
     return new URLSearchParams(typeof location > "u" ? "" : location.search);
   }
   function Ld(t, e = Y()) {
-    return t.replace(Ob, (i, r) => encodeURIComponent(e.get(r) ?? ""));
+    return t.replace(Rb, (i, r) => encodeURIComponent(e.get(r) ?? ""));
   }
   function Md(t, e = document) {
     let i = wi(e);
-    return t.replace(Db, (r, o) => encodeURIComponent(i.get(o) ?? ""));
+    return t.replace($b, (r, o) => encodeURIComponent(i.get(o) ?? ""));
   }
   function _i(t, e) {
     let i = Y();
@@ -13839,7 +13917,7 @@ nav {
       e = new Map, kd.set(t, e);
     return e;
   }
-  var $b = 300;
+  var jb = 300;
 
   class ki {
     el;
@@ -13910,7 +13988,7 @@ nav {
         return;
       if (this.timer)
         clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.write(), $b);
+      this.timer = setTimeout(() => this.write(), jb);
     }
     write() {
       if (this.reflecting)
@@ -13924,7 +14002,7 @@ nav {
     }
   }
   var k = "cms-param-sync";
-  var jb = 300;
+  var Kb = 300;
 
   class Ei {
     el;
@@ -14010,7 +14088,7 @@ nav {
         return;
       if (this.timer)
         clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.write(), jb);
+      this.timer = setTimeout(() => this.write(), Kb);
     }
     write() {
       if (this.reflecting)
@@ -14045,10 +14123,10 @@ nav {
   function le(t, e, i) {
     H(t, b, e, (r) => i.registerSource(r)), H(t, k, e, (r) => i.registerParamSync(r)), H(t, x, e, (r) => i.registerPageStateSync(r));
   }
-  function Sd(t, e, i) {
+  function Td(t, e, i) {
     H(t, b, e, (r) => i.unregisterSource(r)), H(t, k, e, (r) => i.unregisterParamSync(r)), H(t, x, e, (r) => i.unregisterPageStateSync(r));
   }
-  function Td(t, e, i) {
+  function Sd(t, e, i) {
     if (t.nodeType !== Node.ELEMENT_NODE || !e)
       return;
     let r = t;
@@ -14067,12 +14145,12 @@ nav {
       else
         i.unregisterPageStateSync(r);
   }
-  var Kb = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  var Ub = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
   function R(t) {
     return _(t).url;
   }
   function _(t) {
-    let e = Kb.exec(t);
+    let e = Ub.exec(t);
     if (!e)
       return { url: t.trim() };
     return { url: e[1].trim(), alias: e[2] };
@@ -14100,15 +14178,15 @@ nav {
     return wd(e) ? e : "auto";
   }
   function Id(t, e) {
-    let i = t.ownerDocument, r = y(t), o = new Set([...r === "auto" ? [Ai] : [], ...Zb(t)]), n = (s) => {
+    let i = t.ownerDocument, r = y(t), o = new Set([...r === "auto" ? [Ai] : [], ...Wb(t)]), n = (s) => {
       if (s.type !== Ai || s.target === i || s.target === t)
         e.onReload();
     };
     for (let s of o)
       i.addEventListener(s, n);
     if (r === "submit" || r === "change") {
-      let s = Xb(t) ?? t.closest("form"), l = r === "submit" ? "submit" : "change", c = null, m = r === "submit" ? e.onSubmit : (h) => {
-        let v = Ub(t);
+      let s = Zb(t) ?? t.closest("form"), l = r === "submit" ? "submit" : "change", c = null, m = r === "submit" ? e.onSubmit : (h) => {
+        let v = Xb(t);
         if (v === 0) {
           e.onChange(h);
           return;
@@ -14133,15 +14211,15 @@ nav {
       a();
     };
   }
-  function Ub(t) {
+  function Xb(t) {
     let e = Number(t.getAttribute(md));
     return Number.isSafeInteger(e) && e >= 0 && e <= 5000 ? e : 0;
   }
-  function Xb(t) {
+  function Zb(t) {
     let e = t.ownerDocument.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
     return typeof e === "function" && t instanceof e ? t : null;
   }
-  function Zb(t) {
+  function Wb(t) {
     return (t.getAttribute(zd) ?? "").split(/\s+/).filter(Boolean);
   }
   var tt = new WeakMap;
@@ -14166,26 +14244,26 @@ nav {
   function Ci(t) {
     return tt.get(t)?.local === true;
   }
-  var Si = new WeakMap;
   var Ti = new WeakMap;
+  var Si = new WeakMap;
   function qd(t, e) {
-    let i = Si.get(t);
+    let i = Ti.get(t);
     if (!i)
-      i = new Set, Si.set(t, i);
+      i = new Set, Ti.set(t, i);
     i.add(e);
-    let r = Ti.get(t);
+    let r = Si.get(t);
     if (r)
       e(r);
     return () => i.delete(e);
   }
   function Hi(t, e, i = false) {
     let r = Object.freeze({ ...e, disposed: i, data: et(t) });
-    Ti.set(t, r);
-    for (let o of [...Si.get(t) ?? []])
+    Si.set(t, r);
+    for (let o of [...Ti.get(t) ?? []])
       o(r);
   }
   function Vd(t) {
-    Hi(t, { loading: false, loaded: false, empty: false, error: false }, true), Ti.delete(t);
+    Hi(t, { loading: false, loaded: false, empty: false, error: false }, true), Si.delete(t);
   }
   async function de(t, e, i = {}) {
     let r;
@@ -14266,9 +14344,9 @@ nav {
   function jd(t) {
     return t.matches("img,picture,source");
   }
-  var Wb = ["src", "srcset"];
-  var Qb = ["sizes", "media"];
-  var Yb = "template";
+  var Qb = ["src", "srcset"];
+  var Yb = ["sizes", "media"];
+  var Gb = "template";
   function it(t) {
     let e = Xd(t, $d), i = new Set;
     for (let r of e.filter((o) => o.localName === "picture")) {
@@ -14279,7 +14357,7 @@ nav {
     for (let r of e)
       if (!i.has(r) && Ud(r))
         Kd(r);
-    for (let r of Xd(t, Yb))
+    for (let r of Xd(t, Gb))
       it(r.content);
   }
   function Kd(t) {
@@ -14293,12 +14371,12 @@ nav {
     }
   }
   function Ud(t) {
-    return t.hasAttribute(ce) || Gb(t) || Wb.some((e) => Jb(kt(t, e))) || Qb.some((e) => Ii(kt(t, e)));
-  }
-  function Gb(t) {
-    return wt.some((e) => t.hasAttribute(pe(e)));
+    return t.hasAttribute(ce) || Jb(t) || Qb.some((e) => tm(kt(t, e))) || Yb.some((e) => Ii(kt(t, e)));
   }
   function Jb(t) {
+    return wt.some((e) => t.hasAttribute(pe(e)));
+  }
+  function tm(t) {
     return t !== null && (!t.trim() || Ii(t));
   }
   function Xd(t, e) {
@@ -14324,7 +14402,7 @@ nav {
     unmount() {
       for (let t of this.sites)
         t.unmount?.();
-      tm(this.start, this.end);
+      em(this.start, this.end);
     }
   }
 
@@ -14349,7 +14427,7 @@ nav {
       i.parentNode?.removeChild(i), i = r;
     }
   }
-  function tm(t, e) {
+  function em(t, e) {
     let i = t.parentNode;
     if (!i)
       return;
@@ -14359,12 +14437,12 @@ nav {
       i.removeChild(r), r = o;
     }
   }
-  var em = { found: false, value: undefined };
+  var im = { found: false, value: undefined };
   function E(t, e) {
     if (e === ".")
       return { found: true, value: t.value };
     if (e === "value")
-      return { found: true, value: im(t) };
+      return { found: true, value: rm(t) };
     let i = e.indexOf("."), r = i === -1 ? e : e.slice(0, i), o = i === -1 ? "" : e.slice(i + 1);
     for (let n = t;n; n = n.parent) {
       if (n.vars && r in n.vars)
@@ -14373,9 +14451,9 @@ nav {
       if (Wd(a) && r in a)
         return { found: true, value: Zd(a[r], o) };
     }
-    return em;
+    return im;
   }
-  function im(t) {
+  function rm(t) {
     let e = t.value;
     if (Wd(e) && "value" in e)
       return e.value;
@@ -14401,11 +14479,11 @@ nav {
   }
   function Fi(t) {
     let e = t?.trim() || undefined;
-    return { dateLong: (i) => om(i, e), minorCurrency: (i, r) => nm(i, r, e), urlencode: (i) => encodeURIComponent(i == null ? "" : String(i)) };
+    return { dateLong: (i) => nm(i, e), minorCurrency: (i, r) => am(i, r, e), urlencode: (i) => encodeURIComponent(i == null ? "" : String(i)) };
   }
-  var rm = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+)(?:\(\s*([\w$.-]+)\s*\))?)?\s*\}\}/g;
+  var om = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+)(?:\(\s*([\w$.-]+)\s*\))?)?\s*\}\}/g;
   function Lt(t, e, i = {}) {
-    return t.replace(rm, (r, o, n, a) => {
+    return t.replace(om, (r, o, n, a) => {
       let s = E(e, o);
       if (!s.found)
         return "";
@@ -14413,13 +14491,13 @@ nav {
       return u == null ? "" : String(u);
     });
   }
-  function om(t, e) {
+  function nm(t, e) {
     let i = new Date(String(t ?? ""));
     if (Number.isNaN(i.getTime()))
       return "—";
     return new Intl.DateTimeFormat(e, { dateStyle: "long" }).format(i);
   }
-  function nm(t, e, i) {
+  function am(t, e, i) {
     let r = Number(t), o = String(e ?? "").trim().toUpperCase();
     if (!Number.isSafeInteger(r) || !o)
       return "—";
@@ -14445,7 +14523,7 @@ nav {
     if (t.kind === "or")
       return Mt(z(t.left, e, i)) || Mt(z(t.right, e, i));
     if (t.kind === "compare")
-      return am(z(t.left, e, i), z(t.right, e, i), t.operator);
+      return sm(z(t.left, e, i), z(t.right, e, i), t.operator);
     return false;
   }
   function Yd(t, e) {
@@ -14455,7 +14533,7 @@ nav {
   function Mt(t) {
     return Boolean(t);
   }
-  function am(t, e, i) {
+  function sm(t, e, i) {
     if (i === "==")
       return Object.is(t, e);
     if (i === "!=")
@@ -14502,16 +14580,16 @@ nav {
         continue;
       }
       if (r === "'" || r === '"') {
-        let a = sm(t, i, r);
+        let a = lm(t, i, r);
         e.push({ kind: "literal", value: a.value }), i = a.next;
         continue;
       }
       if (r === "-" && /\d/.test(t[i + 1] ?? "") || /\d/.test(r)) {
-        let a = dm(t, i);
+        let a = cm(t, i);
         e.push({ kind: "literal", value: a.value }), i = a.next;
         continue;
       }
-      let n = cm(t, i);
+      let n = pm(t, i);
       if (n.value === "true")
         e.push({ kind: "literal", value: true });
       else if (n.value === "false")
@@ -14524,7 +14602,7 @@ nav {
     }
     return e.push({ kind: "end" }), e;
   }
-  function sm(t, e, i) {
+  function lm(t, e, i) {
     let r = "";
     for (let o = e + 1;o < t.length; o += 1) {
       let n = t[o];
@@ -14534,14 +14612,14 @@ nav {
         let a = t[o + 1];
         if (a == null)
           throw Error("unterminated string literal");
-        r += lm(a), o += 1;
+        r += dm(a), o += 1;
         continue;
       }
       r += n;
     }
     throw Error("unterminated string literal");
   }
-  function lm(t) {
+  function dm(t) {
     if (t === "n")
       return `
 `;
@@ -14551,7 +14629,7 @@ nav {
       return "\t";
     return t;
   }
-  function dm(t, e) {
+  function cm(t, e) {
     let i = e;
     if (t[i] === "-")
       i += 1;
@@ -14567,18 +14645,18 @@ nav {
       throw Error(`invalid number literal "${r}"`);
     return { value: o, next: i };
   }
-  function cm(t, e) {
+  function pm(t, e) {
     let i = e;
     while (i < t.length && !/\s/.test(t[i]) && !`!&|=<>"'()`.includes(t[i]))
       i += 1;
     let r = t.slice(e, i);
     if (!r)
       throw Error(`unexpected token "${t[e] ?? ""}"`);
-    if (!pm(r))
+    if (!um(r))
       throw Error(`invalid path "${r}"`);
     return { value: r, next: i };
   }
-  function pm(t) {
+  function um(t) {
     if (t === ".")
       return true;
     return /^[A-Za-z_$][\w$-]*(?:\.[\w$-]+)*$/.test(t);
@@ -14711,7 +14789,7 @@ nav {
       let o = false;
       return { expression: t, valid: false, evaluate: () => {
         if (!o)
-          o = true, console.warn(`Invalid cms-condition "${t}": ${um(r)}`);
+          o = true, console.warn(`Invalid cms-condition "${t}": ${hm(r)}`);
         return false;
       } };
     }
@@ -14719,7 +14797,7 @@ nav {
   function tc(t, e, i) {
     return { expression: t, valid: true, evaluate: (r) => Boolean(z(e, r, i)) };
   }
-  function um(t) {
+  function hm(t) {
     return t instanceof Error ? t.message : String(t);
   }
   var ec = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
@@ -14758,21 +14836,21 @@ nav {
         i.attributes.push({ path: e, name: o.name, template: o.value });
     }
   }
-  var hm = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
+  var bm = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
   function ic(t) {
     let e = t.childNodes.length === 1 ? t.firstChild : null;
     if (!e || e.nodeType !== Node.TEXT_NODE)
       return null;
-    return (e.nodeValue ?? "").trim().match(hm)?.[1] ?? null;
+    return (e.nodeValue ?? "").trim().match(bm)?.[1] ?? null;
   }
-  var bm = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  var mm = /^\$range\((0|[1-9]\d*)\)$/;
+  var mm = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  var fm = /^\$range\((0|[1-9]\d*)\)$/;
   var rc = 100;
   function fe(t) {
-    let e = t.match(bm), i = e ? { path: e[1], name: e[2] } : { path: t.trim() };
+    let e = t.match(mm), i = e ? { path: e[1], name: e[2] } : { path: t.trim() };
     if (!i.path.startsWith("$range("))
       return i;
-    let r = mm.exec(i.path), o = r ? Number(r[1]) : Number.NaN;
+    let r = fm.exec(i.path), o = r ? Number(r[1]) : Number.NaN;
     if (!i.name)
       return { ...i, rangeError: "$range(n) requires an alias." };
     if (!Number.isInteger(o) || o < 0 || o > rc)
@@ -14780,8 +14858,8 @@ nav {
     return { ...i, rangeCount: o };
   }
   function oc(t, e, i, r, o, n) {
-    let a = t.getAttribute(T) ?? "";
-    if (i.skipRepeat || !t.hasAttribute(T) || A(a, i.submitBoundary))
+    let a = t.getAttribute(S) ?? "";
+    if (i.skipRepeat || !t.hasAttribute(S) || A(a, i.submitBoundary))
       return false;
     let s = t.getAttribute(P), l = s ? Ni(s, i.submitBoundary) : false;
     return r.repeats.push({ path: e, spec: fe(a), template: ac(t, o, n, { removeRepeat: true, removeCondition: !!i.submitBoundary && !!s && !l, submitBoundary: i.submitBoundary }), rootCondition: l || !s ? null : Vi(s, o) }), true;
@@ -14795,7 +14873,7 @@ nav {
   function ac(t, e, i, r) {
     let o = (t.ownerDocument ?? document).createDocumentFragment(), n = t.cloneNode(true);
     if (r.removeRepeat)
-      n.removeAttribute(T);
+      n.removeAttribute(S);
     if (r.removeCondition)
       n.removeAttribute(P);
     return o.appendChild(n), i(o, e, { skipRootCondition: true, skipRootRepeat: r.removeRepeat === true, submitBoundary: r.submitBoundary ?? null });
@@ -15207,7 +15285,7 @@ nav {
   function gc(t) {
     let e = new Set, i = Array.from(t.children), r = Array.from(t.querySelectorAll(`[${P}]`));
     for (let o of [...i, ...r])
-      for (let n of fm(o.getAttribute(P)))
+      for (let n of gm(o.getAttribute(P)))
         e.add(n);
     return e;
   }
@@ -15218,12 +15296,12 @@ nav {
     i.setSourceStatus?.(t, e);
   }
   function vc(t, e, i, r, o) {
-    let n = o.sourceStatusesFor?.(t, i) ?? gm(t, i), a = { $source: i, $sources: n };
+    let n = o.sourceStatusesFor?.(t, i) ?? vm(t, i), a = { $source: i, $sources: n };
     if (e)
       a[e] = r;
     return { value: r, vars: a };
   }
-  function fm(t) {
+  function gm(t) {
     let e = [];
     for (let i of (t ?? "").matchAll(/(?:\$source|\$sources\.[A-Za-z_$][\w$-]*)\.(loaded|loading|empty|error)/g))
       e.push(i[1]);
@@ -15232,7 +15310,7 @@ nav {
   function fc(t) {
     return typeof t === "object" && t !== null && (("status" in t) || ("message" in t));
   }
-  function gm(t, e) {
+  function vm(t, e) {
     let i = t.getAttribute(yt)?.trim();
     return i ? { [i]: e } : {};
   }
@@ -15292,7 +15370,7 @@ nav {
     }
   }
   function xc(t, e) {
-    let i = vm(t);
+    let i = xm(t);
     if (!i)
       return;
     let r = {}, o = Y();
@@ -15305,7 +15383,7 @@ nav {
         r[n] = a.value;
     return Object.keys(r).length ? r : undefined;
   }
-  function vm(t) {
+  function xm(t) {
     let e = t?.trim() ?? "";
     if (!e)
       return null;
@@ -15319,13 +15397,13 @@ nav {
       return null;
     let r = {};
     for (let [o, n] of Object.entries(i)) {
-      let a = xm(n);
+      let a = ym(n);
       if (o.trim() && a)
         r[o] = a;
     }
     return Object.keys(r).length ? r : null;
   }
-  function xm(t) {
+  function ym(t) {
     if (!yc(t) || typeof t.from !== "string")
       return null;
     if (t.from === "queryParam" || t.from === "state")
@@ -15346,18 +15424,18 @@ nav {
   var ve = "cms-source:success";
   var xe = "cms-source:failed";
   var Yi = "cms-source:refresh-failed";
-  function St(t) {
+  function Tt(t) {
     let e = new FormData(t);
     if (Array.from(e.keys()).length > 0)
       return e;
-    for (let i of ym(t))
-      _m(e, i);
+    for (let i of _m(t))
+      wm(e, i);
     return e;
   }
-  function ym(t) {
+  function _m(t) {
     return Array.from(t.querySelectorAll("input, select, textarea, [name]"));
   }
-  function _m(t, e) {
+  function wm(t, e) {
     let i = e.name?.trim();
     if (!i || e.disabled)
       return;
@@ -15395,22 +15473,22 @@ nav {
     }
     t.append(i, String(o));
   }
-  var wm = /^[A-Za-z0-9_-]+(?:\[[A-Za-z0-9_-]+\])+$/;
+  var km = /^[A-Za-z0-9_-]+(?:\[[A-Za-z0-9_-]+\])+$/;
   var wc = new Set(["__proto__", "constructor", "prototype"]);
   function kc(t, e, i) {
-    let r = e.endsWith("[]"), o = r ? e.slice(0, -2) : e, n = km(o);
+    let r = e.endsWith("[]"), o = r ? e.slice(0, -2) : e, n = Em(o);
     if (r && /^[A-Za-z0-9_-]+$/.test(o) && !wc.has(o))
       Gi(t, o, i, true);
-    else if (!n || !Em(t, n, i, r))
+    else if (!n || !Am(t, n, i, r))
       Gi(t, e, i);
   }
-  function km(t) {
-    if (!wm.test(t))
+  function Em(t) {
+    if (!km.test(t))
       return null;
     let e = [t.slice(0, t.indexOf("[")), ...Array.from(t.matchAll(/\[([^\]]+)\]/g), (i) => i[1])];
     return e.some((i) => wc.has(i)) ? null : e;
   }
-  function Em(t, e, i, r) {
+  function Am(t, e, i, r) {
     let o = e[0], n = t[o];
     if (n !== undefined && !_c(n))
       return false;
@@ -15488,14 +15566,14 @@ nav {
     }
     return i;
   }
-  var Am = new Set(["__proto__", "constructor", "prototype"]);
+  var Lm = new Set(["__proto__", "constructor", "prototype"]);
   var Ji = /^(0|[1-9]\d*)$/;
   function Lc(t, e, i, r) {
     let o = e.endsWith("[]"), n = o ? e.slice(0, -2) : e;
     if (!/^[A-Za-z0-9_-]+(?:\[[A-Za-z0-9_-]+\])*$/.test(n))
       throw Error(`Invalid typed form name: ${e}. Use bracket paths.`);
     let a = n.replaceAll("]", "").split("[");
-    if (a.some((l) => Am.has(l) || Ji.test(l) && Number(l) > 1e4))
+    if (a.some((l) => Lm.has(l) || Ji.test(l) && Number(l) > 1e4))
       throw Error(`Invalid typed form path: ${e}.`);
     let s = t;
     for (let l = 0;l < a.length; l += 1) {
@@ -15570,20 +15648,20 @@ nav {
       return i;
     return e;
   }
-  function Tt(t, e) {
-    let i = e.formData ?? St(t), r = t.getAttribute(ae);
+  function St(t, e) {
+    let i = e.formData ?? Tt(t), r = t.getAttribute(ae);
     if (r && r !== "typed-json")
       throw Error("cms-source-serialization must be typed-json when specified.");
     if (r === "typed-json") {
       if (!Cc.has(e.method))
         throw Error("typed-json requires a method with a request body.");
-      let n = Sc(Mc(t), i, e.bodyFields);
+      let n = Tc(Mc(t), i, e.bodyFields);
       return { kind: "json", url: e.url, formData: i, data: n, body: JSON.stringify(n) };
     }
     if (e.method === "GET" || e.method === "HEAD")
-      return { kind: "query", url: Lm(e.url, i), formData: i, data: tr(i) };
-    let o = Sc(tr(i), i, e.bodyFields);
-    if (Cc.has(e.method) && Mm(i))
+      return { kind: "query", url: Mm(e.url, i), formData: i, data: tr(i) };
+    let o = Tc(tr(i), i, e.bodyFields);
+    if (Cc.has(e.method) && Cm(i))
       return { kind: "formData", url: e.url, formData: i, data: o, body: i };
     return { kind: "json", url: e.url, formData: i, data: o, body: JSON.stringify(o) };
   }
@@ -15596,14 +15674,14 @@ nav {
     }
     return e;
   }
-  function Lm(t, e) {
+  function Mm(t, e) {
     let i = new URL(t, location.href);
     for (let [r, o] of e.entries())
       if (!ir(o))
         i.searchParams.append(r, rr(o) ? o.name : o);
     return i.toString();
   }
-  function Sc(t, e, i) {
+  function Tc(t, e, i) {
     if (!i)
       return t;
     let r = t;
@@ -15617,7 +15695,7 @@ nav {
     }
     return r;
   }
-  function Mm(t) {
+  function Cm(t) {
     return Array.from(t.values()).some((e) => !ir(e) && rr(e));
   }
   function ir(t) {
@@ -15627,16 +15705,16 @@ nav {
     return typeof t === "object" && t !== null && typeof t.name === "string" && typeof t.size === "number";
   }
   async function or(t, e) {
-    let i = e.serialized ?? Tt(t, e), r = new Headers({ Accept: "application/json" }), o = { method: e.method, headers: r, signal: e.signal };
+    let i = e.serialized ?? St(t, e), r = new Headers({ Accept: "application/json" }), o = { method: e.method, headers: r, signal: e.signal };
     if (i.kind === "json")
       r.set("Content-Type", "application/json"), o.body = i.body;
     else if (i.kind === "formData")
       o.body = i.body;
-    return { ...await Tc(i.url, o), form: t };
+    return { ...await Sc(i.url, o), form: t };
   }
-  async function Tc(t, e = {}) {
+  async function Sc(t, e = {}) {
     try {
-      let i = await fetch(t, e), r = await Cm(i);
+      let i = await fetch(t, e), r = await Tm(i);
       return { ok: i.ok, status: i.status, statusText: i.statusText, body: r, message: i.ok ? "" : Sm(i, r) };
     } catch (i) {
       if (i?.name === "AbortError")
@@ -15644,7 +15722,7 @@ nav {
       return { ok: false, status: 0, statusText: "Network Error", body: null, message: i instanceof Error ? i.message : String(i) };
     }
   }
-  async function Cm(t) {
+  async function Tm(t) {
     if (t.status === 204)
       return null;
     let e = await t.clone().text().catch(() => "");
@@ -15663,8 +15741,8 @@ nav {
       return e.message;
     return t.statusText || `Request failed (${t.status})`;
   }
-  var Tm = "form:success";
-  var Hm = "form:failed";
+  var Hm = "form:success";
+  var zm = "form:failed";
 
   class nr {
     element;
@@ -15677,8 +15755,8 @@ nav {
       let e = Ht(this.element, this.element.ownerDocument);
       if (!e)
         return null;
-      let i = this.sourceMethod(), r = St(e), o = i === "GET" || i === "HEAD" ? undefined : xc(this.element.getAttribute(yi), this.element.ownerDocument);
-      return { form: e, method: i, formData: r, bodyFields: o, serialized: Tt(e, { url: this.submitUrl(t), method: i, formData: r, bodyFields: o }) };
+      let i = this.sourceMethod(), r = Tt(e), o = i === "GET" || i === "HEAD" ? undefined : xc(this.element.getAttribute(yi), this.element.ownerDocument);
+      return { form: e, method: i, formData: r, bodyFields: o, serialized: St(e, { url: this.submitUrl(t), method: i, formData: r, bodyFields: o }) };
     }
     async send(t, e, i) {
       return or(t.form, { url: this.submitUrl(e), method: t.method, signal: i, bodyFields: t.bodyFields, formData: t.formData, serialized: t.serialized });
@@ -15707,7 +15785,7 @@ nav {
       return e.toString();
     }
     dispatchResult(t) {
-      let e = t.ok ? ve : xe, i = t.ok ? Tm : Hm, r = { bubbles: true, composed: true, detail: t };
+      let e = t.ok ? ve : xe, i = t.ok ? Hm : zm, r = { bubbles: true, composed: true, detail: t };
       this.element.dispatchEvent(new CustomEvent(e, r)), this.element.dispatchEvent(new CustomEvent(i, r));
     }
     publish(t) {
@@ -16047,7 +16125,7 @@ nav {
   }
   function qc(t, e, i, r) {
     let o = {};
-    for (let n of zm(t, i)) {
+    for (let n of Im(t, i)) {
       if (!n.hasAttribute(b))
         continue;
       let a = n.getAttribute(yt)?.trim();
@@ -16059,7 +16137,7 @@ nav {
     }
     return o;
   }
-  function zm(t, e) {
+  function Im(t, e) {
     let i = [];
     for (let r = e;r && r !== t.parentElement; r = r.parentElement)
       if (i.push(r), r === t)
@@ -16221,7 +16299,7 @@ nav {
       this.filters = e;
     }
     mountWithin(t) {
-      H(t, T, this.root, (e) => this.mount(e));
+      H(t, S, this.root, (e) => this.mount(e));
     }
     restore() {
       for (let { authored: t, marker: e, region: i } of Array.from(this.mounted.values()).reverse())
@@ -16242,10 +16320,10 @@ nav {
       this.mounted.set(t, { authored: t, marker: n, region: s });
     }
     isStandaloneRange(t) {
-      if (!fe(t.getAttribute(T) ?? "").path.startsWith("$range("))
+      if (!fe(t.getAttribute(S) ?? "").path.startsWith("$range("))
         return false;
       for (let i = t.parentElement;i && i !== this.root; i = i.parentElement)
-        if (i.hasAttribute(b) || i.hasAttribute(T))
+        if (i.hasAttribute(b) || i.hasAttribute(S))
           return false;
       return true;
     }
@@ -16305,10 +16383,10 @@ nav {
       this.observer = new t((e) => {
         for (let i of e) {
           if (i.type === "attributes") {
-            Td(i.target, i.attributeName, this.registry);
+            Sd(i.target, i.attributeName, this.registry);
             continue;
           }
-          i.removedNodes.forEach((r) => Sd(r, this.root, this.registry)), i.addedNodes.forEach((r) => {
+          i.removedNodes.forEach((r) => Td(r, this.root, this.registry)), i.addedNodes.forEach((r) => {
             ur(r), this.fixedRanges.mountWithin(r), le(r, this.root, this.registry);
           });
         }
@@ -16327,15 +16405,15 @@ nav {
     }
   }
   var Vc = "cms-binding-cloak";
-  var Im = `${f}{display:contents}[${b}]:not([${g}]){visibility:hidden}`;
+  var Pm = `${f}{display:contents}[${b}]:not([${g}]){visibility:hidden}`;
   function Nc(t) {
     if (t.getElementById(Vc))
       return;
     let e = t.createElement("style");
-    e.id = Vc, e.textContent = Im, (t.head ?? t.documentElement).appendChild(e);
+    e.id = Vc, e.textContent = Pm, (t.head ?? t.documentElement).appendChild(e);
   }
   var Oc = {};
-  function Pm(t) {
+  function Bm(t) {
     Oc = t;
   }
 
@@ -16405,14 +16483,14 @@ nav {
       return 2;
     }
   }
-  function mr(t, e, i, r = Fm()) {
-    let o = Bm(t);
+  function mr(t, e, i, r = qm()) {
+    let o = Fm(t);
     if (o === undefined)
       return "";
     let n = 10n ** BigInt(e), a = o < 0n ? -o : o, s = a / n, l = a % n, c = o < 0n ? "-" : "";
     if (e === 0 || !i && l === 0n)
       return `${c}${s}`;
-    let u = qm(r);
+    let u = Vm(r);
     return `${c}${s}${u}${l.toString().padStart(e, "0")}`;
   }
   function fr(t, e, i) {
@@ -16430,7 +16508,7 @@ nav {
       return { ok: false, message: "Enter a smaller amount." };
     return { ok: true, value: m };
   }
-  function Bm(t) {
+  function Fm(t) {
     if (typeof t === "number" && Number.isSafeInteger(t))
       return BigInt(t);
     if (typeof t === "string" && /^[+-]?\d+$/u.test(t)) {
@@ -16440,12 +16518,12 @@ nav {
     }
     return;
   }
-  function Fm() {
+  function qm() {
     if (typeof navigator < "u" && navigator.language)
       return navigator.language;
     return typeof document < "u" && document.documentElement.lang ? document.documentElement.lang : "en-US";
   }
-  function qm(t) {
+  function Vm(t) {
     return new Intl.NumberFormat(t).formatToParts(1.1).find((e) => e.type === "decimal")?.value ?? ".";
   }
 
@@ -16556,6 +16634,44 @@ nav {
     const slug = title.normalize("NFKD").replace(/œ/gi, "oe").replace(/æ/gi, "ae").replace(/ß/gi, "ss").replace(/\p{Mark}+/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
     return slug ? `/${slug}` : "";
   }
+  // ../../features/cms-content/src/core/validation/errors.ts
+  class ContentValidationError extends Error {
+    field;
+    status = 400;
+    constructor(field, message) {
+      super(`Invalid ${field}: ${message}`);
+      this.field = field;
+      this.name = "ContentValidationError";
+    }
+  }
+
+  // ../../features/cms-content/src/core/utils/localizedPagePath.ts
+  function languagePrefix(language) {
+    return `/${language.toLowerCase()}`;
+  }
+  var PUBLIC_SITEMAP_CHUNKS_ROUTE = "/sitemaps";
+  function isReservedPublicPagePath(path, languages = []) {
+    if (path === PUBLIC_SITEMAP_CHUNKS_ROUTE || path.startsWith(`${PUBLIC_SITEMAP_CHUNKS_ROUTE}/`)) {
+      return true;
+    }
+    return languages.some((language) => {
+      const prefix = `${languagePrefix(language)}${PUBLIC_SITEMAP_CHUNKS_ROUTE}`;
+      return path === prefix || path.startsWith(`${prefix}/`);
+    });
+  }
+  function publicPagePath(language, localPath, defaultLanguage) {
+    const local = validLocalPath(localPath);
+    if (!language || language.toLowerCase() === defaultLanguage.toLowerCase()) {
+      return local;
+    }
+    return `${languagePrefix(language)}${local === "/" ? "" : local}`;
+  }
+  function validLocalPath(path) {
+    if (!isValidPathFormat(path)) {
+      throw new ContentValidationError("path", "must start with '/' and contain only [a-zA-Z0-9-/]");
+    }
+    return path;
+  }
   // src/components/admin/Common/PageSettings/pageFormFields.ts
   function resolvePageForm(host) {
     const id2 = host.getAttribute("form")?.trim();
@@ -16585,12 +16701,10 @@ nav {
   class PagePathAvailability {
     document;
     endpoint;
-    currentPath;
     activeRequest = null;
-    constructor(document2, endpoint, currentPath) {
+    constructor(document2, endpoint) {
       this.document = document2;
       this.endpoint = endpoint;
-      this.currentPath = currentPath;
     }
     cancel() {
       this.activeRequest?.abort();
@@ -16606,10 +16720,6 @@ nav {
       this.activeRequest = request;
       const url = new URL(endpoint, this.document.baseURI);
       url.searchParams.set("path", path);
-      const currentPath = this.currentPath();
-      if (currentPath) {
-        url.searchParams.set("current-path", currentPath);
-      }
       try {
         const response = await fetch(url, {
           signal: request.signal,
@@ -16636,11 +16746,12 @@ nav {
   // src/components/admin/Common/PageSettings/PageFormController.ts
   var PATH_FORMAT_ERROR = 'Start with "/". Use only letters, numbers, hyphens and single slashes.';
   var PATH_TAKEN_ERROR = "A page already uses this path.";
+  var PATH_RESERVED_ERROR = "This URL is reserved by the CMS.";
   var SOURCE_FAILED_EVENT = "cms-source:failed";
   var SOURCE_SUCCESS_EVENT = "cms-source:success";
 
   class PageFormController extends HTMLElement {
-    static observedAttributes = ["form", "mode", "availability-url", "current-path"];
+    static observedAttributes = ["form", "availability-url"];
     form = null;
     titleControl = null;
     path = null;
@@ -16670,8 +16781,8 @@ nav {
       this.form = form;
       this.titleControl = title;
       this.path = path;
-      this.pathEditedByUser = this.getAttribute("mode") !== "create" || path.value !== "";
-      this.availability = new PagePathAvailability(this.ownerDocument, () => this.getAttribute("availability-url")?.trim() ?? "", () => this.getAttribute("current-path")?.trim() ?? "");
+      this.pathEditedByUser = path.value !== "";
+      this.availability = new PagePathAvailability(this.ownerDocument, () => this.getAttribute("availability-url")?.trim() ?? "");
       title.addEventListener("input", this.onTitleInput);
       path.addEventListener("input", this.onPathInput);
       path.addEventListener("change", this.onPathChange);
@@ -16710,7 +16821,7 @@ nav {
       }
     };
     onPathChange = () => {
-      if (this.path && isValidPathFormat(this.path.value)) {
+      if (this.path && isValidPathFormat(this.path.value) && !isReservedPublicPagePath(this.path.value)) {
         this.checkAvailability();
       }
     };
@@ -16734,7 +16845,7 @@ nav {
       queueMicrotask(() => {
         this.titleControl?.setCustomValidity("");
         this.setPathError("", null);
-        this.pathEditedByUser = this.getAttribute("mode") !== "create";
+        this.pathEditedByUser = false;
       });
     };
     validateEditedPath() {
@@ -16746,6 +16857,10 @@ nav {
       }
       if (!isValidPathFormat(value)) {
         this.setPathError(PATH_FORMAT_ERROR, "format");
+        return false;
+      }
+      if (isReservedPublicPagePath(value)) {
+        this.setPathError(PATH_RESERVED_ERROR, "format");
         return false;
       }
       this.setPathError("", null);
@@ -16760,7 +16875,7 @@ nav {
         this.availabilityTimer = null;
       }
       const candidate = this.path?.value ?? "";
-      if (!candidate || !isValidPathFormat(candidate) || !this.availability) {
+      if (!candidate || !isValidPathFormat(candidate) || isReservedPublicPagePath(candidate) || !this.availability) {
         return;
       }
       const result = await this.availability.check(candidate);
@@ -16912,6 +17027,771 @@ nav {
   function isPageOption(value) {
     const candidate = value;
     return typeof candidate?.path === "string" && typeof candidate.title === "string";
+  }
+
+  // src/components/admin/Common/PageSettings/languages/languageName.ts
+  function languageName(code) {
+    try {
+      return new Intl.DisplayNames(["en"], { type: "language" }).of(code) ?? code.toUpperCase();
+    } catch {
+      return code.toUpperCase();
+    }
+  }
+
+  // src/components/admin/Common/PageSettings/languages/manage/languageRows.ts
+  function languageRows(language, paths, seo, expanded) {
+    const row = document.createElement("tr");
+    row.className = "page-language-row";
+    const identity = document.createElement("td");
+    identity.className = "page-language-identity";
+    const heading = document.createElement("strong");
+    const code = document.createElement("span");
+    code.className = "page-language-code";
+    code.textContent = language.code.toUpperCase();
+    heading.append(code, document.createTextNode(languageName(language.code)));
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "page-language-toggle";
+    toggle.textContent = expanded ? "Hide SEO" : "Edit SEO";
+    toggle.setAttribute("aria-controls", `page-language-seo-${language.code}`);
+    toggle.setAttribute("aria-expanded", String(expanded));
+    identity.append(heading, toggle);
+    const old = document.createElement("td");
+    old.className = "page-language-old";
+    old.dataset.label = "Current URL";
+    const oldValue = document.createElement("span");
+    oldValue.className = "page-language-old-value";
+    oldValue.textContent = language.publicPath || "No URL yet";
+    oldValue.toggleAttribute("data-empty", !language.publicPath);
+    old.append(oldValue);
+    const next = document.createElement("td");
+    next.className = "page-language-next";
+    next.dataset.label = "New URL";
+    const input = document.createElement("p9r-input");
+    input.setAttribute("name", language.code);
+    input.setAttribute("aria-label", `New URL for ${languageName(language.code)}`);
+    input.setAttribute("value", paths.paths[language.code] ?? "");
+    input.setAttribute("placeholder", "/your-page");
+    input.setAttribute("autocomplete", "off");
+    input.setAttribute("spellcheck", "false");
+    input.required = language.default;
+    if (!language.default) {
+      input.setAttribute("prefix", languagePrefix(language.code));
+    }
+    if (!language.active) {
+      input.setAttribute("hint", "Available after enabling this language in site settings.");
+    }
+    next.append(input);
+    row.append(identity, old, next);
+    const detailRow = document.createElement("tr");
+    detailRow.id = `page-language-seo-${language.code}`;
+    detailRow.className = "page-language-seo-row";
+    detailRow.dataset.language = language.code;
+    detailRow.hidden = !expanded;
+    const cell = document.createElement("td");
+    cell.colSpan = 3;
+    const panel = document.createElement("div");
+    panel.className = "page-language-seo-panel";
+    panel.append(seoField("title", language.code, seo), seoField("description", language.code, seo));
+    cell.append(panel);
+    detailRow.append(cell);
+    toggle.addEventListener("click", () => {
+      detailRow.hidden = !detailRow.hidden;
+      toggle.setAttribute("aria-expanded", String(!detailRow.hidden));
+      toggle.textContent = detailRow.hidden ? "Edit SEO" : "Hide SEO";
+    });
+    return [row, detailRow];
+  }
+  function seoField(kind, code, seo) {
+    const wrap = document.createElement("div");
+    wrap.className = "page-language-seo-field";
+    const field = document.createElement(kind === "title" ? "p9r-input" : "p9r-textarea");
+    field.setAttribute("name", `${code}.${kind}`);
+    field.setAttribute("label", kind === "title" ? "SEO title" : "SEO description");
+    field.setAttribute("aria-label", `SEO ${kind} for ${languageName(code)}`);
+    field.setAttribute("value", seo.translations[code]?.[kind] ?? "");
+    field.setAttribute("placeholder", seo.defaults[kind]);
+    field.setAttribute("maxlength", kind === "title" ? "70" : "200");
+    if (kind === "description") {
+      field.setAttribute("rows", "3");
+      field.setAttribute("max-count", "200");
+    }
+    wrap.append(field);
+    return wrap;
+  }
+
+  // src/components/admin/Common/PageSettings/languages/manage/PageLanguagesView.ts
+  function createLanguagesForm(paths, seo, expanded, saved) {
+    const form = document.createElement("form");
+    form.className = "page-languages-form";
+    const intro = document.createElement("p");
+    intro.className = "page-languages-intro";
+    intro.textContent = "Changed URLs redirect permanently. Empty SEO fields use the page title and description.";
+    const scroll = document.createElement("div");
+    scroll.className = "page-languages-scroll";
+    const table = document.createElement("table");
+    table.className = "page-languages-table";
+    const head = document.createElement("thead");
+    const headingRow = document.createElement("tr");
+    for (const label of ["Language", "Current URL", "New URL"]) {
+      const heading = document.createElement("th");
+      heading.scope = "col";
+      heading.textContent = label;
+      headingRow.append(heading);
+    }
+    head.append(headingRow);
+    const body = document.createElement("tbody");
+    for (const language of paths.languages) {
+      body.append(...languageRows(language, paths, seo, expanded.has(language.code)));
+    }
+    table.append(head, body);
+    scroll.append(table);
+    const footer = document.createElement("div");
+    footer.className = "page-languages-footer";
+    const feedback = document.createElement("div");
+    const message = document.createElement("p");
+    message.className = "page-languages-error";
+    message.setAttribute("role", "alert");
+    const status = document.createElement("p");
+    status.className = "page-languages-status";
+    status.setAttribute("role", "status");
+    status.textContent = saved ? "Language changes saved." : "";
+    feedback.append(message, status);
+    const save = document.createElement("p9r-button");
+    save.setAttribute("type", "submit");
+    save.setAttribute("color", "primary");
+    save.setAttribute("disabled", "");
+    save.textContent = "Save changes";
+    footer.append(feedback, save);
+    form.append(intro, scroll, footer);
+    form.addEventListener("input", (event) => {
+      const target = event.target;
+      if (target instanceof HTMLElement && target.matches(".page-language-row p9r-input")) {
+        const input = target;
+        setPathError(input, pathInputError(input, paths));
+      }
+      message.textContent = "";
+      status.textContent = "";
+      save.toggleAttribute("disabled", !hasChanges(paths, seo, form));
+    });
+    return { form, message, save };
+  }
+  function pathInputs(form) {
+    return Array.from(form.querySelectorAll(".page-language-row p9r-input"));
+  }
+  function setPathError(input, text) {
+    if (text) {
+      input.setAttribute("error", text);
+    } else {
+      input.removeAttribute("error");
+    }
+  }
+  function pathInputError(input, paths) {
+    if (!input.value) {
+      return "";
+    }
+    if (!isValidPathFormat(input.value)) {
+      return "Use a path like /about-us.";
+    }
+    const defaultLanguage = paths.languages.find((language) => language.default)?.code ?? "";
+    const publicPath = publicPagePath(input.name, input.value, defaultLanguage);
+    return isReservedPublicPagePath(publicPath, paths.languages.map((language) => language.code)) ? "This URL is reserved by the CMS." : "";
+  }
+  function readTranslations(form) {
+    const translations = {};
+    for (const row of Array.from(form.querySelectorAll(".page-language-seo-row"))) {
+      const code = row.dataset.language;
+      const title = row.querySelector("p9r-input").value.trim();
+      const description = row.querySelector("p9r-textarea").value.trim();
+      if (title || description) {
+        translations[code] = { ...title ? { title } : {}, ...description ? { description } : {} };
+      }
+    }
+    return translations;
+  }
+  function hasPathChanges(paths, form) {
+    return pathInputs(form).some((input) => input.value !== (paths.paths[input.name] ?? ""));
+  }
+  function hasChanges(paths, seo, form) {
+    if (hasPathChanges(paths, form)) {
+      return true;
+    }
+    const draft = readTranslations(form);
+    return seo.languages.some((code) => {
+      const before = seo.translations[code] ?? {};
+      const after = draft[code] ?? {};
+      return (before.title ?? "") !== (after.title ?? "") || (before.description ?? "") !== (after.description ?? "");
+    });
+  }
+  function applySeoDefaults(root, seo, title, description) {
+    seo.defaults = { title, description };
+    for (const field of Array.from(root.querySelectorAll(".page-language-seo-field"))) {
+      const input = field.querySelector("p9r-input, p9r-textarea");
+      const kind = input?.getAttribute("name")?.split(".")[1];
+      if (input && kind) {
+        input.setAttribute("placeholder", seo.defaults[kind]);
+      }
+    }
+  }
+  function updateCurrentUrls(form, paths) {
+    for (const language of paths.languages) {
+      const row = Array.from(form.querySelectorAll(".page-language-row")).find((item) => item.querySelector(`p9r-input[name="${language.code}"]`));
+      const current = row?.querySelector(".page-language-old-value");
+      if (current) {
+        current.textContent = language.publicPath || "No URL yet";
+        current.toggleAttribute("data-empty", !language.publicPath);
+      }
+    }
+  }
+
+  // src/components/admin/Common/PageSettings/languages/manage/saveLanguages.ts
+  async function saveLanguages(form, paths, seo, basePath, isCurrent, onPathsSaved) {
+    const inputs = pathInputs(form);
+    for (const input of inputs) {
+      const error = pathInputError(input, paths);
+      if (error) {
+        setPathError(input, error);
+        input.focus();
+        throw new Error("Fix the highlighted URL before saving.");
+      }
+    }
+    if (hasPathChanges(paths, form)) {
+      const changed = inputs.filter((input) => input.value && input.value !== (paths.paths[input.name] ?? ""));
+      const availability = await Promise.all(changed.map(async (input) => {
+        const url = new URL(`${basePath}/api/page/exists`, document.baseURI);
+        url.searchParams.set("path", input.value);
+        url.searchParams.set("language", input.name);
+        url.searchParams.set("pageId", paths.id);
+        try {
+          const response3 = await fetch(url);
+          return { input, available: response3.ok && !(await response3.json()).exists };
+        } catch {
+          return { input, available: false };
+        }
+      }));
+      const unavailable = availability.find((result) => !result.available);
+      if (unavailable) {
+        setPathError(unavailable.input, "This URL is already reserved or could not be checked.");
+        throw new Error("Fix the highlighted URL before saving.");
+      }
+      if (!isCurrent()) {
+        return seo;
+      }
+      const nextPaths = Object.fromEntries(inputs.map((input) => [input.name, input.value]));
+      const response2 = await fetch(`${basePath}/api/page/paths?id=${encodeURIComponent(paths.id)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paths: nextPaths, expectedPaths: paths.paths })
+      });
+      if (!response2.ok) {
+        if (response2.status === 409) {
+          const body = await response2.json().catch(() => null);
+          if (body?.code === "page_path_update_in_progress" || body?.code === "page_paths_changed") {
+            throw new Error("Page URLs changed elsewhere. Reopen Languages before saving.");
+          }
+          throw new Error("A URL is already reserved.");
+        }
+        throw new Error("Could not save page URLs.");
+      }
+      const updated = await response2.json();
+      onPathsSaved(updated);
+      if (!isCurrent()) {
+        return seo;
+      }
+      Object.assign(paths, updated);
+    }
+    if (!isCurrent()) {
+      return seo;
+    }
+    if (!hasChanges(paths, seo, form)) {
+      return seo;
+    }
+    const response = await fetch(`${basePath}/api/page/seo?id=${encodeURIComponent(seo.id)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ translations: readTranslations(form) })
+    });
+    if (!response.ok) {
+      throw new Error("Could not save SEO translations.");
+    }
+    return await response.json();
+  }
+
+  // src/components/admin/Common/PageSettings/languages/manage/style.css
+  var style_default = `cms-page-languages {
+    display: block;
+    height: 100%;
+    min-height: 0;
+    color: var(--text-main, #1e293b);
+    font-family: inherit;
+}
+
+.page-languages-form {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    height: 100%;
+    min-height: 0;
+}
+
+.page-languages-intro {
+    margin: 0;
+    padding: 1.5rem 1.5rem 1rem;
+    color: var(--text-muted, #64748b);
+    font-size: 0.875rem;
+    line-height: 1.55;
+}
+
+.page-languages-scroll {
+    min-height: 0;
+    overflow: auto;
+    padding: 0 1.5rem 1.5rem;
+}
+
+.page-languages-table {
+    width: 100%;
+    border: 1px solid var(--border-default, #dce3ed);
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    background: var(--bg-surface, #fff);
+    table-layout: fixed;
+}
+
+.page-languages-table th {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--border-default, #dce3ed);
+    background: var(--bg-base, #f1f5f9);
+    color: var(--text-muted, #64748b);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.page-languages-table th:first-child { width: 27%; border-top-left-radius: 11px; }
+.page-languages-table th:nth-child(2) { width: 30%; }
+.page-languages-table th:last-child { border-top-right-radius: 11px; }
+
+.page-language-row td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-default, #dce3ed);
+    vertical-align: top;
+}
+
+.page-language-row:last-child td { border-bottom: 0; }
+.page-language-identity strong { display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; }
+.page-language-code {
+    padding: 0.2rem 0.45rem;
+    border-radius: 5px;
+    background: var(--bg-base, #f1f5f9);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+}
+
+.page-language-toggle {
+    margin: 0.6rem 0 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--primary-base, #2563eb);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: left;
+}
+
+.page-language-toggle:hover { text-decoration: underline; }
+.page-language-toggle::after { display: inline-block; margin-left: 0.25rem; content: "⌄"; transition: transform 120ms ease; }
+.page-language-toggle[aria-expanded="true"]::after { transform: rotate(180deg); }
+.page-language-toggle:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+
+.page-language-old-value {
+    display: block;
+    padding: 0.65rem 0.7rem;
+    overflow-wrap: anywhere;
+    border: 1px solid var(--border-default, #dce3ed);
+    border-radius: 8px;
+    background: var(--bg-base, #f1f5f9);
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.4;
+    user-select: text;
+}
+
+.page-language-old-value[data-empty] { color: var(--text-muted, #64748b); font-size: 0.75rem; }
+.page-language-seo-row[hidden] { display: none; }
+.page-language-seo-row > td { padding: 0; border-bottom: 1px solid var(--border-default, #dce3ed); }
+.page-language-seo-panel { display: grid; gap: 1rem; padding: 1.25rem 1.5rem 1.5rem; background: var(--bg-base, #f1f5f9); }
+.page-language-seo-field { display: grid; gap: 0.35rem; }
+.page-languages-error { margin: 0; color: var(--danger-base, #b42318); font-size: 0.8rem; }
+.page-languages-status { margin: 0; color: var(--success-base, #16803d); font-size: 0.8rem; }
+.page-languages-error:empty, .page-languages-status:empty { display: none; }
+.page-languages-loading, .page-languages-load-error { padding: 1.5rem; }
+.page-languages-load-error { display: grid; justify-items: start; gap: 0.75rem; }
+`;
+
+  // src/components/admin/Common/PageSettings/languages/manage/layout.css
+  var layout_default = `.page-languages-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-default, #dce3ed);
+    background: var(--bg-surface, #fff);
+}
+
+@media (max-width: 700px) {
+    .page-languages-intro { padding: 1rem; }
+    .page-languages-scroll { padding: 0 1rem 1rem; }
+    .page-languages-footer { padding: 1rem; }
+    .page-languages-table, .page-languages-table tbody, .page-language-row, .page-language-seo-row { display: block; width: 100%; box-sizing: border-box; }
+    .page-languages-table { border: 0; background: transparent; }
+    .page-languages-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .page-language-row { overflow: hidden; border: 1px solid var(--border-default, #dce3ed); border-radius: 12px; background: var(--bg-surface, #fff); }
+    .page-language-row:not(:first-child) { margin-top: 0.75rem; }
+    .page-language-row td { display: block; box-sizing: border-box; width: 100%; padding: 0.6rem 1rem; border-bottom: 0; }
+    .page-language-row td:first-child { padding-top: 1rem; }
+    .page-language-row td:last-child { padding-bottom: 1rem; }
+    .page-language-row td:not(.page-language-identity)::before { display: block; margin-bottom: 0.4rem; color: var(--text-muted, #64748b); content: attr(data-label); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+    .page-language-identity { display: flex !important; align-items: center; justify-content: space-between; gap: 0.75rem; }
+    .page-language-toggle { margin: 0; white-space: nowrap; }
+    .page-language-seo-row:not([hidden]) { margin-top: -0.75rem; overflow: hidden; border: 1px solid var(--border-default, #dce3ed); border-top: 0; border-radius: 0 0 12px 12px; }
+    .page-language-row:has(+ .page-language-seo-row:not([hidden])) { border-radius: 12px 12px 0 0; }
+    .page-language-seo-row > td { display: block; width: 100%; }
+    .page-language-seo-panel { padding: 1rem; }
+}
+`;
+
+  // src/components/admin/Common/PageSettings/languages/manage/PageLanguages.ts
+  var styles = `${style_default}
+${layout_default}`;
+
+  class PageLanguages extends HTMLElement {
+    paths = null;
+    seo = null;
+    pendingDefaults = null;
+    savingVersion = null;
+    requestVersion = 0;
+    modal = null;
+    reloadOnOpen = () => this.refresh();
+    static get observedAttributes() {
+      return ["page-id", "base-path"];
+    }
+    connectedCallback() {
+      this.modal = this.closest("p9r-modal");
+      this.modal?.addEventListener("open", this.reloadOnOpen);
+      this.refresh();
+    }
+    disconnectedCallback() {
+      this.modal?.removeEventListener("open", this.reloadOnOpen);
+      this.modal = null;
+      this.requestVersion += 1;
+    }
+    attributeChangedCallback() {
+      if (this.isConnected) {
+        this.refresh();
+      }
+    }
+    updateDefaults(title, description) {
+      this.pendingDefaults = { id: this.getAttribute("page-id") ?? "", title, description };
+      if (!this.seo) {
+        return;
+      }
+      applySeoDefaults(this, this.seo, title, description);
+    }
+    refresh() {
+      const id2 = this.getAttribute("page-id")?.trim();
+      const basePath = this.getAttribute("base-path") ?? "";
+      const version = ++this.requestVersion;
+      this.paths = null;
+      this.seo = null;
+      this.innerHTML = `<style>${styles}</style><p class="page-languages-loading">Loading page languages…</p>`;
+      if (id2 && !id2.includes("{{") && !basePath.includes("{{")) {
+        this.load(id2, basePath, version);
+      }
+    }
+    async load(id2, basePath, version) {
+      try {
+        const [pathsResponse, seoResponse] = await Promise.all([
+          fetch(`${basePath}/api/page/paths?id=${encodeURIComponent(id2)}`),
+          fetch(`${basePath}/api/page/seo?id=${encodeURIComponent(id2)}`)
+        ]);
+        if (!pathsResponse.ok || !seoResponse.ok) {
+          throw new Error("Could not load page languages.");
+        }
+        const [paths, seo] = await Promise.all([
+          pathsResponse.json(),
+          seoResponse.json()
+        ]);
+        if (!this.isConnected || version !== this.requestVersion) {
+          return;
+        }
+        if (this.pendingDefaults?.id === id2) {
+          seo.defaults = { title: this.pendingDefaults.title, description: this.pendingDefaults.description };
+        }
+        this.paths = paths;
+        this.seo = seo;
+        this.render();
+      } catch (error) {
+        if (this.isConnected && version === this.requestVersion) {
+          this.showError(error instanceof Error ? error.message : "Could not load page languages.");
+        }
+      }
+    }
+    render(saved = false) {
+      if (!this.paths || !this.seo) {
+        return;
+      }
+      const expanded = new Set(Array.from(this.querySelectorAll(".page-language-seo-row:not([hidden])")).map((row) => row.dataset.language).filter(Boolean));
+      this.innerHTML = `<style>${styles}</style>`;
+      const { form, message, save } = createLanguagesForm(this.paths, this.seo, expanded, saved);
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        this.save(form, message, save);
+      });
+      this.append(form);
+    }
+    async save(form, message, save) {
+      if (!this.paths || !this.seo || this.savingVersion === this.requestVersion || save.hasAttribute("disabled")) {
+        return;
+      }
+      const version = this.requestVersion;
+      const pageId = this.paths.id;
+      let pathsSaved = false;
+      const basePath = this.getAttribute("base-path") ?? "";
+      this.savingVersion = version;
+      save.setAttribute("disabled", "");
+      form.querySelectorAll("p9r-input, p9r-textarea").forEach((field) => field.setAttribute("disabled", ""));
+      message.textContent = "";
+      try {
+        const updatedSeo = await saveLanguages(form, this.paths, this.seo, basePath, () => this.isConnected && version === this.requestVersion, (updated) => {
+          if (!this.isConnected || this.getAttribute("page-id") !== pageId || updated.id !== pageId) {
+            return;
+          }
+          pathsSaved = true;
+          this.dispatchEvent(new CustomEvent("page:paths-saved", {
+            bubbles: true,
+            composed: true,
+            detail: { primaryPath: updated.languages.find((language) => language.default)?.publicPath }
+          }));
+          if (version !== this.requestVersion) {
+            this.refresh();
+          }
+        });
+        if (this.isConnected && version === this.requestVersion) {
+          this.seo = updatedSeo;
+          this.render(true);
+        }
+      } catch (error) {
+        if (this.isConnected && version === this.requestVersion) {
+          const reason = error instanceof Error ? error.message : "Could not save language changes.";
+          message.textContent = pathsSaved ? `URLs saved. ${reason} Retry to save the remaining changes.` : reason;
+          if (pathsSaved && this.paths) {
+            updateCurrentUrls(form, this.paths);
+          }
+        }
+      } finally {
+        if (this.savingVersion === version) {
+          this.savingVersion = null;
+        }
+        if (this.isConnected && version === this.requestVersion) {
+          form.querySelectorAll("p9r-input, p9r-textarea").forEach((field) => field.removeAttribute("disabled"));
+          save.toggleAttribute("disabled", !this.paths || !this.seo || !hasChanges(this.paths, this.seo, form));
+        }
+      }
+    }
+    showError(text) {
+      this.innerHTML = `<style>${styles}</style>`;
+      const failure = document.createElement("div");
+      failure.className = "page-languages-load-error";
+      const message = document.createElement("p");
+      message.setAttribute("role", "alert");
+      message.textContent = text;
+      const retry = document.createElement("p9r-button");
+      retry.setAttribute("type", "button");
+      retry.textContent = "Try again";
+      retry.addEventListener("click", () => this.refresh());
+      failure.append(message, retry);
+      this.append(failure);
+    }
+  }
+
+  // src/components/admin/Common/PageSettings/languages/delete.css
+  var delete_default = `cms-page-delete {
+    display: block;
+    color: var(--text-main, #1e293b);
+    font-family: inherit;
+}
+
+.page-delete-form {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.page-path-error {
+    color: var(--danger-base, #b42318);
+}
+`;
+
+  // src/components/admin/Common/PageSettings/languages/PageDelete.ts
+  class PageDelete extends HTMLElement {
+    deleting = false;
+    requestVersion = 0;
+    static get observedAttributes() {
+      return ["page-id", "base-path"];
+    }
+    connectedCallback() {
+      this.render();
+    }
+    disconnectedCallback() {
+      this.requestVersion += 1;
+    }
+    attributeChangedCallback() {
+      if (this.isConnected) {
+        this.render();
+      }
+    }
+    render() {
+      const ownId = this.getAttribute("page-id")?.trim();
+      const basePath = this.getAttribute("base-path") ?? "";
+      const version = ++this.requestVersion;
+      this.innerHTML = `<style>${delete_default}</style>`;
+      const form = document.createElement("form");
+      form.className = "page-delete-form";
+      const explanation = document.createElement("p");
+      explanation.textContent = "Old URLs redirect to the replacement, or return 410 Gone if none is selected. They stay reserved.";
+      const select = document.createElement("p9r-select");
+      select.setAttribute("name", "alternativeId");
+      select.setAttribute("label", "Alternative page");
+      select.append(this.option("None — return 410 Gone", ""));
+      const message = document.createElement("p");
+      message.className = "page-path-error";
+      message.setAttribute("role", "alert");
+      const submit = document.createElement("p9r-button");
+      submit.setAttribute("type", "submit");
+      submit.setAttribute("color", "danger");
+      submit.setAttribute("disabled", "");
+      submit.textContent = "Delete page";
+      form.append(explanation, select, message, submit);
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        this.deletePage(select.value, message, submit);
+      });
+      this.append(form);
+      if (ownId && !ownId.includes("{{") && !basePath.includes("{{")) {
+        this.loadAlternatives(ownId, basePath, version, select, submit, message);
+      }
+    }
+    async loadAlternatives(ownId, basePath, version, select, submit, message) {
+      try {
+        const response = await fetch(`${basePath}/api/page/list?visible=published`);
+        if (!response.ok) {
+          throw new Error("Could not load alternative pages.");
+        }
+        const pages = await response.json();
+        if (!this.isConnected || version !== this.requestVersion) {
+          return;
+        }
+        for (const page of pages) {
+          if (page.id !== ownId) {
+            select.append(this.option(`${page.title} (${page.path})`, page.id));
+          }
+        }
+        submit.removeAttribute("disabled");
+      } catch {
+        if (this.isConnected && version === this.requestVersion) {
+          message.textContent = "Could not load alternative pages. Reopen this panel to try again.";
+        }
+      }
+    }
+    option(label, value) {
+      const option = document.createElement("option");
+      option.textContent = label;
+      option.value = value;
+      return option;
+    }
+    async deletePage(alternativeId, message, submit) {
+      if (this.deleting || submit.hasAttribute("disabled")) {
+        return;
+      }
+      this.deleting = true;
+      submit.setAttribute("disabled", "");
+      const basePath = this.getAttribute("base-path") ?? "";
+      const id2 = this.getAttribute("page-id") ?? "";
+      const url = new URL(`${basePath}/api/page`, document.baseURI);
+      url.searchParams.set("id", id2);
+      if (alternativeId) {
+        url.searchParams.set("alternativeId", alternativeId);
+      }
+      try {
+        const response = await fetch(url, { method: "DELETE" });
+        if (!response.ok) {
+          throw new Error("Delete failed.");
+        }
+        window.location.assign(`${basePath}/admin/pages`);
+      } catch {
+        message.textContent = "Could not delete this page.";
+        this.deleting = false;
+        submit.removeAttribute("disabled");
+      }
+    }
+  }
+
+  // src/components/admin/Common/PageSettings/languages/PageDetailSync.ts
+  class PageDetailSync extends HTMLElement {
+    connectedCallback() {
+      this.style.display = "contents";
+      this.addEventListener("click", this.openAction);
+      this.addEventListener("cms-source:success", this.settingsSaved);
+      this.addEventListener("page:paths-saved", this.pathsSaved);
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this.openAction);
+      this.removeEventListener("cms-source:success", this.settingsSaved);
+      this.removeEventListener("page:paths-saved", this.pathsSaved);
+    }
+    openAction = (event) => {
+      const item = event.composedPath().find((target) => target instanceof HTMLElement && target.localName === "p9r-action-menu-item");
+      const targetId = item?.getAttribute("data-modal-target");
+      if (targetId !== "manage-page-languages-modal" && targetId !== "delete-page-modal") {
+        return;
+      }
+      this.querySelector(`#${targetId}`)?.show?.();
+    };
+    settingsSaved = (event) => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement) || form.id !== "page-settings-form") {
+        return;
+      }
+      const title = form.querySelector('p9r-input[name="title"]')?.value.trim();
+      const heading = this.querySelector('cms-shell-detail > [slot="title"]');
+      if (title && heading) {
+        heading.textContent = title;
+      }
+      const description = form.querySelector('p9r-textarea[name="description"]')?.value;
+      if (title !== undefined && description !== undefined) {
+        this.querySelector("cms-page-languages")?.updateDefaults(title, description);
+      }
+    };
+    pathsSaved = (event) => {
+      const path = event.detail?.primaryPath;
+      if (!path) {
+        return;
+      }
+      const field = this.querySelector('p9r-input[name="path"]');
+      if (field) {
+        field.setAttribute("value", path);
+        field.value = path;
+      }
+      const link = this.querySelector('p9r-action-menu-item[data-action="view-public"]');
+      const currentUrl = link?.getAttribute("href");
+      if (currentUrl) {
+        link?.setAttribute("href", currentUrl.startsWith("/") ? path : new URL(path, currentUrl).href);
+      }
+    };
   }
 
   // src/components/admin/Resources/Dashboards/domain/formatting.ts
@@ -21238,7 +22118,7 @@ nav {
   var adminSystemSettingsStore = new AdminSystemSettingsStore;
 
   // src/components/admin/Layout/AdminLayout/style.css
-  var style_default = `:host {
+  var style_default2 = `:host {
     display: block;
     position: fixed;
     inset: 0;
@@ -21505,7 +22385,7 @@ slot[name="secondary-lateral-nav"]::slotted(*) {
     _pageTabs = null;
     constructor() {
       super({
-        css: style_default,
+        css: style_default2,
         template: template_default
       });
     }
@@ -21769,7 +22649,7 @@ slot[name="secondary-lateral-nav"]::slotted(*) {
       const target = this.getAttribute("target");
       const method = this.getAttribute("method") || "POST";
       if (!target) {
-        wb("cms-confirm-form: missing target", { type: "error" });
+        kb("cms-confirm-form: missing target", { type: "error" });
         return;
       }
       const url = force ? withForce(target) : target;
@@ -21777,7 +22657,7 @@ slot[name="secondary-lateral-nav"]::slotted(*) {
       try {
         res = await fetch(url, { method });
       } catch (e) {
-        wb(`Request failed: ${e instanceof Error ? e.message : String(e)}`, { type: "error" });
+        kb(`Request failed: ${e instanceof Error ? e.message : String(e)}`, { type: "error" });
         return;
       }
       if (res.ok) {
@@ -21805,7 +22685,7 @@ ${followMessage}`)) {
           message = body.error;
         }
       } catch {}
-      wb(message || `HTTP ${res.status}`, { type: "error" });
+      kb(message || `HTTP ${res.status}`, { type: "error" });
     }
     _onSuccess() {
       const emit = this.getAttribute("emit");
@@ -22054,7 +22934,7 @@ ${followMessage}`)) {
   async function fetchKeys(api) {
     const res = await fetch(`${api}/keys`, { headers: { Accept: "application/json" } });
     if (!res.ok) {
-      wb("Failed to load credentials", { type: "error" });
+      kb("Failed to load credentials", { type: "error" });
       return [];
     }
     return res.json();
@@ -22203,19 +23083,19 @@ ${followMessage}`)) {
       keyInput.setAttribute("invalid", "");
       keyInput.setAttribute("hint", keyError);
       keyInput.setAttribute("hint-level", "error");
-      wb(`Invalid key: ${keyError}`, { type: "error" });
+      kb(`Invalid key: ${keyError}`, { type: "error" });
       return;
     }
     if (host._keys.includes(key)) {
-      wb(`Credential ${key} already exists`, { type: "warning" });
+      kb(`Credential ${key} already exists`, { type: "warning" });
       return;
     }
     const r = await createCredential(host._api, key, value);
     if (!r.ok) {
-      wb(`Create failed: ${r.error}`, { type: "error" });
+      kb(`Create failed: ${r.error}`, { type: "error" });
       return;
     }
-    wb(`Credential ${key} created`, { type: "success" });
+    kb(`Credential ${key} created`, { type: "success" });
     m3.removeAttribute("open");
     await refreshList(host);
     setValue(host, keyToRef(key));
@@ -23930,7 +24810,7 @@ input {
 `;
 
   // src/components/admin/Common/EmptyState/style.css
-  var style_default2 = `:host {
+  var style_default3 = `:host {
     display: table-row;
     position: relative;
     height: 320px;
@@ -23986,7 +24866,7 @@ input {
   class EmptyState extends l {
     constructor() {
       super({
-        css: style_default2,
+        css: style_default3,
         template: template_default4
       });
     }
@@ -24025,7 +24905,7 @@ input {
       const message = this.getAttribute("message") ?? "";
       const type = this.getAttribute("type") ?? "success";
       if (message) {
-        wb(message, { type });
+        kb(message, { type });
       }
     };
     connectedCallback() {
@@ -24151,7 +25031,7 @@ input {
       const next = !this._enabled;
       if (await this._send("PATCH", { id: this._id, enabled: next })) {
         this.setAttribute("enabled", String(next));
-        wb(next ? "Provider enabled" : "Provider disabled", { type: "success" });
+        kb(next ? "Provider enabled" : "Provider disabled", { type: "success" });
         this._fire();
       }
     }
@@ -24160,7 +25040,7 @@ input {
         return;
       }
       if (await this._send("DELETE", { id: this._id })) {
-        wb("Provider removed", { type: "success" });
+        kb("Provider removed", { type: "success" });
         this._fire();
       }
     }
@@ -24172,12 +25052,12 @@ input {
           body: JSON.stringify(body)
         });
         if (!res.ok) {
-          wb("Action failed", { type: "error" });
+          kb("Action failed", { type: "error" });
           return false;
         }
         return true;
       } catch {
-        wb("Network error", { type: "error" });
+        kb("Network error", { type: "error" });
         return false;
       }
     }
@@ -24265,15 +25145,15 @@ input {
           body: JSON.stringify({ sub: this._sub, role })
         });
         if (res.ok) {
-          wb("Role updated", { type: "success" });
+          kb("Role updated", { type: "success" });
           if (this._emit) {
             document.dispatchEvent(new Event(this._emit, { bubbles: true }));
           }
         } else {
-          wb("Failed to update role", { type: "error" });
+          kb("Failed to update role", { type: "error" });
         }
       } catch {
-        wb("Network error", { type: "error" });
+        kb("Network error", { type: "error" });
       }
     }
     get name() {
@@ -24626,20 +25506,20 @@ input {
           body: JSON.stringify({ id: this.data.role.id, label: this.data.role.label, grants })
         });
         if (res.ok) {
-          wb("Role permissions saved", { type: "success" });
+          kb("Role permissions saved", { type: "success" });
           location.href = this._back;
         } else {
-          wb("Failed to save permissions", { type: "error" });
+          kb("Failed to save permissions", { type: "error" });
         }
       } catch {
-        wb("Network error", { type: "error" });
+        kb("Network error", { type: "error" });
       }
     }
   }
   customElements.define("cms-role-editor", CmsRoleEditor);
 
   // src/components/admin/Actions/UserActions/style.css
-  var style_default3 = `:host {
+  var style_default4 = `:host {
     display: inline-flex;
 }
 
@@ -24674,7 +25554,7 @@ p9r-action-menu {
       return ["password-reset", "email-verification", "mark-verified"];
     }
     constructor() {
-      super({ css: style_default3, template: template_default5 });
+      super({ css: style_default4, template: template_default5 });
     }
     connectedCallback() {
       this.addEventListener("click", this.onClick);
@@ -24705,10 +25585,10 @@ p9r-action-menu {
       }
       const res = await fetch(this.url(action), this.request(action, sub)).catch(() => null);
       if (!res?.ok) {
-        wb(await errorMessage(res), { type: "error" });
+        kb(await errorMessage(res), { type: "error" });
         return;
       }
-      wb(ACTIONS[action].label, { type: "success" });
+      kb(ACTIONS[action].label, { type: "success" });
       if (action === "delete") {
         window.location.href = `${this.basePath}/admin/users`;
       } else {
@@ -24799,7 +25679,7 @@ p9r-action-menu {
           body: JSON.stringify({ name })
         });
         if (!res.ok) {
-          wb("Could not create token", { type: "error" });
+          kb("Could not create token", { type: "error" });
           return;
         }
         const { token } = await res.json();
@@ -24809,14 +25689,14 @@ p9r-action-menu {
         this._q('[data-role="reveal"]').hidden = false;
         document.dispatchEvent(new Event(this._emit, { bubbles: true }));
       } catch {
-        wb("Network error", { type: "error" });
+        kb("Network error", { type: "error" });
       } finally {
         btn.removeAttribute("disabled");
       }
     }
     _copy() {
       navigator.clipboard?.writeText(this._token);
-      wb("Token copied", { type: "success" });
+      kb("Token copied", { type: "success" });
     }
     _reset() {
       this._token = "";
@@ -24880,7 +25760,7 @@ p9r-action-menu {
 `;
 
   // src/components/admin/Secrets/style.css
-  var style_default4 = `:host {
+  var style_default5 = `:host {
     display: block;
 }
 
@@ -24995,10 +25875,10 @@ p9r-action-menu {
   async function opConfigureSecret(api, key, value) {
     const r = await postSecret(api, key, value);
     if (r.ok) {
-      wb(`Secret ${key} updated`, { type: "success" });
+      kb(`Secret ${key} updated`, { type: "success" });
       return true;
     } else {
-      wb(`Update failed: ${r.error}`, { type: "error" });
+      kb(`Update failed: ${r.error}`, { type: "error" });
       return false;
     }
   }
@@ -25008,9 +25888,9 @@ p9r-action-menu {
     }
     const r = await deleteSecret(api, key);
     if (r.ok) {
-      wb(`Secret ${key} deleted`, { type: "success" });
+      kb(`Secret ${key} deleted`, { type: "success" });
     } else {
-      wb(`Delete failed: ${r.error}`, { type: "error" });
+      kb(`Delete failed: ${r.error}`, { type: "error" });
     }
   }
 
@@ -25098,7 +25978,7 @@ p9r-action-menu {
     _configureDialog;
     _onReload = () => this._reload();
     constructor() {
-      super({ css: style_default4, template: template_default6 });
+      super({ css: style_default5, template: template_default6 });
       this._configureDialog = new SecretConfigureDialog(this.shadowRoot, () => this._api);
     }
     connectedCallback() {
@@ -25150,7 +26030,7 @@ p9r-action-menu {
   }
 
   // src/components/admin/Layout/SettingsSections/style.css
-  var style_default5 = `:host {
+  var style_default6 = `:host {
     display: block;
     height: 100%;
 }
@@ -25282,7 +26162,7 @@ w13c-lateral-menu-item {
 
   class CmsSettingsNav extends l {
     constructor() {
-      super({ css: style_default5, template: template_default7 });
+      super({ css: style_default6, template: template_default7 });
     }
     connectedCallback() {
       super.connectedCallback();
@@ -25478,7 +26358,7 @@ w13c-lateral-menu-item {
   }
 
   // src/components/admin/Layout/LanguageSettings/style.css
-  var style_default6 = `cms-language-settings {
+  var style_default7 = `cms-language-settings {
     display: grid;
     gap: 16px;
     color: var(--text-main);
@@ -25654,7 +26534,7 @@ cms-language-settings .language-actions p9r-button {
     initialized = false;
     connectedCallback() {
       if (!this.initialized) {
-        this.innerHTML = `<style>${style_default6}</style>${template_default8}`;
+        this.innerHTML = `<style>${style_default7}</style>${template_default8}`;
         this.initialized = true;
       }
       this.addEventListener("click", this.onClick);
@@ -25871,7 +26751,7 @@ cms-language-settings .language-actions p9r-button {
   }
 
   // src/components/admin/Layout/AnalyticsPrivacySettings/style.css
-  var style_default7 = `cms-analytics-privacy-settings {
+  var style_default8 = `cms-analytics-privacy-settings {
     display: block;
     padding: 1.5rem;
 }
@@ -26070,7 +26950,7 @@ button {
     request = null;
     connectedCallback() {
       if (!this.hasChildNodes()) {
-        this.innerHTML = `<style>${style_default7}</style>${template_default9}`;
+        this.innerHTML = `<style>${style_default8}</style>${template_default9}`;
         this.query("[data-retry]").addEventListener("click", () => void this.load());
         this.query("[data-settings-form]").addEventListener("submit", (event) => void this.saveSettings(event));
         this.query("[data-snapshot-form]").addEventListener("submit", (event) => void this.saveSnapshot(event));
@@ -26199,7 +27079,7 @@ button {
   }
 
   // src/components/admin/Layout/ShellDetail/style.css
-  var style_default8 = `:host {
+  var style_default9 = `:host {
     display: block;
 }
 
@@ -26575,7 +27455,7 @@ p {
   }
 
   // src/components/admin/Layout/ShellDetail/body/style.css
-  var style_default9 = `:host {
+  var style_default10 = `:host {
     display: block;
     min-width: 0;
     container-type: inline-size;
@@ -26721,7 +27601,7 @@ slot::slotted(*) { min-width: 0; max-width: 100%; }
     stopSourceObservation;
     invalidPending = false;
     constructor() {
-      super({ css: style_default9, template: template_default11 });
+      super({ css: style_default10, template: template_default11 });
       this.tabs = this.shadowRoot.querySelector("p9r-tabs");
       this.leftAside = this.shadowRoot.querySelector(".shell-detail-left-aside");
       this.main = this.shadowRoot.querySelector(".shell-detail-main");
@@ -26838,7 +27718,7 @@ slot::slotted(*) { min-width: 0; max-width: 100%; }
     actions = null;
     chromeSlots = [];
     constructor() {
-      super({ css: style_default8, template: template_default10 });
+      super({ css: style_default9, template: template_default10 });
     }
     connectedCallback() {
       super.connectedCallback();
@@ -28746,7 +29626,7 @@ circle.endpoint-timeline__errors {
 `;
 
   // src/components/admin/Layout/EndpointPerformance/styles/layout.css
-  var layout_default = `cms-endpoint-performance {
+  var layout_default2 = `cms-endpoint-performance {
     display: block;
     max-width: 1280px;
 }
@@ -29197,7 +30077,7 @@ circle.endpoint-timeline__errors {
     mount() {
       const style = document.createElement("style");
       const template3 = document.createElement("template");
-      style.textContent = [dashboard_default, data_default, states_default, layout_default, table_default, chart_default2].join(`
+      style.textContent = [dashboard_default, data_default, states_default, layout_default2, table_default, chart_default2].join(`
 `);
       template3.innerHTML = template_default12;
       this.replaceChildren(style, template3.content.cloneNode(true));
@@ -29582,7 +30462,7 @@ circle.endpoint-timeline__errors {
   }
 
   // src/components/admin/Resources/Dashboards/navigation/icons/style.css
-  var style_default10 = `:host { display: inline-flex; width: var(--icon-size, 16px); height: var(--icon-size, 16px); }
+  var style_default11 = `:host { display: inline-flex; width: var(--icon-size, 16px); height: var(--icon-size, 16px); }
 span { display: contents; }
 svg { width: 100%; height: 100%; stroke: currentColor; fill: none; }
 `;
@@ -29590,7 +30470,7 @@ svg { width: 100%; height: 100%; stroke: currentColor; fill: none; }
   // src/components/admin/Resources/Dashboards/navigation/icons/Icon.ts
   class DashboardIcon extends l {
     constructor() {
-      super({ css: style_default10, template: "<span></span>" });
+      super({ css: style_default11, template: "<span></span>" });
     }
     static observedAttributes = ["name", "svg"];
     attributeChangedCallback() {
@@ -29871,7 +30751,7 @@ w13c-lateral-menu {
     const saved = (detail = { created: false }) => {
       acknowledge(submitted);
       Zi(host);
-      wb("Changes saved", { type: "success" });
+      kb("Changes saved", { type: "success" });
       host.dispatchEvent(new CustomEvent(DETAIL_SAVED_EVENT, { bubbles: true, composed: true, detail }));
     };
     const success = (event) => {
@@ -29882,7 +30762,7 @@ w13c-lateral-menu {
           const id2 = valueAt(body, creation.idPath ?? "id");
           if (typeof id2 !== "string" && typeof id2 !== "number" || !String(id2)) {
             host.setAttribute("data-create-result-invalid", "");
-            wb("The resource was created, but the response did not identify it. Open the list to find it before trying again.", { type: "error" });
+            kb("The resource was created, but the response did not identify it. Open the list to find it before trying again.", { type: "error" });
             return;
           }
           saved({ created: true, body, id: String(id2) });
@@ -29894,7 +30774,7 @@ w13c-lateral-menu {
     const partial = (event) => {
       if (host.isConnected && scope() === submittedScope && event.target.matches("[data-detail-save]") && event.target.closest("cms-dashboard-w-detail") === host) {
         awaitingRead = true;
-        wb("Changes were saved, but the detail could not be reloaded. Retry the read before saving again.", {
+        kb("Changes were saved, but the detail could not be reloaded. Retry the read before saving again.", {
           type: "warning"
         });
       }
@@ -29911,7 +30791,7 @@ w13c-lateral-menu {
       if (awaitingRead) {
         event.preventDefault();
         event.stopImmediatePropagation();
-        wb("Retry the detail read before running another operation.", { type: "warning" });
+        kb("Retry the detail read before running another operation.", { type: "warning" });
         return;
       }
       if (!event.target.matches("[data-detail-save]")) {
@@ -29922,7 +30802,7 @@ w13c-lateral-menu {
         event.preventDefault();
         event.stopImmediatePropagation();
         if (missing) {
-          wb("The detail identity or revision is missing. Reload the detail.", { type: "error" });
+          kb("The detail identity or revision is missing. Reload the detail.", { type: "error" });
         }
         return;
       }
@@ -30364,7 +31244,7 @@ w13c-lateral-menu {
               return;
             }
             apply(upload.field.id, control.items.flatMap((current) => current.url !== item.url ? [current] : detail.previousItem ? [detail.previousItem] : []));
-            wb(error instanceof Error ? error.message : "Image upload failed", { type: "error" });
+            kb(error instanceof Error ? error.message : "Image upload failed", { type: "error" });
           }
         });
       }
@@ -32643,7 +33523,7 @@ p9r-token-input {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/style.css
-  var style_default11 = `:host {
+  var style_default12 = `:host {
     display: block;
     min-width: 0;
     --dashboard-table-columns: 46px 1fr;
@@ -32794,7 +33674,7 @@ slot {
   class DashboardWTable extends l {
     rowsObserver = new MutationObserver(() => this.syncPresentation());
     constructor() {
-      super({ css: style_default11, template: template_default14 });
+      super({ css: style_default12, template: template_default14 });
     }
     set selected(value2) {
       this.setAttribute("data-selected", value2);
@@ -36288,12 +37168,12 @@ slot { display: contents; }
           throw new Error("The media endpoint returned no usable media item");
         }
         settleNestedMedia(context, key, media2, widget, result.item);
-        wb(`Media ${media2.action} completed`, { type: "success" });
+        kb(`Media ${media2.action} completed`, { type: "success" });
         return;
       }
       removeDraftField(context.drafts, key, media2.field);
       context.acknowledgeDetailFields?.(detail.collection, detail.row, { [media2.field]: media2.value });
-      wb(`Media ${media2.action} completed`, { type: "success" });
+      kb(`Media ${media2.action} completed`, { type: "success" });
       context.reload(detail.collection, detail.row);
     } catch (error) {
       if (finishAction() === "stale") {
@@ -36308,7 +37188,7 @@ slot { display: contents; }
         }
         context.restoreDetailField?.(detail.collection, detail.row, media2.field, media2.value, media2.previousValue);
       }
-      wb(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
+      kb(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
     }
   }
   function removeDraftField(drafts, key, field2) {
@@ -36337,13 +37217,13 @@ slot { display: contents; }
       }
       if (finishAction() !== "stale") {
         downloadBlob(result.blob, result.filename);
-        wb(`${action.action} downloaded`, { type: "success" });
+        kb(`${action.action} downloaded`, { type: "success" });
       }
     } catch (error) {
       if (finishAction() === "stale") {
         return;
       }
-      wb(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
+      kb(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
     }
   }
   function downloadBlob(blob, filename) {
@@ -36543,7 +37423,7 @@ slot { display: contents; }
       }
       const body = event.detail.body;
       host.setAttribute(OPERATION_AWAITING_READ, formId2);
-      wb("The operation completed, but the detail could not be reloaded. Retry the read before making further changes.", { type: "warning" });
+      kb("The operation completed, but the detail could not be reloaded. Retry the read before making further changes.", { type: "warning" });
       stopRead?.();
       stopRead = qd(host, (state) => {
         if (state.disposed || !host.isConnected || scope() !== submittedScope) {
@@ -36587,7 +37467,7 @@ slot { display: contents; }
       let selectedKey = "";
       const capture = trackOperationCompletion(table, form.id, (body) => {
         table.querySelector(`[id="${modal.id}"]`)?.removeAttribute("open");
-        wb("Operation completed", { type: "success" });
+        kb("Operation completed", { type: "success" });
         if (action.after?.opens) {
           const row = action.after.row ? resolveExpression(action.after.row, { result: body, selection: { id: selectedKey } }) : selectedKey;
           if ((typeof row === "string" || typeof row === "number") && String(row)) {
@@ -36607,7 +37487,7 @@ slot { display: contents; }
         if (!current || hasMissingTechnicalFields(event.target) || table.hasAttribute(OPERATION_AWAITING_READ)) {
           event.preventDefault();
           event.stopImmediatePropagation();
-          wb(table.hasAttribute(OPERATION_AWAITING_READ) ? "The operation completed. Retry the list read before submitting again." : "Select exactly one available row before running this operation.", { type: "warning" });
+          kb(table.hasAttribute(OPERATION_AWAITING_READ) ? "The operation completed. Retry the list read before submitting again." : "Select exactly one available row before running this operation.", { type: "warning" });
           return;
         }
         selectedKey = keys[0];
@@ -36661,7 +37541,7 @@ slot { display: contents; }
         if (action.section && operation.refresh !== "none" && !action.after?.opens) {
           const source2 = host.querySelector(`[data-widget-id="${action.section}"] [cms-source]`);
           if (source2) {
-            Ic(source2).catch(() => wb("The operation completed, but its list could not be reloaded.", { type: "warning" }));
+            Ic(source2).catch(() => kb("The operation completed, but its list could not be reloaded.", { type: "warning" }));
           }
         }
         host.querySelector(`[id="${modalId}"]`)?.removeAttribute("open");
@@ -36688,7 +37568,7 @@ slot { display: contents; }
         if (host.hasAttribute(OPERATION_AWAITING_READ)) {
           event.preventDefault();
           event.stopImmediatePropagation();
-          wb("The operation already completed. Retry the detail read before submitting another form.", { type: "warning" });
+          kb("The operation already completed. Retry the detail read before submitting another form.", { type: "warning" });
           return;
         }
         if (event.target.getAttribute("id") !== formId2) {
@@ -36702,7 +37582,7 @@ slot { display: contents; }
         if (missing || unavailable || dirty) {
           event.preventDefault();
           event.stopImmediatePropagation();
-          wb(missing ? "The operation identity or revision is missing. Reload the detail." : unavailable ? "This operation is no longer available for the current detail." : "Save or discard the current changes before running this operation.", { type: "warning" });
+          kb(missing ? "The operation identity or revision is missing. Reload the detail." : unavailable ? "This operation is no longer available for the current detail." : "Save or discard the current changes before running this operation.", { type: "warning" });
           return;
         }
         capture();
@@ -36860,7 +37740,7 @@ slot { display: contents; }
         return;
       }
       if (hasMissingTechnicalFields(this.form)) {
-        wb("The order cannot be saved because its parent identity is unavailable.", { type: "error" });
+        kb("The order cannot be saved because its parent identity is unavailable.", { type: "error" });
         return;
       }
       this.draft = order;
@@ -36888,7 +37768,7 @@ slot { display: contents; }
     failed = (event) => {
       if (event.target === this.form) {
         this.finish();
-        wb("The order could not be saved. The previous order has been restored.", { type: "error" });
+        kb("The order could not be saved. The previous order has been restored.", { type: "error" });
       }
     };
     readFailed = (event) => {
@@ -37022,7 +37902,7 @@ slot { display: contents; }
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/style.css
-  var style_default12 = `:host {
+  var style_default13 = `:host {
     display: block;
     max-inline-size: 960px;
 }
@@ -37088,7 +37968,7 @@ slot { display: contents; }
     rowsObserver = new MutationObserver(() => this.syncItems());
     dragging = null;
     constructor() {
-      super({ css: style_default12, template: template_default15 });
+      super({ css: style_default13, template: template_default15 });
       this.internals = this.attachInternals();
     }
     get pendingOrder() {
@@ -37442,7 +38322,7 @@ slot { display: contents; }
         if (!options2.saved) {
           const read = owner.hasAttribute("cms-source") ? owner : owner.querySelector("[cms-source]");
           if (read) {
-            Ic(read).catch(() => wb("Reload the list to see the saved resource.", { type: "warning" }));
+            Ic(read).catch(() => kb("Reload the list to see the saved resource.", { type: "warning" }));
           }
         }
       });
@@ -37467,7 +38347,7 @@ slot { display: contents; }
       owner.append(modal);
       modal.setAttribute("open", "");
     } catch (error) {
-      wb(error instanceof Error ? error.message : "The detail could not be opened.", { type: "error" });
+      kb(error instanceof Error ? error.message : "The detail could not be opened.", { type: "error" });
     }
   }
 
@@ -38145,12 +39025,12 @@ p {
 `;
 
   // src/components/admin/Resources/Dashboards/view/DashboardView.ts
-  var styles = [base_default2, panels_default].join(`
+  var styles2 = [base_default2, panels_default].join(`
 `);
 
   class DashboardView extends DashboardViewController {
     constructor() {
-      super(styles, template_default16);
+      super(styles2, template_default16);
     }
     connectedCallback() {
       super.connectedCallback();
@@ -38229,7 +39109,7 @@ p {
     };
     onWidgetAction = (event) => {
       if (this.isExampleMode()) {
-        wb(`${event.detail.action} clicked`, { type: "success" });
+        kb(`${event.detail.action} clicked`, { type: "success" });
         return;
       }
       if (event.detail.target) {
@@ -38243,14 +39123,14 @@ p {
     };
     onWidgetMediaAction = (event) => {
       if (this.isExampleMode()) {
-        wb(`Media ${event.detail.action} event captured`, { type: "success" });
+        kb(`Media ${event.detail.action} event captured`, { type: "success" });
         return;
       }
       runDashboardMediaAction(this.actionContext(), event.detail, event.target instanceof HTMLElement ? event.target : undefined);
     };
     onWidgetFilterChange = (event) => {
       if (this.isExampleMode()) {
-        wb("Filters applied", { type: "success" });
+        kb("Filters applied", { type: "success" });
         return;
       }
       this.setDashboardFilters(event.detail.widget, event.detail.filters);
@@ -38391,7 +39271,7 @@ p {
   }
 
   // src/components/admin/DashboardWorkspace/nav/style.css
-  var style_default13 = `:host {
+  var style_default14 = `:host {
     display: block;
     height: 100%;
     min-width: 0;
@@ -38479,7 +39359,7 @@ w13c-lateral-menu {
   class CmsDashboardNav extends l {
     selectedId = "";
     constructor() {
-      super({ css: style_default13, template: template_default17 });
+      super({ css: style_default14, template: template_default17 });
     }
     connectedCallback() {
       super.connectedCallback();
@@ -40162,7 +41042,7 @@ cms-dashboard-icon svg {
     return true;
   }
   // src/components/admin/DashboardWorkspace/configuration/style.css
-  var style_default14 = `:host {
+  var style_default15 = `:host {
     display: block;
     min-width: 0;
 }
@@ -40223,7 +41103,7 @@ p9r-modal {
     views = [];
     internals = this.attachInternals();
     constructor() {
-      super({ css: `${style_default14}${navigation_default2}`, template: template_default19 });
+      super({ css: `${style_default15}${navigation_default2}`, template: template_default19 });
     }
     attributeChangedCallback() {
       if (this.isConnected) {
@@ -40864,7 +41744,7 @@ p9r-modal {
   }
 
   // src/components/admin/Resources/Functions/detail/style.css
-  var style_default15 = `:host {
+  var style_default16 = `:host {
     display: block;
 }
 * {
@@ -41089,7 +41969,7 @@ pre {
       }
     }
     renderState(message) {
-      this.replaceChildren(styleNode(style_default15), state(message));
+      this.replaceChildren(styleNode(style_default16), state(message));
     }
     renderDetail() {
       if (!this.detail) {
@@ -41101,7 +41981,7 @@ pre {
       body.slot = "body";
       body.append(inputsSection(this.detail, this.draft, (path) => void this.onInputChange(path)), resultSection(), functionSummarySection(this.detail), contractSection(this.detail));
       shell.append(backLink(), title(this.detail), headerActions(), body);
-      this.replaceChildren(styleNode(style_default15), shell);
+      this.replaceChildren(styleNode(style_default16), shell);
       this.bindRefs();
       hydrateExecuteFields(this, this.detail, this.draft);
     }
@@ -41708,7 +42588,7 @@ textarea.compact {
 `;
 
   // src/components/admin/Resources/Functions/create/styles/layout.css
-  var layout_default2 = `:host {
+  var layout_default3 = `:host {
     display: block;
 }
 
@@ -42056,7 +42936,7 @@ details[open] > summary > .chevron {
 `;
 
   // src/components/admin/Resources/Functions/create/styles/index.ts
-  var styles_default4 = [layout_default2, mapping_default, controls_default2, steps_default].join(`
+  var styles_default4 = [layout_default3, mapping_default, controls_default2, steps_default].join(`
 `);
 
   // src/components/admin/Resources/Functions/create/templates/aside.html
@@ -45335,7 +46215,7 @@ details[open] svg { transform: rotate(180deg); }
   }
 
   // src/components/admin/Resources/Blocs/workspace/style.css
-  var style_default16 = `cms-collection-workspace { display: contents; }
+  var style_default17 = `cms-collection-workspace { display: contents; }
 cms-collection-workspace [hidden] { display: none !important; }
 cms-collection-workspace .collection-overview,
 cms-collection-workspace .collection-blocs { display: contents; }
@@ -46343,7 +47223,7 @@ cms-collection-workspace .collection-text-table tbody td {
   }
 
   // src/components/admin/Resources/Blocs/workspace/ThemeSpecimen/style.css
-  var style_default17 = `:host { display: block; min-width: 0; color: var(--text-main); }
+  var style_default18 = `:host { display: block; min-width: 0; color: var(--text-main); }
 [hidden] { display: none !important; }
 .workbench { min-width: 0; overflow: hidden; background: var(--bg-base); }
 .toolbar {
@@ -46679,7 +47559,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
     panels;
     appliedVariables = new Set;
     constructor() {
-      super({ css: style_default17, template: template_default21 });
+      super({ css: style_default18, template: template_default21 });
       this.panels = this.createPanels();
     }
     static get observedAttributes() {
@@ -46800,7 +47680,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
   }
 
   // src/components/admin/Resources/Blocs/workspace/TokenPreview/style.css
-  var style_default18 = `:host {
+  var style_default19 = `:host {
     display: inline-grid;
     width: 38px;
     height: 38px;
@@ -46900,7 +47780,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
     measure;
     surface;
     constructor() {
-      super({ css: style_default18, template: template_default22 });
+      super({ css: style_default19, template: template_default22 });
       this.lightColor = this.shadowRoot.querySelector(".color-light");
       this.darkColor = this.shadowRoot.querySelector(".color-dark");
       this.glyph = this.shadowRoot.querySelector(".glyph");
@@ -47462,7 +48342,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
-  var style_default19 = `:host {
+  var style_default20 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -47562,7 +48442,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default19)}</style>${String(template_default24)}`;
+  template7.innerHTML = `<style>${String(style_default20)}</style>${String(template_default24)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -48874,7 +49754,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/style.css
-  var style_default20 = `:host { display: contents; }
+  var style_default21 = `:host { display: contents; }
 * { box-sizing: border-box; }
 
 .backdrop {
@@ -49278,7 +50158,7 @@ textarea { min-height: 92px; resize: vertical; }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
   var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${String(style_default20)}</style>${String(template_default26)}`;
+  template9.innerHTML = `<style>${String(style_default21)}</style>${String(template_default26)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -52031,7 +52911,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/style.css
-  var style_default21 = `:host {
+  var style_default22 = `:host {
     display: block;
     position: relative;
     min-height: 100%;
@@ -52202,7 +53082,7 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template11 = document.createElement("template");
-  template11.innerHTML = `<style>${[style_default21, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
+  template11.innerHTML = `<style>${[style_default22, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default28)}`;
 
   class StructureTree extends HTMLElement {
@@ -52253,7 +53133,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
-  var style_default22 = `:host {
+  var style_default23 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -52362,7 +53242,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template12 = document.createElement("template");
-  template12.innerHTML = `<style>${String(style_default22)}</style>${String(template_default29)}`;
+  template12.innerHTML = `<style>${String(style_default23)}</style>${String(template_default29)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -52515,7 +53395,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/style.css
-  var style_default23 = `:host {
+  var style_default24 = `:host {
     display: block;
 }
 
@@ -52604,7 +53484,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template13 = createFieldTemplate(template_default30, style_default23);
+  var template13 = createFieldTemplate(template_default30, style_default24);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -52649,7 +53529,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/style.css
-  var style_default24 = `:host {
+  var style_default25 = `:host {
     display: block;
 }
 
@@ -53086,7 +53966,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template14 = createFieldTemplate(template_default31, `${String(style_default24)}${String(dynamicDataPicker_default)}`);
+  var template14 = createFieldTemplate(template_default31, `${String(style_default25)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -53167,7 +54047,7 @@ input:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/style.css
-  var style_default25 = `:host {
+  var style_default26 = `:host {
     display: block;
 }
 
@@ -53239,7 +54119,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template15 = createFieldTemplate(template_default32, `${String(style_default25)}${String(dynamicDataPicker_default)}`);
+  var template15 = createFieldTemplate(template_default32, `${String(style_default26)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -54071,7 +54951,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/style.css
-  var style_default26 = `:host {
+  var style_default27 = `:host {
     display: block;
 }
 
@@ -54175,7 +55055,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template17 = createFieldTemplate(template_default34, style_default26);
+  var template17 = createFieldTemplate(template_default34, style_default27);
 
   class Select extends HTMLElement {
     constructor() {
@@ -54222,7 +55102,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/style.css
-  var style_default27 = `:host {
+  var style_default28 = `:host {
     display: block;
 }
 
@@ -54335,7 +55215,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template18 = createFieldTemplate(template_default35, style_default27);
+  var template18 = createFieldTemplate(template_default35, style_default28);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -54358,7 +55238,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/style.css
-  var style_default28 = `:host {
+  var style_default29 = `:host {
     display: block;
 }
 
@@ -54404,7 +55284,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template19 = createFieldTemplate(template_default36, style_default28);
+  var template19 = createFieldTemplate(template_default36, style_default29);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -61091,7 +61971,7 @@ label {
                 </label>
                 <label>
                     <span data-page-label="path">Path</span>
-                    <input type="text" data-page-field="path">
+                    <input type="text" data-page-field="path" readonly>
                 </label>
                 <label>
                     <span data-page-label="published">Status</span>
@@ -61121,7 +62001,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
-  var style_default29 = `:host {
+  var style_default30 = `:host {
     --editor-v2-bg: #f6f7f7;
     --editor-v2-surface: #ffffff;
     --editor-v2-surface-muted: #f9faf9;
@@ -61249,7 +62129,7 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTemplate.ts
   function createShellTemplate() {
     const template22 = document.createElement("template");
-    template22.innerHTML = `<style>${[style_default29, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
+    template22.innerHTML = `<style>${[style_default30, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default39)}`;
     return template22;
   }
@@ -63494,7 +64374,7 @@ label {
 `;
 
   // src/components/admin/Resources/Blocs/workspace/ThemeEditing/style.css
-  var style_default30 = `:host {
+  var style_default31 = `:host {
     display: block;
     min-width: 0;
     container: theme-editor / inline-size;
@@ -63695,7 +64575,7 @@ label {
     constructor() {
       super({
         css: `${tokens_default}
-${style_default30}`,
+${style_default31}`,
         template: template_default40
       });
     }
@@ -63866,7 +64746,7 @@ ${style_default30}`,
   }
 
   // src/components/admin/Resources/Blocs/preview/style.css
-  var style_default31 = `:host {
+  var style_default32 = `:host {
     --_bloc-preview-inset: 0px;
 
     display: block;
@@ -63921,7 +64801,7 @@ iframe {
   // src/components/admin/Resources/Blocs/preview/BlocPreview.ts
   class BlocPreview extends l {
     constructor() {
-      super({ css: style_default31, template: template_default41 });
+      super({ css: style_default32, template: template_default41 });
     }
     static get observedAttributes() {
       return ["src"];
@@ -63988,7 +64868,7 @@ iframe {
   customElements.define("cms-bloc-choice", BlocChoice);
 
   // src/components/admin/Resources/Blocs/artwork/style.css
-  var style_default32 = `:host { display: block; width: 100%; }
+  var style_default33 = `:host { display: block; width: 100%; }
 .artwork {
     position: relative;
     aspect-ratio: 16 / 9;
@@ -64054,7 +64934,7 @@ iframe {
   // src/components/admin/Resources/Blocs/artwork/LibraryArtwork.ts
   class LibraryArtwork extends l {
     constructor() {
-      super({ css: style_default32, template: template_default42 });
+      super({ css: style_default33, template: template_default42 });
     }
     static get observedAttributes() {
       return ["label"];
@@ -64087,7 +64967,7 @@ iframe {
   customElements.define("cms-library-artwork", LibraryArtwork);
 
   // src/components/admin/Resources/Blocs/icons/style.css
-  var style_default33 = `:host { display: inline-flex; width: 16px; height: 16px; flex: none; }
+  var style_default34 = `:host { display: inline-flex; width: 16px; height: 16px; flex: none; }
 svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 `;
 
@@ -64104,7 +64984,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
 
   class LibraryIcon extends l {
     constructor() {
-      super({ css: style_default33, template: '<svg viewBox="0 0 24 24" aria-hidden="true"><path/></svg>' });
+      super({ css: style_default34, template: '<svg viewBox="0 0 24 24" aria-hidden="true"><path/></svg>' });
     }
     static get observedAttributes() {
       return ["name"];
@@ -64362,7 +65242,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
     siteVariables = new SiteVariablesController(this);
     connectedCallback() {
       if (!this.hasAttribute("data-rendered")) {
-        this.innerHTML = `<style>${String(style_default16)}${String(theme_default)}${String(texts_default)}</style>${template22}`;
+        this.innerHTML = `<style>${String(style_default17)}${String(theme_default)}${String(texts_default)}</style>${template22}`;
         this.setAttribute("data-rendered", "");
       }
       this.configureRoute();
@@ -64465,7 +65345,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
 `;
 
   // src/components/admin/Resources/Triggers/style.css
-  var style_default34 = `.triggers-surface {
+  var style_default35 = `.triggers-surface {
     max-width: 1120px;
 }
 
@@ -64698,7 +65578,7 @@ button.run:disabled {
     }
     mount() {
       const style = document.createElement("style");
-      style.textContent = style_default34;
+      style.textContent = style_default35;
       const body = document.createElement("template");
       body.innerHTML = template_default43;
       this.replaceChildren(style, body.content.cloneNode(true));
@@ -65066,7 +65946,7 @@ textarea {
 `;
 
   // src/components/admin/Resources/Triggers/create/styles/layout.css
-  var layout_default3 = `:host {
+  var layout_default4 = `:host {
     display: block;
 }
 
@@ -65262,7 +66142,7 @@ details[open] > summary > .chevron {
 `;
 
   // src/components/admin/Resources/Triggers/create/styles/index.ts
-  var styles_default12 = [layout_default3, mapping_default2, controls_default3, feedback_default].join(`
+  var styles_default12 = [layout_default4, mapping_default2, controls_default3, feedback_default].join(`
 `);
 
   // src/components/admin/Resources/Triggers/create/templates/aside.html
@@ -66328,7 +67208,7 @@ details[open] > summary > .chevron {
 `;
 
   // src/components/editorSystemV2/siteBloc/style.css
-  var style_default35 = `:host {
+  var style_default36 = `:host {
     --builder-accent: #165f4b;
     --builder-border: #dfe5e2;
     --builder-muted: #697873;
@@ -66376,7 +67256,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 
   // src/components/editorSystemV2/siteBloc/SiteBlocBuilder.ts
   var template23 = document.createElement("template");
-  template23.innerHTML = `<style>${String(style_default35)}</style>${String(template_default44)}`;
+  template23.innerHTML = `<style>${String(style_default36)}</style>${String(template_default44)}`;
 
   class SiteBlocBuilder extends HTMLElement {
     controller;
@@ -66537,7 +67417,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default36 = `:host {
+  var style_default37 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -66662,7 +67542,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class CardMedia extends l {
     constructor() {
       super({
-        css: style_default36,
+        css: style_default37,
         template: template_default45
       });
     }
@@ -66785,7 +67665,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/CropSystem/styles/layout.css
-  var layout_default4 = `:host {
+  var layout_default5 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -66915,7 +67795,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class CropSystem extends l {
     constructor() {
       super({
-        css: [layout_default4, controls_default4].join(`
+        css: [layout_default5, controls_default4].join(`
 `),
         template: template_default46
       });
@@ -66997,7 +67877,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/DetailMedia/styles/layout.css
-  var layout_default5 = `:host {
+  var layout_default6 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -67212,7 +68092,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class DetailMedia extends l {
     constructor() {
       super({
-        css: [layout_default5, tools_default].join(`
+        css: [layout_default6, tools_default].join(`
 `),
         template: template_default47
       });
@@ -69458,7 +70338,10 @@ dialog::backdrop {
   }
   define("cms-page-form-controller", PageFormController);
   define("cms-page-copy-source", PageCopySource);
-  Pm({
+  define("cms-page-languages", PageLanguages);
+  define("cms-page-delete", PageDelete);
+  define("cms-page-detail-sync", PageDetailSync);
+  Bm({
     ...dashboardDisplayFilters,
     json: (value3) => value3 === undefined ? undefined : JSON.stringify(value3),
     jsonurl: (value3) => value3 === undefined ? undefined : encodeURIComponent(JSON.stringify(value3)),
@@ -69467,14 +70350,14 @@ dialog::backdrop {
   });
   define(CMS_BINDING_CORE_TAG, Rc);
   define("p9r-accordion", Lr);
-  define("p9r-accordion-item", Sr);
+  define("p9r-accordion-item", Tr);
   define("p9r-action-menu", os);
   define("p9r-action-menu-item", ss);
   define("p9r-action-menu-section", cs);
   define("p9r-alert", Ir);
   define("p9r-avatar", Fr);
   define("p9r-badge", Nr);
-  define("p9r-button", To);
+  define("p9r-button", So);
   define("p9r-card", Zr);
   define("w13c-checkbox", Vo);
   define("p9r-combobox", Uo);

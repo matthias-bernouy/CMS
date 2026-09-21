@@ -6,7 +6,6 @@ export class PagePathAvailability {
     constructor(
         private readonly document: Document,
         private readonly endpoint: () => string,
-        private readonly currentPath: () => string,
     ) {}
 
     cancel(): void {
@@ -24,10 +23,6 @@ export class PagePathAvailability {
         this.activeRequest = request;
         const url = new URL(endpoint, this.document.baseURI);
         url.searchParams.set("path", path);
-        const currentPath = this.currentPath();
-        if (currentPath) {
-            url.searchParams.set("current-path", currentPath);
-        }
 
         try {
             const response = await fetch(url, {
