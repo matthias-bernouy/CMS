@@ -48,8 +48,10 @@ Feature packages:
   serving handlers live under its explicit `./files` subpaths.
 - `@bernouy/cms-secrets`: secret storage contracts, `${VAR}` resolution, and
   encrypted Mongo storage.
-- `@bernouy/cms-auth`: local auth, OIDC auth, PATs, signed cookies, public auth
-  flows, user/provider repositories, and auth route registrars.
+- `@bernouy/cms-auth`: accounts, local/OIDC providers, PATs, signed sessions,
+  email and public-auth action composition. Auth HTTP registrars use `./http`,
+  admin mutations use `./management`, and Mongo/SMTP adapters use `./mongo`
+  and `./smtp` from composition roots.
 - `@bernouy/cms-sources`: data-source contracts, endpoint execution, system
   sources, and source proxy helpers.
 - `@bernouy/cms-source-images`: bounded responsive Source image recipes,
@@ -118,6 +120,16 @@ Publication is still `visible === true`, without separate page revisions.
 Authenticated editorial preview remains in Control. Author files are independently
 public by ID/path, including draft-only and unreferenced files. The shared-process
 runtime does not claim operational isolation or confidential-media enforcement.
+
+`cms-auth` uses the same domain-first approach: `accounts`, `providers`,
+`sessions`, `tokens`, `email`, and `application`, plus `exports`. The application
+coordinates login, account lifecycle, public recovery flows and HTTP handling.
+Runtimes build a fresh `PublicAuthActions` object from user, credential, token
+and email dependencies; public HTTP consumers receive operations, not those
+stores. Control retains its administrative stores, and its test-email action
+is supplied separately from Delivery's public operations.
+The `/http` entrypoint contains mountable handlers, not a production transport;
+`/mongo` and `/smtp` remain runtime-only adapters. `/browser` stays browser-safe.
 
 Keep these boundaries:
 

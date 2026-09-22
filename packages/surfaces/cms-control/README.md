@@ -13,8 +13,7 @@ Pair it with:
 - **`@bernouy/cms-auth`** for the auth chain (login + signed cookie +
   PATs).
 
-A working composition of all of the above lives in `images/cms/server.ts`
-at the repo root.
+A working composition lives in `packages/runtimes/cms-server/src/runtime/`.
 
 ---
 
@@ -109,7 +108,7 @@ new ControlCms(
     credentials?:        LocalCredentialStore,
     sources?:            SourceRepository,
     analytics?:          AnalyticsStore,
-    authBackends?:       { local?: LocalAuthentication; oidc?: OidcAuthentication },
+    authBackends?:       { local?: LocalAuthenticationActions; oidc?: OidcAuthHandlers },
 )
 ```
 
@@ -162,9 +161,15 @@ through `ulvia dev credentials`.
 | `<basePath>/assets/*`                    | public    | `control-components.js` + `control-styles.css` |
 | `<basePath>/resources/*`                 | public    | Fonts + theme CSS (`@bernouy/components`) |
 
-The auth guard (`createAuthGuard` from `@bernouy/cms-auth`) checks the
-`subject.role === "admin"` and redirects unauth'd browser navigations to
-`<basePath>/login`. JSON API calls get a 401 / 403 instead.
+The auth guard (`createAuthGuard` from `@bernouy/cms-auth/http`) establishes an
+authenticated subject. It does not evaluate roles or view permissions. Control
+chooses the unauthenticated response for each route group: a login redirect or
+an explicit unauthorized response.
+
+Public auth routes receive operations created with `createPublicAuthActions`,
+not credential, user or recovery-token stores. Control can additionally receive
+`publicAuth.emailTest`, created with `createAuthEmailTestSender` from
+`@bernouy/cms-auth/management`; Delivery does not receive this admin capability.
 
 ---
 
@@ -194,5 +199,4 @@ same canonical class across every bloc, preserving `instanceof` checks.
   live in `@bernouy/cms-auth`; assemble them and pass the result as
   `auth`.
 
-For a working full-stack image (admin + delivery + nginx, all in
-memory), see `images/cms/` at the repo root.
+For production adapter and surface wiring, see `packages/runtimes/cms-server/`.
