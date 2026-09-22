@@ -6,7 +6,7 @@ import { setupDashboardWidgetSelectionTests } from "./setup";
 setupDashboardWidgetSelectionTests();
 
 describe("dashboard widget selection", () => {
-    test("reads the common detail once and loads its dependent lookups and relations", async () => {
+    test("reads the common detail once and loads its dependent lookups", async () => {
         const resource = {
             id: "product-1",
             title: "Updated product",
@@ -27,9 +27,6 @@ describe("dashboard widget selection", () => {
             if (url.pathname.endsWith("/categorySchema")) {
                 return Response.json({ fields: [{ id: "material", label: "Material", type: "string" }] });
             }
-            if (url.pathname === "/api/relations/page") {
-                return Response.json({ items: [] });
-            }
             return new Response("unexpected source", { status: 500 });
         }) as unknown as typeof fetch;
         const dashboard = productDashboard();
@@ -49,8 +46,7 @@ describe("dashboard widget selection", () => {
         await waitFor(
             () =>
                 requests.some((url) => url.includes("/brands")) &&
-                requests.some((url) => url.includes("/categorySchema")) &&
-                requests.some((url) => url.startsWith("/api/relations/page")),
+                requests.some((url) => url.includes("/categorySchema")),
         );
 
         const detail = root.querySelector<HTMLElement>("cms-dashboard-w-detail")!;
@@ -63,7 +59,6 @@ describe("dashboard widget selection", () => {
         expect(requests.filter((url) => url.includes("/getProduct"))).toHaveLength(1);
         expect(requests.filter((url) => url.includes("/brands"))).toHaveLength(1);
         expect(requests.filter((url) => url.includes("/categorySchema"))).toHaveLength(1);
-        expect(requests.filter((url) => url.startsWith("/api/relations/page"))).toHaveLength(1);
     });
 
     test("retains the same detail and fields without another read when its context is reconciled", async () => {

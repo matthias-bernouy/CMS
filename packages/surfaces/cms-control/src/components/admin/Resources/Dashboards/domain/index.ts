@@ -3,7 +3,6 @@ export { detailKey, validDetailSelection, widgetsForSelection } from "./selectio
 export type {
     DashboardRuntimeWidget,
     DetailSelection,
-    RelationTableWidget,
     RenderContext,
     RuntimeDetailWidget,
 } from "./types";

@@ -1,5 +1,4 @@
 import type { DashboardDto, DashboardWidget } from "@bernouy/cms-dashboards";
-import type { RelationDashboardAction, RelationDashboardColumn } from "@bernouy/cms-relations";
 import type { DashboardSourceGroup } from "../types";
 
 export type DetailSelection = {
@@ -16,22 +15,7 @@ export type RenderContext = {
     filters?: ReadonlyMap<string, Readonly<Record<string, string>>>;
 };
 
-export type RelationTableWidget = {
-    widget: "w-relation-table";
-    id: string;
-    title?: string;
-    placement: "main" | "aside";
-    relationId: string;
-    fromId: string;
-    pageSize?: number;
-    rowKey: string;
-    columns: RelationDashboardColumn[];
-    actions?: RelationDashboardAction[];
-};
-
-export type RuntimeDetailWidget = Extract<DashboardWidget, { widget: "w-detail" }> & {
-    relationWidgets?: RelationTableWidget[];
-};
+export type RuntimeDetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 
 export type DashboardRuntimeWidget =
     | Exclude<DashboardWidget, Extract<DashboardWidget, { widget: "w-detail" }>>

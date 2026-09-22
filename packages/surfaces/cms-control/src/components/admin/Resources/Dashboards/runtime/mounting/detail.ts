@@ -6,7 +6,6 @@ import { composeDetail } from "../../widgets/w-detail/binding/composition";
 import type { DetailSelection, RenderContext, RuntimeDetailWidget } from "../../domain";
 import { DashboardWDetail } from "../../widgets/w-detail/WDetail";
 import { detailReloadEvent } from "../reload";
-import { relationDetailSectionElement } from "./mountRelations";
 import { requiredSourceParams, sourceWrapper } from "./mountSource";
 import { navigationListElement } from "./navigation";
 
@@ -64,16 +63,5 @@ function detailContent(widget: RuntimeDetailWidget, context: RenderContext, rowK
     composeDetailOperations(element, widget, context);
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);
-    for (const relationWidget of widget.relationWidgets ?? []) {
-        const section = relationDetailSectionElement(relationWidget);
-        if (form) {
-            section.removeAttribute("slot");
-            form.querySelector(relationWidget.placement === "aside" ? "[data-form-aside]" : "[data-form-main]")!.append(
-                section,
-            );
-        } else {
-            element.append(section);
-        }
-    }
     return element;
 }

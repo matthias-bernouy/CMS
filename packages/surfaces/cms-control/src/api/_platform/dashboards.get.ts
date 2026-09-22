@@ -3,7 +3,6 @@ import {
     dashboardViewAsLegacyDashboard,
     type DashboardDto,
 } from "@bernouy/cms-dashboards";
-import type { DashboardRelationProjection, RelationRepository } from "@bernouy/cms-relations";
 import {
     isSystemSourceUrn,
     materializeSourceOverlays,
@@ -35,25 +34,21 @@ export type DashboardSourceGroup = {
     endpoints: SourceEndpointDto[];
     dashboards: DashboardDto[];
     sourceOverlays?: SourceOverlay[];
-    dashboardRelationProjections?: DashboardRelationProjection[];
 };
 
 export type DashboardListResponse = DashboardSourceGroup[];
 
 type DashboardCmsExtensions = {
-    relations?: RelationRepository;
     sourceOverlays?: SourceOverlayRepository | null;
     sourceExecutorDeps?: ExecutorDeps;
 };
 
 export default async function listDashboards(_req: Request, cms: ControlCms): Promise<Response> {
     const extensions = cms as ControlCms & DashboardCmsExtensions;
-    const relationRepository = extensions.relations;
-    const [sources, dashboards, rawSourceOverlays, dashboardRelationProjections] = await Promise.all([
+    const [sources, dashboards, rawSourceOverlays] = await Promise.all([
         cms.sources.getAllSources(),
         cms.dashboardViews.getAllViews(),
         extensions.sourceOverlays?.getAllOverlays() ?? Promise.resolve([]),
-        relationRepository?.getAllDashboardRelationProjections() ?? Promise.resolve([]),
     ]);
     const sourceOverlays = await materializeOverlays(
         sources,
@@ -76,10 +71,6 @@ export default async function listDashboards(_req: Request, cms: ControlCms): Pr
         const sourceDashboards = (dashboardsBySource.get(id) ?? []).map((dashboard) =>
             applyDashboardSourceOverlays(dashboard, overlays),
         );
-        const sourceDashboardIds = new Set(sourceDashboards.map((dashboard) => dashboard.id));
-        const sourceDashboardRelationProjections = dashboardRelationProjections.filter((projection) =>
-            sourceDashboardIds.has(projection.dashboardId),
-        );
         return {
             source: {
                 urn: source.urn,
@@ -94,9 +85,6 @@ export default async function listDashboards(_req: Request, cms: ControlCms): Pr
             endpoints: dto.endpoints,
             dashboards: sourceDashboards,
             ...(overlays.length ? { sourceOverlays: overlays } : {}),
-            ...(sourceDashboardRelationProjections.length
-                ? { dashboardRelationProjections: sourceDashboardRelationProjections }
-                : {}),
         };
     });
 

@@ -6,7 +6,6 @@ import {
     MongoDashboardViewRepository,
 } from "@bernouy/cms-dashboards/mongo";
 import { MongoIdentityService } from "@bernouy/cms-identities/mongo";
-import { MongoRelationRepository } from "@bernouy/cms-relations/mongo";
 import { createSecretResolver, type SecretStore } from "@bernouy/cms-secrets";
 import {
     CompositeSourceRepository,
@@ -41,8 +40,6 @@ export async function createFeatureStores(db: Db, secrets: SecretStore, options:
     await dashboardViews.init();
     const dashboardAssignments = new MongoDashboardAssignmentRepository(db);
     await dashboardAssignments.init();
-    const relations = new MongoRelationRepository(db);
-    await relations.init();
 
     const mongoAnalytics = new MongoAnalyticsStore(db);
     await mongoAnalytics.init();
@@ -64,7 +61,6 @@ export async function createFeatureStores(db: Db, secrets: SecretStore, options:
         dashboards,
         dashboardViews,
         dashboardAssignments,
-        relations,
         analytics,
         endpointPerformanceRecorder,
         endpointPerformanceReports,

@@ -28,12 +28,4 @@ describe("production CMS composition", () => {
         expect(stores).toMatch(/const\s+resolveSecret\s*=\s*createSecretResolver\s*\(\s*secrets\s*\)\s*;/);
         expect(surfaces).toMatch(/sourceResolveSecret\s*:\s*features\.resolveSecret\s*,/);
     });
-
-    test("wires durable relations into Control and Delivery", async () => {
-        const stores = await Bun.file(new URL("../src/runtime/stores/features.ts", import.meta.url)).text();
-        const surfaces = await Bun.file(new URL("../src/runtime/mountSurfaces.ts", import.meta.url)).text();
-
-        expect(stores).toMatch(/const\s+relations\s*=\s*new\s+MongoRelationRepository\s*\(\s*db\s*\)\s*;/);
-        expect(surfaces).toMatch(/relations\s*:\s*features\.relations\s*,/);
-    });
 });

@@ -38,8 +38,6 @@ describe("production runtime stores", () => {
                 "sourceOverlays",
                 "cms_identity_aliases",
                 "dashboards",
-                "relations",
-                "dashboard_relation_projections",
                 "analytics_rollups",
                 "analytics_hll_sketches",
                 "analytics_referrer_buckets",

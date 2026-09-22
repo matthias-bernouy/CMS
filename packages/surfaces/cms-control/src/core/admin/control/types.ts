@@ -18,7 +18,6 @@ import type {
 import type { EditorDataSource } from "@bernouy/cms-editor-system-v2";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { IdentityService } from "@bernouy/cms-identities";
-import type { RelationRepository } from "@bernouy/cms-relations";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type {
     ExecutorDeps,
@@ -41,7 +40,6 @@ export type ControlCmsOptions = Configuration & {
     dashboards?: DashboardRepository;
     dashboardViews?: DashboardViewRepository;
     dashboardAssignments?: DashboardAssignmentRepository;
-    relations?: RelationRepository;
     identities?: IdentityService;
     sourceOverlays?: SourceOverlayRepository;
     endpointPerformanceReports?: EndpointPerformanceReports;
@@ -79,7 +77,6 @@ export type ControlCmsState = {
     dashboards: DashboardRepository;
     dashboardViews: DashboardViewRepository;
     dashboardAssignments: DashboardAssignmentRepository;
-    relations: RelationRepository;
     identities: IdentityService;
     sourceOverlays: SourceOverlayRepository | null;
 };

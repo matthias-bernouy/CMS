@@ -13,7 +13,6 @@ export const controlCmsAccessors = {
     dashboards: (state: ControlCmsState) => state.dashboards,
     dashboardViews: (state: ControlCmsState) => state.dashboardViews,
     dashboardAssignments: (state: ControlCmsState) => state.dashboardAssignments,
-    relations: (state: ControlCmsState) => state.relations,
     identities: (state: ControlCmsState) => state.identities,
     sourceOverlays: (state: ControlCmsState) => state.sourceOverlays,
     sourceExecutorDeps: (state: ControlCmsState) => ({

@@ -66,18 +66,6 @@ export function productDetailWidget() {
                 ],
             },
         ],
-        relationWidgets: [
-            {
-                widget: "w-relation-table",
-                id: "offersRelation",
-                title: "Offers",
-                placement: "main",
-                relationId: "product-offers",
-                fromId: "product-1",
-                rowKey: "id",
-                columns: [{ id: "id", label: "ID", path: "id", primary: true }],
-            },
-        ],
     };
 }
 

@@ -1,20 +1,11 @@
 import type { DashboardDto, DashboardWidget } from "@bernouy/cms-dashboards";
-import type { DashboardRelationProjection } from "@bernouy/cms-relations";
-import { relationWidgetsFor } from "./relations";
 import type { DashboardRuntimeWidget, DetailSelection } from "./types";
 
-export function widgetsForSelection(
-    dashboard: DashboardDto,
-    detail: DetailSelection | null,
-    projections: readonly DashboardRelationProjection[] = [],
-): DashboardRuntimeWidget[] {
+export function widgetsForSelection(dashboard: DashboardDto, detail: DetailSelection | null): DashboardRuntimeWidget[] {
     if (!detail) {
         return rootWidgetsFor(dashboard.views, detailTargetsFor(dashboard.views));
     }
-    const relationWidgets = relationWidgetsFor(dashboard, detail, projections);
-    const details = detailWidgetsFor(dashboard.views, detail.collection).map((widget) =>
-        relationWidgets.length ? { ...widget, relationWidgets } : widget,
-    );
+    const details = detailWidgetsFor(dashboard.views, detail.collection);
     return [...details, ...selectionScopedWidgetsFor(dashboard.views, detail.collection)];
 }
 

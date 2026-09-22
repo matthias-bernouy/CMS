@@ -168,48 +168,4 @@ describe("dashboard widget selection", () => {
         expect(widgets[0]?.widget).toBe("w-detail");
         expect(widgets[0]?.id).toBe("emailerSettings");
     });
-
-    test("attaches relation table widgets to selected details", () => {
-        const dashboard = {
-            id: "products",
-            source: "products",
-            views: [
-                {
-                    widget: "w-detail",
-                    id: "productDetail",
-                    source: { endpoint: "product" },
-                    main: [],
-                },
-            ],
-        } as DashboardDto;
-
-        const widgets = widgetsForSelection(dashboard, { collection: "productDetail", row: "product-1" }, [
-            {
-                type: "dashboardRelation",
-                relationId: "product-offers",
-                dashboardId: "products",
-                viewId: "productDetail",
-                widget: "table",
-                title: "Offers",
-                placement: "side",
-                rowKey: "offerId",
-                pageSize: 10,
-                columns: [{ id: "title", label: "Offer", path: "title", primary: true }],
-            },
-        ]);
-
-        expect(widgets[0]).toMatchObject({
-            widget: "w-detail",
-            relationWidgets: [
-                {
-                    id: "product-offersRelation",
-                    relationId: "product-offers",
-                    fromId: "product-1",
-                    placement: "aside",
-                    rowKey: "offerId",
-                    pageSize: 10,
-                },
-            ],
-        });
-    });
 });

@@ -20,7 +20,6 @@
         "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources":     "workspace:*",
         "@bernouy/cms-dashboards":  "workspace:*",
-        "@bernouy/cms-relations":   "workspace:*",
         "@bernouy/cms-identities": "workspace:*",
         "@bernouy/cms-analytics":   "workspace:*",
         "@bernouy/cms-control":     "workspace:*",

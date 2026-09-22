@@ -29,7 +29,7 @@ export function renderDashboardShell(
     if (detail) {
         selectedRows.set(detail.collection, detail.row);
     }
-    const widgets = widgetsForSelection(dashboard, detail, group.dashboardRelationProjections ?? []);
+    const widgets = widgetsForSelection(dashboard, detail);
     mountDashboardWidgets(
         query(root, "[data-widgets]"),
         widgets,

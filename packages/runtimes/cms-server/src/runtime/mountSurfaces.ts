@@ -84,7 +84,6 @@ export async function mountProductionSurfaces(
             dashboards: features.dashboards,
             dashboardViews: features.dashboardViews,
             dashboardAssignments: features.dashboardAssignments,
-            relations: features.relations,
             identities: features.identities,
             sourceOverlays: features.sourceOverlays,
             endpointPerformanceReports: features.endpointPerformanceReports,

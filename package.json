@@ -42,7 +42,6 @@
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-identities": "workspace:*",
-        "@bernouy/cms-relations": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",

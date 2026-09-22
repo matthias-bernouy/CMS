@@ -28673,36 +28673,12 @@ w13c-lateral-menu {
       };
     }
   }
-  // src/components/admin/Resources/Dashboards/domain/relations.ts
-  function relationWidgetsFor(dashboard, detail, projections) {
-    return projections.filter((projection) => projection.dashboardId === dashboard.id && projection.viewId === detail.collection && projection.widget === "table").map((projection) => ({
-      widget: "w-relation-table",
-      id: projection.sectionId ?? `${projection.relationId}Relation`,
-      ...projection.title ? { title: projection.title } : {},
-      placement: projection.placement === "side" ? "aside" : "main",
-      relationId: projection.relationId,
-      fromId: detail.row,
-      ...projection.pageSize ? { pageSize: projection.pageSize } : {},
-      rowKey: projection.rowKey ?? "id",
-      columns: projection.columns?.length ? projection.columns : [
-        {
-          id: "id",
-          label: "ID",
-          path: projection.rowKey ?? "id",
-          primary: true
-        }
-      ],
-      ...projection.actions?.length ? { actions: projection.actions } : {}
-    }));
-  }
-
   // src/components/admin/Resources/Dashboards/domain/selection.ts
-  function widgetsForSelection(dashboard, detail, projections = []) {
+  function widgetsForSelection(dashboard, detail) {
     if (!detail) {
       return rootWidgetsFor(dashboard.views, detailTargetsFor(dashboard.views));
     }
-    const relationWidgets = relationWidgetsFor(dashboard, detail, projections);
-    const details = detailWidgetsFor(dashboard.views, detail.collection).map((widget) => relationWidgets.length ? { ...widget, relationWidgets } : widget);
+    const details = detailWidgetsFor(dashboard.views, detail.collection);
     return [...details, ...selectionScopedWidgetsFor(dashboard.views, detail.collection)];
   }
   function detailKey(collection, row) {
@@ -35383,70 +35359,6 @@ slot { display: contents; }
     }
   }
 
-  // src/components/admin/Resources/Dashboards/runtime/mounting/table.ts
-  function tableWithSource(widget, source2, filters = {}) {
-    const table = tableShell(widget, filters);
-    for (const name of ["cms-source", "cms-reload-on"]) {
-      const value2 = source2.getAttribute(name);
-      if (value2 !== null) {
-        table.setAttribute(name, value2);
-      }
-    }
-    table.append(...Array.from(source2.childNodes), tableRowsTemplate(widget));
-    if (!table.hasAttribute("cms-source")) {
-      table.setAttribute("cms-source", "");
-      Pd(table, {});
-    }
-    return table;
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/mounting/mountRelations.ts
-  function relationDetailSectionElement(widget) {
-    const section2 = document.createElement("cms-detail-section");
-    section2.setAttribute("slot", widget.placement === "aside" ? "aside-extra" : "main-extra");
-    section2.setAttribute("heading", widget.title ?? "Related items");
-    if (widget.placement === "aside") {
-      section2.setAttribute("density", "compact");
-    }
-    section2.append(relationTableElement(widget));
-    return section2;
-  }
-  function relationTableElement(widget) {
-    const tableWidget = {
-      widget: "w-table",
-      id: widget.id,
-      source: {
-        endpoint: widget.relationId,
-        itemsPath: "items"
-      },
-      rowKey: widget.rowKey,
-      columns: widget.columns,
-      ...widget.pageSize ? { pageSize: widget.pageSize } : {},
-      ...widget.actions?.length ? { actions: widget.actions.map(tableAction) } : {}
-    };
-    const wrapper = urlSourceWrapper(relationPageUrl(widget), "dashboardData");
-    const element = tableWithSource(tableWidget, wrapper);
-    element.toggleAttribute("embedded", true);
-    return element;
-  }
-  function tableAction(action) {
-    return {
-      id: action.id,
-      label: action.label,
-      ...action.icon ? { icon: action.icon } : {},
-      ...action.tone ? { tone: action.tone } : {},
-      ...action.placement ? { placement: action.placement } : {}
-    };
-  }
-  function relationPageUrl(widget) {
-    const url = new URL(route("/api/relations/page"), window.location.origin);
-    url.searchParams.set("relation", widget.relationId);
-    url.searchParams.set("fromId", widget.fromId);
-    url.searchParams.set("limit", String(widget.pageSize ?? 25));
-    url.searchParams.set("offset", "0");
-    return `${url.pathname}${url.search}`;
-  }
-
   // src/static/admin/_content/sources/_runtime/forms/order.html
   var order_default = `<form slot="footer" hidden data-navigation-order-form cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
 `;
@@ -36018,15 +35930,6 @@ slot { display: contents; }
     composeDetailOperations(element, widget, context);
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);
-    for (const relationWidget of widget.relationWidgets ?? []) {
-      const section2 = relationDetailSectionElement(relationWidget);
-      if (form) {
-        section2.removeAttribute("slot");
-        form.querySelector(relationWidget.placement === "aside" ? "[data-form-aside]" : "[data-form-main]").append(section2);
-      } else {
-        element.append(section2);
-      }
-    }
     return element;
   }
 
@@ -36246,6 +36149,23 @@ slot { display: contents; }
     return true;
   }
 
+  // src/components/admin/Resources/Dashboards/runtime/mounting/table.ts
+  function tableWithSource(widget, source2, filters = {}) {
+    const table = tableShell(widget, filters);
+    for (const name of ["cms-source", "cms-reload-on"]) {
+      const value2 = source2.getAttribute(name);
+      if (value2 !== null) {
+        table.setAttribute(name, value2);
+      }
+    }
+    table.append(...Array.from(source2.childNodes), tableRowsTemplate(widget));
+    if (!table.hasAttribute("cms-source")) {
+      table.setAttribute("cms-source", "");
+      Pd(table, {});
+    }
+    return table;
+  }
+
   // src/components/admin/Resources/Dashboards/runtime/mounting/mount.ts
   var tabsSequence = 0;
   function mountDashboardWidgets(root, widgets, context, key, tabState, detail) {
@@ -36357,7 +36277,7 @@ slot { display: contents; }
     if (detail) {
       selectedRows.set(detail.collection, detail.row);
     }
-    const widgets = widgetsForSelection(dashboard, detail, group.dashboardRelationProjections ?? []);
+    const widgets = widgetsForSelection(dashboard, detail);
     mountDashboardWidgets(query3(root, "[data-widgets]"), widgets, { group, groups, dashboard, selectedRows, drafts, filters }, "root", tabState, detail);
   }
   function renderExampleShell(root, selectedRow) {

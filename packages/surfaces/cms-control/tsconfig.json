@@ -30,7 +30,6 @@
         { "path": "../../features/cms-identities" },
         { "path": "../../features/cms-sources" },
         { "path": "../../features/cms-dashboards" },
-        { "path": "../../features/cms-relations" },
         { "path": "../../features/cms-analytics" }
     ]
 }

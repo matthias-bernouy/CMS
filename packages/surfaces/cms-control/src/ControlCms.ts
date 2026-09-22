@@ -92,9 +92,6 @@ export class ControlCms {
     get dashboardAssignments() {
         return controlCmsAccessors.dashboardAssignments(this.state);
     }
-    get relations() {
-        return controlCmsAccessors.relations(this.state);
-    }
     get identities() {
         return controlCmsAccessors.identities(this.state);
     }

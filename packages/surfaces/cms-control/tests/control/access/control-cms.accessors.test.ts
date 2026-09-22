@@ -14,7 +14,6 @@ describe("ControlCms accessor delegation", () => {
             cache: dependency,
             secrets: dependency,
             dashboards: dependency,
-            relations: dependency,
             identities: dependency,
             sourceOverlays: dependency,
         } as unknown as ControlCmsState;
@@ -27,7 +26,6 @@ describe("ControlCms accessor delegation", () => {
             ["cache", dependency],
             ["secrets", dependency],
             ["dashboards", dependency],
-            ["relations", dependency],
             ["identities", dependency],
             ["sourceOverlays", dependency],
         ] as const;

@@ -54,7 +54,6 @@ export function surfaceMountFixtures() {
         },
         features: {
             dashboards: token("dashboards"),
-            relations: token("relations"),
             identities: token("identities"),
             sourceOverlays: token("source-overlays"),
             sources: token("sources"),
