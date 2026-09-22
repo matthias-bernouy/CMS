@@ -19,7 +19,7 @@
     "dependencies": {
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
-        "linkedom": "^0.18.12",
+        "linkedom": "^0.18.13",
         "sharp": "^0.35.4"
     },
     "peerDependencies": {

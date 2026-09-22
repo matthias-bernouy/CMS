@@ -12,7 +12,7 @@
     },
     "dependencies": {
         "@bernouy/envelope-crypto": "workspace:*",
-        "jose": "^6.2.1",
+        "jose": "^6.2.12",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",

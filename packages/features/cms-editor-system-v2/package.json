@@ -14,7 +14,7 @@
         "@bernouy/cms-content": "workspace:*"
     },
     "devDependencies": {
-        "linkedom": "^0.18.12"
+        "linkedom": "^0.18.13"
     },
     "peerDependencies": {
         "typescript": "^5.9.3"
