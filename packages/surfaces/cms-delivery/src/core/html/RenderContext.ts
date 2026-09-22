@@ -1,4 +1,4 @@
-import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-content/files";
+import type { PublicFileMetadataLookup, BlobReader, VariantStore } from "@bernouy/cms-content/files/serving";
 import type { ContentReader } from "@bernouy/cms-content";
 import type { HeadInjector } from "cms-delivery/interfaces/HeadInjector";
 import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
@@ -22,10 +22,10 @@ export type RenderContext = {
     /** Files metadata, used to resolve each `by-id` media URL's `contentHash`
      *  for the cache-busting `?v=` token. Optional — absent when no files
      *  backend is wired, in which case media URLs render unversioned. */
-    filesMetadata?: CmsFilesMetadataRepository;
+    filesMetadata?: PublicFileMetadataLookup;
     /** Shared variant store — read for manifests to build responsive `srcset`s.
      *  Absent → images render as the (versioned) original. */
-    variantStore?: CmsFilesBlobStore;
+    variantStore?: VariantStore;
     /** Enqueue background optimization for a page's not-yet-optimized images.
      *  Absent → no optimization (originals only). */
     optimizePage?: (path: string, imageIds: string[]) => void;

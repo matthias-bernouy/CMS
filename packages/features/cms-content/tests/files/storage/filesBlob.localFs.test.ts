@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { LocalFsCmsFilesBlob } from "@bernouy/cms-content/files";
+import { LocalFsCmsFilesBlob } from "@bernouy/cms-content/files/local-fs";
 
 let directory: string;
 

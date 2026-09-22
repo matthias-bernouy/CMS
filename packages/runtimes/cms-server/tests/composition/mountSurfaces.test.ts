@@ -128,7 +128,7 @@ describe("production surface mounting", () => {
             analyticsSiteScope: options.env.DELIVERY_PUBLIC_URL,
             analyticsTrustProxy: false,
             analyticsTrustedProxyVerified: false,
-            sitemapStore: options.core.sitemapStore,
+            sitemapStore: { get: expect.any(Function), put: expect.any(Function), delete: expect.any(Function) },
             auth: {
                 marker: "public-auth",
                 emailVerificationUrl: options.env.CMS_AUTH_EMAIL_VERIFICATION_URL,
@@ -136,6 +136,11 @@ describe("production surface mounting", () => {
             },
         });
         expect(deliveryConfig?.publicPageProviders).toBeUndefined();
+        expect(deliveryConfig?.filesBlob).not.toBe(options.core.filesBlob);
+        expect(Object.keys(deliveryConfig?.filesBlob as object)).toEqual(["get"]);
+        expect(Object.keys(deliveryConfig?.filesMetadata as object).sort()).toEqual(["getItem", "getItemByPath"]);
+        expect(Object.keys(deliveryConfig?.variantStore as object).sort()).toEqual(["get", "put"]);
+        expect(deliveryConfig?.sitemapStore).not.toBe(options.core.sitemapStore);
         expect(finalizerStore).toBe(options.features.analytics);
         expect(flusherRecorder).toBe(options.features.endpointPerformanceRecorder);
         expect(sitemapRefreshOptions).toEqual({ reportError: expect.any(Function) });

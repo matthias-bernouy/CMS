@@ -3,14 +3,15 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import sharp from "sharp";
-import { InMemoryCmsFilesBlob, LocalFsCmsFilesBlob } from "@bernouy/cms-content/files";
+import { InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
+import { LocalFsCmsFilesBlob } from "@bernouy/cms-content/files/local-fs";
 import {
     generateImageVariant,
     variantKey,
     ensureVariants,
     readManifest,
     manifestKey,
-} from "@bernouy/cms-content/files";
+} from "@bernouy/cms-content/files/serving";
 
 // Note: requires libvips on the loader path (LD_LIBRARY_PATH in dev / system
 // libvips in Docker) — sharp dlopens it at runtime.

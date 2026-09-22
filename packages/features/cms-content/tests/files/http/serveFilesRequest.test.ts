@@ -1,5 +1,6 @@
 import { describe, test, expect, afterEach } from "bun:test";
-import { serveFilesRequest, InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
+import { serveFilesRequest } from "@bernouy/cms-content/files/serving";
+import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
 import { encode, FILES_PREFIX, filesRequest, seedFile } from "./serveFilesFixtures";
 
 // Each test pins MODE explicitly; restore afterwards so tests don't leak state.

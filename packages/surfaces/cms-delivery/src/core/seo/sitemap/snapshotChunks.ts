@@ -1,5 +1,5 @@
 import { CryptoHasher, gzipSync } from "bun";
-import type { CmsFilesBlobStore } from "@bernouy/cms-content/files";
+import type { SitemapStore } from "@bernouy/cms-content/files/serving";
 import { isDeliveryReservedPath } from "cms-delivery/core/pages/publicPagePaths";
 import type { PageIndexingLocation } from "cms-delivery/core/seo/discoverPageIndexingLocations";
 import { sitemapChunkKey, type SitemapChunkDescriptor, type SitemapSnapshotDescriptor } from "./manifest";
@@ -24,7 +24,7 @@ export class SitemapChunkWriter {
     private readonly groups = new Map<string | null, GroupBuffer>();
 
     constructor(
-        private readonly store: CmsFilesBlobStore,
+        private readonly store: Pick<SitemapStore, "put" | "delete">,
         private readonly publicBaseUrl: string,
         private readonly signal?: AbortSignal,
     ) {}
@@ -99,7 +99,7 @@ export class SitemapChunkWriter {
 }
 
 export async function deleteSitemapSnapshot(
-    store: CmsFilesBlobStore,
+    store: Pick<SitemapStore, "delete">,
     snapshot: Pick<SitemapSnapshotDescriptor, "id" | "chunks">,
 ): Promise<void> {
     await Promise.all(snapshot.chunks.map(({ index }) => store.delete(sitemapChunkKey(snapshot.id, index))));

@@ -7,7 +7,8 @@ import {
 } from "@bernouy/cms-auth/mongo";
 import { ValidatingCmsRepository } from "@bernouy/cms-content";
 import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
-import { LocalFsCmsFilesBlob, ValidatingCmsFilesMetadata } from "@bernouy/cms-content/files";
+import { ValidatingCmsFilesMetadata } from "@bernouy/cms-content/files";
+import { createLocalAuthorFileStores } from "./authorFiles";
 import { MongoCmsFilesMetadata } from "@bernouy/cms-content/files/mongo";
 import { LocalSourceImageCache } from "@bernouy/cms-source-images/local-fs";
 import { MongoSourceImageJobQueue, MongoSourceMediaIndex } from "@bernouy/cms-source-images/mongo";
@@ -40,9 +41,7 @@ export async function createCoreStores(env: RuntimeEnv) {
     const mongoFilesMetadata = new MongoCmsFilesMetadata(db);
     await mongoFilesMetadata.init();
     const filesMetadata = new ValidatingCmsFilesMetadata(mongoFilesMetadata);
-    const filesBlob = new LocalFsCmsFilesBlob(env.CMS_FILES_DIR);
-    const variantStore = new LocalFsCmsFilesBlob(`${env.CMS_FILES_DIR}/.variants`);
-    const sitemapStore = new LocalFsCmsFilesBlob(`${env.CMS_FILES_DIR}/.sitemaps`);
+    const { filesBlob, variantStore, sitemapStore } = createLocalAuthorFileStores(env.CMS_FILES_DIR);
     const sourceImageCache = await createRuntimeSourceImageCache(env);
     const sourceImageJobs = new MongoSourceImageJobQueue(db);
     const sourceMediaIndex = new MongoSourceMediaIndex(db);

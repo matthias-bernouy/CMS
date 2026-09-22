@@ -1,5 +1,5 @@
-import type { CmsFilesMetadataRepository, FileItem } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
-import type { CmsFilesBlobStore } from "cms-content/files/interfaces/CmsFilesBlobStore";
+import type { PublicFileMetadataLookup, FileItem } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
+import type { BlobReader } from "cms-content/files/interfaces/CmsFilesBlobStore";
 import { publicAssetCacheControl } from "@bernouy/http-runner";
 import { CMS_FILES_BY_ID_SEGMENT } from "cms-content/files/core/media/fileUrls";
 
@@ -42,8 +42,8 @@ export function isInlineSafeFileType(mimeType: string): boolean {
 }
 
 export type FilesServeDeps = {
-    metadata: CmsFilesMetadataRepository;
-    blob: CmsFilesBlobStore;
+    metadata: PublicFileMetadataLookup;
+    blob: BlobReader;
 };
 
 const notFound = () => new Response("Not found", { status: 404 });

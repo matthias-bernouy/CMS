@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import { parseHTML } from "linkedom";
 import type { CmsFilesMetadataRepository, FilesItem } from "@bernouy/cms-content/files";
 import { InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
-import { injectMediaVersions } from "@bernouy/cms-content/files";
+import { injectMediaVersions } from "@bernouy/cms-content/files/serving";
 
 /** Files metadata stub: id → contentHash. A missing id resolves to `null`; a
  *  present id with `undefined` hash resolves to a file with no contentHash. */

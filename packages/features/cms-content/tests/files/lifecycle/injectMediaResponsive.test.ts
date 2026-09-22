@@ -1,11 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
-import {
-    injectMediaVersions,
-    InMemoryCmsFilesBlob,
-    InMemoryCmsFilesMetadata,
-    manifestKey,
-} from "@bernouy/cms-content/files";
+import { injectMediaVersions, manifestKey } from "@bernouy/cms-content/files/serving";
+import { InMemoryCmsFilesBlob, InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
 
 async function setupImage(mimeType: string, withManifest: boolean) {
     const files = new InMemoryCmsFilesMetadata();

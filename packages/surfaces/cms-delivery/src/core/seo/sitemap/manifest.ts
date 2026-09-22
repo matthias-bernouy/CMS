@@ -1,4 +1,4 @@
-import type { CmsFilesBlobStore } from "@bernouy/cms-content/files";
+import type { BlobReader } from "@bernouy/cms-content/files/serving";
 
 export const SITEMAP_MANIFEST_KEY = "manifest.json";
 export const SITEMAP_RETAINED_SNAPSHOTS = 5;
@@ -49,7 +49,7 @@ export function matchRootSitemapChunkPath(
     return null;
 }
 
-export async function readSitemapManifest(store: CmsFilesBlobStore): Promise<SitemapManifest | null> {
+export async function readSitemapManifest(store: BlobReader): Promise<SitemapManifest | null> {
     const stream = await store.get(SITEMAP_MANIFEST_KEY);
     if (!stream) {
         return null;

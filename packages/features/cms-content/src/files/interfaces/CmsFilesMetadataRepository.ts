@@ -79,13 +79,17 @@ export type NewFile = {
 };
 export type ItemPatch = { name?: string; parentId?: string | null };
 
-export interface CmsFilesMetadataRepository {
-    // READ
-    /** Direct children of a folder (`null` = root), filtered / sorted / paged. */
-    listChildren(parentId: string | null, opts?: FilesListOptions): Promise<FilesPage>;
+/** Lookup in the public author library; visibility is independent of page publication. */
+export interface PublicFileMetadataLookup {
     getItem(id: string): Promise<FilesItem | null>;
     /** Resolve a readable path ("images/hero.png") to its item for resource import/export. */
     getItemByPath(path: string): Promise<FilesItem | null>;
+}
+
+export interface CmsFilesMetadataRepository extends PublicFileMetadataLookup {
+    // READ
+    /** Direct children of a folder (`null` = root), filtered / sorted / paged. */
+    listChildren(parentId: string | null, opts?: FilesListOptions): Promise<FilesPage>;
     /** Every descendant of a folder (any depth) — for recursive delete + blob cleanup. */
     listSubtree(folderId: string): Promise<FilesItem[]>;
 

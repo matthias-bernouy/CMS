@@ -1,4 +1,4 @@
-import type { CmsFilesBlobStore } from "cms-content/files/interfaces/CmsFilesBlobStore";
+import type { BlobReader, VariantStore } from "cms-content/files/interfaces/CmsFilesBlobStore";
 
 /** V1 ships WebP only (fast encode); AVIF is a later add. */
 export type VariantFormat = "webp";
@@ -63,7 +63,7 @@ export function manifestKey(contentHash: string): string {
     return `${contentHash}-manifest.json`;
 }
 
-export async function readManifest(store: CmsFilesBlobStore, contentHash: string): Promise<VariantManifest | null> {
+export async function readManifest(store: BlobReader, contentHash: string): Promise<VariantManifest | null> {
     const blob = await store.get(manifestKey(contentHash));
     if (!blob) {
         return null;
@@ -84,7 +84,7 @@ export async function readManifest(store: CmsFilesBlobStore, contentHash: string
  * upscale. Writes each variant + the manifest into the shared store.
  */
 export async function ensureVariants(
-    store: CmsFilesBlobStore,
+    store: VariantStore,
     contentHash: string,
     source: Uint8Array,
     ladder: number[],

@@ -1,14 +1,14 @@
-import type { CmsFilesMetadataRepository } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
-import type { CmsFilesBlobStore } from "cms-content/files/interfaces/CmsFilesBlobStore";
+import type { PublicFileMetadataLookup } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
+import type { BlobReader, VariantStore } from "cms-content/files/interfaces/CmsFilesBlobStore";
 import { ensureVariants } from "cms-content/files/core/media/imageVariants";
 
 /** Default width ladder. `ensureVariants` caps each rung at the source width. */
 export const DEFAULT_LADDER = [320, 640, 960, 1280, 1920];
 
 export type OptimizeDeps = {
-    metadata: CmsFilesMetadataRepository;
-    sourceBlob: CmsFilesBlobStore;
-    variantStore: CmsFilesBlobStore;
+    metadata: Pick<PublicFileMetadataLookup, "getItem">;
+    sourceBlob: BlobReader;
+    variantStore: VariantStore;
 };
 
 /**

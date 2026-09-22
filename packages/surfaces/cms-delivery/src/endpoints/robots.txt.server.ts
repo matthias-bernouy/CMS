@@ -1,6 +1,6 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { canonicalSiteBaseUrl } from "@bernouy/cms-content";
-import { CMS_FILES_ROUTE, CMS_IMAGE_VARIANT_ROUTE } from "@bernouy/cms-content/files";
+import { CMS_FILES_ROUTE, CMS_IMAGE_VARIANT_ROUTE } from "@bernouy/cms-content/files/serving";
 import { CMS_SOURCES_ROUTE, isPublicSourceImageEndpoint, parseUrn } from "@bernouy/cms-sources";
 import { compress, sendCompressed } from "@bernouy/http-runner";
 

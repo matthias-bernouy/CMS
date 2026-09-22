@@ -4,7 +4,7 @@ import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
 import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import { expandCompositions, sanitizeDomTree, wrapBindingCore } from "@bernouy/cms-content";
-import { injectMediaVersions } from "@bernouy/cms-content/files";
+import { injectMediaVersions } from "@bernouy/cms-content/files/serving";
 import { createBlocUsageResolver } from "@bernouy/cms-content";
 import { prepareNetworkInertBindings } from "@bernouy/components/binding-dom";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";

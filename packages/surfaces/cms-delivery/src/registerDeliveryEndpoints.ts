@@ -15,7 +15,7 @@ import {
     imageVariantPrefix,
     serveFilesRequest,
     serveVariantRequest,
-} from "@bernouy/cms-content/files";
+} from "@bernouy/cms-content/files/serving";
 import { SYSTEM_AUTH_SOURCE_ID, sourcesPrefix } from "@bernouy/cms-sources";
 import {
     generateStyleEntry,

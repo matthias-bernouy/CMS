@@ -12,12 +12,25 @@
  *  (buffered or streamed) and hands them to the store. */
 export type BlobInput = Blob | Uint8Array | ReadableStream<Uint8Array>;
 
-export interface CmsFilesBlobStore {
+export interface BlobWriter {
     /** Store bytes under `key`, overwriting any existing blob. Returns the byte size. */
     put(key: string, data: BlobInput): Promise<{ size: number }>;
+}
+
+export interface BlobReader {
     /** Read a blob's bytes as a stream (to proxy back to the browser), or `null` if absent. */
     get(key: string): Promise<ReadableStream<Uint8Array> | null>;
+}
+
+export interface BlobDeleter {
     /** Remove a blob. Idempotent — no error when `key` is absent. */
     delete(key: string): Promise<void>;
+}
+
+export type OriginalBlobReader = BlobReader;
+export interface VariantStore extends BlobReader, BlobWriter {}
+export interface SitemapStore extends BlobReader, BlobWriter, BlobDeleter {}
+
+export interface CmsFilesBlobStore extends BlobReader, BlobWriter, BlobDeleter {
     exists(key: string): Promise<boolean>;
 }

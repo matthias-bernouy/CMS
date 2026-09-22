@@ -1,17 +1,18 @@
 import { P9R_CACHE } from "@bernouy/cms-content";
 import {
-    type CmsFilesBlobStore,
-    type CmsFilesMetadataRepository,
+    type BlobReader,
+    type VariantStore,
+    type PublicFileMetadataLookup,
     OptimizeQueue,
     optimizePageImages,
-} from "@bernouy/cms-content/files";
+} from "@bernouy/cms-content/files/serving";
 import type { Cache } from "@bernouy/http-runner";
 
 type PageOptimizerConfig = {
     cache: Cache;
-    metadata: CmsFilesMetadataRepository;
-    sourceBlob: CmsFilesBlobStore;
-    variantStore: CmsFilesBlobStore;
+    metadata: PublicFileMetadataLookup;
+    sourceBlob: BlobReader;
+    variantStore: VariantStore;
 };
 
 export class PageOptimizer {

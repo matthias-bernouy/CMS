@@ -1,7 +1,12 @@
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
 import type { ContentReader } from "@bernouy/cms-content";
-import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
+import type {
+    BlobReader,
+    VariantStore,
+    SitemapStore,
+    PublicFileMetadataLookup,
+} from "@bernouy/cms-content/files/serving";
 import type { IdentityService } from "@bernouy/cms-identities";
 import type {
     SourceEndpointInterceptor,
@@ -126,29 +131,29 @@ export class DeliveryCmsContext {
         return this.config.analyticsPrivacyPolicyUrl;
     }
 
-    get filesMetadata(): CmsFilesMetadataRepository {
+    get filesMetadata(): PublicFileMetadataLookup {
         if (!this.config.filesMetadata) {
             throw new Error("files metadata backend not configured");
         }
         return this.config.filesMetadata;
     }
 
-    get filesMetadataOrNull(): CmsFilesMetadataRepository | null {
+    get filesMetadataOrNull(): PublicFileMetadataLookup | null {
         return this.config.filesMetadata ?? null;
     }
 
-    get variantStoreOrNull(): CmsFilesBlobStore | null {
+    get variantStoreOrNull(): VariantStore | null {
         return this.config.variantStore ?? null;
     }
 
-    get sitemapStore(): CmsFilesBlobStore {
+    get sitemapStore(): SitemapStore {
         if (!this.config.sitemapStore) {
             throw new Error("sitemap storage backend not configured");
         }
         return this.config.sitemapStore;
     }
 
-    get sitemapStoreOrNull(): CmsFilesBlobStore | null {
+    get sitemapStoreOrNull(): SitemapStore | null {
         return this.config.sitemapStore ?? null;
     }
 
@@ -156,14 +161,14 @@ export class DeliveryCmsContext {
         this.pageOptimizer?.optimize(path, imageIds);
     }
 
-    get filesBlob(): CmsFilesBlobStore {
+    get filesBlob(): BlobReader {
         if (!this.config.filesBlob) {
             throw new Error("files blob backend not configured");
         }
         return this.config.filesBlob;
     }
 
-    get filesBlobOrNull(): CmsFilesBlobStore | null {
+    get filesBlobOrNull(): BlobReader | null {
         return this.config.filesBlob ?? null;
     }
 

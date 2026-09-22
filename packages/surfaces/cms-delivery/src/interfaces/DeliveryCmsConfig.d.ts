@@ -1,7 +1,12 @@
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
 import type { ContentReader } from "@bernouy/cms-content";
-import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
+import type {
+    BlobReader,
+    VariantStore,
+    SitemapStore,
+    PublicFileMetadataLookup,
+} from "@bernouy/cms-content/files/serving";
 import type { IdentityService } from "@bernouy/cms-identities";
 import type {
     SourceEndpointInterceptor,
@@ -60,10 +65,10 @@ export type DeliveryCmsConfig = {
     /** Public privacy-policy link shown next to the audience-measurement opt-out. */
     analyticsPrivacyPolicyUrl?: string;
     /** File metadata and bytes backing the public file route. */
-    filesMetadata?: CmsFilesMetadataRepository;
-    filesBlob?: CmsFilesBlobStore;
+    filesMetadata?: PublicFileMetadataLookup;
+    filesBlob?: BlobReader;
     /** Shared storage for derived responsive image variants. */
-    variantStore?: CmsFilesBlobStore;
+    variantStore?: VariantStore;
     /** Dedicated immutable chunk and atomic-manifest storage for generated sitemaps. */
-    sitemapStore?: CmsFilesBlobStore;
+    sitemapStore?: SitemapStore;
 };

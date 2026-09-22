@@ -1,5 +1,5 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { isInlineSafeFileType, mediaIdFromUrl } from "@bernouy/cms-content/files";
+import { isInlineSafeFileType, mediaIdFromUrl } from "@bernouy/cms-content/files/serving";
 import { securityHeaders, sendCompressed } from "@bernouy/http-runner";
 import { generateFaviconEntry } from "cms-delivery/core/assets/defaultFavicon";
 

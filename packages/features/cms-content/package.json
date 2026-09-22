@@ -12,6 +12,8 @@
         "./page-path": "./src/exports/page-path.ts",
         "./mongo": "./src/exports/mongo.ts",
         "./files": "./src/exports/files/index.ts",
+        "./files/serving": "./src/exports/files/serving.ts",
+        "./files/local-fs": "./src/exports/files/local-fs.ts",
         "./files/urls": "./src/exports/files/urls.ts",
         "./files/mongo": "./src/exports/files/mongo.ts",
         "./files/s3": "./src/exports/files/s3.ts"

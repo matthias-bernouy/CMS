@@ -1,13 +1,13 @@
-import type { CmsFilesMetadataRepository } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
-import type { CmsFilesBlobStore } from "cms-content/files/interfaces/CmsFilesBlobStore";
+import type { PublicFileMetadataLookup } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
+import type { BlobReader } from "cms-content/files/interfaces/CmsFilesBlobStore";
 import { variantKey } from "cms-content/files/core/media/imageVariants";
 
 export type VariantServeDeps = {
-    metadata: CmsFilesMetadataRepository;
+    metadata: Pick<PublicFileMetadataLookup, "getItem">;
     /** Source bytes (the originals), for the best-effort fallback. */
-    sourceBlob: CmsFilesBlobStore;
+    sourceBlob: BlobReader;
     /** Shared variant store (S3 in prod), where the worker writes variants. */
-    variantStore: CmsFilesBlobStore;
+    variantStore: BlobReader;
 };
 
 const MAX_WIDTH = 4000; // sanity bound on the URL; no generation happens here

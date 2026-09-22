@@ -1,6 +1,7 @@
 import type { RuntimeEnv } from "../runtimeEnv";
 import type { ProductionAuthentication } from "./auth";
 import type { CoreStores } from "./stores/core";
+import { createPublicFileStores } from "./stores/authorFiles";
 import type { FeatureStores } from "./stores/features";
 import { createSurfaceSourceTelemetry } from "./sourceTelemetry";
 import { createRuntimeSourceImageComposition } from "./sourceImageTelemetry";
@@ -127,10 +128,7 @@ export async function mountProductionSurfaces(
         analyticsTrustedProxyVerified: env.ANALYTICS_TRUSTED_PROXY_VERIFIED,
         analyticsCmsVersion: "0.1.0",
         sourceResolveSecret: features.resolveSecret,
-        filesMetadata: core.filesMetadata,
-        filesBlob: core.filesBlob,
-        variantStore: core.variantStore,
-        sitemapStore: core.sitemapStore,
+        ...createPublicFileStores(core),
         auth: {
             ...authentication.publicAuthBase,
             emailVerificationUrl: env.CMS_AUTH_EMAIL_VERIFICATION_URL,

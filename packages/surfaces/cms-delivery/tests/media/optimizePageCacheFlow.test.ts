@@ -5,7 +5,7 @@ import { TtlCache } from "@bernouy/http-runner";
 import { type CacheEntry } from "@bernouy/http-runner";
 import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, sha256Hex } from "@bernouy/cms-content/files";
 import { P9R_CACHE } from "@bernouy/cms-content";
-import { readManifest } from "@bernouy/cms-content/files";
+import { readManifest } from "@bernouy/cms-content/files/serving";
 import type { ContentReader } from "@bernouy/cms-content";
 
 // optimizePage never touches the repository, so an empty stub is fine.

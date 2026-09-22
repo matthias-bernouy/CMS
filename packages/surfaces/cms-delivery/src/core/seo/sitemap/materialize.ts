@@ -1,5 +1,5 @@
 import { canonicalSiteBaseUrl, type TPage } from "@bernouy/cms-content";
-import type { CmsFilesBlobStore } from "@bernouy/cms-content/files";
+import type { SitemapStore } from "@bernouy/cms-content/files/serving";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { collectPublicPageProviderPaths } from "cms-delivery/core/pages/publicPagePaths";
 import {
@@ -98,7 +98,7 @@ export async function storedSitemapLocations(
 }
 
 async function publishSnapshot(
-    store: CmsFilesBlobStore,
+    store: SitemapStore,
     snapshot: SitemapSnapshotDescriptor,
 ): Promise<SitemapMaterializationResult> {
     const previous = await readSitemapManifest(store);

@@ -1,5 +1,5 @@
-import type { CmsFilesBlobStore } from "cms-content/files/interfaces/CmsFilesBlobStore";
-import type { CmsFilesMetadataRepository } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
+import type { BlobReader, VariantStore } from "cms-content/files/interfaces/CmsFilesBlobStore";
+import type { PublicFileMetadataLookup } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
 import { readManifest, type VariantManifest } from "cms-content/files/core/media/imageVariants";
 import {
     cmsImageVariantBaseUrlFromByIdUrl,
@@ -20,7 +20,7 @@ type Target = { el: Element; attr: string; url: string; id: string };
  */
 export async function injectMediaVersions(
     document: Document,
-    deps: { files?: CmsFilesMetadataRepository; variantStore?: CmsFilesBlobStore },
+    deps: { files?: PublicFileMetadataLookup; variantStore?: VariantStore },
 ): Promise<string[]> {
     const { files, variantStore } = deps;
     if (!files) {

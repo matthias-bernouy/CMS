@@ -1,8 +1,8 @@
 import { describe, test, expect } from "bun:test";
 import sharp from "sharp";
 import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
-import { optimizePageImages } from "@bernouy/cms-content/files";
-import { readManifest, variantKey } from "@bernouy/cms-content/files";
+import { optimizePageImages } from "@bernouy/cms-content/files/serving";
+import { readManifest, variantKey } from "@bernouy/cms-content/files/serving";
 
 // Requires libvips on the loader path (sharp).
 const png = async (w: number, h: number): Promise<Uint8Array> =>

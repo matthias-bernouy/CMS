@@ -2,13 +2,8 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdtemp, mkdir, rm, rename, writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-    LocalFsCmsFiles,
-    sha256Hex,
-    InMemoryCmsFilesMetadata,
-    InMemoryCmsFilesBlob,
-    type FileItem,
-} from "@bernouy/cms-content/files";
+import { LocalFsCmsFiles } from "@bernouy/cms-content/files/local-fs";
+import { sha256Hex, InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, type FileItem } from "@bernouy/cms-content/files";
 import { uploadFile } from "@bernouy/cms-content/files";
 import { updateFileContent } from "@bernouy/cms-content/files";
 import { deleteFileTree } from "@bernouy/cms-content/files";

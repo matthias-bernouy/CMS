@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { InMemoryCmsFilesBlob, InMemoryCmsFilesMetadata, serveFilesRequest } from "@bernouy/cms-content/files";
+import { InMemoryCmsFilesBlob, InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
+import { serveFilesRequest } from "@bernouy/cms-content/files/serving";
 import { encode, FILES_PREFIX, filesRequest, seedFile } from "./serveFilesFixtures";
 
 const savedMode = process.env.MODE;
