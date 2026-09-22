@@ -13,19 +13,12 @@ import { CMS_FILES_ROUTE, filesPrefix, serveFilesRequest } from "@bernouy/cms-fi
 import { cachedResponseAsync, publicAssetCacheControl, redirect } from "@bernouy/http-runner";
 import { renderLoginPage } from "cms-control/core/admin/auth/authPages";
 import { mountControlSourceProxy } from "cms-control/core/admin/control/sourceProxy";
-import {
-    createAuthenticatedControlGuard,
-    createControlAccessGuard,
-    createControlStaticAccessGuard,
-} from "cms-control/core/admin/control/adminAccess";
+import { createAuthenticatedControlGuard, createControlAccessGuard } from "cms-control/core/admin/control/adminAccess";
 import type { ControlAuthBackends, ControlCmsState } from "cms-control/core/admin/control/types";
 import { mountAnalyticsRoutes } from "cms-control/core/admin/control/mountRoutes/analytics";
 import serveStaticFolder from "cms-control/core/admin/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "cms-control/core/admin/registerEndpoints/serveApiFolder";
 import type { ControlCms } from "cms-control/ControlCms";
-import { mountDashboardOperatorRoutes } from "cms-control/core/admin/dashboards/operatorRoutes";
-import { canAccessDashboardWorkspace } from "cms-control/core/admin/dashboards/access";
-import { mountDashboardSourceProxy } from "cms-control/core/admin/dashboards/proxy";
 
 export function mountControlCmsRoutes(
     cms: ControlCms,
@@ -36,9 +29,6 @@ export function mountControlCmsRoutes(
     const runner = state.runner;
     const authGuard = createControlAccessGuard(cms.basePath, state.auth);
     const authenticatedGuard = createAuthenticatedControlGuard(cms.basePath, state.auth);
-    const staticGuard = createControlStaticAccessGuard(cms.basePath, state.auth, async (req) =>
-        canAccessDashboardWorkspace(cms, req),
-    );
     runner.addEndpoint("GET", "/login", (req) => renderLoginPage(req, cms.basePath));
 
     const controlPublicAuth = state.configuration.publicAuth
@@ -77,8 +67,6 @@ export function mountControlCmsRoutes(
     runner.addEndpoint("GET", "/", toPages, [authGuard]);
     runner.addEndpoint("GET", "/admin", toPages, [authGuard]);
     mountControlSourceProxy(state, authGuard, controlPublicAuth);
-    mountDashboardOperatorRoutes(cms, authenticatedGuard);
-    mountDashboardSourceProxy(state, authenticatedGuard);
     runner.group(
         CMS_FILES_ROUTE,
         (filesRunner) => {
@@ -111,7 +99,7 @@ export function mountControlCmsRoutes(
                 cspExtras: () => cms.getCspExtras(),
             });
         },
-        [staticGuard],
+        [authGuard],
     );
     let apiRoutesReady = Promise.resolve();
     runner.group(

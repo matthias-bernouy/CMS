@@ -1,5 +1,0 @@
-<div data-dashboard-list-source slot="source-status" cms-source="/api/dashboards as dashboards" cms-reload-on="dashboard:definitions-changed">
-    <span cms-condition="$source.loading"><span cms-condition="definitionsEmbedded">Loading…</span></span>
-    <p9r-alert type="error" cms-condition="$source.error || $source.refreshError">Unable to load dashboards. {{ $source.message }}</p9r-alert>
-    <p9r-alert type="error" cms-condition="definitionsUnavailable">The settings dashboard is unavailable.</p9r-alert>
-</div>

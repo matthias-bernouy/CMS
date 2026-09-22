@@ -107,6 +107,7 @@ describe("production surface mounting", () => {
         expect(controlArguments[2]).toBe(options.authentication.auth);
         expect(controlConfig).toMatchObject({
             deliveryUrl: options.env.DELIVERY_PUBLIC_URL,
+            dashboardAssignments: options.features.dashboardAssignments,
             publicAuth: {
                 marker: "public-auth",
                 emailVerificationUrl: options.env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,

@@ -1,7 +1,0 @@
-<template data-lookup="states">
-    <span hidden cms-condition="$source.loading"></span>
-    <span hidden cms-condition="$source.error || $source.refreshError"></span>
-</template>
-<template data-lookup="options">
-    <option cms-repeat="lookupOptions as lookupOption" value="{{ lookupOption.value }}">{{ lookupOption.label }}</option>
-</template>

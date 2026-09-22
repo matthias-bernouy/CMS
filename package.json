@@ -29,7 +29,6 @@
         "typecheck": "tsc --build",
         "clean": "tsc --build --clean",
         "test": "bun test",
-        "test:browser:dashboards": "bun run packages/surfaces/cms-control/tests/browser-runner.ts",
         "check:ui-contracts": "bun run quality/ui-contracts/check.ts"
     },
     "devDependencies": {

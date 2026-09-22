@@ -46,9 +46,7 @@ cancellation and submissions support multipart forms and nested field paths.
 
 The ownership rule is a **CMS application policy**, not a restriction of the
 foundation engine. The engine supports isolated nested cores; that capability and
-its tests remain valid. Dashboard navigation and widget sources now remain in
-light DOM under the document core. Dynamic widget mounting does not justify a
-private core. See the [Dashboard binding architecture](./dashboard-widget-binding.md).
+its tests remain valid.
 
 ## Component composition and styles
 
@@ -70,13 +68,6 @@ DOM and expose slots for light-DOM content. Slotted content remains light DOM.
 Keep document-owned bindings there: the binding discovery code walks ordinary
 DOM descendants and does not enter a component's shadow root. Do not move
 those bindings behind Shadow DOM and add a private core to reactivate them.
-
-For Dashboard widgets, first use declarative repetition and conditional
-templates for the known widget types. Runtime data does not by itself require
-an imperative renderer. Recursive sections/tabs need an explicit composition
-strategy; assess that concrete requirement before adding a narrowly scoped
-extension. Do not use serialized JSON attributes and observers as a parallel
-data-passing mechanism between controllers and widgets.
 
 These composition and CSS rules guide review. The current scanner checks core
 creation, but does not prove light/shadow placement or detect every stylesheet

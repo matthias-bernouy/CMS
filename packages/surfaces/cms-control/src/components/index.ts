@@ -56,7 +56,6 @@ import { PageCopySource } from "./admin/Common/PageSettings/PageCopySource";
 import { PageLanguages } from "./admin/Common/PageSettings/languages/manage/PageLanguages";
 import { PageDelete } from "./admin/Common/PageSettings/languages/PageDelete";
 import { PageDetailSync } from "./admin/Common/PageSettings/languages/PageDetailSync";
-import { dashboardDisplayFilters } from "./admin/Resources/Dashboards/widgets/w-detail/binding/filters";
 
 function define(tag: string, constructor: CustomElementConstructor) {
     if (!customElements.get(tag)) {
@@ -70,7 +69,6 @@ define("cms-page-languages", PageLanguages);
 define("cms-page-delete", PageDelete);
 define("cms-page-detail-sync", PageDetailSync);
 setBindingFilters({
-    ...dashboardDisplayFilters,
     json: (value) => (value === undefined ? undefined : JSON.stringify(value)),
     jsonurl: (value) => (value === undefined ? undefined : encodeURIComponent(JSON.stringify(value))),
     lines: (value) => (Array.isArray(value) ? value.join("\n") : value),
@@ -150,25 +148,6 @@ import "./admin/Layout/ShellDetail/ShellDetail";
 import "./admin/Layout/Analytics/AnalyticsNav";
 import "./admin/Layout/Analytics/AnalyticsDashboard";
 import "./admin/Layout/EndpointPerformance/EndpointPerformance";
-import "./admin/Resources/Dashboards/navigation/DashboardNav";
-import "./admin/Resources/Dashboards/view/DashboardView";
-import "./admin/DashboardWorkspace/DashboardNav";
-import "./admin/DashboardWorkspace/DashboardWorkspace";
-import {
-    CmsDashboardAdminNav,
-    CmsDashboardAdminStyles,
-    CmsDashboardIcon,
-} from "./admin/DashboardWorkspace/configuration/AdminSupport";
-import { CmsDashboardCreateController } from "./admin/DashboardWorkspace/configuration/CreateController";
-import { CmsDashboardMemberFilter } from "./admin/DashboardWorkspace/configuration/MemberFilter";
-import { CmsDashboardNavigationEditor } from "./admin/DashboardWorkspace/configuration/NavigationEditor";
-define("cms-dashboard-admin-styles", CmsDashboardAdminStyles);
-define("cms-dashboard-admin-nav", CmsDashboardAdminNav);
-define("cms-dashboard-icon", CmsDashboardIcon);
-define("cms-dashboard-create-controller", CmsDashboardCreateController);
-define("cms-dashboard-member-filter", CmsDashboardMemberFilter);
-define("cms-dashboard-navigation-editor", CmsDashboardNavigationEditor);
-import "./admin/Resources/Sources/ResourceWorkspace";
 import "./admin/Resources/Blocs/workspace/controller/CollectionWorkspace";
 
 // Editor

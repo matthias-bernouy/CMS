@@ -35,7 +35,7 @@ describe("production runtime stores", () => {
             expect.arrayContaining([
                 "sources",
                 "cms_identity_aliases",
-                "dashboards",
+                "dashboardAssignments",
                 "analytics_rollups",
                 "analytics_hll_sketches",
                 "analytics_referrer_buckets",

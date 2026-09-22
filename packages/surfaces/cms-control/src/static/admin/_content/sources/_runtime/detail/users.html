@@ -1,9 +1,0 @@
-<template data-users="source">
-    <cms-dashboard-directory cms-source="{{ detailUsersUrl }}" hidden>
-        <span cms-condition="$source.loading" hidden></span>
-        <span cms-condition="$source.error || $source.refreshError" hidden></span>
-    </cms-dashboard-directory>
-</template>
-<template data-users="option">
-    <option value="{{ cmsUserOption.value }}">{{ cmsUserOption.label }}</option>
-</template>

@@ -81,8 +81,6 @@ export async function mountProductionSurfaces(
                 secureCookie: new URL(env.DELIVERY_PUBLIC_URL).protocol === "https:",
                 optOutUrl: `${env.DELIVERY_PUBLIC_URL}/.cms/privacy/analytics`,
             },
-            dashboards: features.dashboards,
-            dashboardViews: features.dashboardViews,
             dashboardAssignments: features.dashboardAssignments,
             identities: features.identities,
             endpointPerformanceReports: features.endpointPerformanceReports,

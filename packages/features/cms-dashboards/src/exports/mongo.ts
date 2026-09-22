@@ -1,15 +1,4 @@
-/**
- * Mongo adapter of @bernouy/cms-dashboards — composition roots only.
- */
-
-export {
-    MongoDashboardRepository,
-    type MongoDashboardRepositoryConfig,
-} from "../default-implementation/MongoDashboardRepository";
-export {
-    MongoDashboardViewRepository,
-    type MongoDashboardViewRepositoryConfig,
-} from "../default-implementation/MongoDashboardViewRepository";
+/** Mongo assignment adapter — composition roots only. */
 export {
     MongoDashboardAssignmentRepository,
     type MongoDashboardAssignmentRepositoryConfig,

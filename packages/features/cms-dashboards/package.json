@@ -1,16 +1,13 @@
 {
     "name": "@bernouy/cms-dashboards",
     "version": "0.1.0",
-    "description": "Dashboard contracts and repositories for declarative integration-authored data views.",
+    "description": "Temporary dashboard assignment boundary during the views and dashboards transition.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./src/exports/index.ts",
     "exports": {
         ".": "./src/exports/index.ts",
         "./mongo": "./src/exports/mongo.ts"
-    },
-    "dependencies": {
-        "@bernouy/cms-sources": "workspace:*"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",

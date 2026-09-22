@@ -12368,11 +12368,6 @@ nav {
   function it(t) {
     return et.get(t)?.value;
   }
-  function Pd(t, e) {
-    if (y(t) !== "auto")
-      throw Error("setSourceData requires an automatic read source; form sources own their submission results.");
-    et.set(t, { value: e, local: D(t.getAttribute("cms-source") ?? "") === "" }), Mi.get(t)?.(e);
-  }
   function Ci(t, e) {
     et.set(t, { value: e, local: Ti(t) && D(t.getAttribute("cms-source") ?? "") === "" });
   }
@@ -13362,12 +13357,6 @@ nav {
   }
   var uc = new WeakMap;
   var xe = new WeakMap;
-  function hc(t, e) {
-    uc.set(t, e), Wi(t);
-  }
-  function Wi(t) {
-    xe.get(t)?.();
-  }
   function bc(t, e) {
     return uc.get(t)?.(e) ?? {};
   }
@@ -13998,12 +13987,6 @@ nav {
       if (at.get(t) === e)
         at.delete(t);
     };
-  }
-  async function Ic(t) {
-    let e = at.get(t);
-    if (!e || !t.isConnected || !e.url())
-      throw Error("reloadSource requires an active automatic source.");
-    return e.reload();
   }
   function Pc(t) {
     let e = t.getAttribute(se)?.trim();
@@ -15889,854 +15872,6 @@ ${layout_default}`;
     };
   }
 
-  // src/components/admin/Resources/Dashboards/domain/formatting.ts
-  function formatDashboardValue(value, format, options = {}) {
-    if (format === "date") {
-      return formatDashboardDate(value, options.locale);
-    }
-    if (format === "money") {
-      return formatDashboardMoney(value, options.currency, options.locale);
-    }
-    return displayText(value);
-  }
-  function formatDashboardDate(value, locale) {
-    const raw = displayText(value).trim();
-    if (!raw) {
-      return "";
-    }
-    const dateOnly = /^\d{4}-\d{2}-\d{2}$/u.test(raw);
-    const date = dateOnly ? new Date(`${raw}T00:00:00`) : new Date(raw);
-    if (!Number.isFinite(date.valueOf())) {
-      return raw;
-    }
-    return new Intl.DateTimeFormat(locale, dateOnly ? { dateStyle: "medium" } : dateTimeOptions()).format(date);
-  }
-  function formatDashboardMoney(value, currency, locale) {
-    const raw = displayText(value).trim();
-    if (!raw) {
-      return "";
-    }
-    const minorUnits = safeInteger(value);
-    if (minorUnits === undefined) {
-      return raw;
-    }
-    const normalizedCurrency = currency?.trim().toUpperCase();
-    const fractionDigits = currencyFractionDigits(normalizedCurrency);
-    const majorUnits = minorUnits / 10 ** fractionDigits;
-    if (normalizedCurrency) {
-      try {
-        return new Intl.NumberFormat(locale, {
-          style: "currency",
-          currency: normalizedCurrency
-        }).format(majorUnits);
-      } catch {
-        return `${formatNumber(majorUnits, fractionDigits, locale)} ${normalizedCurrency}`;
-      }
-    }
-    return formatNumber(majorUnits, fractionDigits, locale);
-  }
-  function displayText(value) {
-    if (value === null || value === undefined) {
-      return "";
-    }
-    if (Array.isArray(value)) {
-      return value.map(displayText).filter(Boolean).join(", ");
-    }
-    return String(value);
-  }
-  function safeInteger(value) {
-    if (typeof value === "number") {
-      return Number.isSafeInteger(value) ? value : undefined;
-    }
-    if (typeof value !== "string" || !/^[+-]?\d+$/u.test(value.trim())) {
-      return;
-    }
-    const parsed = Number(value);
-    return Number.isSafeInteger(parsed) ? parsed : undefined;
-  }
-  function currencyFractionDigits(currency) {
-    if (!currency) {
-      return 2;
-    }
-    try {
-      return new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2;
-    } catch {
-      return 2;
-    }
-  }
-  function formatNumber(value, fractionDigits, locale) {
-    return new Intl.NumberFormat(locale, {
-      minimumFractionDigits: fractionDigits,
-      maximumFractionDigits: fractionDigits
-    }).format(value);
-  }
-  function dateTimeOptions() {
-    return { dateStyle: "medium", timeStyle: "short" };
-  }
-
-  // ../../features/cms-dashboards/src/interfaces/dashboard/limits.ts
-  var DASHBOARD_MAX_OPTIONS = 256;
-  var DASHBOARD_MAX_NESTED_FIELDS = 64;
-  // ../../features/cms-dashboards/src/interfaces/dashboard/composition.ts
-  var DASHBOARD_SCHEMA_VERSION = 2;
-  // ../../features/cms-dashboards/src/core/errors.ts
-  class DuplicateDashboardError extends Error {
-    dashboardId;
-    constructor(dashboardId) {
-      super(`duplicate dashboard: ${dashboardId}`);
-      this.dashboardId = dashboardId;
-      this.name = "DuplicateDashboardError";
-    }
-  }
-
-  class DuplicateDashboardViewError extends Error {
-    viewId;
-    constructor(viewId) {
-      super(`duplicate dashboard view: ${viewId}`);
-      this.viewId = viewId;
-      this.name = "DuplicateDashboardViewError";
-    }
-  }
-
-  // ../../features/cms-dashboards/src/default-implementation/InMemoryDashboardRepository.ts
-  class InMemoryDashboardRepository {
-    dashboards = new Map;
-    async createDashboard(dashboard) {
-      if (this.dashboards.has(dashboard.id)) {
-        throw new DuplicateDashboardError(dashboard.id);
-      }
-      this.dashboards.set(dashboard.id, structuredClone(dashboard));
-      return structuredClone(dashboard);
-    }
-    async updateDashboard(dashboard) {
-      if (!this.dashboards.has(dashboard.id)) {
-        return null;
-      }
-      this.dashboards.set(dashboard.id, structuredClone(dashboard));
-      return structuredClone(dashboard);
-    }
-    async deleteDashboard(id2) {
-      return this.dashboards.delete(id2);
-    }
-    async getDashboard(id2) {
-      const found = this.dashboards.get(id2);
-      return found ? structuredClone(found) : null;
-    }
-    async getAllDashboards() {
-      return Array.from(this.dashboards.values(), (dashboard) => structuredClone(dashboard));
-    }
-  }
-  // ../../features/cms-dashboards/src/default-implementation/InMemoryDashboardViewRepository.ts
-  class InMemoryDashboardViewRepository {
-    views = new Map;
-    async createView(view) {
-      if (this.views.has(view.id)) {
-        throw new DuplicateDashboardViewError(view.id);
-      }
-      this.views.set(view.id, structuredClone(view));
-      return structuredClone(view);
-    }
-    async updateView(view) {
-      if (!this.views.has(view.id)) {
-        return null;
-      }
-      this.views.set(view.id, structuredClone(view));
-      return structuredClone(view);
-    }
-    async deleteView(id2) {
-      return this.views.delete(id2);
-    }
-    async getView(id2) {
-      const view = this.views.get(id2);
-      return view ? structuredClone(view) : null;
-    }
-    async getViewsForSource(sourceId) {
-      return Array.from(this.views.values()).filter((view) => view.source === sourceId).map((view) => structuredClone(view));
-    }
-    async getAllViews() {
-      return Array.from(this.views.values(), (view) => structuredClone(view));
-    }
-  }
-  // ../../features/cms-dashboards/src/default-implementation/InMemoryDashboardAssignmentRepository.ts
-  class InMemoryDashboardAssignmentRepository {
-    dashboardIdsBySubject = new Map;
-    async assign(assignment) {
-      const dashboardIds = this.dashboardIdsBySubject.get(assignment.subjectId) ?? new Set;
-      dashboardIds.add(assignment.dashboardId);
-      this.dashboardIdsBySubject.set(assignment.subjectId, dashboardIds);
-      return structuredClone(assignment);
-    }
-    async unassign(subjectId, dashboardId) {
-      const dashboardIds = this.dashboardIdsBySubject.get(subjectId);
-      const deleted = dashboardIds?.delete(dashboardId) ?? false;
-      if (dashboardIds?.size === 0) {
-        this.dashboardIdsBySubject.delete(subjectId);
-      }
-      return deleted;
-    }
-    async hasAssignment(subjectId, dashboardId) {
-      return this.dashboardIdsBySubject.get(subjectId)?.has(dashboardId) ?? false;
-    }
-    async getDashboardIdsForSubject(subjectId) {
-      return [...this.dashboardIdsBySubject.get(subjectId) ?? []].sort();
-    }
-    async getSubjectIdsForDashboard(dashboardId) {
-      return [...this.dashboardIdsBySubject].filter(([, dashboardIds]) => dashboardIds.has(dashboardId)).map(([subjectId]) => subjectId).sort();
-    }
-    async getAssignedSubjectIds(dashboardId, subjectIds) {
-      return subjectIds.filter((subjectId) => this.dashboardIdsBySubject.get(subjectId)?.has(dashboardId)).sort();
-    }
-    async countForDashboard(dashboardId) {
-      return (await this.getSubjectIdsForDashboard(dashboardId)).length;
-    }
-    async deleteForSubject(subjectId) {
-      const deleted = this.dashboardIdsBySubject.get(subjectId)?.size ?? 0;
-      this.dashboardIdsBySubject.delete(subjectId);
-      return deleted;
-    }
-    async deleteForDashboard(dashboardId) {
-      let deleted = 0;
-      for (const [subjectId, dashboardIds] of this.dashboardIdsBySubject) {
-        if (dashboardIds.delete(dashboardId)) {
-          deleted += 1;
-        }
-        if (dashboardIds.size === 0) {
-          this.dashboardIdsBySubject.delete(subjectId);
-        }
-      }
-      return deleted;
-    }
-  }
-  // ../../features/cms-sources/src/core/model/errors.ts
-  class SourceValidationError extends Error {
-    status = 400;
-    constructor(field, message) {
-      super(`Invalid ${field}: ${message}`);
-      this.name = "SourceValidationError";
-    }
-  }
-
-  class DuplicateSourceError extends Error {
-    status = 409;
-    constructor(urn) {
-      super(`Source with urn "${urn}" already exists`);
-      this.name = "DuplicateSourceError";
-    }
-  }
-  // ../../features/cms-sources/src/interfaces/SourceObservability.ts
-  var SOURCE_TIMING_STAGES = [
-    "cms_auth",
-    "cms_authorize",
-    "cms_roles",
-    "cms_endpoint_resolve",
-    "cms_context",
-    "cms_secret",
-    "cms_headers",
-    "cms_body",
-    "cms_upstream",
-    "cms_image_upstream",
-    "cms_image_read",
-    "cms_image_decode",
-    "cms_image_semaphore_wait",
-    "cms_image_encode",
-    "cms_image_store",
-    "cms_projection",
-    "cms_identity_binding",
-    "cms_total"
-  ];
-  // ../../features/cms-sources/src/core/upstream/headerPolicy.ts
-  var FORBIDDEN_REQUEST_HEADERS = new Set([
-    "host",
-    "connection",
-    "keep-alive",
-    "transfer-encoding",
-    "te",
-    "upgrade",
-    "proxy-connection",
-    "proxy-authorization",
-    "trailer",
-    "content-length",
-    "cookie",
-    "x-cms-correlation-id"
-  ]);
-  // ../../features/cms-sources/src/default-implementation/InMemorySourceRepository.ts
-  class InMemorySourceRepository {
-    _sources = new Map;
-    async createSource(source2) {
-      if (this._sources.has(source2.urn)) {
-        throw new DuplicateSourceError(source2.urn);
-      }
-      this._sources.set(source2.urn, structuredClone(source2));
-      return structuredClone(source2);
-    }
-    async updateSource(source2) {
-      if (!this._sources.has(source2.urn)) {
-        return null;
-      }
-      this._sources.set(source2.urn, structuredClone(source2));
-      return structuredClone(source2);
-    }
-    async deleteSource(urn) {
-      return this._sources.delete(urn);
-    }
-    async getSource(urn) {
-      const found = this._sources.get(urn);
-      return found ? structuredClone(found) : null;
-    }
-    async getAllSources() {
-      return Array.from(this._sources.values(), (p2) => structuredClone(p2));
-    }
-    async getEndpoint(urn) {
-      for (const source2 of this._sources.values()) {
-        const endpoint = source2.endpoints.find((e) => e.urn === urn);
-        if (endpoint) {
-          return structuredClone(endpoint);
-        }
-      }
-      return null;
-    }
-  }
-  // ../../features/cms-sources/src/core/system/urn.ts
-  function parseUrn(urn) {
-    const parts = urn.split(":");
-    if (parts[0] !== "urn") {
-      return null;
-    }
-    if (parts.length === 2 && parts[1]) {
-      return { source: parts[1], endpoint: null };
-    }
-    if (parts.length === 3 && parts[1] && parts[2]) {
-      return { source: parts[1], endpoint: parts[2] };
-    }
-    return null;
-  }
-  function makeSourceUrn(sourceId) {
-    return `urn:${sourceId}`;
-  }
-  function makeEndpointUrn(sourceId, endpointId) {
-    return `urn:${sourceId}:${endpointId}`;
-  }
-
-  // ../../features/cms-sources/src/core/system/siteSource.ts
-  var SYSTEM_SITE_SOURCE_ID = "system-site";
-  var SYSTEM_SITE_SOURCE_URN = makeSourceUrn(SYSTEM_SITE_SOURCE_ID);
-  var SYSTEM_SITE_ORGANIZATION_ENDPOINT_URN = makeEndpointUrn(SYSTEM_SITE_SOURCE_ID, "organization");
-  var stringShape = (title) => ({ type: "string", title });
-  var addressShape = {
-    type: "object",
-    title: "Address",
-    properties: {
-      streetAddress: stringShape("Street address"),
-      postalCode: stringShape("Postal code"),
-      addressLocality: stringShape("City"),
-      addressRegion: stringShape("Region"),
-      addressCountry: stringShape("Country code")
-    },
-    required: ["streetAddress", "postalCode", "addressLocality", "addressRegion", "addressCountry"]
-  };
-  var organizationShape = {
-    type: "object",
-    properties: {
-      name: stringShape("Name"),
-      legalName: stringShape("Legal name"),
-      description: stringShape("Description"),
-      logo: stringShape("Logo"),
-      email: stringShape("Email"),
-      telephone: stringShape("Telephone"),
-      address: addressShape,
-      sameAs: {
-        type: "array",
-        title: "Public profiles",
-        items: { type: "string" }
-      }
-    },
-    required: ["name", "legalName", "description", "logo", "email", "telephone", "address", "sameAs"]
-  };
-  // ../../features/cms-sources/src/core/system/systemSources.ts
-  var SYSTEM_SOURCE_ID_PREFIX = "system-";
-  var SYSTEM_AUTH_SOURCE_ID = "system-auth";
-  var SYSTEM_AUTH_SOURCE_URN = makeSourceUrn(SYSTEM_AUTH_SOURCE_ID);
-  var SYSTEM_TARGET_SCHEME = "cms-system://";
-  var stringShape2 = () => ({ type: "string" });
-  var booleanShape = () => ({ type: "boolean" });
-  var objectShape = (properties, required = []) => ({
-    type: "object",
-    properties,
-    ...required.length ? { required } : {}
-  });
-  var subjectShape = objectShape({
-    identifier: stringShape2(),
-    email: stringShape2(),
-    role: stringShape2()
-  });
-  var okShape = objectShape({ ok: booleanShape() });
-  var emailBody = objectShape({ email: stringShape2() }, ["email"]);
-  var tokenBody = objectShape({ token: stringShape2() }, ["token"]);
-  var SYSTEM_AUTH_SOURCE = {
-    urn: SYSTEM_AUTH_SOURCE_URN,
-    meta: {
-      name: "Authentication",
-      description: "Built-in first-party authentication actions."
-    },
-    endpoints: [
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "me"),
-        method: "GET",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/me`,
-        meta: { name: "Current user" },
-        output: [{ status: "200", body: objectShape({ subject: subjectShape }) }]
-      },
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "login"),
-        method: "POST",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/login`,
-        meta: { name: "Log in" },
-        input: {
-          body: objectShape({ email: stringShape2(), password: stringShape2(), returnTo: stringShape2() }, [
-            "email",
-            "password"
-          ])
-        },
-        output: [{ status: "200", body: objectShape({ subject: subjectShape }) }]
-      },
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "logout"),
-        method: "POST",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/logout`,
-        meta: { name: "Log out" },
-        output: [{ status: "200", body: okShape }]
-      },
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "signup"),
-        method: "POST",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/signup`,
-        meta: { name: "Sign up" },
-        input: {
-          body: objectShape({
-            email: stringShape2(),
-            password: stringShape2()
-          }, ["email", "password"])
-        },
-        output: [{ status: "200", body: okShape }]
-      },
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "requestEmailVerification"),
-        method: "POST",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/email/verification/request`,
-        meta: { name: "Request email verification" },
-        input: { body: emailBody },
-        output: [{ status: "200", body: okShape }]
-      },
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "confirmEmailVerification"),
-        method: "POST",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/email/verification/confirm`,
-        meta: { name: "Confirm email verification" },
-        input: { body: tokenBody },
-        output: [{ status: "200", body: okShape }]
-      },
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "requestPasswordReset"),
-        method: "POST",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/password/reset/request`,
-        meta: { name: "Request password reset" },
-        input: { body: emailBody },
-        output: [{ status: "200", body: okShape }]
-      },
-      {
-        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "confirmPasswordReset"),
-        method: "POST",
-        access: { mode: "public" },
-        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/password/reset/confirm`,
-        meta: { name: "Confirm password reset" },
-        input: { body: objectShape({ token: stringShape2(), password: stringShape2() }, ["token", "password"]) },
-        output: [{ status: "200", body: okShape }]
-      }
-    ]
-  };
-  function isSystemSourceId(sourceId) {
-    return sourceId.startsWith(SYSTEM_SOURCE_ID_PREFIX);
-  }
-  function systemSourceUrnOf(urn) {
-    const parsed = parseUrn(urn);
-    if (!parsed || !isSystemSourceId(parsed.source)) {
-      return null;
-    }
-    return makeSourceUrn(parsed.source);
-  }
-  // ../../features/cms-sources/src/core/repositories/CompositeSourceRepository.ts
-  class CompositeSourceRepository {
-    inner;
-    systemSources = new Map;
-    constructor(inner, systemSources = []) {
-      this.inner = inner;
-      for (const source2 of systemSources) {
-        this.systemSources.set(source2.urn, structuredClone(source2));
-      }
-    }
-    async createSource(source2) {
-      this.assertUserSource(source2.urn, "system source namespace is reserved");
-      return this.inner.createSource(source2);
-    }
-    async updateSource(source2) {
-      this.assertUserSource(source2.urn, "system sources are readonly");
-      return this.inner.updateSource(source2);
-    }
-    async deleteSource(urn) {
-      this.assertUserSource(urn, "system sources are readonly");
-      return this.inner.deleteSource(urn);
-    }
-    async getSource(urn) {
-      const system = this.systemSources.get(urn);
-      if (system) {
-        return structuredClone(system);
-      }
-      return this.inner.getSource(urn);
-    }
-    async getAllSources() {
-      const systemUrns = new Set(this.systemSources.keys());
-      const system = Array.from(this.systemSources.values(), (source2) => structuredClone(source2));
-      const user = (await this.inner.getAllSources()).filter((source2) => !systemUrns.has(source2.urn) && !systemSourceUrnOf(source2.urn));
-      return [...system, ...user];
-    }
-    async getEndpoint(urn) {
-      const systemUrn = systemSourceUrnOf(urn);
-      if (systemUrn) {
-        const system = this.systemSources.get(systemUrn);
-        const endpoint = system?.endpoints.find((candidate) => candidate.urn === urn);
-        return endpoint ? structuredClone(endpoint) : null;
-      }
-      return this.inner.getEndpoint(urn);
-    }
-    assertUserSource(urn, message) {
-      if (systemSourceUrnOf(urn)) {
-        throw new SourceValidationError("urn", message);
-      }
-    }
-  }
-  // ../../features/cms-sources/src/core/validation/sourceMediaEffectBindings.ts
-  var MAX_MEDIA_EFFECT_RESPONSE_BYTES = 64 * 1024;
-  // ../../foundation/http-runner/src/core/request/observability.ts
-  var correlations = new WeakMap;
-  var timings = new WeakMap;
-  var finishedTimings = new WeakMap;
-  // ../../features/cms-sources/src/core/execution/observability/sourceObservationReporting.ts
-  var sourceStageNames = new Set(SOURCE_TIMING_STAGES);
-
-  // ../../features/cms-sources/src/core/execution/sourceObservability.ts
-  var contexts = new WeakMap;
-  // ../../features/cms-sources/src/core/response-projection/bindResponseIdentities.ts
-  var MAX_IDENTITY_BINDING_RESPONSE_BYTES = 64 * 1024;
-
-  // ../../features/cms-sources/src/core/response-projection/projectEndpointResponse.ts
-  var MAX_PROJECTED_JSON_BYTES = 2 * 1024 * 1024;
-  // ../../features/cms-dashboards/src/core/dashboardPaths.ts
-  var PATH_SEGMENT = /^[A-Za-z_$][\w$]*$/;
-  var EXPRESSION = /^\$([A-Za-z]+)(?:\.(.+))?$/;
-  var UNSAFE_PATH_SEGMENTS = new Set(["__proto__", "constructor", "prototype"]);
-  function dashboardPathSegments(value) {
-    const segments = value.split(".");
-    if (!segments.length || segments.some((segment) => !PATH_SEGMENT.test(segment) || UNSAFE_PATH_SEGMENTS.has(segment))) {
-      return null;
-    }
-    return segments;
-  }
-  function isSafeDashboardPath(value) {
-    return dashboardPathSegments(value) !== null;
-  }
-  function isSafeDashboardExpression(value, roots, pathRequired = false) {
-    const match = EXPRESSION.exec(value);
-    if (!match || !roots.includes(match[1])) {
-      return false;
-    }
-    const path = match[2];
-    return path === undefined ? !pathRequired : isSafeDashboardPath(path);
-  }
-  // ../../features/cms-dashboards/src/core/dashboardVisibility.ts
-  var DASHBOARD_VISIBILITY_MAX_DEPTH = 10;
-  var DASHBOARD_VISIBILITY_MAX_NODES = 500;
-  function isDashboardVisibilityExpression(value) {
-    return typeof value === "string" && isSafeDashboardExpression(value, ["field", "resource"], true);
-  }
-  function evaluateDashboardVisibility(rule, resolve) {
-    if (rule === undefined) {
-      return true;
-    }
-    const result = evaluateRule(rule, resolve, 0, { nodes: 0 });
-    return result.valid && result.matches;
-  }
-  function evaluateRule(value, resolve, depth, budget) {
-    if (depth >= DASHBOARD_VISIBILITY_MAX_DEPTH || ++budget.nodes > DASHBOARD_VISIBILITY_MAX_NODES) {
-      return invalid();
-    }
-    if (!isRecord3(value)) {
-      return invalid();
-    }
-    const hasAll = Object.hasOwn(value, "all");
-    const hasAny = Object.hasOwn(value, "any");
-    const hasCondition = Object.hasOwn(value, "value") || Object.hasOwn(value, "equals") || Object.hasOwn(value, "notEquals");
-    if (hasAll || hasAny) {
-      if (hasAll === hasAny || hasCondition || Object.keys(value).length !== 1) {
-        return invalid();
-      }
-      const rules = hasAll ? value.all : value.any;
-      if (!Array.isArray(rules) || rules.length === 0) {
-        return invalid();
-      }
-      let matches = hasAll;
-      for (const entry of rules) {
-        const result = evaluateRule(entry, resolve, depth + 1, budget);
-        if (!result.valid) {
-          return invalid();
-        }
-        matches = hasAll ? matches && result.matches : matches || result.matches;
-      }
-      return { valid: true, matches };
-    }
-    const hasEquals = Object.hasOwn(value, "equals");
-    const hasNotEquals = Object.hasOwn(value, "notEquals");
-    if (!isDashboardVisibilityExpression(value.value) || hasEquals === hasNotEquals || Object.keys(value).length !== 2) {
-      return invalid();
-    }
-    const expected = hasEquals ? value.equals : value.notEquals;
-    if (!isVisibilityValue(expected)) {
-      return invalid();
-    }
-    const actual = resolve(value.value);
-    if (actual === undefined) {
-      return { valid: true, matches: false };
-    }
-    return { valid: true, matches: hasEquals ? actual === expected : actual !== expected };
-  }
-  function invalid() {
-    return { valid: false, matches: false };
-  }
-  function isVisibilityValue(value) {
-    return value === null || typeof value === "string" || typeof value === "boolean" || typeof value === "number" && Number.isFinite(value);
-  }
-  function isRecord3(value) {
-    return value !== null && typeof value === "object" && !Array.isArray(value);
-  }
-  // src/components/admin/Resources/Dashboards/runtime/expressions.ts
-  var DASHBOARD_PLACEHOLDER = /^\$[A-Za-z_][A-Za-z0-9_]*(?:\.|$)/;
-  function valueAt(value, path) {
-    if (!path) {
-      return value;
-    }
-    const segments = dashboardPathSegments(path);
-    if (!segments) {
-      return;
-    }
-    return segments.reduce((current, part) => {
-      if (current === null || current === undefined) {
-        return;
-      }
-      if (Array.isArray(current) && /^\d+$/.test(part)) {
-        return current[Number(part)];
-      }
-      if (typeof current !== "object") {
-        return;
-      }
-      if (!Object.hasOwn(current, part)) {
-        return;
-      }
-      return current[part];
-    }, value);
-  }
-  function setValueAt(target, path, value) {
-    const parts = dashboardPathSegments(path);
-    if (!parts) {
-      return false;
-    }
-    let current = target;
-    for (const part of parts.slice(0, -1)) {
-      const existing = Object.hasOwn(current, part) ? current[part] : undefined;
-      if (!existing || typeof existing !== "object" || Array.isArray(existing)) {
-        current[part] = {};
-      }
-      current = current[part];
-    }
-    current[parts.at(-1)] = value;
-    return true;
-  }
-  function textAt(value, path, fallback = "") {
-    const found = valueAt(value, path);
-    if (found === null || found === undefined) {
-      return fallback;
-    }
-    if (typeof found === "string") {
-      return found;
-    }
-    if (typeof found === "number" || typeof found === "boolean") {
-      return String(found);
-    }
-    return fallback;
-  }
-  function arrayAt(value, path) {
-    const found = valueAt(value, path);
-    return Array.isArray(found) ? found : [];
-  }
-  function resolveExpression(expression, vars) {
-    if (expression === "$search") {
-      return vars.search;
-    }
-    if (expression === "$limit") {
-      return vars.limit;
-    }
-    if (expression === "$offset") {
-      return vars.offset;
-    }
-    if (expression.startsWith("$selection.")) {
-      return valueAt(vars.selection, expression.slice("$selection.".length));
-    }
-    if (expression.startsWith("$resource.")) {
-      return valueAt(vars.resource, expression.slice("$resource.".length));
-    }
-    if (expression.startsWith("$field.")) {
-      return valueAt(vars.fields, expression.slice("$field.".length));
-    }
-    if (expression.startsWith("$filter.")) {
-      return valueAt(vars.filters, expression.slice("$filter.".length));
-    }
-    if (expression.startsWith("$media.")) {
-      return valueAt(vars.media, expression.slice("$media.".length));
-    }
-    if (expression === "$result") {
-      return vars.result;
-    }
-    if (expression.startsWith("$result.")) {
-      return valueAt(vars.result, expression.slice("$result.".length));
-    }
-    if (expression === "$value") {
-      return vars.value;
-    }
-    if (expression.startsWith("$value.")) {
-      return valueAt(vars.value, expression.slice("$value.".length));
-    }
-    if (DASHBOARD_PLACEHOLDER.test(expression)) {
-      return;
-    }
-    return expression;
-  }
-  function matchesDashboardVisibility(rule, vars) {
-    return evaluateDashboardVisibility(rule, (expression) => resolveExpression(expression, vars));
-  }
-  function resolveParams(params, vars) {
-    const out = {};
-    for (const [key, expression] of Object.entries(params ?? {})) {
-      const value = resolveExpression(expression, vars);
-      if (value === undefined || value === null || value === "") {
-        continue;
-      }
-      out[key] = String(value);
-    }
-    return out;
-  }
-  function resolveBody(body, vars) {
-    if (!body) {
-      return;
-    }
-    const out = {};
-    for (const [key, expression] of Object.entries(body)) {
-      const value = resolveExpression(expression, vars);
-      if (value === undefined) {
-        continue;
-      }
-      setBodyValue(out, key, value);
-    }
-    return out;
-  }
-  function setBodyValue(target, path, value) {
-    if (!setValueAt(target, path, value)) {
-      throw new Error(`Unsafe dashboard body path "${path}"`);
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/mapping/fieldSupport.ts
-  function optionData(option) {
-    return { label: option.label, value: option.value };
-  }
-  function optionList(staticOptions, dynamicOptions) {
-    const seen = new Set;
-    return [...staticOptions ?? [], ...dynamicOptions].filter((option) => {
-      if (seen.has(option.value)) {
-        return false;
-      }
-      seen.add(option.value);
-      return true;
-    }).map(optionData);
-  }
-  function textValue(value) {
-    return value === null || value === undefined ? "" : String(value);
-  }
-  function numberValue(value) {
-    if (value === null || value === undefined || value === "") {
-      return "";
-    }
-    const parsed = typeof value === "number" ? value : Number(value);
-    return Number.isFinite(parsed) ? parsed : "";
-  }
-  function readonlyValue(value) {
-    return Array.isArray(value) ? value.map(textValue).map((item) => item.trim()).filter(Boolean) : textValue(value);
-  }
-  function tokenValue(value) {
-    return Array.isArray(value) ? value.map(textValue).filter(Boolean) : [];
-  }
-  function tableValue(value) {
-    return Array.isArray(value) ? value.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item)) : [];
-  }
-  function recordValue(value) {
-    return value !== null && typeof value === "object" && !Array.isArray(value) ? { ...value } : {};
-  }
-  function schemaDefinitions(field, fields, definitions) {
-    if (!field.exclude) {
-      return definitions;
-    }
-    const source2 = valueAt(fields, field.exclude.from.slice("$field.".length));
-    const excluded = new Set((Array.isArray(source2) ? source2 : [source2]).flatMap((item) => {
-      const value = valueAt(item, field.exclude.valuePath);
-      return typeof value === "string" || typeof value === "number" ? [String(value)] : [];
-    }));
-    return definitions.filter((definition) => !excluded.has(definition.id));
-  }
-  function isCreatable(field) {
-    return field.allowCustom === true;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/filters.ts
-  var dashboardDisplayFilters = {
-    dashboardVisibility: (value, rule) => Boolean(value && typeof value === "object") && matchesDashboardVisibility(rule, value),
-    dashboardTokens: (value) => tokenValue(value).join(","),
-    dashboardDefined: (value) => value !== null && value !== undefined,
-    dashboardHttpUrl: (value) => {
-      const text = textValue(value).trim();
-      if (!text) {
-        return "";
-      }
-      try {
-        const url = new URL(text, window.location.href);
-        return ["http:", "https:"].includes(url.protocol) ? url.href : "";
-      } catch {
-        return "";
-      }
-    },
-    dashboardTrimmedText: (value) => textValue(value).trim(),
-    dashboardValueKind: (value) => {
-      const display = readonlyValue(value);
-      return Array.isArray(display) ? display.length ? "list" : "empty-list" : "scalar";
-    },
-    dashboardBadge: (value) => String(readonlyValue(value)),
-    dashboardDate: (value) => formatDashboardDate(value),
-    dashboardMoney: (value, currency) => formatDashboardMoney(value, textValue(currency).trim() || undefined)
-  };
-
   // ../../foundation/components/dist/base.js
   class l extends HTMLElement {
     _rawStyles = "";
@@ -17284,7 +16419,7 @@ ${layout_default}`;
   }
   var I2 = ["src", "srcset", "sizes", "media", "width", "height"];
   var ht = "data-cms-network-inert";
-  var Wi2 = "img,picture,source";
+  var Wi = "img,picture,source";
   function T2(t, i) {
     if (!Gi2(t))
       return t.getAttribute(i);
@@ -17306,7 +16441,7 @@ ${layout_default}`;
   var rr2 = ["sizes", "media"];
   var or2 = "template";
   function L2(t) {
-    let i = Ri2(t, Wi2), n = new Set;
+    let i = Ri2(t, Wi), n = new Set;
     for (let r of i.filter((o) => o.localName === "picture")) {
       let o = [r, ...Array.from(r.querySelectorAll("img,source")).filter((e) => e.closest("picture") === r)];
       if (o.forEach((e) => n.add(e)), o.some(Ki2))
@@ -20172,30 +19307,6 @@ slot[name="secondary-lateral-nav"]::slotted(*) {
             </svg>
             Analytics
         </w13c-lateral-menu-item>
-
-        <w13c-lateral-menu-item data-route="sources">
-            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <ellipse cx="12" cy="5" rx="7" ry="3" />
-                <path d="M5 5v6c0 1.66 3.13 3 7 3s7-1.34 7-3V5" />
-                <path d="M5 11v6c0 1.66 3.13 3 7 3s7-1.34 7-3v-6" />
-            </svg>
-            Sources
-        </w13c-lateral-menu-item>
-
-        <div class="menu-section" data-dashboard-workspace>Workspace</div>
-
-        <w13c-lateral-menu-item data-route="dashboards" data-dashboard-workspace>
-            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="18" rx="1" />
-                <rect x="14" y="3" width="7" height="7" rx="1" />
-                <rect x="14" y="14" width="7" height="7" rx="1" />
-            </svg>
-            Dashboards
-        </w13c-lateral-menu-item>
-
-
 
         <w13c-lateral-menu-item data-route="users">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -27837,11022 +26948,8 @@ circle.endpoint-timeline__errors {
     return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
   }
 
-  // src/components/admin/Resources/Dashboards/navigation/icons/catalog.ts
-  var DASHBOARD_ICONS = {
-    database: svg(`
-        <ellipse cx="12" cy="5" rx="7" ry="3" />
-        <path d="M5 5v6c0 1.66 3.13 3 7 3s7-1.34 7-3V5" />
-        <path d="M5 11v6c0 1.66 3.13 3 7 3s7-1.34 7-3v-6" />
-    `),
-    "map-pin": svg(`
-        <path d="M20 10c0 4.99-5.54 10.19-7.4 11.79a1 1 0 0 1-1.2 0C9.54 20.19 4 14.99 4 10a8 8 0 0 1 16 0Z" />
-        <circle cx="12" cy="10" r="3" />
-    `),
-    layout: svg(`
-        <rect x="3" y="3" width="18" height="18" rx="2" />
-        <path d="M3 9h18M9 21V9" />
-    `),
-    search: svg(`
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.3-4.3" />
-    `),
-    user: svg(`
-        <circle cx="12" cy="8" r="4" />
-        <path d="M4 21a8 8 0 0 1 16 0" />
-    `),
-    users: svg(`
-        <circle cx="9" cy="8" r="4" />
-        <path d="M2 21a7 7 0 0 1 14 0M16 4.5a4 4 0 0 1 0 7M17.5 15a6 6 0 0 1 4.5 6" />
-    `),
-    mail: svg(`
-        <rect x="3" y="5" width="18" height="14" rx="2" />
-        <path d="m3 7 9 6 9-6" />
-    `),
-    send: svg(`
-        <path d="m22 2-7 20-4-9-9-4Z" />
-        <path d="M22 2 11 13" />
-    `),
-    "shopping-bag": svg(`
-        <path d="M6 8V6a6 6 0 0 1 12 0v2" />
-        <path d="M4 8h16l1 13H3Z" />
-    `),
-    package: svg(`
-        <path d="m12 3 9 5-9 5-9-5Z" />
-        <path d="m3 8 9 5 9-5v8l-9 5-9-5ZM12 13v8" />
-    `),
-    tag: svg(`
-        <path d="M20 13 13 20 3 10V3h7Z" />
-        <circle cx="7.5" cy="7.5" r="1.5" />
-    `),
-    receipt: svg(`
-        <path d="M5 3v18l3-2 4 2 4-2 3 2V3l-3 2-4-2-4 2Z" />
-        <path d="M9 9h6M9 13h6" />
-    `),
-    settings: svg(`
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1v.1h-4v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.6-1h-.1v-4H3a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V3h4v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.25.62.86 1 1.6 1h.1v4H21a1.7 1.7 0 0 0-1.6 1Z" />
-    `),
-    store: svg(`
-        <path d="M3 9h18l-2-6H5ZM5 13v8h14v-8" />
-        <path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0M9 21v-6h6v6" />
-    `),
-    "credit-card": svg(`
-        <rect x="3" y="5" width="18" height="14" rx="2" />
-        <path d="M3 10h18M7 15h2" />
-    `),
-    truck: svg(`
-        <path d="M3 6h11v11H3ZM14 10h4l3 3v4h-7Z" />
-        <circle cx="7" cy="19" r="2" /><circle cx="18" cy="19" r="2" />
-    `)
-  };
-  function svg(content) {
-    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${content}</svg>`;
-  }
-
-  // src/components/admin/Resources/Dashboards/navigation/icons.ts
-  var SVG_MAX_LENGTH = 8000;
-  var ALLOWED_TAGS = new Set(["svg", "g", "path", "circle", "rect", "line", "polyline", "polygon", "ellipse"]);
-  var ALLOWED_ATTRS = new Set([
-    "aria-hidden",
-    "class",
-    "clip-rule",
-    "cx",
-    "cy",
-    "d",
-    "fill",
-    "fill-rule",
-    "focusable",
-    "height",
-    "points",
-    "r",
-    "role",
-    "rx",
-    "ry",
-    "stroke",
-    "stroke-linecap",
-    "stroke-linejoin",
-    "stroke-width",
-    "viewbox",
-    "width",
-    "x",
-    "x1",
-    "x2",
-    "y",
-    "y1",
-    "y2"
-  ]);
-  function appendIconSlot(host, svg2, icon, fallback) {
-    const element = createIcon(svg2, icon, fallback);
-    if (!element) {
-      return;
-    }
-    element.setAttribute("slot", "icon");
-    host.append(element);
-  }
-  function renderIcon(target2, svg2, icon, fallback) {
-    target2.replaceChildren();
-    const element = createIcon(svg2, icon, fallback);
-    if (element) {
-      target2.append(element);
-    }
-  }
-  function createIcon(svg2, icon, fallback) {
-    const iconName = toIconName(icon);
-    const source2 = sanitizeSvg(svg2) ?? (iconName ? DASHBOARD_ICONS[iconName] : undefined) ?? DASHBOARD_ICONS[fallback];
-    const template3 = document.createElement("template");
-    template3.innerHTML = source2.trim();
-    const element = template3.content.firstElementChild;
-    if (!element || element.tagName.toLowerCase() !== "svg") {
-      return null;
-    }
-    element.setAttribute("aria-hidden", "true");
-    element.setAttribute("focusable", "false");
-    return element;
-  }
-  function sanitizeSvg(value2) {
-    if (!value2 || value2.length > SVG_MAX_LENGTH) {
-      return null;
-    }
-    const doc = new DOMParser().parseFromString(value2, "image/svg+xml");
-    if (doc.querySelector("parsererror")) {
-      return null;
-    }
-    const root = doc.documentElement;
-    if (!root || root.tagName.toLowerCase() !== "svg") {
-      return null;
-    }
-    for (const element of [root, ...Array.from(root.querySelectorAll("*"))]) {
-      const tag = element.tagName.toLowerCase();
-      if (!ALLOWED_TAGS.has(tag)) {
-        return null;
-      }
-      for (const attr of Array.from(element.attributes)) {
-        const name = attr.name.toLowerCase();
-        const attrValue = attr.value.toLowerCase();
-        if (name.startsWith("on") || name.includes(":") || attrValue.includes("url(") || attrValue.includes("javascript:") || !ALLOWED_ATTRS.has(name)) {
-          element.removeAttribute(attr.name);
-        }
-      }
-    }
-    return new XMLSerializer().serializeToString(root);
-  }
-  function toIconName(value2) {
-    return value2 && value2 in DASHBOARD_ICONS ? value2 : undefined;
-  }
-
-  // src/components/admin/Resources/Dashboards/navigation/icons/style.css
-  var style_default11 = `:host { display: inline-flex; width: var(--icon-size, 16px); height: var(--icon-size, 16px); }
-span { display: contents; }
-svg { width: 100%; height: 100%; stroke: currentColor; fill: none; }
-`;
-
-  // src/components/admin/Resources/Dashboards/navigation/icons/Icon.ts
-  class DashboardIcon extends l {
-    constructor() {
-      super({ css: style_default11, template: "<span></span>" });
-    }
-    static observedAttributes = ["name", "svg"];
-    attributeChangedCallback() {
-      renderIcon(this.shadowRoot.querySelector("span"), this.getAttribute("svg") ?? undefined, this.getAttribute("name") ?? undefined, "database");
-    }
-  }
-  customElements.define("cms-dashboard-icon", DashboardIcon);
-
-  // src/static/admin/_content/sources/_runtime/navigation.html
-  var navigation_default = `<span class="empty" cms-condition="$source.loading &amp;&amp; !navReady">Loading sources…</span>
-<p9r-alert type="error" cms-condition="$source.error || $source.refreshError">
-    Unable to load sources. {{ $source.message }}
-    <p9r-button data-nav-retry>Retry</p9r-button>
-</p9r-alert>
-<span class="empty" cms-condition="navEmpty">No sources</span>
-<w13c-lateral-menu-item
-    cms-repeat="navItems as item"
-    data-generated="true"
-    data-source="{{ item.source }}"
-    data-dashboard="{{ item.dashboard }}"
-    manual-active
-    cms-bind-boolean-active="item.active"
-    cms-bind-boolean-hidden="item.hidden"
-    cms-bind-boolean-data-nested="item.nested"
->
-    <cms-dashboard-icon
-        slot="icon"
-        name="{{ item.icon }}"
-        svg="{{ item.svg }}"
-        cms-condition="item.icon || item.svg"
-    ></cms-dashboard-icon>
-    {{ item.label }}
-</w13c-lateral-menu-item>
-`;
-
-  // src/components/admin/Resources/Dashboards/navigation/binding/context.ts
-  function navigationContext() {
-    let items = [];
-    return (groups, source2, dashboard, example) => {
-      const next = [];
-      const append = (item) => {
-        const previous = items[next.length];
-        next.push(previous?.identity === item.identity ? Object.assign(previous, item) : item);
-      };
-      for (const group of groups) {
-        const id2 = group.source.id;
-        append({
-          identity: `source:${id2}`,
-          label: group.source.name,
-          source: example ? "" : id2,
-          dashboard: "",
-          href: "",
-          icon: group.source.icon ?? "database",
-          svg: group.source.svg ?? "",
-          nested: false,
-          active: id2 === source2,
-          hidden: false
-        });
-        for (const entry of group.dashboards) {
-          append({
-            identity: `dashboard:${id2}:${entry.id}`,
-            label: entry.meta?.name ?? entry.id,
-            source: example ? "" : id2,
-            dashboard: example ? "" : entry.id,
-            href: "",
-            icon: entry.meta?.icon ?? "layout",
-            svg: entry.meta?.svg ?? "",
-            nested: true,
-            active: entry.id === dashboard,
-            hidden: id2 !== source2 || !example && group.dashboards.length < 2
-          });
-        }
-      }
-      items = next;
-      return {
-        navItems: items,
-        navEmpty: groups.length === 0
-      };
-    };
-  }
-  var exampleGroups = [
-    {
-      source: {
-        id: "example",
-        urn: "urn:example",
-        name: "Example source",
-        icon: "database",
-        endpointCount: 0,
-        dashboardCount: 1,
-        readonly: true
-      },
-      endpoints: [],
-      dashboards: [
-        { id: "example", source: "example", meta: { name: "Product dashboard", icon: "layout" }, views: [] }
-      ]
-    }
-  ];
-
-  // src/components/admin/Resources/Dashboards/api.ts
-  var DASHBOARD_SELECTION_EVENT = "cms-dashboards:selection";
-  function basePath() {
-    const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
-    return raw.replace(/\/+$/, "");
-  }
-  function route(path) {
-    return `${basePath()}${path}`;
-  }
-  function currentSource() {
-    return new URL(window.location.href).searchParams.get("source") ?? "";
-  }
-  function currentDashboard() {
-    return new URL(window.location.href).searchParams.get("dashboard") ?? "";
-  }
-  function currentCollection() {
-    return new URL(window.location.href).searchParams.get("collection") ?? "";
-  }
-  function currentRow() {
-    return new URL(window.location.href).searchParams.get("row") ?? "";
-  }
-  function currentSelection() {
-    const collection = currentCollection();
-    const row = currentRow();
-    return {
-      source: currentSource(),
-      dashboard: currentDashboard(),
-      ...collection && row ? { collection, row } : {}
-    };
-  }
-  function defaultDashboardSource(groups) {
-    return groups.find((group) => group.dashboards.length > 0)?.source.id ?? groups[0]?.source.id ?? "";
-  }
-  function replaceSelectionUrl(selection) {
-    history.replaceState(null, "", selectionUrl(selection));
-  }
-  function pushSelectionUrl(selection) {
-    history.pushState(null, "", selectionUrl(selection));
-  }
-  function selectionUrl(selection) {
-    const scoped = Boolean(document.documentElement.dataset.dashboardScope);
-    const target2 = scoped ? new URL(window.location.href) : new URL(route("/admin/sources"), window.location.origin);
-    const params = target2.searchParams;
-    for (const key of ["source", "dashboard", "collection", "row"]) {
-      params.delete(key);
-    }
-    if (selection.source) {
-      params.set("source", selection.source);
-    }
-    if (selection.dashboard) {
-      params.set("dashboard", selection.dashboard);
-    }
-    if (selection.collection && selection.row) {
-      params.set("collection", selection.collection);
-      params.set("row", selection.row);
-    }
-    target2.search = params.toString();
-    return `${target2.pathname}${target2.search}`;
-  }
-  function dispatchDashboardSelection(selection) {
-    window.dispatchEvent(new CustomEvent(DASHBOARD_SELECTION_EVENT, { detail: selection }));
-  }
-  function dashboardUserOptions(users) {
-    return users.flatMap((user) => {
-      const sub = typeof user.sub === "string" ? user.sub : "";
-      if (!sub) {
-        return [];
-      }
-      const email = cleanText(user.email);
-      const fallbackLabel = cleanText(user.label);
-      const name = cleanText(user.displayName) || (fallbackLabel !== email ? fallbackLabel : "");
-      const humanLabel = name && email ? `${name} — ${email}` : name || email || sub;
-      const metadata = sub !== humanLabel ? sub : "";
-      return [{ value: sub, label: metadata ? `${humanLabel} · ${metadata}` : humanLabel }];
-    });
-  }
-  function cleanText(value2) {
-    return typeof value2 === "string" ? value2.trim() : "";
-  }
-
-  // src/components/admin/Resources/Dashboards/navigation/nav.css
-  var nav_default3 = `:host {
-    display: block;
-    height: 100%;
-}
-
-w13c-lateral-menu {
-    width: 100%;
-    height: 100%;
-    --menu-brand-mark-display: none;
-    --menu-header-font-size: .875rem;
-    --menu-item-font-size: .875rem;
-    --menu-section-font-size: .6875rem;
-}
-
-.binding-source {
-    display: none;
-}
-
-::slotted(w13c-lateral-menu-item) {
-    --item-font-size: .875rem;
-}
-
-::slotted([data-nested]) {
-    margin-left: 18px;
-    --item-height: 32px;
-}
-
-::slotted([hidden]) {
-    display: none !important;
-}
-
-::slotted(.empty) {
-    display: block;
-    padding: 8px 10px;
-    color: var(--text-muted, #66736f);
-    font-size: .8125rem;
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/navigation/nav.html
-  var nav_default4 = `<w13c-lateral-menu aria-label="Sources navigation">
-    <span slot="header">Sources</span>
-    <slot></slot>
-</w13c-lateral-menu>
-`;
-
-  // src/components/admin/Resources/Dashboards/navigation/DashboardNav.ts
-  class DashboardNav extends l {
-    groups = [];
-    selectedSource = "";
-    selectedDashboard = "";
-    project = navigationContext();
-    constructor() {
-      super({ css: nav_default3, template: nav_default4 });
-    }
-    connectedCallback() {
-      super.connectedCallback();
-      this.syncFromUrl();
-      this.addEventListener("click", this.onClick);
-      window.addEventListener("popstate", this.onPopState);
-      window.addEventListener("cms-resources:route", this.onResourceRoute);
-      window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection);
-      hc(this, () => this.context());
-      this.startBoundSource();
-    }
-    disconnectedCallback() {
-      this.removeEventListener("click", this.onClick);
-      window.removeEventListener("popstate", this.onPopState);
-      window.removeEventListener("cms-resources:route", this.onResourceRoute);
-      window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection);
-    }
-    startBoundSource() {
-      if (!this.querySelector("[data-generated]")) {
-        const template3 = document.createElement("template");
-        template3.innerHTML = navigation_default;
-        this.append(template3.content.cloneNode(true));
-      }
-      this.setAttribute("data-nav-list-source", "");
-      this.setAttribute("cms-reload-on", "dashboard:definitions-changed");
-      this.setAttribute("cms-source", this.isExampleMode() ? "" : `${route("/api/dashboards")} as dashboards`);
-      if (this.isExampleMode()) {
-        Pd(this, exampleGroups);
-      }
-    }
-    select(sourceId, dashboardId = "") {
-      this.selectedSource = sourceId;
-      this.selectedDashboard = dashboardId;
-      this.ensureDashboardSelection();
-      const selection = this.selection();
-      replaceSelectionUrl(selection);
-      dispatchDashboardSelection(selection);
-      this.render();
-    }
-    ensureDashboardSelection() {
-      const group = this.activeGroup();
-      if (!group) {
-        this.selectedDashboard = "";
-        return;
-      }
-      if (!group.dashboards.some((dashboard) => dashboard.id === this.selectedDashboard)) {
-        this.selectedDashboard = group.dashboards[0]?.id ?? "";
-      }
-    }
-    context() {
-      const data = it(this);
-      this.groups = Array.isArray(data) ? data : [];
-      this.selectedSource ||= defaultDashboardSource(this.groups);
-      if (Array.isArray(data)) {
-        this.ensureDashboardSelection();
-      }
-      return {
-        ...this.project(this.groups, this.selectedSource, this.selectedDashboard, this.isExampleMode()),
-        navReady: Array.isArray(data),
-        navEmpty: Array.isArray(data) && this.groups.length === 0
-      };
-    }
-    render() {
-      Wi(this);
-    }
-    onResourceRoute = () => {
-      this.syncFromUrl();
-      this.render();
-    };
-    activeGroup() {
-      return this.groups.find((group) => group.source.id === this.selectedSource) ?? null;
-    }
-    selection() {
-      return { source: this.selectedSource, dashboard: this.selectedDashboard };
-    }
-    syncFromUrl() {
-      const selection = currentSelection();
-      this.selectedSource = selection.source;
-      this.selectedDashboard = selection.dashboard;
-    }
-    isExampleMode() {
-      return this.hasAttribute("example") || window.location.pathname.replace(/\/+$/, "").endsWith("/admin/sources/example");
-    }
-    onClick = (event) => {
-      const target2 = event.target;
-      if (target2?.closest("[data-nav-retry]")) {
-        this.ownerDocument.dispatchEvent(new Event("dashboard:definitions-changed"));
-        return;
-      }
-      const dashboardButton = target2?.closest("[data-dashboard]");
-      if (dashboardButton?.dataset.source && dashboardButton.dataset.dashboard) {
-        this.select(dashboardButton.dataset.source, dashboardButton.dataset.dashboard);
-        return;
-      }
-      const sourceButton = target2?.closest("[data-source]");
-      if (sourceButton?.dataset.source) {
-        this.select(sourceButton.dataset.source);
-      }
-    };
-    onPopState = () => {
-      this.syncFromUrl();
-      this.ensureDashboardSelection();
-      this.render();
-      dispatchDashboardSelection(currentSelection());
-    };
-    onExternalSelection = (event) => {
-      this.selectedSource = event.detail.source;
-      this.selectedDashboard = event.detail.dashboard;
-      this.ensureDashboardSelection();
-      this.render();
-    };
-  }
-  if (!customElements.get("cms-dashboards-nav")) {
-    customElements.define("cms-dashboards-nav", DashboardNav);
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/technicalFields.ts
-  function hasMissingTechnicalFields(form) {
-    return Array.from(form.querySelectorAll('input[type="hidden"][required]')).some((input) => {
-      if (!input.value || input.value.includes("{{")) {
-        return true;
-      }
-      const type = input.getAttribute("cms-form-value-type");
-      return type === "number" ? !input.value.trim() || !Number.isFinite(Number(input.value)) : type === "boolean" && !["true", "false"].includes(input.value);
-    });
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/detail.ts
-  var DETAIL_SAVED_EVENT = "cms-dashboard-detail:saved";
-  function connectDetailForm(host, validate, capture, acknowledge, creation) {
-    let awaitingRead = false;
-    let submitted = {};
-    let submittedScope = "";
-    const scope = () => `${host.dataset.sourceId ?? ""}\x00${host.dataset.rowKey ?? ""}`;
-    const saved = (detail = { created: false }) => {
-      acknowledge(submitted);
-      Wi(host);
-      kb("Changes saved", { type: "success" });
-      host.dispatchEvent(new CustomEvent(DETAIL_SAVED_EVENT, { bubbles: true, composed: true, detail }));
-    };
-    const success = (event) => {
-      if (host.isConnected && scope() === submittedScope && event.target.matches("[data-detail-save]") && event.target.closest("cms-dashboard-w-detail") === host) {
-        awaitingRead = false;
-        if (creation) {
-          const body = event.detail.body;
-          const id2 = valueAt(body, creation.idPath ?? "id");
-          if (typeof id2 !== "string" && typeof id2 !== "number" || !String(id2)) {
-            host.setAttribute("data-create-result-invalid", "");
-            kb("The resource was created, but the response did not identify it. Open the list to find it before trying again.", { type: "error" });
-            return;
-          }
-          saved({ created: true, body, id: String(id2) });
-        } else {
-          saved();
-        }
-      }
-    };
-    const partial = (event) => {
-      if (host.isConnected && scope() === submittedScope && event.target.matches("[data-detail-save]") && event.target.closest("cms-dashboard-w-detail") === host) {
-        awaitingRead = true;
-        kb("Changes were saved, but the detail could not be reloaded. Retry the read before saving again.", {
-          type: "warning"
-        });
-      }
-    };
-    const submit = (event) => {
-      if (event.target.closest("cms-dashboard-w-detail") !== host) {
-        return;
-      }
-      if (host.hasAttribute("data-create-result-invalid")) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        return;
-      }
-      if (awaitingRead) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        kb("Retry the detail read before running another operation.", { type: "warning" });
-        return;
-      }
-      if (!event.target.matches("[data-detail-save]")) {
-        return;
-      }
-      const missing = hasMissingTechnicalFields(event.target);
-      if (missing || !validate()) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        if (missing) {
-          kb("The detail identity or revision is missing. Reload the detail.", { type: "error" });
-        }
-        return;
-      }
-      const confirmation = event.target.dataset.saveConfirm;
-      if (confirmation && !window.confirm(confirmation)) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        return;
-      }
-      submittedScope = scope();
-      submitted = structuredClone(capture());
-    };
-    const stop = qd(host, (state) => {
-      if (state.disposed || scope() !== submittedScope) {
-        awaitingRead = false;
-        return;
-      }
-      if (awaitingRead && !state.loading && !state.refreshing && !state.error && !state.refreshError && !state.disposed) {
-        awaitingRead = false;
-        saved();
-      }
-    });
-    host.addEventListener("submit", submit, true);
-    host.addEventListener(X, success);
-    host.addEventListener(Ut2, partial);
-    return () => {
-      stop();
-      host.removeEventListener("submit", submit, true);
-      host.removeEventListener(X, success);
-      host.removeEventListener(Ut2, partial);
-    };
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/reload.ts
-  function detailReloadEvent(sourceId, dashboardId, collection, row) {
-    return `cms-dashboard:${encodePart(sourceId)}:${encodePart(dashboardId)}:${encodePart(collection)}:${encodePart(row || "new")}:reload`;
-  }
-  function encodePart(value2) {
-    return encodeURIComponent(value2);
-  }
-  function retryDashboardSource(event) {
-    const button = event.composedPath().find((node) => node instanceof HTMLElement && node.hasAttribute("data-dashboard-source-retry"));
-    const source2 = button?.closest("[cms-source][cms-reload-on]");
-    const name = source2?.getAttribute("cms-reload-on");
-    if (source2 && name) {
-      source2.ownerDocument.dispatchEvent(new Event(name));
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/domain/actionScope.ts
-  class DashboardActionScope {
-    generation = 0;
-    invalidate() {
-      this.generation += 1;
-    }
-    beginAction() {
-      const generation = this.generation;
-      let finished = false;
-      return () => {
-        if (finished || generation !== this.generation) {
-          return "stale";
-        }
-        finished = true;
-        return "current";
-      };
-    }
-  }
-  // src/components/admin/Resources/Dashboards/domain/selection.ts
-  function widgetsForSelection(dashboard, detail) {
-    if (!detail) {
-      return rootWidgetsFor(dashboard.views, detailTargetsFor(dashboard.views));
-    }
-    const details = detailWidgetsFor(dashboard.views, detail.collection);
-    return [...details, ...selectionScopedWidgetsFor(dashboard.views, detail.collection)];
-  }
-  function detailKey(collection, row) {
-    return `${collection}:${row}`;
-  }
-  function validDetailSelection(dashboard, detail) {
-    return detail && detailWidgetsFor(dashboard.views, detail.collection).length ? detail : null;
-  }
-  function rootWidgetsFor(widgets, detailTargets) {
-    return widgets.flatMap((widget) => {
-      if (isDetailWidget(widget)) {
-        return detailTargets.has(widget.id) ? [] : [widget];
-      }
-      if (isSelectionScopedWidget(widget)) {
-        return [];
-      }
-      if (widget.widget === "w-section") {
-        return sectionWithChildren(widget, rootWidgetsFor(widget.children, detailTargets));
-      }
-      if (widget.widget === "w-tabs") {
-        return tabsWithChildren(widget, (tab) => rootWidgetsFor(tab.children, detailTargets));
-      }
-      return [widget];
-    });
-  }
-  function selectionScopedWidgetsFor(widgets, collection) {
-    return widgets.flatMap((widget) => {
-      if (widget.widget === "w-section") {
-        return selectionScopedWidgetsFor(widget.children, collection);
-      }
-      if (widget.widget === "w-tabs") {
-        return widget.tabs.flatMap((tab) => selectionScopedWidgetsFor(tab.children, collection));
-      }
-      return selectionScopes(widget).has(collection) ? [widget] : [];
-    });
-  }
-  function isSelectionScopedWidget(widget) {
-    return selectionScopes(widget).size > 0;
-  }
-  function selectionScopes(widget) {
-    if (widget.widget !== "w-table" && widget.widget !== "w-navigation-list") {
-      return new Set;
-    }
-    return new Set(Object.values(widget.source.params ?? {}).flatMap((expression) => {
-      const match = expression.match(/^\$selection\.([A-Za-z_][A-Za-z0-9_]*)\./);
-      return match?.[1] ? [match[1]] : [];
-    }));
-  }
-  function detailTargetsFor(widgets) {
-    const targets = new Set;
-    for (const widget of widgets) {
-      collectDetailTargets(widget, targets);
-    }
-    return targets;
-  }
-  function collectDetailTargets(widget, targets) {
-    if (widget.widget === "w-detail") {
-      for (const action of widget.actions ?? []) {
-        if (action.selection?.opens) {
-          targets.add(action.selection.opens);
-        }
-      }
-      for (const mainItem of widget.main) {
-        if ("widget" in mainItem) {
-          collectDetailTargets(mainItem, targets);
-        }
-      }
-      return;
-    }
-    if (widget.widget === "w-table" || widget.widget === "w-navigation-list") {
-      if (widget.selection?.opens) {
-        targets.add(widget.selection.opens);
-      }
-      for (const action of widget.actions ?? []) {
-        if (action.selection?.opens) {
-          targets.add(action.selection.opens);
-        }
-        if (action.after?.opens) {
-          targets.add(action.after.opens);
-        }
-      }
-      return;
-    }
-    if (widget.widget === "w-section") {
-      for (const child of widget.children) {
-        collectDetailTargets(child, targets);
-      }
-      return;
-    }
-    if (widget.widget === "w-tabs") {
-      for (const tab of widget.tabs) {
-        for (const child of tab.children) {
-          collectDetailTargets(child, targets);
-        }
-      }
-    }
-  }
-  function detailWidgetsFor(widgets, detailWidgetId) {
-    return widgets.flatMap((widget) => {
-      if (widget.widget === "w-section") {
-        return detailWidgetsFor(widget.children, detailWidgetId);
-      }
-      if (widget.widget === "w-tabs") {
-        return widget.tabs.flatMap((tab) => detailWidgetsFor(tab.children, detailWidgetId));
-      }
-      return isDetailWidget(widget) && widget.id === detailWidgetId ? [widget] : [];
-    });
-  }
-  function sectionWithChildren(widget, children) {
-    return children.length ? [{ ...widget, children }] : [];
-  }
-  function tabsWithChildren(widget, map) {
-    const tabs = widget.tabs.map((tab) => ({ id: tab.id, label: tab.label, children: map(tab) })).filter((tab) => tab.children.length);
-    return tabs.length ? [{ ...widget, tabs }] : [];
-  }
-  function isDetailWidget(widget) {
-    return widget.widget === "w-detail";
-  }
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/presentation.ts
-  function configureDetailPresentation(host) {
-    const panel = host.getAttribute("presentation") === "modal";
-    const root = host.shadowRoot;
-    root.querySelector("cms-shell-detail").toggleAttribute("contained", panel);
-    root.querySelector("[data-actions]").setAttribute("slot", panel ? "footer" : "actions");
-    if (!panel) {
-      return;
-    }
-    for (const body of [
-      ...Array.from(host.querySelectorAll("cms-shell-detail-body")),
-      ...Array.from(root.querySelectorAll("cms-shell-detail-body"))
-    ]) {
-      if (body.getRootNode() === root || body.closest("cms-dashboard-w-detail") === host) {
-        body.setAttribute("tabbed", "");
-      }
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/shared.ts
-  var WIDGET_ROW_SELECT_EVENT = "cms-dashboard-widget:row-select";
-  var WIDGET_BACK_EVENT = "cms-dashboard-widget:back";
-  var WIDGET_ACTION_EVENT = "cms-dashboard-widget:action";
-  var WIDGET_FILTER_CHANGE_EVENT = "cms-dashboard-widget:filter-change";
-  var WIDGET_FIELD_CHANGE_EVENT = "cms-dashboard-widget:field-change";
-  var WIDGET_MEDIA_ACTION_EVENT = "cms-dashboard-widget:media-action";
-  function emitWidgetEvent(host, type, detail) {
-    host.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
-  }
-  function setText(root, selector, value2) {
-    const element = root.querySelector(selector);
-    if (element) {
-      element.textContent = value2;
-    }
-  }
-  function setP9rButtonLabel(button, label2) {
-    button.textContent = label2;
-    button.setAttribute("aria-label", label2);
-    const syncNativeButton = () => {
-      button.shadowRoot?.querySelector("button")?.setAttribute("aria-label", label2);
-    };
-    syncNativeButton();
-    if (!button.shadowRoot) {
-      customElements.whenDefined(button.localName).then(syncNativeButton);
-    }
-  }
-  function setP9rButtonTone(button, tone) {
-    button.removeAttribute("color");
-    button.removeAttribute("variant");
-    if (tone === "primary") {
-      button.setAttribute("color", "primary");
-      button.setAttribute("variant", "filled");
-      return;
-    }
-    if (tone === "danger") {
-      button.setAttribute("color", "danger");
-      button.setAttribute("variant", "ghost");
-      return;
-    }
-    button.setAttribute("variant", "outlined");
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/types.ts
-  var W_MEDIA_FIELD_ACTION_EVENT = "cms-dashboard-w-media-field:action";
-
-  // src/static/admin/_content/sources/_runtime/forms/upload.html
-  var upload_default = `<form hidden data-media-upload data-operation-form cms-source="{{ mediaUploadUrl }} as stagedMedia" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false" enctype="multipart/form-data">
-    <input type="file" name="file" accept="image/*">
-</form>
-`;
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/media/upload.ts
-  function submitMediaUpload(form, file, signal) {
-    return new Promise((resolve, reject) => {
-      let finished = false;
-      let stop;
-      const finish = (error, body) => {
-        if (finished) {
-          return;
-        }
-        finished = true;
-        stop?.();
-        form.removeEventListener("cms-source:success", result);
-        form.removeEventListener("cms-source:failed", result);
-        signal.removeEventListener("abort", abort);
-        if (error) {
-          reject(error);
-        } else {
-          resolve(body);
-        }
-      };
-      const abort = () => finish(new DOMException("The detail was closed", "AbortError"));
-      const result = (event) => {
-        if (event.target !== form) {
-          return;
-        }
-        const response = event.detail;
-        finish(response.ok ? undefined : new Error(response.message || "Image upload failed"), response.body);
-      };
-      if (signal.aborted || !form.isConnected) {
-        abort();
-        return;
-      }
-      form.addEventListener("cms-source:success", result);
-      form.addEventListener("cms-source:failed", result);
-      signal.addEventListener("abort", abort, { once: true });
-      let started = false;
-      stop = qd(form, (state) => {
-        if (state.disposed) {
-          abort();
-        } else if (!started) {
-          started = true;
-          queueMicrotask(() => {
-            if (finished || !form.isConnected) {
-              return;
-            }
-            try {
-              const transfer = new DataTransfer;
-              transfer.items.add(file);
-              form.querySelector('input[type="file"]').files = transfer.files;
-              form.requestSubmit();
-            } catch (error) {
-              finish(error instanceof Error ? error : new Error(String(error)));
-            }
-          });
-        }
-      });
-    });
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/media/index.ts
-  var owners = new WeakMap;
-  function composeMediaForms(host, widget, context) {
-    const uploads = new Map;
-    for (const field2 of [...widget.main, ...widget.aside ?? []].flatMap((section) => ("fields" in section) ? section.fields : [])) {
-      if (field2.type !== "media" || field2.persist !== "save") {
-        continue;
-      }
-      const template3 = document.createElement("template");
-      template3.innerHTML = upload_default;
-      const form = template3.content.firstElementChild;
-      form.dataset.mediaField = field2.id;
-      form.setAttribute("cms-source", `{{ detailMediaUploadUrls.${field2.id} }} as stagedMedia`);
-      const ref = field2.actions?.upload;
-      if (ref) {
-        const sourceId = ref.sourceId ?? context.dashboard.source;
-        const endpoint = (context.groups ?? [context.group]).find((group) => group.source.id === sourceId)?.endpoints.find((entry) => entry.endpointId === ref.endpoint);
-        if (!endpoint || !["POST", "PUT", "PATCH"].includes(endpoint.method)) {
-          throw new Error("A staged media upload must use a declared write endpoint.");
-        }
-        if (ref.body && Object.keys(ref.body).length) {
-          throw new Error("Staged media uploads use their file input and stable endpoint parameters.");
-        }
-        form.setAttribute("cms-source-method", endpoint.method);
-      }
-      if (field2.staging) {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = field2.staging.sessionField;
-        input.setAttribute("cms-form-empty", "omit");
-        input.setAttribute("value", `{{ detailUploadSessions.${field2.id} }}`);
-        host.querySelector("[data-detail-save]")?.append(input);
-      }
-      uploads.set(field2.id, { field: field2, queue: Promise.resolve() });
-      host.append(form);
-    }
-    owners.set(host, uploads);
-  }
-  function connectMediaForms(host) {
-    const abort = new AbortController;
-    const uploads = owners.get(host);
-    const apply = (field2, value2) => {
-      host.applyFieldDraft(field2, value2);
-      emitWidgetEvent(host, WIDGET_FIELD_CHANGE_EVENT, { rowKey: host.dataset.rowKey ?? "", field: field2, value: value2 });
-    };
-    const onAction = (event) => {
-      if (event.target.closest("cms-dashboard-w-detail") !== host) {
-        return;
-      }
-      const control = event.composedPath().find((node) => node instanceof HTMLElement && node.localName === "cms-dashboard-media-field");
-      const upload = uploads?.get(control?.dataset.fieldControl ?? "");
-      if (!upload || !control) {
-        return;
-      }
-      event.stopImmediatePropagation();
-      const detail = event.detail;
-      apply(upload.field.id, detail.value);
-      const files = detail.files ?? (detail.file ? [detail.file] : []);
-      const pending = detail.action === "replace" ? [detail.value[detail.index]].filter(Boolean) : detail.value.filter((item) => item.pending && !(detail.previousValue ?? []).some((previous) => previous.id === item.id));
-      for (const [index, file] of files.entries()) {
-        const item = pending[index];
-        if (!item) {
-          continue;
-        }
-        const row = host.dataset.rowKey;
-        upload.queue = upload.queue.then(async () => {
-          if (abort.signal.aborted || row !== host.dataset.rowKey) {
-            return;
-          }
-          try {
-            if (!upload.field.actions?.upload) {
-              throw new Error("No staged upload endpoint is configured.");
-            }
-            const form = Array.from(host.querySelectorAll("[data-media-upload]")).find((candidate) => candidate.dataset.mediaField === upload.field.id);
-            if (!form) {
-              throw new Error("The staged upload form is unavailable.");
-            }
-            const result = await submitMediaUpload(form, file, abort.signal);
-            if (abort.signal.aborted || row !== host.dataset.rowKey) {
-              return;
-            }
-            const sessionId = valueAt(result, "sessionId");
-            if (typeof sessionId !== "string" || !sessionId || upload.sessionId && upload.sessionId !== sessionId) {
-              throw new Error("The upload returned an invalid session reference.");
-            }
-            upload.sessionId = sessionId;
-            const id2 = valueAt(result, "media.id");
-            if (typeof id2 !== "string" && typeof id2 !== "number" || !String(id2)) {
-              throw new Error("The upload returned no usable media identifier.");
-            }
-            apply(upload.field.id, control.items.map((current) => current.url === item.url ? { ...current, id: String(id2), pending: false } : current));
-          } catch (error) {
-            if (abort.signal.aborted || row !== host.dataset.rowKey) {
-              return;
-            }
-            apply(upload.field.id, control.items.flatMap((current) => current.url !== item.url ? [current] : detail.previousItem ? [detail.previousItem] : []));
-            kb(error instanceof Error ? error.message : "Image upload failed", { type: "error" });
-          }
-        });
-      }
-    };
-    host.addEventListener(W_MEDIA_FIELD_ACTION_EVENT, onAction, true);
-    return () => {
-      abort.abort();
-      host.removeEventListener(W_MEDIA_FIELD_ACTION_EVENT, onAction, true);
-    };
-  }
-  function mediaUploadSessions(host) {
-    return Object.fromEntries(Array.from(owners.get(host) ?? []).map(([id2, upload]) => [id2, upload.sessionId ?? ""]));
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/operations/declarations.ts
-  function detailFormActions(widget) {
-    return [
-      ...widget.actions ?? [],
-      ...widget.main.flatMap((section) => ("widget" in section) ? (section.actions ?? []).filter((action) => action.form && action.id !== section.reorderable?.action).map((action) => ({ ...action, section: section.id })) : [])
-    ];
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/source.ts
-  function requireDetailResource(resource) {
-    if (resource === undefined || resource === null) {
-      throw new Error("The detail is not loaded. Wait for it to load before trying again.");
-    }
-    return resource;
-  }
-  async function sendSourceDownload(sourceId, ref, method, vars) {
-    const response = await sendDownloadResponse(sourceId, ref, method, vars, "*/*");
-    if (!response.ok) {
-      throw new Error(await response.text() || `Source request failed (${response.status})`);
-    }
-    const filename = filenameFromDisposition(response.headers.get("content-disposition"));
-    return {
-      blob: await response.blob(),
-      ...filename ? { filename } : {}
-    };
-  }
-  async function sendDownloadResponse(sourceId, ref, method, vars, accept) {
-    const body = resolveBody(ref.body, vars);
-    return fetch(sourceUrl(sourceId, ref, vars), {
-      method,
-      headers: body === undefined ? { Accept: accept } : { Accept: accept, "Content-Type": "application/json" },
-      ...body === undefined ? {} : { body: JSON.stringify(body) }
-    });
-  }
-  function sourceUrl(sourceId, ref, vars) {
-    const targetSourceId = ref.sourceId ?? sourceId;
-    const dashboardId = document.documentElement.dataset.dashboardScope;
-    const prefix = dashboardId ? `/.cms/dashboards/${encodeURIComponent(dashboardId)}/sources` : "/.cms/sources";
-    const url = new URL(route(`${prefix}/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
-    for (const [key, value2] of Object.entries(resolveParams(ref.params, vars))) {
-      url.searchParams.set(key, value2);
-    }
-    return url;
-  }
-  function filenameFromDisposition(value2) {
-    const match = value2?.match(/filename="?([^";]+)"?/i);
-    return match?.[1]?.trim() || undefined;
-  }
-  function itemsFrom(data, ref) {
-    if (!ref.itemsPath) {
-      return Array.isArray(data) ? data : [];
-    }
-    return arrayAt(data, ref.itemsPath);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/directoryContext.ts
-  function directoryContext(host, fields) {
-    const users = fields.filter((field2) => field2.type === "cms-user");
-    let requested = false;
-    return (values, resource) => {
-      requested ||= resource != null && users.some((field2) => matchesDashboardVisibility(field2.visibleWhen, { fields: values, resource }));
-      const directory = host.querySelector("cms-dashboard-directory");
-      const data = directory ? it(directory) : undefined;
-      const options = Array.isArray(data) ? dashboardUserOptions(data) : [];
-      const failed = directory?.failed === true;
-      return {
-        detailUsersUrl: requested ? route("/api/users") : "",
-        detailUsersFailed: failed,
-        detailUsersHint: failed ? "Unable to load CMS users. Focus or click to retry." : "",
-        detailUsersOptions: Object.fromEntries(users.map((field2) => {
-          const selected2 = typeof values[field2.id] === "string" ? values[field2.id] : "";
-          return [
-            field2.id,
-            Array.isArray(data) && selected2 && !options.some((option) => option.value === selected2) ? [...options, { value: selected2, label: `Unknown CMS user · ${selected2}` }] : options
-          ];
-        }))
-      };
-    };
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/schemas/dependencies.ts
-  function schemaDependenciesResolved(field2, resource, fields) {
-    return Object.values(field2.schema.params ?? {}).every((expression) => {
-      if (!expression.startsWith("$")) {
-        return true;
-      }
-      const value2 = resolveExpression(expression, { resource, fields });
-      return value2 !== undefined && value2 !== null && value2 !== "";
-    });
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/schemas/definitions.ts
-  var KEY_MAX_LENGTH = 128;
-  var LABEL_MAX_LENGTH = 256;
-  var UNIT_MAX_LENGTH = 32;
-  function definitionsAt(data, path) {
-    const definitions = new Map;
-    for (const value2 of arrayAt(data, path).slice(0, DASHBOARD_MAX_NESTED_FIELDS)) {
-      const definition = schemaDefinition(value2);
-      if (definition && !definitions.has(definition.id)) {
-        definitions.set(definition.id, definition);
-      }
-    }
-    return [...definitions.values()];
-  }
-  function schemaDefinition(value2) {
-    const row = record(value2);
-    const nested = record(row?.definition);
-    const id2 = text3(row?.id, KEY_MAX_LENGTH) ?? text3(row?.fieldKey, KEY_MAX_LENGTH) ?? text3(row?.key, KEY_MAX_LENGTH);
-    const label2 = text3(row?.label, LABEL_MAX_LENGTH) ?? text3(nested?.label, LABEL_MAX_LENGTH) ?? id2;
-    const rawType = text3(row?.type, 16) ?? text3(row?.fieldType, 16) ?? text3(nested?.fieldType, 16);
-    const type = rawType === "enum" ? "string" : rawType;
-    if (!id2 || !label2 || !safeKey(id2) || type !== "string" && type !== "number" && type !== "boolean") {
-      return null;
-    }
-    const options = schemaOptions(row?.options ?? nested?.options);
-    const unit = text3(row?.unit, UNIT_MAX_LENGTH) ?? text3(nested?.unit, UNIT_MAX_LENGTH);
-    return {
-      id: id2,
-      label: label2,
-      type,
-      ...row?.required === true ? { required: true } : {},
-      ...unit ? { unit } : {},
-      ...options.length ? { options } : {}
-    };
-  }
-  function schemaOptions(value2) {
-    if (!Array.isArray(value2)) {
-      return [];
-    }
-    const seen = new Set;
-    return value2.slice(0, DASHBOARD_MAX_OPTIONS).flatMap((option) => {
-      let result;
-      if (typeof option === "string" || typeof option === "number") {
-        const value3 = text3(option, LABEL_MAX_LENGTH);
-        if (value3) {
-          result = { value: value3, label: value3 };
-        }
-      } else {
-        const entry = record(option);
-        const optionValue = text3(entry?.value, LABEL_MAX_LENGTH);
-        const optionLabel = text3(entry?.label, LABEL_MAX_LENGTH) ?? optionValue;
-        if (optionValue && optionLabel) {
-          result = { value: optionValue, label: optionLabel };
-        }
-      }
-      if (!result || seen.has(result.value)) {
-        return [];
-      }
-      seen.add(result.value);
-      return [result];
-    });
-  }
-  function safeKey(value2) {
-    return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value2) && !["__proto__", "prototype", "constructor"].includes(value2);
-  }
-  function text3(value2, maxLength) {
-    if (typeof value2 !== "string" && typeof value2 !== "number") {
-      return;
-    }
-    const result = String(value2).trim();
-    return result && result.length <= maxLength ? result : undefined;
-  }
-  function record(value2) {
-    return value2 !== null && typeof value2 === "object" && !Array.isArray(value2) ? value2 : undefined;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/data.ts
-  var cache = new WeakMap;
-  function boundSchemas(host) {
-    return Object.fromEntries(Array.from(host.querySelectorAll("cms-dashboard-schema-source")).map((source2) => {
-      const payload = it(source2);
-      let entry = cache.get(source2);
-      if (!entry || !Object.is(entry.payload, payload)) {
-        entry = {
-          payload,
-          definitions: definitionsAt(payload, source2.getAttribute("items-path") ?? undefined)
-        };
-        cache.set(source2, entry);
-      }
-      return [source2.getAttribute("field-id"), { definitions: entry.definitions, status: source2.status }];
-    }));
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/context.ts
-  function schemaContext(host, fields) {
-    const schemas = fields.filter((field2) => field2.type === "schema");
-    const rows = new WeakMap;
-    return (values, resource) => {
-      const data = boundSchemas(host);
-      return {
-        detailSchemaUrls: Object.fromEntries(schemas.map((field2) => [
-          field2.id,
-          resource != null && schemaDependenciesResolved(field2, resource, values) ? sourceUrl(host.dataset.sourceId ?? "", field2.schema, { fields: values, resource }).href : ""
-        ])),
-        detailSchemas: Object.fromEntries(schemas.map((field2) => {
-          const schema = data[field2.id];
-          const definitions = schemaDefinitions(field2, values, schema?.definitions ?? []);
-          const current = recordValue(values[field2.id]);
-          const projected = definitions.map((definition) => {
-            let row = rows.get(definition);
-            if (!row) {
-              row = {
-                ...definition,
-                required: definition.required === true,
-                checkbox: definition.type === "boolean",
-                select: definition.type !== "boolean" && Boolean(definition.options?.length),
-                text: definition.type !== "boolean" && !definition.options?.length,
-                inputType: definition.type === "number" ? "number" : "text",
-                value: "",
-                checked: false,
-                placeholder: false
-              };
-              rows.set(definition, row);
-            }
-            const value2 = current[definition.id];
-            row.value = value2 == null ? "" : String(value2);
-            row.checked = value2 === true;
-            row.placeholder = row.value === "" && !definition.options?.some((option) => option.value === "");
-            return row;
-          });
-          return [
-            field2.id,
-            { status: schema?.status ?? "loading", rows: projected, empty: definitions.length === 0 }
-          ];
-        }))
-      };
-    };
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/shared.ts
-  function isValueControl(control) {
-    return "value" in control && typeof control.value === "string";
-  }
-  function isTokenControl(control) {
-    return isValueControl(control) && "values" in control && Array.isArray(control.values);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/editors.ts
-  function readTableEditor(column, control) {
-    if (column.editable !== true) {
-      return;
-    }
-    if (column.type === "tokens") {
-      return isTokenControl(control) ? [...control.values] : [];
-    }
-    return isValueControl(control) ? control.value : "";
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/context.ts
-  var tables = new WeakMap;
-  function tableContext(host, fields) {
-    const definitions = fields.filter((field2) => field2.type === "table");
-    const state = new Map;
-    tables.set(host, state);
-    return (values) => Object.fromEntries(definitions.map((field2) => {
-      const previous = state.get(field2.id) ?? [];
-      const rows = tableRows(values[field2.id]).map((source2, index) => {
-        const row = previous[index] ?? { index, source: source2, cells: {} };
-        row.source = source2;
-        for (const column of field2.columns) {
-          const value2 = valueAt(source2, column.path);
-          const editor = field2.editable && column.editable;
-          row.cells[column.id] = editor ? column.type === "tokens" ? Array.isArray(value2) ? value2.join(",") : "" : value2 == null ? "" : String(value2) : formatDashboardValue(value2, column.format, { currency: currency(source2, column.path) });
-        }
-        return row;
-      });
-      state.set(field2.id, rows);
-      return [field2.id, rows];
-    }));
-  }
-  function readBoundTableRows(field2, control) {
-    if (!field2.editable) {
-      return structuredClone(tableRows(field2.value));
-    }
-    const host = control.closest("cms-dashboard-w-detail");
-    const sources = host ? tables.get(host)?.get(field2.id) : undefined;
-    return Array.from(control.querySelectorAll("[data-table-row]")).map((element) => {
-      const row = structuredClone(sources?.[Number(element.dataset.tableIndex)]?.source ?? {});
-      for (const column of field2.columns ?? []) {
-        const editor = Array.from(element.querySelectorAll("[data-table-column]")).find((node) => node.dataset.tableColumn === column.key);
-        if (editor) {
-          setValueAt(row, column.path, readTableEditor(column, editor));
-        }
-      }
-      return row;
-    });
-  }
-  function tableRows(value2) {
-    return Array.isArray(value2) ? value2.filter((row) => row !== null && typeof row === "object" && !Array.isArray(row)) : [];
-  }
-  function serializedTableRows(value2) {
-    return tableRows(value2).filter(hasValue);
-  }
-  function hasValue(value2) {
-    if (value2 && typeof value2 === "object") {
-      return Object.values(value2).some(hasValue);
-    }
-    return String(value2 ?? "").trim().length > 0;
-  }
-  function currency(row, path) {
-    const separator = path.lastIndexOf(".");
-    const sibling = separator < 0 ? "currency" : `${path.slice(0, separator)}.currency`;
-    const value2 = valueAt(row, sibling) ?? row.currency;
-    return value2 == null ? undefined : String(value2).trim() || undefined;
-  }
-  function tableLookupContexts(host) {
-    return Object.fromEntries(Array.from(host.querySelectorAll("cms-dashboard-lookup[context-name]")).map((source2) => [
-      source2.getAttribute("context-name"),
-      source2.sharedContext
-    ]));
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/media.ts
-  function mediaValue(value2, field2, sourceId) {
-    const values = Array.isArray(value2) ? value2 : value2 !== null && typeof value2 === "object" ? [value2] : arrayAt({ value: value2 }, "value");
-    return values.map((item) => {
-      const source2 = sourceMediaItem(item, field2, sourceId);
-      return source2.id && source2.url ? source2 : normalizedMediaItem(item) ?? source2;
-    }).filter((item) => item.id && item.url);
-  }
-  function normalizedMediaItem(item) {
-    if (!item || typeof item !== "object" || Array.isArray(item)) {
-      return null;
-    }
-    const record2 = item;
-    const id2 = textAt(record2, "id");
-    const url = textAt(record2, "url");
-    if (!id2 || !url) {
-      return null;
-    }
-    return {
-      id: id2,
-      url,
-      ...typeof record2.thumbnailUrl === "string" && record2.thumbnailUrl ? { thumbnailUrl: record2.thumbnailUrl } : {},
-      ...typeof record2.alt === "string" ? { alt: record2.alt } : {},
-      ...typeof record2.name === "string" ? { name: record2.name } : {},
-      ...record2.pending === true ? { pending: true } : {}
-    };
-  }
-  function sourceMediaItem(item, field2, sourceId) {
-    return {
-      id: textAt(item, field2.item.idPath, textAt(item, field2.item.urlPath)),
-      url: mediaUrl(item, field2, sourceId),
-      alt: field2.item.altPath ? textAt(item, field2.item.altPath) : undefined
-    };
-  }
-  function mediaUrl(item, field2, sourceId) {
-    const raw = textAt(item, field2.item.urlPath);
-    if (isRenderableUrl(raw)) {
-      return raw;
-    }
-    const id2 = textAt(item, field2.item.idPath);
-    const endpoint = mediaFileEndpoint(field2);
-    if (!sourceId || !endpoint || !id2) {
-      return raw;
-    }
-    return route(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(endpoint)}?id=${encodeURIComponent(id2)}`);
-  }
-  function mediaFileEndpoint(field2) {
-    if (field2.item.endpoint) {
-      return field2.item.endpoint;
-    }
-    const upload = field2.actions?.upload?.endpoint ?? "";
-    if (!upload.startsWith("upload") || upload.length <= "upload".length) {
-      return "";
-    }
-    const rest = upload.slice("upload".length);
-    return `${rest.charAt(0).toLowerCase()}${rest.slice(1)}`;
-  }
-  function isRenderableUrl(value2) {
-    return /^(https?:|blob:|data:|\/)/.test(value2);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/media.ts
-  function choiceMedia(owner, fieldId, index, field2, raw, draft, previous) {
-    const source2 = draft && raw && typeof raw === "object" && "id" in raw && "url" in raw ? [raw] : mediaValue(raw, field2, owner.dataset.sourceId ?? "");
-    const items = source2.map((item, itemIndex) => {
-      const projected = {
-        ...item,
-        index: itemIndex,
-        thumbnail: item.thumbnailUrl || item.url,
-        title: item.name?.trim() || item.alt?.trim() || `Image ${itemIndex + 1}`,
-        previewAlt: item.alt?.trim() || item.name?.trim() || `Image ${itemIndex + 1}`
-      };
-      const old = previous?.items[itemIndex];
-      return old && JSON.stringify(old) === JSON.stringify(projected) ? old : projected;
-    });
-    const control = Array.from(owner.querySelectorAll("cms-dashboard-media-field[data-item-field]")).find((node) => node.closest("[data-field-control]")?.dataset.fieldControl === fieldId && node.dataset.itemIndex === String(index) && node.dataset.itemField === field2.id);
-    const open = (control?.preview.opened ?? false) && items.length > 0;
-    return { items, showAdd: items.length === 0, index: 0, open, preview: items[0], counter: `1 / ${items.length}` };
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/context.ts
-  var owners2 = new WeakMap;
-  function reorderableContext(owner, fields) {
-    const state = new Map;
-    owners2.set(owner, state);
-    for (const definition of fields.filter((field2) => field2.type === "reorderable-list")) {
-      state.set(definition.id, { definition, rows: [] });
-    }
-    return (values, edits) => {
-      const urls = new Set;
-      const result = Object.fromEntries(Array.from(state, ([id2, entry]) => {
-        entry.rows = tableRows(values[id2]).map((source2, index) => {
-          const identity = valueAt(source2, entry.definition.itemKey);
-          const row = entry.rows[index] ?? { index, identity: "", title: "", source: source2, cells: {}, media: {} };
-          row.source = source2;
-          row.identity = String(identity ?? index);
-          row.title = String(identity ?? `Item ${index + 1}`);
-          for (const field2 of entry.definition.fields) {
-            const value2 = valueAt(source2, field2.path);
-            if (field2.type === "media") {
-              row.media[field2.id] = choiceMedia(owner, id2, index, field2, value2, Object.hasOwn(edits, id2), row.media[field2.id]);
-              for (const item of row.media[field2.id].items) {
-                urls.add(item.url);
-              }
-            } else {
-              row.cells[field2.id] = field2.type === "checkbox" ? value2 === true || value2 === "true" || value2 === 1 : value2 == null ? "" : String(value2);
-            }
-          }
-          return row;
-        });
-        return [
-          id2,
-          {
-            rows: entry.rows,
-            addDisabled: entry.definition.maxItems !== undefined && entry.rows.length >= entry.definition.maxItems,
-            removeDisabled: entry.definition.minItems !== undefined && entry.rows.length <= entry.definition.minItems
-          }
-        ];
-      }));
-      return { result, urls };
-    };
-  }
-  function readReorderableItems(control) {
-    const owner = control.closest("cms-dashboard-w-detail");
-    const entry = owner ? owners2.get(owner)?.get(control.dataset.fieldControl ?? "") : undefined;
-    if (!entry) {
-      return [];
-    }
-    return Array.from(control.querySelectorAll("cms-dashboard-reorderable-row[data-index]")).map((element) => {
-      const index = Number(element.dataset.index);
-      const row = entry.rows[index];
-      const item = structuredClone(row?.source ?? {});
-      for (const field2 of entry.definition.fields) {
-        const editor = Array.from(element.querySelectorAll("[data-item-field]")).find((node) => node.dataset.itemField === field2.id);
-        if (!editor) {
-          continue;
-        }
-        const value2 = field2.type === "media" ? editor.items[0] ?? null : field2.type === "checkbox" ? editor.checked : ("value" in editor) ? String(editor.value ?? "") : "";
-        if (field2.type === "media" || value2 !== row?.cells[field2.id]) {
-          setValueAt(item, field2.path, value2);
-        }
-      }
-      setValueAt(item, entry.definition.positionPath ?? "position", index);
-      return item;
-    });
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/utils.ts
-  function numberData(value2) {
-    if (value2 === undefined) {
-      return null;
-    }
-    const number = Number(value2);
-    return Number.isInteger(number) ? number : null;
-  }
-  function tileFromEvent(event) {
-    return event.target?.closest("[data-media-tile]") ?? null;
-  }
-  function localId() {
-    return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/mediaState.ts
-  class LocalMediaFiles {
-    urls = new Set;
-    create(file) {
-      const url = URL.createObjectURL(file);
-      this.urls.add(url);
-      return { id: `local-${localId()}`, url, thumbnailUrl: url, alt: file.name, name: file.name, pending: true };
-    }
-    revoke(url) {
-      if (!url || !this.urls.has(url)) {
-        return;
-      }
-      URL.revokeObjectURL(url);
-      this.urls.delete(url);
-    }
-    retain(urls) {
-      for (const url of this.urls) {
-        if (!urls.has(url)) {
-          this.revoke(url);
-        }
-      }
-    }
-    clear() {
-      this.retain(new Set);
-    }
-  }
-  function dispatchMediaChange(host, action, items, detail) {
-    host.dispatchEvent(new CustomEvent(W_MEDIA_FIELD_ACTION_EVENT, {
-      bubbles: true,
-      composed: true,
-      detail: { ...detail, action, value: items }
-    }));
-    host.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/files.ts
-  var owners3 = new WeakMap;
-  function mediaFiles(owner) {
-    let files = owners3.get(owner);
-    if (!files) {
-      files = new LocalMediaFiles;
-      owners3.set(owner, files);
-    }
-    return files;
-  }
-  function releaseMediaFiles(owner) {
-    owners3.get(owner)?.clear();
-    owners3.delete(owner);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/context.ts
-  function mediaContext(owner, fields) {
-    const definitions = fields.filter((field2) => field2.type === "media");
-    const cache2 = new Map;
-    return (values, edits, nestedUrls = []) => {
-      const urls = new Set(nestedUrls);
-      const result = Object.fromEntries(definitions.map((field2) => {
-        const raw = values[field2.id];
-        const draft = Object.hasOwn(edits, field2.id);
-        let entry = cache2.get(field2.id);
-        if (!entry || entry.raw !== raw || entry.draft !== draft) {
-          const items = draft && Array.isArray(raw) ? raw : mediaValue(raw, field2, owner.dataset.sourceId ?? "");
-          const previous = entry?.items ?? [];
-          entry = {
-            raw,
-            draft,
-            items: items.map((item, index2) => projectMediaItem(item, index2, previous[index2]))
-          };
-          cache2.set(field2.id, entry);
-        }
-        for (const item of entry.items) {
-          urls.add(item.url);
-        }
-        const control = Array.from(owner.querySelectorAll("cms-dashboard-media-field")).find((node) => node.dataset.fieldControl === field2.id);
-        const index = Math.min(control?.preview.index ?? 0, Math.max(0, entry.items.length - 1));
-        const open = (control?.preview.opened ?? false) && entry.items.length > 0;
-        return [
-          field2.id,
-          {
-            items: entry.items,
-            showAdd: field2.multiple || entry.items.length === 0,
-            index,
-            open,
-            preview: entry.items[index],
-            counter: `${index + 1} / ${entry.items.length}`
-          }
-        ];
-      }));
-      mediaFiles(owner).retain(urls);
-      return result;
-    };
-  }
-  function projectMediaItem(item, index, previous) {
-    const next = {
-      id: item.id,
-      url: item.url,
-      thumbnailUrl: item.thumbnailUrl,
-      alt: item.alt,
-      name: item.name,
-      pending: item.pending,
-      index,
-      thumbnail: item.thumbnailUrl || item.url,
-      title: item.name?.trim() || item.alt?.trim() || `Image ${index + 1}`,
-      previewAlt: item.alt?.trim() || item.name?.trim() || `Image ${index + 1}`
-    };
-    if (previous && (previous.id === item.id || previous.pending && previous.url === item.url)) {
-      return Object.assign(previous, next);
-    }
-    return next;
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/lookups/targets.ts
-  function nestedLookupKey(fieldId, nestedId) {
-    return `${fieldId}::${nestedId}`;
-  }
-  function lookupUsesRemoteSearch(lookup) {
-    return Object.values(lookup.params ?? {}).includes("$search");
-  }
-  function lookupUsesOffsetPagination(lookup) {
-    const expressions = Object.values(lookup.params ?? {});
-    return expressions.includes("$limit") && expressions.includes("$offset");
-  }
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/urls.ts
-  function detailLookupUrls(fields, sourceId, values, resource) {
-    return Object.fromEntries(fields.flatMap((field2) => {
-      if (field2.type !== "combobox" && field2.type !== "tokens" || !field2.lookup) {
-        return [];
-      }
-      return [[field2.id, lookupUrl(field2.lookup, sourceId, values, resource)]];
-    }));
-  }
-  function lookupUrl(lookup, sourceId, values, resource) {
-    const vars = {
-      fields: values,
-      resource,
-      ...lookupUsesRemoteSearch(lookup) ? { search: "" } : {},
-      ...lookupUsesOffsetPagination(lookup) ? { limit: 25, offset: 0 } : {}
-    };
-    const ready = Object.values(lookup.params ?? {}).every((expression) => {
-      if (!expression.startsWith("$") || ["$search", "$limit", "$offset"].includes(expression)) {
-        return true;
-      }
-      const value2 = resolveExpression(expression, vars);
-      return value2 !== undefined && value2 !== null && value2 !== "";
-    });
-    return ready ? sourceUrl(sourceId, lookup, vars).href : "";
-  }
-  function tableLookupUrls(fields, sourceId, values, resource) {
-    return Object.fromEntries(fields.filter((field2) => field2.type === "table").map((field2) => [
-      field2.id,
-      Object.fromEntries(field2.columns.flatMap((column) => column.editable && column.type === "combobox" && column.lookup ? [[column.id, lookupUrl(column.lookup, sourceId, values, resource)]] : []))
-    ]));
-  }
-  function choiceLookupUrls(fields, sourceId, values, resource) {
-    return Object.fromEntries(fields.filter((field2) => field2.type === "reorderable-list").map((field2) => [
-      field2.id,
-      Object.fromEntries(field2.fields.flatMap((item) => item.type === "combobox" && item.lookup ? [[item.id, lookupUrl(item.lookup, sourceId, values, resource)]] : []))
-    ]));
-  }
-  // src/components/admin/Resources/Dashboards/runtime/mapping/money.ts
-  function moneyFieldContext(fields, resource, values) {
-    return Object.fromEntries(fields.filter((field2) => field2.type === "money").map((field2) => [
-      field2.id,
-      {
-        currency: field2.currencyPath ? valueAt(values, field2.currencyPath) ?? valueAt(resource, field2.currencyPath) : "",
-        allowDecimals: typeof field2.allowDecimals === "object" ? matchesDashboardVisibility(field2.allowDecimals, { fields: values, resource }) : field2.allowDecimals !== false
-      }
-    ]));
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/mapping/nestedFields.ts
-  function tableColumn(fieldId, column, options) {
-    const base = {
-      key: column.id,
-      label: column.label,
-      path: column.path,
-      ...column.width ? { width: column.width } : {},
-      ...column.format ? { format: column.format } : {}
-    };
-    if (column.editable !== true) {
-      return base;
-    }
-    const type = column.type ?? "text";
-    if (type === "select") {
-      return { ...base, editable: true, type, options: (column.options ?? []).map(optionData) };
-    }
-    if (type === "combobox") {
-      const key = nestedLookupKey(fieldId, column.id);
-      return {
-        ...base,
-        editable: true,
-        type,
-        options: optionList(column.options, options[key] ?? []),
-        ...lookupMetadata(key, column.lookup)
-      };
-    }
-    return { ...base, editable: true, type };
-  }
-  function reorderableField(fieldId, field2, options) {
-    const base = {
-      id: field2.id,
-      label: field2.label,
-      path: field2.path,
-      ...field2.required ? { required: true } : {},
-      ...field2.placeholder ? { placeholder: field2.placeholder } : {},
-      ...field2.secondary ? { secondary: true } : {}
-    };
-    if (field2.type === "page-link") {
-      return {
-        ...base,
-        type: field2.type,
-        publishedOnly: field2.publishedOnly,
-        allowExternal: field2.allowExternal,
-        allowMedia: field2.allowMedia
-      };
-    }
-    const type = field2.type ?? "text";
-    if (type === "select") {
-      return { ...base, type, options: (field2.options ?? []).map(optionData) };
-    }
-    if (type === "combobox") {
-      const key = nestedLookupKey(fieldId, field2.id);
-      return {
-        ...base,
-        type,
-        options: optionList(field2.options, options[key] ?? []),
-        ...lookupMetadata(key, field2.lookup)
-      };
-    }
-    return { ...base, type };
-  }
-  function lookupMetadata(lookupKey, lookup) {
-    if (!lookup) {
-      return {};
-    }
-    const expressions = Object.values(lookup.params ?? {});
-    const remoteSearch = expressions.includes("$search");
-    const remotePagination = expressions.includes("$limit") && expressions.includes("$offset");
-    return {
-      lookupKey,
-      ...remoteSearch ? { remoteSearch: true } : {},
-      ...remotePagination ? { remotePagination: true } : {}
-    };
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/mapping/fields.ts
-  function detailField(field2, resource, fields, options, sourceId, schemas = {}) {
-    const value2 = Object.hasOwn(fields, field2.id) ? fields[field2.id] : valueAt(resource, field2.path);
-    const base = {
-      id: field2.id,
-      label: field2.label,
-      ...field2.required ? { required: true } : {},
-      ..."placeholder" in field2 && field2.placeholder ? { placeholder: field2.placeholder } : {}
-    };
-    if (field2.type === "secret-ref" || field2.type === "page-link") {
-      return {
-        ...base,
-        input: field2.type,
-        value: textValue(value2),
-        ...field2.type === "page-link" ? {
-          publishedOnly: field2.publishedOnly,
-          allowExternal: field2.allowExternal,
-          allowMedia: field2.allowMedia
-        } : {}
-      };
-    }
-    if (field2.type === "number") {
-      return {
-        ...base,
-        input: "number",
-        value: numberValue(value2),
-        ...field2.min !== undefined ? { min: field2.min } : {},
-        ...field2.max !== undefined ? { max: field2.max } : {},
-        ...field2.step !== undefined ? { step: field2.step } : {}
-      };
-    }
-    if (field2.type === "money") {
-      const currency2 = field2.currencyPath ? textValue(valueAt(fields, field2.currencyPath) ?? valueAt(resource, field2.currencyPath)) : "";
-      const allowDecimals = field2.allowDecimals === undefined ? true : typeof field2.allowDecimals === "boolean" ? field2.allowDecimals : matchesDashboardVisibility(field2.allowDecimals, { fields, resource });
-      return {
-        ...base,
-        input: "money",
-        value: numberValue(value2),
-        ...currency2 ? { currency: currency2 } : {},
-        fractionDigits: br(currency2 || undefined),
-        allowDecimals
-      };
-    }
-    if (field2.type === "checkbox") {
-      return { ...base, input: "checkbox", value: value2 === true };
-    }
-    if (field2.type === "textarea") {
-      return {
-        ...base,
-        input: "textarea",
-        value: textValue(value2),
-        ...field2.rows !== undefined ? { rows: field2.rows } : {}
-      };
-    }
-    if (field2.type === "cms-user") {
-      return {
-        ...base,
-        input: "cms-user",
-        value: textValue(value2),
-        options: optionList(undefined, options[field2.id] ?? [])
-      };
-    }
-    if (field2.type === "select") {
-      return { ...base, input: "select", value: textValue(value2), options: field2.options.map(optionData) };
-    }
-    if (field2.type === "combobox") {
-      return {
-        ...base,
-        input: "combobox",
-        value: textValue(value2),
-        options: optionList(field2.options, options[field2.id] ?? []),
-        creatable: isCreatable(field2),
-        ...lookupMetadata2(field2.id, field2.lookup)
-      };
-    }
-    if (field2.type === "tokens") {
-      return {
-        ...base,
-        input: "tokens",
-        value: tokenValue(value2),
-        options: optionList(field2.options, options[field2.id] ?? []),
-        creatable: isCreatable(field2)
-      };
-    }
-    if (field2.type === "table") {
-      return {
-        ...base,
-        input: "table",
-        value: tableValue(value2),
-        columns: field2.columns.map((column) => tableColumn(field2.id, column, options)),
-        ...field2.derive ? { derive: field2.derive } : {},
-        ...field2.editable === true ? { editable: true } : {},
-        ...field2.addLabel ? { addLabel: field2.addLabel } : {}
-      };
-    }
-    if (field2.type === "reorderable-list") {
-      return {
-        ...base,
-        input: "reorderable-list",
-        value: reorderableValue(value2, field2, sourceId),
-        itemKey: field2.itemKey,
-        ...field2.positionPath ? { positionPath: field2.positionPath } : {},
-        ...field2.layout ? { reorderableLayout: field2.layout } : {},
-        reorderableFields: field2.fields.map((item) => reorderableField(field2.id, item, options)),
-        ...field2.addLabel ? { addLabel: field2.addLabel } : {},
-        ...field2.minItems !== undefined ? { minItems: field2.minItems } : {},
-        ...field2.maxItems !== undefined ? { maxItems: field2.maxItems } : {}
-      };
-    }
-    if (field2.type === "schema") {
-      const schema = schemas[field2.id];
-      return {
-        ...base,
-        input: "schema",
-        value: recordValue(value2),
-        schemaDefinitions: schemaDefinitions(field2, fields, schema?.definitions ?? []),
-        schemaStatus: schema?.status ?? "loading"
-      };
-    }
-    if (field2.type === "media") {
-      return {
-        ...base,
-        input: "media-list",
-        value: mediaValue(value2, field2, sourceId),
-        accept: "image/*",
-        multiple: field2.multiple === true
-      };
-    }
-    if (field2.type === "readonly") {
-      if (field2.format === "image") {
-        return { ...base, input: "image", value: textValue(value2) };
-      }
-      if (field2.format === "date" || field2.format === "money") {
-        return {
-          ...base,
-          input: "readonly",
-          value: formatDashboardValue(value2, field2.format, {
-            currency: field2.format === "money" ? detailCurrency(resource, fields, field2.path) : undefined
-          })
-        };
-      }
-      return { ...base, input: field2.format === "badge" ? "badge" : "readonly", value: readonlyValue(value2) };
-    }
-    return { ...base, input: "text", value: textValue(value2) };
-  }
-  function lookupMetadata2(lookupKey, lookup) {
-    if (!lookup) {
-      return {};
-    }
-    const expressions = Object.values(lookup.params ?? {});
-    const remoteSearch = expressions.includes("$search");
-    const remotePagination = expressions.includes("$limit") && expressions.includes("$offset");
-    return {
-      lookupKey,
-      ...remoteSearch ? { remoteSearch: true } : {},
-      ...remotePagination ? { remotePagination: true } : {}
-    };
-  }
-  function reorderableValue(value2, field2, sourceId) {
-    return tableValue(value2).map((item) => {
-      const next = structuredClone(item);
-      for (const nested of field2.fields) {
-        if (nested.type !== "media") {
-          continue;
-        }
-        const media = mediaValue(valueAt(item, nested.path), nested, sourceId)[0] ?? null;
-        setValueAt(next, nested.path, media);
-      }
-      return next;
-    });
-  }
-  function detailCurrency(resource, fields, valuePath) {
-    const separator = valuePath.lastIndexOf(".");
-    const siblingPath = separator === -1 ? "currency" : `${valuePath.slice(0, separator)}.currency`;
-    const value2 = valueAt(fields, "currency") ?? valueAt(resource, siblingPath) ?? (siblingPath === "currency" ? undefined : valueAt(resource, "currency"));
-    const currency2 = textValue(value2).trim();
-    return currency2 || undefined;
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/mapping/detail.ts
-  function detailData(widget, resource, rowKey, draft = {}, options = {}, sourceId = "", schemas = {}) {
-    const fields = { ...fieldValues(widget, resource), ...draft };
-    const scope = { ...record2(resource), ...fields };
-    return {
-      rowKey,
-      eyebrow: widget.id,
-      title: textAt(scope, widget.title?.path, widget.title?.fallback ?? widget.id),
-      status: widget.status ? textAt(scope, widget.status.path, widget.status.fallback) : undefined,
-      actions: (widget.actions ?? []).filter((action) => matchesDashboardVisibility(action.visibleWhen, { fields, resource })).map(actionData),
-      main: widget.main.map((item, index) => ("widget" in item) ? { title: "", fields: [], widgetSlot: `main-widget-${index}` } : section(item, resource, fields, options, sourceId, schemas)),
-      aside: sections(widget.aside ?? [], resource, fields, options, sourceId, schemas)
-    };
-  }
-  function fieldValues(widget, resource) {
-    const all = [...widget.main.filter(isDetailSection), ...widget.aside ?? []].flatMap((section) => section.fields);
-    return Object.fromEntries(all.map((field2) => [field2.id, valueAt(resource, field2.path)]));
-  }
-  function sections(sections2, resource, fields, options, sourceId, schemas) {
-    return sections2.map((item) => section(item, resource, fields, options, sourceId, schemas));
-  }
-  function section(section2, resource, fields, options, sourceId, schemas) {
-    return {
-      title: section2.title,
-      ...section2.description ? { description: section2.description } : {},
-      fields: section2.fields.filter((field2) => matchesDashboardVisibility(field2.visibleWhen, { fields, resource })).map((field2) => detailField(field2, resource, fields, options, sourceId, schemas))
-    };
-  }
-  function isDetailSection(item) {
-    return !("widget" in item);
-  }
-  function actionData(action) {
-    return {
-      label: action.label,
-      action: action.id,
-      tone: action.tone,
-      placement: action.placement,
-      section: action.section,
-      icon: isActionIcon(action.icon) ? action.icon : undefined,
-      confirm: action.confirm
-    };
-  }
-  function isActionIcon(value2) {
-    return value2 === "archive" || value2 === "download" || value2 === "link" || value2 === "trash";
-  }
-  function record2(value2) {
-    return value2 && typeof value2 === "object" && !Array.isArray(value2) ? value2 : {};
-  }
-  // src/static/admin/_content/sources/_runtime/detail/actions.html
-  var actions_default = `<p9r-button slot="bound-actions" cms-repeat="detailActions.primary as action" type="button" color="{{ action.color }}" variant="{{ action.variant }}" data-action="{{ action.id }}" data-confirm="{{ action.confirm }}" aria-label="{{ action.label }}">{{ action.label }}</p9r-button>
-<p9r-action-menu slot="bound-actions" cms-condition="detailActions.groups.length" label="More actions">
-    <p9r-action-menu-section cms-repeat="detailActions.groups as group" label="{{ group.label }}">
-        <p9r-action-menu-item cms-repeat="group.actions as action" color="{{ action.menuColor }}" data-action="{{ action.id }}" data-confirm="{{ action.confirm }}">
-            <svg cms-condition="action.icon == 'archive'" slot="icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M3 7h18"></path><path d="M5 7l1 14h12l1-14"></path><path d="M9 11h6"></path></svg>
-            <svg cms-condition="action.icon == 'download'" slot="icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
-            <svg cms-condition="action.icon == 'link'" slot="icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0-7.07-7.07l-.91.91"></path><path d="M14 11a5 5 0 0 0-7.07 0l-1.41 1.41a5 5 0 0 0 7.07 7.07l.91-.91"></path></svg>
-            <svg cms-condition="action.icon == 'trash'" slot="icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
-            {{ action.label }}
-        </p9r-action-menu-item>
-    </p9r-action-menu-section>
-</p9r-action-menu>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/actions.ts
-  function composeActions() {
-    const template3 = document.createElement("template");
-    template3.innerHTML = actions_default;
-    return template3.content;
-  }
-  function actionLayout(actions) {
-    const entries = actions.map((action) => ({
-      ...action,
-      color: action.tone === "primary" ? "primary" : action.tone === "danger" ? "danger" : "",
-      variant: action.tone === "primary" ? "filled" : action.tone === "danger" ? "ghost" : "outlined",
-      menuColor: action.tone === "danger" ? "danger" : ""
-    }));
-    let previous = [];
-    let layout = { primary: [], groups: [] };
-    return (fields, resource) => {
-      const visible = resource == null ? [] : entries.filter((action) => matchesDashboardVisibility(action.visibleWhen, { fields, resource }));
-      if (visible.length === previous.length && visible.every((entry, index) => entry === previous[index])) {
-        return layout;
-      }
-      previous = visible;
-      const buttons = visible.filter((action) => action.placement !== "more");
-      const overflow = [...buttons.slice(3), ...visible.filter((action) => action.placement === "more")];
-      const groups = new Map;
-      for (const action of overflow) {
-        const label2 = action.section ?? "Other actions";
-        const group = groups.get(label2) ?? [];
-        group.push(action);
-        groups.set(label2, group);
-      }
-      layout = {
-        primary: buttons.slice(0, 3),
-        groups: Array.from(groups, ([label2, actions2]) => ({ label: label2, actions: actions2 }))
-      };
-      return layout;
-    };
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/context.ts
-  function bindDetailContext(host, widget, draft) {
-    const fields = [...widget.main, ...widget.aside ?? []].flatMap((section2) => ("widget" in section2) ? [] : section2.fields);
-    const users = directoryContext(host, fields);
-    const media = mediaContext(host, fields);
-    const schemas = schemaContext(host, fields);
-    const tables2 = tableContext(host, fields);
-    const choices = reorderableContext(host, fields);
-    const actions = actionLayout(detailFormActions(widget).filter((action) => !action.form));
-    const rules = Object.fromEntries(fields.map((field2) => [field2.id, field2.visibleWhen]));
-    hc(host, () => {
-      const source2 = it(host);
-      const resource = widget.source.itemPath ? valueAt(source2, widget.source.itemPath) : source2;
-      const edits = draft(resource);
-      const values = { ...fieldValues(widget, resource), ...edits };
-      let effective = structuredClone(resource);
-      for (const field2 of fields) {
-        if (!Object.hasOwn(edits, field2.id)) {
-          continue;
-        }
-        if (field2.path === ".") {
-          effective = edits[field2.id];
-        } else if (effective && typeof effective === "object" && !Array.isArray(effective)) {
-          setValueAt(effective, field2.path, edits[field2.id]);
-        }
-      }
-      const nested = choices(values, edits);
-      const sessions = mediaUploadSessions(host);
-      return {
-        detailChoices: nested.result,
-        detailChoiceLookupUrls: choiceLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
-        detailTables: tables2(values),
-        ...tableLookupContexts(host),
-        detailTableLookupUrls: tableLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
-        ...schemas(values, resource),
-        detailMedia: media(values, edits, nested.urls),
-        detailUploadSessions: sessions,
-        detailMediaUploadUrls: Object.fromEntries(fields.filter((field2) => field2.type === "media" && field2.persist === "save").map((field2) => {
-          const ref = field2.type === "media" ? field2.actions?.upload : undefined;
-          if (!ref) {
-            return [field2.id, ""];
-          }
-          const url = sourceUrl(host.dataset.sourceId ?? "", ref, { resource });
-          if (sessions[field2.id]) {
-            url.searchParams.set("sessionId", sessions[field2.id]);
-          }
-          return [field2.id, url.href];
-        })),
-        ...users(values, resource),
-        detailResourcePath: widget.source.itemPath ?? "",
-        detailLookupUrls: detailLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
-        detailReady: resource !== null && resource !== undefined,
-        detailPersisted: !widget.create || host.dataset.rowKey !== "__new__",
-        detailValues: effective,
-        detailResource: resource,
-        detailOperations: Object.fromEntries(detailFormActions(widget).filter((action) => action.form).map((action) => {
-          const operationFields = action.form.fields ?? [];
-          const operationValues = Object.fromEntries(operationFields.map((field2) => [field2.id, valueAt(resource, field2.path)]));
-          return [
-            action.id,
-            { resource, resourceMoney: moneyFieldContext(operationFields, resource, operationValues) }
-          ];
-        })),
-        detailSelection: { id: host.dataset.rowKey ?? "" },
-        detailRow: resource,
-        detailOperationVisibility: Object.fromEntries(detailFormActions(widget).map((action) => [
-          action.id,
-          resource != null && matchesDashboardVisibility(action.visibleWhen, { fields: values, resource })
-        ])),
-        detailActions: actions(values, resource),
-        detailValuesMoney: moneyFieldContext(fields, resource, values),
-        detailVisibility: { fields: values, resource },
-        detailRules: rules
-      };
-    });
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/runtime.ts
-  function readSchemaControlValue(field2, control) {
-    const result = recordValue2(field2.value);
-    if (field2.schemaStatus !== "ready") {
-      return result;
-    }
-    const definitions = new Map((field2.schemaDefinitions ?? []).map((definition) => [definition.id, definition]));
-    for (const element of Array.from(control.querySelectorAll("[data-schema-key]"))) {
-      const key = element.dataset.schemaKey ?? "";
-      const definition = definitions.get(key);
-      if (!definition || !shouldReadSchemaValue(definition, element, result)) {
-        continue;
-      }
-      result[key] = readSchemaValue(definition, element);
-    }
-    return result;
-  }
-  function validateSchemaControl(field2, control) {
-    if (field2.schemaStatus !== "ready") {
-      return null;
-    }
-    const definitions = new Map((field2.schemaDefinitions ?? []).map((definition) => [definition.id, definition]));
-    let invalid2 = null;
-    for (const element of Array.from(control.querySelectorAll("[data-schema-key]"))) {
-      const definition = definitions.get(element.dataset.schemaKey ?? "");
-      if (!definition) {
-        continue;
-      }
-      syncSchemaRequiredValidity(definition, element);
-      if (!invalid2 && element.hasAttribute("invalid")) {
-        invalid2 = element;
-      }
-    }
-    return invalid2;
-  }
-  function updateSchemaControl(field2, event) {
-    const control = event.target?.closest("[data-schema-key]");
-    const definition = (field2.schemaDefinitions ?? []).find((item) => item.id === control?.dataset.schemaKey);
-    if (!control || !definition) {
-      return;
-    }
-    control.dataset.schemaDirty = "true";
-    syncSchemaRequiredValidity(definition, control);
-  }
-  function recordValue2(value2) {
-    return value2 !== null && typeof value2 === "object" && !Array.isArray(value2) ? { ...value2 } : {};
-  }
-  function readSchemaValue(definition, control) {
-    if (definition.type === "boolean" && control instanceof HTMLInputElement) {
-      return control.checked;
-    }
-    if (!isValueControl(control)) {
-      return;
-    }
-    if (definition.type !== "number" || control.value === "") {
-      return control.value;
-    }
-    const value2 = Number(control.value);
-    return Number.isFinite(value2) ? value2 : "";
-  }
-  function shouldReadSchemaValue(definition, control, values) {
-    return control.dataset.schemaDirty === "true" || !Object.hasOwn(values, definition.id) && definition.required === true && definition.type === "boolean";
-  }
-  function syncSchemaRequiredValidity(definition, control) {
-    if (!definition.required || !missingRequiredValue(readSchemaValue(definition, control))) {
-      clearSchemaRequiredError(control);
-      return;
-    }
-    control.dataset.dashboardSchemaRequiredInvalid = "true";
-    control.setAttribute("invalid", "");
-    control.setAttribute("aria-invalid", "true");
-    control.setAttribute("hint", "This field is required.");
-    control.setAttribute("hint-level", "error");
-  }
-  function missingRequiredValue(value2) {
-    return value2 === null || value2 === undefined || typeof value2 === "string" && value2.trim() === "";
-  }
-  function clearSchemaRequiredError(control) {
-    if (control.dataset.dashboardSchemaRequiredInvalid !== "true") {
-      return;
-    }
-    delete control.dataset.dashboardSchemaRequiredInvalid;
-    control.removeAttribute("invalid");
-    control.removeAttribute("aria-invalid");
-    control.removeAttribute("hint");
-    control.removeAttribute("hint-level");
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/validation.ts
-  function validateReorderable(control, markedOnly = false) {
-    let invalid2 = null;
-    for (const editor of Array.from(control.querySelectorAll("[data-item-field][required]"))) {
-      if (markedOnly && !editor.hasAttribute("data-choice-required-invalid")) {
-        continue;
-      }
-      const missing = editor instanceof HTMLInputElement && editor.type === "checkbox" ? !editor.checked : ("items" in editor) && Array.isArray(editor.items) ? editor.items.length === 0 : !("value" in editor) || String(editor.value ?? "").trim() === "";
-      if (missing) {
-        editor.setAttribute("data-choice-required-invalid", "");
-        editor.setAttribute("invalid", "");
-        editor.setAttribute("aria-invalid", "true");
-        editor.setAttribute("hint", "This field is required.");
-        editor.setAttribute("hint-level", "error");
-        invalid2 ??= editor;
-      } else if (editor.hasAttribute("data-choice-required-invalid")) {
-        for (const attribute of ["data-choice-required-invalid", "invalid", "aria-invalid", "hint", "hint-level"]) {
-          editor.removeAttribute(attribute);
-        }
-      }
-    }
-    if (invalid2 && !markedOnly) {
-      const details = invalid2.closest("cms-dashboard-reorderable-settings")?.shadowRoot?.querySelector("details");
-      if (details) {
-        details.open = true;
-      }
-    }
-    return invalid2;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/mediaControl.ts
-  function isMediaControl(control) {
-    return "items" in control && Array.isArray(control.items);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/basic.ts
-  function readBasicControlValue(field2, control) {
-    if (field2.input === "chips") {
-      return Array.from(control.querySelectorAll("[aria-pressed='true']")).map((button) => button.dataset.value ?? "").filter(Boolean);
-    }
-    if (field2.input === "tokens" && isTokenControl(control)) {
-      return control.values;
-    }
-    if (field2.input === "checkbox" && control instanceof HTMLInputElement) {
-      return control.checked;
-    }
-    if ((field2.input === "number" || field2.input === "money") && isValueControl(control)) {
-      if (control.value === "") {
-        return "";
-      }
-      const value2 = Number(control.value);
-      return Number.isFinite(value2) ? value2 : "";
-    }
-    if (isValueControl(control)) {
-      return control.value;
-    }
-    return Array.isArray(field2.value) ? field2.value : String(field2.value);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/index.ts
-  function readFieldControlValue(field2, control) {
-    if (field2.input === "reorderable-list" && control.localName === "cms-dashboard-reorderable-field") {
-      return control.items;
-    }
-    if (field2.input === "media-list" && isMediaControl(control)) {
-      return control.items;
-    }
-    if (field2.input === "table") {
-      const rows = readBoundTableRows(field2, control);
-      return field2.editable ? serializedTableRows(rows) : rows;
-    }
-    if (field2.input === "schema") {
-      return readSchemaControlValue(field2, control);
-    }
-    return readBasicControlValue(field2, control);
-  }
-  function readFieldControlDraft(field2, control) {
-    return field2.input === "table" && control.localName === "cms-dashboard-table-field" ? readBoundTableRows(field2, control) : readFieldControlValue(field2, control);
-  }
-  function invalidFieldControl(field2, control) {
-    if (field2.input === "reorderable-list" && control.localName === "cms-dashboard-reorderable-field") {
-      return validateReorderable(control) ?? (control.hasAttribute("invalid") ? control : null);
-    }
-    if (field2.input === "schema") {
-      return validateSchemaControl(field2, control) ?? (control.hasAttribute("invalid") ? control : null);
-    }
-    return control.hasAttribute("invalid") ? control : null;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/derive.ts
-  function deriveTableRows(field2, sourceValue) {
-    if (field2.derive?.type !== "cartesian") {
-      return [];
-    }
-    const axes = Array.isArray(sourceValue) ? sourceValue.filter((row) => row !== null && typeof row === "object" && !Array.isArray(row)).map((row, index) => ({
-      label: textValue2(valueAt(row, field2.derive.labelPath)),
-      values: listValue(valueAt(row, field2.derive.valuesPath)),
-      position: index
-    })).filter((axis) => axis.label && axis.values.length) : [];
-    if (!axes.length) {
-      return [];
-    }
-    return axes.reduce((sets, axis) => sets.flatMap((set) => axis.values.map((value2) => [...set, { label: axis.label, value: value2 }])), [[]]).map((choices, index) => ({
-      key: choices.map((choice) => `${slug(choice.label)}:${slug(choice.value)}`).join("|"),
-      options: choices.map((choice) => choice.value).join(" / "),
-      title: choices.map((choice) => `${choice.label}: ${choice.value}`).join(" / "),
-      status: "inactive",
-      position: index
-    }));
-  }
-  function listValue(value2) {
-    if (Array.isArray(value2)) {
-      return value2.map((item) => String(item).trim()).filter(Boolean);
-    }
-    if (typeof value2 === "string") {
-      return value2.split(",").map((item) => item.trim()).filter(Boolean);
-    }
-    return [];
-  }
-  function textValue2(value2) {
-    return value2 === null || value2 === undefined ? "" : String(value2).trim();
-  }
-  function slug(value2) {
-    return value2.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/tableValues.ts
-  function toggleChip(chip, emitFieldChange) {
-    chip.setAttribute("aria-pressed", String(chip.getAttribute("aria-pressed") !== "true"));
-    const control = chip.closest("[data-field-control]");
-    if (control) {
-      emitFieldChange(control);
-    }
-  }
-  function addTableRow(button, fields, emitFieldChange) {
-    const control = button.closest("[data-field-control]");
-    const field2 = control ? fields.find(control.dataset.fieldControl ?? "") : undefined;
-    if (!control || !field2 || field2.input !== "table") {
-      return;
-    }
-    const rows = [...readBoundTableRows(field2, control), {}];
-    emitFieldChange(control, rows);
-    updateDerivedTables(field2.id, fields, rows);
-  }
-  function removeTableRow(button, fields, emitFieldChange) {
-    const control = button.closest("[data-field-control]");
-    const row = button.closest("[data-table-row]");
-    if (!control || !row) {
-      return;
-    }
-    const field2 = fields.find(control.dataset.fieldControl ?? "");
-    if (!field2) {
-      return;
-    }
-    const rows = readBoundTableRows(field2, control);
-    rows.splice(Number(row.dataset.tableIndex), 1);
-    emitFieldChange(control, rows);
-    updateDerivedTables(field2.id, fields, rows);
-  }
-  function updateDerivedTables(sourceFieldId, fields, sourceDraft) {
-    const sourceControl = fields.control(sourceFieldId);
-    const sourceField = sourceControl ? fields.find(sourceFieldId) : undefined;
-    if (!sourceControl || !sourceField) {
-      return;
-    }
-    const sourceValue = sourceDraft ?? readFieldControlValue(sourceField, sourceControl);
-    for (const field2 of fields.fields()) {
-      if (field2.input !== "table" || field2.derive?.sourceField !== sourceFieldId) {
-        continue;
-      }
-      const control = fields.control(field2.id);
-      if (!control) {
-        continue;
-      }
-      const rows = deriveTableRows(field2, sourceValue);
-      field2.value = rows;
-      fields.record(field2.id, rows);
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/events.ts
-  class DetailEvents {
-    host;
-    fields;
-    readData;
-    refreshConditionalFields;
-    bound = false;
-    constructor(host, fields, readData, refreshConditionalFields) {
-      this.host = host;
-      this.fields = fields;
-      this.readData = readData;
-      this.refreshConditionalFields = refreshConditionalFields;
-    }
-    bind() {
-      if (this.bound) {
-        return;
-      }
-      this.host.addEventListener("click", this.onClick);
-      this.host.addEventListener("focusin", this.onFocusIn);
-      this.host.addEventListener("input", this.onInput);
-      this.host.addEventListener("change", this.onChange);
-      this.host.addEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction);
-      this.bound = true;
-    }
-    unbind() {
-      this.host.removeEventListener("click", this.onClick);
-      this.host.removeEventListener("focusin", this.onFocusIn);
-      this.host.removeEventListener("input", this.onInput);
-      this.host.removeEventListener("change", this.onChange);
-      this.host.removeEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction);
-      this.bound = false;
-    }
-    onClick = (event) => {
-      if (!this.owns(event) || event.target?.closest("[data-operation-form]")) {
-        return;
-      }
-      const target2 = event.target;
-      this.retryCmsUser(target2);
-      if (findEventTarget(event, "[data-back]")) {
-        emitWidgetEvent(this.host, WIDGET_BACK_EVENT, {});
-      }
-      const action = findEventTarget(event, "[data-action]");
-      const owner = action?.closest("[data-widget-id]");
-      if (owner && owner !== this.host && this.host.contains(owner)) {
-        return;
-      }
-      const data = this.readData();
-      if (action?.dataset.action && !this.fields.validate()) {
-        return;
-      }
-      if (action?.dataset.confirm && !window.confirm(action.dataset.confirm)) {
-        return;
-      }
-      if (action?.dataset.action) {
-        emitWidgetEvent(this.host, WIDGET_ACTION_EVENT, {
-          action: action.dataset.action,
-          detail: true,
-          widget: action.dataset.widget ?? this.host.dataset.widgetId,
-          row: data.rowKey,
-          resource: this.fields.currentResource(),
-          fields: this.fields.submissionFields()
-        });
-      }
-      const chip = target2?.closest(".chip");
-      if (chip) {
-        toggleChip(chip, (control) => this.emitFieldChange(control));
-      }
-      const tableAdd = target2?.closest("[data-table-add]");
-      const tableRemove = target2?.closest("[data-table-remove]");
-      const changedControl = (chip ?? tableAdd ?? tableRemove)?.closest("[data-field-control]");
-      if (tableAdd) {
-        addTableRow(tableAdd, this.fields, (control, draft) => this.emitFieldChange(control, draft));
-      }
-      if (tableRemove) {
-        removeTableRow(tableRemove, this.fields, (control, draft) => this.emitFieldChange(control, draft));
-      }
-      if (changedControl) {
-        this.afterFieldChange();
-      }
-    };
-    onFocusIn = (event) => {
-      if (!this.owns(event)) {
-        return;
-      }
-      this.retryCmsUser(event.target);
-    };
-    onInput = (event) => {
-      if (!this.owns(event) || event.target?.closest("[data-operation-form]")) {
-        return;
-      }
-      const control = findEventTarget(event, "[data-field-control]");
-      const field2 = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
-      if (field2?.input === "schema") {
-        updateSchemaControl(field2, event);
-      }
-      if (control && field2?.input === "table") {
-        updateDerivedTables(field2.id, this.fields);
-      }
-      if (control && field2?.input === "money") {
-        readFieldControlValue(field2, control);
-      }
-      if (control) {
-        this.fields.refreshRequiredValidity(control);
-      }
-      if (control && field2) {
-        this.fields.record(field2.id, readFieldControlDraft(field2, control));
-      }
-      if (field2) {
-        this.refreshConditionalFields();
-        return;
-      }
-    };
-    onChange = (event) => {
-      if (!this.owns(event) || event.target?.closest("[data-operation-form]")) {
-        return;
-      }
-      const control = findEventTarget(event, "[data-field-control]");
-      if (!control) {
-        return;
-      }
-      const field2 = this.fields.find(control.dataset.fieldControl ?? "");
-      if (field2?.input === "schema") {
-        updateSchemaControl(field2, event);
-      }
-      this.fields.refreshRequiredValidity(control);
-      this.emitFieldChange(control);
-      updateDerivedTables(control.dataset.fieldControl ?? "", this.fields);
-      this.afterFieldChange();
-    };
-    onMediaAction = (event) => {
-      if (!this.owns(event)) {
-        return;
-      }
-      event.stopPropagation();
-      const control = findEventTarget(event, "[data-field-control]");
-      const field2 = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
-      if (!field2) {
-        return;
-      }
-      emitWidgetEvent(this.host, WIDGET_MEDIA_ACTION_EVENT, {
-        ...event.detail,
-        widget: this.host.dataset.widgetId,
-        resource: this.fields.currentResource(),
-        fields: this.fields.currentFields(),
-        rowKey: this.readData().rowKey,
-        field: field2.id
-      });
-    };
-    emitFieldChange = (control, override) => {
-      const field2 = this.fields.find(control.dataset.fieldControl ?? "");
-      if (!field2) {
-        return;
-      }
-      const draft = override ?? readFieldControlDraft(field2, control);
-      const value2 = field2.input === "table" && field2.editable ? serializedTableRows(draft) : draft;
-      this.fields.record(field2.id, draft);
-      emitWidgetEvent(this.host, WIDGET_FIELD_CHANGE_EVENT, {
-        rowKey: this.readData().rowKey,
-        field: field2.id,
-        value: value2
-      });
-    };
-    afterFieldChange() {
-      this.refreshConditionalFields();
-    }
-    owns(event) {
-      const detail = event.composedPath().find((node) => node instanceof HTMLElement && node.localName === "cms-dashboard-w-detail");
-      return detail === this.host;
-    }
-    retryCmsUser(target2) {
-      const control = target2?.closest("[data-field-control]");
-      const field2 = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
-      if (field2?.input === "cms-user") {
-        this.host.querySelector("cms-dashboard-directory")?.retry();
-      }
-    }
-  }
-  function findEventTarget(event, selector) {
-    return event.composedPath().find((target2) => target2 instanceof HTMLElement && target2.matches(selector));
-  }
-
-  // src/components/admin/Resources/Dashboards/domain/drafts.ts
-  function remainingDraft(draft, submitted) {
-    return Object.fromEntries(Object.entries(draft).filter(([key, value2]) => !Object.hasOwn(submitted, key) || JSON.stringify(value2) !== JSON.stringify(submitted[key])));
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/fieldState.ts
-  class DetailFieldState {
-    container;
-    readBinding;
-    readData;
-    scopeKey = "";
-    values = {};
-    submittedTables = {};
-    acknowledged = null;
-    constructor(container, readBinding, readData) {
-      this.container = container;
-      this.readBinding = readBinding;
-      this.readData = readData;
-    }
-    get root() {
-      return this.container.host;
-    }
-    get draft() {
-      return this.values;
-    }
-    acknowledgeSavedFields(fields) {
-      const accepted = { ...fields };
-      for (const [id2, draft] of Object.entries(this.submittedTables)) {
-        if (Object.hasOwn(fields, id2) && JSON.stringify(serializedTableRows(draft)) === JSON.stringify(fields[id2])) {
-          accepted[id2] = draft;
-          delete this.submittedTables[id2];
-        }
-      }
-      this.acknowledged = { fields: accepted, resource: this.currentResource() };
-    }
-    draftForResource(resource) {
-      if (this.acknowledged && !Object.is(this.acknowledged.resource, resource)) {
-        this.values = remainingDraft(this.values, this.acknowledged.fields);
-        this.acknowledged = null;
-      }
-      return this.values;
-    }
-    acknowledgeDraft(submitted) {
-      this.values = remainingDraft(this.values, submitted);
-    }
-    syncScope(scopeKey) {
-      if (this.scopeKey === scopeKey) {
-        return;
-      }
-      this.scopeKey = scopeKey;
-      this.values = {};
-      this.acknowledged = null;
-      this.submittedTables = {};
-    }
-    clear() {
-      this.scopeKey = "";
-      this.values = {};
-      this.acknowledged = null;
-      this.submittedTables = {};
-    }
-    record(fieldId, value2) {
-      this.values[fieldId] = value2;
-    }
-    restoreField(fieldId, submitted, previous) {
-      if (!Object.hasOwn(this.values, fieldId) || Object.hasOwn(remainingDraft(this.values, { [fieldId]: submitted }), fieldId)) {
-        return;
-      }
-      this.record(fieldId, structuredClone(previous));
-    }
-    find(fieldId) {
-      return this.fields().find((field2) => field2.id === fieldId);
-    }
-    fields() {
-      const data = this.readData();
-      return [...data.main, ...data.aside].flatMap((section2) => section2.fields);
-    }
-    currentResource() {
-      return this.readBinding()?.resource;
-    }
-    currentFields() {
-      const fields = { ...this.values };
-      const fieldsById = new Map(this.fields().map((field2) => [field2.id, field2]));
-      for (const control of Array.from(this.root.querySelectorAll("[data-field-control]:not([data-operation-form] [data-field-control])"))) {
-        if (control.closest("cms-dashboard-w-detail") !== this.root) {
-          continue;
-        }
-        const field2 = fieldsById.get(control.dataset.fieldControl ?? "");
-        if (field2) {
-          fields[field2.id] = readFieldControlValue(field2, control);
-        }
-      }
-      for (const id2 of this.editableTableIds()) {
-        if (Object.hasOwn(fields, id2)) {
-          fields[id2] = serializedTableRows(fields[id2]);
-        }
-      }
-      return fields;
-    }
-    submissionFields() {
-      const submitted = this.currentFields();
-      for (const id2 of this.editableTableIds()) {
-        const field2 = this.find(id2);
-        const control = this.control(id2);
-        const draft = field2 && control?.localName === "cms-dashboard-table-field" ? readFieldControlDraft(field2, control) : this.values[id2];
-        if (draft !== undefined) {
-          this.record(id2, draft);
-          this.submittedTables[id2] = structuredClone(draft);
-        }
-      }
-      return submitted;
-    }
-    validate() {
-      const values = this.currentFields();
-      let invalid2 = null;
-      for (const field2 of this.fields()) {
-        const control = this.control(field2.id);
-        if (!control) {
-          continue;
-        }
-        this.syncRequiredValidity(field2, control, values[field2.id]);
-        invalid2 ??= invalidFieldControl(field2, control);
-      }
-      invalid2 ??= this.root.querySelector("[data-field-control][invalid]:not([data-operation-form] [data-field-control])");
-      if (invalid2) {
-        invalid2.closest("cms-shell-detail-body")?.reveal(invalid2);
-        invalid2.focus();
-      }
-      return invalid2 === null;
-    }
-    refreshRequiredValidity(control) {
-      const field2 = this.find(control.dataset.fieldControl ?? "");
-      if (!field2) {
-        return;
-      }
-      this.syncRequiredValidity(field2, control, readFieldControlValue(field2, control));
-      if (control.localName === "cms-dashboard-reorderable-field") {
-        validateReorderable(control, true);
-      }
-    }
-    control(fieldId) {
-      return Array.from(this.root.querySelectorAll("[data-field-control]:not([data-operation-form] [data-field-control])")).find((control) => control.dataset.fieldControl === fieldId && control.closest("cms-dashboard-w-detail") === this.root) ?? null;
-    }
-    editableTableIds() {
-      const widget = this.readBinding()?.widget;
-      return [...widget?.main ?? [], ...widget?.aside ?? []].flatMap((section2) => ("widget" in section2) ? [] : section2.fields.filter((field2) => field2.type === "table" && field2.editable).map((field2) => field2.id));
-    }
-    syncRequiredValidity(field2, control, value2) {
-      if (!field2.required) {
-        clearRequiredError(control);
-        return;
-      }
-      if (missingRequiredValue2(value2, field2.input)) {
-        control.dataset.dashboardRequiredInvalid = "true";
-        control.setAttribute("invalid", "");
-        control.setAttribute("aria-invalid", "true");
-        control.setAttribute("hint", "This field is required.");
-        control.setAttribute("hint-level", "error");
-        return;
-      }
-      clearRequiredError(control);
-    }
-  }
-  function missingRequiredValue2(value2, input) {
-    if (input === "checkbox") {
-      return value2 !== true;
-    }
-    if (value2 === null || value2 === undefined) {
-      return true;
-    }
-    if (typeof value2 === "string") {
-      return value2.trim() === "";
-    }
-    if (Array.isArray(value2)) {
-      return value2.length === 0;
-    }
-    return typeof value2 === "object" && Object.keys(value2).length === 0;
-  }
-  function clearRequiredError(control) {
-    if (control.dataset.dashboardRequiredInvalid !== "true") {
-      return;
-    }
-    delete control.dataset.dashboardRequiredInvalid;
-    control.removeAttribute("invalid");
-    control.removeAttribute("aria-invalid");
-    control.removeAttribute("hint");
-    control.removeAttribute("hint-level");
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-section/WSection.ts
-  class DashboardWSection extends CmsDetailSection {
-  }
-  if (!customElements.get("cms-dashboard-w-section")) {
-    customElements.define("cms-dashboard-w-section", DashboardWSection);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/base.css
-  var base_default = `:host {
-    display: block;
-}
-
-cms-shell-detail {
-    --w-detail-main-width: 720px;
-    --w-detail-aside-width: 300px;
-    --w-detail-gap: 16px;
-}
-
-.w-detail-main,
-.w-detail-aside {
-    display: grid;
-    gap: 16px;
-    min-width: 0;
-}
-
-.w-detail-main > slot,
-.w-detail-aside > slot,
-.w-detail-actions > slot {
-    display: contents;
-}
-
-.w-detail-main > slot::slotted(*) {
-    box-sizing: border-box;
-    max-width: 100%;
-    min-width: 0;
-    width: 100%;
-}
-
-.w-detail-main > slot::slotted([data-detail-ready]:not([data-detail-ready="true"])) {
-    display: none;
-}
-
-.w-detail-actions p9r-button,
-.w-detail-actions ::slotted(p9r-button) {
-    --_btn-padding-y: 0.48rem;
-    --_btn-padding-x: 0.82rem;
-    --_btn-font-size: 12px;
-    --_btn-radius: 6px;
-}
-
-.w-detail-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-}
-
-.w-detail-actions p9r-action-menu,
-::slotted(p9r-action-menu[slot="bound-actions"]) {
-    --action-menu-panel-min-width: 220px;
-}
-
-h4,
-p {
-    margin: 0;
-}
-
-p,
-dt,
-.readonly {
-    color: #66736f;
-}
-
-button[slot="back"] svg {
-    width: 17px;
-    height: 17px;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 2;
-}
-
-dl {
-    display: grid;
-    gap: 16px;
-    margin: 0;
-}
-
-.w-detail-field {
-    display: grid;
-    gap: 7px;
-    min-width: 0;
-}
-
-.w-detail-field[data-internal-label] {
-    gap: 0;
-}
-
-.w-detail-field[data-internal-label] dt {
-    display: none;
-}
-
-dt {
-    font-size: 11px;
-    font-weight: 750;
-    letter-spacing: 0;
-    text-transform: uppercase;
-}
-
-.w-detail-field[data-required]:not([data-internal-label]) dt {
-    align-items: baseline;
-    display: flex;
-    gap: 12px;
-    justify-content: space-between;
-}
-
-.w-detail-field[data-required]:not([data-internal-label]) dt::after {
-    color: var(--text-muted, #94a3b8);
-    content: "* Required";
-    flex-shrink: 0;
-    font-size: 10px;
-    font-weight: 650;
-    letter-spacing: 0;
-    text-transform: none;
-}
-
-.w-detail-field[data-required]:not([data-internal-label]):has([invalid]) dt::after {
-    color: var(--danger-base, #dc2626);
-}
-
-dd {
-    margin: 0;
-    min-width: 0;
-}
-
-.readonly,
-.detail-table-row > span {
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-.detail-image {
-    aspect-ratio: 1;
-    background: #f4f1ec;
-    border: 1px solid var(--border-default);
-    border-radius: 10px;
-    display: block;
-    object-fit: cover;
-    width: 100%;
-}
-
-.readonly-list {
-    display: grid;
-    gap: 4px;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-}
-
-.readonly-list li {
-    min-width: 0;
-}
-
-.readonly-empty {
-    color: #8a9692;
-    font-style: italic;
-}
-
-p9r-input,
-p9r-select,
-p9r-textarea,
-p9r-combobox,
-p9r-token-input {
-    width: 100%;
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/panel.css
-  var panel_default = `.panel-close,
-.panel-cancel { display: none; }
-
-:host([presentation="modal"]) {
-    display: block;
-    height: 100%;
-    min-height: 0;
-}
-:host([presentation="modal"]) button[slot="back"] { display: none; }
-:host([presentation="modal"]) .panel-close,
-:host([presentation="modal"]) .panel-cancel { display: inline-flex; }
-:host([presentation="modal"]) .w-detail-actions {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    width: 100%;
-}
-:host([presentation="modal"]) .panel-cancel { margin-inline-end: auto; }
-:host([presentation="modal"]) .w-detail-actions p9r-button,
-:host([presentation="modal"]) .w-detail-actions ::slotted(p9r-button) {
-    --_btn-padding-y: 0.65rem;
-    --_btn-padding-x: 1rem;
-    --_btn-font-size: 13px;
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/template.html
-  var template_default13 = `<cms-shell-detail>
-    <button type="button" slot="back" data-back aria-label="Back to table">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="4" y="5" width="16" height="14" rx="2"></rect>
-            <path d="M8 9h8"></path>
-            <path d="M8 13h5"></path>
-        </svg>
-    </button>
-    <span slot="title" data-title><slot name="bound-title"></slot></span>
-    <p9r-icon-button slot="actions" class="panel-close" type="button" variant="ghost" aria-label="Close details" data-back>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round" /></svg>
-    </p9r-icon-button>
-    <div slot="actions" class="w-detail-actions" data-actions>
-        <p9r-button class="panel-cancel" type="button" variant="ghost" data-back>Cancel</p9r-button>
-        <slot name="bound-actions"></slot>
-    </div>
-    <slot name="source-status" slot="body"></slot>
-    <slot name="bound-body" slot="body"><cms-shell-detail-body>
-        <div slot="main" class="w-detail-main" data-main><slot name="bound-main"></slot></div>
-        <slot name="main-extra" slot="main"></slot>
-        <div slot="aside" class="w-detail-aside" data-aside><slot name="bound-aside"></slot></div>
-        <slot name="aside-extra" slot="aside"></slot>
-    </cms-shell-detail-body></slot>
-</cms-shell-detail>
-
-<slot name="footer"></slot>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/index.ts
-  class DashboardWDetail extends l {
-    stopMedia;
-    stopForm;
-    configuration;
-    fields;
-    events;
-    constructor() {
-      super({ css: base_default + panel_default, template: template_default13 });
-      this.fields = new DetailFieldState(this.shadowRoot, () => this.readBinding(), () => this.operationData());
-      this.events = new DetailEvents(this, this.fields, () => this.operationData(), () => Wi(this));
-    }
-    configure(widget) {
-      this.configuration = widget;
-      this.setAttribute("data-declarative", "");
-      bindDetailContext(this, widget, (resource) => this.fields.draftForResource(resource));
-    }
-    readBinding() {
-      if (!this.configuration) {
-        return null;
-      }
-      const data = it(this);
-      const resource = this.configuration.source.itemPath ? valueAt(data, this.configuration.source.itemPath) : data;
-      return resource == null ? null : {
-        widget: this.configuration,
-        resource,
-        rowKey: this.dataset.rowKey ?? "",
-        sourceId: this.dataset.sourceId ?? ""
-      };
-    }
-    operationData() {
-      const binding = this.readBinding();
-      return binding ? detailData(binding.widget, binding.resource, binding.rowKey, this.fields.draft, {}, binding.sourceId, boundSchemas(this)) : { rowKey: "", eyebrow: "", title: "", actions: [], main: [], aside: [] };
-    }
-    applyLookupCreate(fieldId, value2, option) {
-      const control = this.fields.control(fieldId);
-      const lookup = control?.closest("cms-dashboard-lookup");
-      if (lookup && this.fields.find(fieldId)) {
-        const field2 = this.fields.find(fieldId);
-        const current = control;
-        this.fields.record(fieldId, field2.input === "tokens" ? [...new Set([...current.values ?? [], String(value2)])] : value2);
-        lookup.acceptCreatedOption(option);
-        Wi(this);
-      }
-    }
-    acknowledgeSavedFields(fields) {
-      this.fields.acknowledgeSavedFields(fields);
-    }
-    restoreField(field2, submitted, previous) {
-      this.fields.restoreField(field2, submitted, previous);
-      Wi(this);
-    }
-    applyFieldDraft(field2, value2) {
-      this.fields.record(field2, value2);
-      Wi(this);
-    }
-    hasUnsavedChanges() {
-      return Object.keys(this.fields.draft).length > 0;
-    }
-    currentFieldValues() {
-      return this.fields.currentFields();
-    }
-    static observedAttributes = ["data-row-key", "data-source-id"];
-    attributeChangedCallback() {
-      if (this.isConnected) {
-        this.syncScope();
-      }
-    }
-    connectedCallback() {
-      configureDetailPresentation(this);
-      this.syncScope();
-      this.stopMedia = connectMediaForms(this);
-      this.events.bind();
-      this.stopForm = connectDetailForm(this, () => this.fields.validate(), () => this.fields.draft, (snapshot) => this.fields.acknowledgeDraft(snapshot), this.configuration?.create && this.dataset.rowKey === "__new__" ? this.configuration.save : undefined);
-    }
-    disconnectedCallback() {
-      this.events.unbind();
-      this.stopMedia?.();
-      this.stopMedia = undefined;
-      this.stopForm?.();
-      this.stopForm = undefined;
-      this.fields.clear();
-      releaseMediaFiles(this);
-    }
-    syncScope() {
-      this.fields.syncScope(JSON.stringify([this.dataset.sourceId ?? "", this.configuration?.id, this.dataset.rowKey ?? ""]));
-    }
-  }
-  if (!customElements.get("cms-dashboard-w-detail")) {
-    customElements.define("cms-dashboard-w-detail", DashboardWDetail);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/WRow.ts
-  var template3 = document.createElement("template");
-  template3.innerHTML = `
-    <style>
-        :host {
-            display: block;
-        }
-
-        .row {
-            display: grid;
-            grid-template-columns: var(--dashboard-table-columns, 46px 1fr);
-            align-items: center;
-            min-height: 54px;
-            border-top: 1px solid #e8ecea;
-            cursor: default;
-            min-width: 0;
-        }
-
-        :host([collection]) .row {
-            cursor: pointer;
-        }
-
-        :host([collection]) .row:hover,
-        :host([selected]) .row {
-            background: #f3f7f5;
-        }
-
-        .check {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 0;
-        }
-
-        input {
-            margin: 0;
-        }
-
-        slot {
-            display: contents;
-        }
-
-        ::slotted(cms-dashboard-w-cell) {
-            min-width: 0;
-            padding: 12px 16px;
-        }
-    </style>
-    <div class="row" role="row" tabindex="0">
-        <span class="check" role="cell">
-            <input type="checkbox" data-check aria-label="Select row">
-        </span>
-        <slot></slot>
-    </div>
-`;
-
-  class DashboardWRow extends HTMLElement {
-    onClick = (event) => {
-      if (event.target?.closest("input")) {
-        return;
-      }
-      this.select();
-    };
-    onKeydown = (event) => {
-      const key = event instanceof KeyboardEvent ? event.key : "";
-      if (key !== "Enter" && key !== " ") {
-        return;
-      }
-      event.preventDefault();
-      this.select();
-    };
-    constructor() {
-      super();
-      this.attachShadow({ mode: "open" }).append(template3.content.cloneNode(true));
-    }
-    connectedCallback() {
-      this.shadowRoot?.querySelector("[data-check]")?.setAttribute("aria-label", `Select row ${this.rowKey}`);
-      this.shadowRoot?.querySelector(".row")?.addEventListener("click", this.onClick);
-      this.shadowRoot?.querySelector("[data-check]")?.addEventListener("change", this.onCheck);
-      this.shadowRoot?.querySelector(".row")?.addEventListener("keydown", this.onKeydown);
-    }
-    disconnectedCallback() {
-      this.shadowRoot?.querySelector(".row")?.removeEventListener("click", this.onClick);
-      this.shadowRoot?.querySelector("[data-check]")?.removeEventListener("change", this.onCheck);
-      this.shadowRoot?.querySelector(".row")?.removeEventListener("keydown", this.onKeydown);
-    }
-    get rowKey() {
-      return this.getAttribute("row-key") ?? "";
-    }
-    get collection() {
-      return this.getAttribute("collection") ?? "";
-    }
-    get checked() {
-      return this.shadowRoot?.querySelector("[data-check]")?.checked ?? false;
-    }
-    set checked(value2) {
-      const input = this.shadowRoot?.querySelector("[data-check]");
-      if (input) {
-        input.checked = value2;
-      }
-    }
-    onCheck = () => {
-      this.dispatchEvent(new CustomEvent("cms-dashboard-row:check", { bubbles: true }));
-    };
-    select() {
-      if (!this.collection || !this.rowKey) {
-        return;
-      }
-      emitWidgetEvent(this, WIDGET_ROW_SELECT_EVENT, { collection: this.collection, rowKey: this.rowKey });
-    }
-  }
-  if (!customElements.get("cms-dashboard-w-row")) {
-    customElements.define("cms-dashboard-w-row", DashboardWRow);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/WCell.ts
-  var template4 = document.createElement("template");
-  template4.innerHTML = `
-    <style>
-        :host {
-            display: block;
-            min-width: 0;
-            color: #0f1f1a;
-        }
-
-        .cell {
-            display: grid;
-            gap: 2px;
-            min-width: 0;
-        }
-
-        .title,
-        [data-formatted] {
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        [data-formatted][hidden],
-        :host([data-display-format]) slot {
-            display: none;
-        }
-
-        :host([primary]) .title {
-            font-weight: 700;
-        }
-
-        small {
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            color: #66736f;
-        }
-
-        small:empty {
-            display: none;
-        }
-
-        :host([tone="badge"]) .title {
-            justify-self: start;
-            border-radius: 999px;
-            background: #edf7f0;
-            color: #105d3e;
-            font-size: 12px;
-            font-weight: 750;
-            padding: 3px 8px;
-        }
-
-        :host([tone="muted"]) {
-            color: #66736f;
-        }
-    </style>
-    <span class="cell">
-        <span class="title"><slot></slot><span data-formatted hidden></span></span>
-        <small data-meta></small>
-    </span>
-`;
-
-  class DashboardWCell extends HTMLElement {
-    static get observedAttributes() {
-      return ["data-display-currency", "data-display-format", "data-display-value", "meta"];
-    }
-    constructor() {
-      super();
-      this.attachShadow({ mode: "open" }).append(template4.content.cloneNode(true));
-    }
-    connectedCallback() {
-      this.render();
-    }
-    attributeChangedCallback() {
-      this.render();
-    }
-    render() {
-      const meta = this.shadowRoot?.querySelector("[data-meta]");
-      if (meta) {
-        meta.textContent = this.getAttribute("meta") ?? "";
-      }
-      const formatted = this.shadowRoot?.querySelector("[data-formatted]");
-      const format = this.dataset.displayFormat;
-      if (formatted) {
-        const active = format === "date" || format === "money";
-        formatted.hidden = !active;
-        formatted.textContent = active ? formatDashboardValue(this.dataset.displayValue, format, {
-          currency: this.dataset.displayCurrency
-        }) : "";
-        if (active) {
-          formatted.title = formatted.textContent;
-        } else {
-          formatted.removeAttribute("title");
-        }
-      }
-    }
-  }
-  if (!customElements.get("cms-dashboard-w-cell")) {
-    customElements.define("cms-dashboard-w-cell", DashboardWCell);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/style.css
-  var style_default12 = `:host {
-    display: block;
-    min-width: 0;
-    --dashboard-table-columns: 46px 1fr;
-}
-
-.w-table-shell {
-    min-width: 0;
-    overflow: clip;
-    border: 1px solid #e3e8e5;
-    border-radius: 7px;
-    background: #fff;
-}
-
-:host([embedded]) .w-table-shell {
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-}
-
-.w-table-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 14px 16px;
-    border-bottom: 1px solid #e8ecea;
-}
-
-.w-table-header[hidden] {
-    display: none;
-}
-
-.w-table-header h3,
-.w-table-header p {
-    margin: 0;
-}
-
-.w-table-header p,
-small,
-.muted {
-    color: #66736f;
-}
-
-.w-table-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.w-table-actions ::slotted(p9r-button) {
-    --_btn-padding-y: 0.48rem;
-    --_btn-padding-x: 0.82rem;
-    --_btn-font-size: 12px;
-    --_btn-radius: 6px;
-}
-
-.w-table-frame {
-    min-width: 0;
-    overflow: auto;
-}
-
-.w-table-grid {
-    min-width: 0;
-}
-
-.w-table-head {
-    display: grid;
-    grid-template-columns: var(--dashboard-table-columns);
-    align-items: center;
-    background: #f7f8f7;
-}
-
-:host([embedded]) .w-table-head {
-    border-radius: 6px 6px 0 0;
-}
-
-.w-table-head span,
-.w-table-head ::slotted([slot="columns"]) {
-    color: #3d4a46;
-    font-size: 12px;
-    font-weight: 750;
-    padding: 12px 16px;
-    text-align: left;
-}
-
-.check-cell {
-    display: flex;
-    justify-content: center;
-    padding-inline: 0;
-}
-
-.w-table-body {
-    min-width: 0;
-}
-
-slot {
-    display: contents;
-}
-
-.w-table-empty {
-    margin: 0;
-    padding: 22px 16px;
-    color: #66736f;
-}
-
-:host([embedded]) .w-table-empty {
-    padding-inline: 0;
-}
-
-
-::slotted(form[slot="filters"]) {
-    margin: 0;
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/template.html
-  var template_default14 = `<section class="w-table-shell">
-    <header class="w-table-header" data-header>
-        <div>
-            <h3 data-title></h3>
-            <p data-subtitle></p>
-        </div>
-        <div class="w-table-actions" data-actions><slot name="actions"></slot></div>
-    </header>
-
-    <slot name="filters"></slot>
-
-    <div class="w-table-frame">
-        <div class="w-table-grid" role="table">
-            <div class="w-table-head" role="row" data-head-row>
-                <span class="check-cell" role="columnheader">
-                    <input type="checkbox" aria-label="Select all rows" data-select-all>
-                </span>
-                <slot name="columns"></slot>
-            </div>
-            <div class="w-table-body" data-body>
-                <slot></slot>
-            </div>
-        </div>
-        <p class="w-table-empty" data-empty hidden>No rows.</p>
-    </div>
-</section>
-
-<slot name="footer"></slot>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/WTable.ts
-  class DashboardWTable extends l {
-    rowsObserver = new MutationObserver(() => this.syncPresentation());
-    constructor() {
-      super({ css: style_default12, template: template_default14 });
-    }
-    set selected(value2) {
-      this.setAttribute("data-selected", value2);
-    }
-    static observedAttributes = ["heading", "subtitle", "data-selected"];
-    attributeChangedCallback() {
-      this.syncPresentation();
-    }
-    connectedCallback() {
-      this.rowsObserver.observe(this, { childList: true, subtree: true });
-      this.shadowRoot.querySelector("[data-select-all]")?.addEventListener("change", this.onSelectAll);
-      this.addEventListener("click", this.onClick);
-      this.addEventListener("cms-dashboard-row:check", this.onSelectionChange);
-      this.addEventListener("submit", this.onFilterSubmit);
-      this.syncPresentation();
-    }
-    disconnectedCallback() {
-      this.rowsObserver.disconnect();
-      this.shadowRoot?.querySelector("[data-select-all]")?.removeEventListener("change", this.onSelectAll);
-      this.removeEventListener("click", this.onClick);
-      this.removeEventListener("cms-dashboard-row:check", this.onSelectionChange);
-      this.removeEventListener("submit", this.onFilterSubmit);
-    }
-    syncPresentation() {
-      setText(this.shadowRoot, "[data-title]", this.getAttribute("heading") ?? "");
-      setText(this.shadowRoot, "[data-subtitle]", this.getAttribute("subtitle") ?? "");
-      this.shadowRoot.querySelector("[data-header]").hidden = !this.getAttribute("heading") && !this.getAttribute("subtitle") && !this.querySelector('[slot="actions"]');
-      const rows = this.rows();
-      for (const row of rows) {
-        row.toggleAttribute("selected", Boolean(this.dataset.selected && row.rowKey === this.dataset.selected));
-      }
-      this.shadowRoot.querySelector("[data-empty]").hidden = rows.length > 0;
-    }
-    rows() {
-      return Array.from(this.querySelectorAll("cms-dashboard-w-row"));
-    }
-    onClick = (event) => {
-      const target2 = event.composedPath().find((node) => node instanceof HTMLElement && (node.hasAttribute("data-action") || node.hasAttribute("data-filter-clear")));
-      if (!target2 || target2.closest("cms-dashboard-w-table") !== this) {
-        return;
-      }
-      if (target2.hasAttribute("data-filter-clear")) {
-        for (const control of this.filterControls()) {
-          control.value = "";
-        }
-        this.emitFilters({});
-        return;
-      }
-      if (target2.dataset.confirm && !window.confirm(target2.dataset.confirm)) {
-        return;
-      }
-      if (target2.dataset.action) {
-        emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
-          action: target2.dataset.action,
-          widget: target2.dataset.widget,
-          target: target2.dataset.target
-        });
-      }
-    };
-    get selectedKeys() {
-      return this.rows().filter((row) => row.checked).map((row) => row.rowKey);
-    }
-    onSelectionChange = () => {
-      Wi(this);
-    };
-    onSelectAll = (event) => {
-      const checked = Boolean(event.target?.checked);
-      for (const row of this.rows()) {
-        row.checked = checked;
-      }
-      this.onSelectionChange();
-    };
-    onFilterSubmit = (event) => {
-      if (!(event.target instanceof HTMLFormElement) || !event.target.hasAttribute("data-filters")) {
-        return;
-      }
-      event.preventDefault();
-      const values = {};
-      for (const control of this.filterControls()) {
-        const value2 = control.value.trim();
-        if (value2) {
-          values[control.dataset.filterId] = value2;
-        }
-      }
-      this.emitFilters(values);
-    };
-    filterControls() {
-      return Array.from(this.querySelectorAll("[data-filter-id]"));
-    }
-    emitFilters(filters) {
-      emitWidgetEvent(this, WIDGET_FILTER_CHANGE_EVENT, { widget: this.dataset.widgetId ?? "", filters });
-    }
-  }
-  if (!customElements.get("cms-dashboard-w-table")) {
-    customElements.define("cms-dashboard-w-table", DashboardWTable);
-  }
-
-  // src/static/admin/_content/sources/_runtime/forms/index.html
-  var forms_default = `<template data-form-part="save">
-    <form slot="bound-body" data-detail-save cms-source-trigger="submit" cms-source-inherit-query="false" cms-source-serialization="typed-json" cms-source-success-reset="false">
-        <cms-shell-detail-body>
-            <p9r-stack slot="main" gap="md" trim data-form-main></p9r-stack>
-            <p9r-stack slot="aside" gap="md" trim data-form-aside></p9r-stack>
-        </cms-shell-detail-body>
-        <p9r-toast-stack position="bottom-right">
-            <p9r-toast cms-condition="$source.error" type="error" role="alert">{{ $source.message }}</p9r-toast>
-        </p9r-toast-stack>
-    </form>
-</template>
-<template data-form-part="submit"><p9r-button type="submit" color="primary" variant="filled"></p9r-button></template>
-<template data-form-part="modal">
-    <p9r-modal>
-        <span slot="title"></span>
-        <form cms-source-trigger="submit" cms-source-inherit-query="false" cms-source-serialization="typed-json" cms-source-success-reset="false">
-            <p9r-stack gap="md" data-operation-fields></p9r-stack>
-            <p9r-toast-stack position="bottom-right">
-                <p9r-toast cms-condition="$source.error" type="error" role="alert">{{ $source.message }}</p9r-toast>
-            </p9r-toast-stack>
-        </form>
-    </p9r-modal>
-</template>
-<template data-form-part="opener"><p9r-open-modal role="presentation" tabindex="-1"><p9r-button type="button" variant="outlined"></p9r-button></p9r-open-modal></template>
-
-<template data-form-part="view-opener"><p9r-button type="button" variant="outlined" data-view-create></p9r-button></template>
-<template data-form-part="detail-modal"><p9r-modal placement="end" content-layout="contained" no-close close-on-success="false" data-detail-modal></p9r-modal></template>
-<template data-form-part="lookup-create">
-    <p9r-icon-button slot="label-actions" type="button" variant="ghost" size="sm" data-lookup-create>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-linecap="round" /></svg>
-    </p9r-icon-button>
-</template>
-<template data-form-part="lookup-edit">
-    <p9r-icon-button slot="label-actions" type="button" variant="ghost" size="sm" data-lookup-edit>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15z" stroke-linecap="round" stroke-linejoin="round" /></svg>
-    </p9r-icon-button>
-</template>
-`;
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/composition.ts
-  var sequence2 = 0;
-  function formId() {
-    return `dashboard-form-${++sequence2}`;
-  }
-  function formPart(name) {
-    const template5 = document.createElement("template");
-    template5.innerHTML = forms_default;
-    return template5.content.querySelector(`[data-form-part="${name}"]`).content.firstElementChild.cloneNode(true);
-  }
-  function configureForm(form, operation, context) {
-    const sourceId = operation.sourceId ?? context.dashboard.source;
-    const group = (context.groups ?? [context.group]).find((candidate) => candidate.source.id === sourceId);
-    const endpoint = group?.endpoints.find((candidate) => candidate.endpointId === operation.endpoint);
-    if (!endpoint || !["POST", "PUT", "PATCH", "DELETE"].includes(endpoint.method.toUpperCase())) {
-      throw new Error(`Form endpoint ${operation.endpoint} must declare a request-body method.`);
-    }
-    form.setAttribute("id", formId());
-    form.setAttribute("cms-source", `${sourceUrl(sourceId, operation, {}).href} as operationResult`);
-    form.setAttribute("cms-source-method", endpoint.method);
-    const fields = [...operation.hiddenFields ?? []];
-    for (const field2 of fields) {
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = field2.name;
-      input.setAttribute("cms-form-value-type", field2.type);
-      input.required = field2.empty !== "omit";
-      if (field2.empty === "omit") {
-        input.setAttribute("cms-form-empty", "omit");
-      }
-      const value2 = field2.value;
-      input.setAttribute("value", technicalValue(value2));
-      form.prepend(input);
-    }
-  }
-  function submissionName(path, prefix) {
-    const parts = path.replace(/\[([^\]]*)\]/g, ".$1").split(".");
-    const root = prefix ? submissionName(prefix) : parts.shift();
-    return root + parts.map((part) => `[${part}]`).join("");
-  }
-  function technicalValue(value2) {
-    if (typeof value2 !== "string" || !value2.startsWith("$")) {
-      return String(value2);
-    }
-    const roots = {
-      resource: "detailResource",
-      selection: "detailSelection",
-      row: "detailRow"
-    };
-    const match = /^\$(resource|selection|row)(\..+)?$/.exec(value2);
-    if (!match) {
-      throw new Error("A technical field must use a stable resource or selection value.");
-    }
-    return `{{ ${roots[match[1]]}${match[2] ?? ""} }}`;
-  }
-
-  // src/static/admin/_content/sources/_runtime/detail/users.html
-  var users_default = `<template data-users="source">
-    <cms-dashboard-directory cms-source="{{ detailUsersUrl }}" hidden>
-        <span cms-condition="$source.loading" hidden></span>
-        <span cms-condition="$source.error || $source.refreshError" hidden></span>
-    </cms-dashboard-directory>
-</template>
-<template data-users="option">
-    <option value="{{ cmsUserOption.value }}">{{ cmsUserOption.label }}</option>
-</template>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/Directory.ts
-  var sequence3 = 0;
-
-  class DashboardDirectory extends HTMLElement {
-    failed = false;
-    queued = false;
-    connectedCallback() {
-      this.setAttribute("cms-reload-on", `dashboard:directory:${++sequence3}`);
-      hc(this, (value2) => {
-        this.failed = Boolean(value2 && !Array.isArray(value2) && typeof value2 === "object" && "status" in value2);
-        this.refreshOwner();
-        return {};
-      });
-      this.refreshOwner();
-    }
-    retry() {
-      if (this.failed) {
-        this.failed = false;
-        this.ownerDocument.dispatchEvent(new Event(this.getAttribute("cms-reload-on")));
-      }
-    }
-    refreshOwner() {
-      if (this.queued) {
-        return;
-      }
-      this.queued = true;
-      queueMicrotask(() => {
-        this.queued = false;
-        const owner = this.closest("cms-dashboard-w-detail");
-        if (this.isConnected && owner) {
-          Wi(owner);
-        }
-      });
-    }
-  }
-  customElements.define("cms-dashboard-directory", DashboardDirectory);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/users.ts
-  function directoryElement() {
-    return declaration("source");
-  }
-  function composeUserOptions(control, id2) {
-    const option = declaration("option");
-    option.setAttribute("cms-repeat", `detailUsersOptions.${id2} as cmsUserOption`);
-    control.setAttribute("cms-bind-boolean-invalid", "detailUsersFailed");
-    control.setAttribute("hint", "{{ detailUsersHint }}");
-    control.setAttribute("hint-level", "error");
-    control.setAttribute("placeholder", "");
-    control.append(option);
-  }
-  function declaration(kind) {
-    const host = document.createElement("template");
-    host.innerHTML = users_default;
-    return host.content.querySelector(`[data-users="${kind}"]`).content.firstElementChild.cloneNode(true);
-  }
-
-  // src/static/admin/_content/sources/_runtime/detail/schema.html
-  var schema_default = `<span data-schema-state="loading">Loading dynamic fields…</span>
-<span data-schema-state="error">Dynamic fields are temporarily unavailable. Existing values are preserved.</span>
-<span data-schema-state="empty">No dynamic fields are configured.</span>
-<div data-schema-state="ready">
-    <cms-dashboard-schema-row data-schema-row>
-        <p9r-input cms-condition="schemaRow.text" type="{{ schemaRow.inputType }}" step="any"
-            data-schema-key="{{ schemaRow.id }}" label="{{ schemaRow.label }}" value="{{ schemaRow.value }}"
-            cms-bind-boolean-required="schemaRow.required"></p9r-input>
-        <p9r-select cms-condition="schemaRow.select" data-schema-key="{{ schemaRow.id }}"
-            label="{{ schemaRow.label }}" value="{{ schemaRow.value }}" cms-bind-boolean-required="schemaRow.required">
-            <option cms-condition="schemaRow.placeholder" value="" disabled>Select an option</option>
-            <option cms-repeat="schemaRow.options as schemaOption" value="{{ schemaOption.value }}">{{ schemaOption.label }}</option>
-        </p9r-select>
-        <label cms-condition="schemaRow.checkbox" cms-bind-boolean-data-required="schemaRow.required">
-            <input type="checkbox" data-schema-key="{{ schemaRow.id }}" cms-bind-boolean-checked="schemaRow.checked"
-                aria-label="{{ schemaRow.label }}" aria-required="{{ schemaRow.required }}">
-            <span>{{ schemaRow.label }}</span>
-        </label>
-        <span cms-condition="schemaRow.unit" data-schema-unit>{{ schemaRow.unit }}</span>
-    </cms-dashboard-schema-row>
-</div>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/Source.ts
-  class DashboardSchemaSource extends HTMLElement {
-    static observedAttributes = ["request-base"];
-    status = "loading";
-    timer;
-    queued = false;
-    connectedCallback() {
-      hc(this, (value2) => {
-        this.status = value2 === undefined ? "loading" : Object.is(value2, it(this)) ? "ready" : "error";
-        this.refreshOwner();
-        return {};
-      });
-      this.updateUrl(false);
-    }
-    disconnectedCallback() {
-      clearTimeout(this.timer);
-    }
-    attributeChangedCallback(_name, before, after) {
-      if (before !== after && this.isConnected) {
-        this.updateUrl(Boolean(before && !before.includes("{{")));
-      }
-    }
-    updateUrl(debounce) {
-      clearTimeout(this.timer);
-      const url = this.getAttribute("request-base");
-      this.setAttribute("cms-source", "");
-      if (!url || url.includes("{{")) {
-        this.status = "ready";
-        Pd(this, []);
-        this.refreshOwner();
-        return;
-      }
-      this.status = "loading";
-      this.refreshOwner();
-      const activate = () => {
-        this.setAttribute("cms-source", `${url} as schemaPayload`);
-      };
-      if (debounce) {
-        this.timer = setTimeout(activate, 250);
-      } else {
-        activate();
-      }
-    }
-    refreshOwner() {
-      if (this.queued) {
-        return;
-      }
-      this.queued = true;
-      queueMicrotask(() => {
-        this.queued = false;
-        const owner = this.closest("cms-dashboard-w-detail");
-        if (this.isConnected && owner) {
-          Wi(owner);
-        }
-      });
-    }
-  }
-  customElements.define("cms-dashboard-schema-source", DashboardSchemaSource);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/field.css
-  var field_default = `:host { display: block; min-width: 0; }
-:host(cms-dashboard-schema-row) { display: grid; }
-slot { display: contents; }
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.grid ::slotted([data-schema-state="ready"]) { display: contents; }
-.grid ::slotted([data-schema-state]) { color: #66736f; font-size: 12px; }
-.grid ::slotted([data-schema-state="error"]) { color: #8a1f12; }
-.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
-.row ::slotted(p9r-input), .row ::slotted(p9r-select) { width: 100%; }
-.row ::slotted([data-schema-unit]) {
-    align-items: center; background: #f3f7f5; border: 1px solid #cfd8d4;
-    border-radius: 7px; color: #66736f; display: inline-flex; font-size: 12px;
-    font-weight: 750; justify-content: center; min-height: 36px; min-width: 44px; padding: 0 10px 9px;
-}
-.row ::slotted(label) {
-    align-items: center; color: #16231f; display: flex; font-size: 13px;
-    font-weight: 650; gap: 8px; min-height: 36px;
-}
-.row ::slotted(label[data-required])::after {
-    color: var(--text-muted, #94a3b8); content: "* Required";
-    flex-shrink: 0; font-size: 10px; font-weight: 650; letter-spacing: 0; margin-inline-start: auto;
-}
-.row ::slotted(label[data-required]:has([invalid]))::after { color: var(--danger-base, #dc2626); }
-@media (max-width: 720px) { .grid { grid-template-columns: minmax(0, 1fr); } }
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/Field.ts
-  class SchemaField extends l {
-    static formAssociated = true;
-    internals;
-    get form() {
-      return this.internals.form;
-    }
-    get value() {
-      const detail = this.closest("cms-dashboard-w-detail");
-      return detail?.currentFieldValues()[this.dataset.fieldControl ?? ""] ?? {};
-    }
-    constructor() {
-      super({ css: field_default, template: '<div class="grid"><slot></slot></div>' });
-      this.internals = this.attachInternals();
-    }
-  }
-
-  class SchemaRow extends l {
-    constructor() {
-      super({ css: field_default, template: '<div class="row"><slot></slot></div>' });
-    }
-  }
-  customElements.define("cms-dashboard-schema-field", SchemaField);
-  customElements.define("cms-dashboard-schema-row", SchemaRow);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/composition.ts
-  function schemaSource(field2) {
-    const source2 = document.createElement("cms-dashboard-schema-source");
-    source2.hidden = true;
-    source2.setAttribute("cms-source", "");
-    source2.setAttribute("field-id", field2.id);
-    source2.setAttribute("request-base", `{{ detailSchemaUrls.${field2.id} }}`);
-    if (field2.schema.itemsPath) {
-      source2.setAttribute("items-path", field2.schema.itemsPath);
-    }
-    return source2;
-  }
-  function composeSchema(control, field2) {
-    const template5 = document.createElement("template");
-    template5.innerHTML = schema_default;
-    const root = `detailSchemas.${field2.id}`;
-    for (const state of ["loading", "error", "empty", "ready"]) {
-      const element = template5.content.querySelector(`[data-schema-state="${state}"]`);
-      element.setAttribute("cms-condition", state === "empty" ? `${root}.status == 'ready' && ${root}.empty` : `${root}.status == '${state}'`);
-    }
-    template5.content.querySelector("[data-schema-row]").setAttribute("cms-repeat", `${root}.rows as schemaRow`);
-    control.append(template5.content);
-  }
-
-  // src/static/admin/_content/sources/_runtime/detail/table.html
-  var table_default2 = `<template data-table-template="head"><cms-dashboard-table-row data-table-head></cms-dashboard-table-row></template>
-<template data-table-template="row"><cms-dashboard-table-row data-table-row data-table-index="{{ tableRow.index }}"></cms-dashboard-table-row></template>
-<template data-table-template="cell"><span></span></template>
-<template data-table-template="text"><p9r-input></p9r-input></template>
-<template data-table-template="select"><p9r-select></p9r-select></template>
-<template data-table-template="combobox"><p9r-combobox></p9r-combobox></template>
-<template data-table-template="tokens"><p9r-token-input creatable></p9r-token-input></template>
-<template data-table-template="option"><option value="{{ tableOption.value }}">{{ tableOption.label }}</option></template>
-<template data-table-template="add"><button type="button" data-table-add>Add row</button></template>
-<template data-table-template="remove"><button type="button" data-table-remove>Remove</button></template>
-
-<template data-table-template="identity"><input type="hidden" data-table-row-key></template>
-`;
-
-  // src/static/admin/_content/sources/_runtime/detail/lookup.html
-  var lookup_default = `<template data-lookup="states">
-    <span hidden cms-condition="$source.loading"></span>
-    <span hidden cms-condition="$source.error || $source.refreshError"></span>
-</template>
-<template data-lookup="options">
-    <option cms-repeat="lookupOptions as lookupOption" value="{{ lookupOption.value }}">{{ lookupOption.label }}</option>
-</template>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/options.ts
-  function lookupPage(host, payload) {
-    const lookup = {
-      endpoint: "",
-      valuePath: host.getAttribute("value-path") ?? "id",
-      labelPath: host.getAttribute("label-path") ?? "name",
-      itemsPath: host.getAttribute("items-path") || undefined
-    };
-    const items = itemsFrom(payload, lookup);
-    const options = items.flatMap((item) => option(item, lookup));
-    const totalPath = host.getAttribute("total-path");
-    const totalValue = totalPath ? valueAt(payload, totalPath) : undefined;
-    const parsedTotal = Number(totalValue);
-    const total = Number.isFinite(parsedTotal) && parsedTotal >= 0 ? parsedTotal : undefined;
-    return { options, received: items.length, total };
-  }
-  function selectedLookupOptions(host) {
-    const parent = host.closest("cms-dashboard-w-detail");
-    const data = parent ? it(parent) : undefined;
-    const resourcePath = host.getAttribute("resource-path");
-    const resource = resourcePath ? valueAt(data, resourcePath) : data;
-    const expression = host.getAttribute("selected-expression");
-    if (!expression || !isSafeDashboardExpression(expression, ["resource"], true)) {
-      return [];
-    }
-    const items = resolveExpression(expression, { resource });
-    const selected2 = new Set((host.getAttribute("selected-value") ?? "").split(","));
-    const lookup = {
-      valuePath: host.getAttribute("value-path") ?? "id",
-      labelPath: host.getAttribute("label-path") ?? "name"
-    };
-    return (Array.isArray(items) ? items : [items]).flatMap((item) => option(item, lookup, false).filter((entry) => selected2.has(entry.value)));
-  }
-  function distinctOptions(options) {
-    const seen = new Set;
-    return options.filter((option) => {
-      if (seen.has(option.value)) {
-        return false;
-      }
-      seen.add(option.value);
-      return true;
-    });
-  }
-  function option(item, lookup, fallback = true) {
-    const value2 = textAt(item, lookup.valuePath);
-    const label2 = textAt(item, lookup.labelPath, fallback ? value2 : "");
-    return value2 && label2 ? [{ value: value2, label: label2 }] : [];
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/Lookup.ts
-  var sequence4 = 0;
-
-  class DashboardLookup extends HTMLElement {
-    static observedAttributes = ["request-base", "selected-value"];
-    timer;
-    query = "";
-    queued = false;
-    sharedContext = {};
-    offset = 0;
-    received = 0;
-    acceptedOffset = 0;
-    pending = false;
-    hasMore = false;
-    previous;
-    options = [];
-    created = [];
-    declared = [];
-    connectedCallback() {
-      this.declared = Array.from(this.querySelectorAll(":scope > [data-static-options] option")).map((option2) => ({ value: option2.value, label: option2.textContent ?? option2.value }));
-      this.setAttribute("cms-reload-on", `dashboard:lookup:${++sequence4}`);
-      hc(this, (value2) => this.context(value2));
-      this.addEventListener("combobox-search", this.onSearch);
-      this.addEventListener("combobox-load-more", this.onMore);
-      this.updateUrl();
-      if (!this.getAttribute("cms-source")) {
-        Pd(this, {});
-      }
-    }
-    disconnectedCallback() {
-      clearTimeout(this.timer);
-      this.removeEventListener("combobox-search", this.onSearch);
-      this.removeEventListener("combobox-load-more", this.onMore);
-    }
-    attributeChangedCallback(name, before, after) {
-      if (before === after || !this.isConnected) {
-        return;
-      }
-      if (name === "request-base") {
-        clearTimeout(this.timer);
-        this.query = "";
-        this.offset = 0;
-        this.updateUrl();
-      } else {
-        Wi(this);
-      }
-    }
-    acceptCreatedOption(option2) {
-      this.created = distinctOptions([option2, ...this.created]);
-      Wi(this);
-    }
-    context(rendered) {
-      if (rendered !== undefined) {
-        this.pending = false;
-      }
-      const payload = it(this);
-      if (payload !== undefined && !Object.is(payload, this.previous)) {
-        this.previous = payload;
-        this.acceptedOffset = this.offset;
-        const page = lookupPage(this, payload);
-        this.options = distinctOptions(this.offset ? [...this.options, ...page.options] : page.options);
-        this.received = page.received;
-        this.hasMore = Boolean(this.getAttribute("offset-params")) && (page.total === undefined ? page.received >= 25 : this.offset + page.received < page.total);
-      }
-      const context = {
-        lookupValue: this.getAttribute("selected-value") ?? "",
-        lookupOptions: distinctOptions([
-          ...this.created,
-          ...this.declared,
-          ...this.options,
-          ...selectedLookupOptions(this)
-        ]),
-        lookupHasMore: this.hasMore,
-        lookupLoading: this.pending
-      };
-      const name = this.getAttribute("context-name");
-      if (name) {
-        this.sharedContext = context;
-        this.refreshOwner();
-      }
-      return context;
-    }
-    updateUrl(retry = false) {
-      const base = this.getAttribute("request-base");
-      if (!base || base.includes("{{")) {
-        this.offset = 0;
-        this.setAttribute("cms-source", "");
-        Pd(this, {});
-        return;
-      }
-      const url = new URL(base, this.ownerDocument.location.href);
-      for (const [attribute, value2] of [
-        ["search-params", this.query],
-        ["offset-params", String(this.offset)]
-      ]) {
-        for (const key of (this.getAttribute(attribute) ?? "").split(" ").filter(Boolean)) {
-          if (attribute === "search-params" && value2 === "") {
-            url.searchParams.delete(key);
-          } else {
-            url.searchParams.set(key, value2);
-          }
-        }
-      }
-      const source2 = `${url.pathname}${url.search} as lookupData`;
-      if (this.getAttribute("cms-source") !== source2) {
-        this.pending = true;
-        this.setAttribute("cms-source", source2);
-      } else if (retry) {
-        this.pending = true;
-        this.ownerDocument.dispatchEvent(new Event(this.getAttribute("cms-reload-on")));
-      }
-    }
-    onSearch = (event) => {
-      if (!this.ownsControl(event) || !this.getAttribute("search-params")) {
-        return;
-      }
-      event.stopPropagation();
-      const query3 = event.detail?.query;
-      clearTimeout(this.timer);
-      this.timer = setTimeout(() => {
-        this.query = typeof query3 === "string" ? query3.slice(0, 200) : "";
-        this.offset = 0;
-        this.updateUrl(true);
-      }, 250);
-    };
-    onMore = (event) => {
-      if (!this.ownsControl(event)) {
-        return;
-      }
-      event.stopPropagation();
-      if (this.hasMore && !this.pending) {
-        this.offset = this.acceptedOffset + this.received;
-        this.updateUrl(true);
-      }
-    };
-    ownsControl(event) {
-      return !this.hasAttribute("context-name") || event.target === this;
-    }
-    refreshOwner() {
-      if (this.queued) {
-        return;
-      }
-      this.queued = true;
-      queueMicrotask(() => {
-        this.queued = false;
-        const owner = this.closest("cms-dashboard-w-detail");
-        if (this.isConnected && owner) {
-          Wi(owner);
-        }
-      });
-    }
-  }
-  customElements.define("cms-dashboard-lookup", DashboardLookup);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/composition.ts
-  function composeLookup(control, field2) {
-    const lookup = field2.lookup;
-    const host = lookupSource(lookup, field2.id);
-    host.setAttribute("selected-value", control.getAttribute("value") ?? "");
-    const declared = document.createElement("span");
-    declared.hidden = true;
-    declared.setAttribute("data-static-options", "");
-    declared.append(...Array.from(control.children));
-    host.append(declared);
-    control.setAttribute("value", "{{ lookupValue }}");
-    if (field2.type === "combobox") {
-      control.toggleAttribute("remote-search", Boolean(host.getAttribute("search-params")));
-      control.setAttribute("loading", "{{ $source.loading }}");
-      control.setAttribute("has-more", "{{ lookupHasMore }}");
-    }
-    control.toggleAttribute("creatable", field2.allowCustom === true);
-    const template5 = document.createElement("template");
-    template5.innerHTML = lookup_default;
-    control.append(template5.content.querySelector('[data-lookup="options"]').content.cloneNode(true));
-    host.append(control, template5.content.querySelector('[data-lookup="states"]').content.cloneNode(true));
-    return host;
-  }
-  function lookupSource(lookup, path, root = "detailLookupUrls") {
-    const host = document.createElement("cms-dashboard-lookup");
-    host.setAttribute("cms-source", "");
-    host.setAttribute("request-base", `{{ ${root}.${path} }}`);
-    host.setAttribute("resource-path", "{{ detailResourcePath }}");
-    for (const [attribute, value2] of Object.entries({
-      "items-path": lookup.itemsPath,
-      "value-path": lookup.valuePath,
-      "label-path": lookup.labelPath,
-      "total-path": lookup.totalPath,
-      "selected-expression": lookup.selected
-    })) {
-      if (typeof value2 === "string") {
-        host.setAttribute(attribute, value2);
-      }
-    }
-    for (const [attribute, expression] of [
-      ["search-params", "$search"],
-      ["offset-params", "$offset"]
-    ]) {
-      host.setAttribute(attribute, Object.entries(lookup.params ?? {}).filter(([, value2]) => value2 === expression).map(([key]) => key).join(" "));
-    }
-    if (!lookupUsesOffsetPagination(lookup)) {
-      host.removeAttribute("offset-params");
-    }
-    return host;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/field.css
-  var field_default2 = `:host { display: block; min-width: 0; }
-.table { display: grid; gap: 6px; max-width: 100%; min-width: 0; overflow-x: auto; padding-bottom: 2px; }
-.row { display: grid; grid-template-columns: var(--detail-table-columns); gap: 8px; align-items: start; width: 100%; min-width: 0; min-height: 34px; }
-:host([data-table-head]) { color: #66736f; font-size: 11px; font-weight: 750; text-transform: uppercase; }
-:host([data-table-row][data-readonly]) { color: #16231f; font-size: 13px; }
-::slotted(*) { min-width: 0; }
-::slotted(p9r-input), ::slotted(p9r-select), ::slotted(p9r-combobox), ::slotted(p9r-token-input) { width: 100%; }
-::slotted(p9r-input) { --_field-min-height: 34px; --_field-padding-y: 5px; --_field-padding-x: 9px; --_field-font-size: 13px; }
-::slotted(button) { min-height: 30px; border: 1px solid #cfd8d4; border-radius: 6px; background: #fff; color: #0f1f1a; cursor: pointer; font: inherit; font-weight: 700; padding: 4px 8px; font-size: 12px; }
-::slotted(button:hover) { background: #f3f7f5; }
-::slotted([data-table-add]) { width: fit-content; }
-::slotted([data-table-remove]) { color: #8a1f12; }
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/Field.ts
-  class TableField extends l {
-    static formAssociated = true;
-    internals;
-    get value() {
-      return serializedTableRows(Array.from(this.querySelectorAll("[data-table-row]")).map((row) => {
-        const value2 = {};
-        for (const input of Array.from(row.querySelectorAll("[data-submit-path]"))) {
-          if (input.hasAttribute("data-table-row-key") && !input.value.trim()) {
-            continue;
-          }
-          setValueAt(value2, input.dataset.submitPath, input.localName === "p9r-token-input" ? input.values ?? [] : input.value);
-        }
-        return value2;
-      }));
-    }
-    get form() {
-      return this.internals.form;
-    }
-    constructor() {
-      super({ css: field_default2, template: '<div class="table"><slot></slot></div>' });
-      this.internals = this.attachInternals();
-      for (const type of ["combobox-search", "combobox-load-more"]) {
-        this.addEventListener(type, (event) => {
-          const control = event.composedPath().find((node) => node instanceof HTMLElement && node.hasAttribute("data-table-column"));
-          if (!control) {
-            return;
-          }
-          const source2 = Array.from(this.querySelectorAll("cms-dashboard-lookup[table-column]")).find((node) => node.getAttribute("table-column") === control.dataset.tableColumn);
-          if (source2) {
-            event.stopPropagation();
-            source2.dispatchEvent(new CustomEvent(type, { detail: event.detail }));
-          }
-        });
-      }
-    }
-  }
-
-  class TableRow extends l {
-    constructor() {
-      super({ css: field_default2, template: '<div class="row"><slot></slot></div>' });
-    }
-  }
-  customElements.define("cms-dashboard-table-field", TableField);
-  customElements.define("cms-dashboard-table-row", TableRow);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/composition.ts
-  function composeTable(control, field2) {
-    const template5 = document.createElement("template");
-    template5.innerHTML = table_default2;
-    const clone = (name) => template5.content.querySelector(`[data-table-template="${name}"]`).content.firstElementChild.cloneNode(true);
-    control.setAttribute("data-table-editable", String(field2.editable === true));
-    control.style.setProperty("--detail-table-columns", [
-      ...field2.columns.map((column) => column.width ?? "minmax(8rem, 1fr)"),
-      ...field2.editable ? ["72px"] : []
-    ].join(" "));
-    const head = clone("head");
-    const row = clone("row");
-    row.setAttribute("cms-repeat", `detailTables.${field2.id} as tableRow`);
-    row.toggleAttribute("data-readonly", !field2.editable);
-    for (const [index, column] of field2.columns.entries()) {
-      const heading = clone("cell");
-      heading.textContent = column.label;
-      head.append(heading);
-      if (field2.editable && column.editable) {
-        const editor = clone(column.type ?? "text");
-        editor.setAttribute("data-table-column", column.id);
-        editor.setAttribute("data-submit-path", column.path);
-        editor.setAttribute("aria-label", column.label);
-        editor.setAttribute("value", `{{ tableRow.cells.${column.id} }}`);
-        if (column.type === "select" || column.type === "combobox") {
-          for (const item of column.options ?? []) {
-            const option2 = document.createElement("option");
-            option2.value = item.value;
-            option2.textContent = item.label;
-            editor.append(option2);
-          }
-        }
-        if (column.type === "combobox" && column.lookup) {
-          const source2 = lookupSource(column.lookup, `${field2.id}.${column.id}`, "detailTableLookupUrls");
-          const scope = `tableLookup_${field2.id}_${index}`;
-          source2.setAttribute("context-name", scope);
-          source2.setAttribute("table-column", column.id);
-          const declared = document.createElement("span");
-          declared.hidden = true;
-          declared.setAttribute("data-static-options", "");
-          declared.append(...Array.from(editor.children));
-          source2.hidden = true;
-          source2.append(declared);
-          control.append(source2);
-          const option2 = clone("option");
-          option2.setAttribute("cms-repeat", `${scope}.lookupOptions as tableOption`);
-          editor.append(option2);
-          editor.toggleAttribute("remote-search", Boolean(source2.getAttribute("search-params")));
-          editor.setAttribute("loading", `{{ ${scope}.lookupLoading }}`);
-          editor.setAttribute("has-more", `{{ ${scope}.lookupHasMore }}`);
-        }
-        row.append(editor);
-      } else {
-        const cell = clone("cell");
-        cell.textContent = `{{ tableRow.cells.${column.id} }}`;
-        row.append(cell);
-      }
-    }
-    if (field2.editable && field2.rowKey) {
-      const identity = clone("identity");
-      identity.setAttribute("data-submit-path", field2.rowKey);
-      identity.setAttribute("value", `{{ tableRow.source.${field2.rowKey} }}`);
-      row.append(identity);
-    }
-    if (field2.editable) {
-      head.append(clone("cell"));
-      row.append(clone("remove"));
-    }
-    control.append(head, row);
-    if (field2.editable) {
-      const add = clone("add");
-      add.textContent = field2.addLabel ?? "Add row";
-      control.append(add);
-    }
-    return control;
-  }
-
-  // src/static/admin/_content/sources/_runtime/detail/reorderable.html
-  var reorderable_default = `<template data-reorderable="row"><cms-dashboard-reorderable-row class="row" slot="row" data-index="{{ choice.index }}" data-item-key="{{ choice.identity }}"></cms-dashboard-reorderable-row></template>
-<template data-reorderable="cell"><cms-dashboard-reorderable-cell></cms-dashboard-reorderable-cell></template>
-<template data-reorderable="toolbar"><cms-dashboard-reorderable-toolbar><span class="handle" draggable="true" title="Drag to reorder" aria-label="Drag to reorder">⠿</span><span class="identity">{{ choice.title }}</span></cms-dashboard-reorderable-toolbar></template>
-<template data-reorderable="handle"><span class="handle" draggable="true" title="Drag to reorder" aria-label="Drag to reorder">⠿</span></template>
-<template data-reorderable="remove"><button class="remove" type="button" data-remove="{{ choice.index }}" title="Remove item" aria-label="Remove item">×</button></template>
-<template data-reorderable="add"><button class="add" type="button" data-add slot="add"></button></template>
-<template data-reorderable="settings"><cms-dashboard-reorderable-settings></cms-dashboard-reorderable-settings></template>
-<template data-reorderable="option"><option value="{{ choiceOption.value }}">{{ choiceOption.label }}</option></template>
-`;
-
-  // src/static/admin/_content/sources/_runtime/detail/media.html
-  var media_default = `<template data-media="tile">
-    <cms-dashboard-media-tile slot="tile" data-media-tile draggable="true" tabindex="0" aria-label="Replace media"
-        data-index="{{ media.index }}" data-media-id="{{ media.id }}" data-media-url="{{ media.url }}"
-        data-media-thumbnail="{{ media.thumbnailUrl }}" data-media-alt="{{ media.alt }}" data-media-name="{{ media.name }}"
-        cms-bind-boolean-data-pending="media.pending">
-        <img data-cms-src="{{ media.thumbnail }}" alt="{{ media.alt }}">
-    </cms-dashboard-media-tile>
-</template>
-<template data-media="add"><cms-dashboard-media-add slot="tile"></cms-dashboard-media-add></template>
-<template data-media="image"><img slot="image" data-preview-image decoding="async"></template>
-<template data-media="caption"><span slot="caption"></span></template>
-<template data-media="counter"><span slot="counter"></span></template>
-<template data-media="thumbnail">
-    <cms-dashboard-media-thumbnail slot="thumbnail" index="{{ media.index }}" label="{{ media.title }}">
-        <img data-cms-src="{{ media.thumbnail }}" alt="" loading="lazy" decoding="async">
-    </cms-dashboard-media-thumbnail>
-</template>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/formValue.ts
-  class MediaFormValue {
-    host;
-    items;
-    internals;
-    observer = new MutationObserver(() => this.sync());
-    constructor(host, items) {
-      this.host = host;
-      this.items = items;
-      this.internals = host.attachInternals();
-    }
-    get value() {
-      if (this.items().some((item) => item.pending)) {
-        throw new Error("Wait for image uploads to finish before saving.");
-      }
-      return this.items().map((item) => {
-        if (this.host.getAttribute("cms-form-value-type") !== "number") {
-          return item.id;
-        }
-        const id2 = Number(item.id);
-        if (!item.id || !Number.isFinite(id2)) {
-          throw new Error("The uploaded image has an invalid identifier.");
-        }
-        return id2;
-      });
-    }
-    connect() {
-      this.observer.observe(this.host, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ["data-pending", "data-media-id"]
-      });
-      this.sync();
-    }
-    disconnect() {
-      this.observer.disconnect();
-    }
-    sync() {
-      if (!this.host.hasAttribute("persist-on-save")) {
-        return;
-      }
-      const pending = this.items().some((item) => item.pending);
-      this.host.toggleAttribute("invalid", pending);
-      this.internals.setValidity(pending ? { customError: true } : {}, pending ? "Wait for image uploads to finish before saving." : "");
-      const value2 = new FormData;
-      if (!pending) {
-        for (const item of this.items()) {
-          value2.append(this.host.getAttribute("name") ?? "", item.id);
-        }
-      }
-      this.internals.setFormValue(value2);
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/field.css
-  var field_default3 = `:host {
-    --media-grid-item-max: 120px;
-    --media-grid-item-max-mobile: 112px;
-    --media-grid-featured-item-max: calc((var(--media-grid-item-max) * 2) + 8px);
-
-    display: block;
-}
-
-.media-field { display: grid; gap: 10px; }
-
-.label-row {
-    min-height: 30px;
-    align-items: center;
-    color: var(--text-muted);
-    display: flex;
-    font-size: 11px;
-    font-weight: 750;
-    justify-content: space-between;
-    letter-spacing: 0;
-    text-transform: uppercase;
-}
-
-:host([required]) .label-row::after {
-    color: var(--text-muted, #94a3b8);
-    content: "* Required";
-    flex-shrink: 0;
-    font-size: 10px;
-    font-weight: 650;
-    letter-spacing: 0;
-    margin-inline-start: auto;
-    text-transform: none;
-}
-
-:host([required][invalid]) .label-row::after {
-    color: var(--danger-base, #dc2626);
-}
-
-.preview-trigger {
-    background: var(--bg-surface, #fff);
-    color: var(--text-main, #17211e);
-    gap: 6px;
-    min-height: 30px;
-    padding: 5px 10px;
-    text-transform: none;
-}
-
-.preview-trigger[hidden] {
-    display: none;
-}
-
-.preview-trigger:hover {
-    background: var(--bg-hover, #f3f6f5);
-    border-color: var(--border-strong, #aab6b2);
-}
-
-.preview-trigger:focus-visible {
-    border-color: var(--primary-base, #165f4b);
-    outline: 2px solid var(--primary-muted, #e3f2ed);
-    outline-offset: 2px;
-}
-
-.preview-trigger svg {
-    fill: none;
-    height: 15px;
-    stroke: currentcolor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.8;
-    width: 15px;
-}
-
-.media-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
-    gap: 8px;
-    justify-items: center;
-    max-width: 100%;
-}
-
-.media-grid > * {
-    max-width: var(--media-grid-item-max);
-    width: 100%;
-}
-
-.media-tile,
-.add-tile {
-    align-items: center;
-    aspect-ratio: 1;
-    border-radius: 8px;
-    display: grid;
-    justify-items: center;
-    overflow: hidden;
-    position: relative;
-    width: 100%;
-}
-
-.media-tile {
-    background: #f4f1ec;
-    border: 1px solid var(--border-default);
-    cursor: pointer;
-    min-height: 92px;
-    transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
-}
-
-.media-tile:first-child {
-    grid-column: span 2;
-    grid-row: span 2;
-    max-width: var(--media-grid-featured-item-max);
-}
-
-.media-tile:hover,
-.media-tile:focus-visible {
-    border-color: #0f6b53;
-    box-shadow: 0 0 0 2px rgb(15 107 83 / 12%);
-}
-
-.media-tile:active { cursor: grabbing; }
-
-.media-tile[data-dragging] { opacity: 0.48; transform: scale(0.985); }
-
-.media-tile[data-drop-target] {
-    border-color: #0f6b53;
-    box-shadow: inset 0 0 0 2px rgb(15 107 83 / 24%);
-}
-
-.media-tile img {
-    height: 100%;
-    object-fit: cover;
-    width: 100%;
-}
-
-button {
-    align-items: center;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    cursor: pointer;
-    display: inline-flex;
-    font: inherit;
-    justify-content: center;
-}
-
-.tile-action {
-    background: rgb(255 255 255 / 94%);
-    color: var(--text-main);
-    font-size: 14px;
-    font-weight: 760;
-    height: 24px;
-    opacity: 0;
-    padding: 0;
-    position: absolute;
-    right: 6px;
-    top: 6px;
-    transition: opacity 120ms ease, background 120ms ease;
-    width: 24px;
-}
-
-.media-tile:hover .tile-action,
-.media-tile:focus-within .tile-action {
-    opacity: 1;
-}
-
-.tile-action[data-danger] { color: #c52635; }
-
-.tile-action:hover { background: #f6f8f7; }
-
-.add-tile {
-    background: transparent;
-    border: 1px dashed #aab6b2;
-    color: #394944;
-    font-size: 24px;
-    min-height: 92px;
-}
-
-.add-tile:hover {
-    background: #f6f8f7;
-    border-color: #7d8d88;
-}
-
-:host([layout="card"]) {
-    --media-grid-featured-item-max: none;
-    --media-grid-item-max: none;
-}
-
-:host([layout="card"]) .media-grid {
-    grid-template-columns: minmax(0, 1fr);
-}
-
-:host([layout="card"]) .media-tile:first-child {
-    grid-column: auto;
-    grid-row: auto;
-    max-width: none;
-}
-
-:host([layout="card"]) .media-tile,
-:host([layout="card"]) .add-tile {
-    aspect-ratio: 4 / 3;
-    max-width: none;
-}
-
-@media (max-width: 720px) {
-    .label-row { min-height: 44px; }
-    .media-grid {
-        grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-    }
-
-    .media-grid > * {
-        max-width: var(--media-grid-item-max-mobile);
-    }
-
-    .media-tile:first-child {
-        grid-column: span 1;
-        grid-row: span 1;
-        max-width: var(--media-grid-item-max-mobile);
-    }
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/preview-layout.css
-  var preview_layout_default = `.media-preview {
-    background: #111916;
-    border: 1px solid rgb(255 255 255 / 14%);
-    border-radius: 12px;
-    box-sizing: border-box;
-    box-shadow: 0 24px 72px rgb(0 0 0 / 48%);
-    color: #fff;
-    height: min(780px, calc(100dvh - 32px));
-    margin: auto;
-    max-height: none;
-    max-width: none;
-    overflow: hidden;
-    padding: 0;
-    width: min(1120px, calc(100vw - 32px));
-}
-
-.media-preview::backdrop {
-    backdrop-filter: blur(3px);
-    background: rgb(4 8 7 / 78%);
-}
-
-.preview-shell {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    height: 100%;
-    min-height: 0;
-}
-
-.preview-header {
-    align-items: center;
-    border-bottom: 1px solid rgb(255 255 255 / 12%);
-    display: flex;
-    justify-content: space-between;
-    padding: 14px 16px;
-}
-
-.preview-title,
-.preview-counter {
-    margin: 0;
-}
-
-.preview-title {
-    font-size: 15px;
-    font-weight: 760;
-}
-
-.preview-counter {
-    color: rgb(255 255 255 / 68%);
-    font-size: 12px;
-    margin-top: 2px;
-}
-
-.preview-close {
-    background: rgb(255 255 255 / 10%);
-    border-color: rgb(255 255 255 / 22%);
-    color: #fff;
-    gap: 8px;
-    min-height: 44px;
-    min-width: 44px;
-    padding: 6px 10px;
-}
-
-.preview-close span:last-child {
-    font-size: 20px;
-    line-height: 1;
-}
-
-.preview-close:hover,
-.preview-nav:hover {
-    background: rgb(255 255 255 / 18%);
-}
-
-.preview-close:focus-visible,
-.preview-nav:focus-visible,
-.preview-thumb:focus-visible {
-    outline: 2px solid #fff;
-    outline-offset: 2px;
-}
-
-.preview-stage {
-    display: grid;
-    gap: 12px;
-    grid-template-columns: 44px minmax(0, 1fr) 44px;
-    min-height: 0;
-    padding: 12px 16px;
-}
-
-.preview-figure {
-    grid-column: 2;
-}
-
-.preview-nav {
-    align-self: center;
-    background: rgb(255 255 255 / 10%);
-    border-color: rgb(255 255 255 / 22%);
-    border-radius: 999px;
-    color: #fff;
-    font-size: 30px;
-    height: 44px;
-    padding: 0 0 3px;
-    width: 44px;
-}
-
-.media-preview [hidden] {
-    display: none !important;
-}
-
-@media (max-width: 720px) {
-    .media-preview {
-        border-radius: 0;
-        height: 100dvh;
-        width: 100vw;
-    }
-
-    .preview-stage {
-        gap: 4px;
-        grid-template-columns: 44px minmax(0, 1fr) 44px;
-        padding-inline: 8px;
-    }
-
-    .preview-nav {
-        font-size: 28px;
-        height: 44px;
-        width: 44px;
-    }
-
-    .preview-trigger {
-        min-height: 44px;
-    }
-
-    .preview-close span:first-child {
-        display: none;
-    }
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/preview-media.css
-  var preview_media_default = `.preview-figure {
-    display: grid;
-    gap: 10px;
-    grid-template-rows: minmax(0, 1fr) auto;
-    margin: 0;
-    min-height: 0;
-    overflow: hidden;
-}
-
-.preview-media {
-    display: grid;
-    min-height: 0;
-    overflow: hidden;
-    place-items: center;
-}
-
-.preview-image {
-    grid-area: 1 / 1;
-    height: 100%;
-    min-height: 0;
-    object-fit: contain;
-    transition: opacity 120ms ease;
-    width: 100%;
-}
-
-.preview-image[data-state="loading"],
-.preview-image[data-state="error"] {
-    opacity: 0.12;
-}
-
-.preview-status {
-    color: rgb(255 255 255 / 82%);
-    font-size: 13px;
-    grid-area: 1 / 1;
-    margin: 0;
-    text-align: center;
-}
-
-.preview-figure figcaption {
-    color: rgb(255 255 255 / 82%);
-    font-size: 13px;
-    line-height: 1.4;
-    overflow: hidden;
-    text-align: center;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.preview-strip {
-    border-top: 1px solid rgb(255 255 255 / 12%);
-    box-sizing: border-box;
-    display: flex;
-    gap: 8px;
-    min-height: 82px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 10px 16px;
-    scrollbar-width: thin;
-}
-
-.preview-thumb {
-    background: #202925;
-    border-color: transparent;
-    border-radius: 7px;
-    flex: 0 0 72px;
-    height: 60px;
-    opacity: 0.64;
-    overflow: hidden;
-    padding: 0;
-    width: 72px;
-}
-
-.preview-thumb[aria-current="true"] {
-    border-color: #fff;
-    box-shadow: 0 0 0 1px #fff;
-    opacity: 1;
-}
-
-.preview-thumb img {
-    height: 100%;
-    object-fit: contain;
-    width: 100%;
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/index.ts
-  var styles_default3 = [field_default3, preview_layout_default, preview_media_default].join(`
-`);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/field.css
-  var field_default4 = `slot { display: contents; }
-.media-grid ::slotted(*) { max-width: var(--media-grid-item-max); width: 100%; }
-.media-grid ::slotted(cms-dashboard-media-tile:first-child) {
-    grid-column: span 2;
-    grid-row: span 2;
-    max-width: var(--media-grid-featured-item-max);
-}
-::slotted([slot="image"]) {
-    grid-area: 1 / 1;
-    height: 100%;
-    min-height: 0;
-    object-fit: contain;
-    transition: opacity 120ms ease;
-    width: 100%;
-}
-::slotted([slot="image"][data-state="loading"]), ::slotted([slot="image"][data-state="error"]) { opacity: 0.12; }
-:host([layout="card"]) .media-grid ::slotted(*) { aspect-ratio: 4 / 3; max-width: none; }
-:host([layout="card"]) .media-grid ::slotted(cms-dashboard-media-tile:first-child) { grid-column: auto; grid-row: auto; }
-@media (max-width: 720px) {
-    .media-grid ::slotted(*) { max-width: var(--media-grid-item-max-mobile); }
-    .media-grid ::slotted(cms-dashboard-media-tile:first-child) {
-        grid-column: span 1;
-        grid-row: span 1;
-        max-width: var(--media-grid-item-max-mobile);
-    }
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/field.html
-  var field_default5 = `<section class="media-field">
-    <div class="label-row">
-        <span data-label></span>
-        <button class="preview-trigger" data-preview-open type="button" hidden>
-            <svg aria-hidden="true" viewBox="0 0 24 24">
-                <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
-                <circle cx="12" cy="12" r="2.75"></circle>
-            </svg>
-            <span>Preview</span>
-        </button>
-    </div>
-    <div class="media-grid" data-grid><slot name="tile"></slot></div>
-    <input data-file type="file" hidden>
-    <dialog class="media-preview" data-preview-dialog aria-labelledby="media-preview-title">
-        <div class="preview-shell">
-            <header class="preview-header">
-                <div>
-                    <p class="preview-title" id="media-preview-title">Image preview</p>
-                    <p class="preview-counter" data-preview-counter aria-live="polite"><slot name="counter"></slot></p>
-                </div>
-                <button class="preview-close" data-preview-action="close" type="button">
-                    <span>Close</span>
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </header>
-            <div class="preview-stage">
-                <button
-                    class="preview-nav"
-                    data-preview-action="previous"
-                    type="button"
-                    aria-label="Previous image"
-                >&lsaquo;</button>
-                <figure class="preview-figure">
-                    <div class="preview-media">
-                        <slot name="image"></slot>
-                        <p class="preview-status" data-preview-status role="status" hidden></p>
-                    </div>
-                    <figcaption data-preview-caption><slot name="caption"></slot></figcaption>
-                </figure>
-                <button
-                    class="preview-nav"
-                    data-preview-action="next"
-                    type="button"
-                    aria-label="Next image"
-                >&rsaquo;</button>
-            </div>
-            <div class="preview-strip" data-preview-strip role="group" aria-label="Choose an image"><slot name="thumbnail"></slot></div>
-        </div>
-    </dialog>
-</section>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/controllers/drag.ts
-  class MediaDragController {
-    root;
-    move;
-    setSuppressClick;
-    dragFrom = null;
-    constructor(root, move, setSuppressClick) {
-      this.root = root;
-      this.move = move;
-      this.setSuppressClick = setSuppressClick;
-    }
-    start = (event) => {
-      const tile = tileFromEvent(event);
-      const index = numberData(tile?.dataset.index);
-      if (!tile || index === null) {
-        return;
-      }
-      const dragEvent = event;
-      this.dragFrom = index;
-      this.setSuppressClick(true);
-      tile.toggleAttribute("data-dragging", true);
-      dragEvent.dataTransfer?.setData("text/plain", String(index));
-      if (dragEvent.dataTransfer) {
-        dragEvent.dataTransfer.effectAllowed = "move";
-      }
-    };
-    over = (event) => {
-      if (this.dragFrom === null) {
-        return;
-      }
-      event.preventDefault();
-      const dragEvent = event;
-      if (dragEvent.dataTransfer) {
-        dragEvent.dataTransfer.dropEffect = "move";
-      }
-      this.markDropTarget(tileFromEvent(event));
-    };
-    drop = (event) => {
-      if (this.dragFrom === null) {
-        return;
-      }
-      event.preventDefault();
-      const to = numberData(tileFromEvent(event)?.dataset.index);
-      if (to !== null) {
-        this.move(this.dragFrom, to);
-      }
-      this.clear();
-    };
-    end = () => this.clear();
-    markDropTarget(target2) {
-      this.root().querySelectorAll("[data-drop-target]").forEach((tile) => tile.removeAttribute("data-drop-target"));
-      if (target2 && numberData(target2.dataset.index) !== this.dragFrom) {
-        target2.toggleAttribute("data-drop-target", true);
-      }
-    }
-    clear() {
-      this.dragFrom = null;
-      this.root().querySelectorAll("[data-dragging], [data-drop-target]").forEach((tile) => {
-        tile.removeAttribute("data-dragging");
-        tile.removeAttribute("data-drop-target");
-      });
-      window.setTimeout(() => this.setSuppressClick(false), 0);
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/ImageState.ts
-  class PreviewImageState {
-    host;
-    status;
-    observer = new MutationObserver(() => this.refresh());
-    image = null;
-    url = "";
-    constructor(host, status) {
-      this.host = host;
-      this.status = status;
-    }
-    connect() {
-      this.observer.observe(this.host, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ["src"]
-      });
-      this.host.addEventListener("load", this.onLoad, true);
-      this.host.addEventListener("error", this.onError, true);
-    }
-    disconnect() {
-      this.observer.disconnect();
-      this.host.removeEventListener("load", this.onLoad, true);
-      this.host.removeEventListener("error", this.onError, true);
-    }
-    refresh() {
-      const image = this.host.querySelector("[data-preview-image]");
-      const url = image?.getAttribute("src") ?? "";
-      if (image === this.image && url === this.url) {
-        return;
-      }
-      this.image = image;
-      this.url = url;
-      if (!image || !url) {
-        return;
-      }
-      const ready = image.complete && image.naturalWidth > 0;
-      image.dataset.state = ready ? "ready" : "loading";
-      this.status.textContent = "Loading image…";
-      this.status.hidden = ready;
-    }
-    onLoad = (event) => this.settled(event, false);
-    onError = (event) => this.settled(event, true);
-    settled(event, failed) {
-      const image = event.target;
-      if (!(image instanceof HTMLImageElement) || !image.hasAttribute("data-preview-image")) {
-        return;
-      }
-      this.image = image;
-      this.url = image.getAttribute("src") ?? "";
-      image.dataset.state = failed ? "error" : "ready";
-      this.status.hidden = !failed;
-      if (failed) {
-        this.status.textContent = "Unable to load this image.";
-      }
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/Preview.ts
-  class MediaPreview {
-    host;
-    index = 0;
-    opened = false;
-    restoreFocus = null;
-    dialog;
-    images;
-    constructor(host) {
-      this.host = host;
-      this.dialog = this.query("[data-preview-dialog]");
-      this.images = new PreviewImageState(host, this.query("[data-preview-status]"));
-    }
-    connect() {
-      this.host.addEventListener("click", this.onClick);
-      this.dialog.addEventListener("keydown", this.onKeyDown);
-      this.dialog.addEventListener("close", this.onClose);
-      this.images.connect();
-      this.syncCount();
-    }
-    disconnect() {
-      this.host.removeEventListener("click", this.onClick);
-      this.dialog.removeEventListener("keydown", this.onKeyDown);
-      this.dialog.removeEventListener("close", this.onClose);
-      this.images.disconnect();
-      if (this.dialog.open) {
-        this.dialog.close();
-      }
-    }
-    syncCount() {
-      const count = Number(this.host.getAttribute("count")) || 0;
-      this.query("[data-preview-open]").hidden = count === 0;
-      for (const selector of [
-        "[data-preview-action='previous']",
-        "[data-preview-action='next']",
-        "[data-preview-strip]"
-      ]) {
-        this.query(selector).hidden = count < 2;
-      }
-      if (this.opened && count === 0) {
-        this.dialog.close();
-      }
-      this.index = Math.min(this.index, Math.max(0, count - 1));
-    }
-    onClick = (event) => {
-      const path = event.composedPath();
-      const target2 = path.find((node) => node instanceof HTMLElement && node.matches("[data-preview-open], [data-preview-action], [data-preview-index]"));
-      if (target2?.hasAttribute("data-preview-open")) {
-        if (this.opened || this.host.items.length === 0) {
-          return;
-        }
-        this.restoreFocus = target2;
-        this.index = 0;
-        this.opened = true;
-        this.changeImage();
-        this.dialog.showModal();
-        this.query("[data-preview-action='close']").focus();
-      } else if (target2?.hasAttribute("data-preview-index")) {
-        this.setIndex(Number(target2.dataset.previewIndex), true);
-      } else if (target2?.dataset.previewAction === "close" || path[0] === this.dialog) {
-        this.dialog.close();
-      } else if (target2?.dataset.previewAction === "previous") {
-        this.move(-1);
-      } else if (target2?.dataset.previewAction === "next") {
-        this.move(1);
-      }
-    };
-    onKeyDown = (event) => {
-      const focusThumbnail = Array.from(this.host.querySelectorAll("cms-dashboard-media-thumbnail")).some((node) => Boolean(node.shadowRoot?.activeElement));
-      if (event.key === "Escape") {
-        event.preventDefault();
-        this.dialog.close();
-      } else if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        this.move(-1, focusThumbnail);
-      } else if (event.key === "ArrowRight") {
-        event.preventDefault();
-        this.move(1, focusThumbnail);
-      } else if (event.key === "Home") {
-        event.preventDefault();
-        this.setIndex(0, focusThumbnail);
-      } else if (event.key === "End") {
-        event.preventDefault();
-        this.setIndex(this.host.items.length - 1, focusThumbnail);
-      }
-    };
-    onClose = () => {
-      this.opened = false;
-      this.host.refresh();
-      this.query("[data-preview-status]").hidden = true;
-      this.restoreFocus?.focus();
-      this.restoreFocus = null;
-    };
-    move(offset, focus = false) {
-      const count = this.host.items.length;
-      if (count > 1) {
-        this.setIndex((this.index + offset + count) % count, focus);
-      }
-    }
-    setIndex(index, focus) {
-      if (!Number.isInteger(index) || index < 0 || index >= this.host.items.length) {
-        return;
-      }
-      if (this.index !== index) {
-        this.index = index;
-        this.changeImage();
-      }
-      const thumbnail = this.host.querySelector(`cms-dashboard-media-thumbnail[index="${index}"]`);
-      thumbnail?.scrollIntoView({ block: "nearest", inline: "center" });
-      if (focus) {
-        thumbnail?.focus();
-      }
-    }
-    changeImage() {
-      const status = this.query("[data-preview-status]");
-      status.textContent = "Loading image…";
-      status.hidden = false;
-      this.host.refresh();
-      this.images.refresh();
-    }
-    query(selector) {
-      return this.host.shadowRoot.querySelector(selector);
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/MediaField.ts
-  class DashboardMediaField extends l {
-    static formAssociated = true;
-    static observedAttributes = ["label", "count"];
-    formValue;
-    get form() {
-      return this.formValue.internals.form;
-    }
-    get value() {
-      return this.formValue.value;
-    }
-    preview;
-    pendingItems;
-    replaceIndex;
-    suppressClick = false;
-    drag = new MediaDragController(() => this, (from, to) => this.move(from, to), (value2) => {
-      this.suppressClick = value2;
-    });
-    constructor() {
-      super({ css: styles_default3 + field_default4, template: field_default5 });
-      this.formValue = new MediaFormValue(this, () => this.items);
-      this.preview = new MediaPreview(this);
-    }
-    connectedCallback() {
-      this.fileInput.addEventListener("change", this.onFiles);
-      this.addEventListener("click", this.onClick);
-      for (const [name, handler] of this.dragEvents) {
-        this.addEventListener(name, handler);
-      }
-      this.preview.connect();
-      this.formValue.connect();
-    }
-    disconnectedCallback() {
-      this.fileInput.removeEventListener("change", this.onFiles);
-      this.removeEventListener("click", this.onClick);
-      for (const [name, handler] of this.dragEvents) {
-        this.removeEventListener(name, handler);
-      }
-      this.preview.disconnect();
-      this.formValue.disconnect();
-    }
-    attributeChangedCallback(name) {
-      if (name === "label") {
-        this.shadowRoot.querySelector("[data-label]").textContent = this.getAttribute("label") ?? "";
-      } else {
-        this.preview.syncCount();
-      }
-    }
-    get items() {
-      if (this.pendingItems) {
-        return this.pendingItems;
-      }
-      return Array.from(this.querySelectorAll("[data-media-tile]")).map((tile) => ({
-        id: tile.dataset.mediaId ?? "",
-        url: tile.dataset.mediaUrl ?? "",
-        ...tile.dataset.mediaAlt ? { alt: tile.dataset.mediaAlt } : {},
-        ...tile.dataset.mediaName ? { name: tile.dataset.mediaName } : {},
-        ...tile.dataset.mediaThumbnail ? { thumbnailUrl: tile.dataset.mediaThumbnail } : {},
-        ...tile.hasAttribute("data-pending") ? { pending: true } : {}
-      }));
-    }
-    refresh() {
-      if (this.isConnected) {
-        Wi(this.owner);
-      }
-    }
-    get owner() {
-      return this.closest("cms-dashboard-w-detail");
-    }
-    get fileInput() {
-      return this.shadowRoot.querySelector("[data-file]");
-    }
-    get dragEvents() {
-      return [
-        ["dragstart", this.drag.start],
-        ["dragover", this.drag.over],
-        ["drop", this.drag.drop],
-        ["dragend", this.drag.end]
-      ];
-    }
-    onClick = (event) => {
-      const path = event.composedPath();
-      const button = path.find((node) => node instanceof HTMLElement && node.hasAttribute("data-media-action"));
-      const tile = path.find((node) => node instanceof HTMLElement && node.hasAttribute("data-media-tile"));
-      const index = tile ? Number(tile.dataset.index) : undefined;
-      if (button?.dataset.mediaAction === "remove" && index !== undefined) {
-        const items = this.items;
-        const item = items[index];
-        if (item) {
-          this.changed("remove", items.filter((_3, current) => current !== index), { index, item });
-        }
-      } else if (button?.dataset.mediaAction === "upload") {
-        this.pick();
-      } else if (tile && index !== undefined && !this.suppressClick) {
-        this.pick(index);
-      }
-    };
-    pick(index) {
-      this.replaceIndex = index;
-      this.fileInput.value = "";
-      this.fileInput.accept = this.getAttribute("accept") ?? "image/*";
-      this.fileInput.multiple = index === undefined && this.hasAttribute("multiple");
-      this.fileInput.click();
-    }
-    onFiles = (event) => {
-      event.stopPropagation();
-      const files = Array.from(this.fileInput.files ?? []);
-      if (!files[0]) {
-        return;
-      }
-      const items = this.items;
-      if (this.replaceIndex !== undefined) {
-        const index = this.replaceIndex;
-        const previousItem = items[index];
-        if (!previousItem) {
-          return;
-        }
-        const item = { ...previousItem, ...mediaFiles(this.owner).create(files[0]), id: previousItem.id };
-        this.changed("replace", items.map((old, current) => current === index ? item : old), { index, previousItem, item, file: files[0] });
-      } else {
-        const selected2 = this.hasAttribute("multiple") ? files : [files[0]];
-        this.changed("upload", [...items, ...selected2.map((file) => mediaFiles(this.owner).create(file))], {
-          files: selected2
-        });
-      }
-    };
-    move(from, to) {
-      const items = this.items;
-      if (from === to || to < 0 || to >= items.length) {
-        return;
-      }
-      const [item] = items.splice(from, 1);
-      if (item) {
-        items.splice(to, 0, item);
-        this.changed("reorder", items, { from, to, item });
-      }
-    }
-    changed(action, items, detail) {
-      const previousValue = this.items;
-      this.pendingItems = items;
-      try {
-        dispatchMediaChange(this, action, items, { ...detail, previousValue });
-      } finally {
-        this.pendingItems = undefined;
-      }
-    }
-  }
-  customElements.define("cms-dashboard-media-field", DashboardMediaField);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/tile.css
-  var tile_default = `:host {
-    box-sizing: border-box;
-    align-items: center;
-    aspect-ratio: 1;
-    background: #f4f1ec;
-    border: 1px solid var(--border-default);
-    border-radius: 8px;
-    cursor: pointer;
-    display: grid;
-    justify-items: center;
-    min-height: 92px;
-    overflow: hidden;
-    position: relative;
-    transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
-    width: 100%;
-}
-:host(:hover), :host(:focus-visible) {
-    border-color: #0f6b53;
-    box-shadow: 0 0 0 2px rgb(15 107 83 / 12%);
-}
-:host(:active) { cursor: grabbing; }
-:host([data-dragging]) { opacity: 0.48; transform: scale(0.985); }
-:host([data-drop-target]) { border-color: #0f6b53; box-shadow: inset 0 0 0 2px rgb(15 107 83 / 24%); }
-::slotted(img) { height: 100%; object-fit: cover; width: 100%; }
-button {
-    align-items: center;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    cursor: pointer;
-    display: inline-flex;
-    font: inherit;
-    justify-content: center;
-}
-button[data-media-action="remove"] {
-    background: rgb(255 255 255 / 94%);
-    color: #c52635;
-    font-size: 14px;
-    font-weight: 760;
-    height: 24px;
-    opacity: 0;
-    padding: 0;
-    position: absolute;
-    right: 6px;
-    top: 6px;
-    transition: opacity 120ms ease, background 120ms ease;
-    width: 24px;
-}
-:host(:hover) button, :host(:focus-within) button { opacity: 1; }
-button:hover { background: #f6f8f7; }
-:host(cms-dashboard-media-add) { background: transparent; border: none; }
-:host(cms-dashboard-media-add:hover) { box-shadow: none; }
-button[data-media-action="upload"] {
-    background: transparent;
-    border: 1px dashed #aab6b2;
-    border-radius: 8px;
-    color: #394944;
-    font-size: 24px;
-    height: 100%;
-    min-height: 92px;
-    width: 100%;
-}
-button[data-media-action="upload"]:hover { background: #f6f8f7; border-color: #7d8d88; }
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/Tile.ts
-  class MediaTile extends l {
-    constructor() {
-      super({
-        css: tile_default,
-        template: '<slot></slot><button type="button" data-media-action="remove" aria-label="Remove media" title="Remove media">x</button>'
-      });
-    }
-  }
-  customElements.define("cms-dashboard-media-tile", MediaTile);
-
-  class MediaAddTile extends l {
-    constructor() {
-      super({ css: tile_default, template: '<button type="button" data-media-action="upload" aria-label="Add media">+</button>' });
-    }
-  }
-  customElements.define("cms-dashboard-media-add", MediaAddTile);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/thumbnail.css
-  var thumbnail_default = `:host { display: block; flex: 0 0 72px; height: 60px; width: 72px; }
-button {
-    align-items: center;
-    background: #202925;
-    border: 1px solid transparent;
-    border-radius: 7px;
-    cursor: pointer;
-    display: inline-flex;
-    font: inherit;
-    height: 100%;
-    justify-content: center;
-    opacity: 0.64;
-    overflow: hidden;
-    padding: 0;
-    width: 100%;
-}
-:host([selected]) button { border-color: #fff; box-shadow: 0 0 0 1px #fff; opacity: 1; }
-button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-::slotted(img) { height: 100%; object-fit: contain; width: 100%; }
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/Thumbnail.ts
-  class MediaThumbnail extends l {
-    static observedAttributes = ["index", "selected-index", "label"];
-    constructor() {
-      super({ css: thumbnail_default, template: '<button type="button"><slot></slot></button>' });
-    }
-    attributeChangedCallback() {
-      const selected2 = this.getAttribute("index") === this.getAttribute("selected-index");
-      this.toggleAttribute("selected", selected2);
-      const button = this.shadowRoot.querySelector("button");
-      button.setAttribute("aria-current", String(selected2));
-      button.setAttribute("aria-label", this.getAttribute("label") ?? "");
-      button.setAttribute("data-preview-index", this.getAttribute("index") ?? "");
-    }
-    focus() {
-      this.shadowRoot.querySelector("button").focus();
-    }
-  }
-  customElements.define("cms-dashboard-media-thumbnail", MediaThumbnail);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/composition.ts
-  function composeMedia(control, field2, path = `detailMedia.${field2.id}`) {
-    const declarations = document.createElement("template");
-    declarations.innerHTML = media_default;
-    const part = (kind) => declarations.content.querySelector(`[data-media="${kind}"]`).content.firstElementChild.cloneNode(true);
-    const tile = part("tile");
-    tile.setAttribute("cms-repeat", `${path}.items as media`);
-    const add = part("add");
-    add.setAttribute("cms-condition", `${path}.showAdd`);
-    const image = part("image");
-    image.setAttribute("cms-condition", `${path}.open`);
-    image.setAttribute("data-cms-src", `{{ ${path}.preview.url }}`);
-    image.setAttribute("alt", `{{ ${path}.preview.previewAlt }}`);
-    const caption = part("caption");
-    caption.textContent = `{{ ${path}.preview.title }}`;
-    const counter = part("counter");
-    counter.textContent = `{{ ${path}.counter }}`;
-    const thumbnail = part("thumbnail");
-    thumbnail.setAttribute("cms-repeat", `${path}.items as media`);
-    thumbnail.setAttribute("selected-index", `{{ ${path}.index }}`);
-    control.setAttribute("count", `{{ ${path}.items.length }}`);
-    control.toggleAttribute("multiple", field2.multiple === true);
-    control.toggleAttribute("persist-on-save", field2.persist === "save");
-    control.append(tile, add, image, caption, counter, thumbnail);
-  }
-
-  // src/static/admin/_content/sources/_runtime/detail/controls.html
-  var controls_default = `<template data-control="text"><p9r-input type="text"></p9r-input></template>
-<template data-control="number"><p9r-input type="number"></p9r-input></template>
-<template data-control="textarea"><p9r-textarea></p9r-textarea></template>
-<template data-control="select"><p9r-select></p9r-select></template>
-<template data-control="cms-user"><p9r-combobox></p9r-combobox></template>
-<template data-control="combobox"><p9r-combobox></p9r-combobox></template>
-<template data-control="tokens"><p9r-token-input></p9r-token-input></template>
-<template data-control="checkbox"><input type="checkbox" /></template>
-<template data-control="amount"><p9r-money-input></p9r-money-input></template>
-<template data-control="secret-ref"><cms-credential-select></cms-credential-select></template>
-<template data-control="page-link"><cms-editor-v2-page-link></cms-editor-v2-page-link></template>
-<template data-control="readonly">
-    <div>
-        <span data-display-text></span>
-        <span data-display-empty class="readonly-empty">None</span>
-        <ul class="readonly-list">
-            <li cms-condition="readonlyItem | dashboardTrimmedText">{{ readonlyItem | dashboardTrimmedText }}</li>
-        </ul>
-    </div>
-</template>
-<template data-control="url"><div><a target="_blank" rel="noopener noreferrer"></a><span></span></div></template>
-<template data-control="date"><div><span></span></div></template>
-<template data-control="money"><div><span></span></div></template>
-<template data-control="badge"><div><span class="badge"></span></div></template>
-<template data-control="image"><div><span>No image</span><img class="detail-image" loading="lazy" /></div></template>
-<template data-control="media"><cms-dashboard-media-field></cms-dashboard-media-field></template>
-<template data-control="schema"><cms-dashboard-schema-field></cms-dashboard-schema-field></template>
-<template data-control="table"><cms-dashboard-table-field></cms-dashboard-table-field></template>
-<template data-control="reorderable-list"><cms-dashboard-reorderable-field></cms-dashboard-reorderable-field></template>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/editors.ts
-  function composeChoiceEditor(parent, definition, field2, index, optionTemplate) {
-    const template5 = document.createElement("template");
-    template5.innerHTML = controls_default;
-    const editor = template5.content.querySelector(`[data-control="${field2.type ?? "text"}"]`).content.firstElementChild.cloneNode(true);
-    editor.setAttribute("data-item-index", "{{ choice.index }}");
-    editor.setAttribute("data-item-field", field2.id);
-    editor.setAttribute("data-item-path", field2.path);
-    editor.setAttribute("aria-label", field2.label);
-    editor.toggleAttribute("required", field2.required === true);
-    if (field2.placeholder) {
-      editor.setAttribute("placeholder", field2.placeholder);
-    }
-    if (field2.type === "checkbox") {
-      editor.setAttribute("cms-bind-boolean-checked", `choice.cells.${field2.id}`);
-    } else if (field2.type !== "media") {
-      editor.setAttribute("value", `{{ choice.cells.${field2.id} }}`);
-    }
-    if (field2.type === "media") {
-      editor.setAttribute("label", field2.label);
-      editor.setAttribute("layout", "card");
-      editor.setAttribute("accept", "image/*");
-      composeMedia(editor, field2, `choice.media.${field2.id}`);
-    }
-    if (field2.type === "secret-ref") {
-      editor.setAttribute("label", field2.label);
-      editor.setAttribute("api", route("/api/secrets"));
-    }
-    if (field2.type === "page-link") {
-      editor.setAttribute("label", field2.label);
-      for (const [attribute, value2] of [
-        ["allow-external", field2.allowExternal],
-        ["allow-media", field2.allowMedia],
-        ["published-only", field2.publishedOnly]
-      ]) {
-        editor.setAttribute(attribute, String(value2 === true));
-      }
-    }
-    for (const option2 of field2.options ?? []) {
-      const element = document.createElement("option");
-      element.value = option2.value;
-      element.textContent = option2.label;
-      editor.append(element);
-    }
-    if (field2.type === "combobox" && field2.lookup) {
-      const source2 = lookupSource(field2.lookup, `${definition.id}.${field2.id}`, "detailChoiceLookupUrls");
-      const scope = `choiceLookup_${definition.id}_${index}`;
-      source2.setAttribute("context-name", scope);
-      source2.setAttribute("item-field", field2.id);
-      const declared = document.createElement("span");
-      declared.hidden = true;
-      declared.setAttribute("data-static-options", "");
-      declared.append(...Array.from(editor.children));
-      source2.hidden = true;
-      source2.append(declared);
-      parent.append(source2);
-      const option2 = optionTemplate();
-      option2.setAttribute("cms-repeat", `${scope}.lookupOptions as choiceOption`);
-      editor.append(option2);
-      editor.toggleAttribute("remote-search", Boolean(source2.getAttribute("search-params")));
-      editor.toggleAttribute("remote-pagination", Boolean(source2.getAttribute("offset-params")));
-      editor.setAttribute("loading", `{{ ${scope}.lookupLoading }}`);
-      editor.setAttribute("has-more", `{{ ${scope}.lookupHasMore }}`);
-    }
-    return editor;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/interactions.ts
-  class ReorderableInteractions {
-    host;
-    pending;
-    dragging;
-    constructor(host) {
-      this.host = host;
-    }
-    connect() {
-      for (const [name, handler] of this.handlers) {
-        this.host.addEventListener(name, handler);
-      }
-    }
-    disconnect() {
-      for (const [name, handler] of this.handlers) {
-        this.host.removeEventListener(name, handler);
-      }
-      this.clearDrag();
-    }
-    get handlers() {
-      return [
-        ["input", this.input],
-        ["click", this.click],
-        ["dragstart", this.start],
-        ["dragover", this.over],
-        ["drop", this.drop],
-        ["dragend", this.end],
-        ["combobox-search", this.lookup],
-        ["combobox-load-more", this.lookup],
-        [W_MEDIA_FIELD_ACTION_EVENT, this.media]
-      ];
-    }
-    input = (event) => {
-      const editor = event.target?.closest("[data-item-field]");
-      if (editor && editor.localName !== "cms-dashboard-media-field") {
-        this.commit(this.host.items);
-      }
-    };
-    click = (event) => {
-      const target2 = event.target;
-      const add = target2?.closest("[data-add]");
-      const remove = target2?.closest("[data-remove]");
-      if (!add && !remove) {
-        return;
-      }
-      const items = this.host.items;
-      const max = this.host.getAttribute("max-items");
-      const min = this.host.getAttribute("min-items");
-      if (add && (max === null || items.length < Number(max))) {
-        this.commit([...items, {}]);
-      }
-      if (remove && (min === null || items.length > Number(min))) {
-        const index = Number(remove.dataset.remove);
-        if (Number.isInteger(index) && index >= 0 && index < items.length) {
-          items.splice(index, 1);
-          this.commit(items);
-        }
-      }
-    };
-    start = (event) => {
-      const handle = event.target?.closest(".handle");
-      const row = handle?.closest("cms-dashboard-reorderable-row");
-      if (!row) {
-        return;
-      }
-      this.dragging = Number(row.dataset.index);
-      row.dataset.dragging = "";
-      const transfer = event.dataTransfer;
-      transfer?.setData("text/plain", String(this.dragging));
-      if (transfer) {
-        transfer.effectAllowed = "move";
-      }
-    };
-    over = (event) => {
-      const row = event.target?.closest("cms-dashboard-reorderable-row");
-      if (!row || this.dragging === undefined) {
-        return;
-      }
-      event.preventDefault();
-      for (const item of this.rows) {
-        item.toggleAttribute("data-drop-target", item === row);
-      }
-      const transfer = event.dataTransfer;
-      if (transfer) {
-        transfer.dropEffect = "move";
-      }
-    };
-    drop = (event) => {
-      const row = event.target?.closest("cms-dashboard-reorderable-row");
-      if (!row || this.dragging === undefined) {
-        return;
-      }
-      event.preventDefault();
-      const to = Number(row.dataset.index);
-      const items = this.host.items;
-      if (to !== this.dragging && to >= 0 && to < items.length) {
-        const [item] = items.splice(this.dragging, 1);
-        if (item) {
-          items.splice(to, 0, item);
-          this.commit(items);
-        }
-      }
-      this.clearDrag();
-    };
-    end = () => this.clearDrag();
-    lookup = (event) => {
-      const editor = event.target?.closest("[data-item-field]");
-      const source2 = Array.from(this.host.querySelectorAll("cms-dashboard-lookup[item-field]")).find((node) => node.getAttribute("item-field") === editor?.dataset.itemField);
-      if (source2) {
-        event.stopPropagation();
-        source2.dispatchEvent(new CustomEvent(event.type, { detail: event.detail }));
-      }
-    };
-    media = (event) => {
-      if (event.target === this.host) {
-        return;
-      }
-      const editor = event.target?.closest("[data-item-field]");
-      if (!editor?.dataset.itemPath) {
-        return;
-      }
-      event.stopPropagation();
-      const detail = event.detail;
-      const items = this.host.items;
-      const index = Number(editor.dataset.itemIndex);
-      const parent = items[index];
-      if (!parent) {
-        return;
-      }
-      setValueAt(parent, editor.dataset.itemPath, detail.value[0] ?? null);
-      const scoped = {
-        ...detail,
-        itemIndex: index,
-        itemKey: String(valueAt(parent, this.host.getAttribute("item-key") ?? "") ?? index),
-        itemKeyPath: this.host.getAttribute("item-key") ?? "",
-        itemField: editor.dataset.itemField,
-        itemPath: editor.dataset.itemPath,
-        parentItem: structuredClone(parent)
-      };
-      this.commit(items);
-      this.host.dispatchEvent(new CustomEvent(W_MEDIA_FIELD_ACTION_EVENT, { bubbles: true, composed: true, detail: scoped }));
-    };
-    commit(items) {
-      for (const [index, item] of items.entries()) {
-        setValueAt(item, this.host.getAttribute("position-path") ?? "position", index);
-      }
-      this.pending = items;
-      try {
-        this.host.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-      } finally {
-        this.pending = undefined;
-      }
-    }
-    get rows() {
-      return Array.from(this.host.querySelectorAll("cms-dashboard-reorderable-row"));
-    }
-    clearDrag() {
-      this.dragging = undefined;
-      for (const row of this.rows) {
-        row.removeAttribute("data-dragging");
-        row.removeAttribute("data-drop-target");
-      }
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/field.css
-  var field_default6 = `:host { display: block; }
-slot { display: contents; }
-.reorderable-list { display: grid; gap: 8px; }
-.rows { display: grid; gap: 6px; }
-.header { align-items: center; color: var(--text-muted); display: grid; font-size: 11px; font-weight: 750; gap: 8px; grid-template-columns: var(--reorderable-columns); padding: 0 8px; text-transform: uppercase; }
-:host([layout="cards"]) .header { display: none; }
-:host([layout="cards"]) .rows { grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr)); gap: 12px; }
-:host(cms-dashboard-reorderable-row) { align-items: end; background: #fff; border: 1px solid var(--border-default); border-radius: 8px; display: grid; gap: 8px; grid-template-columns: var(--reorderable-columns); padding: 8px; }
-:host(cms-dashboard-reorderable-row[layout="cards"]) { align-content: start; align-items: stretch; gap: 12px; grid-template-columns: minmax(0, 1fr); padding: 10px; }
-:host([data-dragging]) { opacity: .48; }
-:host([data-drop-target]) { border-color: #0f6b53; box-shadow: 0 0 0 2px rgb(15 107 83 / 14%); }
-:host([layout="cards"][data-drop-target]) { transform: translateY(-2px); }
-::slotted(.handle), ::slotted(.remove), ::slotted(.add) { align-items: center; background: transparent; border: 0; border-radius: 6px; color: #60706b; cursor: pointer; display: inline-flex; font: inherit; justify-content: center; min-height: 32px; }
-::slotted(.handle) { cursor: grab; font-size: 19px; letter-spacing: -3px; padding: 0 4px 4px 0; }
-::slotted(.handle:active) { cursor: grabbing; }
-::slotted(.remove:hover) { background: #fff0f0; color: #bd2533; }
-::slotted(.add:hover) { background: #eef6f2; color: #0f6b53; }
-::slotted(.add) { border: 1px dashed #aab6b2; justify-self: start; padding: 0 12px; }
-:host([layout="cards"]) ::slotted(.add) { min-height: 42px; width: 100%; }
-:host(cms-dashboard-reorderable-cell) { display: grid; min-width: 0; }
-:host(cms-dashboard-reorderable-cell) ::slotted(p9r-input), :host(cms-dashboard-reorderable-cell) ::slotted(p9r-select), :host(cms-dashboard-reorderable-cell) ::slotted(p9r-combobox) { min-width: 0; width: 100%; }
-::slotted(input[type="checkbox"]) { accent-color: var(--primary-base); height: 18px; margin: 0; width: 18px; }
-::slotted(input[type="checkbox"]:focus-visible) { outline: 2px solid var(--primary-muted); outline-offset: 2px; }
-.field-label { color: var(--text-muted); font-size: 11px; font-weight: 750; margin-bottom: 5px; text-transform: uppercase; }
-:host(:not([label])) .field-label { display: none; }
-:host(cms-dashboard-reorderable-toolbar) { align-items: center; display: grid; grid-template-columns: 28px minmax(0, 1fr) 32px; }
-::slotted(.identity) { color: var(--text-muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.card-details { border-top: 1px solid var(--border-default); display: grid; gap: 10px; padding-top: 9px; }
-.card-details summary { color: #42514c; cursor: pointer; font-size: 12px; font-weight: 700; list-style-position: inside; }
-.card-details[open] summary { margin-bottom: 2px; }
-@media (max-width: 720px) {
-    .header { display: none; }
-    :host(cms-dashboard-reorderable-row:not([layout="cards"])) { align-items: center; grid-template-columns: 24px minmax(0, 1fr) 32px; }
-    :host(cms-dashboard-reorderable-row:not([layout="cards"])) ::slotted(cms-dashboard-reorderable-cell) { grid-column: 2 / -1; }
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/Field.ts
-  class ReorderableField extends l {
-    static formAssociated = true;
-    internals;
-    interactions = new ReorderableInteractions(this);
-    constructor() {
-      super({
-        css: field_default6,
-        template: '<section class="reorderable-list"><div class="header"><slot name="heading"></slot></div><div class="rows"><slot name="row"></slot></div><slot name="add"></slot></section>'
-      });
-      this.internals = this.attachInternals();
-    }
-    get form() {
-      return this.internals.form;
-    }
-    get value() {
-      return this.items;
-    }
-    get items() {
-      return this.interactions.pending ?? readReorderableItems(this);
-    }
-    connectedCallback() {
-      this.interactions.connect();
-    }
-    disconnectedCallback() {
-      this.interactions.disconnect();
-    }
-  }
-
-  class ReorderableRow extends l {
-    constructor() {
-      super({ css: field_default6, template: "<slot></slot>" });
-    }
-  }
-
-  class ReorderableCell extends l {
-    static observedAttributes = ["label"];
-    constructor() {
-      super({ css: field_default6, template: '<span class="field-label"></span><slot></slot>' });
-    }
-    attributeChangedCallback() {
-      this.shadowRoot.querySelector(".field-label").textContent = this.getAttribute("label") ?? "";
-    }
-  }
-
-  class ReorderableSettings extends l {
-    constructor() {
-      super({
-        css: field_default6,
-        template: '<details class="card-details"><summary>Choice settings</summary><slot></slot></details>'
-      });
-    }
-  }
-
-  class ReorderableToolbar extends l {
-    constructor() {
-      super({ css: field_default6, template: "<slot></slot>" });
-    }
-  }
-  customElements.define("cms-dashboard-reorderable-field", ReorderableField);
-  customElements.define("cms-dashboard-reorderable-row", ReorderableRow);
-  customElements.define("cms-dashboard-reorderable-cell", ReorderableCell);
-  customElements.define("cms-dashboard-reorderable-settings", ReorderableSettings);
-  customElements.define("cms-dashboard-reorderable-toolbar", ReorderableToolbar);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/composition.ts
-  function composeReorderable(control, field2) {
-    const declarations = document.createElement("template");
-    declarations.innerHTML = reorderable_default;
-    const part = (name) => declarations.content.querySelector(`[data-reorderable="${name}"]`).content.firstElementChild.cloneNode(true);
-    const cards = field2.layout === "cards";
-    const scope = `detailChoices.${field2.id}`;
-    control.setAttribute("layout", field2.layout ?? "rows");
-    control.setAttribute("item-key", field2.itemKey);
-    control.setAttribute("position-path", field2.positionPath ?? "position");
-    for (const key of ["minItems", "maxItems"]) {
-      if (field2[key] !== undefined) {
-        control.setAttribute(key === "minItems" ? "min-items" : "max-items", String(field2[key]));
-      }
-    }
-    control.style.setProperty("--reorderable-columns", ["24px", ...field2.fields.map(() => "minmax(0, 1fr)"), "32px"].join(" "));
-    for (const label2 of ["", ...field2.fields.map((item) => item.label), ""]) {
-      const heading = document.createElement("span");
-      heading.slot = "heading";
-      heading.textContent = label2;
-      control.append(heading);
-    }
-    const row = part("row");
-    row.setAttribute("layout", field2.layout ?? "rows");
-    row.setAttribute("cms-repeat", `${scope}.rows as choice`);
-    const remove = part("remove");
-    remove.setAttribute("cms-bind-boolean-disabled", `${scope}.removeDisabled`);
-    const toolbar = cards ? part("toolbar") : undefined;
-    if (toolbar) {
-      toolbar.append(remove);
-    }
-    row.append(toolbar ?? part("handle"));
-    const secondary = cards && field2.fields.some((item) => item.secondary) ? part("settings") : undefined;
-    for (const [index, item] of field2.fields.entries()) {
-      const cell = part("cell");
-      cell.className = `field field-${item.type ?? "text"}`;
-      if (cards && item.type !== "media") {
-        cell.setAttribute("label", item.label);
-      }
-      cell.append(composeChoiceEditor(control, field2, item, index, () => part("option")));
-      (item.secondary && secondary ? secondary : row).append(cell);
-    }
-    if (secondary) {
-      row.append(secondary);
-    }
-    if (!cards) {
-      row.append(remove);
-    }
-    const add = part("add");
-    add.textContent = field2.addLabel ?? "Add item";
-    add.setAttribute("cms-bind-boolean-disabled", `${scope}.addDisabled`);
-    control.append(row, add);
-    return control;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/readonly.ts
-  function composeReadonly(control, field2, root) {
-    const path = field2.path === "." ? root : `${root}.${field2.path}`;
-    if (field2.format === "url") {
-      const anchor = control.querySelector("a");
-      anchor.setAttribute("href", fieldBinding(root, field2.path, "dashboardHttpUrl"));
-      anchor.setAttribute("cms-condition", `${path} | dashboardHttpUrl`);
-      anchor.textContent = fieldBinding(root, field2.path);
-      const fallback = control.querySelector("span");
-      fallback.setAttribute("cms-condition", `${path} | dashboardHttpUrl == ''`);
-      fallback.textContent = fieldBinding(root, field2.path);
-    } else if (field2.format === "image") {
-      const image = control.querySelector("img");
-      image.alt = field2.label;
-      image.setAttribute("cms-condition", `${path} | dashboardTrimmedText`);
-      image.setAttribute("data-cms-src", fieldBinding(root, field2.path, "dashboardTrimmedText"));
-      control.querySelector("span").setAttribute("cms-condition", `!${path} | dashboardTrimmedText`);
-    } else if (field2.format === "money") {
-      const sibling = field2.path.includes(".") ? `${path.slice(0, path.lastIndexOf("."))}.currency` : `${root}.currency`;
-      const value2 = control.querySelector("span");
-      value2.textContent = fieldBinding(root, field2.path, `dashboardMoney(${sibling})`);
-      if (sibling !== `${root}.currency`) {
-        value2.setAttribute("cms-condition", `${sibling} | dashboardDefined`);
-        const fallback = value2.cloneNode();
-        fallback.setAttribute("cms-condition", `!${sibling} | dashboardDefined`);
-        fallback.textContent = fieldBinding(root, field2.path, `dashboardMoney(${root}.currency)`);
-        control.append(fallback);
-      }
-    } else if (field2.format === "date" || field2.format === "badge") {
-      control.querySelector("span").textContent = fieldBinding(root, field2.path, field2.format === "date" ? "dashboardDate" : "dashboardBadge");
-    } else {
-      control.querySelector("[data-display-text]").setAttribute("cms-condition", `${path} | dashboardValueKind == 'scalar'`);
-      control.querySelector("[data-display-text]").textContent = fieldBinding(root, field2.path);
-      control.querySelector("[data-display-empty]").setAttribute("cms-condition", `${path} | dashboardValueKind == 'empty-list'`);
-      control.querySelector("ul").setAttribute("cms-condition", `${path} | dashboardValueKind == 'list'`);
-      control.querySelector("li").setAttribute("cms-repeat", `${path} as readonlyItem`);
-    }
-  }
-  function fieldBinding(root, path, filter) {
-    return `{{ ${path === "." ? root : `${root}.${path}`}${filter ? ` | ${filter}` : ""} }}`;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/fields.ts
-  function fieldElement(field2, root, form) {
-    const template5 = document.createElement("template");
-    template5.innerHTML = controls_default;
-    const kind = field2.type === "readonly" ? field2.format ?? "readonly" : field2.type === "money" ? "amount" : field2.type ?? "text";
-    const control = template5.content.querySelector(`[data-control="${kind === "text" && field2.type === "readonly" ? "readonly" : kind}"]`).content.firstElementChild.cloneNode(true);
-    const wrapper = document.createElement("cms-dashboard-detail-field");
-    if (field2.visibleWhen) {
-      wrapper.setAttribute("cms-condition", `detailVisibility | dashboardVisibility(detailRules.${field2.id})`);
-    }
-    wrapper.setAttribute("label", field2.label);
-    wrapper.toggleAttribute("required", field2.required === true);
-    wrapper.toggleAttribute("internal-label", field2.type !== "readonly" && field2.type !== "checkbox" && field2.type !== "table");
-    if (field2.type === "readonly") {
-      composeReadonly(control, field2, root);
-      wrapper.append(...Array.from(control.childNodes));
-    } else {
-      control.setAttribute("label", field2.label);
-      control.setAttribute("data-field-control", field2.id);
-      if (form && !(field2.type === "table" && !field2.editable)) {
-        const name = submissionName(field2.name ?? field2.path, form.valuesPath);
-        control.setAttribute("name", field2.type === "tokens" && !name.endsWith("[]") ? `${name}[]` : name);
-        if (field2.empty) {
-          control.setAttribute("cms-form-empty", field2.empty);
-        }
-        if (field2.valueType) {
-          control.setAttribute("cms-form-value-type", field2.valueType);
-        }
-      }
-      if (field2.type === "checkbox") {
-        control.setAttribute("cms-bind-boolean-checked", field2.path === "." ? root : `${root}.${field2.path}`);
-        control.setAttribute("aria-label", field2.label);
-      } else if (field2.type !== "media" && field2.type !== "schema" && field2.type !== "table" && field2.type !== "reorderable-list") {
-        control.setAttribute("value", fieldBinding(root, field2.path, field2.type === "tokens" ? "dashboardTokens" : undefined));
-      }
-      control.toggleAttribute("required", field2.required === true);
-      if ("placeholder" in field2 && field2.placeholder) {
-        control.setAttribute("placeholder", field2.placeholder);
-      }
-      if (field2.type === "number") {
-        for (const key of ["min", "max", "step"]) {
-          if (field2[key] !== undefined) {
-            control.setAttribute(key, String(field2[key]));
-          }
-        }
-      }
-      if (field2.type === "money") {
-        control.setAttribute("currency", `{{ ${root}Money.${field2.id}.currency }}`);
-        control.setAttribute("allow-decimals", `{{ ${root}Money.${field2.id}.allowDecimals }}`);
-        control.setAttribute("cms-form-value-type", "number");
-      }
-      if (field2.type === "textarea") {
-        control.setAttribute("rows", String(field2.rows ?? 4));
-      }
-      if (field2.type === "select" || field2.type === "combobox" || field2.type === "tokens") {
-        const options = field2.type === "select" ? field2.options : optionList(field2.options, []);
-        if (field2.type === "select" && !options.some((option2) => option2.value === "")) {
-          const placeholder = document.createElement("option");
-          placeholder.value = "";
-          placeholder.disabled = true;
-          placeholder.textContent = "Select an option";
-          placeholder.setAttribute("cms-condition", `!${root}.${field2.path}`);
-          control.append(placeholder);
-        }
-        for (const item of options) {
-          const option2 = document.createElement("option");
-          option2.value = item.value;
-          option2.textContent = item.label;
-          control.append(option2);
-        }
-        if (field2.type !== "select") {
-          control.toggleAttribute("creatable", field2.allowCustom === true);
-          control.setAttribute("placeholder", "");
-        }
-      }
-      if (field2.type === "cms-user") {
-        composeUserOptions(control, field2.id);
-      }
-      if (field2.type === "media") {
-        composeMedia(control, field2);
-      }
-      if (field2.type === "schema") {
-        composeSchema(control, field2);
-      }
-      if (field2.type === "secret-ref") {
-        control.setAttribute("api", route("/api/secrets"));
-      }
-      if (field2.type === "page-link") {
-        control.setAttribute("allow-external", String(field2.allowExternal === true));
-        control.setAttribute("allow-media", String(field2.allowMedia === true));
-        control.setAttribute("published-only", String(field2.publishedOnly === true));
-      }
-      wrapper.append(field2.type === "table" ? composeTable(control, field2) : field2.type === "reorderable-list" ? composeReorderable(control, field2) : (field2.type === "combobox" || field2.type === "tokens") && field2.lookup ? composeLookup(control, field2) : control);
-    }
-    return wrapper;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/field.css
-  var field_default7 = `:host { display: block; min-width: 0; }
-dl { display: grid; gap: 7px; margin: 0; min-width: 0; }
-dt { color: #66736f; font-size: 11px; font-weight: 750; letter-spacing: 0; text-transform: uppercase; }
-dd { margin: 0; min-width: 0; }
-:host([internal-label]) dl { gap: 0; }
-:host([internal-label]) dt { display: none; }
-:host([required]:not([internal-label])) dt { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-:host([required]:not([internal-label])) dt::after { content: "* Required"; color: var(--text-muted, #94a3b8); flex-shrink: 0; font-size: 10px; font-weight: 650; text-transform: none; }
-:host([required]:not([internal-label]):has([invalid])) dt::after { color: var(--danger-base, #dc2626); }
-::slotted(*) { width: 100%; min-width: 0; }
-::slotted(input[type="checkbox"]) { width: auto; }
-::slotted(span) { color: #66736f; overflow-wrap: anywhere; }
-::slotted(.readonly-list) { display: grid; gap: 4px; padding: 0; margin: 0; list-style: none; color: #66736f; overflow-wrap: anywhere; word-break: break-word; }
-::slotted(.readonly-empty) { color: #8a9692; font-style: italic; }
-::slotted(.badge) { display: inline-flex; align-items: center; width: fit-content; border-radius: 999px; background: #edf7f0; color: #105d3e; font-size: 12px; font-weight: 750; padding: 3px 8px; }
-::slotted(.detail-image) { aspect-ratio: 1; background: #f4f1ec; border: 1px solid var(--border-default); border-radius: 10px; display: block; object-fit: cover; width: 100%; }
-
-::slotted(a) { color: var(--primary-base); overflow-wrap: anywhere; }
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/Field.ts
-  class DashboardDetailField extends l {
-    constructor() {
-      super({ css: field_default7, template: "<dl><dt></dt><dd><slot></slot></dd></dl>" });
-    }
-    static observedAttributes = ["label", "required", "internal-label"];
-    attributeChangedCallback() {
-      this.shadowRoot.querySelector("dt").textContent = this.getAttribute("label") ?? "";
-    }
-  }
-  customElements.define("cms-dashboard-detail-field", DashboardDetailField);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/composition.ts
-  function composeDetail(widget, context, navigation) {
-    const fragment = document.createDocumentFragment();
-    const root = "detailValues";
-    const title = document.createElement("span");
-    title.slot = "bound-title";
-    title.setAttribute("cms-condition", "detailReady");
-    if (widget.title?.path) {
-      const path = widget.title.path === "." ? root : `${root}.${widget.title.path}`;
-      const present = `${path} || ${path} == 0 || ${path} == false`;
-      const value2 = document.createElement("span");
-      value2.setAttribute("cms-condition", present);
-      value2.textContent = binding(root, widget.title.path);
-      const fallback = document.createElement("span");
-      fallback.setAttribute("cms-condition", `!${path} && ${path} != 0 && ${path} != false`);
-      fallback.textContent = widget.title.fallback ?? widget.id;
-      title.append(value2, fallback);
-    } else {
-      title.textContent = widget.title?.fallback ?? widget.id;
-    }
-    fragment.append(title);
-    fragment.append(composeActions());
-    let form;
-    if (widget.save) {
-      if (!context) {
-        throw new Error("Detail forms require their source context.");
-      }
-      form = formPart("save");
-      configureForm(form, widget.save, context);
-      if (widget.save.confirm) {
-        form.dataset.saveConfirm = widget.save.confirm;
-      }
-      const button = formPart("submit");
-      button.slot = "bound-actions";
-      button.setAttribute("form", form.getAttribute("id"));
-      button.setAttribute("cms-condition", "detailReady");
-      button.textContent = widget.save.label ?? "Save";
-      fragment.append(button, form);
-    }
-    for (const section2 of [...widget.main, ...widget.aside ?? []]) {
-      if (!("widget" in section2)) {
-        fragment.append(...section2.fields.filter((field2) => field2.type === "schema").map(schemaSource));
-      }
-    }
-    if ([...widget.main, ...widget.aside ?? []].some((section2) => !("widget" in section2) && section2.fields.some((field2) => field2.type === "cms-user"))) {
-      fragment.append(directoryElement());
-    }
-    for (const [slot, sections2] of [
-      ["bound-main", widget.main],
-      ["bound-aside", widget.aside ?? []]
-    ]) {
-      for (const section2 of sections2) {
-        if ("widget" in section2) {
-          if (!navigation) {
-            throw new Error("Detail navigation must be composed with its source context.");
-          }
-          const child = navigation(section2);
-          child.slot = slot;
-          child.setAttribute("data-detail-ready", "{{ detailReady }}");
-          child.setAttribute("cms-condition", "detailReady && detailPersisted");
-          if (form) {
-            child.removeAttribute("slot");
-            form.querySelector("[data-form-main]").append(child);
-          } else {
-            fragment.append(child);
-          }
-        } else {
-          const element = sectionElement(section2, slot, root, widget.save);
-          if (form) {
-            element.removeAttribute("slot");
-            form.querySelector(slot === "bound-main" ? "[data-form-main]" : "[data-form-aside]").append(element);
-          } else {
-            fragment.append(element);
-          }
-        }
-      }
-    }
-    return fragment;
-  }
-  function sectionElement(section2, slot, root, form) {
-    const element = document.createElement("cms-detail-section");
-    element.slot = slot;
-    element.setAttribute("heading", section2.title);
-    element.setAttribute("cms-condition", "detailReady");
-    if (section2.description) {
-      element.setAttribute("description", section2.description);
-    }
-    if (slot === "bound-aside") {
-      element.setAttribute("density", "compact");
-    }
-    const stack = document.createElement("p9r-stack");
-    stack.setAttribute("gap", "md");
-    stack.setAttribute("trim", "");
-    stack.append(...section2.fields.map((field2) => fieldElement(field2, root, form)));
-    element.append(stack);
-    return element;
-  }
-  function binding(root, path) {
-    return `{{ ${path === "." ? root : `${root}.${path}`} }}`;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/example/definition.ts
-  var exampleDetail = {
-    widget: "w-detail",
-    id: "example-products",
-    source: { endpoint: "" },
-    title: { path: "title" },
-    status: { path: "status" },
-    actions: [
-      { label: "Save changes", tone: "primary", id: "save" },
-      { label: "Duplicate", id: "duplicate" },
-      { label: "Preview", id: "preview" },
-      { label: "Copy link", id: "copy-link", section: "Share", icon: "link" },
-      { label: "Export", id: "export", section: "Share", icon: "download" },
-      { label: "Archive product", tone: "danger", id: "archive", section: "Other actions", icon: "archive" },
-      { label: "Delete product", tone: "danger", id: "delete", section: "Other actions", icon: "trash" }
-    ],
-    main: [
-      {
-        id: "general",
-        title: "General",
-        fields: [
-          { id: "title", label: "Title", type: "text", path: "title" },
-          { id: "description", label: "Description", type: "textarea", path: "description" },
-          {
-            id: "media",
-            label: "Media",
-            type: "media",
-            path: "media",
-            item: { idPath: "id", urlPath: "url", altPath: "alt" }
-          },
-          { id: "category", label: "Category", type: "text", path: "category" }
-        ]
-      }
-    ],
-    aside: [
-      {
-        id: "status",
-        title: "Status",
-        fields: [
-          {
-            id: "status",
-            label: "Publication",
-            type: "select",
-            path: "status",
-            options: options("Active", "Draft", "Archived")
-          },
-          {
-            id: "visibility",
-            label: "Visibility",
-            type: "select",
-            path: "visibility",
-            options: options("Online store", "Hidden")
-          }
-        ]
-      },
-      {
-        id: "organization",
-        title: "Organization",
-        fields: [
-          {
-            id: "vendor",
-            label: "Vendor",
-            type: "combobox",
-            path: "vendor",
-            options: options("Acme", "Example Supply", "Northwind", "Paper & Co."),
-            allowCustom: true
-          },
-          {
-            id: "tags",
-            label: "Tags",
-            type: "tokens",
-            path: "tags",
-            options: options("Featured", "New", "Seasonal"),
-            allowCustom: true
-          },
-          { id: "id", label: "Resource id", type: "readonly", path: "id" }
-        ]
-      }
-    ]
-  };
-  function options(...values) {
-    return values.map((value2) => ({ label: value2, value: value2 }));
-  }
-
-  // src/static/admin/_content/sources/_runtime/table.html
-  var table_default3 = `<template data-table-control="column"><span slot="columns" role="columnheader"></span></template>
-<template data-table-control="action"><p9r-button slot="actions" type="button"></p9r-button></template>
-<template data-table-control="filters">
-    <form slot="filters" data-filters>
-        <cms-dashboard-table-filters>
-            <button slot="actions" type="submit">Apply filters</button>
-            <button slot="actions" type="button" data-filter-clear>Clear filters</button>
-        </cms-dashboard-table-filters>
-    </form>
-</template>
-<template data-table-control="text"><cms-dashboard-table-filter slot="fields"><input type="text"></cms-dashboard-table-filter></template>
-<template data-table-control="select"><cms-dashboard-table-filter slot="fields"><select><option value="">All</option></select></cms-dashboard-table-filter></template>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/presentation/filters.css
-  var filters_default = `:host {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 12px;
-    align-items: end;
-    padding: 12px 16px;
-    border-bottom: 1px solid #e8ecea;
-    background: #fbfcfb;
-}
-
-.fields {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-    gap: 10px;
-    min-width: 0;
-}
-
-.actions {
-    display: flex;
-    gap: 8px;
-}
-
-::slotted(button) {
-    min-height: 36px;
-    border: 1px solid #cfd9d4;
-    border-radius: 6px;
-    background: #fff;
-    color: #29443b;
-    cursor: pointer;
-    font: inherit;
-    font-size: 12px;
-    font-weight: 750;
-    padding: 7px 11px;
-}
-
-::slotted(button[type="submit"]) {
-    border-color: #165f4b;
-    background: #165f4b;
-    color: #fff;
-}
-
-@media (max-width: 760px) {
-    :host {
-        grid-template-columns: 1fr;
-    }
-
-    .actions {
-        justify-content: flex-end;
-    }
-}
-
-slot { display: contents; }
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/presentation/filters.html
-  var filters_default2 = `<div class="fields"><slot name="fields"></slot></div>
-<div class="actions"><slot name="actions"></slot></div>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/presentation/Filters.ts
-  class DashboardTableFilters extends l {
-    constructor() {
-      super({ css: filters_default, template: filters_default2 });
-    }
-  }
-  customElements.define("cms-dashboard-table-filters", DashboardTableFilters);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/presentation/filter.css
-  var filter_default = `:host {
-    display: grid;
-    gap: 5px;
-    min-width: 0;
-    color: #3d4a46;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-::slotted(input),
-::slotted(select) {
-    box-sizing: border-box;
-    width: 100%;
-    min-height: 36px;
-    border: 1px solid #d7dfdb;
-    border-radius: 6px;
-    background: #fff;
-    color: #14201c;
-    font: inherit;
-    font-weight: 500;
-    padding: 7px 9px;
-}
-
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/presentation/Filter.ts
-  class DashboardTableFilter extends l {
-    constructor() {
-      super({ css: filter_default, template: "<span data-label></span><slot></slot>" });
-    }
-    static observedAttributes = ["label"];
-    attributeChangedCallback() {
-      this.shadowRoot.querySelector("[data-label]").textContent = this.getAttribute("label") ?? "";
-    }
-    connectedCallback() {
-      this.addEventListener("click", this.focusControl);
-    }
-    disconnectedCallback() {
-      this.removeEventListener("click", this.focusControl);
-    }
-    focusControl = (event) => {
-      if (event.target === this) {
-        this.querySelector("input, select")?.focus();
-      }
-    };
-  }
-  customElements.define("cms-dashboard-table-filter", DashboardTableFilter);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/composition.ts
-  var filterStates = new WeakMap;
-  function tableShell(widget, filters = {}) {
-    const table = new DashboardWTable;
-    table.dataset.widgetId = widget.id;
-    table.setAttribute("heading", widget.title ?? widget.source.endpoint ?? widget.id);
-    table.style.setProperty("--dashboard-table-columns", ["46px", ...widget.columns.map((column) => column.width ?? "minmax(7rem, 1fr)")].join(" "));
-    const state = { values: filters };
-    filterStates.set(table, state);
-    hc(table, () => {
-      const selected2 = table.selectedKeys;
-      const resource = selected2.length === 1 ? itemsFrom(it(table), widget.source).find((row) => String(valueAt(row, widget.rowKey)) === selected2[0]) : undefined;
-      return {
-        tableFilters: state.values,
-        detailResource: resource,
-        tableOperations: Object.fromEntries((widget.actions ?? []).filter((action) => action.form).map((action) => {
-          const fields = action.form.fields ?? [];
-          const values = Object.fromEntries(fields.map((field2) => [field2.id, valueAt(resource, field2.path)]));
-          return [action.id, { resource, resourceMoney: moneyFieldContext(fields, resource, values) }];
-        })),
-        detailRow: resource,
-        detailSelection: { id: resource ? selected2[0] : undefined }
-      };
-    });
-    for (const column of widget.columns) {
-      const header = fragment("column").firstElementChild;
-      header.dataset.columnHeader = column.id;
-      header.textContent = column.label;
-      table.append(header);
-    }
-    for (const action of widget.actions ?? []) {
-      if (action.form) {
-        continue;
-      }
-      const button = fragment("action").firstElementChild;
-      button.dataset.action = action.id;
-      button.dataset.widget = widget.id;
-      if (action.selection?.opens) {
-        button.dataset.target = action.selection.opens;
-      }
-      if (action.confirm) {
-        button.dataset.confirm = action.confirm;
-      }
-      setP9rButtonTone(button, action.tone ?? "primary");
-      setP9rButtonLabel(button, action.label);
-      table.append(button);
-    }
-    if (widget.filters?.length) {
-      const form = fragment("filters");
-      const layout = form.querySelector("cms-dashboard-table-filters");
-      for (const filter of widget.filters) {
-        const field2 = fragment(filter.type === "select" ? "select" : "text").firstElementChild;
-        field2.setAttribute("label", filter.label);
-        const control = field2.querySelector("input, select");
-        control.name = filter.id;
-        control.dataset.filterId = filter.id;
-        control.setAttribute("aria-label", filter.label);
-        control.setAttribute("value", `{{ tableFilters.${filter.id} }}`);
-        if (filter.placeholder) {
-          control.setAttribute("placeholder", filter.placeholder);
-        }
-        if (filter.type === "select") {
-          for (const option2 of filter.options ?? []) {
-            const element = document.createElement("option");
-            element.value = option2.value;
-            element.textContent = option2.label;
-            control.append(element);
-          }
-        }
-        layout.append(field2);
-      }
-      table.append(form);
-    }
-    return table;
-  }
-  function updateTableFilters(table, filters) {
-    const state = filterStates.get(table);
-    if (!state || JSON.stringify(state.values) === JSON.stringify(filters)) {
-      return;
-    }
-    state.values = filters;
-    Wi(table);
-  }
-  function fragment(kind) {
-    const template5 = document.createElement("template");
-    template5.innerHTML = table_default3;
-    return template5.content.querySelector(`[data-table-control="${kind}"]`).content.cloneNode(true);
-  }
-
-  // src/static/admin/_content/sources/_runtime/source-states.html
-  var source_states_default = `<p9r-skeleton
-    shape="rect"
-    role="status"
-    aria-label="Loading data"
-    cms-condition="!dashboardData &amp;&amp; !$source.loaded &amp;&amp; !$source.empty &amp;&amp; !$source.error &amp;&amp; !$source.refreshError"
-></p9r-skeleton>
-<p9r-alert type="error" cms-condition="$source.error || $source.refreshError" role="alert">
-    <p>Unable to load this data. {{ $source.message }}</p>
-    <p9r-button type="button" variant="outlined" data-dashboard-source-retry>Retry</p9r-button>
-</p9r-alert>
-
-<p9r-alert type="info" cms-condition="!dashboardData &amp;&amp; $source.empty">
-    <p>No data is available.</p>
-    <p9r-button type="button" variant="outlined" data-dashboard-source-retry>Retry</p9r-button>
-</p9r-alert>
-`;
-
-  // src/components/admin/Resources/Dashboards/runtime/mounting/mountSource.ts
-  var sourceSequence = 0;
-  function sourceWrapper(sourceId, ref, vars, alias, requiredParams = []) {
-    const params = resolveParams(ref.params, vars);
-    if (requiredParams.some((name) => params[name] === undefined)) {
-      return pendingSourceWrapper();
-    }
-    const url = sourceUrl(sourceId, ref, vars);
-    return urlSourceWrapper(`${url.pathname}${url.search}`, alias);
-  }
-  function requiredSourceParams(context, ref) {
-    const sourceId = ref.sourceId ?? context.dashboard.source;
-    const group = (context.groups ?? [context.group]).find((candidate) => candidate.source.id === sourceId);
-    return group?.endpoints.find((endpoint) => endpoint.endpointId === ref.endpoint)?.params.filter((param) => param.required).map((param) => param.name) ?? [];
-  }
-  function urlSourceWrapper(url, alias) {
-    const wrapper = document.createElement("div");
-    wrapper.setAttribute("cms-source", `${url} as ${alias}`);
-    wrapper.setAttribute("cms-reload-on", `dashboard:retry:${++sourceSequence}`);
-    const template5 = document.createElement("template");
-    template5.innerHTML = source_states_default;
-    wrapper.append(template5.content.cloneNode(true));
-    return wrapper;
-  }
-  function pendingSourceWrapper() {
-    const wrapper = document.createElement("div");
-    wrapper.dataset.dashboardSourcePending = "true";
-    return wrapper;
-  }
-  function tableRowsTemplate(widget) {
-    const row = document.createElement("cms-dashboard-w-row");
-    row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
-    row.setAttribute("row-key", bindingPath("row", widget.rowKey));
-    if (widget.selection?.opens) {
-      row.setAttribute("collection", widget.selection.opens);
-    }
-    for (const column of widget.columns) {
-      const cell = document.createElement("cms-dashboard-w-cell");
-      cell.setAttribute("column", column.id);
-      if (column.primary) {
-        cell.toggleAttribute("primary", true);
-      }
-      if (column.primary) {
-        cell.setAttribute("meta", "{{ row.id }}");
-      }
-      if (column.format === "badge") {
-        cell.setAttribute("tone", "badge");
-      }
-      if (column.format === "date" || column.format === "money") {
-        cell.dataset.displayFormat = column.format;
-        cell.dataset.displayValue = bindingPath("row", column.path);
-        if (column.format === "money") {
-          cell.dataset.displayCurrency = bindingPath("row", "currency");
-        }
-      }
-      cell.textContent = bindingPath("row", column.path);
-      row.append(cell);
-    }
-    return row;
-  }
-  function navigationItemsTemplate(widget, items) {
-    const item = document.createElement("cms-dashboard-w-navigation-item");
-    item.setAttribute("cms-repeat", `${items ?? repeatPath("dashboardData", widget.source.itemsPath)} as row`);
-    item.setAttribute("row-key", bindingPath("row", widget.rowKey));
-    item.setAttribute("title", bindingPath("row", widget.item.title.path));
-    if (widget.item.subtitle) {
-      item.setAttribute("subtitle", bindingPath("row", widget.item.subtitle.path));
-    }
-    if (widget.item.icon) {
-      item.setAttribute("icon", widget.item.icon);
-    }
-    if (widget.item.badge) {
-      item.setAttribute("badge", bindingPath("row", widget.item.badge.path));
-    }
-    if (widget.selection?.opens) {
-      item.setAttribute("collection", widget.selection.opens);
-    }
-    if (widget.reorderable) {
-      item.toggleAttribute("reorderable", true);
-    }
-    return item;
-  }
-  function repeatPath(alias, path) {
-    return path ? `${alias}.${path}` : alias;
-  }
-  function bindingPath(alias, path) {
-    return `{{ ${path === "." ? alias : `${alias}.${path}`} }}`;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/example/data.ts
-  var PRODUCTS = [
-    product("prod_1001", "Desk Lamp", "Active", "Northwind", "Home", "Online store", "Today"),
-    product("prod_1002", "Canvas Backpack", "Draft", "Acme", "Travel", "Hidden", "Yesterday"),
-    product("prod_1003", "Ceramic Mug", "Active", "Example Supply", "Kitchen", "Online store", "Jul 1"),
-    product("prod_1004", "Notebook Set", "Archived", "Paper & Co.", "Stationery", "Hidden", "Jun 28")
-  ];
-  function isStringArray(value2) {
-    return Array.isArray(value2) && value2.every((item) => typeof item === "string");
-  }
-  function isMediaItems(value2) {
-    return Array.isArray(value2) && value2.every((item) => typeof item === "object" && item !== null && ("url" in item));
-  }
-  function product(id2, title, status, vendor, category, visibility2, updated) {
-    return {
-      id: id2,
-      title,
-      status,
-      vendor,
-      category,
-      visibility: visibility2,
-      updated,
-      description: "Editable sandbox content before any data source is wired.",
-      media: media(id2, title),
-      tags: ["Featured", "New"]
-    };
-  }
-  function media(id2, title) {
-    return [
-      {
-        id: `${id2}_media_1`,
-        url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=420&q=80",
-        alt: `${title} media`
-      }
-    ];
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/example/index.ts
-  function mountDashboardWidgetExample(root, selectedId) {
-    root.replaceChildren();
-    const selected2 = selectedId ? PRODUCTS.find((item) => item.id === selectedId) ?? null : null;
-    root.append(selected2 ? detailElement(selected2) : tableElement());
-  }
-  function updateDashboardWidgetExampleField(rowKey, field2, value2) {
-    const product2 = PRODUCTS.find((item) => item.id === rowKey);
-    if (!product2) {
-      return;
-    }
-    if (field2 === "title" && typeof value2 === "string") {
-      product2.title = value2;
-    }
-    if (field2 === "status" && typeof value2 === "string") {
-      product2.status = value2;
-    }
-    if (field2 === "vendor" && typeof value2 === "string") {
-      product2.vendor = value2;
-    }
-    if (field2 === "category" && typeof value2 === "string") {
-      product2.category = value2;
-    }
-    if (field2 === "description" && typeof value2 === "string") {
-      product2.description = value2;
-    }
-    if (field2 === "visibility" && typeof value2 === "string") {
-      product2.visibility = value2;
-    }
-    if (field2 === "tags" && isStringArray(value2)) {
-      product2.tags = value2;
-    }
-    if (field2 === "media" && isMediaItems(value2)) {
-      product2.media = value2;
-    }
-  }
-  function tableElement() {
-    const widget = {
-      widget: "w-table",
-      id: "example-products",
-      title: "Products",
-      source: { endpoint: "" },
-      rowKey: "id",
-      selection: { opens: "example-products" },
-      columns: [
-        { id: "title", path: "title", label: "Product", primary: true },
-        { id: "status", path: "status", label: "Status", format: "badge", width: "140px" },
-        { id: "vendor", path: "vendor", label: "Vendor", width: "160px" },
-        { id: "category", path: "category", label: "Category", width: "180px" },
-        { id: "updated", path: "updated", label: "Updated", width: "140px" }
-      ]
-    };
-    const element = tableShell(widget);
-    element.setAttribute("subtitle", "Widget sandbox: selection and bulk checkboxes only.");
-    element.setAttribute("cms-source", "");
-    const rows = tableRowsTemplate(widget);
-    rows.querySelector('[column="updated"]').setAttribute("tone", "muted");
-    element.append(rows);
-    Pd(element, { dashboardData: PRODUCTS });
-    return element;
-  }
-  function detailElement(product2) {
-    const element = new DashboardWDetail;
-    element.configure(exampleDetail);
-    element.dataset.widgetId = exampleDetail.id;
-    element.dataset.rowKey = product2.id;
-    element.setAttribute("cms-source", "");
-    element.append(composeDetail(exampleDetail));
-    element.querySelector('[data-field-control="vendor"]').setAttribute("placeholder", "Search or add a vendor");
-    element.querySelector('[data-field-control="tags"]').setAttribute("placeholder", "Search or add tags");
-    Pd(element, structuredClone(product2));
-    return element;
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/endpoint.ts
-  async function executeEndpointAction(group, groups, action, vars) {
-    if (action.selection?.row !== undefined) {
-      const row = resolveExpression(action.selection.row, vars);
-      if (!action.selection.opens || typeof row !== "string" && typeof row !== "number" || !String(row).trim() || typeof row === "number" && !Number.isFinite(row)) {
-        throw new Error("The navigation target is unavailable. Reload the detail before trying again.");
-      }
-      return { kind: "navigation", collection: action.selection.opens, row: String(row) };
-    }
-    if (!action.endpoint) {
-      throw new Error(`Dashboard action "${action.id}" does not declare an endpoint`);
-    }
-    const method = endpointMethod(group, groups, action.endpoint);
-    if (action.download) {
-      const download = await sendSourceDownload(group.source.id, action.endpoint, method, vars);
-      return {
-        kind: "download",
-        blob: download.blob,
-        filename: action.download.filename ?? download.filename ?? `${action.id}.download`
-      };
-    }
-    throw new Error(`Dashboard action "${action.id}" must submit its native form`);
-  }
-  function endpointMethod(group, groups, ref) {
-    const sourceId = ref.sourceId ?? group.source.id;
-    const sourceGroup = groups.find((candidate) => candidate.source.id === sourceId);
-    const endpoint = sourceGroup?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);
-    if (!endpoint) {
-      throw new Error(`Dashboard endpoint "${sourceId}:${ref.endpoint}" was not found`);
-    }
-    return endpoint.method;
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/widgets.ts
-  function findDetailWidget(widgets, id2) {
-    for (const widget of widgets) {
-      if (widget.widget === "w-detail" && widget.id === id2) {
-        return widget;
-      }
-      if (widget.widget === "w-section") {
-        const found = findDetailWidget(widget.children, id2);
-        if (found) {
-          return found;
-        }
-      }
-      if (widget.widget === "w-tabs") {
-        for (const tab of widget.tabs) {
-          const found = findDetailWidget(tab.children, id2);
-          if (found) {
-            return found;
-          }
-        }
-      }
-    }
-    return null;
-  }
-  function findCollectionAction(widgets, actionId, widgetId) {
-    for (const widget of widgets) {
-      if ((widget.widget === "w-table" || widget.widget === "w-navigation-list") && (!widgetId || widget.id === widgetId)) {
-        const action = widget.actions?.find((item) => item.id === actionId);
-        if (action) {
-          return action;
-        }
-      }
-      if (widget.widget === "w-section") {
-        const found = findCollectionAction(widget.children, actionId, widgetId);
-        if (found) {
-          return found;
-        }
-      }
-      if (widget.widget === "w-tabs") {
-        for (const tab of widget.tabs) {
-          const found = findCollectionAction(tab.children, actionId, widgetId);
-          if (found) {
-            return found;
-          }
-        }
-      }
-      if (widget.widget === "w-detail") {
-        const found = findCollectionAction(widget.main.filter((item) => ("widget" in item)), actionId, widgetId);
-        if (found) {
-          return found;
-        }
-      }
-    }
-    return null;
-  }
-  function findMediaField(widget, fieldId, itemFieldId) {
-    const fields = [...widget.main.filter(isDetailSection2), ...widget.aside ?? []].flatMap((section2) => section2.fields);
-    const direct = fields.find((field2) => field2.id === fieldId && field2.type === "media");
-    if (direct) {
-      return { field: direct };
-    }
-    const parent = fields.find((field2) => field2.id === fieldId && field2.type === "reorderable-list");
-    const nested = parent?.fields.find((field2) => field2.id === itemFieldId && field2.type === "media");
-    return parent && nested ? { field: nested, parent } : null;
-  }
-  function isDetailSection2(item) {
-    return !("widget" in item);
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/index.ts
-  async function executeDashboardAction(group, dashboard, detail, actionId, draft, currentResource, groups = [group]) {
-    const widget = findDetailWidget(dashboard.views, detail.collection);
-    if (!widget) {
-      throw new Error(`Dashboard action target "${detail.collection}" was not found`);
-    }
-    const action = widget.actions?.find((item) => item.id === actionId);
-    if (!action) {
-      throw new Error(`Dashboard action "${actionId}" was not found`);
-    }
-    if (!action.endpoint && !action.selection) {
-      throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
-    }
-    const resource = requireDetailResource(currentResource);
-    const fields = { ...fieldValues(widget, resource), ...draft };
-    if (!matchesDashboardVisibility(action.visibleWhen, { resource, fields })) {
-      throw new Error(`Dashboard action "${actionId}" is not available in the current state`);
-    }
-    return executeEndpointAction(group, groups, action, {
-      selection: { id: detail.row },
-      resource,
-      fields
-    });
-  }
-  async function executeDashboardTableAction(group, dashboard, actionId, widgetId, value2, groups = [group], filters = {}, detail) {
-    const action = findCollectionAction(dashboard.views, actionId, widgetId);
-    if (!action) {
-      throw new Error(`Dashboard table action "${actionId}" was not found`);
-    }
-    if (!action.endpoint && !action.selection) {
-      throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
-    }
-    return executeEndpointAction(group, groups, action, {
-      filters: { ...filters },
-      value: value2,
-      ...detail ? {
-        selection: {
-          id: detail.row,
-          [detail.collection]: { id: detail.row }
-        }
-      } : {}
-    });
-  }
-  async function executeDashboardMediaAction(group, dashboard, detail, media2, draft, groups = [group], submit) {
-    const widget = findDetailWidget(dashboard.views, detail.collection);
-    if (!widget) {
-      throw new Error(`Dashboard media target "${detail.collection}" was not found`);
-    }
-    const target2 = findMediaField(widget, media2.field, media2.itemField);
-    const actions = target2?.field.actions;
-    const ref = actions?.[media2.action];
-    if (!target2 || !ref) {
-      return { handled: false, nested: Boolean(target2?.parent), results: [] };
-    }
-    const resource = requireDetailResource(media2.resource);
-    const fields = { ...fieldValues(widget, resource), ...draft, ...media2.fields ?? {} };
-    const mediaVars = mediaActionVars(media2);
-    const files = media2.files ?? (media2.file ? [media2.file] : []);
-    if (!files.length || !submit || ref.body || !["upload", "replace"].includes(media2.action)) {
-      throw new Error("Media mutations require a native file upload; save ordering and removal with the detail.");
-    }
-    const results = await Promise.all(files.map((file) => submit({
-      url: sourceUrl(group.source.id, ref, { resource, fields, media: mediaVars }).href,
-      method: endpointMethod(group, groups, ref),
-      file
-    })));
-    const item = target2.parent ? resultMediaItem(results[0], target2.field, group.source.id) : undefined;
-    return { handled: true, nested: Boolean(target2.parent), results, ...item ? { item } : {} };
-  }
-  function resultMediaItem(value2, field2, sourceId) {
-    const candidate = value2 && typeof value2 === "object" && !Array.isArray(value2) && "media" in value2 ? value2.media : value2;
-    return mediaValue(candidate, field2, sourceId)[0];
-  }
-  function mediaActionVars(media2) {
-    return {
-      action: media2.action,
-      index: media2.index,
-      from: media2.from,
-      to: media2.to,
-      item: media2.item,
-      previousItem: media2.previousItem,
-      value: media2.value,
-      valueIds: media2.value.map(mediaId).filter(Boolean),
-      itemIndex: media2.itemIndex,
-      itemKey: media2.itemKey,
-      itemField: media2.itemField,
-      itemPath: media2.itemPath,
-      parentItem: media2.parentItem
-    };
-  }
-  function mediaId(item) {
-    return item.id;
-  }
-
-  // src/components/admin/Resources/Dashboards/view/actions/outcome.ts
-  function once(finish) {
-    let completion;
-    return () => completion ??= finish?.() ?? "current";
-  }
-
-  // src/components/admin/Resources/Dashboards/view/actions/nestedMedia.ts
-  function settleNestedMedia(context, key, media2, widget, item, failed = false) {
-    const bound = widget ? widget : undefined;
-    const draft = { ...context.drafts.get(key) ?? {} };
-    const items = cloneItems(bound?.currentFieldValues()[media2.field] ?? draft[media2.field]);
-    const parent = nestedMediaParent(items, media2);
-    const current = parent && media2.itemPath ? valueAt(parent, media2.itemPath) : undefined;
-    const expected = media2.value[0] ?? null;
-    if (parent && media2.itemPath && sameMedia(current, expected)) {
-      if (failed) {
-        const previous = media2.action === "replace" ? media2.previousItem : media2.action === "remove" ? media2.item : null;
-        setValueAt(parent, media2.itemPath, previous ?? null);
-      } else if (media2.action === "upload" || media2.action === "replace") {
-        const alt = current && typeof current === "object" && "alt" in current ? current.alt : undefined;
-        setValueAt(parent, media2.itemPath, item ? { ...item, ...typeof alt === "string" ? { alt } : {} } : null);
-      }
-    }
-    draft[media2.field] = items;
-    context.drafts.set(key, draft);
-    if (bound) {
-      bound.applyFieldDraft(media2.field, items);
-      return;
-    }
-  }
-  function cloneItems(value2) {
-    return Array.isArray(value2) ? structuredClone(value2.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item))) : [];
-  }
-  function nestedMediaParent(items, media2) {
-    if (media2.itemKeyPath && valueAt(media2.parentItem, media2.itemKeyPath) != null) {
-      return items.find((item) => String(valueAt(item, media2.itemKeyPath)) === media2.itemKey);
-    }
-    const pending = media2.value[0];
-    if (pending && media2.itemPath) {
-      const parent = items.find((item) => sameMedia(valueAt(item, media2.itemPath), pending));
-      if (parent) {
-        return parent;
-      }
-    }
-    return items[media2.itemIndex ?? -1];
-  }
-  function sameMedia(left, right) {
-    if (left == null || right === null) {
-      return left == null && right === null;
-    }
-    return typeof left === "object" && "id" in left && "url" in left && left.id === right.id && left.url === right.url;
-  }
-
-  // src/components/admin/Resources/Dashboards/view/actions/media.ts
-  async function runDashboardMediaAction(context, media2, widget) {
-    const { group, dashboard } = context;
-    const detail = media2.widget ? { collection: media2.widget, row: media2.rowKey } : context.detail;
-    if (!group || !dashboard || !detail) {
-      return;
-    }
-    const key = detailKey(detail.collection, detail.row);
-    const finishAction = once(context.actionCoordinator?.beginAction());
-    try {
-      const result = await executeDashboardMediaAction(group, dashboard, detail, media2, context.drafts.get(key) ?? {}, context.groups ?? [group], context.submit);
-      if (finishAction() === "stale") {
-        return;
-      }
-      if (result.nested) {
-        if (result.handled && (media2.action === "upload" || media2.action === "replace") && !result.item) {
-          throw new Error("The media endpoint returned no usable media item");
-        }
-        settleNestedMedia(context, key, media2, widget, result.item);
-        kb(`Media ${media2.action} completed`, { type: "success" });
-        return;
-      }
-      removeDraftField(context.drafts, key, media2.field);
-      context.acknowledgeDetailFields?.(detail.collection, detail.row, { [media2.field]: media2.value });
-      kb(`Media ${media2.action} completed`, { type: "success" });
-      context.reload(detail.collection, detail.row);
-    } catch (error) {
-      if (finishAction() === "stale") {
-        return;
-      }
-      if (media2.itemField) {
-        settleNestedMedia(context, key, media2, widget, undefined, true);
-      } else if (media2.previousValue !== undefined) {
-        const draft = context.drafts.get(key);
-        if (draft && Object.hasOwn(draft, media2.field) && !Object.hasOwn(remainingDraft(draft, { [media2.field]: media2.value }), media2.field)) {
-          context.drafts.set(key, { ...draft, [media2.field]: structuredClone(media2.previousValue) });
-        }
-        context.restoreDetailField?.(detail.collection, detail.row, media2.field, media2.value, media2.previousValue);
-      }
-      kb(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
-    }
-  }
-  function removeDraftField(drafts, key, field2) {
-    const draft = { ...drafts.get(key) ?? {} };
-    delete draft[field2];
-    Object.keys(draft).length ? drafts.set(key, draft) : drafts.delete(key);
-  }
-
-  // src/components/admin/Resources/Dashboards/view/actions/index.ts
-  async function runDashboardWidgetAction(context, action) {
-    const { group, dashboard, detail } = context;
-    if (!group || !dashboard) {
-      return;
-    }
-    const actionDetail = action.detail ? action.widget ? { collection: action.widget, row: action.row ?? detail?.row ?? "" } : detail : action.widget ? null : detail;
-    const key = actionDetail ? detailKey(actionDetail.collection, actionDetail.row) : "";
-    const finishAction = once(context.actionCoordinator?.beginAction());
-    try {
-      const submittedFields = structuredClone({ ...context.drafts.get(key) ?? {}, ...action.fields ?? {} });
-      const result = actionDetail ? await executeDashboardAction(group, dashboard, actionDetail, action.action, submittedFields, action.resource, context.groups ?? [group]) : await executeDashboardTableAction(group, dashboard, action.action, action.widget, action.value, context.groups ?? [group], context.filters?.get(action.widget ?? "") ?? {}, detail ?? undefined);
-      if (result.kind === "navigation") {
-        if (finishAction() !== "stale") {
-          (context.navigateDetail ?? context.openDetail)(result.collection, result.row);
-        }
-        return;
-      }
-      if (finishAction() !== "stale") {
-        downloadBlob(result.blob, result.filename);
-        kb(`${action.action} downloaded`, { type: "success" });
-      }
-    } catch (error) {
-      if (finishAction() === "stale") {
-        return;
-      }
-      kb(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
-    }
-  }
-  function downloadBlob(blob, filename) {
-    if (typeof URL.createObjectURL !== "function") {
-      throw new Error("Downloads are not supported in this browser");
-    }
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.hidden = true;
-    document.body.append(link);
-    link.click();
-    link.remove();
-    if (typeof URL.revokeObjectURL === "function") {
-      window.setTimeout(() => URL.revokeObjectURL(url), 0);
-    }
-  }
-
-  // src/static/admin/_content/sources/_runtime/action-form.html
-  var action_form_default = `<form hidden data-dashboard-action-form cms-source-trigger="submit" cms-source-inherit-query="false" cms-source-success-reset="false">
-    <input type="file" name="file" data-submission-file>
-</form>
-`;
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/index.ts
-  class ActionForms {
-    host;
-    pending = new Set;
-    constructor(host) {
-      this.host = host;
-    }
-    submit = (submission) => {
-      if (!this.host.isConnected || !this.host.closest("cms-binding-core")) {
-        return Promise.reject(new Error("The action form is not connected to page binding"));
-      }
-      const fragment2 = document.createElement("template");
-      fragment2.innerHTML = action_form_default;
-      const form = fragment2.content.firstElementChild;
-      form.setAttribute("cms-source", `${submission.url} as result`);
-      form.setAttribute("cms-source-method", submission.method);
-      return new Promise((resolve, reject) => {
-        let settled = false;
-        let started = false;
-        let stop;
-        const finish = (error, body) => {
-          if (settled) {
-            return;
-          }
-          settled = true;
-          stop?.();
-          this.pending.delete(cancel);
-          form.remove();
-          if (error) {
-            reject(error);
-          } else {
-            resolve(body);
-          }
-        };
-        const cancel = () => finish(new DOMException("The action form was disconnected", "AbortError"));
-        const result = (event) => {
-          if (event.target !== form) {
-            return;
-          }
-          const detail = event.detail;
-          finish(detail.ok ? undefined : new Error(detail.message || `Request failed (${detail.status})`), detail.body);
-        };
-        form.addEventListener("cms-source:success", result);
-        form.addEventListener("cms-source:failed", result);
-        this.pending.add(cancel);
-        stop = qd(form, (state) => {
-          if (state.disposed) {
-            cancel();
-          } else if (!started) {
-            started = true;
-            queueMicrotask(() => {
-              if (settled || !form.isConnected) {
-                return;
-              }
-              try {
-                if (submission.file) {
-                  const transfer = new DataTransfer;
-                  transfer.items.add(submission.file);
-                  form.querySelector("[data-submission-file]").files = transfer.files;
-                }
-                form.requestSubmit();
-              } catch (error) {
-                finish(error instanceof Error ? error : new Error(String(error)));
-              }
-            });
-          }
-        });
-        this.host.append(form);
-      });
-    };
-    disconnect() {
-      for (const cancel of [...this.pending]) {
-        cancel();
-      }
-    }
-  }
-
-  // src/static/admin/_content/sources/_runtime/definitions.html
-  var definitions_default = `<div data-dashboard-list-source slot="source-status" cms-source="/api/dashboards as dashboards" cms-reload-on="dashboard:definitions-changed">
-    <span cms-condition="$source.loading"><span cms-condition="definitionsEmbedded">Loading…</span></span>
-    <p9r-alert type="error" cms-condition="$source.error || $source.refreshError">Unable to load dashboards. {{ $source.message }}</p9r-alert>
-    <p9r-alert type="error" cms-condition="definitionsUnavailable">The settings dashboard is unavailable.</p9r-alert>
-</div>
-`;
-
-  // src/components/admin/Resources/Dashboards/view/controller/definitions.ts
-  class DashboardDefinitions {
-    stop;
-    connect(host, accept) {
-      let source2 = host.querySelector("[data-dashboard-list-source]");
-      if (!source2) {
-        const template5 = document.createElement("template");
-        template5.innerHTML = definitions_default;
-        source2 = template5.content.querySelector("[data-dashboard-list-source]");
-        source2.setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
-        host.append(template5.content);
-      }
-      hc(source2, (data) => {
-        const id2 = host.getAttribute("dashboard-id");
-        return {
-          definitionsEmbedded: host.hasAttribute("embedded"),
-          definitionsUnavailable: Boolean(id2) && Array.isArray(data) && !data.some((group) => group.dashboards.some((dashboard) => dashboard.id === id2))
-        };
-      });
-      this.stop = qd(source2, (state) => {
-        if (!state.disposed && !state.error && !state.refreshError && !state.refreshing && (state.loaded || state.empty) && Array.isArray(state.data)) {
-          accept(state.data);
-        }
-      });
-    }
-    disconnect() {
-      this.stop?.();
-      this.stop = undefined;
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/modal.ts
-  function operationModal(operation, context, root) {
-    const modal = formPart("modal");
-    modal.id = formId();
-    const title = operation.title ?? operation.label ?? "Confirm operation";
-    modal.setAttribute("aria-label", title);
-    modal.querySelector('[slot="title"]').textContent = title;
-    const form = modal.querySelector("form");
-    form.dataset.operationForm = "";
-    configureForm(form, operation, context);
-    const stack = form.querySelector("[data-operation-fields]");
-    if (operation.confirm) {
-      const confirmation = document.createElement("p");
-      confirmation.textContent = operation.confirm;
-      stack.append(confirmation);
-    }
-    for (const field2 of operation.fields ?? []) {
-      stack.append(fieldElement(field2, root, operation));
-    }
-    const submit = formPart("submit");
-    setP9rButtonTone(submit, operation.tone ?? "primary");
-    submit.textContent = operation.submitLabel ?? operation.label ?? "Create";
-    stack.append(submit);
-    const opener = formPart("opener");
-    opener.setAttribute("modal-target", modal.id);
-    opener.querySelector("p9r-button").textContent = operation.label ?? title;
-    setP9rButtonTone(opener.querySelector("p9r-button"), operation.tone ?? "secondary");
-    return { modal, form, opener };
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/operations/completion.ts
-  var OPERATION_AWAITING_READ = "data-operation-awaiting-read";
-  function trackOperationCompletion(host, formId2, complete) {
-    let submittedScope = "";
-    let submittedRow = "";
-    let stopRead;
-    const scope = () => `${host.dataset.sourceId ?? ""}\x00${host.dataset.rowKey ?? ""}`;
-    const owns = (event) => event.target.getAttribute("id") === formId2;
-    const clear = () => {
-      stopRead?.();
-      stopRead = undefined;
-      if (host.getAttribute(OPERATION_AWAITING_READ) === formId2) {
-        host.removeAttribute(OPERATION_AWAITING_READ);
-      }
-    };
-    const success = (event) => {
-      if (!owns(event) || !host.isConnected || scope() !== submittedScope) {
-        return;
-      }
-      clear();
-      complete(event.detail.body, submittedRow);
-    };
-    const partial = (event) => {
-      if (!owns(event) || !host.isConnected || scope() !== submittedScope) {
-        return;
-      }
-      const body = event.detail.body;
-      host.setAttribute(OPERATION_AWAITING_READ, formId2);
-      kb("The operation completed, but the detail could not be reloaded. Retry the read before making further changes.", { type: "warning" });
-      stopRead?.();
-      stopRead = qd(host, (state) => {
-        if (state.disposed || !host.isConnected || scope() !== submittedScope) {
-          clear();
-          return;
-        }
-        if ((state.loaded || state.empty) && !state.loading && !state.refreshing && !state.error && !state.refreshError) {
-          clear();
-          complete(body, submittedRow);
-        }
-      });
-    };
-    host.addEventListener(X, success);
-    host.addEventListener(Ut2, partial);
-    return () => {
-      submittedScope = scope();
-      submittedRow = host.dataset.rowKey ?? "";
-    };
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/operations/collection.ts
-  function composeTableOperations(table, widget, context) {
-    table.id ||= formId();
-    for (const action of widget.actions ?? []) {
-      if (!action.form) {
-        continue;
-      }
-      const operation = { label: action.label, tone: action.tone, confirm: action.confirm, ...action.form };
-      const { modal, form, opener } = operationModal(operation, context, `tableOperations.${action.id}.resource`);
-      const confirmation = Boolean(operation.confirm || operation.fields?.length);
-      const trigger = confirmation ? opener : form.querySelector('[type="submit"]');
-      trigger.slot = "actions";
-      if (!confirmation) {
-        trigger.setAttribute("form", form.id);
-      }
-      const content = confirmation ? modal : form;
-      content.slot = "footer";
-      if (operation.refresh !== "none") {
-        form.setAttribute("cms-source-success-reload", `#${table.id}`);
-      }
-      let selectedKey = "";
-      const capture = trackOperationCompletion(table, form.id, (body) => {
-        table.querySelector(`[id="${modal.id}"]`)?.removeAttribute("open");
-        kb("Operation completed", { type: "success" });
-        if (action.after?.opens) {
-          const row = action.after.row ? resolveExpression(action.after.row, { result: body, selection: { id: selectedKey } }) : selectedKey;
-          if ((typeof row === "string" || typeof row === "number") && String(row)) {
-            emitWidgetEvent(table, WIDGET_ROW_SELECT_EVENT, {
-              collection: action.after.opens,
-              rowKey: String(row)
-            });
-          }
-        }
-      });
-      table.addEventListener("submit", (event) => {
-        if (event.target.id !== form.id) {
-          return;
-        }
-        const keys = table.selectedKeys;
-        const current = keys.length === 1 && itemsFrom(it(table), widget.source).some((row) => String(valueAt(row, widget.rowKey)) === keys[0]);
-        if (!current || hasMissingTechnicalFields(event.target) || table.hasAttribute(OPERATION_AWAITING_READ)) {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-          kb(table.hasAttribute(OPERATION_AWAITING_READ) ? "The operation completed. Retry the list read before submitting again." : "Select exactly one available row before running this operation.", { type: "warning" });
-          return;
-        }
-        selectedKey = keys[0];
-        capture();
-      }, true);
-      table.append(trigger, content);
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/operations/index.ts
-  function composeDetailOperations(host, widget, context) {
-    const actions = detailFormActions(widget).flatMap((action) => action.form ? [{ ...action, form: action.form, deleting: false }] : []);
-    if (widget.delete) {
-      actions.push({ id: "delete", label: widget.delete.label ?? "Delete", form: widget.delete, deleting: true });
-    }
-    for (const action of actions) {
-      const operation = {
-        confirm: action.confirm,
-        tone: action.tone,
-        icon: action.icon,
-        ...action.form,
-        label: action.form.label ?? action.label
-      };
-      const { modal, form, opener } = operationModal(operation, context, `detailOperations.${action.id}.resource`);
-      const confirmation = Boolean(operation.confirm || operation.fields?.length);
-      const trigger = confirmation ? opener : form.querySelector('[type="submit"]');
-      const actionHost = action.section ? host.querySelector(`[data-widget-id="${action.section}"]`) ?? host : host;
-      trigger.slot = actionHost === host ? "bound-actions" : "actions";
-      trigger.setAttribute("cms-condition", "detailReady && detailPersisted");
-      if (action.visibleWhen) {
-        trigger.setAttribute("cms-condition", `detailOperationVisibility.${action.id}`);
-      }
-      if (!confirmation) {
-        trigger.setAttribute("form", form.getAttribute("id"));
-      }
-      if (!action.deleting && operation.refresh !== "none") {
-        form.setAttribute("cms-source-success-reload", `#${host.id}`);
-      }
-      const formId2 = form.getAttribute("id");
-      const modalId = modal.id;
-      host.addEventListener("open", (event) => {
-        const target2 = event.target;
-        if (target2.id === modalId) {
-          const currentForm = target2.querySelector("[data-operation-form]");
-          if (currentForm) {
-            HTMLFormElement.prototype.reset.call(currentForm);
-          }
-        }
-      });
-      const capture = trackOperationCompletion(host, formId2, (body, rowKey) => {
-        if (action.section && operation.refresh !== "none" && !action.after?.opens) {
-          const source2 = host.querySelector(`[data-widget-id="${action.section}"] [cms-source]`);
-          if (source2) {
-            Ic(source2).catch(() => kb("The operation completed, but its list could not be reloaded.", { type: "warning" }));
-          }
-        }
-        host.querySelector(`[id="${modalId}"]`)?.removeAttribute("open");
-        const currentForm = host.querySelector(`[id="${formId2}"]`);
-        if (currentForm) {
-          HTMLFormElement.prototype.reset.call(currentForm);
-        }
-        if (action.deleting) {
-          emitWidgetEvent(host, WIDGET_BACK_EVENT, {});
-        } else if (action.after?.opens) {
-          const row = action.after.row ? resolveExpression(action.after.row, { result: body, selection: { id: rowKey } }) : rowKey;
-          if (typeof row === "string" || typeof row === "number") {
-            emitWidgetEvent(host, WIDGET_ROW_SELECT_EVENT, {
-              collection: action.after.opens,
-              rowKey: String(row)
-            });
-          }
-        }
-      });
-      host.addEventListener("submit", (event) => {
-        if (event.target.closest("cms-dashboard-w-detail") !== host) {
-          return;
-        }
-        if (host.hasAttribute(OPERATION_AWAITING_READ)) {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-          kb("The operation already completed. Retry the detail read before submitting another form.", { type: "warning" });
-          return;
-        }
-        if (event.target.getAttribute("id") !== formId2) {
-          return;
-        }
-        const data = it(host);
-        const resource = widget.source.itemPath ? valueAt(data, widget.source.itemPath) : data;
-        const missing = hasMissingTechnicalFields(event.target);
-        const unavailable = resource == null || !matchesDashboardVisibility(action.visibleWhen, { resource, fields: host.currentFieldValues() });
-        const dirty = host.hasUnsavedChanges();
-        if (missing || unavailable || dirty) {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-          kb(missing ? "The operation identity or revision is missing. Reload the detail." : unavailable ? "This operation is no longer available for the current detail." : "Save or discard the current changes before running this operation.", { type: "warning" });
-          return;
-        }
-        capture();
-      }, true);
-      const content = confirmation ? modal : form;
-      content.slot = "footer";
-      actionHost.append(trigger);
-      host.append(content);
-    }
-  }
-
-  // src/static/admin/_content/sources/_runtime/forms/order.html
-  var order_default = `<form slot="footer" hidden data-navigation-order-form cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-inherit-query="false" cms-source-success-reset="false"></form>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/order/composition.ts
-  function composeNavigationOrder(list, source2, widget, context, owner) {
-    const operation = widget.actions?.find((action) => action.id === widget.reorderable?.action)?.form;
-    if (!operation) {
-      return false;
-    }
-    const template5 = document.createElement("template");
-    template5.innerHTML = order_default;
-    const form = template5.content.firstElementChild;
-    configureForm(form, operation, context);
-    source2.id = formId();
-    form.setAttribute("cms-source-success-reload", `#${source2.id}`);
-    list.setAttribute("form", form.id);
-    list.setAttribute("name", submissionName(widget.reorderable?.name ?? "ids", operation.valuesPath));
-    source2.setAttribute("data-navigation-order-source", "");
-    list.setAttribute("order-items-path", widget.source.itemsPath ?? "");
-    list.setAttribute("order-row-key", widget.rowKey);
-    (owner ?? list).append(form);
-    return true;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/order/items.ts
-  function orderedItems(data, host, order) {
-    const path = host.getAttribute("order-items-path");
-    const value2 = path ? valueAt(data, path) : data;
-    const items = Array.isArray(value2) ? value2 : [];
-    if (!order) {
-      return items;
-    }
-    const key = host.getAttribute("order-row-key");
-    const byId = new Map(items.map((item) => [String(valueAt(item, key)), item]));
-    const ordered = order.flatMap((id2) => byId.has(id2) ? [byId.get(id2)] : []);
-    const known = new Set(order);
-    return [...ordered, ...items.filter((item) => !known.has(String(valueAt(item, key))))];
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/order/Order.ts
-  class NavigationOrder {
-    host;
-    form;
-    source;
-    draft = null;
-    busy = false;
-    awaitingRead = false;
-    stop;
-    constructor(host, form, source2) {
-      this.host = host;
-      this.form = form;
-      this.source = source2;
-    }
-    connect() {
-      hc(this.source, (data) => ({
-        navigationItems: orderedItems(data, this.host, this.draft)
-      }));
-      this.form.addEventListener(X, this.success);
-      this.form.addEventListener(N2, this.failed);
-      this.form.addEventListener(Ut2, this.readFailed);
-      this.stop = qd(this.source, (state) => {
-        if (this.awaitingRead && (state.loaded || state.empty) && !state.loading && !state.refreshing && !state.error && !state.refreshError) {
-          this.finish();
-        }
-      });
-    }
-    disconnect() {
-      this.stop?.();
-      this.busy = false;
-      this.awaitingRead = false;
-      this.draft = null;
-      this.host.removeAttribute("aria-busy");
-      this.form.removeEventListener(X, this.success);
-      this.form.removeEventListener(N2, this.failed);
-      this.form.removeEventListener(Ut2, this.readFailed);
-    }
-    submit(order) {
-      if (this.busy || !this.form.isConnected) {
-        return;
-      }
-      if (hasMissingTechnicalFields(this.form)) {
-        kb("The order cannot be saved because its parent identity is unavailable.", { type: "error" });
-        return;
-      }
-      this.draft = order;
-      this.busy = true;
-      this.host.setAttribute("aria-busy", "true");
-      Wi(this.source);
-      queueMicrotask(() => {
-        if (this.form.isConnected && this.draft === order) {
-          this.form.requestSubmit();
-        }
-      });
-    }
-    finish() {
-      this.draft = null;
-      this.awaitingRead = false;
-      this.busy = false;
-      this.host.removeAttribute("aria-busy");
-      Wi(this.source);
-    }
-    success = (event) => {
-      if (event.target === this.form) {
-        this.finish();
-      }
-    };
-    failed = (event) => {
-      if (event.target === this.form) {
-        this.finish();
-        kb("The order could not be saved. The previous order has been restored.", { type: "error" });
-      }
-    };
-    readFailed = (event) => {
-      if (event.target === this.form) {
-        this.awaitingRead = true;
-      }
-    };
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/WNavigationItem.ts
-  var template5 = document.createElement("template");
-  template5.innerHTML = `
-    <style>
-        :host { display: block; color: #10231c; }
-        .item { display: flex; align-items: center; gap: 10px; min-height: 62px; padding: 0 16px; border-top: 1px solid #e8ecea; }
-        :host([collection]) .item { cursor: pointer; }
-        :host([collection]) .item:hover, :host([data-drop-target]) .item { background: #f3f7f5; }
-        :host([data-dragging]) { opacity: .55; }
-        .handle { width: 18px; color: #74817d; cursor: grab; font-size: 17px; line-height: 1; user-select: none; }
-        .handle[hidden], .icon[hidden], .badge[hidden], .chevron[hidden] { display: none; }
-        .icon { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; color: #0d6a55; background: #e7f4ee; }
-        .icon svg { width: 16px; height: 16px; }
-        .content { flex: 1 1 auto; min-width: 0; }
-        .title, .subtitle { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .title { font-size: 14px; font-weight: 700; }
-        .subtitle { margin-top: 2px; color: #66736f; font-size: 12px; }
-        .badge { flex: 0 0 auto; padding: 3px 7px; border-radius: 999px; color: #087048; background: #edf8f1; font-size: 11px; font-weight: 700; }
-        .chevron { color: #70807a; font-size: 24px; font-weight: 300; line-height: 1; }
-    </style>
-    <div class="item">
-        <span class="handle" data-handle title="Drag to reorder" aria-label="Drag to reorder" hidden>⠿</span>
-        <span class="icon" data-icon hidden></span>
-        <span class="content"><span class="title" data-title></span><span class="subtitle" data-subtitle></span></span>
-        <span class="badge" data-badge hidden></span>
-        <span class="chevron" data-chevron hidden aria-hidden="true">›</span>
-    </div>
-`;
-
-  class DashboardWNavigationItem extends HTMLElement {
-    static get observedAttributes() {
-      return ["title", "subtitle", "icon", "badge", "collection", "reorderable"];
-    }
-    constructor() {
-      super();
-      this.attachShadow({ mode: "open" }).append(template5.content.cloneNode(true));
-    }
-    connectedCallback() {
-      this.shadowRoot.querySelector(".item")?.addEventListener("click", this.onClick);
-      this.shadowRoot.querySelector(".item")?.addEventListener("keydown", this.onKeydown);
-      this.render();
-    }
-    disconnectedCallback() {
-      this.shadowRoot?.querySelector(".item")?.removeEventListener("click", this.onClick);
-      this.shadowRoot?.querySelector(".item")?.removeEventListener("keydown", this.onKeydown);
-    }
-    attributeChangedCallback() {
-      if (this.isConnected) {
-        this.render();
-      }
-    }
-    get rowKey() {
-      return this.getAttribute("row-key") ?? "";
-    }
-    get collection() {
-      return this.getAttribute("collection") ?? "";
-    }
-    render() {
-      const root = this.shadowRoot;
-      const item = root.querySelector(".item");
-      if (this.collection) {
-        item.setAttribute("role", "button");
-        item.tabIndex = 0;
-      } else {
-        item.removeAttribute("role");
-        item.removeAttribute("tabindex");
-      }
-      setText2(root, "[data-title]", this.getAttribute("title") ?? "");
-      const subtitle = this.getAttribute("subtitle") ?? "";
-      setText2(root, "[data-subtitle]", subtitle);
-      root.querySelector("[data-subtitle]").hidden = !subtitle;
-      const badge = this.getAttribute("badge") ?? "";
-      setText2(root, "[data-badge]", badge);
-      root.querySelector("[data-badge]").hidden = !badge;
-      const icon = this.getAttribute("icon");
-      const iconRoot = root.querySelector("[data-icon]");
-      iconRoot.hidden = !icon;
-      if (icon) {
-        renderIcon(iconRoot, undefined, icon, "tag");
-      }
-      root.querySelector("[data-handle]").hidden = !this.hasAttribute("reorderable");
-      root.querySelector("[data-handle]").draggable = this.hasAttribute("reorderable");
-      root.querySelector("[data-chevron]").hidden = !this.collection;
-    }
-    onClick = (event) => {
-      if (event.target?.closest("[data-handle]")) {
-        return;
-      }
-      this.select();
-    };
-    onKeydown = (event) => {
-      if (!(event instanceof KeyboardEvent) || event.key !== "Enter" && event.key !== " ") {
-        return;
-      }
-      event.preventDefault();
-      this.select();
-    };
-    select() {
-      if (this.collection && this.rowKey) {
-        emitWidgetEvent(this, WIDGET_ROW_SELECT_EVENT, { collection: this.collection, rowKey: this.rowKey });
-      }
-    }
-  }
-  if (!customElements.get("cms-dashboard-w-navigation-item")) {
-    customElements.define("cms-dashboard-w-navigation-item", DashboardWNavigationItem);
-  }
-  function setText2(root, selector, value2) {
-    const element = root.querySelector(selector);
-    if (element) {
-      element.textContent = value2;
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/drag.ts
-  function navigationDragItem(event) {
-    const fromPath = event.composedPath().find((target3) => target3 instanceof HTMLElement && target3.matches("cms-dashboard-w-navigation-item"));
-    if (fromPath) {
-      return fromPath;
-    }
-    const target2 = event.target;
-    return target2 instanceof Element ? target2.closest("cms-dashboard-w-navigation-item") : null;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/style.css
-  var style_default13 = `:host {
-    display: block;
-    max-inline-size: 960px;
-}
-
-.navigation-list-shell {
-    overflow: clip;
-    border: 1px solid #e3e8e5;
-    border-radius: 7px;
-    background: #fff;
-}
-
-.navigation-list-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    min-height: 50px;
-    padding: 0 14px;
-    border-bottom: 1px solid #e8ecea;
-}
-
-.navigation-list-header[hidden] { display: none; }
-.navigation-list-header h3 { margin: 0; font-size: 14px; }
-
-.navigation-list-actions { display: flex; gap: 8px; }
-::slotted(p9r-button[slot="actions"]) {
-    --_btn-padding-y: .42rem;
-    --_btn-padding-x: .72rem;
-    --_btn-font-size: 12px;
-    --_btn-radius: 6px;
-}
-
-.navigation-list-items { min-width: 0; }
-slot { display: contents; }
-
-.navigation-list-empty {
-    margin: 0;
-    padding: 22px 16px;
-    color: #66736f;
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/template.html
-  var template_default15 = `<section class="navigation-list-shell">
-    <header class="navigation-list-header" data-header>
-        <h3 data-title></h3>
-        <div class="navigation-list-actions" data-actions><slot name="actions"></slot></div>
-    </header>
-    <div class="navigation-list-items" data-items>
-        <slot></slot>
-    </div>
-    <p class="navigation-list-empty" data-empty hidden>No items.</p>
-</section>
-
-<slot name="footer"></slot>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/WNavigationList.ts
-  class DashboardWNavigationList extends l {
-    static formAssociated = true;
-    internals;
-    order;
-    rowsObserver = new MutationObserver(() => this.syncItems());
-    dragging = null;
-    constructor() {
-      super({ css: style_default13, template: template_default15 });
-      this.internals = this.attachInternals();
-    }
-    get pendingOrder() {
-      return this.order?.draft ?? null;
-    }
-    get value() {
-      return this.pendingOrder ?? this.items().map((item) => item.rowKey).filter(Boolean);
-    }
-    get form() {
-      return this.internals.form;
-    }
-    static observedAttributes = ["heading", "name"];
-    attributeChangedCallback() {
-      this.syncHeader();
-      this.syncFormValue();
-    }
-    connectedCallback() {
-      const source2 = this.querySelector(":scope > [data-navigation-order-source]");
-      if (source2 && this.form) {
-        this.order = new NavigationOrder(this, this.form, source2);
-        this.order.connect();
-      }
-      this.rowsObserver.observe(this, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ["row-key"]
-      });
-      this.shadowRoot.querySelector("slot")?.addEventListener("slotchange", this.onSlotChange);
-      this.addEventListener("click", this.onActionClick);
-      this.addEventListener("dragstart", this.onDragStart);
-      this.addEventListener("dragover", this.onDragOver);
-      this.addEventListener("drop", this.onDrop);
-      this.addEventListener("dragend", this.onDragEnd);
-      this.syncHeader();
-      this.syncItems();
-    }
-    disconnectedCallback() {
-      this.order?.disconnect();
-      this.rowsObserver.disconnect();
-      this.shadowRoot?.querySelector("slot")?.removeEventListener("slotchange", this.onSlotChange);
-      this.removeEventListener("click", this.onActionClick);
-      this.removeEventListener("dragstart", this.onDragStart);
-      this.removeEventListener("dragover", this.onDragOver);
-      this.removeEventListener("drop", this.onDrop);
-      this.removeEventListener("dragend", this.onDragEnd);
-    }
-    syncHeader() {
-      const heading = this.getAttribute("heading") ?? "";
-      setText(this.shadowRoot, "[data-title]", heading);
-      this.query("[data-header]").hidden = !heading && !this.querySelector('[slot="actions"]');
-    }
-    syncItems() {
-      this.syncHeader();
-      this.query("[data-empty]").hidden = this.items().length > 0;
-      this.syncFormValue();
-    }
-    onSlotChange = () => this.syncItems();
-    onActionClick = (event) => {
-      const target2 = event.composedPath().find((node) => node instanceof HTMLElement && node.hasAttribute("data-action"));
-      if (!target2?.dataset.action) {
-        return;
-      }
-      if (target2.dataset.confirm && !window.confirm(target2.dataset.confirm)) {
-        return;
-      }
-      emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
-        action: target2.dataset.action,
-        widget: target2.dataset.widget,
-        target: target2.dataset.target
-      });
-    };
-    onDragStart = (event) => {
-      const item = navigationDragItem(event);
-      if (this.order?.busy) {
-        event.preventDefault();
-        return;
-      }
-      if (!item || !this.getAttribute("reorder-action")) {
-        return;
-      }
-      this.dragging = item;
-      item.toggleAttribute("data-dragging", true);
-      event.dataTransfer?.setData("text/plain", item.rowKey);
-      if (event.dataTransfer) {
-        event.dataTransfer.effectAllowed = "move";
-      }
-    };
-    onDragOver = (event) => {
-      const item = navigationDragItem(event);
-      if (!item || !this.dragging || item === this.dragging) {
-        return;
-      }
-      event.preventDefault();
-      this.items().forEach((candidate) => candidate.toggleAttribute("data-drop-target", candidate === item));
-      if (event.dataTransfer) {
-        event.dataTransfer.dropEffect = "move";
-      }
-    };
-    onDrop = (event) => {
-      const target2 = navigationDragItem(event);
-      const dragging = this.dragging;
-      if (this.order?.busy || !target2 || !dragging || target2 === dragging || !this.getAttribute("reorder-action")) {
-        return;
-      }
-      event.preventDefault();
-      const movesDown = Boolean(dragging.compareDocumentPosition(target2) & Node.DOCUMENT_POSITION_FOLLOWING);
-      if (this.order) {
-        const ids = this.items().map((item) => item.rowKey);
-        const from = ids.indexOf(dragging.rowKey);
-        const to = ids.indexOf(target2.rowKey);
-        ids.splice(from, 1);
-        ids.splice(to, 0, dragging.rowKey);
-        this.clearDragState();
-        this.order.submit(ids);
-        this.syncFormValue();
-        return;
-      }
-      if (movesDown) {
-        target2.parentNode.insertBefore(dragging, target2.nextSibling);
-      } else {
-        target2.parentNode.insertBefore(dragging, target2);
-      }
-      const value2 = this.items().map((item) => item.rowKey).filter(Boolean);
-      emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
-        action: this.getAttribute("reorder-action"),
-        widget: this.getAttribute("widget-id") ?? "",
-        value: value2
-      });
-      this.clearDragState();
-    };
-    onDragEnd = () => this.clearDragState();
-    clearDragState() {
-      this.dragging = null;
-      this.items().forEach((item) => {
-        item.removeAttribute("data-dragging");
-        item.removeAttribute("data-drop-target");
-      });
-    }
-    syncFormValue() {
-      if (!this.internals) {
-        return;
-      }
-      const name = this.getAttribute("name");
-      if (!name) {
-        this.internals.setFormValue(null);
-        return;
-      }
-      const data = new FormData;
-      for (const id2 of this.value) {
-        data.append(`${name}[]`, id2);
-      }
-      this.internals.setFormValue(data);
-    }
-    items() {
-      return Array.from(this.querySelectorAll("cms-dashboard-w-navigation-item"));
-    }
-    query(selector) {
-      return this.shadowRoot.querySelector(selector);
-    }
-  }
-  if (!customElements.get("cms-dashboard-w-navigation-list")) {
-    customElements.define("cms-dashboard-w-navigation-list", DashboardWNavigationList);
-  }
-
-  // src/static/admin/_content/sources/_runtime/navigation-list.html
-  var navigation_list_default = `<template data-navigation-action>
-    <p9r-button type="button" slot="actions"></p9r-button>
-</template>
-`;
-
-  // src/components/admin/Resources/Dashboards/runtime/mounting/navigation.ts
-  function navigationListShell(widget) {
-    const element = new DashboardWNavigationList;
-    element.setAttribute("heading", widget.title ?? "");
-    element.setAttribute("widget-id", widget.id);
-    element.dataset.widgetId = widget.id;
-    if (widget.reorderable) {
-      element.setAttribute("reorder-action", widget.reorderable.action);
-    }
-    const template6 = document.createElement("template");
-    template6.innerHTML = navigation_list_default;
-    const actionTemplate = template6.content.querySelector("[data-navigation-action]");
-    for (const action of widget.actions ?? []) {
-      if (action.form || action.id === widget.reorderable?.action) {
-        continue;
-      }
-      const button = actionTemplate.content.firstElementChild.cloneNode(true);
-      button.dataset.action = action.id;
-      button.dataset.widget = widget.id;
-      if (action.selection?.opens) {
-        button.dataset.target = action.selection.opens;
-      }
-      if (action.confirm) {
-        button.dataset.confirm = action.confirm;
-      }
-      setP9rButtonTone(button, action.tone ?? "primary");
-      setP9rButtonLabel(button, action.label);
-      element.append(button);
-    }
-    return element;
-  }
-  function navigationListElement(widget, context, detail, slot, formOwner) {
-    const wrapper = sourceWrapper(context.dashboard.source, widget.source, selectionVars(detail), "dashboardData", requiredSourceParams(context, widget.source));
-    const element = navigationListShell(widget);
-    if (slot) {
-      element.setAttribute("slot", slot);
-    }
-    const orderForm = composeNavigationOrder(element, wrapper, widget, context, formOwner);
-    wrapper.append(navigationItemsTemplate(widget, orderForm ? "navigationItems" : undefined));
-    element.append(wrapper);
-    composeCreation(element, widget, context, formOwner);
-    return element;
-  }
-  function selectionVars(detail) {
-    if (!detail) {
-      return {};
-    }
-    const selected2 = { id: detail.row === "__new__" ? undefined : detail.row };
-    return {
-      selection: {
-        ...selected2,
-        [detail.collection]: selected2
-      }
-    };
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/mounting/detail.ts
-  function detailElement2(widget, context, detail) {
-    const rowKey = detail?.row ?? "";
-    const element = detailContent(widget, context, rowKey);
-    attachDetailSource(element, widget, context, rowKey);
-    return element;
-  }
-  function attachDetailSource(element, widget, context, rowKey) {
-    const wrapper = sourceWrapper(context.dashboard.source, widget.source, { selection: { id: rowKey === "__new__" ? undefined : rowKey } }, "dashboardData", requiredSourceParams(context, widget.source));
-    wrapper.setAttribute("cms-reload-on", detailReloadEvent(context.dashboard.source, context.dashboard.id, widget.id, rowKey));
-    for (const child of Array.from(wrapper.children)) {
-      child.setAttribute("slot", "source-status");
-    }
-    element.append(...Array.from(wrapper.childNodes));
-    element.setAttribute("cms-source", wrapper.getAttribute("cms-source") ?? "");
-    element.setAttribute("cms-reload-on", wrapper.getAttribute("cms-reload-on"));
-  }
-  function detailContent(widget, context, rowKey) {
-    const element = new DashboardWDetail;
-    element.dataset.widgetId = widget.id;
-    element.id = formId();
-    element.configure(widget);
-    const selection = { collection: widget.id, row: rowKey };
-    element.append(composeDetail(widget, context, (child) => navigationListElement(child, context, selection, undefined, element)));
-    const form = element.querySelector("[data-detail-save]");
-    if (form && !(widget.create && rowKey === "__new__")) {
-      form.setAttribute("cms-source-success-reload", `#${element.id}`);
-    }
-    composeLookupCreation(element, widget, context);
-    composeMediaForms(element, widget, context);
-    composeDetailOperations(element, widget, context);
-    element.setAttribute("data-row-key", rowKey);
-    element.setAttribute("data-source-id", context.dashboard.source);
-    return element;
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/creation/resolve.ts
-  function resolveDetailView(ref, context) {
-    const dashboardId = ref.dashboardId ?? context.dashboard.id;
-    const group = (context.groups ?? [context.group]).find((entry) => entry.dashboards.some((dashboard2) => dashboard2.id === dashboardId));
-    const dashboard = group?.dashboards.find((entry) => entry.id === dashboardId);
-    const widget = dashboard && findDetail(dashboard.views, ref.viewId);
-    if (!group || !dashboard || !widget) {
-      throw new Error(`The detail view ${dashboardId}/${ref.viewId} is unavailable.`);
-    }
-    return {
-      widget,
-      context: { ...context, group, dashboard, drafts: new Map, selectedRows: new Map }
-    };
-  }
-  function findDetail(widgets, id2) {
-    for (const widget of widgets) {
-      if (widget.widget === "w-detail" && widget.id === id2) {
-        return widget;
-      }
-      const children = widget.widget === "w-section" ? widget.children : widget.widget === "w-tabs" ? widget.tabs.flatMap((tab) => tab.children) : [];
-      const match = findDetail(children, id2);
-      if (match) {
-        return match;
-      }
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/creation/open.ts
-  function openDetailView(owner, ref, context, options2 = {}) {
-    try {
-      const target2 = resolveDetailView(ref, context);
-      if (!options2.row && !target2.widget.create) {
-        throw new Error("This detail does not support creation.");
-      }
-      const row = options2.row ?? "__new__";
-      if (ref.presentation === "page") {
-        emitWidgetEvent(owner, WIDGET_ROW_SELECT_EVENT, {
-          collection: target2.widget.id,
-          rowKey: row,
-          dashboard: target2.context.dashboard.id,
-          source: target2.context.dashboard.source
-        });
-        return;
-      }
-      const modal = formPart("detail-modal");
-      modal.slot = "footer";
-      modal.setAttribute("aria-label", ref.title ?? ref.label ?? target2.widget.title?.fallback ?? "Resource details");
-      const detail = detailElement2(target2.widget, target2.context, {
-        collection: target2.widget.id,
-        row
-      });
-      detail.setAttribute("presentation", "modal");
-      modal.append(detail);
-      let completed = false;
-      const close = () => modal.hide();
-      modal.addEventListener("beforeclose", (event) => {
-        if (event.target !== modal || completed) {
-          return;
-        }
-        if (detail.getAttribute("aria-busy") === "true" || detail.querySelector('[data-detail-save][aria-busy="true"]')) {
-          event.preventDefault();
-          return;
-        }
-        if (detail.hasUnsavedChanges() && !window.confirm("Discard the unsaved changes?")) {
-          event.preventDefault();
-        }
-      });
-      modal.addEventListener(DETAIL_SAVED_EVENT, (event) => {
-        if (event.target !== detail) {
-          return;
-        }
-        event.stopPropagation();
-        const data = it(detail);
-        const saved = event.detail;
-        const resource = saved.created ? saved.body : target2.widget.source.itemPath ? valueAt(data, target2.widget.source.itemPath) : data;
-        options2.saved?.(resource);
-        completed = true;
-        close();
-        if (!options2.saved) {
-          const read = owner.hasAttribute("cms-source") ? owner : owner.querySelector("[cms-source]");
-          if (read) {
-            Ic(read).catch(() => kb("Reload the list to see the saved resource.", { type: "warning" }));
-          }
-        }
-      });
-      modal.addEventListener(WIDGET_BACK_EVENT, (event) => {
-        event.stopPropagation();
-        close();
-      });
-      for (const type of [
-        "cms-dashboard-widget:field-change",
-        WIDGET_ROW_SELECT_EVENT,
-        "cms-dashboard-widget:media-action",
-        "cms-dashboard-widget:action",
-        X
-      ]) {
-        modal.addEventListener(type, (event) => event.stopPropagation());
-      }
-      modal.addEventListener("close", (event) => {
-        if (event.target === modal) {
-          modal.remove();
-        }
-      });
-      owner.append(modal);
-      modal.setAttribute("open", "");
-    } catch (error) {
-      kb(error instanceof Error ? error.message : "The detail could not be opened.", { type: "error" });
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/creation/lookup.ts
-  function composeLookupCreation(host, widget, context) {
-    const fields = [...widget.main, ...widget.aside ?? []].flatMap((section2) => ("fields" in section2) ? section2.fields : []);
-    for (const field2 of fields) {
-      if (field2.type !== "combobox" && field2.type !== "tokens" || !field2.lookup) {
-        continue;
-      }
-      for (const kind of ["create", "edit"]) {
-        const ref = field2.lookup[kind];
-        if (!ref) {
-          continue;
-        }
-        const button = formPart(`lookup-${kind}`);
-        const label2 = ref.title ?? ref.label ?? `${kind === "create" ? "Create" : "Edit"} ${field2.label}`;
-        button.setAttribute("aria-label", label2);
-        button.setAttribute("title", label2);
-        button.dataset.lookupAction = `${field2.id}:${kind}`;
-        const control = Array.from(host.querySelectorAll("[data-field-control]")).find((node) => node.dataset.fieldControl === field2.id);
-        control?.append(button);
-        if (kind === "edit") {
-          button.setAttribute("cms-bind-boolean-disabled", `!detailValues.${field2.path}`);
-        }
-        host.addEventListener("click", (event) => {
-          const clicked = event.composedPath().find((node) => node instanceof HTMLElement && node.dataset.lookupAction === `${field2.id}:${kind}`);
-          if (!(clicked instanceof HTMLElement) || clicked.closest("cms-dashboard-w-detail") !== host) {
-            return;
-          }
-          const current = host.currentFieldValues()[field2.id];
-          if (kind === "edit" && (current == null || current === "" || Array.isArray(current))) {
-            return;
-          }
-          openDetailView(host, ref, context, {
-            ...kind === "edit" ? { row: String(current) } : {},
-            saved: (resource) => {
-              const value2 = valueAt(resource, ref.valuePath);
-              if (value2 == null) {
-                return;
-              }
-              const label3 = valueAt(resource, ref.labelPath);
-              host.applyLookupCreate(field2.id, String(value2), {
-                value: String(value2),
-                label: String(label3 ?? value2)
-              });
-            }
-          });
-        });
-      }
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/creation/index.ts
-  function composeCreation(host, widget, context, owner = host) {
-    const create = widget.create;
-    if (!create) {
-      return;
-    }
-    const button = formPart("view-opener");
-    button.slot = "actions";
-    button.textContent = create.label ?? "Create";
-    button.dataset.viewCreate = widget.id;
-    owner.addEventListener("click", (event) => {
-      const button2 = event.composedPath().find((node) => node instanceof HTMLElement && node.dataset.viewCreate === widget.id);
-      if (button2 instanceof HTMLElement && button2.closest("[data-widget-id]")?.getAttribute("data-widget-id") === widget.id) {
-        openDetailView(owner, create, context);
-      }
-    });
-    host.append(button);
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/mounting/reconcile.ts
-  var contexts2 = new WeakMap;
-  var snapshots = new WeakMap;
-  function retainWidgets(root, widgets, context, detail) {
-    const signature = JSON.stringify([widgets, context.dashboard.source, context.dashboard.id, detail]);
-    if (snapshots.get(root) !== signature || !root.childElementCount) {
-      snapshots.set(root, signature);
-      contexts2.set(root, context);
-      return false;
-    }
-    Object.assign(contexts2.get(root), context);
-    const visit = (items) => {
-      for (const widget of items) {
-        if (widget.widget === "w-section") {
-          visit(widget.children);
-        } else if (widget.widget === "w-tabs") {
-          widget.tabs.forEach((tab) => visit(tab.children));
-        } else if (widget.widget === "w-table") {
-          const table = Array.from(root.querySelectorAll("cms-dashboard-w-table")).find((node) => node.dataset.widgetId === widget.id);
-          if (!table) {
-            continue;
-          }
-          const filters = { ...context.filters?.get(widget.id) ?? {} };
-          updateTableFilters(table, filters);
-          const source2 = table;
-          const next = sourceWrapper(context.dashboard.source, widget.source, { ...selectionVars(detail), filters }, "dashboardData", requiredSourceParams(context, widget.source));
-          const url = next.getAttribute("cms-source");
-          if (source2 && url && source2.getAttribute("cms-source") !== url) {
-            source2.setAttribute("cms-source", url);
-          }
-        }
-      }
-    };
-    visit(widgets);
-    return true;
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/mounting/table.ts
-  function tableWithSource(widget, source2, filters = {}) {
-    const table = tableShell(widget, filters);
-    for (const name of ["cms-source", "cms-reload-on"]) {
-      const value2 = source2.getAttribute(name);
-      if (value2 !== null) {
-        table.setAttribute(name, value2);
-      }
-    }
-    table.append(...Array.from(source2.childNodes), tableRowsTemplate(widget));
-    if (!table.hasAttribute("cms-source")) {
-      table.setAttribute("cms-source", "");
-      Pd(table, {});
-    }
-    return table;
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/mounting/mount.ts
-  var tabsSequence = 0;
-  function mountDashboardWidgets(root, widgets, context, key, tabState, detail) {
-    if (retainWidgets(root, widgets, context, detail)) {
-      return;
-    }
-    const core = document.createElement("p9r-stack");
-    core.setAttribute("gap", "md");
-    core.setAttribute("trim", "");
-    core.className = "dashboard-widget-binding";
-    core.replaceChildren(...widgets.map((widget, index) => widgetElement(widget, context, `${key}.${index}`, tabState, detail)));
-    root.replaceChildren(core);
-  }
-  function widgetElement(widget, context, key, tabState, detail) {
-    if (widget.widget === "w-section") {
-      return sectionElement2(widget, context, key, tabState, detail);
-    }
-    if (widget.widget === "w-tabs") {
-      return tabsElement(widget, context, key, tabState, detail);
-    }
-    if (widget.widget === "w-table") {
-      return tableElement2(widget, context, detail);
-    }
-    if (widget.widget === "w-navigation-list") {
-      return navigationListElement(widget, context, detail);
-    }
-    if (widget.widget === "w-detail") {
-      return detailElement2(widget, context, detail);
-    }
-    return document.createElement("span");
-  }
-  function sectionElement2(widget, context, key, tabState, detail) {
-    const element = document.createElement("cms-dashboard-w-section");
-    element.setAttribute("heading", widget.title);
-    if (widget.description) {
-      element.setAttribute("description", widget.description);
-    }
-    const stack = document.createElement("p9r-stack");
-    stack.setAttribute("gap", "md");
-    stack.setAttribute("trim", "");
-    stack.className = "widget-stack";
-    stack.append(...widget.children.map((child, index) => widgetElement(child, context, `${key}.${index}`, tabState, detail)));
-    element.append(stack);
-    return element;
-  }
-  function tabsElement(widget, context, key, tabState, detail) {
-    const panel = document.createElement("p9r-card");
-    const tabs = document.createElement("p9r-tabs");
-    tabs.setAttribute("wrap", "");
-    const prefix = `dashboard-tabs-${++tabsSequence}`;
-    const activeIndex = Math.min(tabState.get(key) ?? 0, Math.max(widget.tabs.length - 1, 0));
-    const populate = (index) => {
-      const body = tabs.children[index];
-      const tab = widget.tabs[index];
-      if (!body || !tab || body.childElementCount) {
-        return;
-      }
-      const stack = document.createElement("p9r-stack");
-      stack.setAttribute("gap", "md");
-      stack.setAttribute("trim", "");
-      stack.append(...tab.children.map((child, childIndex) => widgetElement(child, context, `${key}.${index}.${childIndex}`, tabState, detail)));
-      body.append(stack);
-    };
-    for (const [index, tab] of widget.tabs.entries()) {
-      const body = document.createElement("p9r-tab-panel");
-      body.id = `${prefix}-${index}`;
-      body.setAttribute("label", tab.label);
-      tabs.append(body);
-    }
-    tabs.setAttribute("active", `${prefix}-${activeIndex}`);
-    populate(activeIndex);
-    tabs.addEventListener("change", (event) => {
-      if (event.target !== tabs) {
-        return;
-      }
-      const id2 = event.detail.active;
-      const index = Array.from(tabs.children).findIndex((body) => body.id === id2);
-      if (index >= 0) {
-        tabState.set(key, index);
-        populate(index);
-      }
-    });
-    panel.append(tabs);
-    return panel;
-  }
-  function tableElement2(widget, context, detail) {
-    const filters = { ...context.filters?.get(widget.id) ?? {} };
-    const wrapper = sourceWrapper(context.dashboard.source, widget.source, { ...selectionVars(detail), filters }, "dashboardData", requiredSourceParams(context, widget.source));
-    const element = tableWithSource(widget, wrapper, filters);
-    composeTableOperations(element, widget, context);
-    composeCreation(element, widget, context);
-    element.setAttribute("data-selected", context.selectedRows.get(widget.selection?.opens ?? widget.id) ?? "");
-    return element;
-  }
-
-  // src/components/admin/Resources/Dashboards/view/rendering.ts
-  function renderDashboardShell(root, group, dashboard, detail, tabState, drafts, groups = group ? [group] : [], filters = new Map) {
-    query3(root, "[data-empty]").hidden = Boolean(group);
-    query3(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
-    query3(root, "[data-dashboard-head]").hidden = !dashboard;
-    query3(root, "[data-detail-toolbar]").hidden = true;
-    query3(root, "[data-widget-panel]").hidden = !dashboard;
-    if (!group || !dashboard) {
-      return;
-    }
-    query3(root, "[data-dashboard-name]").textContent = dashboard.meta?.name ?? dashboard.id;
-    renderIcon(query3(root, "[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
-    const selectedRows = new Map;
-    if (detail) {
-      selectedRows.set(detail.collection, detail.row);
-    }
-    const widgets = widgetsForSelection(dashboard, detail);
-    mountDashboardWidgets(query3(root, "[data-widgets]"), widgets, { group, groups, dashboard, selectedRows, drafts, filters }, "root", tabState, detail);
-  }
-  function renderExampleShell(root, selectedRow) {
-    query3(root, "[data-empty]").hidden = true;
-    query3(root, "[data-source-empty]").hidden = true;
-    query3(root, "[data-detail-toolbar]").hidden = true;
-    query3(root, "[data-dashboard-head]").hidden = false;
-    query3(root, "[data-widget-panel]").hidden = false;
-    query3(root, "[data-dashboard-name]").textContent = "Dashboard widgets example";
-    renderIcon(query3(root, "[data-dashboard-icon]"), undefined, "layout", "layout");
-    mountDashboardWidgetExample(query3(root, "[data-widgets]"), selectedRow);
-  }
-  function query3(root, selector) {
-    return selector === "[data-widgets]" ? root.host.querySelector(selector) : root.querySelector(selector);
-  }
-
-  // src/components/admin/Resources/Dashboards/navigation/mode.ts
-  function isDashboardExampleMode(host) {
-    return host.hasAttribute("example") || window.location.pathname.replace(/\/+$/, "").endsWith("/admin/sources/example");
-  }
-
-  // src/components/admin/Resources/Dashboards/view/controller/DashboardStateController.ts
-  class DashboardStateController extends l {
-    groups = [];
-    selectedSource = "";
-    selectedDashboard = "";
-    detailSelection = null;
-    tabState = new Map;
-    drafts = new Map;
-    actionScope = new DashboardActionScope;
-    dashboardFilterState = new Map;
-    constructor(css, template6) {
-      super({ css, template: template6 });
-    }
-    disconnectState() {
-      this.actionScope.invalidate();
-      this.dashboardFilterState.clear();
-    }
-    ensureDashboardSelection() {
-      const group = this.activeGroup();
-      if (!group) {
-        this.actionScope.invalidate();
-        this.selectedDashboard = "";
-        this.detailSelection = null;
-        return;
-      }
-      const dashboard = group.dashboards.find((candidate) => candidate.id === this.selectedDashboard);
-      if (!dashboard) {
-        this.actionScope.invalidate();
-        this.selectedDashboard = group.dashboards[0]?.id ?? "";
-        this.detailSelection = null;
-        return;
-      }
-      if (this.detailSelection && !validDetailSelection(dashboard, this.detailSelection)) {
-        this.actionScope.invalidate();
-        this.detailSelection = null;
-        if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
-          replaceSelectionUrl(this.selection());
-        }
-      }
-    }
-    activeGroup() {
-      return this.groups.find((group) => group.source.id === this.selectedSource) ?? null;
-    }
-    activeDashboard() {
-      return this.activeGroup()?.dashboards.find((dashboard) => dashboard.id === this.selectedDashboard) ?? null;
-    }
-    isExampleMode() {
-      return isDashboardExampleMode(this);
-    }
-    selection() {
-      return {
-        source: this.selectedSource,
-        dashboard: this.selectedDashboard,
-        ...this.detailSelection ? this.detailSelection : {}
-      };
-    }
-    syncFromSelection(selection) {
-      this.actionScope.invalidate();
-      this.selectedSource = selection.source;
-      this.selectedDashboard = selection.dashboard;
-      this.detailSelection = selection.collection && selection.row ? { collection: selection.collection, row: selection.row } : null;
-    }
-    invalidateActions() {
-      this.actionScope.invalidate();
-    }
-    dashboardFilters() {
-      return this.dashboardFilterState.get(this.dashboardFilterKey()) ?? new Map;
-    }
-    setDashboardFilters(widget, filters) {
-      if (!widget) {
-        return;
-      }
-      const key = this.dashboardFilterKey();
-      const current = this.dashboardFilterState.get(key) ?? new Map;
-      if (Object.keys(filters).length) {
-        current.set(widget, { ...filters });
-        this.dashboardFilterState.set(key, current);
-        return;
-      }
-      current.delete(widget);
-      if (!current.size) {
-        this.dashboardFilterState.delete(key);
-      }
-    }
-    openDetail(collection, row) {
-      const dashboard = this.activeDashboard();
-      const detail = { collection, row };
-      if (!dashboard || !validDetailSelection(dashboard, detail)) {
-        this.actionScope.invalidate();
-        this.detailSelection = null;
-        if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
-          replaceSelectionUrl(this.selection());
-        }
-        this.renderDashboard();
-        return;
-      }
-      if (this.detailSelection?.collection !== collection || this.detailSelection.row !== row) {
-        this.actionScope.invalidate();
-      }
-      this.detailSelection = detail;
-      if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
-        replaceSelectionUrl(this.selection());
-      }
-      this.renderDashboard();
-    }
-    clearDetail() {
-      this.actionScope.invalidate();
-      this.detailSelection = null;
-      if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
-        replaceSelectionUrl(this.selection());
-      }
-      this.renderDashboard();
-    }
-    dashboardFilterKey() {
-      return `${this.selectedSource}\x00${this.selectedDashboard}`;
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/view/controller/DashboardViewController.ts
-  class DashboardViewController extends DashboardStateController {
-    actionForms = new ActionForms(this);
-    definitions = new DashboardDefinitions;
-    startBoundSource() {
-      if (this.isExampleMode() || this.hasAttribute("external")) {
-        this.renderDashboard();
-        return;
-      }
-      this.definitions.connect(this, (groups) => {
-        this.groups = groups;
-        const embeddedDashboard = this.getAttribute("dashboard-id");
-        if (embeddedDashboard) {
-          this.selectedSource = groups.find((group) => group.dashboards.some((dashboard) => dashboard.id === embeddedDashboard))?.source.id ?? "";
-          this.selectedDashboard = embeddedDashboard;
-        } else {
-          this.selectedSource ||= defaultDashboardSource(groups);
-        }
-        this.ensureDashboardSelection();
-        this.renderDashboard();
-      });
-    }
-    disconnectBoundSource() {
-      this.actionForms.disconnect();
-      this.definitions.disconnect();
-      this.disconnectState();
-    }
-    renderDashboard() {
-      if (!this.querySelector("[data-widgets]")) {
-        const widgets = document.createElement("p9r-stack");
-        widgets.setAttribute("slot", "widgets");
-        widgets.setAttribute("gap", "md");
-        widgets.setAttribute("trim", "");
-        widgets.setAttribute("data-widgets", "");
-        this.append(widgets);
-      }
-      if (this.isExampleMode()) {
-        renderExampleShell(this.shadowRoot, this.detailSelection?.row ?? null);
-        return;
-      }
-      const group = this.activeGroup();
-      const dashboard = this.activeDashboard();
-      renderDashboardShell(this.shadowRoot, group, dashboard, this.detailSelection, this.tabState, this.drafts, this.groups, this.dashboardFilters());
-    }
-    setExternalContext(groups, selection) {
-      this.groups = structuredClone(groups);
-      this.syncFromSelection(selection);
-      this.ensureDashboardSelection();
-      this.renderDashboard();
-    }
-    syncSelectionAndRender(selection) {
-      this.syncFromSelection(selection);
-      this.ensureDashboardSelection();
-      this.renderDashboard();
-    }
-    actionContext() {
-      return {
-        submit: this.actionForms.submit,
-        group: this.activeGroup(),
-        groups: this.groups,
-        dashboard: this.activeDashboard(),
-        detail: this.detailSelection,
-        drafts: this.drafts,
-        filters: this.dashboardFilters(),
-        reload: (collection, row) => this.reloadDetail(collection, row),
-        acknowledgeDetailFields: (collection, row, fields) => {
-          const target2 = Array.from(this.querySelectorAll("cms-dashboard-w-detail")).find((node) => node.dataset.widgetId === collection && (node.dataset.rowKey ?? "") === row);
-          target2?.acknowledgeSavedFields(fields);
-        },
-        restoreDetailField: (collection, row, field2, submitted, previous) => {
-          const target2 = Array.from(this.querySelectorAll("cms-dashboard-w-detail")).find((node) => node.dataset.widgetId === collection && (node.dataset.rowKey ?? "") === row);
-          target2?.restoreField(field2, submitted, previous);
-        },
-        openDetail: (collection, row) => this.openDetail(collection, row),
-        navigateDetail: (collection, row) => {
-          const detail = this.querySelector("cms-dashboard-w-detail");
-          if (detail?.hasUnsavedChanges()) {
-            if (!window.confirm("Discard the unsaved changes?")) {
-              return;
-            }
-            if (this.detailSelection) {
-              this.drafts.delete(`${this.detailSelection.collection}:${this.detailSelection.row}`);
-            }
-          }
-          this.openDetail(collection, row);
-        },
-        actionCoordinator: this.actionScope
-      };
-    }
-    reloadDetail(collection, row) {
-      const dashboard = this.activeDashboard();
-      if (!dashboard) {
-        return;
-      }
-      document.dispatchEvent(new CustomEvent(detailReloadEvent(dashboard.source, dashboard.id, collection, row)));
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/view/styles/base.css
-  var base_default2 = `:host {
-    display: block;
-}
-
-[hidden] {
-    display: none !important;
-}
-
-.binding-source {
-    display: none;
-}
-
-h3,
-p {
-    margin: 0;
-}
-
-.content,
-.widgets,
-.widget-stack,
-.tab-body,
-.dashboard-widget-binding {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-content: start;
-    min-width: 0;
-}
-
-.content {
-    gap: 24px;
-}
-
-.widgets,
-.widget-stack,
-.tab-body,
-.dashboard-widget-binding {
-    gap: 16px;
-}
-
-.dashboard-source-state {
-    align-items: center;
-    border: 1px solid var(--border-default, #dfe5e2);
-    border-radius: 8px;
-    display: flex;
-    gap: 16px;
-    justify-content: space-between;
-    padding: 16px;
-}
-
-.dashboard-source-state > div {
-    display: grid;
-    gap: 4px;
-}
-
-.dashboard-source-state span,
-.dashboard-source-state small {
-    color: var(--text-muted, #66736f);
-}
-
-.dashboard-source-loading {
-    color: var(--text-muted, #66736f);
-}
-
-.dashboard-source-error {
-    background: var(--danger-muted, #fff3f1);
-    border-color: var(--danger-border, #e8b7af);
-}
-
-.dashboard-source-error button {
-    background: var(--bg-surface, #fff);
-    border: 1px solid var(--border-default, #dfe5e2);
-    border-radius: 6px;
-    color: var(--text-default, #0f1f1a);
-    cursor: pointer;
-    flex: none;
-    font: inherit;
-    font-weight: 700;
-    min-height: 36px;
-    padding: 6px 12px;
-}
-
-.dashboard-source-error button:hover {
-    background: var(--bg-hover, #f3f6f5);
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/view/styles/panels.css
-  var panels_default = `.dashboard-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 34px;
-    border-bottom: 1px solid var(--border-default, #dfe5e2);
-    padding: 0 2px 18px;
-}
-
-.dashboard-head h3 {
-    color: var(--text-default, #0f1f1a);
-    font-size: 18px;
-    font-weight: 750;
-    line-height: 1.2;
-}
-
-.title-icon {
-    display: inline-grid;
-    place-items: center;
-    width: 34px;
-    height: 34px;
-    flex: none;
-    border-radius: 8px;
-    background: var(--primary-muted, #e3f2ed);
-    color: var(--primary-base, #165f4b);
-}
-
-.title-icon.compact {
-    width: 26px;
-    height: 26px;
-    border-radius: 7px;
-}
-
-.title-icon svg {
-    width: 18px;
-    height: 18px;
-    stroke: currentColor;
-    fill: none;
-}
-
-.title-icon.compact svg {
-    width: 15px;
-    height: 15px;
-}
-
-.panel,
-.tabs-panel {
-    border: 1px solid var(--border-default, #dfe5e2);
-    border-radius: 8px;
-    background: var(--bg-surface, #fff);
-}
-
-.panel {
-    padding: 16px;
-}
-
-.empty {
-    display: grid;
-    gap: 4px;
-}
-
-.empty span,
-.migration-placeholder {
-    color: var(--text-muted, #66736f);
-}
-
-.tabs-panel {
-    display: grid;
-    gap: 14px;
-    overflow: visible;
-    padding: 0;
-}
-
-.tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    border-bottom: 1px solid var(--border-default, #dfe5e2);
-    padding: 0 14px;
-}
-
-.tab {
-    min-height: 42px;
-    border: 0;
-    border-bottom: 2px solid transparent;
-    background: transparent;
-    color: var(--text-default, #0f1f1a);
-    cursor: pointer;
-    font: inherit;
-    font-weight: 700;
-    padding: 0 10px;
-}
-
-.tab.active {
-    border-bottom-color: var(--primary-base, #165f4b);
-    color: var(--primary-base, #165f4b);
-}
-
-.tab:hover {
-    background: var(--bg-hover, #f3f6f5);
-}
-
-.tab-body {
-    padding: 0 14px 14px;
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/view/template.html
-  var template_default16 = `<main class="content">
-    <slot name="source-status"></slot>
-
-    <section class="panel empty" data-empty>
-        <strong>No dashboards</strong>
-        <span>Install an integration that provides dashboard artifacts.</span>
-    </section>
-
-    <section class="panel empty" data-source-empty hidden>
-        <strong>No dashboards for this source</strong>
-        <span>This source exposes endpoints, but no dashboard artifact has been installed for it yet.</span>
-    </section>
-
-    <section class="dashboard-head" data-dashboard-head hidden>
-        <span class="title-icon compact" data-dashboard-icon></span>
-        <h3 data-dashboard-name></h3>
-    </section>
-
-    <section class="detail-toolbar" data-detail-toolbar hidden>
-        <button type="button" data-dashboard-back>Back</button>
-        <span data-detail-row></span>
-    </section>
-
-    <div class="widgets" data-widget-panel hidden><slot name="widgets"></slot></div>
-</main>
-`;
-
-  // src/components/admin/Resources/Dashboards/view/DashboardView.ts
-  var styles2 = [base_default2, panels_default].join(`
-`);
-
-  class DashboardView extends DashboardViewController {
-    constructor() {
-      super(styles2, template_default16);
-    }
-    connectedCallback() {
-      super.connectedCallback();
-      if (!this.hasAttribute("embedded")) {
-        this.syncFromSelection(currentSelection());
-      }
-      this.addEventListener("click", this.onClick);
-      this.addEventListener(DETAIL_SAVED_EVENT, this.onDetailSaved);
-      this.addEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect);
-      this.addEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
-      this.addEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction);
-      this.addEventListener(WIDGET_FILTER_CHANGE_EVENT, this.onWidgetFilterChange);
-      this.addEventListener(WIDGET_FIELD_CHANGE_EVENT, this.onWidgetFieldChange);
-      this.addEventListener(WIDGET_MEDIA_ACTION_EVENT, this.onWidgetMediaAction);
-      window.addEventListener("popstate", this.onPopState);
-      window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection);
-      this.startBoundSource();
-    }
-    disconnectedCallback() {
-      this.removeEventListener("click", this.onClick);
-      this.removeEventListener(DETAIL_SAVED_EVENT, this.onDetailSaved);
-      this.removeEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect);
-      this.removeEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
-      this.removeEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction);
-      this.removeEventListener(WIDGET_FILTER_CHANGE_EVENT, this.onWidgetFilterChange);
-      this.removeEventListener(WIDGET_FIELD_CHANGE_EVENT, this.onWidgetFieldChange);
-      this.removeEventListener(WIDGET_MEDIA_ACTION_EVENT, this.onWidgetMediaAction);
-      window.removeEventListener("popstate", this.onPopState);
-      window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection);
-      this.disconnectBoundSource();
-    }
-    onClick = (event) => {
-      retryDashboardSource(event);
-      const tabButton = event.target?.closest("[data-tab-key]");
-      if (!tabButton?.dataset.tabKey || !tabButton.dataset.tabIndex) {
-        return;
-      }
-      this.tabState.set(tabButton.dataset.tabKey, Number(tabButton.dataset.tabIndex));
-      this.renderDashboard();
-    };
-    onSelection = (event) => {
-      if (!this.hasAttribute("embedded")) {
-        this.syncSelectionAndRender(event.detail);
-      }
-    };
-    onPopState = () => {
-      if (!this.hasAttribute("embedded")) {
-        this.syncSelectionAndRender(currentSelection());
-      }
-    };
-    onDetailSaved = (event) => {
-      const detail = event.target;
-      const saved = event.detail;
-      if (!saved?.created || !saved.id || !this.detailSelection || this.detailSelection.collection !== detail.dataset.widgetId) {
-        return;
-      }
-      this.openDetail(this.detailSelection.collection, saved.id);
-    };
-    onWidgetRowSelect = (event) => {
-      if (event.detail.source) {
-        this.selectedSource = event.detail.source;
-      }
-      if (event.detail.dashboard) {
-        this.selectedDashboard = event.detail.dashboard;
-      }
-      this.invalidateActions();
-      this.detailSelection = { collection: event.detail.collection, row: event.detail.rowKey };
-      if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
-        pushSelectionUrl(this.selection());
-      }
-      this.renderDashboard();
-    };
-    onWidgetBack = () => {
-      this.invalidateActions();
-      this.clearDetail();
-    };
-    onWidgetAction = (event) => {
-      if (this.isExampleMode()) {
-        kb(`${event.detail.action} clicked`, { type: "success" });
-        return;
-      }
-      if (event.detail.target) {
-        this.invalidateActions();
-        this.detailSelection = { collection: event.detail.target, row: "__new__" };
-        pushSelectionUrl(this.selection());
-        this.renderDashboard();
-        return;
-      }
-      runDashboardWidgetAction(this.actionContext(), event.detail);
-    };
-    onWidgetMediaAction = (event) => {
-      if (this.isExampleMode()) {
-        kb(`Media ${event.detail.action} event captured`, { type: "success" });
-        return;
-      }
-      runDashboardMediaAction(this.actionContext(), event.detail, event.target instanceof HTMLElement ? event.target : undefined);
-    };
-    onWidgetFilterChange = (event) => {
-      if (this.isExampleMode()) {
-        kb("Filters applied", { type: "success" });
-        return;
-      }
-      this.setDashboardFilters(event.detail.widget, event.detail.filters);
-      this.renderDashboard();
-    };
-    onWidgetFieldChange = (event) => {
-      if (this.isExampleMode()) {
-        updateDashboardWidgetExampleField(event.detail.rowKey, event.detail.field, event.detail.value);
-        return;
-      }
-      if (!this.detailSelection) {
-        return;
-      }
-      const key = detailKey(this.detailSelection.collection, event.detail.rowKey);
-      const previousDraft = this.drafts.get(key) ?? {};
-      this.drafts.set(key, { ...previousDraft, [event.detail.field]: event.detail.value });
-    };
-  }
-  if (!customElements.get("cms-dashboards-admin")) {
-    customElements.define("cms-dashboards-admin", DashboardView);
-  }
-
-  // src/components/admin/DashboardWorkspace/events.ts
-  var DASHBOARD_SELECTED_EVENT = "cms-dashboard-workspace:selected";
-  var DASHBOARD_NAVIGATION_EVENT = "cms-dashboard-workspace:navigation";
-  var DASHBOARD_VIEW_SELECTED_EVENT = "cms-dashboard-workspace:view-selected";
-  function dispatchDashboardSelected(id2) {
-    window.dispatchEvent(new CustomEvent(DASHBOARD_SELECTED_EVENT, { detail: { id: id2 } }));
-  }
-  function dispatchDashboardNavigation(state) {
-    window.dispatchEvent(new CustomEvent(DASHBOARD_NAVIGATION_EVENT, { detail: state }));
-  }
-  function dispatchDashboardViewSelected(path) {
-    window.dispatchEvent(new CustomEvent(DASHBOARD_VIEW_SELECTED_EVENT, { detail: { path } }));
-  }
-
-  // src/components/admin/DashboardWorkspace/nav/operatorView.ts
-  function renderDashboardSwitcher(root, dashboards, selectedId) {
-    const container = switcherContainer(root);
-    const current = dashboards.find((dashboard) => dashboard.id === selectedId) ?? dashboards[0];
-    const select = document.createElement("p9r-select");
-    select.dataset.dashboardSwitcher = "true";
-    select.setAttribute("aria-label", "Select dashboard");
-    for (const dashboard of dashboards) {
-      const option2 = document.createElement("option");
-      option2.value = dashboard.id;
-      option2.textContent = dashboard.meta.name;
-      select.append(option2);
-    }
-    select.setAttribute("value", current?.id ?? "");
-    select.value = current?.id ?? "";
-    select.toggleAttribute("disabled", dashboards.length < 2);
-    container.replaceChildren(select);
-  }
-  function renderOperatorLevel(root, dashboard, path, level) {
-    const menu = operatorMenu(root, level === 1 ? "primary" : "secondary");
-    const segments = path.split("/").filter(Boolean);
-    const parent = level === 2 ? dashboard?.views.find((view) => view.id === segments[0]) : undefined;
-    const entries = level === 1 ? dashboard?.views ?? [] : parent?.children ?? [];
-    root.host.toggleAttribute("hidden", level === 2 && entries.length === 0);
-    const heading = menu.querySelector("[data-level-heading]");
-    heading.textContent = "";
-    heading.hidden = true;
-    for (const entry of entries) {
-      menu.append(levelItem(entry, segments, level, dashboard?.id ?? ""));
-    }
-  }
-  function renderOperatorProfile(root, subject, dashboardId, path) {
-    root.querySelector("[data-dashboard-switcher-container]").hidden = true;
-    root.querySelector("[data-operator-navigation]").hidden = true;
-    const container = root.querySelector("[data-dashboard-profile-container]");
-    container.hidden = !subject;
-    container.replaceChildren();
-    if (!subject) {
-      return;
-    }
-    const item = document.createElement("w13c-lateral-menu-item");
-    item.dataset.operatorProfileLink = "true";
-    item.textContent = "Profile";
-    item.setAttribute("href", profileHref(dashboardId, path));
-    item.setAttribute("exact", "");
-    item.toggleAttribute("active", isProfilePage());
-    appendIconSlot(item, undefined, "user", "user");
-    container.append(item);
-  }
-  function operatorMenu(root, surface) {
-    root.querySelector("[data-dashboard-switcher-container]").hidden = true;
-    root.querySelector("[data-dashboard-profile-container]").hidden = true;
-    const menu = root.querySelector("[data-operator-navigation]");
-    menu.hidden = false;
-    menu.dataset.surface = surface;
-    menu.querySelectorAll("[data-operator-generated]").forEach((node) => node.remove());
-    return menu;
-  }
-  function switcherContainer(root) {
-    root.querySelector("[data-operator-navigation]").hidden = true;
-    root.querySelector("[data-dashboard-profile-container]").hidden = true;
-    const container = root.querySelector("[data-dashboard-switcher-container]");
-    container.hidden = false;
-    return container;
-  }
-  function levelItem(entry, segments, level, dashboardId) {
-    const item = document.createElement("w13c-lateral-menu-item");
-    item.dataset.operatorGenerated = "true";
-    const prefix = level === 1 ? [] : [segments[0]];
-    const path = [...prefix, entry.id].join("/");
-    item.dataset.viewPath = path;
-    if (isProfilePage()) {
-      item.setAttribute("href", dashboardHref(dashboardId, path));
-      item.setAttribute("exact", "");
-    }
-    item.toggleAttribute("active", entry.id === segments[level - 1]);
-    item.textContent = entry.label;
-    appendIconSlot(item, undefined, entry.icon, "layout");
-    return item;
-  }
-  function dashboardHref(dashboardId, path) {
-    return controlHref("/dashboards", dashboardId, path);
-  }
-  function profileHref(dashboardId, path) {
-    return controlHref("/dashboards/profile", dashboardId, path);
-  }
-  function controlHref(route2, dashboardId, path) {
-    const basePath2 = document.querySelector('meta[name="basePath"]')?.getAttribute("content")?.replace(/\/+$/, "") ?? "";
-    const params = new URLSearchParams;
-    if (dashboardId) {
-      params.set("id", dashboardId);
-    }
-    if (path) {
-      params.set("view", path);
-    }
-    const query4 = params.toString();
-    return `${basePath2}${route2}${query4 ? `?${query4}` : ""}`;
-  }
-  function isProfilePage() {
-    const basePath2 = document.querySelector('meta[name="basePath"]')?.getAttribute("content")?.replace(/\/+$/, "") ?? "";
-    return window.location.pathname === `${basePath2}/dashboards/profile`;
-  }
-
-  // src/components/admin/DashboardWorkspace/nav/style.css
-  var style_default14 = `:host {
-    display: block;
-    height: 100%;
-    min-width: 0;
-    overflow: hidden;
-}
-
-:host([hidden]) {
-    display: none !important;
-}
-
-[hidden] {
-    display: none !important;
-}
-
-w13c-lateral-menu {
-    height: 100%;
-    width: 100%;
-    --menu-brand-mark-display: none;
-    --menu-header-font-size: .875rem;
-    --menu-item-font-size: .875rem;
-    --menu-section-font-size: .6875rem;
-}
-
-.dashboard-switcher,
-.dashboard-switcher p9r-select,
-.dashboard-profile {
-    min-width: 0;
-    width: 100%;
-}
-
-:host([surface="switcher"]) .dashboard-switcher {
-    padding-top: .625rem;
-}
-
-:host([surface="profile"]) {
-    height: auto;
-    overflow: visible;
-}
-
-.dashboard-profile w13c-lateral-menu-item {
-    display: block;
-    width: 100%;
-}
-
-:host(:is([surface="primary"], [surface="secondary"])) w13c-lateral-menu {
-    background: transparent;
-    border: 0;
-    width: 100%;
-}
-
-:host(:is([surface="primary"], [surface="secondary"])) w13c-lateral-menu::part(header) {
-    display: none;
-}
-
-:host(:is([surface="primary"], [surface="secondary"])) w13c-lateral-menu::part(footer) {
-    display: none;
-}
-
-:host([surface="primary"]) w13c-lateral-menu::part(nav) {
-    padding: 0;
-}
-
-:host([surface="primary"]) w13c-lateral-menu {
-    height: auto;
-}
-
-:host([surface="primary"]) w13c-lateral-menu::part(sidebar) {
-    height: auto;
-}
-
-:host([surface="secondary"]) w13c-lateral-menu::part(nav) {
-    padding-top: .625rem;
-}
-`;
-
-  // src/components/admin/DashboardWorkspace/nav/template.html
-  var template_default17 = `<div class="dashboard-switcher" data-dashboard-switcher-container hidden></div>
-<div class="dashboard-profile" data-dashboard-profile-container hidden></div>
-<w13c-lateral-menu aria-label="Dashboard navigation" data-operator-navigation hidden>
-    <span slot="header" data-level-heading hidden></span>
-</w13c-lateral-menu>
-`;
-
-  // src/components/admin/DashboardWorkspace/DashboardNav.ts
-  class CmsDashboardNav extends l {
-    selectedId = "";
-    constructor() {
-      super({ css: style_default14, template: template_default17 });
-    }
-    connectedCallback() {
-      super.connectedCallback();
-      this.selectedId = new URL(window.location.href).searchParams.get("id") ?? "";
-      this.shadowRoot?.addEventListener("click", this.onClick);
-      this.shadowRoot?.addEventListener("change", this.onChange);
-      window.addEventListener(DASHBOARD_SELECTED_EVENT, this.onSelected);
-      window.addEventListener(DASHBOARD_NAVIGATION_EVENT, this.onNavigation);
-    }
-    disconnectedCallback() {
-      this.shadowRoot?.removeEventListener("click", this.onClick);
-      this.shadowRoot?.removeEventListener("change", this.onChange);
-      window.removeEventListener(DASHBOARD_SELECTED_EVENT, this.onSelected);
-      window.removeEventListener(DASHBOARD_NAVIGATION_EVENT, this.onNavigation);
-    }
-    surface() {
-      const surface = this.getAttribute("surface");
-      return surface === "switcher" || surface === "secondary" || surface === "profile" ? surface : "primary";
-    }
-    select(id2) {
-      this.selectedId = id2;
-      const url = new URL(window.location.href);
-      url.searchParams.set("id", id2);
-      url.searchParams.delete("view");
-      history.replaceState(null, "", url);
-      dispatchDashboardSelected(id2);
-    }
-    onClick = (event) => {
-      const path = event.target?.closest("[data-view-path]")?.dataset.viewPath;
-      if (path) {
-        event.preventDefault();
-        if (this.isProfilePage()) {
-          const target2 = event.target.closest("[data-view-path]");
-          const href = target2?.getAttribute("href");
-          if (href) {
-            window.location.assign(href);
-          }
-          return;
-        }
-        dispatchDashboardViewSelected(path);
-      }
-    };
-    onSelected = (event) => {
-      this.selectedId = event.detail.id;
-    };
-    onNavigation = (event) => {
-      const { dashboards, dashboard, path, subject } = event.detail;
-      this.selectedId = dashboard?.id ?? "";
-      const surface = this.surface();
-      if (surface === "profile") {
-        renderOperatorProfile(this.shadowRoot, subject, dashboard?.id ?? this.selectedId, path);
-      } else if (surface === "switcher") {
-        renderDashboardSwitcher(this.shadowRoot, dashboards, this.selectedId);
-      } else if (surface === "secondary" && this.isProfilePage()) {
-        renderOperatorLevel(this.shadowRoot, null, "", 2);
-      } else {
-        renderOperatorLevel(this.shadowRoot, dashboard, this.isProfilePage() && surface === "primary" ? "" : path, surface === "primary" ? 1 : 2);
-      }
-    };
-    onChange = (event) => {
-      const target2 = event.target;
-      if (target2 instanceof HTMLElement && target2.matches("[data-dashboard-switcher]")) {
-        const id2 = target2.value;
-        if (id2) {
-          this.select(id2);
-        }
-      }
-    };
-    isProfilePage() {
-      const basePath2 = document.querySelector('meta[name="basePath"]')?.getAttribute("content")?.replace(/\/+$/, "");
-      return window.location.pathname === `${basePath2 ?? ""}/dashboards/profile`;
-    }
-  }
-  if (!customElements.get("cms-dashboard-nav")) {
-    customElements.define("cms-dashboard-nav", CmsDashboardNav);
-  }
-
-  // src/static/dashboards/sources.html
-  var sources_default = `<div data-workspace-sources hidden>
-    <div data-workspace-session cms-source="/api/dashboard-session as session">
-        <span cms-condition="$source.error">{{ $source.message }}</span>
-    </div>
-    <div data-workspace-runtime cms-reload-on="cms-dashboard-workspace:read">
-        <span cms-condition="$source.error">{{ $source.message }}</span>
-    </div>
-</div>
-`;
-
-  // src/components/admin/DashboardWorkspace/workspace/sources.ts
-  class WorkspaceSources {
-    runtime = null;
-    stops = [];
-    connect(host, session, runtime2) {
-      if (!host.querySelector("[data-workspace-sources]")) {
-        const fragment2 = document.createElement("template");
-        fragment2.innerHTML = sources_default;
-        host.append(fragment2.content);
-      }
-      const sessionSource = host.querySelector("[data-workspace-session]");
-      sessionSource.setAttribute("cms-source", `${route("/api/dashboard-session")} as session`);
-      this.runtime = host.querySelector("[data-workspace-runtime]");
-      this.stops = [qd(sessionSource, session), qd(this.runtime, runtime2)];
-    }
-    select(id2) {
-      if (!this.runtime) {
-        return;
-      }
-      if (!id2) {
-        this.runtime.removeAttribute("cms-source");
-        return;
-      }
-      const spec = `${route(`/api/dashboard-session/dashboard?id=${encodeURIComponent(id2)}`)} as runtime`;
-      if (this.runtime.getAttribute("cms-source") === spec) {
-        this.runtime.ownerDocument.dispatchEvent(new Event("cms-dashboard-workspace:read"));
-      } else {
-        this.runtime.setAttribute("cms-source", spec);
-      }
-    }
-    disconnect() {
-      for (const stop of this.stops) {
-        stop();
-      }
-      this.stops = [];
-      this.runtime = null;
-    }
-  }
-
-  // src/components/admin/DashboardWorkspace/workspace/styles/base.css
-  var base_default3 = `:host {
-    display: block;
-    min-width: 0;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-[hidden] {
-    display: none !important;
-}
-
-.workspace,
-.profile-view,
-.navigation-row > * {
-    min-width: 0;
-}
-
-slot[name="profile"]::slotted(*) {
-    display: block;
-}
-
-.message {
-    color: var(--text-muted, #66736f);
-    padding: 1rem 0;
-}
-
-.dashboard-icon {
-    display: inline-grid;
-    height: 1.5rem;
-    place-items: center;
-    width: 1.5rem;
-}
-
-.dashboard-icon :is(svg) {
-    height: 1.15rem;
-    width: 1.15rem;
-}
-
-.view-navigation {
-    display: grid;
-    gap: .5rem;
-    margin-bottom: 1.5rem;
-}
-
-.tab-row {
-    border-bottom: 1px solid var(--border-default, #dfe5e2);
-    display: flex;
-    gap: .25rem;
-    overflow-x: auto;
-}
-
-.tab-row button {
-    align-items: center;
-    background: transparent;
-    border: 0;
-    border-bottom: 2px solid transparent;
-    color: var(--text-muted, #66736f);
-    cursor: pointer;
-    display: flex;
-    font: inherit;
-    gap: .4rem;
-    padding: .65rem .8rem;
-    white-space: nowrap;
-}
-
-.tab-row button[aria-selected="true"] {
-    border-bottom-color: var(--primary-base, #087f5b);
-    color: var(--text-main, #0f1f1a);
-    font-weight: 700;
-}
-
-.tab-icon {
-    display: inline-grid;
-    height: 1rem;
-    place-items: center;
-    width: 1rem;
-}
-
-.tab-icon :is(svg) {
-    height: .9rem;
-    width: .9rem;
-}
-`;
-
-  // src/components/admin/DashboardWorkspace/workspace/styles/navigation.css
-  var navigation_default2 = `.dashboard-navigation-list,
-.readonly-navigation {
-    display: grid;
-    gap: .4rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.dashboard-navigation-node {
-    display: grid;
-    gap: .5rem;
-    min-width: 0;
-}
-
-.dashboard-navigation-row {
-    align-items: center;
-    background: var(--bg-surface, #fff);
-    border: 1px solid var(--border-default, #dfe5e2);
-    border-radius: .45rem;
-    cursor: pointer;
-    display: flex;
-    gap: .5rem;
-    min-height: 3.25rem;
-    padding: .4rem .55rem;
-    position: relative;
-}
-
-.dashboard-navigation-row:hover {
-    background: var(--bg-hover, #f5f8f6);
-    border-color: var(--border-strong, #bdc8c3);
-}
-
-.dashboard-navigation-row:focus-visible {
-    outline: 2px solid var(--primary-base, #08745b);
-    outline-offset: 2px;
-}
-
-.dashboard-navigation-handle {
-    align-items: center;
-    align-self: stretch;
-    color: var(--text-muted, #66736f);
-    cursor: grab;
-    display: inline-flex;
-    flex: 0 0 2.25rem;
-    font-size: 1.15rem;
-    justify-content: center;
-    line-height: 1;
-    margin: -.4rem 0 -.4rem -.55rem;
-    min-width: 2.25rem;
-    touch-action: none;
-    user-select: none;
-}
-
-.dashboard-navigation-handle:active {
-    cursor: grabbing;
-}
-
-.dashboard-navigation-handle:focus-visible {
-    border-radius: .25rem;
-    outline: 2px solid var(--primary-base, #08745b);
-    outline-offset: 2px;
-}
-
-.dashboard-navigation-icon {
-    align-items: center;
-    background: var(--primary-muted, #e7f4ee);
-    border-radius: .45rem;
-    color: var(--primary-base, #08745b);
-    display: inline-flex;
-    flex: 0 0 1.75rem;
-    height: 1.75rem;
-    justify-content: center;
-}
-
-.dashboard-navigation-icon :is(svg) {
-    height: 1rem;
-    width: 1rem;
-}
-
-.dashboard-navigation-copy {
-    display: grid;
-    flex: 1 1 auto;
-    gap: .2rem;
-    min-width: 0;
-}
-
-.dashboard-navigation-copy strong,
-.dashboard-navigation-copy span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.dashboard-navigation-copy strong {
-    color: var(--text-main, #0f1f1a);
-    font-size: .8125rem;
-}
-
-.dashboard-navigation-copy span {
-    color: var(--text-muted, #66736f);
-    font-size: .6875rem;
-}
-
-.dashboard-navigation-row-actions {
-    align-items: center;
-    display: flex;
-    gap: .2rem;
-    flex: 0 0 auto;
-    opacity: 0;
-    transition: opacity .15s ease;
-}
-
-.dashboard-navigation-row:hover .dashboard-navigation-row-actions,
-.dashboard-navigation-row:focus-within .dashboard-navigation-row-actions {
-    opacity: 1;
-}
-
-.dashboard-navigation-row-actions p9r-icon-button {
-    font-size: 1.1rem;
-}
-
-.dashboard-navigation-children {
-    border-left: 1px solid var(--border-strong, #bdc8c3);
-    margin-left: 1.45rem;
-    padding-left: .75rem;
-}
-
-.dashboard-navigation-children:empty {
-    display: none;
-}
-
-.dashboard-navigation-node[data-navigation-dragging] > .dashboard-navigation-row {
-    opacity: .45;
-}
-
-.dashboard-navigation-node[data-navigation-drop="before"] > .dashboard-navigation-row {
-    box-shadow: 0 -3px 0 var(--primary-base, #08745b);
-}
-
-.dashboard-navigation-node[data-navigation-drop="after"] > .dashboard-navigation-row {
-    box-shadow: 0 3px 0 var(--primary-base, #08745b);
-}
-
-.dashboard-navigation-node[data-navigation-drop="inside"] > .dashboard-navigation-row {
-    background: var(--primary-muted, #e7f4ee);
-    outline: 2px solid var(--primary-base, #08745b);
-    outline-offset: -2px;
-}
-
-.readonly-navigation .readonly-navigation {
-    border-left: 1px solid var(--border-default, #dfe5e2);
-    margin-left: .55rem;
-    padding-left: 1rem;
-}
-
-.readonly-navigation li > div {
-    align-items: center;
-    display: flex;
-    gap: .5rem;
-    min-height: 2rem;
-}
-
-.readonly-navigation-icon {
-    display: inline-grid;
-    height: 1.1rem;
-    place-items: center;
-    width: 1.1rem;
-}
-
-.readonly-navigation-icon :is(svg) {
-    height: .9rem;
-    width: .9rem;
-}
-
-@media (max-width: 560px) {
-    .dashboard-navigation-row {
-        align-items: flex-start;
-        flex-wrap: wrap;
-    }
-
-    .dashboard-navigation-copy {
-        width: calc(100% - 5rem);
-    }
-
-    .dashboard-navigation-row-actions {
-        margin-left: auto;
-        opacity: 1;
-    }
-}
-
-@media (hover: none) {
-    .dashboard-navigation-row-actions {
-        opacity: 1;
-    }
-
-    .dashboard-navigation-settings {
-        display: none;
-    }
-}
-`;
-
-  // src/components/admin/DashboardWorkspace/workspace/template.html
-  var template_default18 = `<section class="workspace">
-    <div class="message" data-message>Loading dashboard…</div>
-    <div data-content hidden>
-        <span class="dashboard-icon" data-dashboard-icon hidden></span>
-        <span data-name hidden></span>
-        <span data-owner hidden></span>
-        <div class="view-navigation" data-view-navigation></div>
-        <slot name="runtime"></slot>
-    </div>
-    <div class="profile-view" data-profile hidden>
-        <slot name="profile"></slot>
-    </div>
-</section>
-`;
-
-  // src/components/admin/DashboardWorkspace/workspace/view.ts
-  function renderViewNavigation(root, dashboard, requested) {
-    const container = root.querySelector("[data-view-navigation]");
-    container.replaceChildren();
-    const path = resolveViewPath(dashboard, requested);
-    const segments = path.split("/").filter(Boolean);
-    if (segments.length < 3) {
-      return path;
-    }
-    const first = dashboard.views.find((view) => view.id === segments[0]);
-    const second = first?.children.find((view) => view.id === segments[1]);
-    if (!first || !second?.children.length) {
-      return path;
-    }
-    const row = document.createElement("div");
-    row.className = "tab-row";
-    row.setAttribute("role", "tablist");
-    for (const view of second.children) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.dataset.viewPath = `${first.id}/${second.id}/${view.id}`;
-      button.setAttribute("role", "tab");
-      button.setAttribute("aria-selected", String(view.id === segments[2]));
-      const icon = document.createElement("span");
-      icon.className = "tab-icon";
-      renderIcon(icon, undefined, view.icon, "layout");
-      const label2 = document.createElement("span");
-      label2.textContent = view.label;
-      button.append(icon, label2);
-      row.append(button);
-    }
-    container.append(row);
-    return path;
-  }
-  function resolveViewPath(dashboard, requested) {
-    return validLeafPath(dashboard, requested) ?? validLeafPath(dashboard, dashboard.homeView) ?? firstLeafPath(dashboard.views);
-  }
-  function mountDashboardRuntime(root, dashboardId, dashboard, groups, path) {
-    const view = viewAtPath(dashboard.views, path);
-    const runtime2 = root.host.querySelector("[data-runtime]");
-    if (!view?.source) {
-      runtime2.hidden = true;
-      return;
-    }
-    const runtimeId = `view-${path.replaceAll("/", "-")}`;
-    const runtimeGroups = groups.map((group2) => ({
-      ...structuredClone(group2),
-      dashboards: []
-    }));
-    const group = runtimeGroups.find((candidate) => candidate.source.id === view.source);
-    if (!group) {
-      runtime2.hidden = true;
-      return;
-    }
-    group.dashboards = [
-      {
-        id: runtimeId,
-        source: view.source,
-        meta: { name: view.label, ...view.icon ? { icon: view.icon } : {} },
-        views: view.widgets
-      }
-    ];
-    document.documentElement.dataset.dashboardScope = dashboardId;
-    runtime2.hidden = false;
-    runtime2.setExternalContext(runtimeGroups, { source: view.source, dashboard: runtimeId });
-  }
-  function renderHeader(root, dashboard) {
-    root.querySelector("[data-name]").textContent = dashboard.meta.name;
-    renderIcon(root.querySelector("[data-dashboard-icon]"), dashboard.meta.svg, dashboard.meta.icon, "layout");
-    root.querySelector("[data-owner]").textContent = dashboard.origin.kind === "site" ? "Site dashboard" : dashboard.origin.integrationId;
-  }
-  function validLeafPath(dashboard, path) {
-    const view = viewAtPath(dashboard.views, path);
-    return view?.source ? path : view ? firstLeafPath(view.children, path) : null;
-  }
-  function firstLeafPath(views, parent = "") {
-    const view = views[0];
-    if (!view) {
-      return parent;
-    }
-    const path = parent ? `${parent}/${view.id}` : view.id;
-    return view.source || !view.children.length ? path : firstLeafPath(view.children, path);
-  }
-  function viewAtPath(views, path) {
-    let siblings = views;
-    let selected2;
-    for (const segment of path.split("/").filter(Boolean)) {
-      selected2 = siblings.find((view) => view.id === segment);
-      if (!selected2) {
-        return null;
-      }
-      siblings = selected2.children;
-    }
-    return selected2 ?? null;
-  }
-
-  // src/components/admin/DashboardWorkspace/workspace/controller.ts
-  class DashboardWorkspaceController extends l {
-    dashboard = null;
-    runtime = null;
-    session = null;
-    sources = new WorkspaceSources;
-    constructor() {
-      super({ css: `${base_default3}${navigation_default2}`, template: template_default18 });
-    }
-    disconnectWorkspace() {
-      this.sources.disconnect();
-      delete document.documentElement.dataset.dashboardScope;
-    }
-    loadModel() {
-      this.message("Loading dashboards…");
-      this.sources.connect(this, this.sessionChanged, this.runtimeChanged);
-    }
-    sessionChanged = (state) => {
-      if (!this.isConnected || state.disposed || state.loading || state.refreshing) {
-        return;
-      }
-      if (state.refreshError && this.session) {
-        return;
-      }
-      if (state.error || state.refreshError) {
-        this.sources.select(null);
-        this.session = null;
-        this.runtime = null;
-        this.dashboard = null;
-        delete document.documentElement.dataset.dashboardScope;
-        this.publishNavigation(null, "");
-        this.message(String(state.message ?? "Dashboard request failed"), true);
-        return;
-      }
-      if (!state.loaded && !state.empty) {
-        return;
-      }
-      this.session = state.data;
-      const requested = new URL(window.location.href).searchParams.get("id") || "";
-      const target2 = this.allDashboards().some((dashboard) => dashboard.id === requested) ? requested : this.allDashboards()[0]?.id ?? "";
-      this.loadDashboard(target2);
-    };
-    loadDashboard(id2) {
-      delete document.documentElement.dataset.dashboardScope;
-      this.dashboard = this.allDashboards().find((dashboard) => dashboard.id === id2) ?? null;
-      this.runtime = null;
-      if (!this.dashboard) {
-        this.sources.select(null);
-        if (this.isProfilePage()) {
-          this.renderWorkspace();
-          return;
-        }
-        this.message(this.allDashboards().length ? "Select a dashboard." : "No dashboard is available.");
-        this.publishNavigation(null, "");
-        return;
-      }
-      if (this.dashboard.status !== "published") {
-        this.sources.select(null);
-        this.renderWorkspace();
-        return;
-      }
-      this.message("Loading dashboard…");
-      this.sources.select(this.dashboard.id);
-    }
-    runtimeChanged = (state) => {
-      if (!this.isConnected || state.disposed || !this.dashboard || this.dashboard.status !== "published") {
-        return;
-      }
-      if (state.refreshing || state.refreshError && this.runtime !== null) {
-        return;
-      }
-      if (state.loading) {
-        delete document.documentElement.dataset.dashboardScope;
-        this.message("Loading dashboard…");
-      } else if (state.error || state.refreshError) {
-        this.runtime = null;
-        if (this.isProfilePage()) {
-          this.renderWorkspace();
-        } else {
-          this.publishNavigation(null, "");
-          this.message(String(state.message ?? "Dashboard request failed"), true);
-        }
-      } else if (state.loaded || state.empty) {
-        this.runtime = state.data;
-        this.renderWorkspace();
-      }
-    };
-    selectView(requested) {
-      if (!this.dashboard || !this.runtime) {
-        return;
-      }
-      const path = renderViewNavigation(this.shadowRoot, this.runtime.dashboard, requested);
-      const url = new URL(window.location.href);
-      if (path) {
-        url.searchParams.set("view", path);
-      } else {
-        url.searchParams.delete("view");
-      }
-      history.replaceState(null, "", url);
-      this.publishNavigation(this.runtime.dashboard, path);
-      mountDashboardRuntime(this.shadowRoot, this.dashboard.id, this.runtime.dashboard, this.runtime.groups, path);
-    }
-    message(value2, error = false) {
-      const message = this.shadowRoot?.querySelector("[data-message]");
-      const content = this.shadowRoot?.querySelector("[data-content]");
-      const profile = this.shadowRoot?.querySelector("[data-profile]");
-      if (message) {
-        message.textContent = value2;
-        message.hidden = !value2;
-        message.toggleAttribute("data-error", error);
-      }
-      if (content) {
-        content.hidden = Boolean(value2) || this.isProfilePage();
-      }
-      if (profile) {
-        profile.hidden = Boolean(value2) || !this.isProfilePage();
-      }
-    }
-    renderWorkspace() {
-      if (this.isProfilePage()) {
-        this.message("");
-        const path = this.runtime ? resolveViewPath(this.runtime.dashboard, this.requestedView()) : "";
-        this.publishNavigation(this.runtime?.dashboard ?? null, path);
-        return;
-      }
-      if (!this.dashboard) {
-        return;
-      }
-      this.message("");
-      renderHeader(this.shadowRoot, this.dashboard);
-      if (!this.runtime) {
-        this.shadowRoot.querySelector("[data-view-navigation]").replaceChildren();
-        this.shadowRoot.querySelector("[data-runtime]").hidden = true;
-        this.publishNavigation(null, "");
-        return;
-      }
-      this.selectView(this.requestedView());
-    }
-    allDashboards() {
-      return this.session?.dashboards ?? [];
-    }
-    requestedView() {
-      return new URL(window.location.href).searchParams.get("view") ?? "";
-    }
-    isProfilePage() {
-      return this.hasAttribute("profile");
-    }
-    publishNavigation(dashboard, path) {
-      dispatchDashboardNavigation({
-        dashboards: this.allDashboards(),
-        dashboard,
-        path,
-        subject: this.session?.subject ?? null,
-        logoutUrl: this.session?.logoutUrl ?? ""
-      });
-    }
-  }
-
-  // src/components/admin/DashboardWorkspace/DashboardWorkspace.ts
-  class CmsDashboardWorkspace extends DashboardWorkspaceController {
-    connectedCallback() {
-      super.connectedCallback();
-      if (!this.querySelector("[data-runtime]")) {
-        const runtime2 = document.createElement("cms-dashboards-admin");
-        runtime2.setAttribute("external", "");
-        runtime2.setAttribute("slot", "runtime");
-        runtime2.setAttribute("data-runtime", "");
-        runtime2.hidden = true;
-        this.append(runtime2);
-      }
-      this.shadowRoot?.addEventListener("click", this.onClick);
-      window.addEventListener(DASHBOARD_SELECTED_EVENT, this.onSelected);
-      window.addEventListener(DASHBOARD_VIEW_SELECTED_EVENT, this.onViewSelected);
-      window.addEventListener("cms-dashboard-workspace:reload", this.onRuntimeReload);
-      this.loadModel();
-    }
-    disconnectedCallback() {
-      this.disconnectWorkspace();
-      this.shadowRoot?.removeEventListener("click", this.onClick);
-      window.removeEventListener(DASHBOARD_SELECTED_EVENT, this.onSelected);
-      window.removeEventListener(DASHBOARD_VIEW_SELECTED_EVENT, this.onViewSelected);
-      window.removeEventListener("cms-dashboard-workspace:reload", this.onRuntimeReload);
-    }
-    onClick = (event) => {
-      const path = event.target?.closest("[data-view-path]")?.dataset.viewPath;
-      if (path) {
-        this.selectView(path);
-      }
-    };
-    onSelected = (event) => {
-      this.loadDashboard(event.detail.id);
-    };
-    onViewSelected = (event) => {
-      if (this.hasAttribute("profile")) {
-        this.openDashboard(event.detail.path);
-        return;
-      }
-      this.selectView(event.detail.path);
-    };
-    onRuntimeReload = () => {
-      if (this.dashboard) {
-        this.loadDashboard(this.dashboard.id);
-      }
-    };
-    openDashboard(path) {
-      const basePath2 = document.querySelector('meta[name="basePath"]')?.getAttribute("content")?.replace(/\/+$/, "");
-      const url = new URL(`${basePath2 ?? ""}/dashboards`, window.location.origin);
-      if (this.dashboard?.id) {
-        url.searchParams.set("id", this.dashboard.id);
-      }
-      if (path) {
-        url.searchParams.set("view", path);
-      }
-      window.location.assign(`${url.pathname}${url.search}`);
-    }
-  }
-  if (!customElements.get("cms-dashboard-workspace")) {
-    customElements.define("cms-dashboard-workspace", CmsDashboardWorkspace);
-  }
-
-  // src/components/admin/DashboardWorkspace/configuration/admin.css
-  var admin_default = `.dashboard-admin-nav {
-    display: block;
-    height: 100%;
-    min-width: 0;
-    overflow: hidden;
-}
-
-.dashboard-admin-nav w13c-lateral-menu {
-    height: 100%;
-    width: 100%;
-    --menu-brand-mark-display: none;
-    --menu-header-font-size: .875rem;
-    --menu-item-font-size: .875rem;
-    --menu-section-font-size: .6875rem;
-}
-
-.dashboard-admin-nav .menu-section {
-    color: var(--text-muted, #66736f);
-    font-size: .6875rem;
-    font-weight: 700;
-    letter-spacing: .08em;
-    padding: .9rem .625rem .35rem;
-    text-transform: uppercase;
-}
-
-.dashboard-new {
-    background: transparent;
-    border: 0;
-    border-radius: .375rem;
-    color: var(--primary-base, #08745b);
-    cursor: pointer;
-    font: inherit;
-    font-size: .8125rem;
-    font-weight: 700;
-    padding: .45rem .625rem;
-    text-align: left;
-    width: 100%;
-}
-
-.dashboard-new:is(:hover, :focus-visible) {
-    background: var(--bg-hover, #f5f8f6);
-    outline: none;
-}
-
-.dashboard-detail-title,
-.dashboard-detail-actions,
-.dashboard-members-summary,
-.dashboard-member-row,
-.dashboard-modal-actions {
-    align-items: center;
-    display: flex;
-    gap: .75rem;
-}
-
-.dashboard-detail-actions,
-.dashboard-modal-actions {
-    justify-content: flex-end;
-}
-
-.dashboard-configuration,
-.dashboard-configuration form,
-.dashboard-members-modal,
-.dashboard-member-list,
-.dashboard-metadata {
-    display: grid;
-    gap: 1rem;
-}
-
-.dashboard-members-summary {
-    justify-content: space-between;
-}
-
-.dashboard-members-summary p {
-    color: var(--text-muted, #66736f);
-    margin: 0;
-}
-
-.dashboard-members-summary strong {
-    color: var(--text-main, #0f1f1a);
-    font-size: 1.25rem;
-}
-
-.dashboard-member-list {
-    border: 1px solid var(--border-default, #dfe5e2);
-    border-radius: .5rem;
-    gap: 0;
-    max-height: 22.5rem;
-    overflow: auto;
-}
-
-.dashboard-member-row {
-    border-bottom: 1px solid var(--border-default, #dfe5e2);
-    justify-content: space-between;
-    min-height: 4rem;
-    padding: .75rem;
-}
-
-.dashboard-member-row:last-child {
-    border-bottom: 0;
-}
-
-.dashboard-member-identity {
-    display: grid;
-    flex: 1 1 auto;
-    gap: .2rem;
-    min-width: 0;
-}
-
-.dashboard-member-identity span,
-.dashboard-members-empty,
-.dashboard-metadata span {
-    color: var(--text-muted, #66736f);
-    font-size: .8125rem;
-}
-
-.dashboard-member-actions {
-    display: flex;
-    gap: .5rem;
-}
-
-.dashboard-member-actions form {
-    display: block;
-    margin: 0;
-}
-
-.dashboard-metadata-row {
-    display: flex;
-    gap: .5rem;
-    justify-content: space-between;
-}
-
-.dashboard-metadata-row strong {
-    text-align: right;
-}
-
-cms-dashboard-icon {
-    display: inline-grid;
-    flex: 0 0 1.25rem;
-    height: 1.25rem;
-    place-items: center;
-    width: 1.25rem;
-}
-
-cms-dashboard-icon svg {
-    height: 1rem;
-    width: 1rem;
-}
-
-.dashboard-detail-title cms-dashboard-icon {
-    height: 1.5rem;
-    width: 1.5rem;
-}
-
-.dashboard-members-empty {
-    margin: 0;
-    padding: 1rem;
-    text-align: center;
-}
-
-.dashboard-members-modal p9r-pagination {
-    justify-self: center;
-}
-
-.dashboard-admin-empty {
-    color: var(--text-muted, #66736f);
-    padding: 1rem 0;
-}
-`;
-
-  // src/components/admin/DashboardWorkspace/configuration/AdminSupport.ts
-  var STYLE_ID = "cms-dashboard-admin-styles";
-
-  class CmsDashboardAdminStyles extends HTMLElement {
-    connectedCallback() {
-      this.ownerDocument.addEventListener("click", this.onClick);
-      this.ownerDocument.addEventListener("cms-source:success", this.onSourceSuccess);
-      if (this.ownerDocument.getElementById(STYLE_ID)) {
-        return;
-      }
-      const style = this.ownerDocument.createElement("style");
-      style.id = STYLE_ID;
-      style.textContent = admin_default;
-      this.ownerDocument.head.append(style);
-    }
-    disconnectedCallback() {
-      this.ownerDocument.removeEventListener("click", this.onClick);
-      this.ownerDocument.removeEventListener("cms-source:success", this.onSourceSuccess);
-    }
-    onClick = (event) => {
-      const action = event.target?.closest("[data-dashboard-close-modal]");
-      const modal = action?.closest("p9r-modal");
-      modal?.hide?.();
-    };
-    onSourceSuccess = (event) => {
-      const Form = this.ownerDocument.defaultView?.HTMLFormElement;
-      const form = event.composedPath().find((entry) => Boolean(Form && entry instanceof Form));
-      if (!form || form.getAttribute("id") !== "dashboard-settings-form") {
-        return;
-      }
-      const dashboard = event.detail.body;
-      const name = dashboard?.meta?.name ?? form.elements.namedItem("name")?.value;
-      if (typeof name === "string") {
-        const title = this.ownerDocument.querySelector("[data-dashboard-detail-name]");
-        if (title) {
-          title.textContent = name;
-        }
-      }
-      const icon = this.ownerDocument.querySelector("[data-dashboard-detail-icon]");
-      const iconName = dashboard?.meta?.icon ?? form.elements.namedItem("icon")?.value;
-      if (icon && typeof iconName === "string") {
-        icon.setAttribute("icon", iconName);
-        const svg2 = dashboard?.meta?.svg;
-        icon.setAttribute("svg", typeof svg2 === "string" ? svg2 : "");
-      }
-    };
-  }
-
-  class CmsDashboardIcon extends HTMLElement {
-    static observedAttributes = ["icon", "svg"];
-    connectedCallback() {
-      this.render();
-    }
-    attributeChangedCallback() {
-      if (this.isConnected) {
-        this.render();
-      }
-    }
-    render() {
-      renderIcon(this, this.getAttribute("svg") ?? undefined, this.getAttribute("icon") ?? undefined, "layout");
-    }
-  }
-
-  class CmsDashboardAdminNav extends HTMLElement {
-    observer = null;
-    connectedCallback() {
-      this.observer = new MutationObserver(() => this.sync());
-      this.observe();
-      window.addEventListener("popstate", this.sync);
-      this.addEventListener("click", this.onClick);
-      this.addEventListener("keydown", this.onKeydown);
-      queueMicrotask(this.sync);
-    }
-    disconnectedCallback() {
-      this.observer?.disconnect();
-      this.observer = null;
-      window.removeEventListener("popstate", this.sync);
-      this.removeEventListener("click", this.onClick);
-      this.removeEventListener("keydown", this.onKeydown);
-    }
-    sync = () => {
-      this.observer?.disconnect();
-      const items = Array.from(this.querySelectorAll("[data-dashboard-id]"));
-      const selectedId = new URL(window.location.href).searchParams.get("id") || items[0]?.dataset.dashboardId || "";
-      for (const item of items) {
-        item.toggleAttribute("active", item.dataset.dashboardId === selectedId);
-      }
-      this.observe();
-    };
-    observe() {
-      this.observer?.observe(this, { childList: true, subtree: true });
-    }
-    onClick = (event) => {
-      const item = event.target?.closest("[data-dashboard-href]");
-      if (item?.dataset.dashboardHref) {
-        window.location.assign(item.dataset.dashboardHref);
-      }
-    };
-    onKeydown = (event) => {
-      if (event.key !== "Enter" && event.key !== " ") {
-        return;
-      }
-      const item = event.target?.closest("[data-dashboard-href]");
-      if (!item?.dataset.dashboardHref) {
-        return;
-      }
-      event.preventDefault();
-      window.location.assign(item.dataset.dashboardHref);
-    };
-  }
-
-  // src/components/admin/DashboardWorkspace/configuration/CreateController.ts
-  class CmsDashboardCreateController extends HTMLElement {
-    form = null;
-    nameControl = null;
-    idControl = null;
-    idEdited = false;
-    connectedCallback() {
-      queueMicrotask(() => this.bind());
-    }
-    disconnectedCallback() {
-      this.unbind();
-    }
-    bind() {
-      this.unbind();
-      const formId2 = this.getAttribute("form");
-      const form = formId2 ? this.ownerDocument.getElementById(formId2) : this.closest("form");
-      if (!(form instanceof HTMLFormElement)) {
-        return;
-      }
-      const name = form.querySelector("[name='name']");
-      const id2 = form.querySelector("[name='id']");
-      if (!name || !id2) {
-        return;
-      }
-      this.form = form;
-      this.nameControl = name;
-      this.idControl = id2;
-      this.idEdited = Boolean(id2.value);
-      name.addEventListener("input", this.onNameInput);
-      id2.addEventListener("input", this.onIdInput);
-      form.addEventListener("reset", this.onReset);
-      form.addEventListener("cms-source:failed", this.onFailure);
-      form.addEventListener("cms-source:success", this.onSuccess);
-    }
-    unbind() {
-      this.nameControl?.removeEventListener("input", this.onNameInput);
-      this.idControl?.removeEventListener("input", this.onIdInput);
-      this.form?.removeEventListener("reset", this.onReset);
-      this.form?.removeEventListener("cms-source:failed", this.onFailure);
-      this.form?.removeEventListener("cms-source:success", this.onSuccess);
-      this.form = null;
-      this.nameControl = null;
-      this.idControl = null;
-    }
-    onNameInput = () => {
-      this.nameControl?.setCustomValidity("");
-      if (!this.idEdited && this.idControl) {
-        this.idControl.value = deriveDashboardId(this.nameControl?.value ?? "");
-        this.idControl.setCustomValidity("");
-      }
-    };
-    onIdInput = () => {
-      this.idEdited = true;
-      this.idControl?.setCustomValidity("");
-    };
-    onReset = () => {
-      queueMicrotask(() => {
-        this.idEdited = false;
-        this.nameControl?.setCustomValidity("");
-        this.idControl?.setCustomValidity("");
-      });
-    };
-    onFailure = (event) => {
-      const body = event.detail?.body;
-      const control = body?.field === "id" ? this.idControl : body?.field === "name" ? this.nameControl : null;
-      if (!control || typeof body?.error !== "string") {
-        return;
-      }
-      control.setCustomValidity(body.error);
-      control.reportValidity();
-      control.focus();
-    };
-    onSuccess = (event) => {
-      const body = event.detail?.body;
-      if (typeof body?.id !== "string" || !body.id) {
-        return;
-      }
-      const url = new URL(window.location.href);
-      url.searchParams.set("id", body.id);
-      window.history.replaceState(null, "", url);
-    };
-  }
-  function deriveDashboardId(value2) {
-    return value2.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 64).replace(/-$/g, "");
-  }
-
-  // src/components/admin/DashboardWorkspace/configuration/MemberFilter.ts
-  class CmsDashboardMemberFilter extends HTMLElement {
-    observer = null;
-    connectedCallback() {
-      this.addEventListener("input", this.onInput);
-      this.addEventListener("page-change", this.onPageChange);
-      this.addEventListener(X, this.onAssignmentSuccess);
-      this.observer = new MutationObserver(() => this.apply());
-      this.observer.observe(this, { childList: true, subtree: true });
-      queueMicrotask(() => this.apply());
-    }
-    disconnectedCallback() {
-      this.removeEventListener("input", this.onInput);
-      this.removeEventListener("page-change", this.onPageChange);
-      this.removeEventListener(X, this.onAssignmentSuccess);
-      this.observer?.disconnect();
-      this.observer = null;
-    }
-    onInput = (event) => {
-      if (event.target instanceof Element && event.target.matches("[data-dashboard-member-search]")) {
-        kt2("dashboard-member-page", "1", this.ownerDocument);
-      }
-    };
-    onPageChange = (event) => {
-      if (!(event instanceof CustomEvent) || !(event.target instanceof Element)) {
-        return;
-      }
-      if (!event.target.matches("[data-dashboard-member-pagination]")) {
-        return;
-      }
-      const page = event.detail?.page;
-      if (Number.isSafeInteger(page) && page > 0) {
-        kt2("dashboard-member-page", String(page), this.ownerDocument);
-      }
-    };
-    onAssignmentSuccess = (event) => {
-      if (event.target instanceof Element && event.target.matches("[data-dashboard-member-assignment]")) {
-        event.stopPropagation();
-      }
-    };
-    apply() {
-      const rows = Array.from(this.querySelectorAll("[data-dashboard-member-row]"));
-      const empty = this.querySelector("[data-dashboard-member-no-results]");
-      if (empty) {
-        empty.hidden = rows.length > 0;
-      }
-    }
-  }
-
-  // src/components/admin/DashboardWorkspace/workspace/navigation/data.ts
-  function serializeNavigation(root) {
-    const tree = root.querySelector("[data-navigation-tree]");
-    return tree ? serializeList(tree) : [];
-  }
-  function suggestedMount(view) {
-    return {
-      id: slug2(view.view.id || view.meta.name),
-      label: view.meta.name,
-      icon: view.meta.icon ?? view.view.icon ?? "layout",
-      use: view.id
-    };
-  }
-  function serializeList(list) {
-    const used = new Set;
-    return Array.from(list.children).filter((child) => child instanceof HTMLElement && child.dataset.navigationNode === "true").map((node) => {
-      const label2 = (node.dataset.navigationLabel ?? "").trim();
-      const icon = node.dataset.navigationIcon ?? "layout";
-      const use = node.dataset.navigationKind === "group" ? "" : node.dataset.navigationUse ?? "";
-      const children = serializeList(node.querySelector("[data-navigation-children]"));
-      const id2 = uniqueId(node.dataset.nodeId || slug2(label2 || use), used);
-      return { id: id2, label: label2, icon, ...use ? { use } : {}, ...children.length ? { children } : {} };
-    });
-  }
-  function uniqueId(value2, used) {
-    const base = slug2(value2);
-    let candidate = base;
-    let suffix = 2;
-    while (used.has(candidate)) {
-      candidate = `${base.slice(0, 60)}-${suffix++}`;
-    }
-    used.add(candidate);
-    return candidate;
-  }
-  function slug2(value2) {
-    return value2.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 64).replace(/-$/g, "") || "item";
-  }
-  // src/components/admin/DashboardWorkspace/workspace/navigation/readonly.ts
-  function readonlyNavigation(dashboard, views) {
-    const section2 = document.createElement("cms-detail-section");
-    section2.setAttribute("heading", "Navigation");
-    section2.append(readonlyList(dashboard.views, views));
-    return section2;
-  }
-  function readonlyList(mounts, views) {
-    const list = document.createElement("ol");
-    list.className = "readonly-navigation";
-    for (const mount of mounts) {
-      const view = views.find((candidate) => candidate.id === mount.use);
-      const item = document.createElement("li");
-      const row = document.createElement("div");
-      const icon = document.createElement("span");
-      icon.className = "readonly-navigation-icon";
-      renderIcon(icon, undefined, mount.icon ?? view?.meta.icon ?? view?.view.icon, "layout");
-      const label2 = document.createElement("span");
-      label2.textContent = mount.label ?? view?.meta.name ?? view?.view.label ?? mount.id;
-      row.append(icon, label2);
-      item.append(row);
-      if (mount.children?.length) {
-        item.append(readonlyList(mount.children, views));
-      }
-      list.append(item);
-    }
-    return list;
-  }
-
-  // src/components/admin/DashboardWorkspace/workspace/navigation/view.ts
-  function appendIconOptions(select, selected2 = "") {
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = "Select an icon";
-    placeholder.disabled = true;
-    placeholder.selected = !selected2;
-    select.replaceChildren(placeholder, ...Object.keys(DASHBOARD_ICONS).map((icon) => {
-      const option2 = document.createElement("option");
-      option2.value = icon;
-      option2.textContent = icon.replaceAll("-", " ");
-      option2.selected = icon === selected2;
-      return option2;
-    }));
-    select.setAttribute("value", selected2);
-    select.value = selected2;
-  }
-  function navigationEditor(dashboard, views) {
-    const section2 = document.createElement("cms-detail-section");
-    section2.setAttribute("heading", "Navigation");
-    const add = document.createElement("p9r-button");
-    add.slot = "actions";
-    add.setAttribute("type", "button");
-    add.setAttribute("variant", "outlined");
-    add.dataset.navigationAction = "add-root";
-    add.textContent = "+ New item";
-    const tree = document.createElement("ol");
-    tree.className = "dashboard-navigation-list";
-    tree.dataset.navigationTree = "true";
-    tree.setAttribute("aria-label", "Dashboard navigation");
-    dashboard.views.forEach((mount) => tree.append(navigationNode(mount, views, 1)));
-    section2.append(add, tree);
-    return section2;
-  }
-  function newNavigationNode(views, depth) {
-    const view = views[0];
-    const mount = view ? suggestedMount(view) : { id: "new-item", label: "New item", icon: "layout" };
-    return navigationNode(mount, views, depth);
-  }
-  function syncNavigationNode(node, views) {
-    const type = node.dataset.navigationKind === "group" ? "group" : "view";
-    const view = type === "view" ? views.find((candidate) => candidate.id === node.dataset.navigationUse) : undefined;
-    const label2 = node.dataset.navigationLabel || view?.meta.name || "Navigation item";
-    const iconName = node.dataset.navigationIcon || view?.meta.icon || "layout";
-    node.querySelector("[data-navigation-title]").textContent = label2;
-    node.querySelector("[data-navigation-subtitle]").textContent = view ? `${view.meta.name} · ${view.source}` : "Group";
-    renderIcon(node.querySelector("[data-navigation-row-icon]"), undefined, iconName, "layout");
-    node.querySelector(".dashboard-navigation-row").setAttribute("aria-label", `Edit ${label2}`);
-  }
-  function syncNavigationDepth(node, depth) {
-    node.dataset.depth = String(depth);
-    const actions = node.querySelector(".dashboard-navigation-row-actions");
-    const addChild = actions.querySelector("[data-navigation-action='add-child']");
-    if (depth === 3) {
-      addChild?.remove();
-    } else if (!addChild) {
-      const settings = actions.querySelector("[data-action='edit-navigation-item']");
-      actions.insertBefore(iconButton("add-child", "Add child", "+"), settings);
-    }
-    directChildren(node).forEach((child) => syncNavigationDepth(child, depth + 1));
-  }
-  function navigationNode(mount, views, depth) {
-    const view = views.find((candidate) => candidate.id === mount.use);
-    const node = document.createElement("li");
-    node.className = "dashboard-navigation-node";
-    node.dataset.navigationNode = "true";
-    node.dataset.nodeId = mount.id;
-    node.dataset.depth = String(depth);
-    node.dataset.navigationLabel = mount.label ?? view?.meta.name ?? view?.view.label ?? "Navigation item";
-    node.dataset.navigationIcon = mount.icon ?? view?.meta.icon ?? view?.view.icon ?? "layout";
-    node.dataset.navigationUse = mount.use ?? "";
-    node.dataset.navigationKind = mount.use ? "view" : "group";
-    node.dataset.suggestedLabel = view?.meta.name ?? view?.view.label ?? "Navigation item";
-    node.dataset.suggestedIcon = view?.meta.icon ?? view?.view.icon ?? "layout";
-    node.append(navigationRow(depth), childrenList());
-    mount.children?.forEach((child) => node.querySelector("[data-navigation-children]").append(navigationNode(child, views, depth + 1)));
-    syncNavigationNode(node, views);
-    return node;
-  }
-  function navigationRow(depth) {
-    const row = document.createElement("div");
-    row.className = "dashboard-navigation-row";
-    row.dataset.action = "edit-navigation-item";
-    row.tabIndex = 0;
-    row.setAttribute("role", "button");
-    const handle = document.createElement("span");
-    handle.className = "dashboard-navigation-handle";
-    handle.dataset.navigationDragHandle = "true";
-    handle.draggable = true;
-    handle.tabIndex = 0;
-    handle.setAttribute("role", "button");
-    handle.setAttribute("aria-label", "Drag to move this item");
-    handle.setAttribute("title", "Drag vertically to reorder, or move right to nest");
-    handle.textContent = "⠿";
-    const icon = document.createElement("span");
-    icon.className = "dashboard-navigation-icon";
-    icon.dataset.navigationRowIcon = "true";
-    const copy = document.createElement("span");
-    copy.className = "dashboard-navigation-copy";
-    const title = document.createElement("strong");
-    title.dataset.navigationTitle = "true";
-    const subtitle = document.createElement("span");
-    subtitle.dataset.navigationSubtitle = "true";
-    copy.append(title, subtitle);
-    row.append(handle, icon, copy, rowActions(depth));
-    return row;
-  }
-  function rowActions(depth) {
-    const actions = document.createElement("span");
-    actions.className = "dashboard-navigation-row-actions";
-    if (depth < 3) {
-      actions.append(iconButton("add-child", "Add child", "+"));
-    }
-    const settings = iconButton("settings", "Open settings");
-    settings.dataset.action = "edit-navigation-item";
-    delete settings.dataset.navigationAction;
-    settings.classList.add("dashboard-navigation-settings");
-    renderIcon(settings, undefined, "settings", "settings");
-    actions.append(settings);
-    return actions;
-  }
-  function iconButton(action, label2, content = "") {
-    const button = document.createElement("p9r-icon-button");
-    button.setAttribute("type", "button");
-    button.setAttribute("aria-label", label2);
-    button.setAttribute("title", label2);
-    button.dataset.navigationAction = action;
-    button.textContent = content;
-    return button;
-  }
-  function childrenList() {
-    const list = document.createElement("ol");
-    list.className = "dashboard-navigation-list dashboard-navigation-children";
-    list.dataset.navigationChildren = "true";
-    return list;
-  }
-  function directChildren(node) {
-    const list = node.querySelector(":scope > [data-navigation-children]");
-    return Array.from(list?.children ?? []).filter((child) => child instanceof HTMLElement && child.matches("[data-navigation-node]"));
-  }
-
-  // src/components/admin/DashboardWorkspace/workspace/navigation/editor.ts
-  function openNavigationItemEditor(root, node, views, created = false) {
-    const form = navigationForm(root);
-    const view = views.find((candidate) => candidate.id === node.dataset.navigationUse);
-    const type = node.dataset.navigationKind === "group" ? "group" : "view";
-    form.navigationNode = node;
-    form.navigationCreated = created;
-    setValue3(form.querySelector("[data-navigation-label]"), node.dataset.navigationLabel ?? "");
-    const label2 = form.querySelector("[data-navigation-label]");
-    label2.dataset.suggestedLabel = node.dataset.suggestedLabel ?? view?.meta.name ?? "";
-    const icon = form.querySelector("[data-navigation-icon]");
-    appendIconOptions(icon, node.dataset.navigationIcon ?? "layout");
-    icon.dataset.suggestedIcon = node.dataset.suggestedIcon ?? view?.meta.icon ?? "layout";
-    appendViewOptions(form.querySelector("[data-navigation-view]"), views, node.dataset.navigationUse);
-    appendTypeOptions(form.querySelector("[data-navigation-type]"), type, Number(node.dataset.depth ?? "1") < 3);
-    syncNavigationItemType(form, type, views);
-    root.querySelector("[data-action='delete-navigation-item']").hidden = created;
-    root.querySelector("[data-navigation-item-dialog]").showModal();
-    label2.focus();
-  }
-  function saveNavigationItemEditor(root, views) {
-    const form = navigationForm(root);
-    const node = form.navigationNode;
-    if (!node) {
-      return;
-    }
-    const label2 = form.querySelector("[data-navigation-label]").value.trim();
-    if (!label2) {
-      return;
-    }
-    const type = form.querySelector("[data-navigation-type]").value;
-    const use = type === "view" ? form.querySelector("[data-navigation-view]").value : "";
-    if (type === "view" && !use) {
-      return;
-    }
-    node.dataset.navigationLabel = label2;
-    node.dataset.navigationIcon = form.querySelector("[data-navigation-icon]").value;
-    node.dataset.navigationKind = type;
-    node.dataset.navigationUse = use;
-    syncNavigationNode(node, views);
-    resetEditor(form);
-    root.querySelector("[data-navigation-item-dialog]").hide();
-  }
-  function closeNavigationItemEditor(root) {
-    const form = navigationForm(root);
-    discardCreatedNode(form);
-    resetEditor(form);
-    root.querySelector("[data-navigation-item-dialog]").hide();
-  }
-  function deleteNavigationItem(root) {
-    const form = navigationForm(root);
-    form.navigationNode?.remove();
-    resetEditor(form);
-    root.querySelector("[data-navigation-item-dialog]").hide();
-  }
-  function handleNavigationItemEditorClosed(root) {
-    const form = navigationForm(root);
-    discardCreatedNode(form);
-    resetEditor(form);
-  }
-  function syncNavigationItemType(form, type, views) {
-    const field2 = form.querySelector("[data-navigation-view-field]");
-    const select = form.querySelector("[data-navigation-view]");
-    const isView = type === "view";
-    field2.hidden = !isView;
-    select.toggleAttribute("disabled", !isView);
-    select.toggleAttribute("required", isView);
-    if (isView && !select.value && views[0]) {
-      setValue3(select, views[0].id);
-    }
-  }
-  function appendViewOptions(select, views, selected2 = "") {
-    const value2 = views.some((view) => view.id === selected2) ? selected2 : views[0]?.id ?? "";
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = "Select a view";
-    placeholder.disabled = true;
-    placeholder.selected = !value2;
-    select.replaceChildren(placeholder, ...views.map((view) => {
-      const option2 = document.createElement("option");
-      option2.value = view.id;
-      option2.textContent = `${view.meta.name} · ${view.source}`;
-      option2.selected = view.id === value2;
-      return option2;
-    }));
-    setValue3(select, value2);
-  }
-  function appendTypeOptions(control, selected2, allowGroup) {
-    const view = document.createElement("option");
-    view.value = "view";
-    view.textContent = "View";
-    const group = document.createElement("option");
-    group.value = "group";
-    group.textContent = "Group";
-    const value2 = allowGroup ? selected2 : "view";
-    control.replaceChildren(view, ...allowGroup ? [group] : []);
-    setValue3(control, value2);
-  }
-  function navigationForm(root) {
-    return root.querySelector("[data-navigation-item-form]");
-  }
-  function discardCreatedNode(form) {
-    if (form.navigationCreated) {
-      form.navigationNode?.remove();
-    }
-  }
-  function resetEditor(form) {
-    form.navigationCreated = false;
-    form.navigationNode = undefined;
-  }
-  function setValue3(control, value2) {
-    control.setAttribute("value", value2);
-    control.value = value2;
-  }
-  // src/components/admin/DashboardWorkspace/workspace/navigation/drag.ts
-  function handleNavigationDragStart(root, event) {
-    const handle = eventPathElement(event, "[data-navigation-drag-handle]");
-    const node = handle?.closest("[data-navigation-node]");
-    if (!node) {
-      return;
-    }
-    clearNavigationDragState(root);
-    node.dataset.navigationDragging = "true";
-    event.dataTransfer?.setData("text/plain", node.dataset.nodeId ?? "navigation-item");
-    if (event.dataTransfer) {
-      const row = node.querySelector(":scope > .dashboard-navigation-row");
-      const rect = row.getBoundingClientRect();
-      const offsetX = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
-      const offsetY = Math.max(0, Math.min(rect.height, event.clientY - rect.top));
-      event.dataTransfer.setDragImage(row, offsetX, offsetY);
-      event.dataTransfer.effectAllowed = "move";
-    }
-  }
-  function handleNavigationDragOver(root, event) {
-    const dragging = root.querySelector("[data-navigation-dragging]");
-    const target2 = eventPathElement(event, "[data-navigation-node]");
-    clearDropTargets(root);
-    if (!dragging || !target2 || target2 === dragging || dragging.contains(target2)) {
-      return;
-    }
-    const position = pointerPosition(target2, event.clientX, event.clientY);
-    if (!canMove(dragging, target2, position)) {
-      return;
-    }
-    event.preventDefault();
-    target2.dataset.navigationDrop = position;
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = "move";
-    }
-  }
-  function handleNavigationDrop(root, event) {
-    const dragging = root.querySelector("[data-navigation-dragging]");
-    const target2 = eventPathElement(event, "[data-navigation-drop]");
-    const position = target2?.dataset.navigationDrop;
-    if (!dragging || !target2 || !position || !canMove(dragging, target2, position)) {
-      clearNavigationDragState(root);
-      return;
-    }
-    event.preventDefault();
-    const depth = destinationDepth(target2, position);
-    if (position === "inside") {
-      target2.querySelector(":scope > [data-navigation-children]").append(dragging);
-    } else if (position === "after") {
-      target2.after(dragging);
-    } else {
-      target2.before(dragging);
-    }
-    syncNavigationDepth(dragging, depth);
-    clearNavigationDragState(root);
-  }
-  function handleNavigationKeydown(root, event) {
-    const handle = eventPathElement(event, "[data-navigation-drag-handle]");
-    const node = handle?.closest("[data-navigation-node]");
-    if (!node || !event.altKey || !["ArrowDown", "ArrowLeft", "ArrowRight", "ArrowUp"].includes(event.key)) {
-      return false;
-    }
-    const moved = moveWithKeyboard(node, event.key);
-    if (moved) {
-      event.preventDefault();
-      clearNavigationDragState(root);
-    }
-    return moved;
-  }
-  function clearNavigationDragState(root) {
-    root.querySelectorAll("[data-navigation-dragging]").forEach((node) => {
-      delete node.dataset.navigationDragging;
-    });
-    clearDropTargets(root);
-  }
-  function canMove(dragging, target2, position) {
-    const depth = destinationDepth(target2, position);
-    return depth >= 1 && depth + treeHeight(dragging) - 1 <= 3;
-  }
-  function destinationDepth(target2, position) {
-    return Number(target2.dataset.depth ?? "1") + (position === "inside" ? 1 : 0);
-  }
-  function pointerPosition(target2, clientX, clientY) {
-    const rect = target2.querySelector(":scope > .dashboard-navigation-row").getBoundingClientRect();
-    if (clientX >= rect.left + Math.min(64, rect.width * 0.2)) {
-      return "inside";
-    }
-    return clientY < rect.top + rect.height / 2 ? "before" : "after";
-  }
-  function moveWithKeyboard(node, key) {
-    if (key === "ArrowUp" && node.previousElementSibling) {
-      node.parentElement?.insertBefore(node, node.previousElementSibling);
-      return true;
-    }
-    if (key === "ArrowDown" && node.nextElementSibling) {
-      node.parentElement?.insertBefore(node.nextElementSibling, node);
-      return true;
-    }
-    if (key === "ArrowLeft") {
-      const parentNode = node.parentElement?.closest("[data-navigation-node]");
-      if (parentNode) {
-        parentNode.after(node);
-        syncNavigationDepth(node, Number(parentNode.dataset.depth ?? "1"));
-        return true;
-      }
-    }
-    if (key === "ArrowRight") {
-      const previous = node.previousElementSibling;
-      if (previous && canMove(node, previous, "inside")) {
-        previous.querySelector(":scope > [data-navigation-children]").append(node);
-        syncNavigationDepth(node, Number(previous.dataset.depth ?? "1") + 1);
-        return true;
-      }
-    }
-    return false;
-  }
-  function treeHeight(node) {
-    const children = directChildren2(node);
-    return 1 + Math.max(0, ...children.map(treeHeight));
-  }
-  function directChildren2(node) {
-    const list = node.querySelector(":scope > [data-navigation-children]");
-    return Array.from(list?.children ?? []).filter((child) => child instanceof HTMLElement && child.matches("[data-navigation-node]"));
-  }
-  function clearDropTargets(root) {
-    root.querySelectorAll("[data-navigation-drop]").forEach((node) => {
-      delete node.dataset.navigationDrop;
-    });
-  }
-  function eventPathElement(event, selector) {
-    return event.composedPath().find((candidate) => candidate instanceof HTMLElement && candidate.matches(selector)) ?? null;
-  }
-  // src/components/admin/DashboardWorkspace/workspace/navigation/interactions.ts
-  function handleNavigationAction(target2, views) {
-    const button = target2.closest("[data-navigation-action]");
-    if (!button) {
-      return { handled: false };
-    }
-    const action = button.dataset.navigationAction;
-    const node = button.closest("[data-navigation-node]");
-    const list = node?.parentElement;
-    if (action === "add-root") {
-      const tree = button.closest("cms-detail-section")?.querySelector("[data-navigation-tree]");
-      const created = newNavigationNode(views, 1);
-      tree?.append(created);
-      return { handled: true, ...tree ? { created } : {} };
-    }
-    if (action === "add-child" && node) {
-      const depth = Number(node.dataset.depth ?? "1") + 1;
-      const created = newNavigationNode(views, depth);
-      node.querySelector("[data-navigation-children]")?.append(created);
-      return { handled: true, created };
-    }
-    if (action === "remove" && node) {
-      node.remove();
-    } else if (action === "up" && node && node.previousElementSibling) {
-      list?.insertBefore(node, node.previousElementSibling);
-    } else if (action === "down" && node && node.nextElementSibling) {
-      list?.insertBefore(node.nextElementSibling, node);
-    }
-    return { handled: true };
-  }
-  function handleNavigationEditorChange(control, views) {
-    if (!control.matches("[data-navigation-type], [data-navigation-view]")) {
-      return false;
-    }
-    const form = control.closest("[data-navigation-item-form]");
-    if (!form) {
-      return true;
-    }
-    if (control.matches("[data-navigation-type]")) {
-      const type = control.value === "group" ? "group" : "view";
-      syncNavigationItemType(form, type, views);
-      if (type === "group") {
-        return true;
-      }
-    }
-    const select = form.querySelector("[data-navigation-view]");
-    const view = views.find((candidate) => candidate.id === select.value);
-    const label2 = form?.querySelector("[data-navigation-label]");
-    const icon = form?.querySelector("[data-navigation-icon]");
-    if (!view || !label2 || !icon) {
-      return true;
-    }
-    if (!label2.value || label2.value === label2.dataset.suggestedLabel) {
-      label2.value = view.meta.name;
-      label2.dataset.suggestedLabel = view.meta.name;
-    }
-    const suggestedIcon = view.meta.icon ?? view.view.icon ?? "layout";
-    if (!icon.value || icon.value === icon.dataset.suggestedIcon) {
-      icon.value = suggestedIcon;
-      icon.dataset.suggestedIcon = suggestedIcon;
-    }
-    return true;
-  }
-  // src/components/admin/DashboardWorkspace/configuration/style.css
-  var style_default15 = `:host {
-    display: block;
-    min-width: 0;
-}
-
-[hidden] {
-    display: none !important;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-p9r-modal {
-    --p9r-modal-width: 620px;
-}
-
-.modal-actions {
-    align-items: center;
-    display: flex;
-    gap: .75rem;
-    justify-content: flex-end;
-}
-`;
-
-  // src/components/admin/DashboardWorkspace/configuration/template.html
-  var template_default19 = `<div data-navigation-editor></div>
-
-<p9r-modal data-navigation-item-dialog aria-label="Navigation item settings">
-    <span slot="title">Navigation item settings</span>
-    <form id="dashboard-navigation-item-form" data-navigation-item-form>
-        <p9r-stack gap="md">
-            <p9r-segmented-switch name="type" label="Item type" value="view" data-navigation-type>
-                <option value="view">View</option>
-                <option value="group">Group</option>
-            </p9r-segmented-switch>
-            <div data-navigation-view-field>
-                <p9r-select name="view" label="View" required data-navigation-view></p9r-select>
-            </div>
-            <p9r-input name="label" label="Label" maxlength="16" max-count="16" required data-navigation-label></p9r-input>
-            <p9r-select name="icon" label="Icon" required data-navigation-icon></p9r-select>
-        </p9r-stack>
-    </form>
-    <div slot="footer" class="modal-actions">
-        <p9r-button type="button" color="danger" variant="outlined" data-action="delete-navigation-item">
-            Delete item
-        </p9r-button>
-        <p9r-button type="button" variant="outlined" data-action="close-navigation-item">Cancel</p9r-button>
-        <p9r-button type="submit" form="dashboard-navigation-item-form" color="primary">Save item</p9r-button>
-    </div>
-</p9r-modal>
-`;
-
-  // src/components/admin/DashboardWorkspace/configuration/navigation/EditorState.ts
-  var NAVIGATION_LABEL_MAX_LENGTH = 16;
-
-  class DashboardNavigationEditorState extends l {
-    mounts = [];
-    views = [];
-    internals = this.attachInternals();
-    constructor() {
-      super({ css: `${style_default15}${navigation_default2}`, template: template_default19 });
-    }
-    attributeChangedCallback() {
-      if (this.isConnected) {
-        this.renderEditor();
-      }
-    }
-    formResetCallback() {
-      this.renderEditor();
-    }
-    formStateRestoreCallback(state) {
-      if (typeof state === "string") {
-        this.mounts = parseJson(state, []);
-        this.renderCurrentState();
-      }
-    }
-    get value() {
-      return JSON.stringify(this.currentMounts());
-    }
-    renderEditor() {
-      this.mounts = parseJson(this.getAttribute("value"), []);
-      this.views = parseJson(this.getAttribute("views"), []);
-      this.renderCurrentState();
-    }
-    syncFormValue() {
-      if (this.hasAttribute("readonly")) {
-        this.internals.setValidity({});
-        this.internals.setFormValue(null);
-        return;
-      }
-      this.mounts = this.currentMounts();
-      const invalid2 = findLongLabel(this.mounts);
-      this.internals.setValidity(invalid2 ? { customError: true } : {}, invalid2 ? `“${invalid2}” exceeds the 16-character navigation label limit.` : "");
-      this.internals.setFormValue(JSON.stringify(this.mounts));
-    }
-    renderCurrentState() {
-      const target2 = this.shadowRoot?.querySelector("[data-navigation-editor]");
-      if (!target2) {
-        return;
-      }
-      const dashboard = editorDashboard(this.mounts);
-      target2.replaceChildren(this.hasAttribute("readonly") ? readonlyNavigation(dashboard, this.views) : navigationEditor(dashboard, this.views));
-      this.syncFormValue();
-    }
-    currentMounts() {
-      return this.shadowRoot ? serializeNavigation(this.shadowRoot) : this.mounts;
-    }
-  }
-  function findLongLabel(mounts) {
-    for (const mount of mounts) {
-      if (mount.label && mount.label.length > NAVIGATION_LABEL_MAX_LENGTH) {
-        return mount.label;
-      }
-      const child = findLongLabel(mount.children ?? []);
-      if (child) {
-        return child;
-      }
-    }
-    return;
-  }
-  function editorDashboard(views) {
-    return {
-      schemaVersion: DASHBOARD_SCHEMA_VERSION,
-      id: "navigation-editor",
-      meta: { name: "Navigation editor" },
-      homeView: "",
-      views,
-      origin: { kind: "site", createdBy: "configuration" },
-      status: "published",
-      revision: "editor"
-    };
-  }
-  function parseJson(value2, fallback) {
-    if (!value2) {
-      return fallback;
-    }
-    for (const candidate of [value2, decode(value2)]) {
-      try {
-        return JSON.parse(candidate);
-      } catch {}
-    }
-    return fallback;
-  }
-  function decode(value2) {
-    try {
-      return decodeURIComponent(value2);
-    } catch {
-      return value2;
-    }
-  }
-
-  // src/components/admin/DashboardWorkspace/configuration/NavigationEditor.ts
-  class CmsDashboardNavigationEditor extends DashboardNavigationEditorState {
-    static formAssociated = true;
-    static observedAttributes = ["value", "views", "readonly"];
-    connectedCallback() {
-      super.connectedCallback();
-      this.shadowRoot?.addEventListener("click", this.onClick);
-      this.shadowRoot?.addEventListener("submit", this.onSubmit);
-      this.shadowRoot?.addEventListener("change", this.onChange);
-      this.shadowRoot?.addEventListener("dragstart", this.onDragStart);
-      this.shadowRoot?.addEventListener("dragover", this.onDragOver);
-      this.shadowRoot?.addEventListener("drop", this.onDrop);
-      this.shadowRoot?.addEventListener("dragend", this.onDragEnd);
-      this.shadowRoot?.addEventListener("close", this.onModalClose);
-      this.shadowRoot?.addEventListener("keydown", this.onKeydown);
-      this.renderEditor();
-    }
-    disconnectedCallback() {
-      this.shadowRoot?.removeEventListener("click", this.onClick);
-      this.shadowRoot?.removeEventListener("submit", this.onSubmit);
-      this.shadowRoot?.removeEventListener("change", this.onChange);
-      this.shadowRoot?.removeEventListener("dragstart", this.onDragStart);
-      this.shadowRoot?.removeEventListener("dragover", this.onDragOver);
-      this.shadowRoot?.removeEventListener("drop", this.onDrop);
-      this.shadowRoot?.removeEventListener("dragend", this.onDragEnd);
-      this.shadowRoot?.removeEventListener("close", this.onModalClose);
-      this.shadowRoot?.removeEventListener("keydown", this.onKeydown);
-    }
-    onClick = (event) => {
-      if (this.hasAttribute("readonly")) {
-        return;
-      }
-      const target2 = event.target;
-      if (!target2 || target2.closest("[data-navigation-drag-handle]")) {
-        return;
-      }
-      const result = handleNavigationAction(target2, this.views);
-      if (result.handled) {
-        if (result.created) {
-          openNavigationItemEditor(this.shadowRoot, result.created, this.views, true);
-        }
-        this.syncFormValue();
-        return;
-      }
-      const action = target2.closest("[data-action]")?.dataset.action;
-      if (action === "edit-navigation-item") {
-        const node = target2.closest("[data-navigation-node]");
-        if (node) {
-          openNavigationItemEditor(this.shadowRoot, node, this.views);
-        }
-      } else if (action === "close-navigation-item") {
-        closeNavigationItemEditor(this.shadowRoot);
-        this.syncFormValue();
-      } else if (action === "delete-navigation-item") {
-        deleteNavigationItem(this.shadowRoot);
-        this.syncFormValue();
-      }
-    };
-    onSubmit = (event) => {
-      const form = event.target;
-      if (!(form instanceof HTMLFormElement) || !form.matches("[data-navigation-item-form]")) {
-        return;
-      }
-      event.preventDefault();
-      saveNavigationItemEditor(this.shadowRoot, this.views);
-      this.syncFormValue();
-    };
-    onChange = (event) => {
-      const control = event.target;
-      if (control instanceof Element) {
-        handleNavigationEditorChange(control, this.views);
-      }
-    };
-    onDragStart = (event) => handleNavigationDragStart(this.shadowRoot, event);
-    onDragOver = (event) => handleNavigationDragOver(this.shadowRoot, event);
-    onDrop = (event) => {
-      handleNavigationDrop(this.shadowRoot, event);
-      this.syncFormValue();
-    };
-    onDragEnd = () => clearNavigationDragState(this.shadowRoot);
-    onModalClose = (event) => {
-      if (event.target instanceof Element && event.target.matches("[data-navigation-item-dialog]") && !event.target.hasAttribute("open")) {
-        handleNavigationItemEditorClosed(this.shadowRoot);
-        this.syncFormValue();
-      }
-    };
-    onKeydown = (event) => {
-      if (handleNavigationKeydown(this.shadowRoot, event)) {
-        return;
-      }
-      const target2 = event.target;
-      if (target2 instanceof HTMLElement && target2.matches(".dashboard-navigation-row") && (event.key === "Enter" || event.key === " ")) {
-        event.preventDefault();
-        target2.click();
-      }
-    };
-  }
-
-  // src/components/admin/Resources/Sources/ResourceWorkspace.ts
-  class ResourceWorkspace extends HTMLElement {
-    connectedCallback() {
-      if (!this.querySelector(":scope > style")) {
-        const style = document.createElement("style");
-        style.textContent = "cms-resource-workspace { display: block; } cms-resource-workspace > [hidden] { display: none !important; }";
-        this.prepend(style);
-      }
-      for (const child of Array.from(this.children)) {
-        if (child instanceof HTMLElement) {
-          child.hidden = false;
-        }
-      }
-    }
-  }
-  if (!customElements.get("cms-resource-workspace")) {
-    customElements.define("cms-resource-workspace", ResourceWorkspace);
-  }
-
   // src/components/admin/Resources/Blocs/workspace/style.css
-  var style_default16 = `cms-collection-workspace { display: contents; }
+  var style_default11 = `cms-collection-workspace { display: contents; }
 cms-collection-workspace [hidden] { display: none !important; }
 cms-collection-workspace .collection-overview,
 cms-collection-workspace .collection-blocs { display: contents; }
@@ -39694,21 +27791,21 @@ cms-collection-workspace .collection-text-table tbody td {
   // src/components/admin/Resources/Blocs/workspace/ThemeSpecimen/model.ts
   var VARIABLE = /^[a-z][a-z0-9-]*$/;
   function readPreviewBindings(raw) {
-    const value2 = parseJson2(raw, {});
+    const value2 = parseJson(raw, {});
     if (!value2 || typeof value2 !== "object" || Array.isArray(value2)) {
       return {};
     }
     return Object.fromEntries(Object.entries(value2).filter((entry) => VARIABLE.test(entry[0]) && typeof entry[1] === "string" && VARIABLE.test(entry[1])));
   }
   function readPreviewTokens(raw) {
-    const value2 = parseJson2(raw, []);
+    const value2 = parseJson(raw, []);
     return Array.isArray(value2) ? value2.filter(isPreviewToken) : [];
   }
   function readPreviewVariables(raw) {
-    const value2 = parseJson2(raw, []);
+    const value2 = parseJson(raw, []);
     return new Set(Array.isArray(value2) ? value2.filter((variable) => typeof variable === "string" && VARIABLE.test(variable)) : []);
   }
-  function parseJson2(raw, fallback) {
+  function parseJson(raw, fallback) {
     try {
       return JSON.parse(raw ?? JSON.stringify(fallback));
     } catch {
@@ -39724,7 +27821,7 @@ cms-collection-workspace .collection-text-table tbody td {
   }
 
   // src/components/admin/Resources/Blocs/workspace/ThemeSpecimen/style.css
-  var style_default17 = `:host { display: block; min-width: 0; color: var(--text-main); }
+  var style_default12 = `:host { display: block; min-width: 0; color: var(--text-main); }
 [hidden] { display: none !important; }
 .workbench { min-width: 0; overflow: hidden; background: var(--bg-base); }
 .toolbar {
@@ -39952,7 +28049,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
 `;
 
   // src/components/admin/Resources/Blocs/workspace/ThemeSpecimen/template.html
-  var template_default20 = `<section class="workbench" aria-label="Theme preview">
+  var template_default13 = `<section class="workbench" aria-label="Theme preview">
     <header class="toolbar">
         <div>
             <strong data-preview-heading>Light and dark</strong>
@@ -40060,7 +28157,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
     panels;
     appliedVariables = new Set;
     constructor() {
-      super({ css: style_default17, template: template_default20 });
+      super({ css: style_default12, template: template_default13 });
       this.panels = this.createPanels();
     }
     static get observedAttributes() {
@@ -40084,14 +28181,14 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
         return [];
       }
       for (const mode of ["light", "dark"]) {
-        const fragment2 = sample.content.cloneNode(true);
-        const panel = fragment2.querySelector(".sample");
+        const fragment = sample.content.cloneNode(true);
+        const panel = fragment.querySelector(".sample");
         if (!panel) {
           continue;
         }
         panel.dataset.themePanel = mode;
         panel.querySelector(".mode-label").textContent = mode === "light" ? "Light" : "Dark";
-        canvas.append(fragment2);
+        canvas.append(fragment);
       }
       sample.remove();
       return Array.from(canvas.querySelectorAll("[data-theme-panel]"));
@@ -40181,7 +28278,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
   }
 
   // src/components/admin/Resources/Blocs/workspace/TokenPreview/style.css
-  var style_default18 = `:host {
+  var style_default13 = `:host {
     display: inline-grid;
     width: 38px;
     height: 38px;
@@ -40262,7 +28359,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
 `;
 
   // src/components/admin/Resources/Blocs/workspace/TokenPreview/template.html
-  var template_default21 = `<span class="preview">
+  var template_default14 = `<span class="preview">
     <span class="color color-light"></span>
     <span class="color color-dark"></span>
     <span class="glyph"></span>
@@ -40281,7 +28378,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
     measure;
     surface;
     constructor() {
-      super({ css: style_default18, template: template_default21 });
+      super({ css: style_default13, template: template_default14 });
       this.lightColor = this.shadowRoot.querySelector(".color-light");
       this.darkColor = this.shadowRoot.querySelector(".color-dark");
       this.glyph = this.shadowRoot.querySelector(".glyph");
@@ -40326,7 +28423,7 @@ p { margin: 7px 0 0; color: var(--spec-muted); font-size: 11px; line-height: 1.5
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/template.html
-  var template_default22 = `<header class="topbar">
+  var template_default15 = `<header class="topbar">
     <div class="start">
         <a class="back" href="#">
             <span class="chevron">‹</span>
@@ -40637,7 +28734,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/styles/index.ts
-  var styles_default4 = [String(part_1_default3), String(part_2_default3)].join(`
+  var styles_default3 = [String(part_1_default3), String(part_2_default3)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/topBarEvents.ts
@@ -40697,8 +28794,8 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
-  var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(styles_default4)}</style>${String(template_default22)}`;
+  var template3 = document.createElement("template");
+  template3.innerHTML = `<style>${String(styles_default3)}</style>${String(template_default15)}`;
 
   class TopBar extends HTMLElement {
     _viewport = "bleed";
@@ -40706,7 +28803,7 @@ button:hover {
     _sourceState = "loading";
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template6.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template3.content.cloneNode(true));
     }
     connectedCallback() {
       this.shadowRoot.addEventListener("click", this._onClick);
@@ -40827,7 +28924,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/template.html
-  var template_default23 = `<aside class="panel">
+  var template_default16 = `<aside class="panel">
     <div class="panel-head">
         <div class="title">
             <slot name="title"></slot>
@@ -40843,7 +28940,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
-  var style_default19 = `:host {
+  var style_default14 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -40942,13 +29039,13 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
-  var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default19)}</style>${String(template_default23)}`;
+  var template4 = document.createElement("template");
+  template4.innerHTML = `<style>${String(style_default14)}</style>${String(template_default16)}`;
 
   class Panel extends HTMLElement {
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template7.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template4.content.cloneNode(true));
     }
     connectedCallback() {
       this._syncHeaderVisibility();
@@ -40964,31 +29061,31 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceBinding.ts
-  function sourceForBinding(sources, binding2) {
-    if (!binding2) {
+  function sourceForBinding(sources, binding) {
+    if (!binding) {
       return null;
     }
-    return sources.find((source2) => sourceMatchesBinding(source2, binding2)) ?? null;
+    return sources.find((source2) => sourceMatchesBinding(source2, binding)) ?? null;
   }
-  function sourceMatchesBinding(source2, binding2) {
-    if (binding2.method && (source2.method ?? "GET") !== binding2.method) {
+  function sourceMatchesBinding(source2, binding) {
+    if (binding.method && (source2.method ?? "GET") !== binding.method) {
       return false;
     }
-    return bindingQuery(source2.url, binding2.url) !== null;
+    return bindingQuery(source2.url, binding.url) !== null;
   }
-  function paramsForBinding(source2, binding2) {
-    if (!binding2) {
+  function paramsForBinding(source2, binding) {
+    if (!binding) {
       return {};
     }
-    if (binding2.params) {
-      return binding2.params;
+    if (binding.params) {
+      return binding.params;
     }
-    const query4 = bindingQuery(source2.url, binding2.url);
-    if (!query4) {
+    const query3 = bindingQuery(source2.url, binding.url);
+    if (!query3) {
       return {};
     }
     const params = {};
-    for (const [name, value2] of new URLSearchParams(query4).entries()) {
+    for (const [name, value2] of new URLSearchParams(query3).entries()) {
       params[name] = paramValue(value2);
     }
     return params;
@@ -40998,25 +29095,25 @@ button:hover {
     if (queryParam) {
       return { from: "queryParam", name: queryParam };
     }
-    const state = tokenValue2(value2, "@");
+    const state = tokenValue(value2, "@");
     if (state) {
       return { from: "state", name: state };
     }
     return { from: "raw", value: value2 };
   }
-  function tokenValue2(value2, prefix) {
+  function tokenValue(value2, prefix) {
     const match = new RegExp(`^\\${prefix}\\{([^}]+)\\}$`).exec(value2);
     return match?.[1]?.trim() || null;
   }
-  function bindingQuery(sourceUrl2, bindingUrl) {
-    if (bindingUrl === sourceUrl2) {
+  function bindingQuery(sourceUrl, bindingUrl) {
+    if (bindingUrl === sourceUrl) {
       return "";
     }
-    if (bindingUrl.startsWith(`${sourceUrl2}?`)) {
-      return bindingUrl.slice(sourceUrl2.length + 1);
+    if (bindingUrl.startsWith(`${sourceUrl}?`)) {
+      return bindingUrl.slice(sourceUrl.length + 1);
     }
-    if (sourceUrl2.includes("?") && bindingUrl.startsWith(`${sourceUrl2}&`)) {
-      return bindingUrl.slice(sourceUrl2.length + 1);
+    if (sourceUrl.includes("?") && bindingUrl.startsWith(`${sourceUrl}&`)) {
+      return bindingUrl.slice(sourceUrl.length + 1);
     }
     return null;
   }
@@ -41094,11 +29191,11 @@ button:hover {
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerEvents.ts
   var DATA_SOURCE_PICKER_SELECT_EVENT = "editor-v2:data-source-select";
   var DATA_SOURCE_PICKER_REMOVE_EVENT = "editor-v2:data-source-remove";
-  function dispatchDataSourceSelection(host, source2, binding2) {
+  function dispatchDataSourceSelection(host, source2, binding) {
     host.dispatchEvent(new CustomEvent(DATA_SOURCE_PICKER_SELECT_EVENT, {
       bubbles: true,
       composed: true,
-      detail: { source: source2, binding: binding2 }
+      detail: { source: source2, binding }
     }));
   }
   function dispatchDataSourceRemoval(host) {
@@ -41190,10 +29287,10 @@ button:hover {
     row.append(renderParamHeader(rowConfig), renderParamDescription(rowConfig), renderParamControls(rowConfig.name, initialValue));
     return row;
   }
-  function renderBindingHeading(text4) {
+  function renderBindingHeading(text3) {
     const heading = document.createElement("div");
     heading.className = "config-heading";
-    heading.textContent = text4;
+    heading.textContent = text3;
     return heading;
   }
   function bodyBindingFields(fields) {
@@ -41228,7 +29325,7 @@ button:hover {
     controls.className = "param-controls";
     const mode = document.createElement("select");
     mode.className = "param-mode";
-    mode.append(option2("queryParam", "Query param"), option2("raw", "Raw value"), option2("state", "Page state"));
+    mode.append(option("queryParam", "Query param"), option("raw", "Raw value"), option("state", "Page state"));
     const value2 = document.createElement("input");
     value2.className = "param-value";
     value2.placeholder = name;
@@ -41239,7 +29336,7 @@ button:hover {
     controls.append(mode, value2);
     return controls;
   }
-  function option2(value2, label2) {
+  function option(value2, label2) {
     const element = document.createElement("option");
     element.value = value2;
     element.textContent = label2;
@@ -41251,15 +29348,15 @@ button:hover {
     return element;
   }
   function selectOption(select, value2) {
-    const index = Array.from(select.options).findIndex((option3) => option3.value === value2);
+    const index = Array.from(select.options).findIndex((option2) => option2.value === value2);
     if (index >= 0) {
       select.selectedIndex = index;
     }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourceGroups.ts
-  function filteredSources(sources, query4) {
-    const normalized = query4.trim().toLowerCase();
+  function filteredSources(sources, query3) {
+    const normalized = query3.trim().toLowerCase();
     if (!normalized) {
       return sources;
     }
@@ -41295,24 +29392,24 @@ button:hover {
       children: field2.children ? cloneBodyFields(field2.children) : undefined
     }));
   }
-  function firstProviderKey(sources, query4) {
-    return providerGroups(filteredSources(sources, query4))[0]?.key ?? "";
+  function firstProviderKey(sources, query3) {
+    return providerGroups(filteredSources(sources, query3))[0]?.key ?? "";
   }
-  function visibleSources(sources, query4, activeProvider) {
-    return filteredSources(sources, query4).filter((source2) => (source2.provider ?? "default") === activeProvider);
+  function visibleSources(sources, query3, activeProvider) {
+    return filteredSources(sources, query3).filter((source2) => (source2.provider ?? "default") === activeProvider);
   }
-  function initialAlias(binding2) {
-    return binding2?.alias ?? "data";
+  function initialAlias(binding) {
+    return binding?.alias ?? "data";
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/Binding/dataSourceBindingRenderer.ts
   function renderBindingConfig(source2, initialBinding) {
-    const section2 = document.createElement("section");
-    section2.className = "binding-config";
-    section2.append(renderAliasInput(initialAlias(initialBinding)), renderTriggerSelect(initialBinding?.trigger ?? defaultTrigger(source2)));
-    renderRequestParams(section2, source2, initialBinding);
-    renderRequestBody(section2, source2, initialBinding);
-    return section2;
+    const section = document.createElement("section");
+    section.className = "binding-config";
+    section.append(renderAliasInput(initialAlias(initialBinding)), renderTriggerSelect(initialBinding?.trigger ?? defaultTrigger(source2)));
+    renderRequestParams(section, source2, initialBinding);
+    renderRequestBody(section, source2, initialBinding);
+    return section;
   }
   function renderAliasInput(value2) {
     const aliasLabel = document.createElement("label");
@@ -41329,7 +29426,7 @@ button:hover {
     label2.textContent = "Trigger";
     const trigger = document.createElement("select");
     trigger.className = "source-trigger";
-    trigger.append(option3("auto", "Auto"), option3("submit", "Submit"), option3("change", "Change"));
+    trigger.append(option2("auto", "Auto"), option2("submit", "Submit"), option2("change", "Change"));
     selectOption2(trigger, value2);
     label2.append(trigger);
     return label2;
@@ -41337,15 +29434,15 @@ button:hover {
   function defaultTrigger(source2) {
     return (source2.method ?? "GET") === "GET" ? "auto" : "submit";
   }
-  function renderRequestParams(section2, source2, initialBinding) {
+  function renderRequestParams(section, source2, initialBinding) {
     const params = source2.params ?? [];
     if (params.length === 0) {
       return;
     }
-    section2.append(renderBindingHeading("Request params"));
+    section.append(renderBindingHeading("Request params"));
     const initialParams = paramsForBinding(source2, initialBinding);
     for (const param of params) {
-      section2.append(renderBindingRow({
+      section.append(renderBindingRow({
         kind: "param",
         name: param.name,
         location: param.in,
@@ -41355,14 +29452,14 @@ button:hover {
       }, initialParams[param.name]));
     }
   }
-  function renderRequestBody(section2, source2, initialBinding) {
+  function renderRequestBody(section, source2, initialBinding) {
     const fields = bodyBindingFields(source2.body?.fields ?? []);
     if (fields.length === 0) {
       return;
     }
-    section2.append(renderBindingHeading("Request body"));
+    section.append(renderBindingHeading("Request body"));
     for (const field2 of fields) {
-      section2.append(renderBindingRow({
+      section.append(renderBindingRow({
         kind: "body",
         name: field2.name,
         location: "body",
@@ -41371,14 +29468,14 @@ button:hover {
       }, initialBinding?.body?.[field2.name]));
     }
   }
-  function option3(value2, label2) {
+  function option2(value2, label2) {
     const element = document.createElement("option");
     element.value = value2;
     element.textContent = label2;
     return element;
   }
   function selectOption2(select, value2) {
-    const index = Array.from(select.options).findIndex((option4) => option4.value === value2);
+    const index = Array.from(select.options).findIndex((option3) => option3.value === value2);
     if (index >= 0) {
       select.selectedIndex = index;
     }
@@ -41451,7 +29548,7 @@ button:hover {
     responseHeading.textContent = "Response fields";
     container.append(responseHeading, renderDataSourceFields(source2.fields));
   }
-  function renderBindingPanel(container, source2, options2) {
+  function renderBindingPanel(container, source2, options) {
     container.replaceChildren();
     if (!source2) {
       container.append(detailsEmpty("Select a source to configure its binding."));
@@ -41462,13 +29559,13 @@ button:hover {
     title.textContent = "Binding";
     const scroll = document.createElement("div");
     scroll.className = "binding-scroll";
-    scroll.append(title, renderBindingConfig(source2, options2.initialBinding));
+    scroll.append(title, renderBindingConfig(source2, options.initialBinding));
     const footer = document.createElement("footer");
     footer.className = "binding-footer";
-    if (options2.canRemove) {
-      footer.append(removeButton2(options2.onRemove));
+    if (options.canRemove) {
+      footer.append(removeButton2(options.onRemove));
     }
-    footer.append(insertButton(options2.onSelect));
+    footer.append(insertButton(options.onSelect));
     container.append(scroll, footer);
   }
   function detailsEmpty(message) {
@@ -41522,25 +29619,25 @@ button:hover {
   function methodSources(sources, activeMethod) {
     return sources.filter((source2) => activeMethod === "all" || dataSourceMethod(source2) === activeMethod);
   }
-  function pickerProviderGroups(sources, activeMethod, query4) {
-    return providerGroups(filteredSources(methodSources(sources, activeMethod), query4));
+  function pickerProviderGroups(sources, activeMethod, query3) {
+    return providerGroups(filteredSources(methodSources(sources, activeMethod), query3));
   }
-  function pickerVisibleSources(sources, activeMethod, query4, activeProvider) {
-    return visibleSources(methodSources(sources, activeMethod), query4, activeProvider);
+  function pickerVisibleSources(sources, activeMethod, query3, activeProvider) {
+    return visibleSources(methodSources(sources, activeMethod), query3, activeProvider);
   }
   function selectMethodFilter(filter, value2) {
-    const options2 = Array.from(filter.options);
-    const index = options2.findIndex((option4) => option4.value === value2);
+    const options = Array.from(filter.options);
+    const index = options.findIndex((option3) => option3.value === value2);
     filter.selectedIndex = index >= 0 ? index : 0;
-    options2.forEach((option4, optionIndex) => {
-      option4.selected = optionIndex === filter.selectedIndex;
-      option4.toggleAttribute("selected", option4.selected);
+    options.forEach((option3, optionIndex) => {
+      option3.selected = optionIndex === filter.selectedIndex;
+      option3.toggleAttribute("selected", option3.selected);
     });
-    filter.setAttribute("value", options2[filter.selectedIndex]?.value ?? "GET");
+    filter.setAttribute("value", options[filter.selectedIndex]?.value ?? "GET");
   }
   function selectedMethodFilter(filter) {
-    const options2 = Array.from(filter.options);
-    const selected2 = options2.find((option4) => option4.selected);
+    const options = Array.from(filter.options);
+    const selected2 = options.find((option3) => option3.selected);
     if (selected2?.value) {
       return selected2.value;
     }
@@ -41548,28 +29645,28 @@ button:hover {
     if (selectedIndexValue) {
       return selectedIndexValue;
     }
-    const selectedAttribute = options2.find((option4) => option4.hasAttribute("selected"));
+    const selectedAttribute = options.find((option3) => option3.hasAttribute("selected"));
     return selectedAttribute?.value ?? filter.getAttribute("value") ?? "GET";
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerElements.ts
   function queryDataSourcePickerElements(root) {
-    const query4 = (selector) => root.querySelector(selector);
+    const query3 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query4(".backdrop"),
-      binding: query4(".binding"),
-      closeButton: query4(".close"),
-      details: query4(".details"),
-      methodFilter: query4(".method-filter"),
-      providers: query4(".providers"),
-      search: query4(".search"),
-      sourcesList: query4(".sources"),
-      subtitle: query4(".subtitle")
+      backdrop: query3(".backdrop"),
+      binding: query3(".binding"),
+      closeButton: query3(".close"),
+      details: query3(".details"),
+      methodFilter: query3(".method-filter"),
+      providers: query3(".providers"),
+      search: query3(".search"),
+      sourcesList: query3(".sources"),
+      subtitle: query3(".subtitle")
     };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/template.html
-  var template_default24 = `<div class="backdrop" hidden>
+  var template_default17 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="data-source-picker-title">
         <header class="header">
             <div>
@@ -42107,12 +30204,12 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/styles/index.ts
-  var styles_default5 = [String(part_1_default4), String(part_2_default4), String(part_3_default3), String(part_4_default)].join(`
+  var styles_default4 = [String(part_1_default4), String(part_2_default4), String(part_3_default3), String(part_4_default)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/DataSourcePicker.ts
-  var template8 = document.createElement("template");
-  template8.innerHTML = `<style>${String(styles_default5)}</style>${String(template_default24)}`;
+  var template5 = document.createElement("template");
+  template5.innerHTML = `<style>${String(styles_default4)}</style>${String(template_default17)}`;
 
   class DataSourcePicker extends HTMLElement {
     _sources = [];
@@ -42126,7 +30223,7 @@ h2 {
     constructor() {
       super();
       const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.append(template8.content.cloneNode(true));
+      shadowRoot.append(template5.content.cloneNode(true));
       this.elements = queryDataSourcePickerElements(shadowRoot);
     }
     connectedCallback() {
@@ -42148,9 +30245,9 @@ h2 {
       this._disconnectEvents?.();
       this._disconnectEvents = null;
     }
-    open(sources, contextLabel, options2 = {}) {
+    open(sources, contextLabel, options = {}) {
       this._sources = cloneSources(sources);
-      this._initialBinding = options2.initialBinding ?? null;
+      this._initialBinding = options.initialBinding ?? null;
       this.elements.search.value = "";
       this.elements.methodFilter.onchange = this._onMethodChange;
       this._activeSource = sourceForBinding(this._sources, this._initialBinding);
@@ -42161,7 +30258,7 @@ h2 {
         selectMethodFilter(this.elements.methodFilter, "all");
       }
       this._activeProvider = this._activeSource?.provider ?? firstProviderKey(methodSources(this._sources, this._activeMethod), this.elements.search.value);
-      this._canRemove = options2.canRemove === true;
+      this._canRemove = options.canRemove === true;
       this.elements.subtitle.textContent = contextLabel ? `Choose a data source for ${contextLabel}.` : "Choose a data source.";
       this.elements.backdrop.hidden = false;
       this._render();
@@ -42198,11 +30295,11 @@ h2 {
       });
     }
     _select(source2) {
-      const binding2 = readSourceBinding(this.shadowRoot, source2);
-      if (!binding2) {
+      const binding = readSourceBinding(this.shadowRoot, source2);
+      if (!binding) {
         return;
       }
-      dispatchDataSourceSelection(this, source2, binding2);
+      dispatchDataSourceSelection(this, source2, binding);
       this.close();
     }
     _remove = () => {
@@ -42236,7 +30333,7 @@ h2 {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/template.html
-  var template_default25 = `<div class="backdrop" hidden>
+  var template_default18 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="condition-picker-title">
         <header class="header">
             <div>
@@ -42255,7 +30352,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/style.css
-  var style_default20 = `:host { display: contents; }
+  var style_default15 = `:host { display: contents; }
 * { box-sizing: border-box; }
 
 .backdrop {
@@ -42404,14 +30501,14 @@ textarea { min-height: 92px; resize: vertical; }
     root.className = "mode-panel form-grid";
     const label2 = document.createElement("label");
     label2.className = "control";
-    const text4 = document.createElement("span");
-    text4.textContent = "Expression";
+    const text3 = document.createElement("span");
+    text3.textContent = "Expression";
     const textarea = document.createElement("textarea");
     textarea.className = "advanced-expression";
     textarea.value = expression;
     textarea.placeholder = 'plan.status == "active" && $source.loaded';
     textarea.addEventListener("input", () => onInput(textarea.value));
-    label2.append(text4, textarea);
+    label2.append(text3, textarea);
     root.append(label2);
     return root;
   }
@@ -42466,10 +30563,10 @@ textarea { min-height: 92px; resize: vertical; }
     const select = document.createElement("select");
     select.className = "field-path";
     for (const field2 of fields) {
-      const option4 = document.createElement("option");
-      option4.value = field2.path;
-      option4.textContent = `${field2.scopeLabel}: ${field2.path}`;
-      select.append(option4);
+      const option3 = document.createElement("option");
+      option3.value = field2.path;
+      option3.textContent = `${field2.scopeLabel}: ${field2.path}`;
+      select.append(option3);
     }
     select.selectedIndex = Math.max(0, fields.findIndex((field2) => field2.path === draft.path));
     select.addEventListener("change", () => {
@@ -42482,10 +30579,10 @@ textarea { min-height: 92px; resize: vertical; }
     const select = document.createElement("select");
     select.className = "field-operator";
     for (const operator of OPERATORS) {
-      const option4 = document.createElement("option");
-      option4.value = operator.value;
-      option4.textContent = operator.label;
-      select.append(option4);
+      const option3 = document.createElement("option");
+      option3.value = operator.value;
+      option3.textContent = operator.label;
+      select.append(option3);
     }
     select.selectedIndex = Math.max(0, OPERATORS.findIndex((operator) => operator.value === draft.operator));
     select.addEventListener("change", () => {
@@ -42511,9 +30608,9 @@ textarea { min-height: 92px; resize: vertical; }
   function control(labelText, controlElement) {
     const wrapper = document.createElement("label");
     wrapper.className = "control";
-    const text4 = document.createElement("span");
-    text4.textContent = labelText;
-    wrapper.append(text4, controlElement);
+    const text3 = document.createElement("span");
+    text3.textContent = labelText;
+    wrapper.append(text3, controlElement);
     return wrapper;
   }
   function parseValue(value2) {
@@ -42532,10 +30629,10 @@ textarea { min-height: 92px; resize: vertical; }
     }
     return trimmed;
   }
-  function empty2(text4) {
+  function empty2(text3) {
     const element = document.createElement("div");
     element.className = "empty";
-    element.textContent = text4;
+    element.textContent = text3;
     return element;
   }
 
@@ -42544,18 +30641,18 @@ textarea { min-height: 92px; resize: vertical; }
   function sourceStateKey(sources, editor, state) {
     return `${sources.findIndex((source2) => source2.editor === editor)}:${state}`;
   }
-  function renderSourceStateMode(options2) {
+  function renderSourceStateMode(options) {
     const root = document.createElement("div");
     root.className = "mode-panel";
-    if (options2.sources.length === 0) {
+    if (options.sources.length === 0) {
       const empty3 = document.createElement("div");
       empty3.className = "empty";
       empty3.textContent = "No source available.";
       root.append(empty3);
       return root;
     }
-    for (const source2 of options2.sources) {
-      root.append(renderSource(source2, options2));
+    for (const source2 of options.sources) {
+      root.append(renderSource(source2, options));
     }
     return root;
   }
@@ -42570,53 +30667,53 @@ textarea { min-height: 92px; resize: vertical; }
     }
     return conditions2;
   }
-  function renderSource(source2, options2) {
-    const section2 = document.createElement("section");
-    section2.className = "source";
-    section2.append(textBlock("source-title", source2.label));
+  function renderSource(source2, options) {
+    const section = document.createElement("section");
+    section.className = "source";
+    section.append(textBlock("source-title", source2.label));
     if (source2.sourceName) {
-      section2.append(textBlock("source-name", `Source: ${source2.sourceName}`));
+      section.append(textBlock("source-name", `Source: ${source2.sourceName}`));
     }
     const states2 = document.createElement("div");
     states2.className = "states";
     for (const state of STATES) {
-      states2.append(renderState(source2, state, options2));
+      states2.append(renderState(source2, state, options));
     }
-    section2.append(states2);
-    return section2;
+    section.append(states2);
+    return section;
   }
-  function renderState(source2, state, options2) {
-    const key = sourceStateKey(options2.sources, source2.editor, state);
+  function renderState(source2, state, options) {
+    const key = sourceStateKey(options.sources, source2.editor, state);
     const label2 = document.createElement("label");
     const input = document.createElement("input");
     input.type = "checkbox";
-    input.checked = options2.selected.has(key);
+    input.checked = options.selected.has(key);
     input.addEventListener("change", () => {
-      input.checked ? options2.selected.add(key) : options2.selected.delete(key);
-      options2.onChange();
+      input.checked ? options.selected.add(key) : options.selected.delete(key);
+      options.onChange();
     });
-    const text4 = document.createElement("span");
-    text4.textContent = state;
-    label2.append(input, text4);
+    const text3 = document.createElement("span");
+    text3.textContent = state;
+    label2.append(input, text3);
     return label2;
   }
-  function textBlock(className, text4) {
+  function textBlock(className, text3) {
     const element = document.createElement("div");
     element.className = className;
-    element.textContent = text4;
+    element.textContent = text3;
     return element;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/conditionPickerView.ts
   function queryConditionPickerElements(root) {
-    const query4 = (selector) => root.querySelector(selector);
+    const query3 = (selector) => root.querySelector(selector);
     return {
-      applyButton: query4(".apply"),
-      backdrop: query4(".backdrop"),
-      body: query4(".body"),
-      closeButton: query4(".close"),
-      removeButton: query4(".remove"),
-      subtitle: query4(".subtitle")
+      applyButton: query3(".apply"),
+      backdrop: query3(".backdrop"),
+      body: query3(".body"),
+      closeButton: query3(".close"),
+      removeButton: query3(".remove"),
+      subtitle: query3(".subtitle")
     };
   }
   function conditionExpression(input) {
@@ -42658,8 +30755,8 @@ textarea { min-height: 92px; resize: vertical; }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
-  var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${String(style_default20)}</style>${String(template_default25)}`;
+  var template6 = document.createElement("template");
+  template6.innerHTML = `<style>${String(style_default15)}</style>${String(template_default18)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -42673,7 +30770,7 @@ textarea { min-height: 92px; resize: vertical; }
     constructor() {
       super();
       const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.append(template9.content.cloneNode(true));
+      shadowRoot.append(template6.content.cloneNode(true));
       this.elements = queryConditionPickerElements(shadowRoot);
       this.elements.closeButton.addEventListener("click", this.close);
       this.elements.backdrop.addEventListener("click", this.onBackdropClick);
@@ -42686,15 +30783,15 @@ textarea { min-height: 92px; resize: vertical; }
     disconnectedCallback() {
       this.ownerDocument.removeEventListener("keydown", this.onKeydown);
     }
-    open(options2) {
-      this._sources = options2.sources;
-      this._fields = options2.fields ?? [];
-      this._selected = new Set((options2.selected ?? []).map((condition) => sourceStateKey(this._sources, condition.sourceEditor, condition.sourceState)));
+    open(options) {
+      this._sources = options.sources;
+      this._fields = options.fields ?? [];
+      this._selected = new Set((options.selected ?? []).map((condition) => sourceStateKey(this._sources, condition.sourceEditor, condition.sourceState)));
       this._fieldDraft = defaultFieldDraft(this._fields);
-      this._advancedExpression = options2.expression ?? "";
+      this._advancedExpression = options.expression ?? "";
       this._mode = this._selected.size > 0 ? "source" : this._advancedExpression ? "advanced" : "source";
-      this._canRemove = options2.canRemove === true;
-      this.elements.subtitle.textContent = options2.contextLabel ? `Conditions for ${options2.contextLabel}.` : "Conditions";
+      this._canRemove = options.canRemove === true;
+      this.elements.subtitle.textContent = options.contextLabel ? `Conditions for ${options.contextLabel}.` : "Conditions";
       this.elements.backdrop.hidden = false;
       this.render();
     }
@@ -42852,7 +30949,7 @@ textarea { min-height: 92px; resize: vertical; }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/template.html
-  var template_default26 = `<div class="backdrop" hidden>
+  var template_default19 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="block-picker-title">
         <header class="header">
             <div>
@@ -43280,37 +31377,37 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/styles/index.ts
-  var styles_default6 = [String(part_1_default5), String(part_2_default5), String(part_3_default4)].join(`
+  var styles_default5 = [String(part_1_default5), String(part_2_default5), String(part_3_default4)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerItems.ts
-  function normalizeBlockPickerOption(option4) {
-    if (option4.item) {
+  function normalizeBlockPickerOption(option3) {
+    if (option3.item) {
       return {
-        ...option4,
-        kind: option4.item.kind
+        ...option3,
+        kind: option3.item.kind
       };
     }
-    if (!option4.entry) {
+    if (!option3.entry) {
       throw new Error("Block picker option requires either item or entry.");
     }
     return {
-      ...option4,
+      ...option3,
       kind: "block",
       item: {
         kind: "block",
-        entry: option4.entry
+        entry: option3.entry
       }
     };
   }
-  function blockPickerOptionItem(option4) {
-    if (option4.item) {
-      return option4.item;
+  function blockPickerOptionItem(option3) {
+    if (option3.item) {
+      return option3.item;
     }
-    if (option4.entry) {
+    if (option3.entry) {
       return {
         kind: "block",
-        entry: option4.entry
+        entry: option3.entry
       };
     }
     throw new Error("Block picker option requires either item or entry.");
@@ -43348,54 +31445,54 @@ dd {
   function blockPickerIconText(item) {
     return (blockPickerItemIcon(item) ?? blockPickerItemLabel(item)).slice(0, 1).toUpperCase();
   }
-  function blockPickerCategoryLabel(option4) {
-    const item = blockPickerOptionItem(option4);
+  function blockPickerCategoryLabel(option3) {
+    const item = blockPickerOptionItem(option3);
     const category = blockPickerItemCategory(item) ?? blockPickerSourceLabel(item.kind);
     const subCategory = blockPickerItemSubCategory(item);
     return subCategory ? `${category} / ${subCategory}` : category;
   }
-  function blockPickerOptionMatches(option4, query4) {
-    if (!query4) {
+  function blockPickerOptionMatches(option3, query3) {
+    if (!query3) {
       return true;
     }
-    const item = blockPickerOptionItem(option4);
+    const item = blockPickerOptionItem(option3);
     return [
       blockPickerItemLabel(item),
       blockPickerItemDescription(item),
       blockPickerItemCategory(item),
       blockPickerItemSubCategory(item),
       blockPickerItemHandle(item),
-      option4.slotLabel
-    ].some((value2) => value2?.toLowerCase().includes(query4));
+      option3.slotLabel
+    ].some((value2) => value2?.toLowerCase().includes(query3));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerState.ts
-  function blockPickerVisibleOptions(group, source2, category, query4) {
-    return group?.options.filter((option4) => {
-      const item = blockPickerOptionItem(option4);
+  function blockPickerVisibleOptions(group, source2, category, query3) {
+    return group?.options.filter((option3) => {
+      const item = blockPickerOptionItem(option3);
       if (item.kind !== source2) {
         return false;
       }
-      if (category && blockPickerCategoryLabel(option4) !== category) {
+      if (category && blockPickerCategoryLabel(option3) !== category) {
         return false;
       }
-      return blockPickerOptionMatches(option4, query4);
+      return blockPickerOptionMatches(option3, query3);
     }) ?? [];
   }
   function blockPickerOptionsForSource(group, source2) {
-    return group?.options.filter((option4) => blockPickerOptionItem(option4).kind === source2) ?? [];
+    return group?.options.filter((option3) => blockPickerOptionItem(option3).kind === source2) ?? [];
   }
   function blockPickerSourceCount(group, source2) {
     return blockPickerOptionsForSource(group, source2).length;
   }
   function blockPickerCategoryCount(group, source2, category) {
-    return group?.options.filter((option4) => blockPickerOptionItem(option4).kind === source2 && blockPickerCategoryLabel(option4) === category).length ?? 0;
+    return group?.options.filter((option3) => blockPickerOptionItem(option3).kind === source2 && blockPickerCategoryLabel(option3) === category).length ?? 0;
   }
   function blockPickerCategories(group, source2) {
     const categories = new Set;
-    for (const option4 of group?.options ?? []) {
-      if (blockPickerOptionItem(option4).kind === source2) {
-        categories.add(blockPickerCategoryLabel(option4));
+    for (const option3 of group?.options ?? []) {
+      if (blockPickerOptionItem(option3).kind === source2) {
+        categories.add(blockPickerCategoryLabel(option3));
       }
     }
     return [...categories].sort((left, right) => left.localeCompare(right));
@@ -43411,16 +31508,16 @@ dd {
   var BLOCK_PICKER_SELECT_EVENT = "editor-v2:block-picker-select";
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerView.ts
-  function renderBlockPickerDetails(container, option4, onSelect) {
+  function renderBlockPickerDetails(container, option3, onSelect) {
     container.replaceChildren();
-    if (!option4) {
+    if (!option3) {
       const empty3 = document.createElement("div");
       empty3.className = "details-empty";
       empty3.textContent = "Select content to see details.";
       container.append(empty3);
       return;
     }
-    const item = blockPickerOptionItem(option4);
+    const item = blockPickerOptionItem(option3);
     const eyebrow = document.createElement("div");
     eyebrow.className = "details-eyebrow";
     eyebrow.textContent = blockPickerSourceLabel(item.kind);
@@ -43435,22 +31532,22 @@ dd {
     previewIcon.textContent = blockPickerIconText(item);
     preview.append(previewIcon);
     const meta = document.createElement("dl");
-    meta.append(metaRow("Source", blockPickerSourceLabel(item.kind)), metaRow("Handle", blockPickerItemHandle(item)), metaRow("Slot", option4.slotLabel), metaRow("Category", blockPickerCategoryLabel(option4)));
+    meta.append(metaRow("Source", blockPickerSourceLabel(item.kind)), metaRow("Handle", blockPickerItemHandle(item)), metaRow("Slot", option3.slotLabel), metaRow("Category", blockPickerCategoryLabel(option3)));
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
     insert.textContent = "Insert";
-    insert.addEventListener("click", () => onSelect(option4));
+    insert.addEventListener("click", () => onSelect(option3));
     container.append(preview, eyebrow, title, description, meta, insert);
   }
-  function renderBlockPickerOption(option4, activeOption, onActivate, onSelect) {
+  function renderBlockPickerOption(option3, activeOption, onActivate, onSelect) {
     const button = document.createElement("button");
     button.className = "block";
     button.type = "button";
-    button.ariaSelected = String(option4 === activeOption);
-    button.addEventListener("click", () => onActivate(option4));
-    button.addEventListener("dblclick", () => onSelect(option4));
-    const item = blockPickerOptionItem(option4);
+    button.ariaSelected = String(option3 === activeOption);
+    button.addEventListener("click", () => onActivate(option3));
+    button.addEventListener("dblclick", () => onSelect(option3));
+    const item = blockPickerOptionItem(option3);
     const icon = document.createElement("span");
     icon.className = "icon";
     icon.textContent = blockPickerIconText(item);
@@ -43463,7 +31560,7 @@ dd {
     description.textContent = blockPickerItemDescription(item);
     const category = document.createElement("span");
     category.className = "category";
-    category.textContent = blockPickerCategoryLabel(option4);
+    category.textContent = blockPickerCategoryLabel(option3);
     body.append(name, description, category);
     button.append(icon, body);
     return button;
@@ -43502,9 +31599,9 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerResults.ts
   function renderBlockPickerResults(input) {
-    const options2 = blockPickerVisibleOptions(input.group, input.activeSource, input.activeCategory, input.query);
+    const options = blockPickerVisibleOptions(input.group, input.activeSource, input.activeCategory, input.query);
     input.results.replaceChildren();
-    if (input.group?.disabledReason || options2.length === 0) {
+    if (input.group?.disabledReason || options.length === 0) {
       const empty3 = document.createElement("div");
       empty3.className = "empty";
       empty3.textContent = input.group?.disabledReason ?? "No content available";
@@ -43512,9 +31609,9 @@ dd {
       renderBlockPickerDetails(input.details, null, input.onSelect);
       return null;
     }
-    const activeOption = input.activeOption && options2.includes(input.activeOption) ? input.activeOption : options2[0];
-    for (const option4 of options2) {
-      input.results.append(renderBlockPickerOption(option4, activeOption, input.onActivate, input.onSelect));
+    const activeOption = input.activeOption && options.includes(input.activeOption) ? input.activeOption : options[0];
+    for (const option3 of options) {
+      input.results.append(renderBlockPickerOption(option3, activeOption, input.onActivate, input.onSelect));
     }
     renderBlockPickerDetails(input.details, activeOption, input.onSelect);
     return activeOption;
@@ -43550,34 +31647,34 @@ dd {
         onClick();
       }
     });
-    const text4 = document.createElement("span");
-    text4.textContent = label2;
+    const text3 = document.createElement("span");
+    text3.textContent = label2;
     const badge = document.createElement("span");
     badge.className = "count";
     badge.textContent = String(count);
-    button.append(text4, badge);
+    button.append(text3, badge);
     return button;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerElements.ts
   function queryBlockPickerElements(root) {
-    const query4 = (selector) => root.querySelector(selector);
+    const query3 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query4(".backdrop"),
-      categories: query4(".categories"),
-      closeButton: query4(".close"),
-      details: query4(".details"),
-      results: query4(".results"),
-      search: query4(".search"),
-      sources: query4(".sources"),
-      subtitle: query4(".subtitle"),
-      tabs: query4(".slot-tabs")
+      backdrop: query3(".backdrop"),
+      categories: query3(".categories"),
+      closeButton: query3(".close"),
+      details: query3(".details"),
+      results: query3(".results"),
+      search: query3(".search"),
+      sources: query3(".sources"),
+      subtitle: query3(".subtitle"),
+      tabs: query3(".slot-tabs")
     };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/BlockPickerModal.ts
-  var template10 = document.createElement("template");
-  template10.innerHTML = `<style>${String(styles_default6)}</style>${String(template_default26)}`;
+  var template7 = document.createElement("template");
+  template7.innerHTML = `<style>${String(styles_default5)}</style>${String(template_default19)}`;
 
   class BlockPickerModal extends HTMLElement {
     _groups = [];
@@ -43589,7 +31686,7 @@ dd {
     constructor() {
       super();
       const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.append(template10.content.cloneNode(true));
+      shadowRoot.append(template7.content.cloneNode(true));
       this.elements = queryBlockPickerElements(shadowRoot);
     }
     connectedCallback() {
@@ -43607,7 +31704,7 @@ dd {
     open(groups, contextLabel) {
       this._groups = groups.map((group) => ({
         ...group,
-        options: group.options.map((option4) => normalizeBlockPickerOption(option4))
+        options: group.options.map((option3) => normalizeBlockPickerOption(option3))
       }));
       this._activeSlotKey = firstEnabledBlockPickerGroup(this._groups)?.slot ?? "";
       this._activeSource = "block";
@@ -43643,11 +31740,11 @@ dd {
         activeSource: this._activeSource,
         details: this.elements.details,
         group: this._activeGroup(),
-        onActivate: (option4) => {
-          this._activeOption = option4;
+        onActivate: (option3) => {
+          this._activeOption = option3;
           this._renderEntries();
         },
-        onSelect: (option4) => this._selectOption(option4),
+        onSelect: (option3) => this._selectOption(option3),
         query: this.elements.search.value.trim().toLowerCase(),
         results: this.elements.results
       });
@@ -43676,20 +31773,20 @@ dd {
         sources: this.elements.sources
       });
     }
-    _selectOption(option4) {
+    _selectOption(option3) {
       this.dispatchEvent(new CustomEvent(BLOCK_PICKER_SELECT_EVENT, {
         bubbles: true,
         composed: true,
-        detail: { option: option4 }
+        detail: { option: option3 }
       }));
       this.close();
     }
     _selectSingleSourceOption(source2) {
-      const options2 = blockPickerOptionsForSource(this._activeGroup(), source2);
-      if (options2.length !== 1) {
+      const options = blockPickerOptionsForSource(this._activeGroup(), source2);
+      if (options.length !== 1) {
         return false;
       }
-      this._selectOption(options2[0]);
+      this._selectOption(options[0]);
       return true;
     }
     _activeGroup() {
@@ -44367,17 +32464,17 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureBlockPicker.ts
   function openPickerOrEmitSingleMedia(action, groups, contextLabel, context) {
-    const option4 = singleEnabledOption(groups);
-    if (option4?.item?.kind === "media") {
-      context.emitAction(action.action, option4.item, option4.slot);
+    const option3 = singleEnabledOption(groups);
+    if (option3?.item?.kind === "media") {
+      context.emitAction(action.action, option3.item, option3.slot);
       return;
     }
     context.setPendingPickerAction(action);
     context.openBlockPicker(groups, contextLabel);
   }
   function singleEnabledOption(groups) {
-    const options2 = groups.filter((group) => !group.disabledReason).flatMap((group) => group.options);
-    return options2.length === 1 ? options2[0] ?? null : null;
+    const options = groups.filter((group) => !group.disabledReason).flatMap((group) => group.options);
+    return options.length === 1 ? options[0] ?? null : null;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureSourcePicker.ts
@@ -44447,10 +32544,10 @@ dd {
     }
     return true;
   }
-  function filterSettingSections(policy, sections2) {
-    return sections2.flatMap((section2) => {
-      const settings = section2.settings.flatMap((setting) => filterSetting(policy, setting));
-      return settings.length > 0 ? [{ ...section2, settings }] : [];
+  function filterSettingSections(policy, sections) {
+    return sections.flatMap((section) => {
+      const settings = section.settings.flatMap((setting) => filterSetting(policy, setting));
+      return settings.length > 0 ? [{ ...section, settings }] : [];
     });
   }
   function filterSetting(policy, setting) {
@@ -44601,8 +32698,8 @@ dd {
       }
     ] : [];
     return [
-      ...blockOptions.filter((option4) => canFitItem(context, parent, slot, option4.item, replaced)),
-      ...mediaOptions.filter((option4) => option4.item && canFitItem(context, parent, slot, option4.item, replaced))
+      ...blockOptions.filter((option3) => canFitItem(context, parent, slot, option3.item, replaced)),
+      ...mediaOptions.filter((option3) => option3.item && canFitItem(context, parent, slot, option3.item, replaced))
     ];
   }
   function canFitItem(context, parent, slot, item, replaced) {
@@ -44622,7 +32719,7 @@ dd {
     return pageGroups(context);
   }
   function pageGroups(context) {
-    const options2 = [
+    const options = [
       ...context.catalog.filter((entry) => entry.category !== "Runtime" && isCatalogEntryInsertable(context.editingPolicy, entry) && isEditorPlacementAllowed(entry, { kind: "root" })).map((entry) => ({
         item: {
           kind: "block",
@@ -44636,8 +32733,8 @@ dd {
     return [
       {
         label: "Page",
-        disabledReason: options2.length === 0 ? "No compatible blocks." : undefined,
-        options: options2
+        disabledReason: options.length === 0 ? "No compatible blocks." : undefined,
+        options
       }
     ];
   }
@@ -44670,12 +32767,12 @@ dd {
   function childGroups(context, node) {
     return node.editor.getContentSlots().map((slot) => {
       const isFull = isSlotFull(context, node, slot);
-      const options2 = isFull ? [] : slotOptions(context, slot, node);
+      const options = isFull ? [] : slotOptions(context, slot, node);
       return {
         slot: slot.slot,
         label: slot.label,
-        disabledReason: isFull ? "This slot is full." : options2.length === 0 ? "No compatible blocks." : undefined,
-        options: options2
+        disabledReason: isFull ? "This slot is full." : options.length === 0 ? "No compatible blocks." : undefined,
+        options
       };
     });
   }
@@ -44688,13 +32785,13 @@ dd {
     if (!slot) {
       return [];
     }
-    const options2 = slotOptions(context, slot, parent, node);
+    const options = slotOptions(context, slot, parent, node);
     return [
       {
         slot: slot.slot,
         label: slot.label,
-        disabledReason: options2.length === 0 ? "No compatible blocks." : undefined,
-        options: options2
+        disabledReason: options.length === 0 ? "No compatible blocks." : undefined,
+        options
       }
     ];
   }
@@ -44709,28 +32806,28 @@ dd {
   function conditionFieldOptions(scopes) {
     const byPath = new Map;
     for (const scope of scopes) {
-      for (const option4 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
-        if (!byPath.has(option4.path)) {
-          byPath.set(option4.path, option4);
+      for (const option3 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
+        if (!byPath.has(option3.path)) {
+          byPath.set(option3.path, option3);
         }
       }
     }
     return [...byPath.values()];
   }
   function fieldOptions(fields, scopeName, scopeLabel, prefix = "") {
-    const options2 = [];
+    const options = [];
     for (const field2 of fields) {
       const relative = relativePath(field2.path, prefix);
       const path = relative ? `${scopeName}.${relative}` : scopeName;
-      options2.push({
+      options.push({
         path,
         label: field2.label ?? field2.path,
         scopeLabel,
         type: field2.type
       });
-      options2.push(...fieldOptions(field2.children ?? [], scopeName, scopeLabel, relative));
+      options.push(...fieldOptions(field2.children ?? [], scopeName, scopeLabel, relative));
     }
-    return options2;
+    return options;
   }
   function relativePath(path, prefix) {
     if (path === ".") {
@@ -44769,12 +32866,12 @@ dd {
     return selected2;
   }
   function sourceName(tree, source2) {
-    const binding2 = parseSource(source2.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
-    if (!binding2) {
+    const binding = parseSource(source2.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+    if (!binding) {
       return;
     }
-    const dataSource = tree.state.dataSources.find((candidate) => sourceUrlMatchesBinding(candidate.url, binding2.url));
-    return dataSource?.label ?? binding2.alias ?? binding2.url;
+    const dataSource = tree.state.dataSources.find((candidate) => sourceUrlMatchesBinding(candidate.url, binding.url));
+    return dataSource?.label ?? binding.alias ?? binding.url;
   }
   function dataScopes(tree, node) {
     const nodes = [];
@@ -44787,8 +32884,8 @@ dd {
     const value2 = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.condition)?.trim() ?? "";
     return value2 && sourceStatusConditionsFromElement(node.target).length === 0 ? value2 : "";
   }
-  function sourceUrlMatchesBinding(sourceUrl2, bindingUrl) {
-    return bindingUrl === sourceUrl2 || bindingUrl.startsWith(`${sourceUrl2}?`) || sourceUrl2.includes("?") && bindingUrl.startsWith(`${sourceUrl2}&`);
+  function sourceUrlMatchesBinding(sourceUrl, bindingUrl) {
+    return bindingUrl === sourceUrl || bindingUrl.startsWith(`${sourceUrl}?`) || sourceUrl.includes("?") && bindingUrl.startsWith(`${sourceUrl}&`);
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreePickers.ts
@@ -45227,16 +33324,16 @@ dd {
     set catalog(catalog) {
       this.state.catalog = [...catalog];
     }
-    setStructure(nodes, selectedEditor = null, catalog = this.state.catalog, options2 = {}) {
+    setStructure(nodes, selectedEditor = null, catalog = this.state.catalog, options = {}) {
       this.state.nodes = nodes;
-      this.state.rootNode = options2.rootNode ?? null;
+      this.state.rootNode = options.rootNode ?? null;
       this.state.selectedEditor = selectedEditor;
       this.state.catalog = [...catalog];
-      this.state.scrollSelectedIntoViewOnRender = options2.scrollSelectedIntoView === true;
+      this.state.scrollSelectedIntoViewOnRender = options.scrollSelectedIntoView === true;
       if (this.state.scrollSelectedIntoViewOnRender) {
         this.nodes.expandPathToSelected();
       }
-      this.nodes.setRepeatableTargets(options2.repeatableTargets ?? []);
+      this.nodes.setRepeatableTargets(options.repeatableTargets ?? []);
       this.renderer.render();
     }
     childGroups(node) {
@@ -45406,13 +33503,13 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/template.html
-  var template_default27 = `<nav class="structure-tree" aria-label="Page structure">
+  var template_default20 = `<nav class="structure-tree" aria-label="Page structure">
     <div class="empty">No editable elements</div>
 </nav>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/style.css
-  var style_default21 = `:host {
+  var style_default16 = `:host {
     display: block;
     position: relative;
     min-height: 100%;
@@ -45582,15 +33679,15 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
-  var template11 = document.createElement("template");
-  template11.innerHTML = `<style>${[style_default21, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default27)}`;
+  var template8 = document.createElement("template");
+  template8.innerHTML = `<style>${[style_default16, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
+`)}</style>${String(template_default20)}`;
 
   class StructureTree extends HTMLElement {
     controller;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template11.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template8.content.cloneNode(true));
       this.controller = new StructureTreeController(this);
     }
     connectedCallback() {
@@ -45614,8 +33711,8 @@ dd {
     set catalog(catalog) {
       this.controller.catalog = catalog;
     }
-    setStructure(nodes, selectedEditor = null, catalog = this.controller.catalog, options2 = {}) {
-      this.controller.setStructure(nodes, selectedEditor, catalog, options2);
+    setStructure(nodes, selectedEditor = null, catalog = this.controller.catalog, options = {}) {
+      this.controller.setStructure(nodes, selectedEditor, catalog, options);
     }
   }
   if (!customElements.get("cms-editor-v2-structure-tree")) {
@@ -45623,7 +33720,7 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/template.html
-  var template_default28 = `<main class="canvas">
+  var template_default21 = `<main class="canvas">
     <div class="viewport">
         <div class="page">
             <iframe class="editor-frame" data-frame-kind="editor" title="Page editor canvas" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
@@ -45634,7 +33731,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
-  var style_default22 = `:host {
+  var style_default17 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -45742,8 +33839,8 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
-  var template12 = document.createElement("template");
-  template12.innerHTML = `<style>${String(style_default22)}</style>${String(template_default28)}`;
+  var template9 = document.createElement("template");
+  template9.innerHTML = `<style>${String(style_default17)}</style>${String(template_default21)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -45767,7 +33864,7 @@ iframe {
     }
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template12.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template9.content.cloneNode(true));
     }
     connectedCallback() {
       this.editorFrame.addEventListener("load", this.onFrameLoad);
@@ -45884,7 +33981,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/template.html
-  var template_default29 = `<section class="section">
+  var template_default22 = `<section class="section">
     <button class="head" type="button" aria-expanded="true">
         <span class="label"></span>
         <span class="chevron">⌄</span>
@@ -45896,7 +33993,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/style.css
-  var style_default23 = `:host {
+  var style_default18 = `:host {
     display: block;
 }
 
@@ -45963,13 +34060,13 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/fieldElement.ts
   function createFieldTemplate(templateHtml, componentCss) {
-    const template13 = document.createElement("template");
-    template13.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
-    return template13;
+    const template10 = document.createElement("template");
+    template10.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
+    return template10;
   }
-  function attachFieldShadow(host, template13) {
+  function attachFieldShadow(host, template10) {
     const root = host.attachShadow({ mode: "open" });
-    root.append(template13.content.cloneNode(true));
+    root.append(template10.content.cloneNode(true));
     return root;
   }
   function syncFieldCopy(host) {
@@ -45985,7 +34082,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template13 = createFieldTemplate(template_default29, style_default23);
+  var template10 = createFieldTemplate(template_default22, style_default18);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -45994,7 +34091,7 @@ iframe {
     };
     constructor() {
       super();
-      attachFieldShadow(this, template13);
+      attachFieldShadow(this, template10);
     }
     connectedCallback() {
       this.shadowRoot.querySelector(".label").textContent = this.getAttribute("label") ?? "";
@@ -46009,7 +34106,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/template.html
-  var template_default30 = `<div class="field">
+  var template_default23 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <input>
@@ -46030,7 +34127,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/style.css
-  var style_default24 = `:host {
+  var style_default19 = `:host {
     display: block;
 }
 
@@ -46263,31 +34360,31 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
-  function matchingDynamicDataOptions(options2, query4) {
-    const normalized = query4.trim().toLowerCase();
-    return normalized ? options2.filter((option4) => `${option4.label} ${option4.path}`.toLowerCase().includes(normalized)) : options2;
+  function matchingDynamicDataOptions(options, query3) {
+    const normalized = query3.trim().toLowerCase();
+    return normalized ? options.filter((option3) => `${option3.label} ${option3.path}`.toLowerCase().includes(normalized)) : options;
   }
-  function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
+  function renderDynamicDataOptions(list, options, totalOptions, onSelect) {
     list.replaceChildren();
-    if (options2.length === 0) {
+    if (options.length === 0) {
       const empty3 = document.createElement("p");
       empty3.className = "data-empty";
       empty3.textContent = totalOptions === 0 ? "No data available here." : "No matching data.";
       list.append(empty3);
       return;
     }
-    for (const option4 of options2) {
+    for (const option3 of options) {
       const button = document.createElement("button");
       button.className = "data-option";
       button.type = "button";
-      button.dataset.path = option4.path;
+      button.dataset.path = option3.path;
       const label2 = document.createElement("span");
       label2.className = "data-label";
-      label2.textContent = option4.label;
+      label2.textContent = option3.label;
       const path = document.createElement("code");
-      path.textContent = option4.path;
+      path.textContent = option3.path;
       button.append(label2, path);
-      button.addEventListener("click", () => onSelect(option4.path));
+      button.addEventListener("click", () => onSelect(option3.path));
       list.append(button);
     }
   }
@@ -46296,10 +34393,10 @@ input:disabled {
   function flattenDynamicDataOptions(scopes) {
     const byPath = new Map;
     for (const scope of scopes) {
-      const options2 = fieldOptions2(scope.fields, scope.name, scope.label ?? scope.name);
-      for (const option4 of options2) {
-        if (!byPath.has(option4.path)) {
-          byPath.set(option4.path, option4);
+      const options = fieldOptions2(scope.fields, scope.name, scope.label ?? scope.name);
+      for (const option3 of options) {
+        if (!byPath.has(option3.path)) {
+          byPath.set(option3.path, option3);
         }
       }
     }
@@ -46356,9 +34453,9 @@ input:disabled {
       this.close({ restoreFocus: false });
       this._actions.finish();
     }
-    close(options2 = {}) {
+    close(options = {}) {
       this._refs.picker().hidden = true;
-      if (options2.restoreFocus === false) {
+      if (options.restoreFocus === false) {
         return;
       }
       this._actions.focusControl();
@@ -46401,7 +34498,7 @@ input:disabled {
       }, {
         saveSelection: this.saveSelection,
         restoreSelection: this.restoreSelection,
-        insertText: (text4) => this.insertText(text4),
+        insertText: (text3) => this.insertText(text3),
         focusControl: () => this._refs.control().focus(),
         finish: this.emitInput
       });
@@ -46450,12 +34547,12 @@ input:disabled {
     restoreSelection = () => {
       this._refs.control().setSelectionRange?.(this._selectionStart, this._selectionEnd);
     };
-    insertText(text4) {
+    insertText(text3) {
       const control2 = this._refs.control();
       const start = control2.selectionStart ?? this._selectionStart;
       const end = control2.selectionEnd ?? this._selectionEnd;
-      control2.value = `${control2.value.slice(0, start)}${text4}${control2.value.slice(end)}`;
-      const next = start + text4.length;
+      control2.value = `${control2.value.slice(0, start)}${text3}${control2.value.slice(end)}`;
+      const next = start + text3.length;
       control2.setSelectionRange?.(next, next);
       this.saveSelection();
     }
@@ -46467,7 +34564,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template14 = createFieldTemplate(template_default30, `${String(style_default24)}${String(dynamicDataPicker_default)}`);
+  var template11 = createFieldTemplate(template_default23, `${String(style_default19)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -46482,7 +34579,7 @@ input:disabled {
     });
     constructor() {
       super();
-      attachFieldShadow(this, template14);
+      attachFieldShadow(this, template11);
     }
     connectedCallback() {
       syncFieldCopy(this);
@@ -46527,7 +34624,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/template.html
-  var template_default31 = `<div class="field">
+  var template_default24 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <textarea rows="3"></textarea>
@@ -46548,7 +34645,7 @@ input:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/style.css
-  var style_default25 = `:host {
+  var style_default20 = `:host {
     display: block;
 }
 
@@ -46620,7 +34717,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template15 = createFieldTemplate(template_default31, `${String(style_default25)}${String(dynamicDataPicker_default)}`);
+  var template12 = createFieldTemplate(template_default24, `${String(style_default20)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -46635,7 +34732,7 @@ textarea:disabled {
     });
     constructor() {
       super();
-      attachFieldShadow(this, template15);
+      attachFieldShadow(this, template12);
     }
     connectedCallback() {
       syncFieldCopy(this);
@@ -46815,13 +34912,13 @@ textarea:disabled {
   }
   function unwrapElement(editor, element) {
     const document2 = editor.ownerDocument;
-    const fragment2 = document2.createDocumentFragment();
+    const fragment = document2.createDocumentFragment();
     const firstChild = element.firstChild;
     const lastChild = element.lastChild;
     while (element.firstChild) {
-      fragment2.append(element.firstChild);
+      fragment.append(element.firstChild);
     }
-    element.replaceWith(fragment2);
+    element.replaceWith(fragment);
     const nextRange = document2.createRange();
     if (firstChild && lastChild) {
       nextRange.setStartBefore(firstChild);
@@ -46908,10 +35005,10 @@ textarea:disabled {
       this.setSavedRange(unwrapElement(this._editor(), wrapper));
       return true;
     }
-    insertText(text4) {
+    insertText(text3) {
       const range = this.getUsableRange();
       if (!range) {
-        this._editor().append(text4);
+        this._editor().append(text3);
         const nextRange2 = this._editor().ownerDocument.createRange();
         nextRange2.selectNodeContents(this._editor());
         nextRange2.collapse(false);
@@ -46920,7 +35017,7 @@ textarea:disabled {
       }
       range.deleteContents();
       const document2 = this._editor().ownerDocument;
-      const node = document2.createTextNode(text4);
+      const node = document2.createTextNode(text3);
       range.insertNode(node);
       const nextRange = document2.createRange();
       nextRange.setStartAfter(node);
@@ -47055,7 +35152,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/template.html
-  var template_default32 = `<div class="field">
+  var template_default25 = `<div class="field">
     <span class="label"></span>
     <span class="toolbar" aria-label="Rich text tools"></span>
     <div class="data-picker" hidden role="dialog" aria-label="Insert data">
@@ -47306,12 +35403,12 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/styles/index.ts
-  var styles_default7 = [String(part_1_default6), String(part_2_default6)].join(`
+  var styles_default6 = [String(part_1_default6), String(part_2_default6)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
-  var template16 = document.createElement("template");
-  template16.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default32)}`;
+  var template13 = document.createElement("template");
+  template13.innerHTML = `<style>${String(styles_default6)}</style>${String(template_default25)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -47324,13 +35421,13 @@ textarea:disabled {
     }, {
       saveSelection: this._range.saveSelection,
       restoreSelection: () => this._range.restoreSelection(),
-      insertText: (text4) => this._range.insertText(text4),
+      insertText: (text3) => this._range.insertText(text3),
       focusControl: () => this.editor.focus(),
       finish: () => this.finishAction()
     });
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template16.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template13.content.cloneNode(true));
     }
     connectedCallback() {
       this.label.textContent = this.getAttribute("label") ?? "";
@@ -47444,7 +35541,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/template.html
-  var template_default33 = `<label class="field">
+  var template_default26 = `<label class="field">
     <span class="label"></span>
     <select></select>
     <span class="hint"></span>
@@ -47452,7 +35549,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/style.css
-  var style_default26 = `:host {
+  var style_default21 = `:host {
     display: block;
 }
 
@@ -47556,22 +35653,22 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template17 = createFieldTemplate(template_default33, style_default26);
+  var template14 = createFieldTemplate(template_default26, style_default21);
 
   class Select extends HTMLElement {
     constructor() {
       super();
-      attachFieldShadow(this, template17);
+      attachFieldShadow(this, template14);
     }
     connectedCallback() {
       syncFieldCopy(this);
       const current = this.getAttribute("value");
-      const options2 = this._parseOptions();
-      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option4) => {
+      const options = this._parseOptions();
+      this.shadowRoot.querySelector("select").replaceChildren(...options.map((option3) => {
         const element = document.createElement("option");
-        element.textContent = option4.label;
-        element.value = option4.value;
-        element.selected = option4.value === current;
+        element.textContent = option3.label;
+        element.value = option3.value;
+        element.selected = option3.value === current;
         return element;
       }));
     }
@@ -47593,7 +35690,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/template.html
-  var template_default34 = `<button class="toggle" type="button" aria-pressed="false">
+  var template_default27 = `<button class="toggle" type="button" aria-pressed="false">
     <span class="copy">
         <span class="label"></span>
         <span class="hint"></span>
@@ -47603,7 +35700,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/style.css
-  var style_default27 = `:host {
+  var style_default22 = `:host {
     display: block;
 }
 
@@ -47716,12 +35813,12 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template18 = createFieldTemplate(template_default34, style_default27);
+  var template15 = createFieldTemplate(template_default27, style_default22);
 
   class Toggle extends HTMLElement {
     constructor() {
       super();
-      attachFieldShadow(this, template18);
+      attachFieldShadow(this, template15);
     }
     connectedCallback() {
       syncFieldCopy(this);
@@ -47733,13 +35830,13 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/template.html
-  var template_default35 = `<div class="segmented">
+  var template_default28 = `<div class="segmented">
     <slot></slot>
 </div>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/style.css
-  var style_default28 = `:host {
+  var style_default23 = `:host {
     display: block;
 }
 
@@ -47785,12 +35882,12 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template19 = createFieldTemplate(template_default35, style_default28);
+  var template16 = createFieldTemplate(template_default28, style_default23);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
       super();
-      attachFieldShadow(this, template19);
+      attachFieldShadow(this, template16);
     }
   }
   if (!customElements.get("cms-editor-v2-segmented-control")) {
@@ -47800,16 +35897,16 @@ select:disabled {
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/endpointBinding.ts
   function endpointOptions(setting, dataSources) {
     const methods = new Set(setting.methods ?? []);
-    return dataSources.filter((source2) => methods.size === 0 || methods.has(endpointMethod2(source2)));
+    return dataSources.filter((source2) => methods.size === 0 || methods.has(endpointMethod(source2)));
   }
   function selectedEndpoint(setting, dataSources) {
     if (!setting.defaultValue) {
       return null;
     }
-    const binding2 = initialEndpointBinding(setting);
+    const binding = initialEndpointBinding(setting);
     return endpointOptions(setting, dataSources).find((source2) => {
-      if (usesSourceBinding(setting) && binding2) {
-        return binding2.url === source2.url || binding2.url.startsWith(`${source2.url}?`) || source2.url.includes("?") && binding2.url.startsWith(`${source2.url}&`);
+      if (usesSourceBinding(setting) && binding) {
+        return binding.url === source2.url || binding.url.startsWith(`${source2.url}?`) || source2.url.includes("?") && binding.url.startsWith(`${source2.url}&`);
       }
       return source2.url === setting.defaultValue;
     }) ?? null;
@@ -47836,7 +35933,7 @@ select:disabled {
   function endpointAttributes(setting, detail, value2) {
     const attributes = { [setting.attribute]: value2 };
     if (setting.methodAttribute) {
-      attributes[setting.methodAttribute] = detail.binding.method ?? endpointMethod2(detail.source);
+      attributes[setting.methodAttribute] = detail.binding.method ?? endpointMethod(detail.source);
     }
     if (usesSourceBinding(setting)) {
       const body = detail.binding.body ? asSourceBody(detail.binding.body) : "";
@@ -47856,7 +35953,7 @@ select:disabled {
     }
     return attributes;
   }
-  function endpointMethod2(source2) {
+  function endpointMethod(source2) {
     return source2.method ?? "GET";
   }
   function usesSourceBinding(setting) {
@@ -48005,12 +36102,12 @@ select:disabled {
     select.append(custom);
     const groups = new Map;
     for (const token of tokens) {
-      const option4 = document.createElement("option");
-      option4.value = `var(--${token.variable})`;
-      option4.textContent = token.label;
+      const option3 = document.createElement("option");
+      option3.value = `var(--${token.variable})`;
+      option3.textContent = token.label;
       const category = token.category?.trim();
       if (!category) {
-        select.append(option4);
+        select.append(option3);
         continue;
       }
       let group = groups.get(category);
@@ -48020,9 +36117,9 @@ select:disabled {
         groups.set(category, group);
         select.append(group);
       }
-      group.append(option4);
+      group.append(option3);
     }
-    const selected2 = Array.from(select.querySelectorAll("option")).find((option4) => option4.value === (setting.defaultValue ?? ""));
+    const selected2 = Array.from(select.querySelectorAll("option")).find((option3) => option3.value === (setting.defaultValue ?? ""));
     if (selected2) {
       selected2.selected = true;
     }
@@ -48198,11 +36295,11 @@ select:disabled {
     if (!path) {
       return null;
     }
-    const svg2 = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg2.setAttribute("viewBox", "0 0 24 24");
-    svg2.setAttribute("aria-hidden", "true");
-    svg2.innerHTML = path;
-    return svg2;
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.innerHTML = path;
+    return svg;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/settingControls.ts
@@ -48293,15 +36390,15 @@ select:disabled {
       const label2 = renderFieldLabel(setting.label, setting.labelDisplay);
       const control2 = document.createElement("cms-editor-v2-segmented-control");
       control2.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
-      for (const option4 of setting.options) {
+      for (const option3 of setting.options) {
         const button = document.createElement("button");
         button.type = "button";
-        button.value = option4.value;
+        button.value = option3.value;
         button.disabled = setting.disabled === true;
-        button.title = option4.ariaLabel ?? option4.label;
-        button.ariaLabel = option4.ariaLabel ?? option4.label;
-        button.ariaPressed = String(option4.value === setting.defaultValue);
-        button.append(...renderOptionContent(setting.display, option4.display, option4.icon ?? setting.icon, option4.label));
+        button.title = option3.ariaLabel ?? option3.label;
+        button.ariaLabel = option3.ariaLabel ?? option3.label;
+        button.ariaPressed = String(option3.value === setting.defaultValue);
+        button.append(...renderOptionContent(setting.display, option3.display, option3.icon ?? setting.icon, option3.label));
         button.addEventListener("click", () => {
           if (setting.disabled) {
             return;
@@ -48309,7 +36406,7 @@ select:disabled {
           for (const item of Array.from(control2.querySelectorAll("button"))) {
             item.ariaPressed = String(item === button);
           }
-          this.emitSettingChange(setting, option4.value);
+          this.emitSettingChange(setting, option3.value);
         });
         control2.append(button);
       }
@@ -48351,9 +36448,9 @@ select:disabled {
     const icon = iconName ? settingIcon(iconName) : null;
     const nodes = icon && (display === "icon" || display === "icon-label") ? [icon] : [];
     if (display !== "icon" || !icon) {
-      const text4 = document.createElement("span");
-      text4.textContent = label2;
-      nodes.push(text4);
+      const text3 = document.createElement("span");
+      text3.textContent = label2;
+      nodes.push(text3);
     }
     return nodes;
   }
@@ -48422,8 +36519,8 @@ select:disabled {
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/settingsSections.ts
   function renderSettingsStates(states2, onToggle) {
-    const section2 = document.createElement("cms-editor-v2-section");
-    section2.setAttribute("label", "States");
+    const section = document.createElement("cms-editor-v2-section");
+    section.setAttribute("label", "States");
     for (const state of states2) {
       const button = document.createElement("button");
       button.className = "state-button";
@@ -48437,14 +36534,14 @@ select:disabled {
       description.textContent = state.description ?? (state.isActive() ? "Active" : "Inactive");
       button.append(label2, description);
       button.addEventListener("click", () => onToggle(state));
-      section2.append(button);
+      section.append(button);
     }
-    return section2;
+    return section;
   }
-  function renderSettingSection(section2, controls) {
+  function renderSettingSection(section, controls) {
     const element = document.createElement("cms-editor-v2-section");
-    element.setAttribute("label", section2.kind === "surcharge" ? `${section2.label} override` : section2.label);
-    const settings = visibleSettings(section2.settings);
+    element.setAttribute("label", section.kind === "surcharge" ? `${section.label} override` : section.label);
+    const settings = visibleSettings(section.settings);
     if (settings.length === 0) {
       const empty3 = document.createElement("div");
       empty3.className = "section-empty";
@@ -48460,8 +36557,8 @@ select:disabled {
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/internals/rendering/textCapability.ts
   function renderTextCapability(capability, value2, dataScopes2, emitContentChange) {
-    const section2 = document.createElement("cms-editor-v2-section");
-    section2.setAttribute("label", "Content");
+    const section = document.createElement("cms-editor-v2-section");
+    section.setAttribute("label", "Content");
     const setting = {
       type: "text",
       label: capability.format === "richtext" ? "Rich text" : "Text",
@@ -48480,22 +36577,22 @@ select:disabled {
       }
       wireContentControl(control2, "input", (content) => emitContentChange(content, "text"));
     }
-    section2.append(control2);
-    return section2;
+    section.append(control2);
+    return section;
   }
   function formatTextCapability(capability) {
-    const options2 = [
+    const options = [
       capability.bold ? "bold" : null,
       capability.italic ? "italic" : null,
       capability.link ? "link" : null,
       capability.code ? "code" : null,
       capability.dynamic ? "dynamic" : null
-    ].filter((option4) => Boolean(option4));
-    return options2.length > 0 ? options2.join(", ") : "Plain text";
+    ].filter((option3) => Boolean(option3));
+    return options.length > 0 ? options.join(", ") : "Plain text";
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/template.html
-  var template_default36 = `<div class="settings-view">
+  var template_default29 = `<div class="settings-view">
     <div class="empty">Select an editable element</div>
 </div>
 `;
@@ -48772,12 +36869,12 @@ cms-editor-v2-segmented-control button svg:only-child {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/styles/index.ts
-  var styles_default8 = [String(part_1_default7), String(part_2_default7)].join(`
+  var styles_default7 = [String(part_1_default7), String(part_2_default7)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
-  var template20 = document.createElement("template");
-  template20.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default36)}`;
+  var template17 = document.createElement("template");
+  template17.innerHTML = `<style>${String(styles_default7)}</style>${String(template_default29)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
@@ -48790,36 +36887,36 @@ cms-editor-v2-segmented-control button svg:only-child {
     constructor() {
       super();
       const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.append(template20.content.cloneNode(true));
+      shadowRoot.append(template17.content.cloneNode(true));
       this._endpointSettings = new EndpointSettingController(shadowRoot, renderFieldLabel, (setting, value2, attributes) => this._emitSettingChange(setting, value2, attributes));
       this._settingControls = new SettingControlRenderer(this._endpointSettings, () => this._dataScopes, () => this._themeTokens, (setting, value2) => this._emitSettingChange(setting, value2));
     }
     setThemeTokens(tokens) {
       this._themeTokens = tokens.filter((token) => token.label && /^[a-z][a-z0-9-]*$/.test(token.variable));
     }
-    setSettings(sections2, textCapability = null, textValue3 = "", mode = "settings", states2 = [], dataScopes2 = [], dataSources = []) {
+    setSettings(sections, textCapability = null, textValue = "", mode = "settings", states2 = [], dataScopes2 = [], dataSources = []) {
       this._endpointSettings.setDataSources(dataSources);
       this._dataScopes = dataScopes2;
       const view = this.shadowRoot.querySelector(".settings-view");
       view.replaceChildren();
-      const visibleSections = sections2.filter((section2) => mode === "settings" ? section2.kind === "self" : section2.kind === "surcharge");
+      const visibleSections = sections.filter((section) => mode === "settings" ? section.kind === "self" : section.kind === "surcharge");
       const shouldRenderText = mode === "settings" && textCapability;
       const shouldRenderStates = mode === "settings" && states2.length > 0;
       if (visibleSections.length === 0 && !shouldRenderText && !shouldRenderStates) {
         const empty3 = document.createElement("div");
         empty3.className = "empty";
-        empty3.textContent = sections2.length === 0 && !textCapability ? "Select an editable element" : mode === "settings" ? "No settings" : "No overrides";
+        empty3.textContent = sections.length === 0 && !textCapability ? "Select an editable element" : mode === "settings" ? "No settings" : "No overrides";
         view.append(empty3);
         return;
       }
       if (shouldRenderText) {
-        view.append(renderTextCapability(textCapability, textValue3, dataScopes2, (value2, format) => this._emitContentChange(value2, format)));
+        view.append(renderTextCapability(textCapability, textValue, dataScopes2, (value2, format) => this._emitContentChange(value2, format)));
       }
       if (shouldRenderStates) {
         view.append(renderSettingsStates(states2, (state) => this._emitStateToggle(state)));
       }
-      for (const section2 of visibleSections) {
-        view.append(renderSettingSection(section2, this._settingControls));
+      for (const section of visibleSections) {
+        view.append(renderSettingSection(section, this._settingControls));
       }
     }
     _emitStateToggle(state) {
@@ -48850,7 +36947,7 @@ cms-editor-v2-segmented-control button svg:only-child {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/template.html
-  var template_default37 = `<div class="backdrop" hidden>
+  var template_default30 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="repeat-picker-title">
         <header class="header">
             <div>
@@ -49242,15 +37339,15 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/styles/index.ts
-  var styles_default9 = [String(part_1_default8), String(part_2_default8), String(part_3_default5)].join(`
+  var styles_default8 = [String(part_1_default8), String(part_2_default8), String(part_3_default5)].join(`
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatOptions.ts
   function repeatArrayOptions(scopes) {
     const byPath = new Map;
-    for (const option4 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
-      if (!byPath.has(option4.path)) {
-        byPath.set(option4.path, option4);
+    for (const option3 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
+      if (!byPath.has(option3.path)) {
+        byPath.set(option3.path, option3);
       }
     }
     return [...byPath.values()];
@@ -49272,12 +37369,12 @@ label {
       ];
     });
   }
-  function visibleRepeatOptions(options2, query4) {
-    const normalizedQuery = query4.trim().toLowerCase();
+  function visibleRepeatOptions(options, query3) {
+    const normalizedQuery = query3.trim().toLowerCase();
     if (!normalizedQuery) {
-      return options2;
+      return options;
     }
-    return options2.filter((option4) => [option4.path, option4.label, option4.scopeLabel].some((value2) => value2.toLowerCase().includes(normalizedQuery)));
+    return options.filter((option3) => [option3.path, option3.label, option3.scopeLabel].some((value2) => value2.toLowerCase().includes(normalizedQuery)));
   }
   function defaultRepeatAlias(path) {
     const segment = path.split(".").filter(Boolean).at(-1) ?? "item";
@@ -49286,35 +37383,35 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatPickerDetails.ts
-  function renderRepeatOptions(container, options2, activeOption, onActivate, onSelect) {
+  function renderRepeatOptions(container, options, activeOption, onActivate, onSelect) {
     container.replaceChildren();
-    if (options2.length === 0) {
+    if (options.length === 0) {
       const empty3 = document.createElement("div");
       empty3.className = "empty";
       empty3.textContent = "No array fields available.";
       container.append(empty3);
       return;
     }
-    for (const option4 of options2) {
+    for (const option3 of options) {
       const button = document.createElement("button");
       button.className = "array";
       button.type = "button";
-      button.ariaSelected = String(option4 === activeOption);
+      button.ariaSelected = String(option3 === activeOption);
       const name = document.createElement("span");
       name.className = "name";
-      name.textContent = option4.path;
+      name.textContent = option3.path;
       const scope = document.createElement("span");
       scope.className = "scope";
-      scope.textContent = option4.scopeLabel;
+      scope.textContent = option3.scopeLabel;
       button.append(name, scope);
-      button.addEventListener("click", () => onActivate(option4));
-      button.addEventListener("dblclick", () => onSelect(option4));
+      button.addEventListener("click", () => onActivate(option3));
+      button.addEventListener("dblclick", () => onSelect(option3));
       container.append(button);
     }
   }
-  function renderRepeatDetails(container, option4) {
+  function renderRepeatDetails(container, option3) {
     container.replaceChildren();
-    if (!option4) {
+    if (!option3) {
       const empty3 = document.createElement("div");
       empty3.className = "details-empty";
       empty3.textContent = "Select an array field to inspect item fields.";
@@ -49324,11 +37421,11 @@ label {
     const heading = document.createElement("div");
     heading.className = "details-eyebrow";
     heading.textContent = "Response fields";
-    container.append(heading, renderFields(option4.fields));
+    container.append(heading, renderFields(option3.fields));
   }
-  function renderRepeatBinding(container, option4, onSelect) {
+  function renderRepeatBinding(container, option3, onSelect) {
     container.replaceChildren();
-    if (!option4) {
+    if (!option3) {
       const empty3 = document.createElement("div");
       empty3.className = "details-empty";
       empty3.textContent = "Select an array field to configure repeat.";
@@ -49343,7 +37440,7 @@ label {
     const pathLabel = document.createElement("span");
     pathLabel.textContent = "Array";
     const pathValue = document.createElement("strong");
-    pathValue.textContent = option4.path;
+    pathValue.textContent = option3.path;
     path.append(pathLabel, pathValue);
     const config = document.createElement("section");
     config.className = "binding-config";
@@ -49351,14 +37448,14 @@ label {
     label2.textContent = "Alias";
     const alias = document.createElement("input");
     alias.className = "alias";
-    alias.value = defaultRepeatAlias(option4.path);
+    alias.value = defaultRepeatAlias(option3.path);
     label2.append(alias);
     config.append(label2);
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
     insert.textContent = "Use repeat";
-    insert.addEventListener("click", () => onSelect(option4, alias.value));
+    insert.addEventListener("click", () => onSelect(option3, alias.value));
     const scroll = document.createElement("div");
     scroll.className = "binding-scroll";
     scroll.append(heading, path, config);
@@ -49452,9 +37549,9 @@ label {
     footer.append(insert);
     container.append(scroll, footer);
   }
-  function numberInput(text4, value2) {
+  function numberInput(text3, value2) {
     const label2 = document.createElement("label");
-    label2.textContent = text4;
+    label2.textContent = text3;
     const input = document.createElement("input");
     input.className = "count";
     input.type = "number";
@@ -49466,9 +37563,9 @@ label {
     label2.append(input);
     return { label: label2, input };
   }
-  function textInput(text4, value2) {
+  function textInput(text3, value2) {
     const label2 = document.createElement("label");
-    label2.textContent = text4;
+    label2.textContent = text3;
     const input = document.createElement("input");
     input.className = "alias";
     input.pattern = "[A-Za-z_$][A-Za-z0-9_$]*";
@@ -49479,8 +37576,8 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/RepeatPicker.ts
-  var template21 = document.createElement("template");
-  template21.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default37)}`;
+  var template18 = document.createElement("template");
+  template18.innerHTML = `<style>${String(styles_default8)}</style>${String(template_default30)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -49489,7 +37586,7 @@ label {
     _mode = "array";
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template21.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template18.content.cloneNode(true));
     }
     connectedCallback() {
       this.closeButton.addEventListener("click", this.close);
@@ -49532,17 +37629,17 @@ label {
       }
       this._renderOptions();
       renderRepeatDetails(this.details, this._activeOption);
-      renderRepeatBinding(this.binding, this._activeOption, (option4, alias) => this._selectPath(option4.path, alias));
+      renderRepeatBinding(this.binding, this._activeOption, (option3, alias) => this._selectPath(option3.path, alias));
     }
     _renderOptions() {
-      const options2 = visibleRepeatOptions(this._options, this.search.value);
-      if (!this._activeOption || !options2.includes(this._activeOption)) {
-        this._activeOption = options2[0] ?? null;
+      const options = visibleRepeatOptions(this._options, this.search.value);
+      if (!this._activeOption || !options.includes(this._activeOption)) {
+        this._activeOption = options[0] ?? null;
       }
-      renderRepeatOptions(this.arrays, options2, this._activeOption, (option4) => {
-        this._activeOption = option4;
+      renderRepeatOptions(this.arrays, options, this._activeOption, (option3) => {
+        this._activeOption = option3;
         this._render();
-      }, (option4) => this._selectPath(option4.path, defaultRepeatAlias(option4.path)));
+      }, (option3) => this._selectPath(option3.path, defaultRepeatAlias(option3.path)));
     }
     _selectPath(path, alias) {
       const cleanAlias = alias.trim();
@@ -49682,20 +37779,20 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/FrameHighlight.ts
-  var STYLE_ID2 = "cms-editor-v2-highlight-style";
+  var STYLE_ID = "cms-editor-v2-highlight-style";
   var HIGHLIGHT_ATTR = "data-cms-editor-v2-highlight";
 
   class FrameHighlight {
     _target = null;
     _overlay = null;
     _resizeObserver = null;
-    show(editor, options2 = {}) {
+    show(editor, options = {}) {
       this.hide();
       this._target = editor.target;
       const doc = editor.target.ownerDocument;
       this._ensureStyle(doc);
       const targets = this._measurementTargets(editor.target);
-      if (options2.scrollIntoView) {
+      if (options.scrollIntoView) {
         (targets[0] ?? editor.target).scrollIntoView({
           block: "center",
           inline: "nearest",
@@ -49751,11 +37848,11 @@ label {
       return children.length > 0 ? children : [target2];
     }
     _ensureStyle(doc) {
-      if (doc.getElementById(STYLE_ID2)) {
+      if (doc.getElementById(STYLE_ID)) {
         return;
       }
       const style = doc.createElement("style");
-      style.id = STYLE_ID2;
+      style.id = STYLE_ID;
       style.textContent = `
 [${HIGHLIGHT_ATTR}] {
     position: absolute;
@@ -49876,37 +37973,37 @@ label {
     if (typeof value2 !== "string") {
       return null;
     }
-    const media2 = mediaAccessibility(editor.target);
-    if (!media2) {
+    const media = mediaAccessibility(editor.target);
+    if (!media) {
       return null;
     }
-    if (setting.type === "text" && setting.attribute === media2.accessibleName && media2.isDecorative) {
+    if (setting.type === "text" && setting.attribute === media.accessibleName && media.isDecorative) {
       accessibleNameDrafts.set(editor.target, value2);
       return { kind: "accessible-name-draft" };
     }
     if (setting.type !== "segmented" || setting.attribute !== "role") {
       return null;
     }
-    if (value2 === media2.decorativeRole) {
-      rememberCurrentAccessibleName(editor, media2.accessibleName);
+    if (value2 === media.decorativeRole) {
+      rememberCurrentAccessibleName(editor, media.accessibleName);
       return {
         kind: "attributes",
         attributes: decorativeAttributes(editor.target.localName, attributes)
       };
     }
-    if (value2 !== media2.informativeRole) {
+    if (value2 !== media.informativeRole) {
       return null;
     }
     const changes = informativeAttributes(editor.target.localName, attributes);
     const draft = accessibleNameDrafts.get(editor.target);
     if (draft !== undefined) {
-      changes[media2.accessibleName] = draft;
+      changes[media.accessibleName] = draft;
     }
     return { kind: "attributes", attributes: changes };
   }
   function nativeMediaAccessibleNameDraft(editor, setting) {
-    const media2 = mediaAccessibility(editor.target);
-    if (!media2?.isDecorative || setting.type !== "text" || setting.attribute !== media2.accessibleName) {
+    const media = mediaAccessibility(editor.target);
+    if (!media?.isDecorative || setting.type !== "text" || setting.attribute !== media.accessibleName) {
       return;
     }
     return accessibleNameDrafts.get(editor.target);
@@ -50009,9 +38106,9 @@ label {
     }
     return true;
   }
-  function settingsWithParamSync(editor, sections2) {
-    const section2 = paramSyncSettings(editor);
-    return section2 ? [...sections2, section2] : sections2;
+  function settingsWithParamSync(editor, sections) {
+    const section = paramSyncSettings(editor);
+    return section ? [...sections, section] : sections;
   }
   function paramSyncSettings(editor) {
     const target2 = editor.target;
@@ -50099,9 +38196,9 @@ label {
     }
     return true;
   }
-  function settingsWithPageState(editor, sections2) {
-    const section2 = pageStateSettings(editor);
-    return section2 ? [...sections2, section2] : sections2;
+  function settingsWithPageState(editor, sections) {
+    const section = pageStateSettings(editor);
+    return section ? [...sections, section] : sections;
   }
   function pageStateSettings(editor) {
     const target2 = editor.target;
@@ -50149,10 +38246,10 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/settingsValues.ts
-  function resolveSettingsValues(editor, sections2) {
-    return sections2.map((section2) => ({
-      ...section2,
-      settings: section2.settings.map((setting) => resolveSetting(editor, setting))
+  function resolveSettingsValues(editor, sections) {
+    return sections.map((section) => ({
+      ...section,
+      settings: section.settings.map((setting) => resolveSetting(editor, setting))
     }));
   }
   function getTextValue(editor, format) {
@@ -50171,17 +38268,17 @@ label {
     const reserved = reservedSlotNames2(editor.getContentSlots());
     const currentNodes = Array.from(editor.target.childNodes);
     const referenceNode = currentNodes.find((node) => !isReservedSlotNode2(node, reserved)) ?? editor.target.firstChild;
-    const fragment2 = editor.target.ownerDocument.createDocumentFragment();
+    const fragment = editor.target.ownerDocument.createDocumentFragment();
     if (format === "richtext") {
-      const template22 = editor.target.ownerDocument.createElement("template");
-      template22.innerHTML = value2;
-      sanitizeNativeRichTextFragment(template22.content, editor.target.localName);
-      L3(template22.content);
-      fragment2.append(template22.content.cloneNode(true));
+      const template19 = editor.target.ownerDocument.createElement("template");
+      template19.innerHTML = value2;
+      sanitizeNativeRichTextFragment(template19.content, editor.target.localName);
+      L3(template19.content);
+      fragment.append(template19.content.cloneNode(true));
     } else if (value2 !== "") {
-      fragment2.append(editor.target.ownerDocument.createTextNode(value2));
+      fragment.append(editor.target.ownerDocument.createTextNode(value2));
     }
-    editor.target.insertBefore(fragment2, referenceNode);
+    editor.target.insertBefore(fragment, referenceNode);
     for (const node of currentNodes) {
       if (!isReservedSlotNode2(node, reserved)) {
         node.remove();
@@ -50320,8 +38417,8 @@ label {
     preservesFocusOut(target2) {
       return this.richTextToolbar?.preservesFocusOut(target2) ?? false;
     }
-    insertPastedText(event, text4) {
-      return this.activeFormatFor(event) === "richtext" && Boolean(this.richTextToolbar?.insertPlainText(text4));
+    insertPastedText(event, text3) {
+      return this.activeFormatFor(event) === "richtext" && Boolean(this.richTextToolbar?.insertPlainText(text3));
     }
     stopUnless(editor) {
       if (this.activeEditor !== editor) {
@@ -50483,13 +38580,13 @@ label {
   }
   function runtimeContentFragment(contentRoot, targetDocument) {
     const content = runtimeContentClone(contentRoot);
-    const template22 = targetDocument.createElement("template");
+    const template19 = targetDocument.createElement("template");
     if (!content) {
-      return template22.content;
+      return template19.content;
     }
     L3(content);
-    template22.innerHTML = content.innerHTML;
-    return template22.content;
+    template19.innerHTML = content.innerHTML;
+    return template19.content;
   }
   function cleanContentClone(contentRoot) {
     const content = cloneContent(contentRoot);
@@ -50734,26 +38831,26 @@ label {
     if (item.kind === "media") {
       return null;
     }
-    const fragment2 = createBlockFragment(document2, item.entry);
-    const slotElements = slotElementChildren(fragment2);
+    const fragment = createBlockFragment(document2, item.entry);
+    const slotElements = slotElementChildren(fragment);
     for (const child of slotElements) {
       applySlot(child, slotName);
       applyCondition(child, sourceStatusConditions2);
     }
-    if (nativeDomTreeIssue(fragment2, {
+    if (nativeDomTreeIssue(fragment, {
       allowIncompleteMedia: true,
       skipRootPlacement: true,
       requireFormSource: false
     })) {
       return null;
     }
-    L3(fragment2);
+    L3(fragment);
     const selectionTarget = slotElements.find((child) => child.tagName.toLowerCase() === item.entry.tag.toLowerCase()) ?? null;
     if (!selectionTarget || !hasManagedNativeContract(selectionTarget, item.entry.nativeElement)) {
       return null;
     }
     return {
-      fragment: fragment2,
+      fragment,
       selectionTarget,
       slotElements
     };
@@ -50772,17 +38869,17 @@ label {
   }
   function createBlockFragment(document2, entry) {
     if (!entry.defaultContent) {
-      const fragment2 = document2.createDocumentFragment();
+      const fragment = document2.createDocumentFragment();
       const host = document2.createElement(entry.tag);
       if (entry.nativeElement) {
         host.append(document2.createElement(entry.nativeElement));
       }
-      fragment2.append(host);
-      return fragment2;
+      fragment.append(host);
+      return fragment;
     }
-    const template22 = document2.createElement("template");
-    template22.innerHTML = entry.defaultContent;
-    return template22.content.cloneNode(true);
+    const template19 = document2.createElement("template");
+    template19.innerHTML = entry.defaultContent;
+    return template19.content.cloneNode(true);
   }
   function hasManagedNativeContract(host, nativeElement) {
     if (!nativeElement) {
@@ -50792,8 +38889,8 @@ label {
     const hasAuthoredSiblingText = Array.from(host.childNodes).some((node) => node.nodeType === Node.TEXT_NODE && Boolean(node.textContent?.trim()));
     return children.length === 1 && children[0]?.localName === nativeElement.toLowerCase() && !children[0].hasAttribute("slot") && !hasAuthoredSiblingText;
   }
-  function slotElementChildren(fragment2) {
-    return Array.from(fragment2.children).filter(isElementNode);
+  function slotElementChildren(fragment) {
+    return Array.from(fragment.children).filter(isElementNode);
   }
   function isElementNode(node) {
     return node.nodeType === Node.ELEMENT_NODE;
@@ -51016,7 +39113,7 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/media.ts
-  function openMediaPicker(frameDocument, accept, options2, onSelect) {
+  function openMediaPicker(frameDocument, accept, options, onSelect) {
     const center = new FilesCenter;
     const cleanup = () => center.remove();
     center.addEventListener("close", cleanup, { once: true });
@@ -51040,8 +39137,8 @@ label {
     center.show({
       accept: ["folder", "file"],
       fileAccept: accept ?? ["image"],
-      multiple: options2.multiple === true,
-      maxSelection: options2.maxSelection
+      multiple: options.multiple === true,
+      maxSelection: options.maxSelection
     });
   }
   async function createMediaElement(document2, detail, accept) {
@@ -51465,9 +39562,9 @@ label {
   function collectBindingDependencies(root, inheritedScope, usages) {
     for (const child of Array.from(root.childNodes)) {
       if (child.nodeType === Node.TEXT_NODE) {
-        const text4 = child;
-        if (bindingTextDependsOn(text4.data, inheritedScope)) {
-          usages.push({ target: text4 });
+        const text3 = child;
+        if (bindingTextDependsOn(text3.data, inheritedScope)) {
+          usages.push({ target: text3 });
         }
         continue;
       }
@@ -51482,14 +39579,14 @@ label {
       collectBindingDependencies(element, scope, usages);
     }
   }
-  function collectElementDependencies(element, inheritedScope, usages, options2 = {}) {
+  function collectElementDependencies(element, inheritedScope, usages, options = {}) {
     const scope = {
       aliases: new Set(inheritedScope.aliases),
       independentAliases: new Set(inheritedScope.independentAliases),
       sourceId: inheritedScope.sourceId,
       sourceLocal: inheritedScope.sourceLocal
     };
-    if (!options2.isRoot && isBindingBoundary(element)) {
+    if (!options.isRoot && isBindingBoundary(element)) {
       return scope;
     }
     const repeat2 = element.getAttribute(CMS_BINDING_ATTRIBUTES.repeat);
@@ -51675,20 +39772,20 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/Bindings/sourceBindings.ts
   var BINDING_READY_ATTRIBUTE = "cms-ready";
-  function setSource(editor, source2, binding2 = { url: source2.url }) {
-    editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.source, asSource(binding2));
-    if (binding2.trigger === "submit" || binding2.trigger === "change") {
-      editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger, binding2.trigger);
+  function setSource(editor, source2, binding = { url: source2.url }) {
+    editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.source, asSource(binding));
+    if (binding.trigger === "submit" || binding.trigger === "change") {
+      editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger, binding.trigger);
     } else {
       editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger);
     }
-    const method = binding2.method ?? source2.method ?? "GET";
-    if (method && (method !== "GET" || binding2.trigger === "submit" || binding2.trigger === "change")) {
+    const method = binding.method ?? source2.method ?? "GET";
+    if (method && (method !== "GET" || binding.trigger === "submit" || binding.trigger === "change")) {
       editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod, method);
     } else {
       editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod);
     }
-    const body = binding2.body ? asSourceBody(binding2.body) : "";
+    const body = binding.body ? asSourceBody(binding.body) : "";
     if (body) {
       editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceBody, body);
     } else {
@@ -51745,8 +39842,8 @@ label {
     constructor(context) {
       this.context = context;
     }
-    setSource(editor, source2, binding2 = { url: source2.url }) {
-      const controlled = controlledNativeSourceBinding(editor, source2, binding2, this.context.dataSources?.() ?? []);
+    setSource(editor, source2, binding = { url: source2.url }) {
+      const controlled = controlledNativeSourceBinding(editor, source2, binding, this.context.dataSources?.() ?? []);
       if (!controlled) {
         return;
       }
@@ -51825,16 +39922,16 @@ label {
       this.context.syncViewFrameContent();
     }
   }
-  function controlledNativeSourceBinding(editor, source2, binding2, declaredSources) {
+  function controlledNativeSourceBinding(editor, source2, binding, declaredSources) {
     if (!isNativeHtmlTag(editor.target.localName)) {
-      return binding2;
+      return binding;
     }
     const declared = declaredSources.find((candidate) => candidate.url === source2.url && (candidate.method ?? "GET") === (source2.method ?? "GET"));
-    const method = binding2.method ?? source2.method ?? "GET";
-    if (!declared || binding2.url !== declared.url || method !== (declared.method ?? "GET")) {
+    const method = binding.method ?? source2.method ?? "GET";
+    if (!declared || binding.url !== declared.url || method !== (declared.method ?? "GET")) {
       return null;
     }
-    return editor.target.localName === "form" ? { ...binding2, url: declared.url, method, trigger: "submit" } : { ...binding2, url: declared.url, method };
+    return editor.target.localName === "form" ? { ...binding, url: declared.url, method, trigger: "submit" } : { ...binding, url: declared.url, method };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/shellMutations.ts
@@ -51914,9 +40011,9 @@ label {
         this.bindings.setRepeat(editor, path, alias);
       }
     }
-    setSource(editor, source2, binding2 = { url: source2.url }) {
+    setSource(editor, source2, binding = { url: source2.url }) {
       if (this.canUseBindings()) {
-        this.bindings.setSource(editor, source2, binding2);
+        this.bindings.setSource(editor, source2, binding);
       }
     }
     removeSource(editor) {
@@ -51976,7 +40073,7 @@ label {
       }, {
         saveSelection: () => this.commands?.saveSelection(),
         restoreSelection: () => this.commands?.restoreSelection(),
-        insertText: (text4) => this.commands?.insertText(text4),
+        insertText: (text3) => this.commands?.insertText(text3),
         focusControl: () => {
           if (this.editor) {
             textTargetEditor(this.editor).target.focus({ preventScroll: true });
@@ -52021,12 +40118,12 @@ label {
     preservesFocusOut(target2) {
       return this.contains(target2) || !this.refs.picker.hidden;
     }
-    insertPlainText(text4) {
+    insertPlainText(text3) {
       if (!this.editor || !this.commands) {
         return false;
       }
       this.commands.saveSelection();
-      this.commands.insertText(text4);
+      this.commands.insertText(text3);
       this.finishAction();
       return true;
     }
@@ -52278,7 +40375,7 @@ label {
     }
     const controlled = CONTROLLED_VALUES[tag]?.[attribute];
     if (controlled && (setting.type === "select" || setting.type === "segmented")) {
-      return setting.options.length > 0 && setting.options.every((option4) => controlled.has(option4.value));
+      return setting.options.length > 0 && setting.options.every((option3) => controlled.has(option3.value));
     }
     if (setting.type === "page-link") {
       return pageLinkSettingIsControlled(tag, attribute, setting);
@@ -52378,10 +40475,10 @@ label {
       return [attribute, removesAttribute ? null : value2];
     }));
   }
-  function filterNativeEditorSettingSections(target2, sections2, managedNativeTarget) {
-    return sections2.flatMap((section2) => {
-      const settings = section2.settings.flatMap((setting) => filterSetting2(target2, setting, managedNativeTarget));
-      return settings.length > 0 ? [{ ...section2, settings }] : [];
+  function filterNativeEditorSettingSections(target2, sections, managedNativeTarget) {
+    return sections.flatMap((section) => {
+      const settings = section.settings.flatMap((setting) => filterSetting2(target2, setting, managedNativeTarget));
+      return settings.length > 0 ? [{ ...section, settings }] : [];
     });
   }
   function applyNativeEditorAttributeEffects(target2, attribute) {
@@ -52470,13 +40567,13 @@ label {
     constructor(context) {
       this.context = context;
     }
-    select(editor, options2 = {}) {
+    select(editor, options = {}) {
       const runtime2 = this.context.runtime();
       if (!runtime2) {
         return;
       }
       const selection = runtime2.select(editor);
-      this.context.renderStructure(options2);
+      this.context.renderStructure(options);
       if (!selection) {
         this.context.settings().setSettings([]);
         this.context.highlight().hide();
@@ -52484,7 +40581,7 @@ label {
       }
       this.renderSettings();
       this.context.highlight().show(selection.editor, {
-        scrollIntoView: options2.scrollFrameIntoView === true
+        scrollIntoView: options.scrollFrameIntoView === true
       });
     }
     renderSettings() {
@@ -52586,8 +40683,8 @@ label {
     if (typeof value2 !== "string") {
       return false;
     }
-    const binding2 = parseSource(value2);
-    if (!binding2 || !attributes || attributes[CMS_BINDING_ATTRIBUTES.source] !== value2) {
+    const binding = parseSource(value2);
+    if (!binding || !attributes || attributes[CMS_BINDING_ATTRIBUTES.source] !== value2) {
       return false;
     }
     const requestedMethod = attributes?.[CMS_BINDING_ATTRIBUTES.sourceMethod];
@@ -52596,7 +40693,7 @@ label {
     }
     return dataSources.some((source2) => {
       const method = source2.method ?? "GET";
-      return requestedMethod === method && (!setting.methods || setting.methods.includes(method)) && (binding2.url === source2.url || binding2.url.startsWith(`${source2.url}?`) || source2.url.includes("?") && binding2.url.startsWith(`${source2.url}&`));
+      return requestedMethod === method && (!setting.methods || setting.methods.includes(method)) && (binding.url === source2.url || binding.url.startsWith(`${source2.url}?`) || source2.url.includes("?") && binding.url.startsWith(`${source2.url}&`));
     });
   }
 
@@ -52719,7 +40816,7 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Structure/structureRender.ts
-  function renderStructure(tree, runtime2, contentRoot, catalog, isEmptyDocumentContent2, options2 = {}) {
+  function renderStructure(tree, runtime2, contentRoot, catalog, isEmptyDocumentContent2, options = {}) {
     const rootNode = runtime2 && contentRoot ? editorRootNode(runtime2, contentRoot, catalog) : null;
     if (!runtime2 || isEmptyDocumentContent2()) {
       tree.setStructure([], null, catalog, { rootNode });
@@ -52727,7 +40824,7 @@ label {
     }
     const structure = decorateStructure(runtime2.getStructure());
     tree.setStructure(structure, runtime2.getSelection()?.editor ?? null, catalog, {
-      scrollSelectedIntoView: options2.scrollStructureIntoView === true,
+      scrollSelectedIntoView: options.scrollStructureIntoView === true,
       repeatableTargets: repeatableTargets(structure),
       rootNode
     });
@@ -53020,8 +41117,8 @@ label {
       this.context.highlight.show(editor);
     };
     onFramePaste = (event) => {
-      const text4 = event.clipboardData?.getData("text/plain");
-      if (text4 === undefined || !this.context.inlineText.insertPastedText(event, text4)) {
+      const text3 = event.clipboardData?.getData("text/plain");
+      if (text3 === undefined || !this.context.inlineText.insertPastedText(event, text3)) {
         return;
       }
       event.preventDefault();
@@ -53152,10 +41249,10 @@ label {
       }
       return ancestors;
     }
-    collectDataScopes(target2, options2 = {}) {
+    collectDataScopes(target2, options = {}) {
       const editors = [
         ...this.getAncestors(target2),
-        options2.includeTarget === false ? undefined : this.getEditor(target2)
+        options.includeTarget === false ? undefined : this.getEditor(target2)
       ].filter((editor) => Boolean(editor));
       return editors.flatMap((editor) => editor.getDataScopes());
     }
@@ -53190,10 +41287,10 @@ label {
     }
   }
   // ../../features/cms-editor-system-v2/src/runtime/RuntimeEditor/managedNativeSettings.ts
-  function markManagedNativeSection(section2) {
+  function markManagedNativeSection(section) {
     return {
-      ...section2,
-      settings: section2.settings.map(markManagedNativeSetting)
+      ...section,
+      settings: section.settings.map(markManagedNativeSetting)
     };
   }
   function markManagedNativeSetting(setting) {
@@ -53813,9 +41910,9 @@ label {
         settings: () => this.context.renderSync.settings()
       });
     }
-    select(editor, options2 = {}) {
+    select(editor, options = {}) {
       this.context.inlineText.stopUnless(editor);
-      this.context.selection.select(editor, options2);
+      this.context.selection.select(editor, options);
     }
     renderSettings() {
       this.context.selection.renderSettings();
@@ -53849,8 +41946,8 @@ label {
       this.context.state.runtime = null;
       this.context.state.editorDocument = null;
     }
-    renderStructure(options2 = {}) {
-      this.context.renderSync.renderStructure(options2);
+    renderStructure(options = {}) {
+      this.context.renderSync.renderStructure(options);
     }
     isEmptyDocumentContent() {
       return this.context.renderSync.isEmptyDocumentContent();
@@ -53941,8 +42038,8 @@ label {
     constructor(context) {
       this.context = context;
     }
-    renderStructure(options2 = {}) {
-      renderStructure(this.context.refs.structureTree, this.context.state.runtime, this.context.state.editorDocument?.contentRoot, this.context.state.catalog, () => this.isEmptyDocumentContent(), options2);
+    renderStructure(options = {}) {
+      renderStructure(this.context.refs.structureTree, this.context.state.runtime, this.context.state.editorDocument?.contentRoot, this.context.state.catalog, () => this.isEmptyDocumentContent(), options);
     }
     isEmptyDocumentContent() {
       return isEmptyDocumentContent(this.context.state.editorDocument?.contentRoot);
@@ -54038,7 +42135,7 @@ label {
       settingsMode: () => state.settingsMode,
       stateSessions: () => stateSessions,
       highlight: () => highlight,
-      renderStructure: (options2) => renderSync.renderStructure(options2),
+      renderStructure: (options) => renderSync.renderStructure(options),
       syncViewFrameContent: () => renderSync.syncViewFrameContent()
     });
     const sync = new ShellSync({
@@ -54429,7 +42526,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/template.html
-  var template_default38 = `<div class="shell">
+  var template_default31 = `<div class="shell">
     <cms-editor-v2-topbar></cms-editor-v2-topbar>
     <div class="workspace">
         <cms-editor-v2-panel class="structure-panel" side="left">
@@ -54502,7 +42599,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
-  var style_default29 = `:host {
+  var style_default24 = `:host {
     --editor-v2-bg: #f6f7f7;
     --editor-v2-surface: #ffffff;
     --editor-v2-surface-muted: #f9faf9;
@@ -54629,10 +42726,10 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTemplate.ts
   function createShellTemplate() {
-    const template22 = document.createElement("template");
-    template22.innerHTML = `<style>${[style_default29, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default38)}`;
-    return template22;
+    const template19 = document.createElement("template");
+    template19.innerHTML = `<style>${[style_default24, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
+`)}</style>${String(template_default31)}`;
+    return template19;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Services/shellControllerParts.ts
@@ -55433,8 +43530,8 @@ label {
         if (revision !== this.revision || !entry2) {
           return;
         }
-        const sections2 = new entry2.editor(document.createElement(tag)).getSettings();
-        this.render(mergeDefaults(sections2, explicit));
+        const sections = new entry2.editor(document.createElement(tag)).getSettings();
+        this.render(mergeDefaults(sections, explicit));
       } catch (error) {
         console.error(`[collections] Unable to read defaults for ${tag}`, error);
       }
@@ -55480,12 +43577,12 @@ label {
     }
     return list;
   }
-  function mergeDefaults(sections2, explicit) {
+  function mergeDefaults(sections, explicit) {
     const groups = [];
     const rows = new Map;
-    for (const section2 of sections2) {
-      const group = { label: section2.label || "Defaults", rows: [] };
-      const settings = section2.settings.flatMap((setting) => setting.type === "row" ? setting.settings : [setting]);
+    for (const section of sections) {
+      const group = { label: section.label || "Defaults", rows: [] };
+      const settings = section.settings.flatMap((setting) => setting.type === "row" ? setting.settings : [setting]);
       for (const setting of settings) {
         if (setting.defaultValue === undefined) {
           continue;
@@ -55632,11 +43729,11 @@ label {
   }
 
   // src/components/admin/Theme/editor/model.ts
-  function currentSource2(settings, selection) {
+  function currentSource(settings, selection) {
     return settings?.sources.find((item) => item.id === selection.sourceId) ?? settings?.sources[0];
   }
   function currentCategory(settings, selection) {
-    const source2 = currentSource2(settings, selection);
+    const source2 = currentSource(settings, selection);
     return source2?.categories.find((item) => item.id === selection.categoryId) ?? source2?.categories[0];
   }
   function currentTheme(settings, selectedThemeId) {
@@ -55647,7 +43744,7 @@ label {
   }
   function addTheme(settings, name) {
     const number = settings.themes.length + 1;
-    const id2 = uniqueId2(`theme-${number}`, new Set(settings.themes.map((item) => item.id)));
+    const id2 = uniqueId(`theme-${number}`, new Set(settings.themes.map((item) => item.id)));
     settings.themes.push({ id: id2, name: name?.trim() || `New theme ${number}`, values: { light: {}, dark: {} } });
     return id2;
   }
@@ -55661,12 +43758,12 @@ label {
     return true;
   }
   function addCategory(settings, selection, label2, description) {
-    const source2 = currentSource2(settings, selection);
+    const source2 = currentSource(settings, selection);
     if (!isThemeCatalogEditable(source2)) {
       return;
     }
     const number = source2.categories.length + 1;
-    const id2 = uniqueId2(`${source2.id}-category-${number}`, new Set(source2.categories.map((item) => item.id)));
+    const id2 = uniqueId(`${source2.id}-category-${number}`, new Set(source2.categories.map((item) => item.id)));
     const category = {
       id: id2,
       label: label2?.trim() || `New group ${number}`,
@@ -55677,7 +43774,7 @@ label {
     return { sourceId: source2.id, category };
   }
   function updateCategory(settings, selection, label2, description) {
-    const source2 = currentSource2(settings, selection);
+    const source2 = currentSource(settings, selection);
     const category = currentCategory(settings, selection);
     const normalized = label2.trim();
     if (!source2 || !category || !isThemeCatalogEditable(source2) || !normalized) {
@@ -55688,14 +43785,14 @@ label {
     return { sourceId: source2.id, category };
   }
   function addToken(settings, selection, draft) {
-    const source2 = currentSource2(settings, selection);
+    const source2 = currentSource(settings, selection);
     const category = currentCategory(settings, selection);
     if (!isThemeCatalogEditable(source2) || !category) {
       return false;
     }
     const existingNames = new Set(settings.sources.flatMap((item) => item.categories.flatMap((entry2) => entry2.tokens.flatMap((token) => [token.id, token.variable]))));
     const number = settings.sources.filter(isThemeCatalogEditable).flatMap((item) => item.categories).reduce((count, item) => count + item.tokens.length, 0) + 1;
-    const id2 = uniqueId2(`site-variable-${number}`, existingNames);
+    const id2 = uniqueId(`site-variable-${number}`, existingNames);
     category.tokens.push({
       id: id2,
       variable: id2,
@@ -55706,7 +43803,7 @@ label {
     return true;
   }
   function updateToken(settings, selection, tokenId, label2, description) {
-    const source2 = currentSource2(settings, selection);
+    const source2 = currentSource(settings, selection);
     const token = currentToken(settings, selection, tokenId);
     const normalized = label2.trim();
     if (!isThemeCatalogEditable(source2) || !token || !normalized) {
@@ -55717,7 +43814,7 @@ label {
     return true;
   }
   function removeToken(settings, selection, tokenId) {
-    const source2 = currentSource2(settings, selection);
+    const source2 = currentSource(settings, selection);
     const category = currentCategory(settings, selection);
     if (!isThemeCatalogEditable(source2) || !category) {
       return false;
@@ -55731,7 +43828,7 @@ label {
     return true;
   }
   function removeCategory(settings, selection) {
-    const source2 = currentSource2(settings, selection);
+    const source2 = currentSource(settings, selection);
     const category = currentCategory(settings, selection);
     if (!isThemeCatalogEditable(source2) || !category) {
       return;
@@ -55760,7 +43857,7 @@ label {
     };
   }
   function resetTokenValue(settings, selection, selectedThemeId, mode, tokenId) {
-    const source2 = currentSource2(settings, selection);
+    const source2 = currentSource(settings, selection);
     const token = source2?.categories.flatMap((category) => category.tokens).find((item) => item.id === tokenId);
     const theme = currentTheme(settings, selectedThemeId);
     if (!source2 || !token || !theme) {
@@ -55781,7 +43878,7 @@ label {
       }
     }
   }
-  function uniqueId2(base, existing) {
+  function uniqueId(base, existing) {
     let value2 = base;
     let suffix = 2;
     while (existing.has(value2)) {
@@ -55966,7 +44063,7 @@ label {
     unit.className = "length-unit";
     unit.dataset.lengthUnit = "true";
     unit.setAttribute("aria-label", `${token.label} unit`);
-    unit.append(option4("", "Unitless"), ...LENGTH_UNITS.map((value3) => option4(value3, value3)), option4("advanced", "CSS expression"));
+    unit.append(option3("", "Unitless"), ...LENGTH_UNITS.map((value3) => option3(value3, value3)), option3("advanced", "CSS expression"));
     unit.setAttribute("value", parsed?.unit ?? "advanced");
     unit.value = parsed?.unit ?? "advanced";
     const advanced = textControl(token, value2, "text", "calc(100% - 2rem)");
@@ -55997,12 +44094,12 @@ label {
     input.setAttribute("aria-label", `${token.label} ${controlLabel(token.type)}`);
     input.setAttribute("creatable", "");
     input.setAttribute("placeholder", placeholder);
-    input.append(...presets.map(([label2, value3]) => option4(value3, label2)));
+    input.append(...presets.map(([label2, value3]) => option3(value3, label2)));
     input.setAttribute("value", value2);
     input.value = value2;
     return input;
   }
-  function option4(value2, label2) {
+  function option3(value2, label2) {
     const item = document.createElement("option");
     item.value = value2;
     item.textContent = label2;
@@ -56035,17 +44132,17 @@ label {
     input.setAttribute("aria-label", `Reference for ${token.label}`);
     input.setAttribute("placeholder", "Select a variable");
     const entries = themeTokenEntries(settings);
-    const options2 = referenceEntries(token, settings, theme, mode, entries);
-    input.append(...options2.map(referenceOption));
+    const options = referenceEntries(token, settings, theme, mode, entries);
+    input.append(...options.map(referenceOption));
     const reference = parseDirectTokenReference(value2);
     if (reference) {
       const current = entries.find((entry2) => entry2.token.variable === reference.variable);
-      if (!options2.some((entry2) => `var(--${entry2.token.variable})` === value2)) {
+      if (!options.some((entry2) => `var(--${entry2.token.variable})` === value2)) {
         input.prepend(currentReferenceOption(value2, current));
       }
       input.setAttribute("value", value2);
       input.value = value2;
-    } else if (options2.length === 0) {
+    } else if (options.length === 0) {
       input.setAttribute("disabled", "");
       input.setAttribute("placeholder", "No compatible variables");
     }
@@ -56062,16 +44159,16 @@ label {
     return entries.filter((entry2) => canReferenceThemeToken(settings, theme, mode, token.id, entry2.token.id));
   }
   function referenceOption(entry2) {
-    const option5 = document.createElement("option");
-    option5.value = `var(--${entry2.token.variable})`;
-    option5.textContent = referenceLabel(entry2);
-    return option5;
+    const option4 = document.createElement("option");
+    option4.value = `var(--${entry2.token.variable})`;
+    option4.textContent = referenceLabel(entry2);
+    return option4;
   }
   function currentReferenceOption(value2, entry2) {
-    const option5 = document.createElement("option");
-    option5.value = value2;
-    option5.textContent = entry2 ? referenceLabel(entry2) : "Unavailable reference";
-    return option5;
+    const option4 = document.createElement("option");
+    option4.value = value2;
+    option4.textContent = entry2 ? referenceLabel(entry2) : "Unavailable reference";
+    return option4;
   }
   function referenceLabel(entry2) {
     return `${entry2.source.label} · ${entry2.category.label} · ${entry2.token.label}`;
@@ -56325,7 +44422,7 @@ label {
   function control2(host, selector) {
     return host.querySelector(selector);
   }
-  function setText3(host, selector, value2) {
+  function setText(host, selector, value2) {
     const element = host.querySelector(selector);
     if (element) {
       element.textContent = value2;
@@ -56385,8 +44482,8 @@ label {
       type.value = token?.type ?? "color";
       type.hidden = groupAction;
       type.toggleAttribute("disabled", action === "edit-token");
-      setText3(this.host, "[data-site-variable-editor-title]", `${creating ? "New" : "Edit"} ${groupAction ? "group" : "variable"}`);
-      setText3(this.host, "[data-site-variable-editor-submit]", creating ? "Create" : "Save");
+      setText(this.host, "[data-site-variable-editor-title]", `${creating ? "New" : "Edit"} ${groupAction ? "group" : "variable"}`);
+      setText(this.host, "[data-site-variable-editor-submit]", creating ? "Create" : "Save");
       closeModal(this.host, "[data-site-variable-catalog-modal]");
       openModal(this.host, "[data-site-variable-editor-modal]");
       queueMicrotask(() => control2(this.host, "[data-site-variable-name]").focus());
@@ -56469,8 +44566,8 @@ label {
       const category = source2?.categories.find(({ id: id2 }) => id2 === selection.categoryId);
       const token = category?.tokens.find(({ id: id2 }) => id2 === tokenId);
       this.removal = { kind, selection, ...kind === "token" ? { tokenId } : {} };
-      setText3(this.host, "[data-site-variable-remove-title]", `Delete ${kind}`);
-      setText3(this.host, "[data-site-variable-remove-copy]", kind === "group" ? `Delete “${category?.label ?? "this group"}” and all its variables?` : `Delete “${token?.label ?? "this variable"}” from every theme?`);
+      setText(this.host, "[data-site-variable-remove-title]", `Delete ${kind}`);
+      setText(this.host, "[data-site-variable-remove-copy]", kind === "group" ? `Delete “${category?.label ?? "this group"}” and all its variables?` : `Delete “${token?.label ?? "this variable"}” from every theme?`);
       closeModal(this.host, "[data-site-variable-catalog-modal]");
       openModal(this.host, "[data-site-variable-remove-modal]");
     }
@@ -56516,8 +44613,8 @@ label {
     root.append(add);
   }
   function group(sourceId, category, categoryCount) {
-    const section2 = document.createElement("section");
-    section2.className = "site-variable-group";
+    const section = document.createElement("section");
+    section.className = "site-variable-group";
     const header = document.createElement("header");
     const copy = document.createElement("div");
     const title = document.createElement("h3");
@@ -56528,12 +44625,12 @@ label {
     const actions = document.createElement("div");
     actions.append(action("Add variable", "create-token", sourceId, category.id), action("Edit group", "edit-group", sourceId, category.id), action("Delete group", "remove-group", sourceId, category.id, categoryCount <= 1, "danger"));
     header.append(copy, actions);
-    section2.append(header);
+    section.append(header);
     if (category.tokens.length === 0) {
       const empty3 = document.createElement("p");
       empty3.className = "site-variable-empty";
       empty3.textContent = "No variables in this group.";
-      section2.append(empty3);
+      section.append(empty3);
     } else {
       const list = document.createElement("div");
       list.className = "site-variable-list";
@@ -56545,14 +44642,14 @@ label {
         label2.textContent = token.label;
         description2.textContent = token.description;
         details.append(label2, description2);
-        const rowActions2 = document.createElement("div");
-        rowActions2.append(action("Edit", "edit-token", sourceId, category.id, false, undefined, token.id), action("Delete", "remove-token", sourceId, category.id, false, "danger", token.id));
-        row.append(details, rowActions2);
+        const rowActions = document.createElement("div");
+        rowActions.append(action("Edit", "edit-token", sourceId, category.id, false, undefined, token.id), action("Delete", "remove-token", sourceId, category.id, false, "danger", token.id));
+        row.append(details, rowActions);
         list.append(row);
       }
-      section2.append(list);
+      section.append(list);
     }
-    return section2;
+    return section;
   }
   function action(label2, actionName, sourceId, categoryId, disabled = false, color, tokenId) {
     const button = document.createElement("p9r-button");
@@ -56654,10 +44751,10 @@ label {
     theme.values[context.mode] ??= {};
     theme.values[context.mode][tokenId] = value2;
     if (input.type === "color") {
-      const text4 = input.closest("[data-token-id]")?.querySelector("[data-token-value-control]");
-      if (text4) {
-        text4.value = input.value;
-        text4.setAttribute("value", input.value);
+      const text3 = input.closest("[data-token-id]")?.querySelector("[data-token-value-control]");
+      if (text3) {
+        text3.value = input.value;
+        text3.setAttribute("value", input.value);
       }
     }
   }
@@ -56875,7 +44972,7 @@ label {
 `;
 
   // src/components/admin/Resources/Blocs/workspace/ThemeEditing/style.css
-  var style_default30 = `:host {
+  var style_default25 = `:host {
     display: block;
     min-width: 0;
     container: theme-editor / inline-size;
@@ -56986,7 +45083,7 @@ label {
 `;
 
   // src/components/admin/Resources/Blocs/workspace/ThemeEditing/template.html
-  var template_default39 = `<p class="editor-status" data-status role="status" aria-live="polite">Loading values…</p>
+  var template_default32 = `<p class="editor-status" data-status role="status" aria-live="polite">Loading values…</p>
 <div class="editor" data-editor hidden>
     <p9r-segmented-switch data-value-mode value="light" aria-label="Select the value mode">
         <option value="light">Light</option>
@@ -57020,7 +45117,7 @@ label {
   function renderTokenEditor(root, settings, variable, themeId = settings.activeThemeId) {
     const entry2 = themeTokenEntries(settings).find(({ token }) => token.variable === variable);
     const theme = settings.themes.find(({ id: id2 }) => id2 === themeId);
-    const editor = query4(root, "[data-editor]");
+    const editor = query3(root, "[data-editor]");
     if (!entry2 || !theme) {
       editor.hidden = true;
       setEditorStatus(root, "This value is unavailable.", true);
@@ -57033,35 +45130,35 @@ label {
     return { entry: entry2, settings, theme };
   }
   function setEditorStatus(root, message, error = false) {
-    const status = query4(root, "[data-status]");
+    const status = query3(root, "[data-status]");
     status.textContent = message;
     status.hidden = !message;
     status.toggleAttribute("data-error", error);
   }
   function renderMode(root, settings, theme, entry2, mode) {
-    const container = query4(root, `[data-mode-controls="${mode}"]`);
+    const container = query3(root, `[data-mode-controls="${mode}"]`);
     const controls = renderTokenControls(entry2.token, settings, theme, mode);
     controls.dataset.tokenId = entry2.token.id;
     container.replaceChildren(controls);
     const customized = Object.hasOwn(theme.values[mode] ?? {}, entry2.token.id);
-    const status = query4(root, `[data-mode-status="${mode}"]`);
+    const status = query3(root, `[data-mode-status="${mode}"]`);
     status.textContent = customized ? "Customized" : "Default";
     status.toggleAttribute("data-customized", customized);
     const value2 = effectiveTokenValue(entry2.token, theme, mode);
     const resolved = resolveThemeTokenValue(settings, theme, mode, entry2.token.id);
-    const resolvedValue = query4(root, `[data-resolved-value="${mode}"]`);
+    const resolvedValue = query3(root, `[data-resolved-value="${mode}"]`);
     resolvedValue.textContent = resolved.value;
     resolvedValue.hidden = !parseDirectTokenReference(value2);
     resolvedValue.toggleAttribute("data-error", resolved.state === "missing" || resolved.state === "cycle");
     if (mode === "dark") {
-      const fallback = query4(root, "[data-dark-fallback]");
+      const fallback = query3(root, "[data-dark-fallback]");
       const usesLightValue = !customized && entry2.token.defaults?.dark === undefined;
       fallback.hidden = !usesLightValue;
       container.hidden = usesLightValue;
       status.closest("header").hidden = usesLightValue;
     }
   }
-  function query4(root, selector) {
+  function query3(root, selector) {
     return root.querySelector(selector);
   }
 
@@ -57076,8 +45173,8 @@ label {
     constructor() {
       super({
         css: `${tokens_default}
-${style_default30}`,
-        template: template_default39
+${style_default25}`,
+        template: template_default32
       });
     }
     static get observedAttributes() {
@@ -57196,8 +45293,8 @@ ${style_default30}`,
       return true;
     }
     syncSelectedMode() {
-      for (const section2 of Array.from(this.shadowRoot.querySelectorAll("[data-theme-mode]"))) {
-        section2.hidden = section2.dataset.themeMode !== this.selectedMode;
+      for (const section of Array.from(this.shadowRoot.querySelectorAll("[data-theme-mode]"))) {
+        section.hidden = section.dataset.themeMode !== this.selectedMode;
       }
     }
     updateValue(event, rerender) {
@@ -57247,7 +45344,7 @@ ${style_default30}`,
   }
 
   // src/components/admin/Resources/Blocs/preview/style.css
-  var style_default31 = `:host {
+  var style_default26 = `:host {
     --_bloc-preview-inset: 0px;
 
     display: block;
@@ -57296,13 +45393,13 @@ iframe {
 `;
 
   // src/components/admin/Resources/Blocs/preview/template.html
-  var template_default40 = `<iframe loading="lazy" title="Read-only bloc preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
+  var template_default33 = `<iframe loading="lazy" title="Read-only bloc preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
 `;
 
   // src/components/admin/Resources/Blocs/preview/BlocPreview.ts
   class BlocPreview extends l {
     constructor() {
-      super({ css: style_default31, template: template_default40 });
+      super({ css: style_default26, template: template_default33 });
     }
     static get observedAttributes() {
       return ["src"];
@@ -57348,7 +45445,7 @@ iframe {
   customElements.define("cms-bloc-preview", BlocPreview);
 
   // src/components/admin/Resources/Blocs/icons/style.css
-  var style_default32 = `:host { display: inline-flex; width: 16px; height: 16px; flex: none; }
+  var style_default27 = `:host { display: inline-flex; width: 16px; height: 16px; flex: none; }
 svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 `;
 
@@ -57365,7 +45462,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
 
   class LibraryIcon extends l {
     constructor() {
-      super({ css: style_default32, template: '<svg viewBox="0 0 24 24" aria-hidden="true"><path/></svg>' });
+      super({ css: style_default27, template: '<svg viewBox="0 0 24 24" aria-hidden="true"><path/></svg>' });
     }
     static get observedAttributes() {
       return ["name"];
@@ -57381,12 +45478,12 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
 
   // src/core/content/collectionWorkspace/routes.ts
   var COLLECTION_WORKSPACE_SECTIONS = ["overview", "theme", "blocs", "texts"];
-  function collectionWorkspacePath(basePath2, collection, section2 = "overview") {
-    const root = `${normalizeBasePath(basePath2)}/admin/collections`;
-    return collection ? `${root}/${encodeURIComponent(collection)}/${section2}` : root;
+  function collectionWorkspacePath(basePath, collection, section = "overview") {
+    const root = `${normalizeBasePath(basePath)}/admin/collections`;
+    return collection ? `${root}/${encodeURIComponent(collection)}/${section}` : root;
   }
-  function collectionWorkspaceRouteFromPath(pathname, basePath2) {
-    const root = `${normalizeBasePath(basePath2)}/admin/collections`;
+  function collectionWorkspaceRouteFromPath(pathname, basePath) {
+    const root = `${normalizeBasePath(basePath)}/admin/collections`;
     const normalized = pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
     if (normalized === root) {
       return {};
@@ -57395,13 +45492,13 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
       return null;
     }
     const segments = normalized.slice(root.length + 1).split("/");
-    const section2 = segments[1] ?? "";
-    if (segments.length !== 2 || !isCollectionWorkspaceSection(section2)) {
+    const section = segments[1] ?? "";
+    if (segments.length !== 2 || !isCollectionWorkspaceSection(section)) {
       return null;
     }
     try {
       const collection = decodeURIComponent(segments[0] ?? "").trim();
-      return collection ? { collection, section: section2 } : null;
+      return collection ? { collection, section } : null;
     } catch {
       return null;
     }
@@ -57409,16 +45506,16 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
   function isCollectionWorkspaceSection(value2) {
     return COLLECTION_WORKSPACE_SECTIONS.includes(value2);
   }
-  function normalizeBasePath(basePath2) {
-    const normalized = basePath2.replace(/\/+$/, "");
+  function normalizeBasePath(basePath) {
+    const normalized = basePath.replace(/\/+$/, "");
     return normalized === "/" ? "" : normalized;
   }
 
   // src/components/admin/Resources/Blocs/workspace/controller/forms.ts
-  function configureWorkspaceForms(host, basePath2) {
-    configure(host, "[data-new-composition-form]", `${basePath2}/api/site-bloc as created`, `${basePath2}/editor/bloc?id={{ created.body.tag }}`);
-    configure(host, "[data-new-collection-form]", `${basePath2}/api/bloc/collections as created`, `${basePath2}/admin/collections/site:{{ created.body.id }}/overview`);
-    configure(host, "[data-collection-settings-form]", `${basePath2}/api/bloc/collections?id={{ workspace.collection.siteId }} as updated`, `${basePath2}/admin/collections/site:{{ updated.body.id }}/overview`);
+  function configureWorkspaceForms(host, basePath) {
+    configure(host, "[data-new-composition-form]", `${basePath}/api/site-bloc as created`, `${basePath}/editor/bloc?id={{ created.body.tag }}`);
+    configure(host, "[data-new-collection-form]", `${basePath}/api/bloc/collections as created`, `${basePath}/admin/collections/site:{{ created.body.id }}/overview`);
+    configure(host, "[data-collection-settings-form]", `${basePath}/api/bloc/collections?id={{ workspace.collection.siteId }} as updated`, `${basePath}/admin/collections/site:{{ updated.body.id }}/overview`);
   }
   function configure(host, selector, source2, redirect2) {
     const form = host.querySelector(selector);
@@ -57433,39 +45530,39 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
 
   // src/components/admin/Resources/Blocs/workspace/controller/navigation.ts
   function filterWorkspaceNavigation(menu, value2) {
-    const query5 = normalizeSearch(value2);
+    const query4 = normalizeSearch(value2);
     let visible = 0;
-    for (const section2 of Array.from(menu.querySelectorAll("w13c-lateral-menu-section"))) {
-      if (query5 && section2.dataset.searchOpen === undefined) {
-        section2.dataset.searchOpen = String(section2.hasAttribute("open"));
+    for (const section of Array.from(menu.querySelectorAll("w13c-lateral-menu-section"))) {
+      if (query4 && section.dataset.searchOpen === undefined) {
+        section.dataset.searchOpen = String(section.hasAttribute("open"));
       }
       let matches = 0;
       let retained = 0;
-      for (const item of Array.from(section2.querySelectorAll("w13c-lateral-menu-item"))) {
-        const match = !query5 || normalizeSearch(item.dataset.collectionNavName ?? item.textContent ?? "").includes(query5);
-        const retainCurrent = Boolean(query5) && item.hasAttribute("active") && !match;
+      for (const item of Array.from(section.querySelectorAll("w13c-lateral-menu-item"))) {
+        const match = !query4 || normalizeSearch(item.dataset.collectionNavName ?? item.textContent ?? "").includes(query4);
+        const retainCurrent = Boolean(query4) && item.hasAttribute("active") && !match;
         item.hidden = !match && !retainCurrent;
         item.toggleAttribute("data-search-current", retainCurrent);
         matches += Number(match);
         retained += Number(retainCurrent);
       }
-      section2.hidden = Boolean(query5) && matches === 0 && retained === 0;
+      section.hidden = Boolean(query4) && matches === 0 && retained === 0;
       visible += matches;
-      if (query5) {
-        section2.toggleAttribute("open", matches > 0 || retained > 0);
-      } else if (section2.dataset.searchOpen !== undefined) {
-        section2.toggleAttribute("open", section2.dataset.searchOpen === "true");
-        delete section2.dataset.searchOpen;
+      if (query4) {
+        section.toggleAttribute("open", matches > 0 || retained > 0);
+      } else if (section.dataset.searchOpen !== undefined) {
+        section.toggleAttribute("open", section.dataset.searchOpen === "true");
+        delete section.dataset.searchOpen;
       }
     }
-    menu.querySelector("[data-collection-nav-search-empty]")?.toggleAttribute("hidden", !query5 || visible > 0);
+    menu.querySelector("[data-collection-nav-search-empty]")?.toggleAttribute("hidden", !query4 || visible > 0);
   }
   function normalizeSearch(value2) {
     return value2.normalize("NFD").replaceAll(/[\u0300-\u036f]/g, "").trim().toLocaleLowerCase();
   }
 
   // src/components/admin/Resources/Blocs/workspace/controller/CollectionWorkspace.ts
-  var template22 = `<w13c-fixed-admin-layout data-collection-source>${chrome_default}${landing_default}${overview_default2}${theme_default2}${blocs_default}${texts_default2}</w13c-fixed-admin-layout>`;
+  var template19 = `<w13c-fixed-admin-layout data-collection-source>${chrome_default}${landing_default}${overview_default2}${theme_default2}${blocs_default}${texts_default2}</w13c-fixed-admin-layout>`;
 
   class CmsCollectionWorkspace extends HTMLElement {
     themeProfiles = new ThemeProfileController(this);
@@ -57473,7 +45570,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
     siteVariables = new SiteVariablesController(this);
     connectedCallback() {
       if (!this.hasAttribute("data-rendered")) {
-        this.innerHTML = `<style>${String(style_default16)}${String(theme_default)}${String(texts_default)}</style>${template22}`;
+        this.innerHTML = `<style>${String(style_default11)}${String(theme_default)}${String(texts_default)}</style>${template19}`;
         this.setAttribute("data-rendered", "");
       }
       this.configureRoute();
@@ -57489,35 +45586,35 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
       this.siteVariables.disconnect();
     }
     configureRoute() {
-      const basePath2 = getMetaBasePath();
-      const route2 = collectionWorkspaceRouteFromPath(window.location.pathname, basePath2);
+      const basePath = getMetaBasePath();
+      const route = collectionWorkspaceRouteFromPath(window.location.pathname, basePath);
       const source2 = this.querySelector("[data-collection-source]");
       const home = this.querySelector("[data-collections-home]");
-      home?.setAttribute("href", `${basePath2}/admin/collections`);
-      configureWorkspaceForms(this, basePath2);
-      if (!route2 || !source2) {
+      home?.setAttribute("href", `${basePath}/admin/collections`);
+      configureWorkspaceForms(this, basePath);
+      if (!route || !source2) {
         this.querySelector("[data-invalid-route]")?.removeAttribute("hidden");
         return;
       }
-      const query5 = [
-        ...route2.collection ? [`collection=${encodeURIComponent(route2.collection)}`] : [],
-        ...route2.section ? [`section=${route2.section}`] : [],
+      const query4 = [
+        ...route.collection ? [`collection=${encodeURIComponent(route.collection)}`] : [],
+        ...route.section ? [`section=${route.section}`] : [],
         "bloc=#{bloc}",
         "token=#{token}",
         "theme=#{theme}"
       ].join("&");
-      source2.setAttribute("cms-source", `${basePath2}/api/collections/workspace?${query5} as workspace`);
+      source2.setAttribute("cms-source", `${basePath}/api/collections/workspace?${query4} as workspace`);
       source2.setAttribute("cms-reload-on", "collection:changed bloc:changed theme:changed");
-      this.configureTabs(basePath2, route2.collection, route2.section);
-      home?.toggleAttribute("active", !route2.collection);
+      this.configureTabs(basePath, route.collection, route.section);
+      home?.toggleAttribute("active", !route.collection);
     }
-    configureTabs(basePath2, collection, active) {
+    configureTabs(basePath, collection, active) {
       this.querySelector("[data-collection-tabs]")?.toggleAttribute("hidden", !collection);
       for (const link of Array.from(this.querySelectorAll("[data-collection-section]"))) {
-        const section2 = link.dataset.collectionSection;
-        if (collection && section2 && isCollectionWorkspaceSection(section2)) {
-          link.setAttribute("href", collectionWorkspacePath(basePath2, collection, section2));
-          link.toggleAttribute("active", active === section2);
+        const section = link.dataset.collectionSection;
+        if (collection && section && isCollectionWorkspaceSection(section)) {
+          link.setAttribute("href", collectionWorkspacePath(basePath, collection, section));
+          link.toggleAttribute("active", active === section);
         }
       }
     }
@@ -57540,7 +45637,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
   }
 
   // src/components/editorSystemV2/shellSetup.ts
-  async function configureShellCatalogAndFrame(shell, options2 = {}) {
+  async function configureShellCatalogAndFrame(shell, options = {}) {
     const [catalog, dataSources, settings] = await Promise.all([
       loadEditorCatalog(),
       fetchJson("editor/sources", []),
@@ -57549,7 +45646,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
     shell.setCatalog(catalog);
     shell.setDataSources(dataSources);
     setThemeTokens(shell, settings);
-    if (options2.frame === false) {
+    if (options.frame === false) {
       return;
     }
     const documentId = currentPageIdentifier();
@@ -57610,8 +45707,8 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
     });
   }
   function siteBlocFrameUrl(tag, mode, revision, nonce) {
-    const query5 = new URLSearchParams({ id: tag, mode, revision: String(revision), nonce: String(nonce) });
-    return `${getMetaBasePath()}/api/site-bloc/frame?${query5}`;
+    const query4 = new URLSearchParams({ id: tag, mode, revision: String(revision), nonce: String(nonce) });
+    return `${getMetaBasePath()}/api/site-bloc/frame?${query4}`;
   }
   function siteBlocUrl(path, tag) {
     return `${getMetaBasePath()}/api/${path}?id=${encodeURIComponent(tag)}`;
@@ -57651,8 +45748,8 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
     }
     setDefinition(definition) {
       const collection = encodeURIComponent(`site:${definition.collectionId ?? "site"}`);
-      const query5 = new URLSearchParams({ bloc: definition.tag });
-      this.shell.setAttribute("back-href", `${getMetaBasePath()}/admin/collections/${collection}/blocs?${query5}`);
+      const query4 = new URLSearchParams({ bloc: definition.tag });
+      this.shell.setAttribute("back-href", `${getMetaBasePath()}/admin/collections/${collection}/blocs?${query4}`);
       const archive = this.chromeButton('[data-action="delete"]');
       if (archive) {
         archive.textContent = definition.lifecycle === "archived" ? "Restore" : "Archive";
@@ -58126,7 +46223,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
   }
 
   // src/components/editorSystemV2/siteBloc/template.html
-  var template_default41 = `<div class="builder" aria-busy="true">
+  var template_default34 = `<div class="builder" aria-busy="true">
     <div class="feedback">
         <p class="status" data-status role="status" aria-live="polite">Loading bloc…</p>
         <p class="error" data-error role="alert" hidden></p>
@@ -58151,7 +46248,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
 `;
 
   // src/components/editorSystemV2/siteBloc/style.css
-  var style_default33 = `:host {
+  var style_default28 = `:host {
     --builder-accent: #165f4b;
     --builder-border: #dfe5e2;
     --builder-muted: #697873;
@@ -58198,15 +46295,15 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/editorSystemV2/siteBloc/SiteBlocBuilder.ts
-  var template23 = document.createElement("template");
-  template23.innerHTML = `<style>${String(style_default33)}</style>${String(template_default41)}`;
+  var template20 = document.createElement("template");
+  template20.innerHTML = `<style>${String(style_default28)}</style>${String(template_default34)}`;
 
   class SiteBlocBuilder extends HTMLElement {
     controller;
     constructor() {
       super();
       const root = this.attachShadow({ mode: "open" });
-      root.append(template23.content.cloneNode(true));
+      root.append(template20.content.cloneNode(true));
       this.controller = new SiteBlocBuilderController(this, root);
     }
     connectedCallback() {
@@ -58338,7 +46435,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/CardMedia/template.html
-  var template_default42 = `<div class="card">
+  var template_default35 = `<div class="card">
     <div class="preview">
         <slot name="image">
             <span class="placeholder">
@@ -58360,7 +46457,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default34 = `:host {
+  var style_default29 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -58485,8 +46582,8 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class CardMedia extends l {
     constructor() {
       super({
-        css: style_default34,
-        template: template_default42
+        css: style_default29,
+        template: template_default35
       });
     }
   }
@@ -58495,7 +46592,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/CropSystem/template.html
-  var template_default43 = `<div class="backdrop" id="backdrop">
+  var template_default36 = `<div class="backdrop" id="backdrop">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="crop-title">
         <div class="header">
             <h3 id="crop-title">Crop image</h3>
@@ -58534,7 +46631,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/CropSystem/styles/controls.css
-  var controls_default2 = `.ratio-buttons {
+  var controls_default = `.ratio-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
@@ -58738,9 +46835,9 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class CropSystem extends l {
     constructor() {
       super({
-        css: [layout_default3, controls_default2].join(`
+        css: [layout_default3, controls_default].join(`
 `),
-        template: template_default43
+        template: template_default36
       });
     }
     connectedCallback() {
@@ -58778,7 +46875,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/components/media/DetailMedia/template.html
-  var template_default44 = `<div class="backdrop" id="backdrop">
+  var template_default37 = `<div class="backdrop" id="backdrop">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="title">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -59037,7 +47134,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       super({
         css: [layout_default4, tools_default].join(`
 `),
-        template: template_default44
+        template: template_default37
       });
     }
     connectedCallback() {
@@ -59071,7 +47168,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/GridMedia/view/template.html
-  var template_default45 = `<div class="toolbar">
+  var template_default38 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -59345,7 +47442,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/GridMedia/view/styles/navigation.css
-  var navigation_default3 = `:host {
+  var navigation_default = `:host {
     --grid-gap: 16px;
     --grid-min-col: 180px;
     --grid-max-col: 240px;
@@ -59963,7 +48060,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
     const isImage2 = item.type === "image" || item.mimetype === "image/svg+xml";
     const size = item.size ? formatSize(item.size) : "";
     const dims = item.width && item.height ? `${item.width}×${item.height}` : "";
-    const mediaUrl2 = item.absoluteURL ?? "";
+    const mediaUrl = item.absoluteURL ?? "";
     const el = document.createElement("div");
     el.slot = "fields";
     el.innerHTML = `
@@ -59994,14 +48091,14 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
         <div class="detail-field">
             <label>URL</label>
             <div class="url-row">
-                <span class="detail-value mono">${escapeHtml2(mediaUrl2)}</span>
+                <span class="detail-value mono">${escapeHtml2(mediaUrl)}</span>
                 <button class="btn-copy" id="btn-copy" type="button" title="Copy URL" aria-label="Copy media URL">${ICON_COPY}</button>
             </div>
         </div>
     `;
     const copyBtn = el.querySelector("#btn-copy");
     copyBtn.addEventListener("click", () => {
-      navigator.clipboard.writeText(mediaUrl2);
+      navigator.clipboard.writeText(mediaUrl);
       copyBtn.innerHTML = ICON_CHECK;
       setTimeout(() => {
         copyBtn.innerHTML = ICON_COPY;
@@ -60185,9 +48282,9 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
     _items = [];
     constructor() {
       super({
-        css: [navigation_default3, interactions_default, detail_default].join(`
+        css: [navigation_default, interactions_default, detail_default].join(`
 `),
-        template: template_default45
+        template: template_default38
       });
     }
     get detail() {
@@ -60339,7 +48436,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/MediaCenter/template.html
-  var template_default46 = `<dialog>
+  var template_default39 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
             <h2>Media Center</h2>
@@ -60925,7 +49022,7 @@ dialog::backdrop {
       super({
         css: [chrome_default2, content_default2, folder_default].join(`
 `),
-        template: template_default46
+        template: template_default39
       });
     }
     connectedCallback() {
@@ -61285,7 +49382,6 @@ dialog::backdrop {
   define("cms-page-delete", PageDelete);
   define("cms-page-detail-sync", PageDetailSync);
   Im({
-    ...dashboardDisplayFilters,
     json: (value2) => value2 === undefined ? undefined : JSON.stringify(value2),
     jsonurl: (value2) => value2 === undefined ? undefined : encodeURIComponent(JSON.stringify(value2)),
     lines: (value2) => Array.isArray(value2) ? value2.join(`
@@ -61340,10 +49436,4 @@ dialog::backdrop {
   define("p9r-line-chart", sd);
   define("p9r-bar-list", cd);
   define("p9r-range-tabs", hd);
-  define("cms-dashboard-admin-styles", CmsDashboardAdminStyles);
-  define("cms-dashboard-admin-nav", CmsDashboardAdminNav);
-  define("cms-dashboard-icon", CmsDashboardIcon);
-  define("cms-dashboard-create-controller", CmsDashboardCreateController);
-  define("cms-dashboard-member-filter", CmsDashboardMemberFilter);
-  define("cms-dashboard-navigation-editor", CmsDashboardNavigationEditor);
 })();

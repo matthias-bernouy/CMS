@@ -1,8 +1,0 @@
-<template data-reorderable="row"><cms-dashboard-reorderable-row class="row" slot="row" data-index="{{ choice.index }}" data-item-key="{{ choice.identity }}"></cms-dashboard-reorderable-row></template>
-<template data-reorderable="cell"><cms-dashboard-reorderable-cell></cms-dashboard-reorderable-cell></template>
-<template data-reorderable="toolbar"><cms-dashboard-reorderable-toolbar><span class="handle" draggable="true" title="Drag to reorder" aria-label="Drag to reorder">⠿</span><span class="identity">{{ choice.title }}</span></cms-dashboard-reorderable-toolbar></template>
-<template data-reorderable="handle"><span class="handle" draggable="true" title="Drag to reorder" aria-label="Drag to reorder">⠿</span></template>
-<template data-reorderable="remove"><button class="remove" type="button" data-remove="{{ choice.index }}" title="Remove item" aria-label="Remove item">×</button></template>
-<template data-reorderable="add"><button class="add" type="button" data-add slot="add"></button></template>
-<template data-reorderable="settings"><cms-dashboard-reorderable-settings></cms-dashboard-reorderable-settings></template>
-<template data-reorderable="option"><option value="{{ choiceOption.value }}">{{ choiceOption.label }}</option></template>

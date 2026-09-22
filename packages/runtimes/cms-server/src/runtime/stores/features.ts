@@ -1,10 +1,6 @@
 import { BufferedEndpointPerformanceRecorder, ValidatingAnalyticsStore } from "@bernouy/cms-analytics";
 import { MongoAnalyticsStore, MongoEndpointPerformanceStore } from "@bernouy/cms-analytics/mongo";
-import {
-    MongoDashboardAssignmentRepository,
-    MongoDashboardRepository,
-    MongoDashboardViewRepository,
-} from "@bernouy/cms-dashboards/mongo";
+import { MongoDashboardAssignmentRepository } from "@bernouy/cms-dashboards/mongo";
 import { MongoIdentityService } from "@bernouy/cms-identities/mongo";
 import { createSecretResolver, type SecretStore } from "@bernouy/cms-secrets";
 import {
@@ -30,10 +26,6 @@ export async function createFeatureStores(db: Db, secrets: SecretStore, options:
     );
     const identities = new MongoIdentityService(db);
     await identities.init();
-    const dashboards = new MongoDashboardRepository(db);
-    await dashboards.init();
-    const dashboardViews = new MongoDashboardViewRepository(db);
-    await dashboardViews.init();
     const dashboardAssignments = new MongoDashboardAssignmentRepository(db);
     await dashboardAssignments.init();
 
@@ -49,8 +41,6 @@ export async function createFeatureStores(db: Db, secrets: SecretStore, options:
     return {
         sources,
         identities,
-        dashboards,
-        dashboardViews,
         dashboardAssignments,
         analytics,
         endpointPerformanceRecorder,

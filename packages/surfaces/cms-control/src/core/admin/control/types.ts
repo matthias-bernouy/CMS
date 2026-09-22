@@ -10,11 +10,7 @@ import type {
 } from "@bernouy/cms-auth";
 import type { AnalyticsComplianceContext, AnalyticsStore, EndpointPerformanceReports } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
-import type {
-    DashboardAssignmentRepository,
-    DashboardRepository,
-    DashboardViewRepository,
-} from "@bernouy/cms-dashboards";
+import type { DashboardAssignmentRepository } from "@bernouy/cms-dashboards";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { IdentityService } from "@bernouy/cms-identities";
 import type { SecretStore } from "@bernouy/cms-secrets";
@@ -28,8 +24,6 @@ type Configuration = {
 };
 
 export type ControlCmsOptions = Configuration & {
-    dashboards?: DashboardRepository;
-    dashboardViews?: DashboardViewRepository;
     dashboardAssignments?: DashboardAssignmentRepository;
     identities?: IdentityService;
     endpointPerformanceReports?: EndpointPerformanceReports;
@@ -62,8 +56,6 @@ export type ControlCmsState = {
     credentials: LocalCredentialStore | null;
     sources: SourceRepository | null;
     analytics: AnalyticsStore | null;
-    dashboards: DashboardRepository;
-    dashboardViews: DashboardViewRepository;
     dashboardAssignments: DashboardAssignmentRepository;
     identities: IdentityService;
 };
