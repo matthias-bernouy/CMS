@@ -1,7 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { siteBlocTag } from "cms-control/core/content/siteBloc/dto";
 import { blocPreview } from "cms-control/core/content/bloc/preview/render";
-import { generateStyleEntry } from "@bernouy/cms-content";
+import { createContentReader, generateStyleEntry } from "@bernouy/cms-content";
 import editorComponentGet from "cms-control/api/editor/component.js.get";
 import editorBindingCoreGet from "cms-control/api/editor/binding-core.js.get";
 
@@ -15,7 +15,7 @@ export default async function getBlocPreview(req: Request, cms: ControlCms): Pro
     const [component, bindings, style] = await Promise.all([
         editorComponentGet(identityRequest, cms).then((response) => response.text()),
         editorBindingCoreGet(identityRequest, cms).then((response) => response.text()),
-        generateStyleEntry(cms.repository),
+        generateStyleEntry(createContentReader(cms.repository)),
     ]);
     return blocPreview(cms.repository, tag, basePath, {
         scripts: [component, bindings],

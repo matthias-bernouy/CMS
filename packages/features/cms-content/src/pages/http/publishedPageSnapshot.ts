@@ -1,9 +1,5 @@
 import type { ContentReader } from "cms-content/application/interfaces/ContentReader";
-import {
-    isPublishedPage,
-    publishedPageSnapshot,
-    serializePublishedPageSnapshot,
-} from "cms-content/pages/core/lifecycle/publication";
+import { publishedPageSnapshot, serializePublishedPageSnapshot } from "cms-content/pages/core/lifecycle/publication";
 
 export const PUBLISHED_PAGE_SNAPSHOT_ROUTE = "/.cms/content/published-page-snapshot";
 export const PUBLISHED_PAGE_SNAPSHOT_SCHEMA = "cms-published-page-snapshot-v1";
@@ -18,7 +14,10 @@ export function publishedPageSnapshotUrl(deliveryBaseUrl: string, pageId: string
     return url.toString();
 }
 
-export async function servePublishedPageSnapshot(repository: ContentReader, request: Request): Promise<Response> {
+export async function servePublishedPageSnapshot(
+    repository: Pick<ContentReader, "getPublishedPageById">,
+    request: Request,
+): Promise<Response> {
     const pageId = new URL(request.url).searchParams.get("id");
     if (!pageId) {
         return json({ error: "Missing page id" }, 400);
@@ -27,8 +26,8 @@ export async function servePublishedPageSnapshot(repository: ContentReader, requ
         return json({ error: "Invalid page id" }, 400);
     }
 
-    const page = await repository.getPageById(pageId);
-    if (!isPublishedPage(page)) {
+    const page = await repository.getPublishedPageById(pageId);
+    if (!page) {
         return json({ error: "Published page not found" }, 404);
     }
 

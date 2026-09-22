@@ -1,5 +1,12 @@
 import type { AnalyticsEvent } from "@bernouy/cms-analytics";
-import { P9R_CACHE, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
+import {
+    createContentReader,
+    P9R_CACHE,
+    type CmsRepository,
+    type ContentReader,
+    type TPage,
+    type TSystem,
+} from "@bernouy/cms-content";
 import type { PublicPageProvider } from "@bernouy/cms-delivery";
 import type { CmsFilesBlobStore } from "@bernouy/cms-content/files";
 import type { SourceEndpointInterceptor, SourceRepository } from "@bernouy/cms-sources";
@@ -28,7 +35,7 @@ type HarnessOptions = Readonly<{
     sourceInterceptor?: SourceEndpointInterceptor;
     sitemapStore?: CmsFilesBlobStore;
     siteHost?: string;
-    repository?: ContentReader;
+    repository?: ContentReader | CmsRepository;
 }>;
 
 export function mountPublicPages(options: HarnessOptions = {}) {
@@ -47,19 +54,25 @@ export function mountPublicPages(options: HarnessOptions = {}) {
     const recorded = new Promise<void>((resolve) => {
         notifyRecorded = resolve;
     });
-    const repository: ContentReader = options.repository ?? {
-        getPage: async (path) => storedPages.find((page) => page.path === path) ?? null,
-        getAllPages: async () => storedPages,
-        getPublishedPage: async (path) => {
-            storedLookups.push(path);
-            return storedPages.find((page) => page.path === path) ?? null;
-        },
-        getPublishedPages: async () => storedPages,
-        getBlocsList: async () => [],
-        getBlocViewJS: async () => null,
-        getSystem: async () =>
-            options.siteHost === undefined ? SYSTEM : { ...SYSTEM, site: { ...SYSTEM.site, host: options.siteHost } },
-    };
+    const repository: ContentReader = options.repository
+        ? "resolvePublishedRoute" in options.repository
+            ? options.repository
+            : createContentReader(options.repository)
+        : {
+              getPublishedPage: async (path) => {
+                  storedLookups.push(path);
+                  return storedPages.find((page) => page.path === path) ?? null;
+              },
+              getPublishedPageById: async (id) => storedPages.find((page) => page.id === id) ?? null,
+              getPublishedPages: async () => storedPages,
+              resolvePublishedRoute: async () => null,
+              getRenderableBlocs: async () => [],
+              getBlocViewJS: async () => null,
+              getRenderingSettings: async () =>
+                  options.siteHost === undefined
+                      ? SYSTEM
+                      : { ...SYSTEM, site: { ...SYSTEM.site, host: options.siteHost } },
+          };
     const delivery = new DeliveryCms({
         runner,
         repository,

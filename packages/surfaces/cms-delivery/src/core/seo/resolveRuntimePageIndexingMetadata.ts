@@ -1,4 +1,4 @@
-import type { TPage } from "@bernouy/cms-content";
+import type { TPage } from "@bernouy/cms-content/rendering";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { executeDeliverySourceGet } from "cms-delivery/core/sources/executeDeliverySourceGet";
 import {

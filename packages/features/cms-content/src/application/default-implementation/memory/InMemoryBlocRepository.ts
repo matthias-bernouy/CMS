@@ -1,5 +1,5 @@
 import type { BlocListItemResponse } from "cms-content/application/interfaces/CmsRepository";
-import type { BlocListOptions } from "cms-content/application/interfaces/ContentReader";
+import type { BlocListOptions } from "cms-content/application/interfaces/CmsRepository";
 import type {
     BlocRecord,
     SiteBlocDefinition,

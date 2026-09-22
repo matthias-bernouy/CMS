@@ -98,7 +98,7 @@ describe("published page snapshot", () => {
 
 function repositoryWith(page: TPage): ContentReader {
     return {
-        getPageById: async (id: string) => (id === page.id ? structuredClone(page) : null),
+        getPublishedPageById: async (id: string) => (id === page.id && page.visible ? structuredClone(page) : null),
     } as ContentReader;
 }
 

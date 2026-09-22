@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { P9R_CACHE } from "@bernouy/cms-content";
+import { P9R_CACHE } from "@bernouy/cms-content/rendering";
 import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
 import type { ResponsiveSourceImageRollout } from "@bernouy/cms-source-images/browser-host";

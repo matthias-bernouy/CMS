@@ -115,7 +115,7 @@ export type {
 export {
     ENDPOINT_PICKER_METHODS,
     isEndpointPickerMethod,
-} from "cms-content/editor/interfaces/SettingInputs";
+} from "cms-content/editor/core/catalogue/endpointPicker";
 export type {
     EditorCatalog,
     EditorCatalogEntry,

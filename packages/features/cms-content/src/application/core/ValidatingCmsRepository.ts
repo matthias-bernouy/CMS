@@ -145,6 +145,9 @@ export class ValidatingCmsRepository implements CmsRepository {
     getPublishedPage(path: string) {
         return this.inner.getPublishedPage(path);
     }
+    getPublishedPageById(id: string) {
+        return this.inner.getPublishedPageById(id);
+    }
     getPublishedPages() {
         return this.inner.getPublishedPages();
     }

@@ -29,7 +29,7 @@ describe("Delivery robots", () => {
             ],
         });
         const repository = {
-            getSystem: async () => ({ site: { host: "https://canonical.test/store" } }),
+            getRenderingSettings: async () => ({ site: { host: "https://canonical.test/store" } }),
         } as ContentReader;
         new DeliveryCms({ runner, repository, sources });
 
@@ -62,7 +62,7 @@ describe("Delivery robots", () => {
 
     test("omits the sitemap declaration when the canonical host is not configured", async () => {
         const runner = new CaptureRunner();
-        const repository = { getSystem: async () => ({ site: { host: "" } }) } as ContentReader;
+        const repository = { getRenderingSettings: async () => ({ site: { host: "" } }) } as ContentReader;
         new DeliveryCms({ runner, repository });
 
         const response = await runner.endpointHandler(

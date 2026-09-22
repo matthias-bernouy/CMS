@@ -40,11 +40,16 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
             return null;
         }
         const page = await this.getPage(path);
-        return isPublishedPage(page) ? page : null;
+        return isPublishedPage(page) ? structuredClone(page) : null;
+    }
+
+    async getPublishedPageById(id: string): Promise<TPage | null> {
+        const page = await this.getPageById(id);
+        return isPublishedPage(page) ? structuredClone(page) : null;
     }
 
     async getPublishedPages(): Promise<TPage[]> {
-        return (await this.getAllPages()).filter(isPublishedPage);
+        return (await this.getAllPages()).filter(isPublishedPage).map((page) => structuredClone(page));
     }
 
     async insertPage(path: string, title: string, content = "<p></p>"): Promise<void> {

@@ -25,7 +25,7 @@ export default async function FaviconServer(req: Request, delivery: DeliveryCms)
 }
 
 async function configuredFavicon(req: Request, delivery: DeliveryCms): Promise<Response | null> {
-    const settings = await delivery.repository.getSystem();
+    const settings = await delivery.repository.getRenderingSettings();
     const fileId = mediaIdFromUrl(settings.site?.favicon?.trim() ?? "");
     const metadata = delivery.filesMetadataOrNull;
     const blob = delivery.filesBlobOrNull;

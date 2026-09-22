@@ -1,4 +1,4 @@
-import type { TPage } from "@bernouy/cms-content";
+import type { TPage } from "@bernouy/cms-content/rendering";
 
 /** A synthetic CMS page resolved by an adapter injected into Delivery. */
 export type PublicPageResolution = Readonly<{

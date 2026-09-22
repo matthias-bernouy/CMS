@@ -1,4 +1,4 @@
-import type { TSystem } from "@bernouy/cms-content";
+import type { RenderingSettings } from "@bernouy/cms-content/rendering";
 
 /**
  * HTML basics every page needs: `<html lang>` when a language is configured,
@@ -6,7 +6,7 @@ import type { TSystem } from "@bernouy/cms-content";
  * `defineMetaTags` (SEO-adjacent) because these are document-level defaults
  * the browser relies on to parse and lay out the page at all.
  */
-export function buildHtmlBasics(document: Document, head: HTMLElement, settings: TSystem): void {
+export function buildHtmlBasics(document: Document, head: HTMLElement, settings: RenderingSettings): void {
     const language = settings.site?.language?.trim() ?? "";
     if (language) {
         document.documentElement.setAttribute("lang", language);

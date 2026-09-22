@@ -1,4 +1,4 @@
-import { canonicalSiteBaseUrl, type TPage } from "@bernouy/cms-content";
+import { canonicalSiteBaseUrl, type TPage } from "@bernouy/cms-content/rendering";
 import type { SitemapStore } from "@bernouy/cms-content/files/serving";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { collectPublicPageProviderPaths } from "cms-delivery/core/pages/publicPagePaths";
@@ -37,7 +37,7 @@ export async function materializeSitemapSnapshot(
     signal?: AbortSignal,
 ): Promise<SitemapMaterializationResult> {
     const store = delivery.sitemapStore;
-    const settings = await delivery.repository.getSystem();
+    const settings = await delivery.repository.getRenderingSettings();
     const baseUrl = canonicalSiteBaseUrl(settings.site.host);
     if (!baseUrl) {
         if (typeof settings.site.host === "string" && settings.site.host.trim()) {
@@ -90,7 +90,7 @@ export async function storedSitemapLocations(
         }
     }
     for (const path of providerPaths) {
-        if (!blocked.has(path) && !(await delivery.repository.getPageRoute?.(path))) {
+        if (!blocked.has(path) && !(await delivery.repository.resolvePublishedRoute(path))) {
             locations.push({ location: path });
         }
     }

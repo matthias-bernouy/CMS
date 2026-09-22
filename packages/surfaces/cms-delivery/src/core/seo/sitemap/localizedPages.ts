@@ -1,4 +1,4 @@
-import { publicPagePath, type TPage, type TSystem } from "@bernouy/cms-content";
+import { publicPagePath, type RenderingSettings, type TPage } from "@bernouy/cms-content/rendering";
 import type { PageIndexingLocation } from "cms-delivery/core/seo/discoverPageIndexingLocations";
 
 type SitemapPathInfo = {
@@ -9,7 +9,7 @@ type SitemapPathInfo = {
 type SitemapAlternates = ReadonlyMap<string, SitemapPathInfo>;
 
 /** Expand one stored page into the public paths of its active languages. */
-export function localizedSitemapPages(pages: readonly TPage[], system: TSystem): TPage[] {
+export function localizedSitemapPages(pages: readonly TPage[], system: RenderingSettings): TPage[] {
     const active = new Set([system.site.language, ...(system.site.activeLanguages ?? [])]);
     return pages.flatMap((page) => {
         if (!page.paths) {
@@ -25,7 +25,7 @@ export function localizedSitemapPages(pages: readonly TPage[], system: TSystem):
 }
 
 /** Keep the same reciprocal alternate set for each indexable language variant. */
-export function localizedSitemapAlternates(pages: readonly TPage[], system: TSystem): SitemapAlternates {
+export function localizedSitemapAlternates(pages: readonly TPage[], system: RenderingSettings): SitemapAlternates {
     const active = new Set([system.site.language, ...(system.site.activeLanguages ?? [])]);
     const byPath = new Map<string, SitemapPathInfo>();
     for (const page of pages) {

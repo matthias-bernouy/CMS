@@ -8,6 +8,7 @@ import { createRuntimeSourceImageComposition } from "./sourceImageTelemetry";
 import { createRuntimeSourceImageWorkers } from "./stores/sourceImages";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
 import { composeSourceEndpointInterceptors } from "@bernouy/cms-sources";
+import { createContentReader } from "@bernouy/cms-content/rendering";
 
 export type { ProductionSurfaceRuntime } from "./surfaceRuntime";
 
@@ -113,7 +114,7 @@ export async function mountProductionSurfaces(
     const deliveryRunner = new runtime.Runner();
     const deliveryCms = new runtime.Delivery({
         runner: deliveryRunner,
-        repository: core.repo,
+        repository: createContentReader(core.repo),
         cache: core.cache,
         sources: features.sources,
         sourceTelemetry: sourceTelemetry.delivery,

@@ -26,8 +26,8 @@ function makeCtx(): RenderContext {
     };
     return {
         repository: {
-            getSystem: async () => system,
-            getBlocsList: async () => [],
+            getRenderingSettings: async () => system,
+            getRenderableBlocs: async () => [],
         } as unknown as ContentReader,
         resolveAssets: async () => ({
             componentUrl: "/.cms/assets/component.js?v=c",
@@ -76,12 +76,10 @@ describe("renderPage — binding core wrapper", () => {
     test("passes transitive composition dependencies to asset resolution", async () => {
         const ctx = makeCtx();
         const repository = ctx.repository as unknown as {
-            getBlocsList: (options?: { includeInactive?: boolean }) => Promise<{ id: string }[]>;
+            getRenderableBlocs: () => Promise<{ id: string }[]>;
             getBlocViewJS: (tag: string) => Promise<string | null>;
         };
-        let includedInactive = false;
-        repository.getBlocsList = async (options) => {
-            includedInactive = options?.includeInactive === true;
+        repository.getRenderableBlocs = async () => {
             return [{ id: "site-header" }, { id: "base-nav" }, { id: "base-link" }];
         };
         repository.getBlocViewJS = async (tag) =>
@@ -99,7 +97,6 @@ describe("renderPage — binding core wrapper", () => {
 
         await renderPage({ ...page, content: "<site-header></site-header>" }, ctx);
 
-        expect(includedInactive).toBe(true);
         expect(resolvedTags).toEqual(["base-link", "base-nav", "site-header"]);
     });
 

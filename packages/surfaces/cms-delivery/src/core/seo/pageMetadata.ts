@@ -4,9 +4,9 @@ import {
     type PageMetadataContext,
     type PageMetadataScope,
     type TPage,
-    type TSystem,
+    type RenderingSettings,
     pageSeoForLanguage,
-} from "@bernouy/cms-content";
+} from "@bernouy/cms-content/rendering";
 
 export type PageCanonicalIdentity = {
     queryParam: string;
@@ -33,7 +33,7 @@ export type ResolvedPageMetadata = {
 
 export function resolvePageMetadata(
     page: TPage,
-    settings: TSystem,
+    settings: RenderingSettings,
     runtime: PageRenderMetadata = {},
 ): ResolvedPageMetadata {
     const context: PageMetadataContext = {

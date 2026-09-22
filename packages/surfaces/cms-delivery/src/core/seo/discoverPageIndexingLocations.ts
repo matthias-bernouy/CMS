@@ -1,4 +1,4 @@
-import type { TPage } from "@bernouy/cms-content";
+import type { TPage } from "@bernouy/cms-content/rendering";
 import type { Source, SourceRepository } from "@bernouy/cms-sources";
 import {
     type IndexingDiscoveryExecutor,

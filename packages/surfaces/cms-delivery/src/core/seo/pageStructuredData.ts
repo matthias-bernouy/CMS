@@ -1,4 +1,8 @@
-import { canonicalSiteBaseUrl, projectPublicSiteOrganization, type TSystem } from "@bernouy/cms-content";
+import {
+    canonicalSiteBaseUrl,
+    projectPublicSiteOrganization,
+    type RenderingSettings,
+} from "@bernouy/cms-content/rendering";
 import type { ResolvedPageMetadata } from "cms-delivery/core/seo/pageMetadata";
 
 type JsonValue = string | number | boolean | JsonObject | JsonValue[];
@@ -7,7 +11,7 @@ type JsonObject = { [key: string]: JsonValue };
 export function definePageStructuredData(
     document: Document,
     head: HTMLElement,
-    settings: TSystem,
+    settings: RenderingSettings,
     metadata: ResolvedPageMetadata,
 ): void {
     const data = pageStructuredData(settings, metadata);
@@ -20,7 +24,7 @@ export function definePageStructuredData(
     head.appendChild(script);
 }
 
-export function pageStructuredData(settings: TSystem, metadata: ResolvedPageMetadata): JsonObject | null {
+export function pageStructuredData(settings: RenderingSettings, metadata: ResolvedPageMetadata): JsonObject | null {
     const host = canonicalSiteBaseUrl(settings.site.host);
     const canonicalUrl = metadata.canonicalUrl;
     if (!host || !canonicalUrl || metadata.robots?.includes("noindex")) {
@@ -47,7 +51,7 @@ export function pageStructuredData(settings: TSystem, metadata: ResolvedPageMeta
 
 function webPageNode(
     metadata: ResolvedPageMetadata,
-    settings: TSystem,
+    settings: RenderingSettings,
     websiteId: string,
     canonicalUrl: string,
 ): JsonObject {
@@ -63,7 +67,7 @@ function webPageNode(
     return result;
 }
 
-function websiteNode(settings: TSystem, homeUrl: string, hasOrganization: boolean): JsonObject {
+function websiteNode(settings: RenderingSettings, homeUrl: string, hasOrganization: boolean): JsonObject {
     const result: JsonObject = {
         "@type": "WebSite",
         "@id": `${homeUrl}#website`,
@@ -77,7 +81,7 @@ function websiteNode(settings: TSystem, homeUrl: string, hasOrganization: boolea
     return result;
 }
 
-function organizationNode(settings: TSystem, homeUrl: string): JsonObject | null {
+function organizationNode(settings: RenderingSettings, homeUrl: string): JsonObject | null {
     const organization = projectPublicSiteOrganization(settings);
     const name = organization.name.trim();
     if (!name) {

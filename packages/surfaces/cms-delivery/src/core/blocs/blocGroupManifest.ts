@@ -1,9 +1,9 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { createBlocUsageResolver } from "@bernouy/cms-content";
+import { createBlocUsageResolver } from "@bernouy/cms-content/rendering";
 import { groupBlocsBySignature, type BlocGroups } from "cms-delivery/core/blocs/groupBlocsBySignature";
 
 /**
- * Lazy, TTL-cached signature grouping of every bloc across all stored pages.
+ * Lazy, TTL-cached signature grouping of every bloc across published pages.
  *
  * The grouping is derived from real usage: each page's bloc set is computed
  * exactly as `renderPage` does, then `groupBlocsBySignature` buckets blocs by
@@ -46,10 +46,7 @@ export function getBlocGroupManifest(delivery: DeliveryCms): Promise<BlocGroups>
 
 async function computeBlocGroupManifest(delivery: DeliveryCms): Promise<BlocGroups> {
     const repository = delivery.repository;
-    const [pages, blocList] = await Promise.all([
-        repository.getAllPages(),
-        repository.getBlocsList({ includeInactive: true }),
-    ]);
+    const [pages, blocList] = await Promise.all([repository.getPublishedPages(), repository.getRenderableBlocs()]);
 
     const resolveUsage = createBlocUsageResolver(blocList, repository);
     const pageBlocSets = await Promise.all(pages.map((page) => resolveUsage(page.content)));

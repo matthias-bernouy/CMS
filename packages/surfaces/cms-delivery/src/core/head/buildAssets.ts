@@ -1,5 +1,5 @@
 import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
-import { buildBlocFoucShellCss } from "@bernouy/cms-content";
+import { buildBlocFoucShellCss } from "@bernouy/cms-content/rendering";
 
 /**
  * Preload the stylesheet + every bloc/runtime script as early as possible.

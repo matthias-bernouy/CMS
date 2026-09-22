@@ -1,4 +1,4 @@
-import type { TPage } from "@bernouy/cms-content";
+import type { TPage } from "@bernouy/cms-content/rendering";
 import { projectResolvedIndexingEntity, type SourceRepository } from "@bernouy/cms-sources";
 import type { PageRenderMetadata } from "cms-delivery/core/seo/pageMetadata";
 

@@ -4,7 +4,7 @@ import {
     type PublicAuthRoutesConfig,
     type Subject,
 } from "@bernouy/cms-auth";
-import { executeSiteSystemSourceEndpoint } from "@bernouy/cms-content";
+import { createContentReader, executeSiteSystemSourceEndpoint } from "@bernouy/cms-content";
 import {
     CMS_SOURCES_ROUTE,
     SOURCE_PROXY_METHODS,
@@ -43,7 +43,7 @@ export function mountControlSourceProxy(
                     const scope = createControlSourceRequestScope(state, configuration, req, resolveSubject);
                     const executeSystemEndpoint = async (endpoint: SourceEndpoint, request: Request) => {
                         if (endpoint.urn.startsWith(`${SYSTEM_SITE_SOURCE_URN}:`)) {
-                            return executeSiteSystemSourceEndpoint(state.repository, endpoint);
+                            return executeSiteSystemSourceEndpoint(createContentReader(state.repository), endpoint);
                         }
                         if (controlPublicAuth) {
                             return executeAuthSystemSourceEndpoint(controlPublicAuth, endpoint, request);

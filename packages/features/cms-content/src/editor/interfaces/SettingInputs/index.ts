@@ -26,10 +26,6 @@ export type {
     EndpointPickerMethod,
     EndpointPickerSetting,
 } from "cms-content/editor/interfaces/SettingInputs/references/endpointPicker";
-export {
-    ENDPOINT_PICKER_METHODS,
-    isEndpointPickerMethod,
-} from "cms-content/editor/interfaces/SettingInputs/references/endpointPicker";
 export type { ColorSetting } from "cms-content/editor/interfaces/SettingInputs/choices/color";
 export type { PageLinkSetting } from "cms-content/editor/interfaces/SettingInputs/references/pageLink";
 export type { SettingRow } from "cms-content/editor/interfaces/SettingInputs/row";

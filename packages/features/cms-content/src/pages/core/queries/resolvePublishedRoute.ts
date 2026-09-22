@@ -1,21 +1,20 @@
-import { publicPagePath, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
+import { publicPagePath } from "cms-content/pages/core/paths/localizedPagePath";
+import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import type { PublishedRouteResolution } from "cms-content/application/interfaces/ContentReader";
+import type { TSystem } from "cms-content/settings/interfaces/settings";
 
-export type StoredRouteResolution =
-    | { kind: "current"; page: TPage; language: string }
-    | { kind: "redirect"; path: string }
-    | { kind: "gone"; language: string }
-    | { kind: "updating" }
-    | { kind: "unavailable" };
+type PublishedRouteRepository = Pick<CmsRepository, "getPageById" | "getPageRoute" | "getSystem">;
 
-export async function resolveStoredRoute(
+/** Resolves stored routes without ever returning a hidden page. */
+export async function resolvePublishedRoute(
     path: string,
-    repository: ContentReader,
-): Promise<StoredRouteResolution | null> {
+    repository: PublishedRouteRepository,
+): Promise<PublishedRouteResolution | null> {
     const before = await repository.getSystem();
     if (before.pageRoutesUpdating) {
         return { kind: "updating" };
     }
-    const route = await repository.getPageRoute?.(path);
+    const route = await repository.getPageRoute(path);
     if (!route) {
         const after = await repository.getSystem();
         if (after.pageRoutesUpdating || languageConfigurationChanged(before, after)) {
@@ -27,7 +26,7 @@ export async function resolveStoredRoute(
         return { kind: "gone", language: route.language };
     }
     const page = await repository.getPageById(route.pageId);
-    const finalRoute = await repository.getPageRoute?.(path);
+    const finalRoute = await repository.getPageRoute(path);
     const system = await repository.getSystem();
     if (system.pageRoutesUpdating || languageConfigurationChanged(before, system)) {
         return { kind: "updating" };
@@ -39,7 +38,7 @@ export async function resolveStoredRoute(
     ) {
         return { kind: "updating" };
     }
-    if (!page || !page.visible) {
+    if (page?.visible !== true) {
         return { kind: "unavailable" };
     }
     const requestedLanguage = route.language || system.site.language;
@@ -60,7 +59,7 @@ export async function resolveStoredRoute(
     if (route.state === "redirect" || currentPath !== path) {
         return { kind: "redirect", path: currentPath };
     }
-    return { kind: "current", page: { ...page, path }, language };
+    return { kind: "current", page: structuredClone({ ...page, path }), language };
 }
 
 function languageConfigurationChanged(before: TSystem, after: TSystem): boolean {

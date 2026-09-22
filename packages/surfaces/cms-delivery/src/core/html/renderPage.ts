@@ -1,11 +1,11 @@
 import { parseHTML } from "linkedom";
-import type { TPage } from "@bernouy/cms-content";
+import type { TPage } from "@bernouy/cms-content/rendering";
 import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
 import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
-import { expandCompositions, sanitizeDomTree, wrapBindingCore } from "@bernouy/cms-content";
+import { expandCompositions, sanitizeDomTree, wrapBindingCore } from "@bernouy/cms-content/rendering";
 import { injectMediaVersions } from "@bernouy/cms-content/files/serving";
-import { createBlocUsageResolver } from "@bernouy/cms-content";
+import { createBlocUsageResolver } from "@bernouy/cms-content/rendering";
 import { prepareNetworkInertBindings } from "@bernouy/components/binding-dom";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
 import { buildMetaCsp } from "cms-delivery/core/head/buildMetaCsp";
@@ -44,7 +44,7 @@ export async function renderPage(
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     const head = document.head;
 
-    const storedSettings = await ctx.repository.getSystem();
+    const storedSettings = await ctx.repository.getRenderingSettings();
     const settings = runtimeMetadata.language
         ? { ...storedSettings, site: { ...storedSettings.site, language: runtimeMetadata.language } }
         : storedSettings;
@@ -57,7 +57,7 @@ export async function renderPage(
     // scripts / on* handlers / dangerous URL schemes from the parsed tree
     // before this HTML reaches a public visitor, whatever path stored it.
     sanitizeDomTree(document.body);
-    const blocList = await ctx.repository.getBlocsList({ includeInactive: true });
+    const blocList = await ctx.repository.getRenderableBlocs();
     expandCompositions(document.body, blocList);
     sanitizeDomTree(document.body);
     // A browser may fetch an interpolated img src before the deferred binding

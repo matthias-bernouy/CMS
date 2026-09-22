@@ -21,7 +21,7 @@ describe("authorizeDeliverySourceEndpoint", () => {
         const runner = new CaptureRunner();
         new DeliveryCms({
             runner,
-            repository: { getSystem: async () => settings } as never,
+            repository: { getRenderingSettings: async () => settings } as never,
             sources: new InMemorySourceRepository(),
         });
 

@@ -8,7 +8,7 @@ import {
     oidcLoginHandler,
     registerPublicAuthRoutes,
 } from "@bernouy/cms-auth";
-import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
+import { createContentReader, generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
 import { CMS_FILES_ROUTE, filesPrefix } from "@bernouy/cms-content/files/urls";
 import { serveFilesRequest } from "@bernouy/cms-content/files/serving";
 import { cachedResponseAsync, publicAssetCacheControl, redirect } from "@bernouy/http-runner";
@@ -86,7 +86,7 @@ export function mountControlCmsRoutes(
                 req,
                 P9R_CACHE.STYLE,
                 state.cache,
-                async () => generateStyleEntry(state.repository),
+                async () => generateStyleEntry(createContentReader(state.repository)),
                 publicAssetCacheControl(req),
             ),
         [authenticatedGuard],

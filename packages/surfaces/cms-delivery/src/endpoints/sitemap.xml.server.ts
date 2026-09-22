@@ -1,5 +1,5 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { canonicalSiteBaseUrl } from "@bernouy/cms-content";
+import { canonicalSiteBaseUrl } from "@bernouy/cms-content/rendering";
 import { compress, sendCompressed } from "@bernouy/http-runner";
 import { isDeliveryReservedPath } from "cms-delivery/core/pages/publicPagePaths";
 import { storedSitemapLocations } from "cms-delivery/core/seo/sitemap/materialize";
@@ -9,7 +9,7 @@ import { localizedSitemapAlternates, localizedSitemapPages } from "cms-delivery/
 
 export default async function SitemapServer(request: Request, delivery: DeliveryCms): Promise<Response> {
     try {
-        const settings = await delivery.repository.getSystem();
+        const settings = await delivery.repository.getRenderingSettings();
         const publicBaseUrl = canonicalSiteBaseUrl(settings.site.host);
         if (!publicBaseUrl) {
             return new Response("Service Unavailable", {
@@ -40,7 +40,7 @@ export default async function SitemapServer(request: Request, delivery: Delivery
 }
 
 async function buildStaticFallback(request: Request, delivery: DeliveryCms, publicBaseUrl: string): Promise<Response> {
-    const system = await delivery.repository.getSystem();
+    const system = await delivery.repository.getRenderingSettings();
     const published = await delivery.repository.getPublishedPages();
     const pages = localizedSitemapPages(published, system);
     const candidates = await storedSitemapLocations(delivery, pages, localizedSitemapAlternates(published, system));

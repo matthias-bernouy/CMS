@@ -1,4 +1,4 @@
-import { P9R_CACHE } from "@bernouy/cms-content";
+import { P9R_CACHE } from "@bernouy/cms-content/rendering";
 import {
     type BlobReader,
     type VariantStore,

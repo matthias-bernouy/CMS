@@ -1,5 +1,11 @@
 import { describe, test, expect } from "bun:test";
-import { countValues, DuplicatePagePathError, InMemoryCmsRepository, isPublishedPage } from "@bernouy/cms-content";
+import {
+    countValues,
+    createContentReader,
+    DuplicatePagePathError,
+    InMemoryCmsRepository,
+    isPublishedPage,
+} from "@bernouy/cms-content";
 
 /** Seed three pages with distinct titles/paths/tags/visibility. */
 async function seeded() {
@@ -20,6 +26,90 @@ async function seeded() {
 const titles = (rows: { title: string }[]) => rows.map((r) => r.title);
 
 describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
+    test("public reader excludes drafts by path, id, and enumeration", async () => {
+        const repository = await seeded();
+        const reader = createContentReader(repository);
+        const draft = (await repository.getPage("/blog"))!;
+
+        expect(await reader.getPublishedPage("/blog")).toBeNull();
+        expect(await reader.getPublishedPageById(draft.id)).toBeNull();
+        expect((await reader.getPublishedPages()).map((page) => page.path)).toEqual(["/about", "/contact"]);
+        expect(reader).not.toHaveProperty("getPage");
+        expect(reader).not.toHaveProperty("getPageById");
+        expect(reader).not.toHaveProperty("getAllPages");
+    });
+
+    test("public reader returns cloned published pages", async () => {
+        const repository = await seeded();
+        const reader = createContentReader(repository);
+        const page = (await reader.getPublishedPage("/about"))!;
+        page.tags.push("mutated");
+
+        expect((await reader.getPublishedPage("/about"))?.tags).toEqual(["company"]);
+    });
+
+    test("public reader excludes fields outside the rendering projection", async () => {
+        const page = {
+            id: "page",
+            path: "/page",
+            title: "Page",
+            description: "Description",
+            content: "<main></main>",
+            tags: [],
+            visible: true,
+            editorOnly: { draft: true },
+        };
+        const reader = createContentReader({
+            getPublishedPage: async () => page,
+        } as never);
+
+        const projected = await reader.getPublishedPage("/page");
+        expect(projected).not.toHaveProperty("editorOnly");
+        expect(projected).toMatchObject({ visible: true, path: "/page" });
+    });
+
+    test("public reader projects mutable rendering settings without email or initialization state", async () => {
+        const repository = new InMemoryCmsRepository();
+        const reader = createContentReader(repository);
+        const settings = await reader.getRenderingSettings();
+        settings.site.host = "https://mutated.test";
+
+        expect(settings).not.toHaveProperty("email");
+        expect(settings).not.toHaveProperty("initializationStep");
+        expect(settings).not.toHaveProperty("pageRoutesUpdating");
+        expect(settings.site).not.toHaveProperty("additionalLanguages");
+        expect((await reader.getRenderingSettings()).site.host).not.toBe("https://mutated.test");
+    });
+
+    test("public reader retains inactive rendering artifacts without authoring fields", async () => {
+        let includeInactive = false;
+        const reader = createContentReader({
+            getBlocsList: async (options) => {
+                includeInactive = options?.includeInactive === true;
+                return [
+                    {
+                        id: "archived-layout",
+                        name: "Archived layout",
+                        group: "",
+                        description: "",
+                        compositionHTML: "<main><slot></slot></main>",
+                        nativeElement: "main",
+                        ownership: { kind: "code-managed" as const },
+                    },
+                ];
+            },
+        } as never);
+
+        expect(await reader.getRenderableBlocs()).toEqual([
+            {
+                id: "archived-layout",
+                compositionHTML: "<main><slot></slot></main>",
+                nativeElement: "main",
+            },
+        ]);
+        expect(includeInactive).toBe(true);
+    });
+
     test("defaults to title asc, all pages", async () => {
         const rows = await (await seeded()).getPagesMetadata();
         expect(titles(rows)).toEqual(["About us", "Blog", "Contact"]);

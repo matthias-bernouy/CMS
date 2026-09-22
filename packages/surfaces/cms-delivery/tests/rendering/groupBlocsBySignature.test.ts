@@ -83,11 +83,11 @@ describe("getBlocGroupManifest", () => {
         };
         const delivery = {
             repository: {
-                getAllPages: async () => [
+                getPublishedPages: async () => [
                     { content: "<site-header></site-header>" },
                     { content: "<site-header></site-header>" },
                 ],
-                getBlocsList: async () => Object.keys(views).map((id) => ({ id })),
+                getRenderableBlocs: async () => Object.keys(views).map((id) => ({ id })),
                 getBlocViewJS: async (tag: string) => views[tag] ?? null,
             },
         } as unknown as DeliveryCms;
@@ -106,16 +106,30 @@ describe("getBlocGroupManifest", () => {
         };
         const delivery = {
             repository: {
-                getAllPages: async () => [
+                getPublishedPages: async () => [
                     { content: "<site-header></site-header>" },
                     { content: "<base-nav></base-nav>" },
                 ],
-                getBlocsList: async () => Object.keys(views).map((id) => ({ id })),
+                getRenderableBlocs: async () => Object.keys(views).map((id) => ({ id })),
                 getBlocViewJS: async (tag: string) => views[tag] ?? null,
             },
         } as unknown as DeliveryCms;
 
         const { tagToGroup } = await getBlocGroupManifest(delivery);
         expect(tagToGroup.get("site-header")).not.toBe(tagToGroup.get("base-nav"));
+    });
+
+    test("does not include bloc usage found only in drafts", async () => {
+        const delivery = {
+            repository: {
+                getPublishedPages: async () => [{ content: "<published-card></published-card>" }],
+                getRenderableBlocs: async () => [{ id: "published-card" }, { id: "draft-only-card" }],
+                getBlocViewJS: async () => null,
+            },
+        } as unknown as DeliveryCms;
+
+        const { tagToGroup } = await getBlocGroupManifest(delivery);
+        expect(tagToGroup.has("published-card")).toBe(true);
+        expect(tagToGroup.has("draft-only-card")).toBe(false);
     });
 });

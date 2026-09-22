@@ -78,7 +78,7 @@ async function mountFavicon(favicon: string, seed?: Seed) {
     new DeliveryCms({
         runner,
         repository: {
-            getSystem: async () => ({ site: { favicon } }) as TSystem,
+            getRenderingSettings: async () => ({ site: { favicon } }) as TSystem,
         } as ContentReader,
         filesMetadata: metadata,
         filesBlob: blob,

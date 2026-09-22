@@ -1,5 +1,3 @@
-import type { ContentReader } from "cms-content/application/interfaces/ContentReader";
-import type { BlocListOptions } from "cms-content/application/interfaces/ContentReader";
 import type {
     BlocRecord,
     SiteBlocCollection,
@@ -8,7 +6,7 @@ import type {
     TBloc,
     TBlocWrite,
 } from "cms-content/blocs/interfaces/blocs";
-import type { TPage } from "cms-content/pages/interfaces/pages";
+import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 
 export type BlocListItemResponse = {
@@ -21,6 +19,11 @@ export type BlocListItemResponse = {
     internal?: boolean;
     nativeElement?: string;
     ownership: TBloc["ownership"];
+};
+
+export type BlocListOptions = {
+    /** Include installed blocs hidden from the authoring catalogue. */
+    includeInactive?: boolean;
 };
 
 export type PageLink = {
@@ -64,7 +67,7 @@ export type PagesQuery = {
     sortOrder?: "asc" | "desc";
 };
 
-export interface CmsRepository extends ContentReader {
+export interface CmsRepository {
     getSiteBlocCollections(): Promise<SiteBlocCollection[]>;
     updateSiteBlocCollection(id: string, input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection>;
     createSiteBlocCollection(input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection>;
@@ -96,9 +99,13 @@ export interface CmsRepository extends ContentReader {
 
     // PAGE
     getPage(path: string): Promise<TPage | null>;
+    getPageById(id: string): Promise<TPage | null>;
     getAllPages(): Promise<TPage[]>;
     getPublishedPage(path: string): Promise<TPage | null>;
+    getPublishedPageById(id: string): Promise<TPage | null>;
     getPublishedPages(): Promise<TPage[]>;
+    /** Editorial route record access. Public consumers use `resolvePublishedRoute`. */
+    getPageRoute(path: string): Promise<PageRoute | null>;
     insertPage(path: string, title: string, content?: string): Promise<void>;
     updatePage(page: Partial<TPage>): Promise<void>;
     deletePage(id: string): Promise<void>;

@@ -1,5 +1,5 @@
 import type { PublicFileMetadataLookup, BlobReader, VariantStore } from "@bernouy/cms-content/files/serving";
-import type { ContentReader } from "@bernouy/cms-content";
+import type { ContentReader } from "@bernouy/cms-content/rendering";
 import type { HeadInjector } from "cms-delivery/interfaces/HeadInjector";
 import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
 

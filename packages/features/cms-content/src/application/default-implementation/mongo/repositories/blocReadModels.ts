@@ -1,4 +1,4 @@
-import type { BlocListOptions } from "cms-content/application/interfaces/ContentReader";
+import type { BlocListOptions } from "cms-content/application/interfaces/CmsRepository";
 import type { BlocListItemResponse } from "cms-content/application/interfaces/CmsRepository";
 import type { ClientSession, Collection } from "mongodb";
 import { SiteBlocNotFoundError } from "cms-content/application/core/validation/errors";

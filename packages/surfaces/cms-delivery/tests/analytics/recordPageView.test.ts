@@ -35,7 +35,8 @@ function mount(pages: TPage[], settings = { enabled: true, visitorEstimation: tr
         cache,
         repository: {
             getPublishedPage: async (path: string) => pages.find((item) => item.path === path) ?? null,
-            getSystem: async () => ({ site: { notFound: null } }),
+            resolvePublishedRoute: async () => null,
+            getRenderingSettings: async () => ({ site: { notFound: null } }),
         } as never,
         analytics: {
             getSettings: async () => ({

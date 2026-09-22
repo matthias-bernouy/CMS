@@ -2,7 +2,6 @@ import { randomUUIDv7 } from "bun";
 import type { PageLink } from "cms-content/application/interfaces/CmsRepository";
 import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
-import { isPublishedPage } from "cms-content/pages/core/lifecycle/publication";
 import { pagePathsForSystem, planPagePaths } from "cms-content/pages/core/lifecycle/pagePaths";
 import { publicPagePath } from "cms-content/pages/core/paths/localizedPagePath";
 import { MongoBlocRepository } from "cms-content/application/default-implementation/mongo/repositories/MongoBlocRepository";
@@ -131,12 +130,23 @@ export class MongoContentRepository extends MongoBlocRepository {
         if ((await this.getPageRoute(path))?.state === "gone") {
             return null;
         }
-        const page = await this.getPage(path);
-        return isPublishedPage(page) ? page : null;
+        const direct = fromPageDoc(
+            await this.pages.findOne({ path, visible: true, deletionIntent: { $exists: false } }),
+        );
+        if (direct) {
+            return direct;
+        }
+        const route = await this.getPageRoute(path);
+        return route ? this.getPublishedPageById(route.pageId) : null;
+    }
+
+    async getPublishedPageById(id: string): Promise<TPage | null> {
+        return fromPageDoc(await this.pages.findOne({ _id: id, visible: true, deletionIntent: { $exists: false } }));
     }
 
     async getPublishedPages(): Promise<TPage[]> {
-        return (await this.getAllPages()).filter(isPublishedPage);
+        const documents = await this.pages.find({ visible: true, deletionIntent: { $exists: false } }).toArray();
+        return documents.map((document) => fromPageDoc(document)!);
     }
 
     async insertPage(path: string, title: string, content = "<p></p>"): Promise<void> {

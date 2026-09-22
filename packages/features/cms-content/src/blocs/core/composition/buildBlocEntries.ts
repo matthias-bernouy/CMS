@@ -2,7 +2,10 @@ import type { ContentReader } from "cms-content/application/interfaces/ContentRe
 import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
 
-export async function generateBlocEntry(tag: string, repository: ContentReader): Promise<CacheEntry> {
+export async function generateBlocEntry(
+    tag: string,
+    repository: Pick<ContentReader, "getBlocViewJS">,
+): Promise<CacheEntry> {
     const js = await repository.getBlocViewJS(tag);
     if (!js) {
         throw new Error(`Bloc not found: ${tag}`);
@@ -10,7 +13,10 @@ export async function generateBlocEntry(tag: string, repository: ContentReader):
     return compress(js, "text/javascript");
 }
 
-export async function generateBlocSetEntry(tags: string[], repository: ContentReader): Promise<CacheEntry> {
+export async function generateBlocSetEntry(
+    tags: string[],
+    repository: Pick<ContentReader, "getBlocViewJS">,
+): Promise<CacheEntry> {
     const sorted = [...new Set(tags)].sort();
     if (sorted.length === 0) {
         throw new Error("generateBlocSetEntry: empty tag set");

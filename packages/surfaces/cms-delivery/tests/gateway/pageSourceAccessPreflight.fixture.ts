@@ -135,13 +135,13 @@ function pageRepository(
 ): ContentReader {
     const page: TPage = { path: "/products", title: "Products", description: "", content, visible: true, tags: [] };
     return {
-        getPage: async () => page,
-        getAllPages: async () => [page],
         getPublishedPage: async () => page,
+        getPublishedPageById: async () => page,
         getPublishedPages: async () => [page],
-        getBlocsList: async () => [],
+        resolvePublishedRoute: async () => null,
+        getRenderableBlocs: async () => [],
         getBlocViewJS: async () => null,
-        getSystem: async () => ({ ...system, site: { ...system.site, ...systemPages } }),
+        getRenderingSettings: async () => ({ ...system, site: { ...system.site, ...systemPages } }),
     };
 }
 

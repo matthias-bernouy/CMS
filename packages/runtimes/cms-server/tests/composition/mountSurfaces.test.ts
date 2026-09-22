@@ -121,7 +121,7 @@ describe("production surface mounting", () => {
 
         expect(deliveryConfig).toMatchObject({
             runner: runners[1],
-            repository: options.core.repo,
+            repository: { getPublishedPage: expect.any(Function), resolvePublishedRoute: expect.any(Function) },
             sources: options.features.sources,
             sourceTelemetry: expect.any(Object),
             analyticsVisitorSecret: options.analyticsVisitorSecret,
@@ -136,6 +136,9 @@ describe("production surface mounting", () => {
             },
         });
         expect(deliveryConfig?.publicPageProviders).toBeUndefined();
+        expect(deliveryConfig?.repository).not.toBe(options.core.repo);
+        expect(deliveryConfig?.repository).not.toHaveProperty("getAllPages");
+        expect(deliveryConfig?.repository).not.toHaveProperty("updatePage");
         expect(deliveryConfig?.filesBlob).not.toBe(options.core.filesBlob);
         expect(Object.keys(deliveryConfig?.filesBlob as object)).toEqual(["get"]);
         expect(Object.keys(deliveryConfig?.filesMetadata as object).sort()).toEqual(["getItem", "getItemByPath"]);

@@ -1,4 +1,9 @@
-import { canonicalSiteBaseUrl, publicPagePath, type TPage, type TSystem } from "@bernouy/cms-content";
+import {
+    canonicalSiteBaseUrl,
+    publicPagePath,
+    type RenderingSettings,
+    type TPage,
+} from "@bernouy/cms-content/rendering";
 
 export type PageMetaTagOverrides = {
     title?: string;
@@ -16,10 +21,10 @@ export function defineMetaTags(
     document: Document,
     head: HTMLElement,
     page: TPage,
-    settings: TSystem,
+    settings: RenderingSettings,
     faviconUrl: string,
     overrides: PageMetaTagOverrides = {},
-    routeLanguages: Pick<TSystem["site"], "language" | "activeLanguages"> = settings.site,
+    routeLanguages: Pick<RenderingSettings["site"], "language" | "activeLanguages"> = settings.site,
 ): void {
     const title = document.createElement("title");
     title.textContent = overrides.title ?? page.title;

@@ -109,6 +109,24 @@ export type TSystem = {
     };
 };
 
-export function wrapBindingCore(content: string): string {
-    return `<cms-binding-core>${content}</cms-binding-core>`;
-}
+export type RenderingSiteSettings = Pick<
+    TSystem["site"],
+    | "name"
+    | "favicon"
+    | "visible"
+    | "host"
+    | "language"
+    | "activeLanguages"
+    | "organization"
+    | "notFound"
+    | "forbidden"
+    | "serverError"
+    | "login"
+>;
+
+/** Settings deliberately projected for public rendering and public helpers. */
+export type RenderingSettings = {
+    site: RenderingSiteSettings;
+    theme: ThemeSettings;
+    security: TSystem["security"];
+};

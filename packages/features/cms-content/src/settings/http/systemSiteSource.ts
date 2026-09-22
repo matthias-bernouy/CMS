@@ -9,7 +9,7 @@ type SystemSiteEndpoint = {
 };
 
 export async function executeSiteSystemSourceEndpoint(
-    repository: ContentReader,
+    repository: Pick<ContentReader, "getRenderingSettings">,
     endpoint: SystemSiteEndpoint,
 ): Promise<Response> {
     if (
@@ -18,7 +18,7 @@ export async function executeSiteSystemSourceEndpoint(
     ) {
         throw new ContentValidationError("endpoint", `unsupported site system target for ${endpoint.urn}`);
     }
-    const settings = await repository.getSystem();
+    const settings = await repository.getRenderingSettings();
     return Response.json(projectPublicSiteOrganization(settings), {
         headers: { "cache-control": "no-store" },
     });

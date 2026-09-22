@@ -34,10 +34,10 @@ const DOCUMENT_FOUNDATION = `@layer cms-foundation {
  * element presentation, including typography, colour, spacing, and focus.
  */
 export async function generateStyleEntry(
-    reader: ContentReader,
+    reader: Pick<ContentReader, "getRenderingSettings">,
     contributions: readonly IntegrationThemeContribution[] = [],
 ): Promise<CacheEntry> {
-    const settings = await reader.getSystem();
+    const settings = await reader.getRenderingSettings();
     const theme = composeThemeSettings(settings.theme, contributions);
     const css = [DOCUMENT_FOUNDATION, generateThemeCss(theme)].filter(Boolean).join("\n\n");
     return compress(css, "text/css");

@@ -1,7 +1,6 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { cachedResponseAsync, compress, sendCompressed } from "@bernouy/http-runner";
-import { P9R_CACHE } from "@bernouy/cms-content";
-import { isPublishedPage } from "@bernouy/cms-content";
+import { P9R_CACHE } from "@bernouy/cms-content/rendering";
 import { renderPage } from "cms-delivery/core/html/renderPage";
 import { makeRuntimeRenderContext } from "cms-delivery/core/html/runtimeContext";
 
@@ -35,12 +34,12 @@ export async function renderRef(
     language?: string,
 ): Promise<Response> {
     try {
-        const settings = await delivery.repository.getSystem();
+        const settings = await delivery.repository.getRenderingSettings();
         const ref = settings.site?.[field] ?? null;
         if (ref) {
-            const byId = ref.id ? await delivery.repository.getPageById(ref.id) : null;
-            const page = isPublishedPage(byId) ? byId : await delivery.repository.getPublishedPage(ref.path);
-            if (isPublishedPage(page)) {
+            const byId = ref.id ? await delivery.repository.getPublishedPageById(ref.id) : null;
+            const page = byId ?? (await delivery.repository.getPublishedPage(ref.path));
+            if (page) {
                 if (status === 410) {
                     return sendCompressed(
                         req,

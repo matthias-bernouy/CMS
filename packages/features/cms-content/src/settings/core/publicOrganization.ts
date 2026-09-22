@@ -1,7 +1,7 @@
 import type { SiteOrganizationSettings, TSystem } from "cms-content/settings/interfaces/settings";
 
 /** Explicit public projection. New system settings never become public by accident. */
-export function projectPublicSiteOrganization(settings: TSystem): SiteOrganizationSettings {
+export function projectPublicSiteOrganization(settings: Pick<TSystem, "site">): SiteOrganizationSettings {
     const organization = settings.site.organization;
     const address = organization?.address;
     return {

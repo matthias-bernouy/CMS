@@ -1,16 +1,15 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import type { TPage } from "@bernouy/cms-content";
+import type { TPage } from "@bernouy/cms-content/rendering";
 import { cachedResponseAsync, sendCompressed } from "@bernouy/http-runner";
 import { renderPage } from "cms-delivery/core/html/renderPage";
 import { makeRuntimeRenderContext } from "cms-delivery/core/html/runtimeContext";
 import { renderRef } from "cms-delivery/core/pages/renderRef";
-import { P9R_CACHE } from "@bernouy/cms-content";
+import { P9R_CACHE } from "@bernouy/cms-content/rendering";
 import { preflightPageSourceAccess } from "cms-delivery/core/pages/preflightPageSourceAccess";
 import { publicPageCacheKey, resolvePublicPage } from "cms-delivery/core/pages/resolvePublicPage";
 import { InvalidPublicPageRequestError } from "cms-delivery/core/pages/publicPageRequest";
 import type { PageRenderMetadata } from "cms-delivery/core/seo/pageMetadata";
 import { resolveRuntimePageIndexingMetadata } from "cms-delivery/core/seo/resolveRuntimePageIndexingMetadata";
-import { resolveStoredRoute } from "cms-delivery/core/pages/resolveStoredRoute";
 
 /**
  * Shared entry point for every public page GET registered by Delivery.
@@ -47,7 +46,7 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
         return { response: new Response("Not Found", { status: 404 }) };
     }
 
-    const storedRoute = await resolveStoredRoute(pathname, delivery.repository);
+    const storedRoute = await delivery.repository.resolvePublishedRoute(pathname);
     if (storedRoute?.kind === "updating") {
         return {
             response: new Response("Service unavailable", {

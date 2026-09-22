@@ -42,8 +42,8 @@ export function homePage(): TPage {
 export async function renderedHtml(page: TPage, settings: TSystem, metadata: PageRenderMetadata = {}): Promise<string> {
     const context: RenderContext = {
         repository: {
-            getSystem: async () => settings,
-            getBlocsList: async () => [],
+            getRenderingSettings: async () => settings,
+            getRenderableBlocs: async () => [],
         } as ContentReader,
         resolveAssets: async () => ({
             componentUrl: "/.cms/assets/component.js",

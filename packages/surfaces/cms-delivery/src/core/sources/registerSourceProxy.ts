@@ -8,7 +8,7 @@ import {
     type SourceEndpoint,
 } from "@bernouy/cms-sources";
 import { executeAuthSystemSourceEndpoint } from "@bernouy/cms-auth";
-import { executeSiteSystemSourceEndpoint } from "@bernouy/cms-content";
+import { executeSiteSystemSourceEndpoint } from "@bernouy/cms-content/rendering";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { authorizeDeliverySourceEndpoint } from "cms-delivery/core/sources/authorization";
 import { createDeliverySourceRequestScope } from "cms-delivery/core/sources/requestScope";

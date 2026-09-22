@@ -48,13 +48,20 @@ export type {
     ThemeTokenDefaults,
     ThemeTokenType,
 } from "cms-content/theme/interfaces/theme";
-export { wrapBindingCore } from "cms-content/settings/interfaces/settings";
+export { wrapBindingCore } from "cms-content/editor/core/document/wrapBindingCore";
 
 // ── Repository seam ────────────────────────────────────────────────────
-export type { BlocListOptions, ContentReader } from "cms-content/application/interfaces/ContentReader";
+export type {
+    ContentReader,
+    PublishedRouteResolution,
+    RenderableBloc,
+} from "cms-content/application/interfaces/ContentReader";
+export { createContentReader } from "cms-content/application/core/createContentReader";
+export { resolvePublishedRoute } from "cms-content/pages/core/queries/resolvePublishedRoute";
 export type {
     CmsRepository,
     BlocListItemResponse,
+    BlocListOptions,
     PageLink,
     PageMeta,
     PagesQuery,

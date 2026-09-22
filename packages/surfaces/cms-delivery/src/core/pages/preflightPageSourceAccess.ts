@@ -1,6 +1,6 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import type { TPage } from "@bernouy/cms-content";
-import { collectCmsSourceBindings } from "@bernouy/cms-content";
+import type { TPage } from "@bernouy/cms-content/rendering";
+import { collectCmsSourceBindings } from "@bernouy/cms-content/rendering";
 import { isSourceAuthorized, resolveEndpoint, sourceAuthorizationStatus, sourcesPrefix } from "@bernouy/cms-sources";
 import { authorizeDeliverySourceEndpoint, resolveDeliverySubject } from "cms-delivery/core/sources/authorization";
 import { renderRef } from "cms-delivery/core/pages/renderRef";
@@ -75,9 +75,9 @@ async function sourceAccessDenied(req: Request, delivery: DeliveryCms, status: 4
     if (status === 401 && delivery.auth) {
         const url = new URL(req.url);
         const returnTo = `${url.pathname}${url.search}`;
-        const settings = await delivery.repository.getSystem().catch(() => null);
+        const settings = await delivery.repository.getRenderingSettings().catch(() => null);
         const loginRef = settings?.site.login;
-        const loginPage = loginRef?.id ? await delivery.repository.getPageById(loginRef.id) : null;
+        const loginPage = loginRef?.id ? await delivery.repository.getPublishedPageById(loginRef.id) : null;
         const loginPath = loginPage?.path ?? loginRef?.path;
         if (loginPath === url.pathname) {
             return new Response("Unauthorized", { status });

@@ -3,7 +3,7 @@ import { defaultSystem, generateStyleEntry, type ContentReader } from "@bernouy/
 describe("Theme style entry", () => {
     test("composes integration defaults without mutating persisted settings", async () => {
         const system = defaultSystem();
-        const reader = { getSystem: async () => system } as ContentReader;
+        const reader = { getRenderingSettings: async () => system } as ContentReader;
 
         const entry = await generateStyleEntry(reader, [
             {

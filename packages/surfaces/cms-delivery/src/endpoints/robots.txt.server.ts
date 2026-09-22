@@ -1,5 +1,5 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { canonicalSiteBaseUrl } from "@bernouy/cms-content";
+import { canonicalSiteBaseUrl } from "@bernouy/cms-content/rendering";
 import { CMS_FILES_ROUTE, CMS_IMAGE_VARIANT_ROUTE } from "@bernouy/cms-content/files/serving";
 import { CMS_SOURCES_ROUTE, isPublicSourceImageEndpoint, parseUrn } from "@bernouy/cms-sources";
 import { compress, sendCompressed } from "@bernouy/http-runner";
@@ -36,7 +36,7 @@ function publicRuntimePaths(delivery: DeliveryCms): string[] {
 
 async function canonicalSeoBaseUrl(delivery: DeliveryCms): Promise<string | null> {
     try {
-        return canonicalSiteBaseUrl((await delivery.repository.getSystem()).site.host);
+        return canonicalSiteBaseUrl((await delivery.repository.getRenderingSettings()).site.host);
     } catch (error) {
         console.error("Delivery robots canonical host lookup failure", {
             errorType: error instanceof Error ? error.name : "UnknownError",

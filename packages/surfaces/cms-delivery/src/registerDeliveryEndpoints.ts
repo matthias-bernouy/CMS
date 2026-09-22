@@ -22,7 +22,7 @@ import {
     P9R_CACHE,
     PUBLISHED_PAGE_SNAPSHOT_ROUTE,
     servePublishedPageSnapshot,
-} from "@bernouy/cms-content";
+} from "@bernouy/cms-content/rendering";
 import {
     CMS_CORRELATION_HEADER,
     cachedResponseAsync,

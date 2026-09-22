@@ -6,7 +6,7 @@ function deliveryWithDraftFallback(field: "notFound" | "forbidden" | "serverErro
     return {
         calls,
         repository: {
-            getSystem: async () => ({
+            getRenderingSettings: async () => ({
                 site: {
                     name: "Site",
                     favicon: "",

@@ -1,15 +1,22 @@
-import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
-import type { TSystem } from "cms-content/settings/interfaces/settings";
+import type { TPage } from "cms-content/pages/interfaces/pages";
+import type { RenderingSettings } from "cms-content/settings/interfaces/settings";
 
-export type BlocListOptions = {
-    /** Include installed blocs hidden from the authoring catalogue. */
-    includeInactive?: boolean;
+export type RenderableBloc = {
+    id: string;
+    compositionHTML?: string;
+    nativeElement?: string;
 };
+
+export type PublishedRouteResolution =
+    | { kind: "current"; page: TPage; language: string }
+    | { kind: "redirect"; path: string }
+    | { kind: "gone"; language: string }
+    | { kind: "updating" }
+    | { kind: "unavailable" };
 
 /**
  * Read-only view of the content aggregate — the subset public rendering
- * needs: no create/update/delete paths and no editor bundles.
- * `CmsRepository` extends it, so any repository satisfies a reader.
+ * needs: no create/update/delete paths and no editorial page reads.
  *
  * Delivery normally addresses rendered pages by path. Stable page identifiers
  * remain available for read-only machine contracts that must survive a path
@@ -21,27 +28,15 @@ export type BlocListOptions = {
  */
 export interface ContentReader {
     // PAGE
-    getPage(path: string): Promise<TPage | null>;
-    getPageById(id: string): Promise<TPage | null>;
-    getAllPages(): Promise<TPage[]>;
     getPublishedPage(path: string): Promise<TPage | null>;
+    getPublishedPageById(id: string): Promise<TPage | null>;
     getPublishedPages(): Promise<TPage[]>;
-    /** Exact path lookup; implementations may lazily bridge legacy records. */
-    getPageRoute?(path: string): Promise<PageRoute | null>;
+    resolvePublishedRoute(path: string): Promise<PublishedRouteResolution | null>;
 
     // BLOC (view only — editor bundles live in the admin)
-    getBlocsList(options?: BlocListOptions): Promise<
-        {
-            id: string;
-            name: string;
-            group: string;
-            description: string;
-            compositionHTML?: string;
-            nativeElement?: string;
-        }[]
-    >;
+    getRenderableBlocs(): Promise<RenderableBloc[]>;
     getBlocViewJS(tag: string): Promise<string | null>;
 
     // SYSTEM (theme, favicon, host, language, system page refs)
-    getSystem(): Promise<TSystem>;
+    getRenderingSettings(): Promise<RenderingSettings>;
 }

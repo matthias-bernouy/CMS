@@ -67,9 +67,11 @@ describe("MongoCmsRepository content persistence", () => {
 
         expect(draft).toMatchObject({ path: "/draft", title: "Draft", visible: false });
         expect(await repository.getPublishedPage("/draft")).toBeNull();
+        expect(await repository.getPublishedPageById(draft!.id)).toBeNull();
         await repository.updatePage({ id: draft!.id, visible: true, tags: ["news"] });
 
         expect(await repository.getPageById(draft!.id)).toMatchObject({ visible: true, tags: ["news"] });
+        expect(await repository.getPublishedPageById(draft!.id)).toMatchObject({ visible: true, tags: ["news"] });
         expect((await repository.getPublishedPages()).map((page) => page.id)).toEqual([draft!.id]);
         expect(await repository.getLinks()).toEqual([{ path: "/draft", title: "Draft" }]);
         await repository.deletePage(draft!.id);

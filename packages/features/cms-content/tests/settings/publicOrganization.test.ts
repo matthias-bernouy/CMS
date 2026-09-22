@@ -5,7 +5,7 @@ import { defaultSystem, executeSiteSystemSourceEndpoint, type ContentReader, typ
 describe("site system source", () => {
     test("returns only the explicit public organization projection", async () => {
         const settings = organizationSettings();
-        const repository = { getSystem: async () => settings } as ContentReader;
+        const repository = { getRenderingSettings: async () => settings } as ContentReader;
         const endpoint = SYSTEM_SITE_SOURCE.endpoints[0]!;
 
         const response = await executeSiteSystemSourceEndpoint(repository, endpoint);
@@ -16,7 +16,7 @@ describe("site system source", () => {
     });
 
     test("rejects any undeclared site system target", async () => {
-        const repository = { getSystem: async () => organizationSettings() } as ContentReader;
+        const repository = { getRenderingSettings: async () => organizationSettings() } as ContentReader;
 
         await expect(
             executeSiteSystemSourceEndpoint(repository, {
@@ -29,7 +29,7 @@ describe("site system source", () => {
     test("keeps the public contract complete for legacy settings", async () => {
         const settings = defaultSystem();
         delete (settings.site as Partial<TSystem["site"]>).organization;
-        const repository = { getSystem: async () => settings } as ContentReader;
+        const repository = { getRenderingSettings: async () => settings } as ContentReader;
 
         const response = await executeSiteSystemSourceEndpoint(repository, SYSTEM_SITE_SOURCE.endpoints[0]!);
 

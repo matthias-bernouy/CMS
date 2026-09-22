@@ -46,13 +46,13 @@ function repositoryWith(options: {
     } as TPage;
 
     return {
-        getAllPages: async () => [page],
-        getBlocsList: async () => options.blocTags.map((id) => ({ id, name: id, group: "", description: "" })),
+        getRenderableBlocs: async () => options.blocTags.map((id) => ({ id, name: id, group: "", description: "" })),
         getBlocViewJS: async (tag: string) => options.viewJS?.[tag] ?? null,
-        getSystem: async () => system,
-        getPage: async () => null,
+        getRenderingSettings: async () => system,
         getPublishedPage: async () => null,
+        getPublishedPageById: async () => null,
         getPublishedPages: async () => [page],
+        resolvePublishedRoute: async () => null,
     };
 }
 

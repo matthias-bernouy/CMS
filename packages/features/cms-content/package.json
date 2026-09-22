@@ -7,6 +7,7 @@
     "main": "./src/exports/index.ts",
     "exports": {
         ".": "./src/exports/index.ts",
+        "./rendering": "./src/exports/rendering.ts",
         "./editor": "./src/exports/editor.ts",
         "./theme": "./src/exports/theme.ts",
         "./page-path": "./src/exports/page-path.ts",
