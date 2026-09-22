@@ -1,7 +1,8 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
-import { deleteUserCompletely, resolveRequestSubject } from "@bernouy/cms-auth";
+import { resolveRequestSubject } from "@bernouy/cms-auth";
+import { deleteUserCompletely } from "@bernouy/cms-auth/management";
 
 /** DELETE /api/profil — the current user deletes their own account. The session
  *  cookie outlives the row but now resolves to no user, so the

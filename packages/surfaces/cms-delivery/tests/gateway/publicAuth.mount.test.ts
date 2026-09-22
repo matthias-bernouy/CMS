@@ -5,14 +5,13 @@ import {
     InMemoryEmailer,
     InMemoryLocalCredentialStore,
     InMemoryUsersRepository,
+    createPublicAuthActions,
     LocalAuthentication,
     SignedCookieCodec,
     SubjectResolver,
-    type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
+import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
-
-type Role = "user";
 
 class CaptureRunner implements Runner {
     readonly endpoints = new Set<string>();
@@ -116,12 +115,12 @@ describe("Delivery public auth mount", () => {
     });
 });
 
-function authConfig(): PublicAuthRoutesConfig<Role> {
-    const users = new InMemoryUsersRepository<Role>();
+function authConfig(): PublicAuthRoutesConfig {
+    const users = new InMemoryUsersRepository();
     const credentials = new InMemoryLocalCredentialStore();
-    const resolver = new SubjectResolver<Role>(users, "user");
-    return {
-        local: new LocalAuthentication<Role>({
+    const resolver = new SubjectResolver(users);
+    return createPublicAuthActions({
+        local: new LocalAuthentication({
             providerId: "local",
             loginPagePath: "/login",
             logoutPath: "/.cms/auth/logout",
@@ -136,7 +135,7 @@ function authConfig(): PublicAuthRoutesConfig<Role> {
         emailer: new InMemoryEmailer(),
         emailVerificationUrl: "http://site.test/auth/verify-email",
         passwordResetUrl: "http://site.test/auth/reset-password",
-    };
+    });
 }
 
 function joinPath(base: string, path: string): string {

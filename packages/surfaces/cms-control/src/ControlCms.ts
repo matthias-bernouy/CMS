@@ -3,9 +3,9 @@ import type {
     IdentityProviderRepository,
     LocalCredentialStore,
     PatRepository,
-    PublicAuthRoutesConfig,
     UsersRepository,
 } from "@bernouy/cms-auth";
+import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
@@ -104,7 +104,9 @@ export class ControlCms {
     get credentials() {
         return controlCmsAccessors.credentials(this.state);
     }
-    get publicAuth() {
+    get publicAuth(): PublicAuthRoutesConfig & {
+        emailTest?: { send(input: { kind: "email_verification" | "password_reset"; to: string }): Promise<void> };
+    } {
         return controlCmsAccessors.publicAuth(this.state);
     }
     get sources() {

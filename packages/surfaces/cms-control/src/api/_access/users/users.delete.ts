@@ -1,7 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
-import { deleteUserCompletely } from "@bernouy/cms-auth";
+import { deleteUserCompletely } from "@bernouy/cms-auth/management";
 
 /** DELETE /api/users?sub= — removes a member across the membership,
  * local-credential, PAT, and dashboard-assignment stores. */

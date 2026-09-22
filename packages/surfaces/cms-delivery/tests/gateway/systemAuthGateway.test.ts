@@ -5,11 +5,12 @@ import {
     InMemoryEmailer,
     InMemoryLocalCredentialStore,
     InMemoryUsersRepository,
+    createPublicAuthActions,
     LocalAuthentication,
     SignedCookieCodec,
     SubjectResolver,
-    type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
+import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import { InMemorySourceRepository, type SourceEndpointInterceptor } from "@bernouy/cms-sources";
 import { getRequestIP, requestCorrelationId, setRequestIP } from "@bernouy/http-runner";
 import { CaptureRunner } from "./support/CaptureRunner";
@@ -20,7 +21,7 @@ async function setup(options: { sourceImageInterceptor?: SourceEndpointIntercept
     const credentials = new InMemoryLocalCredentialStore();
     const emailer = new InMemoryEmailer();
     const resolver = new SubjectResolver(users);
-    const auth: PublicAuthRoutesConfig = {
+    const auth: PublicAuthRoutesConfig = createPublicAuthActions({
         local: new LocalAuthentication({
             providerId: "local",
             loginPagePath: "/login",
@@ -37,7 +38,7 @@ async function setup(options: { sourceImageInterceptor?: SourceEndpointIntercept
         emailVerificationUrl: "http://site.test/auth/verify-email",
         passwordResetUrl: "http://site.test/auth/reset-password",
         authEmailCooldownSeconds: 0,
-    };
+    });
     const gateway = new InMemorySourceRepository();
     new DeliveryCms({
         runner,

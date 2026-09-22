@@ -1,5 +1,5 @@
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
-import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
+import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
 import type {
     BlobReader,

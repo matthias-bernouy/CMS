@@ -77,6 +77,7 @@ export const DEFAULT_ADAPTER_SUBPATHS = [
     "postgresql",
     "redis",
     "s3",
+    "smtp",
     "supabase",
 ];
 
@@ -88,6 +89,7 @@ export const DEFAULT_INFRASTRUCTURE_MODULES = [
     "ioredis",
     "minio",
     "mysql2",
+    "nodemailer",
     "sharp",
 ];
 

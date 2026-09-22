@@ -1,13 +1,12 @@
 import type {
     Authentication,
     IdentityProviderRepository,
-    LocalAuthentication,
+    LocalAuthenticationActions,
     LocalCredentialStore,
-    OidcAuthentication,
     PatRepository,
-    PublicAuthRoutesConfig,
     UsersRepository,
 } from "@bernouy/cms-auth";
+import type { PublicAuthRoutesConfig, OidcAuthHandlers } from "@bernouy/cms-auth/http";
 import type { AnalyticsComplianceContext, AnalyticsStore, EndpointPerformanceReports } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { DashboardAssignmentRepository } from "@bernouy/cms-dashboards";
@@ -20,7 +19,9 @@ import type { Cache, Runner } from "@bernouy/http-runner";
 type Configuration = {
     deliveryUrl?: string;
     analyticsCompliance?: AnalyticsComplianceContext;
-    publicAuth?: PublicAuthRoutesConfig;
+    publicAuth?: PublicAuthRoutesConfig & {
+        emailTest?: { send(input: { kind: "email_verification" | "password_reset"; to: string }): Promise<void> };
+    };
 };
 
 export type ControlCmsOptions = Configuration & {
@@ -37,8 +38,8 @@ export type ControlCmsOptions = Configuration & {
 };
 
 export type ControlAuthBackends = {
-    local?: LocalAuthentication;
-    oidc?: OidcAuthentication;
+    local?: LocalAuthenticationActions;
+    oidc?: OidcAuthHandlers;
 };
 
 export type ControlCmsState = {

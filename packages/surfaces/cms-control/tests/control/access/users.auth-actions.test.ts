@@ -1,16 +1,17 @@
 import { describe, expect, test } from "bun:test";
 import {
-    createLocalUser,
     InMemoryAuthTokenStore,
     InMemoryEmailer,
     InMemoryLocalCredentialStore,
     InMemoryPatRepository,
     InMemoryUsersRepository,
+    createPublicAuthActions,
     LocalAuthentication,
     SignedCookieCodec,
     SubjectResolver,
-    type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
+import { createLocalUser } from "@bernouy/cms-auth/management";
+import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import { InMemoryDashboardAssignmentRepository } from "@bernouy/cms-dashboards";
 import type { ControlCms } from "cms-control/ControlCms";
 import markVerified from "cms-control/api/_access/users/email-verified.post";
@@ -35,7 +36,7 @@ function setup() {
         codec: new SignedCookieCodec(new TextEncoder().encode("test-secret-key-at-least-16-bytes")),
         cookieName: "cms-session",
     });
-    const publicAuth: PublicAuthRoutesConfig = {
+    const publicAuth: PublicAuthRoutesConfig = createPublicAuthActions({
         local,
         credentials,
         users,
@@ -44,7 +45,7 @@ function setup() {
         emailVerificationUrl: "http://control.test/auth/verify-email",
         passwordResetUrl: "http://control.test/auth/reset-password",
         authEmailCooldownSeconds: 0,
-    };
+    });
     const cms = { users, credentials, pats, publicAuth, dashboardAssignments } as unknown as ControlCms;
     return { cms, users, credentials, emailer, dashboardAssignments };
 }

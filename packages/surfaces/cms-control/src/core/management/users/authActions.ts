@@ -1,6 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
-import { requestEmailVerification, requestPasswordReset } from "@bernouy/cms-auth";
 
 type LocalUserCredential = {
     email: string;
@@ -13,12 +12,12 @@ export async function sendUserEmailVerification(cms: ControlCms, sub: string): P
     if (local.verified) {
         return { sent: false };
     }
-    return requestEmailVerification(cms.publicAuth, { email: local.email });
+    return cms.publicAuth.requestEmailVerification({ email: local.email });
 }
 
 export async function sendUserPasswordReset(cms: ControlCms, sub: string): Promise<{ sent: boolean }> {
     const local = await localCredentialForUser(cms, sub);
-    return requestPasswordReset(cms.publicAuth, { email: local.email });
+    return cms.publicAuth.requestPasswordReset({ email: local.email });
 }
 
 export async function markUserEmailVerified(cms: ControlCms, sub: string): Promise<{ ok: true }> {

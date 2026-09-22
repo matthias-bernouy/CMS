@@ -1,9 +1,5 @@
-import {
-    executeAuthSystemSourceEndpoint,
-    resolveRequestSubject,
-    type PublicAuthRoutesConfig,
-    type Subject,
-} from "@bernouy/cms-auth";
+import { resolveRequestSubject, type Subject } from "@bernouy/cms-auth";
+import { executeAuthSystemSourceEndpoint, type PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import { createContentReader, executeSiteSystemSourceEndpoint } from "@bernouy/cms-content";
 import {
     CMS_SOURCES_ROUTE,

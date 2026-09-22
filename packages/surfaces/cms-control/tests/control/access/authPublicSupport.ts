@@ -4,11 +4,12 @@ import {
     InMemoryEmailer,
     InMemoryLocalCredentialStore,
     InMemoryUsersRepository,
+    createPublicAuthActions,
     LocalAuthentication,
     SignedCookieCodec,
     SubjectResolver,
-    type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
+import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import type { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
@@ -156,7 +157,7 @@ export function authSystem() {
         codec: new SignedCookieCodec(new TextEncoder().encode("test-secret-key-at-least-16-bytes")),
         cookieName: "cms-session",
     });
-    const publicAuth: PublicAuthRoutesConfig = {
+    const publicAuth: PublicAuthRoutesConfig = createPublicAuthActions({
         local,
         credentials,
         users,
@@ -164,7 +165,7 @@ export function authSystem() {
         emailer: new InMemoryEmailer(),
         emailVerificationUrl: "http://control.test/auth/verify-email",
         passwordResetUrl: "http://control.test/auth/reset-password",
-    };
+    });
     return { local, credentials, users, publicAuth };
 }
 

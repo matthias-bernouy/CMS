@@ -1,4 +1,5 @@
-import { changeOwnPassword, resolveRequestSubject } from "@bernouy/cms-auth";
+import { resolveRequestSubject } from "@bernouy/cms-auth";
+import { changeOwnPassword } from "@bernouy/cms-auth/management";
 import type { ControlCms } from "cms-control/ControlCms";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 import { readJsonBody } from "cms-control/core/admin/http/readJsonBody";

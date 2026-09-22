@@ -5,6 +5,43 @@ import { createWorkspaceFixture, manifest, ofKind } from "./checkWorkspace.fixtu
 const { createWorkspace } = createWorkspaceFixture();
 
 describe("browser adapter boundaries", () => {
+    test("allows auth HTTP handlers in surfaces but keeps transports and browser imports restricted", async () => {
+        const root = await createWorkspace({
+            "packages/features/auth/package.json": manifest("@bernouy/cms-auth", {
+                exports: {
+                    ".": "./src/index.ts",
+                    "./http": "./src/http.ts",
+                    "./smtp": "./src/smtp.ts",
+                    "./browser": "./src/browser.ts",
+                },
+            }),
+            "packages/features/auth/src/index.ts": "export const auth = true;",
+            "packages/features/auth/src/http.ts": "export const routes = true;",
+            "packages/features/auth/src/smtp.ts": "export const smtp = true;",
+            "packages/features/auth/src/browser.ts": [
+                "import '@bernouy/cms-auth/http';",
+                "import '@bernouy/cms-auth/smtp';",
+            ].join("\n"),
+            "packages/surfaces/web/package.json": manifest("@fixture/web", {
+                dependencies: { "@bernouy/cms-auth": "workspace:*" },
+                exports: { ".": "./src/index.ts" },
+            }),
+            "packages/surfaces/web/src/index.ts": [
+                "import '@bernouy/cms-auth/http';",
+                "import '@bernouy/cms-auth/smtp';",
+                "import 'nodemailer';",
+            ].join("\n"),
+        });
+        const violations = await checkWorkspaceArchitecture({ rootDir: root });
+        const surface = ofKind(violations, "surface-runtime-adapter");
+        expect(surface).toHaveLength(2);
+        expect(surface.some((item) => item.message.endsWith("@bernouy/cms-auth/smtp"))).toBe(true);
+        expect(surface.some((item) => item.message.endsWith("nodemailer"))).toBe(true);
+        const browser = ofKind(violations, "browser-runtime-adapter");
+        expect(browser).toHaveLength(2);
+        expect(browser.some((item) => item.message.endsWith("@bernouy/cms-auth/http"))).toBe(true);
+    });
+
     test("reports runtime adapters in surfaces and transitive browser exports", async () => {
         const root = await createWorkspace({
             "packages/features/domain/package.json": manifest("@fixture/domain", {

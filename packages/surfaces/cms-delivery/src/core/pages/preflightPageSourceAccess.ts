@@ -84,7 +84,7 @@ async function sourceAccessDenied(req: Request, delivery: DeliveryCms, status: 4
         }
         const location = loginPath
             ? `${loginPath}?returnTo=${encodeURIComponent(returnTo)}`
-            : delivery.auth.local.buildLoginUrl(returnTo);
+            : delivery.auth.buildLoginUrl(returnTo);
         return new Response(null, {
             status: 302,
             headers: {

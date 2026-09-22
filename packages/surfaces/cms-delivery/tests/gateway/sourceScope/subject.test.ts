@@ -1,5 +1,5 @@
 import { describe, expect, spyOn, test } from "bun:test";
-import { InMemoryAuthentication, type Subject } from "@bernouy/cms-auth";
+import { InMemoryAuthentication, resolveRequestSubject, type Subject } from "@bernouy/cms-auth";
 import { InMemorySourceRepository, type SourceRequestObservation } from "@bernouy/cms-sources";
 import type { RouteHandler, Runner } from "@bernouy/http-runner";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
@@ -27,7 +27,10 @@ describe("Delivery source subject scope", () => {
         registerDeliverySourceProxy({
             runner: mounted.runner,
             sources,
-            auth: { local: authentication },
+            auth: {
+                subject: (request) => resolveRequestSubject(authentication, request),
+                buildLoginUrl: (returnTo) => authentication.buildLoginUrl(returnTo),
+            },
             sourceTelemetry: {
                 observe(observation: SourceRequestObservation) {
                     observations.push(observation);

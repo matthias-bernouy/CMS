@@ -7,7 +7,7 @@ import {
     oidcCallbackHandler,
     oidcLoginHandler,
     registerPublicAuthRoutes,
-} from "@bernouy/cms-auth";
+} from "@bernouy/cms-auth/http";
 import { createContentReader, generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
 import { CMS_FILES_ROUTE, filesPrefix } from "@bernouy/cms-content/files/urls";
 import { serveFilesRequest } from "@bernouy/cms-content/files/serving";

@@ -7,17 +7,20 @@
 export {
     MongoUsersRepository,
     type MongoUsersConfig,
-} from "cms-auth/default-implementation/mongo/MongoUsersRepository";
+} from "cms-auth/accounts/default-implementation/mongo/MongoUsersRepository";
 export {
     MongoIdentityProviderRepository,
     type MongoIdentityProviderConfig,
-} from "cms-auth/default-implementation/mongo/MongoIdentityProviderRepository";
+} from "cms-auth/providers/default-implementation/mongo/MongoIdentityProviderRepository";
 export {
     MongoLocalCredentialStore,
     type MongoLocalCredentialConfig,
-} from "cms-auth/default-implementation/mongo/MongoLocalCredentialStore";
-export { MongoPatRepository, type MongoPatConfig } from "cms-auth/default-implementation/mongo/MongoPatRepository";
+} from "cms-auth/providers/default-implementation/mongo/MongoLocalCredentialStore";
+export {
+    MongoPatRepository,
+    type MongoPatConfig,
+} from "cms-auth/tokens/personal-access/default-implementation/mongo/MongoPatRepository";
 export {
     MongoAuthTokenStore,
     type MongoAuthTokenConfig,
-} from "cms-auth/default-implementation/mongo/MongoAuthTokenStore";
+} from "cms-auth/tokens/one-time/default-implementation/mongo/MongoAuthTokenStore";

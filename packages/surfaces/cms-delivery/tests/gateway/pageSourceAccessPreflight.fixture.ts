@@ -122,10 +122,8 @@ export async function mountPage(options: {
 
 export function authSubject(subject: { identifier: string } | null): unknown {
     return {
-        local: {
-            getSubject: async () => subject,
-            buildLoginUrl: (returnTo: string) => `/login?returnTo=${encodeURIComponent(returnTo)}`,
-        },
+        subject: async () => subject,
+        buildLoginUrl: (returnTo: string) => `/login?returnTo=${encodeURIComponent(returnTo)}`,
     };
 }
 

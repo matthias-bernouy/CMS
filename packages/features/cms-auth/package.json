@@ -7,7 +7,10 @@
     "main": "./src/exports/index.ts",
     "exports": {
         ".": "./src/exports/index.ts",
+        "./management": "./src/exports/management.ts",
+        "./http": "./src/exports/http.ts",
         "./mongo": "./src/exports/mongo.ts",
+        "./smtp": "./src/exports/smtp.ts",
         "./browser": "./src/exports/browser.ts"
     },
     "dependencies": {

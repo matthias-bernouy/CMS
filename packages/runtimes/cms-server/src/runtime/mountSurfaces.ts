@@ -91,10 +91,12 @@ export async function mountProductionSurfaces(
             responsivePublicSourceImagesEnabled,
             responsivePrivateSourceImagesEnabled,
             publicAuth: {
-                ...authentication.publicAuthBase,
-                emailVerificationUrl: env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
-                passwordResetUrl: env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
-                allowSignup: false,
+                ...authentication.createPublicAuth({
+                    emailVerificationUrl: env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
+                    passwordResetUrl: env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
+                    allowSignup: false,
+                }),
+                emailTest: authentication.createControlEmailTest(),
             },
         },
         core.cache,
@@ -130,11 +132,10 @@ export async function mountProductionSurfaces(
         analyticsCmsVersion: "0.1.0",
         sourceResolveSecret: features.resolveSecret,
         ...createPublicFileStores(core),
-        auth: {
-            ...authentication.publicAuthBase,
+        auth: authentication.createPublicAuth({
             emailVerificationUrl: env.CMS_AUTH_EMAIL_VERIFICATION_URL,
             passwordResetUrl: env.CMS_AUTH_PASSWORD_RESET_URL,
-        },
+        }),
     });
 
     runtime.startAnalyticsFinalizer(features.analytics, {

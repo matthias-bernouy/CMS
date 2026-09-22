@@ -7,7 +7,7 @@ import {
     SYSTEM_SITE_SOURCE_URN,
     type SourceEndpoint,
 } from "@bernouy/cms-sources";
-import { executeAuthSystemSourceEndpoint } from "@bernouy/cms-auth";
+import { executeAuthSystemSourceEndpoint } from "@bernouy/cms-auth/http";
 import { executeSiteSystemSourceEndpoint } from "@bernouy/cms-content/rendering";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { authorizeDeliverySourceEndpoint } from "cms-delivery/core/sources/authorization";

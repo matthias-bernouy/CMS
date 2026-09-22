@@ -1,7 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { readJsonBody } from "cms-control/core/admin/http/readJsonBody";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
-import { deleteIdentityProvider } from "@bernouy/cms-auth";
+import { deleteIdentityProvider } from "@bernouy/cms-auth/management";
 
 /** DELETE /api/identity/provider { id } — remove a login provider. The builtin
  *  `local` provider is a singleton and cannot be removed — only toggled (see

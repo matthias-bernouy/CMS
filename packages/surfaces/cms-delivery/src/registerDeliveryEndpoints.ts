@@ -7,7 +7,7 @@ import SitemapChunkServer from "cms-delivery/endpoints/sitemap-chunk.server";
 import FaviconServer from "cms-delivery/endpoints/assets/favicon.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import BindingCoreServer from "cms-delivery/endpoints/assets/bindingCore.server";
-import { PUBLIC_AUTH_ROUTES, registerPublicAuthRoutes } from "@bernouy/cms-auth";
+import { PUBLIC_AUTH_ROUTES, registerPublicAuthRoutes } from "@bernouy/cms-auth/http";
 import {
     CMS_FILES_ROUTE,
     CMS_IMAGE_VARIANT_ROUTE,

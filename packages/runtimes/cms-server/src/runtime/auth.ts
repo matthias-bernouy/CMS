@@ -1,12 +1,13 @@
 import {
     AuthValidationError,
-    ConfiguredEmailer,
-    createLocalUser,
+    createPublicAuthActions,
     LocalAuthentication,
     SignedCookieCodec,
     SubjectResolver,
     TemplatedAuthEmailComposer,
 } from "@bernouy/cms-auth";
+import { ConfiguredEmailer } from "@bernouy/cms-auth/smtp";
+import { createAuthEmailTestSender, createLocalUser } from "@bernouy/cms-auth/management";
 import type { RuntimeEnv } from "../runtimeEnv";
 import type { CoreStores } from "./stores/core";
 
@@ -66,7 +67,18 @@ export async function createProductionAuth(env: RuntimeEnv, stores: CoreStores) 
         siteName: env.CMS_AUTH_SITE_NAME,
         authEmailCooldownSeconds: env.CMS_AUTH_EMAIL_COOLDOWN_SECONDS,
     };
-    return { auth, publicAuthBase };
+    return {
+        auth,
+        createPublicAuth(options: { emailVerificationUrl: string; passwordResetUrl: string; allowSignup?: boolean }) {
+            return { ...createPublicAuthActions({ ...publicAuthBase, ...options }), allowSignup: options.allowSignup };
+        },
+        createControlEmailTest: () =>
+            createAuthEmailTestSender({
+                ...publicAuthBase,
+                emailVerificationUrl: env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
+                passwordResetUrl: env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
+            }),
+    };
 }
 
 export type ProductionAuthentication = Awaited<ReturnType<typeof createProductionAuth>>;

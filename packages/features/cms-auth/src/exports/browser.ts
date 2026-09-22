@@ -1,1 +1,1 @@
-export { isBuiltinProvider } from "../core/validation";
+export { isBuiltinProvider } from "cms-auth/application/core/validation";

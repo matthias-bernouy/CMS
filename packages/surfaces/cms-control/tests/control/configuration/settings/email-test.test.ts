@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { InMemoryEmailer } from "@bernouy/cms-auth";
+import { createAuthEmailTestSender } from "@bernouy/cms-auth/management";
 import type { ControlCms } from "cms-control/ControlCms";
 import postEmailTest from "cms-control/api/system/email-test.post";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
@@ -16,17 +17,19 @@ describe("POST /api/system/email-test", () => {
         const emailer = new InMemoryEmailer();
         const cms = {
             publicAuth: {
-                emailer,
-                emailVerificationUrl: "https://site.test/verify",
-                passwordResetUrl: "https://site.test/reset",
-                siteName: "Test Site",
-                emailComposer: {
-                    compose: async (input: any) => ({
-                        to: input.to,
-                        subject: `template:${input.kind}`,
-                        text: input.actionUrl,
-                    }),
-                },
+                emailTest: createAuthEmailTestSender({
+                    emailer,
+                    emailVerificationUrl: "https://site.test/verify",
+                    passwordResetUrl: "https://site.test/reset",
+                    siteName: "Test Site",
+                    emailComposer: {
+                        compose: async (input) => ({
+                            to: input.to,
+                            subject: `template:${input.kind}`,
+                            text: input.actionUrl,
+                        }),
+                    },
+                }),
             },
         } as unknown as ControlCms;
 

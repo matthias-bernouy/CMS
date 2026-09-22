@@ -38,9 +38,7 @@ describe("Delivery gateway secrets", () => {
         const handler = await mountDeliveryGateway({
             providers: [COMPUTED],
             auth: {
-                local: {
-                    getSubject: async () => ({ identifier: "user-123", email: "ada@example.test" }),
-                },
+                subject: async () => ({ identifier: "user-123", email: "ada@example.test" }),
             },
         });
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("ok"));

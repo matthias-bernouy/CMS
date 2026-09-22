@@ -63,7 +63,8 @@ export function surfaceMountFixtures() {
         },
         authentication: {
             auth: token("auth"),
-            publicAuthBase: { marker: "public-auth" },
+            createPublicAuth: (options: Record<string, unknown>) => ({ marker: "public-auth", ...options }),
+            createControlEmailTest: () => ({ send: async () => undefined }),
         },
     };
 }

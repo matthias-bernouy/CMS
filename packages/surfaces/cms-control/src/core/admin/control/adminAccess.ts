@@ -1,4 +1,5 @@
-import { createAuthGuard, type Authentication } from "@bernouy/cms-auth";
+import type { Authentication } from "@bernouy/cms-auth";
+import { createAuthGuard } from "@bernouy/cms-auth/http";
 import type { Middleware } from "@bernouy/http-runner";
 
 export function createControlAccessGuard(basePath: string, auth: Authentication): Middleware {

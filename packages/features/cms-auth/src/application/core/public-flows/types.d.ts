@@ -1,0 +1,54 @@
+import type { AuthEmailComposer } from "cms-auth/email/interfaces/AuthEmailComposer";
+import type { AuthTokenStore } from "cms-auth/tokens/one-time/interfaces/AuthTokenStore";
+import type { Emailer } from "cms-auth/email/interfaces/Emailer";
+import type { LocalCredentialStore } from "cms-auth/providers/interfaces/LocalCredentialStore";
+import type { UsersRepository } from "cms-auth/accounts/interfaces/UsersRepository";
+
+export type VerificationTarget = {
+    sub: string;
+    email: string;
+    emailVerifiedAt: Date | null;
+};
+
+export type PublicAuthFlowConfig = {
+    credentials: LocalCredentialStore;
+    users: UsersRepository;
+    tokens: AuthTokenStore;
+    emailer: Emailer;
+    emailComposer?: AuthEmailComposer;
+    /** Frontend page where users land after clicking a verification email. */
+    emailVerificationUrl: string;
+    /** Frontend page where users land after clicking a password-reset email. */
+    passwordResetUrl: string;
+    siteName?: string;
+    emailVerificationTtlSeconds?: number;
+    passwordResetTtlSeconds?: number;
+    /** Cooldown before another auth email can be sent for the same subject and
+     *  purpose. Defaults to 5 minutes. Set 0 in tests/dev to disable. */
+    authEmailCooldownSeconds?: number;
+    buildEmailVerificationUrl?: (token: string) => string;
+    buildPasswordResetUrl?: (token: string) => string;
+};
+
+export type SignupLocalUserInput = {
+    email: string;
+    password: string;
+};
+
+export type PublicAuthSendResult = {
+    sent: boolean;
+};
+
+export type SignupLocalUserResult = PublicAuthSendResult & {
+    created: boolean;
+    /** Server-only activation subject. Null keeps duplicate signups opaque when
+     * the submitted password did not authenticate the existing credential. */
+    cmsUserId: string | null;
+};
+
+export type PreparedSignupLocalUser = {
+    /** Subject reserved by the credential store before membership activation. */
+    cmsUserId: string | null;
+    /** Idempotent continuation that activates membership and delivers verification. */
+    finalize(): Promise<SignupLocalUserResult>;
+};

@@ -1,5 +1,5 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { resolveRequestSubject, type Subject } from "@bernouy/cms-auth";
+import type { Subject } from "@bernouy/cms-auth";
 import {
     SYSTEM_AUTH_SOURCE_URN,
     SYSTEM_SITE_SOURCE_URN,
@@ -16,7 +16,7 @@ export async function resolveDeliverySubject(delivery: DeliveryCms, req: Request
     if (!auth) {
         return null;
     }
-    return measureActiveSourceTiming(req, "cms_auth", () => resolveRequestSubject(auth.local, req)).catch(() => null);
+    return measureActiveSourceTiming(req, "cms_auth", () => auth.subject(req)).catch(() => null);
 }
 
 export async function resolveDeliverySourceContext(
