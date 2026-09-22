@@ -1,4 +1,4 @@
-import sharp, { type Sharp, versions } from "sharp";
+import sharp, { type Sharp } from "sharp";
 import type { SourceImageRecipe } from "../../interfaces/recipe";
 import type {
     SourceImageInputFormat,
@@ -8,7 +8,8 @@ import type {
 } from "../../interfaces/transformer";
 
 export class SharpSourceImageTransformer implements SourceImageTransformer {
-    readonly encoderIdentity = `sharp-${versions.sharp}-vips-${versions.vips}-webp-${versions.webp ?? "unknown"}`;
+    readonly encoderIdentity =
+        `sharp-${sharp.versions.sharp}-vips-${sharp.versions.vips}-webp-${sharp.versions.webp ?? "unknown"}`;
 
     async inspect(source: Uint8Array, recipe: SourceImageRecipe): Promise<SourceImageMetadata> {
         const pipeline = sharp(source, {
