@@ -5,7 +5,7 @@ export type {
     ThemeSource,
     ThemeToken,
     ThemeTokenDefaults,
-} from "cms-content/interfaces/theme";
+} from "cms-content/theme/interfaces/theme";
 export {
     canReferenceThemeToken,
     directTokenReference,
@@ -17,4 +17,4 @@ export {
     type DirectTokenReference,
     type ResolvedThemeValue,
     type ThemeTokenEntry,
-} from "cms-content/core/theme/tokens";
+} from "cms-content/theme/core/tokens";

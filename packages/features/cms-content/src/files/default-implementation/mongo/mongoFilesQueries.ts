@@ -1,4 +1,4 @@
-import { escapeRegex } from "cms-content/core/utils/escapeRegex";
+import { escapeRegex } from "cms-content/pages/core/queries/escapeRegex";
 import type { Collection } from "mongodb";
 import type { FilesItem, FilesListOptions, FilesPage } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
 import { fromDocument, type FilesItemDocument } from "./mongoFilesDocuments";

@@ -11,10 +11,10 @@
         "./theme": "./src/exports/theme.ts",
         "./page-path": "./src/exports/page-path.ts",
         "./mongo": "./src/exports/mongo.ts",
-        "./files": "./src/files/exports/index.ts",
-        "./files/urls": "./src/files/exports/urls.ts",
-        "./files/mongo": "./src/files/exports/mongo.ts",
-        "./files/s3": "./src/files/exports/s3.ts"
+        "./files": "./src/exports/files/index.ts",
+        "./files/urls": "./src/exports/files/urls.ts",
+        "./files/mongo": "./src/exports/files/mongo.ts",
+        "./files/s3": "./src/exports/files/s3.ts"
     },
     "dependencies": {
         "@bernouy/cms-sources": "workspace:*",

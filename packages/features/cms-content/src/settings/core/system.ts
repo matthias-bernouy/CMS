@@ -1,0 +1,129 @@
+import type { TSystem } from "cms-content/settings/interfaces/settings";
+import { defaultThemeSettings } from "cms-content/theme/core";
+
+export function defaultSystem(): TSystem {
+    return {
+        initializationStep: 0,
+        site: {
+            name: "",
+            favicon: "",
+            visible: true,
+            host: "",
+            language: "",
+            additionalLanguages: [],
+            activeLanguages: [],
+            organization: emptySiteOrganization(),
+            notFound: null,
+            forbidden: null,
+            serverError: null,
+            login: null,
+        },
+        theme: defaultThemeSettings(),
+        security: { connectExtras: [], mediaExtras: [] },
+        email: {
+            enabled: false,
+            fromEmail: "",
+            fromName: "",
+            replyTo: "",
+            transport: "smtp",
+            smtp: {
+                host: "",
+                port: 587,
+                secure: false,
+                username: "",
+                passwordSecretRef: "",
+            },
+            templates: {
+                emailVerification: emptyEmailTemplate(),
+                passwordReset: emptyEmailTemplate(),
+            },
+        },
+    };
+}
+
+function emptyEmailTemplate() {
+    return { subject: "", html: "" };
+}
+
+function emptySiteOrganization(): TSystem["site"]["organization"] {
+    return {
+        name: "",
+        legalName: "",
+        description: "",
+        logo: "",
+        email: "",
+        telephone: "",
+        address: {
+            streetAddress: "",
+            postalCode: "",
+            addressLocality: "",
+            addressRegion: "",
+            addressCountry: "",
+        },
+        sameAs: [],
+    };
+}
+
+export function mergeSystemUpdate(current: TSystem, update: Partial<TSystem>): TSystem {
+    const merged = { ...current };
+    for (const [section, value] of Object.entries(update) as [keyof TSystem, unknown][]) {
+        if (section === "initializationStep") {
+            merged.initializationStep = value as number;
+        } else if (section === "site" && typeof value === "object" && value !== null) {
+            const { theme: _removedFreeformTheme, ...site } = value as Partial<TSystem["site"]> & {
+                theme?: unknown;
+            };
+            const currentOrganization = current.site.organization ?? emptySiteOrganization();
+            const organization = site.organization;
+            merged.site = {
+                ...current.site,
+                ...site,
+                organization: organization
+                    ? {
+                          ...currentOrganization,
+                          ...organization,
+                          address: {
+                              ...currentOrganization.address,
+                              ...(organization.address ?? {}),
+                          },
+                      }
+                    : currentOrganization,
+            };
+            merged.site.additionalLanguages = (merged.site.additionalLanguages ?? []).filter(
+                (language) => language.toLowerCase() !== merged.site.language.toLowerCase(),
+            );
+            const selected = new Set(merged.site.additionalLanguages.map((language) => language.toLowerCase()));
+            merged.site.activeLanguages = (merged.site.activeLanguages ?? []).filter((language) =>
+                selected.has(language.toLowerCase()),
+            );
+        } else if (section === "email" && typeof value === "object" && value !== null) {
+            const email = value as Partial<TSystem["email"]>;
+            const currentEmail = current.email ?? defaultSystem().email;
+            const currentTemplates = currentEmail.templates ?? defaultSystem().email.templates;
+            merged.email = {
+                ...currentEmail,
+                ...email,
+                smtp: {
+                    ...currentEmail.smtp,
+                    ...(email.smtp ?? {}),
+                },
+                templates: {
+                    emailVerification: {
+                        ...currentTemplates.emailVerification,
+                        ...(email.templates?.emailVerification ?? {}),
+                    },
+                    passwordReset: {
+                        ...currentTemplates.passwordReset,
+                        ...(email.templates?.passwordReset ?? {}),
+                    },
+                },
+            };
+        } else if (typeof value === "object" && value !== null) {
+            (merged as any)[section] = {
+                ...(current as any)[section],
+                ...value,
+            };
+        }
+    }
+    return merged;
+}

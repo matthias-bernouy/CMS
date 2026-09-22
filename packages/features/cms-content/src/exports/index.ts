@@ -19,17 +19,21 @@ export type {
     SiteBlocSnapshot,
     TBloc,
     TBlocWrite,
-} from "cms-content/interfaces/blocs";
+} from "cms-content/blocs/interfaces/blocs";
 export {
     parsePresentationImage,
     presentationImageContentType,
     isPresentationImageBytes,
     blocThumbnailFromSource,
-} from "cms-content/core/validation/documents/presentationImage";
-export type { PageIndexingConfiguration, PageRoute, TPage, TPageRef } from "cms-content/interfaces/pages";
-export { languagePrefix, localPagePath, publicPagePath } from "cms-content/core/utils/localizedPagePath";
-export { pageSeoForLanguage } from "cms-content/core/lifecycle/pageSeo";
-export type { SiteOrganizationAddress, SiteOrganizationSettings, TSystem } from "cms-content/interfaces/settings";
+} from "cms-content/blocs/core/presentationImage";
+export type { PageIndexingConfiguration, PageRoute, TPage, TPageRef } from "cms-content/pages/interfaces/pages";
+export { languagePrefix, localPagePath, publicPagePath } from "cms-content/pages/core/paths/localizedPagePath";
+export { pageSeoForLanguage } from "cms-content/pages/core/lifecycle/pageSeo";
+export type {
+    SiteOrganizationAddress,
+    SiteOrganizationSettings,
+    TSystem,
+} from "cms-content/settings/interfaces/settings";
 export type {
     IntegrationThemeContribution,
     ThemeCategoryContribution,
@@ -43,11 +47,11 @@ export type {
     ThemeTokenContribution,
     ThemeTokenDefaults,
     ThemeTokenType,
-} from "cms-content/interfaces/theme";
-export { wrapBindingCore } from "cms-content/interfaces/settings";
+} from "cms-content/theme/interfaces/theme";
+export { wrapBindingCore } from "cms-content/settings/interfaces/settings";
 
 // ── Repository seam ────────────────────────────────────────────────────
-export type { BlocListOptions, ContentReader } from "cms-content/interfaces/ContentReader";
+export type { BlocListOptions, ContentReader } from "cms-content/application/interfaces/ContentReader";
 export type {
     CmsRepository,
     BlocListItemResponse,
@@ -56,10 +60,10 @@ export type {
     PagesQuery,
     SiteBlocPublicationGuard,
     ValueCount,
-} from "cms-content/interfaces/CmsRepository";
-export { InMemoryCmsRepository } from "cms-content/default-implementation/InMemoryCmsRepository";
-export { filterAndSortPages } from "cms-content/core/queries/pagesQuery";
-export { defaultSystem, mergeSystemUpdate } from "cms-content/core/lifecycle/system";
+} from "cms-content/application/interfaces/CmsRepository";
+export { InMemoryCmsRepository } from "cms-content/application/default-implementation/memory/InMemoryCmsRepository";
+export { filterAndSortPages } from "cms-content/pages/core/queries/pagesQuery";
+export { defaultSystem, mergeSystemUpdate } from "cms-content/settings/core/system";
 export {
     allTokens,
     composeThemeSettings,
@@ -73,15 +77,15 @@ export {
     reconcileSubmittedThemeSettings,
     removeIntegrationTheme,
     validateThemeSettings,
-} from "cms-content/core/theme";
-export { countValues, normalizeTags } from "cms-content/core/queries/counts";
-export { projectPublicSiteOrganization } from "cms-content/core/queries/publicOrganization";
+} from "cms-content/theme/core";
+export { countValues, normalizeTags } from "cms-content/pages/core/queries/counts";
+export { projectPublicSiteOrganization } from "cms-content/settings/core/publicOrganization";
 export {
     isPublishedPage,
     publishedPageSnapshot,
     serializePublishedPageSnapshot,
     type PublishedPageSnapshot,
-} from "cms-content/core/lifecycle/publication";
+} from "cms-content/pages/core/lifecycle/publication";
 export {
     BlocOwnershipConflictError,
     BlocPublicationConflictError,
@@ -99,7 +103,7 @@ export {
     SiteBlocPublicationLockLostError,
     SiteBlocPublicationRecoveryRequiredError,
     SiteBlocPublicationRequiredError,
-} from "cms-content/core/validation/errors";
+} from "cms-content/application/core/validation/errors";
 export {
     archivedSiteDefinition,
     assertBlocOwner,
@@ -108,19 +112,19 @@ export {
     normalizeBlocWrite,
     publishedSiteRecord,
     sameBlocOwner,
-} from "cms-content/core/blocs/records";
+} from "cms-content/blocs/core/catalogue/records";
 export {
     DEFAULT_SITE_BLOC_COLLECTION_ID,
     validateSiteBlocCollectionInput,
-} from "cms-content/core/lifecycle/siteBlocCollections";
-export { nextSiteBlocUpdatedAt } from "cms-content/core/blocs/timestamps";
-export { SiteBlocPublicationQueue } from "cms-content/core/blocs/SiteBlocPublicationQueue";
+} from "cms-content/blocs/core/catalogue/siteBlocCollections";
+export { nextSiteBlocUpdatedAt } from "cms-content/blocs/core/catalogue/timestamps";
+export { SiteBlocPublicationQueue } from "cms-content/blocs/core/publication/SiteBlocPublicationQueue";
 export {
     validateBlocWrite,
     validateNativeSiteBlocNode,
     validateSiteBlocDefinition,
     validateSiteBlocSnapshot,
-} from "cms-content/core/validation/blocs";
+} from "cms-content/blocs/core/validation";
 export {
     isNativeHtmlTag,
     isPlatformNativeAttributeAllowed,
@@ -134,22 +138,22 @@ export {
     PLATFORM_NATIVE_CONTEXTUAL_TAGS,
     PLATFORM_NATIVE_RICH_TEXT_TAGS,
     PLATFORM_NATIVE_SEMANTIC_TAGS,
-} from "cms-content/core/validation/blocs/nativeHtml";
+} from "cms-content/blocs/core/validation/nativeHtml";
 export {
     isCmsMediaSource,
     nativeAttributeSetIssue,
     nativeAttributeValueIssue,
-} from "cms-content/core/validation/blocs/nativeAttributeValues";
-export { validateSiteBlocDefaultContent } from "cms-content/core/validation/documents/nativeContent";
+} from "cms-content/blocs/core/validation/nativeAttributeValues";
+export { validateSiteBlocDefaultContent } from "cms-content/editor/core/markup/validation/nativeContent";
 export {
     isCmsBindingAttribute,
     nativeBindingAttributeIssue,
     nativeFormBindingIssue,
-} from "cms-content/core/validation/blocs/nativeBindings";
-export { findPagesReferencingBloc, findPagesReferencingText } from "cms-content/core/queries/pagesReferencing";
-export { createBlocUsageResolver } from "cms-content/core/blocs/usage/resolveUsedBlocTags";
-export { findUsedBlocTags } from "cms-content/core/blocs/usage/findUsedBlocTags";
-export { buildBlocFoucShellCss } from "cms-content/core/blocs/buildBlocFoucShellCss";
+} from "cms-content/blocs/core/validation/nativeBindings";
+export { findPagesReferencingBloc, findPagesReferencingText } from "cms-content/pages/core/queries/pagesReferencing";
+export { createBlocUsageResolver } from "cms-content/blocs/core/usage/resolveUsedBlocTags";
+export { findUsedBlocTags } from "cms-content/blocs/core/usage/findUsedBlocTags";
+export { buildBlocFoucShellCss } from "cms-content/blocs/core/composition/buildBlocFoucShellCss";
 export {
     COMPOSITION_CONTROLLER_ATTRIBUTE,
     COMPOSITION_CONTROLLER_RUNTIME_ATTRIBUTE,
@@ -160,38 +164,41 @@ export {
     expandCompositions,
     type CompositionDefinition,
     type CompositionExpansionMode,
-} from "cms-content/core/blocs/expandCompositions";
-export { generateBlocEntry, generateBlocSetEntry } from "cms-content/core/blocs/buildBlocEntries";
-export { collectCmsSourceBindings, type CmsSourceBindingReference } from "cms-content/core/editor/sourceBindings";
+} from "cms-content/blocs/core/composition/expandCompositions";
+export { generateBlocEntry, generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";
+export {
+    collectCmsSourceBindings,
+    type CmsSourceBindingReference,
+} from "cms-content/editor/core/document/sourceBindings";
 export {
     detectPageIndexingCandidates,
     type PageIndexingCandidate,
     type PageIndexingDetection,
     type PageIndexingDetectionOptions,
     type PageIndexingDetectionStatus,
-} from "cms-content/core/editor/pageIndexingDetection";
+} from "cms-content/editor/core/document/pageIndexingDetection";
 
 // ── Validation (rules live here; the decorator is the unbypassable barrier) ─
-export { ValidatingCmsRepository } from "cms-content/core/validation/ValidatingCmsRepository";
+export { ValidatingCmsRepository } from "cms-content/application/core/ValidatingCmsRepository";
 export {
     assertContentRefsExist,
     type ContentRefsReader,
-} from "cms-content/core/validation/documents/assertContentRefsExist";
+} from "cms-content/editor/core/markup/validation/assertContentRefsExist";
 export {
     managedNativeElementIssue,
     type ManagedNativeElementContract,
-} from "cms-content/core/validation/documents/managedNativeElements";
-export { hardenStoredHtml } from "cms-content/core/validation/hardenStoredHtml";
-export { validatePageSeo } from "cms-content/core/validation/documents/pages/seo";
-export { isSafeNavigationalUrl } from "cms-content/core/utils/safeUrl";
+} from "cms-content/editor/core/markup/validation/managedNativeElements";
+export { hardenStoredHtml } from "cms-content/editor/core/markup/hardenStoredHtml";
+export { validatePageSeo } from "cms-content/pages/core/validation/seo";
+export { isSafeNavigationalUrl } from "cms-content/editor/core/markup/safeUrl";
 export {
     validatePageIndexingConfiguration,
     validatePagePath,
     validatePageTitle,
     validatePagePatch,
-} from "cms-content/core/validation/documents/pages/page";
-export { canonicalSiteBaseUrl, validateSettingsPatch } from "cms-content/core/validation/settings";
-export { coercePageRef, pageRefToString } from "cms-content/core/validation/documents/pageRef";
+} from "cms-content/pages/core/validation/page";
+export { canonicalSiteBaseUrl, validateSettingsPatch } from "cms-content/settings/core/validation";
+export { coercePageRef, pageRefToString } from "cms-content/pages/core/validation/pageRef";
 export {
     PAGE_METADATA_PLATFORM_VARIABLES,
     PAGE_METADATA_RESERVED_NAMESPACES,
@@ -201,23 +208,23 @@ export {
     type PageMetadataScalar,
     type PageMetadataScope,
     type PageMetadataTemplateResult,
-} from "cms-content/core/editor/pageMetadataVariables";
+} from "cms-content/editor/core/document/pageMetadataVariables";
 
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────
-export { generateStyleEntry } from "cms-content/http/generateStyleEntry";
-export { executeSiteSystemSourceEndpoint } from "cms-content/http/systemSiteSource";
+export { generateStyleEntry } from "cms-content/theme/core/generateStyleEntry";
+export { executeSiteSystemSourceEndpoint } from "cms-content/settings/http/systemSiteSource";
 export {
     PUBLISHED_PAGE_SNAPSHOT_ROUTE,
     PUBLISHED_PAGE_SNAPSHOT_SCHEMA,
     publishedPageSnapshotUrl,
     servePublishedPageSnapshot,
-} from "cms-content/http/publishedPageSnapshot";
+} from "cms-content/pages/http/publishedPageSnapshot";
 
 // ── Constants & utils ──────────────────────────────────────────────────
-export * from "cms-content/core/constants/p9r-constants";
-export * from "cms-content/core/validation/predicates";
-export * from "cms-content/core/utils/contentRefs";
-export { derivePagePath } from "cms-content/core/utils/pagePath";
-export { sanitizeDomTree } from "cms-content/core/utils/sanitizeDomTree";
-export { sanitizeSvgTree } from "cms-content/core/utils/sanitizeSvgTree";
-export { escapeRegex } from "cms-content/core/utils/escapeRegex";
+export * from "cms-content/editor/core/constants/p9r-constants";
+export * from "cms-content/application/core/validation/predicates";
+export * from "cms-content/editor/core/markup/contentRefs";
+export { derivePagePath } from "cms-content/pages/core/paths/pagePath";
+export { sanitizeDomTree } from "cms-content/editor/core/markup/sanitizeDomTree";
+export { sanitizeSvgTree } from "cms-content/editor/core/markup/sanitizeSvgTree";
+export { escapeRegex } from "cms-content/pages/core/queries/escapeRegex";

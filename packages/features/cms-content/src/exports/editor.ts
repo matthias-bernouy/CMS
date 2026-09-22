@@ -78,7 +78,7 @@ export {
     type Setting,
     type SettingSection,
     type TextCapability,
-} from "../interfaces/Editor";
+} from "cms-content/editor/core";
 
 export type {
     DataExpression,
@@ -115,15 +115,15 @@ export type {
     TextareaSetting,
     TextSetting,
     ToggleSetting,
-} from "../interfaces/Editor";
+} from "cms-content/editor/core";
 
 export {
     createEditorCatalogEntry,
     mergeEditorCatalogs,
-} from "../core/editor/EditorCatalog";
+} from "cms-content/editor/core/catalogue/EditorCatalog";
 
-export { sanitizeSvgTree } from "../core/utils/sanitizeSvgTree";
-export { isSafeNavigationalUrl } from "../core/utils/safeUrl";
+export { sanitizeSvgTree } from "cms-content/editor/core/markup/sanitizeSvgTree";
+export { isSafeNavigationalUrl } from "cms-content/editor/core/markup/safeUrl";
 export {
     isNativeHtmlTag,
     isPlatformNativeAttributeAllowed,
@@ -137,15 +137,15 @@ export {
     PLATFORM_NATIVE_CONTEXTUAL_TAGS,
     PLATFORM_NATIVE_RICH_TEXT_TAGS,
     PLATFORM_NATIVE_SEMANTIC_TAGS,
-} from "../core/validation/blocs/nativeHtml";
+} from "cms-content/blocs/core/validation/nativeHtml";
 export {
     isCmsMediaSource,
     nativeAttributeSetIssue,
     nativeAttributeValueIssue,
-} from "../core/validation/blocs/nativeAttributeValues";
-export { nativeDomTreeIssue, type NativeDomPolicyOptions } from "../core/validation/blocs/nativeDom";
+} from "cms-content/blocs/core/validation/nativeAttributeValues";
+export { nativeDomTreeIssue, type NativeDomPolicyOptions } from "cms-content/blocs/core/validation/nativeDom";
 export {
     isCmsBindingAttribute,
     nativeBindingAttributeIssue,
     nativeFormBindingIssue,
-} from "../core/validation/blocs/nativeBindings";
+} from "cms-content/blocs/core/validation/nativeBindings";

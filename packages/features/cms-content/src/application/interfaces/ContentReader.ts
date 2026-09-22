@@ -1,0 +1,47 @@
+import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
+import type { TSystem } from "cms-content/settings/interfaces/settings";
+
+export type BlocListOptions = {
+    /** Include installed blocs hidden from the authoring catalogue. */
+    includeInactive?: boolean;
+};
+
+/**
+ * Read-only view of the content aggregate — the subset public rendering
+ * needs: no create/update/delete paths and no editor bundles.
+ * `CmsRepository` extends it, so any repository satisfies a reader.
+ *
+ * Delivery normally addresses rendered pages by path. Stable page identifiers
+ * remain available for read-only machine contracts that must survive a path
+ * change, such as a published-page snapshot.
+ *
+ * An adapter that wraps the existing `CmsRepository` is the short-term way
+ * to satisfy this contract; longer term, Delivery can bypass the admin DB
+ * entirely and read from a projection (file export, S3 snapshot, etc.).
+ */
+export interface ContentReader {
+    // PAGE
+    getPage(path: string): Promise<TPage | null>;
+    getPageById(id: string): Promise<TPage | null>;
+    getAllPages(): Promise<TPage[]>;
+    getPublishedPage(path: string): Promise<TPage | null>;
+    getPublishedPages(): Promise<TPage[]>;
+    /** Exact path lookup; implementations may lazily bridge legacy records. */
+    getPageRoute?(path: string): Promise<PageRoute | null>;
+
+    // BLOC (view only — editor bundles live in the admin)
+    getBlocsList(options?: BlocListOptions): Promise<
+        {
+            id: string;
+            name: string;
+            group: string;
+            description: string;
+            compositionHTML?: string;
+            nativeElement?: string;
+        }[]
+    >;
+    getBlocViewJS(tag: string): Promise<string | null>;
+
+    // SYSTEM (theme, favicon, host, language, system page refs)
+    getSystem(): Promise<TSystem>;
+}
