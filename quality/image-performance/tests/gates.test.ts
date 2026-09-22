@@ -130,7 +130,8 @@ describe("image performance gates", () => {
         const candidate = artifact("candidate", 100, 100, 0, 10);
         let browser = browserArtifact(candidate);
         const candidateCase = browser.cases.find(({ rollout }) => rollout === "candidate")!;
-        candidateCase.images.narrow.currentSrc = "http://fixture.invalid/image/original.png?slot=narrow&cms-width=64";
+        candidateCase.images.narrow.currentSrc =
+            "http://fixture.invalid/.cms/sources/image-performance/image?slot=narrow&cms-width=64";
         candidateCase.images.wide.decodedWidth = 1_600;
         candidateCase.images.wide.responseContentType = "image/png";
         candidateCase.requests.push(candidateCase.requests[0]!);
@@ -139,7 +140,8 @@ describe("image performance gates", () => {
         candidateCase.domProbes.recycled.clearedSizes = null;
         candidateCase.cls = 0.01;
         const baselineCase = browser.cases.find(({ rollout }) => rollout === "baseline")!;
-        baselineCase.images.narrow.currentSrc = "http://fixture.invalid/image/original.png?slot=narrow&cms-width=384";
+        baselineCase.images.narrow.currentSrc =
+            "http://fixture.invalid/.cms/sources/image-performance/image?slot=narrow&cms-width=384";
         browser = buildBrowserPerformanceArtifact(browser.cases, browser.provenance);
 
         const comparison = compareArtifacts(baseline, candidate, browser, comparisonThresholds());

@@ -25,3 +25,7 @@ export default async function prebuildControl() {
         throw new Error("prebuildControl: Bun.build failed");
     }
 }
+
+if (import.meta.main) {
+    await prebuildControl();
+}

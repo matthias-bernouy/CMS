@@ -10,6 +10,7 @@ export {
     comparePackageCoverage,
     isCoverageRegression,
 } from "./policy/comparison";
+export { isCoverageRuntimeMigration } from "./policy/regression";
 export {
     isPackageRemovalAllowed,
     parseRemovedOrRenamedPaths,

@@ -111,7 +111,7 @@ function image(slot: "narrow" | "wide", width: number | null) {
     const cmsWidth = width === null ? "" : `&cms-width=${width}`;
     const decodedWidth = width ?? 1_600;
     return {
-        currentSrc: `http://fixture.invalid/image/original.png?slot=${slot}${cmsWidth}`,
+        currentSrc: `http://fixture.invalid/.cms/sources/image-performance/image?slot=${slot}${cmsWidth}`,
         selectedWidth: width,
         responseStatus: 200,
         decodedWidth,

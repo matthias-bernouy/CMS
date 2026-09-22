@@ -5,10 +5,10 @@ describe("Persistent Source image queue contract", () => {
     test("deduplicates, reclaims expired leases, and fences old owners", async () => {
         const queue = new InMemorySourceImageJobQueue();
         const input = job("first");
-        const now = Date.now();
 
         expect(await queue.enqueue(input)).toBe("accepted");
         expect(await queue.enqueue(input)).toBe("duplicate");
+        const now = Date.now();
         const first = await queue.claim({
             owner: "worker-a",
             now,

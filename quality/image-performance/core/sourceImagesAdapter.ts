@@ -72,7 +72,7 @@ async function buildState(options: ImagePerformanceAdapterOptions): Promise<Cand
             scope: "image-performance",
             cache,
             transformer,
-            semaphore: new SourceImageSemaphore(1),
+            semaphore: new SourceImageSemaphore(),
             semaphoreWaitTimeoutMs: 5_000,
             observe(observation: SourceImageObservation) {
                 if (observation.outcome === "cache_hit") {

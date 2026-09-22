@@ -83,7 +83,7 @@ export function matchesExpectedUrl(urlValue: string, slot: string, width: number
     }
     const url = new URL(urlValue, "http://fixture.invalid");
     return (
-        url.pathname === "/image/original.png" &&
+        url.pathname === "/.cms/sources/image-performance/image" &&
         url.searchParams.get("slot") === slot &&
         (width === null ? !url.searchParams.has("cms-width") : url.searchParams.get("cms-width") === String(width))
     );

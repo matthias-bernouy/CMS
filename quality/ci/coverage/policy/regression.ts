@@ -25,17 +25,24 @@ export function compareWithReference(
     baseline: CoverageBaseline,
     measured: CoverageBaseline,
 ): string[] {
+    const toolchainChanges = git(["diff", "--name-only", `${referenceName}...HEAD`, "--", ".bun-version"]);
+    if (toolchainChanges.exitCode !== 0) {
+        throw new Error(toolchainChanges.stderr.trim() || `Cannot inspect Bun version changes from ${referenceName}`);
+    }
+    if (isCoverageRuntimeMigration(toolchainChanges.stdout)) {
+        return [];
+    }
+
     const reference = readReferenceBaseline(referenceName);
     if (!reference) {
         return comparePackagesExactly(baseline, measured, "initial baseline");
     }
 
-    const regressions: string[] = [];
     if (reference.bunVersion !== baseline.bunVersion) {
-        regressions.push(
-            `target branch baseline uses Bun ${reference.bunVersion}, current baseline uses ${baseline.bunVersion}`,
-        );
+        return [`target branch baseline uses Bun ${reference.bunVersion}, current baseline uses ${baseline.bunVersion}`];
     }
+
+    const regressions: string[] = [];
     const changes = git(["diff", "--name-status", "--find-renames", `${referenceName}...HEAD`, "--", "packages"]);
     if (changes.exitCode !== 0) {
         throw new Error(changes.stderr.trim() || `Cannot inspect source removals from ${referenceName}`);
@@ -51,4 +58,11 @@ export function compareWithReference(
     );
     regressions.push(...compareNewPackages(reference, baseline, measured));
     return regressions;
+}
+
+export function isCoverageRuntimeMigration(changedPaths: string): boolean {
+    return changedPaths
+        .split(/\r?\n/)
+        .map((path) => path.trim())
+        .includes(".bun-version");
 }

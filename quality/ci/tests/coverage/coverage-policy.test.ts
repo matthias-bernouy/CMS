@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
     assertBaselineUpdateAllowed,
     assertEveryPackageHasTests,
+    isCoverageRuntimeMigration,
     normalizeCoverageReference,
     resolveCoverageReference,
 } from "../../coverage/ratchet";
@@ -29,5 +30,10 @@ describe("coverage policy", () => {
         expect(normalizeCoverageReference("abc123")).toBe("abc123");
         expect(resolveCoverageReference(undefined, "true")).toBe("HEAD^");
         expect(resolveCoverageReference(undefined, undefined)).toBeUndefined();
+    });
+
+    test("allows a coverage rebaseline only with an explicit Bun version migration", () => {
+        expect(isCoverageRuntimeMigration(".bun-version\n")).toBeTrue();
+        expect(isCoverageRuntimeMigration("package.json\n")).toBeFalse();
     });
 });

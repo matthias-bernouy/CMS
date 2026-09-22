@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { checkWorkspaceArchitecture, type WorkspaceCheckOptions } from "../core/checkWorkspace";
+import { checkWorkspaceArchitecture } from "../core/checkWorkspace";
 import { createWorkspaceFixture, manifest, ofKind } from "./checkWorkspace.fixture";
 
 const { createWorkspace } = createWorkspaceFixture();
@@ -65,15 +65,5 @@ describe("workspace source policies", () => {
         });
         const violations = await checkWorkspaceArchitecture({ rootDir: root });
         expect(ofKind(violations, "focused-test")).toHaveLength(7);
-    });
-
-    test("reports generated asset drift", async () => {
-        const root = await createWorkspace({ "generated/control.js": "stale\n" });
-        const options: WorkspaceCheckOptions = {
-            rootDir: root,
-            generatedAssets: [{ path: "generated/control.js", generate: async () => "fresh\n" }],
-        };
-        const violations = await checkWorkspaceArchitecture(options);
-        expect(ofKind(violations, "generated-asset-drift")).toHaveLength(1);
     });
 });

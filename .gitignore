@@ -7,7 +7,6 @@ dist/
 
 # Stale top-level build artifacts (pre-monorepo build.ts)
 build/
-/coverage/
 
 # Environment + secrets
 .env
@@ -29,6 +28,7 @@ build/
 
 # Generated files
 coverage/
+packages/surfaces/cms-control/src/static/assets/control-components.js
 
 # .p9r files
 .p9r/

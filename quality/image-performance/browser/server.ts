@@ -89,7 +89,10 @@ export async function startBrowserFixtureServer(): Promise<BrowserFixtureServer>
                         headers: { "content-type": "text/javascript; charset=utf-8" },
                     });
                 }
-                if (url.pathname === "/image/original.png") {
+                if (
+                    url.pathname === "/.cms/sources/image-performance/image" ||
+                    url.pathname === "/image/original.png"
+                ) {
                     requests.push(`${url.pathname}${url.search}`);
                     return sourceImageResponse(adapter, asset, request);
                 }

@@ -27,13 +27,13 @@ test("quality workflow pins external actions and the secret scanner", async () =
     const workflow = await readFile(workflowPath, "utf8");
     const configuration = await readQualityConfiguration();
 
-    expect(workflow).toContain("actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2");
+    expect(workflow).toContain("actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1");
     expect(configuration).toContain("oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0");
     expect(workflow).toContain("GITLEAKS_VERSION: 8.30.1");
     expect(workflow).toContain(
         "GITLEAKS_ARCHIVE_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb",
     );
-    expect(workflow).toContain("actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2");
+    expect(workflow).toContain("actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1");
     expect(configuration).not.toMatch(/uses:\s+[^\s]+@(main|master|v\d+)\s*$/m);
     const actionReferences = [...configuration.matchAll(/uses:\s+[^\s]+@([^\s]+)/g)].flatMap((match) =>
         match[1] ? [match[1]] : [],
@@ -49,6 +49,7 @@ test("quality workflow keeps every G0 check visible", async () => {
 
     for (const command of [
         "bun install --frozen-lockfile",
+        "bun-version-file: .bun-version",
         "bun run check:all",
         "runDirectoryFanoutCheck",
         "runFileSizeCheck",
@@ -60,6 +61,7 @@ test("quality workflow keeps every G0 check visible", async () => {
         "bun run quality/ci/audit/audit.ts",
         "bun run quality/ci/coverage/ratchet.ts",
         "bun run --cwd packages/foundation/components build",
+        "bun run --cwd packages/surfaces/cms-control src/prebuildControl.ts",
         "docker compose version",
         "bun test packages/features/cms-source-images/tests",
         "packages/features/cms-sources/tests/http/interceptors",
@@ -132,8 +134,8 @@ test("secret baseline contains only the audited historical fingerprints", async 
         .split(/\r?\n/)
         .filter((line) => line.length > 0 && !line.startsWith("#"));
 
-    expect(fingerprints).toHaveLength(25);
-    expect(new Set(fingerprints).size).toBe(25);
+    expect(fingerprints).toHaveLength(65);
+    expect(new Set(fingerprints).size).toBe(65);
     for (const fingerprint of fingerprints) {
         expect(fingerprint).toMatch(/^[0-9a-f]{40}:.+:[a-z0-9-]+:\d+$/);
     }

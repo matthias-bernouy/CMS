@@ -10,20 +10,13 @@ export type ArchitectureViolationKind =
     | "surface-runtime-adapter"
     | "browser-runtime-adapter"
     | "environment-read"
-    | "focused-test"
-    | "generated-asset-drift";
+    | "focused-test";
 
 export interface ArchitectureViolation {
     kind: ArchitectureViolationKind;
     message: string;
     file?: string;
     line?: number;
-}
-
-export interface GeneratedAssetCheck {
-    path: string;
-    generate: () => Promise<string>;
-    normalize?: (contents: string) => string;
 }
 
 export interface WorkspaceCheckOptions {
@@ -34,7 +27,6 @@ export interface WorkspaceCheckOptions {
     browserEntryPaths?: readonly string[];
     /** Existing non-runtime reads. Counts are a ratchet: missing reads are fine, extra reads fail. */
     environmentReadBaseline?: Readonly<Record<string, Readonly<Record<string, number>>>>;
-    generatedAssets?: readonly GeneratedAssetCheck[];
     adapterSubpaths?: readonly string[];
     infrastructureModules?: readonly string[];
 }

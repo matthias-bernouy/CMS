@@ -19,7 +19,7 @@ export function captureImageResponses(page: Page): CapturedImageResponse[] {
     const capturedResponses: CapturedImageResponse[] = [];
     page.on("response", (response) => {
         const url = new URL(response.url());
-        if (url.pathname !== "/image/original.png") {
+        if (url.pathname !== "/.cms/sources/image-performance/image") {
             return;
         }
         capturedResponses.push({

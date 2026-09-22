@@ -19,6 +19,7 @@ test("the Bun runtime, types, CI, and container pins stay aligned", async () => 
     const controlPackage = await readPackageManifest("packages/surfaces/cms-control/package.json");
     const qualityWorkflow = await readRepositoryFile(".github/workflows/quality.yml");
     const integrationWorkflow = await readRepositoryFile(".github/workflows/quality-integration-contracts.yml");
+    const setupAction = await readRepositoryFile(".github/actions/setup-workspace/action.yml");
     const dockerfile = await readRepositoryFile("infra/images/cms/Dockerfile");
 
     expect(Bun.version).toBe(version);
@@ -33,7 +34,8 @@ test("the Bun runtime, types, CI, and container pins stay aligned", async () => 
     expect(componentsDevDependencies["@types/bun"]).toBe(version);
     expect(controlDevDependencies["@types/bun"]).toBe(version);
 
-    expect(qualityWorkflow).toContain(`BUN_VERSION: ${version}`);
-    expect(integrationWorkflow).toContain(`BUN_VERSION: ${version}`);
+    expect(setupAction).toContain("bun-version-file: .bun-version");
+    expect(qualityWorkflow).not.toContain("BUN_VERSION:");
+    expect(integrationWorkflow).not.toContain("BUN_VERSION:");
     expect(dockerfile.match(new RegExp(`oven/bun:${version}-alpine@sha256:[0-9a-f]{64}`, "g"))).toHaveLength(2);
 });

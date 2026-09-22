@@ -27,6 +27,7 @@ declare global {
 export {};
 
 const loading = new URL(location.href).searchParams.get("loading") === "eager" ? "eager" : "lazy";
+const sourcePath = "/.cms/sources/image-performance/image";
 window.__activationOrder = {};
 window.__cls = 0;
 const observer = new PerformanceObserver((list) => {
@@ -51,7 +52,7 @@ for (const image of document.querySelectorAll<HTMLImageElement>("img[data-slot]"
     });
     mutations.observe(image, { attributes: true });
     image.setAttribute("loading", loading);
-    image.setAttribute("data-src", `/image/original.png?slot=${slot}`);
+    image.setAttribute("data-src", `${sourcePath}?slot=${slot}`);
     image.setAttribute("data-source-width", "1600");
     image.setAttribute("data-source-height", "1200");
     window.p9r.syncResponsiveSourceImageElement(image);

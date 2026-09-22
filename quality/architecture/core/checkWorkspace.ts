@@ -7,7 +7,6 @@ import { collectCodeFilesFromRoots } from "./files/codeFiles";
 import { checkManifestLayerDependencies, checkWorkspaceCycles } from "../rules/dependencyRules";
 import { checkEnvironmentReads } from "../rules/environmentRule";
 import { checkFocusedTests } from "../rules/focusedTestRule";
-import { checkGeneratedAsset } from "../rules/generatedAssetRule";
 import {
     checkCrossPackageSourceImport,
     checkExportFilesDeclared,
@@ -23,7 +22,6 @@ import { discoverWorkspacePackages } from "./files/workspaceDiscovery";
 export {
     type ArchitectureViolation,
     type ArchitectureViolationKind,
-    type GeneratedAssetCheck,
     WORKSPACE_LAYERS,
     type WorkspaceCheckOptions,
     type WorkspaceLayer,
@@ -79,9 +77,6 @@ export async function checkWorkspaceArchitecture(options: WorkspaceCheckOptions)
         rootDir,
     );
     await checkTests(rootDir, ignoredPaths, violations);
-    for (const asset of options.generatedAssets ?? []) {
-        await checkGeneratedAsset(rootDir, asset, violations);
-    }
     return finalizeViolations(violations);
 }
 

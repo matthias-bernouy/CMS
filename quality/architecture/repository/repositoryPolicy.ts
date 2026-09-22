@@ -1,10 +1,7 @@
 import type { WorkspaceCheckOptions } from "../core/checkWorkspace";
-import {
-    CONTROL_COMPONENT_ASSET,
-    CONTROL_COMPONENT_ENTRY,
-    generateControlComponentAsset,
-    normalizeControlAsset,
-} from "../control/controlAsset";
+
+const CONTROL_COMPONENT_ENTRY = "packages/surfaces/cms-control/src/components/index.ts";
+const CONTROL_COMPONENT_ASSET = "packages/surfaces/cms-control/src/static/assets/control-components.js";
 
 /** Existing reads are frozen here until runtime configuration is injected into their owners. */
 export const ENVIRONMENT_READ_BASELINE = {
@@ -40,12 +37,5 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
         ignoredPaths: [CONTROL_COMPONENT_ASSET],
         browserEntryPaths: [CONTROL_COMPONENT_ENTRY],
         environmentReadBaseline: ENVIRONMENT_READ_BASELINE,
-        generatedAssets: [
-            {
-                path: CONTROL_COMPONENT_ASSET,
-                generate: () => generateControlComponentAsset(rootDir),
-                normalize: normalizeControlAsset,
-            },
-        ],
     };
 }
