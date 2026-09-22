@@ -14,7 +14,9 @@ export function isSourceEndpointAccessMode(value: unknown): value is SourceEndpo
     return typeof value === "string" && (SOURCE_ENDPOINT_ACCESS_MODES as readonly string[]).includes(value);
 }
 
-export function sourceEndpointAccessMode(endpoint: Pick<SourceEndpoint, "access">): SourceEndpointAccessMode {
+export function sourceEndpointAccessMode(endpoint: {
+    readonly access?: SourceEndpoint["access"];
+}): SourceEndpointAccessMode {
     return endpoint.access?.mode ?? DEFAULT_SOURCE_ENDPOINT_ACCESS_MODE;
 }
 

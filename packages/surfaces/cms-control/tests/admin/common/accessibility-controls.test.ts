@@ -2,7 +2,6 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { CredentialSelect } from "cms-control/components/admin/Common/CredentialSelect/CredentialSelect";
 import { renderList } from "cms-control/components/admin/Common/CredentialSelect/controller";
 import "cms-control/components/admin/Actions/ProviderActions/ProviderActions";
-import "cms-control/components/admin/Common/RoleSelect/RoleSelect";
 import "cms-control/components/admin/Secrets/Secrets";
 
 const originalFetch = globalThis.fetch;

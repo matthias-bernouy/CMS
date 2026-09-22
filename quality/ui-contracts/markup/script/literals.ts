@@ -1,4 +1,4 @@
-import * as ts from "typescript";
+import * as ts from "@typescript/typescript6";
 import { DYNAMIC_VALUE, type MarkupFragment } from "../types";
 
 export type StaticBindings = Map<string, ts.Expression | string | null>;

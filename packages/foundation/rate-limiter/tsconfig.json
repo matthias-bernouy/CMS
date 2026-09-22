@@ -3,9 +3,8 @@
     "compilerOptions": {
         "outDir":  "dist",
         "rootDir": "./src",
-        "baseUrl": "./src",
         "paths": {
-            "rate-limiter/*": ["./*"]
+            "rate-limiter/*": ["./src/*"]
         }
     },
     "include": ["src/**/*.ts"]

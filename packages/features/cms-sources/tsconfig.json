@@ -3,9 +3,8 @@
     "compilerOptions": {
         "outDir":  "dist",
         "rootDir": "./src",
-        "baseUrl": "./src",
         "paths": {
-            "cms-sources/*": ["./*"]
+            "cms-sources/*": ["./src/*"]
         }
     },
     "include": ["src/**/*.ts"],

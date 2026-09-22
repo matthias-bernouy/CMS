@@ -3,12 +3,11 @@
     "compilerOptions": {
         "outDir":   "dist",
         "rootDir":  ".",
-        "baseUrl":  ".",
         "paths": {
-            "@bernouy/cms-control":           ["index.ts"],
-            "@bernouy/cms-control/component": ["src/exports/component.ts"],
-            "@bernouy/cms-control/editor":    ["src/exports/editor.ts"],
-            "cms-control/*":                  ["src/*"]
+            "@bernouy/cms-control":           ["./index.ts"],
+            "@bernouy/cms-control/component": ["./src/exports/component.ts"],
+            "@bernouy/cms-control/editor":    ["./src/exports/editor.ts"],
+            "cms-control/*":                  ["./src/*"]
         }
     },
     "include": [

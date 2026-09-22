@@ -1,4 +1,4 @@
-import * as ts from "typescript";
+import * as ts from "@typescript/typescript6";
 import type { UiSource } from "../../contracts/types";
 import { markupTags } from "../html";
 import type { MarkupTag } from "../types";

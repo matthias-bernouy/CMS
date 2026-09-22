@@ -49,12 +49,13 @@
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/ulvia-cli": "workspace:*",
         "@biomejs/biome": "2.5.14",
+        "@typescript/typescript6": "6.0.2",
         "@types/bun": "1.4.2",
         "bun-types": "1.4.2",
         "image-size": "^2.0.4",
         "mongodb": "^7.6.0",
         "playwright": "^1.63.0",
         "sharp": "^0.35.4",
-        "typescript": "^5.9.3"
+        "typescript": "^7.0.2"
     }
 }

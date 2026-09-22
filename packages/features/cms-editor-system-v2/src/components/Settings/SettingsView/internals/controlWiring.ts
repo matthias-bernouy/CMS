@@ -43,7 +43,7 @@ export function wireContentControl(
 export function wireRichTextControl(control: HTMLElement, emitValue: EmitTextValue): void {
     whenDefined(control, () => {
         control.addEventListener("input", (event) => {
-            const value = (event as CustomEvent<{ value: string }>).detail?.value;
+            const value = event instanceof CustomEvent ? event.detail?.value : undefined;
             if (typeof value === "string") {
                 emitValue(value);
             }
@@ -57,7 +57,7 @@ export function wirePageLinkControl(control: HTMLElement, setting: SettingContro
             return;
         }
         control.addEventListener("input", (event) => {
-            const value = (event as CustomEvent<{ value: string }>).detail?.value;
+            const value = event instanceof CustomEvent ? event.detail?.value : undefined;
             if (typeof value === "string") {
                 emitValue(value);
             }

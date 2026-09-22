@@ -1,4 +1,4 @@
-import ts from "typescript";
+import ts from "@typescript/typescript6";
 import type { UiFinding, UiSource } from "../contracts/types";
 import { inlineScripts, type ScriptExcerpt } from "./inlineScripts";
 import { networkPolicy } from "./policy";

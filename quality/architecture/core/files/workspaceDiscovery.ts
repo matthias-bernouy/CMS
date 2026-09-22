@@ -1,6 +1,6 @@
 import { readFile, readdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import * as ts from "typescript";
+import * as ts from "@typescript/typescript6";
 import {
     type PackageManifest,
     type PackagePathAlias,

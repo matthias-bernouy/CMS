@@ -1,4 +1,4 @@
-import * as ts from "typescript";
+import * as ts from "@typescript/typescript6";
 import type { ArchitectureViolation } from "../core/architectureTypes";
 import { toRelativePath } from "../core/pathUtils";
 import { lineOf } from "../core/sourceImports";

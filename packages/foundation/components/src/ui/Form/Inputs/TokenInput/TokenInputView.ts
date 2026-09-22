@@ -149,7 +149,7 @@ export class TokenInputView {
     }
 
     get listHidden(): boolean {
-        return this.listbox?.hidden ?? true;
+        return this.listbox?.hidden !== false;
     }
 
     private syncHint(host: HTMLElement, showValidationMessage: boolean): void {

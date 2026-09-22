@@ -3,9 +3,8 @@
     "compilerOptions": {
         "outDir":  "dist",
         "rootDir": "./src",
-        "baseUrl": "./src",
         "paths": {
-            "envelope-crypto/*": ["./*"]
+            "envelope-crypto/*": ["./src/*"]
         }
     },
     "include": ["src/**/*.ts"]

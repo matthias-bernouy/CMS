@@ -1,4 +1,4 @@
-import * as ts from "typescript";
+import * as ts from "@typescript/typescript6";
 import type { SourceImport } from "./architectureTypes";
 
 export function createSourceFile(file: string, source: string): ts.SourceFile {

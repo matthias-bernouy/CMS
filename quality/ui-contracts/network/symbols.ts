@@ -1,4 +1,4 @@
-import ts from "typescript";
+import ts from "@typescript/typescript6";
 
 export function sourceSymbols(content: string, jsx = false) {
     const fileName = jsx ? "/ui-contract-source.tsx" : "/ui-contract-source.ts";

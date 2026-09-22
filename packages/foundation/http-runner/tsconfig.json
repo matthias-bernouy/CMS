@@ -3,9 +3,8 @@
     "compilerOptions": {
         "outDir":  "dist",
         "rootDir": "./src",
-        "baseUrl": "./src",
         "paths": {
-            "http-runner/*": ["./*"]
+            "http-runner/*": ["./src/*"]
         }
     },
     "include": ["src/**/*.ts"]
