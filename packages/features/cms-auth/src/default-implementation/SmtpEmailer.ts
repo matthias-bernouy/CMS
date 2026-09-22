@@ -1,4 +1,5 @@
 import type { AuthEmailRecipient, Emailer, OutboundEmail } from "cms-auth/interfaces/Emailer";
+import { createTransport } from "nodemailer";
 
 export type SmtpEmailerConfig = {
     host: string;
@@ -69,21 +70,9 @@ export class SmtpEmailer implements Emailer {
     }
 }
 
-async function createNodemailerTransport(config: SmtpTransportConfig): Promise<SmtpTransport> {
-    const nodemailer = (await import("nodemailer")) as NodemailerModule;
-    const createTransport = nodemailer.createTransport ?? nodemailer.default?.createTransport;
-    if (!createTransport) {
-        throw new Error("nodemailer.createTransport is not available.");
-    }
-    return createTransport(config) as SmtpTransport;
+function createNodemailerTransport(config: SmtpTransportConfig): SmtpTransport {
+    return createTransport(config);
 }
-
-type NodemailerModule = {
-    default?: {
-        createTransport?: (config: SmtpTransportConfig) => SmtpTransport;
-    };
-    createTransport?: (config: SmtpTransportConfig) => SmtpTransport;
-};
 
 function formatMailbox(input: AuthEmailRecipient): string {
     const name = input.displayName?.trim();
