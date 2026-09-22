@@ -15,18 +15,10 @@ import type {
     DashboardRepository,
     DashboardViewRepository,
 } from "@bernouy/cms-dashboards";
-import type { EditorDataSource } from "@bernouy/cms-editor-system-v2";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { IdentityService } from "@bernouy/cms-identities";
 import type { SecretStore } from "@bernouy/cms-secrets";
-import type {
-    ExecutorDeps,
-    SourceEndpointInterceptor,
-    SourceOverlayRepository,
-    SourceRepository,
-    SourceRequestTelemetryOptions,
-    SourceTargetUrlValidationOptions,
-} from "@bernouy/cms-sources";
+import type { SourceEndpointInterceptor, SourceRepository, SourceRequestTelemetryOptions } from "@bernouy/cms-sources";
 import type { Cache, Runner } from "@bernouy/http-runner";
 
 type Configuration = {
@@ -36,12 +28,10 @@ type Configuration = {
 };
 
 export type ControlCmsOptions = Configuration & {
-    editorDataSources?: readonly EditorDataSource[];
     dashboards?: DashboardRepository;
     dashboardViews?: DashboardViewRepository;
     dashboardAssignments?: DashboardAssignmentRepository;
     identities?: IdentityService;
-    sourceOverlays?: SourceOverlayRepository;
     endpointPerformanceReports?: EndpointPerformanceReports;
     sourceTelemetry?: SourceRequestTelemetryOptions;
     /** Shared post-authorization interceptor for bounded Source image variants. */
@@ -50,8 +40,6 @@ export type ControlCmsOptions = Configuration & {
     responsivePublicSourceImagesEnabled?: boolean;
     /** Enables private and unclassified responsive consumers when the interceptor is configured. Defaults to true. */
     responsivePrivateSourceImagesEnabled?: boolean;
-    sourceTrustedConnectorTarget?: NonNullable<ExecutorDeps["isTrustedConnectorTarget"]>;
-    sourceTargetValidation?: SourceTargetUrlValidationOptions;
 };
 
 export type ControlAuthBackends = {
@@ -78,5 +66,4 @@ export type ControlCmsState = {
     dashboardViews: DashboardViewRepository;
     dashboardAssignments: DashboardAssignmentRepository;
     identities: IdentityService;
-    sourceOverlays: SourceOverlayRepository | null;
 };

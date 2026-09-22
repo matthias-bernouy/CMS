@@ -38,7 +38,7 @@ async function executeScopedRequest(state: ControlCmsState, request: Request): P
     if (!plan || plan.revision !== dashboard.revision) {
         return new Response("Dashboard execution plan unavailable", { status: 409 });
     }
-    const scope = createControlSourceRequestScope(state, state.configuration, request, async () => subject, undefined);
+    const scope = createControlSourceRequestScope(state, state.configuration, request, async () => subject);
     const response = await handleSourceRequest(scope.proxiedSources, request, {
         prefix: parsed.prefix,
         deps: {

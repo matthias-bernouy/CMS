@@ -79,33 +79,7 @@ export {
     MAX_HEADER_VALUE_LENGTH,
 } from "./core/upstream/headerPolicy";
 export { isReservedSourceParamName } from "./core/validation/sourceRequestValidation";
-export type { SourceRepository, SourceSchemaInvalidationScope } from "./interfaces/SourceRepository";
-export type {
-    SourceOverlay,
-    SourceOverlayDashboardDataRef,
-    SourceOverlayDashboardEndpointRef,
-    SourceOverlayDashboardField,
-    SourceOverlayDashboardFieldPatch,
-    SourceOverlayDashboardFieldType,
-    SourceOverlayDashboardLookupRef,
-    SourceOverlayDashboardOption,
-    SourceOverlayEditableScope,
-    SourceOverlayEndpointTarget,
-    SourceOverlayField,
-    SourceOverlayFieldSource,
-    SourceOverlayFieldSourceMap,
-    SourceOverlayFieldType,
-    SourceOverlayRepository,
-    SourceOverlaySection,
-} from "./interfaces/SourceOverlay";
-export {
-    SOURCE_OVERLAY_DASHBOARD_FIELD_TYPES,
-    SOURCE_OVERLAY_EDITABLE_SCOPES,
-    SOURCE_OVERLAY_FIELD_TYPES,
-    sourceOverlayFieldShape,
-} from "./interfaces/SourceOverlay";
+export type { SourceRepository } from "./interfaces/SourceRepository";
 export { InMemorySourceRepository } from "./default-implementation/InMemorySourceRepository";
-export { InMemorySourceOverlayRepository } from "./default-implementation/InMemorySourceOverlayRepository";
 export { ValidatingSourceRepository } from "./core/repositories/ValidatingSourceRepository";
 export { CompositeSourceRepository } from "./core/repositories/CompositeSourceRepository";
-export { readPersistedSource } from "./core/repositories/persistedSource";

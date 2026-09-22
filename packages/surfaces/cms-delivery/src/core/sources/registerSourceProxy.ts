@@ -11,24 +11,17 @@ import { executeAuthSystemSourceEndpoint } from "@bernouy/cms-auth";
 import { executeSiteSystemSourceEndpoint } from "@bernouy/cms-content";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { authorizeDeliverySourceEndpoint } from "cms-delivery/core/sources/authorization";
-import {
-    createDeliverySourceRequestScope,
-    deliverySourceOverlaySchemaCache,
-} from "cms-delivery/core/sources/requestScope";
+import { createDeliverySourceRequestScope } from "cms-delivery/core/sources/requestScope";
 
 export function registerDeliverySourceProxy(delivery: DeliveryCms): void {
     const runner = delivery.runner;
-    const schemaCache = deliverySourceOverlaySchemaCache(delivery);
     runner.group(
         CMS_SOURCES_ROUTE,
         (proxyRunner) => {
             const prefix = sourcesPrefix(runner.basePath);
             for (const method of SOURCE_PROXY_METHODS) {
                 proxyRunner.setDefaultEndpoint(method, (request) =>
-                    handleDeliverySourceRequest(delivery, request, {
-                        prefix,
-                        schemaCache,
-                    }),
+                    handleDeliverySourceRequest(delivery, request, { prefix }),
                 );
             }
         },
@@ -41,14 +34,9 @@ export function handleDeliverySourceRequest(
     request: Request,
     options: {
         prefix?: string;
-        schemaCache?: ReturnType<typeof deliverySourceOverlaySchemaCache>;
     } = {},
 ): Promise<Response> {
-    const scope = createDeliverySourceRequestScope(
-        delivery,
-        request,
-        options.schemaCache ?? deliverySourceOverlaySchemaCache(delivery),
-    );
+    const scope = createDeliverySourceRequestScope(delivery, request);
     const deps = {
         ...scope.deps,
         executeSystemEndpoint: (endpoint: SourceEndpoint, systemRequest: Request) =>

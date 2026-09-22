@@ -1,7 +1,6 @@
 import type { Source, SourceEndpoint } from "../../interfaces/Source";
-import type { SourceRepository, SourceSchemaInvalidationScope } from "../../interfaces/SourceRepository";
+import type { SourceRepository } from "../../interfaces/SourceRepository";
 import { memoizeRequestPromise } from "./requestScopeCache";
-import { readPersistedSource } from "./persistedSource";
 
 /**
  * Shares identical source reads for one execution only. Construct a fresh
@@ -9,17 +8,10 @@ import { readPersistedSource } from "./persistedSource";
  */
 export class RequestScopedSourceRepository implements SourceRepository {
     private readonly sources = new Map<string, Promise<Source | null>>();
-    private readonly persistedSources = new Map<string, Promise<Source | null>>();
     private readonly endpoints = new Map<string, Promise<SourceEndpoint | null>>();
-    private readonly authorizationEndpoints = new Map<string, Promise<SourceEndpoint | null>>();
     private allSources: Promise<Source[]> | undefined;
-    readonly getEndpointForAuthorization?: (urn: string) => Promise<SourceEndpoint | null>;
 
-    constructor(private readonly inner: SourceRepository) {
-        if (inner.getEndpointForAuthorization) {
-            this.getEndpointForAuthorization = (urn) => this.getAuthorizationEndpoint(urn);
-        }
-    }
+    constructor(private readonly inner: SourceRepository) {}
 
     async createSource(source: Source): Promise<Source> {
         try {
@@ -52,13 +44,6 @@ export class RequestScopedSourceRepository implements SourceRepository {
         return cloneNullable(source);
     }
 
-    async getPersistedSource(urn: string): Promise<Source | null> {
-        const source = await memoizeRequestPromise(this.persistedSources, urn, async () =>
-            cloneNullable(await readPersistedSource(this.inner, urn)),
-        );
-        return cloneNullable(source);
-    }
-
     async getAllSources(): Promise<Source[]> {
         if (!this.allSources) {
             const pending = Promise.resolve()
@@ -81,23 +66,9 @@ export class RequestScopedSourceRepository implements SourceRepository {
         return cloneNullable(endpoint);
     }
 
-    private async getAuthorizationEndpoint(urn: string): Promise<SourceEndpoint | null> {
-        const endpoint = await memoizeRequestPromise(this.authorizationEndpoints, urn, async () =>
-            cloneNullable(await this.inner.getEndpointForAuthorization!(urn)),
-        );
-        return cloneNullable(endpoint);
-    }
-
-    invalidateSchema(scope?: SourceSchemaInvalidationScope): void {
-        this.clear();
-        this.inner.invalidateSchema?.(scope);
-    }
-
     private clear(): void {
         this.sources.clear();
-        this.persistedSources.clear();
         this.endpoints.clear();
-        this.authorizationEndpoints.clear();
         this.allSources = undefined;
     }
 }

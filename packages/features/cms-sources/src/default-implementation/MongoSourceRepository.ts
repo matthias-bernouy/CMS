@@ -72,10 +72,6 @@ export class MongoSourceRepository implements SourceRepository {
         return fromDoc(await this.sources.findOne({ _id: urn }));
     }
 
-    async getPersistedSource(urn: string): Promise<Source | null> {
-        return fromDoc(await this.sources.findOne({ _id: urn }));
-    }
-
     async getAllSources(): Promise<Source[]> {
         const docs = await this.sources.find().toArray();
         return docs.map((d) => fromDoc(d)!);

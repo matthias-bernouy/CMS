@@ -4,9 +4,7 @@ import type { ContentReader } from "@bernouy/cms-content";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { IdentityService } from "@bernouy/cms-identities";
 import type {
-    ExecutorDeps,
     SourceEndpointInterceptor,
-    SourceOverlayRepository,
     SourceRepository,
     SourceRequestTelemetryOptions,
     SourceSecretResolver,
@@ -68,10 +66,6 @@ export class DeliveryCmsContext {
         return this.resolvedSources;
     }
 
-    get sourceOverlays(): SourceOverlayRepository | undefined {
-        return this.config.sourceOverlays;
-    }
-
     get sourceResolveSecret(): SourceSecretResolver | undefined {
         return this.config.sourceResolveSecret;
     }
@@ -90,10 +84,6 @@ export class DeliveryCmsContext {
             public: interceptorReady && this.config.responsivePublicSourceImagesEnabled !== false,
             private: interceptorReady && this.config.responsivePrivateSourceImagesEnabled !== false,
         };
-    }
-
-    get sourceTrustedConnectorTarget(): NonNullable<ExecutorDeps["isTrustedConnectorTarget"]> | undefined {
-        return this.config.sourceTrustedConnectorTarget;
     }
 
     get identities(): IdentityService | undefined {

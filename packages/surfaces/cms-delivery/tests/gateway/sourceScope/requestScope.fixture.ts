@@ -1,15 +1,11 @@
 import { InMemoryIdentityService, type IdentityAlias, type IdentityValue } from "@bernouy/cms-identities";
-import { InMemorySourceOverlayRepository, InMemorySourceRepository, type Source } from "@bernouy/cms-sources";
+import { InMemorySourceRepository, type Source } from "@bernouy/cms-sources";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import {
-    createDeliverySourceRequestScope,
-    deliverySourceOverlaySchemaCache,
-} from "cms-delivery/core/sources/requestScope";
+import { createDeliverySourceRequestScope } from "cms-delivery/core/sources/requestScope";
 
 export type ScopeCounters = {
     sourceReads: number;
     endpointReads: number;
-    overlayReads: number;
     identityReads: number;
     secretReads: number;
 };
@@ -18,36 +14,25 @@ export async function requestScopeHarness() {
     const counters: ScopeCounters = {
         sourceReads: 0,
         endpointReads: 0,
-        overlayReads: 0,
         identityReads: 0,
         secretReads: 0,
     };
     const sources = new CountingSources(counters);
-    const overlays = new CountingOverlays(counters);
     const identities = new CountingIdentities(counters);
     await sources.createSource(CATALOG_SOURCE);
-    await overlays.upsertOverlay({
-        id: "catalog-fields",
-        sourceId: "catalog",
-        output: [{ endpointId: "read" }],
-        fields: [{ id: "reference", label: "Reference", type: "string" }],
-    });
     const delivery = {
         sources,
-        sourceOverlays: overlays,
         identities,
         sourceResolveSecret: async () => {
             counters.secretReads += 1;
             return "request-secret";
         },
     } as unknown as DeliveryCms;
-    const schemaCache = deliverySourceOverlaySchemaCache(delivery);
-
     return {
         counters,
         delivery,
         endpoint: CATALOG_SOURCE.endpoints[0]!,
-        scope: (request: Request) => createDeliverySourceRequestScope(delivery, request, schemaCache),
+        scope: (request: Request) => createDeliverySourceRequestScope(delivery, request),
     };
 }
 
@@ -62,16 +47,6 @@ class CountingSources extends InMemorySourceRepository {
     override async getEndpoint(urn: string) {
         this.counters.endpointReads += 1;
         return super.getEndpoint(urn);
-    }
-}
-
-class CountingOverlays extends InMemorySourceOverlayRepository {
-    constructor(private readonly counters: ScopeCounters) {
-        super();
-    }
-    override async getOverlaysForSource(sourceId: string) {
-        this.counters.overlayReads += 1;
-        return super.getOverlaysForSource(sourceId);
     }
 }
 

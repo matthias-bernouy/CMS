@@ -1,8 +1,7 @@
 import type { Source, SourceEndpoint } from "cms-sources/interfaces/Source";
-import type { SourceRepository, SourceSchemaInvalidationScope } from "cms-sources/interfaces/SourceRepository";
+import type { SourceRepository } from "cms-sources/interfaces/SourceRepository";
 import { SourceValidationError } from "cms-sources/core/model/errors";
 import { systemSourceUrnOf } from "cms-sources/core/system/systemSources";
-import { readPersistedSource } from "cms-sources/core/repositories/persistedSource";
 
 /**
  * Readonly system sources + a writable user source store behind one
@@ -11,8 +10,6 @@ import { readPersistedSource } from "cms-sources/core/repositories/persistedSour
  */
 export class CompositeSourceRepository implements SourceRepository {
     private readonly systemSources = new Map<string, Source>();
-    readonly getEndpointForAuthorization?: (urn: string) => Promise<SourceEndpoint | null>;
-    readonly invalidateSchema?: (scope?: SourceSchemaInvalidationScope) => void;
 
     constructor(
         private readonly inner: SourceRepository,
@@ -20,20 +17,6 @@ export class CompositeSourceRepository implements SourceRepository {
     ) {
         for (const source of systemSources) {
             this.systemSources.set(source.urn, structuredClone(source));
-        }
-        if (inner.getEndpointForAuthorization) {
-            this.getEndpointForAuthorization = async (urn: string) => {
-                const systemUrn = systemSourceUrnOf(urn);
-                if (systemUrn) {
-                    const system = this.systemSources.get(systemUrn);
-                    const endpoint = system?.endpoints.find((candidate) => candidate.urn === urn);
-                    return endpoint ? structuredClone(endpoint) : null;
-                }
-                return inner.getEndpointForAuthorization!(urn);
-            };
-        }
-        if (inner.invalidateSchema) {
-            this.invalidateSchema = (scope) => inner.invalidateSchema!(scope);
         }
     }
 
@@ -58,10 +41,6 @@ export class CompositeSourceRepository implements SourceRepository {
             return structuredClone(system);
         }
         return this.inner.getSource(urn);
-    }
-
-    async getPersistedSource(urn: string): Promise<Source | null> {
-        return readPersistedSource(this.inner, urn);
     }
 
     async getAllSources(): Promise<Source[]> {

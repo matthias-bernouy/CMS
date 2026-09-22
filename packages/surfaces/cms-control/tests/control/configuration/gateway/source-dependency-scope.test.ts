@@ -1,11 +1,7 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
-import {
-    InMemorySourceOverlayRepository,
-    InMemorySourceRepository,
-    type SourceEndpointInterceptor,
-} from "@bernouy/cms-sources";
+import { InMemorySourceRepository, type SourceEndpointInterceptor } from "@bernouy/cms-sources";
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 import { mountControlSourceProxy } from "cms-control/core/admin/control/sourceProxy";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
@@ -13,7 +9,6 @@ import type { ControlCmsState } from "cms-control/core/admin/control/types";
 describe("Control source dependency scope", () => {
     test("shares dependency reads within one request and refreshes them for the next", async () => {
         const sources = new CountingSources();
-        const overlays = new CountingOverlays();
         const secrets = new CountingSecrets();
         let imageCalls = 0;
         const sourceImageInterceptor: SourceEndpointInterceptor = async (_endpoint, candidate, next) => {
@@ -48,7 +43,6 @@ describe("Control source dependency scope", () => {
                 },
                 runner: mounted.runner,
                 sources,
-                sourceOverlays: overlays,
                 auth: new InMemoryAuthentication(),
                 secrets,
             } as unknown as ControlCmsState,
@@ -78,12 +72,10 @@ describe("Control source dependency scope", () => {
         expect({
             endpointReads: sources.endpointReads,
             sourceReads: sources.sourceReads,
-            overlayReads: overlays.sourceReads,
             secretReads: secrets.reads,
         }).toEqual({
             endpointReads: 2,
-            sourceReads: 2,
-            overlayReads: 2,
+            sourceReads: 0,
             secretReads: 2,
         });
     });
@@ -99,14 +91,6 @@ class CountingSources extends InMemorySourceRepository {
     override async getSource(urn: string) {
         this.sourceReads++;
         return super.getSource(urn);
-    }
-}
-
-class CountingOverlays extends InMemorySourceOverlayRepository {
-    sourceReads = 0;
-    override async getOverlaysForSource(sourceId: string) {
-        this.sourceReads++;
-        return super.getOverlaysForSource(sourceId);
     }
 }
 

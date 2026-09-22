@@ -117,13 +117,11 @@ describe("production surface mounting", () => {
             sourceTelemetry: expect.any(Object),
         });
         expect(controlArguments[14]).toEqual({ local: options.authentication.auth });
-        expect(controlConfig.editorDataSources).toBeUndefined();
 
         expect(deliveryConfig).toMatchObject({
             runner: runners[1],
             repository: options.core.repo,
             sources: options.features.sources,
-            sourceOverlays: options.features.sourceOverlays,
             sourceTelemetry: expect.any(Object),
             analyticsVisitorSecret: options.analyticsVisitorSecret,
             analyticsSiteScope: options.env.DELIVERY_PUBLIC_URL,

@@ -16126,12 +16126,9 @@ ${layout_default}`;
   // ../../features/cms-sources/src/interfaces/SourceObservability.ts
   var SOURCE_TIMING_STAGES = [
     "cms_auth",
-    "cms_endpoint_auth_lookup",
     "cms_authorize",
     "cms_roles",
     "cms_endpoint_resolve",
-    "cms_source",
-    "cms_overlays",
     "cms_context",
     "cms_secret",
     "cms_headers",
@@ -16186,10 +16183,6 @@ ${layout_default}`;
       const found = this._sources.get(urn);
       return found ? structuredClone(found) : null;
     }
-    async getPersistedSource(urn) {
-      const found = this._sources.get(urn);
-      return found ? structuredClone(found) : null;
-    }
     async getAllSources() {
       return Array.from(this._sources.values(), (p2) => structuredClone(p2));
     }
@@ -16201,28 +16194,6 @@ ${layout_default}`;
         }
       }
       return null;
-    }
-  }
-  // ../../features/cms-sources/src/default-implementation/InMemorySourceOverlayRepository.ts
-  class InMemorySourceOverlayRepository {
-    overlays = new Map;
-    async getOverlay(id2) {
-      const overlay = this.overlays.get(id2);
-      return overlay ? structuredClone(overlay) : null;
-    }
-    async getOverlaysForSource(sourceId) {
-      return [...this.overlays.values()].filter((overlay) => overlay.sourceId === sourceId).map((overlay) => structuredClone(overlay));
-    }
-    async getAllOverlays() {
-      return [...this.overlays.values()].map((overlay) => structuredClone(overlay));
-    }
-    async upsertOverlay(overlay) {
-      const next = structuredClone(overlay);
-      this.overlays.set(next.id, next);
-      return structuredClone(next);
-    }
-    async deleteOverlay(id2) {
-      return this.overlays.delete(id2);
     }
   }
   // ../../features/cms-sources/src/core/system/urn.ts
@@ -16400,34 +16371,14 @@ ${layout_default}`;
     }
     return makeSourceUrn(parsed.source);
   }
-  // ../../features/cms-sources/src/core/repositories/persistedSource.ts
-  async function readPersistedSource(repository, urn) {
-    return repository.getPersistedSource(urn);
-  }
   // ../../features/cms-sources/src/core/repositories/CompositeSourceRepository.ts
   class CompositeSourceRepository {
     inner;
     systemSources = new Map;
-    getEndpointForAuthorization;
-    invalidateSchema;
     constructor(inner, systemSources = []) {
       this.inner = inner;
       for (const source2 of systemSources) {
         this.systemSources.set(source2.urn, structuredClone(source2));
-      }
-      if (inner.getEndpointForAuthorization) {
-        this.getEndpointForAuthorization = async (urn) => {
-          const systemUrn = systemSourceUrnOf(urn);
-          if (systemUrn) {
-            const system = this.systemSources.get(systemUrn);
-            const endpoint = system?.endpoints.find((candidate) => candidate.urn === urn);
-            return endpoint ? structuredClone(endpoint) : null;
-          }
-          return inner.getEndpointForAuthorization(urn);
-        };
-      }
-      if (inner.invalidateSchema) {
-        this.invalidateSchema = (scope) => inner.invalidateSchema(scope);
       }
     }
     async createSource(source2) {
@@ -16448,9 +16399,6 @@ ${layout_default}`;
         return structuredClone(system);
       }
       return this.inner.getSource(urn);
-    }
-    async getPersistedSource(urn) {
-      return readPersistedSource(this.inner, urn);
     }
     async getAllSources() {
       const systemUrns = new Set(this.systemSources.keys());
@@ -16475,139 +16423,20 @@ ${layout_default}`;
   }
   // ../../features/cms-sources/src/core/validation/sourceMediaEffectBindings.ts
   var MAX_MEDIA_EFFECT_RESPONSE_BYTES = 64 * 1024;
-  // ../../features/cms-sources/src/core/upstream/endpointHeaders.ts
-  function hasComputedParams(endpoint) {
-    return (endpoint.input?.params ?? []).some((param) => param.source?.from === "computed");
-  }
-  function hasComputedHeaders(endpoint) {
-    return (endpoint.headers ?? []).some((header) => header.source.from === "computed");
-  }
-
-  // ../../features/cms-sources/src/core/repositories/SourceOverlaySchemaCache.ts
-  var DEFAULT_SOURCE_OVERLAY_SCHEMA_CACHE_TTL_MS = 60000;
-
-  class SourceOverlaySchemaCache {
-    entries = new Map;
-    pending = new Map;
-    ttlMs;
-    now;
-    invalidationRevision = 0;
-    constructor(options = {}) {
-      const ttlMs = options.ttlMs ?? DEFAULT_SOURCE_OVERLAY_SCHEMA_CACHE_TTL_MS;
-      if (!Number.isFinite(ttlMs) || ttlMs < 0) {
-        throw new RangeError("source overlay schema cache ttlMs must be a finite non-negative number");
-      }
-      this.ttlMs = ttlMs;
-      this.now = options.now ?? Date.now;
-    }
-    async getOrLoad(source2, overlay, load) {
-      const fingerprint = await schemaFingerprint(source2, overlay);
-      if (!fingerprint) {
-        return await load();
-      }
-      const key = `${overlay.sourceId}:${overlay.id}:${fingerprint}`;
-      const now = this.now();
-      this.purgeExpired(now);
-      const cached = this.entries.get(key);
-      if (cached) {
-        return structuredClone(cached.fields);
-      }
-      const active = this.pending.get(key);
-      if (active) {
-        return cloneNullableFields(await active.promise);
-      }
-      const invalidationRevision = this.invalidationRevision;
-      const promise = load();
-      const pending = { sourceId: overlay.sourceId, overlayId: overlay.id, promise };
-      this.pending.set(key, pending);
-      try {
-        const fields = await promise;
-        if (fields !== null && this.ttlMs > 0 && invalidationRevision === this.invalidationRevision) {
-          this.entries.set(key, {
-            sourceId: overlay.sourceId,
-            overlayId: overlay.id,
-            expiresAt: this.now() + this.ttlMs,
-            fields: structuredClone(fields)
-          });
-        }
-        return cloneNullableFields(fields);
-      } finally {
-        if (this.pending.get(key) === pending) {
-          this.pending.delete(key);
-        }
-      }
-    }
-    invalidate(selector = {}) {
-      this.invalidationRevision += 1;
-      deleteMatching(this.entries, selector);
-      deleteMatching(this.pending, selector);
-    }
-    purgeExpired(now) {
-      for (const [key, entry] of this.entries) {
-        if (entry.expiresAt <= now) {
-          this.entries.delete(key);
-        }
-      }
-    }
-  }
-  async function schemaFingerprint(source2, overlay) {
-    const endpointId = overlay.fieldSource?.endpointId;
-    if (!endpointId) {
-      return null;
-    }
-    const endpoint = source2.endpoints.find((candidate) => parseUrn(candidate.urn)?.endpoint === endpointId);
-    if (!endpoint || endpoint.method !== "GET" || endpoint.effects !== undefined || hasComputedParams(endpoint) || hasComputedHeaders(endpoint)) {
-      return null;
-    }
-    const revision = canonicalJson({
-      source: { urn: source2.urn, fieldSourceEndpoint: endpoint },
-      overlay
-    });
-    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(revision));
-    return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-  }
-  function canonicalJson(value) {
-    if (value === null || typeof value !== "object") {
-      return JSON.stringify(value) ?? "null";
-    }
-    if (Array.isArray(value)) {
-      return `[${value.map(canonicalJson).join(",")}]`;
-    }
-    const entries = Object.entries(value).filter(([, entry]) => entry !== undefined).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
-    return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`).join(",")}}`;
-  }
-  function cloneNullableFields(fields) {
-    return fields === null ? null : structuredClone(fields);
-  }
-  function deleteMatching(entries, selector) {
-    for (const [key, entry] of entries) {
-      if (selector.sourceId !== undefined && selector.sourceId !== entry.sourceId) {
-        continue;
-      }
-      if (selector.overlayId !== undefined && selector.overlayId !== entry.overlayId) {
-        continue;
-      }
-      entries.delete(key);
-    }
-  }
-
-  // ../../features/cms-sources/src/core/response-projection/bindResponseIdentities.ts
-  var MAX_IDENTITY_BINDING_RESPONSE_BYTES = 64 * 1024;
-
   // ../../foundation/http-runner/src/core/request/observability.ts
   var correlations = new WeakMap;
   var timings = new WeakMap;
   var finishedTimings = new WeakMap;
-  // ../../features/cms-sources/src/core/response-projection/projectEndpointResponse.ts
-  var MAX_PROJECTED_JSON_BYTES = 2 * 1024 * 1024;
-
-  // ../../features/cms-sources/src/core/overlays/sourceOverlay.ts
-  var sharedSchemaCaches = new WeakMap;
   // ../../features/cms-sources/src/core/execution/observability/sourceObservationReporting.ts
   var sourceStageNames = new Set(SOURCE_TIMING_STAGES);
 
   // ../../features/cms-sources/src/core/execution/sourceObservability.ts
   var contexts = new WeakMap;
+  // ../../features/cms-sources/src/core/response-projection/bindResponseIdentities.ts
+  var MAX_IDENTITY_BINDING_RESPONSE_BYTES = 64 * 1024;
+
+  // ../../features/cms-sources/src/core/response-projection/projectEndpointResponse.ts
+  var MAX_PROJECTED_JSON_BYTES = 2 * 1024 * 1024;
   // ../../features/cms-dashboards/src/core/dashboardPaths.ts
   var PATH_SEGMENT = /^[A-Za-z_$][\w$]*$/;
   var EXPRESSION = /^\$([A-Za-z]+)(?:\.(.+))?$/;
@@ -27006,11 +26835,8 @@ w13c-lateral-menu-item {
   // src/components/admin/Layout/EndpointPerformance/rendering/detail.ts
   var STAGE_LABELS = {
     cms_auth: "Authentication",
-    cms_endpoint_auth_lookup: "Authorization endpoint lookup",
     cms_authorize: "Authorization",
     cms_endpoint_resolve: "Source resolution",
-    cms_source: "Source read",
-    cms_overlays: "Overlays",
     cms_context: "Context",
     cms_secret: "Secrets",
     cms_headers: "Request headers",
@@ -27873,7 +27699,7 @@ circle.endpoint-timeline__errors {
                         <h4>Stage timings</h4>
                         <p class="endpoint-stage-note">
                             Timings are measured independently and may overlap. Do not add rows together; combined
-                            upstream time can include the primary upstream call and overlay field-source calls.
+                            upstream time can include the primary upstream call and image retrieval work.
                         </p>
                         <div data-role="stages"></div>
                     </div>

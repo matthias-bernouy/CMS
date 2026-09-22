@@ -7,7 +7,3 @@ export {
     MongoSourceRepository,
     type MongoSourceRepositoryConfig,
 } from "../default-implementation/MongoSourceRepository";
-export {
-    MongoSourceOverlayRepository,
-    type MongoSourceOverlayRepositoryConfig,
-} from "../default-implementation/MongoSourceOverlayRepository";

@@ -1,21 +1,5 @@
-import {
-    applyDashboardSourceOverlays,
-    dashboardViewAsLegacyDashboard,
-    type DashboardDto,
-} from "@bernouy/cms-dashboards";
-import {
-    isSystemSourceUrn,
-    materializeSourceOverlays,
-    parseUrn,
-    sourceOverlaySchemaCacheFor,
-    sourceToDto,
-    type ExecutorDeps,
-    type Source,
-    type SourceEndpointDto,
-    type SourceOverlay,
-    type SourceOverlayRepository,
-    type SourceOverlaySchemaCache,
-} from "@bernouy/cms-sources";
+import { dashboardViewAsLegacyDashboard, type DashboardDto } from "@bernouy/cms-dashboards";
+import { isSystemSourceUrn, parseUrn, sourceToDto, type SourceEndpointDto } from "@bernouy/cms-sources";
 import type { ControlCms } from "cms-control/ControlCms";
 
 export type DashboardSourceSummary = {
@@ -33,29 +17,12 @@ export type DashboardSourceGroup = {
     source: DashboardSourceSummary;
     endpoints: SourceEndpointDto[];
     dashboards: DashboardDto[];
-    sourceOverlays?: SourceOverlay[];
 };
 
 export type DashboardListResponse = DashboardSourceGroup[];
 
-type DashboardCmsExtensions = {
-    sourceOverlays?: SourceOverlayRepository | null;
-    sourceExecutorDeps?: ExecutorDeps;
-};
-
 export default async function listDashboards(_req: Request, cms: ControlCms): Promise<Response> {
-    const extensions = cms as ControlCms & DashboardCmsExtensions;
-    const [sources, dashboards, rawSourceOverlays] = await Promise.all([
-        cms.sources.getAllSources(),
-        cms.dashboardViews.getAllViews(),
-        extensions.sourceOverlays?.getAllOverlays() ?? Promise.resolve([]),
-    ]);
-    const sourceOverlays = await materializeOverlays(
-        sources,
-        rawSourceOverlays,
-        extensions.sourceExecutorDeps,
-        extensions.sourceOverlays ? sourceOverlaySchemaCacheFor(extensions.sourceOverlays) : undefined,
-    );
+    const [sources, dashboards] = await Promise.all([cms.sources.getAllSources(), cms.dashboardViews.getAllViews()]);
     const dashboardsBySource = new Map<string, DashboardDto[]>();
     for (const view of dashboards) {
         const dashboard = dashboardViewAsLegacyDashboard(view);
@@ -67,10 +34,7 @@ export default async function listDashboards(_req: Request, cms: ControlCms): Pr
     const groups: DashboardSourceGroup[] = sources.map((source) => {
         const dto = sourceToDto(source);
         const id = parseUrn(source.urn)?.source ?? dto.id;
-        const overlays = sourceOverlays.filter((overlay) => overlay.sourceId === id);
-        const sourceDashboards = (dashboardsBySource.get(id) ?? []).map((dashboard) =>
-            applyDashboardSourceOverlays(dashboard, overlays),
-        );
+        const sourceDashboards = dashboardsBySource.get(id) ?? [];
         return {
             source: {
                 urn: source.urn,
@@ -84,26 +48,10 @@ export default async function listDashboards(_req: Request, cms: ControlCms): Pr
             },
             endpoints: dto.endpoints,
             dashboards: sourceDashboards,
-            ...(overlays.length ? { sourceOverlays: overlays } : {}),
         };
     });
 
     return new Response(JSON.stringify(groups), {
         headers: { "Content-Type": "application/json" },
     });
-}
-
-async function materializeOverlays(
-    sources: readonly Source[],
-    overlays: readonly SourceOverlay[],
-    deps: ExecutorDeps | undefined,
-    cache: SourceOverlaySchemaCache | undefined,
-): Promise<SourceOverlay[]> {
-    const sourcesById = new Map(sources.map((source) => [parseUrn(source.urn)?.source ?? "", source]));
-    const resolved: SourceOverlay[] = [];
-    for (const source of sourcesById.values()) {
-        const matching = overlays.filter((overlay) => overlay.sourceId === parseUrn(source.urn)?.source);
-        resolved.push(...(await materializeSourceOverlays(source, matching, deps, cache)));
-    }
-    return resolved;
 }

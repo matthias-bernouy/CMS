@@ -59,20 +59,17 @@ describe("Delivery source dependency scope", () => {
             );
 
             expect(harness.counters).toEqual({
-                sourceReads: expectedReads,
-                endpointReads: 0,
-                overlayReads: expectedReads,
+                sourceReads: 0,
+                endpointReads: expectedReads,
                 identityReads: expectedReads,
                 secretReads: expectedReads,
             });
         }
 
         expect(observations).toHaveLength(2);
-        expect(observations.every((item) => item.stagesMs.cms_source !== undefined)).toBe(true);
-        expect(observations.every((item) => item.stagesMs.cms_overlays !== undefined)).toBe(true);
     });
 
-    test("does no overlay, secret, identity, interceptor, or upstream work before authorization", async () => {
+    test("does no secret, identity, interceptor, or upstream work before authorization", async () => {
         const harness = await requestScopeHarness();
         const request = new Request("https://cms.test/.cms/sources/catalog/read");
         const upstream = spyOn(globalThis, "fetch").mockResolvedValue(new Response("unexpected"));
@@ -105,7 +102,6 @@ describe("Delivery source dependency scope", () => {
             expect(harness.counters).toEqual({
                 sourceReads: 0,
                 endpointReads: 1,
-                overlayReads: 0,
                 identityReads: 0,
                 secretReads: 0,
             });

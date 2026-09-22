@@ -57,7 +57,7 @@ async function setup(options: { sourceImageInterceptor?: SourceEndpointIntercept
 }
 
 describe("Delivery system auth gateway", () => {
-    test("adds the system auth overlay to a plain user source repository", async () => {
+    test("adds the system auth contract to a plain user source repository", async () => {
         const { post, legacySignup, credentials } = await setup();
 
         expect(

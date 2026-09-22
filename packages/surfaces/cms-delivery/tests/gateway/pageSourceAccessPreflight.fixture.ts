@@ -1,6 +1,6 @@
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { P9R_CACHE, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
-import { InMemorySourceRepository, seedSources, type Source, type SourceRepository } from "@bernouy/cms-sources";
+import { InMemorySourceRepository, seedSources, type Source } from "@bernouy/cms-sources";
 import { compress, InMemoryCache, type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
 
 const SHOP_SOURCE: Source = {
@@ -102,7 +102,6 @@ export async function mountPage(options: {
     content: string;
     auth?: unknown;
     systemPages?: Partial<Pick<TSystem["site"], "notFound" | "forbidden" | "serverError" | "login">>;
-    decorateSources?: (sources: InMemorySourceRepository) => SourceRepository;
 }): Promise<{ handler: RouteHandler }> {
     const runner = new CaptureRunner();
     const sources = new InMemorySourceRepository();
@@ -111,12 +110,11 @@ export async function mountPage(options: {
     cache.set(P9R_CACHE.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
     cache.set(P9R_CACHE.STYLE, compress("body{}", "text/css"));
     await seedSources(sources, [SHOP_SOURCE]);
-    const deliverySources = options.decorateSources?.(sources) ?? sources;
     new DeliveryCms({
         runner,
         repository: pageRepository(options.content, options.systemPages),
         cache,
-        sources: deliverySources,
+        sources,
         auth: options.auth as never,
     });
     return { handler: runner.defaultHandler("GET", "/") };

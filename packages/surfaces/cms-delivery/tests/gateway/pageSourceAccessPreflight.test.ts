@@ -1,5 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
-import { InMemorySourceOverlayRepository, SourceOverlaySourceRepository } from "@bernouy/cms-sources";
+import { describe, expect, test } from "bun:test";
 import { authSubject, mountPage } from "./pageSourceAccessPreflight.fixture";
 
 describe("Delivery page source access preflight", () => {
@@ -48,28 +47,5 @@ describe("Delivery page source access preflight", () => {
         const response = await handler(new Request("http://site/checkout"));
         expect(response.status).toBe(200);
         expect(await response.text()).toContain("Buy");
-    });
-
-    test("does not materialize overlays before source authorization", async () => {
-        const overlays = new InMemorySourceOverlayRepository();
-        await overlays.upsertOverlay({
-            id: "shop-product-fields",
-            sourceId: "shop",
-            output: [{ endpointId: "myProducts" }],
-            fieldSource: { endpointId: "listProducts" },
-            fields: [],
-        });
-        const fetchImpl = mock(async () => Response.json({ fields: [] }));
-        const { handler } = await mountPage({
-            content: `<section cms-source="/.cms/sources/shop/myProducts as products"></section>`,
-            auth: authSubject(null),
-            decorateSources: (sources) =>
-                new SourceOverlaySourceRepository(sources, overlays, {
-                    deps: { fetchImpl },
-                }),
-        });
-
-        expect((await handler(new Request("http://site/products"))).status).toBe(302);
-        expect(fetchImpl).not.toHaveBeenCalled();
     });
 });

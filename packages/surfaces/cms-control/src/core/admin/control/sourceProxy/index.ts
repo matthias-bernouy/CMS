@@ -11,7 +11,6 @@ import {
     createSourceRequestTelemetryMiddleware,
     handleSourceRequest,
     measureActiveSourceTiming,
-    sourceOverlaySchemaCacheFor,
     sourcesPrefix,
     SYSTEM_SITE_SOURCE_URN,
     type SourceEndpoint,
@@ -27,7 +26,6 @@ export function mountControlSourceProxy(
 ): void {
     const runner = state.runner;
     const configuration = state.configuration ?? {};
-    const schemaCache = state.sourceOverlays ? sourceOverlaySchemaCacheFor(state.sourceOverlays) : undefined;
     const resolveSubject = (request: Request): Promise<Subject | null> =>
         measureActiveSourceTiming(request, "cms_auth", () => resolveRequestSubject(state.auth, request)).catch(
             () => null,
@@ -42,13 +40,7 @@ export function mountControlSourceProxy(
             const prefix = sourcesPrefix(runner.basePath);
             for (const method of SOURCE_PROXY_METHODS) {
                 proxyRunner.setDefaultEndpoint(method, (req) => {
-                    const scope = createControlSourceRequestScope(
-                        state,
-                        configuration,
-                        req,
-                        resolveSubject,
-                        schemaCache,
-                    );
+                    const scope = createControlSourceRequestScope(state, configuration, req, resolveSubject);
                     const executeSystemEndpoint = async (endpoint: SourceEndpoint, request: Request) => {
                         if (endpoint.urn.startsWith(`${SYSTEM_SITE_SOURCE_URN}:`)) {
                             return executeSiteSystemSourceEndpoint(state.repository, endpoint);

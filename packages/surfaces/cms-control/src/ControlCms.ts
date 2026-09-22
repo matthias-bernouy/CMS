@@ -80,9 +80,6 @@ export class ControlCms {
     get secrets() {
         return controlCmsAccessors.secrets(this.state);
     }
-    get editorDataSources() {
-        return controlCmsAccessors.editorDataSources(this.state);
-    }
     get dashboards() {
         return controlCmsAccessors.dashboards(this.state);
     }
@@ -94,12 +91,6 @@ export class ControlCms {
     }
     get identities() {
         return controlCmsAccessors.identities(this.state);
-    }
-    get sourceOverlays() {
-        return controlCmsAccessors.sourceOverlays(this.state);
-    }
-    get sourceExecutorDeps() {
-        return controlCmsAccessors.sourceExecutorDeps(this.state);
     }
     get filesMetadata() {
         return controlCmsAccessors.filesMetadata(this.state);

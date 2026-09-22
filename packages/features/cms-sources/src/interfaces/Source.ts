@@ -63,13 +63,8 @@ export type SourceMediaInventoryEffect = SourceProducedMediaEffect & {
     };
 };
 
-/** Effects declared by an endpoint after a successful response.
- *
- * `invalidatesSchema` means that CMS-derived definitions (sources, overlays and
- * dashboards) must be read again before the admin renders its next state. It
- * deliberately does not invalidate public-site content or database schemas. */
+/** Effects declared by an endpoint after a successful response. */
 export type SourceEndpointEffects = {
-    invalidatesSchema?: true;
     identityBindings?: Array<{
         kind: "user";
         responsePath: string;

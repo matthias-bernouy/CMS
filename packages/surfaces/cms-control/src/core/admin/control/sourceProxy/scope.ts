@@ -2,17 +2,14 @@ import type { Subject } from "@bernouy/cms-auth";
 import { RequestScopedIdentityService } from "@bernouy/cms-identities/requestScope";
 import { createSecretResolver, secretRefToKey } from "@bernouy/cms-secrets";
 import {
-    SourceOverlaySourceRepository,
     activeSourceObservability,
     type ExecutorDeps,
     type SourceEndpointInterceptor,
-    type SourceOverlaySchemaCache,
     type SourceRepository,
 } from "@bernouy/cms-sources";
 import {
     createRequestScopedSecretResolver,
     createRequestScopedSourceContextResolver,
-    RequestScopedSourceOverlayRepository,
     RequestScopedSourceRepository,
 } from "@bernouy/cms-sources/requestScope";
 import type { ControlCmsOptions, ControlCmsState } from "cms-control/core/admin/control/types";
@@ -21,7 +18,6 @@ type ResolveSubject = (request: Request) => Promise<Subject | null>;
 
 export type ControlSourceRequestScope = {
     deps: ExecutorDeps;
-    overlaySources: SourceRepository | null;
     proxiedSources: SourceRepository | null;
     interceptEndpoint: SourceEndpointInterceptor | undefined;
 };
@@ -31,10 +27,8 @@ export function createControlSourceRequestScope(
     configuration: ControlCmsOptions,
     request: Request,
     resolveSubject: ResolveSubject,
-    schemaCache: SourceOverlaySchemaCache | undefined,
 ): ControlSourceRequestScope {
     const sources = state.sources ? new RequestScopedSourceRepository(state.sources) : null;
-    const overlays = state.sourceOverlays ? new RequestScopedSourceOverlayRepository(state.sourceOverlays) : undefined;
     const identities = state.identities ? new RequestScopedIdentityService(state.identities) : undefined;
     const observability = activeSourceObservability(request);
     const resolveContext = createRequestScopedSourceContextResolver(async (candidate) => {
@@ -50,23 +44,12 @@ export function createControlSourceRequestScope(
         resolveContext,
         ...(identities ? { identities } : {}),
         ...(observability ? { observability } : {}),
-        ...(configuration.sourceTrustedConnectorTarget
-            ? { isTrustedConnectorTarget: configuration.sourceTrustedConnectorTarget }
-            : {}),
     };
-    const overlaySources =
-        sources && overlays
-            ? new SourceOverlaySourceRepository(sources, overlays, {
-                  deps,
-                  ...(schemaCache ? { schemaCache } : {}),
-              })
-            : sources;
     const interceptEndpoint = configuration.sourceImageInterceptor;
 
     return {
         deps,
-        overlaySources,
-        proxiedSources: overlaySources,
+        proxiedSources: sources,
         interceptEndpoint,
     };
 }

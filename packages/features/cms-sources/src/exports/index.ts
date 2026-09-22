@@ -75,20 +75,6 @@ export {
     type UndeclaredUpstreamStatus,
 } from "../core/upstream/upstreamFailure";
 export {
-    SourceOverlaySourceRepository,
-    applySourceOverlays,
-    materializeSourceOverlays,
-    sourceOverlaySchemaCacheFor,
-    sourceOverlayFieldPath,
-    type SourceOverlaySourceRepositoryOptions,
-} from "../core/overlays/sourceOverlay";
-export {
-    DEFAULT_SOURCE_OVERLAY_SCHEMA_CACHE_TTL_MS,
-    SourceOverlaySchemaCache,
-    type SourceOverlaySchemaCacheOptions,
-    type SourceOverlaySchemaCacheSelector,
-} from "../core/repositories/SourceOverlaySchemaCache";
-export {
     sourceDtoToSource,
     sourceToDto,
     sourceToFlatDto,
@@ -101,7 +87,7 @@ export {
     type SourceIndexingEntityDto,
     type CanonicalSourceEndpointDto,
     type CanonicalSourceDto,
-} from "../core/overlays/sourceDto";
+} from "../core/dto/sourceDto";
 export {
     resolveEndpoint,
     type ResolveResult,

@@ -101,6 +101,5 @@ export {
     isSafeDashboardExpression,
     isSafeDashboardPath,
 } from "../core/dashboardPaths";
-export { applyDashboardSourceOverlays } from "../core/sourceOverlayDashboard";
 
 export { DASHBOARD_MODAL_FIELD_TYPES } from "../interfaces/dashboard/forms";

@@ -58,6 +58,5 @@ export function createControlCmsState(input: ControlCmsConstructorInput): Contro
         dashboardViews: configuration.dashboardViews ?? new InMemoryDashboardViewRepository(),
         dashboardAssignments: configuration.dashboardAssignments ?? new InMemoryDashboardAssignmentRepository(),
         identities: configuration.identities ?? new InMemoryIdentityService(),
-        sourceOverlays: configuration.sourceOverlays ?? null,
     };
 }

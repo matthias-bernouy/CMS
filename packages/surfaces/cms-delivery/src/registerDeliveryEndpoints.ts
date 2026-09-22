@@ -36,7 +36,6 @@ import {
     handleDeliverySourceRequest,
     registerDeliverySourceProxy,
 } from "cms-delivery/core/sources/registerSourceProxy";
-import { deliverySourceOverlaySchemaCache } from "cms-delivery/core/sources/requestScope";
 import { handlePageRequest } from "cms-delivery/core/pages/handlePageRequest";
 import {
     PRIVACY_ANALYTICS_ROUTES,
@@ -83,7 +82,6 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
     );
 
     if (delivery.auth) {
-        const schemaCache = deliverySourceOverlaySchemaCache(delivery);
         runner.group(PUBLIC_AUTH_ROUTES.base, (authRunner) => {
             registerPublicAuthRoutes(
                 authRunner,
@@ -94,7 +92,6 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
                               handleDeliverySourceRequest(
                                   delivery,
                                   canonicalSignupSourceRequest(request, runner.basePath),
-                                  { schemaCache },
                               ),
                       }
                     : {},

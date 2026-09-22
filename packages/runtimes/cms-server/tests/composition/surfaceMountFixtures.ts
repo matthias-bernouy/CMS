@@ -55,9 +55,7 @@ export function surfaceMountFixtures() {
         features: {
             dashboards: token("dashboards"),
             identities: token("identities"),
-            sourceOverlays: token("source-overlays"),
             sources: token("sources"),
-            deliverySources: token("delivery-sources"),
             analytics: token("analytics"),
             endpointPerformanceRecorder: token("endpoint-performance-recorder"),
             endpointPerformanceReports: token("endpoint-performance-reports"),

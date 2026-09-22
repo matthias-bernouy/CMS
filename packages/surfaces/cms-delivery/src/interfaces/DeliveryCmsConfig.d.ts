@@ -4,9 +4,7 @@ import type { ContentReader } from "@bernouy/cms-content";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { IdentityService } from "@bernouy/cms-identities";
 import type {
-    ExecutorDeps,
     SourceEndpointInterceptor,
-    SourceOverlayRepository,
     SourceRepository,
     SourceRequestTelemetryOptions,
     SourceSecretResolver,
@@ -28,8 +26,6 @@ export type DeliveryCmsConfig = {
     publicPageProviders?: readonly PublicPageProvider[];
     /** Data sources exposed by the optional same-origin source gateway. */
     sources?: SourceRepository;
-    /** Overlay definitions materialized only after source authorization. */
-    sourceOverlays?: SourceOverlayRepository;
     /** Federated opaque identity aliases used by source bindings. */
     identities?: IdentityService;
     /**
@@ -45,8 +41,6 @@ export type DeliveryCmsConfig = {
     responsivePublicSourceImagesEnabled?: boolean;
     /** Enables private and unclassified responsive consumers when the interceptor is configured. Defaults to true. */
     responsivePrivateSourceImagesEnabled?: boolean;
-    /** Runtime-owned allowlist for forwarding the opaque correlation header. */
-    sourceTrustedConnectorTarget?: NonNullable<ExecutorDeps["isTrustedConnectorTarget"]>;
     /** Optional first-party public authentication routes and system source. */
     auth?: PublicAuthRoutesConfig;
     /** Optional strict aggregate analytics writer. */

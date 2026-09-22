@@ -9,12 +9,11 @@ import { MongoIdentityService } from "@bernouy/cms-identities/mongo";
 import { createSecretResolver, type SecretStore } from "@bernouy/cms-secrets";
 import {
     CompositeSourceRepository,
-    SourceOverlaySourceRepository,
     SYSTEM_SOURCES,
     type SourceTargetUrlValidationOptions,
     ValidatingSourceRepository,
 } from "@bernouy/cms-sources";
-import { MongoSourceOverlayRepository, MongoSourceRepository } from "@bernouy/cms-sources/mongo";
+import { MongoSourceRepository } from "@bernouy/cms-sources/mongo";
 import type { Db } from "mongodb";
 
 type FeatureStoreOptions = {
@@ -29,9 +28,6 @@ export async function createFeatureStores(db: Db, secrets: SecretStore, options:
         new ValidatingSourceRepository(mongoSources, options.sourceTargetValidation),
         SYSTEM_SOURCES,
     );
-    const sourceOverlays = new MongoSourceOverlayRepository(db);
-    await sourceOverlays.init();
-
     const identities = new MongoIdentityService(db);
     await identities.init();
     const dashboards = new MongoDashboardRepository(db);
@@ -50,13 +46,8 @@ export async function createFeatureStores(db: Db, secrets: SecretStore, options:
         enabled: options.endpointPerformanceEnabled,
     });
     const resolveSecret = createSecretResolver(secrets);
-    const deliverySources = new SourceOverlaySourceRepository(sources, sourceOverlays, {
-        deps: { resolveSecret, identities },
-    });
-
     return {
         sources,
-        sourceOverlays,
         identities,
         dashboards,
         dashboardViews,
@@ -65,7 +56,6 @@ export async function createFeatureStores(db: Db, secrets: SecretStore, options:
         endpointPerformanceRecorder,
         endpointPerformanceReports,
         resolveSecret,
-        deliverySources,
     };
 }
 

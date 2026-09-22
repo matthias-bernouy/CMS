@@ -15,7 +15,6 @@ describe("ControlCms accessor delegation", () => {
             secrets: dependency,
             dashboards: dependency,
             identities: dependency,
-            sourceOverlays: dependency,
         } as unknown as ControlCmsState;
 
         const expectations = [
@@ -27,7 +26,6 @@ describe("ControlCms accessor delegation", () => {
             ["secrets", dependency],
             ["dashboards", dependency],
             ["identities", dependency],
-            ["sourceOverlays", dependency],
         ] as const;
 
         for (const [name, expected] of expectations) {

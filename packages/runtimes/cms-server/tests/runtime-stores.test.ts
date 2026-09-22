@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { SourceOverlaySourceRepository } from "@bernouy/cms-sources";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type { Db } from "mongodb";
 import { createCoreStores, createRuntimeSourceImageCache } from "../src/runtime/stores/core";
@@ -35,7 +34,6 @@ describe("production runtime stores", () => {
         expect(indexedCollections).toEqual(
             expect.arrayContaining([
                 "sources",
-                "sourceOverlays",
                 "cms_identity_aliases",
                 "dashboards",
                 "analytics_rollups",
@@ -45,7 +43,7 @@ describe("production runtime stores", () => {
                 "analytics_source_performance_rollups",
             ]),
         );
-        expect(stores.deliverySources).toBeInstanceOf(SourceOverlaySourceRepository);
+        expect(stores.sources).toBeDefined();
         expect(typeof stores.resolveSecret).toBe("function");
         expect(stores.endpointPerformanceRecorder.stats()).toMatchObject({
             accepted: 0,

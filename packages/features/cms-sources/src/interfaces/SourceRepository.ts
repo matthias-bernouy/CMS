@@ -1,9 +1,5 @@
 import type { Source, SourceEndpoint } from "./Source";
 
-export type SourceSchemaInvalidationScope = {
-    sourceId?: string;
-};
-
 /**
  * Persistence of sources. Aggregate: a `Source` is stored in full
  * (with its endpoints), keyed by its `urn`. Writes are whole-aggregate: the admin
@@ -23,12 +19,6 @@ export interface SourceRepository {
     /** A source by its urn, e.g. "urn:shop". `null` if not found. */
     getSource(urn: string): Promise<Source | null>;
 
-    /**
-     * The stored aggregate before decorators add projections such as Source overlays.
-     * Every repository must choose and expose its storage-authoritative read explicitly.
-     */
-    getPersistedSource(urn: string): Promise<Source | null>;
-
     /** All sources. */
     getAllSources(): Promise<Source[]>;
 
@@ -37,15 +27,4 @@ export interface SourceRepository {
      * uses to resolve an incoming request. `null` if not found.
      */
     getEndpoint(urn: string): Promise<SourceEndpoint | null>;
-
-    /**
-     * Optional side-effect-free endpoint lookup used before authorization.
-     * Decorators that enrich endpoint contracts through network, secret, or
-     * other privileged work must return the underlying endpoint descriptor
-     * here and defer enrichment until after authorization succeeds.
-     */
-    getEndpointForAuthorization?(urn: string): Promise<SourceEndpoint | null>;
-
-    /** Invalidates derived endpoint schemas after a successful schema-changing operation. */
-    invalidateSchema?(scope?: SourceSchemaInvalidationScope): void;
 }

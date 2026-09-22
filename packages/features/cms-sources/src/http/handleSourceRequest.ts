@@ -3,8 +3,6 @@ import type { SourceEndpoint } from "../interfaces/Source";
 import { resolveEndpoint } from "../core/execution/resolveEndpoint";
 import { executeEndpoint, type ExecutorDeps } from "../core/execution/executeEndpoint";
 import { systemSourceUrnOf } from "../core/system/systemSources";
-import { sourceEndpointAccessMode } from "../core/execution/access";
-import { parseUrn } from "../core/system/urn";
 import {
     activeSourceObservability,
     runObservedSourceRequest,
@@ -86,17 +84,17 @@ async function handleObservedSourceRequest(
 
     const segments = url.pathname.slice(opts.prefix.length).split("/").filter(Boolean).map(decodeURIComponent);
 
-    const authorizationResolved = await timedExecution({ observability }, "cms_endpoint_auth_lookup", () =>
-        resolveEndpoint(source, segments, request.method, { forAuthorization: true }),
+    const resolved = await timedExecution({ observability }, "cms_endpoint_resolve", () =>
+        resolveEndpoint(source, segments, request.method),
     );
-    if (!authorizationResolved.ok) {
-        return unresolvedEndpointResponse(authorizationResolved.reason);
+    if (!resolved.ok) {
+        return unresolvedEndpointResponse(resolved.reason);
     }
-    setObservedSourceEndpoint(request, authorizationResolved.endpoint.urn);
+    setObservedSourceEndpoint(request, resolved.endpoint.urn);
 
     if (deps?.authorizeEndpoint) {
         const authorization = await timedExecution({ observability }, "cms_authorize", () =>
-            deps.authorizeEndpoint!(authorizationResolved.endpoint, request, observability),
+            deps.authorizeEndpoint!(resolved.endpoint, request, observability),
         );
         if (!isSourceAuthorized(authorization)) {
             const status = sourceAuthorizationStatus(authorization);
@@ -104,43 +102,14 @@ async function handleObservedSourceRequest(
         }
     }
 
-    const resolved = source.getEndpointForAuthorization
-        ? await timedExecution({ observability }, "cms_endpoint_resolve", () =>
-              resolveEndpoint(source, segments, request.method),
-          )
-        : authorizationResolved;
-    if (!resolved.ok) {
-        return unresolvedEndpointResponse(resolved.reason);
-    }
-    if (!sameAuthorizationDescriptor(authorizationResolved.endpoint, resolved.endpoint)) {
-        return new Response("source endpoint changed", { status: 409 });
-    }
-
     const dispatch = async (req: Request) => {
-        const response = await dispatchEndpoint(resolved.endpoint, req, deps);
-        invalidateSchemaAfterSuccess(source, resolved.endpoint, response);
-        return response;
+        return dispatchEndpoint(resolved.endpoint, req, deps);
     };
     return deps?.interceptEndpoint ? deps.interceptEndpoint(resolved.endpoint, request, dispatch) : dispatch(request);
 }
 
-function invalidateSchemaAfterSuccess(source: SourceRepository, endpoint: SourceEndpoint, response: Response): void {
-    if (response.status >= 200 && response.status < 300 && endpoint.effects?.invalidatesSchema) {
-        const sourceId = parseUrn(endpoint.urn)?.source;
-        source.invalidateSchema?.(sourceId ? { sourceId } : undefined);
-    }
-}
-
 function unresolvedEndpointResponse(reason: "not_found" | "method_not_allowed"): Response {
     return new Response(reason, { status: reason === "method_not_allowed" ? 405 : 404 });
-}
-
-function sameAuthorizationDescriptor(base: SourceEndpoint, enriched: SourceEndpoint): boolean {
-    return (
-        base.urn === enriched.urn &&
-        base.method === enriched.method &&
-        sourceEndpointAccessMode(base) === sourceEndpointAccessMode(enriched)
-    );
 }
 
 async function dispatchEndpoint(

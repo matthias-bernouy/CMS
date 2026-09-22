@@ -1,7 +1,6 @@
 import { describe, expect, mock, test } from "bun:test";
 import { handleSourceRequest } from "cms-sources/http/handleSourceRequest";
-import type { SourceEndpoint } from "cms-sources/interfaces/Source";
-import { dynamicOverlayHarness, okFetch, seededSourceRepository, SOURCE_PREFIX } from "../handleSourceFixtures";
+import { okFetch, seededSourceRepository, SOURCE_PREFIX } from "../handleSourceFixtures";
 
 describe("handleSourceRequest authorization", () => {
     test.each([
@@ -45,8 +44,9 @@ describe("handleSourceRequest authorization", () => {
             status: 401,
             calls: 1,
         },
-    ])("does no overlay work before authorization: $name", async ({ path, method, decision, status, calls }) => {
-        const { repository, fetchImpl, resolveSecret } = await dynamicOverlayHarness();
+    ])("does no upstream work before authorization: $name", async ({ path, method, decision, status, calls }) => {
+        const fetchImpl = okFetch();
+        const resolveSecret = mock(async () => "secret");
         const authorizeEndpoint = mock(async () => {
             if (decision === "forbid") {
                 return false;
@@ -57,7 +57,7 @@ describe("handleSourceRequest authorization", () => {
             return true;
         });
         const response = await handleSourceRequest(
-            repository,
+            await seededSourceRepository(),
             new Request(`http://local${SOURCE_PREFIX}${path}`, { method }),
             { prefix: SOURCE_PREFIX, deps: { fetchImpl, resolveSecret, authorizeEndpoint } },
         );
@@ -65,31 +65,5 @@ describe("handleSourceRequest authorization", () => {
         expect(authorizeEndpoint).toHaveBeenCalledTimes(calls);
         expect(fetchImpl).not.toHaveBeenCalled();
         expect(resolveSecret).not.toHaveBeenCalled();
-    });
-
-    test("materializes dynamic overlays only after authorization", async () => {
-        const { repository, fetchImpl, resolveSecret } = await dynamicOverlayHarness();
-        const authorizeEndpoint = mock(async () => {
-            expect(fetchImpl).not.toHaveBeenCalled();
-            expect(resolveSecret).not.toHaveBeenCalled();
-            return true;
-        });
-        let dispatchedEndpoint: SourceEndpoint | undefined;
-        const interceptEndpoint = mock(async (endpoint, request, next) => {
-            dispatchedEndpoint = endpoint;
-            return next(request);
-        });
-        const response = await handleSourceRequest(
-            repository,
-            new Request(`http://local${SOURCE_PREFIX}shop/getCart`),
-            { prefix: SOURCE_PREFIX, deps: { fetchImpl, resolveSecret, authorizeEndpoint, interceptEndpoint } },
-        );
-        expect(response.status).toBe(200);
-        expect(authorizeEndpoint).toHaveBeenCalledTimes(1);
-        expect(resolveSecret).toHaveBeenCalledTimes(1);
-        expect(fetchImpl).toHaveBeenCalledTimes(2);
-        expect(dispatchedEndpoint?.output?.[0]?.body).toMatchObject({
-            properties: { metadata: { properties: { company: { type: "string" } } } },
-        });
     });
 });

@@ -21,7 +21,6 @@ describe("source DTO canonical views", () => {
                     targetUrl: "https://api.example.test/accounts/{id}",
                     timeoutMs: 2_000,
                     access: { mode: "auth" },
-                    effects: { invalidatesSchema: true },
                     responseKind: "json",
                     mediaType: "application/json",
                     params: [

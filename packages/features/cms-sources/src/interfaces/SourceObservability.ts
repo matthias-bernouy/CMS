@@ -1,11 +1,8 @@
 export const SOURCE_TIMING_STAGES = [
     "cms_auth",
-    "cms_endpoint_auth_lookup",
     "cms_authorize",
     "cms_roles",
     "cms_endpoint_resolve",
-    "cms_source",
-    "cms_overlays",
     "cms_context",
     "cms_secret",
     "cms_headers",

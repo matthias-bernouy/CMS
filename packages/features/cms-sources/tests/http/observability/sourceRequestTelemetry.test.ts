@@ -45,7 +45,7 @@ describe("source request telemetry", () => {
         expect(response.headers.get("x-cms-correlation-id")).toBe(observations[0]!.correlationId);
         expect(observations[0]!.stagesMs).toEqual(
             expect.objectContaining({
-                cms_endpoint_auth_lookup: expect.any(Number),
+                cms_endpoint_resolve: expect.any(Number),
                 cms_upstream: expect.any(Number),
                 cms_total: expect.any(Number),
             }),
