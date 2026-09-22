@@ -16,7 +16,7 @@ Do not import another package through a deep filesystem path:
 
 ```ts
 // Wrong
-import { MongoCmsRepository } from "../../cms-content/src/default-implementation/MongoCmsRepository";
+import { MongoCmsRepository } from "../../cms-content/src/application/default-implementation/mongo/MongoCmsRepository";
 ```
 
 If a symbol must be consumed by another package, export it from the owning
@@ -30,7 +30,7 @@ that package:
 
 ```ts
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
-import { validatePagePath } from "cms-content/core/validation/pages";
+import { isPublishedPage } from "cms-content/pages/core/lifecycle/publication";
 import { BunRunner } from "http-runner/default-implementation/BunRunner";
 ```
 
@@ -44,6 +44,7 @@ Adapter subpaths isolate optional infrastructure:
 
 - `./mongo` imports MongoDB-backed repositories.
 - `./s3` imports S3-backed file blobs.
+- `./files/local-fs` imports filesystem-backed author-file stores.
 - `./browser` imports browser-safe source types and helpers.
 - `./components` imports browser components for auth.
 

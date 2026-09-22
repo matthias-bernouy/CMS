@@ -285,4 +285,4 @@ network-inert activation rules. Follow
 custom fetch-and-Blob loader.
 
 The complete activation element and preview-state contract is recorded in the
-[`cms-binding-core` contract](../../packages/features/cms-content/src/interfaces/Editor/README.md).
+[`cms-binding-core` contract](../../packages/features/cms-content/src/editor/interfaces/README.md).

@@ -5,16 +5,23 @@ library, editor contracts, validation, and read models.
 
 ## Boundaries
 
-- Root export exposes entity types, `CmsRepository`, `ContentReader`, in-memory
-  repository, validation, constants, and style generation.
+- Root export exposes authoring entity types, `CmsRepository`, in-memory
+  repository, validation, and authoring operations.
+- `@bernouy/cms-content/rendering` exposes `ContentReader`, its composition
+  factory and public rendering helpers. It has published-only page operations,
+  rendering settings and renderable bloc artifacts, never editorial queries.
 - `@bernouy/cms-content/editor` exposes browser/editor-safe authoring
   contracts.
 - `@bernouy/cms-content/theme` exposes browser-safe theme value resolution.
 - `@bernouy/cms-content/mongo` exposes `MongoCmsRepository` for composition
   roots.
-- `@bernouy/cms-content/files` exposes the CMS-owned file metadata/blob
-  contracts, lifecycle, local and in-memory implementations, image variants,
-  URL helpers, and serving handlers.
+- `@bernouy/cms-content/files` exposes authoring metadata/blob contracts,
+  lifecycle, validation and in-memory implementations.
+- `@bernouy/cms-content/files/serving` exposes public metadata lookup, get-only
+  originals, variant get/put, sitemap get/put/delete, and serving/optimization
+  helpers. Fresh facade objects restrict the methods exposed at runtime.
+- `@bernouy/cms-content/files/local-fs` exposes filesystem implementations to
+  composition roots.
 - `@bernouy/cms-content/files/urls` is the browser-safe file URL surface.
 - `@bernouy/cms-content/files/mongo` and `./files/s3` expose composition-root
   adapters.
@@ -23,10 +30,28 @@ library, editor contracts, validation, and read models.
 - Do not import surfaces, runtimes, Control internals, or persistence adapters
   into `core/` or `interfaces/`.
 
+## Source Layout
+
+- `pages/`, `blocs/`, `files/`, `settings/`, `theme/` and `editor/` are sibling
+  domains. Theme owns tokens, modes, values and CSS independently of settings.
+- Each domain contains only its needed `interfaces/`, `core/`, `http/` or
+  `default-implementation/` layers. Interfaces contain no executable helpers.
+- `application/` owns cross-domain contracts, reader composition, aggregate
+  validation/error primitives and memory/Mongo repositories. Domain rules stay
+  with the domain; do not create a catch-all repository business domain.
+- `exports/` contains all declared public entrypoints, including `exports/files/`.
+- Tests follow domains; aggregate repository tests live in `tests/application/`.
+
 ## Rules
 
-- Content validation belongs in `core/validation/` and should be enforced by
-  `ValidatingCmsRepository`.
+- Domain validation belongs with the relevant domain and is enforced by
+  `application/core/ValidatingCmsRepository` for authoring writes.
+- Public pages must be observed with `visible === true`. Project returned
+  fields explicitly and do not return shared mutable authoring objects.
+- Keep route migration checks and rereads; do not claim snapshot consistency.
+- Rendering settings must not contain initialization state or SMTP settings.
+- Control owns authenticated draft preview. Never add a preview mode to the
+  public reader.
 - Stored HTML/SVG must pass through the existing hardening/sanitizing helpers.
 - Page bloc references should use the existing content-ref helpers.
 - Editor contracts must remain stable; authored blocs depend on them.
@@ -39,4 +64,7 @@ library, editor contracts, validation, and read models.
   external contract.
 - Generated variants are cacheable and reconstructible; original author files
   are not disposable.
+- Media publication is independent of pages: files with metadata and bytes
+  remain public by ID/path even when draft-only or unreferenced. This refactor
+  provides no confidential-media policy or process/credential isolation.
 - Validate file names, sizes, and tree operations through the file core helpers.

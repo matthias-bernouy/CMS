@@ -92,6 +92,33 @@ Not every feature needs every folder. For example, `cms-bloc-compile` is a
 compile-time utility with `core/` and `exports/`; `cms-secrets` has no HTTP
 surface of its own.
 
+`cms-content` groups these layers inside sibling domains:
+
+```text
+cms-content/src/
+|-- pages/        publication, routes, SEO, page validation and snapshots
+|-- blocs/        catalogue, composition, usage and publication
+|-- files/        author library, original storage, serving and derivatives
+|-- settings/     site configuration and public rendering projection
+|-- theme/        token catalogues, modes, values and generated CSS
+|-- editor/       authoring contracts, bindings, document and markup helpers
+|-- application/  cross-domain contracts, facades and aggregate persistence
+`-- exports/      curated package entrypoints, including files/*
+```
+
+Control receives `CmsRepository` and authoring file stores. Delivery receives a
+fresh `ContentReader` facade from `/rendering`: published pages/routes, projected
+rendering settings and renderable bloc artifacts. Its `/files/serving` dependencies
+expose get-only originals, writable variants and a separate sitemap store.
+Runtimes construct the facades and import `/mongo`, `/files/local-fs`, `/files/mongo`
+or `/files/s3` adapters. `/editor`, `/theme`, `/page-path` and `/files/urls` remain
+browser-safe. Import checks enforce Delivery's public entrypoints.
+
+Publication is still `visible === true`, without separate page revisions.
+Authenticated editorial preview remains in Control. Author files are independently
+public by ID/path, including draft-only and unreferenced files. The shared-process
+runtime does not claim operational isolation or confidential-media enforcement.
+
 Keep these boundaries:
 
 - `interfaces/` stays inert: types and contracts only.
