@@ -57,8 +57,5 @@
         "playwright": "^1.61.1",
         "sharp": "^0.34.5",
         "typescript": "^5.9.3"
-    },
-    "patchedDependencies": {
-        "happy-dom@20.9.0": "patches/happy-dom@20.9.0.patch"
     }
 }

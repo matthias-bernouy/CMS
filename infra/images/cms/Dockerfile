@@ -7,7 +7,6 @@ WORKDIR /app
 
 # Copy the whole workspace so Bun can resolve every `workspace:*` dependency.
 COPY package.json bun.lock tsconfig.base.json tsconfig.json build.ts ./
-COPY patches/ ./patches/
 COPY packages/ ./packages/
 
 RUN bun install --frozen-lockfile
@@ -30,7 +29,6 @@ LABEL org.opencontainers.image.title="@bernouy/cms-server" \
 
 WORKDIR /app
 COPY --chown=bun:bun --from=runtime-source /app/package.json /app/bun.lock /app/tsconfig.base.json /app/tsconfig.json ./
-COPY --chown=bun:bun --from=runtime-source /app/patches/ ./patches/
 COPY --chown=bun:bun --from=runtime-source /app/packages/ ./packages/
 
 RUN install -d -o bun -g bun /var/lib/cms/files && chown bun:bun /app
