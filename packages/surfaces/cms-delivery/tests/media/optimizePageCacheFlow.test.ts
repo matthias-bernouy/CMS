@@ -3,9 +3,9 @@ import sharp from "sharp";
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { TtlCache } from "@bernouy/http-runner";
 import { type CacheEntry } from "@bernouy/http-runner";
-import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, sha256Hex } from "@bernouy/cms-files";
+import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, sha256Hex } from "@bernouy/cms-content/files";
 import { P9R_CACHE } from "@bernouy/cms-content";
-import { readManifest } from "@bernouy/cms-files";
+import { readManifest } from "@bernouy/cms-content/files";
 import type { ContentReader } from "@bernouy/cms-content";
 
 // optimizePage never touches the repository, so an empty stub is fine.

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { gunzipSync } from "bun";
-import { InMemoryCmsFilesBlob } from "@bernouy/cms-files";
+import { InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
 import { materializeSitemapSnapshot } from "cms-delivery/core/seo/sitemap/materialize";
 import SitemapChunkServer from "cms-delivery/endpoints/sitemap-chunk.server";
 import { mountPublicPages, publicPage } from "../publicPage.fixture";

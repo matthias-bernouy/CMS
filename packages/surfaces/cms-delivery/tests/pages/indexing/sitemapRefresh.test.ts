@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryCmsFilesBlob } from "@bernouy/cms-files";
+import { InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
 import {
     CanonicalSiteHostNotConfiguredError,
     materializeSitemapSnapshot,

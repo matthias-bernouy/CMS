@@ -42,10 +42,10 @@ Resources:
 
 Feature packages:
 
-- `@bernouy/cms-content`: pages, blocs, settings, validation,
-  editor contracts, and repository contracts.
-- `@bernouy/cms-files`: metadata and blob stores, media lifecycle, local/S3
-  storage, image variants, and file-serving handlers.
+- `@bernouy/cms-content`: pages, blocs, settings, validation, editor contracts,
+  repository contracts, and the CMS-owned author file library. File metadata,
+  blob stores, lifecycle, local/S3 adapters, image variants, URL helpers, and
+  serving handlers live under its explicit `./files` subpaths.
 - `@bernouy/cms-secrets`: secret storage contracts, `${VAR}` resolution, and
   encrypted Mongo storage.
 - `@bernouy/cms-auth`: local auth, OIDC auth, PATs, signed cookies, public auth

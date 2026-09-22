@@ -47605,7 +47605,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 }
 `;
 
-  // ../../features/cms-files/src/core/media/fileUrls.ts
+  // ../../features/cms-content/src/files/core/media/fileUrls.ts
   var CMS_FILES_ROUTE = "/.cms/files";
   var CMS_FILES_BY_ID_SEGMENT = "by-id";
   var CMS_FILES_BY_ID_ROUTE = `${CMS_FILES_ROUTE}/${CMS_FILES_BY_ID_SEGMENT}`;

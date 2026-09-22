@@ -1,4 +1,4 @@
-import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-files";
+import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-content/files";
 import type { ContentReader } from "@bernouy/cms-content";
 import type { HeadInjector } from "cms-delivery/interfaces/HeadInjector";
 import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";

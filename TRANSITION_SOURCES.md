@@ -305,10 +305,20 @@ automation, if still wanted, should later return as a small, separate
 Scheduler and Workflow system built on Protocol v1. It must not leak back into
 contract or provider definitions.
 
-Provider switching is another separate requirement. Before production data
-exists, the design needs snapshot export/import, checksums, dry runs,
-incremental catch-up, cutover, reconciliation, and rollback. GDPR exports are
-not provider migration formats.
+Disaster recovery is a requirement before production data exists. Protocol v1
+must support backup/restore of one provider instance and offline relocation of
+one tenant into a clean instance of the same provider implementation and a
+compatible build. The recovery format is provider-owned and versioned; it
+includes data, files, references, and the operational state required for a
+coherent restore, with checksums, dry runs, reconciliation, audit, and an
+explicit secret rebinding or rotation policy. GDPR exports are not recovery
+formats.
+
+Cross-provider data migration, live catch-up, provider-independent portable
+snapshots, and automatic failover are not Protocol v1 requirements. Contracts,
+consumer records, and selections must still avoid embedding provider endpoints
+so that migration can be designed later per domain, after at least two real
+implementations expose what is genuinely portable.
 
 Files also need explicit lifecycle rules. Immutable IDs are useful for
 caching, but personal files and deleted resources cannot be cached forever.
@@ -374,6 +384,9 @@ duplicating effects or silently losing changes.
 - run conformance in isolated disposable tenants;
 - make conformance coverage warnings blocking for official releases;
 - exercise end-to-end flows across several provider installations;
+- prove backup/restore on the original instance and offline relocation into a
+  clean compatible instance of the same provider, including files, secret
+  rebinding, reconciliation, cutover failure, and rollback;
 - remove the remaining superseded source paths after their replacement behavior
   is covered.
 
@@ -407,7 +420,9 @@ Protocol v1 is ready to become CmsCore's integration foundation when:
 - providers expose actionable health and telemetry;
 - conformance runs in isolation and covers all official capabilities;
 - the official provider passes multi-contract end-to-end tests without
-  Supabase.
+  Supabase;
+- official-provider tenants can be restored in place and relocated offline to
+  a clean compatible instance with verified data and file reconciliation.
 
 ## Workspace architecture
 

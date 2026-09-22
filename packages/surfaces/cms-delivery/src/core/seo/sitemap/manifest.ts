@@ -1,4 +1,4 @@
-import type { CmsFilesBlobStore } from "@bernouy/cms-files";
+import type { CmsFilesBlobStore } from "@bernouy/cms-content/files";
 
 export const SITEMAP_MANIFEST_KEY = "manifest.json";
 export const SITEMAP_RETAINED_SNAPSHOTS = 5;

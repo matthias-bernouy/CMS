@@ -58,7 +58,6 @@
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-analytics": "workspace:*",
         "linkedom": "^0.18.12",
-        "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-editor-system-v2": "workspace:*"

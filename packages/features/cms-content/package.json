@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-content",
     "version": "0.1.0",
-    "description": "The CMS content aggregate behind `CmsRepository` — pages, blocs and settings, with in-memory and Mongo (`./mongo`) implementations, the theme style endpoint under `http/`, cache key builders and content utilities.",
+    "description": "CMS-owned content — pages, blocs, settings, and the author file library, with explicit editor, persistence, file-storage, serving, and image-derivative subpaths.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./src/exports/index.ts",
@@ -10,13 +10,20 @@
         "./editor": "./src/exports/editor.ts",
         "./theme": "./src/exports/theme.ts",
         "./page-path": "./src/exports/page-path.ts",
-        "./mongo": "./src/exports/mongo.ts"
+        "./mongo": "./src/exports/mongo.ts",
+        "./files": "./src/files/exports/index.ts",
+        "./files/urls": "./src/files/exports/urls.ts",
+        "./files/mongo": "./src/files/exports/mongo.ts",
+        "./files/s3": "./src/files/exports/s3.ts"
     },
     "dependencies": {
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
+        "@img/sharp-libvips-linux-x64": "^1.2.4",
+        "@img/sharp-linux-x64": "^0.34.5",
         "linkedom": "^0.18.12",
-        "markdown-it": "^14.3.0"
+        "markdown-it": "^14.3.0",
+        "sharp": "^0.34.5"
     },
     "devDependencies": {
         "@types/markdown-it": "^14.1.2"

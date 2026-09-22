@@ -29,8 +29,7 @@ CmsCore/
 |   |   |-- rate-limiter/      @bernouy/rate-limiter
 |   |   `-- components/        @bernouy/components
 |   |-- features/
-|   |   |-- cms-content/       @bernouy/cms-content
-|   |   |-- cms-files/         @bernouy/cms-files
+|   |   |-- cms-content/       @bernouy/cms-content (pages, blocs, settings, files)
 |   |   |-- cms-secrets/       @bernouy/cms-secrets
 |   |   |-- cms-auth/          @bernouy/cms-auth
 |   |   |-- cms-sources/       @bernouy/cms-sources

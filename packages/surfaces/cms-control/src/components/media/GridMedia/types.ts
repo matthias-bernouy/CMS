@@ -1,4 +1,4 @@
-import { withFileVersion } from "@bernouy/cms-files/urls";
+import { withFileVersion } from "@bernouy/cms-content/files/urls";
 
 export type MediaItem = {
     id: string;

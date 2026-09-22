@@ -1,10 +1,10 @@
 import { describe, test, expect } from "bun:test";
 import { parseHTML } from "linkedom";
 import sharp from "sharp";
-import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, sha256Hex } from "@bernouy/cms-files";
-import { injectMediaVersions } from "@bernouy/cms-files";
-import { optimizePageImages } from "@bernouy/cms-files";
-import { serveVariantRequest } from "@bernouy/cms-files";
+import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, sha256Hex } from "@bernouy/cms-content/files";
+import { injectMediaVersions } from "@bernouy/cms-content/files";
+import { optimizePageImages } from "@bernouy/cms-content/files";
+import { serveVariantRequest } from "@bernouy/cms-content/files";
 
 /**
  * End-to-end: a real image flows through the REAL render → enqueue → generate →

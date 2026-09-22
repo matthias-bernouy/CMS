@@ -8,7 +8,7 @@ source directly.
 Pair it with:
 
 - **`@bernouy/cms-delivery`** for the public-facing rendering layer.
-- **`@bernouy/cms-content`**, **`@bernouy/cms-files`** and
+- **`@bernouy/cms-content`**, its **`./files`** subpath, and
   **`@bernouy/cms-secrets`** for persistence contracts and default stores.
 - **`@bernouy/cms-auth`** for the auth chain (login + signed cookie +
   PATs).
@@ -44,7 +44,7 @@ import {
 } from "@bernouy/cms-auth";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
-import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-files";
+import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 
 const runner = new BunRunner();

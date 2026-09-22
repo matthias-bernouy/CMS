@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { ContentReader, TSystem } from "@bernouy/cms-content";
-import { InMemoryCmsFilesBlob, InMemoryCmsFilesMetadata } from "@bernouy/cms-files";
+import { InMemoryCmsFilesBlob, InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { DEFAULT_FAVICON_SVG } from "cms-delivery/core/assets/defaultFavicon";
 import { CaptureRunner } from "../gateway/support/CaptureRunner";

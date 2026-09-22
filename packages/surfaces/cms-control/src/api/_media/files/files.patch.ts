@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import type { ItemPatch } from "@bernouy/cms-files";
+import type { ItemPatch } from "@bernouy/cms-content/files";
 import { readJsonBody } from "cms-control/core/admin/http/readJsonBody";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 

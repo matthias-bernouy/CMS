@@ -8,10 +8,10 @@ import {
     InMemoryCmsFilesMetadata,
     InMemoryCmsFilesBlob,
     type FileItem,
-} from "@bernouy/cms-files";
-import { uploadFile } from "@bernouy/cms-files";
-import { updateFileContent } from "@bernouy/cms-files";
-import { deleteFileTree } from "@bernouy/cms-files";
+} from "@bernouy/cms-content/files";
+import { uploadFile } from "@bernouy/cms-content/files";
+import { updateFileContent } from "@bernouy/cms-content/files";
+import { deleteFileTree } from "@bernouy/cms-content/files";
 
 const file = (name: string, content: string, type = "text/plain") => new File([content], name, { type });
 const read = async (s: ReadableStream<Uint8Array> | null) => (s ? await new Response(s).text() : null);

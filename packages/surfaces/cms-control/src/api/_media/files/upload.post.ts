@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { uploadFile, MAX_UPLOAD_BYTES } from "@bernouy/cms-files";
+import { uploadFile, MAX_UPLOAD_BYTES } from "@bernouy/cms-content/files";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 
 /** POST /api/files/upload (multipart: `file` + optional `parentId` + optional
@@ -9,7 +9,7 @@ import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 export default async function uploadFileEndpoint(req: Request, cms: ControlCms) {
     // Reject an oversized body via Content-Length BEFORE formData() buffers the
     // whole multipart envelope into memory — a perf guard. The authoritative
-    // size rule lives in `uploadFile` (cms-files), enforced on the actual bytes.
+    // The size rule lives in `uploadFile` (cms-content/files) and is enforced on the actual bytes.
     const declaredLength = Number(req.headers.get("content-length"));
     if (Number.isFinite(declaredLength) && declaredLength > MAX_UPLOAD_BYTES) {
         throw new InvalidParam("file", `Body exceeds the ${MAX_UPLOAD_BYTES}-byte limit.`);

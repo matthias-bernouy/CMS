@@ -1,7 +1,7 @@
 import type { AnalyticsEvent } from "@bernouy/cms-analytics";
 import { P9R_CACHE, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
 import type { PublicPageProvider } from "@bernouy/cms-delivery";
-import type { CmsFilesBlobStore } from "@bernouy/cms-files";
+import type { CmsFilesBlobStore } from "@bernouy/cms-content/files";
 import type { SourceEndpointInterceptor, SourceRepository } from "@bernouy/cms-sources";
 import { type CacheEntry, TtlCache } from "@bernouy/http-runner";
 import DeliveryCms from "cms-delivery/DeliveryCms";

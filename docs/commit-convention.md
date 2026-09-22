@@ -15,7 +15,7 @@ chore(domain): summary
 Examples:
 
 ```text
-feat(cms-files): add image variant manifest
+feat(cms-content): add image variant manifest
 fix(cms-control): validate page editor id before loading
 docs(agents): refresh package instructions
 ```

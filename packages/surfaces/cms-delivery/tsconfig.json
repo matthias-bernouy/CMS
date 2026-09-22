@@ -13,7 +13,6 @@
     "references": [
         { "path": "../../foundation/http-runner" },
         { "path": "../../features/cms-content" },
-        { "path": "../../features/cms-files" },
         { "path": "../../features/cms-source-images" },
         { "path": "../../features/cms-identities" },
         { "path": "../../features/cms-sources" },

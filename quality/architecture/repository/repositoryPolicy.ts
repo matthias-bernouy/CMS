@@ -8,10 +8,10 @@ import {
 
 /** Existing reads are frozen here until runtime configuration is injected into their owners. */
 export const ENVIRONMENT_READ_BASELINE = {
-    "packages/features/cms-files/src/http/serveFilesRequest.ts": {
+    "packages/features/cms-content/src/files/http/serveFilesRequest.ts": {
         "process.env.MODE": 1,
     },
-    "packages/features/cms-files/src/http/serveVariant.ts": {
+    "packages/features/cms-content/src/files/http/serveVariant.ts": {
         "process.env.MODE": 1,
     },
     "packages/foundation/http-runner/src/core/compression/headers.ts": {

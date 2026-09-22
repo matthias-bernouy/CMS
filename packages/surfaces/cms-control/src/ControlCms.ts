@@ -8,7 +8,7 @@ import type {
 } from "@bernouy/cms-auth";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
-import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
+import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type { SourceRepository } from "@bernouy/cms-sources";

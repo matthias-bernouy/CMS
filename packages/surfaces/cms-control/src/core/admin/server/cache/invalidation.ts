@@ -6,7 +6,7 @@ import {
     publicPagePath,
     type TPage,
 } from "@bernouy/cms-content";
-import { cmsFilesByIdRef } from "@bernouy/cms-files";
+import { cmsFilesByIdRef } from "@bernouy/cms-content/files";
 
 /**
  * Invalidate every cached rendered page that uses a bloc directly or through

@@ -2,7 +2,7 @@ import { gunzipSync } from "bun";
 import { expect, test } from "bun:test";
 import { InMemoryCmsRepository, validateSettingsPatch } from "@bernouy/cms-content";
 import type { PublicPageProvider } from "@bernouy/cms-delivery";
-import { InMemoryCmsFilesBlob } from "@bernouy/cms-files";
+import { InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { materializeSitemapSnapshot } from "cms-delivery/core/seo/sitemap/materialize";
 import { readSitemapManifest, sitemapChunkPath } from "cms-delivery/core/seo/sitemap/manifest";

@@ -1,6 +1,6 @@
 import type { MediaItem as LocalMediaItem } from "../types";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
-import { cmsFilesByIdUrl } from "@bernouy/cms-files/urls";
+import { cmsFilesByIdUrl } from "@bernouy/cms-content/files/urls";
 
 /**
  * Filter expressed in the admin-UI's compact vocabulary (`folder` / `image`

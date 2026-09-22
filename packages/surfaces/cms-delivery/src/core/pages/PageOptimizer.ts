@@ -4,7 +4,7 @@ import {
     type CmsFilesMetadataRepository,
     OptimizeQueue,
     optimizePageImages,
-} from "@bernouy/cms-files";
+} from "@bernouy/cms-content/files";
 import type { Cache } from "@bernouy/http-runner";
 
 type PageOptimizerConfig = {

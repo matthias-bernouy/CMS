@@ -7,8 +7,8 @@ import {
 } from "@bernouy/cms-auth/mongo";
 import { ValidatingCmsRepository } from "@bernouy/cms-content";
 import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
-import { LocalFsCmsFilesBlob, ValidatingCmsFilesMetadata } from "@bernouy/cms-files";
-import { MongoCmsFilesMetadata } from "@bernouy/cms-files/mongo";
+import { LocalFsCmsFilesBlob, ValidatingCmsFilesMetadata } from "@bernouy/cms-content/files";
+import { MongoCmsFilesMetadata } from "@bernouy/cms-content/files/mongo";
 import { LocalSourceImageCache } from "@bernouy/cms-source-images/local-fs";
 import { MongoSourceImageJobQueue, MongoSourceMediaIndex } from "@bernouy/cms-source-images/mongo";
 import { EnvelopeSecretCrypto, LocalKekProvider } from "@bernouy/envelope-crypto";

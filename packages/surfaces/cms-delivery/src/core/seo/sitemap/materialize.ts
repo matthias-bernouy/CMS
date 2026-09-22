@@ -1,5 +1,5 @@
 import { canonicalSiteBaseUrl, type TPage } from "@bernouy/cms-content";
-import type { CmsFilesBlobStore } from "@bernouy/cms-files";
+import type { CmsFilesBlobStore } from "@bernouy/cms-content/files";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { collectPublicPageProviderPaths } from "cms-delivery/core/pages/publicPagePaths";
 import {

@@ -1,7 +1,7 @@
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
 import type { ContentReader } from "@bernouy/cms-content";
-import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-files";
+import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { IdentityService } from "@bernouy/cms-identities";
 import type {
     SourceEndpointInterceptor,
