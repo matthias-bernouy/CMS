@@ -4,11 +4,39 @@ import {
     CODE_EXTENSIONS,
     type SourceImport,
     type WorkspacePackage,
+    type WorkspaceCheckOptions,
 } from "../core/architectureTypes";
 import { layerRank } from "./dependencyRules";
 import { resolvePackageAliasImports } from "../core/resolution/moduleResolution";
 import { isDeclaredExport, parseWorkspaceSpecifier } from "../core/resolution/packageExports";
 import { isPathInside, toRelativePath } from "../core/pathUtils";
+
+export function checkPackageImportAllowlist(
+    owner: WorkspacePackage,
+    file: string,
+    imports: readonly SourceImport[],
+    rules: WorkspaceCheckOptions["packageImportAllowlist"],
+    packageByName: ReadonlyMap<string, WorkspacePackage>,
+    violations: ArchitectureViolation[],
+    rootDir: string,
+): void {
+    for (const imported of imports) {
+        const parsed = parseWorkspaceSpecifier(imported.specifier, packageByName);
+        if (!parsed) {
+            continue;
+        }
+        const allowed = rules?.[owner.name]?.[parsed.pkg.name];
+        const subpath = parsed.subpath ? `./${parsed.subpath}` : ".";
+        if (allowed && !allowed.includes(subpath)) {
+            violations.push({
+                kind: "restricted-package-import",
+                file: toRelativePath(rootDir, file),
+                line: imported.line,
+                message: `${owner.name} must use a permitted ${parsed.pkg.name} capability, not ${imported.specifier}`,
+            });
+        }
+    }
+}
 
 export function checkExportFilesDeclared(
     packages: readonly WorkspacePackage[],

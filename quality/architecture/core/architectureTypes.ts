@@ -8,6 +8,7 @@ export type ArchitectureViolationKind =
     | "undeclared-subpath"
     | "cross-package-source-import"
     | "surface-runtime-adapter"
+    | "restricted-package-import"
     | "browser-runtime-adapter"
     | "environment-read"
     | "focused-test";
@@ -29,6 +30,8 @@ export interface WorkspaceCheckOptions {
     environmentReadBaseline?: Readonly<Record<string, Readonly<Record<string, number>>>>;
     adapterSubpaths?: readonly string[];
     infrastructureModules?: readonly string[];
+    /** Consumer package -> dependency package -> allowed exported subpaths. */
+    packageImportAllowlist?: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>>;
 }
 
 export interface PackageManifest {
@@ -65,6 +68,7 @@ export const CODE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mts", ".
 
 export const DEFAULT_ADAPTER_SUBPATHS = [
     "fs",
+    "local-fs",
     "http",
     "mongo",
     "mongodb",
@@ -76,6 +80,15 @@ export const DEFAULT_ADAPTER_SUBPATHS = [
     "supabase",
 ];
 
-export const DEFAULT_INFRASTRUCTURE_MODULES = ["mongodb", "pg", "postgres", "redis", "ioredis", "minio", "mysql2"];
+export const DEFAULT_INFRASTRUCTURE_MODULES = [
+    "mongodb",
+    "pg",
+    "postgres",
+    "redis",
+    "ioredis",
+    "minio",
+    "mysql2",
+    "sharp",
+];
 
 export const IGNORED_DIRECTORY_NAMES = new Set([".git", ".coverage-rate", "coverage", "dist", "node_modules"]);

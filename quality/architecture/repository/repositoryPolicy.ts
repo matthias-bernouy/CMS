@@ -35,7 +35,24 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
     return {
         rootDir,
         ignoredPaths: [CONTROL_COMPONENT_ASSET],
-        browserEntryPaths: [CONTROL_COMPONENT_ENTRY],
+        browserEntryPaths: [
+            CONTROL_COMPONENT_ENTRY,
+            "packages/features/cms-content/src/exports/theme.ts",
+            "packages/features/cms-content/src/exports/page-path.ts",
+            "packages/features/cms-content/src/exports/files/urls.ts",
+        ],
+        packageImportAllowlist: {
+            "@bernouy/cms-delivery": {
+                "@bernouy/cms-content": [
+                    "./rendering",
+                    "./editor",
+                    "./theme",
+                    "./page-path",
+                    "./files/serving",
+                    "./files/urls",
+                ],
+            },
+        },
         environmentReadBaseline: ENVIRONMENT_READ_BASELINE,
     };
 }

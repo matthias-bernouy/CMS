@@ -12,6 +12,7 @@ import {
     checkExportFilesDeclared,
     checkImportedLayer,
     checkImportedWorkspaceSubpath,
+    checkPackageImportAllowlist,
 } from "../rules/packageBoundaryRules";
 import { normalizeRelativePath } from "./pathUtils";
 import { checkSurfaceAdapters } from "../rules/runtimeAdapterRules";
@@ -49,6 +50,18 @@ export async function checkWorkspaceArchitecture(options: WorkspaceCheckOptions)
             const imports = collectImports(sourceFile);
             importsByFile.set(file, imports);
             checkPackageImports(pkg, file, imports, packageByName, packageByRoot, allSourceFiles, violations, rootDir);
+
+            if (!isTestFile(file)) {
+                checkPackageImportAllowlist(
+                    pkg,
+                    file,
+                    imports,
+                    options.packageImportAllowlist,
+                    packageByName,
+                    violations,
+                    rootDir,
+                );
+            }
 
             if (!isTestFile(file) && pkg.layer === "surfaces") {
                 checkSurfaceAdapters(
