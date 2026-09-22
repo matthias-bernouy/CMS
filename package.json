@@ -48,7 +48,7 @@
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/ulvia-cli": "workspace:*",
-        "@biomejs/biome": "2.5.4",
+        "@biomejs/biome": "2.5.14",
         "@types/bun": "1.4.2",
         "bun-types": "1.4.2",
         "image-size": "^2.0.4",
