@@ -1,0 +1,255 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "protocol.examples",
+    "name": "Protocol examples",
+    "description": "Representative Protocol v1 flows used as executable fixtures.",
+    "version": "1.0.0",
+    "publisherId": "ulvia.official",
+    "capabilities": [
+        {
+            "id": "catalog.item.list",
+            "access": "public",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "cursor": { "type": "string", "maxLength": 256 },
+                    "limit": { "type": "integer", "minimum": 1, "maximum": 100 }
+                },
+                "required": []
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "maxItems": 100,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": { "type": "string", "maxLength": 128 },
+                                "name": { "type": "string", "maxLength": 200 }
+                            },
+                            "required": ["id", "name"]
+                        }
+                    },
+                    "nextCursor": { "type": "string", "nullable": true, "maxLength": 256 }
+                },
+                "required": ["items", "nextCursor"]
+            },
+            "errors": [{ "code": "CURSOR_EXPIRED", "retryable": false }],
+            "binding": {
+                "transport": "http",
+                "method": "GET",
+                "path": "/v1/catalog/items",
+                "input": { "query": { "cursor": "cursor", "limit": "limit" } },
+                "response": {
+                    "successStatuses": [200],
+                    "contentTypes": ["application/json"],
+                    "errorStatuses": { "CURSOR_EXPIRED": 410 }
+                }
+            }
+        },
+        {
+            "id": "form.submission.create",
+            "access": "public",
+            "behavior": { "effect": "command", "idempotency": "keyed", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "email": { "type": "string", "format": "email", "maxLength": 320 },
+                    "fields": {
+                        "type": "map",
+                        "maxKeyLength": 64,
+                        "maxProperties": 64,
+                        "values": { "type": "string", "maxLength": 4000 }
+                    }
+                },
+                "required": ["email", "fields"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "submissionId": { "type": "string", "format": "uuid", "maxLength": 36 },
+                    "revision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+                },
+                "required": ["submissionId", "revision"]
+            },
+            "errors": [{ "code": "INVALID_SUBMISSION", "retryable": false }],
+            "binding": {
+                "transport": "http",
+                "method": "POST",
+                "path": "/v1/forms/submissions",
+                "input": { "body": true },
+                "response": {
+                    "successStatuses": [201],
+                    "contentTypes": ["application/json"],
+                    "errorStatuses": { "INVALID_SUBMISSION": 422 }
+                }
+            }
+        },
+        {
+            "id": "file.asset.upload",
+            "access": "admin",
+            "behavior": { "effect": "command", "idempotency": "keyed", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "asset": {
+                        "type": "binary",
+                        "maxBytes": 10485760,
+                        "mediaTypes": ["application/pdf", "image/png"]
+                    }
+                },
+                "required": ["asset"]
+            },
+            "output": {
+                "type": "object",
+                "properties": { "fileId": { "type": "string", "format": "uuid", "maxLength": 36 } },
+                "required": ["fileId"]
+            },
+            "errors": [{ "code": "FILE_TOO_LARGE", "retryable": false }],
+            "binding": {
+                "transport": "http",
+                "method": "POST",
+                "path": "/v1/files",
+                "input": { "body": { "binaryProperty": "asset" } },
+                "response": {
+                    "successStatuses": [201],
+                    "contentTypes": ["application/json"],
+                    "errorStatuses": { "FILE_TOO_LARGE": 413 }
+                }
+            }
+        },
+        {
+            "id": "file.asset.download",
+            "access": "authenticated",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": { "fileId": { "type": "string", "format": "uuid", "maxLength": 36 } },
+                "required": ["fileId"]
+            },
+            "output": {
+                "type": "binary",
+                "maxBytes": 10485760,
+                "mediaTypes": ["application/pdf", "image/png"]
+            },
+            "errors": [{ "code": "FILE_NOT_FOUND", "retryable": false }],
+            "binding": {
+                "transport": "http",
+                "method": "GET",
+                "path": "/v1/files/{fileId}",
+                "input": { "path": { "fileId": "fileId" } },
+                "response": {
+                    "successStatuses": [200],
+                    "contentTypes": ["application/pdf", "image/png"],
+                    "errorStatuses": { "FILE_NOT_FOUND": 404 }
+                }
+            }
+        },
+        {
+            "id": "report.export",
+            "access": "admin",
+            "behavior": { "effect": "command", "idempotency": "keyed", "execution": "operation" },
+            "input": {
+                "type": "object",
+                "properties": { "format": { "type": "string", "enum": ["pdf"], "maxLength": 8 } },
+                "required": ["format"]
+            },
+            "output": { "type": "binary", "maxBytes": 52428800, "mediaTypes": ["application/pdf"] },
+            "errors": [{ "code": "EXPORT_FAILED", "retryable": true }],
+            "binding": {
+                "transport": "http",
+                "method": "POST",
+                "path": "/v1/reports",
+                "input": { "body": true },
+                "response": {
+                    "successStatuses": [202],
+                    "contentTypes": ["application/json"],
+                    "errorStatuses": { "EXPORT_FAILED": 500 }
+                }
+            }
+        },
+        {
+            "id": "catalog.item.changes",
+            "access": "admin",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": { "cursor": { "type": "string", "nullable": true, "maxLength": 256 } },
+                "required": ["cursor"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "events": {
+                        "type": "array",
+                        "maxItems": 500,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "eventId": { "type": "string", "maxLength": 128 },
+                                "resourceId": { "type": "string", "maxLength": 128 },
+                                "occurredAt": { "type": "string", "format": "date-time", "maxLength": 40 },
+                                "type": { "type": "string", "enum": ["delete", "upsert"], "maxLength": 8 }
+                            },
+                            "required": ["eventId", "resourceId", "occurredAt", "type"]
+                        }
+                    },
+                    "cursor": { "type": "string", "maxLength": 256 }
+                },
+                "required": ["events", "cursor"]
+            },
+            "errors": [{ "code": "CURSOR_EXPIRED", "retryable": false }],
+            "binding": {
+                "transport": "http",
+                "method": "GET",
+                "path": "/v1/catalog/changes",
+                "input": { "query": { "cursor": "cursor" } },
+                "response": {
+                    "successStatuses": [200],
+                    "contentTypes": ["application/json"],
+                    "errorStatuses": { "CURSOR_EXPIRED": 410 }
+                }
+            }
+        },
+        {
+            "id": "catalog.item.snapshot",
+            "access": "admin",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "cursor": { "type": "string", "nullable": true, "maxLength": 256 },
+                    "limit": { "type": "integer", "minimum": 1, "maximum": 500 }
+                },
+                "required": ["cursor", "limit"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "snapshotId": { "type": "string", "format": "uuid", "maxLength": 36 },
+                    "watermark": { "type": "string", "maxLength": 256 },
+                    "cursor": { "type": "string", "nullable": true, "maxLength": 256 },
+                    "complete": { "type": "boolean" }
+                },
+                "required": ["snapshotId", "watermark", "cursor", "complete"]
+            },
+            "errors": [],
+            "binding": {
+                "transport": "http",
+                "method": "GET",
+                "path": "/v1/catalog/snapshot",
+                "input": { "query": { "cursor": "cursor", "limit": "limit" } },
+                "response": {
+                    "successStatuses": [200],
+                    "contentTypes": ["application/json"],
+                    "errorStatuses": {}
+                }
+            }
+        }
+    ]
+}
