@@ -14,6 +14,7 @@ import type { ContractRelease } from "../../interfaces/ContractRelease";
 import { createSchemaState } from "../schema/context";
 import { parseCapability } from "./parseCapability";
 import { parseIdentifier, parseSemVer } from "./identifiers";
+import { parseFixtureAssets } from "./parseFixtureAssets";
 
 export function parseContractRelease(
     value: unknown,
@@ -33,6 +34,7 @@ export function parseContractRelease(
             "version",
             "publisherId",
             "capabilities",
+            "fixtureAssets",
         ],
         "$",
         "invalid_contract",
@@ -49,9 +51,17 @@ export function parseContractRelease(
         );
     }
     const schemaState = createSchemaState(limits);
+    const fixtureAssets = parseFixtureAssets(record.fixtureAssets, limits);
+    const assetsById = new Map(fixtureAssets?.map((asset) => [asset.id, asset]));
+    const referencedAssets = new Set<string>();
     const capabilities = source.map((capability, index) =>
-        parseCapability(capability, `$.capabilities[${index}]`, limits, schemaState),
+        parseCapability(capability, `$.capabilities[${index}]`, limits, schemaState, assetsById, referencedAssets),
     );
+    for (const asset of fixtureAssets ?? []) {
+        if (!referencedAssets.has(asset.id)) {
+            throw new ReleaseValidationError("invalid_contract", `unused fixture asset ${asset.id}`, "$.fixtureAssets");
+        }
+    }
     if (new Set(capabilities.map((capability) => capability.id)).size !== capabilities.length) {
         throw new ReleaseValidationError("invalid_contract", "contains duplicate capability IDs", "$.capabilities");
     }
@@ -67,6 +77,7 @@ export function parseContractRelease(
         version: parseSemVer(record.version, "$.version"),
         publisherId: parseIdentifier(record.publisherId, "$.publisherId", 96),
         capabilities,
+        ...(fixtureAssets === undefined ? {} : { fixtureAssets }),
     };
     if (canonicalIJsonBytes(release, limits.maxJsonDepth).byteLength > limits.maxDocumentBytes) {
         throw new ReleaseValidationError(

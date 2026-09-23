@@ -1,0 +1,54 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "communication.receipt",
+    "name": "Receipt",
+    "version": "0.1.0",
+    "publisherId": "ulvia.official",
+    "fixtureAssets": [
+        {
+            "id": "receipt.svg",
+            "mediaType": "image/svg+xml",
+            "byteLength": 200,
+            "digest": "sha256:61cc3d4fd2135663e047b9dfab68367dedf9df8e2516dded57257a06463ffaa9"
+        }
+    ],
+    "capabilities": [
+        {
+            "id": "receipt.render",
+            "access": "admin",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": { "receiptId": { "type": "string", "maxLength": 64 } },
+                "required": ["receiptId"]
+            },
+            "output": { "type": "binary", "maxBytes": 1024, "mediaTypes": ["image/svg+xml"] },
+            "errors": [{ "code": "NOT_FOUND", "retryable": false }],
+            "binding": {
+                "transport": "http",
+                "method": "GET",
+                "path": "/v1/receipts/{receiptId}",
+                "input": { "path": { "receiptId": "receiptId" } },
+                "response": {
+                    "successStatuses": [200],
+                    "contentTypes": ["image/svg+xml"],
+                    "errorStatuses": { "NOT_FOUND": 404 }
+                }
+            },
+            "mocks": [
+                {
+                    "id": "found",
+                    "input": { "receiptId": "example" },
+                    "outcome": { "kind": "success", "output": { "assetId": "receipt.svg" } }
+                },
+                {
+                    "id": "missing",
+                    "input": { "receiptId": "missing" },
+                    "outcome": { "kind": "error", "code": "NOT_FOUND" }
+                }
+            ]
+        }
+    ]
+}

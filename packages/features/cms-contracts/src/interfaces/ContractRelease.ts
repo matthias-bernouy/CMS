@@ -1,5 +1,6 @@
 import type { HttpBindingDefinition } from "./HttpBinding";
 import type { UlviaObjectSchema, UlviaSchema } from "./UlviaSchema";
+import type { ReleaseDigest } from "../core/admission/digest";
 
 export type CapabilityAccess = "admin" | "authenticated" | "public";
 export type CapabilityExecution = "operation" | "sync";
@@ -32,6 +33,25 @@ export interface CapabilityErrorDefinition {
     readonly retryable: boolean;
 }
 
+/** Binary schema leaves in mock values use { assetId: string } instead of inline bytes. */
+export type CapabilityMockOutcome =
+    | { readonly kind: "success"; readonly output: unknown }
+    | { readonly kind: "error"; readonly code: string; readonly output?: unknown };
+
+export interface CapabilityMockDefinition {
+    readonly id: string;
+    readonly description?: string;
+    readonly input: Readonly<Record<string, unknown>>;
+    readonly outcome: CapabilityMockOutcome;
+}
+
+export interface ContractFixtureAssetDefinition {
+    readonly id: string;
+    readonly mediaType: string;
+    readonly byteLength: number;
+    readonly digest: ReleaseDigest;
+}
+
 export interface CapabilityDefinition {
     readonly id: string;
     readonly description?: string;
@@ -41,11 +61,13 @@ export interface CapabilityDefinition {
     readonly output: UlviaSchema;
     readonly errors: readonly CapabilityErrorDefinition[];
     readonly binding: HttpBindingDefinition;
+    readonly mocks?: readonly CapabilityMockDefinition[];
     readonly deprecation?: CapabilityDeprecation;
 }
 
 export interface ContractRelease {
     readonly capabilities: readonly CapabilityDefinition[];
+    readonly fixtureAssets?: readonly ContractFixtureAssetDefinition[];
     readonly contractId: string;
     readonly description?: string;
     readonly kind: "contract";

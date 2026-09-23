@@ -4,7 +4,9 @@ export interface ReleaseLimits {
     maxCapabilities: number;
     maxDocumentBytes: number;
     maxEnumValues: number;
+    maxFixtureAssets: number;
     maxJsonDepth: number;
+    maxMocksPerCapability: number;
     maxProperties: number;
     maxSchemaDepth: number;
     maxSchemaNodes: number;
@@ -17,7 +19,9 @@ export const DEFAULT_RELEASE_LIMITS: Readonly<ReleaseLimits> = Object.freeze({
     maxCapabilities: 512,
     maxDocumentBytes: 1024 * 1024,
     maxEnumValues: 256,
+    maxFixtureAssets: 256,
     maxJsonDepth: 64,
+    maxMocksPerCapability: 128,
     maxProperties: 256,
     maxSchemaDepth: 24,
     maxSchemaNodes: 4096,

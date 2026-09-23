@@ -50,3 +50,8 @@ Feature package for immutable CMS release formats and their admission rules.
   the gateway.
 - Digests use canonical I-JSON bytes and SHA-256. Never hash author formatting
   or a partially validated object.
+- Capability mocks are validated examples, not executable provider responses.
+  Binary mock leaves reference declared fixture assets by ID. Bundle admission
+  verifies the supplied immutable bytes against declared size and SHA-256 before
+  a release with assets can be published; no mutable URL or inline base64 is a
+  valid substitute.

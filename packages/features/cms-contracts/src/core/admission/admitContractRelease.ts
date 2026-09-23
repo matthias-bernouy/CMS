@@ -1,5 +1,6 @@
 import type { ReleaseDigest } from "./digest";
 import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../protocol/limits";
+import { ReleaseValidationError } from "../protocol/errors";
 import type { PreparedContractRelease } from "./prepareContractRelease";
 import { prepareContractRelease, prepareContractReleaseJson } from "./prepareContractRelease";
 
@@ -8,29 +9,53 @@ const encoder = new TextEncoder();
 export interface AdmittedContractRelease extends PreparedContractRelease {
     readonly digest: ReleaseDigest;
     readonly kind: "admitted-contract-release";
+    readonly fixtureAssets?: readonly VerifiedFixtureAsset[];
+}
+
+export interface VerifiedFixtureAsset {
+    readonly id: string;
+    readonly bytes: Blob;
 }
 
 export async function admitContractRelease(
     value: unknown,
     limits: Readonly<ReleaseLimits> = DEFAULT_RELEASE_LIMITS,
 ): Promise<AdmittedContractRelease> {
-    return admitPreparedRelease(prepareContractRelease(value, limits));
+    const prepared = prepareContractRelease(value, limits);
+    requireNoFixtureAssets(prepared);
+    return admitPreparedRelease(prepared);
 }
 
 export async function admitContractReleaseJson(
     input: string | Uint8Array,
     limits: Readonly<ReleaseLimits> = DEFAULT_RELEASE_LIMITS,
 ): Promise<AdmittedContractRelease> {
-    return admitPreparedRelease(prepareContractReleaseJson(input, limits));
+    const prepared = prepareContractReleaseJson(input, limits);
+    requireNoFixtureAssets(prepared);
+    return admitPreparedRelease(prepared);
 }
 
-async function admitPreparedRelease(prepared: PreparedContractRelease): Promise<AdmittedContractRelease> {
+function requireNoFixtureAssets(prepared: PreparedContractRelease): void {
+    if (prepared.release.fixtureAssets?.length) {
+        throw new ReleaseValidationError(
+            "invalid_contract",
+            "fixture assets require admitContractBundle",
+            "$.fixtureAssets",
+        );
+    }
+}
+
+export async function admitPreparedRelease(
+    prepared: PreparedContractRelease,
+    fixtureAssets?: readonly VerifiedFixtureAsset[],
+): Promise<AdmittedContractRelease> {
     const bytes = encoder.encode(prepared.canonicalJson);
     const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes.slice().buffer as ArrayBuffer);
     return Object.freeze({
         kind: "admitted-contract-release",
         ...prepared,
         digest: `sha256:${hex(new Uint8Array(digest))}` as ReleaseDigest,
+        ...(fixtureAssets === undefined ? {} : { fixtureAssets }),
     });
 }
 

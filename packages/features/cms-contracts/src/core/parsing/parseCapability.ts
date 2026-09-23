@@ -14,6 +14,7 @@ import type {
     CapabilityDefinition,
     CapabilityErrorDefinition,
     CapabilityExecution,
+    ContractFixtureAssetDefinition,
 } from "../../interfaces/ContractRelease";
 import type { UlviaObjectSchema } from "../../interfaces/UlviaSchema";
 import { type SchemaParseState } from "../schema/context";
@@ -21,6 +22,7 @@ import { parseSchemaAt } from "../schema/parseSchema";
 import { parseErrorCode, parseIdentifier } from "./identifiers";
 import { parseHttpBinding } from "./parseHttpBinding";
 import { parseCapabilityDeprecation } from "./parseDeprecation";
+import { parseMocks } from "./parseMocks";
 
 const ACCESS_LEVELS = new Set<CapabilityAccess>(["admin", "authenticated", "public"]);
 const EFFECTS = new Set(["command", "query"] as const);
@@ -32,11 +34,13 @@ export function parseCapability(
     path: string,
     limits: Readonly<ReleaseLimits>,
     schemaState: SchemaParseState,
+    assets: ReadonlyMap<string, ContractFixtureAssetDefinition>,
+    referencedAssets: Set<string>,
 ): CapabilityDefinition {
     const record = expectRecord(value, path, "invalid_contract");
     rejectUnknownKeys(
         record,
-        ["id", "description", "access", "behavior", "deprecation", "input", "output", "errors", "binding"],
+        ["id", "description", "access", "behavior", "deprecation", "input", "output", "errors", "binding", "mocks"],
         path,
         "invalid_contract",
     );
@@ -56,15 +60,31 @@ export function parseCapability(
         );
     }
     const description = optionalString(record.description, `${path}.description`, "invalid_contract", 4096);
+    const output = parseSchemaAt(record.output, `${path}.output`, schemaState, 1);
+    const errors = parseErrors(record.errors, `${path}.errors`, schemaState);
     return {
         id: parseIdentifier(record.id, `${path}.id`),
         ...(description ? { description } : {}),
         access: enumValue(record.access, `${path}.access`, ACCESS_LEVELS),
         behavior: parseBehavior(record.behavior, `${path}.behavior`),
         input: input as UlviaObjectSchema,
-        output: parseSchemaAt(record.output, `${path}.output`, schemaState, 1),
-        errors: parseErrors(record.errors, `${path}.errors`, schemaState),
+        output,
+        errors,
         binding: parseHttpBinding(record.binding, `${path}.binding`, limits),
+        ...(record.mocks === undefined
+            ? {}
+            : {
+                  mocks: parseMocks(
+                      record.mocks,
+                      `${path}.mocks`,
+                      input,
+                      output,
+                      errors,
+                      assets,
+                      referencedAssets,
+                      limits,
+                  ),
+              }),
         ...(record.deprecation === undefined
             ? {}
             : { deprecation: parseCapabilityDeprecation(record.deprecation, `${path}.deprecation`) }),
