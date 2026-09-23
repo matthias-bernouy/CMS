@@ -26,3 +26,25 @@ export type {
     ContractRelease,
 } from "cms-contracts/interfaces/ContractRelease";
 export { parseContractRelease, parseContractReleaseJson } from "cms-contracts/core/parsing/parseContractRelease";
+export {
+    analyzeConformanceCoverage,
+    type CapabilityConformanceCoverage,
+    type ConformanceCoverageReport,
+} from "cms-contracts/core/conformance/coverage";
+export { parseConformanceSuite, parseConformanceSuiteJson } from "cms-contracts/core/conformance/parseSuite";
+export {
+    admitConformanceSuite,
+    admitConformanceSuiteJson,
+    type AdmittedConformanceSuite,
+} from "cms-contracts/core/admission/admitConformanceSuite";
+export type {
+    ContractConformanceSuite,
+    ConformanceActor,
+    ConformanceCall,
+    ConformanceCapture,
+    ConformanceCaptureReference,
+    ConformanceCheck,
+    ConformanceCoverageExemption,
+    ConformanceExpectation,
+    ConformanceScenario,
+} from "cms-contracts/interfaces/Conformance";

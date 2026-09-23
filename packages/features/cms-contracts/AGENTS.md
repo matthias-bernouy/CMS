@@ -55,3 +55,10 @@ Feature package for immutable CMS release formats and their admission rules.
   verifies the supplied immutable bytes against declared size and SHA-256 before
   a release with assets can be published; no mutable URL or inline base64 is a
   valid substitute.
+- Conformance suites are independently versioned, provider-neutral test
+  artifacts pinned to the exact digest of an admitted release. Their scenarios,
+  assets, actors, captures, assertions, and reasoned coverage exemptions are
+  validated before the suite is hashed; they do not change the release digest.
+  A suite or coverage report is not a passing-provider attestation. The suite
+  requires a disposable tenant; HTTP execution, provisioning, and cleanup
+  belong outside this package.

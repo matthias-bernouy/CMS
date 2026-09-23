@@ -2,6 +2,8 @@ export interface ReleaseLimits {
     maxArrayItems: number;
     maxBinaryBytes: number;
     maxCapabilities: number;
+    maxConformanceCallsPerScenario: number;
+    maxConformanceScenarios: number;
     maxDocumentBytes: number;
     maxEnumValues: number;
     maxFixtureAssets: number;
@@ -17,6 +19,8 @@ export const DEFAULT_RELEASE_LIMITS: Readonly<ReleaseLimits> = Object.freeze({
     maxArrayItems: 10_000,
     maxBinaryBytes: 100 * 1024 * 1024,
     maxCapabilities: 512,
+    maxConformanceCallsPerScenario: 64,
+    maxConformanceScenarios: 128,
     maxDocumentBytes: 1024 * 1024,
     maxEnumValues: 256,
     maxFixtureAssets: 256,

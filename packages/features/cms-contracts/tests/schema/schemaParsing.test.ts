@@ -63,6 +63,8 @@ describe("ulvia-schema/v1 parsing", () => {
                 maxArrayItems: 10,
                 maxBinaryBytes: 100,
                 maxCapabilities: 10,
+                maxConformanceCallsPerScenario: 10,
+                maxConformanceScenarios: 10,
                 maxDocumentBytes: 10_000,
                 maxEnumValues: 10,
                 maxFixtureAssets: 10,

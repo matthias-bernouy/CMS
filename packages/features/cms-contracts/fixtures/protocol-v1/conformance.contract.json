@@ -1,0 +1,114 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "catalog.demo",
+    "name": "Demo catalog",
+    "version": "0.1.0",
+    "publisherId": "ulvia.official",
+    "capabilities": [
+        {
+            "id": "item.create",
+            "description": "Create an item that is immediately available to find and get within this tenant.",
+            "access": "admin",
+            "behavior": { "effect": "command", "idempotency": "keyed", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": { "name": { "type": "string", "maxLength": 128 } },
+                "required": ["name"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string", "maxLength": 64 },
+                    "name": { "type": "string", "maxLength": 128 }
+                },
+                "required": ["id", "name"]
+            },
+            "errors": [],
+            "binding": {
+                "transport": "http",
+                "method": "POST",
+                "path": "/v1/items",
+                "input": { "body": true },
+                "response": { "successStatuses": [201], "contentTypes": ["application/json"], "errorStatuses": {} }
+            }
+        },
+        {
+            "id": "item.find",
+            "access": "admin",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": { "name": { "type": "string", "maxLength": 128 } },
+                "required": ["name"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string", "maxLength": 64 },
+                    "name": { "type": "string", "maxLength": 128 }
+                },
+                "required": ["id", "name"]
+            },
+            "errors": [],
+            "binding": {
+                "transport": "http",
+                "method": "GET",
+                "path": "/v1/items",
+                "input": { "query": { "name": "name" } },
+                "response": { "successStatuses": [200], "contentTypes": ["application/json"], "errorStatuses": {} }
+            }
+        },
+        {
+            "id": "item.get",
+            "access": "admin",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": { "id": { "type": "string", "maxLength": 64 } },
+                "required": ["id"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string", "maxLength": 64 },
+                    "name": { "type": "string", "maxLength": 128 }
+                },
+                "required": ["id", "name"]
+            },
+            "errors": [{ "code": "NOT_FOUND", "retryable": false }],
+            "binding": {
+                "transport": "http",
+                "method": "GET",
+                "path": "/v1/items/{id}",
+                "input": { "path": { "id": "id" } },
+                "response": {
+                    "successStatuses": [200],
+                    "contentTypes": ["application/json"],
+                    "errorStatuses": { "NOT_FOUND": 404 }
+                }
+            }
+        },
+        {
+            "id": "item.delete",
+            "description": "Delete an item so a subsequent get by the same ID returns NOT_FOUND.",
+            "access": "admin",
+            "behavior": { "effect": "command", "idempotency": "natural", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": { "id": { "type": "string", "maxLength": 64 } },
+                "required": ["id"]
+            },
+            "output": { "type": "null" },
+            "errors": [],
+            "binding": {
+                "transport": "http",
+                "method": "DELETE",
+                "path": "/v1/items/{id}",
+                "input": { "path": { "id": "id" } },
+                "response": { "successStatuses": [204], "contentTypes": [], "errorStatuses": {} }
+            }
+        }
+    ]
+}

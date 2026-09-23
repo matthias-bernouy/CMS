@@ -1,0 +1,66 @@
+{
+    "kind": "contract-conformance-suite",
+    "protocol": "ulvia-conformance/v1",
+    "contractId": "catalog.demo",
+    "contractVersion": "0.1.0",
+    "contractDigest": "sha256:cfd67479c4a797381731ed58b9799351ffb619659f789a070ab5f7665c7cf98f",
+    "publisherId": "ulvia.official",
+    "version": "0.1.0",
+    "isolation": "disposable-tenant",
+    "scenarios": [
+        {
+            "id": "item-roundtrip",
+            "calls": [
+                {
+                    "id": "create",
+                    "capabilityId": "item.create",
+                    "actor": { "kind": "admin" },
+                    "input": { "name": "Sample" },
+                    "expect": { "kind": "success", "checks": [{ "path": "/name", "equals": "Sample" }] },
+                    "captures": [{ "name": "created-id", "path": "/id" }]
+                },
+                {
+                    "id": "find",
+                    "capabilityId": "item.find",
+                    "actor": { "kind": "admin" },
+                    "input": { "name": "Sample" },
+                    "expect": {
+                        "kind": "success",
+                        "checks": [
+                            { "path": "/id", "equals": { "$capture": "created-id" } },
+                            { "path": "/name", "equals": "Sample" }
+                        ]
+                    },
+                    "captures": [{ "name": "found-id", "path": "/id" }]
+                },
+                {
+                    "id": "read",
+                    "capabilityId": "item.get",
+                    "actor": { "kind": "admin" },
+                    "input": { "id": { "$capture": "found-id" } },
+                    "expect": {
+                        "kind": "success",
+                        "checks": [
+                            { "path": "/id", "equals": { "$capture": "found-id" } },
+                            { "path": "/name", "equals": "Sample" }
+                        ]
+                    }
+                },
+                {
+                    "id": "delete",
+                    "capabilityId": "item.delete",
+                    "actor": { "kind": "admin" },
+                    "input": { "id": { "$capture": "created-id" } },
+                    "expect": { "kind": "success", "checks": [{ "path": "", "equals": null }] }
+                },
+                {
+                    "id": "missing",
+                    "capabilityId": "item.get",
+                    "actor": { "kind": "admin" },
+                    "input": { "id": { "$capture": "created-id" } },
+                    "expect": { "kind": "error", "code": "NOT_FOUND" }
+                }
+            ]
+        }
+    ]
+}
