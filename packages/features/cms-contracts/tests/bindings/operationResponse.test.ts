@@ -26,6 +26,7 @@ describe("HTTP operation response compilation", () => {
 
         expect(compiled.response).toEqual({
             kind: "operation-handle",
+            errorEnvelope: { kind: "json" },
             successStatuses: [202],
             contentTypes: ["application/json"],
             errorStatuses: { INVALID_RECIPIENT: 422 },

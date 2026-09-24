@@ -2,11 +2,12 @@ import type { ContractConformanceSuite } from "../../interfaces/Conformance";
 import { parseConformanceSuite, parseConformanceSuiteJson } from "../conformance/parseSuite";
 import { canonicalizeIJson } from "../protocol/canonical";
 import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../protocol/limits";
-import { verifyAdmission } from "../verifyAdmission";
+import { verifyAdmission } from "./verifyAdmission";
 import type { AdmittedContractRelease, VerifiedFixtureAsset } from "./admitContractRelease";
 import type { ContractBundleAsset } from "./admitContractBundle";
 import type { ReleaseDigest } from "./digest";
 import { verifyFixtureAssets } from "./verifyFixtureAssets";
+import { indexDependencyContext } from "../conformance/dependencies/references";
 
 export interface AdmittedConformanceSuite {
     readonly kind: "admitted-conformance-suite";
@@ -16,14 +17,17 @@ export interface AdmittedConformanceSuite {
     readonly fixtureAssets?: readonly VerifiedFixtureAsset[];
 }
 
+/** Reverify root/dependency artifacts and suite-owned asset bytes before admitting the independently hashed suite. */
 export async function admitConformanceSuite(
     value: unknown,
     release: AdmittedContractRelease,
     assets: readonly ContractBundleAsset[] = [],
     limits: Readonly<ReleaseLimits> = DEFAULT_RELEASE_LIMITS,
+    dependencies: readonly AdmittedContractRelease[] = [],
 ): Promise<AdmittedConformanceSuite> {
     const verified = await verifyAdmission(release, limits);
-    return admitParsedSuite(parseConformanceSuite(value, verified, limits), assets, limits);
+    const verifiedDependencies = await verifyDependencies(dependencies, limits);
+    return admitParsedSuite(parseConformanceSuite(value, verified, limits, verifiedDependencies), assets, limits);
 }
 
 export async function admitConformanceSuiteJson(
@@ -31,9 +35,24 @@ export async function admitConformanceSuiteJson(
     release: AdmittedContractRelease,
     assets: readonly ContractBundleAsset[] = [],
     limits: Readonly<ReleaseLimits> = DEFAULT_RELEASE_LIMITS,
+    dependencies: readonly AdmittedContractRelease[] = [],
 ): Promise<AdmittedConformanceSuite> {
     const verified = await verifyAdmission(release, limits);
-    return admitParsedSuite(parseConformanceSuiteJson(input, verified, limits), assets, limits);
+    const verifiedDependencies = await verifyDependencies(dependencies, limits);
+    return admitParsedSuite(parseConformanceSuiteJson(input, verified, limits, verifiedDependencies), assets, limits);
+}
+
+/** Artifact integrity is verified locally; suite admission never resolves a catalogue or contacts a provider. */
+async function verifyDependencies(
+    dependencies: readonly AdmittedContractRelease[],
+    limits: Readonly<ReleaseLimits>,
+): Promise<readonly AdmittedContractRelease[]> {
+    indexDependencyContext(dependencies, limits);
+    const verified: AdmittedContractRelease[] = [];
+    for (const dependency of dependencies) {
+        verified.push(await verifyAdmission(dependency, limits));
+    }
+    return verified;
 }
 
 async function admitParsedSuite(

@@ -31,7 +31,9 @@ describe("HTTP input binding compilation", () => {
         );
 
         expect(compiled.routeKey).toBe("PATCH /v1/messages/{}");
-        expect(compiled.pathParameters).toEqual([{ wireName: "messageId", property: "messageId" }]);
+        expect(compiled.pathParameters).toEqual([
+            { encoding: "json-percent", wireName: "messageId", property: "messageId" },
+        ]);
         expect(compiled.body).toEqual({
             kind: "json",
             contentTypes: ["application/json"],
@@ -74,7 +76,7 @@ describe("HTTP input binding compilation", () => {
     });
 
     test("reserves security and protocol headers for the gateway", () => {
-        for (const header of ["authorization", "keep-alive"]) {
+        for (const header of ["authorization", "keep-alive", "x-ulvia-error-code", "x-ulvia-request-id"]) {
             expect(() =>
                 compileHttpBinding(
                     capability({

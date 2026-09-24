@@ -24,6 +24,8 @@ describe("conformance suite admission", () => {
         const release = await admitContractRelease(releaseFixture);
         expect(release.digest).toBe("sha256:cfd67479c4a797381731ed58b9799351ffb619659f789a070ab5f7665c7cf98f");
         const first = await admitConformanceSuite(suite(), release);
+        expect(first.digest).toBe("sha256:dc5b4fdf05033ca81328d4b007c84bf3be1e20391ee2ccfd8a899d1b0a0411c3");
+        expect(first.suite).not.toHaveProperty("dependencyProfiles");
         const next = suite();
         next.version = "0.1.1";
         const nextCalls = (next.scenarios as { calls: { id: string; expect: Record<string, unknown> }[] }[])[0]!.calls;

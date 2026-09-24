@@ -52,6 +52,16 @@ export interface ContractFixtureAssetDefinition {
     readonly digest: ReleaseDigest;
 }
 
+/** A mandatory, provider-neutral capability needed to fulfill this capability. */
+export interface CapabilityRequirement {
+    readonly contractId: string;
+    readonly capabilityId: string;
+    /** Accepted dependency versions; OR spelling does not define a test matrix. */
+    readonly versionRange: string;
+    /** Explicit support/test ranges covering the accepted set; defaults to [versionRange]. */
+    readonly supportRanges?: readonly string[];
+}
+
 export interface CapabilityDefinition {
     readonly id: string;
     readonly description?: string;
@@ -61,6 +71,7 @@ export interface CapabilityDefinition {
     readonly output: UlviaSchema;
     readonly errors: readonly CapabilityErrorDefinition[];
     readonly binding: HttpBindingDefinition;
+    readonly requires?: readonly CapabilityRequirement[];
     readonly mocks?: readonly CapabilityMockDefinition[];
     readonly deprecation?: CapabilityDeprecation;
 }

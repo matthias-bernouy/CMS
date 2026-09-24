@@ -81,6 +81,8 @@ describe("conformance scenario validation", () => {
         const changedAdmission = await admitContractRelease(changedRelease);
         const optional = suite();
         optional.contractDigest = changedAdmission.digest;
+        expect(() => parseConformanceSuite(optional, changedAdmission)).not.toThrow();
+        delete (call(optional, "find").expect as Record<string, unknown>).checks;
         expect(() => parseConformanceSuite(optional, changedAdmission)).toThrow("required output property");
         const admission = await admitContractRelease(release());
         const wrongPath = suite();

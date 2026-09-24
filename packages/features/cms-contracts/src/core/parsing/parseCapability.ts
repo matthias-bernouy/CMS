@@ -23,6 +23,7 @@ import { parseErrorCode, parseIdentifier } from "./identifiers";
 import { parseHttpBinding } from "./parseHttpBinding";
 import { parseCapabilityDeprecation } from "./parseDeprecation";
 import { parseMocks } from "./parseMocks";
+import { parseCapabilityRequirements } from "./parseCapabilityRequirements";
 
 const ACCESS_LEVELS = new Set<CapabilityAccess>(["admin", "authenticated", "public"]);
 const EFFECTS = new Set(["command", "query"] as const);
@@ -40,7 +41,19 @@ export function parseCapability(
     const record = expectRecord(value, path, "invalid_contract");
     rejectUnknownKeys(
         record,
-        ["id", "description", "access", "behavior", "deprecation", "input", "output", "errors", "binding", "mocks"],
+        [
+            "id",
+            "description",
+            "access",
+            "behavior",
+            "deprecation",
+            "input",
+            "output",
+            "errors",
+            "binding",
+            "mocks",
+            "requires",
+        ],
         path,
         "invalid_contract",
     );
@@ -71,6 +84,9 @@ export function parseCapability(
         output,
         errors,
         binding: parseHttpBinding(record.binding, `${path}.binding`, limits),
+        ...(record.requires === undefined
+            ? {}
+            : { requires: parseCapabilityRequirements(record.requires, `${path}.requires`, limits) }),
         ...(record.mocks === undefined
             ? {}
             : {

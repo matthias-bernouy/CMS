@@ -6,15 +6,19 @@ import { assertIJson, canonicalIJsonBytes } from "../protocol/canonical";
 import { ReleaseValidationError } from "../protocol/errors";
 import { parseStrictJson } from "../protocol/json";
 import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../protocol/limits";
-import { deepFreeze, expectRecord, expectString, rejectUnknownKeys } from "../protocol/values";
-import type { ContractConformanceSuite } from "../../interfaces/Conformance";
+import { deepFreeze, expectArray, expectRecord, expectString, rejectUnknownKeys } from "../protocol/values";
+import type { ContractConformanceSuite, ConformanceScenario } from "../../interfaces/Conformance";
 import { parseCoverageExemptions } from "./exemptions";
 import { parseConformanceScenarios } from "./parseConformance";
+import { parseDependencyProfiles } from "./dependencies/references";
+import { resolveDependencyProfiles } from "./dependencies/resolveProfiles";
 
+/** Parse against trusted admitted artifacts supplied by the caller; no dependency is fetched or inferred. */
 export function parseConformanceSuite(
     value: unknown,
     admission: AdmittedContractRelease,
     limits: Readonly<ReleaseLimits> = DEFAULT_RELEASE_LIMITS,
+    dependencies: readonly AdmittedContractRelease[] = [],
 ): ContractConformanceSuite {
     assertIJson(value, limits.maxJsonDepth);
     const record = expectRecord(value, "$", "invalid_contract");
@@ -32,6 +36,7 @@ export function parseConformanceSuite(
             "scenarios",
             "fixtureAssets",
             "coverageExemptions",
+            "dependencyProfiles",
         ],
         "$",
         "invalid_contract",
@@ -64,12 +69,30 @@ export function parseConformanceSuite(
     const fixtureAssets = parseFixtureAssets(record.fixtureAssets, limits);
     const assetsById = new Map(fixtureAssets?.map((asset) => [asset.id, asset]));
     const referencedAssets = new Set<string>();
-    const scenarios = parseConformanceScenarios(
+    const dependencyProfiles = parseDependencyProfiles(record.dependencyProfiles, limits);
+    const selections = resolveDependencyProfiles(
+        dependencyProfiles,
         record.scenarios,
-        admission.release.capabilities,
-        assetsById,
-        referencedAssets,
+        admission.release,
+        dependencies,
         limits,
+    );
+    const parsed = new Map<string, ConformanceScenario>();
+    for (const selection of selections) {
+        const applicable = parseConformanceScenarios(
+            selection.scenarios,
+            admission.release.capabilities,
+            assetsById,
+            referencedAssets,
+            limits,
+            selection.selected,
+        );
+        for (const scenario of applicable) {
+            parsed.set(scenario.id, scenario);
+        }
+    }
+    const scenarios = expectArray(record.scenarios, "$.scenarios", "invalid_contract").map(
+        (scenario) => parsed.get(expectRecord(scenario, "$.scenarios", "invalid_contract").id as string)!,
     );
     for (const asset of fixtureAssets ?? []) {
         if (!referencedAssets.has(asset.id)) {
@@ -92,6 +115,7 @@ export function parseConformanceSuite(
         version: parseSemVer(record.version, "$.version"),
         isolation: "disposable-tenant",
         scenarios,
+        ...(dependencyProfiles === undefined ? {} : { dependencyProfiles }),
         ...(fixtureAssets === undefined ? {} : { fixtureAssets }),
         ...(coverageExemptions === undefined ? {} : { coverageExemptions }),
     };
@@ -101,17 +125,19 @@ export function parseConformanceSuite(
             `canonical suite exceeds ${limits.maxDocumentBytes} bytes`,
         );
     }
-    return deepFreeze(suite) as ContractConformanceSuite;
+    return deepFreeze(structuredClone(suite)) as ContractConformanceSuite;
 }
 
 export function parseConformanceSuiteJson(
     input: string | Uint8Array,
     admission: AdmittedContractRelease,
     limits: Readonly<ReleaseLimits> = DEFAULT_RELEASE_LIMITS,
+    dependencies: readonly AdmittedContractRelease[] = [],
 ): ContractConformanceSuite {
     return parseConformanceSuite(
         parseStrictJson(input, limits.maxDocumentBytes, limits.maxJsonDepth),
         admission,
         limits,
+        dependencies,
     );
 }

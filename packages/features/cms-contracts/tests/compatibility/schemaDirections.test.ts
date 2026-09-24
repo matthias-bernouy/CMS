@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { admitContractRelease, parseContractRelease } from "@bernouy/cms-contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-contracts/catalogue";
 import { compareContractReleases } from "@bernouy/cms-contracts/compatibility";
+import { validateSchemaValue } from "@bernouy/cms-contracts/schema";
 import { capabilityDocument, contractDocument, objectSchema, stringSchema } from "../support/fixtures";
 
 function compare(
@@ -24,7 +25,7 @@ describe("directional schema compatibility", () => {
         const newInput = objectSchema({ templateId: stringSchema(128) }, ["templateId"]);
         const report = compare({ input: oldInput }, { input: newInput });
 
-        expect(report).toMatchObject({ compatible: true, requiredBump: "minor" });
+        expect(report).toMatchObject({ validEvolution: true, requiredBump: "minor" });
         expect(report.issues).toContainEqual(
             expect.objectContaining({
                 code: "schema_changed",
@@ -33,7 +34,7 @@ describe("directional schema compatibility", () => {
             }),
         );
         expect(compare({ input: oldInput }, { input: newInput }, "1.0.1")).toMatchObject({
-            compatible: false,
+            validEvolution: false,
             requiredBump: "minor",
         });
 
@@ -58,7 +59,7 @@ describe("directional schema compatibility", () => {
 
         const report = compare({ input: previous }, { input: next });
         expect(report).toMatchObject({
-            compatible: false,
+            validEvolution: false,
             requiredBump: "major",
         });
         expect(report.issues).toContainEqual(
@@ -68,7 +69,7 @@ describe("directional schema compatibility", () => {
             }),
         );
         expect(compare({ input: previous }, { input: next }, "2.0.0")).toMatchObject({
-            compatible: true,
+            validEvolution: true,
             requiredBump: "major",
         });
     });
@@ -78,11 +79,41 @@ describe("directional schema compatibility", () => {
         const narrow = objectSchema({ messageId: stringSchema(64) }, ["messageId"]);
 
         expect(compare({ output: wide }, { output: narrow })).toMatchObject({
-            compatible: true,
+            validEvolution: true,
             requiredBump: "minor",
         });
         expect(compare({ output: narrow }, { output: wide })).toMatchObject({
-            compatible: false,
+            validEvolution: false,
+            requiredBump: "major",
+        });
+    });
+
+    test("each selected release keeps its own input and output bounds", () => {
+        const oldSchema = objectSchema({ name: stringSchema(100) }, ["name"]);
+        const newSchema = objectSchema({ name: stringSchema(150) }, ["name"]);
+        const oldRelease = parseContractRelease(
+            contractDocument({
+                version: "1.0.0",
+                capabilities: [capabilityDocument({ input: oldSchema, output: oldSchema })],
+            }),
+        );
+        const newInputRelease = parseContractRelease(
+            contractDocument({
+                version: "1.1.0",
+                capabilities: [capabilityDocument({ input: newSchema, output: oldSchema })],
+            }),
+        );
+        const longerName = { name: "n".repeat(150) };
+
+        expect(() => validateSchemaValue(oldRelease.capabilities[0]!.input, longerName)).toThrow();
+        expect(() => validateSchemaValue(newInputRelease.capabilities[0]!.input, longerName)).not.toThrow();
+        expect(compareContractReleases(oldRelease, newInputRelease)).toMatchObject({
+            validEvolution: true,
+            requiredBump: "minor",
+        });
+        expect(() => validateSchemaValue(oldRelease.capabilities[0]!.output, longerName)).toThrow();
+        expect(compare({ output: oldSchema }, { output: newSchema })).toMatchObject({
+            validEvolution: false,
             requiredBump: "major",
         });
     });
@@ -91,9 +122,9 @@ describe("directional schema compatibility", () => {
         const one = objectSchema({ value: { type: "string", maxLength: 20, enum: ["plain"] } }, ["value"]);
         const two = objectSchema({ value: { type: "string", maxLength: 20, enum: ["plain", "html"] } }, ["value"]);
 
-        expect(compare({ input: one }, { input: two })).toMatchObject({ compatible: true, requiredBump: "minor" });
+        expect(compare({ input: one }, { input: two })).toMatchObject({ validEvolution: true, requiredBump: "minor" });
         expect(compare({ output: one }, { output: two })).toMatchObject({
-            compatible: false,
+            validEvolution: false,
             requiredBump: "major",
         });
     });
@@ -103,11 +134,11 @@ describe("directional schema compatibility", () => {
         const email = objectSchema({ value: { type: "string", format: "email", maxLength: 320 } }, ["value"]);
 
         expect(compare({ input: plain }, { input: email })).toMatchObject({
-            compatible: false,
+            validEvolution: false,
             requiredBump: "major",
         });
         expect(compare({ output: plain }, { output: email })).toMatchObject({
-            compatible: true,
+            validEvolution: true,
             requiredBump: "minor",
         });
     });
@@ -118,15 +149,15 @@ describe("directional schema compatibility", () => {
         const explicitDefault = objectSchema({ value: { type: "string", minLength: 0, maxLength: 64 } }, ["value"]);
 
         expect(compare({ input: nonNullable }, { input: nullable })).toMatchObject({
-            compatible: true,
+            validEvolution: true,
             requiredBump: "minor",
         });
         expect(compare({ output: nullable }, { output: nonNullable })).toMatchObject({
-            compatible: true,
+            validEvolution: true,
             requiredBump: "minor",
         });
         expect(compare({ input: nonNullable }, { input: explicitDefault }, "1.0.1")).toMatchObject({
-            compatible: true,
+            validEvolution: true,
             requiredBump: "patch",
         });
     });
@@ -136,11 +167,11 @@ describe("directional schema compatibility", () => {
         const uri = objectSchema({ value: { type: "string", format: "uri", maxLength: 320 } }, ["value"]);
 
         expect(compare({ input: email }, { input: uri })).toMatchObject({
-            compatible: false,
+            validEvolution: false,
             requiredBump: "major",
         });
         expect(compare({}, { errors: [{ code: "INVALID_RECIPIENT", retryable: true }] })).toMatchObject({
-            compatible: false,
+            validEvolution: false,
             requiredBump: "major",
         });
     });

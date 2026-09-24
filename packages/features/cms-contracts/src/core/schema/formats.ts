@@ -1,7 +1,25 @@
 import type { UlviaStringFormat } from "../../interfaces/UlviaSchema";
 
-const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
-const DATE_TIME_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|([+-])(\d{2}):(\d{2}))$/;
+const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$(?![\s\S])/;
+const DATE_TIME_PATTERN =
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|([+-])(\d{2}):(\d{2}))$(?![\s\S])/;
+
+/** Checks only lengths permitted by this dialect's format validators, not general satisfiability. */
+export function hasStringFormatLength(format: UlviaStringFormat, minimum: number, maximum: number): boolean {
+    switch (format) {
+        case "date":
+            return minimum <= 10 && maximum >= 10;
+        case "date-time":
+            // UTC seconds use 20 characters; fractional seconds start at 22, not 21.
+            return maximum >= 20 && (minimum <= 20 || maximum >= Math.max(minimum, 22));
+        case "email":
+            return maximum >= 5;
+        case "uri":
+            return maximum >= 2;
+        case "uuid":
+            return minimum <= 36 && maximum >= 36;
+    }
+}
 
 export function matchesStringFormat(value: string, format: UlviaStringFormat): boolean {
     switch (format) {
@@ -10,11 +28,11 @@ export function matchesStringFormat(value: string, format: UlviaStringFormat): b
         case "date-time":
             return isValidDateTime(value);
         case "email":
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$(?![\s\S])/.test(value);
         case "uri":
             return URL.canParse(value);
         case "uuid":
-            return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+            return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$(?![\s\S])/i.test(value);
     }
 }
 

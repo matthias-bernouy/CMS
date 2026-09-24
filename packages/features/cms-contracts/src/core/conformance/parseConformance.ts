@@ -1,11 +1,17 @@
-import type { CapabilityDefinition, ContractFixtureAssetDefinition } from "../../interfaces/ContractRelease";
+import type {
+    CapabilityDefinition,
+    ContractFixtureAssetDefinition,
+    ContractRelease,
+} from "../../interfaces/ContractRelease";
 import type { ConformanceScenario } from "../../interfaces/Conformance";
 import type { UlviaSchema } from "../../interfaces/UlviaSchema";
 import { ReleaseValidationError } from "../protocol/errors";
 import type { ReleaseLimits } from "../protocol/limits";
 import { expectArray, expectRecord, optionalString, rejectUnknownKeys } from "../protocol/values";
 import { parseIdentifier } from "../parsing/identifiers";
-import { parseConformanceCall } from "./parseCall";
+import { parseConformanceCall } from "./calls/parseCall";
+import { parseScenarioProfiles } from "./dependencies/scenarioProfiles";
+import { validateScenarioReplay } from "./calls/controls/replay";
 
 export function parseConformanceScenarios(
     value: unknown,
@@ -13,6 +19,7 @@ export function parseConformanceScenarios(
     assets: ReadonlyMap<string, ContractFixtureAssetDefinition>,
     referencedAssets: Set<string>,
     limits: Readonly<ReleaseLimits>,
+    dependencies: ReadonlyMap<string, ContractRelease> = new Map(),
 ): readonly ConformanceScenario[] {
     const path = "$.scenarios";
     const source = expectArray(value, path, "invalid_contract");
@@ -21,7 +28,7 @@ export function parseConformanceScenarios(
     }
     const byId = new Map(capabilities.map((capability) => [capability.id, capability]));
     const scenarios = source.map((item, index) =>
-        parseScenario(item, `${path}[${index}]`, byId, assets, referencedAssets, limits),
+        parseScenario(item, `${path}[${index}]`, byId, assets, referencedAssets, limits, dependencies),
     );
     if (new Set(scenarios.map((scenario) => scenario.id)).size !== scenarios.length) {
         throw new ReleaseValidationError("invalid_contract", "duplicate conformance scenario IDs", path);
@@ -36,24 +43,37 @@ function parseScenario(
     assets: ReadonlyMap<string, ContractFixtureAssetDefinition>,
     referencedAssets: Set<string>,
     limits: Readonly<ReleaseLimits>,
+    dependencies: ReadonlyMap<string, ContractRelease>,
 ): ConformanceScenario {
     const record = expectRecord(value, path, "invalid_contract");
-    rejectUnknownKeys(record, ["id", "description", "calls"], path, "invalid_contract");
+    rejectUnknownKeys(record, ["id", "description", "profiles", "calls"], path, "invalid_contract");
     const source = expectArray(record.calls, `${path}.calls`, "invalid_contract");
     if (source.length === 0 || source.length > limits.maxConformanceCallsPerScenario) {
         throw new ReleaseValidationError("invalid_contract", "invalid number of conformance calls", `${path}.calls`);
     }
     const captures = new Map<string, UlviaSchema>();
     const calls = source.map((item, index) =>
-        parseConformanceCall(item, `${path}.calls[${index}]`, capabilities, captures, assets, referencedAssets, limits),
+        parseConformanceCall(
+            item,
+            `${path}.calls[${index}]`,
+            capabilities,
+            captures,
+            assets,
+            referencedAssets,
+            limits,
+            dependencies,
+        ),
     );
     if (new Set(calls.map((call) => call.id)).size !== calls.length) {
         throw new ReleaseValidationError("invalid_contract", "duplicate conformance call IDs", `${path}.calls`);
     }
     const description = optionalString(record.description, `${path}.description`, "invalid_contract", 4096);
+    const profiles = parseScenarioProfiles(record.profiles, `${path}.profiles`, limits);
+    validateScenarioReplay(calls, limits.maxJsonDepth);
     return {
         id: parseIdentifier(record.id, `${path}.id`),
         ...(description ? { description } : {}),
+        ...(profiles ? { profiles } : {}),
         calls,
     };
 }

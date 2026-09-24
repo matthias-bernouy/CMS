@@ -3,16 +3,17 @@ import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../../core/protocol/
 import { deepFreeze } from "../../core/protocol/values";
 import type { ReleaseDigest } from "../../core/admission/digest";
 import type { AdmittedContractRelease } from "../../core/admission/admitContractRelease";
-import { compareContractReleases } from "../../core/compatibility/compareContractReleases";
-import { compareSemVer, isSemVerPrerelease, semVerMajor } from "../../core/compatibility/semver";
+import { compareSemVer } from "../../core/compatibility/semver";
 import type {
     CatalogueContractRelease,
     ContractReleaseDeprecation,
     ContractReleaseYank,
     ReleaseCatalogue,
 } from "../../interfaces/ReleaseCatalogue";
-import { verifyAdmission } from "../../core/verifyAdmission";
+import { verifyAdmission } from "cms-contracts/core/admission/verifyAdmission";
 import { normalizeReleaseDeprecation, normalizeReleaseYank } from "./normalizeReleaseMetadata";
+import { verifyRequirements } from "cms-contracts/core/catalogue/verifyRequirements";
+import { verifyEvolution } from "cms-contracts/core/catalogue/verifyEvolution";
 
 export class InMemoryReleaseCatalogue implements ReleaseCatalogue {
     readonly #byDigest = new Map<ReleaseDigest, CatalogueContractRelease>();
@@ -41,16 +42,8 @@ export class InMemoryReleaseCatalogue implements ReleaseCatalogue {
             throw new ReleaseValidationError("invalid_contract", "release digest is already assigned", "$.digest");
         }
         this.#assertPublisher(contractId, verified.release.publisherId);
-        const reference = this.#latestReference(contractId, version);
-        if (reference) {
-            const report = compareContractReleases(reference.admission.release, verified.release, this.#limits);
-            if (!report.compatible) {
-                throw new ReleaseValidationError(
-                    "invalid_contract",
-                    `incompatible publication: ${report.issues.map((issue) => issue.message).join("; ")}`,
-                );
-            }
-        }
+        verifyRequirements(verified.release, [...this.#byKey.values()]);
+        verifyEvolution(verified.release, [...this.#byKey.values()], this.#limits);
         const record = freezeRecord(verified, this.#clock().toISOString());
         this.#byKey.set(key, record);
         this.#byDigest.set(verified.digest, record);
@@ -123,23 +116,6 @@ export class InMemoryReleaseCatalogue implements ReleaseCatalogue {
         this.#byKey.set(key, updated);
         this.#byDigest.set(existing.admission.digest, updated);
         return updated;
-    }
-
-    #latestReference(contractId: string, version: string): CatalogueContractRelease | null {
-        const major = semVerMajor(version);
-        const stableRelease = !isSemVerPrerelease(version);
-        return (
-            [...this.#byKey.values()]
-                .filter(
-                    (record) =>
-                        record.admission.release.contractId === contractId &&
-                        semVerMajor(record.admission.release.version) === major &&
-                        (!stableRelease || !isSemVerPrerelease(record.admission.release.version)),
-                )
-                .sort((left, right) =>
-                    compareSemVer(right.admission.release.version, left.admission.release.version),
-                )[0] ?? null
-        );
     }
 }
 

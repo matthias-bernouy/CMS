@@ -3,6 +3,38 @@ import { compileHttpBinding } from "@bernouy/cms-contracts/bindings";
 import { capability, objectSchema, stringSchema } from "../support/fixtures";
 
 describe("HTTP error response binding compilation", () => {
+    test("distinguishes HEAD error codes that share one status without a body", () => {
+        const compiled = compileHttpBinding(
+            capability({
+                behavior: { effect: "query", execution: "sync" },
+                input: objectSchema({}),
+                output: { type: "null" },
+                errors: [
+                    { code: "MISSING", retryable: false },
+                    { code: "EXPIRED", retryable: false },
+                ],
+                binding: {
+                    transport: "http",
+                    method: "HEAD",
+                    path: "/v1/items",
+                    response: {
+                        successStatuses: [200],
+                        contentTypes: [],
+                        errorStatuses: { MISSING: 404, EXPIRED: 404 },
+                    },
+                },
+            }),
+        );
+        expect(compiled.response.errorStatuses).toEqual({ MISSING: 404, EXPIRED: 404 });
+        expect(compiled.response.errorEnvelope).toEqual({
+            kind: "headers",
+            encoding: "json-percent",
+            codeHeader: "x-ulvia-error-code",
+            requestIdHeader: "x-ulvia-request-id",
+        });
+        expect(Object.isFrozen(compiled.response.errorEnvelope)).toBe(true);
+    });
+
     test("requires one valid HTTP status for every declared error", () => {
         expect(() =>
             compileHttpBinding(

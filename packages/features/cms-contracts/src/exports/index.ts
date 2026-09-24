@@ -17,6 +17,7 @@ export type {
     CapabilityAccess,
     CapabilityBehavior,
     CapabilityDefinition,
+    CapabilityRequirement,
     CapabilityErrorDefinition,
     CapabilityExecution,
     CapabilityMockDefinition,
@@ -30,6 +31,7 @@ export {
     analyzeConformanceCoverage,
     type CapabilityConformanceCoverage,
     type ConformanceCoverageReport,
+    type ConformanceProfileCoverage,
 } from "cms-contracts/core/conformance/coverage";
 export { parseConformanceSuite, parseConformanceSuiteJson } from "cms-contracts/core/conformance/parseSuite";
 export {
@@ -43,8 +45,17 @@ export type {
     ConformanceCall,
     ConformanceCapture,
     ConformanceCaptureReference,
+    ConformanceLiteral,
     ConformanceCheck,
     ConformanceCoverageExemption,
+    ConformanceDependencyProfile,
+    ConformanceDependencyRelease,
     ConformanceExpectation,
     ConformanceScenario,
 } from "cms-contracts/interfaces/Conformance";
+export type {
+    ConformanceCallControls,
+    ConformanceCompletion,
+    ConformanceEventually,
+    ConformancePagination,
+} from "cms-contracts/interfaces/ConformanceControls";

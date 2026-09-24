@@ -37,10 +37,14 @@ export function parseMapSchema(
         state.limits.maxProperties,
     );
     assertRange(minProperties, maxProperties, path);
+    const maxKeyLength = requireBoundedInteger(record.maxKeyLength, `${path}.maxKeyLength`, 256);
+    if (maxKeyLength === 0 && (minProperties ?? 0) > 1) {
+        throw new ReleaseValidationError("invalid_schema", "zero-length keys permit at most one map entry", path);
+    }
     return {
         type: "map",
         values: parseNested(record.values, `${path}.values`, state, depth + 1),
-        maxKeyLength: requireBoundedInteger(record.maxKeyLength, `${path}.maxKeyLength`, 256),
+        maxKeyLength,
         maxProperties,
         ...base(record, path),
         ...(minProperties === undefined ? {} : { minProperties }),

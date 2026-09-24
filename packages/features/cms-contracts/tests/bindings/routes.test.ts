@@ -8,6 +8,7 @@ describe("HTTP route binding compilation", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
+                    behavior: { effect: "query", execution: "sync" },
                     input: objectSchema({ id: stringSchema(64) }, ["id"]),
                     binding: {
                         transport: "http",
@@ -25,6 +26,7 @@ describe("HTTP route binding compilation", () => {
         expect(() =>
             compileHttpBinding(
                 capability({
+                    behavior: { effect: "query", execution: "sync" },
                     input: objectSchema({ id: { type: "string", maxLength: 64, nullable: true } }),
                     binding: {
                         transport: "http",

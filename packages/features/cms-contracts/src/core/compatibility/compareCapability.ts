@@ -4,6 +4,8 @@ import type { CapabilityDefinition, CapabilityErrorDefinition } from "../../inte
 import type { UlviaSchema } from "../../interfaces/UlviaSchema";
 import type { VersionBump } from "./semver";
 import { firstSchemaSubsetViolation } from "./schemaAcceptance";
+import { firstProjectedOutputViolation } from "./schema/projectedOutput";
+import { compareRequirements } from "./compareRequirements";
 
 export interface CapabilityChange {
     readonly code: "binding_changed" | "capability_changed" | "schema_changed";
@@ -25,6 +27,7 @@ export function compareCapability(
     if (fingerprint(previous.behavior, maxJsonDepth) !== fingerprint(next.behavior, maxJsonDepth)) {
         changes.push(major("capability_changed", `${path}.behavior`, "capability behavior changed"));
     }
+    changes.push(...compareRequirements(previous.requires ?? [], next.requires ?? [], `${path}.requires`));
     const inputChange = compareSchema(previous.input, next.input, `${path}.input`, "input", maxJsonDepth);
     if (inputChange) {
         changes.push(inputChange);
@@ -64,11 +67,16 @@ function compareSchema(
     }
     const acceptedBefore = direction === "input" ? previous : next;
     const acceptedAfter = direction === "input" ? next : previous;
-    const breakingPath = firstSchemaSubsetViolation(acceptedBefore, acceptedAfter, path);
+    const breakingPath =
+        direction === "output"
+            ? firstProjectedOutputViolation(next, previous, path)
+            : firstSchemaSubsetViolation(acceptedBefore, acceptedAfter, path);
     if (breakingPath) {
         return major("schema_changed", breakingPath, `${direction} schema is not proven backward-compatible`);
     }
-    const changedPath = firstSchemaSubsetViolation(acceptedAfter, acceptedBefore, path);
+    const changedPath =
+        firstSchemaSubsetViolation(acceptedAfter, acceptedBefore, path) ??
+        firstSchemaSubsetViolation(acceptedBefore, acceptedAfter, path);
     if (!changedPath) {
         return null;
     }

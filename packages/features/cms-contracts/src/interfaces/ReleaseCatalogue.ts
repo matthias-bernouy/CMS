@@ -23,6 +23,7 @@ export interface ReleaseCatalogue {
     findByDigest(digest: ReleaseDigest): Promise<CatalogueContractRelease | null>;
     get(contractId: string, version: string): Promise<CatalogueContractRelease | null>;
     list(contractId?: string): Promise<readonly CatalogueContractRelease[]>;
+    /** Reverify admission and resolve mandatory capability requirements before accepting a release. */
     publish(admission: AdmittedContractRelease): Promise<CatalogueContractRelease>;
     setDeprecation(
         contractId: string,

@@ -30,9 +30,21 @@ export interface HttpBindingDefinition {
 }
 
 export interface CompiledHttpParameter {
+    readonly encoding: "json-percent";
     readonly property: string;
     readonly wireName: string;
 }
+
+export type HttpParameterValue = boolean | number | string | null;
+
+export type CompiledHttpErrorEnvelope =
+    | { readonly kind: "json" }
+    | {
+          readonly kind: "headers";
+          readonly encoding: "json-percent";
+          readonly codeHeader: "x-ulvia-error-code";
+          readonly requestIdHeader: "x-ulvia-request-id";
+      };
 
 export interface CompiledJsonHttpBody {
     readonly contentTypes: readonly ["application/json"];
@@ -50,6 +62,7 @@ export type CompiledHttpBody = CompiledBinaryHttpBody | CompiledJsonHttpBody;
 
 export interface CompiledHttpResponse {
     readonly contentTypes: readonly string[];
+    readonly errorEnvelope: CompiledHttpErrorEnvelope;
     readonly errorStatuses: Readonly<Record<string, number>>;
     readonly kind: "operation-handle" | "result";
     readonly successStatuses: readonly number[];

@@ -1,5 +1,6 @@
 import type { UlviaSchema, UlviaStringSchema } from "../../interfaces/UlviaSchema";
 import { matchesStringFormat } from "../schema/formats";
+import { guaranteesObjectProperty } from "./schema/objectPresence";
 
 /** Returns the first path where source values are not proven valid for target. */
 export function firstSchemaSubsetViolation(source: UlviaSchema, target: UlviaSchema, path: string): string | null {
@@ -70,7 +71,7 @@ export function firstSchemaSubsetViolation(source: UlviaSchema, target: UlviaSch
                 }
             }
             for (const name of target.required) {
-                if (!source.required.includes(name)) {
+                if (!guaranteesObjectProperty(source, name)) {
                     return `${path}.required.${name}`;
                 }
             }

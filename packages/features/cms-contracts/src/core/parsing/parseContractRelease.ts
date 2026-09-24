@@ -79,13 +79,23 @@ export function parseContractRelease(
         capabilities,
         ...(fixtureAssets === undefined ? {} : { fixtureAssets }),
     };
+    for (const [index, capability] of capabilities.entries()) {
+        if (capability.requires?.some((requirement) => requirement.contractId === release.contractId)) {
+            throw new ReleaseValidationError(
+                "invalid_contract",
+                "cross-contract requirements cannot reference the declaring contract",
+                `$.capabilities[${index}].requires`,
+            );
+        }
+    }
     if (canonicalIJsonBytes(release, limits.maxJsonDepth).byteLength > limits.maxDocumentBytes) {
         throw new ReleaseValidationError(
             "body_limit_exceeded",
             `canonical release exceeds ${limits.maxDocumentBytes} bytes`,
         );
     }
-    return deepFreeze(release) as ContractRelease;
+    // Retained mock literals must belong to the release, not freeze or alias caller data.
+    return deepFreeze(structuredClone(release)) as ContractRelease;
 }
 
 function validateDeprecationReferences(capabilities: ContractRelease["capabilities"]): void {

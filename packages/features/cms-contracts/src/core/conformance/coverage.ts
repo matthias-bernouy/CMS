@@ -19,6 +19,15 @@ export interface ConformanceCoverageReport {
     readonly scenarioCount: number;
     readonly callCount: number;
     readonly capabilities: readonly CapabilityConformanceCoverage[];
+    /** Aggregate coverage must not conceal a gap in an individual selected dependency profile. */
+    readonly profiles?: readonly ConformanceProfileCoverage[];
+}
+
+export interface ConformanceProfileCoverage {
+    readonly profileId: string;
+    readonly scenarioCount: number;
+    readonly callCount: number;
+    readonly capabilities: readonly CapabilityConformanceCoverage[];
 }
 
 /** Descriptive coverage only; it never states that a provider passed. */
@@ -37,7 +46,9 @@ export function analyzeConformanceCoverage(
     }
     const calls = suite?.scenarios.flatMap((scenario) => scenario.calls) ?? [];
     const capabilities = release.release.capabilities.map((capability) => {
-        const relevant = calls.filter((call) => call.capabilityId === capability.id);
+        const relevant = calls.filter(
+            (call) => call.dependencyContractId === undefined && call.capabilityId === capability.id,
+        );
         const covered = new Set(relevant.flatMap((call) => (call.expect.kind === "error" ? [call.expect.code] : [])));
         const exemptions = suite?.coverageExemptions?.filter((entry) => entry.capabilityId === capability.id) ?? [];
         const successExemptionReason = exemptions.find((entry) => !entry.errorCode)?.reason;
@@ -65,5 +76,19 @@ export function analyzeConformanceCoverage(
         scenarioCount: suite?.scenarios.length ?? 0,
         callCount: calls.length,
         capabilities,
+        ...(suite?.dependencyProfiles
+            ? {
+                  profiles: suite.dependencyProfiles.map((profile) => {
+                      const { dependencyProfiles: _, ...withoutProfiles } = suite;
+                      const report = analyzeConformanceCoverage(release, {
+                          ...withoutProfiles,
+                          scenarios: suite.scenarios.filter(
+                              (scenario) => !scenario.profiles || scenario.profiles.includes(profile.id),
+                          ),
+                      });
+                      return { profileId: profile.id, ...report };
+                  }),
+              }
+            : {}),
     }) as ConformanceCoverageReport;
 }

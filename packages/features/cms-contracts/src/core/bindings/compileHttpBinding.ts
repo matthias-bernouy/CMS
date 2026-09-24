@@ -10,6 +10,9 @@ import { compileResponse } from "./response";
 export function compileHttpBinding(capability: CapabilityDefinition): CompiledHttpBinding {
     const definition = capability.binding;
     const path = `capability ${capability.id}.binding`;
+    if ((definition.method === "GET" || definition.method === "HEAD") && capability.behavior.effect !== "query") {
+        throw new ReleaseValidationError("invalid_binding", `${definition.method} capabilities must be queries`, path);
+    }
     const template = parsePathTemplate(definition.path, `${path}.path`);
     const used = new Set<string>();
     const pathParameters = compileParameterMap(

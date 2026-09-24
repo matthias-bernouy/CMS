@@ -27,6 +27,11 @@ export function isSemVerPrerelease(version: string): boolean {
     return parse(version).prerelease.length > 0;
 }
 
+export function semVerReleaseTarget(version: string): string {
+    const { major, minor, patch } = parse(version);
+    return `${major}.${minor}.${patch}`;
+}
+
 export function versionBump(previous: string, next: string): VersionBump | null {
     if (compareSemVer(next, previous) <= 0) {
         return null;

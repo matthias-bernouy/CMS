@@ -75,11 +75,16 @@ export function rejectUnknownKeys(
 }
 
 export function deepFreeze<T>(value: T): Readonly<T> {
-    if (value === null || typeof value !== "object" || Object.isFrozen(value)) {
+    return freezeValue(value, new WeakSet<object>());
+}
+
+function freezeValue<T>(value: T, visited: WeakSet<object>): Readonly<T> {
+    if (value === null || typeof value !== "object" || visited.has(value)) {
         return value;
     }
+    visited.add(value);
     for (const child of Object.values(value)) {
-        deepFreeze(child);
+        freezeValue(child, visited);
     }
     return Object.freeze(value);
 }

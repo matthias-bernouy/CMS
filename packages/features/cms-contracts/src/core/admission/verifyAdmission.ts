@@ -1,7 +1,7 @@
-import { ReleaseValidationError } from "./protocol/errors";
-import type { ReleaseLimits } from "./protocol/limits";
-import { admitContractRelease, type AdmittedContractRelease } from "./admission/admitContractRelease";
-import { admitContractBundle } from "./admission/admitContractBundle";
+import { ReleaseValidationError } from "cms-contracts/core/protocol/errors";
+import type { ReleaseLimits } from "cms-contracts/core/protocol/limits";
+import { admitContractRelease, type AdmittedContractRelease } from "./admitContractRelease";
+import { admitContractBundle } from "./admitContractBundle";
 
 export async function verifyAdmission(
     admission: AdmittedContractRelease,

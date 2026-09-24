@@ -1,8 +1,8 @@
-import type { CapabilityAccess } from "../../interfaces/ContractRelease";
-import type { ConformanceActor } from "../../interfaces/Conformance";
-import { parseIdentifier } from "../parsing/identifiers";
-import { ReleaseValidationError } from "../protocol/errors";
-import { expectRecord, rejectUnknownKeys } from "../protocol/values";
+import type { CapabilityAccess } from "../../../interfaces/ContractRelease";
+import type { ConformanceActor } from "../../../interfaces/Conformance";
+import { parseIdentifier } from "../../parsing/identifiers";
+import { ReleaseValidationError } from "../../protocol/errors";
+import { expectRecord, rejectUnknownKeys } from "../../protocol/values";
 
 export function parseActor(value: unknown, path: string, access: CapabilityAccess): ConformanceActor {
     const record = expectRecord(value, path, "invalid_contract");

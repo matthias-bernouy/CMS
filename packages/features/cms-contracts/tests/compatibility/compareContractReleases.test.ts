@@ -26,7 +26,7 @@ describe("contract release compatibility", () => {
             contractDocument({ version: "1.1.0", capabilities: [capabilityDocument(), added] }),
         );
 
-        expect(compareContractReleases(previous, next)).toMatchObject({ compatible: true, requiredBump: "minor" });
+        expect(compareContractReleases(previous, next)).toMatchObject({ validEvolution: true, requiredBump: "minor" });
     });
 
     test("requires a major release when a capability schema changes", () => {
@@ -40,7 +40,7 @@ describe("contract release compatibility", () => {
         const next = parseContractRelease(contractDocument({ version: "1.1.0", capabilities: [changed] }));
         const report = compareContractReleases(previous, next);
 
-        expect(report.compatible).toBe(false);
+        expect(report.validEvolution).toBe(false);
         expect(report.requiredBump).toBe("major");
         expect(report.issues.map((issue) => issue.code)).toContain("insufficient_version_bump");
     });
@@ -51,7 +51,7 @@ describe("contract release compatibility", () => {
             contractDocument({ version: "1.0.1", capabilities: [capabilityDocument({ access: "public" })] }),
         );
 
-        expect(compareContractReleases(previous, next)).toMatchObject({ compatible: false, requiredBump: "major" });
+        expect(compareContractReleases(previous, next)).toMatchObject({ validEvolution: false, requiredBump: "major" });
     });
 
     test("requires a major release when command idempotency changes", () => {
@@ -65,7 +65,7 @@ describe("contract release compatibility", () => {
             }),
         );
 
-        expect(compareContractReleases(previous, next)).toMatchObject({ compatible: false, requiredBump: "major" });
+        expect(compareContractReleases(previous, next)).toMatchObject({ validEvolution: false, requiredBump: "major" });
     });
 
     test("allows descriptions to change in a patch release", () => {
@@ -82,7 +82,7 @@ describe("contract release compatibility", () => {
         nextProperties.recipient = { ...nextProperties.recipient, description: "New documentation." };
         const next = parseContractRelease(contractDocument({ version: "1.0.1", capabilities: [nextCapability] }));
 
-        expect(compareContractReleases(previous, next)).toMatchObject({ compatible: true, requiredBump: "patch" });
+        expect(compareContractReleases(previous, next)).toMatchObject({ validEvolution: true, requiredBump: "patch" });
     });
 
     test("allows capability deprecation metadata in a patch release", () => {
@@ -94,7 +94,7 @@ describe("contract release compatibility", () => {
             }),
         );
 
-        expect(compareContractReleases(previous, next)).toMatchObject({ compatible: true, requiredBump: "patch" });
+        expect(compareContractReleases(previous, next)).toMatchObject({ validEvolution: true, requiredBump: "patch" });
     });
 
     test("preserves business properties named description", () => {
@@ -117,7 +117,7 @@ describe("contract release compatibility", () => {
             }),
         );
 
-        expect(compareContractReleases(previous, next)).toMatchObject({ compatible: false, requiredBump: "major" });
+        expect(compareContractReleases(previous, next)).toMatchObject({ validEvolution: false, requiredBump: "major" });
     });
 
     test("ignores binary request media type declaration order", () => {
@@ -146,6 +146,6 @@ describe("contract release compatibility", () => {
         const previous = release("1.0.0", ["application/pdf", "image/png"]);
         const next = release("1.0.1", ["image/png", "application/pdf"]);
 
-        expect(compareContractReleases(previous, next)).toMatchObject({ compatible: true, requiredBump: "patch" });
+        expect(compareContractReleases(previous, next)).toMatchObject({ validEvolution: true, requiredBump: "patch" });
     });
 });

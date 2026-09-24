@@ -3,7 +3,7 @@ import { deepFreeze } from "../protocol/values";
 import { compileContractBindings } from "../bindings/compileContractBindings";
 import type { ContractRelease } from "../../interfaces/ContractRelease";
 import { compareCapability } from "./compareCapability";
-import { versionBump, type VersionBump } from "./semver";
+import { isSemVerPrerelease, semVerReleaseTarget, versionBump, type VersionBump } from "./semver";
 
 export type CompatibilityIssueCode =
     | "binding_changed"
@@ -25,7 +25,10 @@ export interface CompatibilityIssue {
 }
 
 export interface ContractCompatibilityReport {
-    readonly compatible: boolean;
+    /** Identity, ownership and the declared version increase allow this evolution. */
+    readonly validEvolution: boolean;
+    /** Old consumers remain supported with release-specific output projection; this is not provider conformance. */
+    readonly consumerCompatible: boolean;
     readonly declaredBump: VersionBump | null;
     readonly issues: readonly CompatibilityIssue[];
     readonly requiredBump: VersionBump;
@@ -92,9 +95,14 @@ export function compareContractReleases(
         }
     }
     const declaredBump = versionBump(previous.version, next.version);
+    // A target's previews may evolve before stabilization. Publication must
+    // independently check the candidate against its latest stable major line.
+    const previewEvolution =
+        isSemVerPrerelease(previous.version) &&
+        semVerReleaseTarget(previous.version) === semVerReleaseTarget(next.version);
     if (!declaredBump) {
         issues.push({ code: "version_not_increased", message: "next release version must increase" });
-    } else if (BUMP_RANK[declaredBump] < BUMP_RANK[requiredBump]) {
+    } else if (!previewEvolution && BUMP_RANK[declaredBump] < BUMP_RANK[requiredBump]) {
         issues.push({
             code: "insufficient_version_bump",
             message: `${requiredBump} change declared with a ${declaredBump} version bump`,
@@ -107,7 +115,11 @@ export function compareContractReleases(
         "version_not_increased",
     ]);
     return deepFreeze({
-        compatible: !issues.some((issue) => invalidCodes.has(issue.code)),
+        validEvolution: !issues.some((issue) => invalidCodes.has(issue.code)),
+        consumerCompatible:
+            requiredBump !== "major" &&
+            previous.contractId === next.contractId &&
+            previous.publisherId === next.publisherId,
         declaredBump,
         requiredBump,
         issues,

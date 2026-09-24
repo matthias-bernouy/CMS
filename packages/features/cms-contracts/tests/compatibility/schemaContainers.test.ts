@@ -19,11 +19,11 @@ describe("container and binary schema compatibility", () => {
         const newInput = objectSchema({ tags: { type: "array", items: stringSchema(32), maxItems: 4 } }, ["tags"]);
 
         expect(compare({ input: oldInput }, { input: newInput })).toMatchObject({
-            compatible: true,
+            validEvolution: true,
             requiredBump: "minor",
         });
         expect(compare({ input: newInput }, { input: oldInput })).toMatchObject({
-            compatible: false,
+            validEvolution: false,
             requiredBump: "major",
         });
     });
@@ -35,13 +35,13 @@ describe("container and binary schema compatibility", () => {
         expect(
             compare({ input: objectSchema({ labels: oldMap }) }, { input: objectSchema({ labels: newMap }) }),
         ).toMatchObject({
-            compatible: true,
+            validEvolution: true,
             requiredBump: "minor",
         });
         expect(
             compare({ output: objectSchema({ labels: oldMap }) }, { output: objectSchema({ labels: newMap }) }),
         ).toMatchObject({
-            compatible: false,
+            validEvolution: false,
             requiredBump: "major",
         });
     });
@@ -51,15 +51,15 @@ describe("container and binary schema compatibility", () => {
         const number = objectSchema({ amount: { type: "number", minimum: 0, maximum: 100 } }, ["amount"]);
 
         expect(compare({ input: integer }, { input: number })).toMatchObject({
-            compatible: true,
+            validEvolution: true,
             requiredBump: "minor",
         });
         expect(compare({ output: number }, { output: integer })).toMatchObject({
-            compatible: true,
+            validEvolution: true,
             requiredBump: "minor",
         });
         expect(compare({ input: number }, { input: integer })).toMatchObject({
-            compatible: false,
+            validEvolution: false,
             requiredBump: "major",
         });
     });
@@ -78,13 +78,13 @@ describe("container and binary schema compatibility", () => {
         expect(
             compare(binary(1024, ["application/pdf"]), binary(2048, ["application/pdf", "image/png"])),
         ).toMatchObject({
-            compatible: true,
+            validEvolution: true,
             requiredBump: "minor",
         });
         expect(
             compare(binary(2048, ["application/pdf", "image/png"]), binary(1024, ["application/pdf"])),
         ).toMatchObject({
-            compatible: false,
+            validEvolution: false,
             requiredBump: "major",
         });
     });
@@ -108,13 +108,13 @@ describe("container and binary schema compatibility", () => {
         expect(
             compare(binary(2048, ["application/pdf", "image/png"]), binary(1024, ["application/pdf"])),
         ).toMatchObject({
-            compatible: true,
+            validEvolution: true,
             requiredBump: "minor",
         });
         expect(
             compare(binary(1024, ["application/pdf"]), binary(2048, ["application/pdf", "image/png"])),
         ).toMatchObject({
-            compatible: false,
+            validEvolution: false,
             requiredBump: "major",
         });
     });

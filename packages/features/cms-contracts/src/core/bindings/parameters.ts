@@ -74,9 +74,11 @@ export function compileParameterMap(
             }
         }
         used.add(property);
-        return { wireName, property };
+        return { encoding: "json-percent" as const, wireName, property };
     });
-    return parameters.sort((left, right) => left.wireName.localeCompare(right.wireName));
+    return parameters.sort((left, right) =>
+        left.wireName < right.wireName ? -1 : left.wireName > right.wireName ? 1 : 0,
+    );
 }
 
 function validateWireName(name: string, location: ParameterLocation, path: string): void {

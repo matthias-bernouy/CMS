@@ -23,22 +23,23 @@ describe("closed-object schema compatibility", () => {
         ]);
 
         expect(compare({ input: previous }, { input: optional })).toMatchObject({
-            compatible: true,
+            validEvolution: true,
             requiredBump: "minor",
         });
         expect(compare({ input: previous }, { input: required })).toMatchObject({
-            compatible: false,
+            validEvolution: false,
             requiredBump: "major",
         });
     });
 
-    test("adding a possible output property breaks closed-object consumers", () => {
+    test("adding an output property is minor when old consumers receive a valid projection", () => {
         const previous = objectSchema({ messageId: stringSchema(64) }, ["messageId"]);
         const next = objectSchema({ messageId: stringSchema(64), trace: stringSchema(32) }, ["messageId"]);
 
         expect(compare({ output: previous }, { output: next })).toMatchObject({
-            compatible: false,
-            requiredBump: "major",
+            validEvolution: true,
+            consumerCompatible: true,
+            requiredBump: "minor",
         });
     });
 
@@ -47,12 +48,59 @@ describe("closed-object schema compatibility", () => {
         const required = objectSchema({ messageId: stringSchema(64) }, ["messageId"]);
 
         expect(compare({ output: optional }, { output: required })).toMatchObject({
-            compatible: true,
+            validEvolution: true,
             requiredBump: "minor",
         });
         expect(compare({ output: required }, { output: optional })).toMatchObject({
-            compatible: false,
+            validEvolution: false,
             requiredBump: "major",
         });
+    });
+
+    test("recognizes equivalent required fields implied by a closed object's minimum count", () => {
+        const explicit = objectSchema({ name: stringSchema(64) }, ["name"]);
+        const implied = { ...objectSchema({ name: stringSchema(64) }), minProperties: 1 };
+        for (const field of ["input", "output"]) {
+            for (const [previous, next] of [
+                [explicit, implied],
+                [implied, explicit],
+            ]) {
+                expect(compare({ [field]: previous }, { [field]: next })).toMatchObject({
+                    consumerCompatible: true,
+                    validEvolution: true,
+                    requiredBump: "patch",
+                    issues: [],
+                });
+            }
+        }
+    });
+
+    test("recognizes guaranteed properties recursively without assuming any optional choice is guaranteed", () => {
+        const explicit = objectSchema({ name: stringSchema(64), locale: stringSchema(8) }, ["name", "locale"]);
+        const implied = {
+            ...objectSchema({ name: stringSchema(64), locale: stringSchema(8) }, ["locale"]),
+            minProperties: 2,
+        };
+        const wrap = (schema: unknown) => objectSchema({ details: schema }, ["details"]);
+        for (const field of ["input", "output"]) {
+            expect(compare({ [field]: wrap(explicit) }, { [field]: wrap(implied) })).toMatchObject({
+                consumerCompatible: true,
+                requiredBump: "patch",
+            });
+        }
+        const choice = { ...implied, minProperties: 1, required: [] };
+        expect(compare({ input: choice }, { input: explicit }).requiredBump).toBe("major");
+        expect(compare({ output: explicit }, { output: choice }).requiredBump).toBe("major");
+    });
+
+    test("proves projected presence when every new output property is guaranteed by the count", () => {
+        const previous = objectSchema({ name: stringSchema(64) }, ["name"]);
+        const next = { ...objectSchema({ name: stringSchema(64), trace: stringSchema(64) }), minProperties: 2 };
+        expect(compare({ output: previous }, { output: next })).toMatchObject({
+            consumerCompatible: true,
+            validEvolution: true,
+            requiredBump: "minor",
+        });
+        expect(compare({ output: previous }, { output: { ...next, minProperties: 1 } }).requiredBump).toBe("major");
     });
 });

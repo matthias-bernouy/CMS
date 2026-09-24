@@ -8,7 +8,7 @@ import type {
     UlviaStringSchema,
 } from "../../interfaces/UlviaSchema";
 import { assertRange, parseDescription, parseNullable, optionalBoundedInteger, type SchemaParseState } from "./context";
-import { matchesStringFormat } from "./formats";
+import { hasStringFormatLength, matchesStringFormat } from "./formats";
 
 const STRING_FORMATS = new Set<UlviaStringFormat>(["date", "date-time", "email", "uri", "uuid"]);
 
@@ -26,6 +26,9 @@ export function parseStringSchema(record: UnknownRecord, path: string, state: Sc
     }
     assertRange(minLength, maxLength, path);
     const format = parseFormat(record.format, `${path}.format`);
+    if (format && !hasStringFormatLength(format, minLength ?? 0, maxLength)) {
+        throw new ReleaseValidationError("invalid_schema", `length range admits no value of format ${format}`, path);
+    }
     const values = parseStringEnum(record.enum, path, state, minLength, maxLength, format);
     const description = parseDescription(record, path);
     return {

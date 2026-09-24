@@ -51,6 +51,7 @@ export function parseCoverageExemptions(
         seen.add(key);
         const covered = calls.some(
             (call) =>
+                call.dependencyContractId === undefined &&
                 call.capabilityId === capabilityId &&
                 (errorCode
                     ? call.expect.kind === "error" && call.expect.code === errorCode

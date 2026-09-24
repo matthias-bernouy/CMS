@@ -129,6 +129,7 @@ function materializeBinaryReferences(
         return new Uint8Array(0);
     }
     if (schema.type === "array" && Array.isArray(value)) {
+        assertMockCount(value.length, schema.minItems, schema.maxItems, path);
         return value.map((item, index) =>
             materializeBinaryReferences(schema.items, item, `${path}[${index}]`, assets, referencedAssets),
         );
@@ -139,6 +140,11 @@ function materializeBinaryReferences(
         typeof value === "object" &&
         !Array.isArray(value)
     ) {
+        const maximum =
+            schema.type === "map"
+                ? schema.maxProperties
+                : (schema.maxProperties ?? Object.keys(schema.properties).length);
+        assertMockCount(Object.keys(value).length, schema.minProperties, maximum, path);
         return Object.fromEntries(
             Object.entries(value).map(([key, item]) => {
                 const child =
@@ -155,4 +161,10 @@ function materializeBinaryReferences(
         );
     }
     return value;
+}
+
+function assertMockCount(count: number, minimum: number | undefined, maximum: number, path: string): void {
+    if (count < (minimum ?? 0) || count > maximum) {
+        throw new SchemaValueError(`entry count must be between ${minimum ?? 0} and ${maximum}`, path);
+    }
 }

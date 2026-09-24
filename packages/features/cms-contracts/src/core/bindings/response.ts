@@ -4,6 +4,7 @@ import type { CapabilityErrorDefinition, CapabilityExecution } from "../../inter
 import type { CapabilityHttpMethod, CompiledHttpResponse, HttpResponseBinding } from "../../interfaces/HttpBinding";
 import type { UlviaSchema } from "../../interfaces/UlviaSchema";
 import { assertJsonCompatible } from "./jsonCompatibility";
+import { compileErrorStatuses, errorEnvelope } from "./responses/errors";
 
 export function compileResponse(
     binding: HttpResponseBinding,
@@ -52,7 +53,13 @@ export function compileResponse(
         if (contentTypes.length > 0) {
             throw new ReleaseValidationError("invalid_binding", "HEAD responses cannot declare content types", path);
         }
-        return { kind: "result", successStatuses: statuses, contentTypes, errorStatuses };
+        return {
+            kind: "result",
+            successStatuses: statuses,
+            contentTypes,
+            errorStatuses,
+            errorEnvelope: errorEnvelope(method),
+        };
     }
     const bodylessStatuses = statuses.filter((status) => status === 204 || status === 205);
     if (bodylessStatuses.length > 0 && contentTypes.length > 0) {
@@ -95,7 +102,13 @@ export function compileResponse(
             path,
         );
     }
-    return { kind: "result", successStatuses: statuses, contentTypes, errorStatuses };
+    return {
+        kind: "result",
+        successStatuses: statuses,
+        contentTypes,
+        errorStatuses,
+        errorEnvelope: errorEnvelope(method),
+    };
 }
 
 function compileOperationResponse(
@@ -118,47 +131,13 @@ function compileOperationResponse(
             path,
         );
     }
-    return { kind: "operation-handle", successStatuses: statuses, contentTypes, errorStatuses };
-}
-
-function compileErrorStatuses(
-    mappings: Readonly<Record<string, number>>,
-    errors: readonly CapabilityErrorDefinition[],
-    method: CapabilityHttpMethod,
-    path: string,
-): Readonly<Record<string, number>> {
-    const declared = errors.map((error) => error.code).sort();
-    const mapped = Object.keys(mappings).sort();
-    if (declared.length !== mapped.length || declared.some((code, index) => code !== mapped[index])) {
-        throw new ReleaseValidationError(
-            "invalid_binding",
-            `error status mappings must exactly match declared errors: ${declared.join(", ") || "none"}`,
-            path,
-        );
-    }
-    const compiled: Record<string, number> = Object.create(null) as Record<string, number>;
-    for (const error of errors) {
-        const status = mappings[error.code]!;
-        if (status < 400 || status > 599) {
-            throw new ReleaseValidationError(
-                "invalid_binding",
-                "error statuses must be 4xx or 5xx",
-                `${path}.${error.code}`,
-            );
-        }
-        if (error.output) {
-            if (method === "HEAD" && error.output.type !== "null") {
-                throw new ReleaseValidationError(
-                    "invalid_binding",
-                    "HEAD error responses require a null output schema",
-                    `${path}.${error.code}.output`,
-                );
-            }
-            assertJsonCompatible(error.output, `${path}.${error.code}.output`);
-        }
-        compiled[error.code] = status;
-    }
-    return compiled;
+    return {
+        kind: "operation-handle",
+        successStatuses: statuses,
+        contentTypes,
+        errorStatuses,
+        errorEnvelope: errorEnvelope(method),
+    };
 }
 
 function uniqueSorted(values: readonly number[], path: string): readonly number[] {

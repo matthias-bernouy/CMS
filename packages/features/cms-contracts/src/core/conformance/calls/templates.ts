@@ -1,9 +1,9 @@
-import type { ContractFixtureAssetDefinition } from "../../interfaces/ContractRelease";
-import type { UlviaSchema } from "../../interfaces/UlviaSchema";
-import { firstSchemaSubsetViolation } from "../compatibility/schemaAcceptance";
-import { ReleaseValidationError } from "../protocol/errors";
-import { expectRecord } from "../protocol/values";
-import { SchemaValueError, validateSchemaValue } from "../schema/validateValue";
+import type { ContractFixtureAssetDefinition } from "../../../interfaces/ContractRelease";
+import type { UlviaSchema } from "../../../interfaces/UlviaSchema";
+import { firstSchemaSubsetViolation } from "../../compatibility/schemaAcceptance";
+import { ReleaseValidationError } from "../../protocol/errors";
+import { expectRecord } from "../../protocol/values";
+import { SchemaValueError, validateSchemaValue } from "../../schema/validateValue";
 
 export interface ConformanceTemplateContext {
     readonly assets: ReadonlyMap<string, ContractFixtureAssetDefinition>;
@@ -17,8 +17,28 @@ export function validateConformanceTemplate(
     value: unknown,
     path: string,
     context: ConformanceTemplateContext,
+    literal = false,
 ): void {
-    if (value !== null && typeof value === "object" && !Array.isArray(value) && Object.hasOwn(value, "$capture")) {
+    if (
+        !literal &&
+        value !== null &&
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        Object.hasOwn(value, "$literal")
+    ) {
+        const marker = expectRecord(value, path, "invalid_contract");
+        if (Object.keys(marker).length !== 1) {
+            throw new ReleaseValidationError("invalid_contract", "literal reference must be { $literal: value }", path);
+        }
+        return validateConformanceTemplate(schema, marker.$literal, `${path}.$literal`, context, true);
+    }
+    if (
+        !literal &&
+        value !== null &&
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        Object.hasOwn(value, "$capture")
+    ) {
         const marker = expectRecord(value, path, "invalid_contract");
         if (Object.keys(marker).length !== 1 || typeof marker.$capture !== "string") {
             throw new ReleaseValidationError(
@@ -55,7 +75,7 @@ export function validateConformanceTemplate(
             }
             checkCount(value.length, schema.minItems, schema.maxItems, path);
             value.forEach((item, index) =>
-                validateConformanceTemplate(schema.items, item, `${path}[${index}]`, context),
+                validateConformanceTemplate(schema.items, item, `${path}[${index}]`, context, literal),
             );
             return;
         }
@@ -83,7 +103,7 @@ export function validateConformanceTemplate(
                         `${path}.${key}`,
                     );
                 }
-                validateConformanceTemplate(schema.values, item, `${path}.${key}`, context);
+                validateConformanceTemplate(schema.values, item, `${path}.${key}`, context, literal);
             }
             return;
         }
@@ -109,7 +129,7 @@ export function validateConformanceTemplate(
                         `${path}.${key}`,
                     );
                 }
-                validateConformanceTemplate(schema.properties[key]!, item, `${path}.${key}`, context);
+                validateConformanceTemplate(schema.properties[key]!, item, `${path}.${key}`, context, literal);
             }
             return;
         }

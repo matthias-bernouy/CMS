@@ -150,6 +150,12 @@ describe("HTTP response binding compilation", () => {
 
         expect(compiled.response).toEqual({
             kind: "result",
+            errorEnvelope: {
+                kind: "headers",
+                encoding: "json-percent",
+                codeHeader: "x-ulvia-error-code",
+                requestIdHeader: "x-ulvia-request-id",
+            },
             successStatuses: [200],
             contentTypes: [],
             errorStatuses: { INVALID_RECIPIENT: 422 },

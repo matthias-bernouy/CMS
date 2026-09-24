@@ -67,6 +67,32 @@ describe("capability mocks", () => {
         const previous = parseContractRelease(contractDocument({ version: "1.0.0" }));
         const next = parseContractRelease(withMocks([success]));
         const patched = parseContractRelease({ ...next, version: "1.0.1" });
-        expect(compareContractReleases(previous, patched)).toMatchObject({ compatible: true, requiredBump: "patch" });
+        expect(compareContractReleases(previous, patched)).toMatchObject({
+            validEvolution: true,
+            requiredBump: "patch",
+        });
+    });
+
+    test("checks container cardinality before materializing nested binary references", () => {
+        const binary = { type: "binary", maxBytes: 10, mediaTypes: ["application/pdf"] };
+        const cases = [
+            { schema: { type: "array", maxItems: 1, items: binary }, value: [{ assetId: "missing" }, null] },
+            {
+                schema: { type: "map", maxKeyLength: 10, maxProperties: 1, values: binary },
+                value: { first: { assetId: "missing" }, second: null },
+            },
+            { schema: objectSchema({ first: binary }), value: { first: { assetId: "missing" }, second: null } },
+        ];
+        for (const { schema, value } of cases) {
+            const document = contractDocument({
+                capabilities: [
+                    capabilityDocument({
+                        input: objectSchema({ payload: schema }, ["payload"]),
+                        mocks: [{ ...success, input: { payload: value } }],
+                    }),
+                ],
+            });
+            expect(() => parseContractRelease(document)).toThrow("entry count must be between 0 and 1");
+        }
     });
 });
