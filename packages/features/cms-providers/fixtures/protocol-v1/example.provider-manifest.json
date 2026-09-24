@@ -1,0 +1,61 @@
+{
+    "kind": "provider-manifest",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "providerId": "ulvia.example",
+    "name": "Ulvia Example Provider",
+    "version": "1.0.0",
+    "provenance": {
+        "publisherId": "ulvia.official",
+        "publishedAt": "2026-09-22T00:00:00Z"
+    },
+    "buildVersionRange": ">=1.0.0 <2.0.0",
+    "endpoint": {
+        "allowedOrigins": ["https://provider.example.com"],
+        "defaultOrigin": "https://provider.example.com"
+    },
+    "configuration": {
+        "type": "object",
+        "properties": {
+            "region": {
+                "type": "string",
+                "enum": ["eu"],
+                "maxLength": 16
+            }
+        },
+        "required": ["region"]
+    },
+    "credentialSlots": [
+        {
+            "id": "provider-token",
+            "label": "Provider token",
+            "required": true,
+            "secretType": "token"
+        }
+    ],
+    "implementations": [
+        {
+            "contractId": "protocol.examples",
+            "version": "1.0.0",
+            "digest": "sha256:03cdf6293b8f923978a83a8da70f3bc6bd8469f9a709b356ce681db35db281f2",
+            "requires": [
+                {
+                    "contractId": "communication.email",
+                    "versionRange": "^1.0.0",
+                    "capabilityId": "email.message.send",
+                    "optional": false
+                }
+            ]
+        }
+    ],
+    "dataPolicy": {
+        "residency": ["eu"],
+        "retentionPolicyUrl": "https://provider.example.com/legal/retention"
+    },
+    "recovery": {
+        "backupFormatVersion": "ulvia-provider-backup/v1",
+        "compatibleBuildRange": "^1.0.0",
+        "restore": true,
+        "relocation": true
+    }
+}

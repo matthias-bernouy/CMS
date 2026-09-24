@@ -1,0 +1,6 @@
+{
+    "protocol": "ulvia-provider/v1",
+    "installationId": "installation:SHOP_42",
+    "gatewayUrl": "https://cms.example.com/ulvia/gateway",
+    "gatewayToken": "example-bootstrap-token-not-a-real-secret"
+}

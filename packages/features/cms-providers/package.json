@@ -1,0 +1,19 @@
+{
+    "name": "@bernouy/cms-providers",
+    "version": "0.1.0",
+    "description": "Provider manifests, installation models, and connection protocol validation for Ulvia providers.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./installations": "./src/exports/installations.ts",
+        "./selections": "./src/exports/selections.ts"
+    },
+    "dependencies": {
+        "@bernouy/cms-contracts": "workspace:*"
+    },
+    "peerDependencies": {
+        "typescript": "^7.0.2"
+    }
+}
