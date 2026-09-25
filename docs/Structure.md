@@ -46,6 +46,16 @@ Feature packages:
   repository contracts, and the CMS-owned author file library. File metadata,
   blob stores, lifecycle, local/S3 adapters, image variants, URL helpers, and
   serving handlers live under its explicit `./files` subpaths.
+- `@bernouy/cms-repository`: the shared package for contracts and providers,
+  with a planned collections domain. `./contracts` owns immutable releases,
+  `ulvia-schema/v1`, digests, HTTP binding compilation, compatibility and the
+  release catalogue. `./providers` owns manifest admission, pure installation,
+  connection and runtime-report models and validators. Explicit subpaths add
+  manifest publication/comparison, local installation lifecycle, full-site graph
+  planning and revisioned memory stores.
+  Immutable artifacts and site installation state remain distinct. The root
+  exports types only; live connection, durable persistence and gateway execution
+  are not implemented here, and `./collections` is not exported yet.
 - `@bernouy/cms-secrets`: secret storage contracts, `${VAR}` resolution, and
   encrypted Mongo storage.
 - `@bernouy/cms-auth`: accounts, local/OIDC providers, PATs, signed sessions,
@@ -130,6 +140,16 @@ stores. Control retains its administrative stores, and its test-email action
 is supplied separately from Delivery's public operations.
 The `/http` entrypoint contains mountable handlers, not a production transport;
 `/mongo` and `/smtp` remain runtime-only adapters. `/browser` stays browser-safe.
+
+`cms-repository` groups contract logic under `src/contracts/` and provider logic
+under `src/providers/`, with public barrels under `src/exports/contracts/` and
+`src/exports/providers/`. Tests and fixtures use the same domain separation.
+Consumers use `@bernouy/cms-repository/contracts` and its `/schema`, `/bindings`,
+`/compatibility`, `/catalogue` and `/protocol` subpaths, or
+`@bernouy/cms-repository/providers` and its `/catalogue`, `/compatibility`,
+`/installations` and `/selections`
+subpaths. A future collections domain belongs in this package; its implementation
+and public entrypoint remain planned. See the [package guide](../packages/features/cms-repository/README.md).
 
 Keep these boundaries:
 

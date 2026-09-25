@@ -1,0 +1,29 @@
+import { describe, expect, test } from "bun:test";
+
+describe("repository public entry points", () => {
+    test.each([
+        ["contracts", "admitContractRelease"],
+        ["contracts/schema", "parseUlviaSchema"],
+        ["contracts/bindings", "compileContractBindings"],
+        ["contracts/compatibility", "compareContractReleases"],
+        ["contracts/catalogue", "InMemoryReleaseCatalogue"],
+        ["contracts/protocol", "parseStrictJson"],
+        ["providers", "admitProviderManifest"],
+        ["providers/catalogue", "InMemoryProviderManifestCatalogue"],
+        ["providers/compatibility", "compareProviderManifests"],
+        ["providers/installations", "validateProviderInstallation"],
+        ["providers/selections", "planContractSelections"],
+    ])("loads %s independently through its declared package export", async (subpath, entryPoint) => {
+        const module = await import(`@bernouy/cms-repository/${subpath}`);
+        expect(typeof module[entryPoint]).toBe("function");
+    });
+
+    test("keeps the root entry point type-only", async () => {
+        expect(Object.keys(await import("@bernouy/cms-repository"))).toEqual([]);
+    });
+
+    test("does not advertise the planned collections domain as an implemented API", async () => {
+        const manifest = await Bun.file(new URL("../../package.json", import.meta.url)).json();
+        expect(Object.keys(manifest.exports).some((entry) => entry.startsWith("./collections"))).toBe(false);
+    });
+});

@@ -24,6 +24,9 @@ implementation notes live in each package's `AGENTS.md`.
 
 ## Authoring And Sources
 
+- [Repository contracts and providers: flow diagrams](../schema/README.md)
+  separates current admission, publication and conformance flows in
+  `@bernouy/cms-repository` from planned runtime upgrades.
 - [Page languages and routes](./page-languages-and-routes.md) describes localized
   paths, redirects, deletion tombstones, and public SEO behavior.
 - [Bloc Authoring](./blocs/README.md) documents how to create blocs, expose

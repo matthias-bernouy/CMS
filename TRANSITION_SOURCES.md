@@ -167,7 +167,9 @@ The compiler must prove that:
 - no unknown property appears in path, query, headers, or body;
 - body, query, path, and header mappings do not overlap;
 - `body: true` means all remaining properties after other mappings;
-- `GET` and `HEAD` do not carry a body;
+- `GET` and `HEAD` are queries and do not carry a body;
+- path, query and application-header scalars use the fixed `json-percent`
+  codec, preserving the distinction between omission, null and strings;
 - the success status is a 2xx status;
 - declared errors have one valid 4xx or 5xx mapping;
 - binary schemas and content types agree with the binding;
@@ -178,6 +180,11 @@ The compiler must prove that:
 Scenario inputs, assertions, capture paths, pagination walks, duplicate IDs,
 and idempotency replays must also be validated statically. Runtime routing
 must consume only compiled bindings.
+
+The pure parameter codec and bodyless HEAD error headers are specified in
+[the HTTP parameter profile](packages/features/cms-repository/fixtures/contracts/protocol-v1/http-parameters.md).
+The decoder consumes a raw wire value and percent-decodes exactly once; HTTP
+adapters must not add a second URL/form decoding pass.
 
 ### 3. Versioning and compatibility
 
@@ -190,17 +197,87 @@ The preferred Protocol v1 design is one SemVer per contract release:
 - capabilities have stable IDs but no independent version;
 - requirements reference a contract version range and a capability ID;
 - providers implement an exact contract release and digest;
+- a provider build may serve several exact releases of the same contract so
+  sites can upgrade independently; each release claim requires its own
+  conformance evidence, and a newer build does not imply old-release support;
 - breaking any capability requires a new contract major;
-- compatible additions require a minor;
+- provably compatible schema changes and new capabilities require a minor;
 - descriptions and mocks may change in a patch;
 - installed releases and dashboard plans pin the contract digest.
 
-Capabilities also need lifecycle metadata such as `deprecated`, `replacedBy`,
-and `sunsetAt`. Registry releases remain immutable but may be marked deprecated
-or yanked. If independent capability versions are retained instead, the
-compatibility engine must compare every `(capability ID, major)` pair and keep
-all previously supported versions visible. This decision must be settled
-before porting contracts.
+An installed site's selected release keeps its own gateway validation and
+binding plan after a provider deployment. Widening an input limit from 100 to
+150 characters in a later compatible release does not widen the older site's
+accepted input. Widening a possible output is different: the provider must
+still produce output valid for the old selected release or the gateway rejects
+it. A provider can share one current codebase across releases, but neither
+SemVer nor a shared build proves that all those release contracts are served.
+
+Schema compatibility is directional: every value accepted by the previous
+input must remain valid in the next input, and every value the next output may
+produce must remain valid after projection through the previous output schema.
+Additive object fields can therefore remain minor, including inside arrays and
+maps, provided required fields and projected property bounds remain valid.
+Projection never truncates strings, arrays, or maps or coerces values. The checker proves this
+recursively for supported types, bounds, required fields, enums, and binary
+media types. Unproven relationships conservatively require a major release;
+documentation-only or semantically equivalent edits may remain patches.
+Effective object cardinalities include bounds already implied by required
+fields; an equivalent explicit minimum can remain a patch. String and map-key
+lengths are UTF-16 code units. Format validators define a restricted dialect
+profile, not full email/URI standards compliance. Admission rejects known
+impossible format-length and map-key/count combinations, not every uninhabited
+schema; see the [contracts domain guide](packages/features/cms-repository/src/contracts/README.md).
+
+Requirements use bounded exact, caret, tilde, comparator, or OR ranges such as
+`^1.0.0 || ^2.0.0`. Their compatibility is set-based: equivalent spellings are
+patches, expansions are minors, and loss of any accepted version is major.
+Optional `supportRanges` separates evidence partitions from range spelling:
+one to four nonempty subsets must cover the accepted set, and omission means
+`[versionRange]`. Each support range needs a published release witness that
+jointly satisfies that capability's requirements to the same contract. A
+literal OR does not automatically require separate evidence for both branches.
+Yanking a dependency does not erase historical witnesses. Installation selection
+checks the whole explicitly proposed graph and excludes yanked pins in every
+replacement, while historical stored selections remain readable.
+
+Compatibility reports distinguish `validEvolution` (identity, ownership and
+versioning policy) from `consumerCompatible` (old consumers with pinned output
+projection). Neither proves that a provider serves an old release. Prerelease
+targets may evolve before stabilization; the catalogue still checks them
+against the latest stable release in their own major. A future prerelease does
+not block a patch to the current stable version.
+
+Conformance suites can declare exact dependency profiles. A scenario's optional
+`profiles` selects known profiles; omission applies to all, and every profile
+needs an applicable scenario. Validate each applicable scenario and its profile's
+transitive requirements, external setup/verification calls and typed captures.
+Each exercised root support range needs a matching profile actually calling
+that root capability, not merely selecting a release. Coverage is descriptive
+both in aggregate and per profile; it does not prove every version/combination.
+
+Calls now declare bounded keyed replay, operation completion, eventual sync
+queries and cursor pagination. Literal template escapes and JSON Pointer
+captures cover objects, arrays and asserted map entries; overlapping assertion
+paths reject in V1. See [conformance controls](packages/features/cms-repository/fixtures/contracts/protocol-v1/conformance-controls.md).
+Fresh disposable isolation applies per applicable scenario/profile pair.
+Runtime execution and passing-provider attestations remain outside contracts.
+
+Capabilities may carry deprecation metadata: its presence marks them as
+deprecated and requires at least one of `reason`, `replacedBy`, or `sunsetAt`.
+A replacement currently identifies another capability in the same release.
+Contract releases
+are immutable and carry their publisher ID; the catalogue records the actual
+publication time. It may attach optional deprecation metadata or yank a release
+without changing its digest. A newer release does not automatically deprecate an
+older one, and `sunsetAt` is informational rather than an automatic cutoff.
+
+For Protocol v1 installation planning, select one release per contract per site
+and check the full selected graph before applying an upgrade. Reject conflicts
+with a useful dependency path; do not silently upgrade unrelated consumers.
+In-flight operations and keyed retries must keep their original release,
+dependency selections and provider context. Migration, cutover, and rollback
+tests belong to installations and runtime orchestration, not release admission.
 
 ### 4. Idempotency, retries, rate limits, and errors
 
@@ -208,12 +285,18 @@ Every capability must declare protocol behavior in addition to its data
 schema:
 
 ```ts
-type CapabilityBehavior = {
-    effect: "query" | "command";
-    idempotency: "natural" | "keyed" | "unsafe";
-    execution: "sync" | "operation";
-};
+type CapabilityBehavior =
+    | { effect: "query"; execution: "sync" | "operation" }
+    | {
+          effect: "command";
+          idempotency: "natural" | "keyed" | "none";
+          execution: "sync" | "operation";
+      };
 ```
+
+Queries have no business effect and need no idempotency declaration. Commands
+declare whether replay is naturally safe, protected by an invocation key, or
+has no idempotency guarantee (`none`).
 
 An idempotency key belongs to the invocation envelope and transport, not to
 each business input schema. For a keyed command, the provider guarantees:
@@ -225,7 +308,7 @@ each business input schema. For a keyed command, the provider guarantees:
 - conformance includes a replay test.
 
 The gateway may retry queries, naturally idempotent commands, and keyed
-commands carrying a key. It must never retry an unsafe command automatically.
+commands carrying a key. It must never retry a `none` command automatically.
 
 Every error response carries a stable code and request ID, plus retry
 information when relevant. Protocol-level errors include at least
@@ -234,6 +317,9 @@ information when relevant. Protocol-level errors include at least
 The gateway preserves a narrow response-header allowlist including
 `Retry-After`, `ETag`, `Cache-Control`, `Content-Disposition`, and range
 headers.
+HEAD has no response body: its compiled error envelope names the reserved
+`x-ulvia-error-code` and `x-ulvia-request-id` headers, containing JSON-percent
+encoded strings. This preserves error identity even when codes share a status.
 
 ### 5. Operations and change feeds
 
@@ -438,11 +524,18 @@ runtimes -> surfaces -> resources -> features -> foundation
 - `surfaces/` mounts features into HTTP applications.
 - `runtimes/` select adapters, read environment, and start processes.
 
-The new protocol must follow the same direction. Contracts and validation
-belong in features; official contract and provider manifests belong in
-resources; gateway routes belong in surfaces; provider and CMS composition
-belongs in runtimes. Persistence and network adapters remain explicit
-composition-root choices.
+The new protocol must follow the same direction. Contract, provider and future
+collection definitions and validation belong to one feature package,
+`@bernouy/cms-repository`, with separate domains and explicit public subpaths.
+The current `./contracts` and `./providers` entrypoints expose pure logic and
+models; the package root exports types only. `./collections` remains planned
+and is not exported yet. Immutable releases and manifests remain distinct from
+site installation state, and pure installation/report validators do not perform
+live connections or gateway execution.
+
+Official contract and provider manifests belong in resources; gateway routes
+belong in surfaces; provider and CMS composition belongs in runtimes. Persistence
+and network adapters remain explicit composition-root choices.
 
 ## Working in the workspace
 
