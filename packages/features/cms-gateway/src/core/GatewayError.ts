@@ -8,7 +8,9 @@ export type GatewayErrorCode =
     | "invalid_provider_response"
     | "unsupported_behavior"
     | "stale_route"
-    | "transport_failure";
+    | "transport_failure"
+    | "media_busy"
+    | "media_unavailable";
 
 export class GatewayError extends Error {
     constructor(

@@ -1,5 +1,5 @@
 import { resolveRequestSubject } from "@bernouy/cms-auth";
-import { handleGatewayFileGet, handleGatewayHttpCall } from "@bernouy/cms-gateway/handlers";
+import { handleGatewayFileGet, handleGatewayHttpCall, handleGatewayImageGet } from "@bernouy/cms-gateway/handlers";
 import type { Middleware } from "@bernouy/http-runner";
 import type { ControlCmsState } from "../types";
 
@@ -21,6 +21,39 @@ export function mountControlCapabilityRoutes(state: ControlCmsState, guard: Midd
         },
         [guard],
     );
+    if (state.configuration.capabilityGateway.images) {
+        state.runner.group(
+            "/api/image",
+            (imageRunner) => {
+                imageRunner.setDefaultEndpoint("GET", (request) => handleControlCapabilityImage(request, state));
+            },
+            [guard],
+        );
+    }
+}
+
+export async function handleControlCapabilityImage(request: Request, state: ControlCmsState): Promise<Response> {
+    const configured = state.configuration.capabilityGateway;
+    if (!configured?.images) {
+        return new Response(null, { status: 404 });
+    }
+    const subject = await resolveRequestSubject(state.auth, request).catch(() => null);
+    if (!subject) {
+        return new Response(null, { status: 401 });
+    }
+    let administrator: boolean;
+    try {
+        administrator = await configured.isAdministrator(subject);
+    } catch {
+        return new Response(null, { status: 503 });
+    }
+    return handleGatewayImageGet(request, {
+        siteId: configured.siteId,
+        images: configured.images,
+        origin: "control",
+        actor: { kind: administrator ? "administrator" : "user", subjectId: subject.identifier },
+        prefix: `${state.runner.basePath === "/" ? "" : state.runner.basePath}/api/image`,
+    });
 }
 
 export async function handleControlCapabilityFile(request: Request, state: ControlCmsState): Promise<Response> {

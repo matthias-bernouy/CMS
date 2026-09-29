@@ -128,7 +128,9 @@ export async function mountProductionSurfaces(
         responsivePrivateSourceImagesEnabled,
         analytics: features.analytics,
         identities: features.identities,
-        ...(gateway ? { capabilityGateway: { siteId: gateway.siteId, invoker: gateway.invoker } } : {}),
+        ...(gateway
+            ? { capabilityGateway: { siteId: gateway.siteId, invoker: gateway.invoker, images: gateway.images } }
+            : {}),
         analyticsVisitorSecret: options.analyticsVisitorSecret,
         analyticsSiteScope: env.DELIVERY_PUBLIC_URL,
         analyticsTrustProxy: env.ANALYTICS_TRUST_PROXY,

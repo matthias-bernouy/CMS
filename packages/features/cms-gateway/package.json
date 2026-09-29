@@ -12,7 +12,8 @@
         "./identity": "./src/exports/identity/index.ts",
         "./identity/requestScope": "./src/exports/identity/requestScope.ts",
         "./mongo": "./src/exports/mongo.ts",
-        "./media": "./src/exports/media.ts",
+        "./media": "./src/exports/media/index.ts",
+        "./media/local-fs": "./src/exports/media/local-fs.ts",
         "./node-http": "./src/exports/node-http.ts",
         "./sharp": "./src/exports/sharp.ts"
     },

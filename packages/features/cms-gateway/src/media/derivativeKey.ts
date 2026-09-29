@@ -7,8 +7,13 @@ export interface ProviderMediaIdentity {
     readonly releaseDigest: `sha256:${string}`;
     readonly capabilityId: string;
     readonly fileId: string;
-    /** Immutable byte generation, supplied by the provider file contract. */
+    /** Immutable fingerprint of the file bytes returned by the provider. */
     readonly generation: string;
+}
+
+export async function providerByteGeneration(bytes: Uint8Array): Promise<`sha256:${string}`> {
+    const hash = new Uint8Array(await crypto.subtle.digest("SHA-256", Uint8Array.from(bytes)));
+    return `sha256:${Array.from(hash, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 }
 
 export interface DerivativeRecipe {

@@ -23,17 +23,23 @@ export interface GatewayHttpNetwork {
 export interface HttpGatewayTransportOptions {
     readonly network: GatewayHttpNetwork;
     readonly maxResponseBytes?: number;
+    readonly maxBinaryResponseBytes?: number;
     readonly timeoutMs?: number;
 }
 
 export class HttpGatewayTransport implements GatewayTransport {
     readonly #network: GatewayHttpNetwork;
     readonly #maxResponseBytes: number;
+    readonly #maxBinaryResponseBytes: number;
     readonly #timeoutMs: number;
 
     constructor(options: HttpGatewayTransportOptions) {
         this.#network = options.network;
         this.#maxResponseBytes = positiveBound(options.maxResponseBytes ?? 1024 * 1024, "maxResponseBytes");
+        this.#maxBinaryResponseBytes = positiveBound(
+            options.maxBinaryResponseBytes ?? 10 * 1024 * 1024,
+            "maxBinaryResponseBytes",
+        );
         this.#timeoutMs = positiveBound(options.timeoutMs ?? 15_000, "timeoutMs");
     }
 
@@ -62,7 +68,7 @@ export class HttpGatewayTransport implements GatewayTransport {
             const maximum =
                 request.capability.output.type === "binary" &&
                 request.binding.response.successStatuses.includes(response.status)
-                    ? Math.min(this.#maxResponseBytes, request.capability.output.maxBytes)
+                    ? Math.min(this.#maxBinaryResponseBytes, request.capability.output.maxBytes)
                     : this.#maxResponseBytes;
             const bytes = await readBounded(response, maximum);
             if (request.binding.response.successStatuses.includes(response.status)) {

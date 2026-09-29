@@ -4,6 +4,7 @@ import type { CatalogueContractRelease } from "@bernouy/cms-repository/contracts
 import type { CatalogueProviderManifest } from "@bernouy/cms-repository/providers/catalogue";
 import type { StoredProviderInstallation } from "@bernouy/cms-repository/providers/installations";
 import type { ContractSelection } from "@bernouy/cms-repository/providers/selections";
+import type { ProviderMediaIdentity } from "../media/derivativeKey";
 
 export type GatewayActor =
     | { readonly kind: "anonymous" }
@@ -82,6 +83,7 @@ export type GatewayResult =
           readonly kind: "binary";
           readonly bytes: Uint8Array;
           readonly contentType: string;
+          readonly media?: ProviderMediaIdentity;
       })
     | (GatewayResultBase & {
           readonly kind: "declared-error";

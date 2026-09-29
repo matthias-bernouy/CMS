@@ -116,3 +116,36 @@ test("Control mounts authenticated provider file reads", async () => {
             .status,
     ).toBe(401);
 });
+
+test("Control mounts provider derivatives with its authenticated administrator", async () => {
+    const calls: GatewayInvocation[] = [];
+    const runner = new CaptureRunner();
+    const state = {
+        runner,
+        auth: { getSubject: async () => ({ identifier: "cms-admin-1" }) },
+        configuration: {
+            capabilityGateway: {
+                siteId: "site-a",
+                isAdministrator: async () => true,
+                invoker: { invoke: async () => ({ kind: "success", requestId: "unused", status: 200 }) },
+                images: {
+                    get: async (invocation: GatewayInvocation, width: number) => {
+                        calls.push(invocation);
+                        return { bytes: new Uint8Array([7]), etag: '"test"', width, height: 40 };
+                    },
+                },
+            },
+        },
+    } as unknown as ControlCmsState;
+    mountControlCapabilityRoutes(state, (_request, next) => next());
+    const response = await runner.handlers.get("GET /api/image")!(
+        new Request("http://control/api/image/files/file.read/photo-1/128.webp"),
+    );
+    expect(response.status).toBe(200);
+    expect(calls[0]).toMatchObject({
+        siteId: "site-a",
+        origin: "control",
+        actor: { kind: "administrator", subjectId: "cms-admin-1" },
+        input: { fileId: "photo-1" },
+    });
+});

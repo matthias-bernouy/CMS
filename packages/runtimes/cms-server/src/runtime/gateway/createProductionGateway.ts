@@ -4,6 +4,9 @@ import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/node-http";
 import type { IdentityService } from "@bernouy/cms-gateway/identity";
+import { ProviderImageService } from "@bernouy/cms-gateway/media";
+import { LocalProviderImageStore } from "@bernouy/cms-gateway/media/local-fs";
+import { SharpImageTransformer } from "@bernouy/cms-gateway/sharp";
 import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
 import {
     MongoProviderManifestCatalogue,
@@ -22,6 +25,7 @@ export async function createProductionGateway(
     legacyIdentities: IdentityService,
     siteId: string,
     administratorEmail: string,
+    mediaDirectory: string,
 ) {
     const releases = new MongoReleaseCatalogue(db);
     const manifests = new MongoProviderManifestCatalogue(db, releases);
@@ -48,9 +52,13 @@ export async function createProductionGateway(
         transport: new HttpGatewayTransport({ network }),
         authorize: access.authorize,
     });
+    const imageStore = new LocalProviderImageStore(mediaDirectory);
+    await imageStore.initialize();
+    const images = new ProviderImageService({ invoker, transformer: new SharpImageTransformer(), store: imageStore });
     return {
         siteId,
         invoker,
+        images,
         isAdministrator: access.isAdministrator,
     };
 }

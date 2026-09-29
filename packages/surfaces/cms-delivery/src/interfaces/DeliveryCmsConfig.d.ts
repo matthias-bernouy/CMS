@@ -9,6 +9,7 @@ import type {
 } from "@bernouy/cms-content/files/serving";
 import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
+import type { ProviderImageService } from "@bernouy/cms-gateway/media";
 import type {
     SourceEndpointInterceptor,
     SourceRepository,
@@ -35,7 +36,11 @@ export type DeliveryCmsConfig = {
     /** Federated opaque identity aliases used by source bindings. */
     identities?: IdentityService;
     /** Site-scoped capability invocation supplied by a trusted composition root. */
-    capabilityGateway?: { readonly siteId: string; readonly invoker: GatewayInvoker };
+    capabilityGateway?: {
+        readonly siteId: string;
+        readonly invoker: GatewayInvoker;
+        readonly images?: Pick<ProviderImageService, "get">;
+    };
     /**
      * Resolver for source header secrets. Only composition roots that enforce
      * the appropriate source access policy should provide one.

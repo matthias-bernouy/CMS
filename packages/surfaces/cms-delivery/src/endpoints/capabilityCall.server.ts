@@ -1,5 +1,5 @@
 import { type GatewayActor } from "@bernouy/cms-gateway";
-import { handleGatewayFileGet, handleGatewayHttpCall } from "@bernouy/cms-gateway/handlers";
+import { handleGatewayFileGet, handleGatewayHttpCall, handleGatewayImageGet } from "@bernouy/cms-gateway/handlers";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 
 /** Public surface decides the verified actor; gateway HTTP owns parsing and projection. */
@@ -29,6 +29,20 @@ export async function handleCapabilityFile(request: Request, delivery: DeliveryC
         origin: "delivery",
         actor: await deliveryActor(delivery, request),
         prefix: `${delivery.basePath}/.cms/media`,
+    });
+}
+
+export async function handleCapabilityImage(request: Request, delivery: DeliveryCms): Promise<Response> {
+    const configured = delivery.capabilityGateway;
+    if (!configured?.images) {
+        return new Response(null, { status: 404 });
+    }
+    return handleGatewayImageGet(request, {
+        siteId: configured.siteId,
+        images: configured.images,
+        origin: "delivery",
+        actor: await deliveryActor(delivery, request),
+        prefix: `${delivery.basePath}/.cms/image`,
     });
 }
 

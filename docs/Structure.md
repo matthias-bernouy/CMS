@@ -62,8 +62,8 @@ Feature packages:
   and Light DOM/component structure, not renderer compilation or installation.
 - `@bernouy/cms-gateway`: initial capability invocation boundary. It resolves
   pinned selected releases and ready installations, executes admitted synchronous
-  JSON query bindings through an injected transport, validates outputs, and
-  exposes provider-scoped identity and derivative-key helpers. `./handlers`
+  JSON query and bounded file bindings through an injected transport, validates
+  outputs, and exposes provider-scoped identity and image derivatives. `./handlers`
   provides optional Control and Delivery call envelopes; `./http` and `./node-http`
   provide transport and pinned network adapters, while `./mongo` persists identity
   aliases. The production runtime supplies

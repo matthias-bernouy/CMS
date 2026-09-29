@@ -96,7 +96,7 @@ export class DeliveryCmsContext {
         return this.config.identities;
     }
 
-    get capabilityGateway(): { readonly siteId: string; readonly invoker: GatewayInvoker } | undefined {
+    get capabilityGateway(): DeliveryCmsConfig["capabilityGateway"] {
         return this.config.capabilityGateway;
     }
 

@@ -111,3 +111,33 @@ test("Delivery mounts provider file reads with its verified user", async () => {
         },
     ]);
 });
+
+test("Delivery mounts provider image derivatives behind verified actors", async () => {
+    const runner = new CaptureRunner();
+    const calls: GatewayInvocation[] = [];
+    new DeliveryCms({
+        runner,
+        repository: {} as never,
+        capabilityGateway: {
+            siteId: "site-a",
+            invoker: { invoke: async () => ({ kind: "success", status: 200, requestId: "unused" }) },
+            images: {
+                get: async (invocation, width) => {
+                    calls.push(invocation);
+                    return { bytes: new Uint8Array([width]), etag: '"test"', width, height: 40 };
+                },
+            },
+        },
+    });
+    const response = await runner.defaultHandler(
+        "GET",
+        "/.cms/image",
+    )(new Request("http://site/.cms/image/files/file.read/photo-1/128.webp"));
+    expect(response.status).toBe(200);
+    expect(calls[0]).toMatchObject({
+        siteId: "site-a",
+        origin: "delivery",
+        actor: { kind: "anonymous" },
+        input: { fileId: "photo-1" },
+    });
+});

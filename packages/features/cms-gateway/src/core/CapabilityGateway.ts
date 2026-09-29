@@ -14,6 +14,7 @@ import { GatewayError } from "./GatewayError";
 import { resolveRoute } from "./resolveRoute";
 import { snapshotInvocation } from "./snapshotInvocation";
 import { validateResponse } from "./validateResponse";
+import { providerByteGeneration } from "../media/derivativeKey";
 
 export interface CapabilityGatewayOptions {
     readonly routes: GatewayRouteResolver;
@@ -102,7 +103,22 @@ export class CapabilityGateway {
         if (!(await this.#options.routes.isCurrent(route))) {
             throw new GatewayError("stale_route", "selection or installation changed during invocation");
         }
-        return validateResponse(capability, binding, response, requestId);
+        const result = validateResponse(capability, binding, response, requestId);
+        if (result.kind !== "binary" || typeof input.fileId !== "string") {
+            return result;
+        }
+        return {
+            ...result,
+            media: {
+                siteId: invocation.siteId,
+                installationId: route.installation.installation.id,
+                contractId: invocation.contractId,
+                releaseDigest: route.selection.digest,
+                capabilityId: invocation.capabilityId,
+                fileId: input.fileId,
+                generation: await providerByteGeneration(result.bytes),
+            },
+        };
     }
 
     async #providerSubjectId(

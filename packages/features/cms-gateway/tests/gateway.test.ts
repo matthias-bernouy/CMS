@@ -142,6 +142,23 @@ describe("capability gateway", () => {
         expect(otherInstallation.sent[0]?.providerSubjectId).toBe(alias);
     });
 
+    test("pins provider file identity to the selected installation and returned bytes", async () => {
+        const scope = harness(await gatewayRoute({ binary: true }));
+        scope.setResponse({ status: 200, contentType: "image/png", bytes: new Uint8Array([1, 2, 3]) });
+        const result = await scope.gateway.invoke(invocation(undefined, { fileId: "photo-1" }));
+        expect(result.kind).toBe("binary");
+        if (result.kind === "binary") {
+            expect(result.media).toMatchObject({
+                siteId: "site-a",
+                installationId: "install-a",
+                contractId: "catalog",
+                capabilityId: "item.list",
+                fileId: "photo-1",
+            });
+            expect(result.media?.generation).toMatch(/^sha256:[0-9a-f]{64}$/);
+        }
+    });
+
     test("fails closed on stale routes, commands, and malformed provider responses", async () => {
         const scope = harness(await gatewayRoute());
         scope.setCurrent(false);
