@@ -138,6 +138,53 @@ test("HTTP transport bounds and parses responses through an injected network bou
     await expect(bounded.send(request)).rejects.toMatchObject({ code: "invalid_provider_response" });
 });
 
+test("HTTP transport deadline covers network exchange and a stalled response body", async () => {
+    const route = await gatewayRoute();
+    const request = {
+        requestId: "request-1",
+        siteId: "site-a",
+        installationId: "install-a",
+        endpoint: "https://provider.example.com",
+        providerTokenRef: "${PROVIDER_TOKEN}",
+        release: route.release.admission.release,
+        capability: route.release.admission.release.capabilities[0]!,
+        binding: route.release.admission.bindings[0]!.binding,
+        input: { term: "one" },
+        invocationOrigin: "delivery" as const,
+        actorKind: "anonymous" as const,
+    };
+    const deadlineResult = (transport: HttpGatewayTransport) =>
+        Promise.race([
+            transport.send(request).then(
+                () => "completed",
+                (error: unknown) => (error as Error).name,
+            ),
+            new Promise<string>((resolve) => setTimeout(() => resolve("still-pending"), 250)),
+        ]);
+    const stalledExchange = new HttpGatewayTransport({
+        network: { exchange: async () => new Promise<Response>(() => undefined) },
+        timeoutMs: 10,
+    });
+    expect(await deadlineResult(stalledExchange)).toBe("TimeoutError");
+
+    let cancelled = false;
+    const stalledBody = new HttpGatewayTransport({
+        network: {
+            exchange: async () =>
+                new Response(
+                    new ReadableStream({
+                        cancel() {
+                            cancelled = true;
+                        },
+                    }),
+                ),
+        },
+        timeoutMs: 10,
+    });
+    expect(await deadlineResult(stalledBody)).toBe("TimeoutError");
+    expect(cancelled).toBe(true);
+});
+
 test("gateway validates a real HTTP exchange and classifies malformed responses", async () => {
     const route = await gatewayRoute();
     let response = Response.json({ items: ["one"], ignored: true });

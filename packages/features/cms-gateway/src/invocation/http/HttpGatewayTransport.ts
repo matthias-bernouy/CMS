@@ -7,6 +7,8 @@ import type {
     GatewayTransportResponse,
 } from "cms-gateway/invocation/interfaces/Invocation";
 import { buildHttpInvocation, type PreparedHttpInvocation } from "cms-gateway/invocation/http/buildHttpInvocation";
+import { readBounded } from "cms-gateway/invocation/http/readBounded";
+import { withAbort } from "cms-gateway/invocation/http/withAbort";
 
 export interface GatewayHttpExchange extends PreparedHttpInvocation {
     readonly requestId: string;
@@ -50,7 +52,7 @@ export class HttpGatewayTransport implements GatewayTransport {
     async send(request: GatewayTransportRequest): Promise<GatewayTransportResponse> {
         const prepared = buildHttpInvocation(request);
         const signal = AbortSignal.timeout(this.#timeoutMs);
-        const response = await this.#network.exchange({
+        const exchange: GatewayHttpExchange = {
             ...prepared,
             requestId: request.requestId,
             installationId: request.installationId,
@@ -63,7 +65,8 @@ export class HttpGatewayTransport implements GatewayTransport {
                     ? request.capability.output.mediaTypes.join(", ")
                     : "application/json",
             signal,
-        });
+        };
+        const response = await withAbort(() => this.#network.exchange(exchange), signal);
         try {
             if (response.redirected || (response.status >= 300 && response.status < 400)) {
                 throw new TypeError("provider redirects are forbidden");
@@ -75,7 +78,7 @@ export class HttpGatewayTransport implements GatewayTransport {
                 request.binding.response.successStatuses.includes(response.status)
                     ? Math.min(this.#maxBinaryResponseBytes, request.capability.output.maxBytes)
                     : this.#maxResponseBytes;
-            const bytes = await readBounded(response, maximum);
+            const bytes = await readBounded(response, maximum, signal);
             if (request.binding.response.successStatuses.includes(response.status)) {
                 if (request.capability.output.type === "binary") {
                     return { status: response.status, contentType, bytes, responseHeaders };
@@ -113,6 +116,9 @@ export class HttpGatewayTransport implements GatewayTransport {
                 ...(Object.hasOwn(fields, "output") ? { output: fields.output } : {}),
             };
         } catch {
+            if (signal.aborted) {
+                throw signal.reason;
+            }
             throw new GatewayError("invalid_provider_response", "provider returned an invalid HTTP response");
         }
     }
@@ -143,34 +149,6 @@ function headError(response: Response, request: GatewayTransportRequest, bytes: 
         throw new TypeError("HEAD error headers are invalid");
     }
     return { status: response.status, errorCode: code };
-}
-
-async function readBounded(response: Response, maximum: number): Promise<Uint8Array> {
-    const reader = response.body?.getReader();
-    if (!reader) {
-        return new Uint8Array();
-    }
-    const chunks: Uint8Array[] = [];
-    let length = 0;
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-            break;
-        }
-        length += value.byteLength;
-        if (length > maximum) {
-            await reader.cancel().catch(() => undefined);
-            throw new TypeError("provider response exceeds the configured byte limit");
-        }
-        chunks.push(value);
-    }
-    const bytes = new Uint8Array(length);
-    let offset = 0;
-    for (const chunk of chunks) {
-        bytes.set(chunk, offset);
-        offset += chunk.byteLength;
-    }
-    return bytes;
 }
 
 function positiveBound(value: number, name: string): number {

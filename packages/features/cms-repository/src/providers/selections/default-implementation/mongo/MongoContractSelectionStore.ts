@@ -70,6 +70,20 @@ export class MongoContractSelectionStore implements ContractSelectionStore {
             dependencyRevision: revision,
             plan,
         };
+        try {
+            assertIJson(record, this.#limits.maxJsonDepth);
+        } catch {
+            throw new ContractSelectionValidationError(
+                "limit_exceeded",
+                "planned selections exceed the document depth limit",
+            );
+        }
+        if (storedRecordBytes(record) > this.#limits.maxDocumentBytes * 4) {
+            throw new ContractSelectionValidationError(
+                "limit_exceeded",
+                "planned selections exceed the document limit",
+            );
+        }
         if (expectedRevision === 0) {
             try {
                 await this.#collection.insertOne({ _id: site, ...structuredClone(record) });
@@ -124,8 +138,12 @@ function readSelectionDocument(
     }
     const { _id, ...record } = document;
     assertIJson(record, limits.maxJsonDepth);
-    if (new TextEncoder().encode(JSON.stringify(record)).byteLength > limits.maxDocumentBytes * 4) {
+    if (storedRecordBytes(record) > limits.maxDocumentBytes * 4) {
         throw new Error("Stored contract selections exceed the document limit");
     }
     return deepFreeze(structuredClone(record));
+}
+
+function storedRecordBytes(record: StoredContractSelections): number {
+    return new TextEncoder().encode(JSON.stringify(record)).byteLength;
 }

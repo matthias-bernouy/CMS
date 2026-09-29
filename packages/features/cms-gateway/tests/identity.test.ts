@@ -17,6 +17,7 @@ test("gateway reuses a provider alias already bound by the Source identity store
     await oldIdentities.bind("user-1", { authority: "commerce", kind: "user", value: 184 });
     const identities = new ProviderIdentityAliases(oldIdentities);
     expect(await identities.getOrCreate({ providerId: "commerce" }, "user-1")).toBe("184");
+    expect(await identities.resolve({ providerId: "commerce" }, "184")).toBe("user-1");
     expect(await identities.resolve({ providerId: "commerce" }, 184)).toBe("user-1");
     expect(await oldIdentities.resolve({ authority: "cms", kind: "user", value: "user-1" }, "commerce")).toBe(184);
 });
@@ -36,4 +37,5 @@ test("numeric and string legacy aliases cannot collide in the gateway header", a
     const identities = new ProviderIdentityAliases(oldIdentities);
     await expect(identities.getOrCreate({ providerId: "commerce" }, "user-1")).rejects.toThrow("ambiguous");
     await expect(identities.getOrCreate({ providerId: "commerce" }, "user-2")).rejects.toThrow("ambiguous");
+    await expect(identities.resolve({ providerId: "commerce" }, "184")).rejects.toThrow("ambiguous");
 });

@@ -2,12 +2,15 @@ import { deepFreeze } from "cms-repository/exports/contracts/protocol";
 import { parseDateTime } from "cms-repository/providers/manifests/core/parsing/identifiers";
 import { parseProviderInstallation } from "../../core/parsing/parseProviderInstallation";
 import { parseProviderRuntimeReport } from "../../core/reports/parseProviderRuntimeReport";
+import { installationSelectionDigest } from "../../core/selectionRevision";
 import type { ProviderInstallationLimits } from "../../core/limits";
 import type { StoredProviderInstallation } from "../../interfaces/ProviderInstallationStore";
 
 export interface InstallationDocument extends StoredProviderInstallation {
     readonly _id: string;
     readonly siteId: string;
+    /** Cached digest of approved configuration; older records are backfilled on first use. */
+    readonly selectionDigest?: string;
 }
 
 export function readInstallationDocument(
@@ -36,10 +39,11 @@ export function readInstallationDocument(
     });
 }
 
-export function installationDocument(record: StoredProviderInstallation): InstallationDocument {
+export async function installationDocument(record: StoredProviderInstallation): Promise<InstallationDocument> {
     return {
         _id: record.installation.id,
         siteId: record.installation.siteId,
         ...structuredClone(record),
+        selectionDigest: await installationSelectionDigest(record.installation),
     };
 }

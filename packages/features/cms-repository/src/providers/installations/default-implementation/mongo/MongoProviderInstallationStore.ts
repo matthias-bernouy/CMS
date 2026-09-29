@@ -15,7 +15,6 @@ import {
 } from "../../core/lifecycle/state";
 import { parseProviderInstallation } from "../../core/parsing/parseProviderInstallation";
 import { parseOpaqueId } from "../../core/parsing/fields";
-import { installationSelectionRevision } from "../../core/selectionRevision";
 import type { ProviderInstallationStatus } from "../../interfaces/ProviderInstallation";
 import type {
     ProviderInstallationApprovalCommand,
@@ -26,6 +25,7 @@ import type {
     StoredProviderInstallation,
 } from "../../interfaces/ProviderInstallationStore";
 import { installationDocument, type InstallationDocument, readInstallationDocument } from "./record";
+import { mongoInstallationSelectionRevision } from "./selectionMetadata";
 
 /** Durable site-scoped installation state. Mongo's revision predicate fences concurrent writers. */
 export class MongoProviderInstallationStore implements ProviderInstallationStore {
@@ -57,14 +57,7 @@ export class MongoProviderInstallationStore implements ProviderInstallationStore
 
     async selectionRevision(siteId: string): Promise<string> {
         const site = parseOpaqueId(siteId, "$.siteId");
-        const records = await this.#collection
-            .find({ siteId: site }, { projection: { installation: 1 } })
-            .sort({ _id: 1 })
-            .toArray();
-        return installationSelectionRevision(
-            site,
-            records.map((record) => record.installation),
-        );
+        return mongoInstallationSelectionRevision(this.#collection, site);
     }
 
     async get(scope: ProviderInstallationScope): Promise<StoredProviderInstallation | null> {
@@ -95,8 +88,9 @@ export class MongoProviderInstallationStore implements ProviderInstallationStore
             ),
             revision: 1,
         };
+        const document = await installationDocument(record);
         try {
-            await this.#collection.insertOne(installationDocument(record));
+            await this.#collection.insertOne(document);
         } catch (error) {
             if (error instanceof MongoServerError && error.code === 11000) {
                 throw new ProviderInstallationWorkflowError(
@@ -106,7 +100,7 @@ export class MongoProviderInstallationStore implements ProviderInstallationStore
             }
             throw error;
         }
-        return readInstallationDocument(installationDocument(record), this.#options.limits);
+        return readInstallationDocument(document, this.#options.limits);
     }
 
     async reapprove(
@@ -190,6 +184,7 @@ export class MongoProviderInstallationStore implements ProviderInstallationStore
 
     private async replace(before: StoredProviderInstallation, after: StoredProviderInstallation) {
         const scope = installationScope(before);
+        const document = await installationDocument(after);
         const result = await this.#collection.replaceOne(
             {
                 _id: scope.installationId,
@@ -197,11 +192,11 @@ export class MongoProviderInstallationStore implements ProviderInstallationStore
                 revision: before.revision,
                 "installation.status": { $ne: "revoked" },
             },
-            installationDocument(after),
+            document,
         );
         if (result.matchedCount !== 1) {
             throw new ProviderInstallationWorkflowError("revision_conflict", "Installation revision changed");
         }
-        return readInstallationDocument(installationDocument(after), this.#options.limits);
+        return readInstallationDocument(document, this.#options.limits);
     }
 }

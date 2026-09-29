@@ -35,27 +35,32 @@ export class ProviderIdentityAliases implements ProviderIdentityService {
     }
 
     async resolve(scope: ProviderIdentityScope, providerSubjectId: string | number): Promise<string | null> {
+        const providerId = providerAuthority(scope);
         const subject = await this.identities.resolve(
-            { authority: providerAuthority(scope), kind: "user", value: providerSubjectId },
+            { authority: providerId, kind: "user", value: providerSubjectId },
             "cms",
         );
-        if (subject === null) {
+        const numeric = typeof providerSubjectId === "string" ? numericAlias(providerSubjectId) : null;
+        const legacy =
+            numeric === null
+                ? null
+                : await this.identities.resolve({ authority: providerId, kind: "user", value: numeric }, "cms");
+        if (subject !== null && legacy !== null && subject !== legacy) {
+            throw new TypeError("provider identity alias is ambiguous over HTTP");
+        }
+        const resolved = subject ?? legacy;
+        if (resolved === null) {
             return null;
         }
-        if (typeof subject !== "string") {
+        if (typeof resolved !== "string") {
             throw new TypeError("CMS identity subject is invalid");
         }
-        return subject;
+        return resolved;
     }
 
     private async outboundAlias(providerId: string, cmsSubjectId: string, value: IdentityValue): Promise<string> {
         const alias = outboundAlias(value);
-        const alternate =
-            typeof value === "number"
-                ? alias
-                : Number.isFinite(Number(alias)) && String(Number(alias)) === alias
-                  ? Number(alias)
-                  : null;
+        const alternate = typeof value === "number" ? alias : numericAlias(alias);
         if (alternate !== null) {
             const claimant = await this.identities.resolve(
                 { authority: providerId, kind: "user", value: alternate },
@@ -87,4 +92,9 @@ function outboundAlias(value: IdentityValue): string {
         throw new TypeError("provider identity alias cannot be transmitted");
     }
     return alias;
+}
+
+function numericAlias(value: string): number | null {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) && String(numeric) === value ? numeric : null;
 }

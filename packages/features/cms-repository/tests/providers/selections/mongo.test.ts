@@ -49,3 +49,19 @@ test("Mongo selections survive adapter recreation and reject stale revisions", a
     await expect(recreated.replace(siteId, [], 1)).rejects.toMatchObject({ code: "revision_conflict" });
     expect(await first.get(siteId)).toEqual(cleared);
 });
+
+test("Mongo selections reject a generated plan that would fail the stored document limit", async () => {
+    const graph = await graphFixture();
+    const collection = new Collection();
+    const db = { collection: () => collection } as unknown as Db;
+    const store = new MongoContractSelectionStore(
+        db,
+        {
+            capture: async () => ({ ...graph.context, revision: "dependencies:1" }),
+            isCurrent: async () => true,
+        },
+        { maxDocumentBytes: 50, maxJsonDepth: 16, maxSelections: 128, maxInstallations: 256, maxDependencies: 8192 },
+    );
+    await expect(store.replace(siteId, [], 0)).rejects.toMatchObject({ code: "limit_exceeded" });
+    expect(collection.documents.size).toBe(0);
+});

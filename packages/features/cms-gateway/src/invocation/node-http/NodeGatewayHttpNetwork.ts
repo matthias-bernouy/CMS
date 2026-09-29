@@ -1,6 +1,7 @@
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import type { GatewayHttpExchange, GatewayHttpNetwork } from "cms-gateway/invocation/http/HttpGatewayTransport";
+import { withAbort } from "cms-gateway/invocation/http/withAbort";
 import {
     isLoopbackLiteral,
     selectGatewayAddress,
@@ -36,12 +37,12 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
         }
         assertSafeApplicationHeaders(request);
         const hostname = origin.hostname.replace(/^\[|\]$/g, "");
-        const addresses = await abortable(
+        const addresses = await withAbort(
             () => (this.#options.resolveAddresses ?? defaultResolveAddresses)(hostname),
             request.signal,
         );
         const address = selectGatewayAddress(origin, addresses);
-        const token = await abortable(() => this.#options.resolveToken(request.providerTokenRef), request.signal);
+        const token = await withAbort(() => this.#options.resolveToken(request.providerTokenRef), request.signal);
         if (!/^[\x21-\x7e]{1,4096}$/.test(token)) {
             throw new TypeError("provider credential is unavailable");
         }
@@ -53,27 +54,6 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
             ...(request.body === undefined ? {} : { body: request.body }),
             signal: request.signal,
         });
-    }
-}
-
-async function abortable<T>(work: () => Promise<T>, signal: AbortSignal): Promise<T> {
-    if (signal.aborted) {
-        throw signal.reason;
-    }
-    let onAbort: () => void = () => undefined;
-    try {
-        return await Promise.race([
-            work(),
-            new Promise<never>((_resolve, reject) => {
-                onAbort = () => reject(signal.reason);
-                signal.addEventListener("abort", onAbort, { once: true });
-                if (signal.aborted) {
-                    onAbort();
-                }
-            }),
-        ]);
-    } finally {
-        signal.removeEventListener("abort", onAbort);
     }
 }
 
