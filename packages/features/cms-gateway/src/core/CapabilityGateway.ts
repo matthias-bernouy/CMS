@@ -56,17 +56,14 @@ export class CapabilityGateway implements GatewayAccessProbe {
         const invocation = snapshotInvocation(value);
         const { route, release, capability, binding } = await this.#authorizedRoute(invocation);
         const input = snapshotInput(invocation.input, capability);
-        if (!(await this.#options.routes.isCurrent(route))) {
-            throw new GatewayError("stale_route", "selection or installation changed before invocation");
-        }
         const providerSubjectId = await this.#providerSubjectId(invocation.actor, capability, route);
         if (!(await this.#options.routes.isCurrent(route))) {
             throw new GatewayError("stale_route", "installation changed while resolving actor identity");
         }
         const requestId = crypto.randomUUID();
-        let response;
+        let result: GatewayResult;
         try {
-            response = await this.#options.transport.send({
+            const response = await this.#options.transport.send({
                 requestId,
                 siteId: invocation.siteId,
                 installationId: route.installation.installation.id,
@@ -80,16 +77,23 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 actorKind: invocation.actor.kind,
                 ...(providerSubjectId ? { providerSubjectId } : {}),
             });
+            if (!(await this.#options.routes.isCurrent(route))) {
+                throw new GatewayError("stale_route", "selection or installation changed during invocation");
+            }
+            result = validateResponse(capability, binding, response, requestId);
         } catch (error) {
+            if (capability.behavior.effect === "command") {
+                throw new GatewayError(
+                    "outcome_unknown",
+                    "provider command may have completed; reconcile using the request ID before retrying",
+                    requestId,
+                );
+            }
             if (error instanceof GatewayError) {
                 throw error;
             }
             throw new GatewayError("transport_failure", "provider transport failed");
         }
-        if (!(await this.#options.routes.isCurrent(route))) {
-            throw new GatewayError("stale_route", "selection or installation changed during invocation");
-        }
-        const result = validateResponse(capability, binding, response, requestId);
         if (result.kind !== "binary" || typeof input.fileId !== "string") {
             return result;
         }

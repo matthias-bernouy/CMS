@@ -55,7 +55,7 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
         if (!(error instanceof GatewayError)) {
             return jsonResponse({ error: { code: "internal_error" } }, 500);
         }
-        return jsonResponse({ error: { code: error.code } }, errorStatus(error, options.actor));
+        return jsonResponse({ error: { code: error.code } }, errorStatus(error, options.actor), error.requestId);
     }
 }
 
@@ -85,6 +85,8 @@ function errorStatus(error: GatewayError, actor: GatewayActor): number {
     switch (error.code) {
         case "invalid_input":
             return 400;
+        case "outcome_unknown":
+            return 409;
         case "not_selected":
             return 404;
         case "not_authorized":

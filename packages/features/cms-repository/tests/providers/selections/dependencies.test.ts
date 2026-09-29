@@ -127,3 +127,40 @@ test("catalogue dependency revision tracks release, manifest, and installation c
     await fixture.manifests.setYank("ulvia.example", "1.0.0", { reason: "retired" });
     expect(await dependencies.isCurrent(siteId, afterRelease.revision)).toBe(false);
 });
+
+test("metadata revisions fence changes without loading catalogue artifacts on the gateway path", async () => {
+    let releaseRevision = "release-1";
+    let listCalls = 0;
+    const releases = {
+        revision: async () => releaseRevision,
+        list: async () => {
+            listCalls += 1;
+            return [];
+        },
+    } as unknown as ConstructorParameters<typeof CatalogueSelectionDependencies>[0];
+    const manifests = {
+        revision: async () => "manifest-1",
+        list: async () => {
+            listCalls += 1;
+            return [];
+        },
+    } as unknown as ConstructorParameters<typeof CatalogueSelectionDependencies>[1];
+    const installations = {
+        revision: async () => "installation-1",
+        list: async () => {
+            listCalls += 1;
+            return [];
+        },
+    } as unknown as ConstructorParameters<typeof CatalogueSelectionDependencies>[2];
+    const dependencies = new CatalogueSelectionDependencies(releases, manifests, installations);
+    const revision = await dependencies.revision(siteId);
+    expect(listCalls).toBe(0);
+    expect(await dependencies.isCurrent(siteId, revision)).toBe(true);
+    expect(listCalls).toBe(0);
+    const snapshot = await dependencies.capture(siteId);
+    expect(snapshot.revision).toBe(revision);
+    expect(listCalls).toBe(3);
+    releaseRevision = "release-2";
+    expect(await dependencies.isCurrent(siteId, revision)).toBe(false);
+    expect(listCalls).toBe(3);
+});

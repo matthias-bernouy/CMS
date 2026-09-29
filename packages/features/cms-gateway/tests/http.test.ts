@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { CapabilityGateway } from "@bernouy/cms-gateway";
+import { CapabilityGateway, GatewayError } from "@bernouy/cms-gateway";
 import { handleGatewayFileGet, handleGatewayHttpCall } from "@bernouy/cms-gateway/handlers";
 import { buildHttpInvocation, HttpGatewayTransport, type GatewayHttpExchange } from "@bernouy/cms-gateway/http";
 import { gatewayRoute } from "./fixtures";
@@ -69,6 +69,30 @@ test("synchronous command sends validated JSON through its admitted POST binding
         body: '{"term":"saved"}',
         headers: { "content-type": "application/json" },
     });
+});
+
+test("HTTP command uncertainty is explicit and carries a reconciliation request ID", async () => {
+    const response = await handleGatewayHttpCall(
+        new Request("https://site.example/.cms/call/catalog/item.list", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: '{"term":"one"}',
+        }),
+        {
+            siteId: "site-a",
+            origin: "delivery",
+            actor: { kind: "anonymous" },
+            prefix: "/.cms/call",
+            invoker: {
+                invoke: async () => {
+                    throw new GatewayError("outcome_unknown", "uncertain", "request-123");
+                },
+            },
+        },
+    );
+    expect(response.status).toBe(409);
+    expect(response.headers.get("x-ulvia-request-id")).toBe("request-123");
+    expect(await response.json()).toEqual({ error: { code: "outcome_unknown" } });
 });
 
 test("HTTP transport bounds and parses responses through an injected network boundary", async () => {

@@ -185,6 +185,52 @@ describe("capability gateway", () => {
         }
     });
 
+    test("marks a dispatched command outcome unknown when its route changes or response fails", async () => {
+        const route = await gatewayRoute({ behavior: { effect: "command", execution: "sync", idempotency: "none" } });
+        let current = true;
+        let sent = 0;
+        const gateway = new CapabilityGateway({
+            routes: { resolve: async () => route, isCurrent: async () => current },
+            transport: {
+                send: async () => {
+                    sent += 1;
+                    current = false;
+                    return { status: 200, contentType: "application/json", output: { items: ["saved"] } };
+                },
+            },
+            authorize: async () => true,
+            now: () => NOW,
+        });
+        await expect(gateway.invoke(invocation())).rejects.toMatchObject({
+            code: "outcome_unknown",
+            requestId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+        });
+        expect(sent).toBe(1);
+
+        current = true;
+        const failing = new CapabilityGateway({
+            routes: { resolve: async () => route, isCurrent: async () => true },
+            transport: {
+                send: async () => {
+                    throw new TypeError("connection lost");
+                },
+            },
+            authorize: async () => true,
+            now: () => NOW,
+        });
+        await expect(failing.invoke(invocation())).rejects.toMatchObject({ code: "outcome_unknown" });
+
+        const malformed = new CapabilityGateway({
+            routes: { resolve: async () => route, isCurrent: async () => true },
+            transport: {
+                send: async () => ({ status: 200, contentType: "application/json", output: { items: [42] } }),
+            },
+            authorize: async () => true,
+            now: () => NOW,
+        });
+        await expect(malformed.invoke(invocation())).rejects.toMatchObject({ code: "outcome_unknown" });
+    });
+
     test("fails closed on stale routes, commands, and malformed provider responses", async () => {
         const scope = harness(await gatewayRoute());
         scope.setCurrent(false);

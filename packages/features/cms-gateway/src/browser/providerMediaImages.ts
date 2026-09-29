@@ -1,4 +1,4 @@
-import { buildProviderImageAttributes, validDimension } from "./providerMediaAttributes";
+import { buildProviderImageAttributes, isProviderMediaUrl, validDimension } from "./providerMediaAttributes";
 
 type Owned = Map<string, { generated: string; previous: string | null }>;
 const generated = new WeakMap<HTMLImageElement, Owned>();
@@ -26,7 +26,7 @@ export function syncProviderMediaImage(image: HTMLImageElement): void {
     }
     if (width === null && height === null) {
         clearGenerated(image, previous);
-        setGenerated(image, "src", raw);
+        activatePlainCmsImage(image, raw);
         return;
     }
     if (width === null || height === null || width === 0 || height === 0) {
@@ -44,7 +44,7 @@ export function syncProviderMediaImage(image: HTMLImageElement): void {
     });
     if (!attributes) {
         clearGenerated(image, previous);
-        setGenerated(image, "src", raw);
+        activatePlainCmsImage(image, raw);
         return;
     }
     setGenerated(image, "width", String(attributes.width));
@@ -56,6 +56,28 @@ export function syncProviderMediaImage(image: HTMLImageElement): void {
         clearGeneratedAttribute(image, "srcset");
     }
     setGenerated(image, "src", attributes.src);
+}
+
+function activatePlainCmsImage(image: HTMLImageElement, raw: string): void {
+    const baseURI = image.ownerDocument.baseURI;
+    if (isProviderMediaUrl(raw, baseURI) || isCmsFileUrl(raw, baseURI)) {
+        setGenerated(image, "src", raw);
+    }
+}
+
+function isCmsFileUrl(raw: string, baseURI: string): boolean {
+    try {
+        const base = new URL(baseURI);
+        const url = new URL(raw, base);
+        return (
+            url.origin === base.origin &&
+            !url.search &&
+            !url.hash &&
+            /\/\.cms\/files\/by-id\/[^/]+$/u.test(url.pathname)
+        );
+    } catch {
+        return false;
+    }
 }
 
 export function installProviderMediaImageRuntime(root: Document | Element): { disconnect(): void } {

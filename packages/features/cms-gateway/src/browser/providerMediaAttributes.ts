@@ -52,6 +52,10 @@ function providerMediaRoute(urlValue: string, baseURI = "https://cms.invalid/"):
     }
 }
 
+export function isProviderMediaUrl(urlValue: string, baseURI?: string): boolean {
+    return providerMediaRoute(urlValue, baseURI) !== null;
+}
+
 export function validDimension(value: number): boolean {
     return Number.isSafeInteger(value) && value > 0;
 }

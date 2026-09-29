@@ -62,6 +62,7 @@ test("Mongo installation state survives adapter recreation and fences stale writ
     const db = { collection: () => collection } as unknown as Db;
     const first = new MongoProviderInstallationStore(db, fixture.catalogue, fixture.clock);
     await first.init();
+    const beforeRevision = await first.revision(fixture.scope.siteId);
     const approved = await first.approve({
         candidate: fixture.candidate,
         report: fixture.report,
@@ -69,11 +70,14 @@ test("Mongo installation state survives adapter recreation and fences stale writ
         approvedBy: "admin:owner",
     });
     expect(approved.revision).toBe(1);
+    const approvedRevision = await first.revision(fixture.scope.siteId);
+    expect(approvedRevision).not.toBe(beforeRevision);
     const recreated = new MongoProviderInstallationStore(db, fixture.catalogue, fixture.clock);
     expect((await recreated.get(fixture.scope))?.installation).toEqual(approved.installation);
     expect(await recreated.get({ ...fixture.scope, siteId: "another-site" })).toBeNull();
     const disabled = await first.setStatus(fixture.scope, 1, "disabled");
     expect(disabled.revision).toBe(2);
+    expect(await first.revision(fixture.scope.siteId)).not.toBe(approvedRevision);
     await expect(recreated.setStatus(fixture.scope, 1, "revoked")).rejects.toMatchObject({
         code: "revision_conflict",
     });

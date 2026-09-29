@@ -8,6 +8,7 @@ import { verifyRequirements } from "../../core/catalogue/verifyRequirements";
 import { compareSemVer } from "../../core/compatibility/semver";
 import { ReleaseValidationError } from "../../core/protocol/errors";
 import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../../core/protocol/limits";
+import { catalogueRevision } from "../../core/protocol/revision";
 import { normalizeReleaseDeprecation, normalizeReleaseYank } from "../memory/normalizeReleaseMetadata";
 import type {
     CatalogueContractRelease,
@@ -37,6 +38,12 @@ export class MongoReleaseCatalogue implements ReleaseCatalogue {
         this.#heads = db.collection<ReleaseHead>("cms_contract_heads");
         this.#artifacts = db.collection<ReleaseArtifact>("cms_contract_artifacts");
         this.#limits = Object.freeze({ ...limits });
+    }
+
+    async revision(): Promise<string> {
+        const heads = await this.#heads.find({}, { projection: { _id: 1, revision: 1 } }).toArray();
+        heads.sort((left, right) => (left._id < right._id ? -1 : left._id > right._id ? 1 : 0));
+        return catalogueRevision(heads.map((head) => [head._id, head.revision]));
     }
 
     async get(contractId: string, version: string): Promise<CatalogueContractRelease | null> {
@@ -79,20 +86,6 @@ export class MongoReleaseCatalogue implements ReleaseCatalogue {
         }
         const { contractId, version, publisherId } = admission.release;
         const artifact: ReleaseArtifact = { _id: admission.digest, admission };
-        try {
-            await this.#artifacts.insertOne(structuredClone(artifact));
-        } catch (error) {
-            if (!duplicateKey(error)) {
-                throw error;
-            }
-        }
-        const persisted = await this.#artifacts.findOne({ _id: admission.digest });
-        if (!persisted || (await verifyAdmission(persisted.admission, this.#limits)).digest !== admission.digest) {
-            throw new ReleaseValidationError(
-                "invalid_contract",
-                "persisted release artifact failed integrity verification",
-            );
-        }
         for (;;) {
             const head = await this.#heads.findOne({ _id: contractId });
             const existing = head?.versions.find((entry) => entry.version === version);
@@ -121,6 +114,20 @@ export class MongoReleaseCatalogue implements ReleaseCatalogue {
                 head ? await recordsForHead(head, this.#artifacts, this.#limits) : [],
                 this.#limits,
             );
+            try {
+                await this.#artifacts.insertOne(structuredClone(artifact));
+            } catch (error) {
+                if (!duplicateKey(error)) {
+                    throw error;
+                }
+            }
+            const persisted = await this.#artifacts.findOne({ _id: admission.digest });
+            if (!persisted || (await verifyAdmission(persisted.admission, this.#limits)).digest !== admission.digest) {
+                throw new ReleaseValidationError(
+                    "invalid_contract",
+                    "persisted release artifact failed integrity verification",
+                );
+            }
             const entry: ReleaseVersionEntry = {
                 version,
                 digest: admission.digest,

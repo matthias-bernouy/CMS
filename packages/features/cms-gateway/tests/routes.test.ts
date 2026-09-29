@@ -79,6 +79,26 @@ test("gateway revision fences selection and catalogue changes", async () => {
     expect(await revisionSource.isCurrent("site-a", "invalid")).toBe(false);
 });
 
+test("gateway revision capture uses metadata tokens without materializing dependencies", async () => {
+    let reads = 0;
+    const revisions = new CatalogueGatewayRevisionSource(
+        { get: async () => ({ revision: 1 }) } as never,
+        {
+            revision: async () => {
+                reads += 1;
+                return "metadata-1";
+            },
+            capture: async () => {
+                throw new Error("full catalogue capture is forbidden here");
+            },
+            isCurrent: async (_siteId, value) => value === "metadata-1",
+        } as never,
+    );
+    const token = await revisions.capture("site-a");
+    expect(reads).toBe(1);
+    expect(await revisions.isCurrent("site-a", token)).toBe(true);
+});
+
 test("editor catalogue includes only callable selected query capabilities", async () => {
     const fixture = await gatewayRoute();
     const catalogue = new SelectedGatewayCatalogue(

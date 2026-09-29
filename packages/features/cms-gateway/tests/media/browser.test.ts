@@ -62,6 +62,20 @@ test("bound provider image updates candidates and restores authored attributes",
     expect(image.getAttribute("src")).toBe("/placeholder.png");
 });
 
+test("image activation leaves external sources inert and retains CMS file fallbacks", () => {
+    const image = document.createElement("img");
+    image.setAttribute("data-cms-src", "https://other.example/tracker.png");
+    image.setAttribute("data-cms-width", "800");
+    image.setAttribute("data-cms-height", "600");
+    syncProviderMediaImage(image);
+    expect(image.hasAttribute("src")).toBe(false);
+
+    image.setAttribute("data-cms-src", "/.cms/files/by-id/photo-1");
+    syncProviderMediaImage(image);
+    expect(image.getAttribute("src")).toBe("/.cms/files/by-id/photo-1");
+    expect(image.hasAttribute("srcset")).toBe(false);
+});
+
 test("unresolved provider sizes do not activate an image URL", () => {
     const image = document.createElement("img");
     image.setAttribute("data-cms-src", "/.cms/media/catalog/photo.read/file");

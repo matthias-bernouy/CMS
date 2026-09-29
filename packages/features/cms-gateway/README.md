@@ -9,6 +9,9 @@ compiled binding pin.
 `CapabilityGateway` activates synchronous JSON queries, synchronous natural or
 non-idempotent commands, and bounded binary file reads through an injected
 transport. Keyed commands remain closed until a durable idempotency store exists.
+Once a synchronous command has been dispatched, a transport error, route change,
+or invalid response produces `outcome_unknown` with the request ID. Callers must
+reconcile that request with the provider before retrying the command.
 Delivery exposes provider file reads
 at `/.cms/media/<contract>/<capability>/<fileId>`; Control exposes the same
 capability behind its authenticated `/api/media` route. Both recheck the
@@ -17,7 +20,8 @@ bounded WebP derivatives at `/.cms/image/<contract>/<capability>/<fileId>/<width
 Control uses `/api/image`. Each request reauthorizes the original file before
 looking up its byte-generation key in the local derivative store.
 `./browser` builds bounded `srcset` candidates for same-origin provider media
-URLs and activates resolved `data-cms-src` image bindings. Control and Delivery
+URLs and activates resolved `data-cms-src` image bindings only for same-origin
+CMS media or file routes. Control and Delivery
 expose those helpers in their component bundles for authored Blocs.
 `./node-http` provides a Node network adapter that
 resolves and pins one public address, permits canonical HTTP loopback targets,
@@ -66,9 +70,9 @@ declare the response fields projected into metadata and canonical URLs.
    Add separate fixture-asset byte storage for Mongo release publication.
 2. Exercise the production network composition against real custom and official
    provider fixtures, harden cross-catalogue snapshot consistency, and replace
-   full-catalogue revision scans before large deployments.
+   the metadata revision scans before large deployments.
 3. Add durable idempotency, rate policy, audit, telemetry, and separate host
    entrypoints before activating keyed commands or provider/system calls.
-5. Replace Source image consumers with provider file URLs, move expensive
+4. Replace Source image consumers with provider file URLs, move expensive
    derivative work to durable jobs, and add garbage collection and benchmarks
    before removing the legacy image package.

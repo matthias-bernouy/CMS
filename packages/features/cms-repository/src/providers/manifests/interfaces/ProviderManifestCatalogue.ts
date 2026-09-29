@@ -15,6 +15,8 @@ export interface CatalogueProviderManifest {
 }
 
 export interface ProviderManifestCatalogue {
+    /** Optional token that changes on every publication or yank mutation. */
+    revision?(): Promise<string>;
     findByDigest(digest: ProviderManifestDigest): Promise<CatalogueProviderManifest | null>;
     get(providerId: string, version: string): Promise<CatalogueProviderManifest | null>;
     /** Includes historical yanked versions, ordered by provider ID, then version. */

@@ -7,6 +7,8 @@ export interface ContractSelectionDependencySnapshot extends ContractSelectionCo
 
 /** Composition roots provide coherent snapshots and revision checks; this is not a distributed transaction. */
 export interface ContractSelectionDependencySource {
+    /** Optional revision-only read; its value must match capture().revision for the same state. */
+    revision?(siteId: string): Promise<string>;
     capture(siteId: string): Promise<ContractSelectionDependencySnapshot>;
     isCurrent(siteId: string, revision: string): Promise<boolean>;
 }

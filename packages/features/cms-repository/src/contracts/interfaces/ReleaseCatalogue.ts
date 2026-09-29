@@ -20,6 +20,8 @@ export interface CatalogueContractRelease {
 }
 
 export interface ReleaseCatalogue {
+    /** Optional token that changes on every publication, yank or deprecation mutation. */
+    revision?(): Promise<string>;
     findByDigest(digest: ReleaseDigest): Promise<CatalogueContractRelease | null>;
     get(contractId: string, version: string): Promise<CatalogueContractRelease | null>;
     list(contractId?: string): Promise<readonly CatalogueContractRelease[]>;

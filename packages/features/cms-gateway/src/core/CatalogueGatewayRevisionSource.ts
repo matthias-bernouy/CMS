@@ -14,9 +14,11 @@ export class CatalogueGatewayRevisionSource implements GatewayRouteRevisionSourc
 
     async capture(siteId: string): Promise<string> {
         for (let attempt = 0; attempt < 3; attempt += 1) {
-            const dependency = await this.dependencies.capture(siteId);
+            const dependencyRevision = this.dependencies.revision
+                ? await this.dependencies.revision(siteId)
+                : (await this.dependencies.capture(siteId)).revision;
             const selection = await this.selections.get(siteId);
-            const revision = JSON.stringify([dependency.revision, selection?.revision ?? 0]);
+            const revision = JSON.stringify([dependencyRevision, selection?.revision ?? 0]);
             if (await this.isCurrent(siteId, revision)) {
                 return revision;
             }

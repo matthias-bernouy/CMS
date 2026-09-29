@@ -100,6 +100,8 @@ function nativeAttributesIssue(
         if (
             name.startsWith("on") ||
             name === "srcdoc" ||
+            name === "data-cms-network-inert" ||
+            /^data-cms-(?:src|srcset|sizes|media|width|height)$/.test(name) ||
             BROWSER_FORM_OVERRIDE_ATTRIBUTES.has(name) ||
             (tag === "form" && name === "action")
         ) {

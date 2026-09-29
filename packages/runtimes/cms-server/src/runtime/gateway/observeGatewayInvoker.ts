@@ -21,13 +21,15 @@ export function observeGatewayInvoker(
                     status =
                         error.code === "not_selected"
                             ? 404
-                            : error.code === "not_authorized"
-                              ? 403
-                              : error.code === "invalid_input"
-                                ? 400
-                                : error.code === "invalid_provider_response" || error.code === "transport_failure"
-                                  ? 502
-                                  : 503;
+                            : error.code === "outcome_unknown"
+                              ? 409
+                              : error.code === "not_authorized"
+                                ? 403
+                                : error.code === "invalid_input"
+                                  ? 400
+                                  : error.code === "invalid_provider_response" || error.code === "transport_failure"
+                                    ? 502
+                                    : 503;
                 }
                 throw error;
             } finally {

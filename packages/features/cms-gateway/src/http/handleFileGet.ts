@@ -63,17 +63,22 @@ export async function handleGatewayFileGet(request: Request, options: GatewayHtt
         const status =
             error.code === "invalid_input"
                 ? 400
-                : error.code === "not_selected"
-                  ? 404
-                  : error.code === "not_authorized"
-                    ? options.actor.kind === "anonymous"
-                        ? 401
-                        : 403
-                    : error.code === "unsupported_behavior"
-                      ? 501
-                      : error.code === "invalid_provider_response" || error.code === "transport_failure"
-                        ? 502
-                        : 503;
-        return new Response(null, { status });
+                : error.code === "outcome_unknown"
+                  ? 409
+                  : error.code === "not_selected"
+                    ? 404
+                    : error.code === "not_authorized"
+                      ? options.actor.kind === "anonymous"
+                          ? 401
+                          : 403
+                      : error.code === "unsupported_behavior"
+                        ? 501
+                        : error.code === "invalid_provider_response" || error.code === "transport_failure"
+                          ? 502
+                          : 503;
+        return new Response(null, {
+            status,
+            headers: error.requestId ? { "x-ulvia-request-id": error.requestId } : undefined,
+        });
     }
 }

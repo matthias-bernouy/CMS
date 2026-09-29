@@ -51,6 +51,8 @@ export type ProviderInstallationClock = () => string;
  * Adapters must enforce validation, CAS, terminal revocation and immutable connection identity.
  */
 export interface ProviderInstallationStore {
+    /** Optional site-scoped token that changes on every installation mutation. */
+    revision?(siteId: string): Promise<string>;
     get(scope: ProviderInstallationScope): Promise<StoredProviderInstallation | null>;
     list(siteId: string): Promise<readonly StoredProviderInstallation[]>;
     approve(command: ProviderInstallationApprovalCommand): Promise<StoredProviderInstallation>;

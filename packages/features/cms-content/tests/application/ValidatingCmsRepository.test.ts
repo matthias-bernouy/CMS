@@ -133,6 +133,17 @@ describe("ValidatingCmsRepository — pages", () => {
         ).rejects.toThrow("gateway provider image");
     });
 
+    test("rejects authored runtime image attributes that could bypass the image source policy", async () => {
+        const { repo } = makeRepo({ blocs: ["fixture-card"] });
+        await expect(
+            repo.updatePage({
+                id: "p1",
+                content:
+                    '<fixture-card><img src="/.cms/files/by-id/photo-1" data-cms-src="https://other.example/tracker.png" alt="Product"></fixture-card>',
+            }),
+        ).rejects.toThrow('attribute "data-cms-src" is forbidden');
+    });
+
     test("persists controlled native content and component light DOM", async () => {
         const { repo, calls } = makeRepo({ blocs: ["fixture-newsletter-card", "fixture-input", "fixture-button"] });
         const content = `

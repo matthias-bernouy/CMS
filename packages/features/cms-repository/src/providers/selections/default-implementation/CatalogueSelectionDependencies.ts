@@ -1,5 +1,5 @@
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import { canonicalIJsonBytes } from "cms-repository/exports/contracts/protocol";
+import { catalogueRevision } from "cms-repository/exports/contracts/protocol";
 import type { ProviderInstallationStore } from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
 import { ContractSelectionValidationError } from "../core/errors";
@@ -25,10 +25,13 @@ export class CatalogueSelectionDependencies implements ContractSelectionDependen
 
     async capture(siteId: string): Promise<ContractSelectionDependencySnapshot> {
         const site = parseSelectionSiteId(siteId);
+        const fast = this.hasMetadataRevisions();
         for (let attempt = 0; attempt < 3; attempt += 1) {
+            const before = fast ? await this.revision(site) : undefined;
             const records = await this.read(site);
-            const revision = await fingerprint(site, records);
-            if (revision === (await fingerprint(site, await this.read(site)))) {
+            const revision = before ?? (await fingerprint(site, records));
+            const after = fast ? await this.revision(site) : await fingerprint(site, await this.read(site));
+            if (revision === after) {
                 return {
                     releases: this.releases,
                     manifests: this.manifests,
@@ -42,7 +45,20 @@ export class CatalogueSelectionDependencies implements ContractSelectionDependen
 
     async isCurrent(siteId: string, revision: string): Promise<boolean> {
         const site = parseSelectionSiteId(siteId);
-        return revision === (await fingerprint(site, await this.read(site)));
+        return revision === (await this.revision(site));
+    }
+
+    async revision(siteId: string): Promise<string> {
+        const site = parseSelectionSiteId(siteId);
+        if (!this.hasMetadataRevisions()) {
+            return fingerprint(site, await this.read(site));
+        }
+        const [releases, manifests, installations] = await Promise.all([
+            this.releases.revision!(),
+            this.manifests.revision!(),
+            this.installationStore.revision!(site),
+        ]);
+        return catalogueRevision({ siteId: site, releases, manifests, installations });
     }
 
     async read(siteId: string) {
@@ -53,38 +69,41 @@ export class CatalogueSelectionDependencies implements ContractSelectionDependen
         ]);
         return { releases, manifests, installations };
     }
+
+    private hasMetadataRevisions(): boolean {
+        return (
+            typeof this.releases.revision === "function" &&
+            typeof this.manifests.revision === "function" &&
+            typeof this.installationStore.revision === "function"
+        );
+    }
 }
 
 async function fingerprint(siteId: string, records: CatalogueRecords): Promise<string> {
-    const bytes = canonicalIJsonBytes(
-        {
-            siteId,
-            releases: records.releases
-                .map((record) => ({
-                    id: record.admission.release.contractId,
-                    version: record.admission.release.version,
-                    digest: record.admission.digest,
-                    yank: record.yank ?? null,
-                    deprecation: record.deprecation ?? null,
-                }))
-                .sort((a, b) => compareOrdinal(a.id, b.id) || compareOrdinal(a.version, b.version)),
-            manifests: records.manifests
-                .map((record) => ({
-                    id: record.admission.manifest.providerId,
-                    version: record.admission.manifest.version,
-                    digest: record.admission.digest,
-                    yank: record.yank ?? null,
-                }))
-                .sort((a, b) => compareOrdinal(a.id, b.id) || compareOrdinal(a.version, b.version)),
-            installations: records.installations
-                .map((record) => ({
-                    id: record.installation.id,
-                    revision: record.revision,
-                }))
-                .sort((a, b) => compareOrdinal(a.id, b.id)),
-        },
-        8,
-    );
-    const digest = await crypto.subtle.digest("SHA-256", new Uint8Array(bytes));
-    return `sha256:${Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+    return catalogueRevision({
+        siteId,
+        releases: records.releases
+            .map((record) => ({
+                id: record.admission.release.contractId,
+                version: record.admission.release.version,
+                digest: record.admission.digest,
+                yank: record.yank ?? null,
+                deprecation: record.deprecation ?? null,
+            }))
+            .sort((a, b) => compareOrdinal(a.id, b.id) || compareOrdinal(a.version, b.version)),
+        manifests: records.manifests
+            .map((record) => ({
+                id: record.admission.manifest.providerId,
+                version: record.admission.manifest.version,
+                digest: record.admission.digest,
+                yank: record.yank ?? null,
+            }))
+            .sort((a, b) => compareOrdinal(a.id, b.id) || compareOrdinal(a.version, b.version)),
+        installations: records.installations
+            .map((record) => ({
+                id: record.installation.id,
+                revision: record.revision,
+            }))
+            .sort((a, b) => compareOrdinal(a.id, b.id)),
+    });
 }

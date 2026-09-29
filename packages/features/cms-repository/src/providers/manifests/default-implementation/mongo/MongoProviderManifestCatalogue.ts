@@ -2,6 +2,7 @@ import type { Db } from "mongodb";
 import { MongoServerError } from "mongodb";
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
+import { catalogueRevision } from "cms-repository/exports/contracts/protocol";
 import type { AdmittedProviderManifest, ProviderManifestDigest } from "../../core/admission/admitProviderManifest";
 import { validateProviderManifestReferences } from "../../core/admission/validateProviderManifest";
 import { verifyProviderManifestAdmission } from "../../core/admission/verifyProviderManifestAdmission";
@@ -41,6 +42,12 @@ export class MongoProviderManifestCatalogue implements ProviderManifestCatalogue
         this.#heads = db.collection<ManifestHead>("cms_manifest_heads");
         this.#artifacts = db.collection<ManifestArtifact>("cms_manifest_artifacts");
         this.#limits = normalizeProviderManifestLimits(limits);
+    }
+
+    async revision(): Promise<string> {
+        const heads = await this.#heads.find({}, { projection: { _id: 1, revision: 1 } }).toArray();
+        heads.sort((left, right) => (left._id < right._id ? -1 : left._id > right._id ? 1 : 0));
+        return catalogueRevision(heads.map((head) => [head._id, head.revision]));
     }
 
     async get(providerId: string, version: string): Promise<CatalogueProviderManifest | null> {
@@ -98,23 +105,6 @@ export class MongoProviderManifestCatalogue implements ProviderManifestCatalogue
         }
         await validateProviderManifestReferences(admission.manifest, this.contracts);
         const artifact: ManifestArtifact = { _id: admission.digest, admission };
-        try {
-            await this.#artifacts.insertOne(structuredClone(artifact));
-        } catch (error) {
-            if (!duplicateKey(error)) {
-                throw error;
-            }
-        }
-        const persisted = await this.#artifacts.findOne({ _id: admission.digest });
-        if (
-            !persisted ||
-            (await verifyProviderManifestAdmission(persisted.admission, this.#limits)).digest !== admission.digest
-        ) {
-            throw new ProviderManifestValidationError(
-                "invalid_manifest",
-                "persisted manifest artifact failed integrity verification",
-            );
-        }
         for (;;) {
             const head = await this.#heads.findOne({ _id: providerId });
             const existing = head?.versions.find((entry) => entry.version === version);
@@ -138,6 +128,23 @@ export class MongoProviderManifestCatalogue implements ProviderManifestCatalogue
                 throw new ProviderManifestValidationError(
                     "invalid_manifest",
                     "provider has too many manifest versions",
+                );
+            }
+            try {
+                await this.#artifacts.insertOne(structuredClone(artifact));
+            } catch (error) {
+                if (!duplicateKey(error)) {
+                    throw error;
+                }
+            }
+            const persisted = await this.#artifacts.findOne({ _id: admission.digest });
+            if (
+                !persisted ||
+                (await verifyProviderManifestAdmission(persisted.admission, this.#limits)).digest !== admission.digest
+            ) {
+                throw new ProviderManifestValidationError(
+                    "invalid_manifest",
+                    "persisted manifest artifact failed integrity verification",
                 );
             }
             const entry: ManifestVersionEntry = {

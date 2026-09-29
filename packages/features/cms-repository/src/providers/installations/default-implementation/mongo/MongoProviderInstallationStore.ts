@@ -1,6 +1,7 @@
 import type { Db } from "mongodb";
 import { MongoServerError } from "mongodb";
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
+import { catalogueRevision } from "cms-repository/exports/contracts/protocol";
 import { approvedInstallation, candidateFromInstallation } from "../../core/lifecycle/candidates";
 import { ProviderInstallationWorkflowError } from "../../core/lifecycle/errors";
 import { validateApprovalCommand, validateProposal, workflowOptions } from "../../core/lifecycle/preparations";
@@ -42,6 +43,15 @@ export class MongoProviderInstallationStore implements ProviderInstallationStore
 
     async init(): Promise<void> {
         await this.#collection.createIndex({ siteId: 1, _id: 1 });
+    }
+
+    async revision(siteId: string): Promise<string> {
+        const site = parseOpaqueId(siteId, "$.siteId");
+        const records = await this.#collection
+            .find({ siteId: site }, { projection: { _id: 1, revision: 1 } })
+            .sort({ _id: 1 })
+            .toArray();
+        return catalogueRevision({ siteId: site, records: records.map((record) => [record._id, record.revision]) });
     }
 
     async get(scope: ProviderInstallationScope): Promise<StoredProviderInstallation | null> {
