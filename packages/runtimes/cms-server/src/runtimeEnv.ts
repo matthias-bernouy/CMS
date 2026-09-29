@@ -38,9 +38,6 @@ export type RuntimeEnv = {
     ENDPOINT_PERFORMANCE_ENABLED: boolean;
     SOURCE_TIMING_SAMPLE_RATE: number;
     SOURCE_SLOW_REQUEST_THRESHOLD_MS: number;
-    CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: boolean;
-    CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: boolean;
-    CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: boolean;
     CMS_HTTP_CLIENT_ADDRESS_MODE: "direct" | "disabled" | "trusted-proxy";
     CMS_HTTP_TRUSTED_PROXY_HOPS: number;
 };
@@ -124,21 +121,6 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
             1_000,
             0,
             300_000,
-        ),
-        CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: parseBoolean(
-            source.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED,
-            "CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED",
-            true,
-        ),
-        CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: parseBoolean(
-            source.CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED,
-            "CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED",
-            true,
-        ),
-        CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: parseBoolean(
-            source.CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED,
-            "CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED",
-            true,
         ),
         ...clientAddress,
     };

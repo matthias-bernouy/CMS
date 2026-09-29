@@ -49,7 +49,7 @@ export type AssetsManifest = {
 export async function resolveRuntimeAssets(delivery: DeliveryCms, usedTags: string[]): Promise<AssetsManifest> {
     const prefix = delivery.cmsPathPrefix;
     const componentJsUrl = `${prefix}/assets/component.js`;
-    const componentCacheKey = componentJsCacheKey(componentJsUrl, delivery.responsiveSourceImageRollout);
+    const componentCacheKey = componentJsCacheKey(componentJsUrl);
     const bindingCoreJsUrl = `${prefix}/assets/cms-binding-core.js`;
     const bindingCoreJsCacheKey = P9R_CACHE.js(bindingCoreJsUrl);
 
@@ -76,9 +76,7 @@ export async function resolveRuntimeAssets(delivery: DeliveryCms, usedTags: stri
     ];
 
     const [componentEntry, bindingCoreEntry, styleEntry, ...bundleEntries] = await Promise.all([
-        getOrGenerateEntryAsync(componentCacheKey, delivery.cache, () =>
-            generateComponentJsEntry(delivery.responsiveSourceImageRollout),
-        ),
+        getOrGenerateEntryAsync(componentCacheKey, delivery.cache, generateComponentJsEntry),
         getOrGenerateEntryAsync(bindingCoreJsCacheKey, delivery.cache, generateBindingCoreJsEntry),
         getOrGenerateEntryAsync(P9R_CACHE.STYLE, delivery.cache, () => generateStyleEntry(delivery.repository)),
         ...bundles.map((tags) =>

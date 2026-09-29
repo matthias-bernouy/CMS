@@ -16,9 +16,6 @@ export function surfaceMountFixtures() {
             ENDPOINT_PERFORMANCE_ENABLED: true,
             SOURCE_TIMING_SAMPLE_RATE: 0.01,
             SOURCE_SLOW_REQUEST_THRESHOLD_MS: 1_000,
-            CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: false,
-            CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: true,
-            CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: true,
             CMS_HTTP_CLIENT_ADDRESS_MODE: "trusted-proxy",
             CMS_HTTP_TRUSTED_PROXY_HOPS: 1,
         },
@@ -31,21 +28,6 @@ export function surfaceMountFixtures() {
             filesBlob: token("files-blob"),
             variantStore: token("variant-store"),
             sitemapStore: token("sitemap-store"),
-            sourceImageCache: {
-                name: "source-image-cache",
-                async dispose() {},
-            } as { name: string; dispose: () => Promise<void> } | null,
-            sourceImageJobs: {
-                enqueue: async () => "accepted",
-                claim: async () => null,
-                renew: async () => true,
-                complete: async () => true,
-                retry: async () => true,
-                waitForAvailable: async () => {
-                    await Bun.sleep(1);
-                },
-            },
-            sourceMediaIndex: token("source-media-index"),
             users: token("users"),
             identityProviders: token("identity-providers"),
             pats: token("pats"),

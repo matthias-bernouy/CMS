@@ -10,8 +10,6 @@ import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
 import { ValidatingCmsFilesMetadata } from "@bernouy/cms-content/files";
 import { createLocalAuthorFileStores } from "./authorFiles";
 import { MongoCmsFilesMetadata } from "@bernouy/cms-content/files/mongo";
-import { LocalSourceImageCache } from "@bernouy/cms-source-images/local-fs";
-import { MongoSourceImageJobQueue, MongoSourceMediaIndex } from "@bernouy/cms-source-images/mongo";
 import { EnvelopeSecretCrypto, LocalKekProvider } from "@bernouy/envelope-crypto";
 import { createFieldCrypto, MongoDekRepository } from "@bernouy/envelope-crypto/mongo";
 import { InMemoryCache } from "@bernouy/http-runner";
@@ -19,7 +17,6 @@ import { MongoRateLimiter } from "@bernouy/rate-limiter/mongo";
 import { ValidatingSecretStore } from "@bernouy/cms-secrets";
 import { EncryptedMongoSecretStore } from "@bernouy/cms-secrets/mongo";
 import { MongoClient } from "mongodb";
-import { join } from "node:path";
 import type { RuntimeEnv } from "../../runtimeEnv";
 
 const SCOPE_ID = "default";
@@ -42,10 +39,6 @@ export async function createCoreStores(env: RuntimeEnv) {
     await mongoFilesMetadata.init();
     const filesMetadata = new ValidatingCmsFilesMetadata(mongoFilesMetadata);
     const { filesBlob, variantStore, sitemapStore } = createLocalAuthorFileStores(env.CMS_FILES_DIR);
-    const sourceImageCache = await createRuntimeSourceImageCache(env);
-    const sourceImageJobs = new MongoSourceImageJobQueue(db);
-    const sourceMediaIndex = new MongoSourceMediaIndex(db);
-    await Promise.all([sourceImageJobs.init(), sourceMediaIndex.init()]);
 
     const users = new MongoUsersRepository(db, fieldCrypto);
     const identityProviders = new MongoIdentityProviderRepository(db);
@@ -74,9 +67,6 @@ export async function createCoreStores(env: RuntimeEnv) {
         filesBlob,
         variantStore,
         sitemapStore,
-        sourceImageCache,
-        sourceImageJobs,
-        sourceMediaIndex,
         users,
         identityProviders,
         credentials,
@@ -86,20 +76,6 @@ export async function createCoreStores(env: RuntimeEnv) {
         secrets,
         cache: new InMemoryCache(),
     };
-}
-
-export async function createRuntimeSourceImageCache(
-    env: Pick<RuntimeEnv, "CMS_FILES_DIR" | "CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED">,
-): Promise<LocalSourceImageCache | null> {
-    if (!env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED) {
-        return null;
-    }
-    const cache = new LocalSourceImageCache({
-        directory: join(env.CMS_FILES_DIR, ".source-images"),
-        retention: "persistent",
-    });
-    await cache.initialize();
-    return cache;
 }
 
 export type CoreStores = Awaited<ReturnType<typeof createCoreStores>>;

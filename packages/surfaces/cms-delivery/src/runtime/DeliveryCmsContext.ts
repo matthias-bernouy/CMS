@@ -15,7 +15,6 @@ import type {
     SourceRequestTelemetryOptions,
     SourceSecretResolver,
 } from "@bernouy/cms-sources";
-import type { ResponsiveSourceImageRollout } from "@bernouy/cms-source-images/browser-host";
 import { BunRunner, type Cache, type Runner, TtlCache } from "@bernouy/http-runner";
 import { PageOptimizer } from "cms-delivery/core/pages/PageOptimizer";
 import type { DeliveryCmsConfig } from "cms-delivery/interfaces/DeliveryCmsConfig";
@@ -79,14 +78,6 @@ export class DeliveryCmsContext {
 
     get sourceImageInterceptor(): SourceEndpointInterceptor | undefined {
         return this.config.sourceImageInterceptor;
-    }
-
-    get responsiveSourceImageRollout(): ResponsiveSourceImageRollout {
-        const interceptorReady = Boolean(this.config.sourceImageInterceptor);
-        return {
-            public: interceptorReady && this.config.responsivePublicSourceImagesEnabled !== false,
-            private: interceptorReady && this.config.responsivePrivateSourceImagesEnabled !== false,
-        };
     }
 
     get identities(): IdentityService | undefined {

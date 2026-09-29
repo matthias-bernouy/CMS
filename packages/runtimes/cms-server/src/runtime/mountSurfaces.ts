@@ -5,10 +5,7 @@ import { createPublicFileStores } from "./stores/authorFiles";
 import type { FeatureStores } from "./stores/features";
 import type { ProductionGateway } from "./gateway/createProductionGateway";
 import { createSurfaceSourceTelemetry } from "./sourceTelemetry";
-import { createRuntimeSourceImageComposition } from "./sourceImageTelemetry";
-import { createRuntimeSourceImageWorkers } from "./stores/sourceImages";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
-import { composeSourceEndpointInterceptors } from "@bernouy/cms-sources";
 import { createContentReader } from "@bernouy/cms-content/rendering";
 
 export type { ProductionSurfaceRuntime } from "./surfaceRuntime";
@@ -36,39 +33,6 @@ export async function mountProductionSurfaces(
         slowRequestThresholdMs: env.SOURCE_SLOW_REQUEST_THRESHOLD_MS,
         reportDiagnostic: runtime.log,
     });
-    const sourceImageWorkers =
-        env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED && core.sourceImageCache
-            ? createRuntimeSourceImageWorkers({
-                  scope: env.DELIVERY_PUBLIC_URL,
-                  cache: core.sourceImageCache,
-                  queue: core.sourceImageJobs,
-                  index: core.sourceMediaIndex,
-                  sources: features.sources,
-                  reportError: (error) => runtime.reportError("Source image worker failed", error),
-              })
-            : null;
-    const sourceImageComposition = await createRuntimeSourceImageComposition({
-        cache: core.sourceImageCache,
-        transformsEnabled: env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED,
-        responsivePublicMarkupEnabled:
-            env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED && env.CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED,
-        responsivePrivateMarkupEnabled:
-            env.CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED && env.CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED,
-        scope: env.DELIVERY_PUBLIC_URL,
-        sampleRate: env.SOURCE_TIMING_SAMPLE_RATE,
-        report: runtime.log,
-        ...(sourceImageWorkers
-            ? {
-                  jobScheduler: sourceImageWorkers.scheduler,
-                  mediaCoordinator: sourceImageWorkers.coordinator,
-                  publicMissMode: "queued" as const,
-              }
-            : {}),
-    });
-    const sourceImageInterceptor =
-        composeSourceEndpointInterceptors(sourceImageWorkers?.effects, sourceImageComposition.sourceImageInterceptor) ??
-        sourceImageComposition.sourceImageInterceptor;
-    const { responsivePublicSourceImagesEnabled, responsivePrivateSourceImagesEnabled } = sourceImageComposition;
     const controlRunner = new runtime.Runner();
     const controlCms = new runtime.Control(
         controlRunner,
@@ -90,9 +54,6 @@ export async function mountProductionSurfaces(
             identities: features.identities,
             endpointPerformanceReports: features.endpointPerformanceReports,
             sourceTelemetry: sourceTelemetry.control,
-            sourceImageInterceptor,
-            responsivePublicSourceImagesEnabled,
-            responsivePrivateSourceImagesEnabled,
             publicAuth: {
                 ...authentication.createPublicAuth({
                     emailVerificationUrl: env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
@@ -123,9 +84,6 @@ export async function mountProductionSurfaces(
         cache: core.cache,
         sources: features.sources,
         sourceTelemetry: sourceTelemetry.delivery,
-        sourceImageInterceptor,
-        responsivePublicSourceImagesEnabled,
-        responsivePrivateSourceImagesEnabled,
         analytics: features.analytics,
         identities: features.identities,
         ...(gateway
@@ -177,8 +135,6 @@ export async function mountProductionSurfaces(
                 deliveryRunner.stopGracefully(),
             ]);
             await endpointPerformanceFlusher.run();
-            await sourceImageWorkers?.stop();
-            await core.sourceImageCache?.dispose();
         },
     };
 }

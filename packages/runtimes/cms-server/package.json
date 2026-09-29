@@ -18,7 +18,6 @@
         "@bernouy/cms-content":     "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources":     "workspace:*",
         "@bernouy/cms-dashboards":  "workspace:*",
         "@bernouy/cms-analytics":   "workspace:*",

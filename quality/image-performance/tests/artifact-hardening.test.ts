@@ -21,13 +21,13 @@ describe("image performance artifact hardening", () => {
         });
     });
 
-    test("builds both split-rollout production bundles without unresolved defines", async () => {
+    test("builds the production bundle without legacy rollout defines", async () => {
         const build = await buildCurrentBrowserComponent();
         for (const script of [build.enabledScript, build.disabledScript]) {
             expect(script).not.toContain("__CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED__");
             expect(script).not.toContain("__CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED__");
         }
-        expect(build.enabledBundleFingerprint).not.toBe(build.disabledBundleFingerprint);
+        expect(build.enabledBundleFingerprint).toBe(build.disabledBundleFingerprint);
     });
 
     test("fingerprints the production browser runtime dependency closure", () => {

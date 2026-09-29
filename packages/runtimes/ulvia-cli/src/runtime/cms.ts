@@ -43,9 +43,6 @@ export async function startLocalCms(
             CMS_AUTH_EMAIL_COOLDOWN_SECONDS: "0",
             ANALYTICS_SALT_SECRET: config.analyticsSecret,
             ENDPOINT_PERFORMANCE_ENABLED: "false",
-            CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED: "false",
-            CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED: "false",
-            CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED: "false",
             CMS_HTTP_CLIENT_ADDRESS_MODE: "disabled",
         },
     });

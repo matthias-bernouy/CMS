@@ -15,7 +15,6 @@
         { "path": "../../features/cms-repository" },
         { "path": "../../features/cms-gateway" },
         { "path": "../../features/cms-sources" },
-        { "path": "../../features/cms-source-images" },
         { "path": "../../features/cms-analytics" },
         { "path": "../../surfaces/cms-control" },
         { "path": "../../surfaces/cms-delivery" }

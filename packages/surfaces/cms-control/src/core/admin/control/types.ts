@@ -43,10 +43,6 @@ export type ControlCmsOptions = Configuration & {
     sourceTelemetry?: SourceRequestTelemetryOptions;
     /** Shared post-authorization interceptor for bounded Source image variants. */
     sourceImageInterceptor?: SourceEndpointInterceptor;
-    /** Enables explicitly public responsive consumers when the interceptor is configured. Defaults to true. */
-    responsivePublicSourceImagesEnabled?: boolean;
-    /** Enables private and unclassified responsive consumers when the interceptor is configured. Defaults to true. */
-    responsivePrivateSourceImagesEnabled?: boolean;
 };
 
 export type ControlAuthBackends = {

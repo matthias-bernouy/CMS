@@ -32,7 +32,8 @@ For a representative page:
 4. Check that a changed provider file yields a new derivative generation.
 5. Compare cold and warm request latency, failures, and transferred bytes.
 
-The old `CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED` rollout and `cms_source_image`
-telemetry still apply to legacy Source image code and benchmarks. They do not
-control gateway media routes. Delivery no longer mounts the public Source
-image route.
+The production runtime no longer installs Source image transform workers or
+responsive Source image browser helpers. Provider files use the gateway media
+routes and their own on-demand derivative store. The old Source image package
+remains in the historical performance suite while its browser fixtures are
+being migrated.

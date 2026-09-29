@@ -313,9 +313,6 @@ environment file.
 | `ENDPOINT_PERFORMANCE_ENABLED` | Defaults to `true`; set to `false` to stop new endpoint observations and flushes without deleting retained rollups. |
 | `SOURCE_TIMING_SAMPLE_RATE` | Uniform detailed source-diagnostic sampling rate from `0` to `1`; defaults to `0.01`. Aggregate endpoint metrics remain exhaustive. |
 | `SOURCE_SLOW_REQUEST_THRESHOLD_MS` | Duration threshold for the separate forced diagnostic cohort; defaults to `1000`. Errors are forced independently. |
-| `CMS_SOURCE_IMAGE_TRANSFORMS_ENABLED` | Defaults to `true`; set to `false` to disable bounded Source image derivatives. |
-| `CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED` | Defaults to `true`; set to `false` to disable browser `srcset` markup for images explicitly marked `data-source-image-access="public"`. It is effective only while Source image transforms are enabled. |
-| `CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED` | Defaults to `true`; set to `false` to disable browser `srcset` markup for private and unclassified images. It is effective only while Source image transforms are enabled. |
 | `CMS_AUTH_SITE_NAME` | Public authentication site name; defaults to `CMS`. |
 | `CMS_AUTH_EMAIL_COOLDOWN_SECONDS` | Email throttle interval; defaults to 300 seconds. |
 | `CMS_AUTH_EMAIL_VERIFICATION_URL` | Delivery email-verification URL. |

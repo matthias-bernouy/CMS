@@ -5,12 +5,7 @@ import { cachedResponseAsync, compress } from "@bernouy/http-runner";
 const SOURCE = join(import.meta.dir, "component.client.ts");
 
 export default async function editorComponentGet(req: Request, cms: ControlCms): Promise<Response> {
-    const interceptorReady = Boolean(cms.config.sourceImageInterceptor);
-    const publicEnabled = interceptorReady && cms.config.responsivePublicSourceImagesEnabled !== false;
-    const privateEnabled = interceptorReady && cms.config.responsivePrivateSourceImagesEnabled !== false;
-    const cacheKey = `js:editor-component-runtime:responsive-source-images:public-${
-        publicEnabled ? "on" : "off"
-    }:private-${privateEnabled ? "on" : "off"}`;
+    const cacheKey = "js:editor-component-runtime:gateway-images";
     return cachedResponseAsync(
         req,
         cacheKey,
@@ -19,10 +14,6 @@ export default async function editorComponentGet(req: Request, cms: ControlCms):
             const result = await Bun.build({
                 entrypoints: [SOURCE],
                 format: "iife",
-                define: {
-                    __CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED__: String(publicEnabled),
-                    __CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED__: String(privateEnabled),
-                },
             });
             return compress(await result.outputs[0]!.text(), "text/javascript");
         },

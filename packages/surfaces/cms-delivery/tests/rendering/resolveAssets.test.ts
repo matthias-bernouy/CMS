@@ -5,21 +5,14 @@ import { componentJsCacheKey, generateComponentJsEntry } from "cms-delivery/core
 import { resolveRuntimeAssets } from "cms-delivery/core/assets/resolveAssets";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import type { ResponsiveSourceImageRollout } from "@bernouy/cms-source-images/browser-host";
 
 const system = defaultSystem();
 system.initializationStep = 1;
 system.site.name = "Site";
 
-function deliveryWith(
-    repository: ContentReader,
-    responsiveSourceImageRollout: ResponsiveSourceImageRollout = { public: false, private: false },
-): DeliveryCms {
+function deliveryWith(repository: ContentReader): DeliveryCms {
     const cache = new InMemoryCache();
-    cache.set(
-        componentJsCacheKey("/.cms/assets/component.js", responsiveSourceImageRollout),
-        compress("component", "text/javascript"),
-    );
+    cache.set(componentJsCacheKey("/.cms/assets/component.js"), compress("component", "text/javascript"));
     cache.set(P9R_CACHE.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
     cache.set(P9R_CACHE.STYLE, compress("body{}", "text/css"));
 
@@ -27,7 +20,6 @@ function deliveryWith(
         cmsPathPrefix: "/.cms",
         cache,
         repository,
-        responsiveSourceImageRollout,
     } as unknown as DeliveryCms;
 }
 
@@ -57,55 +49,49 @@ function repositoryWith(options: {
 }
 
 describe("resolveRuntimeAssets", () => {
-    test("exposes components and enabled responsive Source images through the public runtime bundle", async () => {
-        const entry = await generateComponentJsEntry({ public: true, private: true });
+    test("exposes components and provider images through the public runtime bundle", async () => {
+        const entry = await generateComponentJsEntry();
         const js = new TextDecoder().decode(entry.raw);
 
         expect(entry.contentType).toBe("text/javascript");
         expect(js).toMatch(/window\.p9r\s*=\s*\{[\s\S]*Component\s*:/);
-        expect(js).toContain("syncResponsiveSourceImageElement");
         expect(js).toContain("syncProviderMediaImage");
-        expect(js).toContain("cms-width");
+        expect(js).not.toContain("syncResponsiveSourceImageElement");
 
         (window as any).p9r = {};
         window.eval(js);
         expect((window as any).p9r.Composition).toBeUndefined();
-        expect((window as any).p9r.SOURCE_IMAGE_WIDTHS).toEqual([
+        expect((window as any).p9r.PROVIDER_IMAGE_WIDTHS).toEqual([
             64, 128, 256, 384, 512, 768, 1_024, 1_280, 1_600, 1_920, 2_560,
         ]);
-        expect((window as any).p9r.createResponsiveSourceImageBrowserApi).toBeUndefined();
-        expect((window as any).p9r.PROVIDER_IMAGE_WIDTHS).toEqual((window as any).p9r.SOURCE_IMAGE_WIDTHS);
     });
 
-    test.each([
-        ["dark", { public: false, private: false }, false, false],
-        ["public only", { public: true, private: false }, true, false],
-        ["private only", { public: false, private: true }, false, true],
-        ["fully enabled", { public: true, private: true }, true, true],
-    ] as const)(
-        "executes the public component runtime with responsive markup %s",
-        async (_label, rollout, publicEnabled, privateEnabled) => {
-            const response = await ComponentServer(new Request("http://localhost/.cms/assets/component.js"), {
-                cache: new InMemoryCache(),
-                responsiveSourceImageRollout: rollout,
-            } as unknown as DeliveryCms);
-            (window as any).p9r = {};
-            window.eval(await response.text());
-            const publicImage = sourceImage("public");
-            const privateImage = sourceImage();
+    test("serves a provider media bundle with a stable hashed URL", async () => {
+        const delivery = { cache: new InMemoryCache() } as unknown as DeliveryCms;
+        const current = await ComponentServer(new Request("http://localhost/.cms/assets/component.js"), delivery);
+        const entry = await generateComponentJsEntry();
+        const immutable = await ComponentServer(
+            new Request(`http://localhost/.cms/assets/component.js?v=${entry.hash}`),
+            delivery,
+        );
+        expect(current.status).toBe(200);
+        expect(immutable.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+        (window as any).p9r = {};
+        window.eval(await immutable.text());
+        const image = document.createElement("img");
+        image.setAttribute("data-cms-src", "/.cms/media/catalog/photo/file-7");
+        image.setAttribute("data-cms-width", "800");
+        image.setAttribute("data-cms-height", "600");
+        (window as any).p9r.syncProviderMediaImage(image);
+        expect(image.getAttribute("srcset")).toContain("/.cms/image/catalog/photo/file-7/384.webp 384w");
 
-            expect((window as any).p9r.syncResponsiveSourceImageElement(publicImage)).toBe(publicEnabled);
-            expect((window as any).p9r.syncResponsiveSourceImageElement(privateImage)).toBe(privateEnabled);
-            for (const [image, enabled] of [
-                [publicImage, publicEnabled],
-                [privateImage, privateEnabled],
-            ] as const) {
-                expect(image.getAttribute("src")).toBe("/.cms/sources/catalog/image?id=7");
-                expect(image.hasAttribute("srcset")).toBe(enabled);
-                expect(image.getAttribute("srcset")?.includes("cms-width") ?? false).toBe(enabled);
-            }
-        },
-    );
+        const unknown = await ComponentServer(
+            new Request("http://localhost/.cms/assets/component.js?v=unknown"),
+            delivery,
+        );
+        expect(unknown.status).toBe(404);
+        expect(unknown.headers.get("cache-control")).toBe("no-store");
+    });
 
     test("does not emit a blocset script for native-only blocs without viewJS", async () => {
         const assets = await resolveRuntimeAssets(
@@ -139,15 +125,3 @@ describe("resolveRuntimeAssets", () => {
         expect(assets.scriptUrls).toHaveLength(2);
     });
 });
-
-function sourceImage(access?: "public"): HTMLImageElement {
-    const image = document.createElement("img");
-    image.setAttribute("data-src", "/.cms/sources/catalog/image?id=7");
-    image.setAttribute("data-source-width", "800");
-    image.setAttribute("data-source-height", "600");
-    image.setAttribute("loading", "lazy");
-    if (access) {
-        image.setAttribute("data-source-image-access", access);
-    }
-    return image;
-}

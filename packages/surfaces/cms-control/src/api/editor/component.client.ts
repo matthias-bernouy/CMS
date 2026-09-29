@@ -5,16 +5,6 @@ import {
     installProviderMediaImageRuntime,
     syncProviderMediaImage,
 } from "@bernouy/cms-gateway/browser";
-import { SOURCE_IMAGE_WIDTHS } from "@bernouy/cms-source-images/browser";
-import {
-    createResponsiveSourceImageBrowserApi,
-    installBoundImageRuntime,
-} from "@bernouy/cms-source-images/browser-host";
-
-const sourceImages = createResponsiveSourceImageBrowserApi({
-    public: __CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED__,
-    private: __CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED__,
-});
 
 (window as any).p9r = {
     ...(window as any).p9r,
@@ -22,15 +12,9 @@ const sourceImages = createResponsiveSourceImageBrowserApi({
     PROVIDER_IMAGE_WIDTHS,
     buildProviderImageAttributes,
     syncProviderMediaImage,
-    SOURCE_IMAGE_WIDTHS,
-    ...sourceImages,
 };
-installBoundImageRuntime(document, sourceImages);
 installProviderMediaImageRuntime(document);
 installCompositionControllerSync(document);
-
-declare const __CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED__: boolean;
-declare const __CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED__: boolean;
 
 function installCompositionControllerSync(document: Document): void {
     const hostAttribute = "data-p9r-composition";

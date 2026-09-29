@@ -64,7 +64,6 @@ export function assertCandidateBrowserProvenance(
         !isHash(provenance.component.entryFingerprint) ||
         !isHash(provenance.component.enabledBundleFingerprint) ||
         !isHash(provenance.component.disabledBundleFingerprint) ||
-        provenance.component.enabledBundleFingerprint === provenance.component.disabledBundleFingerprint ||
         provenance.component.entryFingerprint !== expected.currentComponentBuild.entryFingerprint ||
         provenance.component.enabledBundleFingerprint !== expected.currentComponentBuild.enabledBundleFingerprint ||
         provenance.component.disabledBundleFingerprint !== expected.currentComponentBuild.disabledBundleFingerprint ||
