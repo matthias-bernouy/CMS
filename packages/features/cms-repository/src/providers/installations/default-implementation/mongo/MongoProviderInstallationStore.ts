@@ -15,6 +15,7 @@ import {
 } from "../../core/lifecycle/state";
 import { parseProviderInstallation } from "../../core/parsing/parseProviderInstallation";
 import { parseOpaqueId } from "../../core/parsing/fields";
+import { installationSelectionRevision } from "../../core/selectionRevision";
 import type { ProviderInstallationStatus } from "../../interfaces/ProviderInstallation";
 import type {
     ProviderInstallationApprovalCommand,
@@ -52,6 +53,18 @@ export class MongoProviderInstallationStore implements ProviderInstallationStore
             .sort({ _id: 1 })
             .toArray();
         return catalogueRevision({ siteId: site, records: records.map((record) => [record._id, record.revision]) });
+    }
+
+    async selectionRevision(siteId: string): Promise<string> {
+        const site = parseOpaqueId(siteId, "$.siteId");
+        const records = await this.#collection
+            .find({ siteId: site }, { projection: { installation: 1 } })
+            .sort({ _id: 1 })
+            .toArray();
+        return installationSelectionRevision(
+            site,
+            records.map((record) => record.installation),
+        );
     }
 
     async get(scope: ProviderInstallationScope): Promise<StoredProviderInstallation | null> {

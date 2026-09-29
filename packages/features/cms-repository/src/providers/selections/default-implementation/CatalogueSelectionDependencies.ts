@@ -1,6 +1,7 @@
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import { catalogueRevision } from "cms-repository/exports/contracts/protocol";
 import type { ProviderInstallationStore } from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
+import { installationSelectionRevision } from "cms-repository/providers/installations/core/selectionRevision";
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
 import { ContractSelectionValidationError } from "../core/errors";
 import { parseSelectionSiteId } from "../core/parseContractSelections";
@@ -56,7 +57,7 @@ export class CatalogueSelectionDependencies implements ContractSelectionDependen
         const [releases, manifests, installations] = await Promise.all([
             this.releases.revision!(),
             this.manifests.revision!(),
-            this.installationStore.revision!(site),
+            this.installationStore.selectionRevision!(site),
         ]);
         return catalogueRevision({ siteId: site, releases, manifests, installations });
     }
@@ -74,12 +75,16 @@ export class CatalogueSelectionDependencies implements ContractSelectionDependen
         return (
             typeof this.releases.revision === "function" &&
             typeof this.manifests.revision === "function" &&
-            typeof this.installationStore.revision === "function"
+            typeof this.installationStore.selectionRevision === "function"
         );
     }
 }
 
 async function fingerprint(siteId: string, records: CatalogueRecords): Promise<string> {
+    const installations = await installationSelectionRevision(
+        siteId,
+        records.installations.map((record) => record.installation),
+    );
     return catalogueRevision({
         siteId,
         releases: records.releases
@@ -99,11 +104,6 @@ async function fingerprint(siteId: string, records: CatalogueRecords): Promise<s
                 yank: record.yank ?? null,
             }))
             .sort((a, b) => compareOrdinal(a.id, b.id) || compareOrdinal(a.version, b.version)),
-        installations: records.installations
-            .map((record) => ({
-                id: record.installation.id,
-                revision: record.revision,
-            }))
-            .sort((a, b) => compareOrdinal(a.id, b.id)),
+        installations,
     });
 }

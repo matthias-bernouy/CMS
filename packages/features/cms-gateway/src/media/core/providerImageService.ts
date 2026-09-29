@@ -70,7 +70,13 @@ export class ProviderImageService {
         if (!Number.isSafeInteger(width) || !recipe.widths.includes(width)) {
             throw new GatewayError("invalid_input", "image width is outside the declared recipe");
         }
-        return this.#withPermit(() => this.#get(invocation, width));
+        let snapshot: GatewayInvocation;
+        try {
+            snapshot = structuredClone(invocation);
+        } catch {
+            throw new GatewayError("invalid_input", "image invocation must be cloneable");
+        }
+        return this.#withPermit(() => this.#get(snapshot, width));
     }
 
     async #get(invocation: GatewayInvocation, width: number): Promise<ProviderImageResult> {

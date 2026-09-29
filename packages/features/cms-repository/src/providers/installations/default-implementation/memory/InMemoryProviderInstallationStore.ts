@@ -22,6 +22,7 @@ import {
 } from "../../core/lifecycle/state";
 import { parseProviderInstallation } from "../../core/parsing/parseProviderInstallation";
 import { parseOpaqueId } from "../../core/parsing/fields";
+import { installationSelectionRevision } from "../../core/selectionRevision";
 
 /** Deterministic command adapter. Authorization belongs to the calling CMS host. */
 export class InMemoryProviderInstallationStore implements ProviderInstallationStore {
@@ -53,6 +54,14 @@ export class InMemoryProviderInstallationStore implements ProviderInstallationSt
                           ? 1
                           : 0,
                 ),
+        );
+    }
+
+    async selectionRevision(siteId: string): Promise<string> {
+        const records = await this.list(siteId);
+        return installationSelectionRevision(
+            siteId,
+            records.map((record) => record.installation),
         );
     }
 

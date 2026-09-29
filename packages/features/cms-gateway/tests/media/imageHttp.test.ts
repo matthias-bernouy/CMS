@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { handleGatewayImageGet } from "@bernouy/cms-gateway/media/handlers";
-import type { GatewayInvocation } from "@bernouy/cms-gateway";
+import { GatewayError, type GatewayInvocation } from "@bernouy/cms-gateway";
 
 test("image route uses trusted actor, rejects invalid widths and returns private WebP", async () => {
     const calls: Array<{ invocation: GatewayInvocation; width: number }> = [];
@@ -69,4 +69,24 @@ test("image route preserves declared provider error retry metadata", async () =>
     expect(response.headers.get("retry-after")).toBe("30");
     expect(response.headers.get("x-ulvia-request-id")).toBe("request-1");
     expect(response.headers.get("cache-control")).toBe("private, no-store");
+});
+
+test("image route keeps gateway errors private", async () => {
+    const response = await handleGatewayImageGet(
+        new Request("https://site.example/.cms/image/files/file.read/photo-1/256.webp"),
+        {
+            siteId: "site-a",
+            origin: "delivery",
+            actor: { kind: "anonymous" },
+            prefix: "/.cms/image",
+            images: {
+                get: async () => {
+                    throw new GatewayError("not_selected", "no provider selected", "request-1");
+                },
+            },
+        },
+    );
+    expect(response.status).toBe(404);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get("x-ulvia-request-id")).toBe("request-1");
 });

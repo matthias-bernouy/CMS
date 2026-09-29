@@ -72,18 +72,24 @@ test("Mongo installation state survives adapter recreation and fences stale writ
     expect(approved.revision).toBe(1);
     const approvedRevision = await first.revision(fixture.scope.siteId);
     expect(approvedRevision).not.toBe(beforeRevision);
+    const approvedSelectionRevision = await first.selectionRevision(fixture.scope.siteId);
     const recreated = new MongoProviderInstallationStore(db, fixture.catalogue, fixture.clock);
     expect((await recreated.get(fixture.scope))?.installation).toEqual(approved.installation);
     expect(await recreated.get({ ...fixture.scope, siteId: "another-site" })).toBeNull();
-    const disabled = await first.setStatus(fixture.scope, 1, "disabled");
-    expect(disabled.revision).toBe(2);
+    const observed = await first.recordObservation(fixture.scope, 1, fixture.report);
+    expect(observed.revision).toBe(2);
     expect(await first.revision(fixture.scope.siteId)).not.toBe(approvedRevision);
+    expect(await first.selectionRevision(fixture.scope.siteId)).toBe(approvedSelectionRevision);
+    const disabled = await first.setStatus(fixture.scope, 2, "disabled");
+    expect(disabled.revision).toBe(3);
+    expect(await first.revision(fixture.scope.siteId)).not.toBe(approvedRevision);
+    expect(await first.selectionRevision(fixture.scope.siteId)).not.toBe(approvedSelectionRevision);
     await expect(recreated.setStatus(fixture.scope, 1, "revoked")).rejects.toMatchObject({
         code: "revision_conflict",
     });
-    const revoked = await recreated.setStatus(fixture.scope, 2, "revoked");
+    const revoked = await recreated.setStatus(fixture.scope, 3, "revoked");
     expect(revoked.installation.status).toBe("revoked");
-    await expect(first.recordObservation(fixture.scope, 3, fixture.report)).rejects.toMatchObject({
+    await expect(first.recordObservation(fixture.scope, 4, fixture.report)).rejects.toMatchObject({
         code: "installation_revoked",
     });
 });

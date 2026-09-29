@@ -53,6 +53,8 @@ export type ProviderInstallationClock = () => string;
 export interface ProviderInstallationStore {
     /** Optional site-scoped token that changes on every installation mutation. */
     revision?(siteId: string): Promise<string>;
+    /** Optional token for approved installation state; observations do not change it. */
+    selectionRevision?(siteId: string): Promise<string>;
     get(scope: ProviderInstallationScope): Promise<StoredProviderInstallation | null>;
     list(siteId: string): Promise<readonly StoredProviderInstallation[]>;
     approve(command: ProviderInstallationApprovalCommand): Promise<StoredProviderInstallation>;

@@ -1,18 +1,19 @@
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type { GatewayHttpCallOptions } from "cms-gateway/invocation/http/handleHttpCall";
+import { privateMediaError } from "cms-gateway/media/http/privateMediaError";
 
 /** Serves a provider file capability after the gateway rechecks the current route and actor grant. */
 export async function handleGatewayFileGet(request: Request, options: GatewayHttpCallOptions): Promise<Response> {
     if (request.method !== "GET") {
-        return new Response(null, { status: 405, headers: { allow: "GET" } });
+        return privateMediaError(405, { allow: "GET" });
     }
     const url = new URL(request.url);
     if (!url.pathname.startsWith(`${options.prefix}/`) || url.search || url.hash) {
-        return new Response(null, { status: 404 });
+        return privateMediaError(404);
     }
     const segments = url.pathname.slice(options.prefix.length + 1).split("/");
     if (segments.length !== 3 || segments.some((segment) => !segment)) {
-        return new Response(null, { status: 404 });
+        return privateMediaError(404);
     }
     let contractId: string;
     let capabilityId: string;
@@ -20,7 +21,7 @@ export async function handleGatewayFileGet(request: Request, options: GatewayHtt
     try {
         [contractId, capabilityId, fileId] = segments.map(decodeURIComponent) as [string, string, string];
     } catch {
-        return new Response(null, { status: 400 });
+        return privateMediaError(400);
     }
     const identifier = /^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/;
     if (
@@ -31,11 +32,11 @@ export async function handleGatewayFileGet(request: Request, options: GatewayHtt
         fileId.length > 256 ||
         !fileId.trim()
     ) {
-        return new Response(null, { status: 400 });
+        return privateMediaError(400);
     }
     const rangeHeader = request.headers.get("range");
     if (rangeHeader !== null && !/^bytes=(?:\d+-\d*|-\d+)$/.test(rangeHeader)) {
-        return new Response(null, { status: 400 });
+        return privateMediaError(400);
     }
     try {
         const result = await options.invoker.invoke({
@@ -57,13 +58,13 @@ export async function handleGatewayFileGet(request: Request, options: GatewayHtt
             });
         }
         if (result.kind !== "binary") {
-            return new Response(null, { status: 502 });
+            return privateMediaError(502);
         }
         const canRange =
             rangeHeader &&
             (!request.headers.has("if-range") || request.headers.get("if-range") === result.responseHeaders?.etag);
         if (rangeHeader && result.status !== 200) {
-            return new Response(null, { status: 502 });
+            return privateMediaError(502);
         }
         const range = canRange ? byteRange(rangeHeader, result.bytes.byteLength) : undefined;
         if (canRange && !range) {
@@ -89,7 +90,7 @@ export async function handleGatewayFileGet(request: Request, options: GatewayHtt
         });
     } catch (error) {
         if (!(error instanceof GatewayError)) {
-            return new Response(null, { status: 500 });
+            return privateMediaError(500);
         }
         const status =
             error.code === "invalid_input"
@@ -107,10 +108,7 @@ export async function handleGatewayFileGet(request: Request, options: GatewayHtt
                         : error.code === "invalid_provider_response" || error.code === "transport_failure"
                           ? 502
                           : 503;
-        return new Response(null, {
-            status,
-            headers: error.requestId ? { "x-ulvia-request-id": error.requestId } : undefined,
-        });
+        return privateMediaError(status, error.requestId ? { "x-ulvia-request-id": error.requestId } : {});
     }
 }
 

@@ -1,7 +1,10 @@
 import { expect, test } from "bun:test";
+import type { IncomingMessage } from "node:http";
+import { Readable } from "node:stream";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { selectGatewayAddress } from "cms-gateway/invocation/node-http/addressPolicy";
+import { toResponse } from "cms-gateway/invocation/node-http/nodeHttpRequest";
 import { gatewayRoute } from "./fixtures";
 
 test("node transport pins the target and injects trusted context", async () => {
@@ -102,6 +105,57 @@ test("node transport rejects a forged literal address and reserved headers", asy
         network.exchange({ ...request, origin: "https://provider.example.com", headers: { authorization: "forged" } }),
     ).rejects.toThrow("forbidden header");
     expect(sent).toBe(0);
+});
+
+test("node transport aborts DNS and secret lookups that outlast the request deadline", async () => {
+    for (const phase of ["dns", "secret"] as const) {
+        let sent = 0;
+        const network = new NodeGatewayHttpNetwork({
+            resolveAddresses: async () =>
+                phase === "dns" ? new Promise<never>(() => undefined) : [{ address: "8.8.8.8", family: 4 }],
+            resolveToken: async () => (phase === "secret" ? new Promise<never>(() => undefined) : "token"),
+            sendPinned: async () => {
+                sent += 1;
+                return Response.json({});
+            },
+        });
+        const result = await Promise.race([
+            network
+                .exchange({
+                    origin: "https://provider.example.com",
+                    pathAndQuery: "/v1/items",
+                    method: "GET",
+                    headers: {},
+                    requestId: "request-1",
+                    installationId: "install-a",
+                    providerTokenRef: "token-ref",
+                    invocationOrigin: "delivery",
+                    actorKind: "anonymous",
+                    signal: AbortSignal.timeout(5),
+                })
+                .then(
+                    () => "sent",
+                    (error: Error) => error.name,
+                ),
+            Bun.sleep(100).then(() => "stalled"),
+        ]);
+        expect(result).toBe("TimeoutError");
+        expect(sent).toBe(0);
+    }
+});
+
+test("node response bridge pauses the source until the web body is consumed", async () => {
+    const incoming = Readable.from(Array.from({ length: 32 }, () => Buffer.alloc(1024)));
+    Object.assign(incoming, { statusCode: 200, headers: {} });
+    let emitted = 0;
+    const response = toResponse(incoming as IncomingMessage, "GET");
+    incoming.on("data", () => {
+        emitted += 1;
+    });
+    await Bun.sleep(10);
+    expect(emitted).toBe(1);
+    expect((await response.arrayBuffer()).byteLength).toBe(32 * 1024);
+    expect(emitted).toBe(32);
 });
 
 test("address policy refuses private, mapped, and documentation ranges", () => {

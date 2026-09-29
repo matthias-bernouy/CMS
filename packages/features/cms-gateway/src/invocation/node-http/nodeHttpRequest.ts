@@ -39,7 +39,7 @@ export async function sendPinnedHttpRequest(value: PinnedHttpRequest): Promise<R
     });
 }
 
-function toResponse(incoming: IncomingMessage, method: string): Response {
+export function toResponse(incoming: IncomingMessage, method: string): Response {
     const status = incoming.statusCode;
     if (!status || status < 200 || status > 599) {
         throw new TypeError("provider returned an invalid HTTP status");
@@ -67,9 +67,17 @@ function toResponse(incoming: IncomingMessage, method: string): Response {
     }
     const body = new ReadableStream<Uint8Array>({
         start(controller) {
-            incoming.on("data", (chunk: Buffer) => controller.enqueue(new Uint8Array(chunk)));
+            incoming.on("data", (chunk: Buffer) => {
+                controller.enqueue(new Uint8Array(chunk));
+                if (controller.desiredSize !== null && controller.desiredSize <= 0) {
+                    incoming.pause();
+                }
+            });
             incoming.once("end", () => controller.close());
             incoming.once("error", (error) => controller.error(error));
+        },
+        pull() {
+            incoming.resume();
         },
         cancel() {
             incoming.destroy();

@@ -1,6 +1,7 @@
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type { GatewayActor, GatewayOrigin } from "cms-gateway/invocation/interfaces/Invocation";
 import type { ProviderImageService } from "cms-gateway/media/core/providerImageService";
+import { privateMediaError } from "cms-gateway/media/http/privateMediaError";
 
 export interface GatewayImageHttpOptions {
     readonly images: Pick<ProviderImageService, "get">;
@@ -13,19 +14,19 @@ export interface GatewayImageHttpOptions {
 /** The original file is authorized before every derivative lookup. */
 export async function handleGatewayImageGet(request: Request, options: GatewayImageHttpOptions): Promise<Response> {
     if (request.method !== "GET") {
-        return new Response(null, { status: 405, headers: { allow: "GET" } });
+        return privateMediaError(405, { allow: "GET" });
     }
     const url = new URL(request.url);
     if (!url.pathname.startsWith(`${options.prefix}/`) || url.search || url.hash) {
-        return new Response(null, { status: 404 });
+        return privateMediaError(404);
     }
     const segments = url.pathname.slice(options.prefix.length + 1).split("/");
     if (segments.length !== 4 || segments.some((segment) => !segment)) {
-        return new Response(null, { status: 404 });
+        return privateMediaError(404);
     }
     const widthMatch = /^(\d+)\.webp$/.exec(segments[3]!);
     if (!widthMatch) {
-        return new Response(null, { status: 404 });
+        return privateMediaError(404);
     }
     let contractId: string;
     let capabilityId: string;
@@ -33,7 +34,7 @@ export async function handleGatewayImageGet(request: Request, options: GatewayIm
     try {
         [contractId, capabilityId, fileId] = segments.slice(0, 3).map(decodeURIComponent) as [string, string, string];
     } catch {
-        return new Response(null, { status: 400 });
+        return privateMediaError(400);
     }
     const identifier = /^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/;
     if (
@@ -44,7 +45,7 @@ export async function handleGatewayImageGet(request: Request, options: GatewayIm
         fileId.length > 256 ||
         !fileId.trim()
     ) {
-        return new Response(null, { status: 400 });
+        return privateMediaError(400);
     }
     try {
         const derivative = await options.images.get(
@@ -77,7 +78,7 @@ export async function handleGatewayImageGet(request: Request, options: GatewayIm
         });
     } catch (error) {
         if (!(error instanceof GatewayError)) {
-            return new Response(null, { status: 500 });
+            return privateMediaError(500);
         }
         const status =
             error.code === "invalid_input"
@@ -93,9 +94,6 @@ export async function handleGatewayImageGet(request: Request, options: GatewayIm
                       : error.code === "invalid_provider_response" || error.code === "transport_failure"
                         ? 502
                         : 503;
-        return new Response(null, {
-            status,
-            headers: error.requestId ? { "x-ulvia-request-id": error.requestId } : undefined,
-        });
+        return privateMediaError(status, error.requestId ? { "x-ulvia-request-id": error.requestId } : {});
     }
 }

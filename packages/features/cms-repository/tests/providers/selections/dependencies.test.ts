@@ -112,13 +112,16 @@ describe("full selection dependency graph", () => {
 test("catalogue dependency revision tracks release, manifest, and installation changes", async () => {
     const fixture = await graphFixture();
     let installationRevision = 1;
+    let installation = fixture.installation;
     const installationStore = {
-        list: async () => [{ installation: fixture.installation, revision: installationRevision }],
+        list: async () => [{ installation, revision: installationRevision }],
     } as unknown as ProviderInstallationStore;
     const dependencies = new CatalogueSelectionDependencies(fixture.releases, fixture.manifests, installationStore);
     const original = await dependencies.capture(siteId);
     expect(await dependencies.isCurrent(siteId, original.revision)).toBe(true);
     installationRevision += 1;
+    expect(await dependencies.isCurrent(siteId, original.revision)).toBe(true);
+    installation = { ...installation, status: "disabled" };
     expect(await dependencies.isCurrent(siteId, original.revision)).toBe(false);
     const afterInstallation = await dependencies.capture(siteId);
     await fixture.releases.setYank("payment", "1.0.0", { reason: "retired" });
@@ -146,7 +149,7 @@ test("metadata revisions fence changes without loading catalogue artifacts on th
         },
     } as unknown as ConstructorParameters<typeof CatalogueSelectionDependencies>[1];
     const installations = {
-        revision: async () => "installation-1",
+        selectionRevision: async () => "installation-1",
         list: async () => {
             listCalls += 1;
             return [];
