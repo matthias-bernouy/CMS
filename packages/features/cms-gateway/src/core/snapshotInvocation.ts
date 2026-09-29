@@ -7,9 +7,17 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
     if (!value || typeof value !== "object") {
         throw new GatewayError("invalid_input", "invocation context is required");
     }
-    for (const field of [value.siteId, value.contractId, value.capabilityId]) {
-        if (typeof field !== "string" || !field.trim() || field !== field.trim() || field.length > 128) {
-            throw new GatewayError("invalid_input", "site, contract, and capability identifiers are required");
+    if (
+        typeof value.siteId !== "string" ||
+        !value.siteId.trim() ||
+        value.siteId !== value.siteId.trim() ||
+        value.siteId.length > 128
+    ) {
+        throw new GatewayError("invalid_input", "site identifier is invalid");
+    }
+    for (const field of [value.contractId, value.capabilityId]) {
+        if (typeof field !== "string" || field.length > 128 || !/^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/.test(field)) {
+            throw new GatewayError("invalid_input", "contract or capability identifier is invalid");
         }
     }
     if (!["delivery", "view", "control", "provider", "system", "conformance"].includes(value.origin)) {

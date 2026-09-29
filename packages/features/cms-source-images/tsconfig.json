@@ -6,6 +6,7 @@
     },
     "include": ["src/**/*.ts"],
     "references": [
+        { "path": "../cms-gateway" },
         { "path": "../cms-sources" }
     ]
 }

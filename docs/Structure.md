@@ -60,10 +60,12 @@ Feature packages:
 - `@bernouy/cms-gateway`: initial capability invocation boundary. It resolves
   pinned selected releases and ready installations, executes admitted synchronous
   JSON query bindings through an injected transport, validates outputs, and
-  exposes installation-scoped identity and derivative-key helpers. Its `./http`
-  and `./mongo` subpaths hold optional transport and persistence adapters. The
-  host still supplies trusted actors, grants, route consistency, network policy,
-  and secrets; production mounting and legacy Source replacement remain pending.
+  exposes installation-scoped identity and derivative-key helpers. `./handlers`
+  provides optional Control and Delivery call envelopes; `./http`, `./node-http`,
+  and `./mongo` provide transport, pinned network, and persistence adapters. The
+  host still supplies trusted actors, grants, route consistency, and secret
+  resolution; runtime provider composition and legacy Source replacement remain
+  pending.
 - `@bernouy/cms-secrets`: secret storage contracts, `${VAR}` resolution, and
   encrypted Mongo storage.
 - `@bernouy/cms-auth`: accounts, local/OIDC providers, PATs, signed sessions,

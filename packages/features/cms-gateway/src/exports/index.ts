@@ -7,6 +7,7 @@ export { GatewayError, type GatewayErrorCode } from "cms-gateway/core/GatewayErr
 export type {
     GatewayActor,
     GatewayInvocation,
+    GatewayInvoker,
     GatewayOrigin,
     GatewayResult,
     GatewayRoute,

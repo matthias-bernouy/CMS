@@ -14,6 +14,7 @@
         "./sharp": "./src/exports/sharp.ts"
     },
     "dependencies": {
+        "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "sharp": "^0.35.4"
     },

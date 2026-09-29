@@ -22,6 +22,7 @@
         { "path": "../../features/cms-auth" },
         { "path": "../../features/cms-bloc-compile" },
         { "path": "../../features/cms-content" },
+        { "path": "../../features/cms-gateway" },
         { "path": "../../features/cms-editor-system-v2" },
         { "path": "../../features/cms-source-images" },
         { "path": "../../features/cms-secrets" },

@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { CapabilityGateway } from "@bernouy/cms-gateway";
+import { handleGatewayHttpCall } from "@bernouy/cms-gateway/handlers";
 import { buildHttpInvocation, HttpGatewayTransport, type GatewayHttpExchange } from "@bernouy/cms-gateway/http";
 import { gatewayRoute } from "./fixtures";
 
@@ -119,4 +120,26 @@ test("HTTP invocation accepts only canonical approved loopback origins", async (
     expect(buildHttpInvocation(request).origin).toBe(request.endpoint);
     expect(() => buildHttpInvocation({ ...request, endpoint: "http://localhost:8080" })).toThrow();
     expect(() => buildHttpInvocation({ ...request, endpoint: "https://provider.example.com/path" })).toThrow();
+});
+
+test("HTTP call envelope preserves bodyless results and rejects wrong methods", async () => {
+    const options = {
+        siteId: "site-a",
+        origin: "delivery" as const,
+        actor: { kind: "anonymous" as const },
+        prefix: "/.cms/call",
+        invoker: {
+            invoke: async () => ({ kind: "success" as const, status: 204, requestId: "request-1", output: null }),
+        },
+    };
+    const url = "https://site.example/.cms/call/catalog/item.list";
+    const response = await handleGatewayHttpCall(
+        new Request(url, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }),
+        options,
+    );
+    expect(response.status).toBe(204);
+    expect(response.headers.get("x-ulvia-request-id")).toBe("request-1");
+    expect(await response.text()).toBe("");
+    const wrongMethod = await handleGatewayHttpCall(new Request(url), options);
+    expect(wrongMethod.status).toBe(405);
 });

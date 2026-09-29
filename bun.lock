@@ -116,6 +116,7 @@
       },
       "peerDependencies": {
         "mongodb": "^7.2.0",
+        "sharp": "^0.35.4",
         "typescript": "^7.0.2",
       },
     },
@@ -154,6 +155,7 @@
       "name": "@bernouy/cms-source-images",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "sharp": "^0.35.4",
       },
@@ -258,6 +260,7 @@
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-dashboards": "workspace:*",
         "@bernouy/cms-editor-system-v2": "workspace:*",
+        "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-identities": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-source-images": "workspace:*",
@@ -284,6 +287,7 @@
         "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
+        "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-identities": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-source-images": "workspace:*",

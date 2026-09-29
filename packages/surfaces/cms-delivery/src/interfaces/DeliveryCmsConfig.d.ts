@@ -8,6 +8,7 @@ import type {
     PublicFileMetadataLookup,
 } from "@bernouy/cms-content/files/serving";
 import type { IdentityService } from "@bernouy/cms-identities";
+import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type {
     SourceEndpointInterceptor,
     SourceRepository,
@@ -33,6 +34,8 @@ export type DeliveryCmsConfig = {
     sources?: SourceRepository;
     /** Federated opaque identity aliases used by source bindings. */
     identities?: IdentityService;
+    /** Site-scoped capability invocation supplied by a trusted composition root. */
+    capabilityGateway?: { readonly siteId: string; readonly invoker: GatewayInvoker };
     /**
      * Resolver for source header secrets. Only composition roots that enforce
      * the appropriate source access policy should provide one.

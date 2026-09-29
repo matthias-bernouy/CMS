@@ -17,6 +17,7 @@ import { mountControlSourceProxy } from "cms-control/core/admin/control/sourcePr
 import { createAuthenticatedControlGuard, createControlAccessGuard } from "cms-control/core/admin/control/adminAccess";
 import type { ControlAuthBackends, ControlCmsState } from "cms-control/core/admin/control/types";
 import { mountAnalyticsRoutes } from "cms-control/core/admin/control/mountRoutes/analytics";
+import { mountControlCapabilityRoutes } from "cms-control/core/admin/control/mountRoutes/capability";
 import serveStaticFolder from "cms-control/core/admin/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "cms-control/core/admin/registerEndpoints/serveApiFolder";
 import type { ControlCms } from "cms-control/ControlCms";
@@ -68,6 +69,7 @@ export function mountControlCmsRoutes(
     runner.addEndpoint("GET", "/", toPages, [authGuard]);
     runner.addEndpoint("GET", "/admin", toPages, [authGuard]);
     mountControlSourceProxy(state, authGuard, controlPublicAuth);
+    mountControlCapabilityRoutes(state, authenticatedGuard);
     runner.group(
         CMS_FILES_ROUTE,
         (filesRunner) => {

@@ -77,3 +77,7 @@ export interface GatewayResult {
     readonly output?: unknown;
     readonly errorCode?: string;
 }
+
+export interface GatewayInvoker {
+    invoke(value: GatewayInvocation): Promise<GatewayResult>;
+}

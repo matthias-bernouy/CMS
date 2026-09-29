@@ -5,6 +5,7 @@ import type {
     LocalCredentialStore,
     PatRepository,
     UsersRepository,
+    Subject,
 } from "@bernouy/cms-auth";
 import type { PublicAuthRoutesConfig, OidcAuthHandlers } from "@bernouy/cms-auth/http";
 import type { AnalyticsComplianceContext, AnalyticsStore, EndpointPerformanceReports } from "@bernouy/cms-analytics";
@@ -12,6 +13,7 @@ import type { CmsRepository } from "@bernouy/cms-content";
 import type { DashboardAssignmentRepository } from "@bernouy/cms-dashboards";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { IdentityService } from "@bernouy/cms-identities";
+import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type { SourceEndpointInterceptor, SourceRepository, SourceRequestTelemetryOptions } from "@bernouy/cms-sources";
 import type { Cache, Runner } from "@bernouy/http-runner";
@@ -27,6 +29,12 @@ type Configuration = {
 export type ControlCmsOptions = Configuration & {
     dashboardAssignments?: DashboardAssignmentRepository;
     identities?: IdentityService;
+    capabilityGateway?: {
+        readonly siteId: string;
+        readonly invoker: GatewayInvoker;
+        /** Host-owned verified administrator grant, independent of request fields. */
+        readonly isAdministrator: (subject: Subject) => Promise<boolean>;
+    };
     endpointPerformanceReports?: EndpointPerformanceReports;
     sourceTelemetry?: SourceRequestTelemetryOptions;
     /** Shared post-authorization interceptor for bounded Source image variants. */

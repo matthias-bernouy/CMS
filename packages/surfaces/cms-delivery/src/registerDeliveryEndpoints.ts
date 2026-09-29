@@ -5,6 +5,7 @@ import RobotsServer from "cms-delivery/endpoints/robots.txt.server";
 import SitemapServer from "cms-delivery/endpoints/sitemap.xml.server";
 import SitemapChunkServer from "cms-delivery/endpoints/sitemap-chunk.server";
 import FaviconServer from "cms-delivery/endpoints/assets/favicon.server";
+import { handleCapabilityCall } from "cms-delivery/endpoints/capabilityCall.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import BindingCoreServer from "cms-delivery/endpoints/assets/bindingCore.server";
 import { PUBLIC_AUTH_ROUTES, registerPublicAuthRoutes } from "@bernouy/cms-auth/http";
@@ -128,6 +129,11 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
     });
 
     registerDeliverySourceProxy(delivery);
+    if (delivery.capabilityGateway) {
+        runner.group("/.cms/call", (callRunner) => {
+            callRunner.setDefaultEndpoint("POST", (request) => handleCapabilityCall(request, delivery));
+        });
+    }
 
     // Responsive image variants at `/.cms/img/<id>/<width>.webp` — mounted only
     // when a variant store is wired (else the renderer just serves originals).

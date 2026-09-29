@@ -8,6 +8,7 @@ import type {
     PublicFileMetadataLookup,
 } from "@bernouy/cms-content/files/serving";
 import type { IdentityService } from "@bernouy/cms-identities";
+import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type {
     SourceEndpointInterceptor,
     SourceRepository,
@@ -93,6 +94,10 @@ export class DeliveryCmsContext {
 
     get identities(): IdentityService | undefined {
         return this.config.identities;
+    }
+
+    get capabilityGateway(): { readonly siteId: string; readonly invoker: GatewayInvoker } | undefined {
+        return this.config.capabilityGateway;
     }
 
     get auth(): PublicAuthRoutesConfig | undefined {
