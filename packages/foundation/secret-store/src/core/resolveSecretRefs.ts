@@ -1,17 +1,17 @@
-import type { SecretStore } from "cms-secrets/interfaces/SecretStore";
-import { SecretNotFound } from "cms-secrets/core/SecretNotFound";
-import { secretRefGlobalPattern } from "cms-secrets/core/secretRef";
+import type { SecretReader } from "secret-store/interfaces/SecretReader";
+import { SecretNotFound } from "secret-store/core/SecretNotFound";
+import { secretRefGlobalPattern } from "secret-store/core/secretRef";
 /**
  * Replaces every `${KEY}` in `input` with the value stored under `KEY`.
  * Multi-occurrences supported (`https://${USER}:${PASS}@host`). Returns
  * the input unchanged when there is no reference at all (cheap fast-path
  * for fields without secrets).
  *
- * Throws `SecretNotFound(key)` on the FIRST missing key — the caller
- * decides how to surface it (HTTP 502, log + skip, …). We never leak
+ * Throws `SecretNotFound(key)` on the first missing key — the caller
+ * decides how to report it. We never leak
  * a literal `${KEY}` on the wire by silently passing it through.
  */
-export async function resolveSecretRefs(input: string, secrets: SecretStore): Promise<string> {
+export async function resolveSecretRefs(input: string, secrets: SecretReader): Promise<string> {
     if (!input.includes("${")) {
         return input;
     }

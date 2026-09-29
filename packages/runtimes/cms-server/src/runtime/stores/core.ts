@@ -14,8 +14,8 @@ import { EnvelopeSecretCrypto, LocalKekProvider } from "@bernouy/envelope-crypto
 import { createFieldCrypto, MongoDekRepository } from "@bernouy/envelope-crypto/mongo";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { MongoRateLimiter } from "@bernouy/rate-limiter/mongo";
-import { ValidatingSecretStore } from "@bernouy/cms-secrets";
-import { EncryptedMongoSecretStore } from "@bernouy/cms-secrets/mongo";
+import { ValidatingSecretStore } from "@bernouy/secret-store";
+import { EncryptedMongoSecretStore } from "@bernouy/secret-store/mongo";
 import { MongoClient } from "mongodb";
 import type { RuntimeEnv } from "../../runtimeEnv";
 

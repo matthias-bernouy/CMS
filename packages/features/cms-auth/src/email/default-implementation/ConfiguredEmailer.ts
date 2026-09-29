@@ -1,5 +1,5 @@
-import type { SecretReader } from "@bernouy/cms-secrets";
-import { secretRefToKey } from "@bernouy/cms-secrets";
+import type { SecretReader } from "@bernouy/secret-store";
+import { secretRefToKey } from "@bernouy/secret-store";
 import type { Emailer, OutboundEmail } from "cms-auth/email/interfaces/Emailer";
 import { SmtpEmailer, type SmtpTransportFactory } from "cms-auth/email/default-implementation/smtp/SmtpEmailer";
 import { EmailConfigurationError, type EmailConfigurationErrorCode } from "cms-auth/email/core/EmailConfigurationError";

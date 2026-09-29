@@ -28,10 +28,10 @@ CmsCore/
 |   |   |-- envelope-crypto/   @bernouy/envelope-crypto
 |   |   |-- rate-limiter/      @bernouy/rate-limiter
 |   |   |-- image-processing/  @bernouy/image-processing
+|   |   |-- secret-store/      @bernouy/secret-store
 |   |   `-- components/        @bernouy/components
 |   |-- features/
 |   |   |-- cms-content/       @bernouy/cms-content (pages, blocs, settings, files)
-|   |   |-- cms-secrets/       @bernouy/cms-secrets
 |   |   |-- cms-auth/          @bernouy/cms-auth
 |   |   |-- cms-gateway/       @bernouy/cms-gateway
 |   |   |-- cms-repository/    @bernouy/cms-repository
@@ -61,8 +61,9 @@ CmsCore/
 - One direction only: `runtimes → surfaces → resources → features → foundation`. Never
   upward, never surface→surface (compose through features).
 - Lateral feature→feature edges are allowed when one feature consumes
-  another's published contract (e.g. cms-auth → cms-secrets for `SecretReader`,
-  cms-gateway → cms-repository for selected capabilities).
+  another's published contract (e.g. cms-gateway → cms-repository for selected
+  capabilities). Features may consume generic Foundation contracts such as
+  `@bernouy/secret-store` for `SecretReader`.
 - Network adapters are only imported by runtimes (`./mongo`, `./s3`
   subpaths); surfaces consume contracts and receive instances injected.
 - Features may define HTTP values (handlers, registrars under `src/http/`)

@@ -10,7 +10,7 @@ import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { Cache, Runner } from "@bernouy/http-runner";
-import type { SecretStore } from "@bernouy/cms-secrets";
+import type { SecretStore } from "@bernouy/secret-store";
 import { join } from "node:path";
 import { controlCmsAccessors } from "cms-control/core/admin/control/accessors";
 import { mountControlCmsRoutes } from "cms-control/core/admin/control/mountRoutes";

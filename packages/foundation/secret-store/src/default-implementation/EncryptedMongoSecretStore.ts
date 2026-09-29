@@ -2,7 +2,7 @@ import type { Collection } from "mongodb";
 
 import { asBuffer } from "@bernouy/envelope-crypto";
 import type { SecretCrypto } from "@bernouy/envelope-crypto";
-import type { SecretStore } from "cms-secrets/interfaces/SecretStore";
+import type { SecretStore } from "secret-store/interfaces/SecretStore";
 
 /**
  * Mongo doc shape for an encrypted secret value. `_id` is the secret
@@ -19,9 +19,8 @@ export type EncryptedSecretDocument = {
 export type EncryptedMongoSecretStoreConfig = {
     /** DEK lookup scope. In a multi-tenant setup: the tenantId. */
     scopeId: string;
-    /** Mongo collection holding encrypted secret docs. Consuming runtime uses
-     *  one collection per tenant (typically `tenant_<id>__secrets`), so docs
-     *  are pre-isolated; `scopeId` only routes the DEK lookup. */
+    /** Mongo collection holding encrypted secret documents. The caller owns
+     *  tenant isolation; `scopeId` routes the DEK lookup. */
     collection: Collection<EncryptedSecretDocument>;
     /** Envelope-encryption surface — typically a single
      *  `EnvelopeSecretCrypto(kekProvider, dekRepo)` instance shared

@@ -5,7 +5,7 @@ import { SubjectResolver } from "cms-auth/accounts/core/SubjectResolver";
 import { OidcAuthentication } from "cms-auth/application/core/authentication/OidcAuthentication";
 import { InMemoryIdentityProviderRepository } from "cms-auth/providers/default-implementation/memory/InMemoryIdentityProviderRepository";
 import { InMemoryUsersRepository } from "cms-auth/accounts/default-implementation/memory/InMemoryUsersRepository";
-import { InMemorySecretStore } from "@bernouy/cms-secrets";
+import { InMemorySecretStore } from "@bernouy/secret-store";
 
 export const ISSUER = "https://issuer.example";
 export const ISSUER_PATH = "https://cms.example/auth/sso";

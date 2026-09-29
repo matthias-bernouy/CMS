@@ -11,7 +11,7 @@ import { InMemoryDashboardAssignmentRepository } from "@bernouy/cms-dashboards";
 import { InMemoryIdentityService } from "@bernouy/cms-gateway/identity";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import { InMemoryCache, type Cache, type Runner } from "@bernouy/http-runner";
-import { InMemorySecretStore, type SecretStore, ValidatingSecretStore } from "@bernouy/cms-secrets";
+import { InMemorySecretStore, type SecretStore, ValidatingSecretStore } from "@bernouy/secret-store";
 import type { ControlAuthBackends, ControlCmsOptions, ControlCmsState } from "cms-control/core/admin/control/types";
 
 export type ControlCmsConstructorInput = {

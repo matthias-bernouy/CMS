@@ -18,7 +18,7 @@
         "jose": "^6.2.12",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
-        "@bernouy/cms-secrets": "workspace:*",
+        "@bernouy/secret-store": "workspace:*",
         "nodemailer": "^10.0.10"
     },
     "peerDependencies": {

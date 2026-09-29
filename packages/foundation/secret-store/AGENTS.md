@@ -1,12 +1,13 @@
-# @bernouy/cms-secrets
+# @bernouy/secret-store
 
-Feature package for CMS-managed secrets and secret reference resolution.
+Foundation package for generic secret storage and secret reference resolution.
+It must remain independent of CMS features, surfaces, and runtimes.
 
 ## Boundaries
 
 - Root export exposes `SecretStore`, `SecretReader`, in-memory store,
   validation, `${VAR}` reference helpers, and `createSecretResolver`.
-- `@bernouy/cms-secrets/mongo` exposes `EncryptedMongoSecretStore` for
+- `@bernouy/secret-store/mongo` exposes `EncryptedMongoSecretStore` for
   composition roots.
 - Encryption primitives come from `@bernouy/envelope-crypto`; surfaces should
   receive a ready secret store instead of creating one.
@@ -19,3 +20,5 @@ Feature package for CMS-managed secrets and secret reference resolution.
 - `resolveSecretRefs` should preserve non-secret text and fail clearly when a
   referenced key is missing.
 - Mongo storage must keep values encrypted at rest.
+- Keep HTTP status mapping and product-specific authorization in consuming
+  surfaces or features.

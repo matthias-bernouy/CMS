@@ -1,9 +1,9 @@
-import type { SecretStore } from "cms-secrets/interfaces/SecretStore";
+import type { SecretStore } from "secret-store/interfaces/SecretStore";
 
 /**
  * In-memory `SecretStore` implementation. Adequate for dev, tests, and
  * single-process deployments where secrets only need to live for the
- * lifetime of the running CMS. Production multi-instance setups should
+ * lifetime of the process. Production multi-instance setups should
  * swap in a backed implementation (Vault, AWS Secrets Manager, …) without
  * touching consumers — the interface is the only contract.
  *

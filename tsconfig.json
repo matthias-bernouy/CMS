@@ -6,7 +6,7 @@
         { "path": "packages/foundation/rate-limiter" },
         { "path": "packages/foundation/image-processing" },
         { "path": "packages/features/cms-auth" },
-        { "path": "packages/features/cms-secrets" },
+        { "path": "packages/foundation/secret-store" },
         { "path": "packages/features/cms-content" },
         { "path": "packages/features/cms-bloc-compile" },
         { "path": "packages/features/cms-repository" },

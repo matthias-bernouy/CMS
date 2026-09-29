@@ -52,7 +52,7 @@
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-dashboards": "workspace:*",
-        "@bernouy/cms-secrets": "workspace:*",
+        "@bernouy/secret-store": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/cms-analytics": "workspace:*",
         "linkedom": "^0.18.13",

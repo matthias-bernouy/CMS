@@ -1,4 +1,4 @@
-import type { SecretReader } from "@bernouy/cms-secrets";
+import type { SecretReader } from "@bernouy/secret-store";
 import type { IdentityProvider, IdentityProviderRepository } from "cms-auth/providers/interfaces/IdentityProvider";
 
 type ResolvedOidcProvider = {

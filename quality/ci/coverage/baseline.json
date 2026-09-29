@@ -1049,37 +1049,6 @@
                 "total": 209
             }
         },
-        "@bernouy/cms-secrets": {
-            "path": "packages/features/cms-secrets",
-            "coveredSourceFiles": [
-                "packages/features/cms-secrets/src/core/SecretNotFound.ts",
-                "packages/features/cms-secrets/src/core/ValidatingSecretStore.ts",
-                "packages/features/cms-secrets/src/core/createSecretResolver.ts",
-                "packages/features/cms-secrets/src/core/resolveSecretRefs.ts",
-                "packages/features/cms-secrets/src/core/scopedSecretReader.ts",
-                "packages/features/cms-secrets/src/core/secretRef.ts",
-                "packages/features/cms-secrets/src/default-implementation/InMemorySecretStore.ts",
-                "packages/features/cms-secrets/src/exports/index.ts"
-            ],
-            "uncoveredSourceFiles": [
-                "packages/features/cms-secrets/src/default-implementation/EncryptedMongoSecretStore.ts",
-                "packages/features/cms-secrets/src/exports/mongo.ts",
-                "packages/features/cms-secrets/src/interfaces/SecretReader.ts",
-                "packages/features/cms-secrets/src/interfaces/SecretStore.ts"
-            ],
-            "files": {
-                "covered": 8,
-                "total": 12
-            },
-            "functions": {
-                "covered": 24,
-                "total": 26
-            },
-            "lines": {
-                "covered": 99,
-                "total": 117
-            }
-        },
         "@bernouy/cms-server": {
             "path": "packages/runtimes/cms-server",
             "coveredSourceFiles": [
@@ -1607,6 +1576,37 @@
             "lines": {
                 "covered": 58,
                 "total": 66
+            }
+        },
+        "@bernouy/secret-store": {
+            "path": "packages/foundation/secret-store",
+            "coveredSourceFiles": [
+                "packages/foundation/secret-store/src/core/SecretNotFound.ts",
+                "packages/foundation/secret-store/src/core/ValidatingSecretStore.ts",
+                "packages/foundation/secret-store/src/core/createSecretResolver.ts",
+                "packages/foundation/secret-store/src/core/resolveSecretRefs.ts",
+                "packages/foundation/secret-store/src/core/scopedSecretReader.ts",
+                "packages/foundation/secret-store/src/core/secretRef.ts",
+                "packages/foundation/secret-store/src/default-implementation/InMemorySecretStore.ts",
+                "packages/foundation/secret-store/src/exports/index.ts"
+            ],
+            "uncoveredSourceFiles": [
+                "packages/foundation/secret-store/src/default-implementation/EncryptedMongoSecretStore.ts",
+                "packages/foundation/secret-store/src/exports/mongo.ts",
+                "packages/foundation/secret-store/src/interfaces/SecretReader.ts",
+                "packages/foundation/secret-store/src/interfaces/SecretStore.ts"
+            ],
+            "files": {
+                "covered": 8,
+                "total": 12
+            },
+            "functions": {
+                "covered": 24,
+                "total": 26
+            },
+            "lines": {
+                "covered": 99,
+                "total": 117
             }
         },
         "@bernouy/ulvia-cli": {

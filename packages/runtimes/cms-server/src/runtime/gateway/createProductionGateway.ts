@@ -19,7 +19,7 @@ import {
     MongoContractSelectionStore,
 } from "@bernouy/cms-repository/providers/mongo";
 import { CatalogueSelectionDependencies } from "@bernouy/cms-repository/providers/selections";
-import { createSecretResolver, type SecretStore } from "@bernouy/cms-secrets";
+import { createSecretResolver, type SecretStore } from "@bernouy/secret-store";
 import type { Db } from "mongodb";
 import { createProductionGatewayAccess } from "./access";
 

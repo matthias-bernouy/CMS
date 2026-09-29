@@ -39,7 +39,7 @@ authenticated Control and Delivery POST routes. The production runtime injects a
 gateway when `CMS_GATEWAY_SITE_ID` is set. It persists release, manifest,
 installation and selection state in MongoDB, reuses the existing provider
 identity aliases in `cms_identity_aliases`, resolves provider token references
-through `cms-secrets`, and uses the pinned
+through `@bernouy/secret-store`, and uses the pinned
 Node network adapter. Delivery grants public capabilities and authenticated
 capabilities to verified users; Control grants calls only to the configured
 local administrator. The Control editor lists callable JSON capabilities from

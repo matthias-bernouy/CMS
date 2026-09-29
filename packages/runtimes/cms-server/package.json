@@ -14,7 +14,7 @@
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-secrets": "workspace:*",
+        "@bernouy/secret-store": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",

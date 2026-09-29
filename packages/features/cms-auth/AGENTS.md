@@ -30,7 +30,7 @@ remain tracked limitations, not successful recovery guarantees.
   composition roots only.
 - `@bernouy/cms-auth/browser` exposes browser-safe helpers only. UI components
   belong to their consuming surface or integration.
-- This package may depend on `@bernouy/cms-secrets`,
+- This package may depend on `@bernouy/secret-store`,
   `@bernouy/envelope-crypto`, `@bernouy/http-runner`, and
   `@bernouy/rate-limiter`; it must not import surfaces or runtimes.
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { Runner, RouteHandler } from "@bernouy/http-runner";
-import { InMemorySecretStore } from "@bernouy/cms-secrets";
+import { InMemorySecretStore } from "@bernouy/secret-store";
 import {
     InMemoryIdentityProviderRepository,
     InMemoryLocalCredentialStore,

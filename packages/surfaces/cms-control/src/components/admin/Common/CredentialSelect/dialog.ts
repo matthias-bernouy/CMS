@@ -1,6 +1,6 @@
 import type { CredentialSelect } from "./CredentialSelect";
 import { showToast } from "@bernouy/components";
-import { secretKeyError } from "@bernouy/cms-secrets";
+import { secretKeyError } from "@bernouy/secret-store";
 import { createCredential } from "./flows";
 import { closePanel, keyToRef, refreshList, setValue } from "./controller";
 

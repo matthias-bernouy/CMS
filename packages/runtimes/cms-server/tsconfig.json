@@ -10,7 +10,7 @@
         { "path": "../../foundation/envelope-crypto" },
         { "path": "../../foundation/rate-limiter" },
         { "path": "../../features/cms-auth" },
-        { "path": "../../features/cms-secrets" },
+        { "path": "../../foundation/secret-store" },
         { "path": "../../features/cms-content" },
         { "path": "../../features/cms-repository" },
         { "path": "../../features/cms-gateway" },

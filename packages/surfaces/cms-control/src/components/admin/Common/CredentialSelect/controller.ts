@@ -1,5 +1,5 @@
 import type { CredentialSelect } from "./CredentialSelect";
-import { secretKeyToRef, secretRefToKey } from "@bernouy/cms-secrets";
+import { secretKeyToRef, secretRefToKey } from "@bernouy/secret-store";
 import { fetchKeys } from "./flows";
 
 /** Storage `${KEY}` ↔ display `KEY`. */

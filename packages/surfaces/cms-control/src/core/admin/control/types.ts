@@ -16,7 +16,7 @@ import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { GatewayCapabilityCatalogue } from "@bernouy/cms-gateway";
 import type { ProviderImageService } from "@bernouy/cms-gateway/media";
-import type { SecretStore } from "@bernouy/cms-secrets";
+import type { SecretStore } from "@bernouy/secret-store";
 import type { Cache, Runner } from "@bernouy/http-runner";
 
 type Configuration = {

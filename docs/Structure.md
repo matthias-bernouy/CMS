@@ -31,6 +31,8 @@ Foundation packages:
   encryption, and the Mongo DEK adapter.
 - `@bernouy/rate-limiter`: fixed-window rate limiting with memory and Mongo
   implementations.
+- `@bernouy/secret-store`: secret storage contracts, `${VAR}` resolution, and
+  encrypted Mongo storage through `./mongo`.
 - `@bernouy/image-processing`: generic image inspection and WebP byte transforms;
   the optional `./sharp` adapter is shared by author files and gateway media.
 - `@bernouy/components`: public custom elements (`<p9r-*>`, `<w13c-*>`) and
@@ -71,8 +73,6 @@ Feature packages:
   revision checks and secret resolution when `CMS_GATEWAY_SITE_ID` is configured.
   Dynamic page indexing invokes selected gateway queries and projects declared
   response fields for metadata and sitemap discovery.
-- `@bernouy/cms-secrets`: secret storage contracts, `${VAR}` resolution, and
-  encrypted Mongo storage.
 - `@bernouy/cms-auth`: accounts, local/OIDC providers, PATs, signed sessions,
   email and public-auth action composition. Auth HTTP registrars use `./http`,
   admin mutations use `./management`, and Mongo/SMTP adapters use `./mongo`
@@ -112,7 +112,7 @@ src/
 ```
 
 Not every feature needs every folder. For example, `cms-bloc-compile` is a
-compile-time utility with `core/` and `exports/`; `cms-secrets` has no HTTP
+compile-time utility with `core/` and `exports/`; `secret-store` has no HTTP
 surface of its own.
 
 `cms-content` groups these layers inside sibling domains:

@@ -6,10 +6,11 @@ import {
     ValidatingSecretStore,
     createSecretResolver,
     isValidSecretKey,
+    scopedSecretReader,
     secretKeyToRef,
     secretRefToKey,
     secretRefGlobalPattern,
-} from "@bernouy/cms-secrets";
+} from "@bernouy/secret-store";
 
 describe("ValidatingSecretStore", () => {
     test("accepts an env-var-style key and delegates", async () => {
@@ -69,5 +70,25 @@ describe("secret refs", () => {
         const resolve = createSecretResolver(store);
         expect(await resolve("${API_KEY}")).toBe("secret");
         expect(await resolve("API_KEY")).toBe("secret");
+    });
+
+    test("secret resolver treats reader failures as unavailable secrets", async () => {
+        const resolve = createSecretResolver({
+            get: async () => {
+                throw new Error("store unavailable");
+            },
+        });
+        expect(await resolve("${API_KEY}")).toBeUndefined();
+    });
+
+    test("scoped readers disclose only explicitly granted keys", async () => {
+        const store = new InMemorySecretStore();
+        await store.set("ALLOWED", "visible");
+        await store.set("OTHER", "hidden");
+        const reader = scopedSecretReader(store, ["${ALLOWED}"]);
+        expect(await reader.get("ALLOWED")).toBe("visible");
+        await expect(reader.get("OTHER")).rejects.toThrow("not granted");
+        expect("listKeys" in reader).toBe(false);
+        expect(() => scopedSecretReader(store, ["ALLOWED"])).toThrow("exact secret reference");
     });
 });

@@ -13,6 +13,6 @@
         { "path": "../../foundation/http-runner" },
         { "path": "../../foundation/envelope-crypto" },
         { "path": "../../foundation/rate-limiter" },
-        { "path": "../cms-secrets" }
+        { "path": "../../foundation/secret-store" }
     ]
 }

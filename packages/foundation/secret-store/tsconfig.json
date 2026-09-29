@@ -4,11 +4,11 @@
         "outDir":  "dist",
         "rootDir": "./src",
         "paths": {
-            "cms-secrets/*": ["./src/*"]
+            "secret-store/*": ["./src/*"]
         }
     },
     "include": ["src/**/*.ts"],
     "references": [
-        { "path": "../../foundation/envelope-crypto" }
+        { "path": "../envelope-crypto" }
     ]
 }

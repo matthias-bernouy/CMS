@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { resolveSecretRefs, SecretNotFound, InMemorySecretStore } from "@bernouy/cms-secrets";
+import { resolveSecretRefs, SecretNotFound, InMemorySecretStore } from "@bernouy/secret-store";
 
 async function makeStore(entries: Record<string, string>) {
     const s = new InMemorySecretStore();

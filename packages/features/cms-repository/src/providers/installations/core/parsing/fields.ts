@@ -36,7 +36,7 @@ export function parseEndpoint(value: unknown, path: string): string {
     }
 }
 
-/** Exact cms-secrets reference syntax; never an inline credential or template expression. */
+/** Exact secret-store reference syntax; never an inline credential or template expression. */
 export function parseSecretRef(value: unknown, path: string): string {
     const ref = expectString(value, path, 131);
     if (!/^\$\{[A-Z][A-Z0-9_]{0,127}\}$/.test(ref)) {

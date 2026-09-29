@@ -14,12 +14,12 @@
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
+        "@bernouy/secret-store": "workspace:*",
         "@bernouy/ulvia-cli": "workspace:*",
         "@biomejs/biome": "2.5.14",
         "@types/bun": "1.4.2",
@@ -48,10 +48,10 @@
       "name": "@bernouy/cms-auth",
       "version": "0.1.0",
       "dependencies": {
-        "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
+        "@bernouy/secret-store": "workspace:*",
         "jose": "^6.2.12",
         "nodemailer": "^10.0.10",
       },
@@ -132,17 +132,6 @@
         "typescript": "^7.0.2",
       },
     },
-    "packages/features/cms-secrets": {
-      "name": "@bernouy/cms-secrets",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/envelope-crypto": "workspace:*",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.2.0",
-        "typescript": "^7.0.2",
-      },
-    },
     "packages/foundation/components": {
       "name": "@bernouy/components",
       "version": "0.1.2",
@@ -186,6 +175,17 @@
         "typescript": "^7.0.2",
       },
     },
+    "packages/foundation/secret-store": {
+      "name": "@bernouy/secret-store",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/envelope-crypto": "workspace:*",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^7.0.2",
+      },
+    },
     "packages/runtimes/cms-server": {
       "name": "@bernouy/cms-server",
       "version": "0.1.0",
@@ -198,10 +198,10 @@
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
+        "@bernouy/secret-store": "workspace:*",
         "mongodb": "^7.6.0",
       },
       "peerDependencies": {
@@ -232,9 +232,9 @@
         "@bernouy/cms-dashboards": "workspace:*",
         "@bernouy/cms-editor-system-v2": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
+        "@bernouy/secret-store": "workspace:*",
         "linkedom": "^0.18.13",
       },
       "devDependencies": {
@@ -256,7 +256,6 @@
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "linkedom": "^0.18.13",
@@ -290,8 +289,6 @@
 
     "@bernouy/cms-repository": ["@bernouy/cms-repository@workspace:packages/features/cms-repository"],
 
-    "@bernouy/cms-secrets": ["@bernouy/cms-secrets@workspace:packages/features/cms-secrets"],
-
     "@bernouy/cms-server": ["@bernouy/cms-server@workspace:packages/runtimes/cms-server"],
 
     "@bernouy/components": ["@bernouy/components@workspace:packages/foundation/components"],
@@ -303,6 +300,8 @@
     "@bernouy/image-processing": ["@bernouy/image-processing@workspace:packages/foundation/image-processing"],
 
     "@bernouy/rate-limiter": ["@bernouy/rate-limiter@workspace:packages/foundation/rate-limiter"],
+
+    "@bernouy/secret-store": ["@bernouy/secret-store@workspace:packages/foundation/secret-store"],
 
     "@bernouy/ulvia-cli": ["@bernouy/ulvia-cli@workspace:packages/runtimes/ulvia-cli"],
 

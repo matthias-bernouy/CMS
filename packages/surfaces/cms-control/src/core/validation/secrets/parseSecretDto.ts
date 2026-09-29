@@ -4,7 +4,7 @@ export type SecretDto = { key: string; value: string };
 
 /**
  * Extract a `/api/secrets` upsert body: presence + shape coercion only. The
- * key-format rule lives in `@bernouy/cms-secrets` (validated at write time by
+ * key-format rule lives in `@bernouy/secret-store` (validated at write time by
  * `ValidatingSecretStore`). Empty values are allowed (clear without delete).
  */
 export function parseSecretDto(body: Record<string, unknown>): SecretDto {

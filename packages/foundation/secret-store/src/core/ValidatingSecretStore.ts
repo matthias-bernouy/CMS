@@ -1,10 +1,8 @@
-import type { SecretStore } from "cms-secrets/interfaces/SecretStore";
-import { secretKeyError } from "cms-secrets/core/secretRef";
+import type { SecretStore } from "secret-store/interfaces/SecretStore";
+import { secretKeyError } from "secret-store/core/secretRef";
 
-/** Thrown when a secret key breaks the env-var naming rule. Carries `.status`
- *  so any HTTP surface maps it to a 400 without importing surface errors. */
+/** Thrown when a secret key breaks the configured naming rule. */
 export class SecretValidationError extends Error {
-    status = 400;
     constructor(message: string) {
         super(message);
         this.name = "SecretValidationError";
@@ -12,9 +10,8 @@ export class SecretValidationError extends Error {
 }
 
 /**
- * The secret-key naming rule (the domain rule, owned here). Keys follow the
- * env-var convention so they stay consistent with the `${KEY_NAME}` reference
- * syntax used in data-provider config. Throws `SecretValidationError`.
+ * Keys follow the env-var convention so they stay consistent with the
+ * `${KEY_NAME}` reference syntax. Throws `SecretValidationError`.
  */
 export function validateSecretKey(key: string): void {
     const err = secretKeyError(key);
@@ -25,7 +22,7 @@ export function validateSecretKey(key: string): void {
 
 /**
  * Decorator that validates the key on every `set` before delegating — the
- * unbypassable barrier so no writer (admin API, CLI, …) can store a
+ * unbypassable barrier so no writer can store a
  * malformed key. Reads, deletes, and key listings pass straight through.
  *
  *   `new ValidatingSecretStore(new EncryptedMongoSecretStore(...))`

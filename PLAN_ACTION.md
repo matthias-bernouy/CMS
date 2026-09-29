@@ -49,7 +49,7 @@ The following foundations should be preserved and adapted:
 - the existing Collections workspace UI shell;
 - the page editor and the generic binding/rendering runtime where its behavior
   remains useful;
-- `cms-secrets` and envelope encryption for credential references;
+- `secret-store` and envelope encryption for credential references;
 - `cms-gateway/identity` for aliases and reverse identity resolution;
 - the generic rate limiter;
 - the HTTP runner and surface/runtime dependency-injection pattern;
@@ -838,7 +838,7 @@ runtime code has no API for executing an uncompiled binding.
 3. Create installation, runtime-report, requirement-approval, contract
    selection, and health models.
 4. Add repositories and Mongo adapters; store secrets only through
-   `cms-secrets` references.
+   `secret-store` references.
 5. Support several installations/accounts for the same provider.
 6. Implement credential issue, rotation, and revoke while preserving one
    pairwise user identity alias per provider across installations.
