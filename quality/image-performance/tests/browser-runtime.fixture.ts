@@ -1,32 +1,32 @@
-import { SOURCE_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-source-images";
-import { SharpSourceImageTransformer } from "@bernouy/cms-source-images/sharp";
+import { PROVIDER_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-gateway/media";
+import { SharpImageTransformer } from "@bernouy/cms-gateway/media/sharp";
 import { startBrowserFixtureServer } from "../browser/server";
 
 const server = await startBrowserFixtureServer();
 try {
-    const original = await fetch(`${server.origin}/image/original.png?slot=baseline`);
-    const derivative = await fetch(`${server.origin}/image/original.png?slot=candidate&cms-width=384`);
-    const transformer = new SharpSourceImageTransformer();
+    const original = await fetch(`${server.origin}/image/narrow`);
+    const derivative = await fetch(`${server.origin}/.cms/image/performance/image/wide/384.webp`);
+    const transformer = new SharpImageTransformer();
     const originalMetadata = await transformer.inspect(
         new Uint8Array(await original.arrayBuffer()),
-        SOURCE_RESPONSIVE_WEBP_V1,
+        PROVIDER_RESPONSIVE_WEBP_V1,
     );
     const derivativeMetadata = await transformer.inspect(
         new Uint8Array(await derivative.arrayBuffer()),
-        SOURCE_RESPONSIVE_WEBP_V1,
+        PROVIDER_RESPONSIVE_WEBP_V1,
     );
 
     assertEqual(original.headers.get("content-type"), "image/png", "original content type");
     assertMetadata(originalMetadata, { format: "png", width: 1_600, height: 1_200 });
     assertEqual(derivative.headers.get("content-type"), "image/webp", "derivative content type");
     assertMetadata(derivativeMetadata, { format: "webp", width: 384, height: 288 });
-    assertEqual(server.adapter.name, "source-responsive-webp-v1-local-fs", "adapter name");
-    assertEqual(server.adapter.implementation.mode, "source-image", "adapter mode");
-    assertEqual(server.adapter.implementation.recipeId, SOURCE_RESPONSIVE_WEBP_V1.id, "recipe id");
+    assertEqual(server.adapter.name, "provider-responsive-webp-v1-local-fs", "adapter name");
+    assertEqual(server.adapter.implementation.mode, "provider-image", "adapter mode");
+    assertEqual(server.adapter.implementation.recipeId, PROVIDER_RESPONSIVE_WEBP_V1.id, "recipe id");
     assertEqual(server.adapter.implementation.encoderIdentity, transformer.encoderIdentity, "encoder identity");
     assertEqual(
         JSON.stringify(server.requests),
-        JSON.stringify(["/image/original.png?slot=baseline", "/image/original.png?slot=candidate&cms-width=384"]),
+        JSON.stringify(["/image/narrow", "/.cms/image/performance/image/wide/384.webp"]),
         "request sequence",
     );
 } finally {

@@ -35,18 +35,25 @@ export interface ProviderImageServiceOptions {
     readonly transformer: GatewayImageTransformer;
     readonly store: ProviderImageDerivativeStore;
     readonly maxConcurrent?: number;
+    readonly maxPending?: number;
 }
 
 /** Authorization always runs before cache lookup; byte fingerprints invalidate changed provider files. */
 export class ProviderImageService {
     readonly #flights = new Map<string, Promise<ProviderImageDerivative>>();
     readonly #maxConcurrent: number;
+    readonly #maxPending: number;
+    readonly #waiters: Array<() => void> = [];
     #active = 0;
 
     constructor(private readonly options: ProviderImageServiceOptions) {
         this.#maxConcurrent = options.maxConcurrent ?? 2;
+        this.#maxPending = options.maxPending ?? 64;
         if (!Number.isSafeInteger(this.#maxConcurrent) || this.#maxConcurrent <= 0) {
             throw new TypeError("maxConcurrent must be a positive integer");
+        }
+        if (!Number.isSafeInteger(this.#maxPending) || this.#maxPending < 0) {
+            throw new TypeError("maxPending must be a non-negative integer");
         }
     }
 
@@ -96,16 +103,32 @@ export class ProviderImageService {
         if (existing) {
             return existing;
         }
-        if (this.#active >= this.#maxConcurrent) {
-            throw new GatewayError("media_busy", "image processing capacity is exhausted");
-        }
-        this.#active += 1;
-        const flight = this.#transform(key, result.bytes, width).finally(() => {
+        const flight = this.#transformWithPermit(key, result.bytes, width).finally(() => {
             this.#flights.delete(key);
-            this.#active -= 1;
         });
         this.#flights.set(key, flight);
         return flight;
+    }
+
+    async #transformWithPermit(key: string, source: Uint8Array, width: number): Promise<ProviderImageDerivative> {
+        if (this.#active >= this.#maxConcurrent) {
+            if (this.#waiters.length >= this.#maxPending) {
+                throw new GatewayError("media_busy", "image processing capacity is exhausted");
+            }
+            await new Promise<void>((resolve) => this.#waiters.push(resolve));
+        } else {
+            this.#active += 1;
+        }
+        try {
+            return await this.#transform(key, source, width);
+        } finally {
+            const next = this.#waiters.shift();
+            if (next) {
+                next();
+            } else {
+                this.#active -= 1;
+            }
+        }
     }
 
     async #transform(key: string, source: Uint8Array, width: number): Promise<ProviderImageDerivative> {

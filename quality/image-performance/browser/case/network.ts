@@ -7,9 +7,7 @@ export function requestMismatches(
     const matched = new Set<number>();
     let mismatches = 0;
     for (const slot of imageSlots()) {
-        const indices = requests.flatMap((request, index) =>
-            new URL(request, "http://fixture.invalid").searchParams.get("slot") === slot ? [index] : [],
-        );
+        const indices = requests.flatMap((request, index) => (slotFromUrl(request) === slot ? [index] : []));
         for (const index of indices) {
             matched.add(index);
         }
@@ -61,9 +59,7 @@ export function responseCaptureMismatches(
 
 export function doubleFetches(requests: string[]): number {
     return imageSlots().reduce((count, slot) => {
-        const requestsForSlot = requests.filter(
-            (request) => new URL(request, "http://fixture.invalid").searchParams.get("slot") === slot,
-        ).length;
+        const requestsForSlot = requests.filter((request) => slotFromUrl(request) === slot).length;
         return count + Math.max(0, requestsForSlot - 1);
     }, 0);
 }
@@ -82,10 +78,17 @@ export function matchesExpectedUrl(urlValue: string, slot: string, width: number
         return false;
     }
     const url = new URL(urlValue, "http://fixture.invalid");
+    return width === null
+        ? url.pathname === `/image/${slot}` && !url.search
+        : url.pathname === `/.cms/image/performance/image/${slot}/${width}.webp` && !url.search;
+}
+
+function slotFromUrl(value: string): string | null {
+    const pathname = new URL(value, "http://fixture.invalid").pathname;
     return (
-        url.pathname === "/.cms/sources/image-performance/image" &&
-        url.searchParams.get("slot") === slot &&
-        (width === null ? !url.searchParams.has("cms-width") : url.searchParams.get("cms-width") === String(width))
+        /^\/image\/(narrow|wide)$/.exec(pathname)?.[1] ??
+        /^\/\.cms\/image\/performance\/image\/(narrow|wide)\/\d+\.webp$/.exec(pathname)?.[1] ??
+        null
     );
 }
 

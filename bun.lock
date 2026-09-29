@@ -15,7 +15,6 @@
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
-        "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
@@ -146,22 +145,6 @@
         "typescript": "^7.0.2",
       },
     },
-    "packages/features/cms-source-images": {
-      "name": "@bernouy/cms-source-images",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-sources": "workspace:*",
-        "sharp": "^0.35.4",
-      },
-      "devDependencies": {
-        "linkedom": "^0.18.13",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.2.0",
-        "typescript": "^7.0.2",
-      },
-    },
     "packages/features/cms-sources": {
       "name": "@bernouy/cms-sources",
       "version": "0.1.0",
@@ -230,7 +213,6 @@
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
-        "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
@@ -266,7 +248,6 @@
         "@bernouy/cms-editor-system-v2": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
-        "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
@@ -292,7 +273,6 @@
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
-        "@bernouy/cms-source-images": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
@@ -330,8 +310,6 @@
     "@bernouy/cms-secrets": ["@bernouy/cms-secrets@workspace:packages/features/cms-secrets"],
 
     "@bernouy/cms-server": ["@bernouy/cms-server@workspace:packages/runtimes/cms-server"],
-
-    "@bernouy/cms-source-images": ["@bernouy/cms-source-images@workspace:packages/features/cms-source-images"],
 
     "@bernouy/cms-sources": ["@bernouy/cms-sources@workspace:packages/features/cms-sources"],
 

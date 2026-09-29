@@ -18,6 +18,12 @@ export function syncProviderMediaImage(image: HTMLImageElement): void {
     }
     const width = dimension(image.getAttribute("data-source-width") ?? image.getAttribute("data-cms-width"));
     const height = dimension(image.getAttribute("data-source-height") ?? image.getAttribute("data-cms-height"));
+    const sizes = image.getAttribute("data-cms-sizes");
+    if (sizes?.includes("{{")) {
+        clearGenerated(image, previous);
+        scrubUnresolved(image);
+        return;
+    }
     if (width === null && height === null) {
         clearGenerated(image, previous);
         setGenerated(image, "src", raw);
@@ -33,7 +39,7 @@ export function syncProviderMediaImage(image: HTMLImageElement): void {
         width,
         height,
         baseURI: image.ownerDocument.baseURI,
-        ...(image.getAttribute("data-cms-sizes") ? { sizes: image.getAttribute("data-cms-sizes")! } : {}),
+        ...(sizes ? { sizes } : {}),
         loading: image.getAttribute("loading") === "lazy" ? "lazy" : "eager",
     });
     if (!attributes) {

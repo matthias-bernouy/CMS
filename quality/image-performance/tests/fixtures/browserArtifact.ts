@@ -61,8 +61,7 @@ function provenance(candidate: ImagePerformanceArtifact): BrowserPerformanceProv
         component: {
             productionEntry: true,
             entryFingerprint: "c".repeat(64),
-            enabledBundleFingerprint: "d".repeat(64),
-            disabledBundleFingerprint: "e".repeat(64),
+            bundleFingerprint: "d".repeat(64),
         },
         adapter: {
             name: candidate.adapter,
@@ -83,10 +82,10 @@ function domProbes(): BrowserPerformanceCase["domProbes"] {
         recycled: {
             firstSizes: "(max-width: 640px) 100vw, 30vw",
             secondSizes: "50vw",
-            secondSrc: "http://fixture.invalid/image/original.png?slot=recycle-second",
+            secondSrc: "/.cms/media/performance/image/recycle-second",
             clearedSizes: "25vw",
-            clearedSrc: "http://fixture.invalid/image/other-owner.png?slot=recycle-owned-src",
-            clearedSrcset: "/image/other-owner-640.png?slot=recycle-owned-srcset 640w",
+            clearedSrc: "/image/other-owner",
+            clearedSrcset: "/image/other-owner-640 640w",
             clearedWidth: "321",
             clearedHeight: "123",
         },
@@ -108,10 +107,12 @@ function expectedWidths(
 }
 
 function image(slot: "narrow" | "wide", width: number | null) {
-    const cmsWidth = width === null ? "" : `&cms-width=${width}`;
     const decodedWidth = width ?? 1_600;
     return {
-        currentSrc: `http://fixture.invalid/.cms/sources/image-performance/image?slot=${slot}${cmsWidth}`,
+        currentSrc:
+            width === null
+                ? `http://fixture.invalid/image/${slot}`
+                : `http://fixture.invalid/.cms/image/performance/image/${slot}/${width}.webp`,
         selectedWidth: width,
         responseStatus: 200,
         decodedWidth,

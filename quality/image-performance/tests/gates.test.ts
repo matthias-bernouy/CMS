@@ -100,14 +100,14 @@ describe("image performance gates", () => {
         expect(() => compare(baseline, candidate)).toThrow("explicitly approved corpus fingerprint");
     });
 
-    test("rejects excess upstream reads for a cold public single-flight key", () => {
+    test("rejects missing or excess provider authorization reads", () => {
         const baseline = artifact("baseline", 1_000, 1_000, 0, 10);
         const candidate = artifact("candidate", 100, 100, 0, 10);
         candidate.listing[0]!.stats.upstreamReads = 13;
 
         const comparison = compare(baseline, candidate);
 
-        expect(comparison.gates.find(({ id }) => id === "cold_single_flight_upstream_mismatches")?.passed).toBe(false);
+        expect(comparison.gates.find(({ id }) => id === "provider_authorization_read_mismatches")?.passed).toBe(false);
     });
 
     test("fails closed when browser or single-flight measurements are missing", () => {
@@ -130,18 +130,16 @@ describe("image performance gates", () => {
         const candidate = artifact("candidate", 100, 100, 0, 10);
         let browser = browserArtifact(candidate);
         const candidateCase = browser.cases.find(({ rollout }) => rollout === "candidate")!;
-        candidateCase.images.narrow.currentSrc =
-            "http://fixture.invalid/.cms/sources/image-performance/image?slot=narrow&cms-width=64";
+        candidateCase.images.narrow.currentSrc = "http://fixture.invalid/.cms/image/performance/image/narrow/64.webp";
         candidateCase.images.wide.decodedWidth = 1_600;
         candidateCase.images.wide.responseContentType = "image/png";
         candidateCase.requests.push(candidateCase.requests[0]!);
         candidateCase.domProbes.unresolved.source.src =
-            "http://fixture.invalid/image/original.png?slot=unresolved-source";
+            "http://fixture.invalid/.cms/media/performance/image/unresolved-source";
         candidateCase.domProbes.recycled.clearedSizes = null;
         candidateCase.cls = 0.01;
         const baselineCase = browser.cases.find(({ rollout }) => rollout === "baseline")!;
-        baselineCase.images.narrow.currentSrc =
-            "http://fixture.invalid/.cms/sources/image-performance/image?slot=narrow&cms-width=384";
+        baselineCase.images.narrow.currentSrc = "http://fixture.invalid/.cms/image/performance/image/narrow/384.webp";
         browser = buildBrowserPerformanceArtifact(browser.cases, browser.provenance);
 
         const comparison = compareArtifacts(baseline, candidate, browser, comparisonThresholds());

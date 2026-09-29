@@ -83,7 +83,36 @@ test("image processing rejects unapproved files and animated inputs", async () =
     await expect(service.get(invocation, 256)).rejects.toMatchObject({ code: "invalid_provider_response" });
 });
 
-async function binary(bytes: Uint8Array): Promise<GatewayResult> {
+test("distinct provider images wait behind the bounded transform capacity", async () => {
+    let active = 0;
+    let peak = 0;
+    const service = new ProviderImageService({
+        invoker: {
+            invoke: async ({ input }) => binary(new Uint8Array([1, 2, 3]), (input as { fileId: string }).fileId),
+        },
+        transformer: {
+            encoderIdentity: "test-encoder",
+            inspect: async () => ({ format: "png", width: 600, height: 400, pages: 1 }),
+            transform: async (_bytes, options) => {
+                active++;
+                peak = Math.max(peak, active);
+                await Bun.sleep(10);
+                active--;
+                return { bytes: new Uint8Array([options.width]), width: options.width, height: 40 };
+            },
+        },
+        store: { get: async () => null, put: async () => undefined },
+        maxConcurrent: 1,
+        maxPending: 3,
+    });
+    const results = await Promise.all(
+        ["photo-1", "photo-2", "photo-3"].map((fileId) => service.get({ ...invocation, input: { fileId } }, 256)),
+    );
+    expect(results.every((result) => "bytes" in result)).toBe(true);
+    expect(peak).toBe(1);
+});
+
+async function binary(bytes: Uint8Array, fileId = "photo-1"): Promise<GatewayResult> {
     return {
         kind: "binary",
         requestId: "request-1",
@@ -96,7 +125,7 @@ async function binary(bytes: Uint8Array): Promise<GatewayResult> {
             contractId: "files",
             releaseDigest: `sha256:${"a".repeat(64)}`,
             capabilityId: "file.read",
-            fileId: "photo-1",
+            fileId,
             generation: await providerByteGeneration(bytes),
         },
     };

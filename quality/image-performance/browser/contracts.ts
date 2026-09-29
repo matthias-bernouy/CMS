@@ -68,13 +68,12 @@ export type BrowserPerformanceProvenance = {
     component: {
         productionEntry: true;
         entryFingerprint: string;
-        enabledBundleFingerprint: string;
-        disabledBundleFingerprint: string;
+        bundleFingerprint: string;
     };
     adapter: {
         name: string;
         implementation: {
-            mode: "original" | "source-image";
+            mode: "original" | "provider-image";
             recipeId: string;
             encoderIdentity: string;
         };

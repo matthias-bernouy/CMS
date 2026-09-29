@@ -26,3 +26,25 @@ test("provider derivative cache survives restart and rejects corrupted bytes", a
         await rm(directory, { recursive: true, force: true });
     }
 });
+
+test("parallel derivative writes cannot delete each other's temporary files", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "cms-provider-images-parallel-"));
+    try {
+        const store = new LocalProviderImageStore(directory);
+        const entries = await Promise.all(
+            Array.from({ length: 24 }, async (_, index) => {
+                const key = `sha256:${index.toString(16).padStart(64, "0")}`;
+                const bytes = new Uint8Array([index + 1, 2, 3]);
+                return { key, bytes, etag: `"${await providerByteGeneration(bytes)}"` };
+            }),
+        );
+        await Promise.all(
+            entries.map(({ key, bytes, etag }) => store.put(key, { bytes, etag, width: 128, height: 64 })),
+        );
+        for (const { key, bytes } of entries) {
+            expect((await store.get(key))?.bytes).toEqual(bytes);
+        }
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});

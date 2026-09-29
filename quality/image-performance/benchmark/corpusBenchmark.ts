@@ -1,5 +1,5 @@
 import { imageSize } from "image-size";
-import { SOURCE_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-source-images";
+import { PROVIDER_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-gateway/media";
 import sharp from "sharp";
 import type { CorpusAssetSample } from "../contracts";
 import type { ImagePerformanceAdapter } from "../core/adapter";
@@ -94,7 +94,7 @@ async function fidelityThumbnail(bytes: Uint8Array): Promise<Uint8Array> {
     const thumbnail = await sharp(bytes, {
         animated: false,
         failOn: "warning",
-        limitInputPixels: SOURCE_RESPONSIVE_WEBP_V1.maxInputPixels,
+        limitInputPixels: PROVIDER_RESPONSIVE_WEBP_V1.maxInputPixels,
     })
         .rotate()
         .flatten({ background: { r: 255, g: 255, b: 255 } })

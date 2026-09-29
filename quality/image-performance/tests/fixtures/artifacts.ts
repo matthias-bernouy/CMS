@@ -23,8 +23,7 @@ export function comparisonThresholds() {
         currentCodeFingerprint: TEST_CODE_FINGERPRINT,
         currentComponentBuild: {
             entryFingerprint: "c".repeat(64),
-            enabledBundleFingerprint: "d".repeat(64),
-            disabledBundleFingerprint: "e".repeat(64),
+            bundleFingerprint: "d".repeat(64),
         },
         nowMs: TEST_NOW_MS,
         maxArtifactAgeMs: 60_000,
@@ -43,10 +42,10 @@ export function artifact(
     const artifactWithoutProvenance: Omit<ImagePerformanceArtifact, "provenance"> = {
         schema: IMAGE_PERFORMANCE_SCHEMA,
         label,
-        adapter: role === "baseline" ? "original" : "source-responsive-webp-v1-local-fs",
+        adapter: role === "baseline" ? "original" : "provider-responsive-webp-v1-local-fs",
         implementation: {
-            mode: role === "baseline" ? "original" : "source-image",
-            recipeId: "source-responsive-webp-v1",
+            mode: role === "baseline" ? "original" : "provider-image",
+            recipeId: "provider-responsive-webp",
             encoderIdentity: role === "baseline" ? "original-pass-through" : "test-sharp-vips-webp",
         },
         corpus: {
@@ -171,7 +170,7 @@ function listingSample(
         stats: {
             cacheHits: role === "candidate" && phase === "warm" ? users * 12 : 0,
             encodes: candidateCold ? 12 : 0,
-            upstreamReads: candidateCold ? 12 : role === "baseline" ? users * 12 : 0,
+            upstreamReads: users * 12,
         },
     };
 }

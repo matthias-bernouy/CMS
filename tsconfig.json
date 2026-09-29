@@ -12,7 +12,6 @@
         { "path": "packages/features/cms-repository" },
         { "path": "packages/features/cms-gateway" },
         { "path": "packages/features/cms-sources" },
-        { "path": "packages/features/cms-source-images" },
         { "path": "packages/features/cms-dashboards" },
         { "path": "packages/features/cms-analytics" },
         { "path": "packages/foundation/components" },

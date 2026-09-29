@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import { arch, cpus, hostname, platform, release } from "node:os";
 import { join, relative } from "node:path";
-import { SOURCE_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-source-images";
+import { PROVIDER_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-gateway/media";
 import {
     IMAGE_PERFORMANCE_PROVENANCE_SCHEMA,
     type AdapterImplementation,
@@ -16,14 +16,14 @@ export const IMAGE_PERFORMANCE_CODE_INPUTS = [
     "quality/image-performance",
     "packages/foundation/components/package.json",
     "packages/foundation/components/src",
-    "packages/features/cms-source-images/package.json",
-    "packages/features/cms-source-images/src",
-    "packages/features/cms-sources/src",
+    "packages/features/cms-gateway/package.json",
+    "packages/features/cms-gateway/src",
+    "packages/foundation/image-processing/src",
     "packages/features/cms-bloc-compile/src/core/p9rExternalsPlugin.ts",
     "packages/surfaces/cms-delivery/src/endpoints/assets/component.client.ts",
     "packages/surfaces/cms-delivery/src/core/assets/buildComponent.ts",
     "packages/surfaces/cms-delivery/src/core/assets/resolveAssets.ts",
-    "packages/runtimes/cms-server/src/runtime/sourceImageTelemetry.ts",
+    "packages/runtimes/cms-server/src/runtime/gateway/createProductionGateway.ts",
     "packages/runtimes/cms-server/src/runtime/stores/core.ts",
     "packages/runtimes/cms-server/src/runtime/mountSurfaces.ts",
 ] as const;
@@ -37,7 +37,7 @@ export function fingerprintBytes(value: string | Uint8Array): string {
 }
 
 export function recipeFingerprint(): string {
-    return fingerprint(SOURCE_RESPONSIVE_WEBP_V1);
+    return fingerprint(PROVIDER_RESPONSIVE_WEBP_V1);
 }
 
 export async function currentCodeFingerprint(root = process.cwd()): Promise<string> {
@@ -66,7 +66,7 @@ export function performanceSuiteFingerprint(
         codeFingerprint,
         corpusFingerprint: artifact.corpus.fingerprint,
         configuration: artifact.configuration,
-        recipeId: SOURCE_RESPONSIVE_WEBP_V1.id,
+        recipeId: PROVIDER_RESPONSIVE_WEBP_V1.id,
         recipeFingerprint: recipeFingerprint(),
     });
 }
@@ -113,7 +113,7 @@ export function createPerformanceProvenance(options: {
         suiteId: options.suiteId,
         generatedAtMs: options.generatedAtMs ?? Date.now(),
         codeFingerprint: options.codeFingerprint,
-        recipeId: SOURCE_RESPONSIVE_WEBP_V1.id,
+        recipeId: PROVIDER_RESPONSIVE_WEBP_V1.id,
         recipeFingerprint: recipeFingerprint(),
         suiteFingerprint: performanceSuiteFingerprint(options.artifact, options.suiteId, options.codeFingerprint),
         implementationFingerprint: implementationFingerprint(options.artifact.implementation, options.codeFingerprint),

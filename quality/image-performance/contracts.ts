@@ -65,7 +65,7 @@ export type ListingSample = {
 };
 
 export type AdapterImplementation = {
-    mode: "original" | "source-image" | "provider-image";
+    mode: "original" | "provider-image";
     recipeId: string;
     encoderIdentity: string;
 };

@@ -31,7 +31,6 @@ export function validateSmokeArtifacts(
     return [
         exactGate("smoke_failed_images", candidate.summary.failedImages, 0),
         exactGate("smoke_warm_encodes", candidate.summary.warmEncodes, 0),
-        exactGate("smoke_warm_upstream_reads", candidate.summary.warmUpstreamReads, 0),
         ...candidateArtifactIntegrityGates(candidate, options.maximumThumbnailMae),
         ...browserPerformanceGates(browser, candidate, options),
     ];

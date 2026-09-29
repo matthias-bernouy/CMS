@@ -1,10 +1,10 @@
-import { createAdapter, type ImagePerformanceAdapter } from "../core/adapter";
+import { createAdapter } from "../core/adapter";
 import type { LoadedAsset } from "../core/corpus";
 import { syntheticPng } from "../core/png";
 import type { BrowserPerformanceProvenance } from "./contracts";
 import { buildCurrentBrowserComponent } from "./componentBuild";
 
-function fixtureHtml(responsive: boolean): string {
+function fixtureHtml(): string {
     return `<!doctype html>
 <html>
 <head>
@@ -20,16 +20,16 @@ img { display: block; width: 100%; height: 100%; object-fit: cover; }
 </style>
 </head>
 <body>
-<div class="row"><div class="frame narrow"><img data-slot="narrow" data-source-image-access="public" alt=""></div></div>
-<div class="row"><div class="frame wide"><img data-slot="wide" data-source-image-access="public" alt=""></div></div>
+<div class="row"><div class="frame narrow"><img data-slot="narrow" alt=""></div></div>
+<div class="row"><div class="frame wide"><img data-slot="wide" alt=""></div></div>
 <div class="probes" aria-hidden="true">
-<img data-probe="empty" data-source-image-access="public" alt="">
-<img data-probe="unresolved-source" data-source-image-access="public" alt="">
-<img data-probe="unresolved-width" data-source-image-access="public" alt="">
-<img data-probe="unresolved-height" data-source-image-access="public" alt="">
-<img data-probe="unresolved-sizes" data-source-image-access="public" alt="">
+<img data-probe="empty" alt="">
+<img data-probe="unresolved-source" alt="">
+<img data-probe="unresolved-width" alt="">
+<img data-probe="unresolved-height" alt="">
+<img data-probe="unresolved-sizes" alt="">
 </div>
-<script src="/component.js?responsive=${responsive ? "on" : "off"}"></script>
+<script src="/component.js"></script>
 <script type="module" src="/fixture.js"></script>
 </body>
 </html>`;
@@ -40,8 +40,7 @@ export type BrowserFixtureServer = {
     requests: string[];
     build: {
         entryFingerprint: string;
-        enabledBundleFingerprint: string;
-        disabledBundleFingerprint: string;
+        bundleFingerprint: string;
     };
     adapter: BrowserPerformanceProvenance["adapter"];
     reset(): void;
@@ -61,8 +60,7 @@ export async function startBrowserFixtureServer(): Promise<BrowserFixtureServer>
         fixtureBuild.outputs[0].text(),
         buildCurrentBrowserComponent(),
     ]);
-    const asset = browserAsset();
-    const adapter = await createAdapter("module:quality/image-performance/core/sourceImagesAdapter.ts", {
+    const adapter = await createAdapter("module:quality/image-performance/benchmark/adapters/gatewayImagesAdapter.ts", {
         imageUpstreamDelayMs: 0,
     });
     const requests: string[] = [];
@@ -73,28 +71,34 @@ export async function startBrowserFixtureServer(): Promise<BrowserFixtureServer>
             async fetch(request) {
                 const url = new URL(request.url);
                 if (url.pathname === "/") {
-                    return new Response(fixtureHtml(url.searchParams.get("rollout") === "candidate"), {
+                    return new Response(fixtureHtml(), {
                         headers: { "content-type": "text/html; charset=utf-8" },
                     });
                 }
                 if (url.pathname === "/component.js") {
-                    const script =
-                        url.searchParams.get("responsive") === "on"
-                            ? componentBuild.enabledScript
-                            : componentBuild.disabledScript;
-                    return new Response(script, { headers: { "content-type": "text/javascript; charset=utf-8" } });
+                    return new Response(componentBuild.script, {
+                        headers: { "content-type": "text/javascript; charset=utf-8" },
+                    });
                 }
                 if (url.pathname === "/fixture.js") {
                     return new Response(fixtureScript, {
                         headers: { "content-type": "text/javascript; charset=utf-8" },
                     });
                 }
-                if (
-                    url.pathname === "/.cms/sources/image-performance/image" ||
-                    url.pathname === "/image/original.png"
-                ) {
+                const original = /^\/image\/(narrow|wide)$/.exec(url.pathname);
+                const media = /^\/\.cms\/media\/performance\/image\/(narrow|wide)$/.exec(url.pathname);
+                const derivative = /^\/\.cms\/image\/performance\/image\/(narrow|wide)\/(\d+)\.webp$/.exec(
+                    url.pathname,
+                );
+                if (original || media || derivative) {
                     requests.push(`${url.pathname}${url.search}`);
-                    return sourceImageResponse(adapter, asset, request);
+                    const asset = browserAsset((original ?? media ?? derivative)![1]!);
+                    if (derivative) {
+                        return adapter.variant(asset, Number(derivative[2]));
+                    }
+                    return original
+                        ? new Response(asset.bytes.slice(), { headers: { "content-type": asset.mediaType } })
+                        : adapter.respond(asset, request);
                 }
                 return new Response("Not found", { status: 404 });
             },
@@ -109,8 +113,7 @@ export async function startBrowserFixtureServer(): Promise<BrowserFixtureServer>
         requests,
         build: {
             entryFingerprint: componentBuild.entryFingerprint,
-            enabledBundleFingerprint: componentBuild.enabledBundleFingerprint,
-            disabledBundleFingerprint: componentBuild.disabledBundleFingerprint,
+            bundleFingerprint: componentBuild.bundleFingerprint,
         },
         adapter: {
             name: adapter.name,
@@ -130,28 +133,12 @@ export async function startBrowserFixtureServer(): Promise<BrowserFixtureServer>
     };
 }
 
-function browserAsset(): LoadedAsset {
+function browserAsset(slot: string): LoadedAsset {
     return {
-        assetId: "browser-fixture-1600x1200",
+        assetId: slot,
         bytes: syntheticPng(1_600, 1_200, 7),
         mediaType: "image/png",
         width: 1_600,
         height: 1_200,
     };
-}
-
-function sourceImageResponse(
-    adapter: ImagePerformanceAdapter,
-    asset: LoadedAsset,
-    browserRequest: Request,
-): Promise<Response> {
-    const sourceUrl = new URL(browserRequest.url);
-    sourceUrl.searchParams.delete("slot");
-    return adapter.respond(
-        asset,
-        new Request(sourceUrl, {
-            headers: browserRequest.headers,
-            method: "GET",
-        }),
-    );
 }

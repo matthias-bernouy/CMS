@@ -19,7 +19,10 @@ export function captureImageResponses(page: Page): CapturedImageResponse[] {
     const capturedResponses: CapturedImageResponse[] = [];
     page.on("response", (response) => {
         const url = new URL(response.url());
-        if (url.pathname !== "/.cms/sources/image-performance/image") {
+        if (
+            !/^\/image\/(narrow|wide)$/.test(url.pathname) &&
+            !/^\/\.cms\/image\/performance\/image\/(narrow|wide)\/\d+\.webp$/.test(url.pathname)
+        ) {
             return;
         }
         capturedResponses.push({

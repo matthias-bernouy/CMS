@@ -110,7 +110,9 @@ describe("image performance corpus", () => {
 
     test("records a bounded thumbnail fidelity signal for the production candidate", async () => {
         const corpus = await loadCorpus({ syntheticCount: 1 });
-        const adapter = await createAdapter("module:quality/image-performance/core/sourceImagesAdapter.ts");
+        const adapter = await createAdapter(
+            "module:quality/image-performance/benchmark/adapters/gatewayImagesAdapter.ts",
+        );
         try {
             const samples = await benchmarkCorpus(corpus, adapter, [384]);
 

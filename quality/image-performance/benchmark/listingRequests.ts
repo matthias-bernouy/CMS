@@ -23,9 +23,6 @@ export async function runListingUser(
                     ? `/image/${asset.assetId}/${width}.webp`
                     : `/image/${asset.assetId}`;
             const url = new URL(path, origin);
-            if (implementation.mode === "source-image" && width) {
-                url.searchParams.set("cms-width", String(width));
-            }
             const startedAt = performance.now();
             try {
                 const response = await fetch(url);

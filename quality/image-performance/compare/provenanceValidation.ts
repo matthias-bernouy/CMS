@@ -62,11 +62,9 @@ export function assertCandidateBrowserProvenance(
         !provenance.engine.version?.trim() ||
         provenance.component?.productionEntry !== true ||
         !isHash(provenance.component.entryFingerprint) ||
-        !isHash(provenance.component.enabledBundleFingerprint) ||
-        !isHash(provenance.component.disabledBundleFingerprint) ||
+        !isHash(provenance.component.bundleFingerprint) ||
         provenance.component.entryFingerprint !== expected.currentComponentBuild.entryFingerprint ||
-        provenance.component.enabledBundleFingerprint !== expected.currentComponentBuild.enabledBundleFingerprint ||
-        provenance.component.disabledBundleFingerprint !== expected.currentComponentBuild.disabledBundleFingerprint ||
+        provenance.component.bundleFingerprint !== expected.currentComponentBuild.bundleFingerprint ||
         provenance.generatedAtMs + 60_000 < candidate.provenance.generatedAtMs
     ) {
         throw new Error("Browser evidence lacks Chromium production-bundle provenance");

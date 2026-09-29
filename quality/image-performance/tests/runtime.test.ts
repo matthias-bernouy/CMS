@@ -1,21 +1,19 @@
 import { describe, expect, test } from "bun:test";
 import { runSustainedForeground } from "../benchmark/listingRequests";
-import { assertReleaseAdapterSpecifier, createAdapter } from "../core/adapter";
+import { assertReleaseAdapterSpecifier, createAdapter, RELEASE_CANDIDATE_ADAPTER } from "../core/adapter";
 import type { LoadedAsset } from "../core/corpus";
 import { syntheticPng } from "../core/png";
 
 describe("image performance runtime", () => {
     test("allows only the real release adapters in benchmark artifacts", () => {
         expect(() => assertReleaseAdapterSpecifier("original")).not.toThrow();
-        expect(() =>
-            assertReleaseAdapterSpecifier("module:quality/image-performance/core/sourceImagesAdapter.ts"),
-        ).not.toThrow();
+        expect(() => assertReleaseAdapterSpecifier(RELEASE_CANDIDATE_ADAPTER)).not.toThrow();
         expect(() => assertReleaseAdapterSpecifier("module:/tmp/forged-adapter.ts")).toThrow(
             "Release image benchmarks require",
         );
     });
 
-    test("drives image and foreground traffic through the Source API", async () => {
+    test("drives original image and foreground traffic through the baseline", async () => {
         const adapter = await createAdapter("original");
         try {
             const asset = syntheticAsset();
@@ -43,53 +41,42 @@ describe("image performance runtime", () => {
         }
     });
 
-    test("uses the production LocalFS candidate cache across a warm request", async () => {
-        const adapter = await createAdapter("module:quality/image-performance/core/sourceImagesAdapter.ts");
+    test("uses the gateway LocalFS candidate cache across a warm request", async () => {
+        const adapter = await createAdapter(RELEASE_CANDIDATE_ADAPTER);
         try {
             const asset = syntheticAsset();
-            const request = () => new Request(`https://benchmark.invalid/image/${asset.assetId}?cms-width=384`);
-
-            const cold = await adapter.respond(asset, request());
-            const warm = await adapter.respond(asset, request());
+            const cold = await adapter.variant(asset, 384);
+            const warm = await adapter.variant(asset, 384);
             await Promise.all([cold.arrayBuffer(), warm.arrayBuffer()]);
 
             expect(cold.headers.get("content-type")).toBe("image/webp");
             expect(warm.headers.get("content-type")).toBe("image/webp");
-            expect(adapter.stats()).toEqual({ cacheHits: 1, encodes: 1, upstreamReads: 1 });
+            expect(adapter.stats()).toEqual({ cacheHits: 1, encodes: 1, upstreamReads: 2 });
         } finally {
             await adapter.dispose?.();
         }
     });
 
-    test("forces one real upstream read and transform for an overlapping cold wave", async () => {
-        const adapter = await createAdapter("module:quality/image-performance/core/sourceImagesAdapter.ts", {
+    test("reauthorizes every overlapping request but transforms only once", async () => {
+        const adapter = await createAdapter(RELEASE_CANDIDATE_ADAPTER, {
             imageUpstreamDelayMs: 25,
         });
         try {
             const asset = syntheticAsset();
             const startedAt = performance.now();
-            const responses = await Promise.all(
-                Array.from({ length: 20 }, (_, index) =>
-                    adapter.respond(
-                        asset,
-                        new Request(`https://benchmark.invalid/image/${asset.assetId}?cms-width=384`, {
-                            headers: { cookie: `audit-session=${index}`, "user-agent": `audit-${index}` },
-                        }),
-                    ),
-                ),
-            );
+            const responses = await Promise.all(Array.from({ length: 20 }, () => adapter.variant(asset, 384)));
             const bodies = await Promise.all(responses.map((response) => response.arrayBuffer()));
 
             expect(performance.now() - startedAt).toBeGreaterThanOrEqual(20);
             expect(new Set(responses.map(({ status }) => status))).toEqual(new Set([200]));
             expect(new Set(bodies.map(({ byteLength }) => byteLength)).size).toBe(1);
-            expect(adapter.stats()).toEqual({ cacheHits: 0, encodes: 1, upstreamReads: 1 });
+            expect(adapter.stats()).toEqual({ cacheHits: 0, encodes: 1, upstreamReads: 20 });
         } finally {
             await adapter.dispose?.();
         }
     });
 
-    test("serves the browser fixture through the real Source and Sharp adapter", () => {
+    test("serves the browser fixture through the gateway and Sharp adapter", () => {
         const result = Bun.spawnSync({
             cmd: [process.execPath, new URL("./browser-runtime.fixture.ts", import.meta.url).pathname],
             cwd: new URL("../../../", import.meta.url).pathname,

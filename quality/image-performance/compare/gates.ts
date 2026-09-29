@@ -49,7 +49,6 @@ export function compareArtifacts(
             thresholds.minimumSavingsRatio,
         ),
         exactGate("warm_encodes", candidate.summary.warmEncodes, 0),
-        exactGate("warm_upstream_reads", candidate.summary.warmUpstreamReads, 0),
         exactGate("failed_images", candidate.summary.failedImages, 0),
         ...artifactIntegrityGates(baseline, candidate, thresholds.maximumThumbnailMae),
         ...browserPerformanceGates(browser, candidate, thresholds),

@@ -34,6 +34,5 @@ For a representative page:
 
 The production runtime no longer installs Source image transform workers or
 responsive Source image browser helpers. Provider files use the gateway media
-routes and their own on-demand derivative store. The old Source image package
-remains in the historical performance suite while its browser fixtures are
-being migrated.
+routes and their own on-demand derivative store. The performance suite also
+uses the gateway image service and browser runtime.

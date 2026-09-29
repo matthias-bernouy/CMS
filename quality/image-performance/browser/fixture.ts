@@ -17,87 +17,87 @@ declare global {
                 clearedHeight: string | null;
             };
         };
-        p9r: {
-            clearResponsiveSourceImageElement(image: HTMLImageElement): void;
-            syncResponsiveSourceImageElement(image: HTMLImageElement): boolean;
-        };
+        p9r: { syncProviderMediaImage(image: HTMLImageElement): void };
     }
 }
 
 export {};
 
-const loading = new URL(location.href).searchParams.get("loading") === "eager" ? "eager" : "lazy";
-const sourcePath = "/.cms/sources/image-performance/image";
+const params = new URL(location.href).searchParams;
+const candidate = params.get("rollout") === "candidate";
+const loading = params.get("loading") === "eager" ? "eager" : "lazy";
+const mediaPath = (slot: string) => `/.cms/media/performance/image/${slot}`;
 window.__activationOrder = {};
 window.__cls = 0;
-const observer = new PerformanceObserver((list) => {
+new PerformanceObserver((list) => {
     for (const entry of list.getEntries() as LayoutShift[]) {
         if (!entry.hadRecentInput) {
             window.__cls = (window.__cls ?? 0) + entry.value;
         }
     }
-});
-observer.observe({ type: "layout-shift", buffered: true });
+}).observe({ type: "layout-shift", buffered: true });
 
 for (const image of document.querySelectorAll<HTMLImageElement>("img[data-slot]")) {
     const slot = image.dataset.slot!;
     const order: string[] = [];
     window.__activationOrder[slot] = order;
-    const mutations = new MutationObserver((records) => {
+    new MutationObserver((records) => {
         for (const record of records) {
             if (record.attributeName) {
                 order.push(record.attributeName);
             }
         }
-    });
-    mutations.observe(image, { attributes: true });
+    }).observe(image, { attributes: true });
     image.setAttribute("loading", loading);
-    image.setAttribute("data-src", `${sourcePath}?slot=${slot}`);
-    image.setAttribute("data-source-width", "1600");
-    image.setAttribute("data-source-height", "1200");
-    window.p9r.syncResponsiveSourceImageElement(image);
+    if (candidate) {
+        image.setAttribute("data-cms-src", mediaPath(slot));
+        image.setAttribute("data-cms-width", "1600");
+        image.setAttribute("data-cms-height", "1200");
+        window.p9r.syncProviderMediaImage(image);
+    } else {
+        image.setAttribute("src", `/image/${slot}`);
+    }
 }
 
 const empty = document.querySelector<HTMLImageElement>('img[data-probe="empty"]')!;
-empty.setAttribute("data-src", "");
-empty.setAttribute("data-source-width", "1600");
-empty.setAttribute("data-source-height", "1200");
-window.p9r.syncResponsiveSourceImageElement(empty);
+empty.setAttribute("data-cms-src", "");
+empty.setAttribute("data-cms-width", "1600");
+empty.setAttribute("data-cms-height", "1200");
+window.p9r.syncProviderMediaImage(empty);
 
 const unresolved = {
-    source: unresolvedProbe("source", {
-        src: "/image/original.png?slot=unresolved-source&id={{offer.id}}",
-    }),
-    width: unresolvedProbe("width", { width: "{{media.width}}" }),
-    height: unresolvedProbe("height", { height: "{{media.height}}" }),
-    sizes: unresolvedProbe("sizes", { sizes: "{{layout.sizes}}" }),
+    source: unresolvedProbe("source", { src: "{{ offer.image }}" }),
+    width: unresolvedProbe("width", { width: "{{ media.width }}" }),
+    height: unresolvedProbe("height", { height: "{{ media.height }}" }),
+    sizes: unresolvedProbe("sizes", { sizes: "{{ layout.sizes }}" }),
 };
 
-const detachedDocument = document.implementation.createHTMLDocument("recycle probe");
-const recycled = detachedDocument.createElement("img");
-const firstAuthoredSizes = "(max-width: 640px) 100vw, 30vw";
-const secondAuthoredSizes = "50vw";
+const detached = document.implementation.createHTMLDocument("recycle probe");
+const base = detached.createElement("base");
+base.href = location.origin;
+detached.head.append(base);
+const recycled = detached.createElement("img");
 recycled.setAttribute("loading", "lazy");
-recycled.setAttribute("data-source-image-access", "public");
-recycled.setAttribute("sizes", firstAuthoredSizes);
-recycled.setAttribute("data-src", "/image/original.png?slot=recycle-first");
-recycled.setAttribute("data-source-width", "1600");
-recycled.setAttribute("data-source-height", "1200");
-window.p9r.syncResponsiveSourceImageElement(recycled);
+recycled.setAttribute("data-cms-sizes", "(max-width: 640px) 100vw, 30vw");
+recycled.setAttribute("data-cms-src", mediaPath("recycle-first"));
+recycled.setAttribute("data-cms-width", "1600");
+recycled.setAttribute("data-cms-height", "1200");
+window.p9r.syncProviderMediaImage(recycled);
 const firstSizes = recycled.getAttribute("sizes");
-recycled.setAttribute("sizes", secondAuthoredSizes);
-recycled.setAttribute("data-src", "/image/original.png?slot=recycle-second");
-recycled.setAttribute("data-source-width", "1200");
-recycled.setAttribute("data-source-height", "900");
-window.p9r.syncResponsiveSourceImageElement(recycled);
+recycled.setAttribute("data-cms-sizes", "50vw");
+recycled.setAttribute("data-cms-src", mediaPath("recycle-second"));
+recycled.setAttribute("data-cms-width", "1200");
+recycled.setAttribute("data-cms-height", "900");
+window.p9r.syncProviderMediaImage(recycled);
 const secondSizes = recycled.getAttribute("sizes");
 const secondSrc = recycled.getAttribute("src");
 recycled.setAttribute("sizes", "25vw");
-recycled.setAttribute("src", "/image/other-owner.png?slot=recycle-owned-src");
-recycled.setAttribute("srcset", "/image/other-owner-640.png?slot=recycle-owned-srcset 640w");
+recycled.setAttribute("src", "/image/other-owner");
+recycled.setAttribute("srcset", "/image/other-owner-640 640w");
 recycled.setAttribute("width", "321");
 recycled.setAttribute("height", "123");
-window.p9r.clearResponsiveSourceImageElement(recycled);
+recycled.removeAttribute("data-cms-src");
+window.p9r.syncProviderMediaImage(recycled);
 window.__domProbes = {
     empty: { src: empty.getAttribute("src"), srcset: empty.getAttribute("srcset") },
     unresolved,
@@ -113,11 +113,11 @@ window.__domProbes = {
     },
 };
 
-requestAnimationFrame(() => {
+requestAnimationFrame(() =>
     requestAnimationFrame(() => {
         window.__imageFixtureReady = true;
-    });
-});
+    }),
+);
 
 function unresolvedProbe(
     name: "source" | "width" | "height" | "sizes",
@@ -125,17 +125,14 @@ function unresolvedProbe(
 ): { src: string | null; srcset: string | null } {
     const image = document.querySelector<HTMLImageElement>(`img[data-probe="unresolved-${name}"]`)!;
     image.setAttribute("loading", "lazy");
-    image.setAttribute("data-src", overrides.src ?? `/image/original.png?slot=unresolved-${name}`);
-    image.setAttribute("data-source-width", overrides.width ?? "1600");
-    image.setAttribute("data-source-height", overrides.height ?? "1200");
+    image.setAttribute("data-cms-src", overrides.src ?? mediaPath(`unresolved-${name}`));
+    image.setAttribute("data-cms-width", overrides.width ?? "1600");
+    image.setAttribute("data-cms-height", overrides.height ?? "1200");
     if (overrides.sizes) {
-        image.setAttribute("sizes", overrides.sizes);
+        image.setAttribute("data-cms-sizes", overrides.sizes);
     }
-    window.p9r.syncResponsiveSourceImageElement(image);
+    window.p9r.syncProviderMediaImage(image);
     return { src: image.getAttribute("src"), srcset: image.getAttribute("srcset") };
 }
 
-type LayoutShift = PerformanceEntry & {
-    hadRecentInput: boolean;
-    value: number;
-};
+type LayoutShift = PerformanceEntry & { hadRecentInput: boolean; value: number };

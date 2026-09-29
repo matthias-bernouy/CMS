@@ -79,9 +79,6 @@ Feature packages:
 - `@bernouy/cms-sources`: legacy data-source contracts and internal endpoint
   execution for indexing, plus the Control source proxy. Delivery no longer
   mounts a public Source proxy.
-- `@bernouy/cms-source-images`: bounded responsive Source image recipes,
-  browser activation and derivative caches. Its transformer delegates to the
-  gateway image profile over the shared foundation adapter.
 - `@bernouy/cms-analytics`: privacy-first server-side analytics events,
   counters, stores, and dashboard handlers.
 - `@bernouy/cms-bloc-compile`: bloc validation, view/editor bundling, and the

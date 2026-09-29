@@ -54,7 +54,7 @@ function expectedSelectedWidths(
 
 function imageEvidence(measurement: BrowserImageEvidence): BrowserImageEvidence {
     const currentSrc = measurement.currentSrc ?? "";
-    const widthValue = currentSrc ? new URL(currentSrc).searchParams.get("cms-width") : null;
+    const widthValue = currentSrc ? (/\/(\d+)\.webp$/.exec(new URL(currentSrc).pathname)?.[1] ?? null) : null;
     const selectedWidth = widthValue === null ? null : Number(widthValue);
     return {
         ...measurement,

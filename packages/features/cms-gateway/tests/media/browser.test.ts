@@ -61,3 +61,14 @@ test("bound provider image updates candidates and restores authored attributes",
     syncProviderMediaImage(image);
     expect(image.getAttribute("src")).toBe("/placeholder.png");
 });
+
+test("unresolved provider sizes do not activate an image URL", () => {
+    const image = document.createElement("img");
+    image.setAttribute("data-cms-src", "/.cms/media/catalog/photo.read/file");
+    image.setAttribute("data-cms-width", "800");
+    image.setAttribute("data-cms-height", "600");
+    image.setAttribute("data-cms-sizes", "{{ layout.sizes }}");
+    syncProviderMediaImage(image);
+    expect(image.hasAttribute("src")).toBe(false);
+    expect(image.hasAttribute("srcset")).toBe(false);
+});

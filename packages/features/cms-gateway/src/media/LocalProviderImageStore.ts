@@ -90,11 +90,13 @@ export class LocalProviderImageStore implements ProviderImageDerivativeStore {
 
     async #prune(removeOrphans: boolean): Promise<void> {
         const names = await readdir(this.directory);
-        await Promise.all(
-            names
-                .filter((name) => name.endsWith(".tmp"))
-                .map((name) => unlink(join(this.directory, name)).catch(() => undefined)),
-        );
+        if (removeOrphans) {
+            await Promise.all(
+                names
+                    .filter((name) => name.endsWith(".tmp"))
+                    .map((name) => unlink(join(this.directory, name)).catch(() => undefined)),
+            );
+        }
         const entries: Array<{ name: string; size: number; createdAt: number }> = [];
         for (const filename of names.filter((name) => /^[a-f0-9]{64}\.json$/.test(name))) {
             const name = filename.slice(0, -5);

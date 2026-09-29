@@ -7,8 +7,8 @@ permissions:
   contents: read
 
 jobs:
-  source-image-safety:
-    name: Source image safety and Chromium smoke
+  gateway-image-safety:
+    name: Gateway image safety and Chromium smoke
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -18,13 +18,9 @@ jobs:
       - name: Set up workspace
         uses: ./.github/actions/setup-workspace
 
-      - name: Run Source image security contracts
+      - name: Run gateway image security contracts
         run: |
-          bun test packages/features/cms-source-images/tests
-          bun test \
-            packages/features/cms-sources/tests/http/interceptors \
-            packages/features/cms-sources/tests/http/observability/sourceImageTelemetry.test.ts \
-            packages/features/cms-sources/tests/validation/validateSource.reservedParams.test.ts
+          bun test packages/features/cms-gateway/tests/media
 
       - name: Run image performance harness tests
         run: bun test quality/image-performance/tests
@@ -38,20 +34,20 @@ jobs:
         run: |
           bun run quality/image-performance/benchmark/run.ts \
             --label ci-candidate \
-            --adapter module:quality/image-performance/core/sourceImagesAdapter.ts \
-            --suite-id source-images-ci-smoke \
+            --adapter module:quality/image-performance/benchmark/adapters/gatewayImagesAdapter.ts \
+            --suite-id gateway-images-ci-smoke \
             --synthetic 2 \
             --repetitions 1 \
             --users 1 \
             --foreground-requests 4 \
             --output "$RUNNER_TEMP/image-performance-candidate.json"
 
-      - name: Verify production responsive runtime in Chromium
+      - name: Verify provider media runtime in Chromium
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/playwright
         run: |
           bun run quality/image-performance/browser/run.ts \
-            --suite-id source-images-ci-smoke \
+            --suite-id gateway-images-ci-smoke \
             --candidate "$RUNNER_TEMP/image-performance-candidate.json" \
             --output "$RUNNER_TEMP/image-performance-browser.json"
 

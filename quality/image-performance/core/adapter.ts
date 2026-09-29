@@ -1,8 +1,7 @@
-import { SOURCE_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-source-images";
+import { PROVIDER_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-gateway/media";
 import type { AdapterImplementation, AdapterStats } from "../contracts";
 import type { LoadedAsset } from "./corpus";
 import { safeLabel } from "./output";
-import { createImagePerformanceSourceApi } from "./sourceApi";
 
 export type ImagePerformanceAdapter = {
     name: string;
@@ -20,7 +19,7 @@ export type ImagePerformanceAdapterOptions = {
 };
 
 const DEFAULT_OPTIONS: ImagePerformanceAdapterOptions = { imageUpstreamDelayMs: 15 };
-export const RELEASE_CANDIDATE_ADAPTER = "module:quality/image-performance/core/sourceImagesAdapter.ts";
+export const RELEASE_CANDIDATE_ADAPTER = "module:quality/image-performance/benchmark/adapters/gatewayImagesAdapter.ts";
 
 export function assertReleaseAdapterSpecifier(specifier: string): void {
     if (specifier !== "original" && specifier !== RELEASE_CANDIDATE_ADAPTER) {
@@ -60,17 +59,18 @@ export async function createAdapter(
 
 async function originalAdapter(options: ImagePerformanceAdapterOptions): Promise<ImagePerformanceAdapter> {
     let stats = { cacheHits: 0, encodes: 0, upstreamReads: 0 };
-    const sourceApi = await createImagePerformanceSourceApi({
-        imageUpstreamDelayMs: options.imageUpstreamDelayMs,
-        onImageUpstreamRead() {
-            stats.upstreamReads++;
-        },
-    });
+    const respond = async (asset: LoadedAsset): Promise<Response> => {
+        stats.upstreamReads++;
+        if (options.imageUpstreamDelayMs > 0) {
+            await new Promise((resolve) => setTimeout(resolve, options.imageUpstreamDelayMs));
+        }
+        return new Response(asset.bytes.slice(), { headers: { "content-type": asset.mediaType } });
+    };
     return {
         name: "original",
         implementation: {
             mode: "original",
-            recipeId: SOURCE_RESPONSIVE_WEBP_V1.id,
+            recipeId: PROVIDER_RESPONSIVE_WEBP_V1.id,
             encoderIdentity: "original-pass-through",
         },
         async reset() {
@@ -80,13 +80,22 @@ async function originalAdapter(options: ImagePerformanceAdapterOptions): Promise
             return { ...stats };
         },
         variant(asset, _targetWidth) {
-            return sourceApi.image(asset, new Request(`https://benchmark.invalid/image/${asset.assetId}`));
+            return respond(asset);
         },
-        respond(asset, request) {
-            return sourceApi.image(asset, request);
+        respond(asset, _request) {
+            return respond(asset);
         },
-        foreground(request) {
-            return sourceApi.foreground(request);
+        foreground(_request) {
+            return Promise.resolve(
+                Response.json({
+                    items: Array.from({ length: 12 }, (_, index) => ({
+                        id: `offer-${index + 1}`,
+                        title: `Representative offer ${index + 1}`,
+                        price: 100 + index,
+                        media: { id: `media-${index + 1}`, width: 1_600, height: 1_200 },
+                    })),
+                }),
+            );
         },
     };
 }
@@ -105,7 +114,7 @@ function assertAdapter(adapter: ImagePerformanceAdapter): void {
         !adapter.implementation ||
         typeof adapter.implementation.recipeId !== "string" ||
         typeof adapter.implementation.encoderIdentity !== "string" ||
-        !["original", "source-image", "provider-image"].includes(adapter.implementation.mode) ||
+        !["original", "provider-image"].includes(adapter.implementation.mode) ||
         typeof adapter.reset !== "function" ||
         typeof adapter.stats !== "function" ||
         typeof adapter.variant !== "function" ||

@@ -9,25 +9,16 @@ import {
     IMAGE_PERFORMANCE_CODE_INPUTS,
     performanceEvidenceFingerprint,
 } from "../provenance";
-import { BROWSER_COMPONENT_ROLLOUT, buildCurrentBrowserComponent } from "../browser/componentBuild";
+import { buildCurrentBrowserComponent } from "../browser/componentBuild";
 import { artifact, comparisonThresholds, TEST_CODE_FINGERPRINT, TEST_NOW_MS } from "./fixtures/artifacts";
 import { browserArtifact } from "./fixtures/browserArtifact";
 
 describe("image performance artifact hardening", () => {
-    test("benchmarks the public rollout while keeping private source images disabled", () => {
-        expect(BROWSER_COMPONENT_ROLLOUT).toEqual({
-            enabled: { public: true, private: false },
-            disabled: { public: false, private: false },
-        });
-    });
-
     test("builds the production bundle without legacy rollout defines", async () => {
         const build = await buildCurrentBrowserComponent();
-        for (const script of [build.enabledScript, build.disabledScript]) {
-            expect(script).not.toContain("__CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED__");
-            expect(script).not.toContain("__CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED__");
-        }
-        expect(build.enabledBundleFingerprint).toBe(build.disabledBundleFingerprint);
+        expect(build.script).toContain("syncProviderMediaImage");
+        expect(build.script).not.toContain("__CMS_RESPONSIVE_PUBLIC_SOURCE_IMAGES_ENABLED__");
+        expect(build.script).not.toContain("__CMS_RESPONSIVE_PRIVATE_SOURCE_IMAGES_ENABLED__");
     });
 
     test("fingerprints the production browser runtime dependency closure", () => {
@@ -180,7 +171,7 @@ describe("image performance artifact hardening", () => {
         const baseline = artifact("baseline", 1_000, 1_000, 0, 10);
         const candidate = artifact("candidate", 100, 100, 0, 10);
         const thresholds = comparisonThresholds();
-        thresholds.currentComponentBuild.enabledBundleFingerprint = "f".repeat(64);
+        thresholds.currentComponentBuild.bundleFingerprint = "f".repeat(64);
 
         expect(() => compareArtifacts(baseline, candidate, browserArtifact(candidate), thresholds)).toThrow(
             "production-bundle provenance",

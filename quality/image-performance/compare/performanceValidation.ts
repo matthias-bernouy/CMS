@@ -1,4 +1,4 @@
-import { SOURCE_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-source-images";
+import { PROVIDER_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-gateway/media";
 import { IMAGE_PERFORMANCE_SCHEMA, type ImagePerformanceArtifact, type ListingSample } from "../contracts";
 import { summarizeListing } from "../core/math";
 import { stableSerialize } from "../provenance";
@@ -23,12 +23,12 @@ function assertPerformanceArtifactStructure(artifact: ImagePerformanceArtifact, 
     if (artifact.schema !== IMAGE_PERFORMANCE_SCHEMA) {
         throw new Error(`Unsupported ${role} image performance artifact`);
     }
-    if (artifact.adapter !== (role === "baseline" ? "original" : "source-responsive-webp-v1-local-fs")) {
+    if (artifact.adapter !== (role === "baseline" ? "original" : "provider-responsive-webp-v1-local-fs")) {
         throw new Error(`Unexpected ${role} image performance adapter`);
     }
     if (
-        artifact.implementation?.mode !== (role === "baseline" ? "original" : "source-image") ||
-        artifact.implementation.recipeId !== SOURCE_RESPONSIVE_WEBP_V1.id ||
+        artifact.implementation?.mode !== (role === "baseline" ? "original" : "provider-image") ||
+        artifact.implementation.recipeId !== PROVIDER_RESPONSIVE_WEBP_V1.id ||
         !artifact.implementation.encoderIdentity
     ) {
         throw new Error(`Invalid ${role} adapter implementation`);

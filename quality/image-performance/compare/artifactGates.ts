@@ -22,8 +22,8 @@ export function candidateArtifactIntegrityGates(
         exactGate("corpus_output_mismatches", corpusOutputMismatches(candidate), 0),
         exactGate("descriptor_mismatches", descriptorMismatches(candidate), 0),
         exactGate("source_passthrough_mismatches", sourcePassthroughMismatches(candidate), 0),
-        exactGate("cold_single_flight_encode_mismatches", singleFlightMismatches(candidate, "encodes"), 0),
-        exactGate("cold_single_flight_upstream_mismatches", singleFlightMismatches(candidate, "upstreamReads"), 0),
+        exactGate("cold_single_flight_encode_mismatches", singleFlightMismatches(candidate), 0),
+        exactGate("provider_authorization_read_mismatches", authorizationReadMismatches(candidate), 0),
         maximumGate("normalized_thumbnail_mae", maximumObservedThumbnailMae(candidate), maximumThumbnailMae),
     ];
 }
@@ -82,14 +82,22 @@ function maximumObservedThumbnailMae(artifact: ImagePerformanceArtifact): number
     );
 }
 
-function singleFlightMismatches(artifact: ImagePerformanceArtifact, key: "encodes" | "upstreamReads"): number {
+function singleFlightMismatches(artifact: ImagePerformanceArtifact): number {
     return artifact.listing
         .filter(({ phase }) => phase === "cold")
         .reduce(
             (mismatches, sample) =>
-                mismatches + Math.abs(sample.stats[key] - expectedColdDerivatives(artifact, sample)),
+                mismatches + Math.abs(sample.stats.encodes - expectedColdDerivatives(artifact, sample)),
             0,
         );
+}
+
+function authorizationReadMismatches(artifact: ImagePerformanceArtifact): number {
+    return artifact.listing.reduce(
+        (mismatches, sample) =>
+            mismatches + Math.abs(sample.stats.upstreamReads - artifact.configuration.cardCount * sample.users),
+        0,
+    );
 }
 
 function expectedColdDerivatives(artifact: ImagePerformanceArtifact, sample: ListingSample): number {

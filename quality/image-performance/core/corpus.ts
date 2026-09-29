@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { SOURCE_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-source-images";
-import { SharpSourceImageTransformer } from "@bernouy/cms-source-images/sharp";
+import { PROVIDER_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-gateway/media";
+import { SharpImageTransformer } from "@bernouy/cms-gateway/media/sharp";
 import type { CorpusRejections } from "../contracts";
 import { syntheticPng } from "./png";
 
@@ -35,7 +35,7 @@ export async function loadCorpus(options: { directory?: string; syntheticCount?:
         : await readCorpusFiles(options.directory!);
     const accepted: Array<Omit<LoadedAsset, "assetId"> & { digest: string }> = [];
     const rejections: CorpusRejections = { animated: 0, invalidOrUnsafe: 0, oversizedBytes: 0 };
-    const transformer = new SharpSourceImageTransformer();
+    const transformer = new SharpImageTransformer();
     for (const bytes of candidates) {
         const inspected = await inspect(bytes, transformer);
         if ("rejection" in inspected) {
@@ -79,13 +79,13 @@ async function walk(directory: string, files: string[]): Promise<void> {
 
 async function inspect(
     bytes: Uint8Array,
-    transformer: SharpSourceImageTransformer,
+    transformer: SharpImageTransformer,
 ): Promise<{ asset: Omit<LoadedAsset, "assetId"> } | { rejection: keyof CorpusRejections }> {
-    if (bytes.byteLength > SOURCE_RESPONSIVE_WEBP_V1.maxSourceBytes) {
+    if (bytes.byteLength > PROVIDER_RESPONSIVE_WEBP_V1.maxSourceBytes) {
         return { rejection: "oversizedBytes" };
     }
     try {
-        const metadata = await transformer.inspect(bytes, SOURCE_RESPONSIVE_WEBP_V1);
+        const metadata = await transformer.inspect(bytes, PROVIDER_RESPONSIVE_WEBP_V1);
         if (metadata.pages !== 1) {
             return { rejection: "animated" };
         }
