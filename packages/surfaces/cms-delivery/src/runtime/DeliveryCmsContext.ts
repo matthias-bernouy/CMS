@@ -7,7 +7,7 @@ import type {
     SitemapStore,
     PublicFileMetadataLookup,
 } from "@bernouy/cms-content/files/serving";
-import type { IdentityService } from "@bernouy/cms-identities";
+import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type {
     SourceEndpointInterceptor,

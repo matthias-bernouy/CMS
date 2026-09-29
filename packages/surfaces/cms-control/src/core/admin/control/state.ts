@@ -8,7 +8,7 @@ import type {
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
 import { InMemoryDashboardAssignmentRepository } from "@bernouy/cms-dashboards";
-import { InMemoryIdentityService } from "@bernouy/cms-identities";
+import { InMemoryIdentityService } from "@bernouy/cms-gateway/identity";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import { InMemoryCache, type Cache, type Runner } from "@bernouy/http-runner";
 import { InMemorySecretStore, type SecretStore, ValidatingSecretStore } from "@bernouy/cms-secrets";

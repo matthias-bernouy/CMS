@@ -443,7 +443,7 @@ installable.
 
 - implement provider installation persistence and credential rotation;
 - approve and resolve `requires` from manifests;
-- add invocation context and installation-scoped identity;
+- add invocation context and provider-scoped identity aliases;
 - implement the error envelope, retry policy, rate limiting, audit, and
   observability;
 - add SSRF, redirect, DNS-rebinding, HTTPS, timeout, and response-size guards.

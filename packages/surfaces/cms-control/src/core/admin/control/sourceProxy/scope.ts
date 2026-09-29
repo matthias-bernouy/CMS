@@ -1,5 +1,5 @@
 import type { Subject } from "@bernouy/cms-auth";
-import { RequestScopedIdentityService } from "@bernouy/cms-identities/requestScope";
+import { RequestScopedIdentityService } from "@bernouy/cms-gateway/identity/requestScope";
 import { createSecretResolver, secretRefToKey } from "@bernouy/cms-secrets";
 import {
     activeSourceObservability,

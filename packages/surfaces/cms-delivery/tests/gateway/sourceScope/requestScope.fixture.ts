@@ -1,4 +1,4 @@
-import { InMemoryIdentityService, type IdentityAlias, type IdentityValue } from "@bernouy/cms-identities";
+import { InMemoryIdentityService, type IdentityAlias, type IdentityValue } from "@bernouy/cms-gateway/identity";
 import { InMemorySourceRepository, type Source } from "@bernouy/cms-sources";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { createDeliverySourceRequestScope } from "cms-delivery/core/sources/requestScope";

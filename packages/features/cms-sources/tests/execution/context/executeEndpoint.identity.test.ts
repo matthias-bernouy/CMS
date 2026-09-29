@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryIdentityService } from "@bernouy/cms-identities";
+import { InMemoryIdentityService } from "@bernouy/cms-gateway/identity";
 import { executeEndpoint, makeEndpointUrn } from "@bernouy/cms-sources";
 
 describe("executeEndpoint identity bindings", () => {

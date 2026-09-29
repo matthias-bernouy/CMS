@@ -1,1 +1,1 @@
-export { MongoInstallationIdentityService } from "cms-gateway/identity/MongoInstallationIdentityService";
+export { MongoIdentityService } from "cms-gateway/identity/aliases/default-implementation/MongoIdentityService";

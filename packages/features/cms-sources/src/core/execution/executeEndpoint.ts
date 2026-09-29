@@ -3,7 +3,7 @@ import {
     MAX_SOURCE_ENDPOINT_TIMEOUT_MS,
     type SourceEndpoint,
 } from "cms-sources/interfaces/Source";
-import type { IdentityService } from "@bernouy/cms-identities";
+import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import { buildUpstreamUrl, type SourceComputedContext } from "cms-sources/core/upstream/buildUpstreamUrl";
 import {
     allowsPublicCacheWithUpstreamCookie,

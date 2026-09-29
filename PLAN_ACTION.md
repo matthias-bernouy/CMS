@@ -50,7 +50,7 @@ The following foundations should be preserved and adapted:
 - the page editor and the generic binding/rendering runtime where its behavior
   remains useful;
 - `cms-secrets` and envelope encryption for credential references;
-- `cms-identities` for aliases and reverse identity resolution;
+- `cms-gateway/identity` for aliases and reverse identity resolution;
 - the generic rate limiter;
 - the HTTP runner and surface/runtime dependency-injection pattern;
 - source proxy protections worth transplanting: forbidden-header policy,
@@ -840,8 +840,8 @@ runtime code has no API for executing an uncompiled binding.
 4. Add repositories and Mongo adapters; store secrets only through
    `cms-secrets` references.
 5. Support several installations/accounts for the same provider.
-6. Implement credential issue, rotation, revoke, and installation-scoped
-   pairwise identity aliases.
+6. Implement credential issue, rotation, and revoke while preserving one
+   pairwise user identity alias per provider across installations.
 7. Implement the installation and selection state machines. Never auto-switch
    a site's selected contract release or provider. Support a bounded overlap
    between old and new major lines until the sites using the old line migrate.

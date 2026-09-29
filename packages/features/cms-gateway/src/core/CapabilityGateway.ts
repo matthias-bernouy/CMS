@@ -1,6 +1,6 @@
 import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
-import type { InstallationIdentityService } from "../identity/InstallationIdentityService";
+import type { ProviderIdentityService } from "../identity/ProviderIdentityService";
 import type {
     GatewayActor,
     GatewayInvocation,
@@ -25,7 +25,7 @@ export interface CapabilityGatewayOptions {
         route: GatewayRoute,
         origin: GatewayOrigin,
     ) => Promise<boolean>;
-    readonly identities?: InstallationIdentityService;
+    readonly identities?: ProviderIdentityService;
     readonly now?: () => string;
     readonly maxObservationAgeMs?: number;
 }
@@ -115,10 +115,10 @@ export class CapabilityGateway {
             return undefined;
         }
         if (!this.#options.identities) {
-            throw new GatewayError("not_authorized", "installation-scoped identity service is unavailable");
+            throw new GatewayError("not_authorized", "provider identity service is unavailable");
         }
         return this.#options.identities.getOrCreate(
-            { siteId: route.selection.siteId, installationId: route.selection.installationId },
+            { providerId: route.installation.installation.providerId },
             actor.subjectId,
         );
     }

@@ -91,7 +91,7 @@ The intended dependency direction is:
 | Features | `@bernouy/cms-editor-system-v2` | Browser editor system and component shell; root. |
 | Features | `@bernouy/cms-files` | File metadata/blob contracts, HTTP delivery, local and optional storage adapters; root, `./mongo`, `./s3`, `./urls`. |
 | Features | `@bernouy/cms-functions` | CMS function definitions and persistence; root and `./mongo`. |
-| Features | `@bernouy/cms-identities` | Runtime identities and request-scoped decorators; root, `./mongo`, `./requestScope`. |
+| Features | `@bernouy/cms-gateway` | Provider capabilities and authority-scoped identity aliases; `./identity`, `./identity/requestScope`, and `./mongo`. |
 | Features | `@bernouy/cms-integration-packages` | Immutable integration package sources/resolvers; root, `./fs`, `./http`. |
 | Features | `@bernouy/cms-integration-registry` | Catalogue, compatibility, immutable publication and recovery; root and `./fs`. |
 | Features | `@bernouy/cms-integration-verification` | Verification protocol, admission plans, policies, SDK, Bun runner and upgrade-fixture API; root, `./bun`, `./sdk/v1`, `./upgrade-fixtures/v1`. |

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { Db } from "mongodb";
-import { IdentityAliasConflictError } from "@bernouy/cms-identities";
-import { MongoIdentityService } from "@bernouy/cms-identities/mongo";
+import { IdentityAliasConflictError, ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
+import { MongoIdentityService } from "@bernouy/cms-gateway/mongo";
 import { identityServiceContract } from "./identityService.contract";
 
 type IdentityDoc = {
@@ -18,6 +18,15 @@ type IdentityFilter = Partial<Pick<IdentityDoc, "aliasKey" | "subjectAuthorityKe
 identityServiceContract("Mongo", () => createService(new FakeIdentityCollection()));
 
 describe("Mongo identity persistence", () => {
+    test("gateway reuses a numeric provider alias stored before the package move", async () => {
+        const collection = new FakeIdentityCollection();
+        await createService(collection).bind("subject-1", { authority: "commerce", kind: "user", value: 184 });
+
+        const gatewayIdentities = new ProviderIdentityAliases(createService(collection));
+        expect(await gatewayIdentities.getOrCreate({ providerId: "commerce" }, "subject-1")).toBe("184");
+        expect(await gatewayIdentities.resolve({ providerId: "commerce" }, 184)).toBe("subject-1");
+    });
+
     test("creates unique indexes for both sides of a binding", async () => {
         const collection = new FakeIdentityCollection();
         await createService(collection).init();

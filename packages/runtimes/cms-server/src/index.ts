@@ -19,6 +19,7 @@ const gateway = env.CMS_GATEWAY_SITE_ID
           core.db,
           core.secrets,
           core.credentials,
+          features.identities,
           env.CMS_GATEWAY_SITE_ID,
           env.CMS_ADMIN_EMAIL,
       )

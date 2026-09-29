@@ -12,7 +12,7 @@ import type { AnalyticsComplianceContext, AnalyticsStore, EndpointPerformanceRep
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { DashboardAssignmentRepository } from "@bernouy/cms-dashboards";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
-import type { IdentityService } from "@bernouy/cms-identities";
+import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type { SourceEndpointInterceptor, SourceRepository, SourceRequestTelemetryOptions } from "@bernouy/cms-sources";

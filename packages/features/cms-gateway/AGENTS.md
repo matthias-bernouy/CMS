@@ -12,8 +12,9 @@ publish releases or choose providers.
   at call time.
 - Execute only binding plans admitted by `@bernouy/cms-repository`; do not
   interpret raw author binding documents in runtime code.
-- Scope user aliases by site and installation. Keep CMS subject IDs out of
-  provider requests.
+- Reuse the CMS authority-alias store for one user alias per provider ID,
+  independent of sites and installations. Keep CMS subject IDs out of provider
+  requests. Installation revocation must not delete provider-wide aliases.
 - Deny execution paths without complete validation or authorization. In
   particular, keyed commands need durable idempotency before activation.
 - Keep derivative identity and recipe logic independent of legacy Source IDs.

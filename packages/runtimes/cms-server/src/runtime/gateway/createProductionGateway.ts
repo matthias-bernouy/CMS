@@ -1,8 +1,9 @@
 import type { LocalCredentialStore } from "@bernouy/cms-auth";
 import { CapabilityGateway, CatalogueGatewayRevisionSource, CatalogueGatewayRouteResolver } from "@bernouy/cms-gateway";
+import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
-import { MongoInstallationIdentityService } from "@bernouy/cms-gateway/mongo";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/node-http";
+import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
 import {
     MongoProviderManifestCatalogue,
@@ -18,6 +19,7 @@ export async function createProductionGateway(
     db: Db,
     secrets: SecretStore,
     credentials: LocalCredentialStore,
+    legacyIdentities: IdentityService,
     siteId: string,
     administratorEmail: string,
 ) {
@@ -29,8 +31,6 @@ export async function createProductionGateway(
     const selections = new MongoContractSelectionStore(db, dependencies);
     const revisions = new CatalogueGatewayRevisionSource(selections, dependencies);
     const routes = new CatalogueGatewayRouteResolver({ selections, revisions, installations, releases, manifests });
-    const identities = new MongoInstallationIdentityService(db);
-    await identities.init();
     const resolveSecret = createSecretResolver(secrets);
     const network = new NodeGatewayHttpNetwork({
         resolveToken: async (reference) => {
@@ -44,7 +44,7 @@ export async function createProductionGateway(
     const access = createProductionGatewayAccess(credentials, administratorEmail);
     const invoker = new CapabilityGateway({
         routes,
-        identities,
+        identities: new ProviderIdentityAliases(legacyIdentities),
         transport: new HttpGatewayTransport({ network }),
         authorize: access.authorize,
     });

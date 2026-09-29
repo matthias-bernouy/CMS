@@ -26,7 +26,6 @@
         { "path": "../../features/cms-editor-system-v2" },
         { "path": "../../features/cms-source-images" },
         { "path": "../../features/cms-secrets" },
-        { "path": "../../features/cms-identities" },
         { "path": "../../features/cms-sources" },
         { "path": "../../features/cms-dashboards" },
         { "path": "../../features/cms-analytics" }

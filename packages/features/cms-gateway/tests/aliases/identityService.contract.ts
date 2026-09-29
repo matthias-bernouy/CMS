@@ -4,7 +4,7 @@ import {
     InvalidIdentityError,
     type IdentityAlias,
     type IdentityService,
-} from "@bernouy/cms-identities";
+} from "@bernouy/cms-gateway/identity";
 
 type IdentityServiceFactory = () => IdentityService | Promise<IdentityService>;
 

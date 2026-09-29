@@ -1,7 +1,7 @@
 import { BufferedEndpointPerformanceRecorder, ValidatingAnalyticsStore } from "@bernouy/cms-analytics";
 import { MongoAnalyticsStore, MongoEndpointPerformanceStore } from "@bernouy/cms-analytics/mongo";
 import { MongoDashboardAssignmentRepository } from "@bernouy/cms-dashboards/mongo";
-import { MongoIdentityService } from "@bernouy/cms-identities/mongo";
+import { MongoIdentityService } from "@bernouy/cms-gateway/mongo";
 import { createSecretResolver, type SecretStore } from "@bernouy/cms-secrets";
 import {
     CompositeSourceRepository,

@@ -7,10 +7,10 @@ import {
     type GatewayTransportRequest,
     type GatewayTransportResponse,
 } from "@bernouy/cms-gateway";
-import { InMemoryInstallationIdentityService } from "@bernouy/cms-gateway/identity";
+import { InMemoryIdentityService, ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
 import { gatewayRoute, NOW } from "./fixtures";
 
-function harness(route: GatewayRoute) {
+function harness(route: GatewayRoute, identities = new ProviderIdentityAliases(new InMemoryIdentityService())) {
     const sent: GatewayTransportRequest[] = [];
     let current = true;
     let response: GatewayTransportResponse = {
@@ -18,7 +18,6 @@ function harness(route: GatewayRoute) {
         contentType: "application/json",
         output: { items: ["one"] },
     };
-    const identities = new InMemoryInstallationIdentityService();
     const gateway = new CapabilityGateway({
         routes: {
             resolve: async () => route,
@@ -114,7 +113,7 @@ describe("capability gateway", () => {
         }
     });
 
-    test("isolates user identity by installation and hides CMS subject IDs from transport", async () => {
+    test("uses provider identity and hides CMS subject IDs from transport", async () => {
         const route = await gatewayRoute({ access: "authenticated" });
         const scope = harness(route);
         await expect(scope.gateway.invoke(invocation())).rejects.toMatchObject({ code: "not_authorized" });
@@ -122,10 +121,25 @@ describe("capability gateway", () => {
         const alias = scope.sent[0]?.providerSubjectId;
         expect(alias).toMatch(/^[0-9a-f-]{36}$/);
         expect(JSON.stringify(scope.sent[0])).not.toContain("cms-user-1");
-        expect(await scope.identities.resolve({ siteId: "site-a", installationId: "install-a" }, alias!)).toBe(
-            "cms-user-1",
+        expect(await scope.identities.resolve({ providerId: "ulvia.example" }, alias!)).toBe("cms-user-1");
+        expect(await scope.identities.resolve({ providerId: "other.example" }, alias!)).toBeNull();
+
+        const otherInstallation = harness(
+            {
+                ...route,
+                selection: { ...route.selection, siteId: "site-b", installationId: "install-b" },
+                installation: {
+                    ...route.installation,
+                    installation: { ...route.installation.installation, siteId: "site-b", id: "install-b" },
+                },
+            },
+            scope.identities,
         );
-        expect(await scope.identities.resolve({ siteId: "site-a", installationId: "install-b" }, alias!)).toBeNull();
+        await otherInstallation.gateway.invoke({
+            ...invocation({ kind: "user", subjectId: "cms-user-1" }),
+            siteId: "site-b",
+        });
+        expect(otherInstallation.sent[0]?.providerSubjectId).toBe(alias);
     });
 
     test("fails closed on stale routes, commands, and malformed provider responses", async () => {

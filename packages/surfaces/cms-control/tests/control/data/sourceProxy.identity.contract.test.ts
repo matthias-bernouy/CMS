@@ -1,6 +1,6 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
-import { InMemoryIdentityService } from "@bernouy/cms-identities";
+import { InMemoryIdentityService } from "@bernouy/cms-gateway/identity";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";

@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-gateway",
     "version": "0.1.0",
-    "description": "Capability invocation and installation-scoped identity for CmsCore.",
+    "description": "Capability invocation and provider-scoped identity for CmsCore.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./src/exports/index.ts",
@@ -9,7 +9,8 @@
         ".": "./src/exports/index.ts",
         "./handlers": "./src/exports/handlers.ts",
         "./http": "./src/exports/http.ts",
-        "./identity": "./src/exports/identity.ts",
+        "./identity": "./src/exports/identity/index.ts",
+        "./identity/requestScope": "./src/exports/identity/requestScope.ts",
         "./mongo": "./src/exports/mongo.ts",
         "./media": "./src/exports/media.ts",
         "./node-http": "./src/exports/node-http.ts",
