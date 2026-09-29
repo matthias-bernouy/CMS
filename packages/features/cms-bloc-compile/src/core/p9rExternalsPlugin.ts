@@ -37,12 +37,22 @@ export const p9rExternalsPlugin: BunPlugin = {
     setup(build) {
         build.onResolve(
             {
-                filter: /^@bernouy\/(?:components\/(?:base|binding)|cms(?:-control)?\/component|cms-content\/editor|cms(?:-control)?\/editor|cms-source-images\/browser)$/,
+                filter: /^@bernouy\/(?:components\/(?:base|binding)|cms(?:-control)?\/component|cms-content\/editor|cms(?:-control)?\/editor|cms-source-images\/browser|cms-gateway\/browser)$/,
             },
             (args) => ({ path: args.path, namespace: "p9r-extern" }),
         );
 
         build.onLoad({ filter: /.*/, namespace: "p9r-extern" }, (args) => {
+            if (args.path === "@bernouy/cms-gateway/browser") {
+                return {
+                    contents: [
+                        "export const PROVIDER_IMAGE_WIDTHS = window.p9r.PROVIDER_IMAGE_WIDTHS;",
+                        "export const buildProviderImageAttributes = window.p9r.buildProviderImageAttributes;",
+                        "export const syncProviderMediaImage = window.p9r.syncProviderMediaImage;",
+                    ].join("\n"),
+                    loader: "js",
+                };
+            }
             if (args.path === "@bernouy/cms-source-images/browser") {
                 return {
                     contents: [

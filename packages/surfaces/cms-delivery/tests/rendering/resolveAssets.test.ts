@@ -64,6 +64,7 @@ describe("resolveRuntimeAssets", () => {
         expect(entry.contentType).toBe("text/javascript");
         expect(js).toMatch(/window\.p9r\s*=\s*\{[\s\S]*Component\s*:/);
         expect(js).toContain("syncResponsiveSourceImageElement");
+        expect(js).toContain("syncProviderMediaImage");
         expect(js).toContain("cms-width");
 
         (window as any).p9r = {};
@@ -73,6 +74,7 @@ describe("resolveRuntimeAssets", () => {
             64, 128, 256, 384, 512, 768, 1_024, 1_280, 1_600, 1_920, 2_560,
         ]);
         expect((window as any).p9r.createResponsiveSourceImageBrowserApi).toBeUndefined();
+        expect((window as any).p9r.PROVIDER_IMAGE_WIDTHS).toEqual((window as any).p9r.SOURCE_IMAGE_WIDTHS);
     });
 
     test.each([

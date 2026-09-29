@@ -40,6 +40,7 @@ describe("editor component runtime endpoint", () => {
             expect(js).toContain("window.p9r");
             expect(js).toContain("Component");
             expect(js).toContain("syncResponsiveSourceImageElement");
+            expect(js).toContain("syncProviderMediaImage");
             expect(js).toContain("cms-width");
             expect(js).not.toContain(`define("base-container"`);
             expect(js).not.toContain(`define("base-card"`);

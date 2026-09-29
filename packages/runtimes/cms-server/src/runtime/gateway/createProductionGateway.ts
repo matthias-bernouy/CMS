@@ -11,7 +11,7 @@ import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/node-http";
 import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import { ProviderImageService } from "@bernouy/cms-gateway/media";
 import { LocalProviderImageStore } from "@bernouy/cms-gateway/media/local-fs";
-import { SharpImageTransformer } from "@bernouy/cms-gateway/sharp";
+import { SharpImageTransformer } from "@bernouy/cms-gateway/media/sharp";
 import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
 import {
     MongoProviderManifestCatalogue,

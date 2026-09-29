@@ -16,6 +16,9 @@ current selection and actor grant before returning bytes. Delivery also serves
 bounded WebP derivatives at `/.cms/image/<contract>/<capability>/<fileId>/<width>.webp`;
 Control uses `/api/image`. Each request reauthorizes the original file before
 looking up its byte-generation key in the local derivative store.
+`./browser` builds bounded `srcset` candidates for same-origin provider media
+URLs and activates resolved `data-cms-src` image bindings. Control and Delivery
+expose those helpers in their component bundles for authored Blocs.
 `./node-http` provides a Node network adapter that
 resolves and pins one public address, permits canonical HTTP loopback targets,
 rejects redirects through the transport, and injects host-resolved credentials

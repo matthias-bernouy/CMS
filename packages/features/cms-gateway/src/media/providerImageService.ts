@@ -2,8 +2,9 @@ import type { GatewayImageTransformer } from "./imageTransformer";
 import { providerByteGeneration, providerDerivativeKey } from "./derivativeKey";
 import { GatewayError } from "../core/GatewayError";
 import type { GatewayInvocation, GatewayInvoker } from "../interfaces/Invocation";
+import { PROVIDER_IMAGE_WIDTHS } from "./providerImageWidths";
 
-export const PROVIDER_IMAGE_WIDTHS = Object.freeze([64, 128, 256, 384, 512, 768, 1024, 1280, 1600, 1920, 2560]);
+export { PROVIDER_IMAGE_WIDTHS } from "./providerImageWidths";
 
 export const PROVIDER_RESPONSIVE_WEBP_V1 = Object.freeze({
     id: "provider-responsive-webp",

@@ -1,5 +1,11 @@
 import { Component } from "@bernouy/components/base";
 import {
+    PROVIDER_IMAGE_WIDTHS,
+    buildProviderImageAttributes,
+    installProviderMediaImageRuntime,
+    syncProviderMediaImage,
+} from "@bernouy/cms-gateway/browser";
+import {
     observeSource,
     readSourceData,
     refreshSourceContext,
@@ -17,6 +23,9 @@ const sourceImages = createResponsiveSourceImageBrowserApi({ public: false, priv
 
 (window as any).p9r = {
     Component,
+    PROVIDER_IMAGE_WIDTHS,
+    buildProviderImageAttributes,
+    syncProviderMediaImage,
     observeSource,
     readSourceData,
     refreshSourceContext,
@@ -28,3 +37,4 @@ const sourceImages = createResponsiveSourceImageBrowserApi({ public: false, priv
 };
 
 installBoundImageRuntime(document, sourceImages);
+installProviderMediaImageRuntime(document);
