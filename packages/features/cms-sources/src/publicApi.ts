@@ -82,4 +82,3 @@ export { isReservedSourceParamName } from "./core/validation/sourceRequestValida
 export type { SourceRepository } from "./interfaces/SourceRepository";
 export { InMemorySourceRepository } from "./default-implementation/InMemorySourceRepository";
 export { ValidatingSourceRepository } from "./core/repositories/ValidatingSourceRepository";
-export { CompositeSourceRepository } from "./core/repositories/CompositeSourceRepository";

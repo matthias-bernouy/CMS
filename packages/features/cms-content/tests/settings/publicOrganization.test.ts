@@ -1,39 +1,21 @@
 import { describe, expect, test } from "bun:test";
-import { SYSTEM_SITE_SOURCE } from "@bernouy/cms-sources";
-import { defaultSystem, executeSiteSystemSourceEndpoint, type ContentReader, type TSystem } from "@bernouy/cms-content";
+import { defaultSystem, projectPublicSiteOrganization, type TSystem } from "@bernouy/cms-content";
 
-describe("site system source", () => {
-    test("returns only the explicit public organization projection", async () => {
+describe("public site organization", () => {
+    test("projects only the explicit public organization fields", () => {
         const settings = organizationSettings();
-        const repository = { getRenderingSettings: async () => settings } as ContentReader;
-        const endpoint = SYSTEM_SITE_SOURCE.endpoints[0]!;
+        const publicOrganization = projectPublicSiteOrganization(settings);
 
-        const response = await executeSiteSystemSourceEndpoint(repository, endpoint);
-
-        expect(response.status).toBe(200);
-        expect(response.headers.get("cache-control")).toBe("no-store");
-        expect(await response.json()).toEqual(settings.site.organization);
+        expect(publicOrganization).toEqual(settings.site.organization);
+        expect(JSON.stringify(publicOrganization)).not.toContain("SMTP_PASSWORD");
+        expect(JSON.stringify(publicOrganization)).not.toContain("private-api.example.com");
     });
 
-    test("rejects any undeclared site system target", async () => {
-        const repository = { getRenderingSettings: async () => organizationSettings() } as ContentReader;
-
-        await expect(
-            executeSiteSystemSourceEndpoint(repository, {
-                urn: "urn:system-site:settings",
-                targetUrl: "cms-system://site/settings",
-            }),
-        ).rejects.toThrow("unsupported site system target");
-    });
-
-    test("keeps the public contract complete for legacy settings", async () => {
+    test("keeps the public projection complete when legacy settings omit organization", () => {
         const settings = defaultSystem();
         delete (settings.site as Partial<TSystem["site"]>).organization;
-        const repository = { getRenderingSettings: async () => settings } as ContentReader;
 
-        const response = await executeSiteSystemSourceEndpoint(repository, SYSTEM_SITE_SOURCE.endpoints[0]!);
-
-        expect(await response.json()).toEqual(defaultSystem().site.organization);
+        expect(projectPublicSiteOrganization(settings)).toEqual(defaultSystem().site.organization);
     });
 });
 

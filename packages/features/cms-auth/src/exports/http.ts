@@ -15,4 +15,3 @@ export {
     type PublicAuthRouteOverrides,
     type PublicAuthRoutesConfig,
 } from "cms-auth/application/http/handlers/publicAuthHandlers";
-export { executeAuthSystemSourceEndpoint } from "cms-auth/application/http/handlers/systemAuthSource";

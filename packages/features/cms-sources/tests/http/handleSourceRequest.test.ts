@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { handleSourceRequest } from "cms-sources/http/handleSourceRequest";
+import { InMemorySourceRepository } from "cms-sources/default-implementation/InMemorySourceRepository";
 import { okFetch, seededSourceRepository, SOURCE_PREFIX } from "./handleSourceFixtures";
 
 describe("handleSourceRequest routing", () => {
@@ -29,6 +30,22 @@ describe("handleSourceRequest routing", () => {
         );
         expect(response.status).toBe(404);
         expect(await response.text()).toBe("not_found");
+    });
+
+    test("does not execute a persisted former system Source", async () => {
+        const sources = new InMemorySourceRepository();
+        await sources.createSource({
+            urn: "urn:system-auth",
+            endpoints: [{ urn: "urn:system-auth:me", method: "GET", targetUrl: "https://legacy.example.test/me" }],
+        });
+        const fetchImpl = okFetch();
+        const response = await handleSourceRequest(
+            sources,
+            new Request("http://local" + SOURCE_PREFIX + "system-auth/me"),
+            { prefix: SOURCE_PREFIX, deps: { fetchImpl } },
+        );
+        expect(response.status).toBe(404);
+        expect(fetchImpl).not.toHaveBeenCalled();
     });
 
     test("returns 405 for a method mismatch", async () => {

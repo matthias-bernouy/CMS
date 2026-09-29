@@ -2,7 +2,7 @@ import type { SourceRepository } from "../interfaces/SourceRepository";
 import type { SourceEndpoint } from "../interfaces/Source";
 import { resolveEndpoint } from "../core/execution/resolveEndpoint";
 import { executeEndpoint, type ExecutorDeps } from "../core/execution/executeEndpoint";
-import { systemSourceUrnOf } from "../core/system/systemSources";
+import { isSystemSourceId } from "../core/system/systemSources";
 import {
     activeSourceObservability,
     runObservedSourceRequest,
@@ -13,7 +13,6 @@ import type { SourceExecutionObservability, SourceRequestTelemetryOptions } from
 
 export const CMS_SOURCES_ROUTE = "/.cms/sources";
 export const SOURCE_PROXY_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
-export type SourceSystemExecutor = (endpoint: SourceEndpoint, request: Request) => Response | Promise<Response>;
 export type SourceEndpointInterceptor = (
     endpoint: SourceEndpoint,
     request: Request,
@@ -32,7 +31,6 @@ export type SourceEndpointAuthorizer = (
     observability?: SourceExecutionObservability,
 ) => SourceAuthorizationResult | Promise<SourceAuthorizationResult>;
 export type SourceHandlerDeps = ExecutorDeps & {
-    executeSystemEndpoint?: SourceSystemExecutor;
     authorizeEndpoint?: SourceEndpointAuthorizer;
     interceptEndpoint?: SourceEndpointInterceptor;
     telemetry?: SourceRequestTelemetryOptions;
@@ -44,16 +42,16 @@ export function sourcesPrefix(basePath: string): string {
 }
 
 /**
- * Shared proxy glue used by both delivery (publication) and control (preview):
+ * Shared proxy glue used by internal indexing and Control legacy routes:
  * each host passes its own base-path-relative `prefix` (e.g. `<basePath>/.cms/sources/`)
- * plus optional `deps` (`fetchImpl` / `resolveSecret` / system executors), so
+ * plus optional `deps` (`fetchImpl` / `resolveSecret`), so
  * an app collapses to one call.
  *
  *  - no source configured        → 501
  *  - path not under `prefix`      → 404
  *  - unknown source/endpoint    → 404
  *  - method mismatch              → 405
- *  - system source endpoint     → app-owned system executor
+ *  - reserved system source     → 404
  *  - otherwise the executor's response (proxied upstream, see `executeEndpoint`)
  */
 export async function handleSourceRequest(
@@ -83,6 +81,9 @@ async function handleObservedSourceRequest(
     }
 
     const segments = url.pathname.slice(opts.prefix.length).split("/").filter(Boolean).map(decodeURIComponent);
+    if (segments[0] && isSystemSourceId(segments[0])) {
+        return new Response("not_found", { status: 404 });
+    }
 
     const resolved = await timedExecution({ observability }, "cms_endpoint_resolve", () =>
         resolveEndpoint(source, segments, request.method),
@@ -102,29 +103,12 @@ async function handleObservedSourceRequest(
         }
     }
 
-    const dispatch = async (req: Request) => {
-        return dispatchEndpoint(resolved.endpoint, req, deps);
-    };
+    const dispatch = async (req: Request) => executeEndpoint(resolved.endpoint, req, deps);
     return deps?.interceptEndpoint ? deps.interceptEndpoint(resolved.endpoint, request, dispatch) : dispatch(request);
 }
 
 function unresolvedEndpointResponse(reason: "not_found" | "method_not_allowed"): Response {
     return new Response(reason, { status: reason === "method_not_allowed" ? 405 : 404 });
-}
-
-async function dispatchEndpoint(
-    endpoint: SourceEndpoint,
-    request: Request,
-    deps: SourceHandlerDeps | undefined,
-): Promise<Response> {
-    if (systemSourceUrnOf(endpoint.urn)) {
-        if (!deps?.executeSystemEndpoint) {
-            return new Response("system source executor not configured", { status: 501 });
-        }
-        return deps.executeSystemEndpoint(endpoint, request);
-    }
-
-    return executeEndpoint(endpoint, request, deps);
 }
 
 export function isSourceAuthorized(result: SourceAuthorizationResult): boolean {

@@ -10,12 +10,7 @@ import {
     SignedCookieCodec,
     SubjectResolver,
 } from "@bernouy/cms-auth";
-import {
-    authMethodsHandler,
-    executeAuthSystemSourceEndpoint,
-    registerPublicAuthRoutes,
-    type PublicAuthRoutesConfig,
-} from "@bernouy/cms-auth/http";
+import { authMethodsHandler, registerPublicAuthRoutes, type PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import {
     localLoginHandler,
     localLoginJsonHandler,
@@ -24,7 +19,7 @@ import {
 } from "cms-auth/application/http/handlers/localAuthentication";
 
 describe("authentication endpoint cache policy", () => {
-    test("protects direct and system-source current-user responses", async () => {
+    test("protects the current-user response", async () => {
         const subject = { identifier: "local:user-1", email: "ada@example.test" };
         const cfg = {
             allowSignup: false,
@@ -52,35 +47,8 @@ describe("authentication endpoint cache policy", () => {
             headers: { cookie: "cms-session=session-token" },
         });
         const direct = await routes.get("GET /me")!(request);
-        const system = await executeAuthSystemSourceEndpoint(
-            cfg,
-            {
-                urn: "urn:system-auth:me",
-                targetUrl: "cms-system://auth/me",
-            },
-            request,
-        );
-
         expect(await direct.json()).toEqual({ subject });
-        expect(await system.json()).toEqual({ subject });
         expectPrivatePolicy(direct);
-        expectPrivatePolicy(system);
-    });
-
-    test("protects disabled system signup without changing its response", async () => {
-        const cfg = { allowSignup: false } as PublicAuthRoutesConfig;
-        const response = await executeAuthSystemSourceEndpoint(
-            cfg,
-            {
-                urn: "urn:system-auth:signup",
-                targetUrl: "cms-system://auth/signup",
-            },
-            new Request("http://site/.cms/sources/system-auth/signup", { method: "POST" }),
-        );
-
-        expect(response.status).toBe(404);
-        expect(await response.text()).toBe("not_found");
-        expectPrivatePolicy(response);
     });
 
     test("protects local redirects, JSON failures and logout cookies", async () => {

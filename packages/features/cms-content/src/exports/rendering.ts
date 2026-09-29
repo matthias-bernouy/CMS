@@ -20,7 +20,6 @@ export { collectCmsSourceBindings } from "cms-content/editor/core/document/sourc
 export { resolvePageMetadataTemplateResult } from "cms-content/editor/core/document/pageMetadataVariables";
 export { canonicalSiteBaseUrl } from "cms-content/settings/core/validation";
 export { generateStyleEntry } from "cms-content/theme/core/generateStyleEntry";
-export { executeSiteSystemSourceEndpoint } from "cms-content/settings/http/systemSiteSource";
 export {
     PUBLISHED_PAGE_SNAPSHOT_ROUTE,
     PUBLISHED_PAGE_SNAPSHOT_SCHEMA,

@@ -219,7 +219,6 @@ export {
 
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────
 export { generateStyleEntry } from "cms-content/theme/core/generateStyleEntry";
-export { executeSiteSystemSourceEndpoint } from "cms-content/settings/http/systemSiteSource";
 export {
     PUBLISHED_PAGE_SNAPSHOT_ROUTE,
     PUBLISHED_PAGE_SNAPSHOT_SCHEMA,
