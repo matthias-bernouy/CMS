@@ -24,6 +24,10 @@ implementation notes live in each package's `AGENTS.md`.
 
 ## Authoring And Providers
 
+- [Source and provider transition](../TRANSITION_SOURCES.md) records the
+  Protocol v1 direction and high-level phase status.
+- [Source, provider and collection execution plan](../PLAN_ACTION.md) tracks
+  the current wave status, remaining gates and next implementation series.
 - [Repository contracts and providers: flow diagrams](../schema/README.md)
   separates current admission, publication and conformance flows in
   `@bernouy/cms-repository` from planned runtime upgrades.

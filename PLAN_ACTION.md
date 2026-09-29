@@ -1,12 +1,14 @@
 # Source, provider, and collection redesign plan
 
-Status: investigation and design plan only. No implementation in this file.
+Status: active implementation plan, reconciled with the repository on
+2026-09-29. Wave statuses below describe code that exists, not just design
+intent. Exit conditions remain the target for completing each wave.
 
 This document expands the protocol direction recorded in
 [`TRANSITION_SOURCES.md`](./TRANSITION_SOURCES.md) into an end-to-end execution
 plan. It covers contracts, providers, the gateway, the official Ulvia provider,
 collections, blocs, text variables, views, dashboards, admin pages, delivery,
-SEO, validation, operations, observability, and final deletion of the current
+SEO, validation, operations, observability, and retirement of the former
 source/dashboard stack.
 
 The reference sandbox is:
@@ -18,6 +20,36 @@ The reference sandbox is:
 It is a behavioral and product-design reference. It is not a package to copy
 into CmsCore.
 
+## Current position
+
+The migration is not following the original wave order strictly. The contract
+core is advanced, provider state and a synchronous gateway are integrated, and
+the old Source packages were removed before every planned operational and media
+replacement guarantee was complete. A passed workspace check is not evidence
+that those protocol exit conditions have been met.
+
+| Waves | State on 2026-09-29 | Main remaining gate |
+| --- | --- | --- |
+| 0–1: protocol and contracts | Partially complete; contract admission, catalogues, schemas, binding compilation and static conformance models exist | Finish representative operation/feed/view fixtures and live conformance evidence |
+| 2–3: providers and synchronous gateway | Partially complete; revisioned Mongo state and selected synchronous calls run through Control and Delivery | Authorized management, real provider fixtures, rate/retry/audit/telemetry, provider/system entrypoints |
+| 4–6: durable protocol, official provider, admin | File reads and bounded derivatives are an initial slice; the rest is open | Durable idempotency, operations, feeds, official provider and provider/contract management UI |
+| 7–9: collections, blocs, views | Collection bundle admission is an initial slice; legacy bloc compilation and a dashboard assignment store remain | Collection publication/install/render, configuration and text model, compiled view grants |
+| 10 and 12: Delivery/media and legacy retirement | Legacy Source and Source image packages are gone; gateway rendering, indexing and media paths are integrated | Durable media work, cache/GC policy, remaining `cms-source*` authoring vocabulary and end-to-end coverage |
+| 11 and 13: recovery and release tooling | Open | Provider restore/relocation, release tooling, attestations and operational drills |
+
+Immediate implementation sequence: make publication, approval, installation,
+selection and observation manageable through an authorized host flow; exercise
+that flow and the production gateway against a real custom provider fixture;
+then close durable invocation, operation and media gaps. The official provider
+and collection/view work build on those verified paths. The detailed waves
+below retain the full target scope.
+
+Current boundaries and limitations are documented by the
+[repository package](./packages/features/cms-repository/README.md),
+[gateway package](./packages/features/cms-gateway/README.md),
+[collection slice](./packages/features/cms-repository/src/collections/README.md)
+and [temporary dashboard package](./packages/features/cms-dashboards/AGENTS.md).
+
 ## 1. Starting point
 
 ### CmsCore
@@ -27,20 +59,22 @@ constraint. We may change persisted formats, routes, authored markup, package
 names, and APIs rather than carrying adapters for concepts that are being
 removed.
 
-The previous cleanup removed the legacy integration, function, trigger,
-notification-dispatch, role, and permission systems. The repository still has
-three large legacy areas that are active and must eventually be replaced:
+The legacy integration, function, trigger, notification-dispatch, role and
+permission systems, `@bernouy/cms-sources` and `@bernouy/cms-source-images`
+have been removed. The current boundaries are:
 
-| Current area | Approximate size | Current responsibility |
-| --- | ---: | --- |
-| `@bernouy/cms-sources` | 12,496 lines | Source definitions, proxying, validation, overlays, indexing, projections, and telemetry |
-| `@bernouy/cms-dashboards` | 6,370 lines | Widget-based views, dashboards, assignments, and execution plans |
-| `@bernouy/cms-source-images` | 8,756 lines | Source response interception, image inventory, transforms, and cache |
-| Control dashboard runtime and widgets | 12,219 lines | Business dashboard rendering and interactions |
-| Control dashboard browser tests | 9,880 lines | Behavioral coverage of the current widget system |
+| Area | Current responsibility |
+| --- | --- |
+| `@bernouy/cms-repository` | Contract and provider releases, admission, catalogues, installation/selection state, and first collection bundle admission |
+| `@bernouy/cms-gateway` | Selected synchronous invocation, provider-wide identity aliases, authorized file reads and bounded image derivatives |
+| `@bernouy/cms-content/files` | CMS-owned author file library and its image variants |
+| `@bernouy/cms-dashboards` | Temporary dashboard-to-subject assignment persistence only; no widget runtime or execution plans |
+| `@bernouy/secret-store` and `@bernouy/image-processing` | Generic Foundation services used by the CMS features |
 
-These numbers explain why the transition must be staged. They do not justify
-keeping the old abstractions.
+Control and Delivery have gateway routes, but there is no provider/contract
+management UI or official provider runtime. The current Collections workspace
+still serves existing CMS-owned content; collection-release installation and
+rendering are separate future work.
 
 The following foundations should be preserved and adapted:
 
@@ -49,23 +83,23 @@ The following foundations should be preserved and adapted:
 - the existing Collections workspace UI shell;
 - the page editor and the generic binding/rendering runtime where its behavior
   remains useful;
-- `secret-store` and envelope encryption for credential references;
+- `@bernouy/secret-store` in Foundation and envelope encryption for credential
+  references;
 - `cms-gateway/identity` for aliases and reverse identity resolution;
 - the generic rate limiter;
 - the HTTP runner and surface/runtime dependency-injection pattern;
-- source proxy protections worth transplanting: forbidden-header policy,
-  bounded bodies, timeout handling, target validation, response projection,
-  and request telemetry;
-- the generic image transformation/cache algorithms, after removing their
-  dependency on legacy sources;
+- gateway transport protections already transplanted from the Source proxy,
+  while rate, retry, audit and telemetry still need implementation;
+- generic image inspection and transforms now in
+  `@bernouy/image-processing`, with media authorization kept in the gateway;
 - reusable admin layout, table, detail, form, file, and navigation components.
 
-The current baseline passes `bun run check:all`. The existing advisory shape
-and browser-network warnings are pre-existing and are not protocol guarantees.
+The 2026-09-29 baseline passes `bun run check:all` (7/7). Its advisory shape
+and browser-network warnings are not protocol guarantees.
 
 ### UlviaInterfaces
 
-The sandbox currently contains:
+At the original investigation, the external sandbox contained:
 
 - 12 contracts;
 - 282 capabilities and 282 HTTP bindings;
@@ -88,13 +122,14 @@ The strongest ideas to retain are:
   versioned resource graph;
 - a published dashboard compiles a narrow execution plan from its views.
 
-### Existing file, cache, and image behavior to preserve
+### File, cache, and image behavior to preserve or restore
 
-The removal of the legacy Source model must not accidentally erase the useful
-engineering originally implemented by the standalone `cms-files` package and
-still present under `cms-content/files`, or the engineering in
-`cms-source-images`. The current implementation contains several distinct
-mechanisms that must not be collapsed under one vague "cache" abstraction:
+The standalone `cms-files` and `cms-source-images` packages have already been
+removed. `cms-content/files` retains the CMS-owned author file library;
+`cms-gateway/media` now serves authorized provider files and bounded WebP
+derivatives. The former Source image pipeline remains a useful reference for
+guarantees that the gateway path has not yet recovered. Keep these mechanisms
+distinct:
 
 1. `http-runner` has an in-process response cache for generated HTML and assets.
    It stores raw, Brotli, and gzip representations plus their content hash. It
@@ -106,15 +141,17 @@ mechanisms that must not be collapsed under one vague "cache" abstraction:
    rendering, queues bounded in-process work, generates a fixed WebP ladder,
    stores content-addressed variants under `CMS_FILES_DIR/.variants`, and
    invalidates the rendered-page cache when work completes.
-3. `cms-source-images` owns a second, Source-specific derivative pipeline. It
-   stores derivative objects separately from short-lived request lookups,
-   persists derivative bytes under `CMS_FILES_DIR/.source-images`, keeps a
-   durable Mongo job queue and media index, and runs prioritized Sharp workers.
+3. The removed `cms-source-images` pipeline had durable Mongo jobs, a media
+   index and prioritized workers. Its Source-specific public model is gone.
+   The gateway replacement currently generates bounded derivatives on demand
+   and stores them locally; it has no durable derivative queue, complete public
+   cache policy or garbage collection.
 
-The `cms-source-images` package will be deleted because its public model is
-coupled to `SourceRepository`, source endpoints, source effects, and legacy
-installation identifiers. The following design properties are nevertheless
-requirements for the replacement and must be ported deliberately:
+The following former pipeline properties remain the replacement's target
+requirements. The current gateway already provides deterministic
+byte-generation keys, bounded widths, authorization before lookup, same-origin
+browser helpers and transport limits; this list is not a claim that every
+property below is implemented:
 
 - derivative recipes and encoder identities are explicitly versioned;
 - derivative keys are deterministic and immutable for one source generation,
@@ -150,13 +187,15 @@ requirements for the replacement and must be ported deliberately:
 - source/download size, MIME type, redirects, timeouts, and target origins are
   validated before decoding or transforming bytes.
 
-These are behavioral requirements, not a requirement to preserve the current
-package, Mongo collection names, filesystem layout, or Source terminology.
+These are behavioral requirements, not a reason to restore the old package,
+Mongo collection names, filesystem layout or Source terminology.
 
-## 2. What the sandbox does not solve yet
+## 2. Gaps found in the reference sandbox
 
-Passing tests show that the prototype is internally coherent. They do not make
-it production-ready. The implementation currently has the following gaps.
+This section records the original UlviaInterfaces assessment. It describes
+the external prototype at that time, not the current CmsCore implementation.
+The execution-wave statuses below track which decisions have since reached
+CmsCore. Passing sandbox tests did not establish production readiness.
 
 ### Contract and schema gaps
 
@@ -298,10 +337,11 @@ compiled, immutable binding plan instead.
 - Conformance cleanup, seeded clocks, external-event injection, and parallel
   isolation are not standardized.
 
-## 3. Decisions to freeze before implementation
+## 3. Protocol v1 decisions and remaining design work
 
-These are the recommended Protocol v1 decisions. Any rejected decision should
-be replaced by a short ADR before code is written.
+These decisions guide the implementation. Several are already encoded in
+`cms-repository` and `cms-gateway`; the others remain target behavior. Record
+any changed decision explicitly before depending on it in later waves.
 
 ### Vocabulary and identity
 
@@ -464,13 +504,12 @@ tree merely because a page renders them. Collection-release assets are also
 immutable release artifacts, not author uploads, and retain their release
 identity and digest.
 
-Do not create a broad `cms-media` package during cleanup. Keep the current
-CMS-file derivative implementation inside `cms-content`. Extract a
-narrow origin-neutral derivative engine only when both CMS-owned files and a
-new provider file capability exercise it. That extraction may own recipes,
-keys, transforms, manifests, derivative storage ports, and worker contracts;
-it must not own file libraries, provider authorization, page caching, or all
-HTTP caching.
+Do not create a broad `cms-media` package. CMS-file derivatives stay in
+`cms-content`; provider-file authorization, derivative keys and storage stay in
+`cms-gateway/media`. Generic inspection and WebP byte transforms already live
+in Foundation's `@bernouy/image-processing`. Further shared worker or storage
+machinery needs a proven common boundary; it must not absorb file libraries,
+provider authorization, page caching or all HTTP caching.
 
 CMS-authored file IDs may remain stable while their bytes change, so their
 content hash is the derivative generation identity. A provider contract may
@@ -501,7 +540,7 @@ are identical.
 - Publishing compiles and pins its execution plan for one dashboard revision.
 - Assignments are direct `subjectId -> dashboardId` records. No roles or
   permission catalogue return.
-- The current dashboard widgets are not migrated as a runtime. Useful visual
+- The former dashboard widgets are not migrated as a runtime. Useful visual
   patterns become ordinary generic UI components or official Ulvia collection
   blocs.
 
@@ -565,11 +604,11 @@ below remain subject to implementation, but their boundaries should stay stable.
   - the providers domain owns manifests, installations, reports, selections,
     requirements, health snapshots and credential references; manifest publication
     and comparison, local installation lifecycle, explicit graph planning and
-    memory stores exist. Durable persistence, live connections and authorized
-    runtime orchestration remain planned;
-  - the planned collections domain owns collection releases, imports,
-    configuration schemas, themes, texts, blocs, assets, compatibility,
-    installations and overrides; there is no collection implementation yet;
+    memory and Mongo stores exist. Authorized management, coherent production
+    snapshots, live conformance and provider connection workflows remain open;
+  - the collections domain admits authored bundles with assets, local blocs,
+    Light DOM structure and capability witnesses. Imports, themes, texts,
+    views, publication, compatibility, installations and overrides remain open;
   - immutable catalogue artifacts remain separate from site installation
     state; this package does not implement providers or mount gateway routes;
   - the root exports types only. Current entrypoints are `./contracts`, its
@@ -580,20 +619,25 @@ below remain subject to implementation, but their boundaries should stay stable.
     assets, local bloc structure and capability witness validation; its renderer,
     catalogue and installation APIs remain unimplemented.
 - `@bernouy/cms-gateway`
-  - invocation context, actor model, capability resolution, compiled binding
-    execution, errors, projection, idempotency/retry/rate policy, audit and
-    telemetry ports, operations, files, and change-feed helpers;
-  - optional explicit `./http` and persistence adapter subpaths.
+  - currently resolves exact selections and approved installations, authorizes
+    actors/origins, executes compiled synchronous JSON bindings, validates
+    results, serves bounded provider files and derivatives, and owns one user
+    alias per provider ID;
+  - keyed commands, async operations, provider/system actors, durable rate,
+    retry, audit, telemetry and change-feed behavior remain closed or absent;
+  - optional Node transport, media and identity adapters use explicit subpaths.
 - `@bernouy/cms-views`
-  - view definitions, dashboard manifests/site copies, assignments, compiler,
-    execution plans, and repositories;
-  - replaces `@bernouy/cms-dashboards` rather than extending it.
+  - proposed future owner of view definitions, dashboard site copies, grants,
+    execution plans and repositories;
+  - would replace the remaining `@bernouy/cms-dashboards` assignment store.
 - An official-provider domain feature, named only after its first vertical
   slice proves the useful boundary. Do not put 282 handlers in a single runtime
   file tree without domain services and persistence ports.
 
 ### Resources
 
+- No resource package currently publishes official contract, provider or
+  collection releases.
 - One official Ulvia resource package, or a few responsibility-based packages,
   containing validated contract releases, the official provider manifest, and
   official collection releases.
@@ -604,20 +648,24 @@ below remain subject to implementation, but their boundaries should stay stable.
 
 ### Surfaces
 
-- `cms-control` mounts contract/provider/collection/view management APIs and
-  pages through injected feature ports.
-- `cms-delivery` mounts public/authenticated capability invocation and renders pages.
+- `cms-control` currently mounts authenticated gateway/media routes and an
+  editor capability listing. Contract/provider management pages remain planned.
+- `cms-delivery` currently mounts public/authenticated gateway/media routes,
+  page access preflight, indexing and page rendering.
+- Collection-release and view management APIs/pages remain planned.
 - A small provider HTTP surface may expose provider protocol endpoints and
   compiled capability bindings without owning official business logic.
 
 ### Runtimes
 
-- `cms-server` composes Mongo adapters, secrets, rate limits, release resources,
-  gateway clients, Control, and Delivery.
+- `cms-server` composes Mongo catalogues and site state, secret references,
+  gateway transport/identity/media adapters, Control and Delivery when
+  `CMS_GATEWAY_SITE_ID` is configured. Provider management and release
+  resources remain planned.
 - A new `ulvia-provider` runtime composes official domain services, persistence,
   file storage, workers, and the provider HTTP surface.
-- `ulvia-cli` eventually starts the local CMS, Mongo, and the local official
-  provider with persistent private credentials.
+- `ulvia-cli` currently starts the local CMS and Mongo; it can later start the
+  official provider with persistent private credentials.
 
 ## 6. Canonical records
 
@@ -786,11 +834,16 @@ earlier one.
 
 ## 8. Execution plan
 
-Each wave should be a separate reviewable series. A wave may temporarily remove
-features, but its exit condition must be testable before starting the next
-dependent wave.
+Each wave should be a reviewable series with a testable exit. Work has already
+crossed wave boundaries; a later wave's partial implementation does not imply
+that an earlier wave's exit condition passed. Status notes below describe the
+2026-09-29 repository state.
 
 ### Wave 0 — Protocol ADRs and executable fixtures
+
+Status: partial. The contract and provider models, protocol fixtures and
+negative tests exist, while the representative operation, change-feed and view
+flows are not all executable end to end.
 
 1. Freeze the vocabulary, versioning, schema dialect, access, behavior,
    idempotency, operation, change-feed, and configuration decisions above.
@@ -812,6 +865,11 @@ role, permission, integration package, or Supabase concept.
 
 ### Wave 1 — Contract core and binding compiler
 
+Status: advanced. `cms-repository/contracts` has strict release/schema
+admission, canonical digests, compatibility, binding compilation, mocks,
+static conformance declarations, and memory/Mongo catalogues. A live isolated
+conformance runner and official release evidence remain open.
+
 1. Implement the contracts domain in `@bernouy/cms-repository`, exposed through
    `./contracts`, with strict parsers, the schema runtime, projection,
    canonicalization, digesting, and compatibility.
@@ -829,12 +887,18 @@ runtime code has no API for executing an uncompiled binding.
 
 ### Wave 2 — Provider manifests and installations
 
+Status: partial. `cms-repository/providers` has manifest publication and
+comparison, installation lifecycle, runtime observations, full-site selection
+planning, and revisioned memory/Mongo stores. Production management,
+credential rotation/revocation, coherent cross-catalogue snapshots and live
+provider evidence remain open.
+
 1. Implement immutable provider manifests and their publication validator in
    the providers domain of `@bernouy/cms-repository`, exposed through `./providers`.
 2. Allow distinct exact releases of one contract in a manifest, reject duplicate
    `(contractId, version)` claims, and verify every claimed digest and release.
-   Manifest parsing and reference validation now support this; release-specific
-   runtime conformance and installation selection still need implementation.
+   Manifest parsing and reference validation support this; release-specific
+   runtime conformance remains open. Selection planning and persistence exist.
 3. Create installation, runtime-report, requirement-approval, contract
    selection, and health models.
 4. Add repositories and Mongo adapters; store secrets only through
@@ -846,13 +910,12 @@ runtime code has no API for executing an uncompiled binding.
    a site's selected contract release or provider. Support a bounded overlap
    between old and new major lines until the sites using the old line migrate.
 
-Current domain slice: manifest catalogue and comparison, explicit local
-preparation/approval/modification/disable/enable/revoke, CMS-timestamped report
-observations, full-site selection planning and revisioned memory stores are
-implemented. Plans validate explicit choices rather than solve for versions.
-Selections have a dependency-snapshot port; production composition must supply
-coherent captures and mutation revisions. Catalogue approval and selection
-replacement are separate operations, not an atomic multi-store upgrade.
+The local domain lifecycle supports explicit preparation, approval,
+modification, disable, enable and revoke. Plans validate explicit choices
+rather than solve for versions. Selections have a dependency-snapshot port;
+production composition must provide coherent captures and mutation revisions.
+Catalogue approval and selection replacement remain separate operations, not
+an atomic multi-store upgrade.
 See [provider workflows](packages/features/cms-repository/src/providers/workflows.md)
 for exact V1 policies and remaining durable, network and gateway work.
 
@@ -860,6 +923,13 @@ Exit: a runtime report cannot increase provider authority, and disconnect or
 revocation immediately removes gateway access.
 
 ### Wave 3 — Synchronous gateway vertical slice
+
+Status: partial. Control and Delivery invoke selected synchronous JSON
+capabilities; the gateway validates access, origin, compiled bindings, input
+and output, and uses a guarded Node transport. Natural and non-idempotent
+commands are supported with `outcome_unknown` after ambiguous dispatch. Keyed
+commands, provider/system callers, durable policy/audit/telemetry and real
+custom/official fixture coverage remain open.
 
 1. Build the invocation context and actor/origin model.
 2. Port the useful hardening from `cms-sources`: target validation, DNS/private
@@ -880,6 +950,10 @@ redirect, and requirement expansion attempts fail.
 
 ### Wave 4 — Idempotency, operations, files, and change feeds
 
+Status: initial file-read slice only. Bounded provider file reads and WebP
+derivatives are active. Keyed commands, durable operations, writes, snapshots,
+change feeds and outbox behavior are not active.
+
 1. Move idempotency keys from business schemas to the invocation envelope.
 2. Persist keyed-command payload hashes and results/operation IDs for the
    declared retention period.
@@ -896,6 +970,9 @@ Exit: restart and ambiguous-timeout tests prove no duplicated command effect,
 no silently lost deletion, and recoverable long-running work.
 
 ### Wave 5 — Official Ulvia provider
+
+Status: not started in this repository. No official provider resource, service
+or runtime package exists yet.
 
 Build it by vertical domain slices instead of porting 282 handlers at once:
 
@@ -932,7 +1009,11 @@ blocking conformance plus cross-contract scenarios.
 
 ### Wave 6 — Contract and provider admin experience
 
-Replace the current Sources page with a provider-oriented control plane:
+Status: not started. The former Sources management page is gone, and existing
+identity-provider settings concern authentication providers, not capability
+provider installations. Catalogues currently require host/database setup.
+
+Build a provider-oriented control plane:
 
 - `/admin/providers`: installations, readiness, selected contracts, health,
   and pending approvals;
@@ -951,6 +1032,11 @@ Exit: providers can be installed, approved, configured, selected, observed,
 rotated, disabled, and removed without editing JSON or using legacy Sources.
 
 ### Wave 7 — Collections vNext core
+
+Status: first authored-bundle admission slice implemented. The public
+`./collections` API parses and admits immutable bundle data, assets, local
+component/composition Light DOM and capability witnesses. There is no
+collection publication catalogue, site installation or renderer yet.
 
 Initial authored-bundle parsing/admission is implemented for assets and local
 component/Light DOM composition definitions. It validates resource dependency
@@ -976,6 +1062,11 @@ directly.
 
 ### Wave 8 — Bloc compiler, configuration, themes, and texts
 
+Status: open for the new collection model. The existing `cms-bloc-compile`
+package still handles code-based and site bloc bundling; its eventual ownership
+and the replacement flows need joint review before relocation. Existing CMS
+theme/text editing does not constitute collection-release themes/texts.
+
 1. Replace bespoke bloc editor bundles with bounded configuration schemas,
    defaults, presets, and declarative UI hints.
 2. Store each placed bloc's configuration JSON separately from page content and
@@ -1000,6 +1091,10 @@ editor and Delivery, localized, themed, and previewable from mocks without
 
 ### Wave 9 — Views, dashboards, and authorization
 
+Status: open. The old widget runtime has been removed; `cms-dashboards` retains
+only assignment persistence. Collection-owned views, published dashboard
+plans and compiled grants do not exist yet.
+
 1. Replace widget-based dashboard views with collection-owned composition
    views.
 2. Extend the declarative view grammar for queries, command forms, files,
@@ -1014,8 +1109,8 @@ editor and Delivery, localized, themed, and previewable from mocks without
 8. Audit every view-delegated command with subject, dashboard, view, revision,
    installation, capability, outcome, and request ID.
 9. Move reusable table/detail/form/navigation/media presentation into ordinary
-   components or official collection blocs, then delete the current dashboard
-   widget runtime.
+   components or official collection blocs where those patterns are still
+   needed. The former dashboard widget runtime has already been deleted.
 
 Exit: an authenticated user sees only assigned dashboards and can perform
 exactly the calls their published views prove. An administrator retains direct
@@ -1023,36 +1118,49 @@ access to every capability.
 
 ### Wave 10 — Delivery, pages, media, and SEO
 
-1. Replace the Delivery source proxy with capability gateway routes.
+Status: partially implemented out of sequence. Delivery's Source proxy is
+retired; Control and Delivery use gateway capability routes, page access
+preflight and capability-based indexing. CMS-owned files remain under
+`cms-content/files`; provider file reads and bounded on-demand derivatives are
+in the gateway, using Foundation image processing. The durable image queue,
+cache/GC policy, change-feed invalidation, JSON-LD and authoring-vocabulary
+cleanup remain open.
+
+1. Keep the completed Delivery source-proxy replacement covered by gateway
+   integration tests.
 2. Adapt the browser binding runtime to address capabilities and compiled
    consumer requirements. Since compatibility is not required, rename
    `cms-source*` authoring attributes if a clearer `cms-call*` grammar is
    selected; do not confuse browser submit triggers with the deleted backend
    trigger system.
-3. Rewrite page preflight against capability access and installed collection
-   requirements.
-4. Migrate dynamic page/indexing discovery from Source URNs to contract
-   capabilities and explicit projections.
+3. Extend the existing capability-access page preflight to installed
+   collection requirements when installations exist.
+4. Keep capability-based dynamic indexing discovery and projections covered
+   as official contracts are added.
 5. Keep the CMS-owned file library consolidated under explicit `cms-content`
    subpaths without changing its stable authoring semantics. Keep its
    content-hash-based image variants operational through the transition.
-6. Replace `cms-source-images` with an origin-neutral derivative path connected
-   to declared file capabilities. Port its versioned recipes, deterministic
+6. Complete the gateway derivative path for declared file capabilities. Port
+   the former pipeline's versioned recipes, deterministic
    keys, bounded variants, durable deduplicated queue, leases/retries,
    generation-aware media index, authorization-before-disclosure rule,
    atomic writes, garbage collection, cache policies, fallbacks, and telemetry.
-   Extract a shared derivative package only when the CMS-file and provider-file
-   implementations prove the common boundary.
+   Keep generic byte processing in `@bernouy/image-processing`; share further
+   derivative machinery only when both file owners prove a common boundary.
 7. Preserve localized paths, redirects, canonical URLs, sitemap, robots, and
    metadata-variable behavior through the transition.
 8. Add JSON-LD later as declarative, validated projections from page and
    capability data; do not put schema.org shapes into the transport protocol.
 9. Use change feeds to invalidate search, sitemap, metadata, and media caches.
 
-Exit: no Delivery or editor runtime imports `cms-sources`, and public rendering,
-auth, media, indexing, and localized routing use the new gateway safely.
+Exit: public rendering, auth, media, indexing and localized routing use the
+gateway with the required media durability and cache behavior, without
+legacy Source runtime imports or misleading authoring vocabulary.
 
 ### Wave 11 — Provider backup, restore, and same-provider relocation
+
+Status: open. There is no official provider installation with persistent
+business data to exercise recovery against yet.
 
 Before any production data:
 
@@ -1080,27 +1188,30 @@ loss, and the CMS can reconnect through new endpoint credentials deliberately.
 
 ### Wave 12 — Legacy deletion and naming cleanup
 
-Delete only after the replacement behavior is exercised:
+Status: partial, performed ahead of some original replacement gates. The old
+packages and widget runtime were removed, but their removal does not certify
+the missing media, admin and view behavior. Track those gaps in Waves 6, 9 and
+10 rather than treating deletion as their completion.
 
-| Delete or rewrite | Replacement gate |
+| Area | State and remaining work |
 | --- | --- |
-| `@bernouy/cms-sources` | Contract catalogue, installations, gateway, Control, Delivery, editor, indexing, and auth flows no longer import it |
-| Source overlays and source DTOs | Provider/collection configuration and immutable contract schemas cover their surviving use cases |
-| Sources admin page/runtime fragments | Provider and contract pages are complete |
-| `@bernouy/cms-dashboards` | `cms-views` repositories, plans, assignments, and management UI are live |
-| Dashboard widgets/runtime/browser tests | Equivalent collection components and view flows are tested |
-| Source-owned theme contributions | Collection release/import ownership is active |
-| Standalone `@bernouy/cms-files` package (completed before Wave 0) | CMS-owned file APIs, adapters, routes, tests, and image variants are available through explicit `cms-content` subpaths |
-| `@bernouy/cms-source-images` | The provider-file derivative path passes the current recipe/key, bounded-work, durable-queue, generation, authorization, cache-policy, fallback, garbage-collection, and observability benchmarks listed above |
-| Source URNs, route constants, and `/.cms/sources` | All authored and system calls use capability addressing |
-| `userRole`, `admin: boolean`, role timing stages | Verified administrator identity and separately scoped view grants are complete |
-| Integration/source vocabulary in docs and UI | Final repository-wide terminology audit passes |
+| `@bernouy/cms-sources`, Source proxy and old Sources page | Removed; finish provider/contract management in Wave 6 and end-to-end official flows in Waves 3–5 |
+| Source overlays, DTOs, URNs and `/.cms/sources` | Old backend paths removed; audit authored markup and remaining `cms-source*` browser attributes when choosing a capability-oriented grammar |
+| `@bernouy/cms-source-images` | Package removed; bounded gateway derivatives exist, while durable jobs, generation/index policy, caching, garbage collection and observability remain in Wave 10 |
+| Standalone `@bernouy/cms-files` | Removed earlier; CMS-owned file APIs and variants remain under `@bernouy/cms-content/files` |
+| Dashboard widgets and runtime | Removed; `@bernouy/cms-dashboards` now holds only assignments and awaits a collection/view owner in Wave 9 |
+| Roles and generic permissions | Removed; verified administrator access exists, while narrow published view grants remain in Wave 9 |
+| Integration/Source terminology | Still appears in browser bindings and some documentation; complete a source-backed terminology audit after the new authoring grammar is chosen |
 
-Then remove obsolete Mongo collections, environment variables, quality
-fixtures, exports, package references, docs, and dead tests. No compatibility
-reader or migration is required for unshipped data.
+Clean obsolete storage collections, environment variables and fixtures only
+after checking their remaining references and replacement behavior. No
+compatibility reader or migration is required for unshipped data.
 
 ### Wave 13 — Release tooling and hardening
+
+Status: open beyond the current build, checks and existing image benchmarks.
+Official artifact tooling, attestations and recurring recovery drills do not
+exist yet.
 
 1. Add author CLI commands for verify, diff, release, conformance, pack, and
    inspect using the same core libraries as CI.
@@ -1212,21 +1323,28 @@ stores with separate retention and access policies.
   must nevertheless avoid embedding provider endpoints so later
   domain-specific migration remains possible.
 
-## 12. First implementation series after approval
+## 12. Next implementation series from the current baseline
 
-The safest first coding series is intentionally small:
+The first contract, manifest, installation and synchronous gateway slices are
+already in the repository. The next reviewable series is:
 
-1. ADRs and Protocol v1 types/fixtures.
-2. `ulvia-schema/v1`, contract parser, validator, canonical digest, and binding
-   compiler.
-3. Provider manifest parser and approval diff.
-4. Installation repository/state machine with secret references.
-5. One synchronous gateway slice: a query, a keyed command, a declared error,
-   and one approved provider-to-provider capability requirement.
+1. Add authorized publication, installation, selection and observation flows
+   backed by the existing catalogues and site state. Persist fixture-asset
+   bytes separately so Mongo release publication can admit those artifacts.
+2. Exercise the production network composition end to end with one real custom
+   provider fixture, including manifest approval, an exact selected release,
+   query, natural command, declared error and authorized file read.
+3. Harden cross-catalogue snapshot consistency and credential
+   rotation/revocation; verify that stale observations or revoked
+   installations fail closed.
+4. Add durable idempotency and the host policy/audit/telemetry required before
+   activating keyed commands or provider/system callers. Keep those paths
+   closed until their own gates pass.
+5. Complete durable media generation, cache/GC policy and recovery tests for
+   the gateway derivative path removed from the old Source image package.
 
-Only after this series passes should the first official provider domain or any
-admin UI be built. It creates the authority and execution foundation that every
-later collection, view, dashboard, text, page, and SEO feature depends on.
+Official provider slices, collection installation/rendering and view grants
+then have an executable authority and recovery foundation to build on.
 
 ## 13. Definition of done
 

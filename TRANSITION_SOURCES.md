@@ -2,12 +2,14 @@
 
 CmsCore is the Bun and TypeScript monorepo behind the Ulvia CMS platform.
 
-This branch, `codex/refonte-sources`, is the working branch for a deliberate
-redesign of sources and integrations. The repository is not expected to keep
-the current integration model backward compatible while this work is in
-progress: no production site depends on it yet, and a temporarily unstable
-implementation is preferable to preserving concepts that are about to be
-removed.
+This branch, `codex/refonte-sources`, is the working branch for the source and
+provider redesign. The legacy Source packages have been removed; Protocol v1
+and the replacement product flows are still in progress. There is no
+production compatibility requirement for the former integration model.
+
+This document records the protocol direction and its high-level phases. The
+[execution plan](./PLAN_ACTION.md) tracks the 2026-09-29 implementation state
+wave by wave.
 
 ## Source and provider redesign
 
@@ -23,32 +25,36 @@ bindings, provider implementations, a CMS gateway, executable conformance
 scenarios, mocks, health reports, collections, text variables, blocs, views,
 and dashboards.
 
-At the time of this review, the sandbox contains 12 domain contracts and 282
+At the original investigation, the sandbox contained 12 domain contracts and 282
 capabilities, with roughly 460 mocks and 82 conformance scenarios. Its 217
-tests pass, and every generated contract passes its local verifier. This gives
+tests passed, and every generated contract passed its local verifier. This gives
 us a substantial behavioral reference, but it does not yet make the protocol
 production-ready.
 
 ### Transition status
 
 The legacy function, trigger, notification-dispatch, integration package,
-registry, verification, repository, official-integration resource, role, and
-permission stacks have been removed. Authentication subjects and CMS membership
-records now contain identity only; view definitions will own authorization.
+registry, verification, repository, official-integration resource, role,
+permission, `cms-sources` and `cms-source-images` stacks have been removed.
+Authentication subjects and CMS membership records contain identity only;
+view definitions and grants are still planned.
 The Ulvia CLI now starts only the local CMS and MongoDB; it no longer owns package
 pull, audit, release, publication, repository, or Supabase workflows.
 
-Obsolete integration-backed collection and dashboard fixtures have been
-removed. The current Collections UI is retained around private and code-backed
-collections; provider-backed catalogues will return only after contracts and
-provider installations exist.
+`@bernouy/cms-repository` now owns contract releases, provider manifests,
+installation/selection state and initial collection bundle admission.
+`@bernouy/cms-gateway` owns selected synchronous invocation, provider-wide
+identity aliases and bounded provider media. Its production runtime uses Mongo
+catalogues and site state when `CMS_GATEWAY_SITE_ID` is configured. Authorized
+provider management, an official provider, durable operations and change feeds,
+collection installation/rendering and published views remain open. The current
+Collections UI still serves private and code-backed collections.
 
 ### Why this redesign exists
 
-The current CmsCore integration system combines too many concerns: integration
-packages, sources, functions, triggers, roles, permissions, connector
-deployment, and provider-specific infrastructure. The resulting model is
-powerful but difficult to understand, author, replace, and operate.
+The former CmsCore integration system combined integration packages, sources,
+functions, triggers, roles, permissions, connector deployment and
+provider-specific infrastructure. That complexity motivated the redesign.
 
 The intended direction is simpler:
 
@@ -70,9 +76,9 @@ Supabase. Third-party or custom providers may implement the same contracts and
 remain interchangeable when they meet the same protocol and conformance
 requirements.
 
-### Scope of the current work
+### Protocol v1 scope
 
-The first milestone covers only:
+The protocol foundation covers:
 
 - contracts and capabilities;
 - provider manifests and installations;
@@ -81,8 +87,8 @@ The first milestone covers only:
 - conformance, health, errors, identity, and operational behavior;
 - the official Ulvia provider boundary.
 
-The following subjects are deliberately deferred until that foundation is
-stable:
+The following subjects depend on that foundation. Collection authored-bundle
+admission has started, but their full product flows remain open:
 
 - collection replacement;
 - the new bloc format and editors;
@@ -117,8 +123,9 @@ hardening and integration effort, not a rewrite of all twelve domains.
 
 ## Protocol v1 work
 
-Before the sandbox model is integrated into CmsCore, six areas must be made
-explicit and testable.
+The sandbox model is being integrated into CmsCore. The six areas below are
+Protocol v1 targets; some have partial implementations, as tracked in the
+[execution plan](./PLAN_ACTION.md#8-execution-plan).
 
 ### 1. Provider manifests and approved installations
 
@@ -144,14 +151,17 @@ Rules:
 - an expanded requirement set requires explicit approval;
 - credentials are scoped and rotated per installation;
 - the CMS supports several accounts for the same provider;
-- pairwise user IDs are scoped by installation, not hostname;
+- pairwise user IDs use one stable alias per provider ID across that
+  provider's installations and sites, never the hostname;
 - a custom provider uses a locally approved manifest;
 - the official provider uses a registry-published manifest;
 - disconnecting or revoking an installation immediately invalidates its
   provider-to-gateway credential.
 
-The registry may later sign manifests cryptographically. The first invariant
-is that a provider cannot approve new capability requirements for itself.
+The registry may later sign manifests cryptographically. The current gateway
+and manifest model keep provider reports from approving new capability
+requirements. Issuance, rotation and revocation of provider credentials still
+need authorized host workflows.
 
 ### 2. Exhaustive binding compilation
 
@@ -418,6 +428,10 @@ are settled before hundreds of capabilities are ported.
 
 ### Phase 0 — Freeze the protocol decisions
 
+Status: partial. Contract/provider protocols and fixtures cover the first
+release and binding models; executable operation, change-feed and view cases
+remain to be finalized.
+
 - record the selected versioning model;
 - define the contract release, provider manifest, installation, invocation,
   error, operation, and change-feed types;
@@ -428,6 +442,10 @@ Exit condition: the interfaces can describe the UlviaInterfaces examples
 without relying on the old integration model.
 
 ### Phase 1 — Registry and binding safety
+
+Status: advanced. `cms-repository` implements immutable contract and manifest
+admission, canonical digests, compatibility checks, binding compilation and
+memory/Mongo catalogues. Live conformance attestations remain open.
 
 - implement immutable contract and provider-manifest releases;
 - pin digests;
@@ -441,6 +459,11 @@ installable.
 
 ### Phase 2 — Installation and gateway runtime
 
+Status: partial. Revisioned installation and selection stores, provider-wide
+identity aliases, selected synchronous gateway calls, guarded Node transport,
+and Control/Delivery routes exist. Authorized management, credential lifecycle,
+rate/retry/audit/telemetry and provider/system invocation are still open.
+
 - implement provider installation persistence and credential rotation;
 - approve and resolve `requires` from manifests;
 - add invocation context and provider-scoped identity aliases;
@@ -452,6 +475,10 @@ Exit condition: a custom provider cannot escape its approved capabilities or
 override gateway identity.
 
 ### Phase 3 — Operations and synchronization
+
+Status: open. The gateway can read bounded provider files and serve on-demand
+derivatives, but keyed commands, durable operations, snapshots, change feeds
+and outbox recovery are not active.
 
 - implement operation polling and cancellation;
 - implement snapshots, watermarks, and change feeds;
@@ -465,6 +492,11 @@ duplicating effects or silently losing changes.
 
 ### Phase 4 — Official provider and contract migration
 
+Status: open for the official provider. `cms-sources` and
+`cms-source-images` were removed earlier than this phase's original sequence.
+The gateway replacement still needs durable image generation and recovery
+behavior before the media objective is complete.
+
 - implement the official provider without Supabase;
 - port the remaining official contracts;
 - run conformance in isolated disposable tenants;
@@ -473,15 +505,23 @@ duplicating effects or silently losing changes.
 - prove backup/restore on the original instance and offline relocation into a
   clean compatible instance of the same provider, including files, secret
   rebinding, reconciliation, cutover failure, and rollback;
-- remove the remaining superseded source paths after their replacement behavior
-  is covered.
+- finish the replacement behavior for paths already removed, including media
+  durability, cache policy, garbage collection and operational coverage;
+- finish remaining authored `cms-source*` vocabulary cleanup once its new
+  capability grammar is chosen.
 
 Exit condition: official contracts work exclusively through the new gateway,
 and the old runtime is no longer part of the composition root.
 
 ### Phase 5 — Collections, views, and text variables
 
-Only after the provider protocol is stable:
+Status: first collection authored-bundle admission slice exists. Publication,
+site installation, rendering, new bloc configuration, views, dashboard grants
+and localized collection texts remain open. The former dashboard widget runtime
+is gone; `cms-dashboards` retains assignment persistence only.
+
+Complete the following product flows after the provider protocol is stable;
+initial bundle admission has already started:
 
 - port the new collection and bloc model;
 - integrate site and admin text variables;
@@ -520,7 +560,8 @@ runtimes -> surfaces -> resources -> features -> foundation
 
 - `foundation/` contains generic utilities with no CMS-domain knowledge.
 - `features/` contains CMS contracts, validation, and adapter-light behavior.
-- `resources/` contains official declarative resources and releases.
+- `resources/` is reserved for official declarative resources and releases;
+  none is published there yet.
 - `surfaces/` mounts features into HTTP applications.
 - `runtimes/` select adapters, read environment, and start processes.
 
