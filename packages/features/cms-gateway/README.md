@@ -6,8 +6,10 @@ manifest claim, current installation state, fresh runtime observation, actor
 access, trusted invocation origin, host grants, input and output schema, and
 compiled binding pin.
 
-`CapabilityGateway` activates synchronous JSON queries and bounded binary
-file reads through an injected transport. Delivery exposes provider file reads
+`CapabilityGateway` activates synchronous JSON queries, synchronous natural or
+non-idempotent commands, and bounded binary file reads through an injected
+transport. Keyed commands remain closed until a durable idempotency store exists.
+Delivery exposes provider file reads
 at `/.cms/media/<contract>/<capability>/<fileId>`; Control exposes the same
 capability behind its authenticated `/api/media` route. Both recheck the
 current selection and actor grant before returning bytes. Delivery also serves
@@ -17,9 +19,9 @@ looking up its byte-generation key in the local derivative store.
 `./node-http` provides a Node network adapter that
 resolves and pins one public address, permits canonical HTTP loopback targets,
 rejects redirects through the transport, and injects host-resolved credentials
-and trusted context headers. Commands, operation handles, binary file writes,
+and trusted context headers. Asynchronous operations, binary file writes,
 provider-to-gateway calls, and system actors fail closed until their
-idempotency and grant protocols are implemented. Derivatives currently run on
+execution and grant protocols are implemented. Derivatives currently run on
 bounded demand; durable derivative jobs and public file cache policy are not
 active. Surfaces must create
 actors from verified authentication and supply a host authorization decision;
@@ -30,8 +32,10 @@ gateway when `CMS_GATEWAY_SITE_ID` is set. It persists release, manifest,
 installation and selection state in MongoDB, reuses the existing provider
 identity aliases in `cms_identity_aliases`, resolves provider token references
 through `cms-secrets`, and uses the pinned
-Node network adapter. Delivery currently grants public capabilities; Control
-grants calls only to the configured local administrator.
+Node network adapter. Delivery grants public capabilities and authenticated
+capabilities to verified users; Control grants calls only to the configured
+local administrator. The Control editor lists callable JSON capabilities from
+the site's selected releases through `/api/editor/capabilities`.
 
 `./identity` owns the authority-alias service and resolves one stable user alias
 per provider ID. `./mongo` retains the `cms_identity_aliases` collection and its
@@ -58,8 +62,8 @@ consumers and derivative workers replace their behavior.
    provider fixtures, harden cross-catalogue snapshot consistency, and replace
    full-catalogue revision scans before large deployments.
 3. Add durable idempotency, rate policy, audit, telemetry, and separate host
-   entrypoints before activating commands or provider/system calls.
-4. Migrate Control, Delivery, editor bindings, indexing, and system source
+   entrypoints before activating keyed commands or provider/system calls.
+4. Migrate remaining Control and Delivery source paths, indexing, and system source
    calls to capability routes while preserving provider-wide identity aliases
    and their observable behavior.
 5. Replace Source image consumers with provider file URLs, move expensive

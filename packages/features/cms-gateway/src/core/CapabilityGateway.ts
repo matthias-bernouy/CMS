@@ -59,8 +59,8 @@ export class CapabilityGateway {
             throw new GatewayError("invalid_route", "selected release does not define this capability and binding");
         }
         if (
-            capability.behavior.effect !== "query" ||
             capability.behavior.execution !== "sync" ||
+            (capability.behavior.effect === "command" && capability.behavior.idempotency === "keyed") ||
             binding.body?.kind === "binary"
         ) {
             throw new GatewayError("unsupported_behavior", "this capability needs a later execution profile");

@@ -30,6 +30,46 @@ test("compiled HTTP request preserves the json-percent wire profile", async () =
     expect(JSON.stringify(prepared)).not.toContain("PROVIDER_TOKEN");
 });
 
+test("synchronous command sends validated JSON through its admitted POST binding", async () => {
+    const route = await gatewayRoute({ behavior: { effect: "command", execution: "sync", idempotency: "natural" } });
+    const exchanges: GatewayHttpExchange[] = [];
+    const gateway = new CapabilityGateway({
+        routes: { resolve: async () => route, isCurrent: async () => true },
+        transport: new HttpGatewayTransport({
+            network: {
+                exchange: async (request) => {
+                    exchanges.push(request);
+                    return Response.json({ items: ["saved"] });
+                },
+            },
+        }),
+        authorize: async () => true,
+        now: () => "2026-09-29T08:00:00.000Z",
+    });
+    const response = await handleGatewayHttpCall(
+        new Request("https://site.example/.cms/call/catalog/item.list", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ term: "saved" }),
+        }),
+        {
+            siteId: "site-a",
+            origin: "delivery",
+            actor: { kind: "anonymous" },
+            prefix: "/.cms/call",
+            invoker: gateway,
+        },
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ output: { items: ["saved"] } });
+    expect(exchanges[0]).toMatchObject({
+        method: "POST",
+        pathAndQuery: "/v1/items",
+        body: '{"term":"saved"}',
+        headers: { "content-type": "application/json" },
+    });
+});
+
 test("HTTP transport bounds and parses responses through an injected network boundary", async () => {
     const route = await gatewayRoute();
     const exchanges: GatewayHttpExchange[] = [];

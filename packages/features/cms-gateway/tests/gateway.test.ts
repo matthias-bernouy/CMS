@@ -159,6 +159,20 @@ describe("capability gateway", () => {
         }
     });
 
+    test("executes synchronous commands without a keyed retry contract", async () => {
+        for (const idempotency of ["natural", "none"] as const) {
+            const scope = harness(
+                await gatewayRoute({ behavior: { effect: "command", execution: "sync", idempotency } }),
+            );
+            await expect(scope.gateway.invoke(invocation())).resolves.toMatchObject({
+                kind: "success",
+                output: { items: ["one"] },
+            });
+            expect(scope.sent).toHaveLength(1);
+            expect(scope.sent[0]?.binding.method).toBe("POST");
+        }
+    });
+
     test("fails closed on stale routes, commands, and malformed provider responses", async () => {
         const scope = harness(await gatewayRoute());
         scope.setCurrent(false);

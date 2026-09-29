@@ -43,8 +43,8 @@ export class SelectedGatewayCatalogue implements GatewayCapabilityCatalogue {
                 )?.binding;
                 if (
                     (capability.access !== "public" && capability.access !== "authenticated") ||
-                    capability.behavior.effect !== "query" ||
                     capability.behavior.execution !== "sync" ||
+                    (capability.behavior.effect === "command" && capability.behavior.idempotency === "keyed") ||
                     capability.output.type === "binary" ||
                     !binding ||
                     binding.body?.kind === "binary"

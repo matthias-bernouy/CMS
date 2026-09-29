@@ -96,9 +96,18 @@ test("editor catalogue includes only callable selected query capabilities", asyn
         { contractId: "catalog", contractLabel: "Catalog", capabilityId: "item.list", providerId: "ulvia.example" },
     ]);
 
+    const command = await gatewayRoute({ behavior: { effect: "command", execution: "sync", idempotency: "natural" } });
+    const commandCatalogue = new SelectedGatewayCatalogue(
+        { get: async () => ({ plan: { selections: [command.selection] } }) } as unknown as ConstructorParameters<
+            typeof SelectedGatewayCatalogue
+        >[0],
+        { resolve: async () => command, isCurrent: async () => true },
+    );
+    expect(await commandCatalogue.list("site-a")).toHaveLength(1);
+
     for (const excluded of [
         { access: "admin" },
-        { behavior: { effect: "command", execution: "sync", idempotency: "natural" } },
+        { behavior: { effect: "command", execution: "sync", idempotency: "keyed" } },
         { binary: true },
     ]) {
         const route = await gatewayRoute(excluded);

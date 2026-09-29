@@ -4,7 +4,10 @@ import type { CapabilityGatewayOptions } from "@bernouy/cms-gateway";
 /** Initial host policy for the single-site runtime; wider grants need explicit site policy. */
 export function createProductionGatewayAccess(credentials: LocalCredentialStore, administratorEmail: string) {
     const authorize: CapabilityGatewayOptions["authorize"] = async (actor, capability, _route, origin) =>
-        (origin === "delivery" && capability.access === "public") ||
+        (origin === "delivery" &&
+            (capability.access === "public" ||
+                (capability.access === "authenticated" &&
+                    (actor.kind === "user" || actor.kind === "administrator")))) ||
         (origin === "control" && actor.kind === "administrator");
 
     const isAdministrator = async (subject: Subject): Promise<boolean> => {

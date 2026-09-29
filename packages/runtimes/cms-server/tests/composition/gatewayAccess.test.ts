@@ -3,7 +3,7 @@ import type { LocalCredentialStore } from "@bernouy/cms-auth";
 import type { CapabilityGatewayOptions } from "@bernouy/cms-gateway";
 import { createProductionGatewayAccess } from "../../src/runtime/gateway/access";
 
-test("production gateway grants only public Delivery calls and bootstrap-admin Control calls", async () => {
+test("production gateway grants public and authenticated Delivery calls and bootstrap-admin Control calls", async () => {
     const credentials = {
         getByEmail: async () => ({ sub: "bootstrap-1" }),
     } as unknown as LocalCredentialStore;
@@ -16,8 +16,9 @@ test("production gateway grants only public Delivery calls and bootstrap-admin C
     const route = {} as Parameters<CapabilityGatewayOptions["authorize"]>[2];
     expect(await access.authorize({ kind: "anonymous" }, publicCapability, route, "delivery")).toBe(true);
     expect(await access.authorize({ kind: "user", subjectId: "user-1" }, privateCapability, route, "delivery")).toBe(
-        false,
+        true,
     );
+    expect(await access.authorize({ kind: "anonymous" }, privateCapability, route, "delivery")).toBe(false);
     expect(
         await access.authorize(
             { kind: "administrator", subjectId: "local:bootstrap-1" },
