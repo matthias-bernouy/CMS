@@ -94,3 +94,7 @@ export type GatewayResult =
 export interface GatewayInvoker {
     invoke(value: GatewayInvocation): Promise<GatewayResult>;
 }
+
+export interface GatewayAccessProbe {
+    assertAuthorized(value: Omit<GatewayInvocation, "input">): Promise<void>;
+}

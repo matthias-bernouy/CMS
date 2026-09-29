@@ -129,7 +129,14 @@ export async function mountProductionSurfaces(
         analytics: features.analytics,
         identities: features.identities,
         ...(gateway
-            ? { capabilityGateway: { siteId: gateway.siteId, invoker: gateway.invoker, images: gateway.images } }
+            ? {
+                  capabilityGateway: {
+                      siteId: gateway.siteId,
+                      invoker: gateway.invoker,
+                      access: gateway.access,
+                      images: gateway.images,
+                  },
+              }
             : {}),
         analyticsVisitorSecret: options.analyticsVisitorSecret,
         analyticsSiteScope: env.DELIVERY_PUBLIC_URL,

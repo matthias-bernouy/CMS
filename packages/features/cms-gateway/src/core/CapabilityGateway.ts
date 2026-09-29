@@ -1,8 +1,10 @@
-import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
+import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
+import type { CompiledHttpBinding } from "@bernouy/cms-repository/contracts/bindings";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import type { ProviderIdentityService } from "../identity/ProviderIdentityService";
 import type {
     GatewayActor,
+    GatewayAccessProbe,
     GatewayInvocation,
     GatewayOrigin,
     GatewayResult,
@@ -31,44 +33,28 @@ export interface CapabilityGatewayOptions {
     readonly maxObservationAgeMs?: number;
 }
 
-export class CapabilityGateway {
+type AuthorizedRoute = {
+    route: GatewayRoute;
+    release: ContractRelease;
+    capability: CapabilityDefinition;
+    binding: CompiledHttpBinding;
+};
+
+export class CapabilityGateway implements GatewayAccessProbe {
     readonly #options: CapabilityGatewayOptions;
 
     constructor(options: CapabilityGatewayOptions) {
         this.#options = options;
     }
 
+    /** Checks the current route and host grant without calling the provider. */
+    async assertAuthorized(value: Omit<GatewayInvocation, "input">): Promise<void> {
+        await this.#authorizedRoute(value);
+    }
+
     async invoke(value: GatewayInvocation): Promise<GatewayResult> {
         const invocation = snapshotInvocation(value);
-        const route = await this.#options.routes.resolve(invocation.siteId, invocation.contractId);
-        if (!route) {
-            throw new GatewayError("not_selected", "site has no selected release for this contract");
-        }
-        const release = resolveRoute(
-            route,
-            invocation.siteId,
-            invocation.contractId,
-            (this.#options.now ?? (() => new Date().toISOString()))(),
-            this.#options.maxObservationAgeMs ?? 60_000,
-        );
-        const capability = release.capabilities.find((item) => item.id === invocation.capabilityId);
-        const binding = route.release.admission.bindings.find(
-            (item) => item.capabilityId === invocation.capabilityId,
-        )?.binding;
-        if (!capability || !binding) {
-            throw new GatewayError("invalid_route", "selected release does not define this capability and binding");
-        }
-        if (
-            capability.behavior.execution !== "sync" ||
-            (capability.behavior.effect === "command" && capability.behavior.idempotency === "keyed") ||
-            binding.body?.kind === "binary"
-        ) {
-            throw new GatewayError("unsupported_behavior", "this capability needs a later execution profile");
-        }
-        checkAccess(invocation.actor, capability, invocation.origin);
-        if (!(await this.#options.authorize(invocation.actor, capability, route, invocation.origin))) {
-            throw new GatewayError("not_authorized", "host grant denied this capability");
-        }
+        const { route, release, capability, binding } = await this.#authorizedRoute(invocation);
         const input = snapshotInput(invocation.input, capability);
         if (!(await this.#options.routes.isCurrent(route))) {
             throw new GatewayError("stale_route", "selection or installation changed before invocation");
@@ -119,6 +105,42 @@ export class CapabilityGateway {
                 generation: await providerByteGeneration(result.bytes),
             },
         };
+    }
+
+    async #authorizedRoute(value: Omit<GatewayInvocation, "input">): Promise<AuthorizedRoute> {
+        const route = await this.#options.routes.resolve(value.siteId, value.contractId);
+        if (!route) {
+            throw new GatewayError("not_selected", "site has no selected release for this contract");
+        }
+        const release = resolveRoute(
+            route,
+            value.siteId,
+            value.contractId,
+            (this.#options.now ?? (() => new Date().toISOString()))(),
+            this.#options.maxObservationAgeMs ?? 60_000,
+        );
+        const capability = release.capabilities.find((item) => item.id === value.capabilityId);
+        const binding = route.release.admission.bindings.find(
+            (item) => item.capabilityId === value.capabilityId,
+        )?.binding;
+        if (!capability || !binding) {
+            throw new GatewayError("invalid_route", "selected release does not define this capability and binding");
+        }
+        if (
+            capability.behavior.execution !== "sync" ||
+            (capability.behavior.effect === "command" && capability.behavior.idempotency === "keyed") ||
+            binding.body?.kind === "binary"
+        ) {
+            throw new GatewayError("unsupported_behavior", "this capability needs a later execution profile");
+        }
+        checkAccess(value.actor, capability, value.origin);
+        if (!(await this.#options.authorize(value.actor, capability, route, value.origin))) {
+            throw new GatewayError("not_authorized", "host grant denied this capability");
+        }
+        if (!(await this.#options.routes.isCurrent(route))) {
+            throw new GatewayError("stale_route", "selection or installation changed during access check");
+        }
+        return { route, release, capability, binding };
     }
 
     async #providerSubjectId(

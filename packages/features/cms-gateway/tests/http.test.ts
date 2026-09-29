@@ -61,7 +61,8 @@ test("synchronous command sends validated JSON through its admitted POST binding
         },
     );
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ output: { items: ["saved"] } });
+    expect(await response.json()).toEqual({ items: ["saved"] });
+    expect(response.headers.get("x-ulvia-request-id")).toMatch(/^[0-9a-f-]{36}$/);
     expect(exchanges[0]).toMatchObject({
         method: "POST",
         pathAndQuery: "/v1/items",

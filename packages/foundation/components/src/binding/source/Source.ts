@@ -3,13 +3,21 @@
 import { disposeSourceObservation, publishSourceObservation } from "./runtime/observation";
 import { runFetch } from "./fetcher";
 import { type FilterMap } from "../core/interpolate";
-import { READY_ATTR, SOURCE_ATTR, type SourceState } from "../core/attrs";
+import {
+    READY_ATTR,
+    SOURCE_ATTR,
+    SOURCE_BODY_ATTR,
+    SOURCE_METHOD_ATTR,
+    isSourceMethod,
+    type SourceState,
+} from "../core/attrs";
 import { captureSourceContent, cloneSourceContent } from "./presentation/sourceContent";
 import { listenSourceEvents, sourceTrigger } from "./sourceEvents";
 import { parseSourceSpec } from "./runtime/sourceSpec";
 import { resolveReactiveUrl } from "./runtime/reactiveUrl";
 import { SourceRenderer } from "./presentation/sourceRenderer";
 import { SourcePresenter } from "./presentation/sourcePresenter";
+import { resolveSourceBodyFields } from "./presentation/sourceBody";
 import { type SourceStatusOptions, type SourceStatusValue } from "./presentation/sourceStatus";
 import { ownerForm, SourceSubmission } from "./submission";
 import { connectSourceData, disconnectSourceData, readSourceData, rememberSourceData } from "./values";
@@ -281,7 +289,25 @@ export class Source {
             }
         }
 
-        const outcome = await (this.options.read ?? runFetch)(url, ac.signal);
+        const methodValue = this.el.getAttribute(SOURCE_METHOD_ATTR)?.toUpperCase();
+        const method = isSourceMethod(methodValue ?? null) ? methodValue : "GET";
+        const outcome =
+            method === "GET"
+                ? await (this.options.read ?? runFetch)(url, ac.signal)
+                : await runFetch(url, ac.signal, {
+                      method,
+                      ...(method === "HEAD"
+                          ? {}
+                          : {
+                                headers: { "content-type": "application/json" },
+                                body: JSON.stringify(
+                                    resolveSourceBodyFields(
+                                        this.el.getAttribute(SOURCE_BODY_ATTR),
+                                        this.el.ownerDocument,
+                                    ) ?? {},
+                                ),
+                            }),
+                  });
         if (ac.signal.aborted || outcome.kind === "aborted") {
             return false;
         }

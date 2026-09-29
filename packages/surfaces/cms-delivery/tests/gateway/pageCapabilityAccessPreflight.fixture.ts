@@ -1,34 +1,7 @@
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { P9R_CACHE, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
-import { InMemorySourceRepository, seedSources, type Source } from "@bernouy/cms-sources";
+import { GatewayError, type GatewayAccessProbe } from "@bernouy/cms-gateway";
 import { compress, InMemoryCache, type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
-
-const SHOP_SOURCE: Source = {
-    urn: "urn:shop",
-    endpoints: [
-        {
-            urn: "urn:shop:listProducts",
-            method: "GET",
-            access: { mode: "public" },
-            targetUrl: "https://api.example.com/products",
-            output: [{ status: "200", body: { type: "object" } }],
-        },
-        {
-            urn: "urn:shop:createOrder",
-            method: "POST",
-            access: { mode: "system" },
-            targetUrl: "https://api.example.com/orders",
-            output: [{ status: "200", body: { type: "object" } }],
-        },
-        {
-            urn: "urn:shop:myProducts",
-            method: "GET",
-            access: { mode: "auth" },
-            targetUrl: "https://api.example.com/my-products",
-            output: [{ status: "200", body: { type: "object" } }],
-        },
-    ],
-};
 
 const system: TSystem = {
     initializationStep: 1,
@@ -104,21 +77,37 @@ export async function mountPage(options: {
     systemPages?: Partial<Pick<TSystem["site"], "notFound" | "forbidden" | "serverError" | "login">>;
 }): Promise<{ handler: RouteHandler }> {
     const runner = new CaptureRunner();
-    const sources = new InMemorySourceRepository();
     const cache = new InMemoryCache();
     cache.set(P9R_CACHE.js("/.cms/assets/component.js"), compress("component", "text/javascript"));
     cache.set(P9R_CACHE.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
     cache.set(P9R_CACHE.STYLE, compress("body{}", "text/css"));
-    await seedSources(sources, [SHOP_SOURCE]);
     new DeliveryCms({
         runner,
         repository: pageRepository(options.content, options.systemPages),
         cache,
-        sources,
+        capabilityGateway: {
+            siteId: "site-a",
+            invoker: { invoke: async () => ({ kind: "success", status: 200, requestId: "test", output: {} }) },
+            access: shopAccess,
+        },
         auth: options.auth as never,
     });
     return { handler: runner.defaultHandler("GET", "/") };
 }
+
+const shopAccess: GatewayAccessProbe = {
+    assertAuthorized: async (invocation) => {
+        if (invocation.contractId !== "shop") {
+            throw new GatewayError("not_selected", "contract is not selected");
+        }
+        if (invocation.capabilityId === "restricted") {
+            throw new GatewayError("not_authorized", "access denied");
+        }
+        if (invocation.capabilityId === "myProducts" && invocation.actor.kind === "anonymous") {
+            throw new GatewayError("not_authorized", "authentication is required");
+        }
+    },
+};
 
 export function authSubject(subject: { identifier: string } | null): unknown {
     return {

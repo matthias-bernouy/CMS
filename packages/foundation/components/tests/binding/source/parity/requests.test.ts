@@ -32,6 +32,31 @@ test("concurrent equivalent reads share a request and receive independent data",
     expect(await fresh).toEqual({ kind: "success", data: { items: ["updated"] } });
 });
 
+test("automatic POST bindings send JSON input independently", async () => {
+    const calls: Array<{ url: string; method: string | undefined; body: string | undefined }> = [];
+    globalThis.fetch = (async (url: string, init?: RequestInit) => {
+        calls.push({ url, method: init?.method, body: init?.body?.toString() });
+        return Response.json({ items: ["one"] });
+    }) as unknown as typeof fetch;
+    const hosts = [document.createElement("div"), document.createElement("div")];
+    for (const host of hosts) {
+        host.setAttribute("cms-source", "/.cms/call/catalog/item.list");
+        host.setAttribute("cms-source-method", "POST");
+        host.setAttribute("cms-source-body", '{"term":{"from":"raw","value":"one"}}');
+    }
+    const sources = hosts.map((host) => new Source(host));
+    try {
+        await Promise.all(sources.map((source) => source.run()));
+        expect(calls).toEqual([
+            { url: "/.cms/call/catalog/item.list", method: "POST", body: '{"term":"one"}' },
+            { url: "/.cms/call/catalog/item.list", method: "POST", body: '{"term":"one"}' },
+        ]);
+        expect(readSourceData(hosts[0]!)).toEqual({ items: ["one"] });
+    } finally {
+        sources.forEach((source) => source.dispose());
+    }
+});
+
 test("one consumer can leave while another keeps the same request alive", async () => {
     let networkSignal!: AbortSignal;
     globalThis.fetch = ((_url: RequestInfo | URL, init?: RequestInit) => {

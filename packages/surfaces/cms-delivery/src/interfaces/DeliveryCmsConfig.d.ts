@@ -8,7 +8,7 @@ import type {
     PublicFileMetadataLookup,
 } from "@bernouy/cms-content/files/serving";
 import type { IdentityService } from "@bernouy/cms-gateway/identity";
-import type { GatewayInvoker } from "@bernouy/cms-gateway";
+import type { GatewayAccessProbe, GatewayInvoker } from "@bernouy/cms-gateway";
 import type { ProviderImageService } from "@bernouy/cms-gateway/media";
 import type {
     SourceEndpointInterceptor,
@@ -39,6 +39,7 @@ export type DeliveryCmsConfig = {
     capabilityGateway?: {
         readonly siteId: string;
         readonly invoker: GatewayInvoker;
+        readonly access?: GatewayAccessProbe;
         readonly images?: Pick<ProviderImageService, "get">;
     };
     /**

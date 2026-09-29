@@ -142,6 +142,18 @@ describe("capability gateway", () => {
         expect(otherInstallation.sent[0]?.providerSubjectId).toBe(alias);
     });
 
+    test("checks access without invoking the provider or creating an identity alias", async () => {
+        const identities = new InMemoryIdentityService();
+        const scope = harness(await gatewayRoute({ access: "authenticated" }), new ProviderIdentityAliases(identities));
+        const call = invocation({ kind: "user", subjectId: "cms-user-1" });
+        await scope.gateway.assertAuthorized(call);
+        expect(scope.sent).toHaveLength(0);
+        expect(
+            await identities.resolve({ authority: "cms", kind: "user", value: "cms-user-1" }, "ulvia.example"),
+        ).toBeNull();
+        await expect(scope.gateway.assertAuthorized(invocation())).rejects.toMatchObject({ code: "not_authorized" });
+    });
+
     test("pins provider file identity to the selected installation and returned bytes", async () => {
         const scope = harness(await gatewayRoute({ binary: true }));
         scope.setResponse({ status: 200, contentType: "image/png", bytes: new Uint8Array([1, 2, 3]) });

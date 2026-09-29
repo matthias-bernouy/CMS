@@ -31,7 +31,8 @@ test("Delivery mounts a capability call that derives site and actor from trusted
         }),
     );
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ requestId: "request-1", output: { items: ["one"] } });
+    expect(await response.json()).toEqual({ items: ["one"] });
+    expect(response.headers.get("x-ulvia-request-id")).toBe("request-1");
     expect(calls).toEqual([
         {
             siteId: "site-a",

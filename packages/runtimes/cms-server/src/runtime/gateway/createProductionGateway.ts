@@ -64,6 +64,7 @@ export async function createProductionGateway(
     return {
         siteId,
         invoker,
+        access: invoker,
         images,
         catalogue,
         isAdministrator: access.isAdministrator,

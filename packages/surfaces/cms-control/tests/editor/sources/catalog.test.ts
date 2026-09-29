@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import type { GatewayEditorCapability } from "@bernouy/cms-gateway";
 import getEditorCapabilities from "cms-control/api/editor/capabilities.get";
 import type { ControlCms } from "cms-control/ControlCms";
+import { editorCapabilityDto } from "cms-control/core/content/editorSources/capabilityDto";
 
 const capability: GatewayEditorCapability = {
     contractId: "catalog",
@@ -60,4 +61,8 @@ test("editor catalogue is empty when gateway is not configured", async () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual([]);
+});
+
+test("root-mounted editor capabilities use an absolute same-origin route", () => {
+    expect(editorCapabilityDto("/", capability).url).toBe("/.cms/call/catalog/item.list");
 });

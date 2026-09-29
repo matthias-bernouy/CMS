@@ -12,6 +12,7 @@ export { CatalogueGatewayRevisionSource } from "cms-gateway/core/CatalogueGatewa
 export { GatewayError, type GatewayErrorCode } from "cms-gateway/core/GatewayError";
 export type {
     GatewayActor,
+    GatewayAccessProbe,
     GatewayInvocation,
     GatewayInvoker,
     GatewayOrigin,

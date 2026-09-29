@@ -5,7 +5,7 @@ import { renderPage } from "cms-delivery/core/html/renderPage";
 import { makeRuntimeRenderContext } from "cms-delivery/core/html/runtimeContext";
 import { renderRef } from "cms-delivery/core/pages/renderRef";
 import { P9R_CACHE } from "@bernouy/cms-content/rendering";
-import { preflightPageSourceAccess } from "cms-delivery/core/pages/preflightPageSourceAccess";
+import { preflightPageGatewayAccess } from "cms-delivery/core/pages/preflightPageGatewayAccess";
 import { publicPageCacheKey, resolvePublicPage } from "cms-delivery/core/pages/resolvePublicPage";
 import { InvalidPublicPageRequestError } from "cms-delivery/core/pages/publicPageRequest";
 import type { PageRenderMetadata } from "cms-delivery/core/seo/pageMetadata";
@@ -72,7 +72,7 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
     const page =
         storedRoute?.kind === "current" ? storedRoute.page : await delivery.repository.getPublishedPage(pathname);
     if (page) {
-        const sourceAccess = await preflightPageSourceAccess(req, page, delivery);
+        const sourceAccess = await preflightPageGatewayAccess(req, page, delivery);
         if (sourceAccess) {
             return { response: sourceAccess, pageId: page.id };
         }
@@ -100,7 +100,7 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
     }
 
     if (dynamicPage) {
-        const sourceAccess = await preflightPageSourceAccess(req, dynamicPage.page, delivery);
+        const sourceAccess = await preflightPageGatewayAccess(req, dynamicPage.page, delivery);
         if (sourceAccess) {
             return { response: sourceAccess, pageId: dynamicPage.page.id };
         }

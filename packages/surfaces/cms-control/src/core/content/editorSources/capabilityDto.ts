@@ -7,9 +7,10 @@ type BodyField = NonNullable<EditorDataSource["body"]>["fields"][number];
 
 /** The picker describes the selected contract, independent of its installed provider. */
 export function editorCapabilityDto(basePath: string, capability: GatewayEditorCapability): EditorDataSource {
+    const prefix = basePath === "/" ? "" : basePath.replace(/\/$/, "");
     return {
         label: capability.description ?? capability.capabilityId,
-        url: `${basePath}/.cms/call/${encodeURIComponent(capability.contractId)}/${encodeURIComponent(capability.capabilityId)}`,
+        url: `${prefix}/.cms/call/${encodeURIComponent(capability.contractId)}/${encodeURIComponent(capability.capabilityId)}`,
         method: "POST",
         provider: capability.contractId,
         providerLabel: capability.contractLabel,

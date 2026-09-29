@@ -26,8 +26,9 @@ bounded demand; durable derivative jobs and public file cache policy are not
 active. Surfaces must create
 actors from verified authentication and supply a host authorization decision;
 the gateway never accepts an actor or an endpoint from capability input.
-`./handlers` supplies a bounded JSON envelope for separately authenticated
-Control and Delivery POST routes. The production runtime injects a site-scoped
+`./handlers` projects successful JSON outputs directly as the selected contract
+declares them, with the request ID in a response header, for separately
+authenticated Control and Delivery POST routes. The production runtime injects a site-scoped
 gateway when `CMS_GATEWAY_SITE_ID` is set. It persists release, manifest,
 installation and selection state in MongoDB, reuses the existing provider
 identity aliases in `cms_identity_aliases`, resolves provider token references
@@ -36,6 +37,9 @@ Node network adapter. Delivery grants public capabilities and authenticated
 capabilities to verified users; Control grants calls only to the configured
 local administrator. The Control editor lists callable JSON capabilities from
 the site's selected releases through `/api/editor/capabilities`.
+Delivery checks automatic capability bindings before rendering a page, so a
+protected binding can send anonymous visitors to the configured login page
+without contacting the provider.
 
 `./identity` owns the authority-alias service and resolves one stable user alias
 per provider ID. `./mongo` retains the `cms_identity_aliases` collection and its
