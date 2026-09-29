@@ -1,5 +1,5 @@
 import { type GatewayActor } from "@bernouy/cms-gateway";
-import { handleGatewayHttpCall } from "@bernouy/cms-gateway/handlers";
+import { handleGatewayFileGet, handleGatewayHttpCall } from "@bernouy/cms-gateway/handlers";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 
 /** Public surface decides the verified actor; gateway HTTP owns parsing and projection. */
@@ -15,6 +15,20 @@ export async function handleCapabilityCall(request: Request, delivery: DeliveryC
         origin: "delivery",
         actor,
         prefix: `${delivery.basePath}/.cms/call`,
+    });
+}
+
+export async function handleCapabilityFile(request: Request, delivery: DeliveryCms): Promise<Response> {
+    const configured = delivery.capabilityGateway;
+    if (!configured) {
+        return new Response(null, { status: 404 });
+    }
+    return handleGatewayFileGet(request, {
+        siteId: configured.siteId,
+        invoker: configured.invoker,
+        origin: "delivery",
+        actor: await deliveryActor(delivery, request),
+        prefix: `${delivery.basePath}/.cms/media`,
     });
 }
 

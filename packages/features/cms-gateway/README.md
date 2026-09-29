@@ -6,13 +6,17 @@ manifest claim, current installation state, fresh runtime observation, actor
 access, trusted invocation origin, host grants, input and output schema, and
 compiled binding pin.
 
-`CapabilityGateway` currently activates synchronous JSON **queries** through
-an injected transport. `./node-http` provides a Node network adapter that
+`CapabilityGateway` activates synchronous JSON queries and bounded binary
+file reads through an injected transport. Delivery exposes provider file reads
+at `/.cms/media/<contract>/<capability>/<fileId>`; Control exposes the same
+capability behind its authenticated `/api/media` route. Both recheck the
+current selection and actor grant before returning bytes. `./node-http` provides a Node network adapter that
 resolves and pins one public address, permits canonical HTTP loopback targets,
 rejects redirects through the transport, and injects host-resolved credentials
 and trusted context headers. Commands, operation handles, binary file responses,
 provider-to-gateway calls, and system actors fail closed until their
-idempotency, file, and grant protocols are implemented. Surfaces must create
+idempotency and grant protocols are implemented. Derivative jobs, public file
+cache policy, and provider file writes are not active. Surfaces must create
 actors from verified authentication and supply a host authorization decision;
 the gateway never accepts an actor or an endpoint from capability input.
 `./handlers` supplies a bounded JSON envelope for separately authenticated

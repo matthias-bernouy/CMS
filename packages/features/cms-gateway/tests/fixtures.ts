@@ -6,7 +6,7 @@ import type { GatewayRoute } from "@bernouy/cms-gateway";
 export const NOW = "2026-09-29T08:00:00.000Z";
 
 export async function gatewayRoute(
-    overrides: { access?: string; behavior?: Record<string, unknown> } = {},
+    overrides: { access?: string; behavior?: Record<string, unknown>; binary?: boolean } = {},
 ): Promise<GatewayRoute> {
     const command = overrides.behavior?.effect === "command";
     const contract = await admitContractRelease({
@@ -22,25 +22,35 @@ export async function gatewayRoute(
                 id: "item.list",
                 access: overrides.access ?? "public",
                 behavior: overrides.behavior ?? { effect: "query", execution: "sync" },
-                input: {
-                    type: "object",
-                    properties: { term: { type: "string", maxLength: 50 } },
-                    required: [],
-                },
-                output: {
-                    type: "object",
-                    properties: { items: { type: "array", items: { type: "string", maxLength: 50 }, maxItems: 10 } },
-                    required: ["items"],
-                },
+                input: overrides.binary
+                    ? {
+                          type: "object",
+                          properties: { fileId: { type: "string", maxLength: 256 } },
+                          required: ["fileId"],
+                      }
+                    : { type: "object", properties: { term: { type: "string", maxLength: 50 } }, required: [] },
+                output: overrides.binary
+                    ? { type: "binary", maxBytes: 8, mediaTypes: ["image/png"] }
+                    : {
+                          type: "object",
+                          properties: {
+                              items: { type: "array", items: { type: "string", maxLength: 50 }, maxItems: 10 },
+                          },
+                          required: ["items"],
+                      },
                 errors: [{ code: "NOT_FOUND", retryable: false }],
                 binding: {
                     transport: "http",
                     method: command ? "POST" : "GET",
-                    path: "/v1/items",
-                    input: command ? { body: true } : { query: { term: "term" } },
+                    path: overrides.binary ? "/v1/files/{fileId}" : "/v1/items",
+                    input: overrides.binary
+                        ? { path: { fileId: "fileId" } }
+                        : command
+                          ? { body: true }
+                          : { query: { term: "term" } },
                     response: {
                         successStatuses: [200],
-                        contentTypes: ["application/json"],
+                        contentTypes: [overrides.binary ? "image/png" : "application/json"],
                         errorStatuses: { NOT_FOUND: 404 },
                     },
                 },

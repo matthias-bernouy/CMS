@@ -60,6 +60,16 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
 }
 
 function resultResponse(result: GatewayResult): Response {
+    if (result.kind === "binary") {
+        return new Response(new Uint8Array(result.bytes), {
+            status: result.status,
+            headers: {
+                "cache-control": "private, no-store",
+                "content-type": result.contentType,
+                "x-ulvia-request-id": result.requestId,
+            },
+        });
+    }
     if (result.status === 204 || result.status === 205) {
         return new Response(null, {
             status: result.status,

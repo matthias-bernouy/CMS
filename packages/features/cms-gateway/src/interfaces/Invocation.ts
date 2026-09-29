@@ -63,6 +63,7 @@ export interface GatewayTransportResponse {
     readonly status: number;
     readonly contentType?: string;
     readonly output?: unknown;
+    readonly bytes?: Uint8Array;
     readonly errorCode?: string;
 }
 
@@ -70,13 +71,23 @@ export interface GatewayTransport {
     send(request: GatewayTransportRequest): Promise<GatewayTransportResponse>;
 }
 
-export interface GatewayResult {
+interface GatewayResultBase {
     readonly requestId: string;
     readonly status: number;
-    readonly kind: "success" | "declared-error";
-    readonly output?: unknown;
-    readonly errorCode?: string;
 }
+
+export type GatewayResult =
+    | (GatewayResultBase & { readonly kind: "success"; readonly output?: unknown })
+    | (GatewayResultBase & {
+          readonly kind: "binary";
+          readonly bytes: Uint8Array;
+          readonly contentType: string;
+      })
+    | (GatewayResultBase & {
+          readonly kind: "declared-error";
+          readonly errorCode: string;
+          readonly output?: unknown;
+      });
 
 export interface GatewayInvoker {
     invoke(value: GatewayInvocation): Promise<GatewayResult>;

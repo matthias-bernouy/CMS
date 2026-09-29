@@ -18,6 +18,28 @@ export function validateResponse(
             throw new GatewayError("invalid_provider_response", "success response contains an error code");
         }
         checkContentType(binding, response);
+        if (capability.output.type === "binary") {
+            if (
+                !(response.bytes instanceof Uint8Array) ||
+                response.bytes.byteLength > capability.output.maxBytes ||
+                response.output !== undefined
+            ) {
+                throw new GatewayError(
+                    "invalid_provider_response",
+                    "provider binary output violates the selected release",
+                );
+            }
+            return Object.freeze({
+                kind: "binary",
+                requestId,
+                status: response.status,
+                bytes: new Uint8Array(response.bytes),
+                contentType: response.contentType!.split(";", 1)[0]!.trim().toLowerCase(),
+            });
+        }
+        if (response.bytes !== undefined) {
+            throw new GatewayError("invalid_provider_response", "provider JSON output contains binary bytes");
+        }
         try {
             const output = projectSchemaValue(capability.output, response.output ?? null);
             return Object.freeze({ kind: "success", requestId, status: response.status, output });

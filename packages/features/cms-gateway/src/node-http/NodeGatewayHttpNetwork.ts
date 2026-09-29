@@ -61,7 +61,7 @@ async function defaultResolveAddresses(hostname: string): Promise<readonly Resol
 function trustedHeaders(request: GatewayHttpExchange, token: string): Record<string, string> {
     return {
         ...request.headers,
-        accept: "application/json",
+        accept: request.accept ?? "application/json",
         authorization: `Bearer ${token}`,
         "x-ulvia-request-id": request.requestId,
         "x-ulvia-origin": request.invocationOrigin,

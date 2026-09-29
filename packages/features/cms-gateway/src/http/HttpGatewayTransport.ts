@@ -12,6 +12,7 @@ export interface GatewayHttpExchange extends PreparedHttpInvocation {
     readonly actorKind: GatewayTransportRequest["actorKind"];
     readonly providerSubjectId?: string;
     readonly signal: AbortSignal;
+    readonly accept?: string;
 }
 
 /** The host network adapter enforces target DNS/IP policy and never follows redirects. */
@@ -47,6 +48,10 @@ export class HttpGatewayTransport implements GatewayTransport {
             invocationOrigin: request.invocationOrigin,
             actorKind: request.actorKind,
             ...(request.providerSubjectId ? { providerSubjectId: request.providerSubjectId } : {}),
+            accept:
+                request.capability.output.type === "binary"
+                    ? request.capability.output.mediaTypes.join(", ")
+                    : "application/json",
             signal,
         });
         try {
@@ -54,8 +59,16 @@ export class HttpGatewayTransport implements GatewayTransport {
                 throw new TypeError("provider redirects are forbidden");
             }
             const contentType = response.headers.get("content-type") ?? undefined;
-            const bytes = await readBounded(response, this.#maxResponseBytes);
+            const maximum =
+                request.capability.output.type === "binary" &&
+                request.binding.response.successStatuses.includes(response.status)
+                    ? Math.min(this.#maxResponseBytes, request.capability.output.maxBytes)
+                    : this.#maxResponseBytes;
+            const bytes = await readBounded(response, maximum);
             if (request.binding.response.successStatuses.includes(response.status)) {
+                if (request.capability.output.type === "binary") {
+                    return { status: response.status, contentType, bytes };
+                }
                 return {
                     status: response.status,
                     contentType,

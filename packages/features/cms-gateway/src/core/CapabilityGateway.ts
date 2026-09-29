@@ -60,8 +60,7 @@ export class CapabilityGateway {
         if (
             capability.behavior.effect !== "query" ||
             capability.behavior.execution !== "sync" ||
-            binding.body?.kind === "binary" ||
-            capability.output.type === "binary"
+            binding.body?.kind === "binary"
         ) {
             throw new GatewayError("unsupported_behavior", "this capability needs a later execution profile");
         }

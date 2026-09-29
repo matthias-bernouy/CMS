@@ -5,7 +5,7 @@ import RobotsServer from "cms-delivery/endpoints/robots.txt.server";
 import SitemapServer from "cms-delivery/endpoints/sitemap.xml.server";
 import SitemapChunkServer from "cms-delivery/endpoints/sitemap-chunk.server";
 import FaviconServer from "cms-delivery/endpoints/assets/favicon.server";
-import { handleCapabilityCall } from "cms-delivery/endpoints/capabilityCall.server";
+import { handleCapabilityCall, handleCapabilityFile } from "cms-delivery/endpoints/capabilityCall.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import BindingCoreServer from "cms-delivery/endpoints/assets/bindingCore.server";
 import { PUBLIC_AUTH_ROUTES, registerPublicAuthRoutes } from "@bernouy/cms-auth/http";
@@ -132,6 +132,9 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
     if (delivery.capabilityGateway) {
         runner.group("/.cms/call", (callRunner) => {
             callRunner.setDefaultEndpoint("POST", (request) => handleCapabilityCall(request, delivery));
+        });
+        runner.group("/.cms/media", (mediaRunner) => {
+            mediaRunner.setDefaultEndpoint("GET", (request) => handleCapabilityFile(request, delivery));
         });
     }
 
