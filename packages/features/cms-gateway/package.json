@@ -1,0 +1,22 @@
+{
+    "name": "@bernouy/cms-gateway",
+    "version": "0.1.0",
+    "description": "Capability invocation and installation-scoped identity for CmsCore.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./http": "./src/exports/http.ts",
+        "./identity": "./src/exports/identity.ts",
+        "./mongo": "./src/exports/mongo.ts",
+        "./media": "./src/exports/media.ts"
+    },
+    "dependencies": {
+        "@bernouy/cms-repository": "workspace:*"
+    },
+    "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^7.0.2"
+    }
+}

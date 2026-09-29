@@ -10,6 +10,7 @@
         { "path": "packages/features/cms-bloc-compile" },
         { "path": "packages/features/cms-identities" },
         { "path": "packages/features/cms-repository" },
+        { "path": "packages/features/cms-gateway" },
         { "path": "packages/features/cms-sources" },
         { "path": "packages/features/cms-source-images" },
         { "path": "packages/features/cms-dashboards" },

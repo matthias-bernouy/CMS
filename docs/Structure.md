@@ -57,6 +57,13 @@ Feature packages:
   exports types only; live connection, durable persistence and gateway execution
   are not implemented here. `./collections` adds authored bundles, asset checks
   and Light DOM/component structure, not renderer compilation or installation.
+- `@bernouy/cms-gateway`: initial capability invocation boundary. It resolves
+  pinned selected releases and ready installations, executes admitted synchronous
+  JSON query bindings through an injected transport, validates outputs, and
+  exposes installation-scoped identity and derivative-key helpers. Its `./http`
+  and `./mongo` subpaths hold optional transport and persistence adapters. The
+  host still supplies trusted actors, grants, route consistency, network policy,
+  and secrets; production mounting and legacy Source replacement remain pending.
 - `@bernouy/cms-secrets`: secret storage contracts, `${VAR}` resolution, and
   encrypted Mongo storage.
 - `@bernouy/cms-auth`: accounts, local/OIDC providers, PATs, signed sessions,
@@ -64,7 +71,7 @@ Feature packages:
   admin mutations use `./management`, and Mongo/SMTP adapters use `./mongo`
   and `./smtp` from composition roots.
 - `@bernouy/cms-sources`: data-source contracts, endpoint execution, system
-  sources, and source proxy helpers.
+  sources, and source proxy helpers for the active legacy paths.
 - `@bernouy/cms-source-images`: bounded responsive Source image recipes,
   browser activation, derivative caches, and image transformers.
 - `@bernouy/cms-analytics`: privacy-first server-side analytics events,
