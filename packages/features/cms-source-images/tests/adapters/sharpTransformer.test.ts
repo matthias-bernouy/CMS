@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
 import sharp from "sharp";
 import { SOURCE_IMAGE_WIDTHS, SOURCE_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-source-images";
 import { SharpSourceImageTransformer } from "@bernouy/cms-source-images/sharp";
@@ -26,6 +27,18 @@ describe("SharpSourceImageTransformer", () => {
             expect(result.height).toBe(width / 2);
             expect(metadata.height).toBe(width / 2);
         }
+    }, 30_000);
+
+    test("decodes HEIF/HEIC originals to WebP with the primary image dimensions", async () => {
+        const transformer = new SharpSourceImageTransformer();
+        const source = readFileSync(new URL("../fixtures/example.heic", import.meta.url));
+        const inspected = await transformer.inspect(source, SOURCE_RESPONSIVE_WEBP_V1);
+        const result = await transformer.transform(source, { width: 384, recipe: SOURCE_RESPONSIVE_WEBP_V1 });
+        const output = await sharp(result.bytes).metadata();
+
+        expect(inspected).toEqual({ format: "heif", width: 1280, height: 854, pages: 1 });
+        expect(result).toMatchObject({ width: 384, height: 256 });
+        expect(output).toMatchObject({ format: "webp", width: 384, height: 256 });
     }, 30_000);
 
     test("applies EXIF orientation before sizing", async () => {

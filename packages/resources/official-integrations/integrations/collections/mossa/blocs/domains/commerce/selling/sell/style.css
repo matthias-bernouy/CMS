@@ -6,6 +6,7 @@ form { display: grid; gap: 2rem; }
 .number { display: grid; place-items: center; width: 2rem; height: 2rem; flex: 0 0 auto; border-radius: 50%; background: var(--ulvia-secondary-base); color: var(--ulvia-secondary-foreground); font-weight: 800; }
 .content, .summary { box-sizing: border-box; padding: 1.5rem; border-radius: var(--ulvia-radius-lg); background: var(--ulvia-subtle-background); }
 .content { display: grid; gap: .85rem; min-width: 0; }
+.step[data-invalid] .content { box-shadow: inset 0 0 0 2px var(--ulvia-danger-contrasted); }
 .step[data-state="complete"] .content { display: none; }
 .summary { display: none; margin: 0; font-weight: 700; }
 .step[data-state="complete"] .summary { display: block; }
@@ -56,6 +57,7 @@ slot[name="photo-guide"]::slotted(a:hover) { border-color: var(--ulvia-secondary
 .photo-preview { position: relative; min-width: 0; margin: 0; overflow: hidden; border: 1px solid var(--ulvia-surface-border); border-radius: var(--ulvia-radius-lg); background: var(--ulvia-surface-background); box-shadow: var(--ulvia-shadow-sm); transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
 .photo-preview:hover { border-color: var(--ulvia-secondary-base); box-shadow: var(--ulvia-shadow-soft); transform: translateY(-2px); }
 .photo-preview img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .25s ease; }
+.photo-preview .photo-filename { display: grid; place-items: center; height: 100%; padding: .75rem; overflow-wrap: anywhere; text-align: center; font-size: .8rem; }
 .photo-preview:hover img { transform: scale(1.025); }
 .photo-preview .remove-photo { position: absolute; top: .5rem; right: .5rem; display: grid; place-items: center; width: 2rem; min-height: 2rem; padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--ulvia-surface-text) 82%, transparent); color: var(--ulvia-surface-background); font-size: 1.25rem; line-height: 1; cursor: pointer; opacity: .88; transition: opacity .18s ease, transform .18s ease; }
 .photo-preview .remove-photo:hover { opacity: 1; transform: scale(1.06); }
@@ -67,6 +69,9 @@ slot[name="photo-guide"]::slotted(a:hover) { border-color: var(--ulvia-secondary
 .photos-upload { position: absolute; width: 1px; height: 1px; min-height: 0; padding: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
 .photo-picker:has(.photos-upload:focus-visible) { outline: 2px solid var(--ulvia-secondary-base); outline-offset: 2px; }
 .photo-hint, .photo-count { color: var(--ulvia-surface-muted-text); font-weight: 400; }
+.photo-field[data-invalid] .photo-picker { border-color: var(--ulvia-danger-contrasted); }
+.photo-field[data-invalid] .photo-count { color: var(--ulvia-danger-contrasted); font-weight: 700; }
+.step-error { margin: 0; color: var(--ulvia-danger-contrasted); font-weight: 700; }
 .photo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
 .photo-actions slot[name="photo-guide"]::slotted(a) { min-height: 3rem; }
 slot[name="auth-link"]::slotted(a) { --_mossa-link-color: var(--ulvia-primary-foreground); --_mossa-link-visited-color: var(--ulvia-primary-foreground); --_mossa-link-hover-color: var(--ulvia-primary-foreground); --_mossa-link-active-color: var(--ulvia-primary-foreground); display: inline-flex; min-height: 3rem; align-items: center; box-sizing: border-box; padding: .75rem .9rem; border-radius: var(--ulvia-radius-card); background: var(--ulvia-primary-base); color: var(--ulvia-primary-foreground); font-weight: 800; text-decoration: none; }

@@ -2,7 +2,8 @@ import type { SourceImageInputFormat, SourceImageMetadata } from "../../interfac
 
 export function validateSourceImageResponse(response: Response, bytes: Uint8Array): SourceImageInputFormat {
     const mediaType = response.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase();
-    const expected = mediaType === "image/jpg" ? "jpeg" : mediaType?.slice("image/".length);
+    const expected =
+        mediaType === "image/jpg" ? "jpeg" : mediaType === "image/heic" ? "heif" : mediaType?.slice("image/".length);
     const detected = detectImageFormat(bytes);
     if (!expected || !detected || expected !== detected) {
         throw new SourceImageFailure("upstream_content_type", "source response is not a supported raster image");
@@ -42,7 +43,7 @@ export class SourceImageFailure extends Error {
     }
 }
 
-function detectImageFormat(bytes: Uint8Array): SourceImageInputFormat | null {
+export function detectImageFormat(bytes: Uint8Array): SourceImageInputFormat | null {
     if (matches(bytes, [0xff, 0xd8, 0xff])) {
         return "jpeg";
     }
@@ -56,10 +57,22 @@ function detectImageFormat(bytes: Uint8Array): SourceImageInputFormat | null {
     if (gif === "GIF87a" || gif === "GIF89a") {
         return "gif";
     }
-    if (ascii(bytes, 4, 4) === "ftyp") {
-        const brands = [ascii(bytes, 8, 4), ascii(bytes, 16, 4), ascii(bytes, 20, 4)];
+    if (ascii(bytes, 4, 4) === "ftyp" && bytes.byteLength >= 16) {
+        const end = Math.min(new DataView(bytes.buffer, bytes.byteOffset, 4).getUint32(0, false), bytes.byteLength);
+        const brands = [];
+        for (let offset = 8; offset + 4 <= end; offset += 4) {
+            if (offset !== 12) {
+                brands.push(ascii(bytes, offset, 4));
+            }
+        }
         if (brands.some((brand) => brand === "avif" || brand === "avis")) {
             return "avif";
+        }
+        if (
+            brands.some((brand) => ["heic", "heix"].includes(brand)) &&
+            !brands.some((brand) => ["msf1", "hevs", "heis"].includes(brand))
+        ) {
+            return "heif";
         }
     }
     return null;

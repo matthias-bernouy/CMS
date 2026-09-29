@@ -4,6 +4,25 @@ import { expectRpc, installCommerceTestEnvironment, jsonResponse, requestCommerc
 installCommerceTestEnvironment();
 
 describe("commerce workflow configuration requests", () => {
+    test("publishes the current offer photo bounds with seller condition choices", async () => {
+        setRestResponder((request) =>
+            jsonResponse(
+                new URL(request.url).pathname.endsWith("/offer_conditions")
+                    ? [{ code: "good", label: "Good", enabled: true }]
+                    : [{ offer_image_min_count: 4, offer_image_max_count: 8 }],
+            ),
+        );
+
+        const response = await requestCommerce("/offer-conditions", { method: "GET" });
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({
+            items: [{ code: "good", label: "Good", enabled: true }],
+            total: 1,
+            photoPolicy: { minimum: 4, maximum: 8 },
+        });
+    });
+
     test("updates bounded product and offer image policies", async () => {
         setRestResponder(() =>
             jsonResponse({

@@ -54,6 +54,7 @@ export class Bloc extends Component {
     private variantId: number | null = null;
     private variantRequired = false;
     private files: File[] = [];
+    private photoPolicy: { minimum: number; maximum: number } | null = null;
     private authenticated = false;
     private authSubject: SourceRecord | null = null;
     private searchTimer?: number;
@@ -117,6 +118,22 @@ export class Bloc extends Component {
 
     private async loadConditions() {
         const data = await this.requestSource("sell-conditions");
+        const policy = data.photoPolicy;
+        if (policy !== undefined) {
+            if (
+                !policy ||
+                !Number.isInteger(policy.minimum) ||
+                !Number.isInteger(policy.maximum) ||
+                policy.minimum < 0 ||
+                policy.maximum > 20 ||
+                policy.minimum > policy.maximum
+            ) {
+                throw new Error("Commerce photo policy is invalid");
+            }
+            this.photoPolicy = { minimum: policy.minimum, maximum: policy.maximum };
+        }
+        this.syncPhotoPolicy();
+        this.renderPhotoPreviews();
         const conditions = (Array.isArray(data.items) ? data.items : []).filter(
             (item): item is OfferCondition =>
                 item &&
@@ -353,19 +370,29 @@ export class Bloc extends Component {
     private onPhotos = () => {
         const selected = Array.from(this.photosUpload.files || []);
         const known = new Set(this.files.map(fileKey));
+        let invalid: File | undefined;
+        let exceeded = false;
         for (const file of selected) {
+            if (!isSupportedPhoto(file)) {
+                invalid ??= file;
+                continue;
+            }
+            if (known.has(fileKey(file))) {
+                continue;
+            }
             if (this.files.length >= this.maximumPhotos) {
-                break;
+                exceeded = true;
+                continue;
             }
-            if (!known.has(fileKey(file))) {
-                this.files.push(file);
-                known.add(fileKey(file));
-            }
+            this.files.push(file);
+            known.add(fileKey(file));
         }
         this.photosUpload.value = "";
         this.renderPhotoPreviews();
-        if (selected.length && this.files.length >= this.maximumPhotos) {
-            this.setStatus(this.copy("maximumPhotos", { maximum: String(this.maximumPhotos) }));
+        if (invalid) {
+            this.showStepError(3, this.copy("invalidImage", { name: invalid.name }));
+        } else if (exceeded) {
+            this.showStepError(3, this.copy("maximumPhotos", { maximum: String(this.maximumPhotos) }));
         }
     };
 
@@ -386,6 +413,14 @@ export class Bloc extends Component {
                 this.previewUrls.push(url);
                 image.src = url;
                 image.alt = this.copy("previewAlt", { position: String(index + 1), name: file.name });
+                const filename = document.createElement("span");
+                filename.className = "photo-filename";
+                filename.textContent = file.name;
+                filename.hidden = true;
+                image.addEventListener("error", () => {
+                    image.hidden = true;
+                    filename.hidden = false;
+                });
 
                 const remove = document.createElement("button");
                 remove.className = "remove-photo";
@@ -394,7 +429,7 @@ export class Bloc extends Component {
                 remove.textContent = "×";
                 remove.addEventListener("click", () => this.removePhoto(index));
 
-                figure.append(image, remove);
+                figure.append(image, filename, remove);
                 if (index === 0) {
                     const main = document.createElement("span");
                     main.className = "main-photo";
@@ -413,6 +448,7 @@ export class Bloc extends Component {
             : this.copy("noPhoto");
         this.photoPickerLabel.textContent = this.files.length ? this.copy("addMorePhotos") : this.copy("addPhotos");
         this.photoPicker.toggleAttribute("hidden", this.files.length >= this.maximumPhotos);
+        this.refreshPhotoValidation();
     }
 
     private syncPhotoPolicy() {
@@ -432,9 +468,13 @@ export class Bloc extends Component {
 
     private onSubmit = async (event: SubmitEvent) => {
         event.preventDefault();
-        const validation = this.validate();
-        if (validation) {
-            return this.setStatus(validation, "error");
+        for (const step of [1, 2, 3]) {
+            const message = this.validateStep(step);
+            if (message) {
+                this.showStepError(step, message);
+                this.goToStep(step);
+                return;
+            }
         }
         if (!this.authenticated) {
             this.setStatus(this.copy("sessionExpired"), "error");
@@ -448,8 +488,10 @@ export class Bloc extends Component {
         const next = Number((event.currentTarget as HTMLElement).dataset.next);
         const message = this.validateStep(next - 1);
         if (message) {
-            return this.setStatus(message, "error");
+            this.showStepError(next - 1, message);
+            return;
         }
+        this.showStepError(next - 1, "");
         this.updateSummary(next - 1);
         this.setStatus("");
         this.goToStep(next);
@@ -598,10 +640,6 @@ export class Bloc extends Component {
         }
     }
 
-    private validate(): string | null {
-        return this.validateStep(1) || this.validateStep(2) || this.validateStep(3);
-    }
-
     private validateStep(step: number): string | null {
         if (step === 1 && !this.product) {
             return this.copy("chooseProduct");
@@ -624,12 +662,27 @@ export class Bloc extends Component {
                 { minimum: String(this.minimumPhotos), maximum: String(this.maximumPhotos) },
             );
         }
-        const invalid = this.files.find(
-            (file) =>
-                !["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type) ||
-                file.size > 5 * 1024 * 1024,
-        );
+        const invalid = this.files.find((file) => !isSupportedPhoto(file));
         return invalid ? this.copy("invalidImage", { name: invalid.name }) : null;
+    }
+
+    private refreshPhotoValidation() {
+        const message = this.validateStep(3);
+        this.showStepError(3, message || "");
+        this.nextButtons.find((button) => button.dataset.next === "4")!.disabled = Boolean(message);
+    }
+
+    private showStepError(step: number, message: string) {
+        const error = this.shadowRoot!.querySelector<HTMLElement>(`[data-step-error="${step}"]`)!;
+        error.textContent = message;
+        error.hidden = !message;
+        this.steps
+            .find((item) => Number(item.dataset.step) === step)
+            ?.toggleAttribute("data-invalid", Boolean(message));
+        if (step === 3) {
+            this.photoField.toggleAttribute("data-invalid", Boolean(message));
+            this.photosUpload.setAttribute("aria-invalid", String(Boolean(message)));
+        }
     }
 
     private async requestSource(sourceId: string, values: SourceRecord = {}): Promise<SourceRecord> {
@@ -722,6 +775,9 @@ export class Bloc extends Component {
     private get photoHint() {
         return this.shadowRoot!.querySelector<HTMLElement>("[data-photo-hint]")!;
     }
+    private get photoField() {
+        return this.shadowRoot!.querySelector<HTMLElement>(".photo-field")!;
+    }
     private get photoPicker() {
         return this.shadowRoot!.querySelector<HTMLElement>(".photo-picker")!;
     }
@@ -756,10 +812,13 @@ export class Bloc extends Component {
         return Array.from(this.shadowRoot!.querySelectorAll<HTMLButtonElement>("[data-edit]"));
     }
     private get maximumPhotos() {
-        return boundedPhotoCount(this.getAttribute("maximum-photos"), 5);
+        return this.photoPolicy?.maximum ?? boundedPhotoCount(this.getAttribute("maximum-photos"), 5);
     }
     private get minimumPhotos() {
-        return Math.min(boundedPhotoCount(this.getAttribute("minimum-photos"), 3), this.maximumPhotos);
+        return (
+            this.photoPolicy?.minimum ??
+            Math.min(boundedPhotoCount(this.getAttribute("minimum-photos"), 3), this.maximumPhotos)
+        );
     }
     private copy(name: string, replacements: Readonly<Record<string, string>> = {}): string {
         const slotName = `copy-${name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`;
@@ -906,6 +965,15 @@ function formattingLocale(): string {
 }
 function fileKey(file: File) {
     return `${file.name}:${file.size}:${file.lastModified}`;
+}
+function isSupportedPhoto(file: File): boolean {
+    const heifWithoutMime = !file.type && /\.(heic|heif)$/i.test(file.name);
+    return (
+        file.size > 0 &&
+        file.size <= 5 * 1024 * 1024 &&
+        (heifWithoutMime ||
+            ["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic", "image/heif"].includes(file.type))
+    );
 }
 function boundedPhotoCount(value: unknown, fallback: number) {
     if (value === null || value === undefined || String(value).trim() === "") {

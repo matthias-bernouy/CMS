@@ -1,6 +1,6 @@
 import { HttpError } from "../../../../core/errors.ts";
 import { maxProductImagePixels } from "../constants.ts";
-import { avifDimensions, isAvif } from "./avif.ts";
+import { avifDimensions, heifDimensions, isAvif, isHeif } from "./avif.ts";
 import { gifDimensions, isGif } from "./gif.ts";
 import { isJpeg, jpegDimensions } from "./jpeg.ts";
 import { isPng, pngDimensions } from "./png.ts";
@@ -31,7 +31,12 @@ function detectedImage(bytes: Uint8Array): ProbedImage {
     if (isAvif(bytes)) {
         return { ...avifDimensions(bytes), mimeType: "image/avif", extension: ".avif" };
     }
-    throw new HttpError(400, "file must be a JPEG, PNG, WebP, GIF, or AVIF image");
+    if (isHeif(bytes)) {
+        const major = String.fromCharCode(...bytes.subarray(8, 12));
+        const mimeType = major === "heic" || major === "heix" ? "image/heic" : "image/heif";
+        return { ...heifDimensions(bytes), mimeType, extension: mimeType === "image/heic" ? ".heic" : ".heif" };
+    }
+    throw new HttpError(400, "file must be a JPEG, PNG, WebP, GIF, AVIF, HEIC, or HEIF image");
 }
 
 function validateDimensions(dimensions: ImageDimensions): void {

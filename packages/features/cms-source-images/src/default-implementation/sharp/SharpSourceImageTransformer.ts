@@ -1,4 +1,6 @@
 import sharp, { type Sharp, versions } from "sharp";
+import { detectImageFormat } from "../../core/pipeline/validation";
+import { inspectHeif, transformHeif } from "./heif";
 import type { SourceImageRecipe } from "../../interfaces/recipe";
 import type {
     SourceImageInputFormat,
@@ -8,9 +10,13 @@ import type {
 } from "../../interfaces/transformer";
 
 export class SharpSourceImageTransformer implements SourceImageTransformer {
-    readonly encoderIdentity = `sharp-${versions.sharp}-vips-${versions.vips}-webp-${versions.webp ?? "unknown"}`;
+    readonly encoderIdentity =
+        `sharp-${versions.sharp}-vips-${versions.vips}-webp-${versions.webp ?? "unknown"}-heifjs-1.23.2`;
 
     async inspect(source: Uint8Array, recipe: SourceImageRecipe): Promise<SourceImageMetadata> {
+        if (detectImageFormat(source) === "heif") {
+            return inspectHeif(source, recipe);
+        }
         const pipeline = sharp(source, {
             animated: true,
             failOn: "warning",
@@ -33,6 +39,9 @@ export class SharpSourceImageTransformer implements SourceImageTransformer {
         source: Uint8Array,
         options: { width: number; recipe: SourceImageRecipe },
     ): Promise<SourceImageTransformResult> {
+        if (detectImageFormat(source) === "heif") {
+            return transformHeif(source, options);
+        }
         const pipeline = sharp(source, {
             animated: false,
             failOn: "warning",

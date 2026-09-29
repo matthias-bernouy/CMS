@@ -70,8 +70,19 @@ describe("Commerce image format probing", () => {
 
     test("rejects an unsupported signature instead of trusting a declared MIME", () => {
         expect(() => probeCommerceImage(new TextEncoder().encode("<svg/>"))).toThrow(
-            "file must be a JPEG, PNG, WebP, GIF, or AVIF image",
+            "file must be a JPEG, PNG, WebP, GIF, AVIF, HEIC, or HEIF image",
         );
+    });
+
+    test.each([
+        ["HEIC", "heic", "image/heic", ".heic"],
+        ["HEIF", "mif1", "image/heif", ".heif"],
+    ])("recognizes a structurally valid %s container by its compatible brand", (_label, major, mimeType, extension) => {
+        const bytes = avifBytes();
+        bytes.set(new TextEncoder().encode(major), 8);
+        bytes.set(new TextEncoder().encode("heic"), 20);
+        expect(probeCommerceImage(bytes)).toEqual({ width: 3, height: 2, mimeType, extension });
+        expect(() => probeCommerceImage(bytes.subarray(0, bytes.length - 1))).toThrow();
     });
 
     test("rejects zero dimensions and the 40 MP pixel envelope", () => {

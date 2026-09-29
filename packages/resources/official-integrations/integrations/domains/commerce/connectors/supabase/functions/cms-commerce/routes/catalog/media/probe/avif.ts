@@ -11,19 +11,35 @@ export function isAvif(bytes: Uint8Array): boolean {
 }
 
 export function avifDimensions(bytes: Uint8Array): ImageDimensions {
+    return itemDimensions(bytes, avifBrand);
+}
+
+export function isHeif(bytes: Uint8Array): boolean {
+    return bytes.length >= 16 && ascii(bytes, 4, 4) === "ftyp" && heifBrand(bytes);
+}
+
+export function heifDimensions(bytes: Uint8Array): ImageDimensions {
+    return itemDimensions(bytes, heifBrand);
+}
+
+function itemDimensions(bytes: Uint8Array, supportedBrand: (bytes: Uint8Array, box?: Box) => boolean): ImageDimensions {
     const state = { boxes: 0 };
     const top = boxes(bytes, 0, bytes.length, state);
     const ftyp = top.find((box) => box.type === "ftyp");
     const meta = top.find((box) => box.type === "meta");
     const mediaData = top.find((box) => box.type === "mdat");
-    if (!ftyp || !meta || !mediaData || mediaData.end === mediaData.payload || !avifBrand(bytes, ftyp)) {
+    if (!ftyp || !meta || !supportedBrand(bytes, ftyp)) {
         malformed();
     }
-    if (hasBrand(bytes, ftyp, "avis")) {
+    if (["avis", "msf1", "hevs", "heis"].some((brand) => hasBrand(bytes, ftyp, brand))) {
         unsupportedAnimation();
     }
     requireBytes(bytes, meta.payload, 4);
     const children = boxes(bytes, meta.payload + 4, meta.end, state);
+    const inlineData = children.find((box) => box.type === "idat");
+    if ((!mediaData || mediaData.end === mediaData.payload) && (!inlineData || inlineData.end === inlineData.payload)) {
+        malformed();
+    }
     if (!children.some((box) => box.type === "iloc") || !children.some((box) => box.type === "iinf")) {
         malformed();
     }
@@ -78,6 +94,14 @@ function avifBrand(bytes: Uint8Array, knownBox?: Box): boolean {
         return false;
     }
     return hasBrand(bytes, box, "avif") || hasBrand(bytes, box, "avis");
+}
+
+function heifBrand(bytes: Uint8Array, knownBox?: Box): boolean {
+    const box = knownBox ?? boxes(bytes, 0, bytes.length, { boxes: 0 })[0];
+    if (!box || box.type !== "ftyp" || box.end - box.payload < 8) {
+        return false;
+    }
+    return ["heic", "heix"].some((brand) => hasBrand(bytes, box, brand));
 }
 
 function hasBrand(bytes: Uint8Array, box: Box, expected: string): boolean {

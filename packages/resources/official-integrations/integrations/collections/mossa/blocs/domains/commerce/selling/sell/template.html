@@ -1,4 +1,5 @@
 <form novalidate>
+    <p class="status" role="status"></p>
     <section class="step" data-step="1" data-state="active">
         <header><span class="number">1</span><h2 class="step-product-title"></h2><button class="edit" type="button" data-edit="1"></button></header>
         <p class="summary" data-summary="1"></p>
@@ -12,6 +13,7 @@
                 <div class="variant-fields"></div>
             </div>
             <button class="next" type="button" data-next="2"></button>
+            <p class="step-error" data-step-error="1" role="alert" hidden></p>
         </div>
     </section>
 
@@ -29,6 +31,7 @@
                 <div class="grades" data-condition-options></div>
             </fieldset>
             <button class="next" type="button" data-next="3"></button>
+            <p class="step-error" data-step-error="2" role="alert" hidden></p>
         </div>
     </section>
 
@@ -48,14 +51,15 @@
                         <label class="photo-picker">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg>
                             <span class="photo-picker-label"></span>
-                            <input class="photos-upload" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>
+                            <input class="photos-upload" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif,.heic,.heif" aria-describedby="photo-error" multiple>
                         </label>
                     </div>
                     <small class="photo-hint" data-photo-hint></small>
                     <small class="photo-count" data-photo-count aria-live="polite"></small>
+                    <p class="step-error" id="photo-error" data-step-error="3" role="alert" hidden></p>
                 </div>
                 <div class="photo-actions">
-                    <button class="next" type="button" data-next="4"></button>
+                    <button class="next" type="button" data-next="4" aria-describedby="photo-error" disabled></button>
                     <slot name="photo-guide"></slot>
                 </div>
             </div>
@@ -67,7 +71,6 @@
         <div class="content">
             <p class="review"></p>
             <button class="submit" type="submit"></button>
-            <p class="status" role="status"></p>
         </div>
     </section>
 </form>
@@ -84,7 +87,7 @@
     <slot name="copy-maximum-photos"></slot><slot name="copy-preview-alt"></slot><slot name="copy-remove-photo"></slot>
     <slot name="copy-main-photo"></slot><slot name="copy-photo-count-one"></slot><slot name="copy-photo-count-many"></slot>
     <slot name="copy-no-photo"></slot><slot name="copy-add-more-photos"></slot><slot name="copy-add-photos"></slot>
-    <slot name="copy-photo-formats">JPEG, PNG, WebP, or AVIF, up to 5 MB per image.</slot><slot name="copy-photo-requirement-exact"></slot><slot name="copy-photo-requirement-range"></slot>
+    <slot name="copy-photo-formats">JPEG, PNG, WebP, AVIF, HEIC, or HEIF, up to 5 MB per image.</slot><slot name="copy-photo-requirement-exact"></slot><slot name="copy-photo-requirement-range"></slot>
     <slot name="copy-session-expired"></slot><slot name="copy-submission-failed"></slot><slot name="copy-summary-photos"></slot>
     <slot name="copy-description-added"></slot><slot name="copy-preparing"></slot><slot name="copy-seller"></slot>
     <slot name="copy-uploading"></slot><slot name="copy-submitting"></slot><slot name="copy-submitted"></slot>

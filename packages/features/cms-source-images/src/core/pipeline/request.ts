@@ -18,6 +18,8 @@ const DECLARED_RASTER_MEDIA = new Set([
     "image/webp",
     "image/gif",
     "image/avif",
+    "image/heic",
+    "image/heif",
 ]);
 
 export function requestedSourceImageTransform(

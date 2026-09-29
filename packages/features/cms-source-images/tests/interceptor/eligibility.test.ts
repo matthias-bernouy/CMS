@@ -1,7 +1,9 @@
 import { describe, expect, mock, test } from "bun:test";
+import { readFileSync } from "node:fs";
 import { isSourceImageWidth, SOURCE_IMAGE_WIDTHS, SOURCE_RESPONSIVE_WEBP_V1 } from "@bernouy/cms-source-images";
 import {
     imageEndpoint,
+    FakeImageTransformer,
     interceptorHarness,
     invoke,
     PNG_BYTES,
@@ -65,6 +67,24 @@ describe("Source image eligibility", () => {
         const response = await invoke(harness.interceptor, endpoint, new Request(url), harness.next);
         expect(response.status).toBe(200);
         expect(harness.next).toHaveBeenCalledTimes(1);
+    });
+
+    test.each(["image/heic", "image/heif"])("transforms a %s Source response", async (contentType) => {
+        const source = readFileSync(new URL("../fixtures/example.heic", import.meta.url));
+        const transformer = new FakeImageTransformer();
+        transformer.format = "heif";
+        const harness = interceptorHarness({ transformer });
+        const response = await invoke(
+            harness.interceptor,
+            imageEndpoint({ mediaType: contentType }),
+            sourceRequest(),
+            async () => upstreamImage({ contentType, bytes: source }),
+        );
+
+        expect(response.status).toBe(200);
+        expect(response.headers.get("content-type")).toBe("image/webp");
+        expect(transformer.inspectCalls).toBe(1);
+        expect(transformer.transformCalls).toBe(1);
     });
 
     test("preserves upstream errors without reading or transforming them", async () => {

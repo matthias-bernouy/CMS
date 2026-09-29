@@ -53,6 +53,17 @@
                         },
                         "total": {
                             "type": "number"
+                        },
+                        "photoPolicy": {
+                            "type": "object",
+                            "properties": {
+                                "minimum": {
+                                    "type": "number"
+                                },
+                                "maximum": {
+                                    "type": "number"
+                                }
+                            }
                         }
                     }
                 }

@@ -9,6 +9,7 @@ import {
     type SourceImageJobScheduler,
     type SourceImageRecipe,
     type SourceImageTransformer,
+    type SourceImageInputFormat,
 } from "@bernouy/cms-source-images";
 
 export const PNG_BYTES = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4]);
@@ -20,6 +21,7 @@ export class FakeImageTransformer implements SourceImageTransformer {
     width = 1_000;
     height = 600;
     pages = 1;
+    format: SourceImageInputFormat = "png";
     failInspect = false;
     failTransform = false;
     inspectDelayMs = 0;
@@ -38,7 +40,7 @@ export class FakeImageTransformer implements SourceImageTransformer {
             if (this.failInspect) {
                 throw new Error("corrupt image");
             }
-            return { format: "png" as const, width: this.width, height: this.height, pages: this.pages };
+            return { format: this.format, width: this.width, height: this.height, pages: this.pages };
         } finally {
             this.active -= 1;
         }

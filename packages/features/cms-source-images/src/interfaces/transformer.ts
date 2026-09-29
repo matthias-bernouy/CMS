@@ -1,6 +1,6 @@
 import type { SourceImageRecipe } from "./recipe";
 
-export const SOURCE_IMAGE_INPUT_FORMATS = ["jpeg", "png", "webp", "gif", "avif"] as const;
+export const SOURCE_IMAGE_INPUT_FORMATS = ["jpeg", "png", "webp", "gif", "avif", "heif"] as const;
 export type SourceImageInputFormat = (typeof SOURCE_IMAGE_INPUT_FORMATS)[number];
 
 export type SourceImageMetadata = Readonly<{

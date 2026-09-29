@@ -16,7 +16,7 @@ create table if not exists commerce.media (
     constraint media_storage_path_unique unique (storage_bucket, storage_path),
     constraint media_file_size_valid check (file_size between 1 and 10485760),
     constraint media_mime_type_valid check (
-        mime_type in ('image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif')
+        mime_type in ('image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif', 'image/heic', 'image/heif')
     ),
     constraint media_original_filename_not_blank check (length(btrim(original_filename)) > 0),
     constraint media_alt_length check (alt is null or length(alt) <= 500),
@@ -36,6 +36,17 @@ alter table commerce.media
 
 do $commerce_media_constraints$
 begin
+    if not exists (
+        select 1 from pg_constraint
+        where conrelid = 'commerce.media'::regclass
+          and conname = 'media_mime_type_valid'
+          and pg_get_constraintdef(oid) like '%image/heic%'
+    ) then
+        alter table commerce.media drop constraint if exists media_mime_type_valid;
+        alter table commerce.media add constraint media_mime_type_valid check (
+            mime_type in ('image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif', 'image/heic', 'image/heif')
+        );
+    end if;
     if not exists (
         select 1 from pg_constraint
         where conrelid = 'commerce.media'::regclass

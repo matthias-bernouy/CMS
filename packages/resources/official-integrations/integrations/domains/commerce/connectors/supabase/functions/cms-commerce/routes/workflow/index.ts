@@ -5,10 +5,23 @@ import { one, restJson, rpc } from "../../core/rest.ts";
 import type { JsonRecord } from "../../core/types.ts";
 
 export async function listOfferConditions(): Promise<Response> {
-    const rows = await restJson<JsonRecord[]>(
-        "offer_conditions?select=code,label,description,position,enabled,created_at,updated_at&order=position.asc,code.asc",
-    );
-    return json({ items: camelize(rows), total: rows.length });
+    const [rows, settings] = await Promise.all([
+        restJson<JsonRecord[]>(
+            "offer_conditions?select=code,label,description,position,enabled,created_at,updated_at&order=position.asc,code.asc",
+        ),
+        one("settings", { id: "default" }, "offer_image_min_count,offer_image_max_count"),
+    ]);
+    if (!settings) {
+        throw new HttpError(500, "commerce settings are missing");
+    }
+    return json({
+        items: camelize(rows),
+        total: rows.length,
+        photoPolicy: {
+            minimum: settings.offer_image_min_count,
+            maximum: settings.offer_image_max_count,
+        },
+    });
 }
 
 export async function getOfferCondition(request: Request): Promise<Response> {
