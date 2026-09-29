@@ -1,6 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
-import { planContractSelections, type ContractSelection } from "@bernouy/cms-repository/providers/selections";
+import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
+import {
+    CatalogueSelectionDependencies,
+    planContractSelections,
+    type ContractSelection,
+} from "@bernouy/cms-repository/providers/selections";
 import { contractDocument, implementation, releaseCatalogue, requirement } from "../support/fixtures";
 import { graphFixture, installationFor, siteId } from "./fixtures";
 
@@ -102,4 +107,23 @@ describe("full selection dependency graph", () => {
             dependencyPath: ["alpha", "bravo", "charlie:run"],
         });
     });
+});
+
+test("catalogue dependency revision tracks release, manifest, and installation changes", async () => {
+    const fixture = await graphFixture();
+    let installationRevision = 1;
+    const installationStore = {
+        list: async () => [{ installation: fixture.installation, revision: installationRevision }],
+    } as unknown as ProviderInstallationStore;
+    const dependencies = new CatalogueSelectionDependencies(fixture.releases, fixture.manifests, installationStore);
+    const original = await dependencies.capture(siteId);
+    expect(await dependencies.isCurrent(siteId, original.revision)).toBe(true);
+    installationRevision += 1;
+    expect(await dependencies.isCurrent(siteId, original.revision)).toBe(false);
+    const afterInstallation = await dependencies.capture(siteId);
+    await fixture.releases.setYank("payment", "1.0.0", { reason: "retired" });
+    expect(await dependencies.isCurrent(siteId, afterInstallation.revision)).toBe(false);
+    const afterRelease = await dependencies.capture(siteId);
+    await fixture.manifests.setYank("ulvia.example", "1.0.0", { reason: "retired" });
+    expect(await dependencies.isCurrent(siteId, afterRelease.revision)).toBe(false);
 });

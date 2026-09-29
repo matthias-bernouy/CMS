@@ -9,6 +9,7 @@ import {
     requiredEnv,
     type RuntimeEnvSource,
 } from "./runtimeEnvParsing";
+import { parseSelectionSiteId } from "@bernouy/cms-repository/providers/selections";
 
 export { parsePort } from "./runtimeEnvParsing";
 
@@ -21,6 +22,7 @@ export type RuntimeEnv = {
     CMS_KEK_HEX: string;
     CMS_ADMIN_EMAIL: string;
     CMS_ADMIN_PASSWORD: string;
+    CMS_GATEWAY_SITE_ID?: string;
     CMS_FILES_DIR: string;
     MONGO_URL: string;
     CMS_AUTH_SITE_NAME: string;
@@ -62,6 +64,9 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         CMS_KEK_HEX: requiredEnv(source, "CMS_KEK_HEX"),
         CMS_ADMIN_EMAIL: requiredEnv(source, "CMS_ADMIN_EMAIL"),
         CMS_ADMIN_PASSWORD: requiredEnv(source, "CMS_ADMIN_PASSWORD"),
+        ...(!source.CMS_GATEWAY_SITE_ID?.trim()
+            ? {}
+            : { CMS_GATEWAY_SITE_ID: parseSelectionSiteId(source.CMS_GATEWAY_SITE_ID.trim()) }),
         CMS_FILES_DIR: requiredEnv(source, "CMS_FILES_DIR"),
         MONGO_URL: requiredEnv(source, "MONGO_URL"),
         CMS_AUTH_SITE_NAME: source.CMS_AUTH_SITE_NAME?.trim() || "CMS",

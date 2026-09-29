@@ -3,6 +3,7 @@ export {
     CatalogueGatewayRouteResolver,
     type CatalogueGatewayRouteResolverOptions,
 } from "cms-gateway/core/CatalogueGatewayRouteResolver";
+export { CatalogueGatewayRevisionSource } from "cms-gateway/core/CatalogueGatewayRevisionSource";
 export { GatewayError, type GatewayErrorCode } from "cms-gateway/core/GatewayError";
 export type {
     GatewayActor,

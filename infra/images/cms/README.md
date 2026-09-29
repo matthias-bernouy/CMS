@@ -308,6 +308,7 @@ environment file.
 | Variable | Default or purpose |
 | --- | --- |
 | `CMS_ADMIN_EMAIL` | Defaults to `admin@${DOMAIN}`. |
+| `CMS_GATEWAY_SITE_ID` | Optional stable opaque site ID. When set, mounts capability call routes in Control and Delivery backed by Mongo catalogues and the provider gateway. Publication and installation management routes are still pending. |
 | `ANALYTICS_TRUST_PROXY` | Defaults to `false`; enable only behind a proxy that overwrites forwarding headers. |
 | `ENDPOINT_PERFORMANCE_ENABLED` | Defaults to `true`; set to `false` to stop new endpoint observations and flushes without deleting retained rollups. |
 | `SOURCE_TIMING_SAMPLE_RATE` | Uniform detailed source-diagnostic sampling rate from `0` to `1`; defaults to `0.01`. Aggregate endpoint metrics remain exhaustive. |

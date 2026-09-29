@@ -85,6 +85,15 @@ describe("runtime env validation", () => {
         ).toBe(0);
     });
 
+    test("activates the capability gateway only with a valid stable site ID", () => {
+        expect(readRuntimeEnv(validEnv()).CMS_GATEWAY_SITE_ID).toBeUndefined();
+        expect(readRuntimeEnv({ ...validEnv(), CMS_GATEWAY_SITE_ID: "" }).CMS_GATEWAY_SITE_ID).toBeUndefined();
+        expect(readRuntimeEnv({ ...validEnv(), CMS_GATEWAY_SITE_ID: "site:main" }).CMS_GATEWAY_SITE_ID).toBe(
+            "site:main",
+        );
+        expect(() => readRuntimeEnv({ ...validEnv(), CMS_GATEWAY_SITE_ID: "bad site" })).toThrow();
+    });
+
     test("validates endpoint performance controls", () => {
         expect(
             readRuntimeEnv({

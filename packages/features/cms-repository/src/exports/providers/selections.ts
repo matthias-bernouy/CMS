@@ -13,6 +13,7 @@ export type {
 export {
     parseContractSelections,
     parseContractSelectionsJson,
+    parseSelectionSiteId,
 } from "cms-repository/providers/selections/core/parseContractSelections";
 export { planContractSelections } from "cms-repository/providers/selections/core/planContractSelections";
 export {
@@ -24,3 +25,4 @@ export {
     type ContractSelectionValidationCode,
 } from "cms-repository/providers/selections/core/errors";
 export { InMemoryContractSelectionStore } from "cms-repository/providers/selections/default-implementation/InMemoryContractSelectionStore";
+export { CatalogueSelectionDependencies } from "cms-repository/providers/selections/default-implementation/CatalogueSelectionDependencies";

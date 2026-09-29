@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test";
-import { CatalogueGatewayRouteResolver, type CatalogueGatewayRouteResolverOptions } from "@bernouy/cms-gateway";
+import {
+    CatalogueGatewayRevisionSource,
+    CatalogueGatewayRouteResolver,
+    type CatalogueGatewayRouteResolverOptions,
+} from "@bernouy/cms-gateway";
 import { gatewayRoute } from "./fixtures";
 
 test("catalogue resolver loads exact site pins and fences changing route state", async () => {
@@ -50,4 +54,26 @@ test("catalogue resolver loads exact site pins and fences changing route state",
     expect(await resolver.isCurrent(route!)).toBe(true);
     changeDuringLookup = true;
     await expect(resolver.resolve("site-a", "catalog")).rejects.toMatchObject({ code: "stale_route" });
+});
+
+test("gateway revision fences selection and catalogue changes", async () => {
+    let selectionRevision = 1;
+    let dependencyRevision = "dependencies-1";
+    const revisionSource = new CatalogueGatewayRevisionSource(
+        { get: async () => ({ revision: selectionRevision }) } as unknown as ConstructorParameters<
+            typeof CatalogueGatewayRevisionSource
+        >[0],
+        {
+            capture: async () => ({ revision: dependencyRevision }),
+            isCurrent: async (_siteId, revision) => revision === dependencyRevision,
+        } as unknown as ConstructorParameters<typeof CatalogueGatewayRevisionSource>[1],
+    );
+    const original = await revisionSource.capture("site-a");
+    expect(await revisionSource.isCurrent("site-a", original)).toBe(true);
+    selectionRevision += 1;
+    expect(await revisionSource.isCurrent("site-a", original)).toBe(false);
+    const afterSelection = await revisionSource.capture("site-a");
+    dependencyRevision = "dependencies-2";
+    expect(await revisionSource.isCurrent("site-a", afterSelection)).toBe(false);
+    expect(await revisionSource.isCurrent("site-a", "invalid")).toBe(false);
 });

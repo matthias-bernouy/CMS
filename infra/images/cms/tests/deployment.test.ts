@@ -64,6 +64,16 @@ describe("per-instance Compose rendering", () => {
         expect(Object.keys(config.services)).toEqual(["cms"]);
         expect(config.services.cms.environment?.MONGO_URL).toBe(mongoUrl);
     });
+
+    composeTest("forwards the optional gateway site scope to the CMS", () => {
+        const config = renderCompose(instanceComposeFile, {
+            ...requiredCmsEnvironment,
+            DOMAIN: "client.example.test",
+            MONGO_URL: "mongodb://cms_app:password@mongo:27017/cms_client?authSource=admin",
+            CMS_GATEWAY_SITE_ID: "site:main",
+        });
+        expect(config.services.cms.environment?.CMS_GATEWAY_SITE_ID).toBe("site:main");
+    });
 });
 
 describe("shared infrastructure Compose rendering", () => {

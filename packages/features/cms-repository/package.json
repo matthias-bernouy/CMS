@@ -12,6 +12,7 @@
         "./contracts/bindings": "./src/exports/contracts/bindings.ts",
         "./contracts/compatibility": "./src/exports/contracts/compatibility.ts",
         "./contracts/catalogue": "./src/exports/contracts/catalogue.ts",
+        "./contracts/mongo": "./src/exports/contracts/mongo.ts",
         "./contracts/protocol": "./src/exports/contracts/protocol.ts",
         "./providers": "./src/exports/providers/index.ts",
         "./providers/catalogue": "./src/exports/providers/catalogue.ts",

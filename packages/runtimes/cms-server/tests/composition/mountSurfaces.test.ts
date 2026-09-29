@@ -92,8 +92,13 @@ describe("production surface mounting", () => {
             reportError() {},
         } as unknown as ProductionSurfaceRuntime;
         const options = surfaceMountFixtures();
+        const gateway = {
+            siteId: "site:main",
+            invoker: { invoke: async () => ({ requestId: "request", status: 200, kind: "success" as const }) },
+            isAdministrator: async () => true,
+        };
 
-        const mounting = mountProductionSurfaces(options as never, runtime);
+        const mounting = mountProductionSurfaces({ ...options, gateway } as never, runtime);
         await waitFor(() => events.includes("control"));
 
         expect(events).toEqual(["runner:control", "control"]);
@@ -108,6 +113,7 @@ describe("production surface mounting", () => {
         expect(controlConfig).toMatchObject({
             deliveryUrl: options.env.DELIVERY_PUBLIC_URL,
             dashboardAssignments: options.features.dashboardAssignments,
+            capabilityGateway: gateway,
             publicAuth: {
                 marker: "public-auth",
                 emailVerificationUrl: options.env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
@@ -123,6 +129,7 @@ describe("production surface mounting", () => {
             runner: runners[1],
             repository: { getPublishedPage: expect.any(Function), resolvePublishedRoute: expect.any(Function) },
             sources: options.features.sources,
+            capabilityGateway: { siteId: gateway.siteId, invoker: gateway.invoker },
             sourceTelemetry: expect.any(Object),
             analyticsVisitorSecret: options.analyticsVisitorSecret,
             analyticsSiteScope: options.env.DELIVERY_PUBLIC_URL,

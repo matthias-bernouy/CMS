@@ -12,6 +12,8 @@
         { "path": "../../features/cms-auth" },
         { "path": "../../features/cms-secrets" },
         { "path": "../../features/cms-content" },
+        { "path": "../../features/cms-repository" },
+        { "path": "../../features/cms-gateway" },
         { "path": "../../features/cms-identities" },
         { "path": "../../features/cms-sources" },
         { "path": "../../features/cms-source-images" },

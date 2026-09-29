@@ -56,8 +56,9 @@ Feature packages:
   manifest publication/comparison, local installation lifecycle, full-site graph
   planning and revisioned memory stores.
   Immutable artifacts and site installation state remain distinct. The root
-  exports types only; Mongo installation and selection stores use `./providers/mongo`,
-  while durable catalogues and live connection remain pending. `./collections` adds authored bundles, asset checks
+  exports types only; Mongo release publication uses `./contracts/mongo` and
+  manifest, installation and selection state use `./providers/mongo`. Live
+  connection belongs to `cms-gateway`. `./collections` adds authored bundles, asset checks
   and Light DOM/component structure, not renderer compilation or installation.
 - `@bernouy/cms-gateway`: initial capability invocation boundary. It resolves
   pinned selected releases and ready installations, executes admitted synchronous
@@ -65,9 +66,9 @@ Feature packages:
   exposes installation-scoped identity and derivative-key helpers. `./handlers`
   provides optional Control and Delivery call envelopes; `./http`, `./node-http`,
   and `./mongo` provide transport, pinned network, and persistence adapters. The
-  host still supplies trusted actors, grants, route consistency, and secret
-  resolution; runtime provider composition and legacy Source replacement remain
-  pending.
+  production runtime supplies trusted actors, conservative grants, catalogue
+  revision checks and secret resolution when `CMS_GATEWAY_SITE_ID` is configured.
+  Legacy Source replacement remains pending.
 - `@bernouy/cms-secrets`: secret storage contracts, `${VAR}` resolution, and
   encrypted Mongo storage.
 - `@bernouy/cms-auth`: accounts, local/OIDC providers, PATs, signed sessions,
@@ -158,7 +159,7 @@ The `/http` entrypoint contains mountable handlers, not a production transport;
 under `src/providers/`, with public barrels under `src/exports/contracts/` and
 `src/exports/providers/`. Tests and fixtures use the same domain separation.
 Consumers use `@bernouy/cms-repository/contracts` and its `/schema`, `/bindings`,
-`/compatibility`, `/catalogue` and `/protocol` subpaths, or
+`/compatibility`, `/catalogue`, `/mongo` and `/protocol` subpaths, or
 `@bernouy/cms-repository/providers` and its `/catalogue`, `/compatibility`,
 `/installations` and `/selections`
 subpaths. The initial `./collections` entrypoint parses and admits authored

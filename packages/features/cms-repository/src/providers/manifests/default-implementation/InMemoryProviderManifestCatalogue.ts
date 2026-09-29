@@ -1,25 +1,20 @@
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
-import { assertIJson, deepFreeze } from "cms-repository/exports/contracts/protocol";
+import { deepFreeze } from "cms-repository/exports/contracts/protocol";
 import type {
     AdmittedProviderManifest,
     ProviderManifestDigest,
 } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
 import { validateProviderManifestReferences } from "cms-repository/providers/manifests/core/admission/validateProviderManifest";
 import { verifyProviderManifestAdmission } from "cms-repository/providers/manifests/core/admission/verifyProviderManifestAdmission";
-import { translateContractError } from "cms-repository/providers/manifests/core/contractErrors";
 import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/errors";
+import { normalizeManifestYank } from "cms-repository/providers/manifests/core/admission/normalizeManifestYank";
 import {
     DEFAULT_PROVIDER_MANIFEST_LIMITS,
     normalizeProviderManifestLimits,
     type ProviderManifestLimits,
 } from "cms-repository/providers/manifests/core/limits";
-import {
-    compareOrdinal,
-    expectRecord,
-    expectString,
-    rejectUnknownKeys,
-} from "cms-repository/providers/manifests/core/values";
+import { compareOrdinal } from "cms-repository/providers/manifests/core/values";
 import type {
     CatalogueProviderManifest,
     ProviderManifestCatalogue,
@@ -126,7 +121,7 @@ export class InMemoryProviderManifestCatalogue implements ProviderManifestCatalo
         if (!existing) {
             throw new ProviderManifestValidationError("invalid_manifest", `${providerId}@${version} is not published`);
         }
-        const normalized = yank === null ? undefined : normalizeYank(yank);
+        const normalized = yank === null ? undefined : normalizeManifestYank(yank);
         const record = deepFreeze({
             admission: existing.admission,
             publishedAt: existing.publishedAt,
@@ -140,19 +135,4 @@ export class InMemoryProviderManifestCatalogue implements ProviderManifestCatalo
 
 function manifestKey(providerId: string, version: string): string {
     return `${providerId}\u0000${version}`;
-}
-
-function normalizeYank(yank: ProviderManifestYank): ProviderManifestYank {
-    try {
-        assertIJson(yank, 2);
-    } catch (error) {
-        translateContractError(error);
-    }
-    const record = expectRecord(yank, "$.yank");
-    rejectUnknownKeys(record, ["reason"], "$.yank");
-    const reason = expectString(record.reason, "$.yank.reason", 1024);
-    if (!reason.trim()) {
-        throw new ProviderManifestValidationError("invalid_manifest", "must not be blank", "$.yank.reason");
-    }
-    return { reason };
 }

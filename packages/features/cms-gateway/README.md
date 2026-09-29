@@ -16,9 +16,12 @@ idempotency, file, and grant protocols are implemented. Surfaces must create
 actors from verified authentication and supply a host authorization decision;
 the gateway never accepts an actor or an endpoint from capability input.
 `./handlers` supplies a bounded JSON envelope for separately authenticated
-Control and Delivery POST routes. Both surfaces mount it only when a host injects
-a site-scoped gateway; the production runtime has no provider catalogue wiring
-yet.
+Control and Delivery POST routes. The production runtime injects a site-scoped
+gateway when `CMS_GATEWAY_SITE_ID` is set. It persists release, manifest,
+installation, selection and installation-scoped identity state in MongoDB,
+resolves provider token references through `cms-secrets`, and uses the pinned
+Node network adapter. Delivery currently grants public capabilities; Control
+grants calls only to the configured local administrator.
 
 `./identity` provides site-and-installation scoped user aliases. `./mongo`
 provides the durable adapter with unique indexes and scoped revocation; its
@@ -36,11 +39,12 @@ as capability-backed consumers and derivative workers replace their behavior.
 
 ## Remaining migration gates
 
-1. Wire `CatalogueGatewayRouteResolver` to production catalogues and site
-   selections, with one coherent dependency revision covering installations,
-   observations, manifests, releases, and yank changes.
-2. Wire the Node network adapter to the production secret store and exercise
-   it against a real custom and official provider fixture.
+1. Add authorized publication, installation and selection management flows so
+   sites can populate the durable catalogues without direct database writes.
+   Add separate fixture-asset byte storage for Mongo release publication.
+2. Exercise the production network composition against real custom and official
+   provider fixtures, harden cross-catalogue snapshot consistency, and replace
+   full-catalogue revision scans before large deployments.
 3. Add durable idempotency, rate policy, audit, telemetry, and separate host
    entrypoints before activating commands or provider/system calls.
 4. Migrate Control, Delivery, editor bindings, indexing, system source calls,

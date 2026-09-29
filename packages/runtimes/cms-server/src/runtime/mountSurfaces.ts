@@ -3,6 +3,7 @@ import type { ProductionAuthentication } from "./auth";
 import type { CoreStores } from "./stores/core";
 import { createPublicFileStores } from "./stores/authorFiles";
 import type { FeatureStores } from "./stores/features";
+import type { ProductionGateway } from "./gateway/createProductionGateway";
 import { createSurfaceSourceTelemetry } from "./sourceTelemetry";
 import { createRuntimeSourceImageComposition } from "./sourceImageTelemetry";
 import { createRuntimeSourceImageWorkers } from "./stores/sourceImages";
@@ -22,13 +23,14 @@ type MountOptions = {
     core: CoreStores;
     features: FeatureStores;
     authentication: ProductionAuthentication;
+    gateway?: ProductionGateway;
 };
 
 export async function mountProductionSurfaces(
     options: MountOptions,
     runtime: ProductionSurfaceRuntime = PRODUCTION_SURFACE_RUNTIME,
 ): Promise<ProductionSurfaceHandle> {
-    const { env, core, features, authentication } = options;
+    const { env, core, features, authentication, gateway } = options;
     const sourceTelemetry = createSurfaceSourceTelemetry(features.endpointPerformanceRecorder, {
         uniformSampleRate: env.SOURCE_TIMING_SAMPLE_RATE,
         slowRequestThresholdMs: env.SOURCE_SLOW_REQUEST_THRESHOLD_MS,
@@ -84,6 +86,7 @@ export async function mountProductionSurfaces(
                 optOutUrl: `${env.DELIVERY_PUBLIC_URL}/.cms/privacy/analytics`,
             },
             dashboardAssignments: features.dashboardAssignments,
+            ...(gateway ? { capabilityGateway: gateway } : {}),
             identities: features.identities,
             endpointPerformanceReports: features.endpointPerformanceReports,
             sourceTelemetry: sourceTelemetry.control,
@@ -125,6 +128,7 @@ export async function mountProductionSurfaces(
         responsivePrivateSourceImagesEnabled,
         analytics: features.analytics,
         identities: features.identities,
+        ...(gateway ? { capabilityGateway: { siteId: gateway.siteId, invoker: gateway.invoker } } : {}),
         analyticsVisitorSecret: options.analyticsVisitorSecret,
         analyticsSiteScope: env.DELIVERY_PUBLIC_URL,
         analyticsTrustProxy: env.ANALYTICS_TRUST_PROXY,

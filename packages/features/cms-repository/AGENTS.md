@@ -10,7 +10,8 @@ models and validation for CMS-owned installations and site selections.
   admission, compatibility and protocol primitives. Its `catalogue/` directory
   owns storage-independent evolution and requirement checks; catalogue
   implementations delegate them. The in-memory catalogue lives in
-  `src/contracts/default-implementation/memory/`.
+  `src/contracts/default-implementation/memory/`; `mongo/` persists immutable
+  artifacts and revisioned publication metadata.
 - `src/providers/manifests/{interfaces,core}/` owns immutable manifest types,
   parsing, ranges, reference validation, admission, comparison and limits.
   Its catalogue port and memory adapter preserve exact artifact keys and publisher ownership.
@@ -36,8 +37,10 @@ models and validation for CMS-owned installations and site selections.
   repository capabilities; optional adapters need explicit subpaths. Business
   HTTP execution and gateway routing remain outside this package; runtimes own
   environment access and production adapter selection. `./providers/mongo`
-  provides durable installation and selection stores. There is no durable
-  release/manifest catalogue, live transport or conformance runner here yet.
+  provides durable manifest, installation and selection stores; `./contracts/mongo`
+  provides durable release publication. Live transport and conformance execution
+  remain outside this package. Mongo release publication currently rejects
+  bundles with fixture assets until separate byte storage is implemented.
 - `src/collections/{interfaces,core}/` owns authored collection release parsing,
   asset verification and resource-level reference validation, exposed through
   `./collections`. Collections consume the contracts facade, not providers or
