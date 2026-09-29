@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
-import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/node-http";
-import { selectGatewayAddress } from "cms-gateway/node-http/addressPolicy";
+import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
+import { selectGatewayAddress } from "cms-gateway/invocation/node-http/addressPolicy";
 import { gatewayRoute } from "./fixtures";
 
 test("node transport pins the target and injects trusted context", async () => {

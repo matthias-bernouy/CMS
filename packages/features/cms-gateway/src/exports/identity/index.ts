@@ -1,5 +1,8 @@
-export type { ProviderIdentityScope, ProviderIdentityService } from "cms-gateway/identity/ProviderIdentityService";
-export { ProviderIdentityAliases } from "cms-gateway/identity/ProviderIdentityAliases";
+export type {
+    ProviderIdentityScope,
+    ProviderIdentityService,
+} from "cms-gateway/identity/interfaces/ProviderIdentityService";
+export { ProviderIdentityAliases } from "cms-gateway/identity/core/ProviderIdentityAliases";
 export {
     CMS_IDENTITY_AUTHORITY,
     type IdentityAlias,
@@ -10,6 +13,6 @@ export {
     type IdentityService,
     type IdentitySubjectId,
     type IdentityValue,
-} from "cms-gateway/identity/aliases/interfaces/Identity";
-export { IdentityAliasConflictError, InvalidIdentityError } from "cms-gateway/identity/aliases/core/errors";
-export { InMemoryIdentityService } from "cms-gateway/identity/aliases/default-implementation/InMemoryIdentityService";
+} from "cms-gateway/identity/interfaces/Identity";
+export { IdentityAliasConflictError, InvalidIdentityError } from "cms-gateway/identity/core/errors";
+export { InMemoryIdentityService } from "cms-gateway/identity/default-implementation/InMemoryIdentityService";

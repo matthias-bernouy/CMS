@@ -65,10 +65,12 @@ Feature packages:
 - `@bernouy/cms-gateway`: capability invocation boundary. It resolves
   pinned selected releases and ready installations, executes admitted synchronous
   JSON query and bounded file bindings through an injected transport, validates
-  outputs, and exposes provider-scoped identity and image derivatives. `./handlers`
-  provides optional Control and Delivery call envelopes; `./http` and `./node-http`
-  provide transport and pinned network adapters, while `./mongo` persists identity
-  aliases. The production runtime supplies
+  outputs, and exposes provider-scoped identity and image derivatives. Its
+  `invocation`, `identity`, and `media` domains have corresponding public subpaths.
+  `./http/handlers` and `./media/handlers` provide optional Control and Delivery
+  call envelopes;
+  `./http` and `./http/node` provide transport and pinned network adapters,
+  while `./identity/mongo` persists aliases. The production runtime supplies
   trusted actors, conservative grants, catalogue
   revision checks and secret resolution when `CMS_GATEWAY_SITE_ID` is configured.
   Dynamic page indexing invokes selected gateway queries and projects declared

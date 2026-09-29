@@ -19,11 +19,11 @@ current selection and actor grant before returning bytes. Delivery also serves
 bounded WebP derivatives at `/.cms/image/<contract>/<capability>/<fileId>/<width>.webp`;
 Control uses `/api/image`. Each request reauthorizes the original file before
 looking up its byte-generation key in the local derivative store.
-`./browser` builds bounded `srcset` candidates for same-origin provider media
+`./media/browser` builds bounded `srcset` candidates for same-origin provider media
 URLs and activates resolved `data-cms-src` image bindings only for same-origin
 CMS media or file routes. Control and Delivery
 expose those helpers in their component bundles for authored Blocs.
-`./node-http` provides a Node network adapter that
+`./http/node` provides a Node network adapter that
 resolves and pins one public address, permits canonical HTTP loopback targets,
 rejects redirects through the transport, and injects host-resolved credentials
 and trusted context headers. Asynchronous operations, binary file writes,
@@ -33,9 +33,10 @@ bounded demand; durable derivative jobs and public file cache policy are not
 active. Surfaces must create
 actors from verified authentication and supply a host authorization decision;
 the gateway never accepts an actor or an endpoint from capability input.
-`./handlers` projects successful JSON outputs directly as the selected contract
+`./http/handlers` projects successful JSON outputs directly as the selected contract
 declares them, with the request ID in a response header, for separately
-authenticated Control and Delivery POST routes. The production runtime injects a site-scoped
+authenticated Control and Delivery POST routes. `./media/handlers` serves
+authorized provider files and image derivatives. The production runtime injects a site-scoped
 gateway when `CMS_GATEWAY_SITE_ID` is set. It persists release, manifest,
 installation and selection state in MongoDB, reuses the existing provider
 identity aliases in `cms_identity_aliases`, resolves provider token references
@@ -49,8 +50,8 @@ protected binding can send anonymous visitors to the configured login page
 without contacting the provider.
 
 `./identity` owns the authority-alias service and resolves one stable user alias
-per provider ID. `./mongo` retains the `cms_identity_aliases` collection and its
-indexes; `./identity/requestScope` caches resolutions for one request. The
+per provider ID. `./identity/mongo` retains the `cms_identity_aliases` collection and its
+indexes; `./identity/request-scope` caches resolutions for one request. The
 production runtime shares that store across capability calls. Site or
 installation changes do not revoke provider-wide aliases.
 `./media` owns deterministic derivative keys, the bounded image service, and
@@ -58,6 +59,12 @@ the storage port; `./media/local-fs` is the production derivative store. The
 byte fingerprint invalidates a derivative when a provider changes the file.
 `./media/sharp` applies gateway limits over the generic
 `@bernouy/image-processing/sharp` adapter.
+
+The source tree follows these responsibilities: `invocation/` contains routing,
+authorization, HTTP handlers, and transport; `identity/` contains provider-wide
+aliases and their stores; `media/` contains authorized derivatives and browser
+helpers. `exports/` contains the corresponding public entrypoints. The package
+root remains the invocation API; optional adapters use domain-specific subpaths.
 
 Control and Delivery invoke selected capabilities for authoring, rendering,
 metadata resolution, and sitemap discovery. Page-owned indexing definitions

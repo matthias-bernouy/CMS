@@ -4,7 +4,7 @@ import {
     buildProviderImageAttributes,
     installProviderMediaImageRuntime,
     syncProviderMediaImage,
-} from "@bernouy/cms-gateway/browser";
+} from "@bernouy/cms-gateway/media/browser";
 import {
     observeSource,
     readSourceData,

@@ -5,6 +5,42 @@ import { createWorkspaceFixture, manifest, ofKind } from "./checkWorkspace.fixtu
 const { createWorkspace } = createWorkspaceFixture();
 
 describe("browser adapter boundaries", () => {
+    test("allows gateway handlers in surfaces while keeping transport adapters in runtimes", async () => {
+        const root = await createWorkspace({
+            "packages/features/gateway/package.json": manifest("@bernouy/cms-gateway", {
+                exports: {
+                    ".": "./src/index.ts",
+                    "./http": "./src/http.ts",
+                    "./http/handlers": "./src/handlers.ts",
+                    "./http/node": "./src/node.ts",
+                    "./media/handlers": "./src/mediaHandlers.ts",
+                },
+            }),
+            "packages/features/gateway/src/index.ts": "export const gateway = true;",
+            "packages/features/gateway/src/http.ts": "export const transport = true;",
+            "packages/features/gateway/src/handlers.ts": "export const handlers = true;",
+            "packages/features/gateway/src/node.ts": "export const network = true;",
+            "packages/features/gateway/src/mediaHandlers.ts": "export const mediaHandlers = true;",
+            "packages/surfaces/web/package.json": manifest("@fixture/web", {
+                dependencies: { "@bernouy/cms-gateway": "workspace:*" },
+                exports: { ".": "./src/index.ts", "./browser": "./src/browser.ts" },
+            }),
+            "packages/surfaces/web/src/index.ts": [
+                "import '@bernouy/cms-gateway/http/handlers';",
+                "import '@bernouy/cms-gateway/media/handlers';",
+                "import '@bernouy/cms-gateway/http';",
+                "import '@bernouy/cms-gateway/http/node';",
+            ].join("\n"),
+            "packages/surfaces/web/src/browser.ts": "import '@bernouy/cms-gateway/media/handlers';",
+        });
+        const violations = await checkWorkspaceArchitecture({ rootDir: root });
+        const surface = ofKind(violations, "surface-runtime-adapter");
+        expect(surface).toHaveLength(2);
+        expect(surface.some((item) => item.message.endsWith("@bernouy/cms-gateway/http"))).toBe(true);
+        expect(surface.some((item) => item.message.endsWith("@bernouy/cms-gateway/http/node"))).toBe(true);
+        expect(ofKind(violations, "browser-runtime-adapter")).toHaveLength(1);
+    });
+
     test("allows auth HTTP handlers in surfaces but keeps transports and browser imports restricted", async () => {
         const root = await createWorkspace({
             "packages/features/auth/package.json": manifest("@bernouy/cms-auth", {

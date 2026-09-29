@@ -3,7 +3,7 @@ import {
     buildProviderImageAttributes,
     PROVIDER_IMAGE_WIDTHS,
     syncProviderMediaImage,
-} from "@bernouy/cms-gateway/browser";
+} from "@bernouy/cms-gateway/media/browser";
 
 test("provider media URLs become bounded derivative candidates", () => {
     const attributes = buildProviderImageAttributes({

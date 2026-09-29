@@ -3,7 +3,7 @@ export {
     providerDerivativeKey,
     type DerivativeRecipe,
     type ProviderMediaIdentity,
-} from "cms-gateway/media/derivativeKey";
+} from "cms-gateway/media/core/derivativeKey";
 export {
     PROVIDER_IMAGE_WIDTHS,
     PROVIDER_RESPONSIVE_WEBP_V1,
@@ -11,11 +11,11 @@ export {
     type ProviderImageDerivative,
     type ProviderImageDerivativeStore,
     type ProviderImageServiceOptions,
-} from "cms-gateway/media/providerImageService";
+} from "cms-gateway/media/core/providerImageService";
 export type {
     GatewayImageInputFormat,
     GatewayImageMetadata,
     GatewayImageRecipe,
     GatewayImageTransformer,
     GatewayImageTransformResult,
-} from "cms-gateway/media/imageTransformer";
+} from "cms-gateway/media/interfaces/imageTransformer";

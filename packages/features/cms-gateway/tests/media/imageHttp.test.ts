@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { handleGatewayImageGet } from "@bernouy/cms-gateway/handlers";
+import { handleGatewayImageGet } from "@bernouy/cms-gateway/media/handlers";
 import type { GatewayInvocation } from "@bernouy/cms-gateway";
 
 test("image route uses trusted actor, rejects invalid widths and returns private WebP", async () => {

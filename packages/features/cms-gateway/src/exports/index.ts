@@ -1,15 +1,15 @@
-export { CapabilityGateway, type CapabilityGatewayOptions } from "cms-gateway/core/CapabilityGateway";
+export { CapabilityGateway, type CapabilityGatewayOptions } from "cms-gateway/invocation/core/CapabilityGateway";
 export {
     SelectedGatewayCatalogue,
     type GatewayCapabilityCatalogue,
     type GatewayEditorCapability,
-} from "cms-gateway/core/SelectedGatewayCatalogue";
+} from "cms-gateway/invocation/core/SelectedGatewayCatalogue";
 export {
     CatalogueGatewayRouteResolver,
     type CatalogueGatewayRouteResolverOptions,
-} from "cms-gateway/core/CatalogueGatewayRouteResolver";
-export { CatalogueGatewayRevisionSource } from "cms-gateway/core/CatalogueGatewayRevisionSource";
-export { GatewayError, type GatewayErrorCode } from "cms-gateway/core/GatewayError";
+} from "cms-gateway/invocation/core/CatalogueGatewayRouteResolver";
+export { CatalogueGatewayRevisionSource } from "cms-gateway/invocation/core/CatalogueGatewayRevisionSource";
+export { GatewayError, type GatewayErrorCode } from "cms-gateway/invocation/core/GatewayError";
 export type {
     GatewayActor,
     GatewayAccessProbe,
@@ -23,4 +23,4 @@ export type {
     GatewayTransport,
     GatewayTransportRequest,
     GatewayTransportResponse,
-} from "cms-gateway/interfaces/Invocation";
+} from "cms-gateway/invocation/interfaces/Invocation";

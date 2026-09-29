@@ -1,5 +1,6 @@
 import { type GatewayActor } from "@bernouy/cms-gateway";
-import { handleGatewayFileGet, handleGatewayHttpCall, handleGatewayImageGet } from "@bernouy/cms-gateway/handlers";
+import { handleGatewayHttpCall } from "@bernouy/cms-gateway/http/handlers";
+import { handleGatewayFileGet, handleGatewayImageGet } from "@bernouy/cms-gateway/media/handlers";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 
 /** Public surface decides the verified actor; gateway HTTP owns parsing and projection. */

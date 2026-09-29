@@ -4,7 +4,7 @@ import { prepare_bloc } from "../src/exports";
 test("provider media helpers use the host browser runtime", async () => {
     const view = new File(
         [
-            `import { PROVIDER_IMAGE_WIDTHS, buildProviderImageAttributes, syncProviderMediaImage } from "@bernouy/cms-gateway/browser";`,
+            `import { PROVIDER_IMAGE_WIDTHS, buildProviderImageAttributes, syncProviderMediaImage } from "@bernouy/cms-gateway/media/browser";`,
             `customElements.define("demo-provider-image", class extends HTMLElement {`,
             `  static media = { PROVIDER_IMAGE_WIDTHS, buildProviderImageAttributes, syncProviderMediaImage };`,
             `});`,
@@ -16,5 +16,5 @@ test("provider media helpers use the host browser runtime", async () => {
     for (const name of ["PROVIDER_IMAGE_WIDTHS", "buildProviderImageAttributes", "syncProviderMediaImage"]) {
         expect(bloc.viewJS).toContain(`window.p9r.${name}`);
     }
-    expect(bloc.viewJS).not.toContain("@bernouy/cms-gateway/browser");
+    expect(bloc.viewJS).not.toContain("@bernouy/cms-gateway/media/browser");
 });

@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { CapabilityGateway, GatewayError } from "@bernouy/cms-gateway";
-import { handleGatewayFileGet, handleGatewayHttpCall } from "@bernouy/cms-gateway/handlers";
+import { handleGatewayHttpCall } from "@bernouy/cms-gateway/http/handlers";
+import { handleGatewayFileGet } from "@bernouy/cms-gateway/media/handlers";
 import { buildHttpInvocation, HttpGatewayTransport, type GatewayHttpExchange } from "@bernouy/cms-gateway/http";
 import { gatewayRoute } from "./fixtures";
 

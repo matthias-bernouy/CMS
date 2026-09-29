@@ -1,1 +1,1 @@
-export { SharpImageTransformer } from "cms-gateway/media/SharpImageTransformer";
+export { SharpImageTransformer } from "cms-gateway/media/default-implementation/SharpImageTransformer";

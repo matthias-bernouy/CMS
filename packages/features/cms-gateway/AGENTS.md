@@ -4,6 +4,17 @@ This package implements provider-neutral capability invocation. It consumes
 published repository contracts and site-owned provider selections; it does not
 publish releases or choose providers.
 
+## Layout
+
+- `src/invocation/` owns route resolution, authorization, response validation,
+  HTTP handlers, and transport implementations.
+- `src/identity/` owns provider-wide authority aliases, their contracts, and
+  memory, Mongo, and request-scoped implementations.
+- `src/media/` owns provider file handlers, derivatives, image policy, storage
+  adapters, and browser image helpers. Generic image processing remains in Foundation.
+- `src/exports/` is the public facade. The package root exposes invocation;
+  optional HTTP, identity, and media APIs use their named subpaths.
+
 - Keep untrusted request parsing, authenticated actor creation, and secret
   resolution in explicit host or adapter boundaries. Never accept a provider's
   identity or permission claims as CMS authority.
@@ -20,7 +31,7 @@ publish releases or choose providers.
 - Keep derivative identity and recipe logic independent of legacy Source IDs.
   Private media disclosure requires current gateway authorization.
 - Runtime adapters select HTTP, persistence, DNS policy, secret storage and
-  worker implementations. Keep optional adapters in explicit subpaths.
+  worker implementations. Keep optional adapters in explicit domain subpaths.
 
 Use `cms-gateway/...` aliases inside this package and declared
 `@bernouy/cms-gateway/...` exports outside it.

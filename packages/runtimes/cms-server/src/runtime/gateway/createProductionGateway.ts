@@ -7,7 +7,7 @@ import {
 } from "@bernouy/cms-gateway";
 import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
-import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/node-http";
+import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import { ProviderImageService } from "@bernouy/cms-gateway/media";
 import { LocalProviderImageStore } from "@bernouy/cms-gateway/media/local-fs";

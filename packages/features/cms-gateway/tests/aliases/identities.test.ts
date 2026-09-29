@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { Db } from "mongodb";
 import { IdentityAliasConflictError, ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
-import { MongoIdentityService } from "@bernouy/cms-gateway/mongo";
+import { MongoIdentityService } from "@bernouy/cms-gateway/identity/mongo";
 import { identityServiceContract } from "./identityService.contract";
 
 type IdentityDoc = {

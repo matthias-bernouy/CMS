@@ -6,7 +6,7 @@ import {
     type IdentityService,
     type IdentityValue,
 } from "@bernouy/cms-gateway/identity";
-import { RequestScopedIdentityService } from "@bernouy/cms-gateway/identity/requestScope";
+import { RequestScopedIdentityService } from "@bernouy/cms-gateway/identity/request-scope";
 import { identityServiceContract } from "./identityService.contract";
 
 const alias: IdentityAlias = { authority: "provider", kind: "user", value: "external-1" };

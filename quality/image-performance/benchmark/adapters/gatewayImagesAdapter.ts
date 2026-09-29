@@ -2,7 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
-import { handleGatewayFileGet, handleGatewayImageGet } from "@bernouy/cms-gateway/handlers";
+import { handleGatewayFileGet, handleGatewayImageGet } from "@bernouy/cms-gateway/media/handlers";
 import {
     providerByteGeneration,
     PROVIDER_RESPONSIVE_WEBP_V1,

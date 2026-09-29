@@ -1,5 +1,6 @@
 import { resolveRequestSubject } from "@bernouy/cms-auth";
-import { handleGatewayFileGet, handleGatewayHttpCall, handleGatewayImageGet } from "@bernouy/cms-gateway/handlers";
+import { handleGatewayHttpCall } from "@bernouy/cms-gateway/http/handlers";
+import { handleGatewayFileGet, handleGatewayImageGet } from "@bernouy/cms-gateway/media/handlers";
 import type { Middleware } from "@bernouy/http-runner";
 import type { ControlCmsState } from "../types";
 

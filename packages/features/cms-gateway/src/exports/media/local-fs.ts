@@ -1,1 +1,1 @@
-export { LocalProviderImageStore } from "cms-gateway/media/LocalProviderImageStore";
+export { LocalProviderImageStore } from "cms-gateway/media/default-implementation/LocalProviderImageStore";

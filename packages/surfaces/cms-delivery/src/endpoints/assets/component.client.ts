@@ -4,7 +4,7 @@ import {
     buildProviderImageAttributes,
     installProviderMediaImageRuntime,
     syncProviderMediaImage,
-} from "@bernouy/cms-gateway/browser";
+} from "@bernouy/cms-gateway/media/browser";
 
 (window as any).p9r = {
     Component,

@@ -34,11 +34,13 @@ export function isRuntimeAdapter(
     browser: boolean,
     packageByName: ReadonlyMap<string, WorkspacePackage>,
 ): boolean {
-    // cms-auth's HTTP subpath contains framework-neutral handlers/registrars,
-    // not a network adapter. Surfaces mount those handlers, while browser
-    // graphs must still reject it through the normal adapter classification.
-    if (!browser && specifier === "@bernouy/cms-auth/http") {
+    // These subpaths expose framework-neutral handlers mounted by surfaces.
+    // Browser graphs still reject their server-side HTTP dependencies.
+    if (!browser && (specifier === "@bernouy/cms-auth/http" || specifier === "@bernouy/cms-gateway/http/handlers")) {
         return false;
+    }
+    if (browser && specifier === "@bernouy/cms-gateway/media/handlers") {
+        return true;
     }
     const normalizedBuiltin = specifier.replace(/^node:/, "");
     if (browser && (specifier === "bun" || specifier.startsWith("bun:") || NODE_BUILTINS.has(normalizedBuiltin))) {
