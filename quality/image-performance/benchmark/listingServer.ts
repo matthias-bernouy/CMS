@@ -15,10 +15,13 @@ export function startListingServer(corpus: LoadedCorpus, adapter: ImagePerforman
             if (url.pathname === "/foreground") {
                 return adapter.foreground(request);
             }
-            const match = /^\/image\/(asset-\d+)$/.exec(url.pathname);
+            const match = /^\/image\/(asset-\d+)(?:\/(\d+)\.webp)?$/.exec(url.pathname);
             const asset = match ? assets.get(match[1]!) : undefined;
             if (!asset) {
                 return new Response("Not found", { status: 404 });
+            }
+            if (match?.[2]) {
+                return adapter.variant(asset, Number(match[2]));
             }
             return adapter.respond(asset, request);
         },

@@ -18,7 +18,11 @@ export async function runListingUser(
         Array.from({ length: config.cardCount }, async (_, index) => {
             const asset = corpus.assets[index % corpus.assets.length]!;
             const width = selectedWidth(asset.width, config, layout, dpr);
-            const url = new URL(`/image/${asset.assetId}`, origin);
+            const path =
+                implementation.mode === "provider-image" && width
+                    ? `/image/${asset.assetId}/${width}.webp`
+                    : `/image/${asset.assetId}`;
+            const url = new URL(path, origin);
             if (implementation.mode === "source-image" && width) {
                 url.searchParams.set("cms-width", String(width));
             }
@@ -48,11 +52,12 @@ function validImageResponse(
 ): boolean {
     try {
         const dimensions = imageSize(bytes);
-        const expectedWidth = mode === "source-image" && selected ? Math.min(selected, asset.width) : asset.width;
-        const expectedType = mode === "source-image" ? "webp" : asset.mediaType.split("/")[1]?.replace("jpeg", "jpg");
+        const transformed = mode !== "original";
+        const expectedWidth = transformed && selected ? Math.min(selected, asset.width) : asset.width;
+        const expectedType = transformed ? "webp" : asset.mediaType.split("/")[1]?.replace("jpeg", "jpg");
         return (
             response.ok &&
-            response.headers.get("content-type") === (mode === "source-image" ? "image/webp" : asset.mediaType) &&
+            response.headers.get("content-type") === (transformed ? "image/webp" : asset.mediaType) &&
             dimensions.width === expectedWidth &&
             dimensions.type === expectedType
         );

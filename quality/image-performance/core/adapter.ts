@@ -105,7 +105,7 @@ function assertAdapter(adapter: ImagePerformanceAdapter): void {
         !adapter.implementation ||
         typeof adapter.implementation.recipeId !== "string" ||
         typeof adapter.implementation.encoderIdentity !== "string" ||
-        (adapter.implementation.mode !== "original" && adapter.implementation.mode !== "source-image") ||
+        !["original", "source-image", "provider-image"].includes(adapter.implementation.mode) ||
         typeof adapter.reset !== "function" ||
         typeof adapter.stats !== "function" ||
         typeof adapter.variant !== "function" ||
