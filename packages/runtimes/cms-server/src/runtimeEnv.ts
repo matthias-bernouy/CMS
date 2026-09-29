@@ -1,6 +1,5 @@
 import {
     parseBoolean,
-    parseBoundedNumber,
     parseHttpUrl,
     parseNonNegativeInteger,
     parsePositiveInteger,
@@ -36,8 +35,6 @@ export type RuntimeEnv = {
     ANALYTICS_TRUST_PROXY: boolean;
     ANALYTICS_TRUSTED_PROXY_VERIFIED: boolean;
     ENDPOINT_PERFORMANCE_ENABLED: boolean;
-    SOURCE_TIMING_SAMPLE_RATE: number;
-    SOURCE_SLOW_REQUEST_THRESHOLD_MS: number;
     CMS_HTTP_CLIENT_ADDRESS_MODE: "direct" | "disabled" | "trusted-proxy";
     CMS_HTTP_TRUSTED_PROXY_HOPS: number;
 };
@@ -107,20 +104,6 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
             source.ENDPOINT_PERFORMANCE_ENABLED,
             "ENDPOINT_PERFORMANCE_ENABLED",
             true,
-        ),
-        SOURCE_TIMING_SAMPLE_RATE: parseBoundedNumber(
-            source.SOURCE_TIMING_SAMPLE_RATE,
-            "SOURCE_TIMING_SAMPLE_RATE",
-            0.01,
-            0,
-            1,
-        ),
-        SOURCE_SLOW_REQUEST_THRESHOLD_MS: parseBoundedNumber(
-            source.SOURCE_SLOW_REQUEST_THRESHOLD_MS,
-            "SOURCE_SLOW_REQUEST_THRESHOLD_MS",
-            1_000,
-            0,
-            300_000,
         ),
         ...clientAddress,
     };

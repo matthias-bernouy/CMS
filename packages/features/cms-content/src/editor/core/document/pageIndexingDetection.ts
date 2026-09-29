@@ -1,88 +1,42 @@
-import { CMS_SOURCES_ROUTE, makeEndpointUrn, makeSourceUrn, type Source } from "@bernouy/cms-sources";
 import { collectCmsSourceBindings } from "cms-content/editor/core/document/sourceBindings";
-import { parseQueryParamToken } from "cms-content/editor/core/bindings";
+import { isCmsQueryParamName } from "cms-content/editor/core/bindings";
 
 const DETECTION_BASE_URL = new URL("https://cms.invalid");
 
 export type PageIndexingCandidate = {
-    sourceUrn: string;
-    endpointUrn: string;
-    entityId: string;
-    identity: {
-        key: string;
-        inputParam: string;
-        pageQueryParam: string;
-    };
+    contractId: string;
+    capabilityId: string;
+    inputParam: string;
+    pageQueryParam: string;
 };
 
 export type PageIndexingDetectionStatus = "none" | "detected" | "ambiguous";
+export type PageIndexingDetection = { status: PageIndexingDetectionStatus; candidates: PageIndexingCandidate[] };
+export type PageIndexingDetectionOptions = { gatewayPrefix?: string };
 
-export type PageIndexingDetection = {
-    status: PageIndexingDetectionStatus;
-    candidates: PageIndexingCandidate[];
-};
-
-export type PageIndexingDetectionOptions = {
-    /** Base-path-aware source proxy prefix, for example `/cms/.cms/sources/`. */
-    sourcePrefix?: string;
-};
-
-type InternalSourceReference = {
-    sourceUrn: string;
-    endpointUrn: string;
-    searchParams: URLSearchParams;
-};
-
-/**
- * Detects indexable entity bindings authored in a page without choosing one for
- * the page. Only automatic GET bindings whose resolve identity comes from a
- * public page query parameter are candidates.
- */
+/** Finds gateway calls whose typed JSON input binds one field to a public page parameter. */
 export function detectPageIndexingCandidates(
     html: string,
-    sources: readonly Source[],
     options: PageIndexingDetectionOptions = {},
 ): PageIndexingDetection {
-    const sourcePrefix = normalizeSourcePrefix(options.sourcePrefix);
+    const prefix = `${(options.gatewayPrefix?.trim() || "/.cms/call").replace(/\/+$/, "")}/`;
     const candidates = new Map<string, PageIndexingCandidate>();
-
     for (const binding of collectCmsSourceBindings(html)) {
-        if (binding.method !== "GET" || binding.trigger !== "auto") {
+        if (binding.method !== "POST" || binding.trigger !== "auto" || !binding.body) {
             continue;
         }
-
-        const reference = parseInternalSourceReference(binding.url, sourcePrefix);
-        const source = sources.find((candidate) => candidate.urn === reference?.sourceUrn);
-        if (!reference || !source?.indexing) {
+        const reference = parseGatewayReference(binding.url, prefix);
+        if (!reference) {
             continue;
         }
-
-        for (const entity of source.indexing.entities) {
-            if (entity.resolve.endpointUrn !== reference.endpointUrn) {
+        for (const [inputParam, value] of Object.entries(binding.body)) {
+            if (value?.from !== "queryParam" || !isCmsQueryParamName(value.name)) {
                 continue;
             }
-
-            for (const value of reference.searchParams.getAll(entity.resolve.identity.inputParam)) {
-                const pageQueryParam = parseQueryParamToken(value);
-                if (!pageQueryParam) {
-                    continue;
-                }
-
-                const candidate: PageIndexingCandidate = {
-                    sourceUrn: source.urn,
-                    endpointUrn: reference.endpointUrn,
-                    entityId: entity.id,
-                    identity: {
-                        key: entity.resolve.identity.key,
-                        inputParam: entity.resolve.identity.inputParam,
-                        pageQueryParam,
-                    },
-                };
-                candidates.set(candidateKey(candidate), candidate);
-            }
+            const candidate = { ...reference, inputParam, pageQueryParam: value.name };
+            candidates.set(JSON.stringify(candidate), candidate);
         }
     }
-
     const detected = [...candidates.values()];
     return {
         status: detected.length === 0 ? "none" : detected.length === 1 ? "detected" : "ambiguous",
@@ -90,46 +44,21 @@ export function detectPageIndexingCandidates(
     };
 }
 
-function normalizeSourcePrefix(value: string | undefined): string {
-    const prefix = value?.trim() || `${CMS_SOURCES_ROUTE}/`;
-    return `${prefix.replace(/\/+$/, "")}/`;
-}
-
-function parseInternalSourceReference(urlValue: string, sourcePrefix: string): InternalSourceReference | null {
+function parseGatewayReference(
+    raw: string,
+    prefix: string,
+): Pick<PageIndexingCandidate, "contractId" | "capabilityId"> | null {
     try {
-        const url = new URL(escapeQueryParamTokens(urlValue), DETECTION_BASE_URL);
-        if (url.origin !== DETECTION_BASE_URL.origin || !url.pathname.startsWith(sourcePrefix)) {
+        const url = new URL(raw, DETECTION_BASE_URL);
+        if (url.origin !== DETECTION_BASE_URL.origin || !url.pathname.startsWith(prefix) || url.search) {
             return null;
         }
-
-        const segments = url.pathname.slice(sourcePrefix.length).split("/").filter(Boolean).map(decodeURIComponent);
-        const sourceId = segments[0];
-        const endpointId = segments[1];
-        if (segments.length !== 2 || !sourceId || !endpointId) {
+        const segments = url.pathname.slice(prefix.length).split("/").map(decodeURIComponent);
+        if (segments.length !== 2 || segments.some((part) => !/^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/u.test(part))) {
             return null;
         }
-
-        return {
-            sourceUrn: makeSourceUrn(sourceId),
-            endpointUrn: makeEndpointUrn(sourceId, endpointId),
-            searchParams: url.searchParams,
-        };
+        return { contractId: segments[0]!, capabilityId: segments[1]! };
     } catch {
         return null;
     }
-}
-
-function escapeQueryParamTokens(urlValue: string): string {
-    return urlValue.replace(/#\{[^}]*\}/g, (token) => encodeURIComponent(token));
-}
-
-function candidateKey(candidate: PageIndexingCandidate): string {
-    return [
-        candidate.sourceUrn,
-        candidate.endpointUrn,
-        candidate.entityId,
-        candidate.identity.key,
-        candidate.identity.inputParam,
-        candidate.identity.pageQueryParam,
-    ].join("\u0000");
 }

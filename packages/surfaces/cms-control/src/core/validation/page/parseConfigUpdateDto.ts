@@ -1,7 +1,7 @@
 import type { PageIndexingConfiguration } from "@bernouy/cms-content";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
-import type { PageIndexingSelectionUpdate } from "cms-control/core/content/page/pageIndexingSelection";
+import type { PageIndexingSelectionUpdate } from "cms-control/core/content/page/indexing/pageIndexingSelection";
 import { coerceTags } from "./tags";
 import { coerceVisible } from "./visible";
 
@@ -54,5 +54,21 @@ function parseIndexingSelection(body: Record<string, unknown>): PageIndexingSele
     return {
         enabled: enabled === "true",
         ...(candidate ? { candidate } : {}),
+        ...(body.indexingProjection === undefined ? {} : { projection: parseProjection(body.indexingProjection) }),
     };
+}
+
+function parseProjection(value: unknown): NonNullable<PageIndexingSelectionUpdate["projection"]> {
+    let parsed: unknown = value;
+    if (typeof value === "string") {
+        try {
+            parsed = JSON.parse(value);
+        } catch {
+            throw new InvalidParam("indexingProjection", "Expected a valid projection.");
+        }
+    }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new InvalidParam("indexingProjection", "Expected a projection object.");
+    }
+    return parsed as NonNullable<PageIndexingSelectionUpdate["projection"]>;
 }

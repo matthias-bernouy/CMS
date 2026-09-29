@@ -17,7 +17,6 @@ import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { GatewayCapabilityCatalogue } from "@bernouy/cms-gateway";
 import type { ProviderImageService } from "@bernouy/cms-gateway/media";
 import type { SecretStore } from "@bernouy/cms-secrets";
-import type { SourceEndpointInterceptor, SourceRepository, SourceRequestTelemetryOptions } from "@bernouy/cms-sources";
 import type { Cache, Runner } from "@bernouy/http-runner";
 
 type Configuration = {
@@ -40,9 +39,6 @@ export type ControlCmsOptions = Configuration & {
         readonly isAdministrator: (subject: Subject) => Promise<boolean>;
     };
     endpointPerformanceReports?: EndpointPerformanceReports;
-    sourceTelemetry?: SourceRequestTelemetryOptions;
-    /** Shared post-authorization interceptor for bounded Source image variants. */
-    sourceImageInterceptor?: SourceEndpointInterceptor;
 };
 
 export type ControlAuthBackends = {
@@ -63,7 +59,6 @@ export type ControlCmsState = {
     identityProviders: IdentityProviderRepository | null;
     pats: PatRepository | null;
     credentials: LocalCredentialStore | null;
-    sources: SourceRepository | null;
     analytics: AnalyticsStore | null;
     dashboardAssignments: DashboardAssignmentRepository;
     identities: IdentityService;

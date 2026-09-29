@@ -9,7 +9,7 @@ import { preflightPageGatewayAccess } from "cms-delivery/core/pages/preflightPag
 import { publicPageCacheKey, resolvePublicPage } from "cms-delivery/core/pages/resolvePublicPage";
 import { InvalidPublicPageRequestError } from "cms-delivery/core/pages/publicPageRequest";
 import type { PageRenderMetadata } from "cms-delivery/core/seo/pageMetadata";
-import { resolveRuntimePageIndexingMetadata } from "cms-delivery/core/seo/resolveRuntimePageIndexingMetadata";
+import { resolveRuntimePageIndexingMetadata } from "cms-delivery/core/seo/indexing/resolveRuntimePageIndexingMetadata";
 
 /**
  * Shared entry point for every public page GET registered by Delivery.

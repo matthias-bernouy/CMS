@@ -1,76 +1,37 @@
 import type { TPage } from "@bernouy/cms-content";
-import type { Source } from "@bernouy/cms-sources";
-
-export const COMMERCE_SOURCE: Source = {
-    urn: "urn:commerce",
-    endpoints: [
-        {
-            urn: "urn:commerce:product",
-            method: "GET",
-            access: { mode: "public" },
-            targetUrl: "https://commerce.test/product",
-            input: {
-                params: [{ name: "slug", in: "query", required: true, schema: { type: "string" } }],
-            },
-        },
-        {
-            urn: "urn:commerce:products",
-            method: "GET",
-            access: { mode: "public" },
-            targetUrl: "https://commerce.test/products",
-            input: {
-                params: [
-                    { name: "limit", in: "query", schema: { type: "number" } },
-                    { name: "offset", in: "query", schema: { type: "number" } },
-                ],
-            },
-        },
-    ],
-    indexing: {
-        entities: [
-            {
-                id: "product-by-slug",
-                label: "Product",
-                resolve: {
-                    endpointUrn: "urn:commerce:product",
-                    identity: { key: "slug", inputParam: "slug", outputPath: "slug" },
-                },
-                discover: {
-                    endpointUrn: "urn:commerce:products",
-                    itemsPath: "items",
-                    identityPath: "slug",
-                    lastModifiedPath: "updatedAt",
-                    pagination: {
-                        type: "offset",
-                        limitParam: "limit",
-                        offsetParam: "offset",
-                        pageSize: 2,
-                        totalPath: "total",
-                    },
-                },
-                variables: {
-                    description: { path: "description", type: "text" },
-                    title: { path: "title", type: "text" },
-                },
-            },
-        ],
-    },
-};
 
 export const PRODUCT_PAGE = {
     id: "product-detail",
     path: "/products/detail",
     title: "${content.title} — ${site.name}",
     description: "${content.description}",
-    content: '<main cms-source="/.cms/sources/commerce/product?slug=#{product}"></main>',
+    content: `<main cms-source="/.cms/call/commerce/product.get" cms-source-method="POST" cms-source-body='{"slug":{"from":"queryParam","name":"product"}}'></main>`,
     visible: true,
     tags: [],
     indexing: {
         enabled: true,
         entity: {
-            sourceUrn: "urn:commerce",
-            entityId: "product-by-slug",
+            contractId: "commerce",
+            label: "Product",
             pageQueryParam: "product",
+            resolve: { capabilityId: "product.get", inputParam: "slug", identityPath: "slug" },
+            discover: {
+                capabilityId: "product.list",
+                itemsPath: "items",
+                identityPath: "slug",
+                lastModifiedPath: "updatedAt",
+                pagination: {
+                    type: "offset",
+                    limitParam: "limit",
+                    offsetParam: "offset",
+                    pageSize: 2,
+                    totalPath: "total",
+                },
+            },
+            variables: {
+                description: { path: "description", type: "text" },
+                title: { path: "title", type: "text" },
+            },
         },
     },
 } satisfies TPage;

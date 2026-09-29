@@ -9,6 +9,8 @@ export interface GatewayEditorCapability {
     readonly description?: string;
     readonly providerId: string;
     readonly providerLabel: string;
+    readonly access: "public" | "authenticated";
+    readonly effect: "query" | "command";
     readonly input: UlviaObjectSchema;
     readonly output: UlviaSchema;
 }
@@ -58,6 +60,8 @@ export class SelectedGatewayCatalogue implements GatewayCapabilityCatalogue {
                     ...(capability.description ? { description: capability.description } : {}),
                     providerId: provider.providerId,
                     providerLabel: provider.name,
+                    access: capability.access,
+                    effect: capability.behavior.effect,
                     input: capability.input,
                     output: capability.output,
                 });

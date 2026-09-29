@@ -3,12 +3,11 @@ import { expect, test } from "bun:test";
 import { InMemoryCmsRepository, validateSettingsPatch } from "@bernouy/cms-content";
 import type { PublicPageProvider } from "@bernouy/cms-delivery";
 import { InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
-import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { materializeSitemapSnapshot } from "cms-delivery/core/seo/sitemap/materialize";
 import { readSitemapManifest, sitemapChunkPath } from "cms-delivery/core/seo/sitemap/manifest";
 import SitemapServer from "cms-delivery/endpoints/sitemap.xml.server";
 import { mountPublicPages } from "../publicPage.fixture";
-import { COMMERCE_SOURCE, PRODUCT_PAGE } from "../indexing/fixtures";
+import { PRODUCT_PAGE } from "../indexing/fixtures";
 
 test("sitemap snapshots separate languages and common URLs while retaining reciprocal links", async () => {
     const repository = new InMemoryCmsRepository();
@@ -33,18 +32,22 @@ test("sitemap snapshots separate languages and common URLs while retaining recip
         indexing: PRODUCT_PAGE.indexing,
     });
     await repository.setPagePaths(product.id, { fr: "/produits/fiche", en: "/products/detail" });
-    const sources = new InMemorySourceRepository();
-    await sources.createSource(COMMERCE_SOURCE);
     const provider: PublicPageProvider = {
         resolvePage: async () => null,
         listSitemapPaths: async () => ["/provider"],
     };
     const mounted = mountPublicPages({
         repository,
-        sources,
+        gateway: {
+            invoke: async () => ({
+                kind: "success",
+                requestId: "request-1",
+                status: 200,
+                output: { items: [{ slug: "oak & chair" }], total: 1 },
+            }),
+        },
         providers: [provider],
         sitemapStore: new InMemoryCmsFilesBlob(),
-        sourceInterceptor: async () => Response.json({ items: [{ slug: "oak & chair" }], total: 1 }),
     });
 
     const result = await materializeSitemapSnapshot(mounted.delivery);

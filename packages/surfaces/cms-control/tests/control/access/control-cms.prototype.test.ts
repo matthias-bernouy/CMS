@@ -6,7 +6,7 @@ import { CaptureRunner } from "./authPublicSupport";
 
 describe("ControlCms public prototype contract", () => {
     test("keeps public accessors directly on ControlCms.prototype", () => {
-        expect(typeof Object.getOwnPropertyDescriptor(ControlCms.prototype, "sources")?.get).toBe("function");
+        expect(Object.getOwnPropertyDescriptor(ControlCms.prototype, "sources")).toBeUndefined();
         expect(typeof Object.getOwnPropertyDescriptor(ControlCms.prototype, "filesMetadata")?.get).toBe("function");
         expect(Object.getPrototypeOf(ControlCms.prototype)).toBe(Object.prototype);
     });

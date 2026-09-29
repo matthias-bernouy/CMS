@@ -11,6 +11,8 @@ const capability: GatewayEditorCapability = {
     description: "List items",
     providerId: "ulvia.example",
     providerLabel: "Example Provider",
+    access: "public",
+    effect: "query",
     input: {
         type: "object",
         properties: { term: { type: "string", maxLength: 50 } },

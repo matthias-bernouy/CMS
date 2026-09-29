@@ -79,7 +79,7 @@ describe("expandCompositions", () => {
     });
 
     test("preserves site host bindings on the generated behavior controller", () => {
-        const document = body(`<site-header cms-source="/.cms/sources/system-auth/me as auth">
+        const document = body(`<site-header cms-source="/.cms/call/system-auth/me as auth">
             <a slot="actions" cms-condition="!auth.subject">Log in</a>
             <user-menu slot="actions" cms-condition="auth.subject">Account</user-menu>
         </site-header>`);
@@ -93,7 +93,7 @@ describe("expandCompositions", () => {
         ]);
 
         const navbar = document.querySelector("site-navbar")!;
-        expect(navbar.getAttribute("cms-source")).toBe("/.cms/sources/system-auth/me as auth");
+        expect(navbar.getAttribute("cms-source")).toBe("/.cms/call/system-auth/me as auth");
         expect(navbar.hasAttribute("data-p9r-composition-controller")).toBe(false);
         expect(navbar.querySelector('a[slot="actions"]')?.getAttribute("cms-condition")).toBe("!auth.subject");
         expect(navbar.querySelector('user-menu[slot="actions"]')?.getAttribute("cms-condition")).toBe("auth.subject");

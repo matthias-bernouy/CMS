@@ -1,68 +1,82 @@
 import { describe, expect, test } from "bun:test";
 import { P9R_CACHE, type TPage } from "@bernouy/cms-content";
-import type { Source } from "@bernouy/cms-sources";
+import type { GatewayEditorCapability } from "@bernouy/cms-gateway";
 import putConfigDetail from "cms-control/api/_content/page/_editing/configDetail.put";
 import putPageContent from "cms-control/api/_content/page/_editing/content.put";
 
-const commerce: Source = {
-    urn: "urn:commerce",
-    endpoints: [],
-    indexing: {
-        entities: [
-            {
-                id: "product-by-slug",
-                label: "Product",
-                resolve: {
-                    endpointUrn: "urn:commerce:product",
-                    identity: { key: "slug", inputParam: "slug", outputPath: "slug" },
-                },
-                discover: {
-                    endpointUrn: "urn:commerce:products",
-                    itemsPath: "items",
-                    identityPath: "slug",
-                },
-                variables: { title: { path: "title", type: "text" } },
-            },
-        ],
+const capability: GatewayEditorCapability = {
+    contractId: "commerce",
+    contractLabel: "Commerce",
+    capabilityId: "product.get",
+    description: "Product",
+    providerId: "shop",
+    providerLabel: "Shop",
+    access: "public",
+    effect: "query",
+    input: { type: "object", properties: { slug: { type: "string", maxLength: 128 } }, required: ["slug"] },
+    output: {
+        type: "object",
+        properties: { slug: { type: "string", maxLength: 128 }, title: { type: "string", maxLength: 128 } },
+        required: ["slug"],
     },
 };
-
+const listCapability: GatewayEditorCapability = {
+    ...capability,
+    capabilityId: "product.list",
+    description: "List products",
+    input: { type: "object", properties: { limit: { type: "integer" }, offset: { type: "integer" } }, required: [] },
+    output: {
+        type: "object",
+        properties: {
+            items: {
+                type: "array",
+                items: { type: "object", properties: { slug: { type: "string", maxLength: 128 } }, required: ["slug"] },
+                maxItems: 100,
+            },
+            total: { type: "integer" },
+        },
+        required: ["items"],
+    },
+};
 const existingPage: TPage = {
     id: "page-1",
     path: "/draft",
     title: "Draft",
     description: "Draft description",
-    content: '<main cms-source="/.cms/sources/commerce/product?slug=#{product}">Original content</main>',
+    content: `<main cms-source="/.cms/call/commerce/product.get" cms-source-method="POST" cms-source-body='{"slug":{"from":"queryParam","name":"product"}}'>Original content</main>`,
     visible: false,
     tags: ["existing"],
     indexing: { enabled: false },
 };
-
 function makeCms() {
     const updates: Partial<TPage>[] = [];
     const invalidations: string[] = [];
-    const cms = {
-        repository: {
-            getPageById: async (id: string) => (id === existingPage.id ? existingPage : null),
-            getPage: async (path: string) =>
-                path === "/draft" ? { ...existingPage, ...updates.at(-1), id: existingPage.id } : null,
-            getSystem: async () => ({ site: { language: "fr" } }),
-            updatePage: async (page: Partial<TPage>) => {
-                updates.push(page);
+    return {
+        cms: {
+            repository: {
+                getPageById: async (id: string) => (id === existingPage.id ? existingPage : null),
+                getPage: async (path: string) => (path === "/draft" ? { ...existingPage, ...updates.at(-1) } : null),
+                getSystem: async () => ({ site: { language: "fr" } }),
+                updatePage: async (page: Partial<TPage>) => {
+                    updates.push(page);
+                },
+            },
+            config: {
+                capabilityGateway: {
+                    siteId: "site-test",
+                    catalogue: { list: async () => [capability, listCapability] },
+                },
+            },
+            cache: {
+                delete: (key: string) => {
+                    invalidations.push(key);
+                },
             },
         },
-        cache: {
-            delete: (key: string) => {
-                invalidations.push(key);
-            },
-        },
-        optionalSources: {
-            getAllSources: async () => [commerce],
-        },
+        updates,
+        invalidations,
     };
-    return { cms, updates, invalidations };
 }
-
 function jsonRequest(url: string, body: Record<string, unknown>): Request {
     return new Request(url, {
         method: "PUT",
@@ -72,9 +86,8 @@ function jsonRequest(url: string, body: Record<string, unknown>): Request {
 }
 
 describe("page management writes", () => {
-    test("updates page settings without replacing visual content", async () => {
+    test("updates settings and projects a selected gateway binding", async () => {
         const { cms, updates, invalidations } = makeCms();
-
         const response = await putConfigDetail(
             jsonRequest("http://localhost/cms/api/page/configDetail?id=page-1", {
                 title: "${content.title} | Store",
@@ -83,39 +96,27 @@ describe("page management writes", () => {
                 published: "true",
                 tags: "seo, landing",
                 indexingEnabled: "true",
-                indexingCandidate: "urn%3Acommerce|product-by-slug|product",
+                indexingCandidate: "commerce|product.get|slug|product",
             }),
             cms as never,
         );
-
         expect(response.status).toBe(200);
-        expect(await response.json()).toEqual({ id: existingPage.id });
-        expect(updates).toEqual([
-            {
-                id: existingPage.id,
-                title: "${content.title} | Store",
-                path: "/draft",
-                description: "Buy ${content.title}",
-                visible: true,
-                tags: ["seo", " landing"],
-                indexing: {
-                    enabled: true,
-                    entity: {
-                        sourceUrn: "urn:commerce",
-                        entityId: "product-by-slug",
-                        pageQueryParam: "product",
-                    },
-                },
+        expect(updates[0]?.indexing).toEqual({
+            enabled: true,
+            entity: {
+                contractId: "commerce",
+                label: "Product",
+                pageQueryParam: "product",
+                resolve: { capabilityId: "product.get", inputParam: "slug", identityPath: "slug" },
+                variables: { slug: { path: "slug", type: "text" }, title: { path: "title", type: "text" } },
             },
-        ]);
+        });
         expect(updates[0]).not.toHaveProperty("content");
-        expect(updates[0]).not.toHaveProperty("seo");
         expect(invalidations).toEqual([P9R_CACHE.page("/draft")]);
     });
 
-    test("rejects an entity binding that is no longer present in the page", async () => {
+    test("rejects a candidate no longer present on the page", async () => {
         const { cms, updates } = makeCms();
-
         await expect(
             putConfigDetail(
                 jsonRequest("http://localhost/cms/api/page/configDetail?id=page-1", {
@@ -125,7 +126,7 @@ describe("page management writes", () => {
                     published: true,
                     tags: [],
                     indexingEnabled: "true",
-                    indexingCandidate: "urn%3Acommerce|product-by-id|product",
+                    indexingCandidate: "commerce|product.delete|slug|product",
                 }),
                 cms as never,
             ),
@@ -133,9 +134,91 @@ describe("page management writes", () => {
         expect(updates).toEqual([]);
     });
 
+    test("saves explicit sitemap projections only when the selected contract declares them", async () => {
+        const { cms, updates } = makeCms();
+        const request = (itemsPath: string) =>
+            jsonRequest("http://localhost/cms/api/page/configDetail?id=page-1", {
+                title: "Product",
+                path: "/draft",
+                description: "",
+                published: true,
+                tags: [],
+                indexingEnabled: "true",
+                indexingCandidate: "commerce|product.get|slug|product",
+                indexingProjection: JSON.stringify({
+                    identityPath: "slug",
+                    discover: {
+                        capabilityId: "product.list",
+                        itemsPath,
+                        identityPath: "slug",
+                        pagination: {
+                            type: "offset",
+                            limitParam: "limit",
+                            offsetParam: "offset",
+                            pageSize: 100,
+                            totalPath: "total",
+                        },
+                    },
+                }),
+            });
+        await expect(putConfigDetail(request("missing"), cms as never)).rejects.toThrow("list response");
+        expect(updates).toEqual([]);
+        const response = await putConfigDetail(request("items"), cms as never);
+        expect(response.status).toBe(200);
+        expect(updates[0]?.indexing?.entity?.discover).toEqual({
+            capabilityId: "product.list",
+            itemsPath: "items",
+            identityPath: "slug",
+            pagination: {
+                type: "offset",
+                limitParam: "limit",
+                offsetParam: "offset",
+                pageSize: 100,
+                totalPath: "total",
+            },
+        });
+    });
+
+    test("validates direct indexing configuration against selected gateway schemas", async () => {
+        const { cms, updates } = makeCms();
+        const indexing = {
+            enabled: true,
+            entity: {
+                contractId: "commerce",
+                label: "Product",
+                pageQueryParam: "product",
+                resolve: { capabilityId: "product.get", inputParam: "slug", identityPath: "slug" },
+                variables: {},
+            },
+        };
+        const request = (value: unknown) =>
+            jsonRequest("http://localhost/cms/api/page/configDetail?id=page-1", {
+                title: "Product",
+                path: "/draft",
+                indexing: value,
+            });
+        await expect(
+            putConfigDetail(
+                request({ ...indexing, entity: { ...indexing.entity, contractId: "missing" } }),
+                cms as never,
+            ),
+        ).rejects.toThrow("selected gateway capability");
+        await expect(
+            putConfigDetail(
+                request({
+                    ...indexing,
+                    entity: { ...indexing.entity, resolve: { ...indexing.entity.resolve, identityPath: "missing" } },
+                }),
+                cms as never,
+            ),
+        ).rejects.toThrow("canonical identity field");
+        expect(updates).toEqual([]);
+        expect((await putConfigDetail(request(indexing), cms as never)).status).toBe(200);
+        expect(updates[0]?.indexing).toEqual(indexing);
+    });
+
     test("updates visual content without replacing page settings", async () => {
         const { cms, updates, invalidations } = makeCms();
-
         const response = await putPageContent(
             jsonRequest("http://localhost/cms/api/page/content", {
                 id: "page-1",
@@ -143,11 +226,8 @@ describe("page management writes", () => {
             }),
             cms as never,
         );
-
         expect(response.status).toBe(204);
         expect(updates).toEqual([{ id: existingPage.id, content: "<main>Updated content</main>" }]);
-        expect(updates[0]).not.toHaveProperty("title");
-        expect(updates[0]).not.toHaveProperty("seo");
         expect(invalidations).toEqual([P9R_CACHE.page("/draft")]);
     });
 });

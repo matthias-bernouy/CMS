@@ -44,7 +44,7 @@ describe("image performance gates", () => {
         const comparison = compare(baseline, candidate);
 
         expect(comparison.gates.find(({ id }) => id === "descriptor_mismatches")?.passed).toBe(false);
-        expect(comparison.gates.find(({ id }) => id === "source_passthrough_mismatches")?.passed).toBe(false);
+        expect(comparison.gates.find(({ id }) => id === "provider_passthrough_mismatches")?.passed).toBe(false);
     });
 
     test("rejects catastrophic thumbnail drift and explicit CPU or RSS budget overruns", () => {
@@ -72,7 +72,7 @@ describe("image performance gates", () => {
         const mutatedBaseline = artifact("baseline", 1_000, 1_000, 0, 10);
         mutatedBaseline.corpus.assets[0]!.variants[0]!.matchesSourceBytes = false;
         const mutationComparison = compare(mutatedBaseline, candidate);
-        expect(mutationComparison.gates.find(({ id }) => id === "legacy_original_mismatches")?.passed).toBe(false);
+        expect(mutationComparison.gates.find(({ id }) => id === "baseline_original_mismatches")?.passed).toBe(false);
     });
 
     test("gates scenario-distribution and absolute cache-cold foreground p95", () => {

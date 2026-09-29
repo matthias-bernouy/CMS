@@ -18,9 +18,8 @@ installation, actor grant, and original file before a derivative cache lookup.
 Gateway derivative responses currently use `private, no-store`; durable jobs and
 public cache policy have not been added yet.
 
-The old `/.cms/sources` image route is not mounted by Delivery. The legacy
-Source image worker and browser code remain in the repository during migration,
-but new authored content should use selected provider media capabilities.
+The old `/.cms/sources` image route and Source image worker have been removed.
+Provider media uses selected gateway capabilities.
 
 ## Responsibilities
 

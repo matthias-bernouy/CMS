@@ -239,10 +239,10 @@ describe("generated site bloc compilation", () => {
 
         const source = generateSiteBlocSourceBundle(base, {
             ...base.draft,
-            defaultContent: `<form cms-source="/.cms/sources/forms/contact"
+            defaultContent: `<form cms-source="/.cms/call/forms/contact"
                 cms-source-method="POST" cms-source-trigger="submit"
                 cms-source-inherit-query="false" cms-source-success-reset="true"></form>`,
         });
-        expect(source["default.html"]).toContain('cms-source="/.cms/sources/forms/contact"');
+        expect(source["default.html"]).toContain('cms-source="/.cms/call/forms/contact"');
     });
 });

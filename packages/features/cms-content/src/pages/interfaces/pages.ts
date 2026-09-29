@@ -1,12 +1,33 @@
 export type PageIndexingConfiguration = {
     /** Whether search engines may index this page or its discovered entity URLs. */
     enabled: boolean;
-    /** Optional dynamic entity exposed by the page. Endpoint details remain owned by the source. */
+    /** CMS-owned projection of selected gateway capabilities for this dynamic page. */
     entity?: {
-        sourceUrn: string;
-        entityId: string;
+        contractId: string;
+        label: string;
         /** Public page query parameter bound to the entity identity. */
         pageQueryParam: string;
+        resolve: {
+            capabilityId: string;
+            inputParam: string;
+            identityPath: string;
+        };
+        discover?: {
+            capabilityId: string;
+            itemsPath: string;
+            identityPath: string;
+            lastModifiedPath?: string;
+            pagination?:
+                | { type: "offset"; limitParam: string; offsetParam: string; pageSize: number; totalPath?: string }
+                | {
+                      type: "cursor";
+                      cursorParam: string;
+                      nextCursorPath: string;
+                      limitParam?: string;
+                      pageSize?: number;
+                  };
+        };
+        variables: Record<string, { path: string; type: "text" | "url" | "image" | "date" | "number" }>;
     };
 };
 

@@ -5,7 +5,7 @@ import { createControlAccessGuard } from "cms-control/core/admin/control/adminAc
 describe("Control authenticated access", () => {
     test("allows authenticated members through the Control guard", async () => {
         expect(await status("GET", "/cms/api/users")).toBe(200);
-        expect(await status("POST", "/cms/.cms/sources/commerce/refund")).toBe(200);
+        expect(await status("POST", "/cms/.cms/call/commerce/refund")).toBe(200);
         expect(await status("GET", "/cms/admin/settings/secrets")).toBe(200);
     });
 });

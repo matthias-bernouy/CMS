@@ -8,7 +8,7 @@ export function artifactIntegrityGates(
     return [
         exactGate("baseline_corpus_errors", corpusTransformErrors(baseline), 0),
         exactGate("baseline_failed_images", baseline.summary.failedImages, 0),
-        exactGate("legacy_original_mismatches", legacyOriginalMismatches(baseline), 0),
+        exactGate("baseline_original_mismatches", baselineOriginalMismatches(baseline), 0),
         ...candidateArtifactIntegrityGates(candidate, maximumThumbnailMae),
     ];
 }
@@ -21,7 +21,7 @@ export function candidateArtifactIntegrityGates(
         exactGate("corpus_transform_errors", corpusTransformErrors(candidate), 0),
         exactGate("corpus_output_mismatches", corpusOutputMismatches(candidate), 0),
         exactGate("descriptor_mismatches", descriptorMismatches(candidate), 0),
-        exactGate("source_passthrough_mismatches", sourcePassthroughMismatches(candidate), 0),
+        exactGate("provider_passthrough_mismatches", providerPassthroughMismatches(candidate), 0),
         exactGate("cold_single_flight_encode_mismatches", singleFlightMismatches(candidate), 0),
         exactGate("provider_authorization_read_mismatches", authorizationReadMismatches(candidate), 0),
         maximumGate("normalized_thumbnail_mae", maximumObservedThumbnailMae(candidate), maximumThumbnailMae),
@@ -66,7 +66,7 @@ function descriptorMismatches(artifact: ImagePerformanceArtifact): number {
     );
 }
 
-function sourcePassthroughMismatches(artifact: ImagePerformanceArtifact): number {
+function providerPassthroughMismatches(artifact: ImagePerformanceArtifact): number {
     return artifact.corpus.assets.reduce(
         (count, asset) => count + Number(!isExactPassthrough(asset.passthrough, asset)),
         0,
@@ -115,7 +115,7 @@ function expectedColdDerivatives(artifact: ImagePerformanceArtifact, sample: Lis
     return keys.size;
 }
 
-function legacyOriginalMismatches(artifact: ImagePerformanceArtifact): number {
+function baselineOriginalMismatches(artifact: ImagePerformanceArtifact): number {
     if (artifact.adapter !== "original") {
         return 1;
     }

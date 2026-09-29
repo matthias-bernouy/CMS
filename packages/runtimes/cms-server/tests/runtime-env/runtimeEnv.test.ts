@@ -24,8 +24,6 @@ describe("runtime env validation", () => {
         expect(env.ANALYTICS_TRUST_PROXY).toBe(false);
         expect(env.ANALYTICS_TRUSTED_PROXY_VERIFIED).toBe(false);
         expect(env.ENDPOINT_PERFORMANCE_ENABLED).toBe(true);
-        expect(env.SOURCE_TIMING_SAMPLE_RATE).toBe(0.01);
-        expect(env.SOURCE_SLOW_REQUEST_THRESHOLD_MS).toBe(1_000);
         expect(
             readRuntimeEnv({
                 ...validEnv(),
@@ -92,23 +90,8 @@ describe("runtime env validation", () => {
     });
 
     test("validates endpoint performance controls", () => {
-        expect(
-            readRuntimeEnv({
-                ...validEnv(),
-                ENDPOINT_PERFORMANCE_ENABLED: "false",
-                SOURCE_TIMING_SAMPLE_RATE: "1",
-                SOURCE_SLOW_REQUEST_THRESHOLD_MS: "2500.5",
-            }),
-        ).toMatchObject({
+        expect(readRuntimeEnv({ ...validEnv(), ENDPOINT_PERFORMANCE_ENABLED: "false" })).toMatchObject({
             ENDPOINT_PERFORMANCE_ENABLED: false,
-            SOURCE_TIMING_SAMPLE_RATE: 1,
-            SOURCE_SLOW_REQUEST_THRESHOLD_MS: 2_500.5,
         });
-        expect(() => readRuntimeEnv({ ...validEnv(), SOURCE_TIMING_SAMPLE_RATE: "1.01" })).toThrow(
-            /SOURCE_TIMING_SAMPLE_RATE must be between 0 and 1/,
-        );
-        expect(() => readRuntimeEnv({ ...validEnv(), SOURCE_SLOW_REQUEST_THRESHOLD_MS: "NaN" })).toThrow(
-            /SOURCE_SLOW_REQUEST_THRESHOLD_MS must be between/,
-        );
     });
 });

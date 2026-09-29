@@ -42,7 +42,6 @@
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
-        "@bernouy/cms-sources": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",

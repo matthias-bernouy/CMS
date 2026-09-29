@@ -1,8 +1,7 @@
-import { isSourceUrn } from "@bernouy/cms-sources";
-import type { PageIndexingConfiguration, TPage } from "cms-content/pages/interfaces/pages";
+import type { TPage } from "cms-content/pages/interfaces/pages";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { isValidPathFormat } from "cms-content/application/core/validation/predicates";
-import { isCmsQueryParamName } from "cms-content/editor/core/bindings";
+import { validatePageIndexingConfiguration } from "cms-content/pages/core/validation/indexing";
 import { validatePageSeo } from "cms-content/pages/core/validation/seo";
 import {
     validateLabel,
@@ -11,8 +10,6 @@ import {
     validateTags,
     validateId,
 } from "cms-content/application/core/validation/fields";
-
-const MAX_INDEXING_REFERENCE_LENGTH = 512;
 
 /** Page path: `/seg/seg` shape (see `isValidPathFormat`). */
 export function validatePagePath(value: string): string {
@@ -25,36 +22,6 @@ export function validatePagePath(value: string): string {
 /** Page title: required, ≤70, no control chars. */
 export function validatePageTitle(value: string): string {
     return validateLabel("title", value, 70);
-}
-
-export function validatePageIndexingConfiguration(value: unknown): PageIndexingConfiguration {
-    if (!isRecord(value)) {
-        throw new ContentValidationError("indexing", "object expected");
-    }
-    if (typeof value.enabled !== "boolean") {
-        throw new ContentValidationError("indexing.enabled", "boolean expected");
-    }
-    if (value.entity === undefined) {
-        return { enabled: value.enabled };
-    }
-    if (!isRecord(value.entity)) {
-        throw new ContentValidationError("indexing.entity", "object expected");
-    }
-
-    const sourceUrn = requiredIndexingText(value.entity.sourceUrn, "indexing.entity.sourceUrn");
-    if (!isSourceUrn(sourceUrn)) {
-        throw new ContentValidationError("indexing.entity.sourceUrn", "source URN expected");
-    }
-    const entityId = requiredIndexingText(value.entity.entityId, "indexing.entity.entityId");
-    const pageQueryParam = requiredIndexingText(value.entity.pageQueryParam, "indexing.entity.pageQueryParam");
-    if (!isCmsQueryParamName(pageQueryParam)) {
-        throw new ContentValidationError("indexing.entity.pageQueryParam", "invalid CMS query parameter name");
-    }
-
-    return {
-        enabled: value.enabled,
-        entity: { sourceUrn, entityId, pageQueryParam },
-    };
 }
 
 /**
@@ -97,15 +64,4 @@ export function validatePagePatch(page: Partial<TPage>): Partial<TPage> {
         out.indexing = validatePageIndexingConfiguration(page.indexing);
     }
     return out;
-}
-
-function requiredIndexingText(value: unknown, field: string): string {
-    if (typeof value !== "string") {
-        throw new ContentValidationError(field, "string expected");
-    }
-    return validateLabel(field, value, MAX_INDEXING_REFERENCE_LENGTH);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
 }

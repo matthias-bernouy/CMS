@@ -78,7 +78,7 @@ describe("Shell", () => {
             [
                 {
                     label: "Current user",
-                    url: "/cms/.cms/sources/system-auth/me",
+                    url: "/cms/.cms/call/system-auth/me",
                     method: "GET",
                     provider: "system-auth",
                     providerUrn: "urn:system-auth",
@@ -87,7 +87,7 @@ describe("Shell", () => {
                 },
                 {
                     label: "Log in",
-                    url: "/cms/.cms/sources/system-auth/login",
+                    url: "/cms/.cms/call/system-auth/login",
                     method: "POST",
                     provider: "system-auth",
                     providerUrn: "urn:system-auth",
@@ -102,7 +102,7 @@ describe("Shell", () => {
         const picker = view.shadowRoot!.querySelector("cms-editor-v2-data-source-picker")!;
         const sources = Array.from(picker.shadowRoot!.querySelectorAll<HTMLButtonElement>(".source"));
         expect(sources.map((source) => source.textContent)).toEqual([
-            "POSTLog inNo description./cms/.cms/sources/system-auth/login",
+            "POSTLog inNo description./cms/.cms/call/system-auth/login",
         ]);
 
         sources[0]!.click();
@@ -110,9 +110,9 @@ describe("Shell", () => {
 
         expect(events).toEqual([
             {
-                value: "/cms/.cms/sources/system-auth/login",
+                value: "/cms/.cms/call/system-auth/login",
                 attributes: {
-                    target: "/cms/.cms/sources/system-auth/login",
+                    target: "/cms/.cms/call/system-auth/login",
                     method: "POST",
                 },
             },

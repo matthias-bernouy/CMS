@@ -21,11 +21,11 @@ describe("production CMS composition", () => {
         );
     });
 
-    test("wires the encrypted secret store into Delivery gateway execution", async () => {
-        const stores = await Bun.file(new URL("../src/runtime/stores/features.ts", import.meta.url)).text();
-        const surfaces = await Bun.file(new URL("../src/runtime/mountSurfaces.ts", import.meta.url)).text();
-
-        expect(stores).toMatch(/const\s+resolveSecret\s*=\s*createSecretResolver\s*\(\s*secrets\s*\)\s*;/);
-        expect(surfaces).toMatch(/sourceResolveSecret\s*:\s*features\.resolveSecret\s*,/);
+    test("wires the encrypted secret store into gateway transport", async () => {
+        const gateway = await Bun.file(
+            new URL("../src/runtime/gateway/createProductionGateway.ts", import.meta.url),
+        ).text();
+        expect(gateway).toMatch(/const\s+resolveSecret\s*=\s*createSecretResolver\s*\(\s*secrets\s*\)\s*;/);
+        expect(gateway).toMatch(/resolveToken:\s*async\s*\(reference\)/);
     });
 });

@@ -136,7 +136,7 @@ import "./admin/Common/EmptyState/EmptyState";
 import "./admin/Common/EventToast/EventToast";
 import "./admin/Resources/Auth/LoginMethods/LoginMethods";
 import "./admin/Actions/ProviderActions/ProviderActions";
-import "./admin/Common/PageSettings/PageIndexingSettings";
+import "./admin/Common/PageSettings/indexing/PageIndexingSettings";
 import "./admin/Actions/UserActions/UserActions";
 import "./admin/Common/Tokens/TokenCreate";
 import "./admin/Secrets/Secrets";

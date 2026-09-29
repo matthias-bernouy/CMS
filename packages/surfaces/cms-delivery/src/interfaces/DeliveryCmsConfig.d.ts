@@ -7,15 +7,8 @@ import type {
     SitemapStore,
     PublicFileMetadataLookup,
 } from "@bernouy/cms-content/files/serving";
-import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayAccessProbe, GatewayInvoker } from "@bernouy/cms-gateway";
 import type { ProviderImageService } from "@bernouy/cms-gateway/media";
-import type {
-    SourceEndpointInterceptor,
-    SourceRepository,
-    SourceRequestTelemetryOptions,
-    SourceSecretResolver,
-} from "@bernouy/cms-sources";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { HeadInjector } from "./HeadInjector";
 import type { PublicPageProvider } from "./PublicPageProvider";
@@ -31,10 +24,6 @@ export type DeliveryCmsConfig = {
     headInjectors?: readonly HeadInjector[];
     /** Ordered fallback adapters consulted only when ContentReader has no published page for the request path. */
     publicPageProviders?: readonly PublicPageProvider[];
-    /** Legacy data sources used only by internal indexing while it migrates. */
-    sources?: SourceRepository;
-    /** Federated opaque identity aliases used by source bindings. */
-    identities?: IdentityService;
     /** Site-scoped capability invocation supplied by a trusted composition root. */
     capabilityGateway?: {
         readonly siteId: string;
@@ -42,15 +31,6 @@ export type DeliveryCmsConfig = {
         readonly access?: GatewayAccessProbe;
         readonly images?: Pick<ProviderImageService, "get">;
     };
-    /**
-     * Resolver for source header secrets. Only composition roots that enforce
-     * the appropriate source access policy should provide one.
-     */
-    sourceResolveSecret?: SourceSecretResolver;
-    /** Request timings and non-blocking endpoint metrics supplied by the runtime. */
-    sourceTelemetry?: SourceRequestTelemetryOptions;
-    /** Shared post-authorization interceptor for bounded Source image variants. */
-    sourceImageInterceptor?: SourceEndpointInterceptor;
     /** Optional first-party public authentication routes. */
     auth?: PublicAuthRoutesConfig;
     /** Optional strict aggregate analytics writer. */

@@ -25,7 +25,6 @@
         { "path": "../../features/cms-gateway" },
         { "path": "../../features/cms-editor-system-v2" },
         { "path": "../../features/cms-secrets" },
-        { "path": "../../features/cms-sources" },
         { "path": "../../features/cms-dashboards" },
         { "path": "../../features/cms-analytics" }
     ]

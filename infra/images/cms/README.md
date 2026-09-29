@@ -311,29 +311,12 @@ environment file.
 | `CMS_GATEWAY_SITE_ID` | Optional stable opaque site ID. When set, mounts capability call routes in Control and Delivery backed by Mongo catalogues and the provider gateway. Publication and installation management routes are still pending. |
 | `ANALYTICS_TRUST_PROXY` | Defaults to `false`; enable only behind a proxy that overwrites forwarding headers. |
 | `ENDPOINT_PERFORMANCE_ENABLED` | Defaults to `true`; set to `false` to stop new endpoint observations and flushes without deleting retained rollups. |
-| `SOURCE_TIMING_SAMPLE_RATE` | Uniform detailed source-diagnostic sampling rate from `0` to `1`; defaults to `0.01`. Aggregate endpoint metrics remain exhaustive. |
-| `SOURCE_SLOW_REQUEST_THRESHOLD_MS` | Duration threshold for the separate forced diagnostic cohort; defaults to `1000`. Errors are forced independently. |
 | `CMS_AUTH_SITE_NAME` | Public authentication site name; defaults to `CMS`. |
 | `CMS_AUTH_EMAIL_COOLDOWN_SECONDS` | Email throttle interval; defaults to 300 seconds. |
 | `CMS_AUTH_EMAIL_VERIFICATION_URL` | Delivery email-verification URL. |
 | `CMS_AUTH_PASSWORD_RESET_URL` | Delivery password-reset URL. |
 | `CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL` | Control email-verification URL. |
 | `CMS_CONTROL_AUTH_PASSWORD_RESET_URL` | Control password-reset URL. |
-
-Source image transformation and both responsive cohorts are enabled when their
-switches are omitted. Public classification remains opt-in through
-`data-source-image-access="public"`; missing or unknown classifications stay in
-the private cohort.
-
-Each switch is a strict `true`/`false` opt-out control. To roll back, explicitly
-set private markup to `false`, then public markup to `false` so newly loaded
-pages use only original Source URLs. Keep transforms enabled while previously
-loaded pages and cached responsive bundles drain, then set transforms to
-`false`. Setting transforms to `false` forces both responsive cohorts off even
-if their own switches are omitted or `true`. A markup-only configuration fails
-closed: the runtime keeps both responsive cohorts disabled, and a residual
-`cms-width` request receives a non-cacheable `503` instead of an original under
-a false width descriptor.
 
 Treat the MongoDB URL, session secret, KEK, and any configured SMTP credentials
 as server-side secrets. Never expose them to browser code or commit them to the

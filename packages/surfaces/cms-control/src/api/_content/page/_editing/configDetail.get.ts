@@ -3,7 +3,7 @@ import type { ControlCms } from "cms-control/ControlCms";
 import {
     buildPageIndexingEditor,
     type PageIndexingEditorModel,
-} from "cms-control/core/content/page/pageIndexingEditor";
+} from "cms-control/core/content/page/indexing/pageIndexingEditor";
 
 export type PageConfigDetailResponse = {
     id: string;
@@ -40,7 +40,12 @@ export default async function getConfigDetail(req: Request, cms: ControlCms): Pr
         tags: page.tags,
         published: page.visible,
         ...(page.indexing ? { indexing: page.indexing } : {}),
-        indexingEditor: await buildPageIndexingEditor(page, cms.optionalSources),
+        indexingEditor: await buildPageIndexingEditor(
+            page,
+            cms.config.capabilityGateway?.catalogue
+                ? await cms.config.capabilityGateway.catalogue.list(cms.config.capabilityGateway.siteId)
+                : [],
+        ),
     };
 
     return new Response(JSON.stringify(response), {

@@ -1,6 +1,5 @@
 import {
     InMemoryAuthTokenStore,
-    InMemoryAuthentication,
     InMemoryEmailer,
     InMemoryLocalCredentialStore,
     InMemoryUsersRepository,
@@ -10,10 +9,7 @@ import {
     SubjectResolver,
 } from "@bernouy/cms-auth";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
-import type { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
-import { ControlCms } from "cms-control/ControlCms";
 
 export class CaptureRunner implements Runner {
     readonly endpoints = new Map<string, number>();
@@ -117,31 +113,6 @@ class GroupRunner extends CaptureRunner {
         const groupedMiddlewares = [...this.groupMiddlewares, ...middlewares];
         callback(new GroupRunner(basePath, this, groupedMiddlewares, this.mountFileApi));
     }
-}
-
-export async function mountedSourceHandler(sources: InMemorySourceRepository): Promise<RouteHandler> {
-    const runner = CaptureRunner.withoutFileApi();
-    const cms = new ControlCms(
-        runner,
-        new InMemoryCmsRepository(),
-        new InMemoryAuthentication(),
-        {},
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        sources,
-    );
-    await cms.ready;
-    const handler = runner.handlers.get("POST /.cms/sources");
-    if (!handler) {
-        throw new Error("Control source handler was not mounted");
-    }
-    return handler;
 }
 
 export function authSystem() {

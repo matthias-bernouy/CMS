@@ -47,18 +47,17 @@ without contacting the provider.
 `./identity` owns the authority-alias service and resolves one stable user alias
 per provider ID. `./mongo` retains the `cms_identity_aliases` collection and its
 indexes; `./identity/requestScope` caches resolutions for one request. The
-production runtime shares that store between legacy Source paths and capability
-calls. Site or installation changes do not revoke provider-wide aliases.
+production runtime shares that store across capability calls. Site or
+installation changes do not revoke provider-wide aliases.
 `./media` owns deterministic derivative keys, the bounded image service, and
 the storage port; `./media/local-fs` is the production derivative store. The
 byte fingerprint invalidates a derivative when a provider changes the file.
 `./media/sharp` applies gateway limits over the generic
 `@bernouy/image-processing/sharp` adapter.
 
-The existing `cms-sources` package remains active for Control legacy paths and
-Delivery's internal indexing execution. Delivery no longer mounts public
-`/.cms/sources` routes or resolves legacy system Sources internally. The
-remaining Source paths will be retired as indexing moves to gateway contracts.
+Control and Delivery invoke selected capabilities for authoring, rendering,
+metadata resolution, and sitemap discovery. Page-owned indexing definitions
+declare the response fields projected into metadata and canonical URLs.
 
 ## Remaining migration gates
 
@@ -70,9 +69,6 @@ remaining Source paths will be retired as indexing moves to gateway contracts.
    full-catalogue revision scans before large deployments.
 3. Add durable idempotency, rate policy, audit, telemetry, and separate host
    entrypoints before activating keyed commands or provider/system calls.
-4. Migrate remaining Control and Delivery source paths, indexing, and system source
-   calls to capability routes while preserving provider-wide identity aliases
-   and their observable behavior.
 5. Replace Source image consumers with provider file URLs, move expensive
    derivative work to durable jobs, and add garbage collection and benchmarks
    before removing the legacy image package.

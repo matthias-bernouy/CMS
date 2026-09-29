@@ -13,7 +13,6 @@ import { CMS_FILES_ROUTE, filesPrefix } from "@bernouy/cms-content/files/urls";
 import { serveFilesRequest } from "@bernouy/cms-content/files/serving";
 import { cachedResponseAsync, publicAssetCacheControl, redirect } from "@bernouy/http-runner";
 import { renderLoginPage } from "cms-control/core/admin/auth/authPages";
-import { mountControlSourceProxy } from "cms-control/core/admin/control/sourceProxy";
 import { createAuthenticatedControlGuard, createControlAccessGuard } from "cms-control/core/admin/control/adminAccess";
 import type { ControlAuthBackends, ControlCmsState } from "cms-control/core/admin/control/types";
 import { mountAnalyticsRoutes } from "cms-control/core/admin/control/mountRoutes/analytics";
@@ -68,7 +67,6 @@ export function mountControlCmsRoutes(
     const toPages = () => redirect(`${cms.basePath}/admin/pages`);
     runner.addEndpoint("GET", "/", toPages, [authGuard]);
     runner.addEndpoint("GET", "/admin", toPages, [authGuard]);
-    mountControlSourceProxy(state, authGuard);
     mountControlCapabilityRoutes(state, authenticatedGuard);
     runner.group(
         CMS_FILES_ROUTE,

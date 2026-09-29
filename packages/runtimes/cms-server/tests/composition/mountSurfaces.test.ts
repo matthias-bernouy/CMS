@@ -113,7 +113,10 @@ describe("production surface mounting", () => {
         expect(controlConfig).toMatchObject({
             deliveryUrl: options.env.DELIVERY_PUBLIC_URL,
             dashboardAssignments: options.features.dashboardAssignments,
-            capabilityGateway: gateway,
+            capabilityGateway: {
+                siteId: gateway.siteId,
+                invoker: expect.objectContaining({ invoke: expect.any(Function) }),
+            },
             publicAuth: {
                 marker: "public-auth",
                 emailVerificationUrl: options.env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
@@ -121,16 +124,16 @@ describe("production surface mounting", () => {
                 allowSignup: false,
             },
             endpointPerformanceReports: options.features.endpointPerformanceReports,
-            sourceTelemetry: expect.any(Object),
         });
-        expect(controlArguments[14]).toEqual({ local: options.authentication.auth });
+        expect(controlArguments[13]).toEqual({ local: options.authentication.auth });
 
         expect(deliveryConfig).toMatchObject({
             runner: runners[1],
             repository: { getPublishedPage: expect.any(Function), resolvePublishedRoute: expect.any(Function) },
-            sources: options.features.sources,
-            capabilityGateway: { siteId: gateway.siteId, invoker: gateway.invoker },
-            sourceTelemetry: expect.any(Object),
+            capabilityGateway: {
+                siteId: gateway.siteId,
+                invoker: expect.objectContaining({ invoke: expect.any(Function) }),
+            },
             analyticsVisitorSecret: options.analyticsVisitorSecret,
             analyticsSiteScope: options.env.DELIVERY_PUBLIC_URL,
             analyticsTrustProxy: false,

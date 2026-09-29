@@ -79,9 +79,11 @@ describe("PUT /api/page (update)", () => {
                 indexing: {
                     enabled: true,
                     entity: {
-                        sourceUrn: "urn:commerce",
-                        entityId: "product-by-id",
+                        contractId: "commerce",
+                        label: "Product",
                         pageQueryParam: "product",
+                        resolve: { capabilityId: "product.get", inputParam: "id", identityPath: "id" },
+                        variables: {},
                     },
                 },
             }),
@@ -100,9 +102,11 @@ describe("PUT /api/page (update)", () => {
         expect(updated.indexing).toEqual({
             enabled: true,
             entity: {
-                sourceUrn: "urn:commerce",
-                entityId: "product-by-id",
+                contractId: "commerce",
+                label: "Product",
                 pageQueryParam: "product",
+                resolve: { capabilityId: "product.get", inputParam: "id", identityPath: "id" },
+                variables: {},
             },
         });
         expect(deleteSpy).toEqual([P9R_CACHE.page("/draft")]);

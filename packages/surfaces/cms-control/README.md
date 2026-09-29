@@ -81,8 +81,6 @@ runner.group("/cms", (sub) => {
         pats,
         undefined,
         undefined,
-        undefined,
-        undefined,
         { local: auth },
     );
 });
@@ -106,7 +104,6 @@ new ControlCms(
     identityProviders?:  IdentityProviderRepository,
     pats?:               PatRepository,
     credentials?:        LocalCredentialStore,
-    sources?:            SourceRepository,
     analytics?:          AnalyticsStore,
     authBackends?:       { local?: LocalAuthenticationActions; oidc?: OidcAuthHandlers },
 )

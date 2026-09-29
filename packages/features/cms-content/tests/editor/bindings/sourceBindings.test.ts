@@ -5,18 +5,18 @@ describe("collectCmsSourceBindings", () => {
     test("extracts source URLs, aliases, methods, and triggers", () => {
         expect(
             collectCmsSourceBindings(`
-            <section cms-source="/.cms/sources/catalog/search?q=#{q} as products"></section>
-            <form cms-source="/.cms/sources/newsletter/subscribe" cms-source-method="post" cms-source-trigger="submit"></form>
+            <section cms-source="/.cms/call/catalog/search?q=#{q} as products"></section>
+            <form cms-source="/.cms/call/newsletter/subscribe" cms-source-method="post" cms-source-trigger="submit"></form>
         `),
         ).toEqual([
             {
-                url: "/.cms/sources/catalog/search?q=#{q}",
+                url: "/.cms/call/catalog/search?q=#{q}",
                 alias: "products",
                 method: "GET",
                 trigger: "auto",
             },
             {
-                url: "/.cms/sources/newsletter/subscribe",
+                url: "/.cms/call/newsletter/subscribe",
                 method: "POST",
                 trigger: "submit",
             },

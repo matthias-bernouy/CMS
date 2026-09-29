@@ -1,8 +1,7 @@
 # Public Authentication
 
 Delivery mounts CMS-owned authentication under `/.cms/auth` when public auth is
-configured. These routes work independently of provider selections and the
-legacy Source repository.
+configured. These routes work independently of provider selections.
 
 | Method | Path | JSON body | Response |
 | --- | --- | --- | --- |

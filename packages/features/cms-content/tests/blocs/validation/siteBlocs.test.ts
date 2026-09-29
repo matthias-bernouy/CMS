@@ -82,7 +82,7 @@ describe("site bloc validation", () => {
                         kind: "bloc",
                         tag: "site-results",
                         attributes: {
-                            "cms-source": "/.cms/sources/catalog/search?q=#{query} as results",
+                            "cms-source": "/.cms/call/catalog/search?q=#{query} as results",
                             "cms-source-id": "catalogResults",
                         },
                         children: [
@@ -103,7 +103,7 @@ describe("site bloc validation", () => {
             expect.arrayContaining([
                 expect.objectContaining({
                     attributes: expect.objectContaining({
-                        "cms-source": "/.cms/sources/catalog/search?q=#{query} as results",
+                        "cms-source": "/.cms/call/catalog/search?q=#{query} as results",
                     }),
                 }),
             ]),
@@ -236,7 +236,7 @@ describe("site bloc validation", () => {
             ['<section><span slot="label">Nested slot bypass</span></section>', /direct custom-element child/],
             ["<form></form>", /declared CMS source endpoint/],
             [
-                `<form cms-source="/.cms/sources/forms/contact" cms-source-method="POST"
+                `<form cms-source="/.cms/call/forms/contact" cms-source-method="POST"
                     cms-source-trigger="submit"
                     cms-source-body='{"safe":{"from":"raw","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
                 /typed parameter map/,
@@ -255,14 +255,14 @@ describe("site bloc validation", () => {
         const valid = validateSiteBlocSnapshot(
             siteBlocSnapshot({
                 defaultContent: `<h2 slot="title">Contact</h2><form
-                    cms-source="/.cms/sources/forms/contact"
+                    cms-source="/.cms/call/forms/contact"
                     cms-source-method="POST"
                     cms-source-trigger="submit"
                     cms-source-success-redirect="/thanks" cms-source-success-redirect-param="returnTo"></form>`,
             }),
             "site-feature-panel",
         );
-        expect(valid.defaultContent).toContain('cms-source="/.cms/sources/forms/contact"');
+        expect(valid.defaultContent).toContain('cms-source="/.cms/call/forms/contact"');
         expect(valid.defaultContent).toContain('cms-source-success-redirect-param="returnTo"');
     });
 
@@ -271,7 +271,7 @@ describe("site bloc validation", () => {
             kind: "bloc" as const,
             tag: "form",
             attributes: {
-                "cms-source": "/.cms/sources/system-auth/logout as logout",
+                "cms-source": "/.cms/call/system-auth/logout as logout",
                 "cms-source-method": "POST",
                 "cms-source-trigger": "submit",
                 "cms-source-success-redirect": "/login",

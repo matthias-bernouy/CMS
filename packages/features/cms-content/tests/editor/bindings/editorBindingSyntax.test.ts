@@ -63,7 +63,7 @@ describe("editor binding syntax", () => {
         expect(asSource({ url: " /api/plans ", alias: " plans " })).toBe("/api/plans as plans");
         expect(
             asSource({
-                url: "/.cms/sources/catalog/search",
+                url: "/.cms/call/catalog/search",
                 alias: "addresses",
                 params: {
                     q: { from: "queryParam", name: "address" },
@@ -76,7 +76,7 @@ describe("editor binding syntax", () => {
                 },
             }),
         ).toBe(
-            "/.cms/sources/catalog/search?q=#{address}&minimum=#{filter_racket-weight:gte}&delivery=@{deliveryAddress}&limit=5&type=housenumber%20street as addresses",
+            "/.cms/call/catalog/search?q=#{address}&minimum=#{filter_racket-weight:gte}&delivery=@{deliveryAddress}&limit=5&type=housenumber%20street as addresses",
         );
         expect(asSource({ url: "/api/plans?", params: { q: { from: "raw", value: "hello" } } })).toBe(
             "/api/plans?q=hello",
@@ -99,8 +99,8 @@ describe("editor binding syntax", () => {
         expect(parseSource(" {{BASE_PATH}}/api/plans ")).toEqual({ url: "{{BASE_PATH}}/api/plans" });
         expect(parseSource("/api/plans as plans")).toEqual({ url: "/api/plans", alias: "plans" });
         expect(
-            parseSource("  /.cms/sources/catalog/search?q=#{address}&delivery=@{deliveryAddress}   as   addresses  "),
-        ).toEqual({ url: "/.cms/sources/catalog/search?q=#{address}&delivery=@{deliveryAddress}", alias: "addresses" });
+            parseSource("  /.cms/call/catalog/search?q=#{address}&delivery=@{deliveryAddress}   as   addresses  "),
+        ).toEqual({ url: "/.cms/call/catalog/search?q=#{address}&delivery=@{deliveryAddress}", alias: "addresses" });
         expect(parseSource("")).toBeNull();
         expect(parseSource("   ")).toBeNull();
     });

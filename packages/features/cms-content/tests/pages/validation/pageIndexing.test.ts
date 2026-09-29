@@ -1,69 +1,38 @@
 import { describe, expect, test } from "bun:test";
-import { ContentValidationError, validatePageIndexingConfiguration, validatePagePatch } from "@bernouy/cms-content";
+import { validatePageIndexingConfiguration, validatePagePatch } from "@bernouy/cms-content";
 
-describe("page indexing configuration", () => {
-    test("preserves an explicit disabled choice", () => {
-        expect(validatePageIndexingConfiguration({ enabled: false, ignored: true })).toEqual({
-            enabled: false,
-        });
+const entity = {
+    contractId: "commerce",
+    label: "Product",
+    pageQueryParam: "product",
+    resolve: { capabilityId: "product.get", inputParam: "slug", identityPath: "slug" },
+    discover: {
+        capabilityId: "product.list",
+        itemsPath: "items",
+        identityPath: "slug",
+        pagination: { type: "offset", limitParam: "limit", offsetParam: "offset", pageSize: 100 },
+    },
+    variables: { title: { path: "title", type: "text" } },
+};
+
+describe("page indexing validation", () => {
+    test("accepts explicit gateway capabilities and projection paths", () => {
+        expect(validatePageIndexingConfiguration({ enabled: true, entity })).toEqual({ enabled: true, entity });
+        expect(validatePagePatch({ indexing: { enabled: false } })).toEqual({ indexing: { enabled: false } });
     });
 
-    test("normalizes an optional entity selection", () => {
-        expect(
-            validatePageIndexingConfiguration({
-                enabled: true,
-                entity: {
-                    sourceUrn: "  urn:commerce  ",
-                    entityId: "  product-by-slug  ",
-                    pageQueryParam: "  product  ",
-                },
-            }),
-        ).toEqual({
-            enabled: true,
-            entity: {
-                sourceUrn: "urn:commerce",
-                entityId: "product-by-slug",
-                pageQueryParam: "product",
+    test("rejects old Source references and unsafe projections", () => {
+        for (const invalid of [
+            { ...entity, contractId: "urn:commerce" },
+            { ...entity, resolve: { ...entity.resolve, identityPath: "__proto__.x" } },
+            { ...entity, variables: { title: { path: "title", type: "script" } } },
+            {
+                ...entity,
+                discover: { ...entity.discover, pagination: { ...entity.discover.pagination, pageSize: 1001 } },
             },
-        });
-    });
-
-    test.each([
-        null,
-        {},
-        { enabled: "yes" },
-        { enabled: true, entity: "product" },
-        { enabled: true, entity: { sourceUrn: "commerce", entityId: "product", pageQueryParam: "product" } },
-        { enabled: true, entity: { sourceUrn: "urn:commerce", entityId: "", pageQueryParam: "product" } },
-        {
-            enabled: true,
-            entity: { sourceUrn: "urn:commerce", entityId: "product", pageQueryParam: "bad param" },
-        },
-    ])("rejects an invalid configuration: %p", (configuration) => {
-        expect(() => validatePageIndexingConfiguration(configuration)).toThrow(ContentValidationError);
-    });
-
-    test("normalizes indexing as part of a page patch", () => {
-        expect(
-            validatePagePatch({
-                indexing: {
-                    enabled: true,
-                    entity: {
-                        sourceUrn: "urn:commerce",
-                        entityId: " product-by-id ",
-                        pageQueryParam: "product",
-                    },
-                },
-            }),
-        ).toEqual({
-            indexing: {
-                enabled: true,
-                entity: {
-                    sourceUrn: "urn:commerce",
-                    entityId: "product-by-id",
-                    pageQueryParam: "product",
-                },
-            },
-        });
+            { ...entity, pageQueryParam: "bad param" },
+        ]) {
+            expect(() => validatePageIndexingConfiguration({ enabled: true, entity: invalid })).toThrow();
+        }
     });
 });

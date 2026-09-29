@@ -10,19 +10,18 @@
         "start": "bun run src/index.ts"
     },
     "dependencies": {
-        "@bernouy/http-runner":     "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
-        "@bernouy/rate-limiter":    "workspace:*",
-        "@bernouy/cms-auth":        "workspace:*",
-        "@bernouy/cms-secrets":     "workspace:*",
-        "@bernouy/cms-content":     "workspace:*",
+        "@bernouy/rate-limiter": "workspace:*",
+        "@bernouy/cms-auth": "workspace:*",
+        "@bernouy/cms-secrets": "workspace:*",
+        "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-sources":     "workspace:*",
-        "@bernouy/cms-dashboards":  "workspace:*",
-        "@bernouy/cms-analytics":   "workspace:*",
-        "@bernouy/cms-control":     "workspace:*",
-        "@bernouy/cms-delivery":    "workspace:*",
+        "@bernouy/cms-dashboards": "workspace:*",
+        "@bernouy/cms-analytics": "workspace:*",
+        "@bernouy/cms-control": "workspace:*",
+        "@bernouy/cms-delivery": "workspace:*",
         "mongodb": "^7.6.0"
     },
     "peerDependencies": {

@@ -11,7 +11,7 @@ const env = readRuntimeEnv(process.env);
 await validateCmsStorageRoots(env.CMS_FILES_DIR);
 
 const core = await createCoreStores(env);
-const features = await createFeatureStores(core.db, core.secrets, {
+const features = await createFeatureStores(core.db, {
     endpointPerformanceEnabled: env.ENDPOINT_PERFORMANCE_ENABLED,
 });
 const authentication = await createProductionAuth(env, core);

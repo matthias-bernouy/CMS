@@ -1,12 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import type { SecretStore } from "@bernouy/cms-secrets";
 import type { Db } from "mongodb";
 import { createCoreStores } from "../src/runtime/stores/core";
 import { createFeatureStores } from "../src/runtime/stores/features";
 import { readRuntimeEnv } from "../src/runtimeEnv";
 
 describe("production runtime stores", () => {
-    test("initializes feature stores without injecting obsolete system Sources", async () => {
+    test("initializes feature stores without a Source repository", async () => {
         const indexedCollections: string[] = [];
         const db = {
             collection(name: string) {
@@ -27,13 +26,10 @@ describe("production runtime stores", () => {
                 };
             },
         } as unknown as Db;
-        const secrets = { get: async () => null } as unknown as SecretStore;
-
-        const stores = await createFeatureStores(db, secrets);
+        const stores = await createFeatureStores(db);
 
         expect(indexedCollections).toEqual(
             expect.arrayContaining([
-                "sources",
                 "cms_identity_aliases",
                 "dashboardAssignments",
                 "analytics_rollups",
@@ -43,10 +39,7 @@ describe("production runtime stores", () => {
                 "analytics_source_performance_rollups",
             ]),
         );
-        expect(stores.sources).toBeDefined();
-        expect(await stores.sources.getSource("urn:system-auth")).toBeNull();
-        expect(await stores.sources.getSource("urn:system-site")).toBeNull();
-        expect(typeof stores.resolveSecret).toBe("function");
+        expect(indexedCollections).not.toContain("sources");
         expect(stores.endpointPerformanceRecorder.stats()).toMatchObject({
             accepted: 0,
             dropped: 0,

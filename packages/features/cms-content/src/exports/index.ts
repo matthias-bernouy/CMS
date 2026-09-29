@@ -184,6 +184,11 @@ export {
     type PageIndexingDetectionOptions,
     type PageIndexingDetectionStatus,
 } from "cms-content/editor/core/document/pageIndexingDetection";
+export {
+    projectResolvedIndexingEntity,
+    projectIndexingDiscoveryPage,
+} from "cms-content/pages/core/indexing/projection";
+export type { ProjectedIndexingDiscoveryItem } from "cms-content/pages/core/indexing/projection";
 
 // ── Validation (rules live here; the decorator is the unbypassable barrier) ─
 export { ValidatingCmsRepository } from "cms-content/application/core/ValidatingCmsRepository";
@@ -197,9 +202,9 @@ export {
 } from "cms-content/editor/core/markup/validation/managedNativeElements";
 export { hardenStoredHtml } from "cms-content/editor/core/markup/hardenStoredHtml";
 export { validatePageSeo } from "cms-content/pages/core/validation/seo";
+export { validatePageIndexingConfiguration } from "cms-content/pages/core/validation/indexing";
 export { isSafeNavigationalUrl } from "cms-content/editor/core/markup/safeUrl";
 export {
-    validatePageIndexingConfiguration,
     validatePagePath,
     validatePageTitle,
     validatePagePatch,

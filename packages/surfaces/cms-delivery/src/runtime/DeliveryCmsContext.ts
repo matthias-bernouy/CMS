@@ -7,14 +7,7 @@ import type {
     SitemapStore,
     PublicFileMetadataLookup,
 } from "@bernouy/cms-content/files/serving";
-import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
-import type {
-    SourceEndpointInterceptor,
-    SourceRepository,
-    SourceRequestTelemetryOptions,
-    SourceSecretResolver,
-} from "@bernouy/cms-sources";
 import { BunRunner, type Cache, type Runner, TtlCache } from "@bernouy/http-runner";
 import { PageOptimizer } from "cms-delivery/core/pages/PageOptimizer";
 import type { DeliveryCmsConfig } from "cms-delivery/interfaces/DeliveryCmsConfig";
@@ -25,14 +18,12 @@ export class DeliveryCmsContext {
     private readonly config: DeliveryCmsConfig;
     private readonly resolvedRunner: Runner;
     private readonly resolvedCache: Cache;
-    private readonly resolvedSources: SourceRepository | undefined;
     private readonly pageOptimizer: PageOptimizer | null;
 
     constructor(config: DeliveryCmsConfig) {
         this.config = config;
         this.resolvedRunner = config.runner ?? new BunRunner();
         this.resolvedCache = config.cache ?? new TtlCache({ bypass: process.env.MODE === "DEV" });
-        this.resolvedSources = config.sources;
         this.pageOptimizer =
             config.filesMetadata && config.filesBlob && config.variantStore
                 ? new PageOptimizer({
@@ -62,26 +53,6 @@ export class DeliveryCmsContext {
 
     get publicPageProviders(): readonly PublicPageProvider[] {
         return this.config.publicPageProviders ?? [];
-    }
-
-    get sources(): SourceRepository | undefined {
-        return this.resolvedSources;
-    }
-
-    get sourceResolveSecret(): SourceSecretResolver | undefined {
-        return this.config.sourceResolveSecret;
-    }
-
-    get sourceTelemetry(): SourceRequestTelemetryOptions | undefined {
-        return this.config.sourceTelemetry;
-    }
-
-    get sourceImageInterceptor(): SourceEndpointInterceptor | undefined {
-        return this.config.sourceImageInterceptor;
-    }
-
-    get identities(): IdentityService | undefined {
-        return this.config.identities;
     }
 
     get capabilityGateway(): DeliveryCmsConfig["capabilityGateway"] {

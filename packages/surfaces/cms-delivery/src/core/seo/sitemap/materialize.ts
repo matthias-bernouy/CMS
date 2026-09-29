@@ -5,8 +5,8 @@ import { collectPublicPageProviderPaths } from "cms-delivery/core/pages/publicPa
 import {
     iteratePageIndexingLocations,
     type PageIndexingLocation,
-} from "cms-delivery/core/seo/discoverPageIndexingLocations";
-import { executeDeliverySourceGet } from "cms-delivery/core/sources/executeDeliverySourceGet";
+} from "cms-delivery/core/seo/indexing/discoverPageIndexingLocations";
+import { executeIndexingCapability } from "cms-delivery/core/seo/indexing/executeIndexingCapability";
 import {
     readSitemapManifest,
     SITEMAP_MANIFEST_KEY,
@@ -57,11 +57,8 @@ export async function materializeSitemapSnapshot(
         for (const entry of await storedSitemapLocations(delivery, pages, alternates)) {
             await writer.append(entry, delivery.cmsPathPrefix);
         }
-        for await (const entry of iteratePageIndexingLocations(pages, delivery.sources, (endpointUrn, params) =>
-            executeDeliverySourceGet(delivery, request, endpointUrn, params, {
-                forwardAuthentication: false,
-                forwardLanguage: false,
-            }),
+        for await (const entry of iteratePageIndexingLocations(pages, (contractId, capabilityId, input) =>
+            executeIndexingCapability(delivery, request, contractId, capabilityId, input, true),
         )) {
             await writer.append(withSitemapAlternates(entry, alternates), delivery.cmsPathPrefix);
         }

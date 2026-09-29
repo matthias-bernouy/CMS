@@ -4,7 +4,7 @@ import type { CoreStores } from "./stores/core";
 import { createPublicFileStores } from "./stores/authorFiles";
 import type { FeatureStores } from "./stores/features";
 import type { ProductionGateway } from "./gateway/createProductionGateway";
-import { createSurfaceSourceTelemetry } from "./sourceTelemetry";
+import { observeGatewayInvoker } from "./gateway/observeGatewayInvoker";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
 import { createContentReader } from "@bernouy/cms-content/rendering";
 
@@ -28,11 +28,6 @@ export async function mountProductionSurfaces(
     runtime: ProductionSurfaceRuntime = PRODUCTION_SURFACE_RUNTIME,
 ): Promise<ProductionSurfaceHandle> {
     const { env, core, features, authentication, gateway } = options;
-    const sourceTelemetry = createSurfaceSourceTelemetry(features.endpointPerformanceRecorder, {
-        uniformSampleRate: env.SOURCE_TIMING_SAMPLE_RATE,
-        slowRequestThresholdMs: env.SOURCE_SLOW_REQUEST_THRESHOLD_MS,
-        reportDiagnostic: runtime.log,
-    });
     const controlRunner = new runtime.Runner();
     const controlCms = new runtime.Control(
         controlRunner,
@@ -50,10 +45,20 @@ export async function mountProductionSurfaces(
                 optOutUrl: `${env.DELIVERY_PUBLIC_URL}/.cms/privacy/analytics`,
             },
             dashboardAssignments: features.dashboardAssignments,
-            ...(gateway ? { capabilityGateway: gateway } : {}),
+            ...(gateway
+                ? {
+                      capabilityGateway: {
+                          ...gateway,
+                          invoker: observeGatewayInvoker(
+                              gateway.invoker,
+                              features.endpointPerformanceRecorder,
+                              "control",
+                          ),
+                      },
+                  }
+                : {}),
             identities: features.identities,
             endpointPerformanceReports: features.endpointPerformanceReports,
-            sourceTelemetry: sourceTelemetry.control,
             publicAuth: {
                 ...authentication.createPublicAuth({
                     emailVerificationUrl: env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
@@ -71,7 +76,6 @@ export async function mountProductionSurfaces(
         core.identityProviders,
         core.pats,
         core.credentials,
-        features.sources,
         features.analytics,
         { local: authentication.auth },
     );
@@ -82,15 +86,12 @@ export async function mountProductionSurfaces(
         runner: deliveryRunner,
         repository: createContentReader(core.repo),
         cache: core.cache,
-        sources: features.sources,
-        sourceTelemetry: sourceTelemetry.delivery,
         analytics: features.analytics,
-        identities: features.identities,
         ...(gateway
             ? {
                   capabilityGateway: {
                       siteId: gateway.siteId,
-                      invoker: gateway.invoker,
+                      invoker: observeGatewayInvoker(gateway.invoker, features.endpointPerformanceRecorder, "delivery"),
                       access: gateway.access,
                       images: gateway.images,
                   },
@@ -101,7 +102,6 @@ export async function mountProductionSurfaces(
         analyticsTrustProxy: env.ANALYTICS_TRUST_PROXY,
         analyticsTrustedProxyVerified: env.ANALYTICS_TRUSTED_PROXY_VERIFIED,
         analyticsCmsVersion: "0.1.0",
-        sourceResolveSecret: features.resolveSecret,
         ...createPublicFileStores(core),
         auth: authentication.createPublicAuth({
             emailVerificationUrl: env.CMS_AUTH_EMAIL_VERIFICATION_URL,

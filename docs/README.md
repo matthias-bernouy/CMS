@@ -22,15 +22,17 @@ implementation notes live in each package's `AGENTS.md`.
 - [static-folder.md](./static-folder.md) documents the static HTML routing and
   template system used by `@bernouy/cms-control`.
 
-## Authoring And Sources
+## Authoring And Providers
 
 - [Repository contracts and providers: flow diagrams](../schema/README.md)
   separates current admission, publication and conformance flows in
   `@bernouy/cms-repository` from planned runtime upgrades.
 - [Page languages and routes](./page-languages-and-routes.md) describes localized
   paths, redirects, deletion tombstones, and public SEO behavior.
+- [Dynamic page indexing](./page-indexing.md) describes gateway capability
+  projections for metadata and sitemap discovery.
 - [Bloc Authoring](./blocs/README.md) documents how to create blocs, expose
-  editor capabilities, bind Sources, design themeable CSS, test, and publish.
+  editor capabilities, bind provider calls, design themeable CSS, test, and publish.
 - [Public authentication](./public-auth.md) documents the native Delivery auth routes.
 
 ## Images

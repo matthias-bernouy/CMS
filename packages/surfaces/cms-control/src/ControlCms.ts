@@ -11,7 +11,6 @@ import type { CmsRepository } from "@bernouy/cms-content";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { SecretStore } from "@bernouy/cms-secrets";
-import type { SourceRepository } from "@bernouy/cms-sources";
 import { join } from "node:path";
 import { controlCmsAccessors } from "cms-control/core/admin/control/accessors";
 import { mountControlCmsRoutes } from "cms-control/core/admin/control/mountRoutes";
@@ -37,7 +36,6 @@ export class ControlCms {
         identityProviders?: IdentityProviderRepository,
         pats?: PatRepository,
         credentials?: LocalCredentialStore,
-        sources?: SourceRepository,
         analytics?: AnalyticsStore,
         authBackends: ControlAuthBackends = {},
     ) {
@@ -54,7 +52,6 @@ export class ControlCms {
             identityProviders,
             pats,
             credentials,
-            sources,
             analytics,
             authBackends,
         });
@@ -108,12 +105,6 @@ export class ControlCms {
         emailTest?: { send(input: { kind: "email_verification" | "password_reset"; to: string }): Promise<void> };
     } {
         return controlCmsAccessors.publicAuth(this.state);
-    }
-    get sources() {
-        return controlCmsAccessors.sources(this.state);
-    }
-    get optionalSources() {
-        return controlCmsAccessors.optionalSources(this.state);
     }
     get analytics() {
         return controlCmsAccessors.analytics(this.state);

@@ -26,7 +26,6 @@ describe("Control analytics routes", () => {
             undefined,
             undefined,
             undefined,
-            undefined,
             analytics,
         );
         await cms.ready;

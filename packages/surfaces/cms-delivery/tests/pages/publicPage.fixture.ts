@@ -9,7 +9,7 @@ import {
 } from "@bernouy/cms-content";
 import type { PublicPageProvider } from "@bernouy/cms-delivery";
 import type { CmsFilesBlobStore } from "@bernouy/cms-content/files";
-import type { SourceEndpointInterceptor, SourceRepository } from "@bernouy/cms-sources";
+import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import { type CacheEntry, TtlCache } from "@bernouy/http-runner";
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { componentJsCacheKey } from "cms-delivery/core/assets/buildComponent";
@@ -31,8 +31,7 @@ type HarnessOptions = Readonly<{
     providers?: readonly PublicPageProvider[];
     storedPages?: readonly TPage[];
     analytics?: boolean;
-    sources?: SourceRepository;
-    sourceInterceptor?: SourceEndpointInterceptor;
+    gateway?: GatewayInvoker;
     sitemapStore?: CmsFilesBlobStore;
     siteHost?: string;
     repository?: ContentReader | CmsRepository;
@@ -78,8 +77,7 @@ export function mountPublicPages(options: HarnessOptions = {}) {
         repository,
         cache,
         publicPageProviders: options.providers,
-        sources: options.sources,
-        sourceImageInterceptor: options.sourceInterceptor,
+        ...(options.gateway ? { capabilityGateway: { siteId: "site-test", invoker: options.gateway } } : {}),
         sitemapStore: options.sitemapStore,
         analytics: options.analytics
             ? ({

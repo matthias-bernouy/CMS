@@ -17,6 +17,11 @@ export { buildBlocFoucShellCss } from "cms-content/blocs/core/composition/buildB
 export { expandCompositions } from "cms-content/blocs/core/composition/expandCompositions";
 export { generateBlocEntry, generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";
 export { collectCmsSourceBindings } from "cms-content/editor/core/document/sourceBindings";
+export {
+    projectResolvedIndexingEntity,
+    projectIndexingDiscoveryPage,
+} from "cms-content/pages/core/indexing/projection";
+export type { ProjectedIndexingDiscoveryItem } from "cms-content/pages/core/indexing/projection";
 export { resolvePageMetadataTemplateResult } from "cms-content/editor/core/document/pageMetadataVariables";
 export { canonicalSiteBaseUrl } from "cms-content/settings/core/validation";
 export { generateStyleEntry } from "cms-content/theme/core/generateStyleEntry";

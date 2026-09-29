@@ -89,24 +89,24 @@ describe("ValidatingCmsRepository — pages", () => {
             ["<fixture-card><form></form></fixture-card>", /declared CMS source endpoint/],
             [
                 '<fixture-card><img src="https:\/\/example.invalid\/photo.jpg" alt="Photo"></fixture-card>',
-                /CMS media or a typed CMS Source image/,
+                /CMS media or a gateway provider image/,
             ],
-            ['<fixture-card><img alt=""></fixture-card>', /CMS media or a typed CMS Source image/],
+            ['<fixture-card><img alt=""></fixture-card>', /CMS media or a gateway provider image/],
             ['<fixture-card cms-source="https:\/\/example.invalid\/items"></fixture-card>', /same-site endpoint/],
             [
-                `<fixture-card><form cms-source="/.cms/sources/forms/contact" cms-source-method="POST"
+                `<fixture-card><form cms-source="/.cms/call/forms/contact" cms-source-method="POST"
                     cms-source-trigger="submit"><button formaction="https://example.invalid/steal">Send</button>
                 </form></fixture-card>`,
                 /formaction.*forbidden/,
             ],
             [
-                `<form cms-source="/.cms/sources/forms/contact" cms-source-method="POST"
+                `<form cms-source="/.cms/call/forms/contact" cms-source-method="POST"
                     cms-source-trigger="submit"
                     cms-source-body='{"safe":{"from":"raw","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
                 /typed parameter map/,
             ],
             [
-                `<form cms-source="/.cms/sources/forms/contact" cms-source-method="POST" cms-source-trigger="submit" cms-source-inherit-query="maybe"></form>`,
+                `<form cms-source="/.cms/call/forms/contact" cms-source-method="POST" cms-source-trigger="submit" cms-source-inherit-query="maybe"></form>`,
                 /query inheritance must be true or false/,
             ],
         ] as const;
@@ -118,13 +118,28 @@ describe("ValidatingCmsRepository — pages", () => {
         }
     });
 
+    test("accepts gateway provider images and rejects the removed Source image route", async () => {
+        const { repo, calls } = makeRepo({ blocs: ["fixture-card"] });
+        const image =
+            '<fixture-card><img src="/.cms/media/catalog/photo.read/{{ product.image }}" alt="Product"></fixture-card>';
+        await repo.updatePage({ id: "p1", content: image });
+        expect(calls.updatePage[0].content).toContain("/.cms/media/catalog/photo.read/");
+        await expect(
+            repo.updatePage({
+                id: "p1",
+                content:
+                    '<fixture-card><img src="/.cms/sources/catalog/image?id={{ product.image }}" alt="Product"></fixture-card>',
+            }),
+        ).rejects.toThrow("gateway provider image");
+    });
+
     test("persists controlled native content and component light DOM", async () => {
         const { repo, calls } = makeRepo({ blocs: ["fixture-newsletter-card", "fixture-input", "fixture-button"] });
         const content = `
-            <fixture-newsletter-card cms-source="/.cms/sources/content/newsletter as newsletterPage">
+            <fixture-newsletter-card cms-source="/.cms/call/content/newsletter as newsletterPage">
                 <h2 slot="title">Stay informed</h2>
                 <form slot="form"
-                    cms-source="/.cms/sources/newsletter/setSubscription as newsletterSubscription"
+                    cms-source="/.cms/call/newsletter/setSubscription as newsletterSubscription"
                     cms-source-id="newsletterSubscription"
                     cms-source-trigger="submit"
                     cms-source-method="POST"

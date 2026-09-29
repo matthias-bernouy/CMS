@@ -13,14 +13,14 @@ export function componentImageIssue(
     }
     if (!source) {
         if (!allowIncompleteMedia || attributes.alt === undefined) {
-            return "native image source must reference CMS media or a typed CMS Source image";
+            return "native image source must reference CMS media or a gateway provider image";
         }
         return attributes.role !== "presentation" || (attributes["aria-hidden"] === "true" && attributes.alt === "")
             ? null
             : "decorative native images require an empty alt and aria-hidden";
     }
-    if (!isCmsMediaSource(source) && !isTypedSourceMedia(source)) {
-        return "native image source must reference CMS media or a typed CMS Source image";
+    if (!isCmsMediaSource(source) && !isGatewayProviderMedia(source)) {
+        return "native image source must reference CMS media or a gateway provider image";
     }
     const decorative = attributes.role === "presentation";
     if (decorative) {
@@ -51,6 +51,10 @@ export function accessibleSvgIssue(attributes: Readonly<Record<string, string>>)
         : "decorative native SVGs require aria-hidden=true";
 }
 
-function isTypedSourceMedia(value: string): boolean {
-    return value.startsWith("/") && !value.startsWith("//") && /\/\.cms\/sources\/[^/?#]+\/[^/?#]+/.test(value);
+function isGatewayProviderMedia(value: string): boolean {
+    return (
+        value.startsWith("/") &&
+        !value.startsWith("//") &&
+        /\/\.cms\/media\/[^/?#]+\/[^/?#]+\/[^?#]+(?:[?#].*)?$/.test(value)
+    );
 }

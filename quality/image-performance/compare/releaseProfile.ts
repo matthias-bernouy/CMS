@@ -15,7 +15,7 @@ export function assertReleaseProfile(artifact: ImagePerformanceArtifact, approve
         throw new Error("Release evidence must contain at least 12 accepted images");
     }
     if (JSON.stringify(configuration.ladder) !== JSON.stringify(CANONICAL_LADDER)) {
-        throw new Error("Release evidence must use the canonical source image ladder");
+        throw new Error("Release evidence must use the canonical provider image ladder");
     }
     if (configuration.cardCount !== 12) {
         throw new Error("Release evidence must use the 12-card listing");

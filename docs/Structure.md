@@ -60,7 +60,7 @@ Feature packages:
   manifest, installation and selection state use `./providers/mongo`. Live
   connection belongs to `cms-gateway`. `./collections` adds authored bundles, asset checks
   and Light DOM/component structure, not renderer compilation or installation.
-- `@bernouy/cms-gateway`: initial capability invocation boundary. It resolves
+- `@bernouy/cms-gateway`: capability invocation boundary. It resolves
   pinned selected releases and ready installations, executes admitted synchronous
   JSON query and bounded file bindings through an injected transport, validates
   outputs, and exposes provider-scoped identity and image derivatives. `./handlers`
@@ -69,16 +69,14 @@ Feature packages:
   aliases. The production runtime supplies
   trusted actors, conservative grants, catalogue
   revision checks and secret resolution when `CMS_GATEWAY_SITE_ID` is configured.
-  Legacy Source replacement remains pending.
+  Dynamic page indexing invokes selected gateway queries and projects declared
+  response fields for metadata and sitemap discovery.
 - `@bernouy/cms-secrets`: secret storage contracts, `${VAR}` resolution, and
   encrypted Mongo storage.
 - `@bernouy/cms-auth`: accounts, local/OIDC providers, PATs, signed sessions,
   email and public-auth action composition. Auth HTTP registrars use `./http`,
   admin mutations use `./management`, and Mongo/SMTP adapters use `./mongo`
   and `./smtp` from composition roots.
-- `@bernouy/cms-sources`: legacy data-source contracts and internal endpoint
-  execution for indexing, plus the Control source proxy. Delivery no longer
-  mounts a public Source proxy.
 - `@bernouy/cms-analytics`: privacy-first server-side analytics events,
   counters, stores, and dashboard handlers.
 - `@bernouy/cms-bloc-compile`: bloc validation, view/editor bundling, and the
@@ -89,7 +87,7 @@ Feature packages:
 Surface packages:
 
 - `@bernouy/cms-control`: admin UI, REST API, authenticated static pages, media
-  admin, settings, users, sources admin, and editor endpoints.
+  admin, settings, users, selected gateway capabilities, and editor endpoints.
 - `@bernouy/cms-delivery`: public rendering, page lookup, bloc bundles,
   component runtime, gateway capability routes, media serving, sitemap, robots, and
   analytics collection.
@@ -97,7 +95,7 @@ Runtime packages:
 
 - `@bernouy/ulvia-cli`: local CMS development launcher backed by MongoDB.
 - `@bernouy/cms-server`: production composition root. It reads environment,
-  wires Mongo/local filesystem/crypto/auth/sources/analytics, and starts
+  wires Mongo/local filesystem/crypto/auth/gateway/analytics, and starts
   Control and Delivery runners.
 
 ## Feature Anatomy

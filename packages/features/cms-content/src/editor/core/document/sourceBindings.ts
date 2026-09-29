@@ -4,6 +4,8 @@ import {
     isCmsSourceMethod,
     isCmsSourceTrigger,
     parseSource,
+    parseSourceBody,
+    type CmsSourceBodyBinding,
     type CmsSourceMethod,
     type CmsSourceTrigger,
 } from "cms-content/editor/core/bindings";
@@ -13,6 +15,7 @@ export type CmsSourceBindingReference = {
     alias?: string;
     method: CmsSourceMethod;
     trigger: CmsSourceTrigger;
+    body?: CmsSourceBodyBinding;
 };
 
 /**
@@ -31,11 +34,13 @@ export function collectCmsSourceBindings(html: string): CmsSourceBindingReferenc
         }
 
         const alias = source.alias?.trim();
+        const body = parseSourceBody(element.getAttribute(CMS_BINDING_ATTRIBUTES.sourceBody));
         bindings.push({
             url: source.url,
             ...(alias ? { alias } : {}),
             method: sourceMethod(element.getAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod)),
             trigger: sourceTrigger(element.getAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger)),
+            ...(body ? { body } : {}),
         });
     }
 

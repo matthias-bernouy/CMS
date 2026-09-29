@@ -1,5 +1,5 @@
 import type { PageIndexingConfiguration } from "@bernouy/cms-content";
-import type { PageIndexingEditorModel } from "cms-control/core/content/page/pageIndexingEditor";
+import type { PageIndexingEditorModel } from "cms-control/core/content/page/indexing/pageIndexingEditor";
 
 export type PageConfigDetailResponse = {
     id: string;

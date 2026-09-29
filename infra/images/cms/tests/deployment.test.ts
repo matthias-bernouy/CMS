@@ -43,8 +43,6 @@ describe("per-instance Compose rendering", () => {
         expect(cms.environment).toMatchObject({
             CMS_FILES_DIR: "/var/lib/cms/files",
             ENDPOINT_PERFORMANCE_ENABLED: "true",
-            SOURCE_TIMING_SAMPLE_RATE: "0.01",
-            SOURCE_SLOW_REQUEST_THRESHOLD_MS: "1000",
         });
         expect(cms.volumes?.map(({ target }) => target)).toEqual(["/var/lib/cms/files"]);
         expect(cms.volumes?.map(({ source }) => source)).toEqual([`${cmsDirectory}/files`]);
