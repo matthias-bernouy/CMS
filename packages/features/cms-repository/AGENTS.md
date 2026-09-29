@@ -35,8 +35,9 @@ models and validation for CMS-owned installations and site selections.
 - Filesystem/remote catalogue adapters and registry distribution are future
   repository capabilities; optional adapters need explicit subpaths. Business
   HTTP execution and gateway routing remain outside this package; runtimes own
-  environment access and production adapter selection. No live transport,
-  durable installation/selection adapter or conformance runner exists yet.
+  environment access and production adapter selection. `./providers/mongo`
+  provides durable installation and selection stores. There is no durable
+  release/manifest catalogue, live transport or conformance runner here yet.
 - `src/collections/{interfaces,core}/` owns authored collection release parsing,
   asset verification and resource-level reference validation, exposed through
   `./collections`. Collections consume the contracts facade, not providers or

@@ -114,13 +114,25 @@ test("address policy refuses private, mapped, and documentation ranges", () => {
         "172.16.0.1",
         "192.168.1.1",
         "192.0.2.1",
+        "192.88.99.1",
         "198.18.0.1",
         "198.51.100.1",
         "203.0.113.1",
     ]) {
         expect(() => selectGatewayAddress(origin, [{ address, family: 4 }])).toThrow("non-public");
     }
-    for (const address of ["::1", "fc00::1", "fe80::1", "::ffff:127.0.0.1", "2001:db8::1"]) {
+    for (const address of [
+        "::1",
+        "fc00::1",
+        "fe80::1",
+        "::ffff:127.0.0.1",
+        "2001::1",
+        "2001:2::1",
+        "2001:db8::1",
+        "2001:0db8::1",
+        "2002:c0a8:101::1",
+        "3fff::1",
+    ]) {
         expect(() => selectGatewayAddress(origin, [{ address, family: 6 }])).toThrow("non-public");
     }
     expect(selectGatewayAddress(origin, [{ address: "8.8.8.8", family: 4 }]).address).toBe("8.8.8.8");

@@ -18,6 +18,7 @@
         "./providers/compatibility": "./src/exports/providers/compatibility.ts",
         "./providers/installations": "./src/exports/providers/installations.ts",
         "./providers/selections": "./src/exports/providers/selections.ts",
+        "./providers/mongo": "./src/exports/providers/mongo.ts",
         "./collections": "./src/exports/collections/index.ts"
     },
     "dependencies": {
@@ -26,6 +27,7 @@
         "jsonc-parser": "^3.3.1"
     },
     "peerDependencies": {
+        "mongodb": "^7.2.0",
         "typescript": "^7.0.2"
     }
 }

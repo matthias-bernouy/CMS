@@ -1,7 +1,7 @@
 # Provider domain workflows
 
-These workflows run locally against explicit ports and deterministic memory
-implementations. They do not send HTTP requests, store secret values, authorize
+These workflows run locally against explicit ports, deterministic memory
+implementations and optional Mongo state stores. They do not send HTTP requests, store secret values, authorize
 administrators, execute business capabilities or attest provider conformance.
 
 ## Publish and compare manifests
@@ -89,8 +89,8 @@ V1 replacement requires every proposed contract and manifest pin to be
 non-yanked, including unchanged pins in a replacement. Historical stored graphs
 remain readable after a yank; they are neither deleted nor silently upgraded.
 
-`InMemoryContractSelectionStore.replace` revalidates the entire proposed graph,
-then replaces it atomically within the memory store at the expected site revision.
+Both selection stores revalidate the entire proposed graph and replace it at the
+expected site revision; the Mongo store uses a database compare-and-swap write.
 It accepts selections, not a caller-supplied prevalidated plan. Its dependency
 source supplies a coherent snapshot and checks its revision again before commit.
 That revision must cover installations, releases, manifests and yank metadata.
@@ -124,7 +124,8 @@ stale or current observations. It lists only exact releases reported ready in a
 fresh observation; it does not turn the whole installation into a ready provider
 or assert conformance. The caller chooses the maximum observation age.
 
-Memory catalogues and stores are reference adapters, not durable storage.
-Production persistence, authorized host actions, dependency snapshot coordination,
-HTTP transport, secret rotation/revocation, registration/grants, UI and conformance
-execution remain separate implementation work.
+Memory catalogues and stores are reference adapters. `./providers/mongo` persists
+installation and selection records with revision-checked writes, but production
+still needs durable release/manifest catalogues and a coherent dependency revision
+source. Authorized host actions, secret rotation/revocation, registration/grants,
+UI and conformance execution remain separate implementation work.

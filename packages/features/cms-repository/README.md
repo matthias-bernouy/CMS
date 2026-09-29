@@ -71,6 +71,7 @@ compilation, site installation or execution authorization.
 | `@bernouy/cms-repository/providers/compatibility` | Descriptive manifest changes and exact-digest approval requirements |
 | `@bernouy/cms-repository/providers/installations` | Parsers, local preparation/approval lifecycle, observations, readiness and revisioned memory store |
 | `@bernouy/cms-repository/providers/selections` | Bounded full-site graph planning and revisioned memory store |
+| `@bernouy/cms-repository/providers/mongo` | Mongo installation and selection stores with revision-checked writes |
 | `@bernouy/cms-repository/collections` | Authored release parsing, Light DOM structure, asset and requirement verification, bundle digests |
 
 Use explicit domain subpaths for executable APIs. There are no compatibility
@@ -79,9 +80,10 @@ packages or wrappers under the former package names.
 ## Current scope
 
 The package provides local provider-domain workflows, catalogue and storage ports,
-and deterministic memory implementations. It has no live provider transport,
-mounted routes, durable installation/selection adapter, secret-store integration,
-conformance runner or gateway execution. Admission and graph planning validate
+deterministic memory implementations, and Mongo installation/selection stores.
+It has no durable release/manifest catalogue, live provider transport,
+mounted routes, secret-store integration, conformance runner or gateway execution.
+Admission and graph planning validate
 artifacts and proposed choices; they do not establish live readiness or attest
 that a provider passes a contract. Host authorization and production snapshot
 consistency remain composition responsibilities.

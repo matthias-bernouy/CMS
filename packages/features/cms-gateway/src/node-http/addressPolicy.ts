@@ -49,12 +49,20 @@ function isPublicAddress(candidate: ResolvedAddress): boolean {
             (a === 100 && b! >= 64 && b! <= 127) ||
             (a === 169 && b === 254) ||
             (a === 172 && b! >= 16 && b! <= 31) ||
-            (a === 192 && (b === 168 || b === 0 || b === 88)) ||
+            (a === 192 && (b === 168 || (b === 0 && (c === 0 || c === 2)) || (b === 88 && c === 99))) ||
             (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100))) ||
             (a === 203 && b === 0 && c === 113) ||
             a! >= 224
         );
     }
-    const first = Number.parseInt(candidate.address.split(":", 1)[0] ?? "", 16);
-    return first >= 0x2000 && first <= 0x3fff && !/^2001:db8:/i.test(candidate.address);
+    const [firstWord, secondWord] = candidate.address.split(":", 2);
+    const first = Number.parseInt(firstWord ?? "", 16);
+    const second = secondWord === "" ? 0 : Number.parseInt(secondWord ?? "", 16);
+    if (!Number.isInteger(first) || first < 0x2000 || first > 0x3fff || first === 0x3fff || first === 0x2002) {
+        return false;
+    }
+    if (first === 0x2001 && (second === 0 || second === 2 || (second >= 0x10 && second <= 0x2f) || second === 0xdb8)) {
+        return false;
+    }
+    return true;
 }

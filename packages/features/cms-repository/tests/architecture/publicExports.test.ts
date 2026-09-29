@@ -13,6 +13,7 @@ describe("repository public entry points", () => {
         ["providers/compatibility", "compareProviderManifests"],
         ["providers/installations", "validateProviderInstallation"],
         ["providers/selections", "planContractSelections"],
+        ["providers/mongo", "MongoProviderInstallationStore"],
         ["collections", "admitCollectionRelease"],
     ])("loads %s independently through its declared package export", async (subpath, entryPoint) => {
         const module = await import(`@bernouy/cms-repository/${subpath}`);
