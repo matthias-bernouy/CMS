@@ -15,7 +15,6 @@ import type {
     SourceRequestTelemetryOptions,
     SourceSecretResolver,
 } from "@bernouy/cms-sources";
-import { CompositeSourceRepository, SYSTEM_SOURCES } from "@bernouy/cms-sources";
 import type { ResponsiveSourceImageRollout } from "@bernouy/cms-source-images/browser-host";
 import { BunRunner, type Cache, type Runner, TtlCache } from "@bernouy/http-runner";
 import { PageOptimizer } from "cms-delivery/core/pages/PageOptimizer";
@@ -34,9 +33,7 @@ export class DeliveryCmsContext {
         this.config = config;
         this.resolvedRunner = config.runner ?? new BunRunner();
         this.resolvedCache = config.cache ?? new TtlCache({ bypass: process.env.MODE === "DEV" });
-        this.resolvedSources = config.sources
-            ? new CompositeSourceRepository(config.sources, SYSTEM_SOURCES)
-            : undefined;
+        this.resolvedSources = config.sources;
         this.pageOptimizer =
             config.filesMetadata && config.filesBlob && config.variantStore
                 ? new PageOptimizer({

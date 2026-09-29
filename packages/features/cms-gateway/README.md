@@ -58,7 +58,8 @@ still delegates through the same transformer profile.
 
 The existing `cms-sources` and `cms-source-images` packages remain active for
 Control legacy paths and Delivery's internal indexing execution and image
-workers. Delivery no longer mounts public `/.cms/sources` routes. The packages
+workers. Delivery no longer mounts public `/.cms/sources` routes or resolves
+legacy system Sources internally. The packages
 will be retired as indexing and derivative workers move to gateway contracts.
 
 ## Remaining migration gates

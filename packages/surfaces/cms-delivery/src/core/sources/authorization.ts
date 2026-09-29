@@ -1,11 +1,8 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import type { Subject } from "@bernouy/cms-auth";
 import {
-    SYSTEM_AUTH_SOURCE_URN,
-    SYSTEM_SITE_SOURCE_URN,
     sourceEndpointAccessAllows,
     sourceEndpointAccessMode,
-    sourceUrnOf,
     measureActiveSourceTiming,
     type SourceAuthorizationResult,
     type SourceEndpoint,
@@ -33,11 +30,6 @@ export async function authorizeDeliverySourceEndpoint(
     req: Request,
     options: { subject?: Subject | null } = {},
 ): Promise<SourceAuthorizationResult> {
-    const sourceUrn = sourceUrnOf(endpoint.urn);
-    if ((delivery.auth && sourceUrn === SYSTEM_AUTH_SOURCE_URN) || sourceUrn === SYSTEM_SITE_SOURCE_URN) {
-        return true;
-    }
-
     const subject = Object.prototype.hasOwnProperty.call(options, "subject")
         ? (options.subject ?? null)
         : await resolveDeliverySubject(delivery, req);

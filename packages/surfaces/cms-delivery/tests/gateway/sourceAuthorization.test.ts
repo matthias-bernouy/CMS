@@ -1,37 +1,32 @@
 import { describe, expect, test } from "bun:test";
-import { defaultSystem } from "@bernouy/cms-content";
-import { InMemorySourceRepository, SYSTEM_SITE_SOURCE, type SourceEndpoint } from "@bernouy/cms-sources";
+import { InMemorySourceRepository, type SourceEndpoint } from "@bernouy/cms-sources";
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { authorizeDeliverySourceEndpoint } from "cms-delivery/core/sources/authorization";
 import { handleDeliverySourceRequest } from "cms-delivery/core/sources/executeSourceRequest";
 import { CaptureRunner } from "./support/CaptureRunner";
 
 describe("authorizeDeliverySourceEndpoint", () => {
-    test("always exposes the public site organization system endpoint", async () => {
-        const result = await authorizeDeliverySourceEndpoint(
-            {} as DeliveryCms,
-            SYSTEM_SITE_SOURCE.endpoints[0]!,
-            new Request("http://site/.cms/sources/system-site/organization"),
-        );
-        expect(result).toBe(true);
-    });
-
-    test("resolves the organization for internal indexing without authentication", async () => {
-        const settings = defaultSystem();
-        settings.site.organization.name = "Public organization";
+    test("does not mount public Source routes", () => {
         const runner = new CaptureRunner();
-        const delivery = new DeliveryCms({
+        new DeliveryCms({
             runner,
-            repository: { getRenderingSettings: async () => settings } as never,
+            repository: {} as never,
             sources: new InMemorySourceRepository(),
         });
+        expect(() => runner.defaultHandler("GET", "/.cms/sources")).toThrow();
+    });
 
+    test("does not resolve obsolete system Sources for internal indexing", async () => {
+        const delivery = new DeliveryCms({
+            runner: new CaptureRunner(),
+            repository: {} as never,
+            sources: new InMemorySourceRepository(),
+        });
         const response = await handleDeliverySourceRequest(
             delivery,
             new Request("http://site/.cms/sources/system-site/organization"),
         );
-        expect(response.status).toBe(200);
-        expect(await response.json()).toMatchObject({ name: "Public organization" });
+        expect(response.status).toBe(404);
     });
 
     test("uses only the endpoint exposure mode and authentication state", async () => {

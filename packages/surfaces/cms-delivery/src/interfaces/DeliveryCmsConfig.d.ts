@@ -31,7 +31,7 @@ export type DeliveryCmsConfig = {
     headInjectors?: readonly HeadInjector[];
     /** Ordered fallback adapters consulted only when ContentReader has no published page for the request path. */
     publicPageProviders?: readonly PublicPageProvider[];
-    /** Data sources exposed by the optional same-origin source gateway. */
+    /** Legacy data sources used only by internal indexing while it migrates. */
     sources?: SourceRepository;
     /** Federated opaque identity aliases used by source bindings. */
     identities?: IdentityService;
@@ -55,7 +55,7 @@ export type DeliveryCmsConfig = {
     responsivePublicSourceImagesEnabled?: boolean;
     /** Enables private and unclassified responsive consumers when the interceptor is configured. Defaults to true. */
     responsivePrivateSourceImagesEnabled?: boolean;
-    /** Optional first-party public authentication routes and system source. */
+    /** Optional first-party public authentication routes. */
     auth?: PublicAuthRoutesConfig;
     /** Optional strict aggregate analytics writer. */
     analytics?: AnalyticsStore;
