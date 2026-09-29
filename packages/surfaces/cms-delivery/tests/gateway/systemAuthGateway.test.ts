@@ -12,8 +12,8 @@ import {
 } from "@bernouy/cms-auth";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import { InMemorySourceRepository, type SourceEndpointInterceptor } from "@bernouy/cms-sources";
-import { getRequestIP, requestCorrelationId, setRequestIP } from "@bernouy/http-runner";
 import { CaptureRunner } from "./support/CaptureRunner";
+import { handleDeliverySourceRequest } from "cms-delivery/core/sources/executeSourceRequest";
 
 async function setup(options: { sourceImageInterceptor?: SourceEndpointInterceptor } = {}) {
     const runner = new CaptureRunner();
@@ -40,7 +40,7 @@ async function setup(options: { sourceImageInterceptor?: SourceEndpointIntercept
         authEmailCooldownSeconds: 0,
     });
     const gateway = new InMemorySourceRepository();
-    new DeliveryCms({
+    const delivery = new DeliveryCms({
         runner,
         repository: {} as any,
         auth,
@@ -48,25 +48,28 @@ async function setup(options: { sourceImageInterceptor?: SourceEndpointIntercept
         ...(options.sourceImageInterceptor ? { sourceImageInterceptor: options.sourceImageInterceptor } : {}),
     });
     return {
+        runner,
         emailer,
         credentials,
         users,
-        get: runner.defaultHandler("GET", "/.cms/sources"),
-        post: runner.defaultHandler("POST", "/.cms/sources"),
-        legacySignup: runner.endpointHandler("POST", "/.cms/auth/signup"),
+        get: (request: Request) => handleDeliverySourceRequest(delivery, request),
+        post: (request: Request) => handleDeliverySourceRequest(delivery, request),
+        publicSignup: runner.endpointHandler("POST", "/.cms/auth/signup"),
     };
 }
 
 describe("Delivery system auth gateway", () => {
     test("adds the system auth contract to a plain user source repository", async () => {
-        const { post, legacySignup, credentials } = await setup();
+        const { runner, post, publicSignup, credentials } = await setup();
+
+        expect(() => runner.defaultHandler("GET", "/.cms/sources")).toThrow();
 
         expect(
             (await post(jsonRequest("/signup", { email: "source@example.com", password: "password-1" }))).status,
         ).toBe(200);
         expect(
             (
-                await legacySignup(
+                await publicSignup(
                     new Request("http://site/.cms/auth/signup", {
                         method: "POST",
                         headers: { "content-type": "application/json" },
@@ -139,13 +142,11 @@ describe("Delivery system auth gateway", () => {
         expect(emailer.sent).toHaveLength(1);
     });
 
-    test("preserves request correlation and peer IP when the legacy route enters the source gateway", async () => {
-        let canonicalCorrelation: string | undefined;
-        let canonicalIP: string | undefined;
-        const { legacySignup } = await setup({
+    test("public signup uses native auth without entering the source proxy", async () => {
+        let sourceCalls = 0;
+        const { publicSignup, credentials } = await setup({
             sourceImageInterceptor: async (_endpoint, request, next) => {
-                canonicalCorrelation = requestCorrelationId(request);
-                canonicalIP = getRequestIP(request);
+                sourceCalls += 1;
                 return next(request);
             },
         });
@@ -154,12 +155,9 @@ describe("Delivery system auth gateway", () => {
             headers: { "content-type": "application/json" },
             body: JSON.stringify({ email: "context@example.com", password: "password-1" }),
         });
-        setRequestIP(request, "203.0.113.42");
-        const correlation = requestCorrelationId(request);
-
-        expect((await legacySignup(request)).status).toBe(200);
-        expect(canonicalCorrelation).toBe(correlation);
-        expect(canonicalIP).toBe("203.0.113.42");
+        expect((await publicSignup(request)).status).toBe(200);
+        expect(sourceCalls).toBe(0);
+        expect(await credentials.getByEmail("context@example.com")).not.toBeNull();
     });
 });
 

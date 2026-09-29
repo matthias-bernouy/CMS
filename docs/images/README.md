@@ -1,93 +1,37 @@
 # Responsive Images
 
-CmsCore uses native responsive-image HTML and bounded server-side derivatives.
-The CMS does not choose one fixed image size for every layout. It exposes a
-finite set of truthful candidates, then lets the browser select the best one
-for the rendered size, device pixel ratio, zoom level, and browser policy.
+CmsCore uses native responsive-image HTML and bounded WebP derivatives. The
+browser selects a candidate from `srcset` using image layout, `sizes`, device
+pixel ratio, and its own loading policy.
 
-This documentation covers the platform contract only. It does not describe a
-particular site, Bloc implementation, storage provider, or connector.
+## Supported Paths
 
-## Responsibility Model
-
-| Owner | Responsibility |
-| --- | --- |
-| Original owner | Retain the authoritative original and, for bound Source images, expose its intrinsic width and height. |
-| Bloc author | Write semantic `<img>` markup, meaningful `alt`, the loading policy, CSS layout, and optional `sizes` or art direction. |
-| Binding runtime | Keep unresolved dynamic URLs network-inert, resolve bindings, and activate complete image attributes safely. |
-| Delivery | Detect CMS File references, schedule their jobs, emit candidates, and mount Source image processing. |
-| Image features and Sharp | Validate originals, resize and encode bounded WebP derivatives, and use the appropriate derivative store. |
-| Browser | Select a candidate from `srcset` using `sizes`, layout, viewport, DPR, zoom, and its own loading policy. |
-| Site editor | Choose content and presentation settings; never enumerate derivative widths or operate an encoder. |
-
-The browser owns final candidate selection. CmsCore does not use a
-`ResizeObserver` to choose a URL and does not assume that a Bloc always occupies
-the same percentage of the viewport.
-
-## Supported Image Paths
-
-CmsCore has two separate optimization pipelines:
-
-| Image URL | Optimization path | When work happens |
+| Image URL | Optimization | Generation |
 | --- | --- | --- |
-| Concrete raster `<img src="/.cms/files/by-id/<id>">` rendered by Delivery | CMS Files variants | In a background job after a rendered page first references the file. |
-| Bound same-origin `/.cms/sources/...` file URL | CMS Source image derivatives | Eagerly after a declared mutation, with a queued first-miss safety net. |
-| Other image URL | No responsive derivative pipeline | CmsCore emits no generated candidates for it. |
+| `/.cms/files/by-id/<id>` rendered by Delivery | CMS Files variants at `/.cms/img/...` | Background job after a page first references the file. |
+| Selected provider file at `/.cms/media/<contract>/<capability>/<fileId>` | Gateway derivatives at `/.cms/image/<contract>/<capability>/<fileId>/<width>.webp` | Bounded on-demand processing after a fresh authorized file read. |
+| Other URL | None | No generated candidates. |
 
-The two caches and URL contracts are deliberately independent. A CMS File
-variant uses `/.cms/img/...`; a Source derivative keeps its Source URL and adds
-the reserved `cms-width` parameter.
+The original remains authoritative. Derivatives are disposable and never grant
+access to the original. Gateway requests recheck the selected contract,
+installation, actor grant, and original file before a derivative cache lookup.
+Gateway derivative responses currently use `private, no-store`; durable jobs and
+public cache policy have not been added yet.
 
-## End-To-End Flows
+The old `/.cms/sources` image route is not mounted by Delivery. The legacy
+Source image worker and browser code remain in the repository during migration,
+but new authored content should use selected provider media capabilities.
 
-For a CMS File:
+## Responsibilities
 
-```text
-authoritative CMS file
-  -> first page render for an unoptimized content hash uses the original
-  -> Delivery queues bounded background variants
-  -> the page cache is invalidated
-  -> a later render emits srcset
-  -> the browser selects one ready WebP
-```
+- The provider retains the original and supplies intrinsic width and height.
+- Bloc authors write semantic `<img>` markup, `alt`, layout CSS, loading policy,
+  and optional `sizes` or art direction.
+- The binding runtime keeps unresolved URLs inert until interpolation finishes.
+- The gateway browser helper generates bounded candidates for same-origin
+  `/.cms/media` URLs with known dimensions.
+- The browser chooses the candidate. CmsCore does not measure the rendered
+  element to select a width.
 
-For a CMS Source image declared by a mutation effect:
-
-```text
-successful upload or replacement declares the public image identity
-  -> the CMS persists the media generation and queues one critical job
-  -> a worker reads and validates the original once
-  -> the worker creates every applicable bounded WebP variant
-  -> browser requests resolve directly to the current generation
-  -> an undeclared cold miss serves the original immediately and queues the same work
-```
-
-## Platform Invariants
-
-- Originals remain authoritative. Responsive derivatives are disposable and
-  regenerable.
-- V1 transforms by width only, preserves aspect ratio, and never upscales.
-- V1 output is WebP at quality 75.
-- Candidate URLs come from finite server-owned ladders. Arbitrary dimensions,
-  quality, fit, crop, format, and DPR parameters cannot trigger encoding.
-- `width` and `height` in markup are intrinsic dimensions. CSS still controls
-  the displayed size.
-- Dynamic URLs are not exposed to the browser before every network-sensitive
-  binding in their image group resolves.
-- Authorization is never inferred from possession of a derivative cache key.
-- A Source transformation failure never returns the original under a width
-  descriptor that promises a derivative.
-
-## Read Next
-
-- [Authoring](./authoring.md) explains the HTML contract, `sizes`, loading,
-  dimensions, bindings, and art direction.
-- [Delivery pipelines](./delivery.md) records the exact ladders, recipes,
-  generation sequence, cache semantics, and current limitations.
-- [Operations](./operations.md) covers activation, rollback, failures,
-  observability, and cache maintenance.
-
-The normative browser model comes from the
-[WHATWG responsive-images specification](https://html.spec.whatwg.org/dev/images.html).
-HTTP freshness and validation follow
-[RFC 9111](https://www.rfc-editor.org/rfc/rfc9111.html).
+See [authoring](./authoring.md), [delivery](./delivery.md), and
+[operations](./operations.md) for the current contracts.

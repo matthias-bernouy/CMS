@@ -1,6 +1,7 @@
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { InMemorySourceRepository, seedSources, type Source } from "@bernouy/cms-sources";
 import { CaptureRunner } from "./CaptureRunner";
+import { handleDeliverySourceRequest } from "cms-delivery/core/sources/executeSourceRequest";
 
 const SECURED: Source = {
     urn: "urn:secured",
@@ -48,12 +49,12 @@ export async function mountDeliveryGateway(
     const gateway = new InMemorySourceRepository();
     await seedSources(gateway, opts.providers ?? [SECURED]);
     const runner = new CaptureRunner();
-    new DeliveryCms({
+    const delivery = new DeliveryCms({
         runner,
         repository: {} as any,
         sources: gateway,
         sourceResolveSecret: opts.resolveSecret,
         auth: opts.auth as any,
     });
-    return runner.defaultHandler("GET", "/.cms/sources");
+    return (request: Request) => handleDeliverySourceRequest(delivery, request);
 }

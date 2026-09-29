@@ -3,6 +3,7 @@ import { defaultSystem } from "@bernouy/cms-content";
 import { InMemorySourceRepository, SYSTEM_SITE_SOURCE, type SourceEndpoint } from "@bernouy/cms-sources";
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { authorizeDeliverySourceEndpoint } from "cms-delivery/core/sources/authorization";
+import { handleDeliverySourceRequest } from "cms-delivery/core/sources/executeSourceRequest";
 import { CaptureRunner } from "./support/CaptureRunner";
 
 describe("authorizeDeliverySourceEndpoint", () => {
@@ -15,20 +16,20 @@ describe("authorizeDeliverySourceEndpoint", () => {
         expect(result).toBe(true);
     });
 
-    test("serves the organization without authentication", async () => {
+    test("resolves the organization for internal indexing without authentication", async () => {
         const settings = defaultSystem();
         settings.site.organization.name = "Public organization";
         const runner = new CaptureRunner();
-        new DeliveryCms({
+        const delivery = new DeliveryCms({
             runner,
             repository: { getRenderingSettings: async () => settings } as never,
             sources: new InMemorySourceRepository(),
         });
 
-        const response = await runner.defaultHandler(
-            "GET",
-            "/.cms/sources",
-        )(new Request("http://site/.cms/sources/system-site/organization"));
+        const response = await handleDeliverySourceRequest(
+            delivery,
+            new Request("http://site/.cms/sources/system-site/organization"),
+        );
         expect(response.status).toBe(200);
         expect(await response.json()).toMatchObject({ name: "Public organization" });
     });

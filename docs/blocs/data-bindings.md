@@ -1,7 +1,7 @@
 # Bind Data And Sources
 
 Use declarative bindings for CMS and provider data. They let Control keep
-authoring markup inert, let Delivery preflight Source access, and give both
+authoring markup inert, let Delivery preflight gateway capability access, and give both
 surfaces the same loading, error, repetition, and interpolation behavior.
 
 Do not replace this contract with an ad-hoc `fetch()` when a binding expresses
@@ -18,7 +18,7 @@ The following is suitable for a Bloc's `default.html` when the page already
 provides the core:
 
 ```html
-<example-product-list cms-source="/.cms/sources/catalog/listProducts as catalogue">
+<example-product-list cms-source="/.cms/call/catalog/listProducts as catalogue" cms-source-method="POST">
   <p cms-condition="$source.loading">Loading products…</p>
   <p role="alert" cms-condition="$source.error">Products could not be loaded.</p>
   <p cms-condition="$source.empty">No products are available.</p>
@@ -210,12 +210,12 @@ element through a weak reference for subsequent activation.
 
 The form container is native HTML owned by the CMS editor. A collection may
 provide visual controls, but it must not publish a form renderer or replace the
-native `form` editor. Bind the native element to a declared Source endpoint and
+native `form` editor. Bind the native element to a selected capability and
 delay the mutation until submission:
 
 ```html
 <form
-  cms-source="/.cms/sources/newsletter/setSubscription as subscription"
+  cms-source="/.cms/call/newsletter/setSubscription as subscription"
   cms-source-body='{"subscribed":{"from":"raw","value":true}}'
   cms-source-method="POST"
   cms-source-trigger="submit"
@@ -229,18 +229,18 @@ delay the mutation until submission:
 ```
 
 `auto` is the default trigger; `submit` and `change` bind to the owning form.
-Supported Source methods are `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and
-`HEAD`. Let the endpoint contract and editor source picker produce advanced
+Supported binding methods are `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and
+`HEAD`; gateway capability calls use `POST`. Let the contract and editor picker produce advanced
 body mappings instead of hand-authoring opaque JSON where possible.
 
 Form submissions include the current page's query parameters by default.
 Set `cms-source-inherit-query="false"` on the form to send only the parameters
-explicitly declared in its Source URL (plus form fields for `GET`/`HEAD`). This
+explicitly declared in its URL (plus form fields for `GET`/`HEAD`). This
 preserves action endpoint contracts when the page URL also contains navigation
 or filter parameters. The option accepts `true` or `false`; omitting it retains
 the existing behavior. It does not disable explicit `#{param}` URL bindings.
 
-The global `cms-source:reload` event refreshes automatic Sources only; it does
+The global `cms-source:reload` event refreshes automatic bindings only; it does
 not submit forms. `cms-reload-on="event-name"` opts a Source into an explicit
 reload channel, including when its trigger is `submit` or `change`.
 
@@ -252,31 +252,30 @@ Its default content already carries `cms-source-trigger="submit"`.
 Normal named controls serialize to query parameters for `GET`/`HEAD` and JSON
 for other methods. Bracket names create nested objects, so a control named
 `answers[email]` produces `{ "answers": { "email": "..." } }`. Files switch
-body methods to `FormData`. Use the shared success and failure states instead
-of a source-specific renderer. The Forms Source accepts this generic binding at
-`/.cms/sources/forms/submitPublic?key=<form-key>`; the same native mechanism can
-target any compatible declared endpoint.
+body methods to `FormData`; gateway capabilities currently accept bounded JSON
+input, so choose JSON-only controls for them. Use the shared success and failure
+states instead of a custom renderer.
 
 ## Editor Integration
 
 Use an `endpoint-picker` setting when a site author may choose the endpoint.
-The setting writes the Source URL attribute and can coordinate a method
-attribute and default body. Keep fixed Source endpoints in `default.html`
+The setting writes the capability URL attribute and can coordinate a method
+attribute and default body. Keep fixed capability endpoints in `default.html`
 when they are part of the Bloc contract, rather than presenting a meaningless
 choice. The picker type also exposes `OPTIONS`, but the binding submission
 runtime does not; when the picker writes `cms-source-method`, restrict its
 `methods` to the six runtime methods listed above.
 
 `dataScopes()` advertises expression names and fields to editor tools; it does
-not activate or fetch a Source. The saved `cms-source` markup remains the
+not activate or fetch data. The saved `cms-source` markup remains the
 runtime authority.
 
 ## Runtime JavaScript Boundary
 
 `Bloc.ts` may still implement local interaction such as disclosure state, focus
-management, measurement, or formatting. It may call a CMS Source imperatively
+management, measurement, or formatting. It may call a gateway capability imperatively
 for a multi-step workflow that bindings cannot express. That access must still
-use a declared endpoint, preserve Source authorization, expose deterministic
+use a selected contract, preserve gateway authorization, expose deterministic
 loading/error behavior, and never embed a secret or call a provider directly.
 
 Bound image URLs use the same interpolation layer and have additional

@@ -21,26 +21,14 @@ import {
     serveFilesRequest,
     serveVariantRequest,
 } from "@bernouy/cms-content/files/serving";
-import { SYSTEM_AUTH_SOURCE_ID, sourcesPrefix } from "@bernouy/cms-sources";
 import {
     generateStyleEntry,
     P9R_CACHE,
     PUBLISHED_PAGE_SNAPSHOT_ROUTE,
     servePublishedPageSnapshot,
 } from "@bernouy/cms-content/rendering";
-import {
-    CMS_CORRELATION_HEADER,
-    cachedResponseAsync,
-    getRequestIP,
-    publicAssetCacheControl,
-    requestCorrelationId,
-    setRequestIP,
-} from "@bernouy/http-runner";
+import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { recordPageView } from "cms-delivery/core/analytics/recordPageView";
-import {
-    handleDeliverySourceRequest,
-    registerDeliverySourceProxy,
-} from "cms-delivery/core/sources/registerSourceProxy";
 import { handlePageRequest } from "cms-delivery/core/pages/handlePageRequest";
 import {
     PRIVACY_ANALYTICS_ROUTES,
@@ -88,19 +76,7 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
 
     if (delivery.auth) {
         runner.group(PUBLIC_AUTH_ROUTES.base, (authRunner) => {
-            registerPublicAuthRoutes(
-                authRunner,
-                delivery.auth!,
-                delivery.sources
-                    ? {
-                          signup: (request) =>
-                              handleDeliverySourceRequest(
-                                  delivery,
-                                  canonicalSignupSourceRequest(request, runner.basePath),
-                              ),
-                      }
-                    : {},
-            );
+            registerPublicAuthRoutes(authRunner, delivery.auth!);
         });
     }
 
@@ -132,7 +108,6 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
         );
     });
 
-    registerDeliverySourceProxy(delivery);
     if (delivery.capabilityGateway) {
         runner.group("/.cms/call", (callRunner) => {
             callRunner.setDefaultEndpoint("POST", (request) => handleCapabilityCall(request, delivery));
@@ -189,17 +164,4 @@ function withoutBody(response: Response): Response {
         statusText: response.statusText,
         headers: response.headers,
     });
-}
-
-function canonicalSignupSourceRequest(request: Request, basePath: string): Request {
-    const url = new URL(request.url);
-    url.pathname = `${sourcesPrefix(basePath)}${SYSTEM_AUTH_SOURCE_ID}/signup`;
-    url.search = "";
-    const canonical = new Request(url, request);
-    canonical.headers.set(CMS_CORRELATION_HEADER, requestCorrelationId(request));
-    const requestIP = getRequestIP(request);
-    if (requestIP) {
-        setRequestIP(canonical, requestIP);
-    }
-    return canonical;
 }

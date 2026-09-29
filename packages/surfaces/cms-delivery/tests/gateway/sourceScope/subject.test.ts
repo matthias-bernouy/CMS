@@ -1,9 +1,8 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { InMemoryAuthentication, resolveRequestSubject, type Subject } from "@bernouy/cms-auth";
 import { InMemorySourceRepository, type SourceRequestObservation } from "@bernouy/cms-sources";
-import type { RouteHandler, Runner } from "@bernouy/http-runner";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { registerDeliverySourceProxy } from "cms-delivery/core/sources/registerSourceProxy";
+import { handleDeliverySourceRequest } from "cms-delivery/core/sources/executeSourceRequest";
 
 describe("Delivery source subject scope", () => {
     test("shares one subject through authorization and source context", async () => {
@@ -22,10 +21,9 @@ describe("Delivery source subject scope", () => {
                 },
             ],
         });
-        const mounted = captureSourceHandler();
         const observations: SourceRequestObservation[] = [];
-        registerDeliverySourceProxy({
-            runner: mounted.runner,
+        const delivery = {
+            runner: { basePath: "/" },
             sources,
             auth: {
                 subject: (request) => resolveRequestSubject(authentication, request),
@@ -36,7 +34,7 @@ describe("Delivery source subject scope", () => {
                     observations.push(observation);
                 },
             },
-        } as unknown as DeliveryCms);
+        } as unknown as DeliveryCms;
         const upstream = spyOn(globalThis, "fetch").mockImplementation((async (
             _input: RequestInfo | URL,
             init?: RequestInit,
@@ -47,7 +45,8 @@ describe("Delivery source subject scope", () => {
 
         try {
             for (const expectedCalls of [1, 2]) {
-                const response = await mounted.handler(
+                const response = await handleDeliverySourceRequest(
+                    delivery,
                     new Request("http://site/.cms/sources/orders/create", { method: "POST" }),
                 );
 
@@ -74,28 +73,4 @@ class CountingAuthentication extends InMemoryAuthentication {
         this.calls += 1;
         return super.getSubject(request);
     }
-}
-
-function captureSourceHandler(): { runner: Runner; handler: RouteHandler } {
-    let handler: RouteHandler | undefined;
-    const runner = {
-        basePath: "/",
-        group: (_prefix, mount) =>
-            mount({
-                setDefaultEndpoint: (method: Parameters<Runner["setDefaultEndpoint"]>[0], candidate: RouteHandler) => {
-                    if (method === "POST") {
-                        handler = candidate;
-                    }
-                },
-            } as unknown as Runner),
-    } as Runner;
-    return {
-        runner,
-        handler(request) {
-            if (!handler) {
-                throw new Error("missing source handler");
-            }
-            return handler(request);
-        },
-    };
 }

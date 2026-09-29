@@ -1,7 +1,7 @@
 # @bernouy/cms-delivery
 
 Public rendering surface. It mounts page rendering, bloc bundles, theme CSS,
-component runtime, source proxy, file serving, sitemap, robots, public auth,
+component runtime, gateway capability routes, file serving, sitemap, robots, public auth,
 and analytics collection onto a provided `Runner`.
 
 ## Boundaries
@@ -27,7 +27,8 @@ and analytics collection onto a provided `Runner`.
 - Keep temporary route-updating responses non-cacheable. Editorial draft
   preview belongs to authenticated Control, not public Delivery.
 - Preserve `/.cms/*` route semantics for blocs, blocsets, style, files, image
-  variants, sources, and auth.
+  variants, gateway capabilities, and auth. Delivery does not mount public
+  `/.cms/sources` routes.
 - Source execution must use injected secret resolution.
 - Analytics collection must remain server-side and privacy-preserving.
 - Public routes should be careful with cache headers and CSP-related settings.

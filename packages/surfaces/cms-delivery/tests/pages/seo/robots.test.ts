@@ -1,37 +1,22 @@
 import { describe, expect, test } from "bun:test";
 import type { ContentReader } from "@bernouy/cms-content";
-import { InMemorySourceRepository, type SourceEndpoint } from "@bernouy/cms-sources";
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { CaptureRunner } from "../../gateway/support/CaptureRunner";
 
 describe("Delivery robots", () => {
-    test("allows rendering assets, public files, variants, and only declared public Source images", async () => {
+    test("allows rendering assets, public files, variants, and gateway media routes", async () => {
         const runner = new CaptureRunner("/site");
-        const sources = new InMemorySourceRepository();
-        await sources.createSource({
-            urn: "urn:catalog",
-            endpoints: [
-                endpoint("publicImage"),
-                endpoint("privateImage", { access: { mode: "auth" } }),
-                endpoint("publicJson", { responseKind: "json" }),
-                endpoint("computedImage", {
-                    input: {
-                        params: [
-                            {
-                                name: "userId",
-                                in: "query",
-                                source: { from: "computed", ref: "userID" },
-                                schema: { type: "string" },
-                            },
-                        ],
-                    },
-                }),
-            ],
-        });
         const repository = {
             getRenderingSettings: async () => ({ site: { host: "https://canonical.test/store" } }),
         } as ContentReader;
-        new DeliveryCms({ runner, repository, sources });
+        new DeliveryCms({
+            runner,
+            repository,
+            capabilityGateway: {
+                siteId: "site-a",
+                invoker: { invoke: async () => ({ kind: "success", status: 200, requestId: "test" }) },
+            },
+        });
 
         const response = await runner.endpointHandler(
             "GET",
@@ -50,11 +35,9 @@ describe("Delivery robots", () => {
         }
         expect(body).toContain("Allow: /site/.cms/files/\n");
         expect(body).toContain("Allow: /site/.cms/img/\n");
-        expect(body).toContain("Allow: /site/.cms/sources/catalog/publicImage$\n");
-        expect(body).toContain("Allow: /site/.cms/sources/catalog/publicImage?\n");
-        expect(body).not.toContain("/privateImage");
-        expect(body).not.toContain("/publicJson");
-        expect(body).not.toContain("/computedImage");
+        expect(body).toContain("Allow: /site/.cms/media/\n");
+        expect(body).toContain("Allow: /site/.cms/image/\n");
+        expect(body).not.toContain("/.cms/sources/");
         expect(body).toContain("Disallow: /site/.cms/\n");
         expect(body).toContain("Sitemap: https://canonical.test/store/sitemap.xml\n");
         expect(body).not.toContain("unexpected.test");
@@ -73,16 +56,3 @@ describe("Delivery robots", () => {
         expect(await response.text()).not.toContain("Sitemap:");
     });
 });
-
-function endpoint(id: string, overrides: Partial<SourceEndpoint> = {}): SourceEndpoint {
-    return {
-        urn: `urn:catalog:${id}`,
-        method: "GET",
-        access: { mode: "public" },
-        targetUrl: `https://example.test/${id}`,
-        responseKind: "file",
-        mediaType: "image/*",
-        output: [{ status: "200" }],
-        ...overrides,
-    };
-}

@@ -1,7 +1,7 @@
 import { parseUrn, sourcesPrefix } from "@bernouy/cms-sources";
 import { CMS_CORRELATION_HEADER, requestCorrelationId } from "@bernouy/http-runner";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { handleDeliverySourceRequest } from "cms-delivery/core/sources/registerSourceProxy";
+import { handleDeliverySourceRequest } from "cms-delivery/core/sources/executeSourceRequest";
 
 export type DeliverySourceGetOptions = {
     /** Resolution keeps the visitor subject; public discovery deliberately runs anonymously. */

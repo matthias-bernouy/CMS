@@ -1,33 +1,9 @@
-import {
-    CMS_SOURCES_ROUTE,
-    SOURCE_PROXY_METHODS,
-    createSourceRequestTelemetryMiddleware,
-    handleSourceRequest,
-    sourcesPrefix,
-    SYSTEM_SITE_SOURCE_URN,
-    type SourceEndpoint,
-} from "@bernouy/cms-sources";
+import { handleSourceRequest, sourcesPrefix, SYSTEM_SITE_SOURCE_URN, type SourceEndpoint } from "@bernouy/cms-sources";
 import { executeAuthSystemSourceEndpoint } from "@bernouy/cms-auth/http";
 import { executeSiteSystemSourceEndpoint } from "@bernouy/cms-content/rendering";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { authorizeDeliverySourceEndpoint } from "cms-delivery/core/sources/authorization";
 import { createDeliverySourceRequestScope } from "cms-delivery/core/sources/requestScope";
-
-export function registerDeliverySourceProxy(delivery: DeliveryCms): void {
-    const runner = delivery.runner;
-    runner.group(
-        CMS_SOURCES_ROUTE,
-        (proxyRunner) => {
-            const prefix = sourcesPrefix(runner.basePath);
-            for (const method of SOURCE_PROXY_METHODS) {
-                proxyRunner.setDefaultEndpoint(method, (request) =>
-                    handleDeliverySourceRequest(delivery, request, { prefix }),
-                );
-            }
-        },
-        delivery.sourceTelemetry ? [createSourceRequestTelemetryMiddleware(delivery.sourceTelemetry)] : [],
-    );
-}
 
 export function handleDeliverySourceRequest(
     delivery: DeliveryCms,

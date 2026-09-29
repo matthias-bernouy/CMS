@@ -76,8 +76,9 @@ Feature packages:
   email and public-auth action composition. Auth HTTP registrars use `./http`,
   admin mutations use `./management`, and Mongo/SMTP adapters use `./mongo`
   and `./smtp` from composition roots.
-- `@bernouy/cms-sources`: data-source contracts, endpoint execution, system
-  sources, and source proxy helpers for the active legacy paths.
+- `@bernouy/cms-sources`: legacy data-source contracts and internal endpoint
+  execution for indexing, plus the Control source proxy. Delivery no longer
+  mounts a public Source proxy.
 - `@bernouy/cms-source-images`: bounded responsive Source image recipes,
   browser activation and derivative caches. Its transformer delegates to the
   gateway image profile over the shared foundation adapter.
@@ -93,7 +94,7 @@ Surface packages:
 - `@bernouy/cms-control`: admin UI, REST API, authenticated static pages, media
   admin, settings, users, sources admin, and editor endpoints.
 - `@bernouy/cms-delivery`: public rendering, page lookup, bloc bundles,
-  component runtime, source proxy, media serving, sitemap, robots, and
+  component runtime, gateway capability routes, media serving, sitemap, robots, and
   analytics collection.
 Runtime packages:
 

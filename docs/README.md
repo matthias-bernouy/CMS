@@ -31,8 +31,7 @@ implementation notes live in each package's `AGENTS.md`.
   paths, redirects, deletion tombstones, and public SEO behavior.
 - [Bloc Authoring](./blocs/README.md) documents how to create blocs, expose
   editor capabilities, bind Sources, design themeable CSS, test, and publish.
-- [auth-system-source.md](./auth-system-source.md) documents the readonly
-  system auth source exposed through `/.cms/sources/system-auth/*`.
+- [Public authentication](./public-auth.md) documents the native Delivery auth routes.
 
 ## Images
 

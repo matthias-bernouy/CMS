@@ -52,13 +52,14 @@ calls. Site or installation changes do not revoke provider-wide aliases.
 `./media` owns deterministic derivative keys, the bounded image service, and
 the storage port; `./media/local-fs` is the production derivative store. The
 byte fingerprint invalidates a derivative when a provider changes the file.
-`./sharp` applies gateway limits over the generic
+`./media/sharp` applies gateway limits over the generic
 `@bernouy/image-processing/sharp` adapter. The legacy Source image package
 still delegates through the same transformer profile.
 
 The existing `cms-sources` and `cms-source-images` packages remain active for
-legacy Control and Delivery paths. They will be retired as capability-backed
-consumers and derivative workers replace their behavior.
+Control legacy paths and Delivery's internal indexing execution and image
+workers. Delivery no longer mounts public `/.cms/sources` routes. The packages
+will be retired as indexing and derivative workers move to gateway contracts.
 
 ## Remaining migration gates
 
