@@ -43,24 +43,27 @@ describe("repository domain boundaries", () => {
         expect(violations).toEqual([]);
     });
 
-    test("providers consume contracts through the contract export facade", async () => {
-        const violations: string[] = [];
-        for await (const file of new Bun.Glob("**/*.ts").scan({
-            cwd: resolve(sourceRoot, "providers"),
-            absolute: true,
-        })) {
-            for (const specifier of importPaths(await Bun.file(file).text())) {
-                const target = internalPath(specifier, file);
-                if (
-                    (target !== undefined &&
-                        !target.startsWith("providers/") &&
-                        !target.startsWith("exports/contracts/")) ||
-                    specifier.startsWith("@bernouy/cms-repository")
-                ) {
-                    violations.push(`${relative(sourceRoot, file)} -> ${specifier}`);
+    test.each(["providers", "collections"])(
+        "%s consumes contracts through the contract export facade",
+        async (domain) => {
+            const violations: string[] = [];
+            for await (const file of new Bun.Glob("**/*.ts").scan({
+                cwd: resolve(sourceRoot, domain),
+                absolute: true,
+            })) {
+                for (const specifier of importPaths(await Bun.file(file).text())) {
+                    const target = internalPath(specifier, file);
+                    if (
+                        (target !== undefined &&
+                            !target.startsWith(`${domain}/`) &&
+                            !target.startsWith("exports/contracts/")) ||
+                        specifier.startsWith("@bernouy/cms-repository")
+                    ) {
+                        violations.push(`${relative(sourceRoot, file)} -> ${specifier}`);
+                    }
                 }
             }
-        }
-        expect(violations).toEqual([]);
-    });
+            expect(violations).toEqual([]);
+        },
+    );
 });

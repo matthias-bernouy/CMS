@@ -1,4 +1,4 @@
-# 2. Compatibility and versioning
+<# 2. Compatibility and versioning
 
 [All flows](./README.md) · Next: [Requirements](./03-requirements.md)
 

@@ -47,7 +47,8 @@ captures, keyed replay, operation completion, eventual queries and pagination.
 and bodyless HEAD error identity. These are validated declarations and codecs,
 not a runner or a passing-provider attestation. Provider-specific call
 permissions belong to provider manifests.
-Collection definitions are planned for the repository's future `src/collections/`
-domain. Resource packages may publish collection resources and back-office views;
+Initial collection authored bundles live in the repository's `src/collections/`
+domain, with their own [fixtures](../../collections/v1/README.md). Resource
+packages may publish collection resources and, in a later slice, back-office views;
 they must reference this contract format rather than extending it. The
 [package overview](../../../README.md) distinguishes implemented and planned work.

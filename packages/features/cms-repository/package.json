@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-repository",
     "version": "0.1.0",
-    "description": "Versioned CMS contracts, provider manifests, and installation models.",
+    "description": "Versioned CMS contracts, providers, authored collections, and installation models.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./src/exports/index.ts",
@@ -17,10 +17,12 @@
         "./providers/catalogue": "./src/exports/providers/catalogue.ts",
         "./providers/compatibility": "./src/exports/providers/compatibility.ts",
         "./providers/installations": "./src/exports/providers/installations.ts",
-        "./providers/selections": "./src/exports/providers/selections.ts"
+        "./providers/selections": "./src/exports/providers/selections.ts",
+        "./collections": "./src/exports/collections/index.ts"
     },
     "dependencies": {
         "canonicalize": "^3.0.0",
+        "htmlparser2": "^10.1.0",
         "jsonc-parser": "^3.3.1"
     },
     "peerDependencies": {

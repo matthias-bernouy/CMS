@@ -3,7 +3,8 @@
 CMS repository formats, admission rules and pure validation in one feature
 package. The contracts domain defines provider-neutral releases and conformance
 suites; the providers domain defines immutable manifests and separate CMS-owned
-installation, runtime-report and contract-selection models.
+installation, runtime-report and contract-selection models. The collections
+domain starts with authored bundles, assets and Light DOM compositions.
 
 Contract releases and provider manifests are immutable, versioned publications.
 Installations and selections are state for a particular site, with exact pins to
@@ -25,17 +26,24 @@ cms-repository/
 │   │   ├── installations/
 │   │   ├── selections/
 │   │   └── README.md
+│   ├── collections/
+│   │   ├── core/
+│   │   ├── interfaces/
+│   │   └── README.md
 │   └── exports/
 │       ├── index.ts
 │       ├── contracts/
-│       └── providers/
+│       ├── providers/
+│       └── collections/
 ├── tests/
 │   ├── architecture/
 │   ├── contracts/
-│   └── providers/
+│   ├── providers/
+│   └── collections/
 ├── fixtures/
 │   ├── contracts/
-│   └── providers/
+│   ├── providers/
+│   └── collections/
 ├── AGENTS.md
 ├── README.md
 ├── package.json
@@ -43,9 +51,9 @@ cms-repository/
 ```
 
 Contracts do not depend on providers or installation state. Providers consume
-the contracts export facade. A collections domain is planned for
-`src/collections/`; no collections directory, implementation or public export
-exists yet.
+the contracts export facade. Collections consume that same facade without
+depending on providers. Their authored-bundle admission is not renderer
+compilation, site installation or execution authorization.
 
 ## Public entry points
 
@@ -63,6 +71,7 @@ exists yet.
 | `@bernouy/cms-repository/providers/compatibility` | Descriptive manifest changes and exact-digest approval requirements |
 | `@bernouy/cms-repository/providers/installations` | Parsers, local preparation/approval lifecycle, observations, readiness and revisioned memory store |
 | `@bernouy/cms-repository/providers/selections` | Bounded full-site graph planning and revisioned memory store |
+| `@bernouy/cms-repository/collections` | Authored release parsing, Light DOM structure, asset and requirement verification, bundle digests |
 
 Use explicit domain subpaths for executable APIs. There are no compatibility
 packages or wrappers under the former package names.
@@ -82,5 +91,8 @@ and transport profiles, and conformance dependencies. The
 [provider guide](src/providers/README.md) explains immutable claims, site state
 and the proposed connection protocol. [Provider workflows](src/providers/workflows.md)
 details implemented transitions, upgrade boundaries and remaining runtime work.
+The [collections guide](src/collections/README.md) describes the initial slice
+and its explicit gaps: themes, i18n, imports, views/dashboard templates,
+compatibility, publication, installation and renderer compilation.
 [AGENTS.md](AGENTS.md) defines the domain
 boundaries and implementation invariants.

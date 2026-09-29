@@ -1,6 +1,6 @@
 # @bernouy/cms-repository
 
-Feature package for immutable CMS contracts and provider manifests, plus pure
+Feature package for immutable CMS contracts, provider manifests and authored collection bundles, plus pure
 models and validation for CMS-owned installations and site selections.
 
 ## Layout and boundaries
@@ -21,7 +21,7 @@ models and validation for CMS-owned installations and site selections.
   revisioned store. Installations and selections have deterministic memory adapters.
 - `src/exports/` defines the stable facade independently of domain internals.
   The package root is type-only. Executable APIs use explicit `/contracts` and
-  `/providers` subpaths, as listed in [README.md](README.md).
+  `/providers` and `/collections` subpaths, as listed in [README.md](README.md).
 - Contracts must not depend on providers or installation state. Providers
   consume contracts through `cms-repository/exports/contracts` and its facade
   subpaths, never directly through `src/contracts/` internals. External callers
@@ -37,9 +37,10 @@ models and validation for CMS-owned installations and site selections.
   HTTP execution and gateway routing remain outside this package; runtimes own
   environment access and production adapter selection. No live transport,
   durable installation/selection adapter or conformance runner exists yet.
-- A future collections domain belongs in `src/collections/`; it is planned,
-  with no implemented directory or public export yet. Do not create old-package
-  compatibility wrappers or merge immutable releases with per-site state.
+- `src/collections/{interfaces,core}/` owns authored collection release parsing,
+  asset verification and resource-level reference validation, exposed through
+  `./collections`. Collections consume the contracts facade, not providers or
+  contracts internals. Do not merge immutable releases with per-site state.
 - Treat inputs as untrusted. Parse from `unknown` or strict JSON; reject unknown
   fields, duplicate properties, ambiguous mappings/ranges and limit violations.
   Apply byte/depth/count limits to object and JSON entry points; reject sparse
@@ -197,3 +198,26 @@ models and validation for CMS-owned installations and site selections.
   Production composition must supply snapshot consistency; this is not a distributed
   transaction. Manifest approval and site selection remain separate operations.
   A provider deployment never implicitly upgrades a site selection.
+
+## Collection authored bundles
+
+- Keep components and compositions distinct: components have static shadow
+  shells and optional light DOM; composition-only blocs expand into Light DOM
+  without retaining their authoring host. They cannot have settings, styles,
+  behaviour modules or `cms-host`. Bindings never belong in the shadow shell.
+- Configuration/defaults use bounded, nonnullable object schemas with only
+  JSON-representable leaves. Keep page-owned initial content separate from a
+  bloc's fixed light-DOM assembly.
+- Verify all local uses, slots and thumbnail references and reject cycles.
+  Structural markup validation must use a parser. It is not a renderer,
+  sanitizer, binding/CSS compiler or permission proof; never treat an admitted
+  authored bundle as trusted executable content.
+- Verify asset IDs, exact byte sets, per-asset and aggregate sizes, and digests.
+  Snapshot every supplied buffer before any asynchronous work. Returned bytes
+  are immutable Blobs; do not retain mutable caller-owned buffers.
+- Requirements belong to resources. Require one non-yanked contract witness
+  jointly satisfying a resource and its transitive uses; do not conflate this
+  with selecting providers or validating the whole site's installation graph.
+- Themes, i18n, external imports, views, dashboard templates, publication,
+  compatibility and installation workflows are next slices, not implemented
+  fields or guarantees. Reject unsupported fields until their validation exists.

@@ -528,8 +528,10 @@ The new protocol must follow the same direction. Contract, provider and future
 collection definitions and validation belong to one feature package,
 `@bernouy/cms-repository`, with separate domains and explicit public subpaths.
 The current `./contracts` and `./providers` entrypoints expose pure logic and
-models; the package root exports types only. `./collections` remains planned
-and is not exported yet. Immutable releases and manifests remain distinct from
+models; the package root exports types only. `./collections` now exposes the
+first authored-bundle slice: assets, component shells and Light DOM compositions.
+Theme/i18n, imports, views, dashboards, compilation and installation remain
+planned. Immutable releases and manifests remain distinct from
 site installation state, and pure installation/report validators do not perform
 live connections or gateway execution.
 

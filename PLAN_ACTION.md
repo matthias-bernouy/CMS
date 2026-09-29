@@ -540,13 +540,13 @@ files, background jobs, outbox, idempotency records, operations, and change
 events. It does not use Supabase and does not reach another provider directly.
 
 The catalogue domains share `@bernouy/cms-repository`: contracts and providers
-exist today, while collections remain planned. Sharing a package does not merge
+exist today, alongside a first authored collections slice. Sharing a package does not merge
 immutable artifacts with site installations or move gateway execution into the
 catalogue domain.
 
 ## 5. Recommended workspace shape
 
-Contracts, providers and future collections share `@bernouy/cms-repository`.
+Contracts, providers and authored collections share `@bernouy/cms-repository`.
 They remain separate domains within that package. Other proposed package names
 below remain subject to implementation, but their boundaries should stay stable.
 
@@ -576,8 +576,9 @@ below remain subject to implementation, but their boundaries should stay stable.
     `/schema`, `/bindings`, `/compatibility`, `/catalogue` and `/protocol`
     subpaths, plus `./providers`, `./providers/catalogue`,
     `./providers/compatibility`, `./providers/installations` and
-    `./providers/selections`. The future `./collections` entrypoint is not
-    exported yet.
+    `./providers/selections`. `./collections` exposes authored release parsing,
+    assets, local bloc structure and capability witness validation; its renderer,
+    catalogue and installation APIs remain unimplemented.
 - `@bernouy/cms-gateway`
   - invocation context, actor model, capability resolution, compiled binding
     execution, errors, projection, idempotency/retry/rate policy, audit and
@@ -950,6 +951,11 @@ Exit: providers can be installed, approved, configured, selected, observed,
 rotated, disabled, and removed without editing JSON or using legacy Sources.
 
 ### Wave 7 — Collections vNext core
+
+Initial authored-bundle parsing/admission is implemented for assets and local
+component/Light DOM composition definitions. It validates resource dependency
+witnesses, not render execution or site installation. The remaining items below
+include publication/compatibility, imports, UI resources and site workflows.
 
 1. Add the collections domain to `@bernouy/cms-repository` with strict collection
    release parsing and immutable digest bundles; introduce `./collections` when

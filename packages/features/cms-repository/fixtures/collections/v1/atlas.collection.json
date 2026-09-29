@@ -1,0 +1,48 @@
+{
+    "kind": "collection",
+    "protocol": "ulvia-collection/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "collectionId": "atlas",
+    "publisherId": "atlas.official",
+    "version": "1.0.0",
+    "name": "Atlas starter collection",
+    "locale": "en-US",
+    "configuration": {
+        "schema": { "type": "object", "properties": {}, "required": [] },
+        "defaults": {}
+    },
+    "assets": [
+        {
+            "id": "preview",
+            "mediaType": "image/svg+xml",
+            "byteLength": 154,
+            "digest": "sha256:199cbf7a31792013057e235364563ad358dc223517664811eedca40273fe8b46"
+        }
+    ],
+    "blocs": [
+        {
+            "kind": "component",
+            "id": "atlas-panel",
+            "thumbnail": "preview",
+            "shadowdom": "<section><slot name=\"body\"></slot></section>",
+            "style": ":host { display: block; } :host([tone=\"muted\"]) { opacity: 0.8; }",
+            "slots": { "body": {} },
+            "settings": {
+                "schema": {
+                    "type": "object",
+                    "properties": { "tone": { "type": "string", "maxLength": 7, "enum": ["default", "muted"] } },
+                    "required": ["tone"]
+                },
+                "defaults": { "tone": "default" }
+            }
+        },
+        {
+            "kind": "composition",
+            "id": "atlas-page",
+            "uses": ["atlas-panel"],
+            "lightdom": "<atlas-panel tone=\"default\"><slot name=\"main\" slot=\"body\"></slot></atlas-panel>",
+            "slots": { "main": { "max": 8 } },
+            "defaultContent": "<p slot=\"main\">Start here.</p>"
+        }
+    ]
+}

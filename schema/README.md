@@ -2,8 +2,9 @@
 
 These diagrams describe the contracts and providers domains of
 `@bernouy/cms-repository`. Read the numbered files in order, or follow the
-question that interests you. A collections domain belongs in the same package
-but remains planned, with no implementation or export yet.
+question that interests you. The initial collections authored-bundle domain
+now lives in the same package; its [guide](../packages/features/cms-repository/src/collections/README.md)
+describes that slice, which is not covered by these contract/provider diagrams.
 
 ## Reading guide
 

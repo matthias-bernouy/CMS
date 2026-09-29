@@ -4,3 +4,4 @@ export type { ProviderManifest } from "cms-repository/providers/manifests/interf
 export type { ProviderInstallation } from "cms-repository/providers/installations/interfaces/ProviderInstallation";
 export type { ProviderRuntimeReport } from "cms-repository/providers/installations/interfaces/ProviderRuntimeReport";
 export type { ContractSelection } from "cms-repository/providers/selections/interfaces/ContractSelection";
+export type { CollectionRelease } from "cms-repository/collections/interfaces/CollectionRelease";

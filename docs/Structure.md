@@ -47,7 +47,7 @@ Feature packages:
   blob stores, lifecycle, local/S3 adapters, image variants, URL helpers, and
   serving handlers live under its explicit `./files` subpaths.
 - `@bernouy/cms-repository`: the shared package for contracts and providers,
-  with a planned collections domain. `./contracts` owns immutable releases,
+  with an initial authored collections domain. `./contracts` owns immutable releases,
   `ulvia-schema/v1`, digests, HTTP binding compilation, compatibility and the
   release catalogue. `./providers` owns manifest admission, pure installation,
   connection and runtime-report models and validators. Explicit subpaths add
@@ -55,7 +55,8 @@ Feature packages:
   planning and revisioned memory stores.
   Immutable artifacts and site installation state remain distinct. The root
   exports types only; live connection, durable persistence and gateway execution
-  are not implemented here, and `./collections` is not exported yet.
+  are not implemented here. `./collections` adds authored bundles, asset checks
+  and Light DOM/component structure, not renderer compilation or installation.
 - `@bernouy/cms-secrets`: secret storage contracts, `${VAR}` resolution, and
   encrypted Mongo storage.
 - `@bernouy/cms-auth`: accounts, local/OIDC providers, PATs, signed sessions,
@@ -148,8 +149,9 @@ Consumers use `@bernouy/cms-repository/contracts` and its `/schema`, `/bindings`
 `/compatibility`, `/catalogue` and `/protocol` subpaths, or
 `@bernouy/cms-repository/providers` and its `/catalogue`, `/compatibility`,
 `/installations` and `/selections`
-subpaths. A future collections domain belongs in this package; its implementation
-and public entrypoint remain planned. See the [package guide](../packages/features/cms-repository/README.md).
+subpaths. The initial `./collections` entrypoint parses and admits authored
+component/composition bundles; themes, i18n, imports, views, dashboards and
+collection installation remain future slices. See the [package guide](../packages/features/cms-repository/README.md).
 
 Keep these boundaries:
 

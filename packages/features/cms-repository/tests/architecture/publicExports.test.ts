@@ -13,6 +13,7 @@ describe("repository public entry points", () => {
         ["providers/compatibility", "compareProviderManifests"],
         ["providers/installations", "validateProviderInstallation"],
         ["providers/selections", "planContractSelections"],
+        ["collections", "admitCollectionRelease"],
     ])("loads %s independently through its declared package export", async (subpath, entryPoint) => {
         const module = await import(`@bernouy/cms-repository/${subpath}`);
         expect(typeof module[entryPoint]).toBe("function");
@@ -22,8 +23,10 @@ describe("repository public entry points", () => {
         expect(Object.keys(await import("@bernouy/cms-repository"))).toEqual([]);
     });
 
-    test("does not advertise the planned collections domain as an implemented API", async () => {
+    test("does not advertise unimplemented collection runtime or catalogue APIs", async () => {
         const manifest = await Bun.file(new URL("../../package.json", import.meta.url)).json();
-        expect(Object.keys(manifest.exports).some((entry) => entry.startsWith("./collections"))).toBe(false);
+        expect(Object.keys(manifest.exports).filter((entry) => entry.startsWith("./collections"))).toEqual([
+            "./collections",
+        ]);
     });
 });
