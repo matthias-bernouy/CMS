@@ -1,0 +1,16 @@
+{
+    "name": "@bernouy/image-processing",
+    "version": "0.1.0",
+    "description": "Generic bounded image inspection and byte transformation.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./sharp": "./src/exports/sharp.ts"
+    },
+    "peerDependencies": {
+        "sharp": "^0.35.4",
+        "typescript": "^7.0.2"
+    }
+}

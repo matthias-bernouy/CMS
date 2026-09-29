@@ -16,6 +16,7 @@
         "./sharp": "./src/exports/sharp.ts"
     },
     "dependencies": {
+        "@bernouy/image-processing": "workspace:*",
         "@bernouy/cms-repository": "workspace:*"
     },
     "peerDependencies": {

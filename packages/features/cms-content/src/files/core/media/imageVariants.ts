@@ -24,12 +24,8 @@ export async function generateImageVariant(
     source: Uint8Array,
     spec: VariantSpec,
 ): Promise<{ bytes: Uint8Array; width: number; height: number }> {
-    const sharp = (await import("sharp")).default;
-    const { data, info } = await sharp(source)
-        .resize({ width: spec.width, withoutEnlargement: true })
-        .webp({ quality: spec.quality ?? 75 })
-        .toBuffer({ resolveWithObject: true });
-    return { bytes: new Uint8Array(data), width: info.width, height: info.height };
+    const { SharpImageTransformer } = await import("@bernouy/image-processing/sharp");
+    return new SharpImageTransformer().transform(source, { width: spec.width, quality: spec.quality ?? 75 });
 }
 
 /**

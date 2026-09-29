@@ -31,6 +31,8 @@ Foundation packages:
   encryption, and the Mongo DEK adapter.
 - `@bernouy/rate-limiter`: fixed-window rate limiting with memory and Mongo
   implementations.
+- `@bernouy/image-processing`: generic image inspection and WebP byte transforms;
+  the optional `./sharp` adapter is shared by author files and gateway media.
 - `@bernouy/components`: public custom elements (`<p9r-*>`, `<w13c-*>`) and
   the CMS data-binding runtime.
 
@@ -54,8 +56,8 @@ Feature packages:
   manifest publication/comparison, local installation lifecycle, full-site graph
   planning and revisioned memory stores.
   Immutable artifacts and site installation state remain distinct. The root
-  exports types only; live connection, durable persistence and gateway execution
-  are not implemented here. `./collections` adds authored bundles, asset checks
+  exports types only; Mongo installation and selection stores use `./providers/mongo`,
+  while durable catalogues and live connection remain pending. `./collections` adds authored bundles, asset checks
   and Light DOM/component structure, not renderer compilation or installation.
 - `@bernouy/cms-gateway`: initial capability invocation boundary. It resolves
   pinned selected releases and ready installations, executes admitted synchronous
@@ -75,7 +77,8 @@ Feature packages:
 - `@bernouy/cms-sources`: data-source contracts, endpoint execution, system
   sources, and source proxy helpers for the active legacy paths.
 - `@bernouy/cms-source-images`: bounded responsive Source image recipes,
-  browser activation, derivative caches, and image transformers.
+  browser activation and derivative caches. Its transformer delegates to the
+  gateway image profile over the shared foundation adapter.
 - `@bernouy/cms-analytics`: privacy-first server-side analytics events,
   counters, stores, and dashboard handlers.
 - `@bernouy/cms-bloc-compile`: bloc validation, view/editor bundling, and the

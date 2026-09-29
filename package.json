@@ -48,6 +48,7 @@
         "@bernouy/components": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
+        "@bernouy/image-processing": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/ulvia-cli": "workspace:*",
         "@biomejs/biome": "2.5.14",

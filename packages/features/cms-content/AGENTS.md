@@ -64,6 +64,8 @@ library, editor contracts, validation, and read models.
   external contract.
 - Generated variants are cacheable and reconstructible; original author files
   are not disposable.
+- Image byte transforms use `@bernouy/image-processing/sharp`; keep author-file
+  variant keys, manifests, and serving policy in this package.
 - Media publication is independent of pages: files with metadata and bytes
   remain public by ID/path even when draft-only or unreferenced. This refactor
   provides no confidential-media policy or process/credential isolation.

@@ -25,8 +25,9 @@ provides the durable adapter with unique indexes and scoped revocation; its
 `init()` method must run before serving requests. Disconnect workflows must
 coordinate revocation with in-flight invocations. `./media` defines
 deterministic derivative byte keys from provider file generations and bounded
-recipes. `./sharp` owns the source-neutral WebP inspection and transformation
-adapter; the legacy Source image package now delegates to it. The gateway does
+recipes. `./sharp` applies gateway limits and normalization over the generic
+`@bernouy/image-processing/sharp` adapter; the legacy Source image package
+still delegates through this gateway profile. The gateway does
 not serve or authorize files yet.
 
 The existing `cms-sources`, `cms-source-images`, and `cms-identities` packages

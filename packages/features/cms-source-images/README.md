@@ -4,8 +4,8 @@
 Source image responses. Originals remain owned by the upstream connector. The
 browser can request only the finite widths exported as
 `SOURCE_IMAGE_WIDTHS`; arbitrary transform parameters never trigger work.
-Its Sharp adapter now delegates byte inspection and transformation to
-`@bernouy/cms-gateway/sharp`; the Source-specific queue, media index, and
+Its Sharp adapter delegates to the gateway image profile, which uses the shared
+`@bernouy/image-processing/sharp` transformer. The Source-specific queue, media index, and
 authorization path remain here until capability-file handling replaces them.
 
 ## Browser rollout contract
