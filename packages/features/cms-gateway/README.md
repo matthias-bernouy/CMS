@@ -45,6 +45,14 @@ Node network adapter. Delivery grants public capabilities and authenticated
 capabilities to verified users; Control grants calls only to the configured
 local administrator. The Control editor lists callable JSON capabilities from
 the site's selected releases through `/api/editor/capabilities`.
+Declared errors retain a bounded `Retry-After`; unchanged binary responses
+retain `ETag`, `Content-Disposition` and valid range metadata. Provider file GET
+routes also serve single byte ranges from the bounded validated file response.
+The host keeps `private, no-store` on gateway responses.
+The runtime refreshes selected, enabled installations through the bounded, authenticated
+`GET /ulvia/report` connection protocol. Route checks read only the selected
+site selection and installation; a renewed ready observation does not invalidate
+an in-flight invocation.
 Delivery checks automatic capability bindings before rendering a page, so a
 protected binding can send anonymous visitors to the configured login page
 without contacting the provider.
@@ -76,10 +84,10 @@ declare the response fields projected into metadata and canonical URLs.
    sites can populate the durable catalogues without direct database writes.
    Add separate fixture-asset byte storage for Mongo release publication.
 2. Exercise the production network composition against real custom and official
-   provider fixtures, harden cross-catalogue snapshot consistency, and replace
-   the metadata revision scans before large deployments.
+   provider fixtures, harden cross-catalogue snapshot consistency, and benchmark
+   selected-route reads and observation refresh capacity before large deployments.
 3. Add durable idempotency, rate policy, audit, telemetry, and separate host
    entrypoints before activating keyed commands or provider/system calls.
-4. Replace Source image consumers with provider file URLs, move expensive
-   derivative work to durable jobs, and add garbage collection and benchmarks
-   before removing the legacy image package.
+4. Replace remaining Source image authoring vocabulary with provider file URLs,
+   move expensive derivative work to durable jobs, and add cache recovery,
+   garbage collection and benchmarks.

@@ -30,19 +30,11 @@ export interface GatewayRoute {
     readonly release: CatalogueContractRelease;
     readonly manifest: CatalogueProviderManifest;
     readonly installation: StoredProviderInstallation;
-    /** A coherent host-owned revision spanning all four records and yank state. */
-    readonly revision: string;
 }
 
 export interface GatewayRouteResolver {
     resolve(siteId: string, contractId: string): Promise<GatewayRoute | null>;
     isCurrent(route: GatewayRoute): Promise<boolean>;
-}
-
-/** Host-owned revision covering selections, installations, observations, releases, manifests, and yanks. */
-export interface GatewayRouteRevisionSource {
-    capture(siteId: string): Promise<string>;
-    isCurrent(siteId: string, revision: string): Promise<boolean>;
 }
 
 export interface GatewayTransportRequest {
@@ -63,6 +55,7 @@ export interface GatewayTransportRequest {
 export interface GatewayTransportResponse {
     readonly status: number;
     readonly contentType?: string;
+    readonly responseHeaders?: Readonly<Record<string, string>>;
     readonly output?: unknown;
     readonly bytes?: Uint8Array;
     readonly errorCode?: string;
@@ -75,6 +68,7 @@ export interface GatewayTransport {
 interface GatewayResultBase {
     readonly requestId: string;
     readonly status: number;
+    readonly responseHeaders?: Readonly<Record<string, string>>;
 }
 
 export type GatewayResult =

@@ -10,6 +10,7 @@ export {
     ProviderImageService,
     type ProviderImageDerivative,
     type ProviderImageDerivativeStore,
+    type ProviderImageResult,
     type ProviderImageServiceOptions,
 } from "cms-gateway/media/core/providerImageService";
 export type {

@@ -33,6 +33,10 @@ export async function handleGatewayFileGet(request: Request, options: GatewayHtt
     ) {
         return new Response(null, { status: 400 });
     }
+    const rangeHeader = request.headers.get("range");
+    if (rangeHeader !== null && !/^bytes=(?:\d+-\d*|-\d+)$/.test(rangeHeader)) {
+        return new Response(null, { status: 400 });
+    }
     try {
         const result = await options.invoker.invoke({
             siteId: options.siteId,
@@ -43,17 +47,44 @@ export async function handleGatewayFileGet(request: Request, options: GatewayHtt
             actor: options.actor,
         });
         if (result.kind === "declared-error") {
-            return new Response(null, { status: result.status, headers: { "cache-control": "private, no-store" } });
+            return new Response(null, {
+                status: result.status,
+                headers: {
+                    "cache-control": "private, no-store",
+                    "x-ulvia-request-id": result.requestId,
+                    ...result.responseHeaders,
+                },
+            });
         }
         if (result.kind !== "binary") {
             return new Response(null, { status: 502 });
         }
-        return new Response(new Uint8Array(result.bytes), {
-            status: result.status,
+        const canRange =
+            rangeHeader &&
+            (!request.headers.has("if-range") || request.headers.get("if-range") === result.responseHeaders?.etag);
+        if (rangeHeader && result.status !== 200) {
+            return new Response(null, { status: 502 });
+        }
+        const range = canRange ? byteRange(rangeHeader, result.bytes.byteLength) : undefined;
+        if (canRange && !range) {
+            return new Response(null, {
+                status: 416,
+                headers: {
+                    "cache-control": "private, no-store",
+                    "content-range": `bytes */${result.bytes.byteLength}`,
+                },
+            });
+        }
+        const bytes = range ? result.bytes.slice(range.start, range.end + 1) : result.bytes;
+        return new Response(new Uint8Array(bytes), {
+            status: range ? 206 : result.status,
             headers: {
                 "content-type": result.contentType,
                 "cache-control": "private, no-store",
                 "x-ulvia-request-id": result.requestId,
+                ...result.responseHeaders,
+                "accept-ranges": "bytes",
+                ...(range ? { "content-range": `bytes ${range.start}-${range.end}/${result.bytes.byteLength}` } : {}),
             },
         });
     } catch (error) {
@@ -81,4 +112,25 @@ export async function handleGatewayFileGet(request: Request, options: GatewayHtt
             headers: error.requestId ? { "x-ulvia-request-id": error.requestId } : undefined,
         });
     }
+}
+
+function byteRange(value: string, length: number): { start: number; end: number } | null {
+    const [first, last] = value.slice("bytes=".length).split("-") as [string, string];
+    if (!first) {
+        const suffix = Number(last);
+        return Number.isSafeInteger(suffix) && suffix > 0 && length > 0
+            ? { start: Math.max(0, length - suffix), end: length - 1 }
+            : null;
+    }
+    const start = Number(first);
+    const requestedEnd = last ? Number(last) : length - 1;
+    if (
+        !Number.isSafeInteger(start) ||
+        !Number.isSafeInteger(requestedEnd) ||
+        start >= length ||
+        requestedEnd < start
+    ) {
+        return null;
+    }
+    return { start, end: Math.min(requestedEnd, length - 1) };
 }

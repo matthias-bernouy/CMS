@@ -16,6 +16,8 @@ describe("production surface mounting", () => {
         let flusherStopped = false;
         let sitemapRefreshOptions: Record<string, unknown> | undefined;
         let sitemapRefreshStopped = false;
+        let observationStarted = false;
+        let observationStopped = false;
         let releaseControl!: () => void;
         const controlReady = new Promise<void>((resolve) => {
             releaseControl = resolve;
@@ -96,6 +98,14 @@ describe("production surface mounting", () => {
             siteId: "site:main",
             invoker: { invoke: async () => ({ requestId: "request", status: 200, kind: "success" as const }) },
             isAdministrator: async () => true,
+            observations: {
+                start: () => {
+                    observationStarted = true;
+                },
+                stop: async () => {
+                    observationStopped = true;
+                },
+            },
         };
 
         const mounting = mountProductionSurfaces({ ...options, gateway } as never, runtime);
@@ -157,6 +167,7 @@ describe("production surface mounting", () => {
         expect(finalizerStore).toBe(options.features.analytics);
         expect(flusherRecorder).toBe(options.features.endpointPerformanceRecorder);
         expect(sitemapRefreshOptions).toEqual({ reportError: expect.any(Function) });
+        expect(observationStarted).toBe(true);
         expect(starts).toEqual([
             ["control", 3100],
             ["delivery", 3101],
@@ -173,6 +184,7 @@ describe("production surface mounting", () => {
         await mounted.stop();
         expect(flusherStopped).toBe(true);
         expect(sitemapRefreshStopped).toBe(true);
+        expect(observationStopped).toBe(true);
         expect(flushes).toBe(1);
         expect(events.slice(-2)).toEqual(["stop:control", "stop:delivery"]);
     });

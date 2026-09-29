@@ -112,6 +112,35 @@ test("distinct provider images wait behind the bounded transform capacity", asyn
     expect(peak).toBe(1);
 });
 
+test("image capacity is reserved before contacting the provider", async () => {
+    let release!: (result: GatewayResult) => void;
+    const provider = new Promise<GatewayResult>((resolve) => {
+        release = resolve;
+    });
+    let calls = 0;
+    const service = new ProviderImageService({
+        invoker: {
+            invoke: () => {
+                calls += 1;
+                return provider;
+            },
+        },
+        transformer: {
+            encoderIdentity: "test-encoder",
+            inspect: async () => ({ format: "png", width: 600, height: 400, pages: 1 }),
+            transform: async () => ({ bytes: new Uint8Array([1]), width: 256, height: 170 }),
+        },
+        store: { get: async () => null, put: async () => undefined },
+        maxConcurrent: 1,
+        maxPending: 0,
+    });
+    const first = service.get(invocation, 256);
+    await expect(service.get(invocation, 256)).rejects.toMatchObject({ code: "media_busy" });
+    expect(calls).toBe(1);
+    release(await binary(new Uint8Array([1, 2, 3])));
+    await expect(first).resolves.toHaveProperty("width", 256);
+});
+
 async function binary(bytes: Uint8Array, fileId = "photo-1"): Promise<GatewayResult> {
     return {
         kind: "binary",

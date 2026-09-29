@@ -3,12 +3,12 @@ export {
     SelectedGatewayCatalogue,
     type GatewayCapabilityCatalogue,
     type GatewayEditorCapability,
+    type SelectedGatewayCatalogueOptions,
 } from "cms-gateway/invocation/core/SelectedGatewayCatalogue";
 export {
     CatalogueGatewayRouteResolver,
     type CatalogueGatewayRouteResolverOptions,
 } from "cms-gateway/invocation/core/CatalogueGatewayRouteResolver";
-export { CatalogueGatewayRevisionSource } from "cms-gateway/invocation/core/CatalogueGatewayRevisionSource";
 export { GatewayError, type GatewayErrorCode } from "cms-gateway/invocation/core/GatewayError";
 export type {
     GatewayActor,
@@ -18,7 +18,6 @@ export type {
     GatewayOrigin,
     GatewayResult,
     GatewayRoute,
-    GatewayRouteRevisionSource,
     GatewayRouteResolver,
     GatewayTransport,
     GatewayTransportRequest,

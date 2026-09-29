@@ -1,6 +1,8 @@
 import type { UlviaObjectSchema, UlviaSchema } from "@bernouy/cms-repository/contracts/schema";
 import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
 import type { GatewayRouteResolver } from "cms-gateway/invocation/interfaces/Invocation";
+import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
+import { resolveRoute } from "cms-gateway/invocation/core/resolveRoute";
 
 export interface GatewayEditorCapability {
     readonly contractId: string;
@@ -19,11 +21,17 @@ export interface GatewayCapabilityCatalogue {
     list(siteId: string): Promise<readonly GatewayEditorCapability[]>;
 }
 
+export interface SelectedGatewayCatalogueOptions {
+    readonly now?: () => string;
+    readonly maxObservationAgeMs?: number;
+}
+
 /** Editor catalogue derived only from the site's exact selected releases. */
 export class SelectedGatewayCatalogue implements GatewayCapabilityCatalogue {
     constructor(
         private readonly selections: Pick<ContractSelectionStore, "get">,
         private readonly routes: GatewayRouteResolver,
+        private readonly options: SelectedGatewayCatalogueOptions = {},
     ) {}
 
     async list(siteId: string): Promise<readonly GatewayEditorCapability[]> {
@@ -36,6 +44,23 @@ export class SelectedGatewayCatalogue implements GatewayCapabilityCatalogue {
             const route = await this.routes.resolve(siteId, selection.contractId);
             if (!route) {
                 continue;
+            }
+            try {
+                resolveRoute(
+                    route,
+                    siteId,
+                    selection.contractId,
+                    (this.options.now ?? (() => new Date().toISOString()))(),
+                    this.options.maxObservationAgeMs ?? 60_000,
+                );
+            } catch (error) {
+                if (
+                    error instanceof GatewayError &&
+                    (error.code === "installation_unavailable" || error.code === "not_ready")
+                ) {
+                    continue;
+                }
+                throw error;
             }
             const release = route.release.admission.release;
             const provider = route.manifest.admission.manifest;

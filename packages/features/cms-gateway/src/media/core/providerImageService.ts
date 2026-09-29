@@ -25,6 +25,14 @@ export interface ProviderImageDerivative {
     readonly height: number;
 }
 
+export type ProviderImageResult =
+    | ProviderImageDerivative
+    | {
+          readonly status: number;
+          readonly requestId: string;
+          readonly responseHeaders?: Readonly<Record<string, string>>;
+      };
+
 export interface ProviderImageDerivativeStore {
     get(key: string): Promise<ProviderImageDerivative | null>;
     put(key: string, derivative: ProviderImageDerivative): Promise<void>;
@@ -57,17 +65,19 @@ export class ProviderImageService {
         }
     }
 
-    async get(
-        invocation: GatewayInvocation,
-        width: number,
-    ): Promise<ProviderImageDerivative | { readonly status: number }> {
+    async get(invocation: GatewayInvocation, width: number): Promise<ProviderImageResult> {
         const recipe = PROVIDER_RESPONSIVE_WEBP_V1;
         if (!Number.isSafeInteger(width) || !recipe.widths.includes(width)) {
             throw new GatewayError("invalid_input", "image width is outside the declared recipe");
         }
+        return this.#withPermit(() => this.#get(invocation, width));
+    }
+
+    async #get(invocation: GatewayInvocation, width: number): Promise<ProviderImageResult> {
+        const recipe = PROVIDER_RESPONSIVE_WEBP_V1;
         const result = await this.options.invoker.invoke(invocation);
         if (result.kind === "declared-error") {
-            return { status: result.status };
+            return { status: result.status, requestId: result.requestId, responseHeaders: result.responseHeaders };
         }
         if (result.kind !== "binary" || !result.media || result.bytes.byteLength > recipe.maxSourceBytes) {
             throw new GatewayError("invalid_provider_response", "provider did not return a bounded image file");
@@ -103,14 +113,14 @@ export class ProviderImageService {
         if (existing) {
             return existing;
         }
-        const flight = this.#transformWithPermit(key, result.bytes, width).finally(() => {
+        const flight = this.#transform(key, result.bytes, width).finally(() => {
             this.#flights.delete(key);
         });
         this.#flights.set(key, flight);
         return flight;
     }
 
-    async #transformWithPermit(key: string, source: Uint8Array, width: number): Promise<ProviderImageDerivative> {
+    async #withPermit<T>(work: () => Promise<T>): Promise<T> {
         if (this.#active >= this.#maxConcurrent) {
             if (this.#waiters.length >= this.#maxPending) {
                 throw new GatewayError("media_busy", "image processing capacity is exhausted");
@@ -120,7 +130,7 @@ export class ProviderImageService {
             this.#active += 1;
         }
         try {
-            return await this.#transform(key, source, width);
+            return await work();
         } finally {
             const next = this.#waiters.shift();
             if (next) {

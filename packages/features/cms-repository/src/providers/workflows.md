@@ -63,7 +63,7 @@ are local ephemeral objects, not persisted drafts or HTTP exchange tokens.
 - Mutations carry an expected revision, including observations, so a stale
   approval cannot overwrite a concurrent observation or administrative action.
 
-These are local domain transitions. The future gateway must enforce revocation;
+These are local domain transitions. The gateway enforces revocation at call time;
 remote callback deletion, credential revocation and cleanup are not side effects
 of these methods. Disconnecting a site must not delete shared hub business data.
 

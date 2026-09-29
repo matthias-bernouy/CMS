@@ -1,10 +1,5 @@
 import type { LocalCredentialStore } from "@bernouy/cms-auth";
-import {
-    CapabilityGateway,
-    CatalogueGatewayRevisionSource,
-    CatalogueGatewayRouteResolver,
-    SelectedGatewayCatalogue,
-} from "@bernouy/cms-gateway";
+import { CapabilityGateway, CatalogueGatewayRouteResolver, SelectedGatewayCatalogue } from "@bernouy/cms-gateway";
 import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
@@ -22,6 +17,7 @@ import { CatalogueSelectionDependencies } from "@bernouy/cms-repository/provider
 import { createSecretResolver, type SecretStore } from "@bernouy/secret-store";
 import type { Db } from "mongodb";
 import { createProductionGatewayAccess } from "./access";
+import { ProviderObservationRefresher } from "./ProviderObservationRefresher";
 
 export async function createProductionGateway(
     db: Db,
@@ -38,8 +34,7 @@ export async function createProductionGateway(
     await installations.init();
     const dependencies = new CatalogueSelectionDependencies(releases, manifests, installations);
     const selections = new MongoContractSelectionStore(db, dependencies);
-    const revisions = new CatalogueGatewayRevisionSource(selections, dependencies);
-    const routes = new CatalogueGatewayRouteResolver({ selections, revisions, installations, releases, manifests });
+    const routes = new CatalogueGatewayRouteResolver({ selections, installations, releases, manifests });
     const catalogue = new SelectedGatewayCatalogue(selections, routes);
     const resolveSecret = createSecretResolver(secrets);
     const network = new NodeGatewayHttpNetwork({
@@ -51,6 +46,7 @@ export async function createProductionGateway(
             return token;
         },
     });
+    const observations = new ProviderObservationRefresher(siteId, selections, installations, network);
     const access = createProductionGatewayAccess(credentials, administratorEmail);
     const invoker = new CapabilityGateway({
         routes,
@@ -67,6 +63,7 @@ export async function createProductionGateway(
         access: invoker,
         images,
         catalogue,
+        observations,
         isAdministrator: access.isAdministrator,
     };
 }

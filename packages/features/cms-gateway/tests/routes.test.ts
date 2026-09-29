@@ -1,15 +1,16 @@
 import { expect, test } from "bun:test";
 import {
-    CatalogueGatewayRevisionSource,
+    CapabilityGateway,
     CatalogueGatewayRouteResolver,
     SelectedGatewayCatalogue,
     type CatalogueGatewayRouteResolverOptions,
 } from "@bernouy/cms-gateway";
-import { gatewayRoute } from "./fixtures";
+import { gatewayRoute, NOW } from "./fixtures";
 
-test("catalogue resolver loads exact site pins and fences changing route state", async () => {
+test("catalogue resolver fences selected policy changes without scanning unrelated catalogues", async () => {
     const fixture = await gatewayRoute();
-    let routeRevision = "route-1";
+    let selected = fixture.selection;
+    let installation = fixture.installation;
     let changeDuringLookup = false;
     const selections = {
         get: async () => ({
@@ -18,7 +19,7 @@ test("catalogue resolver loads exact site pins and fences changing route state",
             dependencyRevision: "deps-0",
             plan: {
                 siteId: "site-a",
-                selections: [fixture.selection],
+                selections: [selected],
                 dependencies: [],
                 structurallyValid: true,
                 runtimeReadiness: "not-evaluated",
@@ -27,16 +28,12 @@ test("catalogue resolver loads exact site pins and fences changing route state",
     } as unknown as CatalogueGatewayRouteResolverOptions["selections"];
     const resolver = new CatalogueGatewayRouteResolver({
         selections,
-        revisions: {
-            capture: async () => routeRevision,
-            isCurrent: async (_siteId, revision) => routeRevision === revision,
-        },
         installations: {
             get: async () => {
                 if (changeDuringLookup) {
-                    routeRevision = "route-2";
+                    selected = { ...fixture.selection, installationId: "install-b" };
                 }
-                return fixture.installation;
+                return installation;
             },
         } as unknown as CatalogueGatewayRouteResolverOptions["installations"],
         releases: {
@@ -49,54 +46,69 @@ test("catalogue resolver loads exact site pins and fences changing route state",
     const route = await resolver.resolve("site-a", "catalog");
     expect(route).toMatchObject({ selection: fixture.selection, release: fixture.release });
     expect(await resolver.isCurrent(route!)).toBe(true);
-    routeRevision = "route-2";
+    selected = { ...fixture.selection, installationId: "install-b" };
     expect(await resolver.isCurrent(route!)).toBe(false);
-    routeRevision = "route-1";
+    selected = fixture.selection;
     expect(await resolver.isCurrent(route!)).toBe(true);
+    installation = {
+        ...fixture.installation,
+        revision: fixture.installation.revision + 1,
+        observation: { ...fixture.installation.observation!, observedAt: "2026-09-29T08:00:20.000Z" },
+    };
+    expect(await resolver.isCurrent(route!)).toBe(true);
+    installation = {
+        ...installation,
+        observation: {
+            ...installation.observation!,
+            report: {
+                ...installation.observation!.report,
+                implementations: installation.observation!.report.implementations.map((item) => ({
+                    ...item,
+                    status: "unavailable" as const,
+                })),
+            },
+        },
+    };
+    expect(await resolver.isCurrent(route!)).toBe(false);
+    installation = fixture.installation;
     changeDuringLookup = true;
     await expect(resolver.resolve("site-a", "catalog")).rejects.toMatchObject({ code: "stale_route" });
 });
 
-test("gateway revision fences selection and catalogue changes", async () => {
-    let selectionRevision = 1;
-    let dependencyRevision = "dependencies-1";
-    const revisionSource = new CatalogueGatewayRevisionSource(
-        { get: async () => ({ revision: selectionRevision }) } as unknown as ConstructorParameters<
-            typeof CatalogueGatewayRevisionSource
-        >[0],
-        {
-            capture: async () => ({ revision: dependencyRevision }),
-            isCurrent: async (_siteId, revision) => revision === dependencyRevision,
-        } as unknown as ConstructorParameters<typeof CatalogueGatewayRevisionSource>[1],
-    );
-    const original = await revisionSource.capture("site-a");
-    expect(await revisionSource.isCurrent("site-a", original)).toBe(true);
-    selectionRevision += 1;
-    expect(await revisionSource.isCurrent("site-a", original)).toBe(false);
-    const afterSelection = await revisionSource.capture("site-a");
-    dependencyRevision = "dependencies-2";
-    expect(await revisionSource.isCurrent("site-a", afterSelection)).toBe(false);
-    expect(await revisionSource.isCurrent("site-a", "invalid")).toBe(false);
-});
-
-test("gateway revision capture uses metadata tokens without materializing dependencies", async () => {
-    let reads = 0;
-    const revisions = new CatalogueGatewayRevisionSource(
-        { get: async () => ({ revision: 1 }) } as never,
-        {
-            revision: async () => {
-                reads += 1;
-                return "metadata-1";
+test("fresh observation renewal does not make a completed command uncertain", async () => {
+    const fixture = await gatewayRoute({ behavior: { effect: "command", execution: "sync", idempotency: "none" } });
+    let installation = fixture.installation;
+    const routes = new CatalogueGatewayRouteResolver({
+        selections: { get: async () => ({ plan: { selections: [fixture.selection] } }) } as never,
+        installations: { get: async () => installation } as never,
+        releases: { get: async () => fixture.release } as never,
+        manifests: { findByDigest: async () => fixture.manifest } as never,
+    });
+    const gateway = new CapabilityGateway({
+        routes,
+        transport: {
+            send: async () => {
+                installation = {
+                    ...installation,
+                    revision: installation.revision + 1,
+                    observation: { ...installation.observation!, observedAt: "2026-09-29T08:00:20.000Z" },
+                };
+                return { status: 200, contentType: "application/json", output: { items: ["saved"] } };
             },
-            capture: async () => {
-                throw new Error("full catalogue capture is forbidden here");
-            },
-            isCurrent: async (_siteId, value) => value === "metadata-1",
-        } as never,
-    );
-    const token = await revisions.capture("site-a");
-    expect(reads).toBe(1);
-    expect(await revisions.isCurrent("site-a", token)).toBe(true);
+        },
+        authorize: async () => true,
+        now: () => NOW,
+    });
+    await expect(
+        gateway.invoke({
+            siteId: "site-a",
+            contractId: "catalog",
+            capabilityId: "item.list",
+            actor: { kind: "anonymous" },
+            origin: "delivery",
+            input: { term: "one" },
+        }),
+    ).resolves.toMatchObject({ kind: "success", output: { items: ["saved"] } });
 });
 
 test("editor catalogue includes only callable selected query capabilities", async () => {
@@ -111,6 +123,7 @@ test("editor catalogue includes only callable selected query capabilities", asyn
             resolve: async (siteId, contractId) => (siteId === "site-a" && contractId === "catalog" ? fixture : null),
             isCurrent: async () => true,
         },
+        { now: () => NOW },
     );
     expect(await catalogue.list("site-a")).toMatchObject([
         { contractId: "catalog", contractLabel: "Catalog", capabilityId: "item.list", providerId: "ulvia.example" },
@@ -122,6 +135,7 @@ test("editor catalogue includes only callable selected query capabilities", asyn
             typeof SelectedGatewayCatalogue
         >[0],
         { resolve: async () => command, isCurrent: async () => true },
+        { now: () => NOW },
     );
     expect(await commandCatalogue.list("site-a")).toHaveLength(1);
 
@@ -136,7 +150,34 @@ test("editor catalogue includes only callable selected query capabilities", asyn
                 typeof SelectedGatewayCatalogue
             >[0],
             { resolve: async () => route, isCurrent: async () => true },
+            { now: () => NOW },
         );
         expect(await filtered.list("site-a")).toEqual([]);
     }
+});
+
+test("editor catalogue hides disabled and stale provider routes", async () => {
+    const fixture = await gatewayRoute();
+    let current = fixture;
+    const catalogue = new SelectedGatewayCatalogue(
+        { get: async () => ({ plan: { selections: [fixture.selection] } }) } as never,
+        { resolve: async () => current, isCurrent: async () => true },
+        { now: () => NOW },
+    );
+    expect(await catalogue.list("site-a")).toHaveLength(1);
+    current = {
+        ...fixture,
+        installation: {
+            ...fixture.installation,
+            installation: { ...fixture.installation.installation, status: "disabled" },
+        },
+    };
+    expect(await catalogue.list("site-a")).toEqual([]);
+    current = fixture;
+    const stale = new SelectedGatewayCatalogue(
+        { get: async () => ({ plan: { selections: [fixture.selection] } }) } as never,
+        { resolve: async () => current, isCurrent: async () => true },
+        { now: () => "2026-09-29T08:01:01.000Z" },
+    );
+    expect(await stale.list("site-a")).toEqual([]);
 });

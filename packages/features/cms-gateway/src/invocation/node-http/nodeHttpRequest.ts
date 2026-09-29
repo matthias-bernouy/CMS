@@ -45,7 +45,16 @@ function toResponse(incoming: IncomingMessage, method: string): Response {
         throw new TypeError("provider returned an invalid HTTP status");
     }
     const headers = new Headers();
-    for (const name of ["content-type", "x-ulvia-error-code", "x-ulvia-request-id"]) {
+    for (const name of [
+        "content-type",
+        "x-ulvia-error-code",
+        "x-ulvia-request-id",
+        "retry-after",
+        "etag",
+        "content-disposition",
+        "content-range",
+        "accept-ranges",
+    ]) {
         const value = incoming.headers[name];
         if (typeof value === "string") {
             headers.set(name, value);

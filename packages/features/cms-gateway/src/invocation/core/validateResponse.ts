@@ -29,12 +29,19 @@ export function validateResponse(
                     "provider binary output violates the selected release",
                 );
             }
+            checkBinaryRange(response);
             return Object.freeze({
                 kind: "binary",
                 requestId,
                 status: response.status,
                 bytes: new Uint8Array(response.bytes),
                 contentType: response.contentType!.split(";", 1)[0]!.trim().toLowerCase(),
+                responseHeaders: projectedHeaders(response, [
+                    "etag",
+                    "content-disposition",
+                    "content-range",
+                    "accept-ranges",
+                ]),
             });
         }
         if (response.bytes !== undefined) {
@@ -73,10 +80,55 @@ export function validateResponse(
             status: response.status,
             errorCode: definition.code,
             output,
+            responseHeaders: projectedHeaders(response, ["retry-after"]),
         });
     } catch {
         throw new GatewayError("invalid_provider_response", "provider error output violates the selected release");
     }
+}
+
+function checkBinaryRange(response: GatewayTransportResponse): void {
+    const range = response.responseHeaders?.["content-range"];
+    if (response.status !== 206) {
+        if (range !== undefined) {
+            throw new GatewayError("invalid_provider_response", "unexpected provider content range");
+        }
+        return;
+    }
+    const match = /^bytes (\d+)-(\d+)\/(\d+)$/.exec(range ?? "");
+    const start = Number(match?.[1]);
+    const end = Number(match?.[2]);
+    const total = Number(match?.[3]);
+    if (
+        !match ||
+        !Number.isSafeInteger(start) ||
+        !Number.isSafeInteger(end) ||
+        !Number.isSafeInteger(total) ||
+        start < 0 ||
+        end < start ||
+        end >= total ||
+        end - start + 1 !== response.bytes?.byteLength
+    ) {
+        throw new GatewayError("invalid_provider_response", "provider content range does not match the bytes");
+    }
+}
+
+function projectedHeaders(
+    response: GatewayTransportResponse,
+    names: readonly string[],
+): Readonly<Record<string, string>> {
+    const result: Record<string, string> = {};
+    for (const name of names) {
+        const value = response.responseHeaders?.[name];
+        if (value === undefined) {
+            continue;
+        }
+        if (typeof value !== "string" || value.length > 1024 || /[\x00-\x1f\x7f]/.test(value)) {
+            throw new GatewayError("invalid_provider_response", "provider response header is invalid");
+        }
+        result[name] = value;
+    }
+    return Object.freeze(result);
 }
 
 function checkContentType(binding: CompiledHttpBinding, response: GatewayTransportResponse): void {

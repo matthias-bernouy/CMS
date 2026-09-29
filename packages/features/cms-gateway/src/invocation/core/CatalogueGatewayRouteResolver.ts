@@ -2,22 +2,18 @@ import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalog
 import type { ProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
 import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
 import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
-import type {
-    GatewayRoute,
-    GatewayRouteResolver,
-    GatewayRouteRevisionSource,
-} from "cms-gateway/invocation/interfaces/Invocation";
+import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
+import type { GatewayRoute, GatewayRouteResolver } from "cms-gateway/invocation/interfaces/Invocation";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 
 export interface CatalogueGatewayRouteResolverOptions {
     readonly selections: ContractSelectionStore;
-    readonly revisions: GatewayRouteRevisionSource;
     readonly installations: ProviderInstallationStore;
     readonly releases: ReleaseCatalogue;
     readonly manifests: ProviderManifestCatalogue;
 }
 
-/** Resolves exact persisted pins, then fences the aggregate against concurrent changes. */
+/** Immutable artifacts are pinned; live checks read only the selected route's mutable records. */
 export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
     readonly #options: CatalogueGatewayRouteResolverOptions;
 
@@ -26,7 +22,6 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
     }
 
     async resolve(siteId: string, contractId: string): Promise<GatewayRoute | null> {
-        const revision = await this.#options.revisions.capture(siteId);
         const stored = await this.#options.selections.get(siteId);
         const selection = stored?.plan.selections.find((item) => item.contractId === contractId);
         if (!stored || !selection) {
@@ -51,7 +46,6 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
             release,
             manifest,
             installation,
-            revision,
         };
         if (!(await this.isCurrent(route))) {
             throw new GatewayError("stale_route", "selection or dependency changed during route lookup");
@@ -60,9 +54,35 @@ export class CatalogueGatewayRouteResolver implements GatewayRouteResolver {
     }
 
     async isCurrent(route: GatewayRoute): Promise<boolean> {
-        if (!route.revision) {
+        const { siteId, contractId, installationId } = route.selection;
+        const [stored, current] = await Promise.all([
+            this.#options.selections.get(siteId),
+            this.#options.installations.get({ siteId, installationId }),
+        ]);
+        const selection = stored?.plan.selections.find((item) => item.contractId === contractId);
+        if (
+            !selection ||
+            !current ||
+            selection.siteId !== siteId ||
+            selection.version !== route.selection.version ||
+            selection.digest !== route.selection.digest ||
+            selection.installationId !== installationId ||
+            canonicalizeIJson(current.installation) !== canonicalizeIJson(route.installation.installation)
+        ) {
             return false;
         }
-        return this.#options.revisions.isCurrent(route.selection.siteId, route.revision);
+        return !readyForSelection(route.installation, route.selection) || readyForSelection(current, route.selection);
     }
+}
+
+function readyForSelection(record: GatewayRoute["installation"], selection: GatewayRoute["selection"]): boolean {
+    return (
+        record.observation?.report.implementations.some(
+            (item) =>
+                item.contractId === selection.contractId &&
+                item.version === selection.version &&
+                item.digest === selection.digest &&
+                item.status === "ready",
+        ) ?? false
+    );
 }

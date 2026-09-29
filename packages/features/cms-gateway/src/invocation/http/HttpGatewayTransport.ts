@@ -69,6 +69,7 @@ export class HttpGatewayTransport implements GatewayTransport {
                 throw new TypeError("provider redirects are forbidden");
             }
             const contentType = response.headers.get("content-type") ?? undefined;
+            const responseHeaders = allowedResponseHeaders(response.headers);
             const maximum =
                 request.capability.output.type === "binary" &&
                 request.binding.response.successStatuses.includes(response.status)
@@ -77,16 +78,17 @@ export class HttpGatewayTransport implements GatewayTransport {
             const bytes = await readBounded(response, maximum);
             if (request.binding.response.successStatuses.includes(response.status)) {
                 if (request.capability.output.type === "binary") {
-                    return { status: response.status, contentType, bytes };
+                    return { status: response.status, contentType, bytes, responseHeaders };
                 }
                 return {
                     status: response.status,
                     contentType,
+                    responseHeaders,
                     output: bytes.byteLength ? parseStrictJson(bytes, this.#maxResponseBytes, 64) : null,
                 };
             }
             if (request.binding.response.errorEnvelope.kind === "headers") {
-                return headError(response, request, bytes);
+                return { ...headError(response, request, bytes), responseHeaders };
             }
             if (contentType?.split(";", 1)[0]?.trim().toLowerCase() !== "application/json") {
                 throw new TypeError("provider error content type is invalid");
@@ -106,6 +108,7 @@ export class HttpGatewayTransport implements GatewayTransport {
             return {
                 status: response.status,
                 contentType,
+                responseHeaders,
                 errorCode: fields.code,
                 ...(Object.hasOwn(fields, "output") ? { output: fields.output } : {}),
             };
@@ -113,6 +116,20 @@ export class HttpGatewayTransport implements GatewayTransport {
             throw new GatewayError("invalid_provider_response", "provider returned an invalid HTTP response");
         }
     }
+}
+
+function allowedResponseHeaders(headers: Headers): Readonly<Record<string, string>> {
+    const values: Record<string, string> = {};
+    for (const name of ["retry-after", "etag", "content-disposition", "content-range", "accept-ranges"]) {
+        const value = headers.get(name);
+        if (value !== null) {
+            if (value.length > 1024 || /[\x00-\x1f\x7f]/.test(value)) {
+                throw new TypeError("provider response header is invalid");
+            }
+            values[name] = value;
+        }
+    }
+    return Object.freeze(values);
 }
 
 function headError(response: Response, request: GatewayTransportRequest, bytes: Uint8Array): GatewayTransportResponse {

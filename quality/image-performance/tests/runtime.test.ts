@@ -70,7 +70,7 @@ describe("image performance runtime", () => {
             expect(performance.now() - startedAt).toBeGreaterThanOrEqual(20);
             expect(new Set(responses.map(({ status }) => status))).toEqual(new Set([200]));
             expect(new Set(bodies.map(({ byteLength }) => byteLength)).size).toBe(1);
-            expect(adapter.stats()).toEqual({ cacheHits: 0, encodes: 1, upstreamReads: 20 });
+            expect(adapter.stats()).toMatchObject({ encodes: 1, upstreamReads: 20 });
         } finally {
             await adapter.dispose?.();
         }

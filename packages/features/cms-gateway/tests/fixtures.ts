@@ -78,7 +78,6 @@ export async function gatewayRoute(
         releases,
     );
     return {
-        revision: "revision-1",
         selection: {
             siteId: "site-a",
             contractId: "catalog",

@@ -72,6 +72,7 @@ function resultResponse(result: GatewayResult): Response {
                 "cache-control": "private, no-store",
                 "content-type": result.contentType,
                 "x-ulvia-request-id": result.requestId,
+                ...result.responseHeaders,
             },
         });
     }
@@ -83,7 +84,12 @@ function resultResponse(result: GatewayResult): Response {
     }
     return result.kind === "success"
         ? jsonResponse(result.output ?? null, result.status, result.requestId)
-        : jsonResponse({ error: { code: result.errorCode, output: result.output } }, result.status, result.requestId);
+        : jsonResponse(
+              { error: { code: result.errorCode, output: result.output } },
+              result.status,
+              result.requestId,
+              result.responseHeaders,
+          );
 }
 
 function errorStatus(error: GatewayError, actor: GatewayActor): number {
@@ -106,12 +112,18 @@ function errorStatus(error: GatewayError, actor: GatewayActor): number {
     }
 }
 
-function jsonResponse(value: unknown, status: number, requestId?: string): Response {
+function jsonResponse(
+    value: unknown,
+    status: number,
+    requestId?: string,
+    responseHeaders?: Readonly<Record<string, string>>,
+): Response {
     return Response.json(value, {
         status,
         headers: {
             "cache-control": "private, no-store",
             ...(requestId ? { "x-ulvia-request-id": requestId } : {}),
+            ...responseHeaders,
         },
     });
 }

@@ -3,6 +3,7 @@ import { CapabilityGateway, GatewayError } from "@bernouy/cms-gateway";
 import { handleGatewayHttpCall } from "@bernouy/cms-gateway/http/handlers";
 import { handleGatewayFileGet } from "@bernouy/cms-gateway/media/handlers";
 import { buildHttpInvocation, HttpGatewayTransport, type GatewayHttpExchange } from "@bernouy/cms-gateway/http";
+import { validateResponse } from "cms-gateway/invocation/core/validateResponse";
 import { gatewayRoute } from "./fixtures";
 
 test("compiled HTTP request preserves the json-percent wire profile", async () => {
@@ -155,8 +156,22 @@ test("gateway validates a real HTTP exchange and classifies malformed responses"
         input: { term: "one" },
     };
     await expect(gateway.invoke(call)).resolves.toMatchObject({ kind: "success", output: { items: ["one"] } });
-    response = Response.json({ error: { code: "NOT_FOUND" } }, { status: 404 });
-    await expect(gateway.invoke(call)).resolves.toMatchObject({ kind: "declared-error", errorCode: "NOT_FOUND" });
+    response = Response.json({ error: { code: "NOT_FOUND" } }, { status: 404, headers: { "retry-after": "30" } });
+    await expect(gateway.invoke(call)).resolves.toMatchObject({
+        kind: "declared-error",
+        errorCode: "NOT_FOUND",
+        responseHeaders: { "retry-after": "30" },
+    });
+    response = Response.json({ error: { code: "NOT_FOUND" } }, { status: 404, headers: { "retry-after": "30" } });
+    const declared = await handleGatewayHttpCall(
+        new Request("https://site.example/.cms/call/catalog/item.list", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(call.input),
+        }),
+        { siteId: "site-a", origin: "delivery", actor: call.actor, prefix: "/.cms/call", invoker: gateway },
+    );
+    expect(declared.headers.get("retry-after")).toBe("30");
     response = new Response("not JSON", { status: 200, headers: { "content-type": "application/json" } });
     await expect(gateway.invoke(call)).rejects.toMatchObject({ code: "invalid_provider_response" });
     response = Response.redirect("https://elsewhere.example.com");
@@ -171,7 +186,12 @@ test("gateway validates a real HTTP exchange and classifies malformed responses"
 test("gateway serves bounded provider file bytes with the declared media type", async () => {
     const route = await gatewayRoute({ binary: true });
     let upstream = new Response(new Uint8Array([1, 2, 3, 4]), {
-        headers: { "content-type": "image/png" },
+        headers: {
+            "content-type": "image/png",
+            etag: '"provider-version-1"',
+            "content-disposition": 'inline; filename="photo.png"',
+            "cache-control": "public, max-age=86400",
+        },
     });
     const exchanges: GatewayHttpExchange[] = [];
     const gateway = new CapabilityGateway({
@@ -206,6 +226,8 @@ test("gateway serves bounded provider file bytes with the declared media type", 
     expect(result.status).toBe(200);
     expect(result.headers.get("content-type")).toBe("image/png");
     expect(result.headers.get("cache-control")).toBe("private, no-store");
+    expect(result.headers.get("etag")).toBe('"provider-version-1"');
+    expect(result.headers.get("content-disposition")).toBe('inline; filename="photo.png"');
     expect(await result.arrayBuffer()).toEqual(new Uint8Array([1, 2, 3, 4]).buffer);
     expect(exchanges[0]?.accept).toBe("image/png");
 
@@ -221,7 +243,43 @@ test("gateway serves bounded provider file bytes with the declared media type", 
     expect(await file.arrayBuffer()).toEqual(new Uint8Array([5, 6]).buffer);
     expect(exchanges[1]?.pathAndQuery).toBe("/v1/files/%22photo-1%22");
 
-    upstream = Response.json({ error: { code: "NOT_FOUND" } }, { status: 404 });
+    upstream = new Response(new Uint8Array([1, 2, 3, 4]), {
+        headers: { "content-type": "image/png", etag: '"provider-version-2"' },
+    });
+    const partial = await handleGatewayFileGet(
+        new Request("https://site.example/.cms/media/catalog/item.list/photo-1", {
+            headers: { range: "bytes=1-2" },
+        }),
+        {
+            siteId: "site-a",
+            origin: "delivery",
+            actor: { kind: "anonymous" },
+            prefix: "/.cms/media",
+            invoker: gateway,
+        },
+    );
+    expect(partial.status).toBe(206);
+    expect(partial.headers.get("content-range")).toBe("bytes 1-2/4");
+    expect(partial.headers.get("accept-ranges")).toBe("bytes");
+    expect(await partial.arrayBuffer()).toEqual(new Uint8Array([2, 3]).buffer);
+
+    upstream = new Response(new Uint8Array([1, 2, 3, 4]), { headers: { "content-type": "image/png" } });
+    const unsatisfiable = await handleGatewayFileGet(
+        new Request("https://site.example/.cms/media/catalog/item.list/photo-1", {
+            headers: { range: "bytes=9-12" },
+        }),
+        {
+            siteId: "site-a",
+            origin: "delivery",
+            actor: { kind: "anonymous" },
+            prefix: "/.cms/media",
+            invoker: gateway,
+        },
+    );
+    expect(unsatisfiable.status).toBe(416);
+    expect(unsatisfiable.headers.get("content-range")).toBe("bytes */4");
+
+    upstream = Response.json({ error: { code: "NOT_FOUND" } }, { status: 404, headers: { "retry-after": "10" } });
     const missing = await handleGatewayFileGet(
         new Request("https://site.example/.cms/media/catalog/item.list/missing"),
         {
@@ -233,11 +291,41 @@ test("gateway serves bounded provider file bytes with the declared media type", 
         },
     );
     expect(missing.status).toBe(404);
+    expect(missing.headers.get("retry-after")).toBe("10");
+    expect(missing.headers.get("x-ulvia-request-id")).toMatch(/^[0-9a-f-]{36}$/);
 
     upstream = new Response(new Uint8Array(9), { headers: { "content-type": "image/png" } });
     expect((await call()).status).toBe(502);
     upstream = new Response(new Uint8Array([1]), { headers: { "content-type": "text/plain" } });
     expect((await call()).status).toBe(502);
+});
+
+test("partial provider bytes require a matching content range", async () => {
+    const route = await gatewayRoute({ binary: true });
+    const capability = route.release.admission.release.capabilities[0]!;
+    const original = route.release.admission.bindings[0]!.binding;
+    const binding = {
+        ...original,
+        response: { ...original.response, successStatuses: [206] },
+    };
+    const response = {
+        status: 206,
+        contentType: "image/png",
+        bytes: new Uint8Array([2, 3]),
+        responseHeaders: { "content-range": "bytes 1-2/4" },
+    };
+    expect(validateResponse(capability, binding, response, "request-1")).toMatchObject({
+        kind: "binary",
+        responseHeaders: { "content-range": "bytes 1-2/4" },
+    });
+    expect(() =>
+        validateResponse(
+            capability,
+            binding,
+            { ...response, responseHeaders: { "content-range": "bytes 1-3/4" } },
+            "request-1",
+        ),
+    ).toThrow("content range");
 });
 
 test("HTTP invocation accepts only canonical approved loopback origins", async () => {

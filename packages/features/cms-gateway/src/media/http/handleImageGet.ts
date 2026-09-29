@@ -59,7 +59,14 @@ export async function handleGatewayImageGet(request: Request, options: GatewayIm
             Number(widthMatch[1]),
         );
         if ("status" in derivative) {
-            return new Response(null, { status: derivative.status, headers: { "cache-control": "private, no-store" } });
+            return new Response(null, {
+                status: derivative.status,
+                headers: {
+                    "cache-control": "private, no-store",
+                    "x-ulvia-request-id": derivative.requestId,
+                    ...derivative.responseHeaders,
+                },
+            });
         }
         return new Response(new Uint8Array(derivative.bytes), {
             headers: {

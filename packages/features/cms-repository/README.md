@@ -85,8 +85,9 @@ deterministic memory implementations, and Mongo release, manifest, installation
 and selection stores. Mongo release publication rejects fixture assets until a
 separate byte store is available. It has no live provider transport, mounted
 routes, secret-store integration, conformance runner or gateway execution.
-The Mongo catalogues expose revision tokens from publication metadata, so
-gateway freshness checks do not load immutable release or manifest artifacts.
+The Mongo catalogues expose revision tokens from publication metadata for
+selection planning. Gateway freshness checks compare the selected site route's
+mutable records and do not rescan the global catalogues.
 Admission and graph planning validate
 artifacts and proposed choices; they do not establish live readiness or attest
 that a provider passes a contract. Host authorization and production snapshot

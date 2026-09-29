@@ -8,7 +8,6 @@ export function resolveRoute(route: GatewayRoute, siteId: string, contractId: st
     const document = release.admission.release;
     const provider = manifest.admission.manifest;
     if (
-        !route.revision ||
         selection.siteId !== siteId ||
         selection.contractId !== contractId ||
         selection.installationId !== approved.id ||

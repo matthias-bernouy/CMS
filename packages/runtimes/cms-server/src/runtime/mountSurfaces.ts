@@ -48,12 +48,15 @@ export async function mountProductionSurfaces(
             ...(gateway
                 ? {
                       capabilityGateway: {
-                          ...gateway,
+                          siteId: gateway.siteId,
                           invoker: observeGatewayInvoker(
                               gateway.invoker,
                               features.endpointPerformanceRecorder,
                               "control",
                           ),
+                          images: gateway.images,
+                          catalogue: gateway.catalogue,
+                          isAdministrator: gateway.isAdministrator,
                       },
                   }
                 : {}),
@@ -121,6 +124,7 @@ export async function mountProductionSurfaces(
     const sitemapRefresh = runtime.startSitemapRefresh?.(deliveryCms, {
         reportError: (error) => runtime.reportError("Sitemap refresh failed", error),
     });
+    gateway?.observations?.start((error) => runtime.reportError("Provider observation refresh failed", error));
     runtime.log("🚀 CMS listening");
     runtime.log(`   admin:        ${env.CONTROL_PUBLIC_URL}/admin/`);
     runtime.log(`   sign in:      ${env.CONTROL_PUBLIC_URL}/login`);
@@ -130,6 +134,7 @@ export async function mountProductionSurfaces(
         async stop() {
             endpointPerformanceFlusher.stop();
             await Promise.all([
+                gateway?.observations?.stop(),
                 sitemapRefresh?.stop(),
                 controlRunner.stopGracefully(),
                 deliveryRunner.stopGracefully(),
