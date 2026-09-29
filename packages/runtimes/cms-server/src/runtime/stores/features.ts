@@ -3,12 +3,7 @@ import { MongoAnalyticsStore, MongoEndpointPerformanceStore } from "@bernouy/cms
 import { MongoDashboardAssignmentRepository } from "@bernouy/cms-dashboards/mongo";
 import { MongoIdentityService } from "@bernouy/cms-gateway/mongo";
 import { createSecretResolver, type SecretStore } from "@bernouy/cms-secrets";
-import {
-    CompositeSourceRepository,
-    SYSTEM_SOURCES,
-    type SourceTargetUrlValidationOptions,
-    ValidatingSourceRepository,
-} from "@bernouy/cms-sources";
+import { type SourceTargetUrlValidationOptions, ValidatingSourceRepository } from "@bernouy/cms-sources";
 import { MongoSourceRepository } from "@bernouy/cms-sources/mongo";
 import type { Db } from "mongodb";
 
@@ -20,10 +15,7 @@ type FeatureStoreOptions = {
 export async function createFeatureStores(db: Db, secrets: SecretStore, options: FeatureStoreOptions = {}) {
     const mongoSources = new MongoSourceRepository(db);
     await mongoSources.init();
-    const sources = new CompositeSourceRepository(
-        new ValidatingSourceRepository(mongoSources, options.sourceTargetValidation),
-        SYSTEM_SOURCES,
-    );
+    const sources = new ValidatingSourceRepository(mongoSources, options.sourceTargetValidation);
     const identities = new MongoIdentityService(db);
     await identities.init();
     const dashboardAssignments = new MongoDashboardAssignmentRepository(db);

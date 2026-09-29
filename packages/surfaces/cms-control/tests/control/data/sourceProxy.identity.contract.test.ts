@@ -50,7 +50,6 @@ describe("Control source proxy identity contract", () => {
                 identities,
             } as unknown as ControlCmsState,
             (async (_request, next) => next()) satisfies Middleware,
-            undefined,
         );
         let upstreamCalls = 0;
         const fetchSpy = spyOn(globalThis, "fetch").mockImplementation((async () => {

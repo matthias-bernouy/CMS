@@ -1,6 +1,4 @@
 import { resolveRequestSubject, type Subject } from "@bernouy/cms-auth";
-import { executeAuthSystemSourceEndpoint, type PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
-import { createContentReader, executeSiteSystemSourceEndpoint } from "@bernouy/cms-content";
 import {
     CMS_SOURCES_ROUTE,
     SOURCE_PROXY_METHODS,
@@ -8,18 +6,13 @@ import {
     handleSourceRequest,
     measureActiveSourceTiming,
     sourcesPrefix,
-    SYSTEM_SITE_SOURCE_URN,
     type SourceEndpoint,
 } from "@bernouy/cms-sources";
 import type { Middleware } from "@bernouy/http-runner";
 import { createControlSourceRequestScope } from "cms-control/core/admin/control/sourceProxy/scope";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
 
-export function mountControlSourceProxy(
-    state: ControlCmsState,
-    authGuard: Middleware,
-    controlPublicAuth: PublicAuthRoutesConfig | undefined,
-): void {
+export function mountControlSourceProxy(state: ControlCmsState, authGuard: Middleware): void {
     const runner = state.runner;
     const configuration = state.configuration ?? {};
     const resolveSubject = (request: Request): Promise<Subject | null> =>
@@ -37,23 +30,11 @@ export function mountControlSourceProxy(
             for (const method of SOURCE_PROXY_METHODS) {
                 proxyRunner.setDefaultEndpoint(method, (req) => {
                     const scope = createControlSourceRequestScope(state, configuration, req, resolveSubject);
-                    const executeSystemEndpoint = async (endpoint: SourceEndpoint, request: Request) => {
-                        if (endpoint.urn.startsWith(`${SYSTEM_SITE_SOURCE_URN}:`)) {
-                            return executeSiteSystemSourceEndpoint(createContentReader(state.repository), endpoint);
-                        }
-                        if (controlPublicAuth) {
-                            return executeAuthSystemSourceEndpoint(controlPublicAuth, endpoint, request);
-                        }
-                        return new Response("system source executor not configured", {
-                            status: 501,
-                        });
-                    };
                     return handleSourceRequest(scope.proxiedSources, req, {
                         prefix,
                         deps: {
                             ...scope.deps,
                             telemetry: configuration.sourceTelemetry,
-                            executeSystemEndpoint,
                             authorizeEndpoint,
                             ...(scope.interceptEndpoint ? { interceptEndpoint: scope.interceptEndpoint } : {}),
                         },

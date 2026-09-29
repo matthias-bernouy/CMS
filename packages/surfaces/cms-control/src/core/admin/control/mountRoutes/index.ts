@@ -68,7 +68,7 @@ export function mountControlCmsRoutes(
     const toPages = () => redirect(`${cms.basePath}/admin/pages`);
     runner.addEndpoint("GET", "/", toPages, [authGuard]);
     runner.addEndpoint("GET", "/admin", toPages, [authGuard]);
-    mountControlSourceProxy(state, authGuard, controlPublicAuth);
+    mountControlSourceProxy(state, authGuard);
     mountControlCapabilityRoutes(state, authenticatedGuard);
     runner.group(
         CMS_FILES_ROUTE,

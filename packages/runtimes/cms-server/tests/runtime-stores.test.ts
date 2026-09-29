@@ -6,7 +6,7 @@ import { createFeatureStores } from "../src/runtime/stores/features";
 import { readRuntimeEnv } from "../src/runtimeEnv";
 
 describe("production runtime stores", () => {
-    test("initializes every indexed feature repository before composing delivery sources", async () => {
+    test("initializes feature stores without injecting obsolete system Sources", async () => {
         const indexedCollections: string[] = [];
         const db = {
             collection(name: string) {
@@ -44,6 +44,8 @@ describe("production runtime stores", () => {
             ]),
         );
         expect(stores.sources).toBeDefined();
+        expect(await stores.sources.getSource("urn:system-auth")).toBeNull();
+        expect(await stores.sources.getSource("urn:system-site")).toBeNull();
         expect(typeof stores.resolveSecret).toBe("function");
         expect(stores.endpointPerformanceRecorder.stats()).toMatchObject({
             accepted: 0,

@@ -45,7 +45,6 @@ describe("Control source subject scope", () => {
                 secrets: new InMemorySecretStore(),
             } as unknown as ControlCmsState,
             guard,
-            undefined,
         );
         const upstream = spyOn(globalThis, "fetch").mockImplementation((async (
             _input: RequestInfo | URL,

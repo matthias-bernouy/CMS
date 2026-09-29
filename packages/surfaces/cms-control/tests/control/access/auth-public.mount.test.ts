@@ -1,7 +1,7 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
-import { CompositeSourceRepository, InMemorySourceRepository, SYSTEM_SOURCES } from "@bernouy/cms-sources";
+import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import { ControlCms } from "cms-control/ControlCms";
 import { authSystem, CaptureRunner, mountedSourceHandler } from "./authPublicSupport";
 
@@ -33,11 +33,11 @@ describe("Control public auth mount", () => {
         expect(runner.endpoints.has("POST /.cms/auth/signup")).toBe(false);
     });
 
-    test("keeps system-auth signup disabled through the guarded Control gateway", async () => {
+    test("does not expose system-auth through the Control Source proxy", async () => {
         const runner = CaptureRunner.withoutFileApi();
         const repository = new InMemoryCmsRepository();
         const { local, credentials, users, publicAuth } = authSystem();
-        const gateway = new CompositeSourceRepository(new InMemorySourceRepository(), SYSTEM_SOURCES);
+        const gateway = new InMemorySourceRepository();
         const authenticated = new InMemoryAuthentication();
         const cms = new ControlCms(
             runner,
