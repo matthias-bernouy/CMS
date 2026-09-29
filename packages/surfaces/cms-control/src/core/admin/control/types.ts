@@ -14,6 +14,7 @@ import type { DashboardAssignmentRepository } from "@bernouy/cms-dashboards";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
+import type { GatewayCapabilityCatalogue } from "@bernouy/cms-gateway";
 import type { ProviderImageService } from "@bernouy/cms-gateway/media";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import type { SourceEndpointInterceptor, SourceRepository, SourceRequestTelemetryOptions } from "@bernouy/cms-sources";
@@ -34,6 +35,7 @@ export type ControlCmsOptions = Configuration & {
         readonly siteId: string;
         readonly invoker: GatewayInvoker;
         readonly images?: Pick<ProviderImageService, "get">;
+        readonly catalogue?: GatewayCapabilityCatalogue;
         /** Host-owned verified administrator grant, independent of request fields. */
         readonly isAdministrator: (subject: Subject) => Promise<boolean>;
     };

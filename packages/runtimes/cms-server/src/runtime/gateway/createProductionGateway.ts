@@ -1,5 +1,10 @@
 import type { LocalCredentialStore } from "@bernouy/cms-auth";
-import { CapabilityGateway, CatalogueGatewayRevisionSource, CatalogueGatewayRouteResolver } from "@bernouy/cms-gateway";
+import {
+    CapabilityGateway,
+    CatalogueGatewayRevisionSource,
+    CatalogueGatewayRouteResolver,
+    SelectedGatewayCatalogue,
+} from "@bernouy/cms-gateway";
 import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/node-http";
@@ -35,6 +40,7 @@ export async function createProductionGateway(
     const selections = new MongoContractSelectionStore(db, dependencies);
     const revisions = new CatalogueGatewayRevisionSource(selections, dependencies);
     const routes = new CatalogueGatewayRouteResolver({ selections, revisions, installations, releases, manifests });
+    const catalogue = new SelectedGatewayCatalogue(selections, routes);
     const resolveSecret = createSecretResolver(secrets);
     const network = new NodeGatewayHttpNetwork({
         resolveToken: async (reference) => {
@@ -59,6 +65,7 @@ export async function createProductionGateway(
         siteId,
         invoker,
         images,
+        catalogue,
         isAdministrator: access.isAdministrator,
     };
 }

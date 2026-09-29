@@ -1,55 +1,63 @@
-import { describe, expect, test } from "bun:test";
-import { InMemorySourceRepository, seedSources } from "@bernouy/cms-sources";
-import getEditorSources from "cms-control/api/editor/sources.get";
+import { expect, test } from "bun:test";
+import type { GatewayEditorCapability } from "@bernouy/cms-gateway";
+import getEditorCapabilities from "cms-control/api/editor/capabilities.get";
 import type { ControlCms } from "cms-control/ControlCms";
-import type { DataField } from "@bernouy/cms-content/editor";
-import { ADDRESS_PROVIDER, MIXED_PROVIDER, type EditorSourceTestDto } from "./fixtures";
 
-describe("GET /api/editor/sources contracts", () => {
-    test("lists source contracts for editor data bindings", async () => {
-        const sources = new InMemorySourceRepository();
-        await seedSources(sources, [ADDRESS_PROVIDER]);
+const capability: GatewayEditorCapability = {
+    contractId: "catalog",
+    contractLabel: "Catalog",
+    capabilityId: "item.list",
+    description: "List items",
+    providerId: "ulvia.example",
+    providerLabel: "Example Provider",
+    input: {
+        type: "object",
+        properties: { term: { type: "string", maxLength: 50 } },
+        required: ["term"],
+    },
+    output: {
+        type: "object",
+        properties: { items: { type: "array", items: { type: "string", maxLength: 50 }, maxItems: 10 } },
+        required: ["items"],
+    },
+};
 
-        const response = await getEditorSources(new Request("http://admin/cms/api/editor/sources"), {
-            basePath: "/cms",
-            sources,
-        } as unknown as ControlCms);
-        const body = (await response.json()) as EditorSourceTestDto[];
+test("editor lists selected gateway capabilities with callable bindings", async () => {
+    const response = await getEditorCapabilities(new Request("http://admin/cms/api/editor/capabilities"), {
+        basePath: "/cms",
+        config: {
+            capabilityGateway: {
+                siteId: "site-a",
+                catalogue: {
+                    list: async (siteId: string) => {
+                        expect(siteId).toBe("site-a");
+                        return [capability];
+                    },
+                },
+            },
+        },
+    } as unknown as ControlCms);
 
-        expect(response.status).toBe(200);
-        expect(body.map((source) => source.url)).toEqual([
-            "/cms/.cms/sources/address/search",
-            "/cms/.cms/sources/address/reverse",
-        ]);
-        const searchSource = body[0]!;
-        expect(searchSource.label).toBe("Address search");
-        expect(searchSource.provider).toBe("address");
-        expect(searchSource.providerUrn).toBe("urn:address");
-        expect(searchSource.endpointUrn).toBe("urn:address:search");
-        expect(searchSource.providerLabel).toBe("Address API");
-        expect(searchSource.params?.every((param) => param.in === "query" || param.in === "path")).toBe(true);
-        expect(searchSource.params?.some((param) => param.name === "q" && param.required === true)).toBe(true);
-        const features = searchSource.fields.filter((field: DataField) => field.path === "features");
-        expect(features).toHaveLength(1);
-        expect(features[0]!.type).toBe("array");
-        expect(features[0]!.children?.some((field) => field.path === "geometry")).toBe(true);
-        expect(features[0]!.children?.some((field) => field.path === ".")).toBe(false);
-    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual([
+        {
+            label: "List items",
+            url: "/cms/.cms/call/catalog/item.list",
+            method: "POST",
+            provider: "catalog",
+            providerLabel: "Catalog",
+            description: "List items",
+            body: { contentType: "application/json", fields: [{ path: "term", type: "string", required: true }] },
+            fields: [{ path: "items", type: "array", children: [] }],
+        },
+    ]);
+});
 
-    test("exposes every method allowed by endpoint-picker controls", async () => {
-        const sources = new InMemorySourceRepository();
-        await seedSources(sources, [MIXED_PROVIDER]);
+test("editor catalogue is empty when gateway is not configured", async () => {
+    const response = await getEditorCapabilities(new Request("http://admin/cms/api/editor/capabilities"), {
+        config: {},
+    } as unknown as ControlCms);
 
-        const response = await getEditorSources(new Request("http://admin/cms/api/editor/sources"), {
-            basePath: "/cms",
-            sources,
-        } as unknown as ControlCms);
-        const body = (await response.json()) as EditorSourceTestDto[];
-
-        expect(body.map((source) => `${source.method} ${source.url}`)).toEqual([
-            "GET /cms/.cms/sources/mixed/list",
-            "POST /cms/.cms/sources/mixed/create",
-        ]);
-        expect(body[0]!.params?.map((param) => `${param.in}:${param.name}`)).toEqual(["path:id", "query:q"]);
-    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual([]);
 });

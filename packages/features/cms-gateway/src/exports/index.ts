@@ -1,5 +1,10 @@
 export { CapabilityGateway, type CapabilityGatewayOptions } from "cms-gateway/core/CapabilityGateway";
 export {
+    SelectedGatewayCatalogue,
+    type GatewayCapabilityCatalogue,
+    type GatewayEditorCapability,
+} from "cms-gateway/core/SelectedGatewayCatalogue";
+export {
     CatalogueGatewayRouteResolver,
     type CatalogueGatewayRouteResolverOptions,
 } from "cms-gateway/core/CatalogueGatewayRouteResolver";

@@ -7,7 +7,7 @@ import { currentPageIdentifier } from "./resource";
 export async function configureShellCatalogAndFrame(shell: Shell, options: { frame?: boolean } = {}): Promise<void> {
     const [catalog, dataSources, settings] = await Promise.all([
         loadEditorCatalog(),
-        fetchJson<EditorDataSource[]>("editor/sources", []),
+        fetchJson<EditorDataSource[]>("editor/capabilities", []),
         fetchJson<EditorSettingsResponse>("system/settings", {}),
     ]);
 

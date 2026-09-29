@@ -41,7 +41,7 @@ describe("site bloc builder", () => {
             if (url.includes("/api/bloc/catalogue")) {
                 return Response.json([]);
             }
-            if (url.includes("/api/editor/sources")) {
+            if (url.includes("/api/editor/capabilities")) {
                 return Response.json([]);
             }
             if (url.includes("/api/system/settings")) {

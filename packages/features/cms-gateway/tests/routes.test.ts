@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import {
     CatalogueGatewayRevisionSource,
     CatalogueGatewayRouteResolver,
+    SelectedGatewayCatalogue,
     type CatalogueGatewayRouteResolverOptions,
 } from "@bernouy/cms-gateway";
 import { gatewayRoute } from "./fixtures";
@@ -76,4 +77,37 @@ test("gateway revision fences selection and catalogue changes", async () => {
     dependencyRevision = "dependencies-2";
     expect(await revisionSource.isCurrent("site-a", afterSelection)).toBe(false);
     expect(await revisionSource.isCurrent("site-a", "invalid")).toBe(false);
+});
+
+test("editor catalogue includes only callable selected query capabilities", async () => {
+    const fixture = await gatewayRoute();
+    const catalogue = new SelectedGatewayCatalogue(
+        {
+            get: async () => ({
+                plan: { selections: [fixture.selection] },
+            }),
+        } as unknown as ConstructorParameters<typeof SelectedGatewayCatalogue>[0],
+        {
+            resolve: async (siteId, contractId) => (siteId === "site-a" && contractId === "catalog" ? fixture : null),
+            isCurrent: async () => true,
+        },
+    );
+    expect(await catalogue.list("site-a")).toMatchObject([
+        { contractId: "catalog", contractLabel: "Catalog", capabilityId: "item.list", providerId: "ulvia.example" },
+    ]);
+
+    for (const excluded of [
+        { access: "admin" },
+        { behavior: { effect: "command", execution: "sync", idempotency: "natural" } },
+        { binary: true },
+    ]) {
+        const route = await gatewayRoute(excluded);
+        const filtered = new SelectedGatewayCatalogue(
+            { get: async () => ({ plan: { selections: [route.selection] } }) } as unknown as ConstructorParameters<
+                typeof SelectedGatewayCatalogue
+            >[0],
+            { resolve: async () => route, isCurrent: async () => true },
+        );
+        expect(await filtered.list("site-a")).toEqual([]);
+    }
 });
