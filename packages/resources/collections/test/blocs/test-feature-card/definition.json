@@ -1,0 +1,10 @@
+{
+    "kind": "component",
+    "id": "test-feature-card",
+    "description": "A single feature card",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "body": {}
+    }
+}

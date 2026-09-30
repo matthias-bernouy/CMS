@@ -1,0 +1,19 @@
+[
+    {
+        "id": "tone",
+        "label": "Tone",
+        "group": "Appearance",
+        "type": "string",
+        "enum": ["quiet", "accent"],
+        "maxLength": 16,
+        "default": "quiet"
+    },
+    {
+        "id": "compact",
+        "label": "Compact",
+        "group": "Layout",
+        "type": "boolean",
+        "default": false,
+        "visibleWhen": { "setting": "tone", "equals": "accent" }
+    }
+]

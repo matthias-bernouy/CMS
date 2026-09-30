@@ -1,0 +1,10 @@
+{
+    "kind": "component",
+    "id": "test-callout",
+    "description": "A simple callout",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "body": {}
+    }
+}

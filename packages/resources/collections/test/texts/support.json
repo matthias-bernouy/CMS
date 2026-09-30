@@ -1,0 +1,32 @@
+[
+    {
+        "id": "faq-title",
+        "label": "FAQ title",
+        "category": "Support",
+        "group": "FAQ",
+        "values": {
+            "en": "Frequently asked questions",
+            "fr": "Questions fréquentes"
+        }
+    },
+    {
+        "id": "faq-question",
+        "label": "FAQ question",
+        "category": "Support",
+        "group": "FAQ",
+        "values": {
+            "en": "Can I change these texts?",
+            "fr": "Puis-je modifier ces textes ?"
+        }
+    },
+    {
+        "id": "faq-answer",
+        "label": "FAQ answer",
+        "category": "Support",
+        "group": "FAQ",
+        "values": {
+            "en": "Yes, translations are saved for this site.",
+            "fr": "Oui, les traductions sont enregistrées pour ce site."
+        }
+    }
+]

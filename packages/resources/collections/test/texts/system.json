@@ -1,0 +1,12 @@
+[
+    {
+        "id": "empty-message",
+        "label": "Empty state",
+        "category": "System",
+        "group": "Messages",
+        "values": {
+            "en": "Nothing to display yet.",
+            "fr": "Aucun contenu pour le moment."
+        }
+    }
+]

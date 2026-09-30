@@ -1,0 +1,202 @@
+[
+    {
+        "id": "title",
+        "label": "Welcome title",
+        "category": "Storefront",
+        "group": "Welcome",
+        "values": {
+            "en": "Welcome to your Test collection",
+            "fr": "Bienvenue dans votre collection Test"
+        }
+    },
+    {
+        "id": "description",
+        "label": "Welcome description",
+        "category": "Storefront",
+        "group": "Welcome",
+        "values": {
+            "en": "A small collection for exploring the CMS.",
+            "fr": "Une petite collection pour découvrir le CMS."
+        }
+    },
+    {
+        "id": "hero-action",
+        "label": "Hero action",
+        "category": "Storefront",
+        "group": "Welcome",
+        "values": {
+            "en": "Explore the features",
+            "fr": "Découvrir les fonctionnalités"
+        }
+    },
+    {
+        "id": "feature-one-title",
+        "label": "First feature title",
+        "category": "Storefront",
+        "group": "Features",
+        "values": {
+            "en": "Reusable blocs",
+            "fr": "Blocs réutilisables"
+        }
+    },
+    {
+        "id": "feature-one-body",
+        "label": "First feature description",
+        "category": "Storefront",
+        "group": "Features",
+        "values": {
+            "en": "Compose pages from installed resources.",
+            "fr": "Composez des pages avec les ressources installées."
+        }
+    },
+    {
+        "id": "feature-two-title",
+        "label": "Second feature title",
+        "category": "Storefront",
+        "group": "Features",
+        "values": {
+            "en": "Local repository",
+            "fr": "Repository local"
+        }
+    },
+    {
+        "id": "feature-two-body",
+        "label": "Second feature description",
+        "category": "Storefront",
+        "group": "Features",
+        "values": {
+            "en": "Keep releases versioned and pinned.",
+            "fr": "Conservez des releases versionnées et épinglées."
+        }
+    },
+    {
+        "id": "feature-three-title",
+        "label": "Third feature title",
+        "category": "Storefront",
+        "group": "Features",
+        "values": {
+            "en": "Translations",
+            "fr": "Traductions"
+        }
+    },
+    {
+        "id": "feature-three-body",
+        "label": "Third feature description",
+        "category": "Storefront",
+        "group": "Features",
+        "values": {
+            "en": "Edit site text without changing the release.",
+            "fr": "Modifiez les textes du site sans changer la release."
+        }
+    },
+    {
+        "id": "callout-title",
+        "label": "Callout title",
+        "category": "Storefront",
+        "group": "Callout",
+        "values": {
+            "en": "Ready to build?",
+            "fr": "Prêt à créer ?"
+        }
+    },
+    {
+        "id": "callout-body",
+        "label": "Callout description",
+        "category": "Storefront",
+        "group": "Callout",
+        "values": {
+            "en": "Start with the basics and make them yours.",
+            "fr": "Commencez par les bases et personnalisez-les."
+        }
+    },
+    {
+        "id": "stat-one-value",
+        "label": "First statistic value",
+        "category": "Storefront",
+        "group": "Stats",
+        "values": {
+            "en": "8",
+            "fr": "8"
+        }
+    },
+    {
+        "id": "stat-one-label",
+        "label": "First statistic label",
+        "category": "Storefront",
+        "group": "Stats",
+        "values": {
+            "en": "Starter blocs",
+            "fr": "Blocs de départ"
+        }
+    },
+    {
+        "id": "stat-two-value",
+        "label": "Second statistic value",
+        "category": "Storefront",
+        "group": "Stats",
+        "values": {
+            "en": "2",
+            "fr": "2"
+        }
+    },
+    {
+        "id": "stat-two-label",
+        "label": "Second statistic label",
+        "category": "Storefront",
+        "group": "Stats",
+        "values": {
+            "en": "Languages",
+            "fr": "Langues"
+        }
+    },
+    {
+        "id": "quote",
+        "label": "Testimonial quote",
+        "category": "Storefront",
+        "group": "Testimonial",
+        "values": {
+            "en": "Simple foundations make room for good ideas.",
+            "fr": "De bonnes bases laissent place aux idées."
+        }
+    },
+    {
+        "id": "quote-attribution",
+        "label": "Testimonial attribution",
+        "category": "Storefront",
+        "group": "Testimonial",
+        "values": {
+            "en": "The Test collection",
+            "fr": "La collection Test"
+        }
+    },
+    {
+        "id": "footer-copy",
+        "label": "Footer copy",
+        "category": "Storefront",
+        "group": "Footer",
+        "values": {
+            "en": "Made with Ulvia CMS",
+            "fr": "Créé avec Ulvia CMS"
+        }
+    },
+    {
+        "id": "feature-card-note",
+        "label": "Feature card note",
+        "category": "Storefront",
+        "group": "Features",
+        "values": {
+            "en": "Part of the shared feature card",
+            "fr": "Élément de la carte de fonctionnalité partagée"
+        }
+    },
+    {
+        "id": "navigation-home",
+        "label": "Home link",
+        "category": "Storefront",
+        "group": "Navigation",
+        "values": {
+            "en": "Home",
+            "fr": "Accueil"
+        }
+    }
+]
