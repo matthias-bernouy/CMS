@@ -32,8 +32,8 @@ An empty or invalid workspace fails instead of reporting a successful audit.
 | `binding-core-owner` | ERROR / INFO | Only explicitly declared document producers create a `cms-binding-core`. Known producers remain visible as INFO. |
 | `ui.network.http` | WARNING / INFO | Browser HTTP requests require review. Exact documented infrastructure boundaries are INFO. |
 | `ui.network.websocket`, `ui.network.eventsource` | INFO | Review connection ownership and lifecycle; ordinary HTTP binding does not replace these protocols. |
-| `source-automatic-method` | WARNING | An automatic source performs GET even when a different method is declared. |
-| `source-trigger-target` | WARNING | An event-triggered non-form declares a non-GET method, but only a native form can submit that method. |
+| `source-automatic-method` | WARNING | Currently flags non-GET automatic sources; its GET-only assumption is stale. See the limitation below. |
+| `source-trigger-target` | WARNING | Flags non-GET event-triggered sources outside native forms; its GET-only message is stale. |
 | `source-automatic-mutation` | ERROR | An automatic source targets a proven mutating GET endpoint (currently Control logout only). |
 | `source-publish-reload-loop` | ERROR | A submitted form reloads on an event its own success emits, causing another submission. |
 | `source-body-contract` | WARNING | A static `cms-source-body` contains descriptors the runtime ignores. |
@@ -129,10 +129,27 @@ This first version is intentionally bounded:
   must be added explicitly; unresolved imports can reduce coverage.
 - HTML tokenization handles quotes, comments, raw text, and common entities; it
   is not a full browser HTML parser.
-- Trigger checks use real native-form runtime semantics. A declared POST on an
-  automatic source is an ignored method, not proof that POST executed.
+- Method diagnostics lag behind the current source engine; they cannot prove
+  that an automatic or event-triggered source ignores its declared method.
 - This version does not validate all endpoint methods, source schemas,
   interpolation, boolean attributes, official component usage, or CSS styles.
   It does not ban `innerHTML`, `createElement`, native controls, or local events.
 
 Re-run the scanner for the current inventory and counts.
+
+## Known Method Diagnostic Drift
+
+The current engine in
+[`Source.ts`](../../packages/foundation/components/src/binding/source/Source.ts)
+honors automatic `cms-source-method`, including POST JSON reads used by gateway
+queries. The behavior is covered by
+[request parity tests](../../packages/foundation/components/tests/binding/source/parity/requests.test.ts).
+Only native forms use form serialization; other sources use the ordinary read
+branch with their declared method and body mappings.
+
+The scanner in [forms.ts](../../quality/ui-contracts/markup/forms.ts) still emits
+GET-only explanations for `source-automatic-method` and `source-trigger-target`.
+Treat these messages as stale diagnostics and inspect the actual request path;
+do not rewrite a valid gateway query into GET to satisfy them. Bringing those
+rules into line with the engine remains tooling work. The rules and their
+current severities are documented above as implemented.

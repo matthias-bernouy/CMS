@@ -1,7 +1,7 @@
-# Static Folder
+# Control Static Routing
 
 `@bernouy/cms-control` serves `src/static/` through
-`src/core/registerEndpoints/serveStaticFolder/`. The folder contains
+`src/core/admin/registerEndpoints/serveStaticFolder/`. The folder contains
 server-rendered admin and editor HTML fragments plus static assets.
 
 ## Routing

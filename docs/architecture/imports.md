@@ -29,7 +29,7 @@ Inside a package, use the package-local path aliases already configured for
 that package:
 
 ```ts
-import { readJsonBody } from "cms-control/core/http/readJsonBody";
+import { readJsonBody } from "cms-control/core/admin/http/readJsonBody";
 import { isPublishedPage } from "cms-content/pages/core/lifecycle/publication";
 import { BunRunner } from "http-runner/default-implementation/BunRunner";
 ```
@@ -43,13 +43,13 @@ style, but do not cross package boundaries with relative paths.
 Adapter subpaths isolate optional infrastructure:
 
 - `./mongo` imports MongoDB-backed repositories.
-- `./s3` imports S3-backed file blobs.
+- `./files/s3` on `cms-content` imports S3-backed file blobs.
 - `./files/local-fs` imports filesystem-backed author-file stores.
-- `./browser` imports browser-safe source types and helpers.
-- `./components` imports browser components for auth.
+- `./browser` exposes browser-safe APIs where the package declares it, such as
+  `cms-auth/browser`; gateway image helpers use `cms-gateway/media/browser`.
 
-Only composition roots should import production adapters. In practice this
-usually means `@bernouy/cms-server`, tests, or local development wiring.
+Production adapters belong in composition roots such as `@bernouy/cms-server`
+and local development wiring. Tests can also compose adapters.
 Surfaces consume interfaces and receive concrete instances through their
 constructors or config.
 

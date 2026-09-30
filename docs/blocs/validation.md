@@ -2,8 +2,8 @@
 
 The former integration audit, release, repository, and installation workflow has
 been removed. During the provider transition, validate Bloc work against the
-compiler and the workspace checks; publication will be specified by the new
-contract/provider protocol.
+compiler and the workspace checks; the new collection format has a separate admission API and no publication or
+renderer bridge yet.
 
 ## Local loop
 
@@ -20,9 +20,11 @@ loading, empty, error, and long-content states.
 ## Compiler checks
 
 `@bernouy/cms-bloc-compile` validates tags and artifacts and builds the view and
-editor bundles. It rejects native roots, invalid custom-element names, unsafe
-navigation, unsupported imports, malformed source bundles, and invalid native
-element ownership.
+editor bundles. Tag validation rejects native roots and reserved/invalid custom-element names.
+Source validation detects selected registration and navigation patterns; it is
+not a complete JavaScript safety analysis. Bundling enforces supported imports
+and validates emitted syntax. The Control import path additionally checks source
+bundles, default content and managed native-child structure.
 
 When changing compiler behavior, add a focused test beside
 `packages/features/cms-bloc-compile/tests/`.
@@ -46,5 +48,7 @@ Control bundle used by the browser.
 
 There is currently no supported collection publication command. Do not restore
 the removed package repository, integration manifests, or installation APIs to
-ship a Bloc. Provider manifests, immutable contract releases, conformance, and
-collection resource delivery will define the replacement boundary.
+ship a Bloc. Contract/provider admission and Mongo catalogues already exist. Collection
+publication, installation, renderer compilation and a live conformance runner
+remain separate work. The authenticated `/api/bloc` import described in
+[authoring](authoring.md) still supports the existing compiled format.

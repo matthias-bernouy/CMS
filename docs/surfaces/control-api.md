@@ -1,4 +1,4 @@
-# API Folder
+# Control API Routing
 
 `@bernouy/cms-control` routes `src/api/` through
 `src/core/admin/registerEndpoints/serveApiFolder.ts`. This is a file router for the
@@ -54,7 +54,8 @@ Keep endpoint files thin:
 
 - Parse the request with shared helpers such as `readJsonBody`.
 - Validate DTOs through `src/core/validation/<resource>/parse*Dto.ts`.
-- Delegate mutations to `src/core/<resource>/<action>.ts`.
+- Delegate mutations to the owning domain under `src/core/content/`,
+  `src/core/admin/`, or its feature package.
 - Return JSON with an explicit `Content-Type` header when a body is present.
 - Throw `MissingParam` or `InvalidParam` for bad input.
 
@@ -66,7 +67,7 @@ projections in `src/api/`. Move them to `src/core/`.
 Use the `cms-control/...` alias for package-internal imports:
 
 ```ts
-import { readJsonBody } from "cms-control/core/http/readJsonBody";
+import { readJsonBody } from "cms-control/core/admin/http/readJsonBody";
 ```
 
 Do not use long relative paths from endpoint files.

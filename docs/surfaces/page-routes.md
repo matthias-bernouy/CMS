@@ -1,5 +1,9 @@
 # Page languages and routes
 
+Page content and route persistence belong to `@bernouy/cms-content`; Control
+edits them and Delivery serves the published projection. This guide describes
+that content repository, not the contract/provider `cms-repository` package.
+
 One page record owns its content and stable ID. Its `paths` map stores a local
 path for each configured site language. The default language uses the site
 root: `fr: "/about"` becomes `/about`, and `fr: "/"` becomes `/`. Other
@@ -88,3 +92,7 @@ when those variants live in other files.
 Materialized snapshots follow the runtime refresh schedule, so a recently
 changed path can remain in a snapshot until the next refresh; its public route
 already returns the correct redirect or Gone response.
+
+Dynamic entity URLs add the separate [indexing projection](page-indexing.md).
+See [workspace architecture](../architecture/README.md) for publication and
+read/write facade boundaries.

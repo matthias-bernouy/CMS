@@ -19,9 +19,9 @@ server-only modules.
 ## Package Layout
 
 - `src/ControlCms.ts`: mounts routes and wires injected dependencies.
-- `src/api/`: file-routed REST endpoints. See `docs/api-folder.md`.
+- `src/api/`: file-routed REST endpoints. See `docs/surfaces/control-api.md`.
 - `src/static/`: admin/editor HTML fragments and static assets. See
-  `docs/static-folder.md`.
+  `docs/surfaces/control-static.md`.
 - `src/components/`: browser custom elements bundled into
   `control-components.js`.
 - `src/core/`: non-browser business logic used by endpoints and components.

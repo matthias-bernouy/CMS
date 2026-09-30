@@ -2,6 +2,8 @@
 
 Delivery mounts CMS-owned authentication under `/.cms/auth` when public auth is
 configured. These routes work independently of provider selections.
+Paths below are relative to Delivery's base path. `@bernouy/cms-auth/http`
+supplies the registrar, and the runtime injects the public auth operations.
 
 | Method | Path | JSON body | Response |
 | --- | --- | --- | --- |
@@ -22,7 +24,7 @@ Use `GET /.cms/auth/me` in a `cms-source` binding for account state. Action
 forms can submit to the corresponding auth route. For example:
 
 ```html
-<form cms-source="/.cms/auth/login" cms-source-method="POST" cms-source-trigger="submit">
+<form cms-source="/.cms/auth/login" cms-source-method="POST" cms-source-trigger="submit" cms-source-inherit-query="false">
   <input name="email" type="email" required>
   <input name="password" type="password" required>
   <button type="submit">Log in</button>
@@ -32,3 +34,8 @@ forms can submit to the corresponding auth route. For example:
 Delivery does not mount `/.cms/sources`. Provider data and file reads use
 selected gateway capabilities under `/.cms/call`, `/.cms/media`, and
 `/.cms/image`.
+
+See [binding forms](../blocs/data-bindings.md) for submission state and
+[provider identities](../providers/README.md#identity-and-media) for the separate
+provider alias contract. Public login establishes the CMS session; it does not
+select or approve a provider installation.

@@ -27,7 +27,8 @@ groups, counts, empty-state copy, and optional selected Bloc metadata. Unknown
 collections and Blocs outside the selected collection return 404.
 
 Site compositions are editable. Code Blocs remain readable and previewable but
-are maintained through code or the CLI.
+are maintained through the authenticated Bloc import API. The current CLI has
+no Bloc build/push command.
 
 ## Private collections
 
@@ -60,3 +61,22 @@ collection navigation, overview, theme projection, grouped Bloc detail, and
 the Texts route shell. Text persistence remains deferred. Theme resolution and
 editing use the current content theme contract; provider-owned theme contracts
 will replace that boundary later.
+
+## Repository Collection Admission
+
+`@bernouy/cms-repository/collections` separately implements the
+`ulvia-collection/v1` format. Releases contain assets with byte hashes and
+component or composition definitions. Components declare a static Shadow DOM
+shell, optional fixed Light DOM, styles and settings; compositions declare fixed
+Light DOM only. Local uses, slots, default content and capability requirements
+are validated. Tags use the collection ID as their prefix.
+
+Admission checks structure, asset bytes and available contract witnesses. It
+is not a sanitizer, renderer, provider selection or site installation. Behavior
+JavaScript, external imports, themes, localized texts, views/dashboard templates,
+publication and the bridge to the current compiler are not implemented in this
+format. Existing Control collections do not become admitted releases automatically.
+
+See the [collection format guide](../../packages/features/cms-repository/src/collections/README.md)
+and [starter fixture](../../packages/features/cms-repository/fixtures/collections/v1/README.md)
+for the executable admission example.

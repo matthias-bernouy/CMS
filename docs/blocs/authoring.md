@@ -1,52 +1,47 @@
 # Create A Bloc
 
-This guide uses a small `example-card` custom element owned by a collection.
+This guide covers the compiled Bloc format currently consumed by Control and
+Delivery. It uses an `example-card` custom element. The separate
+`ulvia-collection/v1` admission format is described in [collections](collections.md);
+it does not yet compile these TypeScript modules.
 
-## Folder And Manifest
+## Source Bundle And Import
 
-Put every Bloc below a group directory:
+A descriptive local directory can contain:
 
 ```text
-collections/example/
-└── blocs/
-    └── content/
-        └── example-card/
-            ├── manifest.json
-            ├── Bloc.ts
-            ├── BlocEditor.ts
-            ├── template.html
-            ├── style.css
-            └── default.html
+example-card/
+├── manifest.json
+├── Bloc.ts
+├── BlocEditor.ts
+├── template.html
+├── style.css
+└── default.html
 ```
 
-The collection definition decides which resource group exposes the Bloc. Keep
-the source hierarchy descriptive and declare its category metadata explicitly.
+There is no current CLI folder scanner or collection publication command.
+Control's authenticated `POST <basePath>/api/bloc` accepts multipart fields:
+`tag`, `name`, optional `group`/`description`, a `viewJS` file (view source) or
+`compositionHTML`, an optional `editorJS` file, and an optional `source` JSON map
+of relative filenames to Base64 contents. `force=true` replaces an existing tag;
+otherwise a duplicate returns 409. The import compiles and stores the artifact.
+
+The import fields determine the tag, labels and entry sources. A source bundle's
+`manifest.json` currently supplies default content and optional thumbnail metadata:
 
 ```json
 {
-  "default-tag": "example-card",
-  "bloc": "./Bloc.ts",
-  "editor": "./BlocEditor.ts",
   "defaultContent": "./default.html",
-  "meta": {
-    "title": "Card",
-    "description": "Groups related content on a themed surface."
-  }
+  "thumbnail": { "path": "assets/card.webp", "alt": "Card overview" }
 }
 ```
 
-`default-tag` is the persisted identity and must be a valid custom-element
-name. A collection cannot publish or replace a native HTML root. A collection
-with kind `<kind>` owns both `<kind>/blocs/*` resource IDs and `<kind>-*` custom
-elements; definitions outside either namespace are rejected. For example,
-Mossa uses `mossa/blocs/*` and `mossa-*`. `bloc` defaults to `./Bloc.ts`;
-`editor` is optional for a custom Bloc and produces an opaque editor when
-omitted. `defaultContent` is optional and must remain inside the Bloc directory.
-`meta.title` and `meta.description` label the catalogue entry.
-
-Do not add inactive metadata merely for display: the site scanner currently
-does not consume `runtime`, icon, author, image, or category metadata. The
-folder owns the group.
+Both referenced files must be included in the source map. Omit the thumbnail
+when no image exists. `defaultContent` is optional and resolves inside the
+source bundle. A missing editor produces an opaque editor. The tag must be a
+valid, unreserved custom-element name; native HTML roots cannot be imported.
+Do not assume that old `default-tag`, `bloc`, `editor` or `meta` manifest fields
+configure the current multipart endpoint.
 
 ## View Structure
 
@@ -94,7 +89,7 @@ element callbacks and DOM APIs when the Bloc needs behavior.
 
 Export one runtime class and do not call `customElements.define()`. The
 build wrapper selects the exported class and owns registration with the
-manifest tag. Likewise, `BlocEditor.ts` exports its editor class without
+imported tag. Likewise, `BlocEditor.ts` exports its editor class without
 registering it.
 
 ## Runtime Behavior
@@ -142,17 +137,13 @@ template.
 A custom Bloc may instead own one editable native Light DOM child through the
 artifact-level `nativeElement` contract:
 
-```json
-{
-  "type": "bloc",
-  "bloc": {
-    "tag": "example-link",
-    "name": "Link",
-    "nativeElement": "a",
-    "path": "blocs/navigation/link",
-    "view": "Bloc.ts"
-  }
-}
+```text
+POST <basePath>/api/bloc
+  tag=example-link
+  name=Link
+  nativeElement=a
+  viewJS=<view source file>
+  source=<Base64 source map containing manifest.json and default.html>
 ```
 
 The default content must then contain exactly one direct, un-slotted child of
@@ -178,8 +169,8 @@ The platform authoring set is intentionally narrow:
 - `article`, `nav`, `header`, `footer`, `main`, and `aside` are available for
   semantic template structure but are not global catalogue entries;
 - `div`, `small`, `blockquote`, and `pre` have no native catalogue entry;
-- legal tables use the structured `mossa-table` bloc instead of exposing
-  `table`, `thead`, `tbody`, `tr`, `th`, and `td` separately.
+- `table`, `thead`, `tbody`, `tr`, `th`, and `td` have no standalone native
+  catalogue entry; a custom Bloc must own that authoring structure.
 
 Placement is catalogued data. It applies consistently when the editor offers,
 inserts, replaces, moves, or pastes content; do not reproduce parent-tag or
@@ -204,16 +195,16 @@ through typed controls:
 - headings and paragraphs expose static or dynamic rich text with links,
   strong emphasis, emphasis, and inline code, without visual attributes.
 
-Visual form controls such as Mossa inputs, selectors, checkboxes, and filters
-remain custom collection blocs, distinct from the data-only `forms` Source.
+Visual form controls can be supplied by custom Blocs or the platform component
+library. They participate in native forms; provider calls use gateway capabilities.
 See [Expose Editing Capabilities](./editor.md) for the editor API.
 
 ## Optional presentation images
 
 A bloc `manifest.json` may declare `"thumbnail": { "path": "assets/card.webp", "alt": "Card overview" }`.
-Collection definitions may similarly declare optional cover metadata. References
-use PNG, JPEG, WebP or SVG files within the collection source. The provider
-protocol will define how released collection assets are addressed.
+References use PNG, JPEG, WebP or SVG files below `assets/` in the persisted
+source map. The new collection format uses logical asset IDs and byte digests;
+there is no automatic conversion between these thumbnail contracts.
 
 A standalone persisted Bloc uses `/api/bloc/thumbnail?id=<tag>`. Control
 authenticates the request, validates image paths and MIME signatures, and sends

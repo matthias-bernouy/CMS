@@ -1,7 +1,9 @@
 
 # Commit Convention
 
-Use a short type plus a focused domain:
+Use a short type plus a focused domain for new commits. This is a recommended
+convention; no commit-message gate is configured, and historical commits do not
+all follow it:
 
 ```text
 feat(domain): summary

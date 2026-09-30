@@ -1,4 +1,3 @@
-
 # CmsCore Agent Instructions
 
 These rules apply to the whole CmsCore workspace. When working inside
@@ -22,9 +21,9 @@ runtimes -> surfaces -> resources -> features -> foundation
 - `foundation/` contains generic utilities with no CMS-domain knowledge.
 - `features/` contains CMS domain modules, contracts, validation, default
   implementations, and optional HTTP handlers or registrars.
-- `resources/` contains versioned, declarative CMS resources such as official
-  integration packages. Resource packages may depend on feature contracts but do
-  not mount HTTP routes, connect to databases, or choose runtime adapters.
+- `resources/` is reserved for versioned, declarative CMS resources; it currently
+  contains no workspace package. Resource packages may depend on feature
+  contracts but do not mount routes, connect to databases, or choose adapters.
 - `surfaces/` mounts features into HTTP applications. Surfaces receive
   dependencies through constructors or config; they do not pick production
   adapters.
@@ -33,6 +32,15 @@ runtimes -> surfaces -> resources -> features -> foundation
 
 Never introduce dependencies against the direction above. Feature-to-feature
 dependencies are allowed only through the published package exports.
+New environment reads belong in runtimes. Existing `process.env.MODE` exceptions
+are recorded in `quality/architecture/repository/repositoryPolicy.ts`; do not
+expand that baseline to bypass dependency injection.
+
+`cms-content` owns the content persistence facade named `CmsRepository`.
+`cms-repository` owns contract/provider artifacts, site installation/selection
+models and collection admission. `cms-gateway` owns live invocation,
+provider-wide identities and media. Generic secret storage and image transforms
+belong to Foundation. See the [package map](docs/architecture/packages.md).
 
 ## Imports
 
@@ -42,9 +50,9 @@ dependencies are allowed only through the published package exports.
   package (`cms-control/...`, `cms-content/...`, `http-runner/...`, and so on)
   over deep relative paths.
 - Do not import another package through `packages/.../src/...`.
-- Network and persistence adapters (`./mongo`, `./s3`) are composition-root
-  imports. Keep them out of surfaces and browser bundles unless the package
-  instructions explicitly say otherwise.
+- Network and persistence adapters are composition-root imports. Keep them out
+  of production surface code and browser bundles. Tests may compose adapters;
+  follow any stricter package-local instructions.
 
 ## Public Boundaries
 
@@ -115,12 +123,13 @@ then TypeScript project references, then `@bernouy/cms-control`.
 
 - In a new worktree, make frozen dependencies available with
   `bun install --frozen-lockfile` before running the initial check.
-- Run `bun run check:all` before making changes and again before handoff. Run it
-  in the same task workspace both times so the final report can be compared with
-  that task's starting state.
-- When other agents are working concurrently, create or use an isolated Git
-  worktree before the initial check. Do not fix findings from another worktree
-  or unrelated pre-existing findings merely to make the global report cleaner.
+- For code changes, run `bun run check:all` before making changes and again before
+  handoff. Run it in the same task workspace both times so the final report can
+  be compared with that task's starting state.
+- When concurrent work may modify the same checkout, create or use an isolated
+  Git worktree before the initial check. Read-only reviews can share a checkout.
+  Do not fix findings from another worktree or unrelated pre-existing findings
+  merely to make the global report cleaner.
 - Address errors introduced by the task. Review new `INFO` and `WARNING`
   findings in the task's scope as guidance. A directory-fanout `ERROR` is
   blocking and must be resolved.
@@ -130,11 +139,14 @@ then TypeScript project references, then `@bernouy/cms-control`.
 ## Documentation
 
 - [docs/README.md](docs/README.md) is the documentation index.
-- [docs/Structure.md](docs/Structure.md) is the workspace architecture guide.
+- [Workspace architecture](docs/architecture/README.md) explains package boundaries.
+- [Development](docs/development/README.md) documents current commands and validation.
 - Package `AGENTS.md` files are the source of truth for package-local contracts
   and gotchas.
 - Keep docs factual and source-backed. If code and docs disagree, inspect the
   code before editing the doc.
+- Distinguish implemented domain APIs, mounted runtime flows and planned work.
+  An admitted artifact is not necessarily executable, installed or published.
 - Use exact package names, export subpaths, route paths, and command names.
 - Do not preserve stale names such as removed packages or old directory layouts
   when a source file shows a newer contract.
@@ -142,7 +154,8 @@ then TypeScript project references, then `@bernouy/cms-control`.
 ## Tests And Safety
 
 - Match the existing test style. Add focused tests when behavior changes.
-- For docs-only changes, `git diff --check` is enough unless generated docs or
-  examples are meant to compile.
+- For documentation-only changes, the before/after `check:all` loop is optional:
+  run `git diff --check` and verify local links after moves. Check generated docs
+  or executable examples when the change requires it.
 - Do not overwrite unrelated dirty work. Read existing changes before touching a
   modified file.

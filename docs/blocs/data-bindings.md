@@ -62,6 +62,33 @@ This allows declared scalar/list branches without a component constructing DOM
 from response data. It does not add general parentheses, filter chains or a
 template-reference mechanism.
 
+## Automatic Request Method And Body
+
+Automatic sources default to `GET`. They also honor `cms-source-method` for
+`POST`, `PUT`, `PATCH`, `DELETE` and `HEAD`; non-GET/HEAD reads send JSON from
+`cms-source-body` (or `{}` when no valid fields exist). Use automatic requests
+for reads; an automatically executed POST gateway query is still a read.
+Mutations belong to an explicit form action.
+
+For a query driven by the current page's URL:
+
+```html
+<section
+  cms-source="/.cms/call/catalog/getProduct as product"
+  cms-source-method="POST"
+  cms-source-body='{"slug":{"from":"queryParam","name":"product"}}'
+>
+  <h1>{{ product.title }}</h1>
+</section>
+```
+
+Body descriptors support `queryParam`, `state`, and scalar `raw` values. Query
+values are strings; they are not coerced to numbers from a contract schema.
+Only concurrent automatic GETs share a pending request inside a binding core;
+completed reads are not cached there, and automatic POSTs do not use that sharing.
+The UI scanner still has outdated method warnings; see
+[its known limitations](../quality/ui-contracts.md#known-method-diagnostic-drift).
+
 ## Form control values
 
 Use ordinary attribute interpolation for text values. The binding synchronizes
@@ -112,7 +139,7 @@ A form may declare `cms-source-success-reload="#detail"`. The ID must identify
 one active automatic read source in the same binding core. Its URL, source
 instance and selection generation are checked before applying late effects.
 The mutation response is not merged into the source; a successful response,
-including HTTP 204, triggers a GET of that source only.
+including HTTP 204, reloads that source only, using its configured read method.
 
 Values are captured before editing is locked. The form and target source stay
 mounted and busy until the write and requested read finish. The lock blocks

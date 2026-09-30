@@ -13,22 +13,17 @@ turning every CSS declaration into an editor setting.
 
 ## Site Themes
 
-Structured theme settings contain a shared token catalogue, several named
-value sets, and one active theme. The default catalogue includes:
+Structured theme settings contain token sources, named value sets, and one
+active theme. A new site's `defaultThemeSettings()` creates an empty **Site
+variables** source and one **Default theme** with empty light/dark values.
+It does not install a built-in Ulvia token catalogue.
 
-| Family | Default variables |
-| --- | --- |
-| Brand | `--ulvia-primary-base`, `--ulvia-primary-foreground`, `--ulvia-secondary-base` |
-| Surfaces | `--ulvia-page-background`, `--ulvia-surface-background`, `--ulvia-surface-border` |
-| Text | `--ulvia-body-text`, `--ulvia-surface-text`, `--ulvia-surface-muted-text` |
-| Feedback | `--ulvia-success-base`, `--ulvia-warning-base`, `--ulvia-danger-base` |
-| Typography | `--ulvia-font-heading`, `--ulvia-font-body` |
-| Spacing and widths | `--ulvia-space-sm`, `--ulvia-space-md`, `--ulvia-container-xl` |
-| Shape and elevation | `--ulvia-radius-control`, `--ulvia-radius-card`, `--ulvia-shadow-soft` |
-
-Generic `--ctx-*` aliases are not a public cross-collection API. Consume the
-documented Ulvia vocabulary or a documented hook from the collection that owns
-the component.
+Authors can create `--site-variable-*` tokens through the theme editor. Existing
+integration contribution APIs can compose additional token sources, but the new
+repository collection format does not yet admit or install theme definitions.
+Use only tokens present in the site's settings or supplied by an explicitly
+configured contribution. Neither `--ctx-*` nor `--ulvia-*` is an automatically
+available cross-collection API.
 
 Control edits structured theme values. Delivery serves the document foundation
 and the active structured values through `/.cms/style`. The foundation does not
@@ -39,22 +34,23 @@ is not part of the settings contract; site-specific values are created as
 
 When an active theme defines dark values, they apply through
 `prefers-color-scheme: dark` and may be forced with
-`data-theme-mode="dark"` on the root element. The active Ulvia contract may
-provide both light and dark defaults for the same semantic token.
+`data-theme-mode="dark"` on the root element. A configured contribution may
+provide both light and dark defaults for a token.
 
 ## Bloc-Level Contract
 
-Map global tokens to names owned by the Bloc, and always provide a sensible
-fallback:
+Map configured site tokens to names owned by the Bloc, and always provide a
+sensible fallback. The `--site-variable-*` names below are illustrative tokens
+to create in the site; they are not built-in defaults:
 
 ```css
 :host {
-  --example-card-background: var(--ulvia-surface-background, Canvas);
-  --example-card-color: var(--ulvia-surface-text, CanvasText);
-  --_example-card-muted-color: var(--ulvia-surface-muted-text, currentColor);
-  --_example-card-border-color: var(--ulvia-surface-border, currentColor);
-  --_example-card-radius: var(--ulvia-radius-card, 0.5rem);
-  --_example-card-padding: var(--ulvia-space-md, 1rem);
+  --example-card-background: var(--site-variable-surface-background, Canvas);
+  --example-card-color: var(--site-variable-surface-text, CanvasText);
+  --_example-card-muted-color: var(--site-variable-surface-muted-text, currentColor);
+  --_example-card-border-color: var(--site-variable-surface-border, currentColor);
+  --_example-card-radius: var(--site-variable-radius-card, 0.5rem);
+  --_example-card-padding: var(--site-variable-space-md, 1rem);
 
   display: block;
   color: var(--example-card-color);
@@ -78,7 +74,7 @@ A site may now tune the component without reaching into its Shadow DOM:
 
 ```css
 example-card {
-  --example-card-background: var(--ulvia-subtle-background);
+  --example-card-background: var(--site-variable-subtle-background);
 }
 ```
 
@@ -98,7 +94,7 @@ Use attributes for finite semantic choices:
 }
 
 :host([appearance="elevated"]) [part="card"] {
-  box-shadow: var(--example-card-shadow, var(--ulvia-shadow-soft, 0 0.5rem 1.5rem rgb(0 0 0 / 12%)));
+  box-shadow: var(--example-card-shadow, var(--site-variable-shadow-soft, 0 0.5rem 1.5rem rgb(0 0 0 / 12%)));
 }
 ```
 
@@ -153,3 +149,6 @@ non-essential motion with `prefers-reduced-motion`.
 
 For image candidate selection inside fluid layouts, follow
 [Authoring Responsive Images](../images/authoring.md).
+
+The implementation is in [theme defaults](../../packages/features/cms-content/src/theme/core/defaults.ts)
+and [CSS generation](../../packages/features/cms-content/src/theme/core/generateStyleEntry.ts).

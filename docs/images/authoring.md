@@ -21,21 +21,20 @@ Contentful Paint image.
 ## Bound Provider Media
 
 Bind an image URL returned by a selected file capability. The URL shape is
-`/.cms/media/<contract>/<capability>/<fileId>` on the same origin:
+`/.cms/media/<contract>/<capability>/<fileId>` on the same origin. Place this
+markup below the page shell's existing binding core:
 
 ```html
-<cms-binding-core>
-  <section cms-source="/.cms/call/catalog/getItem as item" cms-source-method="POST">
-    <img
-      src="{{ item.image.url }}"
-      width="{{ item.image.width }}"
-      height="{{ item.image.height }}"
-      alt="{{ item.image.alt }}"
-      loading="lazy"
-      decoding="async"
-    >
-  </section>
-</cms-binding-core>
+<section cms-source="/.cms/call/catalog/getItem as item" cms-source-method="POST">
+  <img
+    src="{{ item.image.url }}"
+    width="{{ item.image.width }}"
+    height="{{ item.image.height }}"
+    alt="{{ item.image.alt }}"
+    loading="lazy"
+    decoding="async"
+  >
+</section>
 ```
 
 The binding runtime makes unresolved image URLs inert. The gateway browser
@@ -43,6 +42,8 @@ helper recognizes resolved same-origin `/.cms/media` URLs without a query or
 fragment and generates `srcset` candidates at declared widths up to the
 intrinsic width. It leaves the original media URL in `src`. A URL outside that
 shape receives no generated candidates.
+This example assumes the query accepts an empty input object; supply the
+capability's required fields through `cms-source-body` when necessary.
 
 Use an explicit `sizes` value when the image's layout calls for one, such as
 `(min-width: 70rem) 40rem, 100vw`. Otherwise the helper uses `auto, 100vw` for

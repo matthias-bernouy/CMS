@@ -8,6 +8,9 @@ file capability must be available before `/.cms/media` and `/.cms/image` can
 serve bytes. The runtime uses a local derivative store outside the CMS author
 file tree. Provider image processing is currently on demand and bounded to two
 concurrent transforms by default.
+Setting the environment variable alone does not publish releases or approve
+installations. Those domain/storage APIs exist, but their Control administration
+flow is still absent; see [gateway integration status](../providers/README.md).
 
 Every derivative request reauthorizes and rereads the original. A cached
 derivative is reused only for the same byte generation and recipe. The local
@@ -36,3 +39,10 @@ The production runtime no longer installs Source image transform workers or
 responsive Source image browser helpers. Provider files use the gateway media
 routes and their own on-demand derivative store. The performance suite also
 uses the gateway image service and browser runtime.
+
+The current gateway recipe bounds source bytes to 10 MiB, output to 5 MiB,
+decoded pixels to 40 million and transform time to 10 seconds. The service allows
+two active jobs and 64 pending jobs by default. These limits are defined in
+[providerImageService.ts](../../packages/features/cms-gateway/src/media/core/providerImageService.ts);
+local retention is defined in
+[LocalProviderImageStore.ts](../../packages/features/cms-gateway/src/media/default-implementation/LocalProviderImageStore.ts).

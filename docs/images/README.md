@@ -18,6 +18,10 @@ installation, actor grant, and original file before a derivative cache lookup.
 Gateway derivative responses currently use `private, no-store`; durable jobs and
 public cache policy have not been added yet.
 
+`no-store` controls browser and intermediary caching. Server-side transformation
+and reuse of stored derivative bytes still happen; a warm request avoids another
+encode, but still authorizes access and reads the original provider bytes.
+
 The old `/.cms/sources` image route and Source image worker have been removed.
 Provider media uses selected gateway capabilities.
 
@@ -34,3 +38,4 @@ Provider media uses selected gateway capabilities.
 
 See [authoring](./authoring.md), [delivery](./delivery.md), and
 [operations](./operations.md) for the current contracts.
+The [gateway flow](../providers/README.md) describes selection and runtime wiring.

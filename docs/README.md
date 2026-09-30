@@ -1,51 +1,46 @@
 # CmsCore Documentation
 
-This directory documents contracts that affect several packages. Package-local
-implementation notes live in each package's `AGENTS.md`.
+These guides describe the current workspace and contracts shared by its
+packages. Package `AGENTS.md` files supply local implementation rules. Planned
+work is identified explicitly; a domain API does not imply a mounted product flow.
 
-## Architecture
+## Architecture And Development
 
-- [Structure.md](./Structure.md) explains the monorepo layers, package roles,
-  dependency direction, and feature package anatomy.
-- [import-rules.md](./import-rules.md) defines allowed import paths, package
-  boundaries, and adapter subpath rules.
-- [commit-convention.md](./commit-convention.md) records the commit message
-  convention used in this repository.
+- [Workspace architecture](architecture/README.md): layers, dependency rules,
+  domain boundaries and runtime composition.
+- [Package map](architecture/packages.md): every current workspace package and
+  its responsibility.
+- [Imports](architecture/imports.md): public exports, local aliases, adapters and
+  browser boundaries.
+- [Development](development/README.md): local startup, builds and validation.
+- [Commit messages](development/commits.md): the recommended message convention.
 
-## Surfaces
+## Providers And Collections
 
-- [UI contracts](./quality/ui-contracts.md) documents binding ownership,
-  browser request diagnostics, source/form checks, and the reviewed inventory.
+- [Repository and gateway flows](providers/README.md): artifact admission, site
+  state, live invocation, identities and remaining integration gaps.
+- [Bloc authoring](blocs/README.md): existing compiled Blocs, editable site
+  compositions, editor contracts, bindings and themes.
+- [Collection API and admission](blocs/collections.md): the current Control
+  workspace and the separate `ulvia-collection/v1` authored bundle format.
 
-- [api-folder.md](./api-folder.md) documents the file-routed REST API convention
-  used by `@bernouy/cms-control`.
-- [static-folder.md](./static-folder.md) documents the static HTML routing and
-  template system used by `@bernouy/cms-control`.
+The root [transition document](../TRANSITION_SOURCES.md) and
+[execution plan](../PLAN_ACTION.md) track direction and implementation phases.
+Use the guides here and the referenced source code to establish current behavior.
 
-## Authoring And Providers
+## HTTP Surfaces
 
-- [Source and provider transition](../TRANSITION_SOURCES.md) records the
-  Protocol v1 direction and high-level phase status.
-- [Source, provider and collection execution plan](../PLAN_ACTION.md) tracks
-  the current wave status, remaining gates and next implementation series.
-- [Repository contracts and providers: flow diagrams](../schema/README.md)
-  separates current admission, publication and conformance flows in
-  `@bernouy/cms-repository` from planned runtime upgrades.
-- [Page languages and routes](./page-languages-and-routes.md) describes localized
-  paths, redirects, deletion tombstones, and public SEO behavior.
-- [Dynamic page indexing](./page-indexing.md) describes gateway capability
-  projections for metadata and sitemap discovery.
-- [Bloc Authoring](./blocs/README.md) documents how to create blocs, expose
-  editor capabilities, bind provider calls, design themeable CSS, test, and publish.
-- [Public authentication](./public-auth.md) documents the native Delivery auth routes.
+- [Control API routing](surfaces/control-api.md).
+- [Control static routing](surfaces/control-static.md).
+- [Page languages and routes](surfaces/page-routes.md): localized URLs,
+  redirects, deletion and recovery.
+- [Dynamic page indexing](surfaces/page-indexing.md): metadata projection and
+  sitemap discovery through selected gateway capabilities.
+- [Public authentication](surfaces/public-auth.md): Delivery's CMS-owned auth routes.
 
-## Images
+## Images And UI Quality
 
-- [Responsive images](./images/README.md) explains ownership, authoring,
-  Delivery optimization, browser selection, caching, and rollout for responsive
-  images.
-
-## UI Quality
-
-- [UI contracts](./quality/ui-contracts.md) documents binding ownership and
-  browser request diagnostics.
+- [Responsive images](images/README.md): [authoring](images/authoring.md),
+  [delivery](images/delivery.md) and [operations](images/operations.md).
+- [UI contracts](quality/ui-contracts.md): binding ownership, browser request
+  diagnostics, source/form checks and current scanner limitations.

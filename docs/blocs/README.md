@@ -24,28 +24,26 @@ layout and semantics.
   templates, default content, registration, and browser constraints.
 - [Expose Editing Capabilities](./editor.md) covers settings, slots, inline
   text, opaque structure, lifecycle hooks, data scopes, and preview states.
-- [Bind Data And Sources](./data-bindings.md) covers declarative CMS Source
+- [Bind Data And Sources](./data-bindings.md) covers declarative source
   markup, loading states, repetition, forms, and the binding-core boundary.
 - [Make A Bloc Themeable](./theming.md) covers global themes, tokens, local CSS
   variables, attributes, `::part`, slots, dark mode, and responsive layout.
-- [Develop, Validate, And Publish](./validation.md) covers the local loop,
+- [Develop And Validate](./validation.md) covers the local loop,
   validation rules, and Delivery loading during the provider transition.
 
-## End-To-End Model
+## Current Execution Paths
 
 ```text
-manifest.json + Bloc.ts + BlocEditor.ts + default.html
-                         |
-                         v
-                  validation
-                    |       |
-                    |       +--> ulvia dev loads the CMS editor
-                    |
-                    +----------> Delivery loads required view bundles
+compiled Bloc sources -> Control import + compiler -> stored view/editor bundles
+site composition      -> Control authoring         -> stored composition artifact
+stored artifacts      -> Control preview and Delivery
 
-site theme --------------------------------> inherited CSS custom properties
-saved Light DOM ---------------------------> slots, text, and bound attributes
+ulvia-collection/v1 bundle -> repository admission -> validated authored bundle
+                                                   (renderer bridge pending)
 ```
+
+Starting `ulvia dev` launches the local CMS; it does not scan, compile or publish
+a collection folder. See [validation](validation.md) for the available checks.
 
 The same saved HTML is used in the editor and in Delivery. Do not put essential
 rendering in `BlocEditor.ts`, depend on editor-only DOM, or make the Delivery
@@ -53,10 +51,10 @@ view wait for authoring controls.
 
 ## Scope Of This Guide
 
-These pages document Blocs owned by collections. Site-specific composition
-lives as CMS data rather than as a copied repository template. Native HTML is
-the exception to collection ownership: the CMS supplies its constrained native
-catalogue, and collections cannot publish native-root artifacts.
+These pages document existing compiled Blocs and site compositions, and identify
+the separate collection admission work. Site compositions live as CMS data.
+The CMS supplies the constrained native HTML catalogue; imported compiled Blocs
+and new collection components cannot replace native roots.
 
 Responsive image behavior is documented separately in
 [Responsive Images](../images/README.md).

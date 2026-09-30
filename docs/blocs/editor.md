@@ -85,7 +85,7 @@ available without Control.
 | `select`, `segmented` | One value from labelled options. |
 | `toggle` | Attribute presence for a boolean choice. |
 | `page-link` | A CMS page, external URL, or media reference. |
-| `endpoint-picker` | A CMS Source endpoint plus its method and optional body attributes. |
+| `endpoint-picker` | A CMS or gateway endpoint plus its method and optional body attributes. |
 | `color` | A theme token or a custom color. |
 | `row` | A visual group of several controls. |
 
@@ -172,7 +172,7 @@ visual attributes.
   cleanup and must not persist preview-only state. States sharing a `group` are
   mutually exclusive.
 - `structureMode()` may return `"opaque"` when the editor must treat internal
-  authored structure as one unit. Omitting `editor` from a custom Bloc manifest
+  authored structure as one unit. Omitting the editor source from a compiled Bloc import
   also produces an opaque editor.
 - `mountEditor()` and `unmountEditor()` are symmetrical hooks for editor-only
   listeners or overlays. Essential interaction belongs in `Bloc.ts`, not in
@@ -180,3 +180,8 @@ visual attributes.
 
 Do not import Control implementation internals. Editor imports are mapped to
 the shared browser editor runtime so all blocs use the same `Editor` identity.
+
+This API belongs to the existing compiled editor runtime. It is not a declaration
+format for the new repository collections. See the
+[editor contracts](../../packages/features/cms-content/src/editor/interfaces/README.md)
+and [current import path](authoring.md#source-bundle-and-import).

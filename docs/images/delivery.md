@@ -29,9 +29,15 @@ bounded concurrency, input, pixel, time, and output limits. The recipe emits
 WebP at quality 75. The local derivative store is disposable.
 
 Responses currently use `private, no-store`, including public capabilities.
+This does not disable the gateway's derivative store. A cache hit reuses encoded
+bytes after a fresh authorized original read; it is not a client or CDN cache hit.
 The gateway has no durable derivative queue or public shared-cache policy.
 Local store garbage collection is limited to age and size pruning. A
 processing miss may add request latency or return a capacity error. These are
 remaining migration tasks.
 
 The old Source `cms-width` URL contract is no longer mounted by Delivery.
+
+Both author files and gateway media use `@bernouy/image-processing/sharp` for
+generic transforms. Their recipes, queues, authorization and storage are owned
+by their respective feature domains.
