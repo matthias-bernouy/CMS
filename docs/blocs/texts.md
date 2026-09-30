@@ -66,22 +66,33 @@ bounds also apply. IDs are lowercase names without dots. Unknown fields,
 duplicate IDs/locales, undeclared parameters and malformed plurals reject.
 This is a plain-text format, not HTML or the full ICU message grammar.
 
-## Delivery configuration
+## Installed catalogues and editing
 
-`DeliveryCmsConfig.collectionTexts` supplies trusted public collection sources
-for the lifetime of a Delivery instance. The route language selects translations.
-These inputs must be stable and public: do not put actor-specific values into
-cached pages. Recreate the instance and invalidate its page cache when changing
-catalogues or overrides. Automatic loading from installed collections and
-revision-based cache invalidation are not implemented yet.
+The runtime persists immutable collection releases and revisioned site installations
+in MongoDB. `createContentReader` exposes installed public text catalogues with
+site overrides and a collection revision. Delivery loads them on render, includes
+the revision in its page-cache keys and requests HTTP revalidation. Control
+invalidates cached pages after saving translations. The static
+`DeliveryCmsConfig.collectionTexts` option remains available for readers without
+an installed-catalogue implementation.
 
-## Example and remaining work
+Installed collections have a working Texts editor: category sections contain
+groups, each displaying a table with Key, Label, immutable default-language value
+and editable selected-language value. Optional `category`, `group`, `label` and
+`description` metadata belong to the JSON definition. Unclassified texts appear
+under General / Texts. Navigation keeps unsaved edits; language changes require
+saving first. Reset removes the site override after Save. Concurrent stale writes
+return 409 and require reloading; they never overwrite newer translations.
 
-`@bernouy/collection-examples` retains the declarative checkout fixture (JSON
-catalogue and HTML composition), covered by an admission test. It mounts no
-route or UI. The temporary Control preview page and endpoint have been removed.
-The Collections Texts tab remains the existing UI mockup; translation persistence
-and actual collection catalogue editing are not connected yet.
+`category`, `group` and `label` accept nonblank strings up to 120 characters;
+`description` accepts up to 500. IDs and runtime interpolation remain unchanged.
+The selector includes collection locales and configured site languages. Complete
+site-language removal/migration workflows are not implemented.
 
-Site override persistence, site-language lifecycle and automatic installed
-catalogue loading remain future work.
+## Examples and limits
+
+`packages/resources/collections/test/texts/` contains the installable Test
+catalogue, split by category. Its eight compositions use the declared keys.
+The checkout example remains an admission fixture. The temporary preview route
+has been removed. Existing private/code collections retain the earlier Texts
+mockup; only installed immutable releases have persisted translation editing.

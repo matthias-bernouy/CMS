@@ -1,82 +1,124 @@
-# Bloc Collection API
+# Collections
 
-The Collections workspace is the authoring shell for reusable Blocs. During the
-provider transition it exposes two collection kinds:
+Control exposes private site collections, compiled code blocs, and immutable
+collections installed from a repository. Private compositions are editable;
+installed blocs are read-only and can be placed on pages.
 
-- private site collections containing editable compositions;
-- one code collection containing compiled, read-only Blocs.
+## Local development source
 
-Provider-backed collections, catalogue discovery, installation, upgrades, and
-per-resource availability are intentionally absent until the contract and
-provider protocol owns them.
+`bun run ulvia -- dev` starts a loopback collection repository on port 5102
+(`ULVIA_DEV_REPOSITORY_PORT` can change it). The repository scans
+`packages/resources/collections/*/definition.json` at startup. Each collection
+is declarative; it is not a Bun workspace package.
 
-## Library projection
+```text
+packages/resources/collections/test/
+├── definition.json          # collection identity, version, locale and metadata
+├── blocs/<bloc>/definition.json
+├── blocs/<bloc>/shadowdom.html  # required for components
+├── blocs/<bloc>/lightdom.html   # required for compositions, optional for components
+├── blocs/<bloc>/default.html    # optional initial page-owned slot content
+├── blocs/<bloc>/settings/definition.json  # optional component attributes and editor groups
+├── blocs/<bloc>/style.css    # optional for shadow components
+├── blocs/<bloc>/bloc.ts      # optional browser behavior
+├── texts/*.json             # arrays of localized text definitions
+├── theme/definition.json    # theme categories and light/dark token defaults
+├── definitions/             # reserved for later collection definitions
+├── views/                   # reserved for later HTML views
+└── dashboards/              # reserved for later workspace dashboards
+```
 
-`GET <basePath>/api/bloc/library` accepts these optional query parameters:
+The local repository assembles the supported files into one
+`ulvia-collection/v1` release, admits it, and serves both release metadata and
+canonical bytes. Changes require a repository restart. The current release
+format does not install the three reserved directories. No direct collection
+JSON upload is available in Control.
 
-| Parameter | Meaning |
-| --- | --- |
-| `collection` | `site:<id>` or `code` |
-| `search` | Case-insensitive text search |
-| `category` | Exact Bloc editor category |
-| `visibility` | Site: `draft`, `published`, `archived`; code: `available`, `hidden` |
-| `bloc` | A Bloc tag within the selected collection |
+Components use `shadowdom.html`, optional fixed `lightdom.html`, optional
+`style.css`, and optional `bloc.ts`.
+The repository generates a default component and editor bundle when `bloc.ts`
+is absent. Compositions use `lightdom.html` without a browser component class.
+Their template is shared across every page using the installed release; an
+upgrade changes every rendering. Named `<slot>` elements in `lightdom.html`
+accept page-owned children, optionally initialized from `default.html`.
+For a component with both DOM layers, its host remains and its fixed Light DOM
+children project into the Shadow DOM slots. For a composition alone, Delivery
+replaces the temporary host with the expanded template.
+Admission forbids inline `style` attributes everywhere, permits `class` only
+inside Shadow DOM, and permits bindings only inside Light DOM. Shadow shells
+also reject visible text, links, headings and images, so crawlable content stays
+in Light DOM.
 
-The response includes the collection navigation, filtered Blocs, category
-groups, counts, empty-state copy, and optional selected Bloc metadata. Unknown
-collections and Blocs outside the selected collection return 404.
+Component attributes may be declared in the bloc's `definition.json` under
+`settings`, or in a separate `settings/definition.json`. The local repository
+rejects using both locations for one bloc. Settings are an ordered JSON array;
+each item has an `id`, `label`, `type` and `default`, plus an optional `group`.
+String items may set `enum`, `minLength` and `maxLength`; an omitted `maxLength`
+defaults to 256. The editor groups items by their `group` in first-appearance
+order and uses a Settings group when it is omitted. The same items supply
+insertion defaults and the server-side value schema. The current editor builds
+text, select and toggle controls for string and boolean attributes.
+An item may add `visibleWhen: { "setting": "tone", "equals": "accent" }`;
+`notEquals` and arrays of accepted values are supported. Multiple rules form
+an AND condition. Conditions may reference a boolean item or a string item
+with `enum`, including items in another editor group. Admission rejects unknown
+references, incompatible values, self references and cycles. Visibility affects
+only the editor control: hidden attributes remain stored and are still validated.
+Changing a controlling value does not clear other attributes.
+Inserting a bloc writes its default attributes onto that page's host, and page
+saves validate changed values against the installed schema. `bloc.ts` remains
+optional behavior code; it is not required to describe the settings panel.
 
-Site compositions are editable. Code Blocs remain readable and previewable but
-are maintained through the authenticated Bloc import API. The current CLI has
-no Bloc build/push command.
+`GET <basePath>/api/collections/available` lists configured sources and release
+metadata. `POST <basePath>/api/collections/install` takes a repository ID, release
+identity, digest and site revision. Control fetches the release server-side,
+validates its identity and digest, then installs or upgrades it. Immutable
+release bytes and mutable per-site state are stored separately. An upgrade
+retains site text overrides and checks revision and compatible resource IDs.
 
-## Private collections
+## Workspace
+
+The admin entry point is `<basePath>/admin/collections`. The collection key is
+encoded in these routes:
+
+- `<basePath>/admin/collections/<collection>/overview`
+- `<basePath>/admin/collections/<collection>/theme`
+- `<basePath>/admin/collections/<collection>/blocs`
+- `<basePath>/admin/collections/<collection>/texts`
+
+The theme workspace projects installed collection tokens into the shared site
+theme. The collection owns token definitions and defaults; the site may edit
+token values. Delivery includes the resulting CSS variables in its public
+stylesheet. The Texts workspace groups translations by category and group and
+persists site overrides. Delivery interpolates `cms.i18n` expressions on the
+server after expanding installed compositions.
+
+`GET <basePath>/api/collections/workspace` supplies the workspace snapshot.
+`GET <basePath>/api/collections/installed` returns installed releases and site
+state. `PUT <basePath>/api/collections/texts` saves site text overrides with an
+expected revision.
+
+## Private and code blocs
 
 `GET <basePath>/api/bloc/collections` returns private collections, including the
-virtual default **Site** collection. Existing compositions without explicit
-membership belong to that default.
+virtual default **Site** collection. `POST` accepts
+`{ name, description?, icon? }`; `PUT ?id=<id>` updates metadata. `POST
+<basePath>/api/site-bloc` creates a private composition and accepts
+`{ name, description?, group?, collectionId?, tag? }`. Omitting the collection
+ID uses **Site**.
 
-`POST <basePath>/api/bloc/collections` accepts
-`{ name, description?, icon? }`. `PUT` on the same endpoint with `?id=<id>`
-updates metadata without changing membership. Supported icons are `folder`,
-`layers`, `grid`, `layout`, `star`, and `code`.
+`GET <basePath>/api/bloc/library` supports collection, search, category,
+visibility and bloc filters. The response groups blocs and includes selected
+bloc metadata. Private compositions are editable; compiled code blocs are
+read-only.
 
-`POST <basePath>/api/site-bloc` accepts
-`{ name, description?, group?, collectionId?, tag? }` and creates an editable
-composition. Omitting `collectionId` uses **Site**; an unknown explicit ID is
-rejected.
+## Current limits
 
-## Workspace routes
+The installed-collection bridge accepts compositions and Shadow components,
+including fixed Light DOM, named slots and initial page content. Asset bytes,
+provider grants, configuration editing, uninstall, registry publication, HTML
+views and dashboards remain future work. A source adapter exists for multiple
+repositories, while the dev runtime configures one local source.
 
-The admin entry point is `<basePath>/admin/collections`. Collection sections
-use the encoded collection key in stable routes:
-
-- `<basePath>/admin/collections/<collection>/overview`;
-- `<basePath>/admin/collections/<collection>/theme`;
-- `<basePath>/admin/collections/<collection>/blocs`;
-- `<basePath>/admin/collections/<collection>/texts`.
-
-`GET <basePath>/api/collections/workspace` supplies the landing page,
-collection navigation, overview, theme projection, grouped Bloc detail, and
-the Texts route shell. Text persistence remains deferred. Theme resolution and
-editing use the current content theme contract; provider-owned theme contracts
-will replace that boundary later.
-
-## Repository Collection Admission
-
-`@bernouy/cms-repository/collections` separately implements the
-`ulvia-collection/v1` format. Releases contain assets with byte hashes and
-component or composition definitions, plus optional localized text definitions. Components declare a static Shadow DOM
-shell, optional fixed Light DOM, styles and settings; compositions declare fixed
-Light DOM only. Local uses, slots, default content and capability requirements
-are validated. Tags use the collection ID as their prefix.
-
-Admission checks structure, asset bytes and available contract witnesses. It
-is not a sanitizer, renderer, provider selection or site installation. Behavior
-JavaScript, external imports, themes, views/dashboard templates,
-publication and the bridge to the current compiler are not implemented in this
-format. Existing Control collections do not become admitted releases automatically.
-
-See the [collection format guide](../../packages/features/cms-repository/src/collections/README.md)
-and [starter fixture](../../packages/features/cms-repository/fixtures/collections/v1/README.md)
-for the executable admission example.
+See the [collection release format](../../packages/features/cms-repository/src/collections/README.md)
+for admission constraints.
