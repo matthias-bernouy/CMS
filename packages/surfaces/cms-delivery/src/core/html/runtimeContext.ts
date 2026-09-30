@@ -12,6 +12,7 @@ import type { RenderContext } from "cms-delivery/core/html/RenderContext";
 export function makeRuntimeRenderContext(delivery: DeliveryCms): RenderContext {
     return {
         repository: delivery.repository,
+        collectionTexts: delivery.collectionTexts,
         resolveAssets: (usedTags) => resolveRuntimeAssets(delivery, usedTags),
         faviconUrl: `${delivery.basePath}${FAVICON_ROUTE}`,
         headInjectors: delivery.headInjectors,

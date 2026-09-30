@@ -17,6 +17,9 @@ and analytics collection onto a provided `Runner`.
 
 ## Rules
 
+- Collection text sources are trusted public inputs fixed per instance. Render
+  their markers server-side after composition expansion; catalogue changes need
+  page-cache invalidation. Never insert actor-specific text into shared pages.
 - Rendering is on demand. Do not introduce build-time prerendering or browser
   automation into this package.
 - `ContentReader` returns published pages, projected rendering settings and

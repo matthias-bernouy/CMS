@@ -33,7 +33,7 @@ that those protocol exit conditions have been met.
 | 0–1: protocol and contracts | Partially complete; contract admission, catalogues, schemas, binding compilation and static conformance models exist | Finish representative operation/feed/view fixtures and live conformance evidence |
 | 2–3: providers and synchronous gateway | Partially complete; revisioned Mongo state and selected synchronous calls run through Control and Delivery | Authorized management, real provider fixtures, rate/retry/audit/telemetry, provider/system entrypoints |
 | 4–6: durable protocol, official provider, admin | File reads and bounded derivatives are an initial slice; the rest is open | Durable idempotency, operations, feeds, official provider and provider/contract management UI |
-| 7–9: collections, blocs, views | Collection bundle admission is an initial slice; legacy bloc compilation and a dashboard assignment store remain | Collection publication/install/render, configuration and text model, compiled view grants |
+| 7–9: collections, blocs, views | Collection bundle admission is an initial slice; legacy bloc compilation and a dashboard assignment store remain | Collection publication/install/render, persisted text overrides, compiled view grants |
 | 10 and 12: Delivery/media and legacy retirement | Legacy Source and Source image packages are gone; gateway rendering, indexing and media paths are integrated | Durable media work, cache/GC policy, remaining `cms-source*` authoring vocabulary and end-to-end coverage |
 | 11 and 13: recovery and release tooling | Open | Provider restore/relocation, release tooling, attestations and operational drills |
 
@@ -1064,8 +1064,10 @@ directly.
 
 Status: open for the new collection model. The existing `cms-bloc-compile`
 package still handles code-based and site bloc bundling; its eventual ownership
-and the replacement flows need joint review before relocation. Existing CMS
-theme/text editing does not constitute collection-release themes/texts.
+and the replacement flows need joint review before relocation. JSON release
+texts, typed parameters, plurals, fallback and shared server rendering are now
+implemented, with a declarative checkout fixture. Site override persistence,
+site-language integration and published catalogue loading remain open.
 
 1. Replace bespoke bloc editor bundles with bounded configuration schemas,
    defaults, presets, and declarative UI hints.
@@ -1077,9 +1079,10 @@ theme/text editing does not constitute collection-release themes/texts.
    official/signed-only code, a real sandbox, or no code in Protocol v1. A
    forbidden-word scan is insufficient.
 5. Port theme tokens and site overrides; remove integration ownership terms.
-6. Implement text definitions, locale values, parameter/plural validation,
-   fallback, safe interpolation, optional sanitized rich text, and site
-   overrides.
+6. Complete text integration: definitions, locale values, typed parameters,
+   plurals, fallback and plain-text interpolation are implemented. Persist site
+   overrides and load installed catalogues into published pages. Rich text is
+   unsupported; site override persistence is not connected.
 7. Integrate text and locale editing with current site languages and define
    what happens when a locale is disabled or deleted.
 8. Feed contract mocks into editor previews without requiring an installed

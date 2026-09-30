@@ -53,6 +53,10 @@ export function lookup(scope: Scope, path: string): Lookup {
 
     const dot = path.indexOf(".");
     const head = dot === -1 ? path : path.slice(0, dot);
+    // The CMS owns this root; provider data and local aliases cannot shadow it.
+    if (head === "cms") {
+        return NOT_FOUND;
+    }
     const rest = dot === -1 ? "" : path.slice(dot + 1);
 
     for (let frame: Scope | undefined = scope; frame; frame = frame.parent) {

@@ -66,14 +66,14 @@ will replace that boundary later.
 
 `@bernouy/cms-repository/collections` separately implements the
 `ulvia-collection/v1` format. Releases contain assets with byte hashes and
-component or composition definitions. Components declare a static Shadow DOM
+component or composition definitions, plus optional localized text definitions. Components declare a static Shadow DOM
 shell, optional fixed Light DOM, styles and settings; compositions declare fixed
 Light DOM only. Local uses, slots, default content and capability requirements
 are validated. Tags use the collection ID as their prefix.
 
 Admission checks structure, asset bytes and available contract witnesses. It
 is not a sanitizer, renderer, provider selection or site installation. Behavior
-JavaScript, external imports, themes, localized texts, views/dashboard templates,
+JavaScript, external imports, themes, views/dashboard templates,
 publication and the bridge to the current compiler are not implemented in this
 format. Existing Control collections do not become admitted releases automatically.
 

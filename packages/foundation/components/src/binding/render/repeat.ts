@@ -34,6 +34,9 @@ const MAX_RANGE_COUNT = 100;
 export function parseRepeat(value: string): RepeatSpec {
     const m = value.match(AS_FORM);
     const spec: RepeatSpec = m ? { path: m[1]!, name: m[2]! } : { path: value.trim() };
+    if (spec.name === "cms") {
+        throw new TypeError("The cms namespace is reserved");
+    }
     if (!spec.path.startsWith("$range(")) {
         return spec;
     }

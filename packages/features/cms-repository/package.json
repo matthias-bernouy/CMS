@@ -20,7 +20,8 @@
         "./providers/installations": "./src/exports/providers/installations.ts",
         "./providers/selections": "./src/exports/providers/selections.ts",
         "./providers/mongo": "./src/exports/providers/mongo.ts",
-        "./collections": "./src/exports/collections/index.ts"
+        "./collections": "./src/exports/collections/index.ts",
+        "./collections/texts": "./src/exports/collections/texts.ts"
     },
     "dependencies": {
         "canonicalize": "^3.0.0",

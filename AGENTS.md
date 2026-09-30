@@ -21,8 +21,8 @@ runtimes -> surfaces -> resources -> features -> foundation
 - `foundation/` contains generic utilities with no CMS-domain knowledge.
 - `features/` contains CMS domain modules, contracts, validation, default
   implementations, and optional HTTP handlers or registrars.
-- `resources/` is reserved for versioned, declarative CMS resources; it currently
-  contains no workspace package. Resource packages may depend on feature
+- `resources/` contains versioned, declarative CMS resources, including
+  `@bernouy/collection-examples` for declarative checkout fixtures. Resource packages may depend on feature
   contracts but do not mount routes, connect to databases, or choose adapters.
 - `surfaces/` mounts features into HTTP applications. Surfaces receive
   dependencies through constructors or config; they do not pick production

@@ -1,3 +1,4 @@
+import type { CollectionTextSource } from "@bernouy/cms-content/rendering";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
@@ -16,6 +17,8 @@ import type { PublicPageProvider } from "./PublicPageProvider";
 export type DeliveryCmsConfig = {
     runner?: Runner;
     repository: ContentReader;
+    /** Public collection texts, fixed for this instance. Recreate/invalidate page cache when changing them. */
+    collectionTexts?: readonly CollectionTextSource[];
     cache?: Cache;
     /**
      * Extensions called in registration order for each rendered document,

@@ -13,6 +13,9 @@ and validated defaults. Binary leaves are forbidden in configuration schemas.
 
 This slice supports:
 
+- Optional JSON text definitions with typed parameters, plural forms and locale
+  values. `./collections/texts` exposes validation, fallback resolution and
+  formatting; see [collection texts](../../../../../docs/blocs/texts.md).
 - Assets declared by stable ID, concrete MIME type, byte length and SHA-256.
 - Component blocs with a static `shadowdom` shell and optional fixed `lightdom`,
   `style` source and `settings` schema/defaults.
@@ -89,7 +92,7 @@ schema policy through configurations. Locale tags normalize using
 
 ## Next slices
 
-Themes and localized text definitions, presets, imports, views and dashboard
+Themes, presets, imports, views and dashboard
 templates remain absent from the public format: unsupported fields reject.
 Views must retain composition-only Light DOM semantics; dashboard assignments,
 site overrides and published execution plans must remain site-owned state.

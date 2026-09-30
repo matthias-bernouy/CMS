@@ -86,6 +86,9 @@ events.
 ## Binding Runtime
 
 Binding activates only inside `<cms-binding-core>`. Nested cores are isolated.
+The `cms` root is reserved for server-owned expressions: source/repeat aliases
+cannot claim it and browser scope lookup never resolves it from business data.
+The browser runtime does not implement i18n.
 
 - `cms-source="url"` fetches JSON and renders the element body.
 - `cms-condition="$source.loading"`, `$source.error`, `$source.empty`, or

@@ -99,7 +99,7 @@ and transport profiles, and conformance dependencies. The
 and the proposed connection protocol. [Provider workflows](src/providers/workflows.md)
 details implemented transitions, upgrade boundaries and remaining runtime work.
 The [collections guide](src/collections/README.md) describes the initial slice
-and its explicit gaps: themes, i18n, imports, views/dashboard templates,
+and its explicit gaps: themes, persisted text overrides, imports, views/dashboard templates,
 compatibility, publication, installation and renderer compilation.
 [AGENTS.md](AGENTS.md) defines the domain
 boundaries and implementation invariants.

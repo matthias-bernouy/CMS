@@ -20,6 +20,7 @@
         "./files/s3": "./src/exports/files/s3.ts"
     },
     "dependencies": {
+        "@bernouy/cms-repository": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "linkedom": "^0.18.13",

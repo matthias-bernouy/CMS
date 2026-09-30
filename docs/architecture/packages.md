@@ -39,9 +39,9 @@ The `cms-source` HTML attribute remains the active binding API.
 
 ## Resources
 
-`packages/resources/` currently has no package. The workspace keeps the layer
-for future declarative resources; there is no `packages/resources/sites`
-template catalogue to copy or build.
+`@bernouy/collection-examples` contains a checkout composition and its JSON
+translation catalogue, covered by admission tests. It has no runtime
+adapters or routes. There is no `packages/resources/sites` template catalogue.
 
 ## Surfaces And Runtimes
 

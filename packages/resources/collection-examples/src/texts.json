@@ -1,0 +1,68 @@
+[
+    {
+        "id": "title",
+        "parameters": {},
+        "values": {
+            "en": "Your order",
+            "fr": "Votre commande"
+        }
+    },
+    {
+        "id": "greeting",
+        "parameters": {
+            "name": "string"
+        },
+        "values": {
+            "en": "Thanks, {name}. Your order is almost ready.",
+            "fr": "Merci, {name}. Votre commande est presque prête."
+        }
+    },
+    {
+        "id": "items",
+        "parameters": {
+            "count": "number"
+        },
+        "plural": "count",
+        "values": {
+            "en": {
+                "one": "{count} item in your basket",
+                "other": "{count} items in your basket"
+            },
+            "fr": {
+                "one": "{count} article dans votre panier",
+                "other": "{count} articles dans votre panier"
+            }
+        }
+    },
+    {
+        "id": "note",
+        "parameters": {},
+        "values": {
+            "en": "Delivery note",
+            "fr": "Instructions de livraison"
+        }
+    },
+    {
+        "id": "placeholder",
+        "parameters": {},
+        "values": {
+            "en": "Building, floor, access code…",
+            "fr": "Bâtiment, étage, code d’accès…"
+        }
+    },
+    {
+        "id": "delivery",
+        "parameters": {},
+        "values": {
+            "en": "Free delivery from €50."
+        }
+    },
+    {
+        "id": "action",
+        "parameters": {},
+        "values": {
+            "en": "Continue to payment",
+            "fr": "Continuer vers le paiement"
+        }
+    }
+]

@@ -33,3 +33,6 @@ export {
 } from "cms-content/pages/http/publishedPageSnapshot";
 export { sanitizeDomTree } from "cms-content/editor/core/markup/sanitizeDomTree";
 export { P9R_CACHE } from "cms-content/editor/core/constants/p9r-constants";
+
+export { renderCollectionTexts } from "cms-content/pages/core/rendering/collectionTexts";
+export type { CollectionTextSource } from "cms-content/pages/core/rendering/collectionTexts";

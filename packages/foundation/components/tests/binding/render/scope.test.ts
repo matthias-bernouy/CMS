@@ -1,3 +1,5 @@
+import { parseSourceSpec } from "../../../src/binding/source/runtime/sourceSpec";
+import { parseRepeat } from "../../../src/binding/render/repeat";
 import { describe, test, expect } from "bun:test";
 import { lookup, type Scope } from "../../../src/binding/core/scope";
 
@@ -105,4 +107,19 @@ describe("lookup — arrays (documented behaviour)", () => {
             value: "b",
         });
     });
+});
+
+test("cms is reserved even when implicit values, aliases or parents supply it", () => {
+    const cms = { i18n: { test: { title: "Spoofed" } } };
+    expect(lookup({ value: { cms } }, "cms.i18n.test.title").found).toBe(false);
+    expect(lookup({ vars: { cms } }, "cms").found).toBe(false);
+    expect(lookup({ parent: { vars: { cms } } }, "cms.i18n").found).toBe(false);
+    expect(lookup({ value: { cmsData: { title: "Business" } } }, "cmsData.title").value).toBe("Business");
+});
+
+test("source and repeat aliases cannot claim the reserved root", () => {
+    expect(() => parseSourceSpec("/api/items as cms")).toThrow("reserved");
+    expect(() => parseRepeat("items as cms")).toThrow("reserved");
+    expect(parseSourceSpec("/api/items as cmsData").alias).toBe("cmsData");
+    expect(parseRepeat("items as cmsData").name).toBe("cmsData");
 });

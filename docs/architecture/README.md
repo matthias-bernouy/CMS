@@ -11,7 +11,7 @@ runtimes -> surfaces -> resources -> features -> foundation
 | --- | --- |
 | `foundation/` | Generic building blocks without CMS-domain knowledge. |
 | `features/` | CMS contracts, validation, domain behavior and optional adapters or handlers. |
-| `resources/` | Reserved for declarative, versioned CMS resources. It currently contains no workspace package. |
+| `resources/` | Declarative, versioned CMS resources, including the collection text example. |
 | `surfaces/` | HTTP applications assembled from injected feature dependencies. |
 | `runtimes/` | Executable composition roots that choose adapters, read configuration and start listeners. |
 

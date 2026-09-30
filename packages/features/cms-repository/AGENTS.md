@@ -43,7 +43,10 @@ models and validation for CMS-owned installations and site selections.
   bundles with fixture assets until separate byte storage is implemented.
 - `src/collections/{interfaces,core}/` owns authored collection release parsing,
   asset verification and resource-level reference validation, exposed through
-  `./collections`. Collections consume the contracts facade, not providers or
+  `./collections`. `./collections/texts` exposes browser-safe text validation,
+  locale resolution and formatting. Translation catalogues are declarative JSON;
+  immutable release texts and mutable site overrides remain separate.
+  Collections consume the contracts facade, not providers or
   contracts internals. Do not merge immutable releases with per-site state.
 - Treat inputs as untrusted. Parse from `unknown` or strict JSON; reject unknown
   fields, duplicate properties, ambiguous mappings/ranges and limit violations.

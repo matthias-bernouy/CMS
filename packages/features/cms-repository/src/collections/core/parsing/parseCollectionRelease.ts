@@ -4,6 +4,7 @@ import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { CollectionValidationError, invalid, translateCollectionError } from "../errors";
 import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../limits";
 import { identifier, keys, record, string } from "../values";
+import { parseCollectionTexts } from "../texts/parseCollectionTexts";
 import { parseAssets } from "./assets";
 import { parseBlocs } from "./blocs/parseBlocs";
 import { validateBlocs } from "./blocs/validateBlocs";
@@ -30,6 +31,7 @@ export function parseCollectionRelease(
                 "description",
                 "locale",
                 "configuration",
+                "texts",
                 "assets",
                 "blocs",
             ],
@@ -61,6 +63,7 @@ export function parseCollectionRelease(
                 ? {}
                 : { description: string(source.description, 4096, "$.description") }),
             locale: parseLocale(source.locale),
+            ...(source.texts === undefined ? {} : { texts: parseTexts(source.texts, parseLocale(source.locale)) }),
             ...(source.configuration === undefined
                 ? {}
                 : { configuration: parseConfiguration(source.configuration, "$.configuration", limits) }),
@@ -111,4 +114,16 @@ function parseVersion(value: unknown): string {
         // Report release identity errors at the release field, not at an internal range helper.
     }
     return invalid("must be an exact canonical SemVer", "$.version");
+}
+
+function parseTexts(value: unknown, locale: string) {
+    try {
+        return parseCollectionTexts(value, locale);
+    } catch (error) {
+        throw new CollectionValidationError(
+            "invalid_collection",
+            error instanceof Error ? error.message : "Invalid texts",
+            "$.texts",
+        );
+    }
 }

@@ -1,3 +1,4 @@
+import { renderCollectionTexts } from "@bernouy/cms-content/rendering";
 import { parseHTML } from "linkedom";
 import type { TPage } from "@bernouy/cms-content/rendering";
 import type { CacheEntry } from "@bernouy/http-runner";
@@ -59,6 +60,7 @@ export async function renderPage(
     sanitizeDomTree(document.body);
     const blocList = await ctx.repository.getRenderableBlocs();
     expandCompositions(document.body, blocList);
+    renderCollectionTexts(document.body, settings.site.language || "en", ctx.collectionTexts ?? []);
     sanitizeDomTree(document.body);
     // A browser may fetch an interpolated img src before the deferred binding
     // runtime executes. Keep only dynamic network attributes inert; static

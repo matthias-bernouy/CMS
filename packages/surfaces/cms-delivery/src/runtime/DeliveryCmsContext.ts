@@ -51,6 +51,10 @@ export class DeliveryCmsContext {
         return this.config.headInjectors ?? [];
     }
 
+    get collectionTexts(): DeliveryCmsConfig["collectionTexts"] {
+        return this.config.collectionTexts;
+    }
+
     get publicPageProviders(): readonly PublicPageProvider[] {
         return this.config.publicPageProviders ?? [];
     }

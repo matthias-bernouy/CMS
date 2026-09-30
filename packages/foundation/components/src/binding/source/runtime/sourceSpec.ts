@@ -15,6 +15,9 @@ export function parseSourceSpec(value: string): SourceSpec {
         return { url: value.trim() };
     }
 
+    if (match[2] === "cms") {
+        throw new TypeError("The cms namespace is reserved");
+    }
     return {
         url: match[1]!.trim(),
         alias: match[2]!,

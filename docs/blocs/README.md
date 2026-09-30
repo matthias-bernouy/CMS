@@ -20,6 +20,8 @@ layout and semantics.
 - [Collection API](./collections.md) covers the library projection, site
   compositions, and code-backed collections.
 
+- [Collection Texts](./texts.md) covers JSON catalogues, locale fallback, server
+  interpolation and the checkout fixture.
 - [Create a Bloc](./authoring.md) covers folders, the manifest, runtime code,
   templates, default content, registration, and browser constraints.
 - [Expose Editing Capabilities](./editor.md) covers settings, slots, inline
