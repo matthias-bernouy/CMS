@@ -1,5 +1,4 @@
 import { startLocalRepository } from "../runtime/repository";
-import { LocalCollectionRepository } from "../repository/local";
 import { loadOrCreateDevRuntimeConfig } from "../runtime/config";
 import { startLocalCms, stopLocalCms, type DevPorts } from "../runtime/cms";
 import { localMongoStatus, startLocalMongo, stopLocalMongo } from "../runtime/mongo";
@@ -48,7 +47,7 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
     log("Starting persistent local MongoDB...");
     const mongo = await startLocalMongo(paths.mongo, ports.mongo);
     const config = await loadOrCreateDevRuntimeConfig(paths.dev);
-    const repository = startLocalRepository(ports.repository, new LocalCollectionRepository(paths.repository));
+    const repository = startLocalRepository(ports.repository, paths.repository);
     let cms: Awaited<ReturnType<typeof startLocalCms>>;
     try {
         cms = await startLocalCms(paths, config, mongo, ports);

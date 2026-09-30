@@ -14,8 +14,11 @@ Local Ulvia CMS development runtime.
 - Bind development-only services to loopback interfaces.
 - Never print session secrets, encryption keys, or infrastructure credentials.
 - Keep external process invocation behind the runtime process abstraction.
-- `release` reads an explicit authored collection folder and stores its immutable
-  release below the persistent user data directory. `dev` serves only stored
-  releases on loopback; it must never read authored folders.
+- `release` reads an explicit authored resource folder and dispatches by its
+  `definition.json` kind: collection, contract, or provider-manifest. It stores
+  immutable releases below the persistent user data directory. Provider
+  manifests require their exact contract releases locally; release never probes
+  a provider or handles credentials.
+- `dev` serves only stored releases on loopback; it must never read authored folders.
 - `prune` clears the local repository without touching the persistent dev stack.
 - Do not reintroduce the removed integration repository or Supabase bridge.

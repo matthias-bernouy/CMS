@@ -11,7 +11,7 @@ import { startLocalRepository } from "../../src/runtime/repository";
 test("local repository lists immutable metadata and serves matching release bytes", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-repository-"));
     const repository = new LocalCollectionRepository(root);
-    const server = startLocalRepository(0, repository);
+    const server = startLocalRepository(0, root);
     try {
         const source = new HttpCollectionRepository("local", server.url);
         expect(await source.list()).toEqual([]);

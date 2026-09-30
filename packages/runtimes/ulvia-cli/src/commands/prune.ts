@@ -9,5 +9,5 @@ export async function pruneCommand(
         throw new Error("Usage: ulvia prune");
     }
     await repository.prune();
-    log("Local collection repository cleared");
+    log("Local repository cleared");
 }

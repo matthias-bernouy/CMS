@@ -8,12 +8,12 @@ const HELP = `Ulvia local CMS CLI
 
 Usage:
   ulvia dev [status | credentials | stop]
-  ulvia release <collection-directory>
+  ulvia release <resource-directory>
   ulvia prune
 
 Commands:
   dev        Run or inspect the persistent local CMS development stack
-  release    Compile and store an immutable collection release locally
+  release    Validate and store an immutable collection, contract, or provider manifest
   prune      Remove all local repository contents
 
 Environment:
@@ -54,7 +54,7 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
     }
     const repository = new LocalCollectionRepository(paths.repository);
     if (command === "release") {
-        await releaseCommand(args.slice(1), options.cwd ?? process.cwd(), repository, log);
+        await releaseCommand(args.slice(1), options.cwd ?? process.cwd(), paths.repository, log);
         return;
     }
     await pruneCommand(args.slice(1), repository, log);

@@ -28,6 +28,20 @@ These APIs exist in explicit `cms-repository/contracts`, `/providers` and
 [repository package guide](../../packages/features/cms-repository/README.md)
 for the complete export map.
 
+## Local Releases
+
+`bun run ulvia -- release <resource-directory>` reads the folder's
+`definition.json` and stores a canonical immutable release under the user's
+Ulvia data directory. Contract folders declare `kind: "contract"`; provider
+folders declare `kind: "provider-manifest"`. Release contracts before provider
+manifests that reference their exact version and digest. The loopback local
+repository lists and serves both types at `/v1/contracts` and `/v1/providers`.
+This makes artifacts available for later installation; it does not contact a
+provider, execute conformance tests, or approve an installation. The current
+CMS runtime does not yet import these local contract/provider endpoints.
+Declared contract fixture assets live in `fixtures/<asset-id>` inside the
+authored folder and are validated before the local release is stored.
+
 ## Live Invocation
 
 ```text
