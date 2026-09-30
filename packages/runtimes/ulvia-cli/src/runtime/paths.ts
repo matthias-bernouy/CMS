@@ -4,6 +4,7 @@ import { isAbsolute, join, resolve } from "node:path";
 
 export type UlviaPaths = Readonly<{
     data: string;
+    repository: string;
     dev: string;
     mongo: string;
     cmsFiles: string;
@@ -21,6 +22,7 @@ export function resolveUlviaPaths(
     const dev = join(data, "dev");
     return Object.freeze({
         data,
+        repository: join(data, "repository"),
         dev,
         mongo: join(dev, "mongo"),
         cmsFiles: join(dev, "cms-files"),
@@ -30,6 +32,7 @@ export function resolveUlviaPaths(
 export async function ensureUlviaPaths(paths: UlviaPaths): Promise<void> {
     await ensurePrivateDirectory(paths.data);
     await Promise.all([
+        ensurePrivateDirectory(paths.repository),
         ensurePrivateDirectory(paths.dev),
         ensurePrivateDirectory(paths.mongo),
         ensurePrivateDirectory(paths.cmsFiles),

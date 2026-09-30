@@ -1,24 +1,33 @@
 import { devCommand } from "./commands/dev";
+import { pruneCommand } from "./commands/prune";
+import { releaseCommand } from "./commands/release";
+import { LocalCollectionRepository } from "./repository/local";
 import { ensureUlviaPaths, resolveUlviaPaths } from "./runtime/paths";
 
 const HELP = `Ulvia local CMS CLI
 
 Usage:
   ulvia dev [status | credentials | stop]
+  ulvia release <collection-directory>
+  ulvia prune
 
 Commands:
   dev        Run or inspect the persistent local CMS development stack
+  release    Compile and store an immutable collection release locally
+  prune      Remove all local repository contents
 
 Environment:
   ULVIA_DATA_DIR          Absolute persistent data directory override
   ULVIA_DEV_CONTROL_PORT  Local Control port
   ULVIA_DEV_DELIVERY_PORT Local Delivery port
   ULVIA_DEV_MONGO_PORT    Local MongoDB port
+  ULVIA_DEV_REPOSITORY_PORT Local collection repository port
 `;
 
 export type CliOptions = Readonly<{
     environment?: Record<string, string | undefined>;
     home?: string;
+    cwd?: string;
     log?: (message: string) => void;
 }>;
 
@@ -33,11 +42,20 @@ export async function runCli(args: readonly string[], options: CliOptions = {}):
         log("0.1.0");
         return;
     }
-    if (command !== "dev") {
+    if (command !== "dev" && command !== "release" && command !== "prune") {
         throw new Error(`Unknown command: ${command}`);
     }
     const environment = options.environment ?? process.env;
     const paths = resolveUlviaPaths(environment, options.home);
     await ensureUlviaPaths(paths);
-    await devCommand(args.slice(1), paths, log, environment);
+    if (command === "dev") {
+        await devCommand(args.slice(1), paths, log, environment);
+        return;
+    }
+    const repository = new LocalCollectionRepository(paths.repository);
+    if (command === "release") {
+        await releaseCommand(args.slice(1), options.cwd ?? process.cwd(), repository, log);
+        return;
+    }
+    await pruneCommand(args.slice(1), repository, log);
 }

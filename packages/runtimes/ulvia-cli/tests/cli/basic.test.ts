@@ -4,14 +4,15 @@ import { resolveDevPorts } from "../../src/commands/dev";
 import { localMongoUrl } from "../../src/runtime/mongo";
 
 describe("Ulvia CLI", () => {
-    test("documents only the local CMS development command", async () => {
+    test("documents local development and repository lifecycle commands", async () => {
         const output: string[] = [];
         await runCli(["--help"], { log: (line) => output.push(line) });
 
         expect(output.join("\n")).toContain("ulvia dev");
+        expect(output.join("\n")).toContain("ulvia release");
+        expect(output.join("\n")).toContain("ulvia prune");
         expect(output.join("\n")).not.toContain("ulvia pull");
         expect(output.join("\n")).not.toContain("ulvia push");
-        expect(output.join("\n")).not.toContain("ulvia release");
     });
 
     test("accepts isolated dev ports and rejects collisions", () => {

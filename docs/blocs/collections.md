@@ -4,12 +4,10 @@ Control exposes private site collections, compiled code blocs, and immutable
 collections installed from a repository. Private compositions are editable;
 installed blocs are read-only and can be placed on pages.
 
-## Local development source
+## Local collection releases
 
-`bun run ulvia -- dev` starts a loopback collection repository on port 5102
-(`ULVIA_DEV_REPOSITORY_PORT` can change it). The repository scans
-`packages/resources/collections/*/definition.json` at startup. Each collection
-is declarative; it is not a Bun workspace package.
+Author a declarative collection folder such as
+`packages/resources/collections/test/`. It is not a Bun workspace package.
 
 ```text
 packages/resources/collections/test/
@@ -28,15 +26,21 @@ packages/resources/collections/test/
 └── dashboards/              # reserved for later workspace dashboards
 ```
 
-The local repository assembles the supported files into one
-`ulvia-collection/v1` release, admits it, and serves both release metadata and
-canonical bytes. Changes require a repository restart. The current release
-format does not install the three reserved directories. No direct collection
-JSON upload is available in Control.
+`bun run ulvia -- release packages/resources/collections/test` assembles the
+supported files into one `ulvia-collection/v1` release, validates it, and
+stores immutable canonical bytes in the user's local repository. That repository
+lives at `ULVIA_DATA_DIR/repository`, or below `$XDG_DATA_HOME/ulvia/repository`
+or `~/.local/share/ulvia/repository` by default. `bun run ulvia -- dev` serves
+only stored releases on loopback port 5102 (`ULVIA_DEV_REPOSITORY_PORT` can
+change it); it never scans authored folders. Run `release` again after editing
+the source and increment its version. `bun run ulvia -- prune` empties the
+local repository without deleting the separate dev CMS data. Pull and push
+remain future commands. The current release format does not install the three
+reserved directories. No direct collection JSON upload is available in Control.
 
 Components use `shadowdom.html`, optional fixed `lightdom.html`, optional
 `style.css`, and optional `bloc.ts`.
-The repository generates a default component and editor bundle when `bloc.ts`
+The release command generates a default component and editor bundle when `bloc.ts`
 is absent. Compositions use `lightdom.html` without a browser component class.
 Their template is shared across every page using the installed release; an
 upgrade changes every rendering. Named `<slot>` elements in `lightdom.html`
@@ -50,7 +54,7 @@ also reject visible text, links, headings and images, so crawlable content stays
 in Light DOM.
 
 Component attributes may be declared in the bloc's `definition.json` under
-`settings`, or in a separate `settings/definition.json`. The local repository
+`settings`, or in a separate `settings/definition.json`. The release command
 rejects using both locations for one bloc. Settings are an ordered JSON array;
 each item has an `id`, `label`, `type` and `default`, plus an optional `group`.
 String items may set `enum`, `minLength` and `maxLength`; an omitted `maxLength`

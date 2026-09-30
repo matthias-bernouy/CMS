@@ -6,7 +6,7 @@ import type {
 } from "./interfaces";
 
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
-const VERSION = /^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/;
+const VERSION = /^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 const DIGEST = /^sha256:[0-9a-f]{64}$/;
 
 export class HttpCollectionRepository implements CollectionRepositorySource {

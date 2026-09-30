@@ -9,6 +9,7 @@ describe("Ulvia persistent data paths", () => {
         );
 
         expect(paths.data).toBe("/var/tmp/ulvia-data");
+        expect(paths.repository).toBe("/var/tmp/ulvia-data/repository");
         expect(paths.dev).toBe("/var/tmp/ulvia-data/dev");
         expect(paths.mongo).toBe("/var/tmp/ulvia-data/dev/mongo");
     });
