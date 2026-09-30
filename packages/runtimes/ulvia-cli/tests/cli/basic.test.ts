@@ -19,6 +19,7 @@ describe("Ulvia CLI", () => {
             control: 5210,
             delivery: 5101,
             mongo: 27019,
+            repository: 5102,
         });
         expect(() => resolveDevPorts({ ULVIA_DEV_CONTROL_PORT: "5200", ULVIA_DEV_DELIVERY_PORT: "5200" })).toThrow(
             /ports must be distinct/,

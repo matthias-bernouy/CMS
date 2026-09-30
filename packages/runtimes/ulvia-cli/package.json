@@ -16,7 +16,9 @@
         "README.md"
     ],
     "dependencies": {
-        "@bernouy/cms-server": "workspace:*"
+        "@bernouy/cms-server": "workspace:*",
+        "@bernouy/cms-bloc-compile": "workspace:*",
+        "@bernouy/cms-repository": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

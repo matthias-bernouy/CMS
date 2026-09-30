@@ -1,3 +1,4 @@
+import { startLocalRepository } from "../runtime/repository";
 import { loadOrCreateDevRuntimeConfig } from "../runtime/config";
 import { startLocalCms, stopLocalCms, type DevPorts } from "../runtime/cms";
 import { localMongoStatus, startLocalMongo, stopLocalMongo } from "../runtime/mongo";
@@ -7,6 +8,7 @@ const DEFAULT_PORTS: DevPorts = Object.freeze({
     control: 5100,
     delivery: 5101,
     mongo: 27019,
+    repository: 5102,
 });
 
 export async function devCommand(
@@ -45,12 +47,24 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
     log("Starting persistent local MongoDB...");
     const mongo = await startLocalMongo(paths.mongo, ports.mongo);
     const config = await loadOrCreateDevRuntimeConfig(paths.dev);
-    const cms = await startLocalCms(paths, config, mongo, ports);
+    const repository = await startLocalRepository(ports.repository);
+    let cms: Awaited<ReturnType<typeof startLocalCms>>;
+    try {
+        cms = await startLocalCms(paths, config, mongo, ports);
+    } catch (error) {
+        repository.stop();
+        throw error;
+    }
     log("");
+    log(`Collection repository: ${repository.url}`);
     log(`CMS Control: http://127.0.0.1:${ports.control}`);
     log(`CMS Delivery: http://127.0.0.1:${ports.delivery}`);
     log("Credentials: bun run ulvia -- dev credentials");
-    await superviseCms(cms);
+    try {
+        await superviseCms(cms);
+    } finally {
+        repository.stop();
+    }
 }
 
 export function resolveDevPorts(environment: Record<string, string | undefined>): DevPorts {
@@ -58,6 +72,7 @@ export function resolveDevPorts(environment: Record<string, string | undefined>)
         control: readPort(environment, "ULVIA_DEV_CONTROL_PORT", DEFAULT_PORTS.control),
         delivery: readPort(environment, "ULVIA_DEV_DELIVERY_PORT", DEFAULT_PORTS.delivery),
         mongo: readPort(environment, "ULVIA_DEV_MONGO_PORT", DEFAULT_PORTS.mongo),
+        repository: readPort(environment, "ULVIA_DEV_REPOSITORY_PORT", DEFAULT_PORTS.repository),
     };
     if (new Set(Object.values(ports)).size !== Object.values(ports).length) {
         throw new Error("Ulvia dev ports must be distinct");

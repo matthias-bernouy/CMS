@@ -1,3 +1,6 @@
+import { CollectionStore } from "@bernouy/cms-repository/collections/installations";
+import { MongoCollectionStorage } from "@bernouy/cms-repository/collections/mongo";
+import { withInstalledCollections } from "@bernouy/cms-content";
 import {
     MongoAuthTokenStore,
     MongoIdentityProviderRepository,
@@ -33,7 +36,10 @@ export async function createCoreStores(env: RuntimeEnv) {
 
     const innerRepo = new MongoCmsRepository(db);
     await innerRepo.init();
-    const repo = new ValidatingCmsRepository(innerRepo);
+    const collectionStorage = new MongoCollectionStorage(db);
+    await collectionStorage.init();
+    const collections = new CollectionStore(collectionStorage);
+    const repo = new ValidatingCmsRepository(withInstalledCollections(innerRepo, collections, SCOPE_ID));
 
     const mongoFilesMetadata = new MongoCmsFilesMetadata(db);
     await mongoFilesMetadata.init();
@@ -60,6 +66,7 @@ export async function createCoreStores(env: RuntimeEnv) {
     );
 
     return {
+        collections,
         mongo,
         db,
         repo,

@@ -4,11 +4,23 @@
         "outDir": "dist",
         "rootDir": "./src",
         "paths": {
-            "ulvia-cli/*": ["./src/*"]
+            "ulvia-cli/*": [
+                "./src/*"
+            ]
         }
     },
-    "include": ["src/**/*.ts"],
+    "include": [
+        "src/**/*.ts"
+    ],
     "references": [
-        { "path": "../cms-server" }
+        {
+            "path": "../cms-server"
+        },
+        {
+            "path": "../../features/cms-bloc-compile"
+        },
+        {
+            "path": "../../features/cms-repository"
+        }
     ]
 }

@@ -1,3 +1,4 @@
+import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import type { RuntimeEnv } from "../runtimeEnv";
 import type { ProductionAuthentication } from "./auth";
 import type { CoreStores } from "./stores/core";
@@ -35,6 +36,13 @@ export async function mountProductionSurfaces(
         authentication.auth,
         {
             deliveryUrl: env.DELIVERY_PUBLIC_URL,
+            collections: {
+                store: core.collections,
+                siteId: "default",
+                sources: env.CMS_COLLECTION_REPOSITORY_URL
+                    ? [new HttpCollectionRepository("local", env.CMS_COLLECTION_REPOSITORY_URL)]
+                    : [],
+            },
             analyticsCompliance: {
                 cmsVersion: "0.1.0",
                 secretReady: Boolean(options.analyticsVisitorSecret.trim()),
