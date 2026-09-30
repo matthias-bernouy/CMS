@@ -26,6 +26,12 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     if (bloc.compositionHTML !== undefined && !bloc.compositionHTML.trim()) {
         throw new ContentValidationError("compositionHTML", "non-empty HTML expected");
     }
+    if (bloc.componentHTML !== undefined && !bloc.componentHTML.trim()) {
+        throw new ContentValidationError("componentHTML", "non-empty HTML expected");
+    }
+    if (bloc.componentHTML !== undefined && (bloc.compositionHTML !== undefined || !bloc.viewJS.trim())) {
+        throw new ContentValidationError("bloc", "componentHTML requires a component view without compositionHTML");
+    }
     if (bloc.compositionHTML !== undefined && bloc.viewJS.trim()) {
         throw new ContentValidationError("bloc", "viewJS and compositionHTML are mutually exclusive");
     }

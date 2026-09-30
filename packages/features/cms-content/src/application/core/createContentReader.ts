@@ -12,6 +12,12 @@ import type { ContentReader } from "cms-content/application/interfaces/ContentRe
  */
 export function createContentReader(repository: CmsRepository): ContentReader {
     return {
+        getCollectionRevision: async () => (await repository.getInstalledCollections?.())?.revision ?? 0,
+        getCollectionTexts: async () =>
+            ((await repository.getInstalledCollections?.())?.collections ?? []).map((item) => ({
+                collection: item.release,
+                overrides: item.textOverrides,
+            })),
         getPublishedPage: async (path) => projectPublishedPage(await repository.getPublishedPage(path)),
         getPublishedPageById: async (id) => projectPublishedPage(await repository.getPublishedPageById(id)),
         getPublishedPages: async () =>
@@ -30,6 +36,7 @@ export function createContentReader(repository: CmsRepository): ContentReader {
             (await repository.getBlocsList({ includeInactive: true })).map((bloc) => ({
                 id: bloc.id,
                 ...(bloc.compositionHTML ? { compositionHTML: bloc.compositionHTML } : {}),
+                ...(bloc.componentHTML ? { componentHTML: bloc.componentHTML } : {}),
                 ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
             })),
         getBlocViewJS: (tag) => repository.getBlocViewJS(tag),

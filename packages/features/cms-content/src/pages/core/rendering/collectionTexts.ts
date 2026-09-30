@@ -12,7 +12,12 @@ export interface CollectionTextSource {
 const ATTRIBUTES = new Set(["title", "placeholder", "alt", "aria-label", "aria-description"]);
 
 /** Server-only DOM pass. Does not inspect or evaluate browser binding expressions. */
-export function renderCollectionTexts(root: Element, locale: string, sources: readonly CollectionTextSource[]): void {
+export function renderCollectionTexts(
+    root: Element,
+    locale: string,
+    sources: readonly CollectionTextSource[],
+    options: { skipSubtree?: (element: Element) => boolean } = {},
+): void {
     const catalogues = new Map<string, ReturnType<typeof resolveCollectionTexts>>();
     const parameters = new Map<string, CollectionTextSource["parameters"]>();
     for (const source of sources) {
@@ -33,6 +38,9 @@ export function renderCollectionTexts(root: Element, locale: string, sources: re
         return value;
     };
     const walk = (element: Element, inert = false): void => {
+        if (options.skipSubtree?.(element)) {
+            return;
+        }
         const blocked =
             inert ||
             /^(template|script|style|textarea|iframe|xmp|plaintext|noembed|noframes|noscript)$/.test(element.localName);

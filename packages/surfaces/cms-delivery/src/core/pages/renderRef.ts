@@ -52,12 +52,13 @@ export async function renderRef(
                         { status, skipCspHeader: true },
                     );
                 }
+                const collectionRevision = (await delivery.repository.getCollectionRevision?.()) ?? 0;
                 return await cachedResponseAsync(
                     req,
-                    P9R_CACHE.page(page.path),
+                    `${P9R_CACHE.page(page.path)}:collections:${collectionRevision}`,
                     delivery.cache,
                     () => renderPage(page, makeRuntimeRenderContext(delivery)),
-                    undefined,
+                    delivery.repository.getCollectionRevision ? "public, no-cache" : undefined,
                     { status, skipCspHeader: true },
                 );
             }

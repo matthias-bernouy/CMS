@@ -26,6 +26,39 @@ describe("expandCompositions", () => {
         expect(document.querySelector("site-layout")).toBeNull();
     });
 
+    test("keeps a component host while projecting fixed Light DOM through its shadow slots", () => {
+        const document = body('<test-card data-page="one"><h2 slot="title">Page title</h2></test-card>');
+
+        expandCompositions(document.body, [
+            {
+                id: "test-card",
+                componentHTML:
+                    '<cms-host cms-source="/shared as data"><slot name="title" slot="body"></slot><section slot="body"><p>Shared copy</p></section></cms-host>',
+            },
+        ]);
+
+        const host = document.querySelector("test-card")!;
+        expect(host.getAttribute("cms-source")).toBe("/shared as data");
+        expect(host.querySelector("section")?.getAttribute("slot")).toBe("body");
+        expect(host.querySelector("h2")?.getAttribute("slot")).toBe("body");
+        expect(host.textContent).toBe("Page titleShared copy");
+    });
+
+    test("renders a changed shared composition for every page while preserving each page slot", () => {
+        const document = body(
+            '<test-banner><span slot="message">First</span></test-banner><test-banner><span slot="message">Second</span></test-banner>',
+        );
+        expandCompositions(document.body, [
+            { id: "test-banner", compositionHTML: '<section><p>Updated</p><slot name="message"></slot></section>' },
+        ]);
+
+        expect(Array.from(document.querySelectorAll("section")).map((section) => section.textContent)).toEqual([
+            "UpdatedFirst",
+            "UpdatedSecond",
+        ]);
+        expect(document.querySelectorAll("test-banner")).toHaveLength(0);
+    });
+
     test("remaps forwarded slots and expands nested compositions", () => {
         const document = body('<outer-shell><a href="/account" slot="navigation">Account</a><p>Body</p></outer-shell>');
 

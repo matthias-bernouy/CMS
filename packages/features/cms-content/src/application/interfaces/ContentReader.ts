@@ -1,9 +1,11 @@
+import type { CollectionTextSource } from "cms-content/pages/core/rendering/collectionTexts";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 import type { RenderingSettings } from "cms-content/settings/interfaces/settings";
 
 export type RenderableBloc = {
     id: string;
     compositionHTML?: string;
+    componentHTML?: string;
     nativeElement?: string;
 };
 
@@ -27,6 +29,8 @@ export type PublishedRouteResolution =
  * entirely and read from a projection (file export, S3 snapshot, etc.).
  */
 export interface ContentReader {
+    getCollectionTexts?(): Promise<CollectionTextSource[]>;
+    getCollectionRevision?(): Promise<number>;
     // PAGE
     getPublishedPage(path: string): Promise<TPage | null>;
     getPublishedPageById(id: string): Promise<TPage | null>;

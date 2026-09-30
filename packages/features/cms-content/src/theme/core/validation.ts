@@ -114,10 +114,15 @@ function validateSource(source: ThemeSource, sourceIds: Set<string>, integration
                 `source id is not derived for integration: ${owner.integrationId}`,
             );
         }
+    } else if (owner?.kind === "collection") {
+        assertIdentifier("collection id", owner.collectionId);
+        if (source.id !== `collection-${owner.collectionId}`) {
+            throw new ContentValidationError("theme", `source id is not derived for collection: ${owner.collectionId}`);
+        }
     } else if (owner) {
         throw new ContentValidationError("theme", `invalid owner for source: ${source.id}`);
-    } else if (source.id.startsWith("integration-")) {
-        throw new ContentValidationError("theme", `reserved integration source id: ${source.id}`);
+    } else if (source.id.startsWith("integration-") || source.id.startsWith("collection-")) {
+        throw new ContentValidationError("theme", `reserved source id: ${source.id}`);
     }
 
     const categoryIds = new Set<string>();
@@ -145,6 +150,13 @@ function validateToken(source: ThemeSource, token: ThemeToken, integrationOwners
         assertCssValue(token.id, value);
     }
 
+    if (source.owner?.kind === "collection") {
+        const prefix = `${source.owner.collectionId}-`;
+        if (token.id !== token.variable || !token.id.startsWith(prefix) || !token.defaults?.light?.trim()) {
+            throw new ContentValidationError("theme", `invalid collection token: ${token.id}`);
+        }
+        return;
+    }
     if (source.owner?.kind !== "integration") {
         const usesReservedNamespace = (value: string) =>
             value.startsWith("integration-") ||

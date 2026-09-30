@@ -24,3 +24,5 @@ export {
     type ThemeTokenEntry,
 } from "cms-content/theme/core/tokens";
 export { validateThemeSettings } from "cms-content/theme/core/validation";
+
+export { collectionThemeSource, composeCollectionThemes } from "cms-content/theme/core/collections";

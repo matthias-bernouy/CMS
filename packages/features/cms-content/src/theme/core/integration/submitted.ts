@@ -25,7 +25,14 @@ export function reconcileSubmittedThemeSettings(
         ),
     ]);
 
+    const collectionSources = current.sources.filter((source) => source.owner?.kind === "collection");
+    const collectionNamespaces = collectionSources.map((source) =>
+        source.owner?.kind === "collection" ? source.owner.collectionId : "",
+    );
     next.sources = next.sources.flatMap((source) => {
+        if (source.owner?.kind === "collection" || source.id.startsWith("collection-")) {
+            return [];
+        }
         if (isReservedIntegrationSource(source)) {
             return [];
         }
@@ -34,11 +41,16 @@ export function reconcileSubmittedThemeSettings(
             category.tokens = category.tokens.filter(
                 (token) =>
                     !isReservedIntegrationName(token.id, reservedNamespaces) &&
-                    !isReservedIntegrationName(token.variable, reservedNamespaces),
+                    !isReservedIntegrationName(token.variable, reservedNamespaces) &&
+                    !collectionNamespaces.some(
+                        (namespace) =>
+                            token.id.startsWith(`${namespace}-`) || token.variable.startsWith(`${namespace}-`),
+                    ),
             );
         }
         return [source];
     });
+    next.sources.push(...structuredClone(collectionSources));
     for (const theme of next.themes) {
         for (const mode of ["light", "dark"] as const) {
             for (const tokenId of Object.keys(theme.values[mode] ?? {})) {

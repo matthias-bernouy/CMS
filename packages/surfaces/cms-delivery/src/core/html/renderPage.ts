@@ -60,7 +60,11 @@ export async function renderPage(
     sanitizeDomTree(document.body);
     const blocList = await ctx.repository.getRenderableBlocs();
     expandCompositions(document.body, blocList);
-    renderCollectionTexts(document.body, settings.site.language || "en", ctx.collectionTexts ?? []);
+    renderCollectionTexts(
+        document.body,
+        settings.site.language || "en",
+        ctx.repository.getCollectionTexts ? await ctx.repository.getCollectionTexts() : (ctx.collectionTexts ?? []),
+    );
     sanitizeDomTree(document.body);
     // A browser may fetch an interpolated img src before the deferred binding
     // runtime executes. Keep only dynamic network attributes inert; static

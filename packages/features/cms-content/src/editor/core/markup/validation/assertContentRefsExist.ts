@@ -1,10 +1,14 @@
 import { extractRefs } from "cms-content/editor/core/markup/contentRefs";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { managedNativeElementIssue } from "cms-content/editor/core/markup/validation/managedNativeElements";
+import { assertCollectionSettingAttributes } from "cms-content/editor/core/markup/validation/collectionSettings";
+import type { CollectionComponentSettings } from "@bernouy/cms-repository/collections";
 
 /** Minimal reader — `CmsRepository` satisfies it structurally. */
 export type ContentRefsReader = {
-    getBlocsList(options?: { includeInactive?: boolean }): Promise<Array<{ id: string; nativeElement?: string }>>;
+    getBlocsList(options?: {
+        includeInactive?: boolean;
+    }): Promise<Array<{ id: string; nativeElement?: string; collectionSettings?: CollectionComponentSettings }>>;
 };
 
 /**
@@ -49,4 +53,5 @@ export async function assertContentRefsExist(repository: ContentRefsReader, cont
     if (managedIssue) {
         throw new ContentValidationError("content", managedIssue);
     }
+    assertCollectionSettingAttributes(content, registeredBlocs);
 }

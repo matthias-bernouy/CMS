@@ -136,6 +136,10 @@ export class InMemoryBlocRepository {
                           group: bloc.group || "",
                           description: bloc.description || "",
                           ...(bloc.compositionHTML ? { compositionHTML: bloc.compositionHTML } : {}),
+                          ...(bloc.componentHTML ? { componentHTML: bloc.componentHTML } : {}),
+                          ...(bloc.collectionSettings
+                              ? { collectionSettings: structuredClone(bloc.collectionSettings) }
+                              : {}),
                           ...(bloc.internal ? { internal: true } : {}),
                           ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
                           ...(bloc.thumbnail ? { thumbnail: structuredClone(bloc.thumbnail) } : {}),

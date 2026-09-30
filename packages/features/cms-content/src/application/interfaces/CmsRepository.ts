@@ -1,3 +1,4 @@
+import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import type {
     BlocRecord,
     SiteBlocCollection,
@@ -16,6 +17,8 @@ export type BlocListItemResponse = {
     description: string;
     thumbnail?: TBloc["thumbnail"];
     compositionHTML?: string;
+    componentHTML?: string;
+    collectionSettings?: TBloc["collectionSettings"];
     internal?: boolean;
     nativeElement?: string;
     ownership: TBloc["ownership"];
@@ -68,6 +71,7 @@ export type PagesQuery = {
 };
 
 export interface CmsRepository {
+    getInstalledCollections?: CollectionStore["snapshot"] extends (siteId: string) => infer R ? () => R : never;
     getSiteBlocCollections(): Promise<SiteBlocCollection[]>;
     updateSiteBlocCollection(id: string, input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection>;
     createSiteBlocCollection(input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection>;

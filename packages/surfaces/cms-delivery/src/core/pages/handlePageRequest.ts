@@ -173,6 +173,7 @@ async function renderWithFallbacks(
                 status,
             );
         }
+        const collectionRevision = (await delivery.repository.getCollectionRevision?.()) ?? 0;
         const cacheKey =
             publicCacheIdentity === null
                 ? P9R_CACHE.page(cachePath)
@@ -180,10 +181,12 @@ async function renderWithFallbacks(
         return withStatus(
             await cachedResponseAsync(
                 req,
-                cacheKey,
+                collectionRevision ? `${cacheKey}:collections:${collectionRevision}` : cacheKey,
                 delivery.cache,
                 () => renderPage(page, makeRuntimeRenderContext(delivery), metadata),
-                publicCacheIdentity === null ? undefined : "public, no-cache",
+                publicCacheIdentity === null && !delivery.repository.getCollectionRevision
+                    ? undefined
+                    : "public, no-cache",
                 { skipCspHeader: true },
             ),
             status,

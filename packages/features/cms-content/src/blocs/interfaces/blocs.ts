@@ -1,4 +1,5 @@
 import type { ContentSlot } from "cms-content/editor/interfaces/document/ContentSlots";
+import type { CollectionComponentSettings } from "@bernouy/cms-repository/collections";
 
 export type BlocOwnership = { kind: "site-builder"; definitionId: string } | { kind: "code-managed" };
 
@@ -22,6 +23,14 @@ export type TBloc = {
      * not need a client custom-element definition of its own.
      */
     compositionHTML?: string;
+    /** Fixed Light DOM owned by a component whose custom-element host survives rendering. */
+    componentHTML?: string;
+    /** Initial page-owned children supplied when this bloc is inserted. */
+    defaultContent?: string;
+    /** Named page-owned substitution slots offered by an installed collection bloc. */
+    collectionSlots?: Record<string, { accepts?: readonly string[]; min?: number; max?: number }>;
+    /** Declarative component attributes and insertion defaults from an installed collection. */
+    collectionSettings?: CollectionComponentSettings;
     editorJS: string;
     ownership: BlocOwnership;
     /**
@@ -86,6 +95,8 @@ export type SiteBlocDefinition = {
 
 /** One globally unique aggregate per custom-element tag. */
 export type BlocRecord = {
+    /** Immutable installed collection provenance, absent for local resources. */
+    collectionId?: string;
     tag: string;
     ownership: BlocOwnership;
     /** The active compiled publication. Draft-only records have no artifact. */

@@ -74,6 +74,8 @@ export { defaultSystem, mergeSystemUpdate } from "cms-content/settings/core/syst
 export {
     allTokens,
     composeThemeSettings,
+    composeCollectionThemes,
+    collectionThemeSource,
     createIntegrationThemeSource,
     defaultThemeSettings,
     generateThemeCss,
@@ -239,3 +241,5 @@ export { derivePagePath } from "cms-content/pages/core/paths/pagePath";
 export { sanitizeDomTree } from "cms-content/editor/core/markup/sanitizeDomTree";
 export { sanitizeSvgTree } from "cms-content/editor/core/markup/sanitizeSvgTree";
 export { escapeRegex } from "cms-content/pages/core/queries/escapeRegex";
+
+export { withInstalledCollections } from "cms-content/blocs/core/collections/installedRepository";

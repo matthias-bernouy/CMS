@@ -39,6 +39,9 @@ import {
  */
 export class ValidatingCmsRepository implements CmsRepository {
     constructor(private readonly inner: CmsRepository) {}
+    async getInstalledCollections() {
+        return (await this.inner.getInstalledCollections?.()) ?? { revision: 0, collections: [] };
+    }
     getSiteBlocCollections(): Promise<SiteBlocCollection[]> {
         return this.inner.getSiteBlocCollections();
     }
