@@ -4,10 +4,11 @@ import {
     type Editor,
     type CmsSourceStatusCondition,
 } from "@bernouy/cms-content/editor";
+import { insertCompositionSlotNodes, isCompositionRuntimeElement } from "@bernouy/components/base";
 
 import type { BlockPickerItem } from "../../../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { MutationContext } from "../shellMutations";
-import { createInsertion } from "../insertion";
+import { applySlotLike, createInsertion } from "../insertion";
 import { canInsertNodeCount, canReplaceNodeCount, findSlot, isSlotFull, parentEditor } from "../slots";
 import { reloadFrameDocument } from "./reloadFrameDocument";
 import {
@@ -54,7 +55,13 @@ export class ShellContentMutations {
             return;
         }
 
-        parent.target.append(insertion.fragment);
+        if (isCompositionRuntimeElement(parent.target)) {
+            if (!insertCompositionSlotNodes(parent.target, slotName ?? "", Array.from(insertion.fragment.childNodes))) {
+                return;
+            }
+        } else {
+            parent.target.append(insertion.fragment);
+        }
         reloadFrameDocument(this.context, insertion.selectionTarget);
     }
 
@@ -124,6 +131,9 @@ export class ShellContentMutations {
             return;
         }
 
+        for (const element of insertion.slotElements) {
+            applySlotLike(element, slotName, editor.target);
+        }
         editor.target.replaceWith(insertion.fragment);
         reloadFrameDocument(this.context, insertion.selectionTarget);
     }

@@ -8,7 +8,7 @@ import {
 
 import type { MutationContext } from "./shellMutations";
 import { reloadFrameDocument } from "./Content/reloadFrameDocument";
-import { applySlot } from "./insertion";
+import { applySlotLike } from "./insertion";
 import { authoredSlot, canDelete, canDuplicate, canInsertSibling, canMoveEditor } from "./slots";
 import { isElementPlacementAllowedAtRoot } from "../../../../../policy/contentSlotAcceptance";
 
@@ -27,6 +27,7 @@ export class ShellEditorMutations {
         }
 
         const clone = editor.target.cloneNode(true) as HTMLElement;
+        applySlotLike(clone, authoredSlot(editor.target), editor.target);
         editor.target.after(clone);
         reloadFrameDocument(this.context, clone);
     }
@@ -83,6 +84,7 @@ export class ShellEditorMutations {
             return;
         }
 
+        applySlotLike(clone, authoredSlot(editor.target), editor.target);
         editor.target.after(clone);
         reloadFrameDocument(this.context, clone);
     }
@@ -101,7 +103,7 @@ export class ShellEditorMutations {
             return;
         }
 
-        applySlot(source.target, authoredSlot(target.target));
+        applySlotLike(source.target, authoredSlot(target.target), target.target);
         applySiblingSourceStatus(source.target, sourceStatusConditionsFromElement(target.target));
 
         if (position === "before") {

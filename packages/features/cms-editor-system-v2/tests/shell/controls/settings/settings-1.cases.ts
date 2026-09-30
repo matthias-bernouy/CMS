@@ -27,13 +27,13 @@ import {
 } from "../../support/shellTestSupport";
 
 describe("Shell", () => {
-    test("settings view filters conditional settings from current values", async () => {
+    test("settings view filters conditions using values from another section", async () => {
         installDom();
 
         const { SettingsView } = await import("../../../../src/components/Settings/SettingsView/SettingsView");
         const view = new SettingsView();
 
-        const settings = (mode: "auto" | "columns") => [
+        const settings = (mode: "auto" | "columns" | "manual") => [
             {
                 kind: "self" as const,
                 label: "Grid",
@@ -46,8 +46,15 @@ describe("Shell", () => {
                         options: [
                             { label: "Auto", value: "auto" },
                             { label: "Columns", value: "columns" },
+                            { label: "Manual", value: "manual" },
                         ],
                     },
+                ],
+            },
+            {
+                kind: "self" as const,
+                label: "Sizing",
+                settings: [
                     {
                         type: "select" as const,
                         label: "Minimum item width",
@@ -77,6 +84,9 @@ describe("Shell", () => {
         expect(
             [...view.shadowRoot!.querySelectorAll("cms-editor-v2-select")].map((el) => el.getAttribute("label")),
         ).toEqual(["Columns"]);
+
+        view.setSettings(settings("manual"));
+        expect(view.shadowRoot!.querySelector('cms-editor-v2-section[label="Sizing"]')).toBeNull();
     });
 
     test("settings view renders visible row children inline", async () => {

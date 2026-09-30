@@ -6,7 +6,8 @@ import {
 } from "@bernouy/cms-content/editor";
 import type { BlockPickerItem } from "../../../../Pickers/BlockPickerModal/BlockPickerModal";
 import type { MutationContext } from "../shellMutations";
-import { applySlot } from "../insertion";
+import { applySlot, applySlotLike } from "../insertion";
+import { insertCompositionSlotNodes, isCompositionRuntimeElement } from "@bernouy/components/base";
 import { canInsertNodeCount, canReplaceNodeCount, remainingSlotCapacity } from "../slots";
 import { openMediaPicker } from "../media";
 import { reloadFrameDocument } from "./reloadFrameDocument";
@@ -124,7 +125,7 @@ export function replaceChildWithMedia(
         ) {
             return;
         }
-        applySlot(element, slotName);
+        applySlotLike(element, slotName, editor.target);
         applySourceConditions(element, sourceStatusConditions);
         editor.target.replaceWith(element);
         reloadFrameDocument(context, element);
@@ -158,7 +159,13 @@ function appendMedia(
         applySlot(element, slotName);
         applySourceConditions(element, sourceStatusConditions);
     }
-    parent.target.append(...elements);
+    if (isCompositionRuntimeElement(parent.target)) {
+        if (!insertCompositionSlotNodes(parent.target, slotName ?? "", elements)) {
+            return;
+        }
+    } else {
+        parent.target.append(...elements);
+    }
     reloadFrameDocument(context, elements[0] ?? null);
 }
 

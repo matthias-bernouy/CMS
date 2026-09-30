@@ -5,9 +5,11 @@ import {
     COMPOSITION_OUTPUT_ATTRIBUTE,
     COMPOSITION_RUNTIME_ATTRIBUTE,
     COMPOSITION_AUTHORED_ATTRIBUTE,
+    insertCompositionSlotNodes,
 } from "@bernouy/components/base";
 import { serializableContentHtml } from "../../src/components/Layout/Shell/Domain/Structure/structureDocument";
 import { syncViewFrameContent } from "../../src/components/Layout/Shell/Domain/Bindings/shellBindingPreview";
+import { expandCompositions } from "@bernouy/cms-content/rendering";
 
 function editorDocument() {
     return parseHTML(`
@@ -73,6 +75,55 @@ describe("composition serialization", () => {
         expect(content).not.toContain("Initial");
         expect(content).not.toContain("Private header");
         expect(content).not.toContain(COMPOSITION_AUTHORED_ATTRIBUTE);
+    });
+
+    test("keeps only edited page slots when serializing a component composition", () => {
+        const document = parseHTML(
+            '<main data-cms-content><test-card data-page="one"><h2 slot="title">Initial</h2></test-card></main>',
+        ).document;
+        expandCompositions(
+            document.querySelector("main")!,
+            [
+                {
+                    id: "test-card",
+                    componentHTML:
+                        '<cms-host cms-source="/shared as data"><slot name="title" slot="body"></slot><section slot="body"><p>Shared</p></section></cms-host>',
+                },
+            ],
+            "editor",
+        );
+        document.querySelector("h2")!.textContent = "Edited";
+
+        const content = serializableContentHtml(document.querySelector<HTMLElement>("main"));
+        expect(content).toContain('<test-card data-page="one"><h2 slot="title">Edited</h2></test-card>');
+        expect(content).not.toContain("cms-source");
+        expect(content).not.toContain("Shared");
+    });
+
+    test("inserts into an initially empty forwarded component slot without saving its fallback", () => {
+        const document = parseHTML("<main data-cms-content><test-card></test-card></main>").document;
+        expandCompositions(
+            document.querySelector("main")!,
+            [
+                {
+                    id: "test-card",
+                    componentHTML:
+                        '<slot name="title" slot="body"><span slot="body">Fallback</span></slot><p slot="body">Fixed</p>',
+                },
+            ],
+            "editor",
+        );
+        const host = document.querySelector("test-card")!;
+        const heading = document.createElement("h2");
+        heading.textContent = "New title";
+
+        expect(insertCompositionSlotNodes(host, "title", [heading])).toBe(true);
+        expect(heading.getAttribute("slot")).toBe("body");
+        expect(host.textContent).toContain("New titleFixed");
+        expect(host.textContent).not.toContain("Fallback");
+        expect(serializableContentHtml(document.querySelector<HTMLElement>("main"))).toContain(
+            '<test-card><h2 slot="title">New title</h2></test-card>',
+        );
     });
 
     test("keeps dynamic image sources inert while syncing the preview", () => {

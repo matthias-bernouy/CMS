@@ -5,6 +5,7 @@ import {
     type EditorCatalogEntry,
 } from "@bernouy/cms-content/editor";
 import { prepareNetworkInertBindings } from "@bernouy/components/binding-dom";
+import { COMPOSITION_AUTHORED_ATTRIBUTE } from "@bernouy/components/base";
 
 import type { BlockPickerItem } from "../../../Pickers/BlockPickerModal/BlockPickerModal";
 
@@ -62,6 +63,21 @@ export function applySlot(element: HTMLElement, slotName: string | undefined): v
         element.setAttribute("slot", slotName);
     } else {
         element.removeAttribute("slot");
+    }
+}
+
+export function applySlotLike(element: HTMLElement, slotName: string | undefined, reference: HTMLElement): void {
+    if (!reference.hasAttribute(COMPOSITION_AUTHORED_ATTRIBUTE)) {
+        element.removeAttribute(COMPOSITION_AUTHORED_ATTRIBUTE);
+        applySlot(element, slotName);
+        return;
+    }
+    element.setAttribute(COMPOSITION_AUTHORED_ATTRIBUTE, slotName ?? "");
+    const forwarded = reference.getAttribute("slot");
+    if (forwarded === null) {
+        element.removeAttribute("slot");
+    } else {
+        element.setAttribute("slot", forwarded);
     }
 }
 

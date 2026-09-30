@@ -1,5 +1,9 @@
 import type { Editor } from "@bernouy/cms-content/editor";
-import { COMPOSITION_OUTPUT_ATTRIBUTE, isCompositionRuntimeElement } from "@bernouy/components/base";
+import {
+    COMPONENT_COMPOSITION_ATTRIBUTE,
+    COMPOSITION_OUTPUT_ATTRIBUTE,
+    isCompositionRuntimeElement,
+} from "@bernouy/components/base";
 
 const STYLE_ID = "cms-editor-v2-highlight-style";
 const HIGHLIGHT_ATTR = "data-cms-editor-v2-highlight";
@@ -71,7 +75,7 @@ export class FrameHighlight {
     };
 
     private _measurementTargets(target: HTMLElement): HTMLElement[] {
-        if (!isCompositionRuntimeElement(target)) {
+        if (!isCompositionRuntimeElement(target) || target.hasAttribute(COMPONENT_COMPOSITION_ATTRIBUTE)) {
             return [target];
         }
 

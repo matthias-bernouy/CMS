@@ -91,11 +91,16 @@ export class SettingsView extends HTMLElement {
         const visibleSections = sections.filter((section) =>
             mode === "settings" ? section.kind === "self" : section.kind === "surcharge",
         );
+        const allSettings = sections.flatMap((section) => section.settings);
+        const renderedSections = visibleSections.flatMap((section) => {
+            const rendered = renderSettingSection(section, this._settingControls, allSettings);
+            return rendered ? [rendered] : [];
+        });
 
         const shouldRenderText = mode === "settings" && textCapability;
         const shouldRenderStates = mode === "settings" && states.length > 0;
 
-        if (visibleSections.length === 0 && !shouldRenderText && !shouldRenderStates) {
+        if (renderedSections.length === 0 && !shouldRenderText && !shouldRenderStates) {
             const empty = document.createElement("div");
             empty.className = "empty";
             empty.textContent =
@@ -120,8 +125,8 @@ export class SettingsView extends HTMLElement {
             view.append(renderSettingsStates(states, (state) => this._emitStateToggle(state)));
         }
 
-        for (const section of visibleSections) {
-            view.append(renderSettingSection(section, this._settingControls));
+        for (const section of renderedSections) {
+            view.append(section);
         }
     }
 

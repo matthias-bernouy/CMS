@@ -2,9 +2,14 @@ export const COMPOSITION_RUNTIME_ATTRIBUTE = "data-p9r-composition";
 export const COMPOSITION_INPUT_ATTRIBUTE = "data-p9r-composition-input";
 export const COMPOSITION_OUTPUT_ATTRIBUTE = "data-p9r-composition-output";
 export const COMPOSITION_AUTHORED_ATTRIBUTE = "data-p9r-composition-authored";
+export const COMPONENT_COMPOSITION_ATTRIBUTE = "data-p9r-component-composition";
 
 const SLOT_START = "p9r-composition-slot-start:";
 const SLOT_END = "p9r-composition-slot-end:";
+const FALLBACK_START = "p9r-composition-slot-fallback-start:";
+const FALLBACK_END = "p9r-composition-slot-fallback-end:";
+const COMPONENT_OUTPUT_START = "p9r-component-output-start";
+const COMPONENT_OUTPUT_END = "p9r-component-output-end";
 
 export function clearCompositionRuntimeState(root: ParentNode): void {
     while (true) {
@@ -15,6 +20,21 @@ export function clearCompositionRuntimeState(root: ParentNode): void {
 
         for (const composition of compositions.reverse()) {
             const input = compositionInput(composition);
+            if (composition.hasAttribute(COMPONENT_COMPOSITION_ATTRIBUTE)) {
+                const authored = authoredOutputNodes(composition);
+                const appended = componentAppendedNodes(composition, input);
+                restoreComponentAttributes(composition, input);
+                composition.removeAttribute(COMPOSITION_RUNTIME_ATTRIBUTE);
+                composition.removeAttribute(COMPONENT_COMPOSITION_ATTRIBUTE);
+                composition.replaceChildren(
+                    ...(authored.length > 0 || appended.length > 0
+                        ? [...authored, ...appended]
+                        : input
+                          ? [input.content.cloneNode(true)]
+                          : []),
+                );
+                continue;
+            }
             const output = Array.from(composition.children).find((element) =>
                 element.hasAttribute(COMPOSITION_OUTPUT_ATTRIBUTE),
             );
@@ -37,6 +57,43 @@ export function clearCompositionRuntimeState(root: ParentNode): void {
             }
         }
     }
+}
+
+function restoreComponentAttributes(composition: Element, input: HTMLTemplateElement | null): void {
+    const original = input?.getAttribute("data-p9r-composition-host-attributes");
+    if (!original) {
+        return;
+    }
+    const attributes = JSON.parse(original) as [string, string][];
+    for (const attribute of Array.from(composition.attributes)) {
+        composition.removeAttribute(attribute.name);
+    }
+    for (const [name, value] of attributes) {
+        composition.setAttribute(name, value);
+    }
+}
+
+function componentAppendedNodes(composition: Element, input: HTMLTemplateElement | null): Node[] {
+    const nodes: Node[] = [];
+    let insideOutput = false;
+    for (const node of Array.from(composition.childNodes)) {
+        if (node.nodeType === 8 && node.nodeValue === COMPONENT_OUTPUT_START) {
+            insideOutput = true;
+            continue;
+        }
+        if (node.nodeType === 8 && node.nodeValue === COMPONENT_OUTPUT_END) {
+            insideOutput = false;
+            continue;
+        }
+        if (
+            !insideOutput &&
+            node !== input &&
+            (node.nodeType === 1 || (node.nodeType === 3 && node.nodeValue?.trim()))
+        ) {
+            nodes.push(node.cloneNode(true));
+        }
+    }
+    return nodes;
 }
 
 function authoredOutputNodes(output: Element): Node[] {
@@ -90,6 +147,75 @@ export function compositionInput(host: Element): HTMLTemplateElement | null {
         (element) => element.localName === "template" && element.hasAttribute(COMPOSITION_INPUT_ATTRIBUTE),
     );
     return (input as HTMLTemplateElement | undefined) ?? null;
+}
+
+/** Add page-owned nodes at their visible substitution point in an editor composition. */
+export function insertCompositionSlotNodes(host: Element, name: string, nodes: Node[]): boolean {
+    const input = compositionInput(host);
+    if (!input || !isCompositionRuntimeElement(host)) {
+        return false;
+    }
+    const forwarding = JSON.parse(input.getAttribute("data-p9r-composition-slot-forwarding") ?? "{}") as Record<
+        string,
+        string | null
+    >;
+    if (!Object.hasOwn(forwarding, name)) {
+        return false;
+    }
+    const encoded = encodeURIComponent(name);
+    const end = findCompositionComment(host, `${SLOT_END}${encoded}`);
+    if (!end?.parentNode) {
+        return false;
+    }
+    const forwardedSlot = forwarding[name];
+    for (const node of nodes) {
+        if (node.nodeType !== 1) {
+            continue;
+        }
+        const element = node as Element;
+        element.setAttribute(COMPOSITION_AUTHORED_ATTRIBUTE, name);
+        if (forwardedSlot === null || forwardedSlot === undefined) {
+            element.removeAttribute("slot");
+        } else {
+            element.setAttribute("slot", forwardedSlot);
+        }
+    }
+    removeCompositionFallback(end, encoded);
+    for (const node of nodes) {
+        end.parentNode.insertBefore(node, end);
+    }
+    return true;
+}
+
+function findCompositionComment(host: Element, value: string): Comment | null {
+    const pending = [...host.childNodes];
+    while (pending.length > 0) {
+        const node = pending.shift()!;
+        if (node.nodeType === 8 && node.nodeValue === value) {
+            return node as Comment;
+        }
+        if (node.nodeType === 1 && isCompositionRuntimeElement(node as Element)) {
+            continue;
+        }
+        pending.unshift(...node.childNodes);
+    }
+    return null;
+}
+
+function removeCompositionFallback(end: Comment, encoded: string): void {
+    const start = end.nextSibling;
+    if (start?.nodeType !== 8 || start.nodeValue !== `${FALLBACK_START}${encoded}`) {
+        return;
+    }
+    for (let node: ChildNode | null = start; node; ) {
+        const next: ChildNode | null = node.nextSibling;
+        const last = node.nodeType === 8 && node.nodeValue === `${FALLBACK_END}${encoded}`;
+        node.parentNode?.removeChild(node);
+        if (last) {
+            return;
+        }
+        node = next;
+    }
 }
 
 export function isCompositionRuntimeElement(element: Element): boolean {

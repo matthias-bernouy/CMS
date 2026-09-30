@@ -1,6 +1,7 @@
 import { clearBindingRuntimeState } from "@bernouy/cms-content/editor";
 import {
     COMPOSITION_AUTHORED_ATTRIBUTE,
+    COMPONENT_COMPOSITION_ATTRIBUTE,
     COMPOSITION_OUTPUT_ATTRIBUTE,
     COMPOSITION_RUNTIME_ATTRIBUTE,
     clearCompositionRuntimeState,
@@ -107,6 +108,15 @@ function materializeCompositionOutputs(content: HTMLElement): void {
     const selector = `[${COMPOSITION_RUNTIME_ATTRIBUTE}]`;
     const compositions = Array.from(content.querySelectorAll<HTMLElement>(selector)).reverse();
     for (const composition of compositions) {
+        if (composition.hasAttribute(COMPONENT_COMPOSITION_ATTRIBUTE)) {
+            const input = Array.from(composition.children).find((element) =>
+                element.hasAttribute("data-p9r-composition-input"),
+            );
+            input?.remove();
+            composition.removeAttribute(COMPOSITION_RUNTIME_ATTRIBUTE);
+            composition.removeAttribute(COMPONENT_COMPOSITION_ATTRIBUTE);
+            continue;
+        }
         const output = Array.from(composition.children).find((element) =>
             element.hasAttribute(COMPOSITION_OUTPUT_ATTRIBUTE),
         );

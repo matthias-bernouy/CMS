@@ -1,4 +1,4 @@
-import type { EditableState, SettingSection } from "@bernouy/cms-content/editor";
+import type { EditableState, Setting, SettingSection } from "@bernouy/cms-content/editor";
 import { visibleSettings } from "../settingState";
 import type { SettingControlRenderer } from "./settingControls";
 
@@ -28,11 +28,18 @@ export function renderSettingsStates(states: EditableState[], onToggle: (state: 
     return section;
 }
 
-export function renderSettingSection(section: SettingSection, controls: SettingControlRenderer): HTMLElement {
+export function renderSettingSection(
+    section: SettingSection,
+    controls: SettingControlRenderer,
+    allSettings: Setting[],
+): HTMLElement | null {
+    const settings = visibleSettings(section.settings, allSettings);
+    if (section.settings.length > 0 && settings.length === 0) {
+        return null;
+    }
     const element = document.createElement("cms-editor-v2-section");
     element.setAttribute("label", section.kind === "surcharge" ? `${section.label} override` : section.label);
 
-    const settings = visibleSettings(section.settings);
     if (settings.length === 0) {
         const empty = document.createElement("div");
         empty.className = "section-empty";

@@ -6,8 +6,8 @@ import type {
 } from "@bernouy/cms-content/editor";
 import type { SettingsViewAttributeChanges } from "../SettingsView";
 
-export function visibleSettings(settings: Setting[]): Setting[] {
-    const values = collectSettingValues(settings);
+export function visibleSettings(settings: Setting[], allSettings: Setting[] = settings): Setting[] {
+    const values = collectSettingValues(allSettings);
     return settings.flatMap((setting): Setting[] => {
         if (!isSettingVisible(setting.visibleWhen, values)) {
             return [];
