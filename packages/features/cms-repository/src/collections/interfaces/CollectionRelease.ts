@@ -1,5 +1,6 @@
 import type { UlviaObjectSchema } from "cms-repository/exports/contracts/schema";
 import type { CollectionText } from "./CollectionText";
+import type { CollectionTheme } from "./CollectionTheme";
 import type { CollectionBloc } from "./CollectionBloc";
 import type { CollectionAssetDefinition } from "./CollectionAssets";
 
@@ -28,6 +29,7 @@ export interface CollectionRelease {
     readonly locale: string;
     readonly configuration?: CollectionConfiguration;
     readonly texts?: readonly CollectionText[];
+    readonly theme?: CollectionTheme;
     readonly assets: readonly CollectionAssetDefinition[];
     readonly blocs: readonly CollectionBloc[];
 }

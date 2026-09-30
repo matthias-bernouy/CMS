@@ -4,6 +4,10 @@ export type CollectionTextValue = string | (Partial<Record<TextPluralCategory, s
 
 export interface CollectionText {
     readonly id: string;
+    readonly label?: string;
+    readonly description?: string;
+    readonly category?: string;
+    readonly group?: string;
     readonly parameters: Readonly<Record<string, TextParameterType>>;
     readonly plural?: string;
     readonly values: Readonly<Record<string, CollectionTextValue>>;

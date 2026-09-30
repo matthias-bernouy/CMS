@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { snapshotCollectionAssets, verifyCollectionAssets } from "../../src/collections/core/admission/assets";
-import { CollectionValidationError } from "../../src/collections/core/errors";
-import { DEFAULT_COLLECTION_LIMITS as limits } from "../../src/collections/core/limits";
-import { parseAssets } from "../../src/collections/core/parsing/assets";
-import type { CollectionBundleAsset } from "../../src/collections/interfaces/CollectionAssets";
+import { snapshotCollectionAssets, verifyCollectionAssets } from "../../../src/collections/core/admission/assets";
+import { CollectionValidationError } from "../../../src/collections/core/errors";
+import { DEFAULT_COLLECTION_LIMITS as limits } from "../../../src/collections/core/limits";
+import { parseAssets } from "../../../src/collections/core/parsing/assets";
+import type { CollectionBundleAsset } from "../../../src/collections/interfaces/CollectionAssets";
 
 const emptyDigest = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 const emptyAsset = { id: "empty.txt", mediaType: "text/plain", byteLength: 0, digest: emptyDigest };

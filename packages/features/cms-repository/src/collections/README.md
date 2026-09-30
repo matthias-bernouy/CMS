@@ -16,9 +16,10 @@ This slice supports:
 - Optional JSON text definitions with typed parameters, plural forms and locale
   values. `./collections/texts` exposes validation, fallback resolution and
   formatting; see [collection texts](../../../../../docs/blocs/texts.md).
+- Optional theme categories with typed light/dark token defaults.
 - Assets declared by stable ID, concrete MIME type, byte length and SHA-256.
 - Component blocs with a static `shadowdom` shell and optional fixed `lightdom`,
-  `style` source and `settings` schema/defaults.
+  `style` source and declarative setting items.
 - Composition blocs with fixed `lightdom` only: their authoring host is replaced
   by their content at delivery. They have no own shell, settings or stylesheet.
 - Explicit local `uses`, named slots, optional thumbnail asset, initial editable
@@ -26,19 +27,32 @@ This slice supports:
 
 Collection and bloc configuration are distinct. `defaultContent` belongs to
 the editable page instance; `lightdom` describes the reusable fixed assembly.
+Updating an installed release updates every page's fixed assembly while each
+page retains its own slot children.
 Initial content is not inserted into the fixed composition during admission.
 
 ## Light DOM invariants
 
 The model follows UlviaInterfaces' shell/composition distinction. A component
-can combine a static shadow shell and light-DOM children distributed through
-its slots. A composition alone is an assembly, not a new encapsulating element.
+can combine a static shadow shell and fixed light-DOM children distributed
+through its slots. A composition alone is a shared assembly whose host is
+replaced at delivery, not a copy of its template into each page.
 
 Structural validation uses an HTML parser, not a regex template scanner. It
 checks declared page slots, local bloc references, `uses` cycles, immediate
 parent slot targets and `<cms-host>`. That marker is only valid as the single
-root of a component's light DOM. Shells reject dynamic interpolation and CMS
-directives. Composition-only settings, styles and behaviour fields reject.
+root of a component's light DOM. Shells reject dynamic interpolation, visible
+text, semantic content and CMS directives. Inline styles are forbidden in all
+markup; classes belong only in shadow shells and bindings only in light DOM.
+Composition-only settings, styles and behaviour fields reject.
+Component settings are an ordered list of items. Each item owns a safe lowercase
+attribute ID, label, optional group, string or boolean type, constraints and
+default. Admission validates the list and defaults against a derived object
+schema; arbitrary nested JSON settings are not exposed as HTML attributes.
+The local repository may read this list from a bloc's
+`settings/definition.json`; release data carries the same normalized list.
+Optional `visibleWhen` rules reference other finite-valued items and affect
+editor visibility only; admission rejects invalid references and cycles.
 
 **Admission is not an HTML/CSS sanitizer or template compiler.** It does not
 type-check expressions, capability calls embedded in markup, placed settings,
@@ -46,7 +60,9 @@ slot content cardinalities, CSS or render expansion. The HTML parser applies
 its parsing rules; acceptance does not certify author syntax as conforming HTML.
 Never render or execute an admitted bundle directly as trusted code. Renderer
 compilation, content policies and execution authorization are separate future
-gates. Behaviour JavaScript modules are unsupported.
+gates. An optional `runtime` field carries compiled browser view/editor bundles
+for components. Admission hashes and bounds those bytes but does not audit the
+executable behavior; installation therefore trusts the configured repository.
 
 ## Dependencies and identity
 
@@ -92,12 +108,12 @@ schema policy through configurations. Locale tags normalize using
 
 ## Next slices
 
-Themes, presets, imports, views and dashboard
-templates remain absent from the public format: unsupported fields reject.
+Presets, imports, views and dashboard templates remain absent from the public
+format: unsupported fields reject.
 Views must retain composition-only Light DOM semantics; dashboard assignments,
 site overrides and published execution plans must remain site-owned state.
 
-Compatibility analysis, immutable catalogue publication, collection installs,
-upgrade impact/migrations and renderer compilation are not implemented yet.
+Compatibility analysis, remote catalogue publication, complex upgrade
+migrations and component renderer compilation are not implemented yet.
 The [starter bundle](../../fixtures/collections/v1/README.md) exercises the
 implemented authoring/admission path without a provider or renderer.

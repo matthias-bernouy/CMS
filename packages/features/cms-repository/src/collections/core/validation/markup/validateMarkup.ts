@@ -1,9 +1,9 @@
 import type { CollectionBloc } from "cms-repository/collections/interfaces/CollectionBloc";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
-import { validateDeclarative, validateHost, validateShadow } from "./shell";
+import { validateDeclarative, validateHost, validateNoBindings, validateShadow } from "./shell";
 import { type BlocMarkup, pageSlots, validatePageSlots, validateSlotTargets } from "./slots";
-import { elements, type MarkupTree, markupTree, offeredSlots } from "./tree";
+import { elements, type MarkupTree, markupTree, offeredSlots, significantRoots } from "./tree";
 
 function inspect(bloc: CollectionBloc): BlocMarkup {
     const shadow = bloc.kind === "component" ? markupTree(bloc.shadowdom) : undefined;
@@ -44,7 +44,7 @@ export function validateMarkup(blocs: readonly CollectionBloc[], limits: Readonl
         }
         validatePageSlots(bloc, content, path);
         if (content.shadow) {
-            validateDeclarative(content.shadow, `${path}.shadowdom`);
+            validateDeclarative(content.shadow, `${path}.shadowdom`, true);
             validateShadow(content.shadow, `${path}.shadowdom`);
             if (elements(content.shadow).some((node) => ids.has(node.name))) {
                 invalid("nested blocs belong in lightdom, not static shadow shells", `${path}.shadowdom`);
@@ -52,6 +52,9 @@ export function validateMarkup(blocs: readonly CollectionBloc[], limits: Readonl
             validatePlacedBlocs(content.shadow, bloc, ids, `${path}.shadowdom`);
         }
         if (content.light) {
+            if (bloc.kind === "component" && significantRoots(content.light).some((node) => node.type === "text")) {
+                invalid("component lightdom needs element roots for slot projection", `${path}.lightdom`);
+            }
             validateDeclarative(content.light, `${path}.lightdom`);
             validateHost(content.light, bloc, `${path}.lightdom`);
             validatePlacedBlocs(content.light, bloc, ids, `${path}.lightdom`);
@@ -59,6 +62,7 @@ export function validateMarkup(blocs: readonly CollectionBloc[], limits: Readonl
         }
         if (content.initial) {
             validateDeclarative(content.initial, `${path}.defaultContent`);
+            validateNoBindings(content.initial, `${path}.defaultContent`);
             if (elements(content.initial).some((node) => node.name === "cms-host")) {
                 invalid("cms-host is only supported in component lightdom", `${path}.defaultContent`);
             }

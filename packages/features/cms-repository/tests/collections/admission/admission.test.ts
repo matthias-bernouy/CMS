@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { admitCollectionRelease, admitCollectionReleaseJson } from "@bernouy/cms-repository/collections";
 import { canonicalIJsonBytes } from "@bernouy/cms-repository/contracts/protocol";
-import { collectionDocument } from "./fixtures";
-import { contractDocument, releaseCatalogue } from "../providers/support/fixtures";
+import { collectionDocument } from "../fixtures";
+import { contractDocument, releaseCatalogue } from "../../providers/support/fixtures";
 
 describe("collection authored bundle admission", () => {
     test("supports the full identifier length admitted by contracts", async () => {

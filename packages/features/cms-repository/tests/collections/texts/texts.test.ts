@@ -88,3 +88,19 @@ test("normalization rejects aliases of the same locale and sparse definitions", 
     expect(() => resolveCollectionTexts(release(), "en", { unknown: { en: "No" } })).toThrow();
     expect(() => resolveCollectionTexts(release(), "en", { title: { en: "Bad {extra}" } })).toThrow();
 });
+
+test("text catalogue preserves bounded navigation and label metadata", () => {
+    const text = {
+        id: "title",
+        label: "Welcome title",
+        description: "Main heading",
+        category: "Storefront",
+        group: "Welcome",
+        values: { en: "Hello" },
+    };
+    expect(parseCollectionTexts([text], "en")[0]).toMatchObject(text);
+    for (const key of ["label", "description", "category", "group"]) {
+        expect(() => parseCollectionTexts([{ ...text, [key]: " " }], "en")).toThrow();
+        expect(() => parseCollectionTexts([{ ...text, [key]: "x".repeat(501) }], "en")).toThrow();
+    }
+});

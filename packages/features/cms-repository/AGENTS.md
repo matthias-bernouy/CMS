@@ -212,9 +212,21 @@ models and validation for CMS-owned installations and site selections.
   shells and optional light DOM; composition-only blocs expand into Light DOM
   without retaining their authoring host. They cannot have settings, styles,
   behaviour modules or `cms-host`. Bindings never belong in the shadow shell.
+- Reject inline style attributes in all authored markup. `class` is valid only
+  in Shadow DOM, and binding expressions only in Light DOM. Compiled component
+  runtime bundles are hashed with the release and remain executable source
+  trust, not proof that admission has audited behavior.
 - Configuration/defaults use bounded, nonnullable object schemas with only
   JSON-representable leaves. Keep page-owned initial content separate from a
   bloc's fixed light-DOM assembly.
+- Component settings form an ordered item list. Each item owns a safe lowercase
+  HTML attribute ID, label, optional group, string or boolean type, constraints
+  and default. The parser derives the validation schema from those items;
+  collection-level configuration keeps its broader JSON schema. Local sources
+  may use a separate `settings/definition.json`; releases keep the item list.
+  Optional `visibleWhen` is editor-only and may reference declared boolean or
+  enumerated string items. Validate comparisons and reject visibility cycles;
+  hiding a control never clears or exempts its stored attribute.
 - Verify all local uses, slots and thumbnail references and reject cycles.
   Structural markup validation must use a parser. It is not a renderer,
   sanitizer, binding/CSS compiler or permission proof; never treat an admitted
@@ -225,6 +237,13 @@ models and validation for CMS-owned installations and site selections.
 - Requirements belong to resources. Require one non-yanked contract witness
   jointly satisfying a resource and its transitive uses; do not conflate this
   with selecting providers or validating the whole site's installation graph.
-- Themes, i18n, external imports, views, dashboard templates, publication,
-  compatibility and installation workflows are next slices, not implemented
-  fields or guarantees. Reject unsupported fields until their validation exists.
+- `./collections/installations` owns immutable releases and revisioned per-site
+  installation/text overrides; `/collections/mongo` is a runtime-only adapter.
+  The installer accepts compositions and components with slots and initial
+  page content, but without assets or capability requirements. Compatible version upgrades preserve site
+  overrides; publication to a remote registry remains unsupported.
+- Text metadata (`category`, `group`, `label`, `description`) is declarative and
+  bounded. It does not change interpolation keys or grant runtime capabilities.
+- Collection theme categories and tokens are admitted and included in the
+  release digest. External imports, views, dashboard templates and remote
+  publication are future slices. Reject unsupported fields until validated.

@@ -46,16 +46,90 @@ describe("collection bloc admission", () => {
         expect(() => check([component({ slots: { body: { min: -1 } } })])).toThrow("integer");
     });
 
-    test("validates bounded settings defaults and case-insensitive host names", () => {
-        const settings = {
-            schema: { type: "object", properties: { tone: { type: "string", maxLength: 16 } }, required: ["tone"] },
-            defaults: { tone: "quiet" },
+    test("validates grouped setting items and their defaults", () => {
+        const tone = {
+            id: "tone",
+            label: "Tone",
+            group: "Appearance",
+            type: "string",
+            enum: ["quiet", "accent"],
+            maxLength: 16,
+            default: "quiet",
         };
-        expect(() => check([component({ settings })])).not.toThrow();
-        expect(() => check([component({ settings: { ...settings, defaults: {} } })])).toThrow("invalid defaults");
-        const properties = { ...settings.schema.properties, Tone: { type: "string", maxLength: 16 } };
+        const compact = { id: "compact", label: "Compact", group: "Layout", type: "boolean", default: false };
+        const parsed = check([component({ settings: [tone, compact] })])[0];
+        expect(parsed?.kind === "component" ? parsed.settings : undefined).toEqual([tone, compact]);
+        expect(() => check([component({ settings: [tone, tone] })])).toThrow("duplicate");
+        expect(() => check([component({ settings: [{ ...tone, id: "Tone" }] })])).toThrow("safe, lowercase");
+        expect(() => check([component({ settings: [{ ...tone, default: "invalid" }] })])).toThrow("invalid defaults");
+        expect(() => check([component({ settings: [{ ...tone, default: "quietly-too-long" }] })])).toThrow();
+        expect(() => check([component({ settings: [{ ...tone, type: "integer" }] })])).toThrow("string and boolean");
+        expect(() => check([component({ settings: [{ ...tone, id: "onclick" }] })])).toThrow("safe, lowercase");
+        expect(() => check([component({ settings: [{ ...compact, maxLength: 10 }] })])).toThrow("boolean settings");
+        expect(() => check([component({ settings: [{ id: "missing", label: "Missing", type: "boolean" }] })])).toThrow(
+            "default value",
+        );
+    });
+
+    test("validates item visibility against finite settings", () => {
+        const mode = {
+            id: "mode",
+            label: "Mode",
+            group: "Appearance",
+            type: "string",
+            enum: ["quiet", "accent"],
+            default: "quiet",
+        };
+        const compact = {
+            id: "compact",
+            label: "Compact",
+            group: "Layout",
+            type: "boolean",
+            default: false,
+            visibleWhen: { setting: "mode", equals: "accent" },
+        };
+        const parsed = check([component({ settings: [mode, compact] })])[0];
+        expect(parsed?.kind === "component" ? parsed.settings?.[1]?.visibleWhen : undefined).toEqual([
+            { setting: "mode", equals: "accent" },
+        ]);
+        const detail = {
+            id: "detail",
+            label: "Detail",
+            type: "string",
+            default: "text",
+            visibleWhen: [
+                { setting: "compact", equals: true },
+                { setting: "mode", notEquals: "quiet" },
+            ],
+        };
+        const withBoolean = check([component({ settings: [mode, compact, detail] })])[0];
+        expect(withBoolean?.kind === "component" ? withBoolean.settings?.[2]?.visibleWhen : undefined).toEqual(
+            detail.visibleWhen,
+        );
         expect(() =>
-            check([component({ settings: { ...settings, schema: { ...settings.schema, properties } } })]),
-        ).toThrow("differ only by case");
+            check([component({ settings: [mode, { ...compact, visibleWhen: { setting: "missing", equals: true } }] })]),
+        ).toThrow("unknown setting");
+        expect(() =>
+            check([component({ settings: [mode, { ...compact, visibleWhen: { setting: "compact", equals: true } }] })]),
+        ).toThrow("own visibility");
+        expect(() =>
+            check([component({ settings: [mode, { ...compact, visibleWhen: { setting: "mode", equals: "other" } }] })]),
+        ).toThrow("declared option");
+        expect(() =>
+            check([component({ settings: [mode, { ...compact, visibleWhen: { setting: "mode", equals: true } }] })]),
+        ).toThrow("declared option");
+        expect(() =>
+            check([
+                component({
+                    settings: [mode, compact, { ...detail, visibleWhen: { setting: "compact", equals: "true" } }],
+                }),
+            ]),
+        ).toThrow("true or false");
+        expect(() =>
+            check([component({ settings: [{ ...mode, visibleWhen: { setting: "compact", equals: true } }, compact] })]),
+        ).toThrow("cyclic");
+        expect(() => check([component({ settings: [{ ...mode, enum: undefined }, compact] })])).toThrow(
+            "enumerated setting",
+        );
     });
 });

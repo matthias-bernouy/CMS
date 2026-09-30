@@ -5,7 +5,7 @@ describe("collection markup admission", () => {
     test.each([
         '<div cms-source="source"></div>',
         "<div>&#123;&#123; data }}</div>",
-        '<div title="#{id}"></div>',
+        '<div data-state="#{id}"></div>',
         "<cms-host></cms-host>",
     ])("rejects dynamic shadow markup %s", (shadowdom) => {
         expect(() => check([component({ shadowdom, slots: {} })])).toThrow("shadow shells");
@@ -20,7 +20,8 @@ describe("collection markup admission", () => {
     });
 
     test("reads real HTML nodes and decoded attributes, ignoring comments", () => {
-        const shadowdom = '<!-- <slot name="fake"> --><section title="a > b"><slot name="bo&#100;y"></slot></section>';
+        const shadowdom =
+            '<!-- <slot name="fake"> --><section data-layout="a > b"><slot name="bo&#100;y"></slot></section>';
         expect(() => check([component({ shadowdom })])).not.toThrow();
     });
 
@@ -82,6 +83,51 @@ describe("collection markup admission", () => {
 
     test("places nested blocs in lightdom, outside static shadow shells", () => {
         const shell = component({ shadowdom: "<demo-page></demo-page>", slots: {}, uses: ["demo-page"] });
-        expect(() => check([shell, composition()])).toThrow("nested blocs belong in lightdom");
+        expect(() => check([shell, composition()])).toThrow("layout and slots only");
+    });
+
+    test("forbids inline style attributes in every markup field", () => {
+        expect(() => check([component({ shadowdom: '<p style="color:red">Text</p>', slots: {} })])).toThrow(
+            "inline style attributes",
+        );
+        expect(() => check([composition({ lightdom: '<p style="color:red">Text</p>', slots: {} })])).toThrow(
+            "inline style attributes",
+        );
+        expect(() =>
+            check([
+                composition({ lightdom: "<p>Text</p>", slots: {}, defaultContent: '<p style="color:red">Text</p>' }),
+            ]),
+        ).toThrow("inline style attributes");
+    });
+
+    test("allows class only in a shadow shell", () => {
+        expect(() => check([component({ shadowdom: '<div class="card"></div>', slots: {} })])).not.toThrow();
+        expect(() => check([composition({ lightdom: '<p class="card">Text</p>', slots: {} })])).toThrow(
+            "class attributes belong only in shadowdom",
+        );
+        expect(() =>
+            check([composition({ lightdom: "<p>Text</p>", slots: {}, defaultContent: '<p class="card">Text</p>' })]),
+        ).toThrow("class attributes belong only in shadowdom");
+    });
+
+    test("allows bindings only in lightdom", () => {
+        expect(() => check([composition({ lightdom: "<p>{{ cms.i18n.demo.title }}</p>", slots: {} })])).not.toThrow();
+        expect(() => check([component({ shadowdom: "<div>{{ title }}</div>", slots: {} })])).toThrow("bindings");
+        expect(() =>
+            check([composition({ lightdom: "<p>Text</p>", slots: {}, defaultContent: "<p>{{ title }}</p>" })]),
+        ).toThrow("bindings belong only in lightdom");
+    });
+
+    test.each([
+        ["text", "<div>Hidden headline</div>"],
+        ["link", '<a href="/products"><slot name="body"></slot></a>'],
+        ["heading", "<h1></h1>"],
+        ["image", '<img src="/image.jpg" alt="Product">'],
+        ["URL attribute", '<div href="/products"></div>'],
+        ["text attribute", '<div aria-label="Product"></div>'],
+    ])("keeps crawlable %s out of shadowdom", (_, shadowdom) => {
+        expect(() => check([component({ shadowdom, slots: shadowdom.includes("<slot") ? { body: {} } : {} })])).toThrow(
+            "shadow shells",
+        );
     });
 });

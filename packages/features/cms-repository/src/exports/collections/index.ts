@@ -4,11 +4,21 @@ export type {
     CollectionCapabilityRequirement,
 } from "cms-repository/collections/interfaces/CollectionRelease";
 export type {
+    CollectionTheme,
+    CollectionThemeCategory,
+    CollectionThemeToken,
+} from "cms-repository/collections/interfaces/CollectionTheme";
+export type {
     CollectionBloc,
     CollectionComponent,
     CollectionComposition,
     CollectionSlot,
+    CollectionComponentSettings,
+    CollectionSettingItem,
+    CollectionSettingVisibilityRule,
+    CollectionSettingVisibilityValue,
 } from "cms-repository/collections/interfaces/CollectionBloc";
+export { collectionSettingsSchema } from "cms-repository/collections/core/parsing/blocs/settings";
 export type {
     CollectionAssetDefinition,
     CollectionBundleAsset,

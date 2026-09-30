@@ -13,8 +13,20 @@ export function parseCollectionTexts(value: unknown, defaultLocale: string): rea
     const locale = textLocale(defaultLocale);
     const texts = value.map((item) => {
         const source = textRecord(item);
-        textKeys(source, ["id", "parameters", "plural", "values"]);
+        textKeys(source, ["id", "label", "description", "category", "group", "parameters", "plural", "values"]);
         const id = textIdentifier(source.id);
+        const metadata = Object.fromEntries(
+            ["label", "description", "category", "group"].flatMap((key) => {
+                const value = source[key];
+                if (value === undefined) {
+                    return [];
+                }
+                if (typeof value !== "string" || !value.trim() || value.length > (key === "description" ? 500 : 120)) {
+                    throw new TypeError(`Invalid text ${key}`);
+                }
+                return [[key, value]];
+            }),
+        );
         const entries = Object.entries(textRecord(source.parameters ?? {}));
         if (entries.length > TEXT_LIMITS.parameters) {
             throw new TypeError("Too many text parameters");
@@ -38,7 +50,7 @@ export function parseCollectionTexts(value: unknown, defaultLocale: string): rea
         if (!Object.hasOwn(values, locale)) {
             throw new TypeError(`Text ${id} is missing its default locale ${locale}`);
         }
-        return Object.freeze({ id, parameters, ...(plural ? { plural } : {}), values });
+        return Object.freeze({ id, ...metadata, parameters, ...(plural ? { plural } : {}), values });
     });
     if (new Set(texts.map(({ id }) => id)).size !== texts.length) {
         throw new TypeError("Duplicate text ID");

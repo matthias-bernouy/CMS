@@ -4,6 +4,7 @@ import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { CollectionValidationError, invalid, translateCollectionError } from "../errors";
 import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../limits";
 import { identifier, keys, record, string } from "../values";
+import { parseCollectionTheme } from "./theme";
 import { parseCollectionTexts } from "../texts/parseCollectionTexts";
 import { parseAssets } from "./assets";
 import { parseBlocs } from "./blocs/parseBlocs";
@@ -32,6 +33,7 @@ export function parseCollectionRelease(
                 "locale",
                 "configuration",
                 "texts",
+                "theme",
                 "assets",
                 "blocs",
             ],
@@ -64,6 +66,7 @@ export function parseCollectionRelease(
                 : { description: string(source.description, 4096, "$.description") }),
             locale: parseLocale(source.locale),
             ...(source.texts === undefined ? {} : { texts: parseTexts(source.texts, parseLocale(source.locale)) }),
+            ...(source.theme === undefined ? {} : { theme: parseCollectionTheme(source.theme) }),
             ...(source.configuration === undefined
                 ? {}
                 : { configuration: parseConfiguration(source.configuration, "$.configuration", limits) }),

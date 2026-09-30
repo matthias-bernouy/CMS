@@ -2,8 +2,8 @@ import type { CollectionBloc } from "cms-repository/collections/interfaces/Colle
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { array, identifier, keys, ordinal, record, string, unique } from "../../values";
-import { parseConfiguration } from "../configuration";
 import { parseRequirements } from "../requirements";
+import { parseComponentSettings } from "./settings";
 import { blocReferences, parseSlots } from "./slots";
 
 const common = ["kind", "id", "description", "internal", "thumbnail", "uses", "requires", "slots", "defaultContent"];
@@ -27,7 +27,10 @@ function parseBloc(
     }
     keys(
         source,
-        [...common, ...(source.kind === "component" ? ["shadowdom", "lightdom", "style", "settings"] : ["lightdom"])],
+        [
+            ...common,
+            ...(source.kind === "component" ? ["shadowdom", "lightdom", "style", "settings", "runtime"] : ["lightdom"]),
+        ],
         path,
     );
     const id = identifier(source.id, `${path}.id`);
@@ -61,15 +64,10 @@ function parseBloc(
         };
     }
     const settings =
-        source.settings === undefined ? undefined : parseConfiguration(source.settings, `${path}.settings`, limits);
-    if (settings) {
-        const names = Object.keys(settings.schema.properties).map((name) => name.toLowerCase());
-        if (new Set(names).size !== names.length) {
-            invalid(
-                "setting names must not differ only by case because HTML attributes ignore case",
-                `${path}.settings.schema.properties`,
-            );
-        }
+        source.settings === undefined ? undefined : parseComponentSettings(source.settings, `${path}.settings`, limits);
+    const runtime = source.runtime === undefined ? undefined : record(source.runtime, `${path}.runtime`);
+    if (runtime) {
+        keys(runtime, ["viewJS", "editorJS"], `${path}.runtime`);
     }
     return {
         ...base,
@@ -82,6 +80,18 @@ function parseBloc(
             ? {}
             : { style: optionalText(source.style, limits.maxMarkupLength, `${path}.style`) }),
         ...(settings === undefined ? {} : { settings }),
+        ...(runtime === undefined
+            ? {}
+            : {
+                  runtime: {
+                      viewJS: string(runtime.viewJS, limits.maxDocumentBytes, `${path}.runtime.viewJS`),
+                      ...(runtime.editorJS === undefined
+                          ? {}
+                          : {
+                                editorJS: string(runtime.editorJS, limits.maxDocumentBytes, `${path}.runtime.editorJS`),
+                            }),
+                  },
+              }),
     };
 }
 

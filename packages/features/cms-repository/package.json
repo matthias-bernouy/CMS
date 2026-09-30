@@ -21,7 +21,11 @@
         "./providers/selections": "./src/exports/providers/selections.ts",
         "./providers/mongo": "./src/exports/providers/mongo.ts",
         "./collections": "./src/exports/collections/index.ts",
-        "./collections/texts": "./src/exports/collections/texts.ts"
+        "./collections/installations": "./src/exports/collections/installations.ts",
+        "./collections/mongo": "./src/exports/collections/mongo.ts",
+        "./collections/texts": "./src/exports/collections/texts.ts",
+        "./collections/sources": "./src/exports/collections/sources.ts",
+        "./collections/http": "./src/exports/collections/http.ts"
     },
     "dependencies": {
         "canonicalize": "^3.0.0",
