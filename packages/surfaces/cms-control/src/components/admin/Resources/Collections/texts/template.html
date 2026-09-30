@@ -1,0 +1,23 @@
+<cms-shell-detail size="xl">
+    <span slot="title" data-title>Collection texts</span>
+    <span slot="description">Translate the texts provided by this collection.</span>
+    <p9r-button slot="actions" type="button" color="primary" data-save>Save translations</p9r-button>
+    <cms-shell-detail-body slot="body" class="collection-navigated-body collection-texts-body">
+        <w13c-lateral-menu slot="left-aside" variant="embedded" compact-label="Texts" class="collection-section-nav collection-texts-nav" aria-label="Text categories" data-navigation></w13c-lateral-menu>
+        <div slot="main" class="collection-texts-editor">
+            <div class="collection-texts-language">
+                <div><span>Default language</span><strong data-default-language></strong></div>
+                <p9r-select label="Translation language" data-language></p9r-select>
+            </div>
+            <cms-detail-section>
+                <table class="collection-text-table">
+                    <colgroup><col class="collection-text-key-column"><col><col><col></colgroup>
+                    <thead><tr><th scope="col">Key</th><th scope="col">Label</th><th scope="col" data-default-heading>Default language</th><th scope="col" data-language-heading>Translation</th></tr></thead>
+                    <tbody data-fields></tbody>
+                </table>
+                <p data-empty hidden>No texts in this collection.</p>
+            </cms-detail-section>
+            <p role="status" aria-live="polite" data-status></p>
+        </div>
+    </cms-shell-detail-body>
+</cms-shell-detail>

@@ -1,0 +1,12 @@
+:host { display: block; width: 100%; color: var(--text-main); }
+section { padding: 24px 32px; }
+h2 { margin: 0 0 8px; font-size: 1.25rem; }
+p { color: var(--text-muted); line-height: 1.5; }
+[data-list] { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 20px; }
+article { border: 1px solid var(--border-default); border-radius: 10px; padding: 20px; background: var(--bg-surface); }
+article h3 { margin: 0; }
+article p { overflow-wrap: anywhere; }
+article p:first-of-type { font-size: .8125rem; }
+button { font: inherit; padding: 9px 14px; border: 1px solid var(--border-default); border-radius: 7px; cursor: pointer; background: var(--primary-base); color: white; }
+button:disabled { cursor: default; opacity: .6; }
+[hidden] { display: none !important; }

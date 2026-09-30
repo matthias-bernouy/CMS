@@ -47,7 +47,9 @@ export async function invalidateUpdatedPage(cms: ControlCms, page: TPage, defaul
         paths.add(publicPagePath(code, local, language));
     }
     for (const path of paths) {
-        cms.cache.delete(P9R_CACHE.page(path));
+        const key = P9R_CACHE.page(path);
+        cms.cache.delete(key);
+        cms.cache.deleteMatching((candidate) => candidate.startsWith(`${key}:`));
     }
 }
 

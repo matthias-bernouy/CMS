@@ -1,3 +1,5 @@
+import "./admin/Resources/Collections/AvailableCollections";
+import "./admin/Resources/Collections/InstalledTexts";
 import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import {
     Accordion,

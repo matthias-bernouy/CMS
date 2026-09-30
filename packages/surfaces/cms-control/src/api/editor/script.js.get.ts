@@ -1,3 +1,4 @@
+import { installedCollectionEditorScript } from "cms-control/core/content/installedCollections/editorScript";
 import type { ControlCms } from "cms-control/ControlCms";
 import { cachedResponseAsync, compress, publicAssetCacheControl } from "@bernouy/http-runner";
 import { P9R_CACHE } from "@bernouy/cms-content";
@@ -17,7 +18,10 @@ export default async function editorScriptGet(req: Request, cms: ControlCms) {
                 })
                 .join("\n");
 
-            return compress(js, "text/javascript");
+            return compress(
+                js + "\n" + installedCollectionEditorScript(await cms.repository.getBlocRecords()),
+                "text/javascript",
+            );
         },
         publicAssetCacheControl(req),
     );

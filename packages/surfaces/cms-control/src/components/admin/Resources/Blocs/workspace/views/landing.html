@@ -2,10 +2,7 @@
     <p9r-button type="button" variant="outlined">Create private collection</p9r-button>
 </p9r-open-modal>
 
-<cms-empty-state cms-condition="workspace.isLanding">
-    <span slot="title">Organize your blocs</span>
-    <span slot="hint">Create a private collection or open an existing collection from the navigation.</span>
-</cms-empty-state>
+<cms-available-collections cms-condition="workspace.isLanding" cms-bind-stop></cms-available-collections>
 
 <p9r-modal id="new-collection-modal" cms-condition="workspace.isLanding" aria-label="Create private collection">
     <span slot="title">Create private collection</span>

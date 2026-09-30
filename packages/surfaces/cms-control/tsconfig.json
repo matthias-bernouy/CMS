@@ -18,6 +18,7 @@
         "tests/**/*.ts"
     ],
     "references": [
+        { "path": "../../features/cms-repository" },
         { "path": "../../foundation/http-runner" },
         { "path": "../../features/cms-auth" },
         { "path": "../../features/cms-bloc-compile" },

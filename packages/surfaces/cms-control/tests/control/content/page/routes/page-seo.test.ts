@@ -20,7 +20,10 @@ test("page SEO API saves translations and invalidates both language caches", asy
     const page = (await repository.getPage("/a-propos"))!;
     await repository.setPagePaths(page.id, { fr: "/a-propos", en: "/about" });
     const invalidated: string[] = [];
-    const cms = { repository, cache: { delete: (key: string) => invalidated.push(key) } } as never;
+    const cms = {
+        repository,
+        cache: { deleteMatching: () => {}, delete: (key: string) => invalidated.push(key) },
+    } as never;
 
     const before = await getPageSeo(new Request(`https://cms.test/api/page/seo?id=${page.id}`), cms);
     expect(await before.json()).toMatchObject({
@@ -52,7 +55,7 @@ test("page SEO API rejects unconfigured languages and oversized titles", async (
     await repository.updateSystem({ site: { language: "fr", additionalLanguages: ["en"] } as never });
     await repository.insertPage("/about", "About");
     const page = (await repository.getPage("/about"))!;
-    const cms = { repository, cache: { delete: () => {} } } as never;
+    const cms = { repository, cache: { deleteMatching: () => {}, delete: () => {} } } as never;
     for (const translations of [{ de: { title: "About" } }, { en: { title: "x".repeat(71) } }]) {
         await expect(
             putPageSeo(
@@ -73,7 +76,7 @@ test("page SEO editor reads canonical SEO keys for an older lowercase site langu
     await repository.updateSystem({ site: { language: "fr-fr" } as never });
     await repository.insertPage("/about", "About");
     const page = (await repository.getPage("/about"))!;
-    const cms = { repository, cache: { delete: () => {} } } as never;
+    const cms = { repository, cache: { deleteMatching: () => {}, delete: () => {} } } as never;
 
     const saved = await putPageSeo(
         new Request(`https://cms.test/api/page/seo?id=${page.id}`, {

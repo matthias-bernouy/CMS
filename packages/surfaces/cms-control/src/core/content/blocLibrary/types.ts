@@ -21,7 +21,11 @@ export type LibraryCollection = {
     key: string;
     name: string;
     description: string;
-    kind: "site" | "code";
+    kind: "site" | "code" | "installed";
+    installedId?: string;
+    version?: string;
+    digest?: string;
+    isInstalled?: boolean;
     siteId?: string;
     icon?: string;
     blocCount: number;

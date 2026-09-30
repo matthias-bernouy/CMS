@@ -1,0 +1,7 @@
+cms-installed-texts { display: block; color: var(--text-main); }
+cms-installed-texts .collection-text-key-column { width: 18%; }
+cms-installed-texts .collection-text-table code { font-size: .75rem; overflow-wrap: anywhere; }
+cms-installed-texts .collection-text-table td { overflow-wrap: anywhere; white-space: pre-wrap; }
+cms-installed-texts p9r-textarea { width: 100%; }
+cms-installed-texts [data-reset] { margin-top: 8px; }
+cms-installed-texts [data-status] { color: var(--text-muted); font-size: .8125rem; }

@@ -13,10 +13,13 @@ import {
     transitiveDependencies,
 } from "cms-control/core/content/siteBloc/validation/dependencies";
 import { networkInertHtml } from "cms-control/core/editorSystemV2/networkInertHtml";
+import { renderEditorCollectionTexts } from "cms-control/core/content/installedCollections/renderTexts";
+import { installedBlocInitialMarkup } from "cms-control/core/content/installedCollections/settings";
 import { previewDocument } from "./document";
 
 export async function blocPreview(
-    repository: Pick<CmsRepository, "getBlocRecords">,
+    repository: Pick<CmsRepository, "getBlocRecords"> &
+        Partial<Pick<CmsRepository, "getInstalledCollections" | "getSystem">>,
     tag: string,
     basePath: string,
     assets: { scripts: string[]; style: string } = { scripts: [], style: "" },
@@ -28,7 +31,11 @@ export async function blocPreview(
     }
     const draft = record.siteDefinition?.draft;
     const artifact = record.artifact;
-    const defaultContent = draft ? undefined : resolveDefaultContent(artifact?.source).content;
+    const defaultContent = draft
+        ? undefined
+        : artifact?.defaultContent || artifact?.collectionSettings
+          ? installedBlocInitialMarkup(artifact)
+          : resolveDefaultContent(artifact?.source).content;
     const content = draft ? `<${tag}>${draft.defaultContent}</${tag}>` : (defaultContent ?? `<${tag}></${tag}>`);
     const blocs = records.flatMap((item) => (item.artifact ? [item.artifact] : []));
     const compositions: Pick<TBloc, "id" | "compositionHTML">[] = blocs.filter((bloc) => bloc.id !== tag);
@@ -54,6 +61,14 @@ export async function blocPreview(
             (bloc) =>
                 `try {\n${bloc.viewJS}\n} catch (error) { console.error(${JSON.stringify(`[bloc-preview] ${bloc.id}`)}, error); }`,
         );
+    const installed = await repository.getInstalledCollections?.();
+    if (installed?.collections.length) {
+        renderEditorCollectionTexts(
+            document.body,
+            (await repository.getSystem?.())?.site.language || "en",
+            installed.collections.map((item) => ({ collection: item.release, overrides: item.textOverrides })),
+        );
+    }
     return previewDocument({
         basePath,
         title: draft?.name ?? artifact?.name ?? tag,

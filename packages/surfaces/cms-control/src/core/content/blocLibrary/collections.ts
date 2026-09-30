@@ -1,3 +1,4 @@
+import type { InstalledCollection } from "@bernouy/cms-repository/collections/installations";
 import type { SiteBlocCollection } from "@bernouy/cms-content";
 import type { LibraryBloc, LibraryCollection } from "./types";
 
@@ -6,6 +7,7 @@ export function libraryCollectionRows(
     blocs: LibraryBloc[],
     selected: string | undefined,
     basePath: string,
+    installed: InstalledCollection[] = [],
 ): LibraryCollection[] {
     const rows: LibraryCollection[] = sites.map((site) =>
         row(
@@ -21,7 +23,24 @@ export function libraryCollectionRows(
             basePath,
         ),
     );
-    if (blocs.some(({ origin }) => origin.kind !== "site-builder")) {
+    for (const item of installed) {
+        rows.push(
+            row(
+                {
+                    key: `installed:${item.collectionId}`,
+                    installedId: item.collectionId,
+                    kind: "installed",
+                    name: item.release.name,
+                    description: item.release.description ?? "",
+                    version: item.release.version,
+                    digest: item.digest,
+                },
+                selected,
+                basePath,
+            ),
+        );
+    }
+    if (blocs.some(({ origin, installedCollectionId }) => origin.kind !== "site-builder" && !installedCollectionId)) {
         rows.push(
             row(
                 { key: "code", name: "Custom code", description: "Blocs maintained in your codebase.", kind: "code" },
@@ -47,6 +66,7 @@ function row(
         countLabel: "",
         isSite: fields.kind === "site",
         isCode: fields.kind === "code",
+        isInstalled: fields.kind === "installed",
         href: `${basePath}/admin/collections/${encodeURIComponent(fields.key)}/overview`,
         active: fields.key === selected,
         ...fields,
@@ -54,10 +74,13 @@ function row(
 }
 
 export function belongsToCollection(bloc: LibraryBloc, collection: LibraryCollection): boolean {
+    if (collection.isInstalled) {
+        return bloc.installedCollectionId === collection.installedId;
+    }
     if (collection.isSite) {
         return bloc.origin.kind === "site-builder" && (bloc.collectionId ?? "site") === collection.siteId;
     }
-    return bloc.origin.kind !== "site-builder";
+    return bloc.origin.kind !== "site-builder" && !bloc.installedCollectionId;
 }
 
 export function matchingCollections(

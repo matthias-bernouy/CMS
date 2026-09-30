@@ -1,4 +1,4 @@
-<cms-shell-detail size="xl" cms-condition="workspace.isTexts">
+<cms-shell-detail size="xl" cms-condition="workspace.isTexts && !workspace.collection.isInstalled">
     <span slot="title">Checkout</span>
     <span slot="description">Texts displayed while a customer completes an order.</span>
     <p9r-button slot="actions" type="button" color="primary" disabled title="Translation persistence is not connected yet">Save translation</p9r-button>
@@ -85,3 +85,5 @@
         </div>
     </cms-shell-detail-body>
 </cms-shell-detail>
+
+<div cms-condition="workspace.isTexts && workspace.collection.isInstalled"><cms-installed-texts collection-id="{{ workspace.collection.installedId }}" cms-bind-stop></cms-installed-texts></div>

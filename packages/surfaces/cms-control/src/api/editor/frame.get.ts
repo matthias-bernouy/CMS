@@ -5,6 +5,7 @@ import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-conte
 import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystemV2/contentRegionAttrs";
 import { buildEditorFrameFoucCss } from "cms-control/core/editorSystemV2/frameFouc";
 import { networkInertHtml } from "cms-control/core/editorSystemV2/networkInertHtml";
+import { renderEditorCollectionTexts } from "cms-control/core/content/installedCollections/renderTexts";
 
 export default async function getEditorFrame(req: Request, cms: ControlCms): Promise<Response> {
     const url = new URL(req.url);
@@ -58,7 +59,7 @@ function renderFrameDocument(input: {
     <meta name="basePath" content="${escapeHtml(input.basePath)}">
     <title>${escapeHtml(input.title)}</title>
     <meta name="description" content="${escapeHtml(input.description)}">
-    <style data-p9r-composition-style>[data-p9r-composition]{display:contents}[data-p9r-composition]>[data-p9r-composition-output]{display:contents}[data-p9r-composition]>:not([data-p9r-composition-output]):not(template[data-p9r-composition-input]){display:none!important}</style>
+    <style data-p9r-composition-style>[data-p9r-composition]:not([data-p9r-component-composition]){display:contents}[data-p9r-composition]>[data-p9r-composition-output]{display:contents}[data-p9r-composition]:not([data-p9r-component-composition])>:not([data-p9r-composition-output]):not(template[data-p9r-composition-input]){display:none!important}</style>
     ${input.foucCss ? `<style id="cms-bloc-fouc-shell">${input.foucCss}</style>` : ""}
     <link rel="stylesheet" href="${input.basePath}/.cms/style">
     <script defer src="${input.basePath}/api/editor/component.js"></script>
@@ -75,6 +76,15 @@ async function expandEditorContent(content: string, cms: ControlCms): Promise<st
     const { document } = parseHTML("<html><body></body></html>");
     document.body.innerHTML = content;
     expandCompositions(document.body, await cms.repository.getBlocsList({ includeInactive: true }), "editor");
+    const installed = await cms.repository.getInstalledCollections?.();
+    if (installed?.collections.length) {
+        const language = (await cms.repository.getSystem()).site.language || "en";
+        renderEditorCollectionTexts(
+            document.body,
+            language,
+            installed.collections.map((item) => ({ collection: item.release, overrides: item.textOverrides })),
+        );
+    }
     return hardenStoredHtml(document.body.innerHTML);
 }
 

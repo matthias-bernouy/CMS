@@ -46,6 +46,7 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
             return {
                 tag: record.tag,
                 ...(record.artifact?.thumbnail ? { thumbnail: record.artifact.thumbnail } : {}),
+                installedCollectionId: record.collectionId ?? null,
                 collectionId: definition ? (definition.collectionId ?? DEFAULT_SITE_BLOC_COLLECTION_ID) : null,
                 active: record.artifact?.catalogue !== "inactive",
                 name: metadata?.name ?? record.tag,

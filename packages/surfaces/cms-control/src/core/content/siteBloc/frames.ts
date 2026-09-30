@@ -78,8 +78,8 @@ ${"cms-site-slot-placeholder"}::before {
     return `html { color-scheme: light; }
 body { margin: 0; min-height: 100vh; }
 [data-cms-content] { display: block; min-height: 100vh; }
-[data-p9r-composition], [data-p9r-composition-output] { display: contents; }
-[data-p9r-composition] > :not([data-p9r-composition-output]):not(template[data-p9r-composition-input]) { display: none !important; }
+[data-p9r-composition]:not([data-p9r-component-composition]), [data-p9r-composition-output] { display: contents; }
+[data-p9r-composition]:not([data-p9r-component-composition]) > :not([data-p9r-composition-output]):not(template[data-p9r-composition-input]) { display: none !important; }
 ${placeholder}`;
 }
 

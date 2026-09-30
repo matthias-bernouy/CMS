@@ -14,6 +14,7 @@ function makeSystem(opts: { existing?: TPage | null } = {}) {
             },
         },
         cache: {
+            deleteMatching: () => {},
             delete: (key: string) => {
                 deleteSpy.push(key);
             },

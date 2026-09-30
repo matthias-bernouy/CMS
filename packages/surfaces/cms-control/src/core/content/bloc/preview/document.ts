@@ -52,8 +52,8 @@ export function previewDocument(input: {
             display: grid;
             align-items: center;
         }
-        [data-p9r-composition], [data-p9r-composition-output] { display: contents; }
-        [data-p9r-composition] > :not([data-p9r-composition-output]):not(template[data-p9r-composition-input]) { display: none !important; }
+        [data-p9r-composition]:not([data-p9r-component-composition]), [data-p9r-composition-output] { display: contents; }
+        [data-p9r-composition]:not([data-p9r-component-composition]) > :not([data-p9r-composition-output]):not(template[data-p9r-composition-input]) { display: none !important; }
     </style>
 </head>
 <body>

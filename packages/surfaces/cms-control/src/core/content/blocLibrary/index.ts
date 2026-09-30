@@ -11,7 +11,8 @@ export async function blocLibrary(
 ): Promise<BlocLibraryResponse> {
     const [sites, items] = await Promise.all([cms.repository.getSiteBlocCollections(), siteBlocCatalogue(cms)]);
     const allBlocs = libraryBlocs(items, basePath);
-    const collections = libraryCollectionRows(sites, allBlocs, query.collection, basePath);
+    const installed = await cms.repository.getInstalledCollections?.();
+    const collections = libraryCollectionRows(sites, allBlocs, query.collection, basePath, installed?.collections);
     const collection = collections.find(({ key }) => key === query.collection);
     if (query.collection && !collection) {
         throw Object.assign(new Error("Collection not found"), { status: 404 });

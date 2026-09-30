@@ -75,6 +75,7 @@ export async function collectionWorkspace(
         ...(bloc ? { bloc } : {}),
         emptyTitle: library.emptyTitle,
         emptyDescription: library.emptyDescription,
+        hasInstalledCollections: collections.some((collection) => collection.isInstalled),
         hasSiteCollections: library.hasSiteCollections,
         hasCodeCollections: library.hasCodeCollections,
     };
@@ -85,7 +86,11 @@ function workspaceCollection(collection: LibraryCollection, basePath: string): C
     return {
         ...collection,
         href: path("overview"),
-        kindLabel: collection.isSite ? "Private collection" : "Code collection",
+        kindLabel: collection.isInstalled
+            ? `Installed · ${collection.version}`
+            : collection.isSite
+              ? "Private collection"
+              : "Code collection",
         overviewHref: path("overview"),
         themeHref: path("theme"),
         blocsHref: path("blocs"),

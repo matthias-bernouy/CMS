@@ -68,6 +68,7 @@ function makeCms() {
                 },
             },
             cache: {
+                deleteMatching: () => {},
                 delete: (key: string) => {
                     invalidations.push(key);
                 },

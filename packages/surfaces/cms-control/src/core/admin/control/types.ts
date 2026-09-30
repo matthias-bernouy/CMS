@@ -1,3 +1,5 @@
+import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
+import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import type {
     Authentication,
     IdentityProviderRepository,
@@ -28,6 +30,7 @@ type Configuration = {
 };
 
 export type ControlCmsOptions = Configuration & {
+    collections?: { store: CollectionStore; siteId: string; sources?: readonly CollectionRepositorySource[] };
     dashboardAssignments?: DashboardAssignmentRepository;
     identities?: IdentityService;
     capabilityGateway?: {

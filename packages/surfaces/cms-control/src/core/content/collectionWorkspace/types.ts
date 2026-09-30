@@ -106,6 +106,7 @@ export type CollectionWorkspaceBloc = Omit<LibraryBloc, "href"> & {
 };
 
 export type CollectionWorkspaceResponse = {
+    hasInstalledCollections?: boolean;
     isLanding: boolean;
     isCollection: boolean;
     isOverview: boolean;
