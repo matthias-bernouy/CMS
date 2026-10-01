@@ -16,6 +16,7 @@ export function fillItemDialog(
     path: number[],
     views: AvailableView[],
     used: Set<string>,
+    allowGroup: boolean,
 ): void {
     const current = item.use ?? "";
     const select = field(root, "[data-view]");
@@ -28,7 +29,9 @@ export function fillItemDialog(
             return option;
         }),
     );
-    setField(root, "[data-kind]", item.use ? "view" : "group");
+    const terminal = !allowGroup;
+    setField(root, "[data-kind]", item.use || terminal ? "view" : "group");
+    root.querySelector<HTMLElement>("[data-kind-field]")!.hidden = terminal;
     const available = select.querySelector<HTMLOptionElement>("option:not(:disabled)")?.value ?? "";
     setField(root, "[data-view]", current || available);
     setField(root, "[data-label]", item.label);

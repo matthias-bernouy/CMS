@@ -11,6 +11,8 @@ test("member changes update in place without replacing the modal", () => {
     const root = members.shadowRoot!;
     const modal = root.querySelector("[data-modal]");
     const add = root.querySelector<HTMLElement>("[data-member-action]")!;
+    expect(root.querySelector('.member-avatar-empty cms-library-icon[name="users"]')).not.toBeNull();
+    expect(root.querySelector("[data-avatars]")?.getAttribute("aria-label")).toBe("No members assigned");
 
     add.click();
     expect(add.hasAttribute("disabled")).toBeTrue();
@@ -18,7 +20,8 @@ test("member changes update in place without replacing the modal", () => {
     members.setAssigned("member", true);
 
     expect(root.querySelector("[data-modal]")).toBe(modal);
-    expect(root.querySelector("[data-count]")?.textContent).toBe("1");
+    expect(root.querySelector("[data-avatars]")?.getAttribute("aria-label")).toBe("1 member assigned");
+    expect(root.querySelector(".member-avatar-empty")).toBeNull();
     expect(root.querySelector("[data-member-action]")?.textContent).toBe("Remove");
     members.remove();
 });

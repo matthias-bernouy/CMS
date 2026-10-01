@@ -1,3 +1,4 @@
+import { showToast } from "@bernouy/components";
 import {
     configureDashboardSources,
     installDashboardCollection,
@@ -78,7 +79,6 @@ class DashboardWorkspace extends HTMLElement {
                 this.navigation()?.render(this.dashboards, "", true);
                 this.view.showMemberOverview(this.dashboards);
                 this.view.showState("ready");
-                this.status("");
                 return;
             }
             this.view.setOverviewMode("admin");
@@ -93,7 +93,6 @@ class DashboardWorkspace extends HTMLElement {
                 await this.loadExplore();
             }
             this.view.showState("ready");
-            this.status("");
         } catch (error) {
             this.querySelector("[data-view-error-message]")!.textContent =
                 error instanceof Error ? error.message : "Dashboards could not be loaded.";
@@ -123,7 +122,7 @@ class DashboardWorkspace extends HTMLElement {
         }
         const validation = this.view.privateValidationMessage();
         if (validation) {
-            this.status(validation);
+            showToast(validation, { type: "warning" });
             return;
         }
         const draft = this.view.privateDraft();
@@ -137,10 +136,9 @@ class DashboardWorkspace extends HTMLElement {
             Object.assign(current, saved);
             this.navigation()?.render(this.dashboards, current.id, false);
             this.view.finishPrivateSave(current);
-            this.status("");
         } catch (error) {
             this.view.setPrivateSaving(false);
-            this.status(String(error));
+            showToast(String(error), { type: "error" });
         }
     }
 
@@ -166,12 +164,11 @@ class DashboardWorkspace extends HTMLElement {
                 this.view.updateMember(record, action, subjectId);
             }
             record.members = response.members;
-            this.status("");
         } catch (error) {
             if (this.selectedId === record.id) {
                 this.view.clearMemberPending(record, subjectId);
             }
-            this.status(String(error));
+            showToast(String(error), { type: "error" });
         }
     }
 
@@ -189,9 +186,8 @@ class DashboardWorkspace extends HTMLElement {
             });
             Object.assign(record, saved);
             this.navigation()?.render(this.dashboards, record.id, false);
-            this.status("");
         } catch (error) {
-            this.status(String(error));
+            showToast(String(error), { type: "error" });
         } finally {
             this.view.setCollectionSaving(false);
         }
@@ -247,7 +243,6 @@ class DashboardWorkspace extends HTMLElement {
             return;
         }
         button.disabled = true;
-        this.status("Installing collection…");
         try {
             await installDashboardCollection(item, this.collectionRevision);
             await this.load();
@@ -255,10 +250,10 @@ class DashboardWorkspace extends HTMLElement {
             if (dashboard) {
                 this.select(dashboard.id);
             }
-            this.status("Collection installed. The dashboard starts inactive.");
+            showToast("Collection installed. The dashboard starts inactive.", { type: "success" });
         } catch (error) {
             button.disabled = false;
-            this.status(String(error));
+            showToast(String(error), { type: "error" });
         }
     }
 
@@ -301,14 +296,10 @@ class DashboardWorkspace extends HTMLElement {
         try {
             await action();
             await this.load();
-            this.status(success);
+            showToast(success, { type: "success" });
         } catch (error) {
-            this.status(String(error));
+            showToast(String(error), { type: "error" });
         }
-    }
-
-    private status(message: string): void {
-        this.view.status(message);
     }
 
     private navigation(): DashboardNav | null {

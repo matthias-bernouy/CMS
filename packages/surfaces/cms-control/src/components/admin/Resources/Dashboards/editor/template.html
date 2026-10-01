@@ -13,10 +13,12 @@
     <span slot="title">Navigation item</span>
     <form id="dashboard-navigation-item-form" data-item-form>
         <p9r-stack gap="md">
-            <p9r-segmented-switch data-kind label="Item type" value="view">
-                <option value="view">View</option>
-                <option value="group">Group</option>
-            </p9r-segmented-switch>
+            <div data-kind-field>
+                <p9r-segmented-switch data-kind label="Item type" value="view">
+                    <option value="view">View</option>
+                    <option value="group">Group</option>
+                </p9r-segmented-switch>
+            </div>
             <div data-view-field>
                 <p9r-select data-view label="Collection view"></p9r-select>
             </div>

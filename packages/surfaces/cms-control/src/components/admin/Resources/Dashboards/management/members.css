@@ -16,6 +16,8 @@
     width: 30px;
 }
 .member-avatar-more { background: var(--bg-muted); color: var(--text-muted); }
+.member-avatar-empty { background: var(--bg-muted); border: 1px dashed var(--border-strong); box-sizing: border-box; color: var(--text-muted); }
+.member-avatar-empty cms-library-icon { height: 15px; width: 15px; }
 .member-empty { color: var(--text-muted); font-size: .75rem; }
 .member-list { display: grid; gap: 0; margin-top: 16px; max-height: min(52vh, 520px); overflow: auto; }
 .member-row { align-items: center; border-top: 1px solid var(--border-default); display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) auto auto; padding-block: 12px; }

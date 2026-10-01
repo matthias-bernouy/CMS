@@ -67,6 +67,16 @@ export class DashboardMembers extends Component {
             avatar.textContent = this.initials(user.label || user.email);
             return avatar;
         });
+        if (assigned.length === 0) {
+            const empty = document.createElement("span");
+            empty.className = "member-avatar member-avatar-empty";
+            empty.title = "No members assigned";
+            empty.setAttribute("aria-hidden", "true");
+            const icon = document.createElement("cms-library-icon");
+            icon.setAttribute("name", "users");
+            empty.append(icon);
+            avatars.push(empty);
+        }
         if (assigned.length > 3) {
             const more = document.createElement("span");
             more.className = "member-avatar member-avatar-more";

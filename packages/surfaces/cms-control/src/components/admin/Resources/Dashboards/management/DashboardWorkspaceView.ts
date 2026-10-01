@@ -169,10 +169,6 @@ export class DashboardWorkspaceView {
             : "";
     }
 
-    status(message: string): void {
-        this.element("[data-status]").textContent = message;
-    }
-
     private syncOpenLink(selector: string, record: Dashboard): void {
         const first = record.mounts[0];
         const open = this.element<HTMLAnchorElement>(selector);

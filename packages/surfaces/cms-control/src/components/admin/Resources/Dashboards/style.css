@@ -61,7 +61,6 @@ cms-dashboard-workspace .dashboard-icon-preview {
 }
 cms-dashboard-workspace .dashboard-icon-preview cms-library-icon { height: 19px; width: 19px; }
 cms-dashboard-workspace [data-dirty] { align-self: center; }
-cms-dashboard-workspace [data-status],
 cms-dashboard-workspace p { color: var(--text-muted); line-height: 1.5; }
 cms-dashboard-workspace form { max-width: 680px; }
 cms-dashboard-workspace [data-collection-views] { margin: 0; padding-left: 20px; }
