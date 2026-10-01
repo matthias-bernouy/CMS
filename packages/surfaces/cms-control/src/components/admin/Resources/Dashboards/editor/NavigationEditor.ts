@@ -14,8 +14,15 @@ export class DashboardNavigationEditor extends HTMLElement {
     private editing: number[] | null = null;
     private snapshot: NavigationItem[] | null = null;
     private dragging: number[] | null = null;
+    private readonly clearDragOnExit = (): void => this.clearDragState();
 
     connectedCallback(): void {
+        document.removeEventListener("dragend", this.clearDragOnExit);
+        document.removeEventListener("drop", this.clearDragOnExit);
+        window.removeEventListener("blur", this.clearDragOnExit);
+        document.addEventListener("dragend", this.clearDragOnExit);
+        document.addEventListener("drop", this.clearDragOnExit);
+        window.addEventListener("blur", this.clearDragOnExit);
         if (this.querySelector("[data-tree]")) {
             return;
         }
@@ -36,6 +43,12 @@ export class DashboardNavigationEditor extends HTMLElement {
         this.querySelector("[data-view]")!.addEventListener("change", () => this.suggestView());
         this.querySelector("[data-dialog]")!.addEventListener("close", () => this.restoreSnapshot());
         this.render();
+    }
+
+    disconnectedCallback(): void {
+        document.removeEventListener("dragend", this.clearDragOnExit);
+        document.removeEventListener("drop", this.clearDragOnExit);
+        window.removeEventListener("blur", this.clearDragOnExit);
     }
 
     get value(): NavigationItem[] {
@@ -97,28 +110,38 @@ export class DashboardNavigationEditor extends HTMLElement {
             event.preventDefault();
             return;
         }
-        this.dragging = this.pathFrom(target);
+        const item = this.dragItem(target);
+        this.dragging = item ? this.pathFrom(item) : null;
+        if (!item || !this.dragging) {
+            event.preventDefault();
+            return;
+        }
         event.dataTransfer?.setData("text/plain", this.dragging?.join(".") ?? "");
         if (event.dataTransfer) {
             event.dataTransfer.effectAllowed = "move";
         }
-        target.closest<HTMLElement>("[data-path]")?.setAttribute("data-dragging", "");
+        item.setAttribute("data-dragging", "");
     }
 
     private onDragOver(event: DragEvent): void {
-        const target = (event.target as Element).closest<HTMLElement>("[data-path]");
+        this.clearDropTargets();
+        const target = this.dragItem(event.target);
         const targetPath = target ? this.pathFrom(target) : null;
         if (!target || !targetPath || !this.sameParent(this.dragging, targetPath)) {
             return;
         }
         event.preventDefault();
-        this.querySelectorAll("[data-drop-position]").forEach((row) => row.removeAttribute("data-drop-position"));
-        const after = event.clientY > target.getBoundingClientRect().top + target.getBoundingClientRect().height / 2;
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = "move";
+        }
+        const row = target.querySelector<HTMLElement>(":scope > .navigation-row")!;
+        const bounds = row.getBoundingClientRect();
+        const after = event.clientY > bounds.top + bounds.height / 2;
         target.dataset.dropPosition = after ? "after" : "before";
     }
 
     private onDrop(event: DragEvent): void {
-        const target = (event.target as Element).closest<HTMLElement>("[data-path]");
+        const target = this.dragItem(event.target);
         const targetPath = target ? this.pathFrom(target) : null;
         const after = target?.dataset.dropPosition === "after";
         event.preventDefault();
@@ -134,10 +157,21 @@ export class DashboardNavigationEditor extends HTMLElement {
 
     private clearDragState(): void {
         this.dragging = null;
-        this.querySelectorAll("[data-dragging], [data-drop-position]").forEach((row) => {
-            row.removeAttribute("data-dragging");
-            row.removeAttribute("data-drop-position");
-        });
+        this.querySelectorAll("[data-dragging]").forEach((row) => row.removeAttribute("data-dragging"));
+        this.clearDropTargets();
+    }
+
+    private clearDropTargets(): void {
+        this.querySelectorAll("[data-drop-position]").forEach((row) => row.removeAttribute("data-drop-position"));
+    }
+
+    private dragItem(target: EventTarget | null): HTMLElement | null {
+        if (!(target instanceof Element)) {
+            return null;
+        }
+        const row = target.closest<HTMLElement>(".navigation-row");
+        const item = row?.parentElement;
+        return item?.matches("[data-path]") ? item : null;
     }
 
     private add(parentPath: number[]): void {

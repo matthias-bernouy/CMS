@@ -93,6 +93,27 @@ export class DashboardWorkspaceView {
         this.element("[data-save]").toggleAttribute("disabled", !dirty);
     }
 
+    setPrivateSaving(saving: boolean): void {
+        const save = this.element("[data-save]");
+        const dirty = !this.element("[data-dirty]").hasAttribute("hidden");
+        save.textContent = saving ? "Saving…" : "Save changes";
+        save.toggleAttribute("disabled", saving || !dirty);
+    }
+
+    finishPrivateSave(record: Dashboard): void {
+        this.element("[data-editor-title]").textContent = record.name;
+        this.field("[data-name]").value = record.name;
+        this.syncOpenLink("[data-private-open]", record);
+        this.setPrivateDirty(false);
+        this.setPrivateSaving(false);
+    }
+
+    setCollectionSaving(saving: boolean): void {
+        const save = this.element("[data-collection-save]");
+        save.textContent = saving ? "Saving…" : "Save access";
+        save.toggleAttribute("disabled", saving);
+    }
+
     renderExplore(catalogue: ExploreDashboard[]): void {
         const query = this.field("[data-explore-search]").value.trim().toLocaleLowerCase();
         const matches = catalogue

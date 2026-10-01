@@ -51,12 +51,9 @@ export class DashboardMembers extends Component {
     }
 
     private render(): void {
-        if (!this.root.querySelector("[data-summary]")) {
+        if (!this.root.querySelector("[data-avatars]")) {
             return;
         }
-        const count = this.memberIds.size;
-        this.root.querySelector("[data-summary]")!.textContent =
-            count === 0 ? "No members assigned" : `${count} ${count === 1 ? "member" : "members"} assigned`;
         this.renderAvatars();
         this.renderList();
     }
@@ -76,7 +73,13 @@ export class DashboardMembers extends Component {
             more.textContent = `+${assigned.length - 3}`;
             avatars.push(more);
         }
-        this.root.querySelector("[data-avatars]")!.replaceChildren(...avatars);
+        const group = this.root.querySelector("[data-avatars]")!;
+        const count = assigned.length;
+        group.setAttribute(
+            "aria-label",
+            count === 0 ? "No members assigned" : `${count} ${count === 1 ? "member" : "members"} assigned`,
+        );
+        group.replaceChildren(...avatars);
     }
 
     private initials(label: string): string {

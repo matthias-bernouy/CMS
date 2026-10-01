@@ -90,3 +90,26 @@ test("drag reordering stays inside the current navigation level", () => {
     expect(items.map((item) => item.id)).toEqual(["two", "three", "one"]);
     expect(reorderItem(items, [0], [0, 0], false)).toBeFalse();
 });
+
+test("drag decoration is cleared when a drag leaves the editor", () => {
+    const editor = new DashboardNavigationEditor();
+    document.body.append(editor);
+    editor.value = [
+        { id: "one", label: "One", use: "test:one" },
+        { id: "two", label: "Two", use: "test:two" },
+    ];
+    const transfer = { setData() {}, effectAllowed: "none", dropEffect: "none" };
+    const dragStart = new Event("dragstart", { bubbles: true, cancelable: true });
+    Object.assign(dragStart, { dataTransfer: transfer });
+    editor.querySelectorAll<HTMLElement>("[data-drag-handle]")[0]!.dispatchEvent(dragStart);
+    expect(editor.querySelectorAll("[data-dragging]")).toHaveLength(1);
+
+    const dragOver = new Event("dragover", { bubbles: true, cancelable: true });
+    Object.assign(dragOver, { clientY: 0, dataTransfer: transfer });
+    editor.querySelectorAll<HTMLElement>(".navigation-row")[1]!.dispatchEvent(dragOver);
+    expect(editor.querySelectorAll("[data-drop-position]")).toHaveLength(1);
+
+    window.dispatchEvent(new Event("blur"));
+    expect(editor.querySelector("[data-dragging], [data-drop-position]")).toBeNull();
+    editor.remove();
+});

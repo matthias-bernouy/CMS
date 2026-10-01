@@ -1,7 +1,30 @@
+import { sourceFormRequest } from "@bernouy/components/binding";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 import type { AvailableView, Dashboard, ExploreDashboard, User } from "./types";
 
 const base = () => `${getMetaBasePath()}/api`;
+
+export type DashboardSourceId = "dashboard-create" | "dashboard-delete" | "dashboard-members" | "dashboard-save";
+
+export function configureDashboardSources(root: ParentNode): void {
+    const paths: Record<DashboardSourceId, string> = {
+        "dashboard-create": "dashboards",
+        "dashboard-delete": "dashboard",
+        "dashboard-members": "dashboard-members",
+        "dashboard-save": "dashboard",
+    };
+    for (const [sourceId, path] of Object.entries(paths)) {
+        root.querySelector(`[cms-source-id="${sourceId}"]`)?.setAttribute("cms-source", `${base()}/${path}`);
+    }
+}
+
+export async function requestDashboardSource<T>(
+    root: ParentNode,
+    sourceId: DashboardSourceId,
+    values: Record<string, unknown>,
+): Promise<T> {
+    return (await sourceFormRequest(root, sourceId, values)) as T;
+}
 
 export async function loadDashboards(): Promise<
     | { mode: "admin"; dashboards: Dashboard[]; views: AvailableView[]; users: User[] }
@@ -23,18 +46,6 @@ export async function loadDashboards(): Promise<
         throw new Error(`Member loading failed (${users.status})`);
     }
     return { mode: "admin", ...(await dashboards.json()), users: await users.json() };
-}
-
-export async function postDashboard(path: string, body: unknown): Promise<Dashboard | { members: string[] }> {
-    const response = await fetch(`${base()}/${path}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-    });
-    if (!response.ok) {
-        throw new Error(`Dashboard request failed (${response.status}): ${await response.text()}`);
-    }
-    return response.json();
 }
 
 export async function loadDashboardExplore(): Promise<{
@@ -64,16 +75,5 @@ export async function installDashboardCollection(dashboard: ExploreDashboard, re
     });
     if (!response.ok) {
         throw new Error(`Collection installation failed (${response.status}): ${await response.text()}`);
-    }
-}
-
-export async function deletePrivateDashboard(id: string, revision: number): Promise<void> {
-    const response = await fetch(`${base()}/dashboard`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, revision }),
-    });
-    if (!response.ok) {
-        throw new Error(`Dashboard deletion failed (${response.status}): ${await response.text()}`);
     }
 }

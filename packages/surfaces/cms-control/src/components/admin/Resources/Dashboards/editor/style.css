@@ -29,7 +29,7 @@
     padding: 10px 5px 10px 2px;
     user-select: none;
 }
-[data-dragging] > .navigation-row { opacity: .45; }
+[data-dragging] > .navigation-row { opacity: .7; }
 [data-drop-position="before"] > .navigation-row::before,
 [data-drop-position="after"] > .navigation-row::after {
     background: var(--primary-base);

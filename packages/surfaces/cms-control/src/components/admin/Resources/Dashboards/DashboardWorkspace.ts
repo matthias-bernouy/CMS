@@ -1,9 +1,9 @@
 import {
-    deletePrivateDashboard,
+    configureDashboardSources,
     installDashboardCollection,
     loadDashboardExplore,
     loadDashboards,
-    postDashboard,
+    requestDashboardSource,
 } from "./domain/api";
 import type { AvailableView, Dashboard, ExploreDashboard, User } from "./domain/types";
 import { DashboardWorkspaceView } from "./management/DashboardWorkspaceView";
@@ -27,6 +27,7 @@ class DashboardWorkspace extends HTMLElement {
             return;
         }
         this.innerHTML = `<style>${css}</style>${template}`;
+        configureDashboardSources(this);
         this.view = new DashboardWorkspaceView(this);
         this.querySelector("[data-view-error]")!.addEventListener("retry", () => void this.load());
         this.selectedId = new URLSearchParams(location.search).get("dashboardId") ?? "";
@@ -126,13 +127,21 @@ class DashboardWorkspace extends HTMLElement {
             return;
         }
         const draft = this.view.privateDraft();
-        await this.mutate(async () => {
-            await postDashboard("dashboard", {
+        this.view.setPrivateSaving(true);
+        try {
+            const saved = await requestDashboardSource<Dashboard>(this, "dashboard-save", {
                 id: current.id,
                 revision: current.revision,
                 ...draft,
             });
-        }, "Dashboard saved.");
+            Object.assign(current, saved);
+            this.navigation()?.render(this.dashboards, current.id, false);
+            this.view.finishPrivateSave(current);
+            this.status("");
+        } catch (error) {
+            this.view.setPrivateSaving(false);
+            this.status(String(error));
+        }
     }
 
     private async changeMember(action: "assign" | "unassign", subjectId: string): Promise<void> {
@@ -141,7 +150,11 @@ class DashboardWorkspace extends HTMLElement {
             return;
         }
         try {
-            await postDashboard("dashboard-members", { dashboardId: record.id, subjectId, action });
+            const response = await requestDashboardSource<{ members: string[] }>(this, "dashboard-members", {
+                dashboardId: record.id,
+                subjectId,
+                action,
+            });
             const members = new Set(record.members);
             if (action === "assign") {
                 members.add(subjectId);
@@ -152,7 +165,8 @@ class DashboardWorkspace extends HTMLElement {
             if (this.selectedId === record.id) {
                 this.view.updateMember(record, action, subjectId);
             }
-            this.status(action === "assign" ? "Member added." : "Member removed.");
+            record.members = response.members;
+            this.status("");
         } catch (error) {
             if (this.selectedId === record.id) {
                 this.view.clearMemberPending(record, subjectId);
@@ -166,13 +180,21 @@ class DashboardWorkspace extends HTMLElement {
         if (!record?.origin) {
             return;
         }
-        await this.mutate(async () => {
-            await postDashboard("dashboard", {
+        this.view.setCollectionSaving(true);
+        try {
+            const saved = await requestDashboardSource<Dashboard>(this, "dashboard-save", {
                 id: record.id,
                 revision: record.revision,
                 enabled: this.view.collectionEnabled(),
             });
-        }, "Dashboard access saved.");
+            Object.assign(record, saved);
+            this.navigation()?.render(this.dashboards, record.id, false);
+            this.status("");
+        } catch (error) {
+            this.status(String(error));
+        } finally {
+            this.view.setCollectionSaving(false);
+        }
     }
 
     private async copyCollectionDashboard(): Promise<void> {
@@ -181,11 +203,11 @@ class DashboardWorkspace extends HTMLElement {
             return;
         }
         await this.mutate(async () => {
-            const copy = (await postDashboard("dashboards", {
+            const copy = await requestDashboardSource<Dashboard>(this, "dashboard-create", {
                 name: `${record.name.slice(0, 115)} copy`,
                 icon: record.icon ?? "layout",
                 navigation: record.navigation ?? [],
-            })) as Dashboard;
+            });
             this.selectedId = copy.id;
         }, "Site dashboard created. It starts inactive.");
     }
@@ -244,7 +266,11 @@ class DashboardWorkspace extends HTMLElement {
         await this.mutate(async () => {
             const name = (this.querySelector("[data-create-name]") as HTMLElement & { value: string }).value.trim();
             const icon = (this.querySelector("[data-create-icon]") as HTMLElement & { value: string }).value;
-            const saved = (await postDashboard("dashboards", { name, icon, navigation: [] })) as Dashboard;
+            const saved = await requestDashboardSource<Dashboard>(this, "dashboard-create", {
+                name,
+                icon,
+                navigation: [],
+            });
             this.createModal().hide();
             this.selectedId = saved.id;
         }, "Dashboard created. Add views to its navigation.");
@@ -264,7 +290,7 @@ class DashboardWorkspace extends HTMLElement {
             return;
         }
         await this.mutate(async () => {
-            await deletePrivateDashboard(record.id, record.revision);
+            await requestDashboardSource(this, "dashboard-delete", { id: record.id, revision: record.revision });
             this.deleteModal().hide();
             this.selectedId = "";
             history.replaceState(null, "", location.pathname);
