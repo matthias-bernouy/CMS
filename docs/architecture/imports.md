@@ -60,12 +60,10 @@ adapters, or surface internals. Use browser-safe subpaths such as:
 
 ```ts
 import { Component } from "@bernouy/cms-control/component";
-import { Editor } from "@bernouy/cms-control/editor";
-import type { EndpointPickerMethod } from "@bernouy/cms-content/editor";
 ```
 
-For bloc editor bundles, `@bernouy/cms-control/editor` is rewritten by
-`p9rExternalsPlugin` so the runtime reads from `window.p9rEditor`.
+Collection authoring metadata is JSON and does not create a second browser
+bundle.
 
 ## Path Resolution
 

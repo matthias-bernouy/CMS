@@ -114,7 +114,6 @@ test("installed shadow component is served as browser bloc JavaScript", async ()
     const script = await reader.getBlocViewJS("test-card");
     expect(script).toContain("attachShadow");
     expect(script).toContain("var(--test-accent)");
-    expect((await repository.getBlocsJS()).find((bloc) => bloc.id === "test-card")?.viewJS).toBe(script);
     expect(
         (await reader.getRenderableBlocs()).find((bloc) => bloc.id === "test-card")?.compositionHTML,
     ).toBeUndefined();

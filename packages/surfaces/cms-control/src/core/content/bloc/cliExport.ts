@@ -1,7 +1,7 @@
 import { generateSiteBlocSourceBundle } from "@bernouy/cms-bloc-compile";
 import type { BlocListItemResponse, CmsRepository, SiteBlocDefinition } from "@bernouy/cms-content";
 
-const PUBLISHED_SOURCE_FILES = ["manifest.json", "Bloc.ts", "BlocEditor.ts", "template.html", "default.html"] as const;
+const PUBLISHED_SOURCE_FILES = ["manifest.json", "Bloc.ts", "template.html", "default.html"] as const;
 
 export async function cliBlocList(repository: CmsRepository): Promise<BlocListItemResponse[]> {
     return (await repository.getBlocRecords()).flatMap((record) => {

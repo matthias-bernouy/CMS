@@ -125,9 +125,6 @@ export class ValidatingCmsRepository implements CmsRepository {
     withSiteBlocPublicationLock<T>(operation: (guard: SiteBlocPublicationGuard) => Promise<T>): Promise<T> {
         return this.inner.withSiteBlocPublicationLock(operation);
     }
-    getBlocsJS() {
-        return this.inner.getBlocsJS();
-    }
     getBlocsList(options?: Parameters<CmsRepository["getBlocsList"]>[0]): Promise<BlocListItemResponse[]> {
         return this.inner.getBlocsList(options);
     }

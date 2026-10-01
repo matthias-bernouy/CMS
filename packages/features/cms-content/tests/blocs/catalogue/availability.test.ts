@@ -11,7 +11,6 @@ describe("bloc catalogue availability", () => {
             description: "",
             catalogue: "inactive",
             viewJS: "customElements.define('collection-card', class extends HTMLElement {});",
-            editorJS: "",
             ownership: { kind: "code-managed" },
         });
 

@@ -35,8 +35,6 @@ export async function invalidatePagesReferencingBloc(cms: ControlCms, blocTag: s
 
 export function invalidateBlocAssets(cms: ControlCms, blocTag: string): void {
     cms.cache.delete(P9R_CACHE.bloc(blocTag));
-    cms.cache.delete(P9R_CACHE.EDITOR_SCRIPT);
-    cms.cache.delete(P9R_CACHE.EDITOR_VIEW_SCRIPT);
     cms.cache.deleteMatching((key) => key.startsWith(P9R_CACHE.BLOCSET_PREFIX));
 }
 

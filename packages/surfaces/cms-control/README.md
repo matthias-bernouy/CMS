@@ -174,22 +174,15 @@ not credential, user or recovery-token stores. Control can additionally receive
 
 ---
 
-## Legacy sub-entries for Bloc compilation
+## Browser sub-entry for Bloc compilation
 
-Bloc files compiled from collection integrations still use two browser-safe entry points.
-The interactive editor has been removed; the editor entry remains temporarily as a
-compiler compatibility boundary until Bloc settings move to collection JSON. The visitor
-bundle (`Bloc.ts`) must NEVER reach editor code:
+Bloc files compiled from collection integrations use one browser-safe entry
+point. The visitor bundle (`Bloc.ts`) must never reach server code:
 
 - `@bernouy/cms-control/component` — `export { Component }` only.
   Imported by `Bloc.ts`, bundled into the view JS shipped to visitors.
-- `@bernouy/cms-control/editor` — editor authoring entry for `Editor`,
-  `registerEditor`, and `registerEditor_opaque`. Editor contracts live in
-  `@bernouy/cms-content/editor`.
-
-The `editor` entry is intercepted by `p9rExternalsPlugin` (in
-`@bernouy/cms-bloc-compile`) so its symbols read from `window.p9rEditor` —
-same canonical class across every bloc, preserving `instanceof` checks.
+Collection settings and slot metadata live in admitted collection JSON; no
+compiled editor bundle or editor authoring sub-entry exists.
 
 ---
 

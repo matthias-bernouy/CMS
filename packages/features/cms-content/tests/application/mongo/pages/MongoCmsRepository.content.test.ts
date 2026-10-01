@@ -8,7 +8,6 @@ const card: TBloc = {
     name: "Card",
     group: "Marketing",
     description: "A reusable card",
-    editorJS: "editor-code",
     viewJS: "view-code",
     ownership: { kind: "code-managed" },
     source: { "index.ts": "c291cmNl" },
@@ -34,7 +33,6 @@ describe("MongoCmsRepository content persistence", () => {
         await expect(repository.createBloc(card)).resolves.toEqual(card);
         expect(await repository.getBlocViewJS(card.id)).toBe("view-code");
         expect(await repository.getBlocSource(card.id)).toEqual(card.source!);
-        expect(await repository.getBlocsJS()).toEqual([{ id: card.id, editorJS: "editor-code", viewJS: "view-code" }]);
         expect(await repository.getBlocsList()).toEqual([
             {
                 id: card.id,

@@ -67,7 +67,6 @@ describe("site bloc publication", () => {
             ownership: published.ownership,
         });
         expect(record?.artifact?.source).toEqual({
-            "BlocEditor.ts": expect.any(String),
             "builder.json": expect.any(String),
             "default.html": expect.any(String),
             "manifest.json": expect.any(String),
@@ -78,8 +77,6 @@ describe("site bloc publication", () => {
         expect(cache.deleted).toEqual(
             expect.arrayContaining([
                 P9R_CACHE.bloc("site-published-feature"),
-                P9R_CACHE.EDITOR_SCRIPT,
-                P9R_CACHE.EDITOR_VIEW_SCRIPT,
                 "blocset:old-signature",
                 P9R_CACHE.page("/home"),
             ]),

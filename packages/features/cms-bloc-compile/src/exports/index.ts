@@ -2,9 +2,8 @@
  * @bernouy/cms-bloc-compile — the bloc compile pipeline for admin uploads and
  * collection integration packaging.
  *
- * Editor authoring imports are rewritten by `p9rExternalsPlugin` during
- * `Bun.build`, so they resolve to the editor runtime globals instead of
- * bundling the CMS editor.
+ * Shared browser imports are rewritten by `p9rExternalsPlugin` during
+ * `Bun.build`, so visitor bundles reuse host runtime APIs.
  */
 
 export { prepare_bloc } from "cms-bloc-compile/core/prepare_bloc";

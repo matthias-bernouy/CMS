@@ -42,7 +42,6 @@ test("local repository lists immutable metadata and serves matching release byte
         expect(card?.kind).toBe("component");
         if (card?.kind === "component") {
             expect(card.runtime?.viewJS).toContain("ulvia-official-feature-card");
-            expect(card.runtime?.editorJS).toContain("ulvia-official-feature-card");
             expect(card.lightdom).toContain("feature-card-note");
             expect(card.defaultContent).toContain("Feature title");
             expect(card.settings).toEqual([

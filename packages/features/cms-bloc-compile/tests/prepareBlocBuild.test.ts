@@ -13,33 +13,20 @@ describe("prepare_bloc build output", () => {
         const source = { "Bloc.ts": Buffer.from("// Native source retained for authoring.").toString("base64") };
 
         await expect(
-            prepare_bloc(view, null, "Image", "Basic", "", "img", source, undefined, { native: true }),
+            prepare_bloc(view, "Image", "Basic", "", "img", source, undefined, { native: true }),
         ).rejects.toThrow('Native HTML tag "img" is platform-owned');
     });
 
-    test("minifies view and editor browser bundles", async () => {
+    test("minifies the browser view bundle", async () => {
         const view = new File(
             ["// VIEW_COMMENT_TO_REMOVE", "customElements.define('demo-minified', class extends HTMLElement {});"],
             "DemoMinified.ts",
             { type: "text/typescript" },
         );
-        const editor = new File(
-            [
-                "// EDITOR_COMMENT_TO_REMOVE",
-                "import { Editor, registerEditor } from '@bernouy/cms-content/editor';",
-                "class DemoMinifiedEditor extends Editor {}",
-                "registerEditor({ editor: DemoMinifiedEditor });",
-            ],
-            "DemoMinifiedEditor.ts",
-            { type: "text/typescript" },
-        );
-
-        const bloc = await prepare_bloc(view, editor, "Minified demo", "Content", "", "demo-minified");
+        const bloc = await prepare_bloc(view, "Minified demo", "Content", "", "demo-minified");
 
         expect(bloc.viewJS).not.toContain("VIEW_COMMENT_TO_REMOVE");
-        expect(bloc.editorJS).not.toContain("EDITOR_COMMENT_TO_REMOVE");
         expect(() => new Function(bloc.viewJS)).not.toThrow();
-        expect(() => new Function(bloc.editorJS)).not.toThrow();
     });
 
     test("rejects invalid final JavaScript with an actionable artifact label", () => {
@@ -58,7 +45,7 @@ describe("prepare_bloc build output", () => {
             "Bloc.ts",
             { type: "text/typescript" },
         );
-        const bloc = await prepare_bloc(view, null, "Separated demo", "Content", "", "demo-separated", {
+        const bloc = await prepare_bloc(view, "Separated demo", "Content", "", "demo-separated", {
             "template.html": Buffer.from("<p>Separated template</p>").toString("base64"),
             "style.css": Buffer.from(":host { display: block; }").toString("base64"),
         });
@@ -78,7 +65,6 @@ describe("prepare_bloc build output", () => {
         );
         const bloc = await prepare_bloc(
             view,
-            null,
             "Nested demo",
             "Content",
             "",
@@ -96,7 +82,7 @@ describe("prepare_bloc build output", () => {
             type: "text/typescript",
         });
         await expect(
-            prepare_bloc(view, null, "Demo card", "Content", "", "demo-card", {
+            prepare_bloc(view, "Demo card", "Content", "", "demo-card", {
                 "../outside.js": Buffer.from("unsafe").toString("base64"),
             }),
         ).rejects.toThrow("Invalid bloc source path: ../outside.js");
@@ -115,7 +101,7 @@ describe("prepare_bloc build output", () => {
             { type: "text/typescript" },
         );
         try {
-            await expect(prepare_bloc(view, null, "Outside import", "Security", "", "demo-outside")).rejects.toThrow();
+            await expect(prepare_bloc(view, "Outside import", "Security", "", "demo-outside")).rejects.toThrow();
         } finally {
             await rm(outsideDir, { recursive: true, force: true });
         }
@@ -132,7 +118,7 @@ describe("prepare_bloc build output", () => {
             "DemoComponent.ts",
             { type: "text/typescript" },
         );
-        const bloc = await prepare_bloc(view, null, "Demo component", "Content", "", "demo-component");
+        const bloc = await prepare_bloc(view, "Demo component", "Content", "", "demo-component");
         expect(bloc.viewJS).toContain("window.p9r.Component");
         expect(bloc.viewJS).toContain("demo-component");
 
@@ -155,7 +141,7 @@ describe("prepare_bloc build output", () => {
             "LegacyCard.ts",
             { type: "text/typescript" },
         );
-        const bloc = await prepare_bloc(view, null, "Legacy card", "Content", "", "legacy-card");
+        const bloc = await prepare_bloc(view, "Legacy card", "Content", "", "legacy-card");
         const definitions = new Map<string, unknown>();
         let registrations = 0;
         const customElements = {
@@ -173,7 +159,7 @@ describe("prepare_bloc build output", () => {
 
     test("reports Bun build failures instead of returning an empty view bundle", async () => {
         const view = new File(["import './missing.js';"], "DemoCard.ts", { type: "text/typescript" });
-        await expect(prepare_bloc(view, null, "Demo card", "Content", "", "demo-card")).rejects.toThrow(
+        await expect(prepare_bloc(view, "Demo card", "Content", "", "demo-card")).rejects.toThrow(
             /Build failed \(view bundle for demo-card\):/,
         );
     });

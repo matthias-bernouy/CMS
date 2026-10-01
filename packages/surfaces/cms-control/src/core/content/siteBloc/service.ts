@@ -158,7 +158,6 @@ async function buildSiteBlocArtifact(
             group: definition.draft.group,
             description: definition.draft.description,
             compositionHTML: bundle["template.html"],
-            editorJS: bundle["BlocEditor.ts"],
             source,
             force: true,
         },

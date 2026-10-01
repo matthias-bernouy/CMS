@@ -39,7 +39,6 @@ test("a real compiled bloc renders in a sandbox while fetches, forms and parent 
     });
     const artifact = await prepare_bloc(
         new File([viewSource], "Bloc.ts"),
-        null,
         "Preview fixture",
         "Test",
         "",

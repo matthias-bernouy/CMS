@@ -10,7 +10,7 @@ export function isBrowserEntrypoint(path: string): boolean {
         path.startsWith("packages/foundation/components/src/ui/") ||
         path.startsWith("packages/foundation/components/src/binding/") ||
         /\.client\.[cm]?[jt]sx?$/.test(path) ||
-        /^packages\/resources\/[^/]+\/.*\/blocs\/.+\/(?:Bloc|BlocEditor)\.ts$/.test(path)
+        /^packages\/resources\/[^/]+\/.*\/blocs\/.+\/Bloc\.ts$/.test(path)
     );
 }
 

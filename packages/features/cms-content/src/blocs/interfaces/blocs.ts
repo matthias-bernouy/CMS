@@ -34,7 +34,6 @@ export type TBloc = {
     collectionSlots?: Readonly<Record<string, CollectionSlot>>;
     /** Declarative component attributes and insertion defaults from an installed collection. */
     collectionSettings?: CollectionComponentSettings;
-    editorJS: string;
     ownership: BlocOwnership;
     /**
      * Author-side source folder, base64-encoded per relative path.

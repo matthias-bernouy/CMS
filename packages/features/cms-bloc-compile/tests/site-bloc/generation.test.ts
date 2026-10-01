@@ -1,23 +1,16 @@
 import { describe, expect, test } from "bun:test";
 import { generateSiteBlocSourceBundle } from "@bernouy/cms-bloc-compile";
 import { definition, publishedSnapshot } from "./fixtures";
-import { expectedBuilderJson, expectedEditorSource } from "./generatedSourceFixtures";
+import { expectedBuilderJson } from "./generatedSourceFixtures";
 
 describe("generateSiteBlocSourceBundle", () => {
-    test("generates the exact five composition source files", () => {
+    test("generates the exact four composition source files", () => {
         const source = generateSiteBlocSourceBundle(definition());
 
-        expect(Object.keys(source)).toEqual([
-            "manifest.json",
-            "BlocEditor.ts",
-            "template.html",
-            "default.html",
-            "builder.json",
-        ]);
+        expect(Object.keys(source)).toEqual(["manifest.json", "template.html", "default.html", "builder.json"]);
         expect(source["manifest.json"]).toBe(`{
     "default-tag": "site-hero",
     "composition": "./template.html",
-    "editor": "./BlocEditor.ts",
     "defaultContent": "./default.html",
     "meta": {
         "title": "Hero",
@@ -29,7 +22,6 @@ describe("generateSiteBlocSourceBundle", () => {
             '<basic-container aria-label="A &quot;&lt;&amp;" width="wide" data-p9r-composition-controller><slot name="title" slot="title"></slot><slot></slot></basic-container>\n',
         );
         expect(source["default.html"]).toBe('<site-hero><h1 slot="title">Hello</h1><p>Body</p></site-hero>\n');
-        expect(source["BlocEditor.ts"]).toBe(expectedEditorSource);
         expect(source["builder.json"]).toBe(expectedBuilderJson);
         for (const content of Object.values(source)) {
             expect(content.includes("\r")).toBe(false);
@@ -66,9 +58,11 @@ describe("generateSiteBlocSourceBundle", () => {
 
         const slotOrderChanged = structuredClone(publishedSnapshot);
         slotOrderChanged.slots.reverse();
-        expect(generateSiteBlocSourceBundle(definition(), slotOrderChanged)["BlocEditor.ts"]).not.toBe(
-            first["BlocEditor.ts"],
-        );
+        expect(
+            generateSiteBlocSourceBundle(definition({ draft: slotOrderChanged, published: slotOrderChanged }))[
+                "builder.json"
+            ],
+        ).not.toBe(first["builder.json"]);
 
         const nodeOrderChanged = structuredClone(publishedSnapshot);
         const changedRoot = nodeOrderChanged.structure[0];

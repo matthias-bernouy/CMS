@@ -104,8 +104,7 @@ files, and the generated Control components bundle. All HTML is checked as
 markup; executable inline scripts are treated as browser code.
 
 Browser script entrypoints are Control components, foundation visual components
-and binding, editor-system-v2 components, `*.client.*`, and resource `Bloc.ts` /
-`BlocEditor.ts` files. Static imports are followed through workspace aliases and
+and binding, `*.client.*`, and resource `Bloc.ts` files. Static imports are followed through workspace aliases and
 package exports, including helpers outside component directories. This is import
 reachability, not proof that an exported function executes. It is deliberately
 broader than a tree-shaken production bundle.

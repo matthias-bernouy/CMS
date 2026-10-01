@@ -117,14 +117,6 @@ export class InMemoryBlocRepository {
         return this.siteBlocPublications.run(operation);
     }
 
-    async getBlocsJS(): Promise<{ id: string; editorJS: string; viewJS: string }[]> {
-        return [...this.blocs.values()].flatMap((record) =>
-            record.artifact
-                ? [{ id: record.tag, editorJS: record.artifact.editorJS, viewJS: record.artifact.viewJS }]
-                : [],
-        );
-    }
-
     async getBlocsList(options: BlocListOptions = {}): Promise<BlocListItemResponse[]> {
         return [...this.blocs.values()].flatMap((record) => {
             const bloc = record.artifact;

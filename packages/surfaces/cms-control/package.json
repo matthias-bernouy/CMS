@@ -15,10 +15,6 @@
         "./component": {
             "bun": "./src/exports/component.ts",
             "default": "./src/exports/component.ts"
-        },
-        "./editor": {
-            "bun": "./src/exports/editor.ts",
-            "default": "./src/exports/editor.ts"
         }
     },
     "files": [

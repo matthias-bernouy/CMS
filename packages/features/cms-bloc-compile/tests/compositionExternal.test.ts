@@ -6,7 +6,6 @@ describe("Composition artifact", () => {
         const compositionHTML = "<base-nav></base-nav><slot></slot>";
         const bloc = await prepare_bloc(
             null,
-            null,
             "Demo composition",
             "Composition",
             "",
@@ -20,7 +19,6 @@ describe("Composition artifact", () => {
 
         expect(bloc.viewJS).toBe("");
         expect(bloc.compositionHTML).toBe(compositionHTML);
-        expect(bloc.editorJS).not.toContain("window.p9r.Composition");
     });
 
     test("keeps historical client compositions installable during an upgrade", async () => {
@@ -36,7 +34,7 @@ describe("Composition artifact", () => {
             { type: "text/typescript" },
         );
 
-        const bloc = await prepare_bloc(view, null, "Legacy composition", "Composition", "", "legacy-composition");
+        const bloc = await prepare_bloc(view, "Legacy composition", "Composition", "", "legacy-composition");
 
         expect(bloc.viewJS).toContain("window.p9r.Composition");
         expect(bloc.viewJS).toContain("data-p9r-legacy-composition");

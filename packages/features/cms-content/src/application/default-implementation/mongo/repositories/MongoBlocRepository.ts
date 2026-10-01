@@ -140,14 +140,6 @@ export class MongoBlocRepository extends MongoRepositoryStorage {
         return withMongoSiteBlocPublicationLock(this.db, this.siteBlocPublicationLocks, operation);
     }
 
-    async getBlocsJS(): Promise<{ id: string; editorJS: string; viewJS: string }[]> {
-        return (await this.getBlocRecords()).flatMap((record) =>
-            record.artifact
-                ? [{ id: record.tag, editorJS: record.artifact.editorJS, viewJS: record.artifact.viewJS }]
-                : [],
-        );
-    }
-
     async getBlocsList(options: BlocListOptions = {}): Promise<BlocListItemResponse[]> {
         return projectBlocList(await this.getBlocRecords(), options);
     }

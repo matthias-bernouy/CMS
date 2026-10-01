@@ -79,7 +79,7 @@ function parseBloc(
         source.settings === undefined ? undefined : parseComponentSettings(source.settings, `${path}.settings`, limits);
     const runtime = source.runtime === undefined ? undefined : record(source.runtime, `${path}.runtime`);
     if (runtime) {
-        keys(runtime, ["viewJS", "editorJS"], `${path}.runtime`);
+        keys(runtime, ["viewJS"], `${path}.runtime`);
     }
     return {
         ...base,
@@ -97,11 +97,6 @@ function parseBloc(
             : {
                   runtime: {
                       viewJS: string(runtime.viewJS, limits.maxDocumentBytes, `${path}.runtime.viewJS`),
-                      ...(runtime.editorJS === undefined
-                          ? {}
-                          : {
-                                editorJS: string(runtime.editorJS, limits.maxDocumentBytes, `${path}.runtime.editorJS`),
-                            }),
                   },
               }),
     };

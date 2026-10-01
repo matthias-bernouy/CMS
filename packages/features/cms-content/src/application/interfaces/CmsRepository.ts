@@ -95,7 +95,6 @@ export interface CmsRepository {
     restoreSiteBloc(tag: string, expectedDraftRevision: number): Promise<SiteBlocDefinition>;
     withSiteBlocPublicationLock<T>(operation: (guard: SiteBlocPublicationGuard) => Promise<T>): Promise<T>;
 
-    getBlocsJS(): Promise<{ id: string; editorJS: string; viewJS: string }[]>;
     getBlocsList(options?: BlocListOptions): Promise<BlocListItemResponse[]>;
     getBlocViewJS(htmlTag: string): Promise<string | null>;
     /** Author-side source map for resource export. Returns null when the bloc has no source bundle. */

@@ -3,7 +3,7 @@ import { RESERVED_PREFIXES } from "@bernouy/cms-content";
 import { isNativeBlocTag, nativeBlocOwnershipError } from "cms-bloc-compile/core/nativeBlocTags";
 
 /**
- * Inputs passed to `validateBloc`. All source fields are optional —
+ * Inputs passed to `validateBloc`. The view source is optional —
  * server-side calls may have only the JS source available, CLI calls have
  * the full bloc folder. The validator runs whichever checks the inputs support.
  */
@@ -14,8 +14,6 @@ export type ValidateBlocInput = {
     native?: boolean;
     /** User's view source (typically `Bloc.ts`). */
     viewSource?: string;
-    /** User's editor source (typically `BlocEditor.ts`). */
-    editorSource?: string;
 };
 
 export type ValidateBlocResult = {
@@ -57,11 +55,6 @@ export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
         errors.push(...checkNoHardcodedDefine(input.viewSource, "Bloc", input.tag));
         errors.push(...checkNoLocationMutation(input.viewSource, "Bloc"));
     }
-    if (input.editorSource) {
-        errors.push(...checkNoHardcodedDefine(input.editorSource, "BlocEditor", input.tag));
-        errors.push(...checkNoLocationMutation(input.editorSource, "BlocEditor"));
-    }
-
     return { errors };
 }
 

@@ -13,7 +13,6 @@ describe("site-builder CLI import boundary", () => {
         const form = definitionForm(tag, definition);
         form.set("force", "false");
         form.set("viewJS", "FORGED_VIEW();");
-        form.set("editorJS", "FORGED_EDITOR();");
         form.set("source", JSON.stringify({ "Bloc.ts": btoa("FORGED_SOURCE();") }));
 
         const response = await postSiteBuilderBloc(request(form), cms);
@@ -23,7 +22,6 @@ describe("site-builder CLI import boundary", () => {
         expect(response.status).toBe(200);
         expect(published.draft.defaultContent).toBe("");
         expect(Object.keys(source ?? {}).sort()).toEqual([
-            "BlocEditor.ts",
             "builder.json",
             "default.html",
             "manifest.json",

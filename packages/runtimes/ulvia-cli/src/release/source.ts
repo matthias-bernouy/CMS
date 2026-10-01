@@ -136,7 +136,6 @@ async function loadBlocs(directory: string, group: string): Promise<unknown[]> {
             new File([(await source.exists()) ? await source.text() : DEFAULT_BLOC_SOURCE], "bloc.ts", {
                 type: "text/typescript",
             }),
-            null,
             String(definition.label),
             group,
             String(definition.description ?? ""),
@@ -152,7 +151,7 @@ async function loadBlocs(directory: string, group: string): Promise<unknown[]> {
             ...(lightdom ? { lightdom } : {}),
             ...(defaultContent ? { defaultContent } : {}),
             ...(css ? { style: css } : {}),
-            runtime: { viewJS: compiled.viewJS, editorJS: compiled.editorJS },
+            runtime: { viewJS: compiled.viewJS },
         });
     }
     return blocs;

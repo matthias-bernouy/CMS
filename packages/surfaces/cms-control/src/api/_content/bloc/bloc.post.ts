@@ -12,8 +12,6 @@ export default async function importBloc(req: Request, cms: ControlCms) {
     const viewFile = viewEntry instanceof File ? viewEntry : null;
     const compositionEntry = formData.get("compositionHTML");
     const compositionHTML = typeof compositionEntry === "string" ? compositionEntry : undefined;
-    const editorEntry = formData.get("editorJS");
-    const editorFile = editorEntry instanceof File ? editorEntry : null;
     const sourceRaw = formData.get("source");
     const source = parseSourceMap(sourceRaw);
     const force = formData.get("force") === "true";
@@ -32,7 +30,6 @@ export default async function importBloc(req: Request, cms: ControlCms) {
             nativeElement,
             viewJS: viewFile,
             compositionHTML,
-            editorJS: editorFile,
             source,
             force,
         });

@@ -12,7 +12,7 @@ test("provider media helpers use the host browser runtime", async () => {
         "DemoProviderImage.ts",
         { type: "text/typescript" },
     );
-    const bloc = await prepare_bloc(view, null, "Provider image", "Content", "", "demo-provider-image");
+    const bloc = await prepare_bloc(view, "Provider image", "Content", "", "demo-provider-image");
     for (const name of ["PROVIDER_IMAGE_WIDTHS", "buildProviderImageAttributes", "syncProviderMediaImage"]) {
         expect(bloc.viewJS).toContain(`window.p9r.${name}`);
     }

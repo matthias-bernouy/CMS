@@ -130,8 +130,6 @@ describe("bloc.post", () => {
         expect(createBlocCalls[0]?.bloc.name).toBe("My");
         expect(createBlocCalls[0]?.bloc.group).toBe("cards");
         expect(deleteSpy).toContain(P9R_CACHE.bloc("my-bloc"));
-        expect(deleteSpy).toContain(P9R_CACHE.EDITOR_SCRIPT);
-        expect(deleteSpy).toContain(P9R_CACHE.EDITOR_VIEW_SCRIPT);
         expect(deleteSpy).toContain(P9R_CACHE.blocset(["my-bloc", "other-bloc"]));
         expect(deleteSpy).not.toContain(P9R_CACHE.page("/kept"));
     });

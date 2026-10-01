@@ -42,7 +42,6 @@ export function blocArtifact(tag: string, overrides: Partial<TBloc> = {}): TBloc
         group: "Basic",
         description: `${tag} description`,
         viewJS: `globalThis[${JSON.stringify(`view:${tag}`)}] = true;`,
-        editorJS: `globalThis[${JSON.stringify(`editor:${tag}`)}] = true;`,
         ownership: { kind: "code-managed" },
         ...overrides,
     };

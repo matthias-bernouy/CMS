@@ -13,7 +13,6 @@ A descriptive local directory can contain:
 example-card/
 ├── manifest.json
 ├── Bloc.ts
-├── BlocEditor.ts
 ├── template.html
 ├── style.css
 └── default.html
@@ -22,8 +21,8 @@ example-card/
 There is no current CLI folder scanner or collection publication command.
 Control's authenticated `POST <basePath>/api/bloc` accepts multipart fields:
 `tag`, `name`, optional `group`/`description`, a `viewJS` file (view source) or
-`compositionHTML`, an optional `editorJS` file, and an optional `source` JSON map
-of relative filenames to Base64 contents. `force=true` replaces an existing tag;
+`compositionHTML`, and an optional `source` JSON map of relative filenames to
+Base64 contents. `force=true` replaces an existing tag;
 otherwise a duplicate returns 409. The import compiles and stores the artifact.
 
 The import fields determine the tag, labels and entry sources. A source bundle's
@@ -38,8 +37,8 @@ The import fields determine the tag, labels and entry sources. A source bundle's
 
 Both referenced files must be included in the source map. Omit the thumbnail
 when no image exists. `defaultContent` is optional and resolves inside the
-source bundle. A missing editor produces an opaque editor. The tag must be a
-valid, unreserved custom-element name; native HTML roots cannot be imported.
+source bundle. The tag must be a valid, unreserved custom-element name; native
+HTML roots cannot be imported.
 Do not assume that old `default-tag`, `bloc`, `editor` or `meta` manifest fields
 configure the current multipart endpoint.
 
@@ -89,8 +88,8 @@ element callbacks and DOM APIs when the Bloc needs behavior.
 
 Export one runtime class and do not call `customElements.define()`. The
 build wrapper selects the exported class and owns registration with the
-imported tag. Likewise, `BlocEditor.ts` exports its editor class without
-registering it.
+imported tag. Authoring settings and slot rules belong to collection JSON, not
+to a second compiled TypeScript entry.
 
 ## Runtime Behavior
 
@@ -197,7 +196,7 @@ through typed controls:
 
 Visual form controls can be supplied by custom Blocs or the platform component
 library. They participate in native forms; provider calls use gateway capabilities.
-See [Expose Editing Capabilities](./editor.md) for the editor API.
+See [Collection API](./collections.md) for declarative settings and slot metadata.
 
 ## Optional presentation images
 

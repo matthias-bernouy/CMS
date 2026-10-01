@@ -6,18 +6,9 @@ import { p9rExternalsPlugin } from "./p9rExternalsPlugin";
 import { writeViewRegistrationEntry } from "./viewRegistrationEntry";
 import { isNativeBlocTag, nativeBlocOwnershipError } from "./nativeBlocTags";
 
-/** Synthetic editor source for blocs deployed without their own Editor module. */
-const OPAQUE_EDITOR_SRC = `
-import { Editor, registerEditor } from "@bernouy/cms-content/editor";
-
-class DefaultBlocEditor extends Editor {}
-
-registerEditor({ editor: DefaultBlocEditor });
-`;
-
 /**
- * Builds a bloc's view + editor bundles from the uploaded files and stamps
- * the manifest tag into both via the `BE5_TAG_TO_BE_REPLACED` placeholder.
+ * Builds a bloc's browser view bundle and stamps the manifest tag into the
+ * `BE5_TAG_TO_BE_REPLACED` placeholder.
  * The caller must provide the tag — blocs are always keyed by their manifest
  * tag, never by a generated UUID.
  *
@@ -27,7 +18,6 @@ registerEditor({ editor: DefaultBlocEditor });
  */
 export async function prepare_bloc(
     fileView: File | null,
-    fileEditor: File | null,
     label: string,
     group: string,
     description: string,
@@ -63,54 +53,26 @@ export async function prepare_bloc(
         const viewPath = options.viewPath
             ? resolveSourceEntryPath(tempDir, options.viewPath)
             : join(tempDir, blocId + ".js");
-        const editorPath = join(tempDir, blocId + "Editor.ts");
-
         if (fileView) {
             await mkdir(dirname(viewPath), { recursive: true });
             await Bun.write(viewPath, fileView);
         }
-        if (fileEditor) {
-            await Bun.write(editorPath, fileEditor);
-        } else {
-            await Bun.write(editorPath, OPAQUE_EDITOR_SRC);
-        }
 
         const viewEntryPath = fileView ? await writeViewRegistrationEntry(tempDir, viewPath) : viewPath;
-
-        const [viewJSRaw, editorJSRaw] = await Promise.all([
+        const viewJSRaw =
             options.compositionHTML !== undefined
                 ? ""
-                : runBuild(buildOptions(viewEntryPath), `view bundle for ${blocId}`),
-            runBuild(buildOptions(editorPath), `editor bundle for ${blocId}`),
-        ]);
-
-        let viewJS = viewJSRaw;
-        let editorJS = editorJSRaw;
-
-        viewJS = viewJS.replaceAll("BE5_TAG_TO_BE_REPLACED", blocId);
-
-        const defaultContentLiteral = JSON.stringify(defaultContent ?? "").replaceAll("$", "$$$$");
-
-        editorJS = editorJS
-            .replaceAll("BE5_TAG_TO_BE_REPLACED", blocId)
-            .replaceAll("BE5_LABEL_TO_BE_REPLACED", jsStringLiteralContent(label))
-            .replaceAll("BE5_GROUP_TO_BE_REPLACED", jsStringLiteralContent(group))
-            .replaceAll("BE5_DESCRIPTION_TO_BE_REPLACED", jsStringLiteralContent(description))
-            .replaceAll("BE5_DEFAULT_CONTENT_TO_BE_REPLACED", defaultContentLiteral)
-            .replaceAll(
-                "BE5_NATIVE_ELEMENT_TO_BE_REPLACED",
-                nativeElement ? JSON.stringify(nativeElement) : "undefined",
-            );
+                : await runBuild(buildOptions(viewEntryPath), `view bundle for ${blocId}`);
+        const viewJS = viewJSRaw.replaceAll("BE5_TAG_TO_BE_REPLACED", blocId);
 
         assertValidJavaScriptArtifact(viewJS, `view bundle for ${blocId}`);
-        assertValidJavaScriptArtifact(editorJS, `editor bundle for ${blocId}`);
 
         return {
             id: blocId,
             ...(thumbnail ? { thumbnail } : {}),
-            editorJS: editorJS,
             viewJS: viewJS,
             ...(options.compositionHTML !== undefined ? { compositionHTML: options.compositionHTML } : {}),
+            ...(defaultContent !== undefined ? { defaultContent } : {}),
             name: label,
             group: group,
             description: description,
@@ -181,10 +143,6 @@ async function materializeSourceBundle(tempDir: string, source: Record<string, s
             await Bun.write(destination, Buffer.from(content, "base64"));
         }),
     );
-}
-
-function jsStringLiteralContent(value: string): string {
-    return JSON.stringify(value).slice(1, -1).replaceAll("$", "$$$$");
 }
 
 export async function runBuild(

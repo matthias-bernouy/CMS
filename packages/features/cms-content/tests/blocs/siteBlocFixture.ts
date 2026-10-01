@@ -50,7 +50,6 @@ export function siteBlocArtifact(overrides: Partial<TBloc> = {}): TBloc {
         name: "Feature panel",
         group: "Site",
         description: "A composed site bloc",
-        editorJS: "editor-artifact",
         viewJS: "view-artifact",
         ownership: { kind: "site-builder", definitionId: "definition-1" },
         source: { "builder.json": "e30=" },

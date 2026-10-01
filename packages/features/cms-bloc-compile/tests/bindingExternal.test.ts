@@ -14,7 +14,7 @@ describe("binding Bloc external", () => {
             { type: "text/typescript" },
         );
 
-        const bloc = await prepare_bloc(view, null, "Binding demo", "Content", "", "demo-binding");
+        const bloc = await prepare_bloc(view, "Binding demo", "Content", "", "demo-binding");
 
         for (const name of [
             "observeSource",

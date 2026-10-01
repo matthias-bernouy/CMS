@@ -37,7 +37,6 @@ export type BlocImportInput = {
     viewPath?: string;
     viewJS?: string | File | null;
     compositionHTML?: string;
-    editorJS?: string | File | null;
     source?: Record<string, string>;
     force?: boolean;
 };
@@ -75,9 +74,7 @@ export async function importBlocArtifact(
     const repository = runtime.repository ?? cms.repository;
 
     const viewFile = input.viewJS ? asFile(input.viewJS, "Bloc.js") : null;
-    const editorFile = input.editorJS ? asFile(input.editorJS, "BlocEditor.ts") : null;
     const viewSource = viewFile ? await viewFile.text() : undefined;
-    const editorSource = editorFile ? await editorFile.text() : undefined;
     const sourceManifest = parseSourceManifest(input.source);
     if (sourceManifest.error) {
         throw new BlocImportError(sourceManifest.error, 400);
@@ -85,7 +82,6 @@ export async function importBlocArtifact(
     const validation = validateBloc({
         tag: input.tag,
         ...(viewSource !== undefined ? { viewSource } : {}),
-        ...(editorSource !== undefined ? { editorSource } : {}),
     });
     if (validation.errors.length > 0) {
         throw new BlocImportError(validation.errors.join("\n"), 400);
@@ -113,7 +109,6 @@ export async function importBlocArtifact(
 
     const prepared = await prepare_bloc(
         viewFile,
-        editorFile,
         input.name,
         input.group ?? "",
         input.description ?? "",
@@ -130,7 +125,6 @@ export async function importBlocArtifact(
     const bloc: TBloc = {
         ...prepared,
         ...(input.catalogue ? { catalogue: input.catalogue } : {}),
-        ...(input.internal ? { editorJS: "" } : {}),
         ...(input.internal ? { internal: true } : {}),
         ownership: runtime.ownership ?? { kind: "code-managed" },
     };

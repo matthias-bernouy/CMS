@@ -24,7 +24,6 @@ export function withInstalledCollections(
                     description: bloc.description ?? "",
                     ownership: { kind: "code-managed" },
                     viewJS: bloc.kind === "component" ? (bloc.runtime?.viewJS ?? compileCollectionComponent(bloc)) : "",
-                    editorJS: bloc.kind === "component" ? (bloc.runtime?.editorJS ?? "") : "",
                     internal: bloc.internal,
                     ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
                     ...(bloc.kind === "component" && bloc.lightdom ? { componentHTML: bloc.lightdom } : {}),
@@ -63,14 +62,6 @@ export function withInstalledCollections(
                 .map((record) => record.artifact!);
             return [...local, ...resources.filter((bloc) => !bloc.internal)];
         },
-        getBlocsJS: async () => [
-            ...(await repository.getBlocsJS()),
-            ...(await installed()).map(({ artifact }) => ({
-                id: artifact!.id,
-                viewJS: artifact!.viewJS,
-                editorJS: artifact!.editorJS,
-            })),
-        ],
         getBlocViewJS: async (tag) => {
             const record = await read(tag);
             return record?.collectionId ? (record.artifact?.viewJS ?? null) : repository.getBlocViewJS(tag);

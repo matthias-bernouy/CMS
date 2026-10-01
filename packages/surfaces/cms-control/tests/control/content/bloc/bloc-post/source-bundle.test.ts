@@ -122,8 +122,8 @@ describe("bloc.post", () => {
 
         expect(res.status).toBe(200);
         expect(createBlocCalls).toHaveLength(1);
-        expect(createBlocCalls[0]?.bloc.editorJS).toContain(
-            `<my-bloc><p slot=\\"header\\">Title</p><p>Body</p></my-bloc>`,
+        expect(createBlocCalls[0]?.bloc.defaultContent).toBe(
+            `<my-bloc><p slot="header">Title</p><p>Body</p></my-bloc>`,
         );
     });
 

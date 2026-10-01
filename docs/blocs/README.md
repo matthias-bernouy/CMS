@@ -6,10 +6,10 @@ CmsCore blocs are reusable HTML elements with four separate contracts:
 | --- | --- | --- |
 | Authored content | Site author | The Light DOM saved in pages. |
 | View | Bloc author | Browser behavior and optional Shadow DOM structure. |
-| Editor | Bloc author or CMS platform | Settings, content slots, text editing, data scopes, and preview states. The CMS owns native HTML editors. |
+| Authoring metadata | Collection or CMS platform | Declarative settings, content slots, defaults, and native-element policy. |
 | Theme | Site and Bloc authors | Site-wide design tokens plus deliberate Bloc-level extension points. |
 
-Keeping these contracts separate is the central design rule. The editor
+Keeping these contracts separate is the central design rule. Authoring metadata
 describes what an author may change; it is not a second renderer. The view owns
 runtime behavior; it must still work in Delivery where no editor is present.
 The theme supplies shared values; a Bloc keeps responsibility for its own
@@ -24,8 +24,6 @@ layout and semantics.
   interpolation and the checkout fixture.
 - [Create a Bloc](./authoring.md) covers folders, the manifest, runtime code,
   templates, default content, registration, and browser constraints.
-- [Expose Editing Capabilities](./editor.md) covers settings, slots, inline
-  text, opaque structure, lifecycle hooks, data scopes, and preview states.
 - [Bind Data And Sources](./data-bindings.md) covers declarative source
   markup, loading states, repetition, forms, and the binding-core boundary.
 - [Make A Bloc Themeable](./theming.md) covers global themes, tokens, local CSS
@@ -36,7 +34,7 @@ layout and semantics.
 ## Current Execution Paths
 
 ```text
-compiled Bloc sources -> Control import + compiler -> stored view/editor bundles
+compiled Bloc sources -> Control import + compiler -> stored view bundle
 site composition      -> Control authoring         -> stored composition artifact
 stored artifacts      -> Control preview and Delivery
 
@@ -47,9 +45,8 @@ ulvia-collection/v1 bundle -> repository admission -> validated authored bundle
 Starting `ulvia dev` launches the local CMS; it does not scan, compile or publish
 a collection folder. See [validation](validation.md) for the available checks.
 
-The same saved HTML is used in the editor and in Delivery. Do not put essential
-rendering in `BlocEditor.ts`, depend on editor-only DOM, or make the Delivery
-view wait for authoring controls.
+The same saved HTML is used by authoring surfaces and Delivery. Do not make
+Delivery depend on authoring-only DOM or controls.
 
 ## Scope Of This Guide
 

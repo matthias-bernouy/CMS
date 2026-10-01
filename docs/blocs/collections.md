@@ -16,7 +16,7 @@ packages/resources/collections/ulvia-official/
 ├── blocs/<bloc>/shadowdom.html  # required for components
 ├── blocs/<bloc>/lightdom.html   # required for compositions, optional for components
 ├── blocs/<bloc>/default.html    # optional initial page-owned slot content
-├── blocs/<bloc>/settings/definition.json  # optional component attributes and editor groups
+├── blocs/<bloc>/settings/definition.json  # optional component attributes and authoring controls
 ├── blocs/<bloc>/style.css    # optional for shadow components
 ├── blocs/<bloc>/bloc.ts      # optional browser behavior
 ├── texts/*.json             # arrays of localized text definitions
@@ -59,17 +59,19 @@ Component attributes may be declared in the bloc's `definition.json` under
 `settings`, or in a separate `settings/definition.json`. The release command
 rejects using both locations for one bloc. Settings are an ordered JSON array;
 each item has an `id`, `label`, `type` and `default`, plus an optional `group`.
-String items may set `enum`, `minLength` and `maxLength`; an omitted `maxLength`
-defaults to 256. The editor groups items by their `group` in first-appearance
-order and uses a Settings group when it is omitted. The same items supply
-insertion defaults and the server-side value schema. The current editor builds
-text, select and toggle controls for string and boolean attributes.
+String items may set `minLength` and `maxLength`; an omitted `maxLength`
+defaults to 256. Every item has a declarative `control`. String controls include
+text, textarea, select, segmented, color, page-link and endpoint-picker;
+booleans use toggle. Select and segmented options carry stable values and
+author-facing labels. The same items supply insertion defaults and the
+server-side value schema.
 An item may add `visibleWhen: { "setting": "tone", "equals": "accent" }`;
 `notEquals` and arrays of accepted values are supported. Multiple rules form
 an AND condition. Conditions may reference a boolean item or a string item
-with `enum`, including items in another editor group. Admission rejects unknown
-references, incompatible values, self references and cycles. Visibility affects
-only the editor control: hidden attributes remain stored and are still validated.
+with finite select or segmented options, including items in another group.
+Admission rejects unknown references, incompatible values, self references and
+cycles. Visibility affects only the authoring control: hidden attributes remain
+stored and are still validated.
 Changing a controlling value does not clear other attributes.
 Inserting a bloc writes its default attributes onto that page's host, and page
 saves validate changed values against the installed schema. `bloc.ts` remains

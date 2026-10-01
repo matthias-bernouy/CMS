@@ -71,14 +71,6 @@ describe("validateBloc — source patterns", () => {
         });
         expect(r.errors).toEqual([expect.stringContaining(`Bloc: hardcoded \`customElements.define("other-tag"`)]);
     });
-
-    test("rejects hardcoded customElements.define in editor", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            editorSource: `customElements.define('foo-bar', Y);`,
-        });
-        expect(r.errors).toEqual([expect.stringContaining("BlocEditor")]);
-    });
 });
 
 describe("validateBloc — Location mutations (#6)", () => {
@@ -88,14 +80,6 @@ describe("validateBloc — Location mutations (#6)", () => {
             viewSource: `customElements.define("my-bloc", class { go() { location.href = "/x"; } });`,
         });
         expect(r.errors).toEqual([expect.stringContaining("location.href = …")]);
-    });
-
-    test("rejects `window.location = …` in editorSource", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            editorSource: `customElements.define("my-bloc", class { go() { window.location = "/x"; } });`,
-        });
-        expect(r.errors).toEqual([expect.stringContaining("window.location = …")]);
     });
 
     test("rejects `location.assign(...)` and `location.replace(...)`", () => {

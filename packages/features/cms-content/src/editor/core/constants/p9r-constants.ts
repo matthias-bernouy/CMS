@@ -15,12 +15,4 @@ export const P9R_CACHE = {
     font: (url: string) => `font:${url}`,
     /** The single theme CSS served at `/style`. */
     STYLE: "style:main",
-    /**
-     * Consolidated editor bundle served at `<admin>/admin/editor-script`.
-     * Contains the static editor runtime plus every bloc's editorJS and
-     * viewJS concatenated — invalidated on any bloc write.
-     */
-    EDITOR_SCRIPT: "js:editor-script",
-    /** Consolidated bloc view bundle used by the editor frame preview. */
-    EDITOR_VIEW_SCRIPT: "js:editor-view-script",
 } as const;

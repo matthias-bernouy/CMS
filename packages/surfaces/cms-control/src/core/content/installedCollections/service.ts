@@ -9,6 +9,4 @@ export function collectionService(cms: ControlCms) {
 }
 export function invalidateCollections(cms: ControlCms) {
     invalidateGlobalStyleAndPages(cms);
-    cms.cache.delete("js:editor-script");
-    cms.cache.delete("js:editor-view-script");
 }

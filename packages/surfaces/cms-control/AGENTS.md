@@ -10,12 +10,9 @@ browser bundle in `src/static/assets/control-components.js`.
 - `@bernouy/cms-control/component`: view-side component authoring, only
   `Component` from `@bernouy/components/base`. Compositions are server-rendered
   resources without a view class.
-- `@bernouy/cms-control/editor`: temporary Bloc compiler compatibility entry.
-  Bloc editor bundles are rewritten by `p9rExternalsPlugin` to use
-  `window.p9rEditor`; no interactive editor is mounted by Control.
 
-Do not let the view authoring subpath import editor code, Control internals, or
-server-only modules.
+Do not let the view authoring subpath import Control internals or server-only
+modules.
 
 ## Package Layout
 

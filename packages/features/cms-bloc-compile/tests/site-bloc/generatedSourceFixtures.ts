@@ -60,47 +60,6 @@ const expectedSnapshotJson = `{
         ]
     }`;
 
-export const expectedEditorSource = `import { Editor, registerEditor, type ContentSlot } from "@bernouy/cms-content/editor";
-
-const slots: ContentSlot[] = [
-    {
-        "accepts": [
-            {
-                "kind": "component",
-                "tag": "basic-heading-1"
-            },
-            {
-                "accept": [
-                    "image",
-                    "video"
-                ],
-                "kind": "media"
-            }
-        ],
-        "label": "Title",
-        "max": 1,
-        "min": 1,
-        "slot": "title"
-    },
-    {
-        "accepts": [
-            {
-                "kind": "any-component"
-            }
-        ],
-        "label": "Content"
-    }
-];
-
-export class SiteCompositeBlocEditor extends Editor {
-    protected override contentSlots(): ContentSlot[] {
-        return slots;
-    }
-}
-
-registerEditor({ editor: SiteCompositeBlocEditor });
-`;
-
 export const expectedBuilderJson = `{
     "createdAt": "2026-07-01T10:00:00.000Z",
     "draft": ${expectedSnapshotJson},
