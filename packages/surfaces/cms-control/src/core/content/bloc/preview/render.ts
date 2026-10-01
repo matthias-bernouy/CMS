@@ -1,4 +1,4 @@
-import { serializeSiteBlocTemplate } from "@bernouy/cms-bloc-compile";
+import { serializeSiteBlocTemplate } from "@bernouy/cms-collection-build";
 import {
     expandCompositions,
     findUsedBlocTags,

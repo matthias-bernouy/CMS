@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { generateSiteBlocSourceBundle } from "@bernouy/cms-bloc-compile";
+import { generateSiteBlocSourceBundle } from "@bernouy/cms-collection-build";
 import getBlocsList from "cms-control/api/_content/bloc/_catalogue/list.get";
 import getBlocSource from "cms-control/api/_content/bloc/_runtime/source.get";
 import { blocArtifact, seedSiteBloc, siteBlocHarness, siteSnapshot } from "../../site-blocs/fixtures";

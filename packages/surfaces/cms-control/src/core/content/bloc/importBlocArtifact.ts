@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { prepare_bloc, validateBloc } from "@bernouy/cms-bloc-compile";
+import { buildCollectionBloc, validateBloc } from "@bernouy/cms-collection-build";
 import {
     type BlocOwnership,
     ContentConflictError,
@@ -107,7 +107,7 @@ export async function importBlocArtifact(
         throw new BlocImportError(managedNativeIssue, 400);
     }
 
-    const prepared = await prepare_bloc(
+    const prepared = await buildCollectionBloc(
         viewFile,
         input.name,
         input.group ?? "",

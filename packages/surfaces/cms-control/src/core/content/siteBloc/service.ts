@@ -1,6 +1,6 @@
 import { requireSiteBlocCollection } from "cms-control/core/content/siteBloc/collections";
 import { randomUUIDv7 } from "bun";
-import { generateSiteBlocSourceBundle } from "@bernouy/cms-bloc-compile";
+import { generateSiteBlocSourceBundle } from "@bernouy/cms-collection-build";
 import {
     BlocRevisionConflictError,
     nextSiteBlocUpdatedAt,

@@ -17,7 +17,7 @@
             "path": "../cms-server"
         },
         {
-            "path": "../../features/cms-bloc-compile"
+            "path": "../../features/cms-collection-build"
         },
         {
             "path": "../../features/cms-repository"

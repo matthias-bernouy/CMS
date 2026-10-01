@@ -42,7 +42,7 @@ export function isValidResourceIdentifier(id: string): boolean {
  * with a lowercase letter, contain at least one dash, and be composed of
  * lowercase alphanumerics and dashes after that. Locked to a conservative
  * subset so the tag can also be used safely as a filesystem path by
- * `prepare_bloc`.
+ * `buildCollectionBloc`.
  */
 export function isValidCustomElementTag(tag: string): boolean {
     if (!tag || typeof tag !== "string") {

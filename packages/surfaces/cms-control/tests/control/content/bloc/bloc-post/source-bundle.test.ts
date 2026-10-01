@@ -104,7 +104,7 @@ describe("bloc.post", () => {
         expect(createBlocCalls).toHaveLength(0);
     });
 
-    test("passes manifest defaultContent file content to prepare_bloc", async () => {
+    test("passes manifest defaultContent file content to the collection build", async () => {
         const { cms, createBlocCalls } = makeSystem();
         const res = await importBloc(
             makeRequest({

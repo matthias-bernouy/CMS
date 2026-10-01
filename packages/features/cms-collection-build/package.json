@@ -1,7 +1,7 @@
 {
-    "name": "@bernouy/cms-bloc-compile",
+    "name": "@bernouy/cms-collection-build",
     "version": "0.1.0",
-    "description": "Bloc build pipeline — builds a bloc's browser view bundle from author sources, validates tags, and rewrites shared browser imports to host runtime globals.",
+    "description": "Collection build pipeline — validates Bloc sources, builds browser artifacts, and generates source bundles for collection releases.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./src/exports/index.ts",

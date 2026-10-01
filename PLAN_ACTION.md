@@ -1065,9 +1065,9 @@ directly.
 
 ### Wave 8 — Bloc compiler, configuration, themes, and texts
 
-Status: open for the new collection model. The existing `cms-bloc-compile`
-package still handles code-based and site bloc bundling; its eventual ownership
-and the replacement flows need joint review before relocation. JSON release
+Status: open for the new collection model. `cms-collection-build` now owns
+collection browser artifacts and site Bloc source bundles. The remaining trust
+model and replacement flows still need joint review. JSON release
 texts, typed parameters, plurals, fallback and shared server rendering are now
 implemented, with a declarative checkout fixture. Site override persistence,
 site-language integration and published catalogue loading remain open.

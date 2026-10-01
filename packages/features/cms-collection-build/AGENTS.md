@@ -1,10 +1,10 @@
-# @bernouy/cms-bloc-compile
+# @bernouy/cms-collection-build
 
-Feature package for bloc validation and bundling.
+Feature package for collection Bloc validation and bundling.
 
 ## Boundaries
 
-- Root export exposes `prepare_bloc`, `validateBloc`, `validateBlocTag`, and
+- Root export exposes `buildCollectionBloc`, `validateBloc`, `validateBlocTag`, and
   `p9rExternalsPlugin`.
 - The package is compile-time/browser-bundle infrastructure. Do not import
   surfaces, runtimes, Mongo adapters, or CMS admin internals.
@@ -19,5 +19,5 @@ Feature package for bloc validation and bundling.
   validation and admin upload.
 - Direct `location.*` mutation remains forbidden in authored browser behavior.
   Prefer anchors or `history.pushState`.
-- `prepare_bloc` uses temporary directories under `os.tmpdir()`. Do not depend
+- `buildCollectionBloc` uses temporary directories under `os.tmpdir()`. Do not depend
   on the process cwd being writable.

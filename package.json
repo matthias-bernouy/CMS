@@ -33,7 +33,7 @@
     },
     "devDependencies": {
         "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-bloc-compile": "workspace:*",
+        "@bernouy/cms-collection-build": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-dashboards": "workspace:*",

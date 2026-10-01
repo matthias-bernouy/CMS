@@ -23,7 +23,7 @@
             "path": "packages/features/cms-content"
         },
         {
-            "path": "packages/features/cms-bloc-compile"
+            "path": "packages/features/cms-collection-build"
         },
         {
             "path": "packages/features/cms-repository"

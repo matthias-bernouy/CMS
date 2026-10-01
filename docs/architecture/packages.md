@@ -19,18 +19,18 @@ files explain implementation invariants.
 
 | Package | Responsibility |
 | --- | --- |
-| `@bernouy/cms-content` | Pages, routes, Blocs, settings, themes, editor contracts and the author file library. |
+| `@bernouy/cms-content` | Pages, routes, Blocs, settings, themes, authoring contracts and the author file library. |
 | `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues and authored collections with Control HTML views. |
 | `@bernouy/cms-gateway` | Authorized capability invocation, provider identity aliases, file reads and image derivatives. |
 | `@bernouy/cms-auth` | Accounts, local/OIDC providers, PATs, signed sessions, public auth operations and email composition. |
 | `@bernouy/cms-dashboards` | Site dashboard records, collection view mounts and direct subject assignments. |
 | `@bernouy/ulvia-official-provider` | Initial local provider capabilities for catalogue reads, form receipts and one media asset. |
-| `@bernouy/cms-bloc-compile` | Existing Bloc validation, view/editor bundling and shared editor externals. |
+| `@bernouy/cms-collection-build` | Collection Bloc validation, browser artifact builds and source-bundle generation. |
 
 `cms-dashboards` owns site activation, private dashboard records and member
 assignments over collection-owned views, not view content or the removed widget
 runtime. Collection dashboard templates live in collection releases.
-Provider-backed view execution remains future work. `cms-bloc-compile` remains
+Provider-backed view execution remains future work. `cms-collection-build` remains
 a separate feature package.
 
 The old `cms-sources`, `cms-source-images`, `cms-identities` and `cms-secrets`

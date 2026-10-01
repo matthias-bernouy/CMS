@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { prepare_bloc } from "../src/exports";
+import { buildCollectionBloc } from "../src/exports";
 
 describe("Composition artifact", () => {
     test("keeps its template out of the client view bundle", async () => {
         const compositionHTML = "<base-nav></base-nav><slot></slot>";
-        const bloc = await prepare_bloc(
+        const bloc = await buildCollectionBloc(
             null,
             "Demo composition",
             "Composition",
@@ -34,7 +34,7 @@ describe("Composition artifact", () => {
             { type: "text/typescript" },
         );
 
-        const bloc = await prepare_bloc(view, "Legacy composition", "Composition", "", "legacy-composition");
+        const bloc = await buildCollectionBloc(view, "Legacy composition", "Composition", "", "legacy-composition");
 
         expect(bloc.viewJS).toContain("window.p9r.Composition");
         expect(bloc.viewJS).toContain("data-p9r-legacy-composition");

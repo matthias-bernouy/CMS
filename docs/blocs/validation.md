@@ -19,7 +19,7 @@ loading, empty, error, and long-content states.
 
 ## Compiler checks
 
-`@bernouy/cms-bloc-compile` validates tags and artifacts and builds the browser
+`@bernouy/cms-collection-build` validates tags and artifacts and builds the browser
 runtime bundle. Tag validation rejects native roots and reserved/invalid custom-element names.
 Source validation detects selected registration and navigation patterns; it is
 not a complete JavaScript safety analysis. Bundling enforces supported imports
@@ -27,7 +27,7 @@ and validates emitted syntax. The Control import path additionally checks source
 bundles, default content and managed native-child structure.
 
 When changing compiler behavior, add a focused test beside
-`packages/features/cms-bloc-compile/tests/`.
+`packages/features/cms-collection-build/tests/`.
 
 ## Workspace checks
 

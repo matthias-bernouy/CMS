@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { prepare_bloc } from "@bernouy/cms-bloc-compile";
+import { buildCollectionBloc } from "@bernouy/cms-collection-build";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { chromium } from "playwright";
 import type { ControlCms } from "cms-control/ControlCms";
@@ -37,7 +37,7 @@ test("a real compiled bloc renders in a sandbox while fetches, forms and parent 
             themes: [{ id: "preview", name: "Preview", values: { light: { accent: "rgb(12, 34, 56)" }, dark: {} } }],
         },
     });
-    const artifact = await prepare_bloc(
+    const artifact = await buildCollectionBloc(
         new File([viewSource], "Bloc.ts"),
         "Preview fixture",
         "Test",

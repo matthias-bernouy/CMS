@@ -6,7 +6,7 @@
       "name": "@bernouy/cms-core",
       "devDependencies": {
         "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-bloc-compile": "workspace:*",
+        "@bernouy/cms-collection-build": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-dashboards": "workspace:*",
@@ -47,8 +47,8 @@
         "typescript": "^7.0.2",
       },
     },
-    "packages/features/cms-bloc-compile": {
-      "name": "@bernouy/cms-bloc-compile",
+    "packages/features/cms-collection-build": {
+      "name": "@bernouy/cms-collection-build",
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/cms-content": "workspace:*",
@@ -195,7 +195,7 @@
         "ulvia": "./src/index.ts",
       },
       "dependencies": {
-        "@bernouy/cms-bloc-compile": "workspace:*",
+        "@bernouy/cms-collection-build": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-server": "workspace:*",
         "@bernouy/ulvia-provider": "workspace:*",
@@ -217,7 +217,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-bloc-compile": "workspace:*",
+        "@bernouy/cms-collection-build": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-dashboards": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
@@ -260,7 +260,7 @@
   "packages": {
     "@bernouy/cms-auth": ["@bernouy/cms-auth@workspace:packages/features/cms-auth"],
 
-    "@bernouy/cms-bloc-compile": ["@bernouy/cms-bloc-compile@workspace:packages/features/cms-bloc-compile"],
+    "@bernouy/cms-collection-build": ["@bernouy/cms-collection-build@workspace:packages/features/cms-collection-build"],
 
     "@bernouy/cms-content": ["@bernouy/cms-content@workspace:packages/features/cms-content"],
 

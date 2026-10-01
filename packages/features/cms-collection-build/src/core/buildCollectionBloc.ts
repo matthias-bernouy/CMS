@@ -5,6 +5,7 @@ import { dirname, isAbsolute, join } from "node:path";
 import { p9rExternalsPlugin } from "./p9rExternalsPlugin";
 import { writeViewRegistrationEntry } from "./viewRegistrationEntry";
 import { isNativeBlocTag, nativeBlocOwnershipError } from "./nativeBlocTags";
+import { validateBlocTag } from "./validateBloc";
 
 /**
  * Builds a bloc's browser view bundle and stamps the manifest tag into the
@@ -16,7 +17,7 @@ import { isNativeBlocTag, nativeBlocOwnershipError } from "./nativeBlocTags";
  * imports don't race on the same `./tmp/<blocId>.js` files, and so we
  * never depend on the process cwd being writable.
  */
-export async function prepare_bloc(
+export async function buildCollectionBloc(
     fileView: File | null,
     label: string,
     group: string,
@@ -34,6 +35,10 @@ export async function prepare_bloc(
 ) {
     if (options.native || isNativeBlocTag(blocId)) {
         throw new Error(nativeBlocOwnershipError(blocId));
+    }
+    const tagIssue = validateBlocTag(blocId);
+    if (tagIssue) {
+        throw new Error(tagIssue);
     }
     const thumbnail = parsePresentationImage(options.thumbnail) ?? blocThumbnailFromSource(source);
     const tempDir = await mkdtemp(join(tmpdir(), "p9r-bloc-"));

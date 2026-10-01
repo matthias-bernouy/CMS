@@ -1,4 +1,4 @@
-import { generateSiteBlocSourceBundle } from "@bernouy/cms-bloc-compile";
+import { generateSiteBlocSourceBundle } from "@bernouy/cms-collection-build";
 import type { BlocListItemResponse, CmsRepository, SiteBlocDefinition } from "@bernouy/cms-content";
 
 const PUBLISHED_SOURCE_FILES = ["manifest.json", "Bloc.ts", "template.html", "default.html"] as const;

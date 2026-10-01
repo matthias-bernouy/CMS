@@ -2,8 +2,8 @@ import { validateSiteBlocSnapshot, type SiteBlocDefinition, type SiteBlocSnapsho
 import {
     canonicalSiteBlocDefinition,
     normalizeSiteBlocSnapshot,
-} from "cms-bloc-compile/core/site-bloc/canonicalSiteBloc";
-import { serializeSiteBlocDefault, serializeSiteBlocTemplate } from "cms-bloc-compile/core/site-bloc/siteBlocHtml";
+} from "cms-collection-build/core/site-bloc/canonicalSiteBloc";
+import { serializeSiteBlocDefault, serializeSiteBlocTemplate } from "cms-collection-build/core/site-bloc/siteBlocHtml";
 
 export function generateSiteBlocSourceBundle(
     definition: SiteBlocDefinition,

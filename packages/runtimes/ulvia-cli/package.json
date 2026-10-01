@@ -17,7 +17,7 @@
     ],
     "dependencies": {
         "@bernouy/cms-server": "workspace:*",
-        "@bernouy/cms-bloc-compile": "workspace:*",
+        "@bernouy/cms-collection-build": "workspace:*",
         "@bernouy/cms-repository": "workspace:*"
         ,"@bernouy/ulvia-provider": "workspace:*"
     },

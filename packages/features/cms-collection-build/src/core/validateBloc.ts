@@ -1,6 +1,6 @@
 import { isValidCustomElementTag } from "@bernouy/cms-content";
 import { RESERVED_PREFIXES } from "@bernouy/cms-content";
-import { isNativeBlocTag, nativeBlocOwnershipError } from "cms-bloc-compile/core/nativeBlocTags";
+import { isNativeBlocTag, nativeBlocOwnershipError } from "cms-collection-build/core/nativeBlocTags";
 
 /**
  * Inputs passed to `validateBloc`. The view source is optional —
@@ -99,13 +99,13 @@ function checkNoHardcodedDefine(source: string, fileLabel: string, expectedTag: 
 
 /**
  * Browsers refuse runtime overrides of `location.assign`, `location.replace`
- * and the `location.href` setter. The editor consequently has no way to
- * intercept blocs that mutate `location.*` directly: such blocs navigate away
- * mid-edit, losing the user's work.
+ * and the `location.href` setter. The authoring surface consequently has no way
+ * to intercept Blocs that mutate `location.*` directly: such Blocs navigate
+ * away from the current workflow.
  *
  * We reject the mutation patterns at push time and steer authors toward
  * `<a href>` (static nav) or `history.pushState` (SPA-style transitions),
- * both of which the editor DOES intercept.
+ * both of which the site shell can intercept.
  */
 function checkNoLocationMutation(source: string, fileLabel: string): string[] {
     const PATTERNS: { name: string; re: RegExp }[] = [
@@ -119,7 +119,7 @@ function checkNoLocationMutation(source: string, fileLabel: string): string[] {
     for (const { name, re } of PATTERNS) {
         if (re.test(source)) {
             errors.push(
-                `${fileLabel}: \`${name}\` detected — Location mutations bypass the editor (browser blocks our intercept). Use \`<a href="…">\` for static navigation or \`history.pushState(...)\` for SPA-style transitions.`,
+                `${fileLabel}: \`${name}\` detected — Location mutations bypass the site shell (browser blocks its intercept). Use \`<a href="…">\` for static navigation or \`history.pushState(...)\` for SPA-style transitions.`,
             );
         }
     }

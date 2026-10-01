@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { prepare_bloc } from "../src/exports";
+import { buildCollectionBloc } from "../src/exports";
 
 describe("binding Bloc external", () => {
     test("maps the public source coordination helpers to window.p9r", async () => {
@@ -14,7 +14,7 @@ describe("binding Bloc external", () => {
             { type: "text/typescript" },
         );
 
-        const bloc = await prepare_bloc(view, "Binding demo", "Content", "", "demo-binding");
+        const bloc = await buildCollectionBloc(view, "Binding demo", "Content", "", "demo-binding");
 
         for (const name of [
             "observeSource",

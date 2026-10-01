@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import { $ } from "bun";
 import { join } from "node:path";
 
-// Test file lives at packages/features/cms-shared/tests/server/security/ — 6 levels
+// Test file lives at packages/features/cms-collection-build/tests/server/security/ — 6 levels
 // below the workspace root.
 const REPO_ROOT = join(import.meta.dir, "..", "..", "..", "..", "..", "..");
 

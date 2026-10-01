@@ -1,7 +1,7 @@
 import { readdir } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
-import { prepare_bloc } from "@bernouy/cms-bloc-compile";
+import { buildCollectionBloc } from "@bernouy/cms-collection-build";
 
 const DEFAULT_BLOC_SOURCE = `
 import { Component } from "@bernouy/components/base";
@@ -132,7 +132,7 @@ async function loadBlocs(directory: string, group: string): Promise<unknown[]> {
             "shadowdom.html": Buffer.from(shadowdom).toString("base64"),
             "style.css": Buffer.from(css ?? "").toString("base64"),
         };
-        const compiled = await prepare_bloc(
+        const compiled = await buildCollectionBloc(
             new File([(await source.exists()) ? await source.text() : DEFAULT_BLOC_SOURCE], "bloc.ts", {
                 type: "text/typescript",
             }),

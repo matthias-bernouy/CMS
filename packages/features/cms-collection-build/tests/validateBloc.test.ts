@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { isNativeBlocTag, validateBloc, validateBlocTag } from "@bernouy/cms-bloc-compile";
+import { isNativeBlocTag, validateBloc, validateBlocTag } from "@bernouy/cms-collection-build";
 
 describe("validateBlocTag", () => {
     test.each([["my-card"], ["a-b"], ["app-v2"], ["base-card"], ["super-cool-bloc"]])("accepts %p", (tag) => {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { generateSiteBlocSourceBundle } from "@bernouy/cms-bloc-compile";
+import { generateSiteBlocSourceBundle } from "@bernouy/cms-collection-build";
 import { definition, publishedSnapshot } from "./fixtures";
 import { expectedBuilderJson } from "./generatedSourceFixtures";
 

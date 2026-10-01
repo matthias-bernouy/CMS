@@ -1,4 +1,4 @@
-import { generateSiteBlocSourceBundle } from "@bernouy/cms-bloc-compile";
+import { generateSiteBlocSourceBundle } from "@bernouy/cms-collection-build";
 import {
     ContentValidationError,
     assertContentRefsExist,

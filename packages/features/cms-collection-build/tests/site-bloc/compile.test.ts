@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test";
-import { generateSiteBlocSourceBundle, prepare_bloc } from "@bernouy/cms-bloc-compile";
+import { buildCollectionBloc, generateSiteBlocSourceBundle } from "@bernouy/cms-collection-build";
 import { definition } from "./fixtures";
 
 describe("generated site bloc compilation", () => {
-    test("builds a composition artifact through prepare_bloc", async () => {
+    test("builds a composition artifact through buildCollectionBloc", async () => {
         const source = generateSiteBlocSourceBundle(definition());
         const encoded = Object.fromEntries(
             Object.entries(source).map(([path, content]) => [path, Buffer.from(content).toString("base64")]),
         );
-        const bloc = await prepare_bloc(
+        const bloc = await buildCollectionBloc(
             null,
             "Hero",
             "Layout",
