@@ -12,6 +12,7 @@ export async function availableDashboardViews(cms: ControlCms) {
             collectionName: item.release.name,
             viewId: view.id,
             name: view.name,
+            icon: view.icon ?? "layout",
             description: view.description ?? "",
         })),
     );

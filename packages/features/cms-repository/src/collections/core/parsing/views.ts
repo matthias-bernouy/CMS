@@ -34,13 +34,14 @@ export function parseCollectionViews(value: unknown, blocIds: ReadonlySet<string
     const views = array(value, 32, "$.views").map((entry, index) => {
         const path = `$.views[${index}]`;
         const source = record(entry, path);
-        keys(source, ["id", "name", "description", "html"], path);
+        keys(source, ["id", "name", "icon", "description", "html"], path);
         const id = identifier(source.id, `${path}.id`);
         const html = string(source.html, 64 * 1024, `${path}.html`);
         validateViewHtml(html, blocIds, `${path}.html`);
         return {
             id,
             name: string(source.name, 128, `${path}.name`),
+            ...(source.icon === undefined ? {} : { icon: identifier(source.icon, `${path}.icon`) }),
             ...(source.description === undefined
                 ? {}
                 : { description: string(source.description, 4096, `${path}.description`) }),

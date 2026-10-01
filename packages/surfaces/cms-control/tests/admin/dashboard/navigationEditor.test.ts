@@ -14,6 +14,28 @@ test("navigation editor only renders the editable navigation tree", () => {
     editor.remove();
 });
 
+test("new navigation items inherit their collection view icon", () => {
+    const editor = new DashboardNavigationEditor();
+    document.body.append(editor);
+    editor.views = [
+        {
+            collectionId: "test",
+            collectionName: "Test",
+            viewId: "overview",
+            name: "Overview",
+            icon: "star",
+            description: "",
+        },
+    ];
+    const modal = editor.querySelector<HTMLElement & { showModal(): void }>("[data-dialog]")!;
+    modal.showModal = () => {};
+
+    editor.querySelector<HTMLElement>("[data-add-root]")!.click();
+
+    expect(editor.value[0]).toMatchObject({ label: "Overview", icon: "star", use: "test:overview" });
+    editor.remove();
+});
+
 test("navigation editor validates direct tabs and three-level navigation", () => {
     const directTabs: NavigationItem[] = [
         {

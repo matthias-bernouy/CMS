@@ -3,8 +3,10 @@
 Collections can release Control HTML views from `views/<view-id>/definition.json`
 and `view.html`. The first format admits semantic HTML, text and declared local
 bloc tags. It rejects scripts, links, inline handlers, styles and arbitrary
-provider bindings. The Control view runner exposes read-only `dashboard.name`
-and `dashboard.viewCount` through the existing document binding core.
+provider bindings. A view may define an `icon`; dashboard navigation uses it by
+default and an individual navigation item may override it. The Control view
+runner exposes read-only `dashboard.name` and `dashboard.viewCount` through the
+existing document binding core.
 
 A collection may release `dashboards/<dashboard-id>/definition.json`. Its
 `navigation` is a tree of groups and view references. A primary item may lead

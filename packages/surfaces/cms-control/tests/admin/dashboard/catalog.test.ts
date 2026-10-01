@@ -9,8 +9,14 @@ test("collection dashboards start inactive and follow collection updates without
     const release = {
         publisherId: "ulvia.examples",
         name: "Test",
+        views: [{ id: "overview", name: "Overview", icon: "star", html: "<section>Overview</section>" }],
         dashboards: [
-            { id: "starter", name: "Starter", icon: "database", views: [{ viewId: "overview", label: "Overview" }] },
+            {
+                id: "starter",
+                name: "Starter",
+                icon: "database",
+                navigation: [{ id: "overview", label: "Overview", use: "overview" }],
+            },
         ],
     };
     const cms = {
@@ -28,9 +34,10 @@ test("collection dashboards start inactive and follow collection updates without
     } as unknown as ControlCms;
     const [initial] = await dashboardCatalog(cms);
     expect(initial).toMatchObject({ icon: "database", enabled: false, revision: 0, origin: { collectionId: "test" } });
+    expect(initial?.navigation?.[0]?.icon).toBe("star");
     await repository.create({ ...initial!, enabled: true, revision: 1 });
     release.dashboards[0]!.name = "Updated starter";
-    release.dashboards[0]!.views[0]!.label = "Updated overview";
+    release.dashboards[0]!.navigation[0]!.label = "Updated overview";
     const [updated] = await dashboardCatalog(cms);
     expect(updated).toMatchObject({ enabled: true, revision: 1, name: "Updated starter" });
     expect(updated?.navigation?.[0]?.label).toBe("Updated overview");

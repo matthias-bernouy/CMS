@@ -2,6 +2,7 @@
 export interface CollectionView {
     readonly id: string;
     readonly name: string;
+    readonly icon?: string;
     readonly description?: string;
     readonly html: string;
 }

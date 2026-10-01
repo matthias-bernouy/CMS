@@ -1,5 +1,6 @@
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 import type { NavigationItem } from "../domain/types";
+import "../../Blocs/icons/LibraryIcon";
 
 function firstUse(item: NavigationItem): string | null {
     return item.use ?? item.children?.map(firstUse).find(Boolean) ?? null;
@@ -31,7 +32,10 @@ function navItem(item: NavigationItem, dashboardId: string, active: boolean): HT
     if (use) {
         element.setAttribute("href", viewUrl(dashboardId, use));
     }
-    element.textContent = item.label;
+    const icon = document.createElement("cms-library-icon");
+    icon.slot = "icon";
+    icon.setAttribute("name", item.icon ?? "layout");
+    element.append(icon, document.createTextNode(item.label));
     return element;
 }
 
@@ -56,7 +60,9 @@ export function renderRuntimeNavigation(dashboardId: string, items: NavigationIt
         ...(tabOwner?.children ?? []).map((item) => {
             const anchor = document.createElement("p9r-nav-tab");
             anchor.setAttribute("href", viewUrl(dashboardId, firstUse(item)!));
-            anchor.textContent = item.label;
+            const icon = document.createElement("cms-library-icon");
+            icon.setAttribute("name", item.icon ?? "layout");
+            anchor.append(icon, document.createTextNode(item.label));
             anchor.toggleAttribute(
                 "active",
                 path.some((part) => part.id === item.id),

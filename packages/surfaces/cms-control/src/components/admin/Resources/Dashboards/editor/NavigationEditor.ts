@@ -96,7 +96,7 @@ export class DashboardNavigationEditor extends HTMLElement {
         const item: NavigationItem = {
             id: `item-${crypto.randomUUID()}`,
             label: view?.name.slice(0, 32) ?? "New group",
-            icon: "layout",
+            icon: view?.icon ?? "layout",
             ...(view ? { use: `${view.collectionId}:${view.viewId}` } : {}),
         };
         list.push(item);
@@ -186,7 +186,7 @@ export class DashboardNavigationEditor extends HTMLElement {
         const label = this.querySelector("[data-label]") as ValueControl;
         const icon = this.querySelector("[data-icon]") as ValueControl;
         label.value = view.name.slice(0, 32);
-        icon.value = "layout";
+        icon.value = view.icon;
     }
 
     private walk(items: NavigationItem[]): NavigationItem[] {

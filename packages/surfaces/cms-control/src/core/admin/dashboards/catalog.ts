@@ -10,8 +10,9 @@ export async function dashboardCatalog(cms: ControlCms): Promise<DashboardRecord
     const [stored, snapshot] = await Promise.all([cms.dashboards.list(siteId), store.snapshot(siteId)]);
     const overrides = new Map(stored.map((item) => [item.id, item]));
     const siteDashboards = stored.filter((item) => !item.origin);
-    const collectionDashboards = snapshot.collections.flatMap((installation) =>
-        (installation.release.dashboards ?? []).map((definition) => {
+    const collectionDashboards = snapshot.collections.flatMap((installation) => {
+        const viewIcons = new Map((installation.release.views ?? []).map((view) => [view.id, view.icon ?? "layout"]));
+        return (installation.release.dashboards ?? []).map((definition) => {
             const id = collectionDashboardId(
                 siteId,
                 installation.release.publisherId,
@@ -28,10 +29,13 @@ export async function dashboardCatalog(cms: ControlCms): Promise<DashboardRecord
                 enabled: state?.enabled ?? false,
                 revision: state?.revision ?? 0,
                 navigation: definition.navigation
-                    ? definition.navigation.map((item) => bindCollectionNavigation(item, installation.collectionId))
+                    ? definition.navigation.map((item) =>
+                          bindCollectionNavigation(item, installation.collectionId, viewIcons),
+                      )
                     : (definition.views ?? []).map((view, index) => ({
                           id: `view-${index + 1}`,
                           label: view.label,
+                          icon: viewIcons.get(view.viewId) ?? "layout",
                           use: `${installation.collectionId}:${view.viewId}`,
                       })),
                 sourceContracts: definition.contracts ?? [],
@@ -43,24 +47,25 @@ export async function dashboardCatalog(cms: ControlCms): Promise<DashboardRecord
                 },
                 collectionName: installation.release.name,
             };
-        }),
-    );
+        });
+    });
     return [...siteDashboards, ...collectionDashboards];
 }
 
 function bindCollectionNavigation(
     item: CollectionDashboardNavigationItem,
     collectionId: string,
+    viewIcons: ReadonlyMap<string, string>,
 ): DashboardNavigationItem {
     return {
         id: item.id,
         label: item.label,
-        ...(item.icon ? { icon: item.icon } : {}),
+        ...(item.icon ? { icon: item.icon } : item.use ? { icon: viewIcons.get(item.use) ?? "layout" } : {}),
         ...(item.use ? { use: `${collectionId}:${item.use}` } : {}),
         ...(item.children
             ? {
                   childPlacement: item.childPlacement,
-                  children: item.children.map((child) => bindCollectionNavigation(child, collectionId)),
+                  children: item.children.map((child) => bindCollectionNavigation(child, collectionId, viewIcons)),
               }
             : {}),
     };

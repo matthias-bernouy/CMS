@@ -42,6 +42,7 @@ export type AvailableView = {
     collectionName: string;
     viewId: string;
     name: string;
+    icon: string;
     description: string;
 };
 export type User = { sub: string; label: string; email: string };
