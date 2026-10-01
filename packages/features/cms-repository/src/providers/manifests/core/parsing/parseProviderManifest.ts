@@ -10,7 +10,13 @@ import { parseConfiguration } from "./parseConfiguration";
 import { parseEndpointPolicy } from "./parseEndpoint";
 import { parseIdentifier } from "./identifiers";
 import { parseImplementations } from "./parseImplementations";
-import { parseCredentialSlots, parseDataPolicy, parseProvenance, parseRecoveryPolicy } from "./parsePolicies";
+import {
+    parseCredentialSlots,
+    parseDataPolicy,
+    parseManifestLinks,
+    parseProvenance,
+    parseRecoveryPolicy,
+} from "./parsePolicies";
 
 const encoder = new TextEncoder();
 
@@ -32,6 +38,7 @@ export function parseProviderManifest(
             "schemaDialect",
             "providerId",
             "name",
+            "links",
             "version",
             "provenance",
             "buildVersionRange",
@@ -48,12 +55,15 @@ export function parseProviderManifest(
     expectLiteral(record.protocol, "ulvia-provider/v1", "$.protocol");
     expectLiteral(record.schemaDialect, "ulvia-schema/v1", "$.schemaDialect");
     const recovery = parseRecoveryPolicy(record.recovery, "$.recovery");
+    const links = parseManifestLinks(record.links, "$.links");
+    const dataPolicy = record.dataPolicy === undefined ? undefined : parseDataPolicy(record.dataPolicy, "$.dataPolicy");
     const manifest: ProviderManifest = {
         kind: "provider-manifest",
         protocol: "ulvia-provider/v1",
         schemaDialect: "ulvia-schema/v1",
         providerId: parseIdentifier(record.providerId, "$.providerId", 96),
         name: expectString(record.name, "$.name", 128),
+        ...(links ? { links } : {}),
         version: parseSemVer(record.version, "$.version"),
         provenance: parseProvenance(record.provenance, "$.provenance"),
         buildVersionRange: parseBuildVersionRange(record.buildVersionRange),
@@ -66,7 +76,7 @@ export function parseProviderManifest(
             limits.maxImplementations,
             limits.maxRequirementsPerImplementation,
         ),
-        dataPolicy: parseDataPolicy(record.dataPolicy, "$.dataPolicy"),
+        ...(dataPolicy ? { dataPolicy } : {}),
         ...(recovery ? { recovery } : {}),
     };
     assertCanonicalSize(manifest, limits);

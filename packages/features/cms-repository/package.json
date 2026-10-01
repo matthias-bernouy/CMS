@@ -19,6 +19,8 @@
         "./providers/compatibility": "./src/exports/providers/compatibility.ts",
         "./providers/installations": "./src/exports/providers/installations.ts",
         "./providers/selections": "./src/exports/providers/selections.ts",
+        "./providers/sources": "./src/exports/providers/sources.ts",
+        "./providers/http": "./src/exports/providers/http.ts",
         "./providers/mongo": "./src/exports/providers/mongo.ts",
         "./collections": "./src/exports/collections/index.ts",
         "./collections/installations": "./src/exports/collections/installations.ts",

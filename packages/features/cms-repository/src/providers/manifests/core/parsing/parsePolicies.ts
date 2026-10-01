@@ -12,6 +12,7 @@ import type {
     ProviderCredentialSlot,
     ProviderCredentialSecretType,
     ProviderDataPolicy,
+    ProviderManifestLinks,
     ProviderManifestProvenance,
     ProviderRecoveryPolicy,
 } from "../../interfaces/ProviderManifest";
@@ -25,6 +26,24 @@ export function parseProvenance(value: unknown, path: string): ProviderManifestP
         publisherId: parseIdentifier(record.publisherId, `${path}.publisherId`, 96),
         publishedAt: parseDateTime(record.publishedAt, `${path}.publishedAt`),
     };
+}
+
+export function parseManifestLinks(value: unknown, path: string): ProviderManifestLinks | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    const record = expectRecord(value, path);
+    const keys = ["website", "setup", "documentation", "support"] as const;
+    rejectUnknownKeys(record, keys, path);
+    const links = Object.fromEntries(
+        keys
+            .filter((key) => record[key] !== undefined)
+            .map((key) => [key, parsePublicUrl(record[key], `${path}.${key}`)]),
+    ) as ProviderManifestLinks;
+    if (Object.keys(links).length === 0) {
+        throw new ProviderManifestValidationError("invalid_manifest", "must contain at least one link", path);
+    }
+    return links;
 }
 
 export function parseCredentialSlots(value: unknown, path: string, maximum: number): ProviderCredentialSlot[] {
@@ -113,6 +132,25 @@ function parseHttpsUrl(value: unknown, path: string): string {
     }
     if (!address.startsWith("https://") || url.protocol !== "https:" || url.username || url.password) {
         throw new ProviderManifestValidationError("invalid_manifest", "must be an absolute HTTPS URL", path);
+    }
+    return address;
+}
+
+function parsePublicUrl(value: unknown, path: string): string {
+    const address = expectString(value, path, 2048);
+    let url: URL;
+    try {
+        url = new URL(address);
+    } catch {
+        throw new ProviderManifestValidationError("invalid_manifest", "must be an absolute public URL", path);
+    }
+    const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+    if ((url.protocol !== "https:" && !(url.protocol === "http:" && loopback)) || url.username || url.password) {
+        throw new ProviderManifestValidationError(
+            "invalid_manifest",
+            "must use HTTPS or loopback HTTP without URL credentials",
+            path,
+        );
     }
     return address;
 }

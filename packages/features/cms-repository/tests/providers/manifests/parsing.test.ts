@@ -145,4 +145,26 @@ describe("provider manifest parsing", () => {
             ).dataPolicy.retentionPolicyUrl,
         ).toBe("https://example.com/retention");
     });
+
+    test("keeps public setup links separate from deployment and data policy", () => {
+        const document = manifestDocument([implementation("domain.example", "1.0.0", digest)], {
+            links: {
+                website: "https://provider.example.com/",
+                setup: "https://provider.example.com/account/tokens",
+                documentation: "https://provider.example.com/docs/ulvia",
+            },
+        });
+        delete document.dataPolicy;
+        const parsed = parseProviderManifest(document);
+
+        expect(parsed.links?.setup).toBe("https://provider.example.com/account/tokens");
+        expect(parsed.dataPolicy).toBeUndefined();
+        expect(() =>
+            parseProviderManifest(
+                manifestDocument([implementation("domain.example", "1.0.0", digest)], {
+                    links: { setup: "http://provider.example.com/account" },
+                }),
+            ),
+        ).toThrow("HTTPS or loopback HTTP");
+    });
 });

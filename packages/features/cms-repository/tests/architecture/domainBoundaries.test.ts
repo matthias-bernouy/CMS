@@ -56,6 +56,7 @@ describe("repository domain boundaries", () => {
                     if (
                         (target !== undefined &&
                             !target.startsWith(`${domain}/`) &&
+                            target !== "exports/contracts" &&
                             !target.startsWith("exports/contracts/")) ||
                         specifier.startsWith("@bernouy/cms-repository")
                     ) {

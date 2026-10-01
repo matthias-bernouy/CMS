@@ -8,6 +8,17 @@ independently versioned conformance suites.
 No provider is contacted by this package. Admission proves that a document is
 internally valid, not that an implementation passes its contract.
 
+## Discovery metadata
+
+A release may include a bounded `catalogue` object with an `icon` token and up
+to six category tokens. Repositories expose those values for discovery UIs;
+the consuming CMS maps icon tokens to trusted local artwork and never renders
+publisher-supplied SVG. The repository catalogue owns `publishedAt`, so release
+authors cannot choose the “last updated” date displayed by Control.
+
+Changing discovery metadata changes the immutable release digest and therefore
+needs a new release coordinate once that artifact has been published.
+
 ## Release and dependency evolution
 
 A capability may declare mandatory requirements:

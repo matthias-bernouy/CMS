@@ -52,6 +52,12 @@ export interface ContractFixtureAssetDefinition {
     readonly digest: ReleaseDigest;
 }
 
+/** Optional discovery metadata. Icon names are rendered by the consuming CMS. */
+export interface ContractCatalogueMetadata {
+    readonly categories?: readonly string[];
+    readonly icon?: string;
+}
+
 /** A mandatory, provider-neutral capability needed to fulfill this capability. */
 export interface CapabilityRequirement {
     readonly contractId: string;
@@ -77,6 +83,7 @@ export interface CapabilityDefinition {
 }
 
 export interface ContractRelease {
+    readonly catalogue?: ContractCatalogueMetadata;
     readonly capabilities: readonly CapabilityDefinition[];
     readonly fixtureAssets?: readonly ContractFixtureAssetDefinition[];
     readonly contractId: string;

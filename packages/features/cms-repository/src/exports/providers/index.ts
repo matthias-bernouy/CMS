@@ -22,6 +22,7 @@ export type {
     ProviderDataPolicy,
     ProviderEndpointPolicy,
     ProviderManifest,
+    ProviderManifestLinks,
     ProviderManifestProvenance,
     ProviderRecoveryPolicy,
 } from "cms-repository/providers/manifests/interfaces/ProviderManifest";

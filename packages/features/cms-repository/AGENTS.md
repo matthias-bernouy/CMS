@@ -141,6 +141,10 @@ models and validation for CMS-owned installations and site selections.
 - Credential slots are declarations, never credential values or installation
   secret references. Endpoint policies contain allowed origins, not a selected
   installation endpoint.
+- Public links help administrators obtain credentials and documentation; they
+  do not authorize an endpoint. Data residency is an optional provider-wide
+  claim, not a local/remote deployment marker. Installation state owns the
+  selected endpoint and the connected account's observed properties.
 - Build ranges accept at least one possible SemVer, including explicitly admitted
   prereleases; no published or running build is required for admission.
 - Resolve every implemented contract by exact version and digest through a
@@ -244,6 +248,8 @@ models and validation for CMS-owned installations and site selections.
   overrides; publication to a remote registry remains unsupported.
 - Text metadata (`category`, `group`, `label`, `description`) is declarative and
   bounded. It does not change interpolation keys or grant runtime capabilities.
-- Collection theme categories and tokens are admitted and included in the
-  release digest. External imports, views, dashboard templates and remote
-  publication are future slices. Reject unsupported fields until validated.
+- Collection theme categories and tokens, HTML views, and dashboard templates
+  are admitted and included in the release digest. Dashboard templates reference
+  only local declared views; site activation and membership live outside the
+  immutable release. External imports and remote publication remain future
+  slices. Reject unsupported fields until validated.

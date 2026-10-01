@@ -24,10 +24,15 @@ describe("repository public entry points", () => {
         expect(Object.keys(await import("@bernouy/cms-repository"))).toEqual([]);
     });
 
-    test("does not advertise unimplemented collection runtime or catalogue APIs", async () => {
+    test("advertises implemented collection surfaces explicitly", async () => {
         const manifest = await Bun.file(new URL("../../package.json", import.meta.url)).json();
         expect(Object.keys(manifest.exports).filter((entry) => entry.startsWith("./collections"))).toEqual([
             "./collections",
+            "./collections/installations",
+            "./collections/mongo",
+            "./collections/texts",
+            "./collections/sources",
+            "./collections/http",
         ]);
     });
 });

@@ -9,6 +9,13 @@ export interface ProviderManifestProvenance {
     readonly publisherId: string;
 }
 
+export interface ProviderManifestLinks {
+    readonly documentation?: string;
+    readonly setup?: string;
+    readonly support?: string;
+    readonly website?: string;
+}
+
 export interface ProviderEndpointPolicy {
     readonly allowedOrigins: readonly string[];
     readonly defaultOrigin?: string;
@@ -51,10 +58,11 @@ export interface ProviderManifest {
     readonly buildVersionRange: VersionRange;
     readonly configuration: UlviaObjectSchema;
     readonly credentialSlots: readonly ProviderCredentialSlot[];
-    readonly dataPolicy: ProviderDataPolicy;
+    readonly dataPolicy?: ProviderDataPolicy;
     readonly endpoint: ProviderEndpointPolicy;
     readonly implementations: readonly ProviderContractImplementation[];
     readonly kind: "provider-manifest";
+    readonly links?: ProviderManifestLinks;
     readonly name: string;
     readonly protocol: "ulvia-provider/v1";
     readonly provenance: ProviderManifestProvenance;

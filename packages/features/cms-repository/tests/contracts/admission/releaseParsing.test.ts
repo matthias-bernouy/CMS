@@ -74,6 +74,23 @@ describe("contract release parsing", () => {
         );
     });
 
+    test("accepts bounded catalogue presentation metadata", () => {
+        const release = parseContractRelease(
+            contractDocument({ catalogue: { icon: "message-square", categories: ["feedback", "forms"] } }),
+        );
+
+        expect(release.catalogue).toEqual({ icon: "message-square", categories: ["feedback", "forms"] });
+        expect(() => parseContractRelease(contractDocument({ catalogue: {} }))).toThrow(
+            "must include icon or categories",
+        );
+        expect(() =>
+            parseContractRelease(contractDocument({ catalogue: { categories: ["feedback", "feedback"] } })),
+        ).toThrow("duplicate categories");
+        expect(() => parseContractRelease(contractDocument({ catalogue: { icon: "<svg>" } }))).toThrow(
+            "lowercase hyphenated token",
+        );
+    });
+
     test("accepts the three human access levels and rejects the former audience model", () => {
         for (const access of ["public", "authenticated", "admin"]) {
             const release = parseContractRelease(contractDocument({ capabilities: [capabilityDocument({ access })] }));

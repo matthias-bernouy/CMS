@@ -40,12 +40,15 @@ export async function compareProviderManifests(
     compare(left.provenance.publishedAt, right.provenance.publishedAt, "$.provenance.publishedAt", "metadata");
     compare(left.version, right.version, "$.version", "metadata");
     compare(left.name, right.name, "$.name", "metadata");
+    for (const key of ["website", "setup", "documentation", "support"] as const) {
+        compare(left.links?.[key], right.links?.[key], `$.links.${key}`, "metadata");
+    }
     compare(left.buildVersionRange, right.buildVersionRange, "$.buildVersionRange", "build_range");
     compare(left.configuration, right.configuration, "$.configuration", "configuration");
     compare(left.recovery, right.recovery, "$.recovery", "recovery_policy");
     compare(
-        left.dataPolicy.retentionPolicyUrl,
-        right.dataPolicy.retentionPolicyUrl,
+        left.dataPolicy?.retentionPolicyUrl,
+        right.dataPolicy?.retentionPolicyUrl,
         "$.dataPolicy.retentionPolicyUrl",
         "data_policy",
     );
@@ -60,8 +63,8 @@ export async function compareProviderManifests(
         changes,
     );
     compareKeyedValues(
-        left.dataPolicy.residency,
-        right.dataPolicy.residency,
+        left.dataPolicy?.residency ?? [],
+        right.dataPolicy?.residency ?? [],
         (region) => region,
         "$.dataPolicy.residency",
         "data_policy",
