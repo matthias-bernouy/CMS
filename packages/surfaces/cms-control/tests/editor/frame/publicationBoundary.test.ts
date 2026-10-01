@@ -17,7 +17,7 @@ test("Control's mounted frame previews drafts only through its authenticated rou
     for (const authenticated of [false, true]) {
         const runner = new CaptureRunner("/cms");
         const auth = authenticated ? new InMemoryAuthentication() : authSystem().local;
-        const control = new ControlCms(runner, repository, auth);
+        const control = new ControlCms(runner, repository, auth, { administrator: async () => true });
         await control.ready;
         const route = "GET /cms/api/editor/frame";
         const handler = runner.handlers.get(route);
@@ -35,8 +35,7 @@ test("Control's mounted frame previews drafts only through its authenticated rou
             expect(response.status).toBe(200);
             expect(body).toContain("Unpublished preview sentinel");
         } else {
-            expect(response.status).toBe(302);
-            expect(response.headers.get("location")).toContain("/login");
+            expect(response.status).toBe(401);
             expect(body).not.toContain("Unpublished preview sentinel");
         }
     }

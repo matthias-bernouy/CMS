@@ -2,11 +2,13 @@ import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import { composeCollectionThemes } from "@bernouy/cms-content";
 import type { CollectionRepositoryReference } from "@bernouy/cms-repository/collections/sources";
 import type { ControlCms } from "cms-control/ControlCms";
+import { requireControlAdministrator } from "cms-control/core/admin/control/adminAccess";
 import { collectionBody } from "cms-control/core/content/installedCollections/body";
 import { collectionService, invalidateCollections } from "cms-control/core/content/installedCollections/service";
 
 /** Accepts an exact repository reference; release bytes are fetched server-side. */
 export default async function install(req: Request, cms: ControlCms) {
+    await requireControlAdministrator(req, cms);
     const input = await collectionBody(req);
     const { store, siteId, sources = [] } = collectionService(cms);
     const source = sources.find((item) => item.id === input.repositoryId);

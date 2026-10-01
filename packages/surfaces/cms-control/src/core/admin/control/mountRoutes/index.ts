@@ -13,7 +13,11 @@ import { CMS_FILES_ROUTE, filesPrefix } from "@bernouy/cms-content/files/urls";
 import { serveFilesRequest } from "@bernouy/cms-content/files/serving";
 import { cachedResponseAsync, publicAssetCacheControl, redirect } from "@bernouy/http-runner";
 import { renderLoginPage } from "cms-control/core/admin/auth/authPages";
-import { createAuthenticatedControlGuard, createControlAccessGuard } from "cms-control/core/admin/control/adminAccess";
+import {
+    createAuthenticatedControlGuard,
+    createControlAccessGuard,
+    createControlApiAuthorizationGuard,
+} from "cms-control/core/admin/control/adminAccess";
 import type { ControlAuthBackends, ControlCmsState } from "cms-control/core/admin/control/types";
 import { mountAnalyticsRoutes } from "cms-control/core/admin/control/mountRoutes/analytics";
 import { mountControlCapabilityRoutes } from "cms-control/core/admin/control/mountRoutes/capability";
@@ -30,6 +34,7 @@ export function mountControlCmsRoutes(
     const runner = state.runner;
     const authGuard = createControlAccessGuard(cms.basePath, state.auth);
     const authenticatedGuard = createAuthenticatedControlGuard(cms.basePath, state.auth);
+    const apiAuthorizationGuard = createControlApiAuthorizationGuard(cms.basePath, cms);
     runner.addEndpoint("GET", "/login", (req) => renderLoginPage(req, cms.basePath));
 
     const controlPublicAuth = state.configuration.publicAuth
@@ -109,7 +114,7 @@ export function mountControlCmsRoutes(
             apiRoutesReady = serveApi(apiRunner, apiDir, cms);
             mountAnalyticsRoutes(apiRunner, state);
         },
-        [authGuard],
+        [authenticatedGuard, apiAuthorizationGuard],
     );
     return Promise.all([staticRoutesReady, apiRoutesReady]).then(() => undefined);
 }

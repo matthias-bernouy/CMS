@@ -1,5 +1,8 @@
 import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
 import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
+import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import type { ProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
+import type { ProviderRepositorySource } from "@bernouy/cms-repository/providers/sources";
 import type {
     Authentication,
     IdentityProviderRepository,
@@ -12,7 +15,7 @@ import type {
 import type { PublicAuthRoutesConfig, OidcAuthHandlers } from "@bernouy/cms-auth/http";
 import type { AnalyticsComplianceContext, AnalyticsStore, EndpointPerformanceReports } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
-import type { DashboardAssignmentRepository } from "@bernouy/cms-dashboards";
+import type { DashboardAssignmentRepository, DashboardRepository } from "@bernouy/cms-dashboards";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
@@ -30,8 +33,36 @@ type Configuration = {
 };
 
 export type ControlCmsOptions = Configuration & {
+    administrator?: (subject: Subject) => Promise<boolean>;
+    administrators?: {
+        canRevoke(sub: string): Promise<boolean>;
+        list(): Promise<string[]>;
+        set(sub: string, enabled: boolean): Promise<void>;
+    };
     collections?: { store: CollectionStore; siteId: string; sources?: readonly CollectionRepositorySource[] };
+    providerResources?: {
+        sources: readonly ProviderRepositorySource[];
+        contracts: ReleaseCatalogue;
+        manifests: ProviderManifestCatalogue;
+        isAdministrator: (subject: Subject) => Promise<boolean>;
+        management?: {
+            list(): Promise<unknown>;
+            importManifest(manifest: string): Promise<unknown>;
+            preview(
+                input: { providerId: string; version: string; endpoint: string; token: string },
+                actorId: string,
+            ): Promise<unknown>;
+            approve(ticket: string, actorId: string): Promise<unknown>;
+            selectContract(input: {
+                installationId: string;
+                contractId: string;
+                version: string;
+                digest: string;
+            }): Promise<unknown>;
+        };
+    };
     dashboardAssignments?: DashboardAssignmentRepository;
+    dashboards?: DashboardRepository;
     identities?: IdentityService;
     capabilityGateway?: {
         readonly siteId: string;
@@ -64,5 +95,6 @@ export type ControlCmsState = {
     credentials: LocalCredentialStore | null;
     analytics: AnalyticsStore | null;
     dashboardAssignments: DashboardAssignmentRepository;
+    dashboards: DashboardRepository;
     identities: IdentityService;
 };

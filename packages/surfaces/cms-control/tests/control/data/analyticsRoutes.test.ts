@@ -10,7 +10,7 @@ import { ControlCms } from "cms-control/ControlCms";
 import { CaptureRunner } from "../access/authPublicSupport";
 
 describe("Control analytics routes", () => {
-    test("mounts every counter report behind the authenticated Control guard", async () => {
+    test("mounts every counter report behind the authenticated administrator guards", async () => {
         const runner = new CaptureRunner();
         const analytics = new InMemoryAnalyticsStore();
         const cms = new ControlCms(
@@ -42,10 +42,10 @@ describe("Control analytics routes", () => {
             "settings",
             "compliance",
         ]) {
-            expect(runner.endpoints.get(`GET /api/analytics/${path}`)).toBe(1);
+            expect(runner.endpoints.get(`GET /api/analytics/${path}`)).toBe(2);
         }
-        expect(runner.endpoints.get("POST /api/analytics/settings")).toBe(1);
-        expect(runner.endpoints.get("POST /api/analytics/compliance/snapshots")).toBe(1);
+        expect(runner.endpoints.get("POST /api/analytics/settings")).toBe(2);
+        expect(runner.endpoints.get("POST /api/analytics/compliance/snapshots")).toBe(2);
 
         const health = runner.handlers.get("GET /api/analytics/health");
         const response = await health!(new Request("http://control/api/analytics/health?range=24h"));
@@ -63,7 +63,7 @@ describe("Control analytics routes", () => {
         });
     });
 
-    test("mounts endpoint performance independently behind the authenticated Control guard", async () => {
+    test("mounts endpoint performance independently behind the administrator guards", async () => {
         const runner = new CaptureRunner();
         const queries: EndpointPerformanceQuery[] = [];
         const dashboard = emptyEndpointDashboard();
@@ -77,7 +77,7 @@ describe("Control analytics routes", () => {
         });
         await cms.ready;
 
-        expect(runner.endpoints.get("GET /api/analytics/endpoints")).toBe(1);
+        expect(runner.endpoints.get("GET /api/analytics/endpoints")).toBe(2);
         const handler = runner.handlers.get("GET /api/analytics/endpoints");
         const response = await handler!(new Request("http://control/api/analytics/endpoints?range=1h&limit=25"));
         expect(response.status).toBe(200);
@@ -91,10 +91,11 @@ describe("Control analytics routes", () => {
         ]);
     });
 
-    test("allows authenticated endpoint performance requests", async () => {
+    test("allows administrator endpoint performance requests", async () => {
         const runner = new CaptureRunner();
         let reportCalls = 0;
         const cms = new ControlCms(runner, new InMemoryCmsRepository(), new InMemoryAuthentication(), {
+            administrator: async () => true,
             endpointPerformanceReports: {
                 async dashboard() {
                     reportCalls++;

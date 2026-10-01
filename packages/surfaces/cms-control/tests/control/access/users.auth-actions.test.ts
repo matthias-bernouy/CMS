@@ -46,7 +46,15 @@ function setup() {
         passwordResetUrl: "http://control.test/auth/reset-password",
         authEmailCooldownSeconds: 0,
     });
-    const cms = { users, credentials, pats, publicAuth, dashboardAssignments } as unknown as ControlCms;
+    const cms = {
+        users,
+        credentials,
+        pats,
+        publicAuth,
+        dashboardAssignments,
+        auth: { getSubject: async () => ({ identifier: "local:admin" }) },
+        config: { administrator: async () => true },
+    } as unknown as ControlCms;
     return { cms, users, credentials, emailer, dashboardAssignments };
 }
 
