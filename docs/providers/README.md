@@ -83,8 +83,7 @@ model is not wired into this runtime.
 | Delivery | `POST /.cms/call/<contract>/<capability>`, `GET /.cms/media/<contract>/<capability>/<fileId>`, `GET /.cms/image/<contract>/<capability>/<fileId>/<width>.webp` |
 
 Routes are mounted only when their dependencies are configured. Image routes
-also require the image service. Control's `GET /api/editor/capabilities` projects
-selected capabilities for authoring. These reads do not publish or select providers.
+also require the image service. These reads do not publish or select providers.
 Dynamic SEO invokes the gateway directly; see [page indexing](../surfaces/page-indexing.md).
 Control's `/admin/settings/providers` page lists connected provider accounts
 and, directly below them, provider manifests from configured repositories that

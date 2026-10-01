@@ -5,7 +5,7 @@ test("collection creation, settings and first composition use the canonical work
     const { browser, page, errors, gotoCollection, repository, writes } = await fixture();
     try {
         await gotoCollection();
-        await page.getByText("Available collections", { exact: true }).waitFor();
+        await page.getByRole("button", { name: "Create private collection", exact: true }).waitFor();
         expect(
             await page.locator('w13c-lateral-menu-item[href="/tenant/cms/admin/collections"]').count(),
         ).toBeGreaterThan(0);
@@ -35,8 +35,12 @@ test("collection creation, settings and first composition use the canonical work
         const composition = page.locator("#new-composition-modal");
         await composition.getByLabel("Name", { exact: true }).fill("Editorial introduction");
         await Promise.all([
-            page.waitForURL((url) => url.pathname.endsWith("/editor/bloc") && Boolean(url.searchParams.get("id"))),
-            composition.getByRole("button", { name: "Create and open editor", exact: true }).click(),
+            page.waitForURL(
+                (url) =>
+                    url.pathname.endsWith(`/admin/collections/site:${collectionId}/blocs`) &&
+                    Boolean(url.searchParams.get("bloc")),
+            ),
+            composition.getByRole("button", { name: "Create composition", exact: true }).click(),
         ]);
 
         expect((await repository.getSiteBlocCollections()).find(({ id }) => id === collectionId)?.name).toBe(

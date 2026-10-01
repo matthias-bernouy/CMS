@@ -7,8 +7,6 @@ const INFRASTRUCTURE: Readonly<Record<string, string>> = {
         "The declarative cms-source transport executes binding requests.",
     "packages/foundation/components/src/binding/submit/submitRequest.ts":
         "The declarative form transport submits serialized binding state.",
-    "packages/surfaces/cms-control/src/components/editorSystemV2/documentMutations.ts":
-        "The editor document lifecycle persists authored document changes.",
 };
 
 export function networkPolicy(

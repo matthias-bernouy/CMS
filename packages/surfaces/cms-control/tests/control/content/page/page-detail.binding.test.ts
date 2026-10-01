@@ -68,7 +68,7 @@ describe("admin page detail", () => {
         });
     });
 
-    test("renders page settings, content editing, and deletion as separate actions", async () => {
+    test("renders page settings and deletion without exposing a removed editor action", async () => {
         globalThis.fetch = mockPageDetailFetch();
 
         window.history.replaceState(null, "", "/admin/pages/detail?id=page-1");
@@ -78,9 +78,7 @@ describe("admin page detail", () => {
         await waitFor(() => document.querySelector("cms-shell-detail") !== null);
 
         expect(document.querySelector("cms-shell-detail")).not.toBeNull();
-        expect(document.querySelector('form[action="/editor/page"] input[name="id"]')?.getAttribute("value")).toBe(
-            "page-1",
-        );
+        expect(document.body.textContent).not.toContain("Edit content");
         const settingsForm = document.querySelector('#page-settings-form[cms-source^="/api/page/configDetail"]');
         expect(settingsForm?.getAttribute("cms-source-method")).toBe("PUT");
         expect(settingsForm?.hasAttribute("cms-source-success-redirect")).toBe(false);

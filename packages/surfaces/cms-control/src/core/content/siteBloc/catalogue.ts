@@ -47,7 +47,10 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
                 tag: record.tag,
                 ...(record.artifact?.thumbnail ? { thumbnail: record.artifact.thumbnail } : {}),
                 installedCollectionId: record.collectionId ?? null,
-                collectionId: definition ? (definition.collectionId ?? DEFAULT_SITE_BLOC_COLLECTION_ID) : null,
+                collectionId:
+                    origin.kind === "site-builder"
+                        ? (definition?.collectionId ?? DEFAULT_SITE_BLOC_COLLECTION_ID)
+                        : null,
                 active: record.artifact?.catalogue !== "inactive",
                 name: metadata?.name ?? record.tag,
                 group: metadata?.group ?? "",
@@ -56,8 +59,6 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
                 state,
                 stateLabel: state === "archived" ? "Archived" : state === "draft" ? "Draft" : "Published",
                 stateColor: state === "archived" ? "secondary" : state === "draft" ? "warning" : "success",
-                editable: origin.kind === "site-builder",
-                editPath: origin.kind === "site-builder" ? `/editor/bloc?id=${encodeURIComponent(record.tag)}` : null,
                 directDependencies: direct,
                 directDependencyCount: direct.length,
                 transitiveDependencies: transitive,
@@ -96,7 +97,7 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
 
 function ownershipView(ownership: BlocOwnership) {
     if (ownership.kind === "site-builder") {
-        return { ...ownership, label: "Site builder", detail: "Editable in this site" };
+        return { ...ownership, label: "Site builder", detail: "Managed in this site" };
     }
     return { ...ownership, label: "Code managed", detail: "Managed through code or the CLI" };
 }

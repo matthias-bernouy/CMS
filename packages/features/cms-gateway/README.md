@@ -43,8 +43,8 @@ identity aliases in `cms_identity_aliases`, resolves provider token references
 through `@bernouy/secret-store`, and uses the pinned
 Node network adapter. Delivery grants public capabilities and authenticated
 capabilities to verified users; Control grants calls only to the configured
-local administrator. The Control editor lists callable JSON capabilities from
-the site's selected releases through `/api/editor/capabilities`.
+local administrator. Control reads callable JSON capabilities from the site's
+selected releases when projecting page indexing settings.
 Declared errors retain a bounded `Retry-After`; unchanged binary responses
 retain `ETag`, `Content-Disposition` and valid range metadata. Provider file GET
 routes also serve single byte ranges from the bounded validated file response.

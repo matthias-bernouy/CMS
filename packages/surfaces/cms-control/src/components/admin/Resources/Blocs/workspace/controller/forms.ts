@@ -3,7 +3,7 @@ export function configureWorkspaceForms(host: HTMLElement, basePath: string): vo
         host,
         "[data-new-composition-form]",
         `${basePath}/api/site-bloc as created`,
-        `${basePath}/editor/bloc?id={{ created.body.tag }}`,
+        `${basePath}/admin/collections/site:{{ created.body.collectionId }}/blocs?bloc={{ created.body.tag }}`,
     );
     configure(
         host,

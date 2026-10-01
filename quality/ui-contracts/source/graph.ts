@@ -9,7 +9,6 @@ export function isBrowserEntrypoint(path: string): boolean {
         path.startsWith("packages/surfaces/cms-control/src/components/") ||
         path.startsWith("packages/foundation/components/src/ui/") ||
         path.startsWith("packages/foundation/components/src/binding/") ||
-        path.startsWith("packages/features/cms-editor-system-v2/src/components/") ||
         /\.client\.[cm]?[jt]sx?$/.test(path) ||
         /^packages\/resources\/[^/]+\/.*\/blocs\/.+\/(?:Bloc|BlocEditor)\.ts$/.test(path)
     );

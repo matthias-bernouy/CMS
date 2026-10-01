@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-control",
     "version": "0.1.0",
-    "description": "Admin layer of the CMS — REST API (file-routed under /api), server-rendered admin pages (under /admin), the visual editor (web components in /assets/control-components.js), and the `ControlCms` composition class. Consumes `@bernouy/cms-bloc-compile` for content / files / secrets stores and `@bernouy/cms-auth` for the auth chain.",
+    "description": "Admin layer of the CMS — REST API (file-routed under /api), server-rendered admin pages (under /admin), admin web components, and the `ControlCms` composition class. Consumes `@bernouy/cms-bloc-compile` for content / files / secrets stores and `@bernouy/cms-auth` for the auth chain.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./index.ts",
@@ -57,8 +57,7 @@
         "@bernouy/components": "workspace:*",
         "linkedom": "^0.18.13",
         "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-editor-system-v2": "workspace:*"
+        "@bernouy/cms-gateway": "workspace:*"
     },
     "engines": {
         "bun": ">=1.3.0"

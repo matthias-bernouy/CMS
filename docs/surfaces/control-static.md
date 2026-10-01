@@ -2,7 +2,7 @@
 
 `@bernouy/cms-control` serves `src/static/` through
 `src/core/admin/registerEndpoints/serveStaticFolder/`. The folder contains
-server-rendered admin and editor HTML fragments plus static assets.
+server-rendered admin HTML fragments plus static assets.
 
 ## Routing
 
@@ -13,7 +13,6 @@ Every scanned `.html` file becomes a route:
 | `static/index.html` | `/` |
 | `static/admin/pages.html` | `/admin/pages` |
 | `static/admin/index.html` | `/admin` |
-| `static/editor/page.html` | `/editor/page` |
 
 Non-HTML assets are served at their relative path. Text assets (`.js`, `.css`,
 `.svg`, `.json`, `.txt`, `.xml`, `.map`) are compressed and cached through the
@@ -48,9 +47,6 @@ put `<html>`, `<head>`, or `<body>` in those fragments.
 Keep static fragments declarative. Prefer custom elements and data-binding over
 page-specific inline scripts. Shared styles and scripts belong in assets or in
 browser components.
-
-Editor routes redirect to the relevant admin list when the required `id` query
-parameter is missing.
 
 ## UI Runtime
 

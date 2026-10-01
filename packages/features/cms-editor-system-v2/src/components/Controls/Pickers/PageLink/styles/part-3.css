@@ -1,7 +1,0 @@
-
-:host([disabled]) button,
-:host([disabled]) input,
-:host([disabled]) .target {
-    opacity: .62;
-    cursor: not-allowed;
-}

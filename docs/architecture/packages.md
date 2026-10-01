@@ -26,7 +26,6 @@ files explain implementation invariants.
 | `@bernouy/cms-dashboards` | Site dashboard records, collection view mounts and direct subject assignments. |
 | `@bernouy/ulvia-official-provider` | Initial local provider capabilities for catalogue reads, form receipts and one media asset. |
 | `@bernouy/cms-bloc-compile` | Existing Bloc validation, view/editor bundling and shared editor externals. |
-| `@bernouy/cms-editor-system-v2` | Editor shell components and runtime types. |
 
 `cms-dashboards` owns site activation, private dashboard records and member
 assignments over collection-owned views, not view content or the removed widget
@@ -49,7 +48,7 @@ adapters or routes. There is no `packages/resources/sites` template catalogue.
 
 | Package | Responsibility |
 | --- | --- |
-| `@bernouy/cms-control` | Authenticated admin UI, REST API, editor, author media and selected gateway capability access. |
+| `@bernouy/cms-control` | Authenticated admin UI, REST API, author media and selected gateway capability access. |
 | `@bernouy/cms-delivery` | Public pages, Bloc assets, binding runtime, auth, media, gateway calls and SEO. |
 | `@bernouy/cms-server` | Production adapter composition and Control/Delivery startup. |
 | `@bernouy/ulvia-cli` | Persistent local CMS development stack backed by MongoDB. |

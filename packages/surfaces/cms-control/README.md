@@ -1,7 +1,7 @@
 # @bernouy/cms-control
 
-Admin layer of the CMS — REST API, server-rendered admin pages, and the
-visual editor. Mounts on a runner you provide. Runs on **Bun** and ships
+Admin layer of the CMS — REST API and server-rendered admin pages. Mounts on a
+runner you provide. Runs on **Bun** and ships
 as a Bun-first package — no transpile, consumers execute the TypeScript
 source directly.
 
@@ -174,10 +174,12 @@ not credential, user or recovery-token stores. Control can additionally receive
 
 ---
 
-## Sub-entries for Bloc authoring
+## Legacy sub-entries for Bloc compilation
 
-Bloc files compiled from collection integrations need two browser-safe entry points; the
-visitor bundle (`Bloc.ts`) must NEVER reach editor code:
+Bloc files compiled from collection integrations still use two browser-safe entry points.
+The interactive editor has been removed; the editor entry remains temporarily as a
+compiler compatibility boundary until Bloc settings move to collection JSON. The visitor
+bundle (`Bloc.ts`) must NEVER reach editor code:
 
 - `@bernouy/cms-control/component` — `export { Component }` only.
   Imported by `Bloc.ts`, bundled into the view JS shipped to visitors.

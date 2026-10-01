@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 import getBlocCatalogue from "cms-control/api/_content/bloc/_catalogue/catalogue.get";
-import { eligibleStructureTags } from "cms-control/components/editorSystemV2/siteBloc/siteBlocCatalog";
 import { siteBlocCatalogue } from "cms-control/core/content/siteBloc/catalogue";
 import { blocArtifact, seedBloc, seedPublishedSiteBloc, siteBlocHarness, siteSnapshot } from "./fixtures";
 
@@ -46,7 +45,7 @@ describe("site bloc catalogue", () => {
         expect(items[0]?.directDependencies).toEqual(["site-shell-controller"]);
     });
 
-    test("lists inactive collection resources for management while keeping them out of the editor", async () => {
+    test("lists inactive collection resources for management while keeping them out of the public catalogue", async () => {
         const { cms, repository } = siteBlocHarness();
         await seedBloc(repository, "selected", { catalogue: "active" });
         await seedBloc(repository, "not-selected", { catalogue: "inactive" });
@@ -85,7 +84,8 @@ describe("site bloc catalogue", () => {
         expect(site.directDependencies).toEqual(["catalogue-grid"]);
         expect(site.transitiveDependencies).toEqual(["basic-card", "catalogue-grid"]);
         expect(site.publishedTransitiveDependencies).toEqual(["basic-card", "catalogue-grid"]);
-        expect(site).toMatchObject({ state: "published", editable: true, hasUnpublishedChanges: false });
+        expect(site).toMatchObject({ state: "published", hasUnpublishedChanges: false });
+        expect(site.origin).toMatchObject({ detail: "Managed in this site" });
     });
 
     test("combines origin, group and search filters and exposes the groups view", async () => {
@@ -123,7 +123,7 @@ describe("site bloc catalogue", () => {
         );
     });
 
-    test("keeps picker cycle eligibility anchored to published dependencies while a draft diverges", async () => {
+    test("tracks draft and published dependency closures independently", async () => {
         const ownerTag = "site-cycle-owner";
 
         const removingFixture = siteBlocHarness();
@@ -144,7 +144,6 @@ describe("site bloc catalogue", () => {
         const removingCandidate = removingItems.find((item) => item.tag === "site-published-dependent")!;
         expect(removingCandidate.transitiveDependencies).toEqual([]);
         expect(removingCandidate.publishedTransitiveDependencies).toEqual([ownerTag]);
-        expect(eligibleStructureTags(removingItems, ownerTag)).not.toContain("site-published-dependent");
 
         const addingFixture = siteBlocHarness();
         await seedPublishedSiteBloc(addingFixture.repository, ownerTag);
@@ -160,6 +159,5 @@ describe("site bloc catalogue", () => {
         const addingCandidate = addingItems.find((item) => item.tag === "site-draft-dependent")!;
         expect(addingCandidate.transitiveDependencies).toEqual([ownerTag]);
         expect(addingCandidate.publishedTransitiveDependencies).toEqual([]);
-        expect(eligibleStructureTags(addingItems, ownerTag)).toContain("site-draft-dependent");
     });
 });

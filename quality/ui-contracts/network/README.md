@@ -31,7 +31,6 @@ informational findings instead, with their purpose recorded in `policy.ts`:
 
 - `packages/foundation/components/src/binding/source/fetcher.ts`: binding transport.
 - `packages/foundation/components/src/binding/submit/submitRequest.ts`: binding form submission.
-- `packages/surfaces/cms-control/src/components/editorSystemV2/documentMutations.ts`: editor document persistence.
 
 WebSocket and EventSource constructors produce separate informational rules
 for protocol purpose and connection lifecycle review. They are not presented

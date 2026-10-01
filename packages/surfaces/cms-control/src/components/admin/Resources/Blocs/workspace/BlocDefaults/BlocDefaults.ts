@@ -1,46 +1,26 @@
-import type { SettingSection } from "@bernouy/cms-content/editor";
-import { loadEditorCatalog } from "cms-control/components/editorSystemV2/catalog";
-
 type ExplicitDefault = { name: string; value: string; hasValue: boolean };
 type DefaultRow = { attribute: string; label: string; value: string };
 type DefaultGroup = { label: string; rows: DefaultRow[] };
 
-/** Displays effective attribute defaults from the insertion markup and editor contract. */
+/** Displays explicit attribute defaults from the insertion markup. */
 export class BlocDefaults extends HTMLElement {
-    private revision = 0;
-
     static get observedAttributes(): string[] {
-        return ["tag", "values"];
+        return ["values"];
     }
 
     connectedCallback(): void {
-        void this.sync();
+        this.sync();
     }
 
     attributeChangedCallback(): void {
         if (this.isConnected) {
-            void this.sync();
+            this.sync();
         }
     }
 
-    private async sync(): Promise<void> {
-        const revision = ++this.revision;
+    private sync(): void {
         const explicit = parseExplicitDefaults(this.getAttribute("values"));
-        this.render(mergeDefaults([], explicit));
-        const tag = this.getAttribute("tag")?.trim();
-        if (!tag || tag.includes("{{")) {
-            return;
-        }
-        try {
-            const entry = (await loadEditorCatalog()).find((candidate) => candidate.tag === tag);
-            if (revision !== this.revision || !entry) {
-                return;
-            }
-            const sections = new entry.editor(document.createElement(tag)).getSettings();
-            this.render(mergeDefaults(sections, explicit));
-        } catch (error) {
-            console.error(`[collections] Unable to read defaults for ${tag}`, error);
-        }
+        this.render(explicitDefaults(explicit));
     }
 
     private render(groups: DefaultGroup[]): void {
@@ -86,48 +66,20 @@ function renderRows(rows: DefaultRow[]): HTMLElement {
     return list;
 }
 
-function mergeDefaults(sections: SettingSection[], explicit: ExplicitDefault[]): DefaultGroup[] {
-    const groups: DefaultGroup[] = [];
-    const rows = new Map<string, DefaultRow>();
-    for (const section of sections) {
-        const group: DefaultGroup = { label: section.label || "Defaults", rows: [] };
-        const settings = section.settings.flatMap((setting) => (setting.type === "row" ? setting.settings : [setting]));
-        for (const setting of settings) {
-            if (setting.defaultValue === undefined) {
-                continue;
-            }
-            const row = {
-                attribute: setting.attribute,
-                label: setting.label,
-                value: displayValue(setting.defaultValue),
-            };
-            rows.set(setting.attribute, row);
-            group.rows.push(row);
-        }
-        if (group.rows.length > 0) {
-            groups.push(group);
-        }
+function explicitDefaults(explicit: ExplicitDefault[]): DefaultGroup[] {
+    if (explicit.length === 0) {
+        return [];
     }
-    let attributes: DefaultGroup | undefined;
-    for (const attribute of explicit) {
-        const existing = rows.get(attribute.name);
-        if (existing) {
-            existing.value = displayExplicitValue(attribute);
-            continue;
-        }
-        attributes ??= { label: "Attributes", rows: [] };
-        const row = {
-            attribute: attribute.name,
-            label: humanize(attribute.name),
-            value: displayExplicitValue(attribute),
-        };
-        rows.set(attribute.name, row);
-        attributes.rows.push(row);
-    }
-    if (attributes) {
-        groups.push(attributes);
-    }
-    return groups;
+    return [
+        {
+            label: "Attributes",
+            rows: explicit.map((attribute) => ({
+                attribute: attribute.name,
+                label: humanize(attribute.name),
+                value: displayExplicitValue(attribute),
+            })),
+        },
+    ];
 }
 
 function parseExplicitDefaults(value: string | null): ExplicitDefault[] {
@@ -147,16 +99,6 @@ function parseExplicitDefaults(value: string | null): ExplicitDefault[] {
     } catch {
         return [];
     }
-}
-
-function displayValue(value: string | boolean): string {
-    if (value === true || value === "true") {
-        return "On";
-    }
-    if (value === false || value === "false") {
-        return "Off";
-    }
-    return value || "Empty";
 }
 
 function displayExplicitValue(attribute: ExplicitDefault): string {

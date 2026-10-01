@@ -45,7 +45,6 @@ test("code collection filters retain complete categories and Bloc metadata", asy
         tag: "gallery-banner",
         selected: false,
         selectable: false,
-        editable: false,
     });
     expect(result.stateOptions.map(({ value }) => value)).toEqual(["", "available", "hidden"]);
     const detail = await read(harness, "?collection=code&bloc=gallery-card");
@@ -56,11 +55,11 @@ test("code collection filters retain complete categories and Bloc metadata", asy
     });
 });
 
-test("site statuses remain editable and collection boundaries are enforced", async () => {
+test("site statuses and collection boundaries are preserved", async () => {
     const harness = await libraryHarness();
     const site = await read(harness, "?collection=site%3Asite&visibility=draft");
     expect(site.blocs.map(({ tag }) => tag)).toEqual(["site-legacy"]);
-    expect(site.blocs[0]?.editPath).toBe("/tenant/control/editor/bloc?id=site-legacy");
+    expect(site.blocs[0]?.href).toBe("/tenant/control/admin/collections/site%3Asite/blocs?bloc=site-legacy");
     expect(site.stateOptions.map(({ value }) => value)).toEqual(["", "published", "draft", "archived"]);
     await expect(read(harness, "?collection=unknown")).rejects.toMatchObject({ status: 404 });
     await expect(read(harness, "?collection=site%3Asite&bloc=gallery-card")).rejects.toMatchObject({ status: 404 });

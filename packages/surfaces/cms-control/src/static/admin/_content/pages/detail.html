@@ -15,10 +15,6 @@
                         </a>
                         <span slot="title">{{ title }}</span>
                         <p9r-button slot="actions" form="page-settings-form" type="submit" color="primary">Save settings</p9r-button>
-                        <form slot="actions" action="{{BASE_PATH}}/editor/page" method="get">
-                            <input type="hidden" name="id" value="{{ id }}">
-                            <p9r-button type="submit" variant="outlined">Edit content</p9r-button>
-                        </form>
                         <div slot="actions">
                             <p9r-action-menu label="More actions">
                                 <p9r-action-menu-item data-action="view-public" href="{{ publicUrl }}" target="_blank">

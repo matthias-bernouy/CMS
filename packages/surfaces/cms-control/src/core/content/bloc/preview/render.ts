@@ -12,7 +12,7 @@ import {
     siteBlocDependencyGraph,
     transitiveDependencies,
 } from "cms-control/core/content/siteBloc/validation/dependencies";
-import { networkInertHtml } from "cms-control/core/editorSystemV2/networkInertHtml";
+import { networkInertHtml } from "./networkInertHtml";
 import { renderEditorCollectionTexts } from "cms-control/core/content/installedCollections/renderTexts";
 import { installedBlocInitialMarkup } from "cms-control/core/content/installedCollections/settings";
 import { previewDocument } from "./document";

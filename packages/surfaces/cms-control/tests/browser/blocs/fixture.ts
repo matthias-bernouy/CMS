@@ -49,25 +49,6 @@ export async function fixture() {
             });
             return;
         }
-        if (path === "/api/editor/script.js") {
-            await route.fulfill({
-                contentType: "text/javascript",
-                body: `window.p9rEditor.registerEditor({
-                    tag: "gallery-card",
-                    label: "Gallery card",
-                    editor: class extends window.p9rEditor.Editor {
-                        getSettings() {
-                            return [{
-                                kind: "self",
-                                label: "Style",
-                                settings: [{ type: "segmented", label: "Tone", attribute: "tone", defaultValue: "neutral" }]
-                            }];
-                        }
-                    }
-                });`,
-            });
-            return;
-        }
         if (path === "/api/bloc/catalogue") {
             await route.fulfill({ json: [] });
             return;
@@ -75,7 +56,7 @@ export async function fixture() {
         if (request.resourceType() === "document") {
             await route.fulfill({
                 contentType: "text/html; charset=utf-8",
-                body: `<!doctype html><head><meta name="basePath" content="${base}"><link rel="stylesheet" href="${base}/style.css"><script src="${base}/control.js"></script></head><body><cms-binding-core>${path === "/editor/bloc" ? "<h1>Composition editor</h1>" : html}</cms-binding-core></body>`,
+                body: `<!doctype html><head><meta name="basePath" content="${base}"><link rel="stylesheet" href="${base}/style.css"><script src="${base}/control.js"></script></head><body><cms-binding-core>${html}</cms-binding-core></body>`,
             });
             return;
         }

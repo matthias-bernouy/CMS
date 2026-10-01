@@ -146,7 +146,6 @@ import "./admin/Layout/AdminLayout/AdminLayout";
 import "./admin/Layout/FormSaveAction/FormSaveAction";
 import "./admin/Common/ConfirmForm/ConfirmForm";
 import "./admin/Common/CredentialSelect/CredentialSelect";
-import "@bernouy/cms-editor-system-v2/page-link";
 import "./admin/Common/EmptyState/EmptyState";
 import "./admin/Common/EventToast/EventToast";
 import "./admin/Resources/Auth/LoginMethods/LoginMethods";
@@ -160,10 +159,6 @@ import "./admin/Layout/LanguageSettings/LanguageSettings";
 import "./admin/Layout/SettingsSections/AuthenticationTabs";
 import "./admin/Layout/ShellDetail/ShellDetail";
 import "./admin/Resources/Blocs/workspace/controller/CollectionWorkspace";
-
-// Editor
-import "./editorSystemV2/siteBloc/SiteBlocBuilder";
-import "./editorSystemV2/bootstrap";
 
 // Medias
 import "./media/CardMedia/CardMedia";

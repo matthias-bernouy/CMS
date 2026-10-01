@@ -100,9 +100,6 @@ describe("browser network contracts", () => {
             severity: "INFO",
             message: expect.stringContaining("declarative cms-source"),
         });
-        const editorPath = "packages/surfaces/cms-control/src/components/editorSystemV2/";
-        expect(inspect("fetch(url)", { path: `${editorPath}documentLoad.ts` })[0]?.severity).toBe("WARNING");
-        expect(inspect("fetch(url)", { path: `${editorPath}documentMutations.ts` })[0]?.severity).toBe("INFO");
         expect(
             inspect("fetch(url)", { path: path.replace("source/fetcher.ts", "submit/submitRequest.ts") })[0]?.severity,
         ).toBe("INFO");

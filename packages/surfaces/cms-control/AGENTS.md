@@ -1,7 +1,7 @@
 # @bernouy/cms-control
 
 Admin surface. It mounts on a provided `Runner` and exposes authenticated admin
-HTML, the admin REST API, editor endpoints, gateway/admin media routes, and the
+HTML, the admin REST API, gateway/admin media routes, and the
 browser bundle in `src/static/assets/control-components.js`.
 
 ## Export Boundaries
@@ -10,8 +10,9 @@ browser bundle in `src/static/assets/control-components.js`.
 - `@bernouy/cms-control/component`: view-side component authoring, only
   `Component` from `@bernouy/components/base`. Compositions are server-rendered
   resources without a view class.
-- `@bernouy/cms-control/editor`: editor-side bloc authoring helpers. Bloc editor
-  bundles are rewritten by `p9rExternalsPlugin` to use `window.p9rEditor`.
+- `@bernouy/cms-control/editor`: temporary Bloc compiler compatibility entry.
+  Bloc editor bundles are rewritten by `p9rExternalsPlugin` to use
+  `window.p9rEditor`; no interactive editor is mounted by Control.
 
 Do not let the view authoring subpath import editor code, Control internals, or
 server-only modules.
@@ -20,7 +21,7 @@ server-only modules.
 
 - `src/ControlCms.ts`: mounts routes and wires injected dependencies.
 - `src/api/`: file-routed REST endpoints. See `docs/surfaces/control-api.md`.
-- `src/static/`: admin/editor HTML fragments and static assets. See
+- `src/static/`: admin HTML fragments and static assets. See
   `docs/surfaces/control-static.md`.
 - `src/components/`: browser custom elements bundled into
   `control-components.js`.
@@ -83,13 +84,12 @@ server-only modules.
 - Design tokens come from `@bernouy/components/style.css`, exposed through
   `<basePath>/resources/css/cms-blocs.css`.
 
-## Editor Rules
+## Bloc Authoring Compatibility
 
 - Stable authoring contracts live in `@bernouy/cms-content/editor`.
-- Built-in HTML/CMS editors live under `src/core/editorSystemV2/builtInEditors/`.
-- App bloc editors belong to collection resources, not to
-  `cms-control`.
-- Editor frame assets are served by `src/api/editor/*`.
+- Control does not mount an interactive editor.
+- The remaining `src/api/editor/*` assets support isolated Bloc previews and
+  are pending the Bloc compiler/settings cleanup.
 - Keep authored bloc behavior independent from Control internals.
 
 ## Dependency Rules
