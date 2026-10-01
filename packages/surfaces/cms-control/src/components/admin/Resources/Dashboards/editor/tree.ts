@@ -1,4 +1,4 @@
-import type { AvailableView, NavigationItem } from "../domain/types";
+import type { NavigationItem } from "../domain/types";
 
 export function listAt(items: NavigationItem[], parentPath: number[]): NavigationItem[] | null {
     let list = items;
@@ -51,65 +51,53 @@ export function moveItem(items: NavigationItem[], path: number[], direction: str
         }
         siblings.splice(index, 1);
         outer.splice(parentIndex + 1, 0, item);
-        if (siblings.length === 0) {
-            delete outer[parentIndex]!.children;
-            delete outer[parentIndex]!.childPlacement;
-        }
+        cleanEmptyParent(outer[parentIndex]!);
         return true;
     }
     return false;
 }
 
-function treeDepth(item: NavigationItem): number {
-    return 1 + Math.max(0, ...(item.children ?? []).map(treeDepth));
+export function navigationError(items: NavigationItem[]): string {
+    return validateItems(items, new Set<string>(), 1);
 }
 
-export function renderTree(items: NavigationItem[], views: AvailableView[], path: number[] = []): HTMLOListElement {
-    const list = document.createElement("ol");
-    list.className = "navigation-tree";
-    items.forEach((item, index) => {
-        const current = [...path, index];
-        const row = document.createElement("li");
-        row.dataset.path = current.join(".");
-        const bar = document.createElement("div");
-        bar.className = "navigation-row";
-        const icon = document.createElement("span");
-        icon.className = "navigation-icon";
-        icon.textContent = (item.icon ?? "layout").slice(0, 2).toUpperCase();
-        const copy = document.createElement("span");
-        copy.className = "navigation-copy";
-        const title = document.createElement("strong");
-        title.textContent = item.label;
-        const detail = document.createElement("span");
-        const view = views.find((candidate) => `${candidate.collectionId}:${candidate.viewId}` === item.use);
-        detail.textContent = item.use ? `${view?.collectionName ?? item.use} / ${view?.name ?? item.use}` : "Group";
-        copy.append(title, detail);
-        const actions = document.createElement("span");
-        actions.className = "navigation-actions";
-        for (const [action, label, glyph, disabled] of [
-            ["up", "Move up", "↑", index === 0],
-            ["down", "Move down", "↓", index === items.length - 1],
-            ["indent", "Nest under previous", "→", index === 0 || current.length >= 3],
-            ["outdent", "Move out one level", "←", current.length === 1],
-            ["add-child", "Add child", "+", current.length >= 3],
-            ["edit", "Edit item", "✎", false],
-            ["delete", "Delete item", "×", false],
-        ] as const) {
-            const button = document.createElement("button");
-            button.type = "button";
-            button.dataset.action = action;
-            button.setAttribute("aria-label", `${label}: ${item.label}`);
-            button.title = label;
-            button.textContent = glyph;
-            button.disabled = disabled;
-            actions.append(button);
+function validateItems(items: NavigationItem[], used: Set<string>, depth: number): string {
+    for (const item of items) {
+        if (!item.use && !item.children?.length) {
+            return `Add a child to “${item.label}” or turn it into a view.`;
         }
-        bar.append(icon, copy, actions);
-        row.append(bar);
+        if (item.use && used.has(item.use)) {
+            return `The view used by “${item.label}” is already in this navigation.`;
+        }
+        if (item.use) {
+            used.add(item.use);
+        }
         if (item.children?.length) {
-            row.append(renderTree(item.children, views, current));
+            if (depth >= 3) {
+                return `“${item.label}” exceeds the three navigation levels.`;
+            }
+            if (depth === 1 && item.childPlacement !== "lateral" && item.childPlacement !== "tabs") {
+                return `Choose how children of “${item.label}” should appear.`;
+            }
+            if (depth === 2 && item.childPlacement !== "tabs") {
+                return `Children of “${item.label}” must be tabs.`;
+            }
+            const nested = validateItems(item.children, used, depth + 1);
+            if (nested) {
+                return nested;
+            }
         }
-        list.append(row);
-    });
-    return list;
+    }
+    return "";
+}
+
+function cleanEmptyParent(item: NavigationItem): void {
+    if (!item.children?.length) {
+        delete item.children;
+        delete item.childPlacement;
+    }
+}
+
+function treeDepth(item: NavigationItem): number {
+    return 1 + Math.max(0, ...(item.children ?? []).map(treeDepth));
 }

@@ -100,6 +100,14 @@ export class DashboardWorkspaceView {
         };
     }
 
+    privateValidationMessage(): string {
+        const navigation = this.editor().value;
+        if (this.element<HTMLInputElement>("[data-enabled]").checked && navigation.length === 0) {
+            return "Add a view before activating this dashboard.";
+        }
+        return this.editor().validationMessage();
+    }
+
     collectionEnabled(): boolean {
         return this.element<HTMLInputElement>("[data-collection-enabled]").checked;
     }

@@ -109,6 +109,11 @@ class DashboardWorkspace extends HTMLElement {
         if (!current || current.origin) {
             return;
         }
+        const validation = this.view.privateValidationMessage();
+        if (validation) {
+            this.status(validation);
+            return;
+        }
         const draft = this.view.privateDraft();
         await this.mutate(async () => {
             await postDashboard("dashboard", {

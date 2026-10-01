@@ -1,24 +1,48 @@
-<cms-detail-section heading="Navigation">
-    <p9r-button slot="actions" type="button" variant="outlined" data-add-root>+ New item</p9r-button>
-    <p class="editor-hint">Arrange views and groups. A primary item can open lateral navigation or tabs directly.</p>
-    <ol class="navigation-tree" data-tree aria-label="Dashboard navigation"></ol>
+<cms-detail-section
+    heading="Navigation"
+    description="Build a primary navigation, an optional side navigation and optional tabs. Tabs can also live directly below a primary item."
+>
+    <p9r-button slot="actions" type="button" variant="outlined" data-add-root>+ Add primary item</p9r-button>
+    <div class="navigation-editor-layout">
+        <div class="navigation-builder">
+            <cms-empty-state fluid data-empty>
+                <p slot="title">No navigation yet</p>
+                <p slot="hint">Add a collection view as the first primary item.</p>
+            </cms-empty-state>
+            <ol class="navigation-tree" data-tree aria-label="Dashboard navigation"></ol>
+        </div>
+        <div data-preview></div>
+    </div>
 </cms-detail-section>
+
 <p9r-modal data-dialog aria-label="Navigation item settings">
     <span slot="title">Navigation item</span>
     <form id="dashboard-navigation-item-form" data-item-form>
         <p9r-stack gap="md">
-            <p9r-select data-kind label="Item type"><option value="view">View</option><option value="group">Group</option></p9r-select>
-            <p9r-select data-view label="Collection view"></p9r-select>
+            <p9r-segmented-switch data-kind label="Item type" value="view">
+                <option value="view">View</option>
+                <option value="group">Group</option>
+            </p9r-segmented-switch>
+            <div data-view-field>
+                <p9r-select data-view label="Collection view"></p9r-select>
+            </div>
             <p9r-input data-label label="Navigation label" maxlength="32" required></p9r-input>
             <p9r-select data-icon label="Icon">
-                <option value="layout">Layout</option><option value="database">Database</option>
-                <option value="shopping-bag">Shopping bag</option><option value="package">Package</option>
-                <option value="users">Users</option><option value="settings">Settings</option>
-                <option value="search">Search</option><option value="tag">Tag</option>
+                <option value="layout">Layout</option>
+                <option value="database">Database</option>
+                <option value="shopping-bag">Shopping bag</option>
+                <option value="package">Package</option>
+                <option value="users">Users</option>
+                <option value="settings">Settings</option>
+                <option value="search">Search</option>
+                <option value="tag">Tag</option>
             </p9r-select>
-            <p9r-select data-placement label="Children appear as">
-                <option value="lateral">Lateral navigation</option><option value="tabs">Tabs</option>
-            </p9r-select>
+            <div data-placement-field>
+                <p9r-select data-placement label="Children appear as">
+                    <option value="lateral">Side navigation</option>
+                    <option value="tabs">Tabs</option>
+                </p9r-select>
+            </div>
         </p9r-stack>
     </form>
     <div slot="footer" class="modal-actions">

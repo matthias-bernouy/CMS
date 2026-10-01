@@ -1,15 +1,20 @@
 import type { AvailableView, NavigationItem } from "../domain/types";
-import { itemAt, listAt, moveItem, renderTree } from "./tree";
+import { fillItemDialog, readItemDialog, syncItemKind } from "./dialog";
+import { renderPreview } from "./preview";
+import { itemAt, listAt, moveItem, navigationError } from "./tree";
+import { renderTree } from "./treeView";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 
-type ValueControl = HTMLElement & { value: string };
 type Modal = HTMLElement & { showModal(): void; hide(): void };
+type ValueControl = HTMLElement & { value: string };
 
 export class DashboardNavigationEditor extends HTMLElement {
     private items: NavigationItem[] = [];
     private available: AvailableView[] = [];
     private editing: number[] | null = null;
+    private selectedPath: number[] = [];
+    private snapshot: NavigationItem[] | null = null;
 
     connectedCallback(): void {
         if (this.querySelector("[data-tree]")) {
@@ -18,9 +23,15 @@ export class DashboardNavigationEditor extends HTMLElement {
         this.innerHTML = `<style>${css}</style>${template}`;
         this.querySelector("[data-add-root]")!.addEventListener("click", () => this.add([]));
         this.querySelector("[data-tree]")!.addEventListener("click", (event) => this.onTreeClick(event));
+        this.querySelector("[data-preview]")!.addEventListener("click", (event) => this.selectPreview(event));
         this.querySelector("[data-item-form]")!.addEventListener("submit", (event) => this.saveItem(event));
-        this.querySelector("[data-cancel]")!.addEventListener("click", () => this.modal().hide());
-        this.querySelector("[data-kind]")!.addEventListener("change", () => this.syncKind());
+        this.querySelector("[data-cancel]")!.addEventListener("click", () => this.cancelItem());
+        this.querySelector("[data-kind]")!.addEventListener("change", () => {
+            syncItemKind(this);
+            this.suggestView();
+        });
+        this.querySelector("[data-view]")!.addEventListener("change", () => this.suggestView());
+        this.querySelector("[data-dialog]")!.addEventListener("close", () => this.restoreSnapshot());
         this.render();
     }
 
@@ -30,6 +41,7 @@ export class DashboardNavigationEditor extends HTMLElement {
 
     set value(value: NavigationItem[]) {
         this.items = structuredClone(value);
+        this.selectedPath = this.items.length ? [0] : [];
         this.render();
     }
 
@@ -38,140 +50,172 @@ export class DashboardNavigationEditor extends HTMLElement {
         this.render();
     }
 
+    validationMessage(): string {
+        return navigationError(this.items);
+    }
+
     private render(): void {
         const tree = this.querySelector("[data-tree]");
         if (!tree) {
             return;
         }
         tree.replaceChildren(...renderTree(this.items, this.available).children);
+        this.querySelector("[data-preview]")!.replaceChildren(
+            renderPreview(this.items, this.available, this.selectedPath),
+        );
+        this.querySelector("[data-empty]")!.toggleAttribute("hidden", this.items.length > 0);
+        this.querySelector("[data-tree]")!.toggleAttribute("hidden", this.items.length === 0);
         (this.querySelector("[data-add-root]") as HTMLElement & { disabled: boolean }).disabled =
             this.available.length === 0;
     }
 
     private onTreeClick(event: Event): void {
-        const button = (event.target as Element).closest<HTMLElement>("[data-action]");
-        const path = button?.closest<HTMLElement>("[data-path]")?.dataset.path?.split(".").map(Number);
-        if (!button || !path) {
+        const target = event.target as Element;
+        const path = this.pathFrom(target);
+        if (!path) {
+            return;
+        }
+        const button = target.closest<HTMLElement>("[data-action]");
+        if (!button) {
+            this.selectedPath = path;
+            this.render();
             return;
         }
         const action = button.dataset.action;
         if (action === "edit") {
             this.open(path);
-            return;
-        }
-        if (action === "add-child") {
+        } else if (action === "add-child") {
             this.add(path);
-            return;
-        }
-        if (action === "delete") {
+        } else if (action === "delete") {
             listAt(this.items, path.slice(0, -1))?.splice(path.at(-1)!, 1);
+            this.selectedPath = [0];
             this.changed();
-            return;
-        }
-        if (action && moveItem(this.items, path, action)) {
+        } else if (action && moveItem(this.items, path, action)) {
+            this.selectedPath = [0];
             this.changed();
         }
     }
 
     private add(parentPath: number[]): void {
-        const parent = parentPath.length ? itemAt(this.items, parentPath) : null;
+        const snapshot = structuredClone(this.items);
         const list = listAt(this.items, parentPath);
         if (!list || parentPath.length >= 3) {
             return;
         }
-        const used = new Set(this.walk(this.items).flatMap((item) => (item.use ? [item.use] : [])));
-        const view = this.available.find((candidate) => !used.has(`${candidate.collectionId}:${candidate.viewId}`));
-        if (!view) {
-            return;
-        }
+        this.snapshot = snapshot;
+        const view = this.firstUnusedView();
         const item: NavigationItem = {
             id: `item-${crypto.randomUUID()}`,
-            label: view.name.slice(0, 32),
+            label: view?.name.slice(0, 32) ?? "New group",
             icon: "layout",
-            use: `${view.collectionId}:${view.viewId}`,
+            ...(view ? { use: `${view.collectionId}:${view.viewId}` } : {}),
         };
         list.push(item);
+        const parent = parentPath.length ? itemAt(this.items, parentPath) : null;
         if (parent) {
             parent.childPlacement ??= parentPath.length === 1 ? "lateral" : "tabs";
         }
-        this.changed();
-        this.open([...parentPath, list.length - 1]);
+        this.open([...parentPath, list.length - 1], true);
+        this.render();
     }
 
-    private open(path: number[]): void {
+    private open(path: number[], created = false): void {
         const item = itemAt(this.items, path);
         if (!item) {
             return;
         }
+        if (!created) {
+            this.snapshot = structuredClone(this.items);
+        }
         this.editing = path;
-        const view = this.field("[data-view]");
-        view.replaceChildren(
-            ...this.available.map((candidate) => {
-                const option = document.createElement("option");
-                option.value = `${candidate.collectionId}:${candidate.viewId}`;
-                option.textContent = `${candidate.collectionName} / ${candidate.name}`;
-                return option;
-            }),
-        );
-        this.setField("[data-kind]", item.use ? "view" : "group");
-        const first = this.available[0];
-        this.setField("[data-view]", item.use ?? (first ? `${first.collectionId}:${first.viewId}` : ""));
-        this.setField("[data-label]", item.label);
-        this.setField("[data-icon]", item.icon ?? "layout");
-        this.setField("[data-placement]", item.childPlacement ?? (path.length === 1 ? "lateral" : "tabs"));
-        this.field("[data-placement]").toggleAttribute("disabled", path.length >= 3);
-        this.syncKind();
+        fillItemDialog(this, item, path, this.available, this.usedViews(item.use));
         this.modal().showModal();
     }
 
     private saveItem(event: Event): void {
         event.preventDefault();
         const item = this.editing && itemAt(this.items, this.editing);
-        if (!item || !this.editing) {
+        const draft = readItemDialog(this);
+        if (!item || !this.editing || !draft) {
             return;
         }
-        const label = this.field("[data-label]").value.trim();
-        const kind = this.field("[data-kind]").value;
-        const use = this.field("[data-view]").value;
-        if (!label || label.length > 32 || (kind === "view" && !use)) {
-            return;
-        }
-        item.label = label;
-        item.icon = this.field("[data-icon]").value;
-        if (kind === "view") {
-            item.use = use;
+        item.label = draft.label;
+        item.icon = draft.icon;
+        if (draft.kind === "view") {
+            item.use = draft.use!;
         } else {
             delete item.use;
         }
         if (item.children?.length) {
-            item.childPlacement =
-                this.editing.length === 2 ? "tabs" : (this.field("[data-placement]").value as "lateral" | "tabs");
+            item.childPlacement = this.editing.length === 2 ? "tabs" : draft.placement;
+        } else {
+            delete item.childPlacement;
         }
+        this.selectedPath = [...this.editing];
+        this.snapshot = null;
+        this.editing = null;
         this.modal().hide();
         this.changed();
     }
 
-    private syncKind(): void {
-        this.field("[data-view]").toggleAttribute("disabled", this.field("[data-kind]").value !== "view");
+    private cancelItem(): void {
+        this.restoreSnapshot();
+        this.modal().hide();
+    }
+
+    private restoreSnapshot(): void {
+        if (this.snapshot) {
+            this.items = this.snapshot;
+            this.snapshot = null;
+            this.editing = null;
+            this.render();
+        }
+    }
+
+    private selectPreview(event: Event): void {
+        const value = (event.target as Element).closest<HTMLElement>("[data-preview-select]")?.dataset.previewSelect;
+        if (value !== undefined) {
+            this.selectedPath = value.split(".").map(Number);
+            this.render();
+        }
     }
 
     private changed(): void {
         this.render();
-        this.dispatchEvent(new CustomEvent("navigation-change", { bubbles: true }));
+        this.dispatchEvent(new CustomEvent("navigation-change", { bubbles: true, composed: true }));
+    }
+
+    private usedViews(except?: string): Set<string> {
+        return new Set(this.walk(this.items).flatMap((item) => (item.use && item.use !== except ? [item.use] : [])));
+    }
+
+    private firstUnusedView(): AvailableView | undefined {
+        const used = this.usedViews();
+        return this.available.find((view) => !used.has(`${view.collectionId}:${view.viewId}`));
+    }
+
+    private suggestView(): void {
+        if ((this.querySelector("[data-kind]") as ValueControl).value !== "view") {
+            return;
+        }
+        const use = (this.querySelector("[data-view]") as ValueControl).value;
+        const view = this.available.find((candidate) => `${candidate.collectionId}:${candidate.viewId}` === use);
+        if (!view) {
+            return;
+        }
+        const label = this.querySelector("[data-label]") as ValueControl;
+        const icon = this.querySelector("[data-icon]") as ValueControl;
+        label.value = view.name.slice(0, 32);
+        icon.value = "layout";
     }
 
     private walk(items: NavigationItem[]): NavigationItem[] {
         return items.flatMap((item) => [item, ...this.walk(item.children ?? [])]);
     }
 
-    private field(selector: string): ValueControl {
-        return this.querySelector(selector) as ValueControl;
-    }
-
-    private setField(selector: string, value: string): void {
-        const field = this.field(selector);
-        field.setAttribute("value", value);
-        field.value = value;
+    private pathFrom(target: Element): number[] | null {
+        const value = target.closest<HTMLElement>("[data-path]")?.dataset.path;
+        return value ? value.split(".").map(Number) : null;
     }
 
     private modal(): Modal {
