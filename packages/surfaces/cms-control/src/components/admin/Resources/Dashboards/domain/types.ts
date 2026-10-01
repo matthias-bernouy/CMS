@@ -31,6 +31,7 @@ export type ExploreDashboard = {
     digest: string;
     dashboardId: string;
     name: string;
+    icon: string;
     description: string;
     viewCount: number;
     installed: boolean;

@@ -40,6 +40,7 @@ export default async function exploreDashboards(request: Request, cms: ControlCm
             digest: entry.digest,
             dashboardId: dashboard.id,
             name: dashboard.name,
+            icon: dashboard.icon ?? "layout",
             description: dashboard.description ?? "",
             viewCount: dashboard.viewCount,
             installed: installation?.digest === entry.digest,

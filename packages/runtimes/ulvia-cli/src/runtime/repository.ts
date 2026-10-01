@@ -43,6 +43,7 @@ export function startLocalRepository(port: number, root: string) {
                         dashboards: (release.dashboards ?? []).map((dashboard) => ({
                             id: dashboard.id,
                             name: dashboard.name,
+                            ...(dashboard.icon ? { icon: dashboard.icon } : {}),
                             description: dashboard.description ?? "",
                             viewCount: dashboard.views?.length ?? countDashboardViews(dashboard.navigation ?? []),
                         })),

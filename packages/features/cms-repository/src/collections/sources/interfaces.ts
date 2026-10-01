@@ -8,7 +8,7 @@ export type CollectionRepositoryEntry = Readonly<{
     description: string;
     blocCount: number;
     hasTheme: boolean;
-    dashboards?: readonly { id: string; name: string; description?: string; viewCount: number }[];
+    dashboards?: readonly { id: string; name: string; icon?: string; description?: string; viewCount: number }[];
 }>;
 
 export type CollectionRepositoryReference = Pick<

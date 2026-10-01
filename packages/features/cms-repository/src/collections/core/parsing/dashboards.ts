@@ -9,7 +9,7 @@ export function parseCollectionDashboards(
     const dashboards = array(value, 32, "$.dashboards").map((entry, index) => {
         const path = `$.dashboards[${index}]`;
         const source = record(entry, path);
-        keys(source, ["id", "name", "description", "views", "navigation", "contracts"], path);
+        keys(source, ["id", "name", "icon", "description", "views", "navigation", "contracts"], path);
         const views = (source.views === undefined ? [] : array(source.views, 16, `${path}.views`)).map(
             (item, viewIndex) => {
                 const itemPath = `${path}.views[${viewIndex}]`;
@@ -48,6 +48,7 @@ export function parseCollectionDashboards(
         return {
             id: identifier(source.id, `${path}.id`),
             name: string(source.name, 128, `${path}.name`),
+            ...(source.icon === undefined ? {} : { icon: identifier(source.icon, `${path}.icon`) }),
             ...(source.description === undefined
                 ? {}
                 : { description: string(source.description, 4096, `${path}.description`) }),

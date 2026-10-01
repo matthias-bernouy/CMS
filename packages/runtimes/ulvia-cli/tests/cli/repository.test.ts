@@ -18,11 +18,12 @@ test("local repository lists immutable metadata and serves matching release byte
         const artifact = await prepareCollectionRelease(
             resolve(import.meta.dir, "../../../../resources/collections/test"),
         );
+        const version = artifact.release.version;
         expect(await repository.store(artifact)).toBe(true);
         expect(await repository.store(artifact)).toBe(false);
         const entries = await source.list();
         expect(entries).toHaveLength(1);
-        expect(entries[0]).toMatchObject({ collectionId: "test", version: "1.3.7", blocCount: 8, hasTheme: true });
+        expect(entries[0]).toMatchObject({ collectionId: "test", version, blocCount: 8, hasTheme: true });
         const release = await source.get(entries[0]!);
         expect((await admitCollectionRelease(release)).digest).toBe(entries[0]!.digest);
         expect(release.blocs).toHaveLength(8);
@@ -63,7 +64,7 @@ test("local repository lists immutable metadata and serves matching release byte
                 expect(textIds.has(match[1]!)).toBeTrue();
             }
         }
-        expect((await fetch(`${server.url}/v1/collections/missing/test/1.3.7`)).status).toBe(404);
+        expect((await fetch(`${server.url}/v1/collections/missing/test/${version}`)).status).toBe(404);
         const build = await admitCollectionRelease({ ...artifact.release, version: "1.3.3+build.1" });
         await repository.store(build);
         const buildEntry = (await source.list()).find((entry) => entry.version === "1.3.3+build.1");
@@ -75,7 +76,7 @@ test("local repository lists immutable metadata and serves matching release byte
         await chmod(join(root, "legacy-packages", "sealed"), 0o500);
         await repository.prune();
         expect(await source.list()).toEqual([]);
-        expect((await fetch(`${server.url}/v1/collections/ulvia.examples/test/1.3.7`)).status).toBe(404);
+        expect((await fetch(`${server.url}/v1/collections/ulvia.examples/test/${version}`)).status).toBe(404);
     } finally {
         server.stop();
         await rm(root, { recursive: true, force: true });
@@ -92,7 +93,9 @@ test("a release coordinate cannot be replaced with different content", async () 
         await repository.store(artifact);
         const changed = await admitCollectionRelease({ ...artifact.release, name: "Changed" });
         await expect(repository.store(changed)).rejects.toThrow("already exists with different content");
-        expect((await repository.get("ulvia.examples", "test", "1.3.7"))?.digest).toBe(artifact.digest);
+        expect((await repository.get("ulvia.examples", "test", artifact.release.version))?.digest).toBe(
+            artifact.digest,
+        );
     } finally {
         await rm(root, { recursive: true, force: true });
     }

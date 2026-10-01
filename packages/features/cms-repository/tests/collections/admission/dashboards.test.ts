@@ -6,6 +6,7 @@ const view = { id: "overview", name: "Overview", html: "<section><h2>Overview</h
 const dashboard = {
     id: "starter",
     name: "Starter dashboard",
+    icon: "layout",
     views: [{ viewId: "overview", label: "Start" }],
 };
 
@@ -13,6 +14,7 @@ test("collection dashboards admit only local views and stable unique IDs", () =>
     const document = collectionDocument();
     const release = parseCollectionRelease({ ...document, views: [view], dashboards: [dashboard] });
     expect(release.dashboards?.[0]?.views).toEqual([{ viewId: "overview", label: "Start" }]);
+    expect(release.dashboards?.[0]?.icon).toBe("layout");
     expect(() => parseCollectionRelease({ ...document, dashboards: [dashboard] })).toThrow(/view/);
     expect(() => parseCollectionRelease({ ...document, views: [view], dashboards: [dashboard, dashboard] })).toThrow();
     expect(() =>

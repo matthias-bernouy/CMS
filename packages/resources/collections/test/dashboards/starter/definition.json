@@ -1,6 +1,7 @@
 {
     "id": "starter",
     "name": "Test dashboard",
+    "icon": "layout",
     "description": "A collection-provided workspace with two HTML views.",
     "navigation": [
         {

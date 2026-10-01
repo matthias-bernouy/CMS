@@ -23,6 +23,7 @@ export async function dashboardCatalog(cms: ControlCms): Promise<DashboardRecord
                 id,
                 siteId,
                 name: definition.name,
+                icon: definition.icon ?? "layout",
                 description: definition.description,
                 enabled: state?.enabled ?? false,
                 revision: state?.revision ?? 0,

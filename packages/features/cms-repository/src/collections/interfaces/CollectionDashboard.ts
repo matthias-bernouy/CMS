@@ -2,6 +2,7 @@
 export interface CollectionDashboard {
     readonly id: string;
     readonly name: string;
+    readonly icon?: string;
     readonly description?: string;
     /** Historical flat navigation. New definitions use navigation. */
     readonly views?: readonly CollectionDashboardView[];

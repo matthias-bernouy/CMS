@@ -80,6 +80,9 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
                             !IDENTIFIER.test((dashboard as { id: string }).id) ||
                             typeof (dashboard as Record<string, unknown>).name !== "string" ||
                             (dashboard as { name: string }).name.length > 128 ||
+                            ((dashboard as Record<string, unknown>).icon !== undefined &&
+                                (typeof (dashboard as Record<string, unknown>).icon !== "string" ||
+                                    !IDENTIFIER.test((dashboard as { icon: string }).icon))) ||
                             typeof (dashboard as Record<string, unknown>).description !== "string" ||
                             (dashboard as { description: string }).description.length > 4096 ||
                             !Number.isSafeInteger((dashboard as Record<string, unknown>).viewCount) ||
