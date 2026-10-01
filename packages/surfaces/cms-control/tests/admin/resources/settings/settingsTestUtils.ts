@@ -10,7 +10,7 @@ export function resetSettingsTest(): void {
 }
 
 export function settingsHtml(relativePath: string): string {
-    const path = join(import.meta.dir, "../../../src/static/admin/_access", relativePath);
+    const path = join(import.meta.dir, "../../../../src/static/admin/_access", relativePath);
     return readFileSync(path, "utf8").replaceAll("{{BASE_PATH}}", "");
 }
 

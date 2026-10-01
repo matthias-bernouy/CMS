@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from "bun:test";
 import "cms-control/components";
-import { resetSettingsTest } from "../../../admin/resources/settingsTestUtils";
+import { resetSettingsTest } from "../../../admin/resources/settings/settingsTestUtils";
 
 afterEach(resetSettingsTest);
 

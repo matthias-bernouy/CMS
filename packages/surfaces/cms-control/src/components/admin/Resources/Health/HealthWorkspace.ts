@@ -1,23 +1,15 @@
-import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
+import {
+    type Catalogue,
+    type Collections,
+    type Dashboards,
+    type HealthReport,
+    type HealthRow,
+    healthReport,
+    type Providers,
+} from "./model";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
-
-type Provider = {
-    id: string;
-    providerId: string;
-    accountId: string;
-    status: string;
-    observedAt: string | null;
-    contracts: { contractId: string; version: string; digest: string; status: string }[];
-};
-type Selection = { installationId: string; contractId: string; version: string; digest: string };
-type Providers = { installations: Provider[]; selected: Selection[] };
-type Collections = {
-    installed: { collectionId: string; version: string }[];
-    releases: { collectionId: string; version: string }[];
-};
-type Dashboards = { dashboards: { enabled: boolean; origin?: unknown }[] };
 
 class HealthWorkspace extends HTMLElement {
     connectedCallback(): void {
@@ -51,31 +43,70 @@ class HealthWorkspace extends HTMLElement {
                 return response.json() as Promise<unknown>;
             }),
         );
-        const [providers, catalogue, collections, dashboards] = results.map((result) =>
-            result.status === "fulfilled" ? result.value : null,
-        ) as [
-            Providers | null,
-            { available: { id: string; kind: string; version: string; digest: string }[] } | null,
-            Collections | null,
-            Dashboards | null,
-        ];
         if (results.every((result) => result.status === "rejected")) {
             this.showState("error");
             return;
         }
-        this.renderProviders(providers);
-        this.renderSources(providers, catalogue);
-        this.renderCollections(collections);
-        this.renderDashboards(dashboards);
+        const [providers, catalogue, collections, dashboards] = results.map((result) =>
+            result.status === "fulfilled" ? result.value : null,
+        ) as [Providers | null, Catalogue | null, Collections | null, Dashboards | null];
+        const report = healthReport(base, providers, catalogue, collections, dashboards);
+        this.renderReport(report, providers, collections, dashboards);
         const unavailable = paths.filter((_, index) => results[index]!.status === "rejected");
-        this.querySelector("[data-health-summary]")!.textContent = unavailable.length
-            ? `${unavailable.length} area${unavailable.length === 1 ? "" : "s"} could not be checked.`
-            : `${providers?.installations.length ?? 0} provider${providers?.installations.length === 1 ? "" : "s"} connected · ${providers?.selected.length ?? 0} source${providers?.selected.length === 1 ? "" : "s"} · ${collections?.installed.length ?? 0} collection${collections?.installed.length === 1 ? "" : "s"} · ${dashboards?.dashboards.filter((item) => item.enabled).length ?? 0} active dashboard${dashboards?.dashboards.filter((item) => item.enabled).length === 1 ? "" : "s"}`;
         const status = this.querySelector<HTMLElement>("[data-health-status]")!;
         status.textContent = unavailable.length
             ? `Some checks are unavailable: ${unavailable.join(", ")}.`
-            : "Provider and source readiness reflects the last recorded observation, not a live probe.";
+            : report.issues
+              ? "Open an affected item to review its configuration or last observation."
+              : "Provider and source readiness reflects the last recorded observation.";
         this.showState("ready");
+    }
+
+    private renderReport(
+        report: HealthReport,
+        providers: Providers | null,
+        collections: Collections | null,
+        dashboards: Dashboards | null,
+    ): void {
+        this.renderRows("[data-provider-list]", report.providers, "No provider is connected.");
+        this.renderRows("[data-source-list]", report.sources, "No sources are connected.");
+        this.renderRows("[data-collection-list]", report.collections, "No collections are installed.");
+        this.renderRows("[data-dashboard-list]", report.dashboards, "No dashboards are configured.");
+        const counts = `${providers?.installations.length ?? 0} provider${providers?.installations.length === 1 ? "" : "s"} · ${providers?.selected.length ?? 0} source${providers?.selected.length === 1 ? "" : "s"} · ${collections?.installed.length ?? 0} collection${collections?.installed.length === 1 ? "" : "s"} · ${dashboards?.dashboards.length ?? 0} dashboard${dashboards?.dashboards.length === 1 ? "" : "s"}`;
+        this.querySelector("[data-health-summary]")!.textContent = report.issues
+            ? `${report.issues} issue${report.issues === 1 ? "" : "s"} need attention · ${counts}`
+            : `All monitored areas look healthy · ${counts}`;
+    }
+
+    private renderRows(selector: string, rows: HealthRow[], empty: string): void {
+        const list = this.querySelector(selector)!;
+        list.replaceChildren(...rows.map((row) => this.row(row)));
+        if (!rows.length) {
+            list.textContent = empty;
+        }
+    }
+
+    private row(data: HealthRow): HTMLElement {
+        const row = document.createElement("a");
+        row.className = "health-row";
+        row.href = data.href;
+        const copy = document.createElement("div");
+        copy.className = "health-row-copy";
+        const title = document.createElement("strong");
+        title.textContent = data.name;
+        const detail = document.createElement("small");
+        detail.textContent = data.detail;
+        copy.append(title, detail);
+        const state = document.createElement("span");
+        state.className = "health-row-state";
+        state.dataset.tone = data.tone;
+        state.textContent = data.state;
+        const arrow = document.createElement("span");
+        arrow.className = "health-row-arrow";
+        arrow.setAttribute("aria-hidden", "true");
+        arrow.textContent = "›";
+        row.append(copy, state, arrow);
+        return row;
     }
 
     private showState(state: "loading" | "error" | "ready"): void {
@@ -84,112 +115,6 @@ class HealthWorkspace extends HTMLElement {
         this.querySelector<HTMLElement>("[data-view-content]")!.hidden = state !== "ready";
         this.querySelector<HTMLElement>("[data-health-status]")!.hidden = state !== "ready";
         this.setAttribute("aria-busy", String(state === "loading"));
-    }
-
-    private renderProviders(data: Providers | null): void {
-        const list = this.querySelector("[data-provider-list]")!;
-        if (!data) {
-            list.textContent = "Provider state is unavailable.";
-            return;
-        }
-        list.replaceChildren(
-            ...data.installations.map((item) => {
-                return this.row(
-                    `${item.providerId} · ${item.accountId}`,
-                    item.observedAt ? `Checked ${new Date(item.observedAt).toLocaleString()}` : "Not checked",
-                    item.status,
-                );
-            }),
-        );
-        if (!data.installations.length) {
-            list.textContent = "No provider is connected.";
-        }
-    }
-
-    private renderSources(
-        data: Providers | null,
-        catalogue: { available: { id: string; kind: string; version: string; digest: string }[] } | null,
-    ): void {
-        const list = this.querySelector("[data-source-list]")!;
-        if (!data) {
-            list.textContent = "Source state is unavailable.";
-            return;
-        }
-        list.replaceChildren(
-            ...data.selected.map((selection) => {
-                const provider = data.installations.find((item) => item.id === selection.installationId);
-                const implementation = provider?.contracts.find(
-                    (item) =>
-                        item.contractId === selection.contractId &&
-                        item.version === selection.version &&
-                        item.digest === selection.digest,
-                );
-                const newer = catalogue?.available.some(
-                    (item) =>
-                        item.kind === "contract" &&
-                        item.id === selection.contractId &&
-                        compareSemVer(item.version, selection.version) > 0,
-                );
-                return this.row(
-                    selection.contractId,
-                    `v${selection.version}${newer ? " · Update available" : ""}`,
-                    provider?.status === "enabled"
-                        ? (implementation?.status ?? "Not reported")
-                        : "Provider unavailable",
-                );
-            }),
-        );
-        if (!data.selected.length) {
-            list.textContent = "No sources are connected.";
-        }
-    }
-
-    private renderCollections(data: Collections | null): void {
-        const list = this.querySelector("[data-collection-list]")!;
-        if (!data) {
-            list.textContent = "Collection state is unavailable.";
-            return;
-        }
-        list.replaceChildren(
-            ...data.installed.map((installed) => {
-                const newer = data.releases.some(
-                    (item) =>
-                        item.collectionId === installed.collectionId &&
-                        compareSemVer(item.version, installed.version) > 0,
-                );
-                return this.row(
-                    installed.collectionId,
-                    `v${installed.version}`,
-                    newer ? "Update available" : "Installed",
-                );
-            }),
-        );
-        if (!data.installed.length) {
-            list.textContent = "No collections are installed.";
-        }
-    }
-
-    private renderDashboards(data: Dashboards | null): void {
-        this.querySelector("[data-dashboard-list]")!.textContent = data
-            ? `${data.dashboards.filter((item) => item.enabled).length} active of ${data.dashboards.length} dashboards`
-            : "Dashboard state is unavailable.";
-    }
-
-    private row(name: string, detail: string, state: string): HTMLElement {
-        const row = document.createElement("div");
-        row.className = "health-row";
-        const copy = document.createElement("div");
-        copy.className = "health-row-copy";
-        const title = document.createElement("strong");
-        title.textContent = name;
-        const meta = document.createElement("small");
-        meta.textContent = detail;
-        copy.append(title, meta);
-        const badge = document.createElement("span");
-        badge.className = "health-row-state";
-        badge.textContent = state.charAt(0).toUpperCase() + state.slice(1);
-        row.append(copy, badge);
-        return row;
     }
 }
 

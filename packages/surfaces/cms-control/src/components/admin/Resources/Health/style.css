@@ -1,14 +1,18 @@
 cms-health-workspace { display: block; color: var(--text-main); }
 cms-health-workspace p9r-container { display: block; padding-block: 24px; }
-cms-health-workspace [data-provider-list], cms-health-workspace [data-source-list], cms-health-workspace [data-collection-list] { display: grid; margin-bottom: 16px; }
-cms-health-workspace .health-row { display: flex; align-items: start; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border-default); }
+cms-health-workspace [data-provider-list], cms-health-workspace [data-source-list], cms-health-workspace [data-collection-list], cms-health-workspace [data-dashboard-list] { display: grid; margin-bottom: 16px; }
+cms-health-workspace .health-row { align-items: center; border-bottom: 1px solid var(--border-default); color: inherit; display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) auto auto; padding: 11px 0; text-decoration: none; }
 cms-health-workspace .health-row:first-child { padding-top: 0; }
 cms-health-workspace .health-row:last-child { padding-bottom: 0; border-bottom: 0; }
+cms-health-workspace .health-row:hover strong { color: var(--primary-base); }
 cms-health-workspace .health-row-copy { display: grid; gap: 4px; min-width: 0; }
 cms-health-workspace .health-row strong { font-size: .875rem; font-weight: 600; overflow-wrap: anywhere; }
 cms-health-workspace .health-row small { color: var(--text-muted); font-size: .75rem; line-height: 1.4; }
-cms-health-workspace .health-row-state { color: var(--text-muted); flex: none; font-size: .75rem; }
-cms-health-workspace [data-dashboard-list] { font-size: .875rem; line-height: 1.5; margin: 0 0 16px; }
+cms-health-workspace .health-row-state { background: var(--bg-muted); border-radius: 999px; color: var(--text-muted); font-size: .6875rem; font-weight: 650; padding: 4px 8px; white-space: nowrap; }
+cms-health-workspace .health-row-state[data-tone="good"] { color: var(--success-base); }
+cms-health-workspace .health-row-state[data-tone="warning"] { background: var(--primary-muted); color: var(--primary-base); }
+cms-health-workspace .health-row-state[data-tone="danger"] { color: var(--danger-base); }
+cms-health-workspace .health-row-arrow { color: var(--text-muted); font-size: 1.25rem; }
 cms-health-workspace a { color: var(--primary-base); font-size: .875rem; font-weight: 600; }
 cms-health-workspace [data-health-status] { color: var(--text-muted); font-size: .8125rem; margin-top: 16px; }
-@media (max-width: 700px) { cms-health-workspace .health-row { flex-wrap: wrap; } }
+@media (max-width: 700px) { cms-health-workspace .health-row { grid-template-columns: minmax(0, 1fr) auto; } cms-health-workspace .health-row-state { grid-column: 1; justify-self: start; } cms-health-workspace .health-row-arrow { grid-column: 2; grid-row: 1 / span 2; } }

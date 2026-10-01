@@ -3,7 +3,7 @@ import { ContentValidationError, defaultSystem, mergeSystemUpdate, validateSetti
 import "cms-control/components";
 import { publicStaticPath } from "cms-control/core/admin/registerEndpoints/serveStaticFolder/scanStaticFolder";
 import { parseSettingsUpdateDto } from "cms-control/core/validation/settings/parseUpdateDto";
-import { json, resetSettingsTest, settingsHtml, waitFor } from "../../../admin/resources/settingsTestUtils";
+import { json, resetSettingsTest, settingsHtml, waitFor } from "../../../admin/resources/settings/settingsTestUtils";
 
 afterEach(resetSettingsTest);
 
