@@ -132,17 +132,15 @@ slot[name="body"]::slotted(form) {
 }
 
 @media (max-width: 880px) {
-    .shell-detail {
-        width: 100%;
-    }
-
-    .shell-detail-header,
-    .shell-detail-identity,
+    .shell-detail { width: 100%; }
+    .shell-detail-header { align-items: stretch; flex-direction: column; }
+    .shell-detail-identity { align-items: center; flex-direction: row; }
     .shell-detail-actions {
-        align-items: stretch;
-        flex-direction: column;
+        align-items: center;
+        flex-flow: row wrap;
+        justify-content: flex-start;
+        margin-inline-start: 40px;
     }
-
 }
 
 :host([contained]) { height: 100%; min-height: 0; }

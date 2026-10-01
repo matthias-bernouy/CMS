@@ -1,6 +1,7 @@
 import { Component } from "@bernouy/components/base";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 import type { Dashboard } from "../domain/types";
+import "../../Blocs/icons/LibraryIcon";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 
@@ -65,7 +66,10 @@ function dashboardItem(dashboard: Dashboard, selectedId: string, memberMode: boo
             ? viewUrl(dashboard.id, `${dashboard.mounts[0].collectionId}:${dashboard.mounts[0].viewId}`)
             : `${getMetaBasePath()}/admin/dashboards?dashboardId=${encodeURIComponent(dashboard.id)}`,
     );
-    item.textContent = dashboard.name;
+    const icon = document.createElement("cms-library-icon");
+    icon.slot = "icon";
+    icon.setAttribute("name", dashboard.icon ?? "layout");
+    item.append(icon, document.createTextNode(dashboard.name));
     return item;
 }
 

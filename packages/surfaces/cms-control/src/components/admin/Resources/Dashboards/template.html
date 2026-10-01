@@ -7,90 +7,103 @@
         <p slot="title">Dashboards could not be loaded</p>
         <p slot="hint" data-view-error-message>Check collection repositories and dashboard storage, then try again.</p>
     </cms-view-state>
+
     <cms-shell-detail size="xl" data-overview>
-        <span slot="title">Explore dashboards</span>
-        <span slot="description">Browse dashboards offered by your repositories. Install a collection to activate its dashboard, or create a private dashboard from installed views.</span>
+        <span slot="title" data-overview-title>Explore dashboards</span>
+        <span slot="description" data-overview-description>Browse dashboards offered by your repositories. Installing one also installs its collection.</span>
+        <p9r-button slot="actions" type="button" color="primary" data-create-open>Create private dashboard</p9r-button>
         <cms-shell-detail-body slot="body">
-            <cms-detail-section slot="main" heading="Repository dashboards">
+            <div slot="main" class="explore-catalogue">
+                <p9r-input data-explore-search type="search" label="Search dashboards" placeholder="Dashboard or collection"></p9r-input>
                 <div data-list></div>
-                <cms-empty-state fluid data-empty hidden><p slot="title">No dashboards in repositories</p><p slot="hint">Release a collection with dashboards, or create a private dashboard.</p></cms-empty-state>
+                <cms-empty-state fluid data-empty hidden>
+                    <p slot="title" data-empty-title>No dashboards available</p>
+                    <p slot="hint" data-empty-hint>Collection dashboards appear here after they are released to a configured repository.</p>
+                </cms-empty-state>
                 <p data-repository-warning role="status"></p>
-            </cms-detail-section>
+            </div>
         </cms-shell-detail-body>
     </cms-shell-detail>
+
     <cms-shell-detail size="xl" data-collection hidden>
+        <a slot="back" data-back aria-label="Back to dashboards">←</a>
         <span slot="title" data-collection-name></span>
         <span slot="description" data-collection-description></span>
-        <a slot="actions" data-collection-open><p9r-button type="button" variant="outlined">Preview dashboard</p9r-button></a>
+        <p9r-tag slot="actions" data-collection-state></p9r-tag>
+        <a slot="actions" data-collection-open><p9r-button type="button" variant="outlined">Open dashboard</p9r-button></a>
+        <p9r-action-menu slot="actions" label="More actions">
+            <p9r-action-menu-item data-collection-copy>Create a private copy</p9r-action-menu-item>
+        </p9r-action-menu>
+        <p9r-button slot="actions" data-collection-save type="button" color="primary">Save access</p9r-button>
+        <cms-shell-detail-body slot="body">
+            <cms-detail-section slot="main" heading="Views" description="Navigation supplied by the collection and updated with it.">
+                <ol data-collection-views></ol>
+            </cms-detail-section>
+            <div slot="aside">
+                <cms-detail-section heading="Availability" description="Controls member access without changing the collection.">
+                    <label class="toggle"><input data-collection-enabled type="checkbox"> Available to assigned members</label>
+                    <p>Administrators can still preview an inactive dashboard.</p>
+                </cms-detail-section>
+                <cms-detail-section heading="Collection">
+                    <p data-collection-origin></p>
+                </cms-detail-section>
+                <cms-dashboard-members data-collection-members></cms-dashboard-members>
+            </div>
+        </cms-shell-detail-body>
+    </cms-shell-detail>
+
+    <cms-shell-detail size="xl" data-editor hidden>
+        <a slot="back" data-back aria-label="Back to dashboards">←</a>
+        <span slot="title" data-editor-title>Private dashboard</span>
+        <span slot="description">Private dashboard</span>
+        <p9r-tag slot="actions" data-private-state></p9r-tag>
+        <a slot="actions" data-private-open hidden><p9r-button type="button" variant="outlined">Open dashboard</p9r-button></a>
+        <p9r-action-menu slot="actions" label="More actions">
+            <p9r-action-menu-item color="danger" data-delete-open>Delete dashboard</p9r-action-menu-item>
+        </p9r-action-menu>
+        <p9r-button slot="actions" type="button" color="primary" data-save>Save changes</p9r-button>
         <cms-shell-detail-body slot="body">
             <div slot="main">
-                <cms-detail-section heading="Views">
-                    <p>Navigation supplied by the collection. Create a private copy to customize it.</p>
-                    <ol data-collection-views></ol>
-                </cms-detail-section>
-                <cms-detail-section heading="Origin">
-                    <p data-collection-origin></p>
-                    <p9r-button data-collection-copy type="button" variant="outlined">Create a private copy</p9r-button>
-                </cms-detail-section>
-            </div>
-            <div slot="aside">
-                <cms-detail-section heading="Site access">
-                    <label class="toggle"><input data-collection-enabled type="checkbox"> Available to assigned members</label>
-                    <p>New collection dashboards start inactive. Preview remains available to administrators.</p>
-                    <p9r-button data-collection-save type="button" color="primary">Save access</p9r-button>
-                </cms-detail-section>
-                <cms-detail-section heading="Members">
-                    <p>Only assigned members can open an active dashboard.</p>
-                    <div class="view-picker"><p9r-select data-user label="User"></p9r-select><p9r-button data-add-member type="button" variant="outlined">Add member</p9r-button></div>
-                    <div data-member-list></div>
-                </cms-detail-section>
-            </div>
-        </cms-shell-detail-body>
-    </cms-shell-detail>
-    <cms-shell-detail size="xl" data-editor hidden>
-        <span slot="title" data-editor-title>New private dashboard</span>
-        <span slot="description" data-state></span>
-        <cms-shell-detail-body slot="body">
-            <cms-detail-section slot="main" heading="Configuration">
-                <p9r-stack gap="md">
+                <cms-detail-section heading="General" description="Name and icon shown in the dashboard switcher.">
+                    <p9r-stack gap="md">
                         <p9r-input data-name name="name" label="Dashboard name" maxlength="120" required></p9r-input>
                         <p9r-select data-icon label="Icon"><option value="layout">Layout</option><option value="database">Database</option><option value="package">Package</option><option value="users">Users</option><option value="settings">Settings</option></p9r-select>
-                        <label class="toggle"><input data-enabled type="checkbox"> Available to assigned members</label>
-                        <cms-dashboard-navigation-editor></cms-dashboard-navigation-editor>
-                        <p9r-button type="button" color="primary" data-save>Save dashboard</p9r-button>
-                </p9r-stack>
-            </cms-detail-section>
-            <cms-detail-section slot="aside" heading="Members" data-members hidden>
-                <p>Only assigned members can open an active dashboard.</p>
-                <div class="view-picker"><p9r-select data-user label="User"></p9r-select><p9r-button data-add-member type="button" variant="outlined">Add member</p9r-button></div>
-                <div data-member-list></div>
-            </cms-detail-section>
-            <cms-detail-section slot="aside" heading="Delete dashboard">
-                <p>Delete this private dashboard and remove its member assignments.</p>
-                <p9r-button type="button" variant="outlined" data-delete-open>Delete dashboard</p9r-button>
-            </cms-detail-section>
+                    </p9r-stack>
+                </cms-detail-section>
+                <cms-dashboard-navigation-editor></cms-dashboard-navigation-editor>
+            </div>
+            <div slot="aside">
+                <cms-detail-section heading="Availability" description="A dashboard needs at least one view and one member before it is useful.">
+                    <label class="toggle"><input data-enabled type="checkbox"> Available to assigned members</label>
+                </cms-detail-section>
+                <cms-dashboard-members data-private-members></cms-dashboard-members>
+            </div>
         </cms-shell-detail-body>
     </cms-shell-detail>
+
     <p role="status" aria-live="polite" data-status></p>
 </p9r-container>
+
 <p9r-modal data-create-modal aria-label="Create private dashboard">
     <span slot="title">Create private dashboard</span>
     <form data-create-form id="dashboard-create-form">
         <p9r-stack gap="md">
+            <p>Private dashboards start inactive. Add collection views and members after creation.</p>
             <p9r-input data-create-name label="Dashboard name" maxlength="120" required></p9r-input>
             <p9r-select data-create-icon label="Icon"><option value="layout">Layout</option><option value="database">Database</option><option value="package">Package</option><option value="users">Users</option><option value="settings">Settings</option></p9r-select>
         </p9r-stack>
     </form>
-    <div slot="footer" class="view-picker">
+    <div slot="footer" class="modal-actions">
         <p9r-button type="button" variant="outlined" data-create-cancel>Cancel</p9r-button>
         <p9r-button type="submit" form="dashboard-create-form" color="primary">Create dashboard</p9r-button>
     </div>
 </p9r-modal>
+
 <p9r-modal data-delete-modal aria-label="Delete private dashboard">
     <span slot="title">Delete dashboard?</span>
     <p>This removes the private dashboard and its member assignments.</p>
-    <div slot="footer" class="view-picker">
+    <div slot="footer" class="modal-actions">
         <p9r-button type="button" variant="outlined" data-delete-cancel>Cancel</p9r-button>
-        <p9r-button type="button" color="primary" data-delete-confirm>Delete dashboard</p9r-button>
+        <p9r-button type="button" color="danger" data-delete-confirm>Delete dashboard</p9r-button>
     </div>
 </p9r-modal>

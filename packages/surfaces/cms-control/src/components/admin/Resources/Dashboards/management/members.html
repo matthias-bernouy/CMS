@@ -1,0 +1,14 @@
+<cms-detail-section heading="Members" description="Only assigned members can open an active dashboard.">
+    <p9r-button slot="actions" type="button" variant="outlined" data-open>Manage</p9r-button>
+    <div class="member-summary">
+        <strong data-count>0</strong>
+        <span data-summary>members assigned</span>
+    </div>
+</cms-detail-section>
+<p9r-modal data-modal aria-label="Manage dashboard members">
+    <span slot="title">Manage members</span>
+    <p9r-input data-search type="search" label="Search members" placeholder="Name or email"></p9r-input>
+    <div class="member-list" data-list></div>
+    <p class="member-empty" data-empty hidden>No users match this search.</p>
+    <p9r-button slot="footer" type="button" color="primary" data-close>Done</p9r-button>
+</p9r-modal>
