@@ -1,10 +1,12 @@
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
+import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
 import type { RuntimeEnv } from "../runtimeEnv";
 import type { ProductionAuthentication } from "./auth";
 import type { CoreStores } from "./stores/core";
 import { createPublicFileStores } from "./stores/authorFiles";
 import type { FeatureStores } from "./stores/features";
 import type { ProductionGateway } from "./gateway/createProductionGateway";
+import { ProviderManagement } from "./gateway/ProviderManagement";
 import { observeGatewayInvoker } from "./gateway/observeGatewayInvoker";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
 import { createContentReader } from "@bernouy/cms-content/rendering";
@@ -30,19 +32,31 @@ export async function mountProductionSurfaces(
 ): Promise<ProductionSurfaceHandle> {
     const { env, core, features, authentication, gateway } = options;
     const controlRunner = new runtime.Runner();
+    const providerSources = env.CMS_REPOSITORY_URL ? [new HttpProviderRepository("local", env.CMS_REPOSITORY_URL)] : [];
     const controlCms = new runtime.Control(
         controlRunner,
         core.repo,
         authentication.auth,
         {
             deliveryUrl: env.DELIVERY_PUBLIC_URL,
+            ...(gateway ? { administrator: gateway.isAdministrator } : {}),
+            ...(gateway ? { administrators: gateway.administrators } : {}),
             collections: {
                 store: core.collections,
                 siteId: "default",
-                sources: env.CMS_COLLECTION_REPOSITORY_URL
-                    ? [new HttpCollectionRepository("local", env.CMS_COLLECTION_REPOSITORY_URL)]
-                    : [],
+                sources: env.CMS_REPOSITORY_URL ? [new HttpCollectionRepository("local", env.CMS_REPOSITORY_URL)] : [],
             },
+            ...(gateway
+                ? {
+                      providerResources: {
+                          sources: providerSources,
+                          contracts: gateway.releases,
+                          manifests: gateway.manifests,
+                          isAdministrator: gateway.isAdministrator,
+                          management: new ProviderManagement(gateway, core.secrets, providerSources),
+                      },
+                  }
+                : {}),
             analyticsCompliance: {
                 cmsVersion: "0.1.0",
                 secretReady: Boolean(options.analyticsVisitorSecret.trim()),
@@ -53,6 +67,7 @@ export async function mountProductionSurfaces(
                 optOutUrl: `${env.DELIVERY_PUBLIC_URL}/.cms/privacy/analytics`,
             },
             dashboardAssignments: features.dashboardAssignments,
+            dashboards: features.dashboards,
             ...(gateway
                 ? {
                       capabilityGateway: {

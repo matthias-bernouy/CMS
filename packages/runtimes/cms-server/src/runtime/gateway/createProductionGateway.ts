@@ -29,6 +29,7 @@ export async function createProductionGateway(
     mediaDirectory: string,
 ) {
     const releases = new MongoReleaseCatalogue(db);
+    await db.collection("cms_administrator_grants").createIndex({ sub: 1 }, { unique: true });
     const manifests = new MongoProviderManifestCatalogue(db, releases);
     const installations = new MongoProviderInstallationStore(db, manifests, () => new Date().toISOString());
     await installations.init();
@@ -47,7 +48,7 @@ export async function createProductionGateway(
         },
     });
     const observations = new ProviderObservationRefresher(siteId, selections, installations, network);
-    const access = createProductionGatewayAccess(credentials, administratorEmail);
+    const access = createProductionGatewayAccess(credentials, administratorEmail, db);
     const invoker = new CapabilityGateway({
         routes,
         identities: new ProviderIdentityAliases(legacyIdentities),
@@ -59,12 +60,17 @@ export async function createProductionGateway(
     const images = new ProviderImageService({ invoker, transformer: new SharpImageTransformer(), store: imageStore });
     return {
         siteId,
+        releases,
+        manifests,
+        installations,
+        selections,
         invoker,
         access: invoker,
         images,
         catalogue,
         observations,
         isAdministrator: access.isAdministrator,
+        administrators: access.administrators,
     };
 }
 
