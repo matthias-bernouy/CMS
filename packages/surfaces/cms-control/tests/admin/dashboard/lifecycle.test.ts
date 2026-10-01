@@ -98,7 +98,7 @@ test("saving a private dashboard updates its fields without rebuilding the works
         icon: "layout",
         enabled: true,
         revision: 2,
-        mounts: [{ collectionId: "ulvia-official", viewId: "overview", label: "Overview" }],
+        navigation: [{ id: "overview", label: "Overview", use: "ulvia-official:overview" }],
         members: [],
     } satisfies Dashboard);
 

@@ -1,7 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { dashboardCollections, dashboardSubject } from "cms-control/core/admin/dashboards/access";
 import { dashboardCatalog } from "cms-control/core/admin/dashboards/catalog";
-import { navigationMounts, recordNavigation } from "cms-control/core/admin/dashboards/navigation";
 
 export default async function myDashboards(request: Request, cms: ControlCms): Promise<Response> {
     const subject = await dashboardSubject(request, cms);
@@ -13,8 +12,7 @@ export default async function myDashboards(request: Request, cms: ControlCms): P
             id: record.id,
             name: record.name,
             icon: record.icon ?? "layout",
-            navigation: recordNavigation(record),
-            mounts: navigationMounts(recordNavigation(record)),
+            navigation: record.navigation,
         }));
     return Response.json({ dashboards }, { headers: { "Cache-Control": "private, no-store" } });
 }

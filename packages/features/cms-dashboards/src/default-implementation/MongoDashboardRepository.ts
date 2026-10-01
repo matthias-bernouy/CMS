@@ -1,5 +1,6 @@
 import type { Collection, Db } from "mongodb";
 import type { DashboardRecord, DashboardRepository } from "../interfaces/DashboardRepository";
+import { parseDashboardNavigation } from "../core/navigation";
 
 export class MongoDashboardRepository implements DashboardRepository {
     constructor(private readonly db: Db) {}
@@ -22,13 +23,16 @@ export class MongoDashboardRepository implements DashboardRepository {
     }
 
     async create(record: DashboardRecord): Promise<void> {
-        await this.records.insertOne({ ...record });
+        await this.records.insertOne(normalized(record));
     }
 
     async replace(record: DashboardRecord, expectedRevision: number): Promise<boolean> {
+        if (record.revision !== expectedRevision + 1) {
+            return false;
+        }
         const result = await this.records.replaceOne(
             { siteId: record.siteId, id: record.id, revision: expectedRevision },
-            { ...record },
+            normalized(record),
         );
         return result.matchedCount === 1;
     }
@@ -41,4 +45,8 @@ export class MongoDashboardRepository implements DashboardRepository {
     private get records(): Collection<DashboardRecord> {
         return this.db.collection<DashboardRecord>("dashboards");
     }
+}
+
+function normalized(record: DashboardRecord): DashboardRecord {
+    return structuredClone({ ...record, navigation: parseDashboardNavigation(record.navigation) });
 }

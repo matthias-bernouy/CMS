@@ -1,7 +1,7 @@
 import type { AvailableView, Dashboard, ExploreDashboard, User } from "../domain/types";
 import type { DashboardNavigationEditor } from "../editor/NavigationEditor";
 import type { DashboardMembers } from "./DashboardMembers";
-import { exploreDashboardCard, renderCollectionMounts, renderMemberDashboardList } from "./render";
+import { exploreDashboardCard, renderCollectionViews, renderMemberDashboardList } from "./render";
 
 type ValueControl = HTMLElement & { value: string };
 type ToggleControl = HTMLElement & { checked: boolean };
@@ -80,7 +80,7 @@ export class DashboardWorkspaceView {
             `${record.collectionName} · ${record.origin!.publisherId} / ${record.origin!.collectionId}`;
         this.element<ToggleControl>("[data-collection-enabled]").checked = record.enabled;
         this.syncOpenLink("[data-collection-open]", record);
-        renderCollectionMounts(this.root, record);
+        renderCollectionViews(this.root, record);
         this.members("[data-collection-members]").value = { users, members: record.members };
     }
 
@@ -170,11 +170,11 @@ export class DashboardWorkspaceView {
     }
 
     private syncOpenLink(selector: string, record: Dashboard): void {
-        const first = record.mounts[0];
+        const first = firstNavigationUse(record.navigation);
         const open = this.element<HTMLAnchorElement>(selector);
         open.toggleAttribute("hidden", !first);
         if (first) {
-            open.href = `${location.pathname}/view?dashboardId=${encodeURIComponent(record.id)}&viewId=${encodeURIComponent(`${first.collectionId}:${first.viewId}`)}`;
+            open.href = `${location.pathname}/view?dashboardId=${encodeURIComponent(record.id)}&viewId=${encodeURIComponent(first)}`;
         }
     }
 
@@ -208,4 +208,14 @@ export class DashboardWorkspaceView {
     private element<T extends Element = HTMLElement>(selector: string): T {
         return this.root.querySelector(selector) as T;
     }
+}
+
+function firstNavigationUse(items: Dashboard["navigation"]): string | undefined {
+    for (const item of items) {
+        const use = item.use ?? firstNavigationUse(item.children ?? []);
+        if (use) {
+            return use;
+        }
+    }
+    return undefined;
 }

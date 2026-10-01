@@ -45,7 +45,7 @@ export function startLocalRepository(port: number, root: string) {
                             name: dashboard.name,
                             ...(dashboard.icon ? { icon: dashboard.icon } : {}),
                             description: dashboard.description ?? "",
-                            viewCount: dashboard.views?.length ?? countDashboardViews(dashboard.navigation ?? []),
+                            viewCount: countDashboardViews(dashboard.navigation),
                         })),
                     }));
                     return listResponse(releases);

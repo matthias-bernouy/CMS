@@ -1,4 +1,5 @@
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
+import { dashboardNavigationViews } from "@bernouy/cms-dashboards";
 import type { Dashboard } from "../Dashboards/domain/types";
 import {
     contractReleases,
@@ -96,11 +97,14 @@ export function renderSourceDetail(
 
 function renderDashboards(host: HTMLElement, contractId: string, allDashboards: Dashboard[]): void {
     const dashboards = allDashboards.filter(
-        (item) => item.enabled && item.mounts.length > 0 && item.sourceContracts?.includes(contractId),
+        (item) =>
+            item.enabled &&
+            dashboardNavigationViews(item.navigation).length > 0 &&
+            item.sourceContracts?.includes(contractId),
     );
     host.querySelector("[data-source-dashboards]")!.replaceChildren(
         ...dashboards.flatMap((dashboard) => {
-            const first = dashboard.mounts[0];
+            const first = dashboardNavigationViews(dashboard.navigation)[0];
             if (!first) {
                 return [];
             }
@@ -110,7 +114,7 @@ function renderDashboards(host: HTMLElement, contractId: string, allDashboards: 
             title.textContent = dashboard.name;
             const link = document.createElement("a");
             link.slot = "actions";
-            link.href = `${getMetaBasePath()}/admin/dashboards/view?dashboardId=${encodeURIComponent(dashboard.id)}&viewId=${encodeURIComponent(`${first.collectionId}:${first.viewId}`)}`;
+            link.href = `${getMetaBasePath()}/admin/dashboards/view?dashboardId=${encodeURIComponent(dashboard.id)}&viewId=${encodeURIComponent(first.use)}`;
             link.textContent = "Open dashboard";
             card.append(title, link);
             return [card];

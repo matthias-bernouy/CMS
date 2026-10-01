@@ -1,9 +1,3 @@
-export interface DashboardMount {
-    readonly collectionId: string;
-    readonly viewId: string;
-    readonly label: string;
-}
-
 export interface DashboardNavigationItem {
     readonly id: string;
     readonly label: string;
@@ -30,9 +24,7 @@ export interface DashboardRecord {
     readonly icon?: string;
     readonly enabled: boolean;
     readonly revision: number;
-    /** Historical flat records; new writes store navigation only. */
-    readonly mounts?: readonly DashboardMount[];
-    readonly navigation?: readonly DashboardNavigationItem[];
+    readonly navigation: readonly DashboardNavigationItem[];
     readonly origin?: CollectionDashboardOrigin;
     readonly collectionName?: string;
     readonly description?: string;

@@ -1,20 +1,22 @@
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
+import { dashboardNavigationViews } from "@bernouy/cms-dashboards";
 import type { Dashboard, ExploreDashboard } from "../domain/types";
 import "../../Blocs/icons/CertifiedBadge";
 
 export function renderMemberDashboardList(root: HTMLElement, dashboards: Dashboard[]): void {
     const list = root.querySelector("[data-list]")!;
-    const available = dashboards.filter((item) => item.mounts.length > 0);
+    const available = dashboards.filter((item) => dashboardNavigationViews(item.navigation).length > 0);
     list.replaceChildren(
         ...available.map((item) => {
             const card = document.createElement("p9r-card");
             card.setAttribute("stretch", "");
             const link = document.createElement("a");
             link.slot = "actions";
-            const first = item.mounts[0]!;
-            link.href = `${getMetaBasePath()}/admin/dashboards/view?dashboardId=${encodeURIComponent(item.id)}&viewId=${encodeURIComponent(`${first.collectionId}:${first.viewId}`)}`;
+            const views = dashboardNavigationViews(item.navigation);
+            const first = views[0]!;
+            link.href = `${getMetaBasePath()}/admin/dashboards/view?dashboardId=${encodeURIComponent(item.id)}&viewId=${encodeURIComponent(first.use)}`;
             link.textContent = "Open dashboard";
-            const title = dashboardTitle(item.name, item.icon ?? "layout", `${item.mounts.length} views`);
+            const title = dashboardTitle(item.name, item.icon ?? "layout", `${views.length} views`);
             const detail = document.createElement("p");
             detail.textContent = item.description ?? "Open this assigned dashboard.";
             card.append(title, detail, link);
@@ -26,13 +28,13 @@ export function renderMemberDashboardList(root: HTMLElement, dashboards: Dashboa
     root.querySelector("[data-empty-hint]")!.textContent = "Ask an administrator to assign you to an active dashboard.";
 }
 
-export function renderCollectionMounts(root: HTMLElement, dashboard: Dashboard): void {
+export function renderCollectionViews(root: HTMLElement, dashboard: Dashboard): void {
     root.querySelector("[data-collection-views]")!.replaceChildren(
-        ...dashboard.mounts.map((mount) => {
+        ...dashboardNavigationViews(dashboard.navigation).map((view) => {
             const item = document.createElement("li");
             const link = document.createElement("a");
-            link.href = `${getMetaBasePath()}/admin/dashboards/view?dashboardId=${encodeURIComponent(dashboard.id)}&viewId=${encodeURIComponent(`${mount.collectionId}:${mount.viewId}`)}`;
-            link.textContent = mount.label;
+            link.href = `${getMetaBasePath()}/admin/dashboards/view?dashboardId=${encodeURIComponent(dashboard.id)}&viewId=${encodeURIComponent(view.use)}`;
+            link.textContent = view.label;
             item.append(link);
             return item;
         }),

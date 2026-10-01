@@ -1,8 +1,8 @@
 import type { ControlCms } from "cms-control/ControlCms";
+import { dashboardNavigationViews } from "@bernouy/cms-dashboards";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 import { canReadDashboard, dashboardCollections, dashboardSubject } from "cms-control/core/admin/dashboards/access";
 import { dashboardFromCatalog } from "cms-control/core/admin/dashboards/catalog";
-import { navigationMounts, recordNavigation } from "cms-control/core/admin/dashboards/navigation";
 
 export default async function dashboardContext(request: Request, cms: ControlCms): Promise<Response> {
     const subject = await dashboardSubject(request, cms);
@@ -21,7 +21,7 @@ export default async function dashboardContext(request: Request, cms: ControlCms
         throw Object.assign(new Error("Dashboard access denied"), { status: 403 });
     }
     return Response.json(
-        { name: record.name, viewCount: navigationMounts(recordNavigation(record)).length },
+        { name: record.name, viewCount: dashboardNavigationViews(record.navigation).length },
         { headers: { "Cache-Control": "private, no-store" } },
     );
 }

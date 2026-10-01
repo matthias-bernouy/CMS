@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-dashboards",
     "version": "0.1.0",
-    "description": "Site dashboards, collection view mounts and member assignments.",
+    "description": "Site dashboard navigation and member assignments over collection views.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./src/exports/index.ts",

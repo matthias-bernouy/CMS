@@ -165,7 +165,7 @@ test("a dashboard member can call only contracts declared by that dashboard", as
         name: "Workspace",
         enabled: true,
         revision: 0,
-        mounts: [],
+        navigation: [],
         sourceContracts: ["catalog.items"],
     });
     await assignments.assign({ dashboardId: "workspace", subjectId: "member-1" });

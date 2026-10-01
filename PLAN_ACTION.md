@@ -890,11 +890,13 @@ runtime code has no API for executing an uncompiled binding.
 
 ### Wave 2 — Provider manifests and installations
 
-Status: partial. `cms-repository/providers` has manifest publication and
-comparison, installation lifecycle, runtime observations, full-site selection
-planning, and revisioned memory/Mongo stores. Production management,
-credential rotation/revocation, coherent cross-catalogue snapshots and live
-provider evidence remain open.
+Status: advanced but incomplete. `cms-repository/providers` has manifest
+publication and comparison, installation lifecycle, runtime observations,
+full-site selection planning and revisioned memory/Mongo stores. Production
+management now supports connection, exact-manifest upgrade/reconnection,
+credential rotation, disable, enable and terminal revocation with credential
+cleanup. Coherent cross-catalogue snapshots and live conformance evidence remain
+open.
 
 1. Implement immutable provider manifests and their publication validator in
    the providers domain of `@bernouy/cms-repository`, exposed through `./providers`.
@@ -974,8 +976,11 @@ no silently lost deletion, and recoverable long-running work.
 
 ### Wave 5 — Official Ulvia provider
 
-Status: not started in this repository. No official provider resource, service
-or runtime package exists yet.
+Status: an initial local provider slice exists. The official resource publishes
+catalogue, forms and media contracts plus an exact manifest; the separate
+runtime serves and validates those releases, rejects blank credentials and
+persists form submissions locally. It is not a production provider and has no
+live conformance runner, durable workers or recovery evidence yet.
 
 Build it by vertical domain slices instead of porting 282 handlers at once:
 
@@ -1012,9 +1017,11 @@ blocking conformance plus cross-contract scenarios.
 
 ### Wave 6 — Contract and provider admin experience
 
-Status: not started. The former Sources management page is gone, and existing
-identity-provider settings concern authentication providers, not capability
-provider installations. Catalogues currently require host/database setup.
+Status: initial provider control plane implemented. Administrators can browse
+repository manifests, import custom manifests, preview and approve connections,
+reconnect/upgrade exact releases, select contracts, inspect observations and
+enable, disable or revoke installations. Contract detail, operations, audit,
+configuration forms and live conformance evidence remain open.
 
 Build a provider-oriented control plane:
 
@@ -1036,15 +1043,12 @@ rotated, disabled, and removed without editing JSON or using legacy Sources.
 
 ### Wave 7 — Collections vNext core
 
-Status: first authored-bundle admission slice implemented. The public
-`./collections` API parses and admits immutable bundle data, assets, local
-component/composition Light DOM and capability witnesses. There is no
-collection publication catalogue, site installation or renderer yet.
-
-Initial authored-bundle parsing/admission is implemented for assets and local
-component/Light DOM composition definitions. It validates resource dependency
-witnesses, not render execution or site installation. The remaining items below
-include publication/compatibility, imports, UI resources and site workflows.
+Status: the local vertical slice is implemented. The public `./collections` API
+parses and admits immutable bundle data, assets, local component/composition
+Light DOM and capability witnesses. The CLI publishes complete bundles, the
+HTTP repository transports them, and the CMS imports, installs and upgrades
+them with revision and compatibility checks. Selected-provider readiness is
+reported separately as ready, missing or degraded.
 
 1. Add the collections domain to `@bernouy/cms-repository` with strict collection
    release parsing and immutable digest bundles; introduce `./collections` when
@@ -1055,9 +1059,10 @@ include publication/compatibility, imports, UI resources and site workflows.
    replace private/code pseudo-collections with release/install projections.
 4. Add tabs for Overview, Configuration, Blocs, Theme, Texts, Views,
    Dashboards, Dependencies, and Updates.
-5. Resolve capability requirements through contract selections. Never write a
-   provider binding into collection data.
-6. Add collection compatibility and affected-page/view reports before update.
+5. Completed locally: resolve capability requirements through contract
+   selections without writing provider bindings into collection data.
+6. Conservative compatibility checks exist; affected-page/view reports and
+   explicit migration choices remain open.
 
 Exit: an immutable collection release can be installed and inspected, and its
 requirements report ready/missing/degraded state without invoking a provider
@@ -1109,7 +1114,7 @@ compiled provider grants do not exist yet.
    confirmations, navigation, invalidation/reload, and operation progress.
 3. Compile typed calls and conservative output projections from an AST.
 4. Pin contract and collection digests in the execution plan.
-5. Keep dashboards as navigation/mounts only; allow a site to adopt, edit,
+5. Keep dashboards as navigation only; allow a site to adopt, edit,
    publish, and revise a collection template.
 6. Assign published dashboards directly to authenticated users.
 7. Deny every view-delegated call when the dashboard is draft, stale, unassigned, or

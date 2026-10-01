@@ -28,16 +28,9 @@ export async function dashboardCatalog(cms: ControlCms): Promise<DashboardRecord
                 description: definition.description,
                 enabled: state?.enabled ?? false,
                 revision: state?.revision ?? 0,
-                navigation: definition.navigation
-                    ? definition.navigation.map((item) =>
-                          bindCollectionNavigation(item, installation.collectionId, viewIcons),
-                      )
-                    : (definition.views ?? []).map((view, index) => ({
-                          id: `view-${index + 1}`,
-                          label: view.label,
-                          icon: viewIcons.get(view.viewId) ?? "layout",
-                          use: `${installation.collectionId}:${view.viewId}`,
-                      })),
+                navigation: definition.navigation.map((item) =>
+                    bindCollectionNavigation(item, installation.collectionId, viewIcons),
+                ),
                 sourceContracts: definition.contracts ?? [],
                 origin: {
                     kind: "collection" as const,

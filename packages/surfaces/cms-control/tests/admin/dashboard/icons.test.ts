@@ -150,7 +150,7 @@ test("member dashboard responses retain the private dashboard icon", async () =>
         icon: "users",
         enabled: true,
         revision: 1,
-        mounts: [{ collectionId: "test", viewId: "overview", label: "Overview" }],
+        navigation: [{ id: "overview", label: "Overview", use: "test:overview" }],
     });
     await dashboardAssignments.assign({ subjectId: "member", dashboardId: "private" });
     const cms = {
@@ -179,7 +179,7 @@ function dashboard(overrides: Partial<Dashboard>): Dashboard {
         name: "Dashboard",
         enabled: false,
         revision: 1,
-        mounts: [],
+        navigation: [],
         members: [],
         ...overrides,
     };

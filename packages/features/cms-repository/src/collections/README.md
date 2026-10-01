@@ -1,8 +1,8 @@
-# Collection authored bundles — first slice
+# Collection authored bundles
 
-`@bernouy/cms-repository/collections` exposes strict release parsing and bundle
-admission. This is the beginning of the collections domain, not a renderer,
-installation workflow, registry publication policy or view authorization engine.
+`@bernouy/cms-repository/collections` exposes strict release parsing, bundle
+admission, repository transport and site installation state. It is not a view
+authorization engine or a general-purpose executable package format.
 
 ## Release contents
 
@@ -61,8 +61,8 @@ slot content cardinalities, CSS or render expansion. The HTML parser applies
 its parsing rules; acceptance does not certify author syntax as conforming HTML.
 Never render or execute an admitted bundle directly as trusted code. Renderer
 compilation, content policies and execution authorization are separate future
-gates. An optional `runtime` field carries compiled browser view/editor bundles
-for components. Admission hashes and bounds those bytes but does not audit the
+gates. An optional `runtime` field carries a compiled browser view bundle for
+components. Admission hashes and bounds those bytes but does not audit the
 executable behavior; installation therefore trusts the configured repository.
 
 ## Dependencies and identity
@@ -77,8 +77,9 @@ One non-yanked release must jointly satisfy every requirement to a given
 contract across a bloc and its transitive `uses`. Independent resources may
 have different witnesses. This is not full-site installability: contract
 transitive requirements, provider selection and readiness remain outside it.
-Admission does not choose or pin the site's provider. Re-admission currently
-rechecks non-yanked witnesses; historical publication is not implemented.
+Admission does not choose or pin the site's provider. Installed collection APIs
+report requirement readiness separately from exact selected provider grants.
+Re-admission rechecks non-yanked witnesses.
 
 Assets, blocs, uses and requirements normalize ordinally; markup strings remain
 exact. The digest hashes canonical release data including asset declarations.
@@ -123,7 +124,21 @@ tabs. Admission rejects unknown or repeated view IDs and duplicate dashboard
 IDs. Optional contract IDs connect source discovery to dashboards that use
 those contracts. The definition is immutable collection content; its site
 activation and membership are separate mutable state. Private site dashboards
-may mount views from several installed collections.
+may navigate to views from several installed collections.
+
+## Publication and installation
+
+The local release command turns source asset declarations into immutable size
+and digest metadata, stores exact bytes beside canonical JSON, and serves each
+asset through a bounded immutable HTTP route. CMS import fetches the complete
+bundle, repeats admission with the contract catalogue, stores assets outside the
+Mongo release document and exposes verified image assets to installed Bloc
+thumbnails.
+
+Site installation pins the collection digest, repository ID, configuration and
+text overrides. Upgrades require a newer release from the same publisher,
+preserve existing resource IDs and Bloc kinds, keep existing setting declarations
+stable and revalidate saved text overrides before changing the digest.
 
 ## Next slices
 
@@ -131,7 +146,7 @@ Presets and imports remain absent from the public format: unsupported fields
 reject. Expanded view bindings, published execution plans and capability grants
 remain future work.
 
-Compatibility analysis, remote catalogue publication, complex upgrade
-migrations and component renderer compilation are not implemented yet.
+Affected-page analysis, remote publication, explicit upgrade migrations and
+component renderer trust hardening are not implemented yet.
 The [starter bundle](../../fixtures/collections/v1/README.md) exercises the
 implemented authoring/admission path without a provider or renderer.

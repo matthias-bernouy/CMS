@@ -26,5 +26,5 @@ export function dashboardName(value: unknown): string {
 }
 
 export function newDashboard(siteId: string, name: string): DashboardRecord {
-    return { id: randomUUID(), siteId, name, enabled: false, revision: 1 };
+    return { id: randomUUID(), siteId, name, enabled: false, revision: 1, navigation: [] };
 }

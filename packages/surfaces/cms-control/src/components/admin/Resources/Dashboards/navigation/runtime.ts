@@ -6,6 +6,10 @@ function firstUse(item: NavigationItem): string | null {
     return item.use ?? item.children?.map(firstUse).find(Boolean) ?? null;
 }
 
+function firstNavigationUse(items: NavigationItem[]): string | null {
+    return items.map(firstUse).find((use): use is string => Boolean(use)) ?? null;
+}
+
 function findPath(items: NavigationItem[], use: string, parents: NavigationItem[] = []): NavigationItem[] {
     for (const item of items) {
         const path = [...parents, item];
@@ -85,9 +89,9 @@ export async function renderDashboardSwitcher(dashboardId: string): Promise<void
         return;
     }
     const data = (await response.json()) as {
-        dashboards: { id: string; name: string; icon?: string; mounts: { collectionId: string; viewId: string }[] }[];
+        dashboards: { id: string; name: string; icon?: string; navigation: NavigationItem[] }[];
     };
-    const available = data.dashboards.filter((item) => item.mounts.length);
+    const available = data.dashboards.filter((item) => firstNavigationUse(item.navigation));
     const current = available.find((item) => item.id === dashboardId) ?? available[0];
     if (!current) {
         return;
@@ -101,9 +105,9 @@ export async function renderDashboardSwitcher(dashboardId: string): Promise<void
     menu.setAttribute("align", "start");
     menu.setAttribute("aria-label", `Switch dashboard, current dashboard: ${current.name}`);
     for (const dashboard of available) {
-        const first = dashboard.mounts[0]!;
+        const first = firstNavigationUse(dashboard.navigation)!;
         const item = document.createElement("p9r-action-menu-item");
-        item.setAttribute("href", viewUrl(dashboard.id, `${first.collectionId}:${first.viewId}`));
+        item.setAttribute("href", viewUrl(dashboard.id, first));
         item.setAttribute("data-dashboard-id", dashboard.id);
         if (dashboard.id === current.id) {
             item.setAttribute("aria-current", "page");

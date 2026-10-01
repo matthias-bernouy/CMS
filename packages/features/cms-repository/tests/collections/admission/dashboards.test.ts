@@ -7,19 +7,26 @@ const dashboard = {
     id: "starter",
     name: "Starter dashboard",
     icon: "layout",
-    views: [{ viewId: "overview", label: "Start" }],
+    navigation: [{ id: "overview", label: "Start", use: "overview" }],
 };
 
 test("collection dashboards admit only local views and stable unique IDs", () => {
     const document = collectionDocument();
     const release = parseCollectionRelease({ ...document, views: [view], dashboards: [dashboard] });
-    expect(release.dashboards?.[0]?.views).toEqual([{ viewId: "overview", label: "Start" }]);
+    expect(release.dashboards?.[0]?.navigation).toEqual([{ id: "overview", label: "Start", use: "overview" }]);
     expect(release.dashboards?.[0]?.icon).toBe("layout");
     expect(() => parseCollectionRelease({ ...document, dashboards: [dashboard] })).toThrow(/view/);
     expect(() => parseCollectionRelease({ ...document, views: [view], dashboards: [dashboard, dashboard] })).toThrow();
     expect(() =>
-        parseCollectionRelease({ ...document, views: [view], dashboards: [{ ...dashboard, views: [] }] }),
+        parseCollectionRelease({ ...document, views: [view], dashboards: [{ ...dashboard, navigation: [] }] }),
     ).toThrow(/at least one view/);
+    expect(() =>
+        parseCollectionRelease({
+            ...document,
+            views: [view],
+            dashboards: [{ id: "legacy", name: "Legacy", views: [{ viewId: "overview", label: "Start" }] }],
+        }),
+    ).toThrow(/unknown property/i);
 });
 
 test("collection dashboard navigation supports tabs directly below the primary level", () => {
@@ -65,5 +72,5 @@ test("collection dashboard navigation supports tabs directly below the primary l
                 },
             ],
         }),
-    ).toThrow(/placement/);
+    ).toThrow(/tabs|placement/);
 });

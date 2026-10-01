@@ -31,7 +31,6 @@ class DashboardView extends HTMLElement {
             dashboard: string;
             label: string;
             html: string;
-            mounts: { viewId: string; label: string }[];
             navigation: NavigationItem[];
         };
         const back = document.createElement("a");

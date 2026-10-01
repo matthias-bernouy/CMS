@@ -1,4 +1,5 @@
 import type { DashboardRecord, DashboardRepository } from "../interfaces/DashboardRepository";
+import { parseDashboardNavigation } from "../core/navigation";
 
 export class InMemoryDashboardRepository implements DashboardRepository {
     private readonly records = new Map<string, DashboardRecord>();
@@ -17,7 +18,7 @@ export class InMemoryDashboardRepository implements DashboardRepository {
         if (this.records.has(key)) {
             throw Object.assign(new Error("Dashboard already exists"), { status: 409 });
         }
-        this.records.set(key, structuredClone(record));
+        this.records.set(key, normalized(record));
     }
 
     async replace(record: DashboardRecord, expectedRevision: number): Promise<boolean> {
@@ -26,7 +27,7 @@ export class InMemoryDashboardRepository implements DashboardRepository {
         if (!current || current.revision !== expectedRevision || record.revision !== expectedRevision + 1) {
             return false;
         }
-        this.records.set(key, structuredClone(record));
+        this.records.set(key, normalized(record));
         return true;
     }
 
@@ -35,4 +36,8 @@ export class InMemoryDashboardRepository implements DashboardRepository {
         const current = this.records.get(key);
         return Boolean(current?.revision === expectedRevision && this.records.delete(key));
     }
+}
+
+function normalized(record: DashboardRecord): DashboardRecord {
+    return structuredClone({ ...record, navigation: parseDashboardNavigation(record.navigation) });
 }

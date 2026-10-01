@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test";
+import { dashboardNavigationViews } from "@bernouy/cms-dashboards";
 import type { ControlCms } from "../../../src/ControlCms";
 import { renderDashboardSwitcher } from "../../../src/components/admin/Resources/Dashboards/navigation/runtime";
-import { navigationMounts, parseDashboardNavigation } from "../../../src/core/admin/dashboards/navigation";
+import { parseDashboardNavigation } from "../../../src/core/admin/dashboards/navigation";
 
 const cms = {
     config: {
@@ -27,7 +28,7 @@ const cms = {
     },
 } as unknown as ControlCms;
 
-test("dashboard navigation preserves primary-to-tabs placement and derives mounts", async () => {
+test("dashboard navigation preserves primary-to-tabs placement and derives view uses", async () => {
     const navigation = await parseDashboardNavigation(cms, [
         {
             id: "workspace",
@@ -40,7 +41,7 @@ test("dashboard navigation preserves primary-to-tabs placement and derives mount
         },
     ]);
     expect(navigation[0]?.childPlacement).toBe("tabs");
-    expect(navigationMounts(navigation).map((mount) => mount.viewId)).toEqual(["overview", "resources"]);
+    expect(dashboardNavigationViews(navigation).map((view) => view.use)).toEqual(["test:overview", "test:resources"]);
     await expect(
         parseDashboardNavigation(cms, [
             { id: "duplicate", label: "One", use: "test:overview" },
@@ -61,13 +62,13 @@ test("dashboard switcher uses dashboard icons and exposes admin return for admin
                         id: "current",
                         name: "Ulvia workspace",
                         icon: "package",
-                        mounts: [{ collectionId: "ulvia-official", viewId: "overview" }],
+                        navigation: [{ id: "overview", label: "Overview", use: "ulvia-official:overview" }],
                     },
                     {
                         id: "private",
                         name: "Private dashboard",
                         icon: "users",
-                        mounts: [{ collectionId: "ulvia-official", viewId: "resources" }],
+                        navigation: [{ id: "resources", label: "Resources", use: "ulvia-official:resources" }],
                     },
                 ],
             }),
@@ -101,7 +102,7 @@ test("dashboard switcher keeps admin return hidden for assigned members", async 
                           {
                               id: "member",
                               name: "Member dashboard",
-                              mounts: [{ collectionId: "test", viewId: "overview" }],
+                              navigation: [{ id: "overview", label: "Overview", use: "test:overview" }],
                           },
                       ],
                   }),

@@ -9,7 +9,7 @@ test("site dashboards require matching revisions and stay scoped to the site", a
         name: "Workspace",
         enabled: false,
         revision: 1,
-        mounts: [{ collectionId: "test", viewId: "overview", label: "Overview" }],
+        navigation: [{ id: "overview", label: "Overview", use: "test:overview" }],
     };
     await repository.create(record);
     expect(await repository.get("site-b", record.id)).toBeNull();

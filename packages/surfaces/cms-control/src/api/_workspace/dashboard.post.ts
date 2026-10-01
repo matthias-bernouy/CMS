@@ -50,9 +50,8 @@ export default async function updateDashboard(request: Request, cms: ControlCms)
     if (typeof body.icon !== "string" || !/^[a-z][a-z0-9-]{0,31}$/.test(body.icon)) {
         throw new InvalidParam("icon", "Choose a dashboard icon");
     }
-    const { mounts: _legacyMounts, ...base } = current;
     const next = {
-        ...base,
+        ...current,
         name: dashboardName(body.name),
         icon: body.icon,
         enabled: body.enabled,

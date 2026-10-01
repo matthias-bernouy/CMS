@@ -1,4 +1,3 @@
-export type Mount = { collectionId: string; viewId: string; label: string };
 export type Dashboard = {
     id: string;
     siteId: string;
@@ -6,8 +5,7 @@ export type Dashboard = {
     icon?: string;
     enabled: boolean;
     revision: number;
-    mounts: Mount[];
-    navigation?: NavigationItem[];
+    navigation: NavigationItem[];
     members: string[];
     origin?: { kind: "collection"; publisherId: string; collectionId: string; dashboardId: string };
     collectionName?: string;

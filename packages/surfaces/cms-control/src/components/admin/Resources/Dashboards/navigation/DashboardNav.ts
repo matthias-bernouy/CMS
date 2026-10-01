@@ -62,8 +62,8 @@ function dashboardItem(dashboard: Dashboard, selectedId: string, memberMode: boo
     }
     item.setAttribute(
         "href",
-        memberMode && dashboard.mounts[0]
-            ? viewUrl(dashboard.id, `${dashboard.mounts[0].collectionId}:${dashboard.mounts[0].viewId}`)
+        memberMode && firstUse(dashboard.navigation)
+            ? viewUrl(dashboard.id, firstUse(dashboard.navigation)!)
             : `${getMetaBasePath()}/admin/dashboards?dashboardId=${encodeURIComponent(dashboard.id)}`,
     );
     const icon = document.createElement("cms-library-icon");
@@ -71,6 +71,16 @@ function dashboardItem(dashboard: Dashboard, selectedId: string, memberMode: boo
     icon.setAttribute("name", dashboard.icon ?? "layout");
     item.append(icon, document.createTextNode(dashboard.name));
     return item;
+}
+
+function firstUse(items: Dashboard["navigation"]): string | undefined {
+    for (const item of items) {
+        const use = item.use ?? firstUse(item.children ?? []);
+        if (use) {
+            return use;
+        }
+    }
+    return undefined;
 }
 
 function viewUrl(dashboardId: string, viewId: string): string {
