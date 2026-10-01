@@ -13,6 +13,7 @@ import { validateBlocs } from "./blocs/validateBlocs";
 import { parseConfiguration } from "./configuration";
 import { parseCollectionViews } from "./views";
 import { parseCollectionDashboards } from "./dashboards";
+import { validateCollectionTextReferences } from "../validation/markup/texts";
 
 export function parseCollectionRelease(
     value: unknown,
@@ -55,9 +56,12 @@ export function parseCollectionRelease(
         }
         const collectionId = parseCollectionNamespace(source.collectionId, "$.collectionId");
         const version = parseVersion(source.version);
+        const locale = parseLocale(source.locale);
+        const texts = source.texts === undefined ? undefined : parseTexts(source.texts, locale);
         const assets = parseAssets(source.assets === undefined ? [] : source.assets, limits);
         const blocs = parseBlocs(source.blocs === undefined ? [] : source.blocs, collectionId, limits);
         validateBlocs(blocs, new Set(assets.map((asset) => asset.id)), limits);
+        validateCollectionTextReferences(blocs, collectionId, new Set(texts?.map((text) => text.id) ?? []));
         const views =
             source.views === undefined
                 ? undefined
@@ -73,8 +77,8 @@ export function parseCollectionRelease(
             ...(source.description === undefined
                 ? {}
                 : { description: string(source.description, 4096, "$.description") }),
-            locale: parseLocale(source.locale),
-            ...(source.texts === undefined ? {} : { texts: parseTexts(source.texts, parseLocale(source.locale)) }),
+            locale,
+            ...(texts === undefined ? {} : { texts }),
             ...(source.theme === undefined ? {} : { theme: parseCollectionTheme(source.theme, collectionId) }),
             ...(source.configuration === undefined
                 ? {}

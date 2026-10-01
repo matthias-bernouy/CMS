@@ -1,6 +1,9 @@
-import { replaceTextExpressions } from "./textExpressions";
 import type { CollectionRelease } from "@bernouy/cms-repository/collections";
-import { resolveCollectionTexts, formatCollectionText } from "@bernouy/cms-repository/collections/texts";
+import {
+    resolveCollectionTexts,
+    formatCollectionText,
+    replaceCollectionTextExpressions,
+} from "@bernouy/cms-repository/collections/texts";
 
 /** Trusted, public render inputs. Do not include actor-specific values in cached pages. */
 export interface CollectionTextSource {
@@ -45,7 +48,7 @@ export function renderCollectionTexts(
             inert ||
             /^(template|script|style|textarea|iframe|xmp|plaintext|noembed|noframes|noscript)$/.test(element.localName);
         const replace = (value: string, allowed: boolean): string =>
-            replaceTextExpressions(value, (collection, id) => {
+            replaceCollectionTextExpressions(value, (collection, id) => {
                 if (!allowed || blocked) {
                     throw new TypeError("Server texts are unsupported in this HTML context");
                 }

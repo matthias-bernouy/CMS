@@ -1,5 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { checkDemoBlocs as check, demoComponent as component, demoComposition as composition } from "./fixtures";
+import { parseCollectionRelease } from "@bernouy/cms-repository/collections";
+import {
+    checkDemoBlocs as check,
+    collectionDocument,
+    demoComponent as component,
+    demoComposition as composition,
+} from "./fixtures";
 
 describe("collection markup admission", () => {
     test.each([
@@ -116,6 +122,25 @@ describe("collection markup admission", () => {
         expect(() =>
             check([composition({ lightdom: "<p>Text</p>", slots: {}, defaultContent: "<p>{{ title }}</p>" })]),
         ).toThrow("bindings belong only in lightdom");
+    });
+
+    test("resolves reserved text bindings within the declaring collection", () => {
+        const source = collectionDocument();
+        source.texts = [{ id: "title", values: { "en-US": "Title" } }];
+        const composition = (source.blocs as Record<string, unknown>[])[1]!;
+
+        composition.lightdom =
+            '<atlas-panel><slot name="main" slot="body"><p>{{ cms.i18n.atlas.title }}</p><p>{{ order.total }}</p></slot></atlas-panel>';
+        expect(() => parseCollectionRelease(source)).not.toThrow();
+
+        for (const expression of [
+            "{{ cms.i18n.other.title }}",
+            "{{ cms.i18n.atlas.missing }}",
+            "{{ cms.i18n.atlas.title | innerHTML }}",
+        ]) {
+            composition.lightdom = `<atlas-panel><slot name="main" slot="body"><p>${expression}</p></slot></atlas-panel>`;
+            expect(() => parseCollectionRelease(source)).toThrow();
+        }
     });
 
     test.each([

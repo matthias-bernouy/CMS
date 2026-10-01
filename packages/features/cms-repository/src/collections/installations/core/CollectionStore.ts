@@ -5,6 +5,7 @@ import { parseCollectionTextOverrides } from "../../core/texts/parseCollectionTe
 import type { CollectionBundleAsset } from "../../interfaces/CollectionAssets";
 import type { CollectionStorage, InstalledCollection } from "../interfaces/store";
 import { assertCollectionResourceIsolation, assertInstallableCollectionResources } from "./resourceIsolation";
+import { assertCompatibleCollectionUpgrade } from "./upgradeCompatibility";
 
 export class CollectionStore {
     constructor(
@@ -91,33 +92,7 @@ export class CollectionStore {
         ) {
             throw Object.assign(new Error("Upgrade requires a newer release from the same publisher"), { status: 409 });
         }
-        if (
-            old.release.blocs.some(
-                (bloc) => !artifact.release.blocs.some((next) => next.id === bloc.id && next.kind === bloc.kind),
-            ) ||
-            (old.release.texts ?? []).some(
-                (text) => !(artifact.release.texts ?? []).some((next) => next.id === text.id),
-            ) ||
-            (old.release.views ?? []).some(
-                (view) => !(artifact.release.views ?? []).some((next) => next.id === view.id),
-            ) ||
-            (old.release.dashboards ?? []).some(
-                (dashboard) => !(artifact.release.dashboards ?? []).some((next) => next.id === dashboard.id),
-            ) ||
-            JSON.stringify(old.release.configuration) !== JSON.stringify(artifact.release.configuration) ||
-            old.release.blocs.some((bloc) => {
-                const next = artifact.release.blocs.find((candidate) => candidate.id === bloc.id);
-                return (
-                    bloc.kind === "component" &&
-                    next?.kind === "component" &&
-                    JSON.stringify(bloc.settings ?? []) !== JSON.stringify(next.settings ?? [])
-                );
-            })
-        ) {
-            throw Object.assign(new Error("Upgrade removes existing resources or changes configuration or settings"), {
-                status: 409,
-            });
-        }
+        assertCompatibleCollectionUpgrade(old.release, artifact.release);
         await assertInstallableCollectionResources(
             this.storage,
             state.installations.filter((item) => item !== previous),

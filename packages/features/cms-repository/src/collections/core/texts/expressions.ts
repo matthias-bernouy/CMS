@@ -1,5 +1,8 @@
-/** Only the reserved cms root is interpreted here. Business expressions remain byte-for-byte intact. */
-export function replaceTextExpressions(input: string, resolve: (collection: string, id: string) => string): string {
+/** Replaces only the reserved CMS text expressions and preserves business bindings byte-for-byte. */
+export function replaceCollectionTextExpressions(
+    input: string,
+    resolve: (collectionId: string, textId: string) => string,
+): string {
     let output = "";
     let cursor = 0;
     while (cursor < input.length) {
@@ -22,7 +25,6 @@ export function replaceTextExpressions(input: string, resolve: (collection: stri
                 throw new TypeError("Expected {{ cms.i18n.collection.text }}");
             }
             const value = resolve(match[1]!, match[2]!);
-            // Reject braces, including across interpolation boundaries, rather than create executable bindings.
             if (/[{}]/.test(value)) {
                 throw new TypeError("Server text cannot introduce binding delimiters");
             }

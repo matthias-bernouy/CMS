@@ -13,3 +13,4 @@ export {
     resolveCollectionTexts,
     formatCollectionText,
 } from "cms-repository/collections/core/texts/resolveCollectionTexts";
+export { replaceCollectionTextExpressions } from "cms-repository/collections/core/texts/expressions";
