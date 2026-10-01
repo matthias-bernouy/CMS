@@ -56,6 +56,7 @@ describe("repository domain boundaries", () => {
                     if (
                         (target !== undefined &&
                             !target.startsWith(`${domain}/`) &&
+                            !target.startsWith("repository-http/") &&
                             target !== "exports/contracts" &&
                             !target.startsWith("exports/contracts/")) ||
                         specifier.startsWith("@bernouy/cms-repository")
@@ -67,4 +68,23 @@ describe("repository domain boundaries", () => {
             expect(violations).toEqual([]);
         },
     );
+
+    test("keeps repository HTTP transport independent of domains", async () => {
+        const violations: string[] = [];
+        for await (const file of new Bun.Glob("**/*.ts").scan({
+            cwd: resolve(sourceRoot, "repository-http"),
+            absolute: true,
+        })) {
+            for (const specifier of importPaths(await Bun.file(file).text())) {
+                const target = internalPath(specifier, file);
+                if (
+                    (target !== undefined && !target.startsWith("repository-http/")) ||
+                    specifier.startsWith("@bernouy/cms-repository")
+                ) {
+                    violations.push(`${relative(sourceRoot, file)} -> ${specifier}`);
+                }
+            }
+        }
+        expect(violations).toEqual([]);
+    });
 });

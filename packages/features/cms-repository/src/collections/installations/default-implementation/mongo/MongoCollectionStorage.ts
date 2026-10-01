@@ -1,5 +1,5 @@
 import type { Db } from "mongodb";
-import type { CollectionStorage, CollectionSiteState, StoredCollectionRelease } from "../interfaces/store";
+import type { CollectionStorage, CollectionSiteState, StoredCollectionRelease } from "../../interfaces/store";
 export class MongoCollectionStorage implements CollectionStorage {
     constructor(private readonly db: Db) {}
     async init() {

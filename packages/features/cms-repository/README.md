@@ -29,7 +29,12 @@ cms-repository/
 │   ├── collections/
 │   │   ├── core/
 │   │   ├── interfaces/
+│   │   ├── installations/
+│   │   ├── sources/
 │   │   └── README.md
+│   ├── repository-http/
+│   │   ├── baseUrl.ts
+│   │   └── getBytes.ts
 │   └── exports/
 │       ├── index.ts
 │       ├── contracts/
@@ -80,11 +85,13 @@ packages or wrappers under the former package names.
 
 ## Current scope
 
-The package provides local provider-domain workflows, catalogue and storage ports,
+The package provides provider-domain workflows, catalogue and storage ports,
 deterministic memory implementations, and Mongo release, manifest, installation
-and selection stores. Mongo release publication rejects fixture assets until a
-separate byte store is available. It has no live provider transport, mounted
-routes, secret-store integration, conformance runner or gateway execution.
+and selection stores. It also owns collection admission, repository sources,
+revisioned site installations and text overrides. The internal `repository-http/`
+directory holds bounded HTTP reads shared by collection and provider sources;
+catalogue parsing remains in each domain. Mongo contract release publication
+rejects fixture assets until separate byte storage is available.
 The Mongo catalogues expose revision tokens from publication metadata for
 selection planning. Gateway freshness checks compare the selected site route's
 mutable records and do not rescan the global catalogues.
@@ -98,8 +105,10 @@ and transport profiles, and conformance dependencies. The
 [provider guide](src/providers/README.md) explains immutable claims, site state
 and the proposed connection protocol. [Provider workflows](src/providers/workflows.md)
 details implemented transitions, upgrade boundaries and remaining runtime work.
-The [collections guide](src/collections/README.md) describes the initial slice
-and its explicit gaps: themes, persisted text overrides, imports, views/dashboard templates,
-compatibility, publication, installation and renderer compilation.
+The [collections guide](src/collections/README.md) documents admitted themes,
+texts, views, dashboards, assets and resource requirements. The installed
+collection path currently accepts releases without assets or capability
+requirements; remote publication, broad view execution and renderer compilation
+remain unfinished.
 [AGENTS.md](AGENTS.md) defines the domain
 boundaries and implementation invariants.

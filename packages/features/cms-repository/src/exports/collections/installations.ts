@@ -1,5 +1,5 @@
 export { CollectionStore } from "cms-repository/collections/installations/core/CollectionStore";
-export { MemoryCollectionStorage } from "cms-repository/collections/installations/memory/MemoryCollectionStorage";
+export { MemoryCollectionStorage } from "cms-repository/collections/installations/default-implementation/memory/MemoryCollectionStorage";
 export type {
     CollectionStorage,
     InstalledCollection,

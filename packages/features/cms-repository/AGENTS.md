@@ -48,6 +48,9 @@ models and validation for CMS-owned installations and site selections.
   immutable release texts and mutable site overrides remain separate.
   Collections consume the contracts facade, not providers or
   contracts internals. Do not merge immutable releases with per-site state.
+- `src/repository-http/` contains only bounded HTTP transport shared by the
+  collection and provider repository sources. It must not import any domain.
+  Keep catalogue parsing, references and admission in their respective domains.
 - Treat inputs as untrusted. Parse from `unknown` or strict JSON; reject unknown
   fields, duplicate properties, ambiguous mappings/ranges and limit violations.
   Apply byte/depth/count limits to object and JSON entry points; reject sparse

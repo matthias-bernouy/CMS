@@ -1,4 +1,4 @@
-import type { CollectionStorage, CollectionSiteState, StoredCollectionRelease } from "../interfaces/store";
+import type { CollectionStorage, CollectionSiteState, StoredCollectionRelease } from "../../interfaces/store";
 export class MemoryCollectionStorage implements CollectionStorage {
     private readonly releases = new Map<string, StoredCollectionRelease>();
     private readonly sites = new Map<string, CollectionSiteState>();
