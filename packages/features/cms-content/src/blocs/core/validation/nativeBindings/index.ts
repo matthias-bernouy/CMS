@@ -1,5 +1,5 @@
 import { isTypedSourceBody } from "cms-content/blocs/core/validation/nativeBindings/sourceBody";
-import { isSafeNavigationalUrl } from "cms-content/editor/core/markup/safeUrl";
+import { isSafeNavigationalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
 import {
     CMS_BINDING_ATTRIBUTES,
     isCmsQueryParamName,
@@ -13,7 +13,7 @@ import {
     parseCondition,
     parseRepeat,
     parseSource,
-} from "cms-content/editor/core/bindings";
+} from "cms-content/blocs/core/markup/bindings";
 
 const CONTROL_CHARACTER = /[\u0000-\u001F\u007F]/;
 const URL_WHITESPACE_OR_CONTROL = /[\u0000-\u0020\u007F]/;

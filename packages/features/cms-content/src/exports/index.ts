@@ -48,7 +48,7 @@ export type {
     ThemeTokenDefaults,
     ThemeTokenType,
 } from "cms-content/theme/interfaces/theme";
-export { wrapBindingCore } from "cms-content/editor/core/document/wrapBindingCore";
+export { wrapBindingCore } from "cms-content/blocs/core/markup/bindingRoot";
 
 // ── Repository seam ────────────────────────────────────────────────────
 export type {
@@ -138,7 +138,7 @@ export {
     isNativeHtmlTag,
     isPlatformNativeAttributeAllowed,
     isPlatformNativeContentTag,
-    isPlatformNativeEditorTag,
+    isPlatformAuthorableNativeTag,
     isPlatformManagedNativeElementTag,
     isSiteBlocNativeAttributeAllowed,
     isSiteBlocNativeStructureTag,
@@ -153,7 +153,7 @@ export {
     nativeAttributeSetIssue,
     nativeAttributeValueIssue,
 } from "cms-content/blocs/core/validation/nativeAttributeValues";
-export { validateSiteBlocDefaultContent } from "cms-content/editor/core/markup/validation/nativeContent";
+export { validateSiteBlocDefaultContent } from "cms-content/blocs/core/markup/validation/nativeContent";
 export {
     isCmsBindingAttribute,
     nativeBindingAttributeIssue,
@@ -178,14 +178,14 @@ export { generateBlocEntry, generateBlocSetEntry } from "cms-content/blocs/core/
 export {
     collectCmsSourceBindings,
     type CmsSourceBindingReference,
-} from "cms-content/editor/core/document/sourceBindings";
+} from "cms-content/pages/core/indexing/sourceBindings";
 export {
     detectPageIndexingCandidates,
     type PageIndexingCandidate,
     type PageIndexingDetection,
     type PageIndexingDetectionOptions,
     type PageIndexingDetectionStatus,
-} from "cms-content/editor/core/document/pageIndexingDetection";
+} from "cms-content/pages/core/indexing/detection";
 export {
     projectResolvedIndexingEntity,
     projectIndexingDiscoveryPage,
@@ -197,15 +197,15 @@ export { ValidatingCmsRepository } from "cms-content/application/core/Validating
 export {
     assertContentRefsExist,
     type ContentRefsReader,
-} from "cms-content/editor/core/markup/validation/assertContentRefsExist";
+} from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
 export {
     managedNativeElementIssue,
     type ManagedNativeElementContract,
-} from "cms-content/editor/core/markup/validation/managedNativeElements";
-export { hardenStoredHtml } from "cms-content/editor/core/markup/hardenStoredHtml";
+} from "cms-content/blocs/core/markup/validation/managedNativeElements";
+export { hardenStoredHtml } from "cms-content/blocs/core/markup/security/hardenStoredHtml";
 export { validatePageSeo } from "cms-content/pages/core/validation/seo";
 export { validatePageIndexingConfiguration } from "cms-content/pages/core/validation/indexing";
-export { isSafeNavigationalUrl } from "cms-content/editor/core/markup/safeUrl";
+export { isSafeNavigationalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
 export {
     validatePagePath,
     validatePageTitle,
@@ -222,7 +222,7 @@ export {
     type PageMetadataScalar,
     type PageMetadataScope,
     type PageMetadataTemplateResult,
-} from "cms-content/editor/core/document/pageMetadataVariables";
+} from "cms-content/pages/core/rendering/pageMetadata";
 
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────
 export { generateStyleEntry } from "cms-content/theme/core/generateStyleEntry";
@@ -234,12 +234,12 @@ export {
 } from "cms-content/pages/http/publishedPageSnapshot";
 
 // ── Constants & utils ──────────────────────────────────────────────────
-export * from "cms-content/editor/core/constants/p9r-constants";
+export * from "cms-content/application/core/cacheKeys";
 export * from "cms-content/application/core/validation/predicates";
-export * from "cms-content/editor/core/markup/contentRefs";
+export * from "cms-content/blocs/core/markup/contentRefs";
 export { derivePagePath } from "cms-content/pages/core/paths/pagePath";
-export { sanitizeDomTree } from "cms-content/editor/core/markup/sanitizeDomTree";
-export { sanitizeSvgTree } from "cms-content/editor/core/markup/sanitizeSvgTree";
+export { sanitizeDomTree } from "cms-content/blocs/core/markup/security/sanitizeDomTree";
+export { sanitizeSvgTree } from "cms-content/blocs/core/markup/security/sanitizeSvgTree";
 export { escapeRegex } from "cms-content/pages/core/queries/escapeRegex";
 
 export { withInstalledCollections } from "cms-content/blocs/core/collections/installedRepository";

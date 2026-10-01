@@ -1,14 +1,14 @@
 {
     "name": "@bernouy/cms-content",
     "version": "0.1.0",
-    "description": "CMS-owned content — pages, blocs, settings, and the author file library, with explicit editor, persistence, file-storage, serving, and image-derivative subpaths.",
+    "description": "CMS-owned content — pages, blocs, settings, bindings, and the author file library, with explicit persistence, rendering, file-storage, serving, and image-derivative subpaths.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./src/exports/index.ts",
     "exports": {
         ".": "./src/exports/index.ts",
+        "./bindings": "./src/exports/bindings.ts",
         "./rendering": "./src/exports/rendering.ts",
-        "./editor": "./src/exports/editor.ts",
         "./theme": "./src/exports/theme.ts",
         "./page-path": "./src/exports/page-path.ts",
         "./mongo": "./src/exports/mongo.ts",

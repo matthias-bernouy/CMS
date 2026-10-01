@@ -9,7 +9,7 @@ import "./admin/Resources/Dashboards/editor/NavigationEditor";
 import "./admin/Resources/Dashboards/navigation/DashboardNav";
 import "./admin/Resources/Dashboards/DashboardView";
 import "./admin/Resources/Collections/InstalledTexts";
-import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
+import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/bindings";
 import {
     Accordion,
     AccordionItem,

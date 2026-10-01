@@ -158,7 +158,7 @@ export const PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS = [
 
 export type PlatformManagedNativeElementTag = (typeof PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS)[number];
 
-const PLATFORM_NATIVE_EDITOR_TAG_SET = new Set<string>([
+const PLATFORM_AUTHORABLE_NATIVE_TAG_SET = new Set<string>([
     ...PLATFORM_NATIVE_ADDABLE_TAGS,
     ...PLATFORM_NATIVE_CONTEXTUAL_TAGS,
 ]);
@@ -195,8 +195,8 @@ export function isNativeHtmlTag(tag: string): boolean {
     return NATIVE_HTML_TAGS.has(tag.toLowerCase());
 }
 
-export function isPlatformNativeEditorTag(tag: string): boolean {
-    return PLATFORM_NATIVE_EDITOR_TAG_SET.has(tag.toLowerCase());
+export function isPlatformAuthorableNativeTag(tag: string): boolean {
+    return PLATFORM_AUTHORABLE_NATIVE_TAG_SET.has(tag.toLowerCase());
 }
 
 export function isPlatformNativeContentTag(tag: string): boolean {

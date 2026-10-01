@@ -13,7 +13,7 @@ import {
     transitiveDependencies,
 } from "cms-control/core/content/siteBloc/validation/dependencies";
 import { networkInertHtml } from "./networkInertHtml";
-import { renderEditorCollectionTexts } from "cms-control/core/content/installedCollections/renderTexts";
+import { renderPreviewCollectionTexts } from "cms-control/core/content/installedCollections/renderTexts";
 import { installedBlocInitialMarkup } from "cms-control/core/content/installedCollections/settings";
 import { previewDocument } from "./document";
 
@@ -46,7 +46,7 @@ export async function blocPreview(
     }
     const { document } = parseHTML("<html><body></body></html>");
     document.body.innerHTML = hardenStoredHtml(content);
-    expandCompositions(document.body, compositions, "editor");
+    expandCompositions(document.body, compositions, "preview");
     neutralizePreviewOnlyCustomElementState(document.body);
     const graph = siteBlocDependencyGraph(records);
     const needed = new Set([tag, ...findUsedBlocTags(document.body.innerHTML, blocs), ...(draft?.dependencies ?? [])]);
@@ -63,7 +63,7 @@ export async function blocPreview(
         );
     const installed = await repository.getInstalledCollections?.();
     if (installed?.collections.length) {
-        renderEditorCollectionTexts(
+        renderPreviewCollectionTexts(
             document.body,
             (await repository.getSystem?.())?.site.language || "en",
             installed.collections.map((item) => ({ collection: item.release, overrides: item.textOverrides })),

@@ -3,7 +3,7 @@ import { parseHTML } from "linkedom";
 import type { TPage } from "@bernouy/cms-content/rendering";
 import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
-import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
+import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/bindings";
 import { expandCompositions, sanitizeDomTree, wrapBindingCore } from "@bernouy/cms-content/rendering";
 import { injectMediaVersions } from "@bernouy/cms-content/files/serving";
 import { createBlocUsageResolver } from "@bernouy/cms-content/rendering";

@@ -81,12 +81,11 @@ modules.
 - Design tokens come from `@bernouy/components/style.css`, exposed through
   `<basePath>/resources/css/cms-blocs.css`.
 
-## Bloc Authoring Compatibility
+## Bloc Preview Compatibility
 
-- Stable authoring contracts live in `@bernouy/cms-content/editor`.
-- Control does not mount an interactive editor.
-- The remaining `src/api/editor/*` assets support isolated Bloc previews and
-  are pending the Bloc compiler/settings cleanup.
+- Stable binding contracts live in `@bernouy/cms-content/bindings`.
+- The remaining preview assets provide the shared component and binding
+  runtimes to isolated Bloc previews.
 - Keep authored bloc behavior independent from Control internals.
 
 ## Dependency Rules

@@ -156,7 +156,7 @@ Page writes and direct API calls validate the same structure server-side.
 This V1 supports `h1` through `h6`, `p`, `a`, `button`, `img`, `svg`, and
 `span`. Container elements with their own content-slot semantics are excluded.
 Do not also declare an unnamed content slot or a wrapper text capability: the
-managed native editor owns the child text contract.
+managed native element owns the child text contract.
 
 The platform authoring set is intentionally narrow:
 

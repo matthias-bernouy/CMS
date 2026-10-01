@@ -37,7 +37,7 @@ export interface ContentReader {
     getPublishedPages(): Promise<TPage[]>;
     resolvePublishedRoute(path: string): Promise<PublishedRouteResolution | null>;
 
-    // BLOC (view only — editor bundles live in the admin)
+    // BLOC (rendering artifacts only)
     getRenderableBlocs(): Promise<RenderableBloc[]>;
     getBlocViewJS(tag: string): Promise<string | null>;
 

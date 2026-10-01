@@ -29,7 +29,7 @@ describe("bloc import tag security", () => {
         "bloc with space",
         "bloc;rm -rf /",
         "script", // native HTML tag, but not allowlisted for blocs
-        "a", // platform-owned native editor, never a stored bloc artifact
+        "a", // platform-owned native element, never a stored bloc artifact
         "BLOC-UP", // uppercase
         "1-bloc", // starts with digit
     ])("rejects dangerous tag %p with 400", async (tag) => {

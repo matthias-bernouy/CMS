@@ -11,7 +11,7 @@ import {
     nativeFormBindingIssue,
 } from "cms-content/blocs/core/validation/nativeBindings";
 import { nativeAttributeSetIssue } from "cms-content/blocs/core/validation/nativeAttributeValues";
-import { CMS_BINDING_RUNTIME_ATTRIBUTES } from "cms-content/editor/core/bindings";
+import { CMS_BINDING_RUNTIME_ATTRIBUTES } from "cms-content/blocs/core/markup/bindings";
 import type { SiteBlocNode } from "cms-content/blocs/interfaces/blocs";
 
 export function validateNativeSiteBlocNode(

@@ -3,9 +3,9 @@ import {
     customElementAttributesIssue,
     nativeElementAttributesIssue,
     type NativePolicyElement,
-} from "cms-content/editor/core/markup/validation/nativeElementPolicy";
+} from "cms-content/blocs/core/markup/validation/nativeElementPolicy";
 import { isNativeHtmlTag, isPlatformNativeContentTag } from "cms-content/blocs/core/validation/nativeHtml";
-import { CMS_BINDING_CORE_TAG } from "cms-content/editor/core/bindings";
+import { CMS_BINDING_CORE_TAG } from "cms-content/blocs/core/markup/bindings";
 
 type NativePolicyRoot = { readonly children: ArrayLike<NativePolicyElement> };
 

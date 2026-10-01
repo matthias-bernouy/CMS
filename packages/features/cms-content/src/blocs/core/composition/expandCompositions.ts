@@ -14,7 +14,7 @@ const COMPONENT_OUTPUT_START = "p9r-component-output-start";
 const COMPONENT_OUTPUT_END = "p9r-component-output-end";
 
 export type CompositionDefinition = { id: string; compositionHTML?: string; componentHTML?: string };
-export type CompositionExpansionMode = "delivery" | "editor";
+export type CompositionExpansionMode = "delivery" | "preview";
 type Template = { html: string; retainHost: boolean };
 
 /**
@@ -22,7 +22,7 @@ type Template = { html: string; retainHost: boolean };
  *
  * Pure compositions replace their host in Delivery. Component compositions
  * keep it so their fixed children can project through its shadow slots.
- * Editor mode retains page-owned children separately from generated markup.
+ * Preview mode retains page-owned children separately from generated markup.
  */
 export function expandCompositions(
     root: ParentNode,
@@ -72,7 +72,7 @@ function nextComposition(
 function expandHost(host: Element, definition: Template, mode: CompositionExpansionMode): void {
     const document = host.ownerDocument;
     const authored = Array.from(host.childNodes);
-    const input = mode === "editor" ? document.createElement("template") : null;
+    const input = mode === "preview" ? document.createElement("template") : null;
     if (input) {
         input.setAttribute(COMPOSITION_INPUT_ATTRIBUTE, "");
         input.content.append(...authored.map((node) => node.cloneNode(true)));
@@ -149,10 +149,10 @@ function projectSlots(
         }
         const projected =
             assigned.length > 0
-                ? assigned.map((node) => (mode === "editor" ? node : node.cloneNode(true)))
+                ? assigned.map((node) => (mode === "preview" ? node : node.cloneNode(true)))
                 : Array.from(slot.childNodes);
         remapProjectedSlot(projected, forwardedSlot);
-        if (mode === "editor") {
+        if (mode === "preview") {
             const encodedName = encodeURIComponent(name);
             const start = slot.ownerDocument.createComment(`${SLOT_START}${encodedName}`);
             const end = slot.ownerDocument.createComment(`${SLOT_END}${encodedName}`);

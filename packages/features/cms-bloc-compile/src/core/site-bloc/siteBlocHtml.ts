@@ -1,4 +1,4 @@
-import { CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES } from "@bernouy/cms-content/editor";
+import { CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES } from "@bernouy/cms-content/bindings";
 import {
     COMPOSITION_CONTROLLER_ATTRIBUTE,
     isCmsBindingAttribute,

@@ -40,9 +40,9 @@ test("Delivery imports only public content capabilities, including type and dyna
 test("browser graphs reject even lazy Sharp imports", async () => {
     const root = await createWorkspace({
         "packages/features/content/package.json": manifest("@fixture/content", {
-            exports: { "./editor": "./src/editor.ts" },
+            exports: { "./bindings": "./src/bindings.ts" },
         }),
-        "packages/features/content/src/editor.ts": "export const optimize = () => import('sharp');",
+        "packages/features/content/src/bindings.ts": "export const optimize = () => import('sharp');",
     });
     expect(ofKind(await checkWorkspaceArchitecture({ rootDir: root }), "browser-runtime-adapter")).toHaveLength(1);
 });

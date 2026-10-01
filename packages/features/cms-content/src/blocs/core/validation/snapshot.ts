@@ -1,6 +1,6 @@
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
-import { validateSiteBlocDefaultContent } from "cms-content/editor/core/markup/validation/nativeContent";
+import { validateSiteBlocDefaultContent } from "cms-content/blocs/core/markup/validation/nativeContent";
 import { isSiteBlocNativeStructureTag } from "cms-content/blocs/core/validation/nativeHtml";
 import {
     isSiteBlocStructureTag,

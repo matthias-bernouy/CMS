@@ -20,7 +20,7 @@ import { planPagePaths } from "cms-content/pages/core/lifecycle/pagePaths";
 import { validateSiteBlocCollectionInput } from "cms-content/blocs/core/catalogue/siteBlocCollections";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 import { validatePagePath, validatePageTitle, validatePagePatch } from "cms-content/pages/core/validation/page";
-import { assertContentRefsExist } from "cms-content/editor/core/markup/validation/assertContentRefsExist";
+import { assertContentRefsExist } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
 import { validateSettingsPatch } from "cms-content/settings/core/validation";
 import {
     validateBlocWrite,

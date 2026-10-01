@@ -1,4 +1,4 @@
-import { isSafeNavigationalUrl } from "cms-content/editor/core/markup/safeUrl";
+import { isSafeNavigationalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
 
 const DYNAMIC_TOKEN = /(?:\{\{|#\{|@\{)/;
 const CONTROL_CHARACTER = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;

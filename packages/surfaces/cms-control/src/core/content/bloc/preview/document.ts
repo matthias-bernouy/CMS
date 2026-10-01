@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
+import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/bindings";
 import { previewLayoutScript } from "./layout";
 
 export function previewDocument(input: {

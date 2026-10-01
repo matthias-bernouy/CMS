@@ -1,7 +1,7 @@
 import { renderCollectionTexts, type CollectionTextSource } from "@bernouy/cms-content/rendering";
 
 /** Resolve collection-owned output without rewriting the inert page input. */
-export function renderEditorCollectionTexts(
+export function renderPreviewCollectionTexts(
     root: ParentNode,
     locale: string,
     sources: readonly CollectionTextSource[],

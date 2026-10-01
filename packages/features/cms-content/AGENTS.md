@@ -1,7 +1,7 @@
 # @bernouy/cms-content
 
 Feature package for CMS-owned content: pages, blocs, settings, the author file
-library, editor contracts, validation, and read models.
+library, declarative bindings, validation, and read models.
 
 ## Boundaries
 
@@ -10,8 +10,8 @@ library, editor contracts, validation, and read models.
 - `@bernouy/cms-content/rendering` exposes `ContentReader`, its composition
   factory and public rendering helpers. It has published-only page operations,
   rendering settings and renderable bloc artifacts, never editorial queries.
-- `@bernouy/cms-content/editor` exposes browser/editor-safe authoring
-  contracts.
+- `@bernouy/cms-content/bindings` exposes browser-safe declarative binding
+  syntax and runtime metadata.
 - `@bernouy/cms-content/theme` exposes browser-safe theme value resolution.
 - `@bernouy/cms-content/mongo` exposes `MongoCmsRepository` for composition
   roots.
@@ -32,7 +32,7 @@ library, editor contracts, validation, and read models.
 
 ## Source Layout
 
-- `pages/`, `blocs/`, `files/`, `settings/`, `theme/` and `editor/` are sibling
+- `pages/`, `blocs/`, `bindings/`, `files/`, `settings/` and `theme/` are sibling
   domains. Theme owns tokens, modes, values and CSS independently of settings.
 - Each domain contains only its needed `interfaces/`, `core/`, `http/` or
   `default-implementation/` layers. Interfaces contain no executable helpers.

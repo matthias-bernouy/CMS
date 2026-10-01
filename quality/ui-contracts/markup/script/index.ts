@@ -91,7 +91,7 @@ function staticBindings(file: ts.SourceFile): StaticBindings {
         if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
             const imports = node.importClause?.namedBindings;
             const trustedPackage = [
-                "@bernouy/cms-content/editor",
+                "@bernouy/cms-content/bindings",
                 "@bernouy/components",
                 "@bernouy/components/binding",
             ].includes(node.moduleSpecifier.text);

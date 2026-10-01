@@ -1,4 +1,4 @@
-import { isCmsQueryParamName } from "cms-content/editor/core/bindings";
+import { isCmsQueryParamName } from "cms-content/blocs/core/markup/bindings";
 
 const PAGE_STATE_KEY = /^[A-Za-z0-9_][A-Za-z0-9_.:-]*$/;
 

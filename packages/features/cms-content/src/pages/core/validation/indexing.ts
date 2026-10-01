@@ -1,7 +1,7 @@
 import type { PageIndexingConfiguration } from "cms-content/pages/interfaces/pages";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { validateLabel } from "cms-content/application/core/validation/fields";
-import { isCmsQueryParamName } from "cms-content/editor/core/bindings";
+import { isCmsQueryParamName } from "cms-content/blocs/core/markup/bindings";
 
 const MAX_INDEXING_REFERENCE_LENGTH = 512;
 const CAPABILITY_ID = /^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/u;

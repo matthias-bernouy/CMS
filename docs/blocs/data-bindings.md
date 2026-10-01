@@ -310,5 +310,5 @@ network-inert activation rules. Follow
 [Authoring Responsive Images](../images/authoring.md) instead of building a
 custom fetch-and-Blob loader.
 
-The complete activation element and preview-state contract is recorded in the
-[`cms-binding-core` contract](../../packages/features/cms-content/src/editor/interfaces/README.md).
+The binding syntax and activation constants are exported from
+`@bernouy/cms-content/bindings`; their implementation belongs to the Bloc markup domain.

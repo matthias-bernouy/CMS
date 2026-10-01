@@ -1,6 +1,6 @@
 import { parseHTML } from "linkedom";
 import type { CollectionComponent } from "@bernouy/cms-repository/collections";
-import { sanitizeDomTree } from "cms-content/editor/core/markup/sanitizeDomTree";
+import { sanitizeDomTree } from "cms-content/blocs/core/markup/security/sanitizeDomTree";
 
 /** Compile an admitted static shell into the existing browser bloc contract. */
 export function compileCollectionComponent(bloc: CollectionComponent): string {

@@ -80,7 +80,7 @@ function inferredBrowserEntries(pkg: WorkspacePackage): string[] {
         return entries;
     }
     for (const [subpath, value] of Object.entries(pkg.manifest.exports as Record<string, unknown>)) {
-        if (!/(?:browser|client|component|editor)/i.test(subpath) && !hasObjectKey(value, "browser")) {
+        if (!/(?:browser|client|component|binding|editor)/i.test(subpath) && !hasObjectKey(value, "browser")) {
             continue;
         }
         for (const target of exportTargets(value)) {

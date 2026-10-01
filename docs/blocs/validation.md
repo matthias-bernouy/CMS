@@ -19,8 +19,8 @@ loading, empty, error, and long-content states.
 
 ## Compiler checks
 
-`@bernouy/cms-bloc-compile` validates tags and artifacts and builds the view and
-editor bundles. Tag validation rejects native roots and reserved/invalid custom-element names.
+`@bernouy/cms-bloc-compile` validates tags and artifacts and builds the browser
+runtime bundle. Tag validation rejects native roots and reserved/invalid custom-element names.
 Source validation detects selected registration and navigation patterns; it is
 not a complete JavaScript safety analysis. Bundling enforces supported imports
 and validates emitted syntax. The Control import path additionally checks source

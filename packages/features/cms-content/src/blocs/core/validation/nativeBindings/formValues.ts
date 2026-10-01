@@ -5,7 +5,7 @@ import {
     type CmsSourceSerialization,
     type CmsFormValueType,
     type CmsFormEmptyBehavior,
-} from "cms-content/editor/core/bindings/types";
+} from "cms-content/blocs/core/markup/bindings/types";
 
 export function isCmsSourceSerialization(value: string | null): value is CmsSourceSerialization {
     return (CMS_SOURCE_SERIALIZATIONS as readonly string[]).includes(value ?? "");

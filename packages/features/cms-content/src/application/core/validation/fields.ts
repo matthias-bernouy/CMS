@@ -1,5 +1,5 @@
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
-import { validatePageContentMarkup } from "cms-content/editor/core/markup/validation/nativeContent";
+import { validatePageContentMarkup } from "cms-content/blocs/core/markup/validation/nativeContent";
 
 /**
  * Field-level validators shared by the content entities. Each one

@@ -1,4 +1,4 @@
-import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
+import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/bindings";
 import {
     BindingCore,
     observeSource,

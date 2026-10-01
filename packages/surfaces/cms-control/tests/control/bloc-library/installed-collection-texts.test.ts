@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { renderEditorCollectionTexts } from "cms-control/core/content/installedCollections/renderTexts";
+import { renderPreviewCollectionTexts } from "cms-control/core/content/installedCollections/renderTexts";
 import { parseHTML } from "linkedom";
 
 test("fixed collection text rendering preserves authored slot input", () => {
@@ -13,7 +13,7 @@ test("fixed collection text rendering preserves authored slot input", () => {
         </test-card>
     </main>`).document;
 
-    renderEditorCollectionTexts(document.querySelector("main")!, "en", [
+    renderPreviewCollectionTexts(document.querySelector("main")!, "en", [
         {
             collection: {
                 collectionId: "test",
