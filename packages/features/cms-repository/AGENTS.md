@@ -250,9 +250,11 @@ models and validation for CMS-owned installations and site selections.
   with selecting providers or validating the whole site's installation graph.
 - `./collections/installations` owns immutable releases and revisioned per-site
   installation/text overrides; `/collections/mongo` is a runtime-only adapter.
-  The installer accepts compositions and components with slots and initial
-  page content, but without assets or capability requirements. Compatible version upgrades preserve site
-  overrides; publication to a remote registry remains unsupported.
+  The installer accepts complete admitted bundles, persists verified assets and
+  resolves resource capability requirements through its configured contract
+  catalogue. Compatible upgrades preserve site overrides, existing slot
+  contracts and theme-token types; publication to a remote registry remains
+  unsupported.
 - Text metadata (`category`, `group`, `label`, `description`) is declarative and
   bounded. It does not change interpolation keys or grant runtime capabilities.
 - Treat `collectionId` as the runtime namespace. It is lowercase kebab-case,

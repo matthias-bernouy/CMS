@@ -2,21 +2,29 @@ import type { Db } from "mongodb";
 import { MongoServerError } from "mongodb";
 
 type Document = { _id: string; revision?: number };
+type Filter = Record<string, unknown>;
 
 class Collection {
     readonly documents = new Map<string, Document>();
 
-    async findOne(filter: { _id: string }): Promise<Document | null> {
-        const document = this.documents.get(filter._id);
-        return document ? structuredClone(document) : null;
+    async createIndex(): Promise<void> {}
+
+    async findOne(filter: Filter, options?: { projection?: { _id?: number } }): Promise<Document | null> {
+        const document = [...this.documents.values()].find((candidate) => matches(candidate, filter));
+        if (!document) {
+            return null;
+        }
+        const cloned = cloneDocument(document);
+        if (options?.projection?._id === 0) {
+            delete (cloned as Partial<Document>)._id;
+        }
+        return cloned;
     }
 
-    find(filter: { _id?: string }) {
+    find(filter: Filter) {
         return {
             toArray: async () =>
-                [...this.documents.values()]
-                    .filter((document) => filter._id === undefined || document._id === filter._id)
-                    .map((document) => structuredClone(document)),
+                [...this.documents.values()].filter((document) => matches(document, filter)).map(cloneDocument),
         };
     }
 
@@ -24,17 +32,69 @@ class Collection {
         if (this.documents.has(document._id)) {
             throw new MongoServerError({ ok: 0, code: 11000, errmsg: "duplicate key" });
         }
-        this.documents.set(document._id, structuredClone(document));
+        this.documents.set(document._id, cloneDocument(document));
     }
 
-    async replaceOne(filter: { _id: string; revision: number }, document: Document) {
-        const current = this.documents.get(filter._id);
-        if (!current || current.revision !== filter.revision) {
-            return { matchedCount: 0 };
+    async updateOne(
+        filter: Filter,
+        update: { $setOnInsert?: Record<string, unknown>; $set?: Record<string, unknown> },
+        options?: { upsert?: boolean },
+    ) {
+        const current = [...this.documents.values()].find((document) => matches(document, filter));
+        if (current) {
+            if (update.$set) {
+                Object.assign(current, cloneDocument(update.$set));
+            }
+            return { matchedCount: 1, modifiedCount: update.$set ? 1 : 0, upsertedCount: 0 };
         }
-        this.documents.set(filter._id, structuredClone(document));
-        return { matchedCount: 1 };
+        if (!options?.upsert) {
+            return { matchedCount: 0, modifiedCount: 0, upsertedCount: 0 };
+        }
+        const inserted = cloneDocument({ ...filter, ...update.$setOnInsert }) as Document;
+        if (typeof inserted._id !== "string" || this.documents.has(inserted._id)) {
+            throw new MongoServerError({ ok: 0, code: 11000, errmsg: "duplicate key" });
+        }
+        this.documents.set(inserted._id, inserted);
+        return { matchedCount: 0, modifiedCount: 0, upsertedCount: 1 };
     }
+
+    async replaceOne(filter: Filter, document: Omit<Document, "_id"> & Partial<Pick<Document, "_id">>, options = {}) {
+        const current = [...this.documents.values()].find((candidate) => matches(candidate, filter));
+        if (current) {
+            this.documents.set(current._id, cloneDocument({ _id: current._id, ...document }));
+            return { matchedCount: 1, modifiedCount: 1, upsertedCount: 0 };
+        }
+        if (!(options as { upsert?: boolean }).upsert) {
+            return { matchedCount: 0, modifiedCount: 0, upsertedCount: 0 };
+        }
+        const id = document._id ?? filter._id;
+        if (typeof id !== "string" || this.documents.has(id)) {
+            throw new MongoServerError({ ok: 0, code: 11000, errmsg: "duplicate key" });
+        }
+        this.documents.set(id, cloneDocument({ _id: id, ...document }));
+        return { matchedCount: 0, modifiedCount: 0, upsertedCount: 1 };
+    }
+}
+
+function matches(document: Document, filter: Filter): boolean {
+    return Object.entries(filter).every(([key, value]) => document[key as keyof Document] === value);
+}
+
+function cloneDocument<T>(value: T): T {
+    if (value instanceof Uint8Array) {
+        return value.slice() as T;
+    }
+    if (value !== null && typeof value === "object") {
+        const prototype = Object.getPrototypeOf(value);
+        if (prototype !== Object.prototype && prototype !== null && !Array.isArray(value)) {
+            return value;
+        }
+        if (Array.isArray(value)) {
+            return value.map(cloneDocument) as T;
+        }
+        return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, cloneDocument(item)])) as T;
+    }
+    return value;
 }
 
 export function fakeCatalogueDb(): Db {

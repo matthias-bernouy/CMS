@@ -6,6 +6,7 @@ import type { CollectionBundleAsset } from "../../interfaces/CollectionAssets";
 import type { CollectionStorage, InstalledCollection } from "../interfaces/store";
 import { assertCollectionResourceIsolation, assertInstallableCollectionResources } from "./resourceIsolation";
 import { assertCompatibleCollectionUpgrade } from "./upgradeCompatibility";
+import { validateStoredCollectionInstallation } from "./siteState";
 
 export class CollectionStore {
     constructor(
@@ -38,7 +39,10 @@ export class CollectionStore {
                 if (!artifact || artifact.release.collectionId !== installation.collectionId) {
                     throw new Error("Installed collection artifact is missing or inconsistent");
                 }
-                return { ...installation, release: artifact.release };
+                return {
+                    ...validateStoredCollectionInstallation(installation, artifact.release),
+                    release: artifact.release,
+                };
             }),
         );
         assertCollectionResourceIsolation(collections.map(({ release }) => release));

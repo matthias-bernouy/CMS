@@ -1,11 +1,10 @@
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
-import { canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
-import type { AdmittedCollectionRelease, CollectionDigest } from "../../interfaces/CollectionAdmission";
+import type { AdmittedCollectionRelease } from "../../interfaces/CollectionAdmission";
 import type { CollectionBundleAsset } from "../../interfaces/CollectionAssets";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../limits";
 import { parseCollectionRelease, parseCollectionReleaseJson } from "../parsing/parseCollectionRelease";
-import { snapshotCollectionAssets, verifyCollectionAssets } from "./assets";
+import { createCollectionArtifact } from "./collectionArtifact";
 import { verifyCollectionRequirements } from "./requirements";
 
 export interface CollectionAdmissionOptions {
@@ -37,13 +36,8 @@ async function admitParsed(
     catalogue: ReleaseCatalogue | undefined,
     limits: Readonly<CollectionLimits>,
 ): Promise<AdmittedCollectionRelease> {
-    // Snapshot every caller-owned buffer before the first asynchronous dependency or hash operation.
-    const snapshots = snapshotCollectionAssets(release.assets, assets, limits);
-    await verifyCollectionAssets(release.assets, snapshots);
-    await verifyCollectionRequirements(release, catalogue);
-    const canonicalJson = canonicalizeIJson(release, limits.maxJsonDepth);
-    const hash = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonicalJson)));
-    const digest =
-        `sha256:${Array.from(hash, (byte) => byte.toString(16).padStart(2, "0")).join("")}` as CollectionDigest;
-    return Object.freeze({ kind: "admitted-collection-release", release, digest, canonicalJson, assets: snapshots });
+    // createCollectionArtifact snapshots every caller-owned buffer before its first hash await.
+    const artifact = await createCollectionArtifact(release, assets, limits);
+    await verifyCollectionRequirements(artifact.release, catalogue);
+    return artifact;
 }
