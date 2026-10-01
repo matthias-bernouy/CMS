@@ -79,6 +79,8 @@ export { ActionMenuSection } from "./ui/Navigation/Menu/ActionMenu/ActionMenuSec
 export { LateralMenu } from "./ui/Navigation/Menu/LateralMenu/LateralMenu";
 export { LateralMenuItem } from "./ui/Navigation/Menu/LateralMenu/LateralMenuItem/LateralMenuItem";
 export { LateralMenuSection } from "./ui/Navigation/Menu/LateralMenu/Section/LateralMenuSection";
+export { NavigationList } from "./ui/Navigation/List/NavigationList";
+export { NavigationListItem } from "./ui/Navigation/List/Item/NavigationListItem";
 
 // Navigation tabs
 export { NavTab } from "./ui/Navigation/NavTabs/NavTab/NavTab";

@@ -50,6 +50,8 @@ export const blocEntries: ReadonlyArray<readonly [string, string]> = [
     ["lateral-menu", "./src/ui/Navigation/Menu/LateralMenu/LateralMenu.ts"],
     ["lateral-menu-item", "./src/ui/Navigation/Menu/LateralMenu/LateralMenuItem/LateralMenuItem.ts"],
     ["lateral-menu-section", "./src/ui/Navigation/Menu/LateralMenu/Section/LateralMenuSection.ts"],
+    ["navigation-list", "./src/ui/Navigation/List/NavigationList.ts"],
+    ["navigation-list-item", "./src/ui/Navigation/List/Item/NavigationListItem.ts"],
     ["nav-tab", "./src/ui/Navigation/NavTabs/NavTab/NavTab.ts"],
     ["nav-tabs", "./src/ui/Navigation/NavTabs/NavTabs.ts"],
     ["pagination", "./src/ui/Navigation/Pagination/Pagination.ts"],

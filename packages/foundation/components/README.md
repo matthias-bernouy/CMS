@@ -131,11 +131,18 @@ for example when several application views share a pathname and use query parame
 | --- | --- | --- |
 | `Breadcrumb` | `<p9r-breadcrumb>` | Breadcrumb container with custom `separator`. |
 | `BreadcrumbItem` | `<p9r-breadcrumb-item>` | Single crumb with `href` / `current`. |
+| `NavigationList` | `<p9r-navigation-list>` | Bordered list of navigation rows. |
+| `NavigationListItem` | `<p9r-navigation-list-item>` | Row with optional `icon`, `description` or `caption`, and `badge` slots; `href` makes it a link. |
 | `Pagination` | `<p9r-pagination>` | Page numbers with `page` / `total` / `siblings` / `boundary`, emits `page-change`. |
 | `Stepper` | `<p9r-stepper>` | Linear stepper with `current` / `orientation`. |
 | `Step` | `<p9r-step>` | One step inside a `<p9r-stepper>`. |
 | `Tabs` | `<p9r-tabs>` | Tab container with keyboard nav and `variant` (line / pills). |
 | `TabPanel` | `<p9r-tab-panel>` | Single panel inside `<p9r-tabs>` (use `id` + `label`). |
+
+`NavigationListItem` is keyboard activatable as a button when it has no `href`.
+Use that mode for actions that open a local flow; use `href` for navigation.
+The badge sits before the trailing chevron. `title` is a required slot; the
+other slots are optional.
 
 ### Disclosure
 

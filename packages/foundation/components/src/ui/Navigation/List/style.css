@@ -1,0 +1,4 @@
+:host { display: block; min-width: 0; }
+.list { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 18px; box-shadow: 0 1px 3px rgb(0 0 0 / 3%); overflow: hidden; }
+::slotted(p9r-navigation-list-item) { display: block; }
+::slotted(p9r-navigation-list-item:not(:last-child)) { border-bottom: 1px solid var(--border-default); }
