@@ -107,6 +107,40 @@ describe("contract release parsing", () => {
         ).toThrow('unknown property "audience"');
     });
 
+    test("admits only explicit synchronous binary media queries", () => {
+        const mediaCapability = capabilityDocument({
+            id: "asset.read",
+            behavior: { effect: "query", execution: "sync" },
+            input: objectSchema({ fileId: stringSchema(64) }, ["fileId"]),
+            output: { type: "binary", maxBytes: 1024, mediaTypes: ["image/png"] },
+            media: { idInput: "fileId" },
+            binding: {
+                transport: "http",
+                method: "GET",
+                path: "/v1/media/{fileId}",
+                input: { path: { fileId: "fileId" } },
+                response: {
+                    successStatuses: [200],
+                    contentTypes: ["image/png"],
+                    errorStatuses: { INVALID_RECIPIENT: 422 },
+                },
+            },
+        });
+        expect(
+            parseContractRelease(contractDocument({ capabilities: [mediaCapability] })).capabilities[0]?.media,
+        ).toEqual({ idInput: "fileId" });
+        expect(() =>
+            parseContractRelease(
+                contractDocument({ capabilities: [{ ...mediaCapability, media: { idInput: "assetId" } }] }),
+            ),
+        ).toThrow("idInput must be fileId");
+        expect(() =>
+            parseContractRelease(
+                contractDocument({ capabilities: [{ ...mediaCapability, output: stringSchema(64) }] }),
+            ),
+        ).toThrow("binary output");
+    });
+
     test("computes the same digest regardless of object key insertion order", async () => {
         const release = parseContractRelease(contractDocument());
         const reordered = { ...release, name: release.name, contractId: release.contractId };

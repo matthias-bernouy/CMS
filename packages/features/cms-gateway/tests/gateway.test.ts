@@ -171,6 +171,18 @@ describe("capability gateway", () => {
         }
     });
 
+    test("does not infer a provider media identity from an unrelated binary capability", async () => {
+        const scope = harness(await gatewayRoute({ binary: true, media: false }));
+        scope.setResponse({ status: 200, contentType: "image/png", bytes: new Uint8Array([1, 2, 3]) });
+
+        const result = await scope.gateway.invoke(invocation(undefined, { fileId: "export-1" }));
+
+        expect(result).toMatchObject({ kind: "binary" });
+        if (result.kind === "binary") {
+            expect(result.media).toBeUndefined();
+        }
+    });
+
     test("executes synchronous commands without a keyed retry contract", async () => {
         for (const idempotency of ["natural", "none"] as const) {
             const scope = harness(

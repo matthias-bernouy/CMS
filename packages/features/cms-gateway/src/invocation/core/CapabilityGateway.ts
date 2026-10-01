@@ -94,7 +94,8 @@ export class CapabilityGateway implements GatewayAccessProbe {
             }
             throw new GatewayError("transport_failure", "provider transport failed");
         }
-        if (result.kind !== "binary" || typeof input.fileId !== "string") {
+        const mediaId = capability.media ? input[capability.media.idInput] : undefined;
+        if (result.kind !== "binary" || typeof mediaId !== "string") {
             return result;
         }
         return {
@@ -105,7 +106,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 contractId: invocation.contractId,
                 releaseDigest: route.selection.digest,
                 capabilityId: invocation.capabilityId,
-                fileId: input.fileId,
+                fileId: mediaId,
                 generation: await providerByteGeneration(result.bytes),
             },
         };

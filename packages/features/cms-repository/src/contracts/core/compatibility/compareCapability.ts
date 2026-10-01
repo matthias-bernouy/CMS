@@ -27,6 +27,18 @@ export function compareCapability(
     if (fingerprint(previous.behavior, maxJsonDepth) !== fingerprint(next.behavior, maxJsonDepth)) {
         changes.push(major("capability_changed", `${path}.behavior`, "capability behavior changed"));
     }
+    if (previous.media?.idInput !== next.media?.idInput) {
+        changes.push(
+            previous.media
+                ? major("capability_changed", `${path}.media`, "capability media declaration changed")
+                : {
+                      code: "capability_changed",
+                      path: `${path}.media`,
+                      message: "capability became addressable through CMS media URLs",
+                      requiredBump: "minor",
+                  },
+        );
+    }
     changes.push(...compareRequirements(previous.requires ?? [], next.requires ?? [], `${path}.requires`));
     const inputChange = compareSchema(previous.input, next.input, `${path}.input`, "input", maxJsonDepth);
     if (inputChange) {

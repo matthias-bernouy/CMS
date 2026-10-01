@@ -6,7 +6,7 @@ import type { GatewayRoute } from "@bernouy/cms-gateway";
 export const NOW = "2026-09-29T08:00:00.000Z";
 
 export async function gatewayRoute(
-    overrides: { access?: string; behavior?: Record<string, unknown>; binary?: boolean } = {},
+    overrides: { access?: string; behavior?: Record<string, unknown>; binary?: boolean; media?: boolean } = {},
 ): Promise<GatewayRoute> {
     const command = overrides.behavior?.effect === "command";
     const contract = await admitContractRelease({
@@ -39,6 +39,7 @@ export async function gatewayRoute(
                           required: ["items"],
                       },
                 errors: [{ code: "NOT_FOUND", retryable: false }],
+                ...(overrides.binary && overrides.media !== false ? { media: { idInput: "fileId" } } : {}),
                 binding: {
                     transport: "http",
                     method: command ? "POST" : "GET",

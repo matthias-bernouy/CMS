@@ -68,6 +68,35 @@ describe("contract release compatibility", () => {
         expect(compareContractReleases(previous, next)).toMatchObject({ validEvolution: false, requiredBump: "major" });
     });
 
+    test("treats explicit media addressing as an additive capability classification", () => {
+        const binary = (media?: { idInput: "fileId" }) =>
+            capabilityDocument({
+                id: "asset.read",
+                behavior: { effect: "query", execution: "sync" },
+                input: objectSchema({ fileId: stringSchema(64) }, ["fileId"]),
+                output: { type: "binary", maxBytes: 1024, mediaTypes: ["image/png"] },
+                ...(media ? { media } : {}),
+                binding: {
+                    transport: "http",
+                    method: "GET",
+                    path: "/v1/media/{fileId}",
+                    input: { path: { fileId: "fileId" } },
+                    response: {
+                        successStatuses: [200],
+                        contentTypes: ["image/png"],
+                        errorStatuses: { INVALID_RECIPIENT: 422 },
+                    },
+                },
+            });
+        const previous = parseContractRelease(contractDocument({ version: "1.0.0", capabilities: [binary()] }));
+        const next = parseContractRelease(
+            contractDocument({ version: "1.1.0", capabilities: [binary({ idInput: "fileId" })] }),
+        );
+
+        expect(compareContractReleases(previous, next)).toMatchObject({ validEvolution: true, requiredBump: "minor" });
+        expect(compareContractReleases(next, previous)).toMatchObject({ requiredBump: "major" });
+    });
+
     test("allows descriptions to change in a patch release", () => {
         const previousCapability = capabilityDocument();
         const previousInput = previousCapability.input as Record<string, unknown>;

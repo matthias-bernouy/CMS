@@ -4,7 +4,7 @@
     "schemaDialect": "ulvia-schema/v1",
     "providerId": "ulvia.official",
     "name": "Ulvia Official Provider",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "provenance": {
         "publisherId": "ulvia.official",
         "publishedAt": "2026-10-01T00:00:00Z"
@@ -33,8 +33,8 @@
         },
         {
             "contractId": "media.assets",
-            "version": "0.1.1",
-            "digest": "sha256:4c59c6ee34938db6de621ecfc4308a6e48ccb409f7e8779e2e8f97a41e747693",
+            "version": "0.2.0",
+            "digest": "sha256:4cb95c46ce1d669d76b40c9b2eaf588ac65b0a91ec8db2ee08c571b3b08266bf",
             "requires": []
         }
     ]

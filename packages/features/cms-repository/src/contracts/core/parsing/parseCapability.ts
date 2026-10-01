@@ -14,6 +14,7 @@ import type {
     CapabilityDefinition,
     CapabilityErrorDefinition,
     CapabilityExecution,
+    CapabilityMediaDefinition,
     ContractFixtureAssetDefinition,
 } from "../../interfaces/ContractRelease";
 import type { UlviaObjectSchema } from "../../interfaces/UlviaSchema";
@@ -53,6 +54,7 @@ export function parseCapability(
             "binding",
             "mocks",
             "requires",
+            "media",
         ],
         path,
         "invalid_contract",
@@ -75,15 +77,29 @@ export function parseCapability(
     const description = optionalString(record.description, `${path}.description`, "invalid_contract", 4096);
     const output = parseSchemaAt(record.output, `${path}.output`, schemaState, 1);
     const errors = parseErrors(record.errors, `${path}.errors`, schemaState);
+    const behavior = parseBehavior(record.behavior, `${path}.behavior`);
+    const binding = parseHttpBinding(record.binding, `${path}.binding`, limits);
     return {
         id: parseIdentifier(record.id, `${path}.id`),
         ...(description ? { description } : {}),
         access: enumValue(record.access, `${path}.access`, ACCESS_LEVELS),
-        behavior: parseBehavior(record.behavior, `${path}.behavior`),
+        behavior,
         input: input as UlviaObjectSchema,
         output,
         errors,
-        binding: parseHttpBinding(record.binding, `${path}.binding`, limits),
+        binding,
+        ...(record.media === undefined
+            ? {}
+            : {
+                  media: parseMedia(
+                      record.media,
+                      `${path}.media`,
+                      input as UlviaObjectSchema,
+                      output,
+                      behavior,
+                      binding,
+                  ),
+              }),
         ...(record.requires === undefined
             ? {}
             : { requires: parseCapabilityRequirements(record.requires, `${path}.requires`, limits) }),
@@ -105,6 +121,49 @@ export function parseCapability(
             ? {}
             : { deprecation: parseCapabilityDeprecation(record.deprecation, `${path}.deprecation`) }),
     };
+}
+
+function parseMedia(
+    value: unknown,
+    path: string,
+    input: UlviaObjectSchema,
+    output: ReturnType<typeof parseSchemaAt>,
+    behavior: CapabilityBehavior,
+    binding: ReturnType<typeof parseHttpBinding>,
+): CapabilityMediaDefinition {
+    const record = expectRecord(value, path, "invalid_contract");
+    rejectUnknownKeys(record, ["idInput"], path, "invalid_contract");
+    const idInput = expectString(record.idInput, `${path}.idInput`, "invalid_contract", 64);
+    if (idInput !== "fileId") {
+        throw new ReleaseValidationError(
+            "invalid_contract",
+            "protocol v1 media idInput must be fileId",
+            `${path}.idInput`,
+        );
+    }
+    const identifier = input.properties.fileId;
+    if (!identifier || identifier.type !== "string" || identifier.nullable || !input.required.includes("fileId")) {
+        throw new ReleaseValidationError(
+            "invalid_contract",
+            "media capabilities require a non-nullable required string fileId input",
+            `${path}.idInput`,
+        );
+    }
+    if (output.type !== "binary" || output.nullable) {
+        throw new ReleaseValidationError(
+            "invalid_contract",
+            "media capabilities require a non-nullable binary output",
+            path,
+        );
+    }
+    if (behavior.effect !== "query" || behavior.execution !== "sync" || binding.method !== "GET") {
+        throw new ReleaseValidationError(
+            "invalid_contract",
+            "media capabilities must be synchronous GET queries",
+            path,
+        );
+    }
+    return { idInput: "fileId" };
 }
 
 function parseBehavior(value: unknown, path: string): CapabilityBehavior {
