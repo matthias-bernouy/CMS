@@ -2,6 +2,14 @@ import { LocalArtifactFiles } from "../repository/artifactFiles";
 import { LocalContractReleases } from "../repository/contracts";
 import { LocalCollectionRepository } from "../repository/local";
 import { LocalProviderReleases } from "../repository/providers";
+import type { CollectionDashboardNavigationItem } from "@bernouy/cms-repository/collections";
+
+function countDashboardViews(items: readonly CollectionDashboardNavigationItem[]): number {
+    return items.reduce(
+        (count, item) => count + Number(Boolean(item.use)) + countDashboardViews(item.children ?? []),
+        0,
+    );
+}
 
 /** Serve only releases explicitly stored in the persistent local repository. */
 export function startLocalRepository(port: number, root: string) {
@@ -32,16 +40,26 @@ export function startLocalRepository(port: number, root: string) {
                         description: release.description ?? "",
                         blocCount: release.blocs.length,
                         hasTheme: Boolean(release.theme),
+                        dashboards: (release.dashboards ?? []).map((dashboard) => ({
+                            id: dashboard.id,
+                            name: dashboard.name,
+                            description: dashboard.description ?? "",
+                            viewCount: dashboard.views?.length ?? countDashboardViews(dashboard.navigation ?? []),
+                        })),
                     }));
                     return listResponse(releases);
                 }
                 if (type === "contracts") {
-                    const releases = (await (await contracts.catalogue()).list()).map(({ admission }) => ({
+                    const releases = (await (await contracts.catalogue()).list()).map(({ admission, publishedAt }) => ({
                         publisherId: admission.release.publisherId,
                         contractId: admission.release.contractId,
                         version: admission.release.version,
                         digest: admission.digest,
                         name: admission.release.name,
+                        description: admission.release.description ?? "",
+                        icon: admission.release.catalogue?.icon,
+                        categories: admission.release.catalogue?.categories,
+                        publishedAt,
                     }));
                     return listResponse(releases);
                 }
@@ -52,6 +70,7 @@ export function startLocalRepository(port: number, root: string) {
                         version: admission.manifest.version,
                         digest: admission.digest,
                         name: admission.manifest.name,
+                        links: admission.manifest.links,
                     }));
                     return listResponse(releases);
                 }

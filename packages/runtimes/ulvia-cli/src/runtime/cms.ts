@@ -9,6 +9,7 @@ export type DevPorts = Readonly<{
     delivery: number;
     mongo: number;
     repository: number;
+    provider: number;
 }>;
 
 export type CmsProcess = ReturnType<typeof Bun.spawn>;
@@ -40,7 +41,8 @@ export async function startLocalCms(
             CMS_ADMIN_PASSWORD: config.adminPassword,
             CMS_FILES_DIR: paths.cmsFiles,
             MONGO_URL: mongo.url,
-            CMS_COLLECTION_REPOSITORY_URL: `http://127.0.0.1:${ports.repository}`,
+            CMS_REPOSITORY_URL: `http://127.0.0.1:${ports.repository}`,
+            CMS_GATEWAY_SITE_ID: "default",
             CMS_AUTH_SITE_NAME: "Ulvia local CMS",
             CMS_AUTH_EMAIL_COOLDOWN_SECONDS: "0",
             ANALYTICS_SALT_SECRET: config.analyticsSecret,

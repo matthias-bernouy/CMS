@@ -21,6 +21,9 @@
         },
         {
             "path": "../../features/cms-repository"
+        },
+        {
+            "path": "../ulvia-provider"
         }
     ]
 }

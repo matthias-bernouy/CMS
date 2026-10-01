@@ -92,7 +92,7 @@ describe("integration theme contributions", () => {
 
         delete source.owner;
         expect(() => validateThemeSettings({ ...defaultThemeSettings(), sources: [source] })).toThrow(
-            "reserved integration source id",
+            "reserved source id",
         );
 
         const malformed = brandTheme();

@@ -1,0 +1,39 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "media.assets",
+    "name": "Media assets",
+    "description": "Serve provider-owned public media through the CMS gateway so pages, blocs, and dashboards can reuse external assets. Access checks and CMS image delivery remain in the normal gateway flow.",
+    "version": "0.1.1",
+    "publisherId": "ulvia.official",
+    "catalogue": {
+        "icon": "media",
+        "categories": ["media"]
+    },
+    "capabilities": [
+        {
+            "id": "asset.read",
+            "access": "public",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": { "assetId": { "type": "string", "maxLength": 64 } },
+                "required": ["assetId"]
+            },
+            "output": { "type": "binary", "maxBytes": 1048576, "mediaTypes": ["image/svg+xml"] },
+            "errors": [{ "code": "NOT_FOUND", "retryable": false }],
+            "binding": {
+                "transport": "http",
+                "method": "GET",
+                "path": "/v1/media/{assetId}",
+                "input": { "path": { "assetId": "assetId" } },
+                "response": {
+                    "successStatuses": [200],
+                    "contentTypes": ["image/svg+xml"],
+                    "errorStatuses": { "NOT_FOUND": 404 }
+                }
+            }
+        }
+    ]
+}

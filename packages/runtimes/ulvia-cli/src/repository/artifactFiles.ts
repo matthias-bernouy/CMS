@@ -1,9 +1,16 @@
 import { createHash, randomUUID } from "node:crypto";
 import { link, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { stat } from "node:fs/promises";
 
 export type ArtifactType = "contracts" | "providers";
-export type StoredArtifact = { publisherId: string; id: string; version: string; bytes: Buffer };
+export type StoredArtifact = {
+    publisherId: string;
+    id: string;
+    version: string;
+    bytes: Buffer;
+    publishedAt: string;
+};
 export type LocalFixtureAsset = { id: string; bytes: Uint8Array };
 
 /** Immutable files for locally published contract and provider artifacts. */
@@ -72,7 +79,8 @@ export class LocalArtifactFiles {
                     if (!bytes) {
                         throw new Error(`Invalid local ${type} coordinate: ${publisherId}/${id}/${version}`);
                     }
-                    artifacts.push({ publisherId, id, version, bytes });
+                    const publishedAt = (await stat(this.path(type, publisherId, id, version))).mtime.toISOString();
+                    artifacts.push({ publisherId, id, version, bytes, publishedAt });
                 }
             }
         }

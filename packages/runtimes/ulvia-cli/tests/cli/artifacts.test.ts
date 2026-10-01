@@ -2,6 +2,10 @@ import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
+import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
+import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
+import { importRepositoryArtifact } from "@bernouy/cms-repository/providers/sources";
 import { runCli } from "../../src/cli";
 import { LocalArtifactFiles } from "../../src/repository/artifactFiles";
 import { LocalContractReleases } from "../../src/repository/contracts";
@@ -22,7 +26,9 @@ test("contract and provider releases use explicit kinds and exact local contract
             import.meta.dir,
             "../../../../features/cms-repository/fixtures/contracts/protocol-v1/representative.contract.json",
         );
-        await writeFile(join(contractFolder, "definition.json"), await readFile(fixture));
+        const contract = JSON.parse(await readFile(fixture, "utf8")) as Record<string, unknown>;
+        contract.catalogue = { icon: "mail", categories: ["communication"] };
+        await writeFile(join(contractFolder, "definition.json"), JSON.stringify(contract));
         const providerFixture = resolve(
             import.meta.dir,
             "../../../../features/cms-repository/fixtures/providers/protocol-v1/example.provider-manifest.json",
@@ -60,6 +66,33 @@ test("contract and provider releases use explicit kinds and exact local contract
         expect(await new LocalArtifactFiles(join(data, "repository")).list("providers")).toHaveLength(1);
         const server = startLocalRepository(0, join(data, "repository"));
         try {
+            const remote = new HttpProviderRepository("local", server.url);
+            const importedContracts = new InMemoryReleaseCatalogue();
+            const importedProviders = new InMemoryProviderManifestCatalogue(importedContracts);
+            const listedContracts = await remote.list("contract");
+            const listedProviders = await remote.list("provider-manifest");
+            expect(listedContracts).toHaveLength(2);
+            expect(listedProviders).toHaveLength(1);
+            const contractReference = listedContracts.find((item) => item.id === "protocol.examples")!;
+            expect(contractReference.icon).toBe("mail");
+            expect(contractReference.categories).toEqual(["communication"]);
+            expect(contractReference.publishedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+            const providerReference = listedProviders[0]!;
+            await expect(
+                importRepositoryArtifact(remote, providerReference, importedContracts, importedProviders),
+            ).rejects.toThrow();
+            await expect(
+                importRepositoryArtifact(
+                    remote,
+                    { ...contractReference, digest: `sha256:${"0".repeat(64)}` },
+                    importedContracts,
+                    importedProviders,
+                ),
+            ).rejects.toThrow(/not listed/);
+            await importRepositoryArtifact(remote, contractReference, importedContracts, importedProviders);
+            await importRepositoryArtifact(remote, providerReference, importedContracts, importedProviders);
+            expect((await importedContracts.list()).length).toBe(1);
+            expect((await importedProviders.list()).length).toBe(1);
             const contractsIndex = (await (await fetch(`${server.url}/v1/contracts`)).json()) as {
                 releases: unknown[];
             };

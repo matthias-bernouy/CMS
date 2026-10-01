@@ -1,0 +1,41 @@
+{
+    "kind": "provider-manifest",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "providerId": "ulvia.official",
+    "name": "Ulvia Official Provider",
+    "version": "0.1.1",
+    "provenance": {
+        "publisherId": "ulvia.official",
+        "publishedAt": "2026-10-01T00:00:00Z"
+    },
+    "buildVersionRange": ">=0.1.0 <1.0.0",
+    "endpoint": {
+        "allowedOrigins": ["http://127.0.0.1:5103"],
+        "defaultOrigin": "http://127.0.0.1:5103"
+    },
+    "configuration": { "type": "object", "properties": {}, "required": [] },
+    "credentialSlots": [
+        { "id": "provider-token", "label": "Provider token", "required": true, "secretType": "token" }
+    ],
+    "implementations": [
+        {
+            "contractId": "catalog.items",
+            "version": "0.1.1",
+            "digest": "sha256:2b392b09c76df02f878399f50237d4ed14e76368cf41c2514b3efb6455094dd7",
+            "requires": []
+        },
+        {
+            "contractId": "forms.submissions",
+            "version": "0.1.1",
+            "digest": "sha256:31d284bab754c3d84836c8bfbcf95c124b805662668f84b0b7f2d774652a878a",
+            "requires": []
+        },
+        {
+            "contractId": "media.assets",
+            "version": "0.1.1",
+            "digest": "sha256:4c59c6ee34938db6de621ecfc4308a6e48ccb409f7e8779e2e8f97a41e747693",
+            "requires": []
+        }
+    ]
+}

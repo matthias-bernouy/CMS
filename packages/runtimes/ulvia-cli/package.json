@@ -19,6 +19,7 @@
         "@bernouy/cms-server": "workspace:*",
         "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-repository": "workspace:*"
+        ,"@bernouy/ulvia-provider": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

@@ -1,0 +1,77 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "forms.submissions",
+    "name": "Form submissions",
+    "description": "Collect public form submissions through a provider and let administrators retrieve individual receipts. It supports contact, feedback, registration, and request flows while the provider remains responsible for the submitted data.",
+    "version": "0.1.1",
+    "publisherId": "ulvia.official",
+    "catalogue": {
+        "icon": "feedback",
+        "categories": ["feedback", "forms"]
+    },
+    "capabilities": [
+        {
+            "id": "submission.create",
+            "access": "public",
+            "behavior": { "effect": "command", "idempotency": "none", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "email": { "type": "string", "format": "email", "maxLength": 320 },
+                    "message": { "type": "string", "maxLength": 4000 }
+                },
+                "required": ["email", "message"]
+            },
+            "output": {
+                "type": "object",
+                "properties": { "id": { "type": "string", "format": "uuid", "maxLength": 36 } },
+                "required": ["id"]
+            },
+            "errors": [{ "code": "INVALID_SUBMISSION", "retryable": false }],
+            "binding": {
+                "transport": "http",
+                "method": "POST",
+                "path": "/v1/forms/submissions",
+                "input": { "body": true },
+                "response": {
+                    "successStatuses": [201],
+                    "contentTypes": ["application/json"],
+                    "errorStatuses": { "INVALID_SUBMISSION": 422 }
+                }
+            }
+        },
+        {
+            "id": "submission.get",
+            "access": "admin",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": { "id": { "type": "string", "format": "uuid", "maxLength": 36 } },
+                "required": ["id"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "maxLength": 36 },
+                    "email": { "type": "string", "format": "email", "maxLength": 320 },
+                    "message": { "type": "string", "maxLength": 4000 }
+                },
+                "required": ["id", "email", "message"]
+            },
+            "errors": [{ "code": "NOT_FOUND", "retryable": false }],
+            "binding": {
+                "transport": "http",
+                "method": "GET",
+                "path": "/v1/forms/submissions/{id}",
+                "input": { "path": { "id": "id" } },
+                "response": {
+                    "successStatuses": [200],
+                    "contentTypes": ["application/json"],
+                    "errorStatuses": { "NOT_FOUND": 404 }
+                }
+            }
+        }
+    ]
+}

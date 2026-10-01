@@ -133,6 +133,13 @@
         "typescript": "^7.0.2",
       },
     },
+    "packages/features/ulvia-official-provider": {
+      "name": "@bernouy/ulvia-official-provider",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/cms-repository": "workspace:*",
+      },
+    },
     "packages/foundation/components": {
       "name": "@bernouy/components",
       "version": "0.1.2",
@@ -223,11 +230,21 @@
         "ulvia": "./src/index.ts",
       },
       "dependencies": {
+        "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-server": "workspace:*",
+        "@bernouy/ulvia-provider": "workspace:*",
       },
       "peerDependencies": {
         "typescript": "^7.0.2",
+      },
+    },
+    "packages/runtimes/ulvia-provider": {
+      "name": "@bernouy/ulvia-provider",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/cms-repository": "workspace:*",
+        "@bernouy/ulvia-official-provider": "workspace:*",
       },
     },
     "packages/surfaces/cms-control": {
@@ -316,6 +333,10 @@
     "@bernouy/secret-store": ["@bernouy/secret-store@workspace:packages/foundation/secret-store"],
 
     "@bernouy/ulvia-cli": ["@bernouy/ulvia-cli@workspace:packages/runtimes/ulvia-cli"],
+
+    "@bernouy/ulvia-official-provider": ["@bernouy/ulvia-official-provider@workspace:packages/features/ulvia-official-provider"],
+
+    "@bernouy/ulvia-provider": ["@bernouy/ulvia-provider@workspace:packages/runtimes/ulvia-provider"],
 
     "@biomejs/biome": ["@biomejs/biome@2.5.14", "", { "optionalDependencies": { "@biomejs/cli-darwin-arm64": "2.5.14", "@biomejs/cli-darwin-x64": "2.5.14", "@biomejs/cli-linux-arm64": "2.5.14", "@biomejs/cli-linux-arm64-musl": "2.5.14", "@biomejs/cli-linux-x64": "2.5.14", "@biomejs/cli-linux-x64-musl": "2.5.14", "@biomejs/cli-win32-arm64": "2.5.14", "@biomejs/cli-win32-x64": "2.5.14" }, "bin": { "biome": "bin/biome" } }, "sha512-0FabLIjd4M/dm8VFI86RMaLLdgepzbdfiAL2R8cr7V81OYYrP1w7Z73KfAwPK5h9SrEBXTzNG2y+mBwPo9xRnw=="],
 

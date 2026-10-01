@@ -15,7 +15,7 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
         await runCli(["release", source], options);
         expect((await repository.list()).map((item) => item.release.collectionId)).toEqual(["test"]);
         await runCli(["release", source], options);
-        expect(output.at(-1)).toStartWith("= collection ulvia.examples/test@1.3.2");
+        expect(output.at(-1)).toStartWith("= collection ulvia.examples/test@1.3.7");
         await runCli(["prune"], options);
         expect(await repository.list()).toEqual([]);
         expect(await readdir(join(data, "repository"))).toEqual([]);

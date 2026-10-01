@@ -25,12 +25,16 @@ export async function prepareCollectionRelease(directory: string) {
     const definition = (await Bun.file(join(collectionRoot, "definition.json")).json()) as Record<string, unknown>;
     const blocs = await loadBlocs(join(collectionRoot, "blocs"), String(definition.name ?? collectionId));
     const texts = await readJsonFiles(join(collectionRoot, "texts"), true);
+    const views = await loadViews(join(collectionRoot, "views"));
+    const dashboards = await loadDashboards(join(collectionRoot, "dashboards"));
     const themeFile = Bun.file(join(collectionRoot, "theme", "definition.json"));
     const candidate = {
         ...definition,
         assets: [],
         blocs,
         ...(texts.length ? { texts } : {}),
+        ...(views.length ? { views } : {}),
+        ...(dashboards.length ? { dashboards } : {}),
         ...((await themeFile.exists()) ? { theme: await themeFile.json() } : {}),
     };
     const artifact = await admitCollectionRelease(candidate);
@@ -38,6 +42,40 @@ export async function prepareCollectionRelease(directory: string) {
         throw new Error(`Collection folder ${collectionId} does not match its definition`);
     }
     return artifact;
+}
+
+async function loadDashboards(directory: string): Promise<unknown[]> {
+    const folders = (await readEntries(directory)).filter((entry) => entry.isDirectory());
+    return Promise.all(
+        folders
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map(async (folder) => {
+                const definition = (await Bun.file(join(directory, folder.name, "definition.json")).json()) as Record<
+                    string,
+                    unknown
+                >;
+                if (definition.id !== folder.name) {
+                    throw new Error(`Dashboard folder ${folder.name} must match its definition`);
+                }
+                return definition;
+            }),
+    );
+}
+
+async function loadViews(directory: string): Promise<unknown[]> {
+    const folders = (await readEntries(directory)).filter((entry) => entry.isDirectory());
+    return Promise.all(
+        folders
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map(async (folder) => {
+                const root = join(directory, folder.name);
+                const definition = (await Bun.file(join(root, "definition.json")).json()) as Record<string, unknown>;
+                if (definition.id !== folder.name || Object.hasOwn(definition, "html")) {
+                    throw new Error(`View folder ${folder.name} must match its definition and keep HTML separate`);
+                }
+                return { ...definition, html: (await Bun.file(join(root, "view.html")).text()).trim() };
+            }),
+    );
 }
 
 async function loadBlocs(directory: string, group: string): Promise<unknown[]> {

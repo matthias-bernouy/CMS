@@ -40,7 +40,7 @@ export class LocalContractReleases {
 
     async catalogue(): Promise<InMemoryReleaseCatalogue> {
         const pending = await Promise.all(
-            (await this.files.list("contracts")).map(async ({ publisherId, id, version, bytes }) => {
+            (await this.files.list("contracts")).map(async ({ publisherId, id, version, bytes, publishedAt }) => {
                 const definitions = parseContractReleaseJson(bytes).fixtureAssets ?? [];
                 const fixtures = await Promise.all(
                     definitions.map(async (fixture) => ({
@@ -59,21 +59,23 @@ export class LocalContractReleases {
                 ) {
                     throw new Error(`Corrupt local contract release: ${publisherId}/${id}/${version}`);
                 }
-                return admission;
+                return { admission, publishedAt };
             }),
         );
         pending.sort(
             (left, right) =>
-                left.release.contractId.localeCompare(right.release.contractId) ||
-                compareSemVer(left.release.version, right.release.version),
+                left.admission.release.contractId.localeCompare(right.admission.release.contractId) ||
+                compareSemVer(left.admission.release.version, right.admission.release.version),
         );
-        const catalogue = new InMemoryReleaseCatalogue();
+        let publicationTime = new Date(0);
+        const catalogue = new InMemoryReleaseCatalogue(undefined, () => publicationTime);
         while (pending.length) {
             let published = false;
             let firstError: unknown;
             for (let index = 0; index < pending.length; ) {
                 try {
-                    await catalogue.publish(pending[index]!);
+                    publicationTime = new Date(pending[index]!.publishedAt);
+                    await catalogue.publish(pending[index]!.admission);
                     pending.splice(index, 1);
                     published = true;
                 } catch (error) {

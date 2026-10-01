@@ -1,0 +1,14 @@
+{
+    "name": "@bernouy/ulvia-official-provider",
+    "version": "0.1.0",
+    "description": "Initial official Ulvia provider capabilities for local development.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts",
+        "./local-fs": "./src/local-fs/index.ts"
+    },
+    "dependencies": {
+        "@bernouy/cms-repository": "workspace:*"
+    }
+}
