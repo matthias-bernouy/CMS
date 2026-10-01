@@ -14,6 +14,7 @@ export function createProductionGatewayAccess(credentials: LocalCredentialStore,
             (capability.access === "public" ||
                 (capability.access === "authenticated" &&
                     (actor.kind === "user" || actor.kind === "administrator")))) ||
+        (origin === "view" && (actor.kind === "user" || actor.kind === "administrator")) ||
         (origin === "control" && actor.kind === "administrator");
 
     const isAdministrator = async (subject: Subject): Promise<boolean> => {

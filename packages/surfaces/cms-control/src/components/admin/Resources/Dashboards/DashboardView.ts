@@ -50,6 +50,7 @@ class DashboardView extends HTMLElement {
             `${getMetaBasePath()}/api/dashboard-context?dashboardId=${encodeURIComponent(dashboardId)} as dashboard`,
         );
         content.innerHTML = view.html;
+        rewriteDashboardCapabilitySources(content, dashboardId, getMetaBasePath());
         const section = document.createElement("cms-detail-section");
         section.slot = "main";
         section.setAttribute("heading", view.label);
@@ -64,6 +65,22 @@ class DashboardView extends HTMLElement {
         container.setAttribute("size", "xl");
         container.append(shell);
         this.replaceChildren(container);
+    }
+}
+
+export function rewriteDashboardCapabilitySources(root: ParentNode, dashboardId: string, basePath: string): void {
+    for (const source of root.querySelectorAll<HTMLElement>("[cms-source]")) {
+        const value = source.getAttribute("cms-source") ?? "";
+        const match = /^(\/\.cms\/call\/\S+?)(\s+as\s+[A-Za-z_$][\w$]*)?$/u.exec(value.trim());
+        if (!match) {
+            continue;
+        }
+        const endpoint = match[1]!;
+        const separator = endpoint.includes("?") ? "&" : "?";
+        source.setAttribute(
+            "cms-source",
+            `${basePath}/api/dashboard-call/${endpoint.slice("/.cms/call/".length)}${separator}dashboardId=${encodeURIComponent(dashboardId)}${match[2] ?? ""}`,
+        );
     }
 }
 

@@ -1,0 +1,6 @@
+{
+    "id": "catalog",
+    "name": "Catalog",
+    "icon": "catalog",
+    "description": "Live catalog items provided through the selected catalog.items source."
+}

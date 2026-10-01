@@ -7,6 +7,7 @@ import changeDashboardMember from "cms-control/api/_workspace/dashboard-members.
 import updateDashboard from "cms-control/api/_workspace/dashboard.post";
 import readDashboardView from "cms-control/api/_workspace/dashboard-view.get";
 import type { Dashboard } from "cms-control/components/admin/Resources/Dashboards/domain/types";
+import { rewriteDashboardCapabilitySources } from "cms-control/components/admin/Resources/Dashboards/DashboardView";
 import { DashboardWorkspaceView } from "cms-control/components/admin/Resources/Dashboards/management/DashboardWorkspaceView";
 import { dashboardCatalog } from "cms-control/core/admin/dashboards/catalog";
 
@@ -106,6 +107,21 @@ test("saving a private dashboard updates its fields without rebuilding the works
     expect((nameField as HTMLInputElement).value).toBe("After");
     expect(root.querySelector("[data-editor-title]")?.textContent).toBe("After");
     expect(root.querySelector("[data-dirty]")?.hasAttribute("hidden")).toBeTrue();
+});
+
+test("dashboard HTML routes declared capability sources through its scoped gateway", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+        <section cms-source="/.cms/call/catalog.items/item.list as catalog"></section>
+        <section cms-source="/api/dashboard-context as dashboard"></section>
+    `;
+
+    rewriteDashboardCapabilitySources(root, "dashboard one", "/cms");
+
+    expect(root.children[0]!.getAttribute("cms-source")).toBe(
+        "/cms/api/dashboard-call/catalog.items/item.list?dashboardId=dashboard%20one as catalog",
+    );
+    expect(root.children[1]!.getAttribute("cms-source")).toBe("/api/dashboard-context as dashboard");
 });
 
 function view(cms: ControlCms, dashboardId: string): Promise<Response> {

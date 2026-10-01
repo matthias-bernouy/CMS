@@ -3,6 +3,7 @@
     "name": "Ulvia workspace",
     "icon": "layout",
     "description": "The official Ulvia workspace with reusable HTML views and complete dashboard navigation.",
+    "contracts": ["catalog.items"],
     "navigation": [
         {
             "id": "workspace",
@@ -18,7 +19,8 @@
                     "childPlacement": "tabs",
                     "children": [
                         { "id": "blocs", "label": "Blocs", "icon": "grid", "use": "resources" },
-                        { "id": "theme", "label": "Theme", "icon": "settings", "use": "theme" }
+                        { "id": "theme", "label": "Theme", "icon": "settings", "use": "theme" },
+                        { "id": "catalog", "label": "Catalog", "icon": "catalog", "use": "catalog" }
                     ]
                 }
             ]

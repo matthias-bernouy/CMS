@@ -34,6 +34,10 @@ test("local repository lists immutable metadata and serves matching release byte
         expect((await admitCollectionRelease(release)).digest).toBe(entries[0]!.digest);
         expect(release.blocs).toHaveLength(8);
         expect(release.theme?.categories.flatMap((category) => category.tokens)).toHaveLength(7);
+        expect(release.views?.find((view) => view.id === "catalog")?.html).toContain(
+            "/.cms/call/catalog.items/item.list",
+        );
+        expect(release.dashboards?.[0]?.contracts).toEqual(["catalog.items"]);
         const card = release.blocs.find((bloc) => bloc.id === "ulvia-official-feature-card");
         expect(card?.kind).toBe("component");
         if (card?.kind === "component") {

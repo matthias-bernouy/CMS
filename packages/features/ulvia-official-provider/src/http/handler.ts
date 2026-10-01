@@ -6,7 +6,11 @@ import type { ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
 import type { OfficialSubmissionStore } from "../core/submissions";
 
-const ITEM = Object.freeze({ id: "starter", name: "Starter item" });
+const ITEMS = Object.freeze([
+    Object.freeze({ id: "starter", name: "Starter item" }),
+    Object.freeze({ id: "editorial", name: "Editorial collection" }),
+    Object.freeze({ id: "seasonal", name: "Seasonal selection" }),
+]);
 const MEDIA =
     '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="80" viewBox="0 0 160 80"><rect width="160" height="80" rx="12" fill="#1d4ed8"/><circle cx="42" cy="40" r="20" fill="#ffffff"/><path d="M80 40h48" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/></svg>';
 
@@ -29,12 +33,12 @@ export function createOfficialProviderHandler(options: {
             return Response.json(options.report, { headers: { "Cache-Control": "no-store" } });
         }
         if (request.method === "GET" && path === "/v1/catalog/items") {
-            return Response.json({ items: [ITEM] });
+            return Response.json({ items: ITEMS });
         }
         if (request.method === "GET" && path.startsWith("/v1/catalog/items/")) {
-            return pathParameter(path, "/v1/catalog/items/", 64) === ITEM.id
-                ? Response.json(ITEM)
-                : error("NOT_FOUND", 404);
+            const id = pathParameter(path, "/v1/catalog/items/", 64);
+            const item = ITEMS.find((candidate) => candidate.id === id);
+            return item ? Response.json(item) : error("NOT_FOUND", 404);
         }
         if (request.method === "POST" && path === "/v1/forms/submissions") {
             let input: unknown;

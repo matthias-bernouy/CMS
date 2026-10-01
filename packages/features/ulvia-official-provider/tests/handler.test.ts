@@ -32,6 +32,16 @@ test("the official provider accepts canonical gateway paths and declared error e
                 new Request(`http://127.0.0.1${path}`, { ...init, headers: { authorization: "Bearer test-token" } }),
             );
         expect((await handler(new Request("http://127.0.0.1/v1/catalog/items"))).status).toBe(401);
+        const catalog = await request("/v1/catalog/items");
+        expect(await catalog.json()).toEqual({
+            items: [
+                { id: "starter", name: "Starter item" },
+                { id: "editorial", name: "Editorial collection" },
+                { id: "seasonal", name: "Seasonal selection" },
+            ],
+        });
+        const item = await request(`/v1/catalog/items/${encodeURIComponent(JSON.stringify("editorial"))}`);
+        expect(await item.json()).toEqual({ id: "editorial", name: "Editorial collection" });
         const created = await request("/v1/forms/submissions", {
             method: "POST",
             body: JSON.stringify({ email: "test@example.com", message: "Hello" }),

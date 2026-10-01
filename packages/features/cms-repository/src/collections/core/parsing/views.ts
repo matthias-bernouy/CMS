@@ -1,4 +1,5 @@
 import { DomUtils, parseDocument } from "htmlparser2";
+import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import type { CollectionView } from "../../interfaces/CollectionView";
 import { invalid } from "../errors";
 import { array, identifier, keys, record, string, unique } from "../values";
@@ -27,7 +28,23 @@ const TAGS = new Set([
     "strong",
     "ul",
 ]);
-const ATTRIBUTES = new Set(["id", "title", "role", "aria-label", "aria-live", "hidden", "type"]);
+const ATTRIBUTES = new Set([
+    "id",
+    "title",
+    "role",
+    "aria-label",
+    "aria-live",
+    "hidden",
+    "type",
+    "cms-condition",
+    "cms-repeat",
+    "cms-source",
+    "cms-source-body",
+    "cms-source-id",
+    "cms-source-method",
+]);
+const IDENTIFIER = "[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*";
+const SOURCE = new RegExp(`^/\\.cms/call/${IDENTIFIER}/${IDENTIFIER}(?: as [A-Za-z_$][\\w$]*)?$`, "u");
 
 /** A bounded Control fragment with no executable HTML or external navigation. */
 export function parseCollectionViews(value: unknown, blocIds: ReadonlySet<string>): readonly CollectionView[] {
@@ -71,10 +88,31 @@ function validateViewHtml(html: string, blocIds: ReadonlySet<string>, path: stri
                 if (name === "type" && value !== "button") {
                     invalid("view buttons must be inert", path);
                 }
+                if (name === "cms-source" && !SOURCE.test(value)) {
+                    invalid("view sources must use a canonical CMS capability", path);
+                }
+                if (name === "cms-source-method" && value.toUpperCase() !== "POST") {
+                    invalid("view capability sources must use POST", path);
+                }
+                if (name === "cms-source-body" && !isJsonObject(value)) {
+                    invalid("view source body must be a JSON object", path);
+                }
+            }
+            if (node.attribs["cms-source"] && node.attribs["cms-source-method"]?.toUpperCase() !== "POST") {
+                invalid("view capability sources must declare POST", path);
             }
             pending.push(...node.children);
         } else if (node.type !== "text") {
             invalid("unsupported view node", path);
         }
+    }
+}
+
+function isJsonObject(value: string): boolean {
+    try {
+        const parsed = parseStrictJson(value, 64 * 1024, 16);
+        return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed);
+    } catch {
+        return false;
     }
 }

@@ -4,7 +4,7 @@ import type { CapabilityGatewayOptions } from "@bernouy/cms-gateway";
 import type { Db } from "mongodb";
 import { createProductionGatewayAccess } from "../../src/runtime/gateway/access";
 
-test("production gateway grants public and authenticated Delivery calls and bootstrap-admin Control calls", async () => {
+test("production gateway grants Delivery, scoped dashboard views and bootstrap-admin Control calls", async () => {
     const credentials = {
         getByEmail: async () => ({ sub: "bootstrap-1" }),
     } as unknown as LocalCredentialStore;
@@ -50,4 +50,6 @@ test("production gateway grants public and authenticated Delivery calls and boot
     expect(await access.authorize({ kind: "user", subjectId: "user-1" }, publicCapability, route, "control")).toBe(
         false,
     );
+    expect(await access.authorize({ kind: "user", subjectId: "user-1" }, publicCapability, route, "view")).toBe(true);
+    expect(await access.authorize({ kind: "user", subjectId: "user-1" }, privateCapability, route, "view")).toBe(true);
 });
