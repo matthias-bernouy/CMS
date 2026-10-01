@@ -13,7 +13,7 @@ entry points.
 | Provider manifest | Immutable provider claims and exact contract references; memory/Mongo catalogue. |
 | Installation | Site-owned configuration, exact approved manifest, administrative lifecycle and runtime observations; revisioned memory/Mongo store. |
 | Selection | Site-owned exact contract/provider choices, validated together as a bounded dependency graph; revisioned memory/Mongo store. |
-| Collection release | Authored component/composition bundle admission and asset verification; no publication catalogue or installation workflow yet. |
+| Collection release | Immutable component, composition, view and dashboard bundle; local repository catalogue and site installation/upgrade. |
 
 Contract admission validates and canonicalizes a release. Provider admission
 validates a manifest against releases. Site preparation and approval establish
@@ -36,11 +36,20 @@ Ulvia data directory. Contract folders declare `kind: "contract"`; provider
 folders declare `kind: "provider-manifest"`. Release contracts before provider
 manifests that reference their exact version and digest. The loopback local
 repository lists and serves both types at `/v1/contracts` and `/v1/providers`.
-This makes artifacts available for later installation; it does not contact a
-provider, execute conformance tests, or approve an installation. The current
-CMS runtime does not yet import these local contract/provider endpoints.
+Control can list and import exact contract and manifest releases from this
+repository. Releasing an artifact does not contact a provider, execute
+conformance tests, or approve an installation.
 Declared contract fixture assets live in `fixtures/<asset-id>` inside the
 authored folder and are validated before the local release is stored.
+Control's Mongo contract catalogue does not yet persist fixture assets, so
+the current import flow accepts only contracts without them.
+
+The first official resources are `catalog.items`, `forms.submissions`,
+`media.assets` and the `ulvia.official` manifest under `packages/resources/`.
+The local `@bernouy/ulvia-provider` runtime serves one authenticated account,
+a starter catalogue item, provider-owned form receipts and one SVG asset.
+The [CLI guide](../../packages/runtimes/ulvia-cli/README.md) gives the local
+release and connection steps.
 
 ## Live Invocation
 
@@ -77,6 +86,33 @@ Routes are mounted only when their dependencies are configured. Image routes
 also require the image service. Control's `GET /api/editor/capabilities` projects
 selected capabilities for authoring. These reads do not publish or select providers.
 Dynamic SEO invokes the gateway directly; see [page indexing](../surfaces/page-indexing.md).
+Control's `/admin/settings/providers` page lists connected provider accounts
+and, directly below them, provider manifests from configured repositories that
+are not connected yet. Each connection opens as a page detail. An administrator
+can also import an unlisted provider from its public manifest URL. The download
+happens in the browser; the CMS receives
+the raw JSON, validates it strictly, and resolves every implemented contract
+from configured repositories before admitting the manifest. Optional manifest
+links can point to provider account setup, documentation, support and the public
+website. The connection flow previews an exact runtime report before approval,
+then persists the token through the secret store. `/admin/sources` searches contract
+releases as catalogue cards with a trusted local icon, purpose, publisher,
+categories and repository publication date. Releases from `ulvia.official` are
+marked Official. Versions, digests and provider readiness stay in the source
+detail instead of the discovery card. A card connects or upgrades an exact
+ready release through a selected provider. Installed-source navigation uses the contract title. Its source detail
+separates the latest repository release from the latest release reported ready
+by a connected provider; the upgrade action remains disabled until the latter
+exists. It also shows the observed provider state and links to active dashboards
+that declare the contract. `/admin/health` summarizes these
+connections, selections, collection versions and dashboard activation. It
+reports configuration and the last provider observation, not a fresh live
+probe of every capability.
+The selected API origin and token belong to installation state. Manifests list
+allowed origins but do not classify providers as local or remote. The runtime
+accepts HTTPS endpoints and literal loopback HTTP for development, and applies
+the gateway's pinned network policy to the report probe. The runtime report
+check is not a live contract conformance run.
 
 ## Identity And Media
 
@@ -93,13 +129,12 @@ clients. See [image delivery](../images/delivery.md).
 
 ## Current Integration Gaps
 
-- The runtime constructs durable stores, but Control has no mounted publication,
-  installation approval, provider upgrade or site selection administration flow.
+- Control imports releases, approves a provider connection and selects its contracts;
+  provider upgrades and a general publication workflow remain open.
 - Conformance suite validation exists; a live conformance runner is not wired.
 - Mongo contract publication rejects fixture assets until a byte store exists.
-- Collection admission is implemented; publication, installation, compatibility,
-  renderer compilation, themes, translations and views/dashboard templates remain
-  incomplete or absent from that new format.
+- Collection releases can be installed and upgraded from the local repository;
+  registry publication and provider execution plans in HTML views remain open.
 - Provider image transforms run on demand; there is no durable derivative queue
   or public shared-cache policy.
 

@@ -52,6 +52,12 @@ Use `cms` as the second parameter name. Prefix unused parameters with `_`.
 
 Keep endpoint files thin:
 
+- The global Control guard establishes authentication only. Administrative
+  routes are administrator-only by default. The API boundary allows members
+  only their profile, personal tokens, assigned dashboard catalogue, dashboard
+  views and dashboard binding context. High-impact handlers also call
+  `requireControlAdministrator(req, cms)` before parsing input or accessing
+  administrative state.
 - Parse the request with shared helpers such as `readJsonBody`.
 - Validate DTOs through `src/core/validation/<resource>/parse*Dto.ts`.
 - Delegate mutations to the owning domain under `src/core/content/`,

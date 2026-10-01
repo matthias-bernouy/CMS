@@ -161,7 +161,12 @@ through `ulvia dev credentials`.
 The auth guard (`createAuthGuard` from `@bernouy/cms-auth/http`) establishes an
 authenticated subject. It does not evaluate roles or view permissions. Control
 chooses the unauthenticated response for each route group: a login redirect or
-an explicit unauthorized response.
+an explicit unauthorized response. File-routed APIs are administrator-only by
+default. The boundary allows members only their self-service profile and token
+routes plus assigned dashboard reads; those dashboard reads then apply their
+assignment-specific checks. High-impact administrative handlers also fail
+closed through `requireControlAdministrator` before parsing input or accessing
+their stores.
 
 Public auth routes receive operations created with `createPublicAuthActions`,
 not credential, user or recovery-token stores. Control can additionally receive

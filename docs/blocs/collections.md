@@ -22,8 +22,9 @@ packages/resources/collections/test/
 ├── texts/*.json             # arrays of localized text definitions
 ├── theme/definition.json    # theme categories and light/dark token defaults
 ├── definitions/             # reserved for later collection definitions
-├── views/                   # reserved for later HTML views
-└── dashboards/              # reserved for later workspace dashboards
+├── views/<view>/definition.json  # view identity and label
+├── views/<view>/view.html   # Control HTML fragment
+└── dashboards/<dashboard>/definition.json  # navigation tree of local views
 ```
 
 `bun run ulvia -- release packages/resources/collections/test` assembles the
@@ -35,8 +36,9 @@ only stored releases on loopback port 5102 (`ULVIA_DEV_REPOSITORY_PORT` can
 change it); it never scans authored folders. Run `release` again after editing
 the source and increment its version. `bun run ulvia -- prune` empties the
 local repository without deleting the separate dev CMS data. Pull and push
-remain future commands. The current release format does not install the three
-reserved directories. No direct collection JSON upload is available in Control.
+remain future commands. The current release format does not install the
+`definitions/` directory. No direct collection JSON upload is available in
+Control.
 
 Components use `shadowdom.html`, optional fixed `lightdom.html`, optional
 `style.css`, and optional `bloc.ts`.
@@ -76,7 +78,9 @@ optional behavior code; it is not required to describe the settings panel.
 `GET <basePath>/api/collections/available` lists configured sources and release
 metadata. `POST <basePath>/api/collections/install` takes a repository ID, release
 identity, digest and site revision. Control fetches the release server-side,
-validates its identity and digest, then installs or upgrades it. Immutable
+validates its identity and digest, then installs or upgrades it. Explore collections
+groups releases by collection, shows the latest version, and offers Manage or
+Upgrade when a newer release is available. Immutable
 release bytes and mutable per-site state are stored separately. An upgrade
 retains site text overrides and checks revision and compatible resource IDs.
 
@@ -120,9 +124,12 @@ read-only.
 
 The installed-collection bridge accepts compositions and Shadow components,
 including fixed Light DOM, named slots and initial page content. Asset bytes,
-provider grants, configuration editing, uninstall, registry publication, HTML
-views and dashboards remain future work. A source adapter exists for multiple
-repositories, while the dev runtime configures one local source.
+provider grants, configuration editing, uninstall and registry publication
+remain future work. Basic HTML views, collection dashboard templates and
+private site dashboards are available; views currently receive only dashboard
+metadata through Control binding. Provider execution plans are not implemented.
+A source adapter exists for multiple repositories, while the dev runtime
+configures one local source.
 
 See the [collection release format](../../packages/features/cms-repository/src/collections/README.md)
 for admission constraints.

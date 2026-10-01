@@ -20,17 +20,20 @@ files explain implementation invariants.
 | Package | Responsibility |
 | --- | --- |
 | `@bernouy/cms-content` | Pages, routes, Blocs, settings, themes, editor contracts and the author file library. |
-| `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues and authored collection admission. |
+| `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues and authored collections with Control HTML views. |
 | `@bernouy/cms-gateway` | Authorized capability invocation, provider identity aliases, file reads and image derivatives. |
 | `@bernouy/cms-auth` | Accounts, local/OIDC providers, PATs, signed sessions, public auth operations and email composition. |
 | `@bernouy/cms-analytics` | Server-side events, counters, persistence and dashboard HTTP handlers. |
-| `@bernouy/cms-dashboards` | Transitional dashboard-to-subject assignment persistence only. |
+| `@bernouy/cms-dashboards` | Site dashboard records, collection view mounts and direct subject assignments. |
+| `@bernouy/ulvia-official-provider` | Initial local provider capabilities for catalogue reads, form receipts and one media asset. |
 | `@bernouy/cms-bloc-compile` | Existing Bloc validation, view/editor bundling and shared editor externals. |
 | `@bernouy/cms-editor-system-v2` | Editor shell components and runtime types. |
 
-`cms-dashboards` does not currently own dashboard definitions, widget execution
-or dashboard CRUD. Collection-owned views/dashboard templates remain future
-work. `cms-bloc-compile` remains a separate feature package.
+`cms-dashboards` owns site activation, private dashboard records and member
+assignments over collection-owned views, not view content or the removed widget
+runtime. Collection dashboard templates live in collection releases.
+Provider-backed view execution remains future work. `cms-bloc-compile` remains
+a separate feature package.
 
 The old `cms-sources`, `cms-source-images`, `cms-identities` and `cms-secrets`
 packages are absent. Provider invocation, identities and media belong to
@@ -51,6 +54,7 @@ adapters or routes. There is no `packages/resources/sites` template catalogue.
 | `@bernouy/cms-delivery` | Public pages, Bloc assets, binding runtime, auth, media, gateway calls, SEO and analytics collection. |
 | `@bernouy/cms-server` | Production adapter composition and Control/Delivery startup. |
 | `@bernouy/ulvia-cli` | Persistent local CMS development stack backed by MongoDB. |
+| `@bernouy/ulvia-provider` | Loopback official provider executable for local development. |
 
 See [workspace architecture](README.md) for dependency direction and
 [repository and gateway flows](../providers/README.md) for runtime wiring.

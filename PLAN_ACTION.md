@@ -1,7 +1,7 @@
 # Source, provider, and collection redesign plan
 
 Status: active implementation plan, reconciled with the repository on
-2026-09-29. Wave statuses below describe code that exists, not just design
+2026-09-30. Wave statuses below describe code that exists, not just design
 intent. Exit conditions remain the target for completing each wave.
 
 This document expands the protocol direction recorded in
@@ -28,27 +28,28 @@ the old Source packages were removed before every planned operational and media
 replacement guarantee was complete. A passed workspace check is not evidence
 that those protocol exit conditions have been met.
 
-| Waves | State on 2026-09-29 | Main remaining gate |
+| Waves | State on 2026-09-30 | Main remaining gate |
 | --- | --- | --- |
 | 0–1: protocol and contracts | Partially complete; contract admission, catalogues, schemas, binding compilation and static conformance models exist | Finish representative operation/feed/view fixtures and live conformance evidence |
-| 2–3: providers and synchronous gateway | Partially complete; revisioned Mongo state and selected synchronous calls run through Control and Delivery | Authorized management, real provider fixtures, rate/retry/audit/telemetry, provider/system entrypoints |
-| 4–6: durable protocol, official provider, admin | File reads and bounded derivatives are an initial slice; the rest is open | Durable idempotency, operations, feeds, official provider and provider/contract management UI |
-| 7–9: collections, blocs, views | Collection bundle admission is an initial slice; legacy bloc compilation and a dashboard assignment store remain | Collection publication/install/render, persisted text overrides, compiled view grants |
+| 2–3: providers and synchronous gateway | Partially complete; revisioned Mongo state and selected synchronous calls run through Control and Delivery. Control has an initial administrator import, connection approval and selection flow | Broader authorization, conformance evidence, rate/retry/audit/telemetry, provider/system entrypoints |
+| 4–6: durable protocol, official provider, admin | File reads, bounded derivatives and a loopback official provider with three contracts are initial slices | Durable idempotency, operations, feeds, production provider behavior and upgrades |
+| 7–9: collections, blocs, views | Collection installation, safe Control HTML views, collection dashboard templates, private dashboard CRUD, activation and member assignment are initial slices | Full bloc rendering in views, provider bindings and compiled grants |
 | 10 and 12: Delivery/media and legacy retirement | Legacy Source and Source image packages are gone; gateway rendering, indexing and media paths are integrated | Durable media work, cache/GC policy, remaining `cms-source*` authoring vocabulary and end-to-end coverage |
-| 11 and 13: recovery and release tooling | Open | Provider restore/relocation, release tooling, attestations and operational drills |
+| 11 and 13: recovery and release tooling | Local `release` and `prune` support contracts and provider manifests; the CMS imports exact releases | Remote release, provider restore/relocation, attestations and operational drills |
 
-Immediate implementation sequence: make publication, approval, installation,
-selection and observation manageable through an authorized host flow; exercise
-that flow and the production gateway against a real custom provider fixture;
-then close durable invocation, operation and media gaps. The official provider
-and collection/view work build on those verified paths. The detailed waves
-below retain the full target scope.
+Immediate implementation sequence: run the approved connection against a live
+conformance suite, add provider upgrades and robust network policy, then close
+durable invocation, operation and media gaps. The local official provider and
+three fixtureless contracts exercise the initial import, approval, selection
+and gateway paths. The first HTML view and site dashboard administration slice
+is now testable locally; provider-backed view execution remains open. The
+detailed waves below retain the full target scope.
 
 Current boundaries and limitations are documented by the
 [repository package](./packages/features/cms-repository/README.md),
 [gateway package](./packages/features/cms-gateway/README.md),
 [collection slice](./packages/features/cms-repository/src/collections/README.md)
-and [temporary dashboard package](./packages/features/cms-dashboards/AGENTS.md).
+and [dashboard package](./packages/features/cms-dashboards/AGENTS.md).
 
 ## 1. Starting point
 
@@ -71,8 +72,10 @@ have been removed. The current boundaries are:
 | `@bernouy/cms-dashboards` | Temporary dashboard-to-subject assignment persistence only; no widget runtime or execution plans |
 | `@bernouy/secret-store` and `@bernouy/image-processing` | Generic Foundation services used by the CMS features |
 
-Control and Delivery have gateway routes, but there is no provider/contract
-management UI or official provider runtime. The current Collections workspace
+Control and Delivery have gateway routes. Control now has a Providers page for
+repository import, local connection approval and contract selection. A local
+official provider runtime serves a starter catalogue, form receipts and an SVG
+asset; it is not a production provider. The current Collections workspace
 still serves existing CMS-owned content; collection-release installation and
 rendering are separate future work.
 
@@ -626,13 +629,13 @@ below remain subject to implementation, but their boundaries should stay stable.
   - keyed commands, async operations, provider/system actors, durable rate,
     retry, audit, telemetry and change-feed behavior remain closed or absent;
   - optional Node transport, media and identity adapters use explicit subpaths.
-- `@bernouy/cms-views`
-  - proposed future owner of view definitions, dashboard site copies, grants,
-    execution plans and repositories;
-  - would replace the remaining `@bernouy/cms-dashboards` assignment store.
-- An official-provider domain feature, named only after its first vertical
-  slice proves the useful boundary. Do not put 282 handlers in a single runtime
-  file tree without domain services and persistence ports.
+- Collection-owned HTML view definitions now live in `@bernouy/cms-repository`;
+  site dashboard records and direct member assignments live in
+  `@bernouy/cms-dashboards`. Compiled grants and execution plans still need a
+  domain owner as provider-backed views expand.
+- `@bernouy/ulvia-official-provider` is the first local provider domain slice.
+  Further capabilities need domain services and persistence ports rather than
+  one runtime file tree of handlers.
 
 ### Resources
 
@@ -1094,9 +1097,11 @@ editor and Delivery, localized, themed, and previewable from mocks without
 
 ### Wave 9 — Views, dashboards, and authorization
 
-Status: open. The old widget runtime has been removed; `cms-dashboards` retains
-only assignment persistence. Collection-owned views, published dashboard
-plans and compiled grants do not exist yet.
+Status: partial. The old widget runtime has been removed. Collections can
+release bounded Control HTML views and dashboard templates; administrators can
+explore them, activate them per site, assign members, and compose private
+dashboards from installed views. Published dashboard execution plans and
+compiled provider grants do not exist yet.
 
 1. Replace widget-based dashboard views with collection-owned composition
    views.
@@ -1202,7 +1207,7 @@ the missing media, admin and view behavior. Track those gaps in Waves 6, 9 and
 | Source overlays, DTOs, URNs and `/.cms/sources` | Old backend paths removed; audit authored markup and remaining `cms-source*` browser attributes when choosing a capability-oriented grammar |
 | `@bernouy/cms-source-images` | Package removed; bounded gateway derivatives exist, while durable jobs, generation/index policy, caching, garbage collection and observability remain in Wave 10 |
 | Standalone `@bernouy/cms-files` | Removed earlier; CMS-owned file APIs and variants remain under `@bernouy/cms-content/files` |
-| Dashboard widgets and runtime | Removed; `@bernouy/cms-dashboards` now holds only assignments and awaits a collection/view owner in Wave 9 |
+| Dashboard widgets and runtime | Removed; collection-owned HTML views and site dashboard records now form the first replacement slice, with provider-backed execution and grants still open |
 | Roles and generic permissions | Removed; verified administrator access exists, while narrow published view grants remain in Wave 9 |
 | Integration/Source terminology | Still appears in browser bindings and some documentation; complete a source-backed terminology audit after the new authoring grammar is chosen |
 

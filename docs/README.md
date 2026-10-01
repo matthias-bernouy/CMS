@@ -23,6 +23,10 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   compositions, editor contracts, bindings and themes.
 - [Collection API and admission](blocs/collections.md): the current Control
   workspace and the separate `ulvia-collection/v1` authored bundle format.
+- [Dashboards and views](dashboards/README.md): site dashboards, collection HTML
+  views, member access and current binding limits.
+- [Site health](providers/README.md): provider observations, selected sources,
+  collection versions and dashboard activation in the admin Health page.
 
 The root [transition document](../TRANSITION_SOURCES.md) and
 [execution plan](../PLAN_ACTION.md) track direction and implementation phases.
