@@ -19,7 +19,7 @@ export function withInstalledCollections(
                 ownership: { kind: "code-managed" as const },
                 artifact: {
                     id: bloc.id,
-                    name: bloc.id,
+                    name: bloc.label,
                     group: release.name,
                     description: bloc.description ?? "",
                     ownership: { kind: "code-managed" },

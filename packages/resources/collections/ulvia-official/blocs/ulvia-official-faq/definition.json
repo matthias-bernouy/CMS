@@ -1,6 +1,7 @@
 {
     "kind": "component",
     "id": "ulvia-official-faq",
+    "label": "Frequently asked question",
     "description": "A frequently asked question",
     "uses": [],
     "requires": [],

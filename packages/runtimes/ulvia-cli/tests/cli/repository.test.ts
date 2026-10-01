@@ -51,7 +51,13 @@ test("local repository lists immutable metadata and serves matching release byte
                     label: "Tone",
                     group: "Appearance",
                     type: "string",
-                    enum: ["quiet", "accent"],
+                    control: {
+                        kind: "select",
+                        options: [
+                            { value: "quiet", label: "Quiet" },
+                            { value: "accent", label: "Accent" },
+                        ],
+                    },
                     maxLength: 16,
                     default: "quiet",
                 },
@@ -61,6 +67,7 @@ test("local repository lists immutable metadata and serves matching release byte
                     group: "Layout",
                     type: "boolean",
                     default: false,
+                    control: { kind: "toggle" },
                     visibleWhen: [{ setting: "tone", equals: "accent" }],
                 },
             ]);

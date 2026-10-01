@@ -19,8 +19,13 @@ export type {
     CollectionComponent,
     CollectionComposition,
     CollectionSlot,
+    CollectionSlotAccept,
+    CollectionMediaAccept,
     CollectionComponentSettings,
+    CollectionEndpointMethod,
+    CollectionSettingControl,
     CollectionSettingItem,
+    CollectionSettingOption,
     CollectionSettingVisibilityRule,
     CollectionSettingVisibilityValue,
 } from "cms-repository/collections/interfaces/CollectionBloc";

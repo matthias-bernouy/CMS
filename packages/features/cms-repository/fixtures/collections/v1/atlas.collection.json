@@ -23,17 +23,32 @@
         {
             "kind": "component",
             "id": "atlas-panel",
+            "label": "Panel",
             "thumbnail": "preview",
             "shadowdom": "<section><slot name=\"body\"></slot></section>",
             "style": ":host { display: block; } :host([tone=\"muted\"]) { opacity: 0.8; }",
             "slots": { "body": {} },
             "settings": [
-                { "id": "tone", "label": "Tone", "type": "string", "enum": ["default", "muted"], "maxLength": 7, "default": "default" }
+                {
+                    "id": "tone",
+                    "label": "Tone",
+                    "type": "string",
+                    "control": {
+                        "kind": "select",
+                        "options": [
+                            { "value": "default", "label": "Default" },
+                            { "value": "muted", "label": "Muted" }
+                        ]
+                    },
+                    "maxLength": 7,
+                    "default": "default"
+                }
             ]
         },
         {
             "kind": "composition",
             "id": "atlas-page",
+            "label": "Page",
             "uses": ["atlas-panel"],
             "lightdom": "<atlas-panel tone=\"default\"><slot name=\"main\" slot=\"body\"></slot></atlas-panel>",
             "slots": { "main": { "max": 8 } },

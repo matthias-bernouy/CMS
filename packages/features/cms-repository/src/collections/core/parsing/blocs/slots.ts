@@ -1,7 +1,13 @@
-import type { CollectionSlot } from "cms-repository/collections/interfaces/CollectionBloc";
+import type {
+    CollectionMediaAccept,
+    CollectionSlot,
+    CollectionSlotAccept,
+} from "cms-repository/collections/interfaces/CollectionBloc";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { array, identifier, integer, keys, ordinal, record, unique } from "../../values";
+
+const MEDIA_ACCEPTS: CollectionMediaAccept[] = ["image", "bitmap", "svg", "video", "audio", "document"];
 
 export function blocReferences(value: unknown, path: string, limits: Readonly<CollectionLimits>): string[] {
     const result = array(value, limits.maxBlocs, path).map((item, index) => identifier(item, `${path}[${index}]`));
@@ -40,11 +46,50 @@ export function parseSlots(
                 {
                     ...(entry.accepts === undefined
                         ? {}
-                        : { accepts: blocReferences(entry.accepts, `${path}.${name}.accepts`, limits) }),
+                        : { accepts: parseSlotAccepts(entry.accepts, `${path}.${name}.accepts`, limits) }),
                     ...(min === undefined ? {} : { min }),
                     ...(max === undefined ? {} : { max }),
                 },
             ];
         }),
     );
+}
+
+function parseSlotAccepts(value: unknown, path: string, limits: Readonly<CollectionLimits>): CollectionSlotAccept[] {
+    const accepts = array(value, limits.maxBlocs, path).map((value, index): CollectionSlotAccept => {
+        const itemPath = `${path}[${index}]`;
+        const source = record(value, itemPath);
+        if (source.kind === "component") {
+            keys(source, ["kind", "tag"], itemPath);
+            return { kind: "component", tag: identifier(source.tag, `${itemPath}.tag`) };
+        }
+        if (source.kind === "any-component") {
+            keys(source, ["kind"], itemPath);
+            return { kind: "any-component" };
+        }
+        if (source.kind === "media") {
+            keys(source, ["kind", "accept"], itemPath);
+            return {
+                kind: "media",
+                ...(source.accept === undefined
+                    ? {}
+                    : { accept: parseMediaAccepts(source.accept, `${itemPath}.accept`) }),
+            };
+        }
+        return invalid("slot acceptance kind must be component, any-component or media", `${itemPath}.kind`);
+    });
+    const signatures = accepts.map((accept) => JSON.stringify(accept));
+    unique(signatures, path);
+    return accepts;
+}
+
+function parseMediaAccepts(value: unknown, path: string): CollectionMediaAccept[] {
+    const values = array(value, MEDIA_ACCEPTS.length, path).map((value, index) => {
+        if (typeof value !== "string" || !MEDIA_ACCEPTS.includes(value as CollectionMediaAccept)) {
+            return invalid(`must be one of ${MEDIA_ACCEPTS.join(", ")}`, `${path}[${index}]`);
+        }
+        return value as CollectionMediaAccept;
+    });
+    unique(values, path);
+    return values;
 }

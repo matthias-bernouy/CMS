@@ -4,7 +4,13 @@
         "label": "Tone",
         "group": "Appearance",
         "type": "string",
-        "enum": ["quiet", "accent"],
+        "control": {
+            "kind": "select",
+            "options": [
+                { "value": "quiet", "label": "Quiet" },
+                { "value": "accent", "label": "Accent" }
+            ]
+        },
         "maxLength": 16,
         "default": "quiet"
     },

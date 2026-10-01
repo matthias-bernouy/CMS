@@ -6,7 +6,18 @@ import { parseRequirements } from "../requirements";
 import { parseComponentSettings } from "./settings";
 import { blocReferences, parseSlots } from "./slots";
 
-const common = ["kind", "id", "description", "internal", "thumbnail", "uses", "requires", "slots", "defaultContent"];
+const common = [
+    "kind",
+    "id",
+    "label",
+    "description",
+    "internal",
+    "thumbnail",
+    "uses",
+    "requires",
+    "slots",
+    "defaultContent",
+];
 
 function optionalText(value: unknown, maximum: number, path: string): string {
     if (typeof value !== "string" || value.length > maximum) {
@@ -42,6 +53,7 @@ function parseBloc(
     }
     const base = {
         id,
+        label: string(source.label, 120, `${path}.label`),
         ...(source.description === undefined
             ? {}
             : { description: string(source.description, 4096, `${path}.description`) }),

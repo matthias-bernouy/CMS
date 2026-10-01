@@ -5,6 +5,7 @@ import type {
 } from "../../../interfaces/CollectionBloc";
 import { invalid } from "../../errors";
 import { array, keys, record, string } from "../../values";
+import { settingControlValues } from "./settingControls";
 
 const MAX_RULES = 16;
 
@@ -33,7 +34,7 @@ export function parseSettingVisibility(
         if (setting === ownId) {
             invalid("a setting cannot control its own visibility", `${rulePath}.setting`);
         }
-        if (referenced.type === "string" && !referenced.enum) {
+        if (referenced.type === "string" && !settingControlValues(referenced.control)) {
             invalid("visibility requires a boolean or enumerated setting", `${rulePath}.setting`);
         }
         if (source.equals === undefined && source.notEquals === undefined) {
@@ -100,7 +101,7 @@ function comparisonValue(
         }
         return value;
     }
-    if (typeof value !== "string" || !setting.enum?.includes(value)) {
+    if (typeof value !== "string" || !settingControlValues(setting.control)?.includes(value)) {
         invalid("visibility value must be a declared option", path);
     }
     return value;

@@ -1,6 +1,7 @@
 {
     "kind": "component",
     "id": "ulvia-official-feature-list",
+    "label": "Feature list",
     "description": "Three introductory features",
     "uses": [],
     "requires": [],

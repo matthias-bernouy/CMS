@@ -20,6 +20,7 @@ export function installedBlocSettingControls(bloc: InstalledSettings): Record<st
         const base = {
             label: item.label,
             attribute: item.id,
+            ...(item.help ? { help: item.help } : {}),
             ...(item.visibleWhen
                 ? {
                       visibleWhen: item.visibleWhen.map(({ setting, ...comparison }) => ({
@@ -32,18 +33,17 @@ export function installedBlocSettingControls(bloc: InstalledSettings): Record<st
         if (item.type === "boolean") {
             return { ...base, type: "toggle" };
         }
-        if (item.enum) {
-            return {
-                ...base,
-                type: "select",
-                options: item.enum.map((value) => ({ label: humanize(value), value })),
-            };
-        }
+        const { kind, ...control } = item.control;
         return {
             ...base,
-            type: "text",
-            ...(item.minLength !== undefined ? { minLength: item.minLength } : {}),
-            maxLength: item.maxLength,
+            ...control,
+            type: kind,
+            ...(kind === "text" || kind === "textarea"
+                ? {
+                      ...(item.minLength !== undefined ? { minLength: item.minLength } : {}),
+                      maxLength: item.maxLength,
+                  }
+                : {}),
         };
     });
 }
@@ -66,10 +66,6 @@ export function installedBlocSettingSections(
         section.settings.push(controls[index]!);
     }
     return sections;
-}
-
-function humanize(value: string): string {
-    return value.replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function escapeAttribute(value: string): string {

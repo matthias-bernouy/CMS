@@ -45,9 +45,9 @@ export function validateBlocs(
             invalid(`unknown thumbnail asset ${bloc.thumbnail}`, `${path}.thumbnail`);
         }
         for (const [name, slot] of Object.entries(bloc.slots)) {
-            for (const id of slot.accepts ?? []) {
-                if (!byId.has(id)) {
-                    invalid(`unknown accepted bloc ${id}`, `${path}.slots.${name}.accepts`);
+            for (const accept of slot.accepts ?? []) {
+                if (accept.kind === "component" && !byId.has(accept.tag)) {
+                    invalid(`unknown accepted bloc ${accept.tag}`, `${path}.slots.${name}.accepts`);
                 }
             }
         }

@@ -1,6 +1,7 @@
 {
     "kind": "component",
     "id": "ulvia-official-stats",
+    "label": "Statistics",
     "description": "Two translated statistics",
     "uses": [],
     "requires": [],

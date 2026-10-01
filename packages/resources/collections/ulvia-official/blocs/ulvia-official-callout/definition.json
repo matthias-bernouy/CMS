@@ -1,6 +1,7 @@
 {
     "kind": "component",
     "id": "ulvia-official-callout",
+    "label": "Callout",
     "description": "A simple callout",
     "uses": [],
     "requires": [],

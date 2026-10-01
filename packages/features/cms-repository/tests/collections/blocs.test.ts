@@ -39,9 +39,9 @@ describe("collection bloc admission", () => {
     });
 
     test("checks accepted blocs and slot cardinality", () => {
-        expect(() => check([component({ slots: { body: { accepts: ["demo-other"] } } })])).toThrow(
-            "unknown accepted bloc",
-        );
+        expect(() =>
+            check([component({ slots: { body: { accepts: [{ kind: "component", tag: "demo-other" }] } } })]),
+        ).toThrow("unknown accepted bloc");
         expect(() => check([component({ slots: { body: { min: 2, max: 1 } } })])).toThrow("min must not exceed max");
         expect(() => check([component({ slots: { body: { min: -1 } } })])).toThrow("integer");
     });
@@ -52,11 +52,24 @@ describe("collection bloc admission", () => {
             label: "Tone",
             group: "Appearance",
             type: "string",
-            enum: ["quiet", "accent"],
+            control: {
+                kind: "select",
+                options: [
+                    { value: "quiet", label: "Quiet" },
+                    { value: "accent", label: "Accent" },
+                ],
+            },
             maxLength: 16,
             default: "quiet",
         };
-        const compact = { id: "compact", label: "Compact", group: "Layout", type: "boolean", default: false };
+        const compact = {
+            id: "compact",
+            label: "Compact",
+            group: "Layout",
+            type: "boolean",
+            default: false,
+            control: { kind: "toggle" },
+        };
         const parsed = check([component({ settings: [tone, compact] })])[0];
         expect(parsed?.kind === "component" ? parsed.settings : undefined).toEqual([tone, compact]);
         expect(() => check([component({ settings: [tone, tone] })])).toThrow("duplicate");
@@ -77,7 +90,13 @@ describe("collection bloc admission", () => {
             label: "Mode",
             group: "Appearance",
             type: "string",
-            enum: ["quiet", "accent"],
+            control: {
+                kind: "select",
+                options: [
+                    { value: "quiet", label: "Quiet" },
+                    { value: "accent", label: "Accent" },
+                ],
+            },
             default: "quiet",
         };
         const compact = {
@@ -128,8 +147,41 @@ describe("collection bloc admission", () => {
         expect(() =>
             check([component({ settings: [{ ...mode, visibleWhen: { setting: "compact", equals: true } }, compact] })]),
         ).toThrow("cyclic");
-        expect(() => check([component({ settings: [{ ...mode, enum: undefined }, compact] })])).toThrow(
+        expect(() => check([component({ settings: [{ ...mode, control: { kind: "text" } }, compact] })])).toThrow(
             "enumerated setting",
         );
+    });
+
+    test("admits declarative controls and rich slot acceptance", () => {
+        const parsed = check([
+            component({
+                slots: {
+                    body: {
+                        accepts: [{ kind: "any-component" }, { kind: "media", accept: ["image", "svg"] }],
+                    },
+                },
+                settings: [
+                    {
+                        id: "summary",
+                        label: "Summary",
+                        help: "Shown below the title.",
+                        type: "string",
+                        default: "",
+                        maxLength: 500,
+                        control: { kind: "textarea", placeholder: "Short summary", rows: 4 },
+                    },
+                    {
+                        id: "destination",
+                        label: "Destination",
+                        type: "string",
+                        default: "/",
+                        maxLength: 512,
+                        control: { kind: "page-link", allowPage: true, allowExternal: true },
+                    },
+                ],
+            }),
+        ])[0];
+        expect(parsed?.slots.body?.accepts).toHaveLength(2);
+        expect(parsed?.kind === "component" ? parsed.settings?.[0]?.control.kind : undefined).toBe("textarea");
     });
 });

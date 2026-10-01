@@ -19,6 +19,7 @@ const release = {
         {
             kind: "composition",
             id: "test-welcome",
+            label: "Welcome",
             lightdom: "<h1>{{ cms.i18n.test.title }}</h1>",
             uses: [],
             requires: [],
@@ -98,6 +99,7 @@ test("installed shadow component is served as browser bloc JavaScript", async ()
             {
                 kind: "component",
                 id: "test-card",
+                label: "Card",
                 shadowdom: '<article class="card"><slot name="body"></slot></article>',
                 style: ".card { color: var(--test-accent); }",
                 uses: [],
@@ -126,6 +128,7 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
             {
                 kind: "component",
                 id: "test-card",
+                label: "Card",
                 shadowdom: '<article><slot name="body"></slot></article>',
                 lightdom:
                     '<slot name="title" slot="body"></slot><section slot="body"><p>{{ cms.i18n.test.title }}</p></section>',
@@ -136,7 +139,13 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
                         label: "Tone",
                         group: "Appearance",
                         type: "string",
-                        enum: ["quiet", "accent"],
+                        control: {
+                            kind: "select",
+                            options: [
+                                { value: "quiet", label: "Quiet" },
+                                { value: "accent", label: "Accent" },
+                            ],
+                        },
                         maxLength: 16,
                         default: "quiet",
                     },

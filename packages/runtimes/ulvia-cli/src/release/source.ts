@@ -137,7 +137,7 @@ async function loadBlocs(directory: string, group: string): Promise<unknown[]> {
                 type: "text/typescript",
             }),
             null,
-            folder.name,
+            String(definition.label),
             group,
             String(definition.description ?? ""),
             folder.name,

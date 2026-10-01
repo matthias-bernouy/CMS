@@ -4,7 +4,7 @@ import {
     isSiteBlocNativeStructureTag,
     type SiteBlocSlot,
 } from "@bernouy/cms-content";
-import type { MediaAccept } from "@bernouy/cms-content/editor";
+import type { CollectionMediaAccept } from "@bernouy/cms-repository/collections";
 import { parseHTML } from "linkedom";
 
 export function validateSiteBlocSlotAccepts(
@@ -112,7 +112,7 @@ function isContextualNativeSlotItemAllowed(slot: SiteBlocSlot, tag: string): boo
     return tag !== "li" && tag !== "strong" && tag !== "em" && tag !== "code";
 }
 
-function mediaTag(type: MediaAccept, tag: string): boolean {
+function mediaTag(type: CollectionMediaAccept, tag: string): boolean {
     if (type === "image" || type === "bitmap") {
         return tag === "img" || tag === "picture";
     }

@@ -10,6 +10,7 @@ function release() {
             {
                 kind: "composition",
                 id: "atlas-welcome",
+                label: "Welcome",
                 lightdom: "<p>Hello</p>",
                 uses: [],
                 requires: [],

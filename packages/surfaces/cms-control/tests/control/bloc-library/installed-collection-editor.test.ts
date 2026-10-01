@@ -20,14 +20,22 @@ test("installed collection editor inserts page defaults and exposes only declare
                 editorJS: "",
                 componentHTML: '<p slot="body">Shared</p>',
                 defaultContent: '<h2 slot="body">Page title</h2>',
-                collectionSlots: { body: { max: 2, accepts: ["test-heading"] } },
+                collectionSlots: {
+                    body: { max: 2, accepts: [{ kind: "component", tag: "test-heading" }] },
+                },
                 collectionSettings: [
                     {
                         id: "tone",
                         label: "Tone",
                         group: "Appearance",
                         type: "string",
-                        enum: ["quiet", "accent"],
+                        control: {
+                            kind: "select",
+                            options: [
+                                { value: "quiet", label: "Quiet" },
+                                { value: "accent", label: "Accent" },
+                            ],
+                        },
                         maxLength: 16,
                         default: "quiet",
                     },
@@ -37,6 +45,7 @@ test("installed collection editor inserts page defaults and exposes only declare
                         group: "Layout",
                         type: "boolean",
                         default: false,
+                        control: { kind: "toggle" },
                         visibleWhen: [{ setting: "tone", equals: "accent" }],
                     },
                 ],

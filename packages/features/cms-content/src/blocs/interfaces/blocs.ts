@@ -1,5 +1,8 @@
-import type { ContentSlot } from "cms-content/editor/interfaces/document/ContentSlots";
-import type { CollectionComponentSettings } from "@bernouy/cms-repository/collections";
+import type {
+    CollectionComponentSettings,
+    CollectionSlot,
+    CollectionSlotAccept,
+} from "@bernouy/cms-repository/collections";
 
 export type BlocOwnership = { kind: "site-builder"; definitionId: string } | { kind: "code-managed" };
 
@@ -28,7 +31,7 @@ export type TBloc = {
     /** Initial page-owned children supplied when this bloc is inserted. */
     defaultContent?: string;
     /** Named page-owned substitution slots offered by an installed collection bloc. */
-    collectionSlots?: Record<string, { accepts?: readonly string[]; min?: number; max?: number }>;
+    collectionSlots?: Readonly<Record<string, CollectionSlot>>;
     /** Declarative component attributes and insertion defaults from an installed collection. */
     collectionSettings?: CollectionComponentSettings;
     editorJS: string;
@@ -56,7 +59,15 @@ export type SiteBlocNode =
       }
     | { kind: "slot"; slotId: string };
 
-export type SiteBlocSlot = ContentSlot & { id: string };
+/** A named editable region in a site-owned bloc definition. */
+export type SiteBlocSlot = {
+    id: string;
+    label: string;
+    slot?: string;
+    min?: number;
+    max?: number;
+    accepts: CollectionSlotAccept[];
+};
 
 export type SiteBlocSnapshot = {
     name: string;

@@ -10,9 +10,7 @@ export function installedCollectionEditorScript(records: BlocRecord[]): string {
                 slot: name,
                 ...(slot.min !== undefined ? { min: slot.min } : {}),
                 ...(slot.max !== undefined ? { max: slot.max } : {}),
-                accepts: slot.accepts?.length
-                    ? slot.accepts.map((tag) => ({ kind: "component", tag }))
-                    : [{ kind: "any-component" }],
+                accepts: slot.accepts?.length ? [...slot.accepts] : [{ kind: "any-component" }],
             }));
             const metadata = JSON.stringify({
                 tag: artifact!.id,

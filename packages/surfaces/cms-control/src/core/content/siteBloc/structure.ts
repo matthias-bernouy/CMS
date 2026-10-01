@@ -6,7 +6,7 @@ import {
     type SiteBlocNode,
     type SiteBlocSlot,
 } from "@bernouy/cms-content";
-import type { MediaAccept } from "@bernouy/cms-content/editor";
+import type { CollectionMediaAccept } from "@bernouy/cms-repository/collections";
 import { parseHTML } from "linkedom";
 
 export const SITE_SLOT_PLACEHOLDER_TAG = "cms-site-slot-placeholder";
@@ -119,7 +119,7 @@ function parseAccepts(element: Element): SiteBlocSlot["accepts"] {
         if (invalid) {
             throw new ContentValidationError("data-slot-media", `unknown media type "${invalid}"`);
         }
-        const accept = values as MediaAccept[];
+        const accept = values as CollectionMediaAccept[];
         return [{ kind: "media", ...(accept.length > 0 ? { accept } : {}) }];
     }
     if (mode === "any-component") {

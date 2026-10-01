@@ -228,13 +228,17 @@ models and validation for CMS-owned installations and site selections.
   bloc's fixed light-DOM assembly.
 - Component settings form an ordered item list. Each item owns a safe lowercase
   HTML attribute ID, label, optional group, string or boolean type, constraints
-  and default. The parser derives the validation schema from those items;
+  and default. Its declarative control owns authoring hints and finite options;
+  keep these hints in the collection JSON rather than compiled editor code. The
+  parser derives the validation schema from those items;
   collection-level configuration keeps its broader JSON schema. Local sources
   may use a separate `settings/definition.json`; releases keep the item list.
   Optional `visibleWhen` is editor-only and may reference declared boolean or
-  enumerated string items. Validate comparisons and reject visibility cycles;
+  finite-option string items. Validate comparisons and reject visibility cycles;
   hiding a control never clears or exempts its stored attribute.
-- Verify all local uses, slots and thumbnail references and reject cycles.
+- Every bloc declares its author-facing label. Slot acceptance is declarative:
+  exact component tags, any component, or bounded media kinds. Verify all local
+  uses, exact component accepts, slots and thumbnail references and reject cycles.
   Structural markup validation must use a parser. It is not a renderer,
   sanitizer, binding/CSS compiler or permission proof; never treat an admitted
   authored bundle as trusted executable content.

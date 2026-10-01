@@ -4,6 +4,7 @@ import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { array, keys, record, string, unique } from "../../values";
 import { parseConfiguration } from "../configuration";
+import { parseSettingControl, settingControlValues } from "./settingControls";
 import { assertVisibilityAcyclic, parseSettingVisibility } from "./visibility";
 
 const DEFAULT_MAX_LENGTH = 256;
@@ -23,7 +24,7 @@ export function parseComponentSettings(
         const source = record(value, itemPath);
         keys(
             source,
-            ["id", "label", "group", "type", "default", "enum", "minLength", "maxLength", "visibleWhen"],
+            ["id", "label", "group", "help", "type", "default", "control", "minLength", "maxLength", "visibleWhen"],
             itemPath,
         );
         const id = string(source.id, 96, `${itemPath}.id`);
@@ -44,9 +45,12 @@ export function parseComponentSettings(
         }
         const label = nonblank(source.label, `${itemPath}.label`);
         const group = source.group === undefined ? undefined : nonblank(source.group, `${itemPath}.group`);
-        if (source.type === "boolean" && ["enum", "minLength", "maxLength"].some((key) => key in source)) {
+        const help = source.help === undefined ? undefined : nonblank(source.help, `${itemPath}.help`);
+        const control = parseSettingControl(source.control, source.type, `${itemPath}.control`, limits);
+        if (source.type === "boolean" && ["minLength", "maxLength"].some((key) => key in source)) {
             invalid("boolean settings cannot declare string constraints", itemPath);
         }
+        const values = settingControlValues(control);
         const schema =
             source.type === "boolean"
                 ? { type: "boolean" }
@@ -54,9 +58,17 @@ export function parseComponentSettings(
                       type: "string",
                       maxLength: source.maxLength === undefined ? DEFAULT_MAX_LENGTH : source.maxLength,
                       ...(source.minLength === undefined ? {} : { minLength: source.minLength }),
-                      ...(source.enum === undefined ? {} : { enum: source.enum }),
+                      ...(values === undefined ? {} : { enum: values }),
                   };
-        return { id, label, ...(group === undefined ? {} : { group }), default: source.default, schema };
+        return {
+            id,
+            label,
+            ...(group === undefined ? {} : { group }),
+            ...(help === undefined ? {} : { help }),
+            control,
+            default: source.default,
+            schema,
+        };
     });
     unique(
         entries.map((entry) => entry.id),
@@ -74,22 +86,31 @@ export function parseComponentSettings(
         path,
         limits,
     );
-    const baseSettings: CollectionComponentSettings = entries.map(({ id, label, group }) => {
+    const baseSettings: CollectionComponentSettings = entries.map(({ id, label, group, help, control }) => {
         const schema = parsed.schema.properties[id]!;
         const defaultValue = parsed.defaults[id];
         if (schema.type === "boolean") {
-            return { id, label, ...(group ? { group } : {}), type: "boolean", default: defaultValue as boolean };
+            return {
+                id,
+                label,
+                ...(group ? { group } : {}),
+                ...(help ? { help } : {}),
+                type: "boolean",
+                default: defaultValue as boolean,
+                control: control as Extract<CollectionSettingItem["control"], { kind: "toggle" }>,
+            };
         }
         if (schema.type === "string") {
             return {
                 id,
                 label,
                 ...(group ? { group } : {}),
+                ...(help ? { help } : {}),
                 type: "string",
                 default: defaultValue as string,
                 maxLength: schema.maxLength,
                 ...(schema.minLength === undefined ? {} : { minLength: schema.minLength }),
-                ...(schema.enum === undefined ? {} : { enum: schema.enum }),
+                control: control as Exclude<CollectionSettingItem["control"], { kind: "toggle" }>,
             } satisfies CollectionSettingItem;
         }
         return invalid("unsupported setting schema", `${path}.${id}`);
@@ -120,7 +141,9 @@ export function collectionSettingsSchema(settings: CollectionComponentSettings):
                           type: "string" as const,
                           maxLength: item.maxLength,
                           ...(item.minLength === undefined ? {} : { minLength: item.minLength }),
-                          ...(item.enum === undefined ? {} : { enum: item.enum }),
+                          ...(settingControlValues(item.control) === undefined
+                              ? {}
+                              : { enum: settingControlValues(item.control) }),
                       },
             ]),
         ),

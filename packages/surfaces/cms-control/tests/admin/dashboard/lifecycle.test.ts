@@ -154,6 +154,7 @@ function release(version: string, marker: string): Record<string, unknown> {
             {
                 kind: "composition",
                 id: "ulvia-official-page",
+                label: "Page",
                 lightdom: "<section><p>Ulvia</p></section>",
                 uses: [],
                 requires: [],

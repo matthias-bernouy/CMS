@@ -1,16 +1,51 @@
 import type { CollectionCapabilityRequirement } from "./CollectionRelease";
 
 export interface CollectionSlot {
-    readonly accepts?: readonly string[];
+    readonly accepts?: readonly CollectionSlotAccept[];
     readonly min?: number;
     readonly max?: number;
 }
+
+export type CollectionMediaAccept = "image" | "bitmap" | "svg" | "video" | "audio" | "document";
+
+export type CollectionSlotAccept =
+    | { readonly kind: "component"; readonly tag: string }
+    | { readonly kind: "any-component" }
+    | { readonly kind: "media"; readonly accept?: readonly CollectionMediaAccept[] };
+
+export interface CollectionSettingOption {
+    readonly value: string;
+    readonly label: string;
+    readonly icon?: string;
+}
+
+export type CollectionSettingControl =
+    | { readonly kind: "text"; readonly placeholder?: string }
+    | { readonly kind: "textarea"; readonly placeholder?: string; readonly rows?: number }
+    | { readonly kind: "select" | "segmented"; readonly options: readonly CollectionSettingOption[] }
+    | {
+          readonly kind: "color";
+          readonly tokens?: readonly CollectionSettingOption[];
+          readonly allowCustom?: boolean;
+      }
+    | {
+          readonly kind: "page-link";
+          readonly allowPage?: boolean;
+          readonly allowExternal?: boolean;
+          readonly allowMedia?: boolean;
+          readonly mediaAccept?: readonly CollectionMediaAccept[];
+      }
+    | { readonly kind: "endpoint-picker"; readonly methods?: readonly CollectionEndpointMethod[] }
+    | { readonly kind: "toggle" };
+
+export type CollectionEndpointMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 
 interface CollectionSettingBase {
     /** Safe HTML attribute name. */
     readonly id: string;
     readonly label: string;
     readonly group?: string;
+    readonly help?: string;
     /** Editor visibility only; hidden values remain stored. */
     readonly visibleWhen?: readonly CollectionSettingVisibilityRule[];
 }
@@ -28,11 +63,15 @@ export type CollectionSettingItem = CollectionSettingBase &
         | {
               readonly type: "string";
               readonly default: string;
-              readonly enum?: readonly string[];
               readonly minLength?: number;
               readonly maxLength: number;
+              readonly control: Exclude<CollectionSettingControl, { readonly kind: "toggle" }>;
           }
-        | { readonly type: "boolean"; readonly default: boolean }
+        | {
+              readonly type: "boolean";
+              readonly default: boolean;
+              readonly control: Extract<CollectionSettingControl, { readonly kind: "toggle" }>;
+          }
     );
 
 export type CollectionComponentSettings = readonly CollectionSettingItem[];
@@ -40,6 +79,7 @@ export type CollectionComponentSettings = readonly CollectionSettingItem[];
 interface CollectionBlocBase {
     /** A stable custom-element tag prefixed by the collection ID. */
     readonly id: string;
+    readonly label: string;
     readonly description?: string;
     readonly internal?: boolean;
     readonly thumbnail?: string;

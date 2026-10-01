@@ -1,6 +1,7 @@
 {
     "kind": "component",
     "id": "ulvia-official-feature-card",
+    "label": "Feature card",
     "description": "A single feature card",
     "uses": [],
     "requires": [],

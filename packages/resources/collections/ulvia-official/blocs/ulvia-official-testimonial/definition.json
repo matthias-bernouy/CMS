@@ -1,6 +1,7 @@
 {
     "kind": "component",
     "id": "ulvia-official-testimonial",
+    "label": "Testimonial",
     "description": "A short testimonial",
     "uses": [],
     "requires": [],
