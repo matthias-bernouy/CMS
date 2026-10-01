@@ -119,6 +119,43 @@ test("installed shadow component is served as browser bloc JavaScript", async ()
     ).toBeUndefined();
 });
 
+test("installed collection thumbnails are projected from verified release assets", async () => {
+    const store = new CollectionStore(new MemoryCollectionStorage());
+    const bytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0"/></svg>');
+    const artifact = await store.importRelease(
+        {
+            ...release,
+            assets: [
+                {
+                    id: "card.svg",
+                    mediaType: "image/svg+xml",
+                    byteLength: bytes.byteLength,
+                    digest: `sha256:${new Bun.CryptoHasher("sha256").update(bytes).digest("hex")}`,
+                },
+            ],
+            blocs: [
+                {
+                    kind: "component",
+                    id: "test-card",
+                    label: "Card",
+                    thumbnail: "card.svg",
+                    shadowdom: "<article></article>",
+                    uses: [],
+                    requires: [],
+                    slots: {},
+                },
+            ],
+        },
+        [{ id: "card.svg", bytes }],
+    );
+    await store.install("site", artifact.digest, 0);
+    const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
+
+    const projected = (await repository.getBlocRecord("test-card"))!.artifact!;
+    expect(projected.thumbnail).toEqual({ path: "assets/card.svg" });
+    expect(Buffer.from(projected.source!["assets/card.svg"]!, "base64")).toEqual(Buffer.from(bytes));
+});
+
 test("installed hybrid component keeps its fixed Light DOM and page defaults distinct", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const artifact = await store.importRelease({

@@ -17,6 +17,10 @@ export class MemoryCollectionStorage implements CollectionStorage {
     async getRelease(digest: string) {
         return structuredClone(this.releases.get(digest) ?? null);
     }
+    async getAsset(digest: string, assetId: string) {
+        const asset = this.releases.get(digest)?.assets.find((item) => item.id === assetId);
+        return asset ? new Uint8Array(asset.bytes) : null;
+    }
     async readSite(siteId: string) {
         return structuredClone(this.sites.get(siteId) ?? { revision: 0, installations: [] });
     }

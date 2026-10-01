@@ -1,8 +1,9 @@
 {
     "kind": "component",
     "id": "ulvia-official-feature-card",
-    "label": "Feature card",
-    "description": "A single feature card",
+  "label": "Feature card",
+  "description": "A single feature card",
+  "thumbnail": "feature-card.svg",
     "uses": [],
     "requires": [],
     "slots": {

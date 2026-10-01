@@ -1,4 +1,3 @@
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import { composeCollectionThemes } from "@bernouy/cms-content";
 import type { CollectionRepositoryReference } from "@bernouy/cms-repository/collections/sources";
 import type { ControlCms } from "cms-control/ControlCms";
@@ -27,8 +26,8 @@ export default async function install(req: Request, cms: ControlCms) {
         throw Object.assign(new Error("Release is not listed by this repository"), { status: 404 });
     }
     const reference: CollectionRepositoryReference = selected;
-    const document = await source.get(reference);
-    const admitted = await admitCollectionRelease(document);
+    const bundle = await source.get(reference);
+    const admitted = await store.importRelease(bundle.release, bundle.assets);
     if (
         admitted.digest !== selected.digest ||
         admitted.release.publisherId !== selected.publisherId ||
@@ -51,10 +50,9 @@ export default async function install(req: Request, cms: ControlCms) {
             .map((item) => item.release),
         admitted.release,
     ]);
-    const artifact = await store.importRelease(document);
     const result = installed.collections.some((item) => item.collectionId === admitted.release.collectionId)
-        ? await store.upgrade(siteId, artifact.digest, input.revision as number, source.id)
-        : await store.install(siteId, artifact.digest, input.revision as number, source.id);
+        ? await store.upgrade(siteId, admitted.digest, input.revision as number, source.id)
+        : await store.install(siteId, admitted.digest, input.revision as number, source.id);
     invalidateCollections(cms);
     return Response.json({ ...result, collectionId: admitted.release.collectionId }, { status: 201 });
 }

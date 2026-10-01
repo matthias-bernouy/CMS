@@ -1,7 +1,11 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { chmod, link, lstat, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { admitCollectionReleaseJson, type AdmittedCollectionRelease } from "@bernouy/cms-repository/collections";
+import {
+    admitCollectionReleaseJson,
+    parseCollectionReleaseJson,
+    type AdmittedCollectionRelease,
+} from "@bernouy/cms-repository/collections";
 
 export class LocalCollectionRepository {
     constructor(private readonly root: string) {}
@@ -15,6 +19,13 @@ export class LocalCollectionRepository {
         }
         const directory = join(this.root, "releases", publisherId, collectionId);
         await mkdir(directory, { recursive: true, mode: 0o700 });
+        const assetDirectory = join(this.root, "assets", "collections", releaseHash(artifact.canonicalJson));
+        if (artifact.assets.length) {
+            await mkdir(assetDirectory, { recursive: true, mode: 0o700 });
+            for (const asset of artifact.assets) {
+                await writeImmutable(join(assetDirectory, asset.id), new Uint8Array(await asset.bytes.arrayBuffer()));
+            }
+        }
         const temporary = join(directory, `.${randomUUID()}.tmp`);
         await writeFile(temporary, artifact.canonicalJson, { flag: "wx", mode: 0o600 });
         try {
@@ -69,7 +80,14 @@ export class LocalCollectionRepository {
         if (!bytes) {
             return null;
         }
-        const artifact = await admitCollectionReleaseJson(bytes);
+        const parsed = parseCollectionReleaseJson(bytes);
+        const assets = await Promise.all(
+            parsed.assets.map(async ({ id }) => ({
+                id,
+                bytes: await readFile(join(this.root, "assets", "collections", releaseHash(bytes), id)),
+            })),
+        );
+        const artifact = await admitCollectionReleaseJson(bytes, assets);
         if (
             artifact.release.publisherId !== publisherId ||
             artifact.release.collectionId !== collectionId ||
@@ -98,6 +116,24 @@ export class LocalCollectionRepository {
     }
 }
 
+async function writeImmutable(path: string, bytes: Uint8Array): Promise<void> {
+    const temporary = `${path}.${randomUUID()}.tmp`;
+    await writeFile(temporary, bytes, { flag: "wx", mode: 0o600 });
+    try {
+        await link(temporary, path);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
+            throw error;
+        }
+        const winner = await readFile(path);
+        if (!winner.equals(bytes)) {
+            throw new Error(`Immutable collection asset already has different content: ${path}`);
+        }
+    } finally {
+        await rm(temporary, { force: true });
+    }
+}
+
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
 const VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u;
 
@@ -111,6 +147,10 @@ function assertSameDigest(existing: AdmittedCollectionRelease, candidate: Admitt
 function coordinate(artifact: AdmittedCollectionRelease): string {
     const { publisherId, collectionId, version } = artifact.release;
     return `${publisherId}/${collectionId}/${version}`;
+}
+
+function releaseHash(value: string | Uint8Array): string {
+    return createHash("sha256").update(value).digest("hex");
 }
 
 async function directories(root: string): Promise<string[]> {

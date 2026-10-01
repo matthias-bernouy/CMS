@@ -2,6 +2,7 @@ import { composeCollectionThemes } from "cms-content/theme/core/collections";
 import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { BlocRecord, TBloc } from "cms-content/blocs/interfaces/blocs";
+import { presentationImageContentType } from "cms-content/blocs/core/presentationImage";
 import { compileCollectionComponent } from "./compiledComponent";
 
 /** Installed resources are projected from their immutable release, never copied into editable bloc storage. */
@@ -12,27 +13,53 @@ export function withInstalledCollections(
 ): CmsRepository {
     const installed = async (): Promise<BlocRecord[]> => {
         const snapshot = await store.snapshot(siteId);
-        return snapshot.collections.flatMap(({ collectionId, release }) =>
-            release.blocs.map((bloc) => ({
-                tag: bloc.id,
-                collectionId,
-                ownership: { kind: "code-managed" as const },
-                artifact: {
-                    id: bloc.id,
-                    name: bloc.label,
-                    group: release.name,
-                    description: bloc.description ?? "",
-                    ownership: { kind: "code-managed" },
-                    viewJS: bloc.kind === "component" ? (bloc.runtime?.viewJS ?? compileCollectionComponent(bloc)) : "",
-                    internal: bloc.internal,
-                    ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
-                    ...(bloc.kind === "component" && bloc.lightdom ? { componentHTML: bloc.lightdom } : {}),
-                    ...(bloc.defaultContent ? { defaultContent: bloc.defaultContent } : {}),
-                    collectionSlots: bloc.slots,
-                    ...(bloc.kind === "component" && bloc.settings ? { collectionSettings: bloc.settings } : {}),
-                } as TBloc,
-            })),
+        const collections = await Promise.all(
+            snapshot.collections.map(async ({ collectionId, digest, release }) =>
+                Promise.all(
+                    release.blocs.map(async (bloc) => {
+                        const thumbnail = bloc.thumbnail
+                            ? release.assets.find((asset) => asset.id === bloc.thumbnail)
+                            : undefined;
+                        const thumbnailPath = thumbnail ? `assets/${thumbnail.id}` : undefined;
+                        const thumbnailBytes =
+                            thumbnailPath && presentationImageContentType(thumbnailPath) === thumbnail?.mediaType
+                                ? await store.getReleaseAsset(digest, thumbnail!.id)
+                                : null;
+                        return {
+                            tag: bloc.id,
+                            collectionId,
+                            ownership: { kind: "code-managed" as const },
+                            artifact: {
+                                id: bloc.id,
+                                name: bloc.label,
+                                group: release.name,
+                                description: bloc.description ?? "",
+                                ownership: { kind: "code-managed" },
+                                viewJS:
+                                    bloc.kind === "component"
+                                        ? (bloc.runtime?.viewJS ?? compileCollectionComponent(bloc))
+                                        : "",
+                                internal: bloc.internal,
+                                ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
+                                ...(bloc.kind === "component" && bloc.lightdom ? { componentHTML: bloc.lightdom } : {}),
+                                ...(bloc.defaultContent ? { defaultContent: bloc.defaultContent } : {}),
+                                collectionSlots: bloc.slots,
+                                ...(bloc.kind === "component" && bloc.settings
+                                    ? { collectionSettings: bloc.settings }
+                                    : {}),
+                                ...(thumbnailPath && thumbnailBytes
+                                    ? {
+                                          thumbnail: { path: thumbnailPath },
+                                          source: { [thumbnailPath]: Buffer.from(thumbnailBytes).toString("base64") },
+                                      }
+                                    : {}),
+                            } as TBloc,
+                        };
+                    }),
+                ),
+            ),
         );
+        return collections.flat();
     };
     const records = async () => {
         const [local, resources] = await Promise.all([repository.getBlocRecords(), installed()]);

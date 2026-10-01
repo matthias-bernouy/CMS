@@ -1,11 +1,17 @@
 export const MAX_REPOSITORY_RESPONSE_BYTES = 2 * 1024 * 1024;
 
 /** Read a bounded repository response without following redirects. */
-export async function getRepositoryBytes(base: URL, path: string, kind: string): Promise<Uint8Array> {
+export async function getRepositoryBytes(
+    base: URL,
+    path: string,
+    kind: string,
+    options: { maxBytes?: number; accept?: string } = {},
+): Promise<Uint8Array> {
+    const maxBytes = options.maxBytes ?? MAX_REPOSITORY_RESPONSE_BYTES;
     const response = await fetch(new URL(path, base), {
         signal: AbortSignal.timeout(10_000),
         redirect: "error",
-        headers: { Accept: "application/json" },
+        headers: { Accept: options.accept ?? "application/json" },
     });
     if (!response.ok || !response.body) {
         throw new Error(`${kind} repository request failed (${response.status})`);
@@ -20,7 +26,7 @@ export async function getRepositoryBytes(base: URL, path: string, kind: string):
                 break;
             }
             length += part.value.byteLength;
-            if (length > MAX_REPOSITORY_RESPONSE_BYTES) {
+            if (length > maxBytes) {
                 await reader.cancel();
                 throw new Error(`${kind} repository response too large`);
             }

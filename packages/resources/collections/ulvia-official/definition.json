@@ -4,8 +4,14 @@
     "schemaDialect": "ulvia-schema/v1",
     "collectionId": "ulvia-official",
     "publisherId": "ulvia.official",
-    "version": "1.1.0",
+  "version": "1.2.0",
     "name": "Ulvia Official",
     "description": "Official starter blocs, translated texts, theme tokens and a dashboard connected to provider data through the CMS gateway.",
-    "locale": "en"
+  "locale": "en",
+  "assets": [
+    {
+      "id": "feature-card.svg",
+      "mediaType": "image/svg+xml"
+    }
+  ]
 }

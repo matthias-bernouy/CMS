@@ -104,6 +104,31 @@ export function startLocalRepository(port: number, root: string) {
                     throw error;
                 }
             }
+            if (parts.length === 8 && type === "collections" && parts[6] === "assets") {
+                try {
+                    const [publisherId, id, version, assetId] = [parts[3]!, parts[4]!, parts[5]!, parts[7]!].map(
+                        decodeURIComponent,
+                    );
+                    const artifact = await collections.get(publisherId!, id!, version!);
+                    const declared = artifact?.release.assets.find((asset) => asset.id === assetId);
+                    const stored = artifact?.assets.find((asset) => asset.id === assetId);
+                    if (!artifact || !declared || !stored) {
+                        return notFound();
+                    }
+                    return new Response(await stored.bytes.arrayBuffer(), {
+                        headers: {
+                            "Content-Type": declared.mediaType,
+                            ETag: `"${declared.digest}"`,
+                            "Cache-Control": "public, max-age=31536000, immutable",
+                        },
+                    });
+                } catch (error) {
+                    if (error instanceof URIError) {
+                        return notFound();
+                    }
+                    throw error;
+                }
+            }
             if (parts.length !== 6) {
                 return new Response(null, { status: 404 });
             }

@@ -1,4 +1,5 @@
-import { readdir } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { readFile, readdir } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import { buildCollectionBloc } from "@bernouy/cms-collection-build";
@@ -28,20 +29,63 @@ export async function prepareCollectionRelease(directory: string) {
     const views = await loadViews(join(collectionRoot, "views"));
     const dashboards = await loadDashboards(join(collectionRoot, "dashboards"));
     const themeFile = Bun.file(join(collectionRoot, "theme", "definition.json"));
+    const assets = await loadAssets(join(collectionRoot, "assets"), definition.assets);
     const candidate = {
         ...definition,
-        assets: [],
+        assets: assets.definitions,
         blocs,
         ...(texts.length ? { texts } : {}),
         ...(views.length ? { views } : {}),
         ...(dashboards.length ? { dashboards } : {}),
         ...((await themeFile.exists()) ? { theme: await themeFile.json() } : {}),
     };
-    const artifact = await admitCollectionRelease(candidate);
+    const artifact = await admitCollectionRelease(candidate, assets.bundle);
     if (artifact.release.collectionId !== collectionId) {
         throw new Error(`Collection folder ${collectionId} does not match its definition`);
     }
     return artifact;
+}
+
+async function loadAssets(directory: string, value: unknown) {
+    const declarations = value === undefined ? [] : value;
+    if (!Array.isArray(declarations)) {
+        throw new Error("Collection source assets must be an array");
+    }
+    const files = (await readEntries(directory)).filter((entry) => entry.isFile()).map((entry) => entry.name);
+    const seen = new Set<string>();
+    const bundle: { id: string; bytes: Uint8Array }[] = [];
+    const definitions = [];
+    for (const [index, value] of declarations.entries()) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+            throw new Error(`Collection source asset ${index} must be an object`);
+        }
+        const source = value as Record<string, unknown>;
+        if (Object.keys(source).some((key) => !["id", "mediaType"].includes(key))) {
+            throw new Error(`Collection source asset ${index} accepts only id and mediaType`);
+        }
+        if (
+            typeof source.id !== "string" ||
+            !/^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u.test(source.id) ||
+            typeof source.mediaType !== "string" ||
+            seen.has(source.id)
+        ) {
+            throw new Error(`Collection source asset ${index} requires a unique id and mediaType`);
+        }
+        seen.add(source.id);
+        const bytes = await readFile(join(directory, source.id));
+        bundle.push({ id: source.id, bytes });
+        definitions.push({
+            id: source.id,
+            mediaType: source.mediaType,
+            byteLength: bytes.byteLength,
+            digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
+        });
+    }
+    const extras = files.filter((file) => !seen.has(file) && file !== ".gitkeep");
+    if (extras.length || files.filter((file) => seen.has(file)).length !== declarations.length) {
+        throw new Error("Collection assets directory must exactly match the source declarations");
+    }
+    return { definitions, bundle };
 }
 
 async function loadDashboards(directory: string): Promise<unknown[]> {

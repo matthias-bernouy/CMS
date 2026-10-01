@@ -1,24 +1,31 @@
 import { compareSemVer } from "../../../exports/contracts/compatibility";
+import type { ReleaseCatalogue } from "../../../exports/contracts/catalogue";
 import { admitCollectionRelease } from "../../core/admission/admitCollectionRelease";
 import { parseCollectionTextOverrides } from "../../core/texts/parseCollectionTexts";
+import type { CollectionBundleAsset } from "../../interfaces/CollectionAssets";
 import type { CollectionStorage, InstalledCollection } from "../interfaces/store";
 
 export class CollectionStore {
-    constructor(private readonly storage: CollectionStorage) {}
+    constructor(
+        private readonly storage: CollectionStorage,
+        private readonly contracts?: ReleaseCatalogue,
+    ) {}
 
-    async importRelease(input: unknown) {
-        const artifact = await admitCollectionRelease(input);
+    async importRelease(input: unknown, assets: readonly CollectionBundleAsset[] = []) {
+        const artifact = await admitCollectionRelease(input, assets, { contracts: this.contracts });
         const release = artifact.release;
-        if (release.assets.length || release.blocs.some((bloc) => bloc.requires.length)) {
-            throw Object.assign(
-                new Error(
-                    "Installation supports composition and shadow components without assets or capability requirements",
-                ),
-                { status: 422 },
-            );
-        }
-        await this.storage.putRelease({ digest: artifact.digest, release });
+        const storedAssets = await Promise.all(
+            artifact.assets.map(async ({ id, bytes }) => ({
+                id,
+                bytes: new Uint8Array(await bytes.arrayBuffer()),
+            })),
+        );
+        await this.storage.putRelease({ digest: artifact.digest, release, assets: storedAssets });
         return { digest: artifact.digest, release };
+    }
+
+    getReleaseAsset(digest: string, assetId: string): Promise<Uint8Array | null> {
+        return this.storage.getAsset(digest, assetId);
     }
 
     async snapshot(siteId: string): Promise<{ revision: number; collections: InstalledCollection[] }> {
@@ -94,16 +101,25 @@ export class CollectionStore {
             (old.release.dashboards ?? []).some(
                 (dashboard) => !(artifact.release.dashboards ?? []).some((next) => next.id === dashboard.id),
             ) ||
-            JSON.stringify(old.release.configuration) !== JSON.stringify(artifact.release.configuration)
+            JSON.stringify(old.release.configuration) !== JSON.stringify(artifact.release.configuration) ||
+            old.release.blocs.some((bloc) => {
+                const next = artifact.release.blocs.find((candidate) => candidate.id === bloc.id);
+                return (
+                    bloc.kind === "component" &&
+                    next?.kind === "component" &&
+                    JSON.stringify(bloc.settings ?? []) !== JSON.stringify(next.settings ?? [])
+                );
+            })
         ) {
-            throw Object.assign(new Error("Upgrade removes existing resources or changes configuration"), {
+            throw Object.assign(new Error("Upgrade removes existing resources or changes configuration or settings"), {
                 status: 409,
             });
         }
+        const textOverrides = parseCollectionTextOverrides(previous.textOverrides, artifact.release.texts ?? []);
         const next = {
             revision: expectedRevision + 1,
             installations: state.installations.map((item) =>
-                item === previous ? { ...item, digest, repositoryId } : item,
+                item === previous ? { ...item, digest, repositoryId, textOverrides } : item,
             ),
         };
         await this.write(siteId, state.revision, expectedRevision, next);

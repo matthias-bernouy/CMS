@@ -30,8 +30,11 @@ test("local repository lists immutable metadata and serves matching release byte
             blocCount: 8,
             hasTheme: true,
         });
-        const release = await source.get(entries[0]!);
-        expect((await admitCollectionRelease(release)).digest).toBe(entries[0]!.digest);
+        const bundle = await source.get(entries[0]!);
+        expect((await admitCollectionRelease(bundle.release, bundle.assets)).digest).toBe(entries[0]!.digest);
+        expect(bundle.assets).toHaveLength(1);
+        expect(new TextDecoder().decode(bundle.assets[0]!.bytes as Uint8Array)).toContain("<svg");
+        const release = bundle.release;
         expect(release.blocs).toHaveLength(8);
         expect(release.theme?.categories.flatMap((category) => category.tokens)).toHaveLength(7);
         expect(release.views?.find((view) => view.id === "catalog")?.html).toContain(
@@ -42,6 +45,7 @@ test("local repository lists immutable metadata and serves matching release byte
         expect(card?.kind).toBe("component");
         if (card?.kind === "component") {
             expect(card.runtime?.viewJS).toContain("ulvia-official-feature-card");
+            expect(card.thumbnail).toBe("feature-card.svg");
             expect(card.lightdom).toContain("feature-card-note");
             expect(card.defaultContent).toContain("Feature title");
             expect(card.settings).toEqual([
@@ -81,11 +85,13 @@ test("local repository lists immutable metadata and serves matching release byte
             }
         }
         expect((await fetch(`${server.url}/v1/collections/missing/test/${version}`)).status).toBe(404);
-        const build = await admitCollectionRelease({ ...artifact.release, version: "1.3.3+build.1" });
+        const assets = artifact.assets.map(({ id, bytes }) => ({ id, bytes }));
+        const build = await admitCollectionRelease({ ...artifact.release, version: "1.3.3+build.1" }, assets);
         await repository.store(build);
         const buildEntry = (await source.list()).find((entry) => entry.version === "1.3.3+build.1");
         expect(buildEntry).toBeDefined();
-        expect((await admitCollectionRelease(await source.get(buildEntry!))).digest).toBe(build.digest);
+        const buildBundle = await source.get(buildEntry!);
+        expect((await admitCollectionRelease(buildBundle.release, buildBundle.assets)).digest).toBe(build.digest);
         await writeFile(join(root, "legacy-file"), "obsolete");
         await mkdir(join(root, "legacy-packages", "sealed"), { recursive: true });
         await writeFile(join(root, "legacy-packages", "sealed", "package.json"), "{}");
@@ -107,7 +113,10 @@ test("a release coordinate cannot be replaced with different content", async () 
             resolve(import.meta.dir, "../../../../resources/collections/ulvia-official"),
         );
         await repository.store(artifact);
-        const changed = await admitCollectionRelease({ ...artifact.release, name: "Changed" });
+        const changed = await admitCollectionRelease(
+            { ...artifact.release, name: "Changed" },
+            artifact.assets.map(({ id, bytes }) => ({ id, bytes })),
+        );
         await expect(repository.store(changed)).rejects.toThrow("already exists with different content");
         expect((await repository.get("ulvia.official", "ulvia-official", artifact.release.version))?.digest).toBe(
             artifact.digest,
