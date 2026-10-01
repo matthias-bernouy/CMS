@@ -9,7 +9,6 @@
         ".": "./src/index.ts"
     },
     "dependencies": {
-        "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "linkedom": "^0.18.13",

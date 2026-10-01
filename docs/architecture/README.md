@@ -87,7 +87,7 @@ is generic infrastructure in `@bernouy/secret-store` under Foundation.
 
 Control mounts its admin UI, file-routed API and editor on a supplied `Runner`.
 Delivery mounts public rendering, authentication, files, gateway routes,
-sitemaps, robots and analytics on its supplied runner. Neither surface chooses
+sitemaps and robots on its supplied runner. Neither surface chooses
 production databases or storage roots.
 
 `cms-server` reads environment configuration, wires concrete dependencies,

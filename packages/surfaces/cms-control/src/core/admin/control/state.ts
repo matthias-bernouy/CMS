@@ -5,7 +5,6 @@ import type {
     PatRepository,
     UsersRepository,
 } from "@bernouy/cms-auth";
-import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
 import { InMemoryDashboardAssignmentRepository, InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import { InMemoryIdentityService } from "@bernouy/cms-gateway/identity";
@@ -27,7 +26,6 @@ export type ControlCmsConstructorInput = {
     identityProviders?: IdentityProviderRepository;
     pats?: PatRepository;
     credentials?: LocalCredentialStore;
-    analytics?: AnalyticsStore;
     authBackends: ControlAuthBackends;
 };
 
@@ -46,7 +44,6 @@ export function createControlCmsState(input: ControlCmsConstructorInput): Contro
         identityProviders: input.identityProviders ?? null,
         pats: input.pats ?? null,
         credentials: input.credentials ?? null,
-        analytics: input.analytics ?? null,
         dashboardAssignments: configuration.dashboardAssignments ?? new InMemoryDashboardAssignmentRepository(),
         dashboards: configuration.dashboards ?? new InMemoryDashboardRepository(),
         identities: configuration.identities ?? new InMemoryIdentityService(),

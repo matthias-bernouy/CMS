@@ -7,7 +7,6 @@ import { createPublicFileStores } from "./stores/authorFiles";
 import type { FeatureStores } from "./stores/features";
 import type { ProductionGateway } from "./gateway/createProductionGateway";
 import { ProviderManagement } from "./gateway/ProviderManagement";
-import { observeGatewayInvoker } from "./gateway/observeGatewayInvoker";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
 import { createContentReader } from "@bernouy/cms-content/rendering";
 
@@ -19,7 +18,6 @@ export type ProductionSurfaceHandle = {
 
 type MountOptions = {
     env: RuntimeEnv;
-    analyticsVisitorSecret: string;
     core: CoreStores;
     features: FeatureStores;
     authentication: ProductionAuthentication;
@@ -57,26 +55,13 @@ export async function mountProductionSurfaces(
                       },
                   }
                 : {}),
-            analyticsCompliance: {
-                cmsVersion: "0.1.0",
-                secretReady: Boolean(options.analyticsVisitorSecret.trim()),
-                siteScope: env.DELIVERY_PUBLIC_URL,
-                trustProxy: env.ANALYTICS_TRUST_PROXY,
-                trustedProxyVerified: env.ANALYTICS_TRUSTED_PROXY_VERIFIED,
-                secureCookie: new URL(env.DELIVERY_PUBLIC_URL).protocol === "https:",
-                optOutUrl: `${env.DELIVERY_PUBLIC_URL}/.cms/privacy/analytics`,
-            },
             dashboardAssignments: features.dashboardAssignments,
             dashboards: features.dashboards,
             ...(gateway
                 ? {
                       capabilityGateway: {
                           siteId: gateway.siteId,
-                          invoker: observeGatewayInvoker(
-                              gateway.invoker,
-                              features.endpointPerformanceRecorder,
-                              "control",
-                          ),
+                          invoker: gateway.invoker,
                           images: gateway.images,
                           catalogue: gateway.catalogue,
                           isAdministrator: gateway.isAdministrator,
@@ -84,7 +69,6 @@ export async function mountProductionSurfaces(
                   }
                 : {}),
             identities: features.identities,
-            endpointPerformanceReports: features.endpointPerformanceReports,
             publicAuth: {
                 ...authentication.createPublicAuth({
                     emailVerificationUrl: env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
@@ -102,7 +86,6 @@ export async function mountProductionSurfaces(
         core.identityProviders,
         core.pats,
         core.credentials,
-        features.analytics,
         { local: authentication.auth },
     );
     await controlCms.ready;
@@ -112,34 +95,21 @@ export async function mountProductionSurfaces(
         runner: deliveryRunner,
         repository: createContentReader(core.repo),
         cache: core.cache,
-        analytics: features.analytics,
         ...(gateway
             ? {
                   capabilityGateway: {
                       siteId: gateway.siteId,
-                      invoker: observeGatewayInvoker(gateway.invoker, features.endpointPerformanceRecorder, "delivery"),
+                      invoker: gateway.invoker,
                       access: gateway.access,
                       images: gateway.images,
                   },
               }
             : {}),
-        analyticsVisitorSecret: options.analyticsVisitorSecret,
-        analyticsSiteScope: env.DELIVERY_PUBLIC_URL,
-        analyticsTrustProxy: env.ANALYTICS_TRUST_PROXY,
-        analyticsTrustedProxyVerified: env.ANALYTICS_TRUSTED_PROXY_VERIFIED,
-        analyticsCmsVersion: "0.1.0",
         ...createPublicFileStores(core),
         auth: authentication.createPublicAuth({
             emailVerificationUrl: env.CMS_AUTH_EMAIL_VERIFICATION_URL,
             passwordResetUrl: env.CMS_AUTH_PASSWORD_RESET_URL,
         }),
-    });
-
-    runtime.startAnalyticsFinalizer(features.analytics, {
-        onError: (error) => runtime.reportError("Analytics visitor finalization failed", error),
-    });
-    const endpointPerformanceFlusher = runtime.startEndpointPerformanceFlusher(features.endpointPerformanceRecorder, {
-        onError: (error) => runtime.reportError("Endpoint performance flush failed", error),
     });
 
     controlRunner.start(env.CONTROL_PORT);
@@ -155,14 +125,12 @@ export async function mountProductionSurfaces(
     runtime.log(`   storage:      mongo=${core.db.databaseName}, files=${env.CMS_FILES_DIR}`);
     return {
         async stop() {
-            endpointPerformanceFlusher.stop();
             await Promise.all([
                 gateway?.observations?.stop(),
                 sitemapRefresh?.stop(),
                 controlRunner.stopGracefully(),
                 deliveryRunner.stopGracefully(),
             ]);
-            await endpointPerformanceFlusher.run();
         },
     };
 }

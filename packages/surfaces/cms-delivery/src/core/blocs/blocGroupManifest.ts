@@ -7,7 +7,7 @@ import { groupBlocsBySignature, type BlocGroups } from "cms-delivery/core/blocs/
  *
  * The grouping is derived from real usage: each page's bloc set is computed
  * exactly as `renderPage` does, then `groupBlocsBySignature` buckets blocs by
- * the set of pages that use them. No analytics, no hand-assigned categories.
+ * the set of pages that use them, without hand-assigned categories.
  *
  * Recompute policy = lazy + TTL: the manifest is built on first use and reused
  * for `TTL_MS`, then rebuilt on the next request after expiry. A stale manifest

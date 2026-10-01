@@ -45,12 +45,6 @@ services:
             CMS_ADMIN_EMAIL:      ${CMS_ADMIN_EMAIL:-admin@${DOMAIN}}
             CMS_ADMIN_PASSWORD:   ${CMS_ADMIN_PASSWORD:?CMS_ADMIN_PASSWORD must be set}
             CMS_GATEWAY_SITE_ID:   ${CMS_GATEWAY_SITE_ID:-}
-            ANALYTICS_SALT_SECRET: ${ANALYTICS_SALT_SECRET:?ANALYTICS_SALT_SECRET must be set and shared by all replicas}
-            ANALYTICS_TRUST_PROXY: ${ANALYTICS_TRUST_PROXY:-false}
-
-            # Gateway invocation performance aggregates.
-            ENDPOINT_PERFORMANCE_ENABLED:          "${ENDPOINT_PERFORMANCE_ENABLED:-true}"
-
             # Required for both the server-wide MongoDB service and an external
             # cluster. The database path is dedicated to this instance; the
             # application credential may be shared, but must never be root.

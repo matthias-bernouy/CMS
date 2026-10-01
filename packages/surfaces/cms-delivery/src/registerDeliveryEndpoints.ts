@@ -28,14 +28,7 @@ import {
     servePublishedPageSnapshot,
 } from "@bernouy/cms-content/rendering";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
-import { recordPageView } from "cms-delivery/core/analytics/recordPageView";
 import { handlePageRequest } from "cms-delivery/core/pages/handlePageRequest";
-import {
-    PRIVACY_ANALYTICS_ROUTES,
-    analyticsPreferencePost,
-    analyticsPrivacyPage,
-    analyticsSelfAssessment,
-} from "cms-delivery/core/analytics/privacyAnalyticsEndpoints";
 import { FAVICON_ROUTE } from "cms-delivery/core/assets/defaultFavicon";
 import { matchRootSitemapChunkPath } from "cms-delivery/core/seo/sitemap/manifest";
 
@@ -59,11 +52,6 @@ import { matchRootSitemapChunkPath } from "cms-delivery/core/seo/sitemap/manifes
  */
 export function registerDeliveryEndpoints(delivery: DeliveryCms) {
     const runner = delivery.runner;
-
-    runner.addEndpoint("GET", PRIVACY_ANALYTICS_ROUTES.page, (req) => analyticsPrivacyPage(req, delivery));
-    runner.addEndpoint("POST", PRIVACY_ANALYTICS_ROUTES.optOut, (req) => analyticsPreferencePost(req, delivery, true));
-    runner.addEndpoint("POST", PRIVACY_ANALYTICS_ROUTES.enable, (req) => analyticsPreferencePost(req, delivery, false));
-    runner.addEndpoint("GET", PRIVACY_ANALYTICS_ROUTES.selfAssessment, (req) => analyticsSelfAssessment(req, delivery));
 
     runner.addEndpoint("GET", "/.cms/bloc", (req) => BlocServer(req, delivery));
     runner.addEndpoint("GET", "/.cms/blocset", (req) => BlocSetServer(req, delivery));
@@ -142,7 +130,7 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
     }
 
     runner.setDefaultEndpoint("GET", (req) =>
-        isRootSitemapChunkRequest(req, delivery) ? SitemapChunkServer(req, delivery) : recordPageView(req, delivery),
+        isRootSitemapChunkRequest(req, delivery) ? SitemapChunkServer(req, delivery) : handlePageRequest(req, delivery),
     );
     runner.setDefaultEndpoint("HEAD", async (req) =>
         withoutBody(

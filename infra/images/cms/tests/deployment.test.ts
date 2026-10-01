@@ -40,10 +40,7 @@ describe("per-instance Compose rendering", () => {
         expect(cms.security_opt).toContain("no-new-privileges:true");
         expect(cms.tmpfs).toContain("/tmp:rw,nosuid,nodev,noexec,size=256m");
         expect(cms.ports).toBeUndefined();
-        expect(cms.environment).toMatchObject({
-            CMS_FILES_DIR: "/var/lib/cms/files",
-            ENDPOINT_PERFORMANCE_ENABLED: "true",
-        });
+        expect(cms.environment).toMatchObject({ CMS_FILES_DIR: "/var/lib/cms/files" });
         expect(cms.volumes?.map(({ target }) => target)).toEqual(["/var/lib/cms/files"]);
         expect(cms.volumes?.map(({ source }) => source)).toEqual([`${cmsDirectory}/files`]);
     });

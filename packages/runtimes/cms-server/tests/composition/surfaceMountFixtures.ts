@@ -11,13 +11,9 @@ export function surfaceMountFixtures() {
             CMS_AUTH_EMAIL_VERIFICATION_URL: "https://www.example.test/auth/confirm-email",
             CMS_AUTH_PASSWORD_RESET_URL: "https://www.example.test/auth/reset-password",
             CMS_FILES_DIR: "/data/files",
-            ANALYTICS_TRUST_PROXY: false,
-            ANALYTICS_TRUSTED_PROXY_VERIFIED: false,
-            ENDPOINT_PERFORMANCE_ENABLED: true,
             CMS_HTTP_CLIENT_ADDRESS_MODE: "trusted-proxy",
             CMS_HTTP_TRUSTED_PROXY_HOPS: 1,
         },
-        analyticsVisitorSecret: "analytics-secret",
         core: {
             repo: token("repo"),
             cache: token("cache"),
@@ -35,9 +31,6 @@ export function surfaceMountFixtures() {
         features: {
             dashboardAssignments: token("dashboard-assignments"),
             identities: token("identities"),
-            analytics: token("analytics"),
-            endpointPerformanceRecorder: token("endpoint-performance-recorder"),
-            endpointPerformanceReports: token("endpoint-performance-reports"),
         },
         authentication: {
             auth: token("auth"),

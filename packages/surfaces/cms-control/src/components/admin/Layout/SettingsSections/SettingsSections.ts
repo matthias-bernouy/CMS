@@ -8,7 +8,6 @@ const SETTINGS_SECTIONS = [
     "languages",
     "organization",
     "email",
-    "privacy-analytics",
     "secrets",
     "providers",
     "authentication",

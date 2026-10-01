@@ -10,10 +10,6 @@ describe("production surface mounting", () => {
         const runners: FakeRunner[] = [];
         let controlArguments: unknown[] = [];
         let deliveryConfig: Record<string, unknown> | undefined;
-        let finalizerStore: unknown;
-        let flusherRecorder: unknown;
-        let flushes = 0;
-        let flusherStopped = false;
         let sitemapRefreshOptions: Record<string, unknown> | undefined;
         let sitemapRefreshStopped = false;
         let observationStarted = false;
@@ -63,21 +59,6 @@ describe("production surface mounting", () => {
             Runner: FakeRunner,
             Control: FakeControl,
             Delivery: FakeDelivery,
-            startAnalyticsFinalizer(store: unknown) {
-                finalizerStore = store;
-                return {};
-            },
-            startEndpointPerformanceFlusher(recorder: unknown) {
-                flusherRecorder = recorder;
-                return {
-                    async run() {
-                        flushes++;
-                    },
-                    stop() {
-                        flusherStopped = true;
-                    },
-                };
-            },
             startSitemapRefresh(_delivery: unknown, options: Record<string, unknown>) {
                 sitemapRefreshOptions = options;
                 return {
@@ -133,9 +114,8 @@ describe("production surface mounting", () => {
                 passwordResetUrl: options.env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
                 allowSignup: false,
             },
-            endpointPerformanceReports: options.features.endpointPerformanceReports,
         });
-        expect(controlArguments[13]).toEqual({ local: options.authentication.auth });
+        expect(controlArguments[12]).toEqual({ local: options.authentication.auth });
 
         expect(deliveryConfig).toMatchObject({
             runner: runners[1],
@@ -144,10 +124,6 @@ describe("production surface mounting", () => {
                 siteId: gateway.siteId,
                 invoker: expect.objectContaining({ invoke: expect.any(Function) }),
             },
-            analyticsVisitorSecret: options.analyticsVisitorSecret,
-            analyticsSiteScope: options.env.DELIVERY_PUBLIC_URL,
-            analyticsTrustProxy: false,
-            analyticsTrustedProxyVerified: false,
             sitemapStore: { get: expect.any(Function), put: expect.any(Function), delete: expect.any(Function) },
             auth: {
                 marker: "public-auth",
@@ -164,8 +140,6 @@ describe("production surface mounting", () => {
         expect(Object.keys(deliveryConfig?.filesMetadata as object).sort()).toEqual(["getItem", "getItemByPath"]);
         expect(Object.keys(deliveryConfig?.variantStore as object).sort()).toEqual(["get", "put"]);
         expect(deliveryConfig?.sitemapStore).not.toBe(options.core.sitemapStore);
-        expect(finalizerStore).toBe(options.features.analytics);
-        expect(flusherRecorder).toBe(options.features.endpointPerformanceRecorder);
         expect(sitemapRefreshOptions).toEqual({ reportError: expect.any(Function) });
         expect(observationStarted).toBe(true);
         expect(starts).toEqual([
@@ -182,10 +156,8 @@ describe("production surface mounting", () => {
         ]);
 
         await mounted.stop();
-        expect(flusherStopped).toBe(true);
         expect(sitemapRefreshStopped).toBe(true);
         expect(observationStopped).toBe(true);
-        expect(flushes).toBe(1);
         expect(events.slice(-2)).toEqual(["stop:control", "stop:delivery"]);
     });
 });

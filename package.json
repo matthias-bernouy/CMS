@@ -32,7 +32,6 @@
         "check:ui-contracts": "bun run quality/ui-contracts/check.ts"
     },
     "devDependencies": {
-        "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-content": "workspace:*",

@@ -1,14 +1,8 @@
-import { BufferedEndpointPerformanceRecorder, ValidatingAnalyticsStore } from "@bernouy/cms-analytics";
-import { MongoAnalyticsStore, MongoEndpointPerformanceStore } from "@bernouy/cms-analytics/mongo";
 import { MongoDashboardAssignmentRepository, MongoDashboardRepository } from "@bernouy/cms-dashboards/mongo";
 import { MongoIdentityService } from "@bernouy/cms-gateway/identity/mongo";
 import type { Db } from "mongodb";
 
-type FeatureStoreOptions = {
-    endpointPerformanceEnabled?: boolean;
-};
-
-export async function createFeatureStores(db: Db, options: FeatureStoreOptions = {}) {
+export async function createFeatureStores(db: Db) {
     const identities = new MongoIdentityService(db);
     await identities.init();
     const dashboardAssignments = new MongoDashboardAssignmentRepository(db);
@@ -16,21 +10,10 @@ export async function createFeatureStores(db: Db, options: FeatureStoreOptions =
     const dashboards = new MongoDashboardRepository(db);
     await dashboards.init();
 
-    const mongoAnalytics = new MongoAnalyticsStore(db);
-    await mongoAnalytics.init();
-    const analytics = new ValidatingAnalyticsStore(mongoAnalytics);
-    const endpointPerformanceReports = new MongoEndpointPerformanceStore(db);
-    await endpointPerformanceReports.init();
-    const endpointPerformanceRecorder = new BufferedEndpointPerformanceRecorder(endpointPerformanceReports, {
-        enabled: options.endpointPerformanceEnabled,
-    });
     return {
         identities,
         dashboardAssignments,
         dashboards,
-        analytics,
-        endpointPerformanceRecorder,
-        endpointPerformanceReports,
     };
 }
 

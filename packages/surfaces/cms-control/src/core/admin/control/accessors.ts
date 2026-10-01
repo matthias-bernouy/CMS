@@ -18,7 +18,6 @@ export const controlCmsAccessors = {
     pats: (state: ControlCmsState) => required(state.pats, "PAT repository not configured"),
     credentials: (state: ControlCmsState) => required(state.credentials, "local credential store not configured"),
     publicAuth: (state: ControlCmsState) => required(state.configuration.publicAuth, "public auth not configured"),
-    analytics: (state: ControlCmsState) => required(state.analytics, "analytics store not configured"),
     basePath: (state: ControlCmsState) => (state.runner.basePath === "/" ? "" : state.runner.basePath),
     getCspExtras: async (state: ControlCmsState) => {
         const settings = await state.repository.getSystem();

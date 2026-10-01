@@ -1,4 +1,3 @@
-import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
 import type {
@@ -65,38 +64,6 @@ export class DeliveryCmsContext {
 
     get auth(): PublicAuthRoutesConfig | undefined {
         return this.config.auth;
-    }
-
-    get analytics(): AnalyticsStore | undefined {
-        return this.config.analytics;
-    }
-
-    get analyticsVisitorSecret(): string | undefined {
-        return this.config.analyticsVisitorSecret;
-    }
-
-    get analyticsSiteScope(): string | undefined {
-        return this.config.analyticsSiteScope;
-    }
-
-    get analyticsTrustProxy(): boolean {
-        return this.config.analyticsTrustProxy ?? false;
-    }
-
-    get analyticsTrustedProxyVerified(): boolean {
-        return this.config.analyticsTrustedProxyVerified ?? false;
-    }
-
-    get analyticsCmsVersion(): string {
-        return this.config.analyticsCmsVersion ?? "development";
-    }
-
-    get analyticsHonorDnt(): boolean {
-        return this.config.analyticsHonorDnt ?? true;
-    }
-
-    get analyticsPrivacyPolicyUrl(): string | undefined {
-        return this.config.analyticsPrivacyPolicyUrl;
     }
 
     get filesMetadata(): PublicFileMetadataLookup {

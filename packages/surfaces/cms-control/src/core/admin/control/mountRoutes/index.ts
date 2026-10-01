@@ -19,7 +19,6 @@ import {
     createControlApiAuthorizationGuard,
 } from "cms-control/core/admin/control/adminAccess";
 import type { ControlAuthBackends, ControlCmsState } from "cms-control/core/admin/control/types";
-import { mountAnalyticsRoutes } from "cms-control/core/admin/control/mountRoutes/analytics";
 import { mountControlCapabilityRoutes } from "cms-control/core/admin/control/mountRoutes/capability";
 import serveStaticFolder from "cms-control/core/admin/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "cms-control/core/admin/registerEndpoints/serveApiFolder";
@@ -112,7 +111,6 @@ export function mountControlCmsRoutes(
         "/api",
         (apiRunner) => {
             apiRoutesReady = serveApi(apiRunner, apiDir, cms);
-            mountAnalyticsRoutes(apiRunner, state);
         },
         [authenticatedGuard, apiAuthorizationGuard],
     );

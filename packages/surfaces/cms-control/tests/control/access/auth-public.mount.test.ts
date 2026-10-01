@@ -21,7 +21,6 @@ describe("Control public auth mount", () => {
             undefined,
             undefined,
             credentials,
-            undefined,
             { local },
         );
         await cms.ready;

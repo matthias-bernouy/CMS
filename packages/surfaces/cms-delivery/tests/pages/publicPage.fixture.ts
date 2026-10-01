@@ -1,4 +1,3 @@
-import type { AnalyticsEvent } from "@bernouy/cms-analytics";
 import {
     createContentReader,
     P9R_CACHE,
@@ -30,7 +29,6 @@ export function publicPage(id: string, path: string, content = `<p>${id}</p>`): 
 type HarnessOptions = Readonly<{
     providers?: readonly PublicPageProvider[];
     storedPages?: readonly TPage[];
-    analytics?: boolean;
     gateway?: GatewayInvoker;
     sitemapStore?: CmsFilesBlobStore;
     siteHost?: string;
@@ -48,11 +46,6 @@ export function mountPublicPages(options: HarnessOptions = {}) {
     cache.set(P9R_CACHE.STYLE, cacheEntry("text/css"));
     const storedPages = [...(options.storedPages ?? [])];
     const storedLookups: string[] = [];
-    const events: AnalyticsEvent[] = [];
-    let notifyRecorded: (() => void) | undefined;
-    const recorded = new Promise<void>((resolve) => {
-        notifyRecorded = resolve;
-    });
     const repository: ContentReader = options.repository
         ? "resolvePublishedRoute" in options.repository
             ? options.repository
@@ -79,29 +72,11 @@ export function mountPublicPages(options: HarnessOptions = {}) {
         publicPageProviders: options.providers,
         ...(options.gateway ? { capabilityGateway: { siteId: "site-test", invoker: options.gateway } } : {}),
         sitemapStore: options.sitemapStore,
-        analytics: options.analytics
-            ? ({
-                  getSettings: async () => ({
-                      enabled: true,
-                      visitorEstimation: false,
-                      rollupRetentionDays: 395,
-                      privacyNoticeUrl: "",
-                  }),
-                  record: async (event: AnalyticsEvent) => {
-                      events.push(event);
-                      notifyRecorded?.();
-                  },
-              } as never)
-            : undefined,
-        analyticsVisitorSecret: "test-secret",
-        analyticsSiteScope: "https://example.test",
     });
     return {
         delivery,
-        events,
         get: runner.defaultHandler("GET", "/"),
         head: runner.defaultHandler("HEAD", "/"),
-        recorded,
         storedLookups,
     };
 }

@@ -45,8 +45,6 @@ export async function startLocalCms(
             CMS_GATEWAY_SITE_ID: "default",
             CMS_AUTH_SITE_NAME: "Ulvia local CMS",
             CMS_AUTH_EMAIL_COOLDOWN_SECONDS: "0",
-            ANALYTICS_SALT_SECRET: config.analyticsSecret,
-            ENDPOINT_PERFORMANCE_ENABLED: "false",
             CMS_HTTP_CLIENT_ADDRESS_MODE: "disabled",
         },
     });

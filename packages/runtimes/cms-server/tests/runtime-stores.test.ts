@@ -28,23 +28,8 @@ describe("production runtime stores", () => {
         } as unknown as Db;
         const stores = await createFeatureStores(db);
 
-        expect(indexedCollections).toEqual(
-            expect.arrayContaining([
-                "cms_identity_aliases",
-                "dashboardAssignments",
-                "analytics_rollups",
-                "analytics_hll_sketches",
-                "analytics_referrer_buckets",
-                "analytics_governance",
-                "analytics_source_performance_rollups",
-            ]),
-        );
+        expect(indexedCollections).toEqual(expect.arrayContaining(["cms_identity_aliases", "dashboardAssignments"]));
         expect(indexedCollections).not.toContain("sources");
-        expect(stores.endpointPerformanceRecorder.stats()).toMatchObject({
-            accepted: 0,
-            dropped: 0,
-            invalid: 0,
-        });
     });
 
     test("rejects an invalid Mongo connection string before initializing stores", async () => {
@@ -57,7 +42,6 @@ describe("production runtime stores", () => {
             CMS_ADMIN_PASSWORD: "Correct-Horse-Battery-Staple-42!",
             CMS_FILES_DIR: "/data/files",
             MONGO_URL: "not-a-mongodb-url",
-            ANALYTICS_SALT_SECRET: "shared-analytics-secret",
         });
 
         await expect(createCoreStores(env)).rejects.toThrow(/Invalid scheme/);

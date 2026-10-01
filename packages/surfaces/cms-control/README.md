@@ -104,7 +104,6 @@ new ControlCms(
     identityProviders?:  IdentityProviderRepository,
     pats?:               PatRepository,
     credentials?:        LocalCredentialStore,
-    analytics?:          AnalyticsStore,
     authBackends?:       { local?: LocalAuthenticationActions; oidc?: OidcAuthHandlers },
 )
 ```

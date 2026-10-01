@@ -35,7 +35,6 @@ CmsCore/
 |   |   |-- cms-auth/          @bernouy/cms-auth
 |   |   |-- cms-gateway/       @bernouy/cms-gateway
 |   |   |-- cms-repository/    @bernouy/cms-repository
-|   |   |-- cms-analytics/     @bernouy/cms-analytics
 |   |   |-- cms-bloc-compile/  @bernouy/cms-bloc-compile
 |   |   `-- cms-editor-system-v2/ @bernouy/cms-editor-system-v2
 |   |-- resources/

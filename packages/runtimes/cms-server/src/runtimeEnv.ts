@@ -1,5 +1,4 @@
 import {
-    parseBoolean,
     parseHttpUrl,
     parseNonNegativeInteger,
     parsePositiveInteger,
@@ -32,10 +31,6 @@ export type RuntimeEnv = {
     CMS_AUTH_PASSWORD_RESET_URL: string;
     CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL: string;
     CMS_CONTROL_AUTH_PASSWORD_RESET_URL: string;
-    ANALYTICS_SALT_SECRET: string;
-    ANALYTICS_TRUST_PROXY: boolean;
-    ANALYTICS_TRUSTED_PROXY_VERIFIED: boolean;
-    ENDPOINT_PERFORMANCE_ENABLED: boolean;
     CMS_HTTP_CLIENT_ADDRESS_MODE: "direct" | "disabled" | "trusted-proxy";
     CMS_HTTP_TRUSTED_PROXY_HOPS: number;
 };
@@ -98,18 +93,6 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
             source.CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
             "CMS_CONTROL_AUTH_PASSWORD_RESET_URL",
             `${CONTROL_PUBLIC_URL}/auth/reset-password`,
-        ),
-        ANALYTICS_SALT_SECRET: requiredEnv(source, "ANALYTICS_SALT_SECRET"),
-        ANALYTICS_TRUST_PROXY: parseBoolean(source.ANALYTICS_TRUST_PROXY, "ANALYTICS_TRUST_PROXY", false),
-        ANALYTICS_TRUSTED_PROXY_VERIFIED: parseBoolean(
-            source.ANALYTICS_TRUSTED_PROXY_VERIFIED,
-            "ANALYTICS_TRUSTED_PROXY_VERIFIED",
-            false,
-        ),
-        ENDPOINT_PERFORMANCE_ENABLED: parseBoolean(
-            source.ENDPOINT_PERFORMANCE_ENABLED,
-            "ENDPOINT_PERFORMANCE_ENABLED",
-            true,
         ),
         ...clientAddress,
     };

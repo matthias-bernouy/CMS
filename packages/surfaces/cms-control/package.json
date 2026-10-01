@@ -55,7 +55,6 @@
         "@bernouy/cms-dashboards": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "@bernouy/components": "workspace:*",
-        "@bernouy/cms-analytics": "workspace:*",
         "linkedom": "^0.18.13",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",

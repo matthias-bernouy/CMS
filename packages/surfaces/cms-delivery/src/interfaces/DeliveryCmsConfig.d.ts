@@ -1,5 +1,4 @@
 import type { CollectionTextSource } from "@bernouy/cms-content/rendering";
-import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
 import type {
@@ -36,22 +35,6 @@ export type DeliveryCmsConfig = {
     };
     /** Optional first-party public authentication routes. */
     auth?: PublicAuthRoutesConfig;
-    /** Optional strict aggregate analytics writer. */
-    analytics?: AnalyticsStore;
-    /** Stable shared HMAC secret. Required by the production runtime. */
-    analyticsVisitorSecret?: string;
-    /** Stable tenant id or normalized public origin and base path. */
-    analyticsSiteScope?: string;
-    /** Trust X-Forwarded-For only behind an overwriting proxy. Defaults to false. */
-    analyticsTrustProxy?: boolean;
-    /** Whether an enabled proxy boundary has been operationally verified. */
-    analyticsTrustedProxyVerified?: boolean;
-    /** Runtime version included in compliance configuration fingerprints. */
-    analyticsCmsVersion?: string;
-    /** Optional defence-in-depth support for the legacy DNT request header. */
-    analyticsHonorDnt?: boolean;
-    /** Public privacy-policy link shown next to the audience-measurement opt-out. */
-    analyticsPrivacyPolicyUrl?: string;
     /** File metadata and bytes backing the public file route. */
     filesMetadata?: PublicFileMetadataLookup;
     filesBlob?: BlobReader;

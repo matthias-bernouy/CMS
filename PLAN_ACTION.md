@@ -1311,8 +1311,8 @@ Every invocation should expose or record:
 
 Dashboards for the platform should show latency/error/rate/timeout/contract
 violation counts, last success, stale health, operations, feed lag, cursor
-expiry, outbox backlog, and worker failures. Audit and analytics remain separate
-stores with separate retention and access policies.
+expiry, outbox backlog, and worker failures. Audit remains a separate store with
+its own retention and access policies.
 
 ## 11. Explicit non-goals
 

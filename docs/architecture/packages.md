@@ -23,7 +23,6 @@ files explain implementation invariants.
 | `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues and authored collections with Control HTML views. |
 | `@bernouy/cms-gateway` | Authorized capability invocation, provider identity aliases, file reads and image derivatives. |
 | `@bernouy/cms-auth` | Accounts, local/OIDC providers, PATs, signed sessions, public auth operations and email composition. |
-| `@bernouy/cms-analytics` | Server-side events, counters, persistence and dashboard HTTP handlers. |
 | `@bernouy/cms-dashboards` | Site dashboard records, collection view mounts and direct subject assignments. |
 | `@bernouy/ulvia-official-provider` | Initial local provider capabilities for catalogue reads, form receipts and one media asset. |
 | `@bernouy/cms-bloc-compile` | Existing Bloc validation, view/editor bundling and shared editor externals. |
@@ -51,7 +50,7 @@ adapters or routes. There is no `packages/resources/sites` template catalogue.
 | Package | Responsibility |
 | --- | --- |
 | `@bernouy/cms-control` | Authenticated admin UI, REST API, editor, author media and selected gateway capability access. |
-| `@bernouy/cms-delivery` | Public pages, Bloc assets, binding runtime, auth, media, gateway calls, SEO and analytics collection. |
+| `@bernouy/cms-delivery` | Public pages, Bloc assets, binding runtime, auth, media, gateway calls and SEO. |
 | `@bernouy/cms-server` | Production adapter composition and Control/Delivery startup. |
 | `@bernouy/ulvia-cli` | Persistent local CMS development stack backed by MongoDB. |
 | `@bernouy/ulvia-provider` | Loopback official provider executable for local development. |

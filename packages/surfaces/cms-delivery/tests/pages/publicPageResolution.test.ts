@@ -169,36 +169,4 @@ describe("Delivery public page providers", () => {
         const missing = await mounted.get(new Request("https://example.test/missing"));
         expect(missing.status).toBe(404);
     });
-
-    test("uses stored page identities before provider identities for same-origin analytics referrers", async () => {
-        const provider: PublicPageProvider = {
-            resolvePage: async (path) =>
-                path === "/integrations"
-                    ? { page: publicPage("catalog", path), cacheIdentity: "catalog-v1" }
-                    : path === "/integrations/example"
-                      ? { page: publicPage("detail", path), cacheIdentity: "detail-v1" }
-                      : null,
-        };
-        const mounted = mountPublicPages({
-            providers: [provider],
-            storedPages: [
-                publicPage("stored-catalog", "/integrations"),
-                publicPage("stored-detail", "/integrations/example"),
-            ],
-            analytics: true,
-        });
-
-        await mounted.get(
-            new Request("https://example.test/integrations/example", {
-                headers: {
-                    host: "example.test",
-                    referer: "https://example.test/integrations",
-                    "user-agent": "Mozilla/5.0 Chrome/120 Safari/537.36",
-                },
-            }),
-        );
-        await mounted.recorded;
-
-        expect(mounted.events[0]).toMatchObject({ pageId: "stored-detail", previousPageId: "stored-catalog" });
-    });
 });

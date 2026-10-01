@@ -11,9 +11,7 @@ const env = readRuntimeEnv(process.env);
 await validateCmsStorageRoots(env.CMS_FILES_DIR);
 
 const core = await createCoreStores(env);
-const features = await createFeatureStores(core.db, {
-    endpointPerformanceEnabled: env.ENDPOINT_PERFORMANCE_ENABLED,
-});
+const features = await createFeatureStores(core.db);
 const authentication = await createProductionAuth(env, core);
 const gateway = env.CMS_GATEWAY_SITE_ID
     ? await createProductionGateway(
@@ -29,7 +27,6 @@ const gateway = env.CMS_GATEWAY_SITE_ID
 
 const surfaces = await mountProductionSurfaces({
     env,
-    analyticsVisitorSecret: env.ANALYTICS_SALT_SECRET,
     core,
     features,
     authentication,

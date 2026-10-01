@@ -29,8 +29,6 @@ test("production composition supplies one gateway image service to Control and D
                 captured.delivery = config;
             }
         },
-        startAnalyticsFinalizer: () => ({}),
-        startEndpointPerformanceFlusher: () => ({ stop() {}, async run() {} }),
         log() {},
         reportError() {},
     } as unknown as ProductionSurfaceRuntime;

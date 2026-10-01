@@ -13,7 +13,6 @@ import type {
     Subject,
 } from "@bernouy/cms-auth";
 import type { PublicAuthRoutesConfig, OidcAuthHandlers } from "@bernouy/cms-auth/http";
-import type { AnalyticsComplianceContext, AnalyticsStore, EndpointPerformanceReports } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { DashboardAssignmentRepository, DashboardRepository } from "@bernouy/cms-dashboards";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
@@ -26,7 +25,6 @@ import type { Cache, Runner } from "@bernouy/http-runner";
 
 type Configuration = {
     deliveryUrl?: string;
-    analyticsCompliance?: AnalyticsComplianceContext;
     publicAuth?: PublicAuthRoutesConfig & {
         emailTest?: { send(input: { kind: "email_verification" | "password_reset"; to: string }): Promise<void> };
     };
@@ -72,7 +70,6 @@ export type ControlCmsOptions = Configuration & {
         /** Host-owned verified administrator grant, independent of request fields. */
         readonly isAdministrator: (subject: Subject) => Promise<boolean>;
     };
-    endpointPerformanceReports?: EndpointPerformanceReports;
 };
 
 export type ControlAuthBackends = {
@@ -93,7 +90,6 @@ export type ControlCmsState = {
     identityProviders: IdentityProviderRepository | null;
     pats: PatRepository | null;
     credentials: LocalCredentialStore | null;
-    analytics: AnalyticsStore | null;
     dashboardAssignments: DashboardAssignmentRepository;
     dashboards: DashboardRepository;
     identities: IdentityService;

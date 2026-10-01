@@ -73,7 +73,7 @@ export type TSystem = {
      * meta CSP emitted by `delivery/core/html/renderPage`.
      *
      * Use these for resources blocs need to reach that aren't modeled as
-     * data providers — third-party analytics, error trackers, font CDNs,
+     * data providers — external measurement tools, error trackers, font CDNs,
      * embed hosts, etc. Each entry is an origin (`scheme://host[:port]`),
      * normalised on save. The DTO parser accepts a newline-separated
      * textarea payload from the admin form.

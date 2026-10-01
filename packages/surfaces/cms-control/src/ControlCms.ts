@@ -6,7 +6,6 @@ import type {
     UsersRepository,
 } from "@bernouy/cms-auth";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
-import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { Cache, Runner } from "@bernouy/http-runner";
@@ -36,7 +35,6 @@ export class ControlCms {
         identityProviders?: IdentityProviderRepository,
         pats?: PatRepository,
         credentials?: LocalCredentialStore,
-        analytics?: AnalyticsStore,
         authBackends: ControlAuthBackends = {},
     ) {
         const state = createControlCmsState({
@@ -52,7 +50,6 @@ export class ControlCms {
             identityProviders,
             pats,
             credentials,
-            analytics,
             authBackends,
         });
         this.state = state;
@@ -108,9 +105,6 @@ export class ControlCms {
         emailTest?: { send(input: { kind: "email_verification" | "password_reset"; to: string }): Promise<void> };
     } {
         return controlCmsAccessors.publicAuth(this.state);
-    }
-    get analytics() {
-        return controlCmsAccessors.analytics(this.state);
     }
     get basePath() {
         return controlCmsAccessors.basePath(this.state);

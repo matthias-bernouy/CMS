@@ -238,7 +238,6 @@ CMS_ADMIN_PASSWORD="$(openssl rand -hex 24)"
     printf 'CMS_KEK_HEX=%s\n' "$(openssl rand -hex 32)"
     printf 'CMS_ADMIN_EMAIL=%s\n' "admin@${DOMAIN}"
     printf 'CMS_ADMIN_PASSWORD=%s\n' "${CMS_ADMIN_PASSWORD}"
-    printf 'ANALYTICS_SALT_SECRET=%s\n' "$(openssl rand -hex 32)"
 } > .env
 
 chmod 600 .env
@@ -301,7 +300,6 @@ environment file.
 | `CMS_SESSION_SECRET` | Session-cookie signing secret; use at least 32 random bytes. |
 | `CMS_KEK_HEX` | Exactly 32 random bytes encoded as 64 hexadecimal characters. |
 | `CMS_ADMIN_PASSWORD` | Initial local admin password; only used if the credential does not yet exist. |
-| `ANALYTICS_SALT_SECRET` | Stable HMAC secret shared by every Delivery replica for this site. |
 
 ### Optional CMS and authentication settings
 
@@ -309,8 +307,6 @@ environment file.
 | --- | --- |
 | `CMS_ADMIN_EMAIL` | Defaults to `admin@${DOMAIN}`. |
 | `CMS_GATEWAY_SITE_ID` | Optional stable opaque site ID. When set, mounts capability call routes in Control and Delivery backed by Mongo catalogues and the provider gateway. Publication and installation management routes are still pending. |
-| `ANALYTICS_TRUST_PROXY` | Defaults to `false`; enable only behind a proxy that overwrites forwarding headers. |
-| `ENDPOINT_PERFORMANCE_ENABLED` | Defaults to `true`; set to `false` to stop new endpoint observations and flushes without deleting retained rollups. |
 | `CMS_AUTH_SITE_NAME` | Public authentication site name; defaults to `CMS`. |
 | `CMS_AUTH_EMAIL_COOLDOWN_SECONDS` | Email throttle interval; defaults to 300 seconds. |
 | `CMS_AUTH_EMAIL_VERIFICATION_URL` | Delivery email-verification URL. |
@@ -464,8 +460,6 @@ Other instance secrets have different semantics:
   or encrypted secrets and protected fields become unreadable.
 - Changing `CMS_ADMIN_PASSWORD` does not reset an existing admin credential; it
   is bootstrap-only.
-- Changing `ANALYTICS_SALT_SECRET` resets daily visitor estimation and must be
-  coordinated across every replica.
 
 ## Migrate a legacy unauthenticated shared MongoDB volume
 
@@ -615,7 +609,7 @@ For every instance:
 1. Back up its legacy Compose file and `.env` without exposing the secrets.
 2. Install the new per-instance `compose.yml` and `.env.example`.
 3. Preserve the existing `CMS_SESSION_SECRET`, `CMS_KEK_HEX`, admin settings,
-   analytics salt, and `files` directory.
+   and `files` directory.
 4. Add `CMS_IMAGE` and an authenticated `MONGO_URL` whose database path is
    exactly the old `cms_<INSTANCE_ID>` value.
 5. Ensure `files` is owned by UID/GID 1000.

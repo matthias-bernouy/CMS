@@ -25,16 +25,6 @@ import { resolveRuntimePageIndexingMetadata } from "cms-delivery/core/seo/indexi
  * (often a CDN's) gets the un-enhanced page.
  */
 export async function handlePageRequest(req: Request, delivery: DeliveryCms): Promise<Response> {
-    return (await handlePageRequestWithResult(req, delivery)).response;
-}
-
-export type PageRequestResult = {
-    response: Response;
-    pageId?: string;
-};
-
-/** Internal variant used by analytics so stable page identity is not reconstructed from a path. */
-export async function handlePageRequestWithResult(req: Request, delivery: DeliveryCms): Promise<PageRequestResult> {
     const url = new URL(req.url);
     const pathname = url.pathname;
 
@@ -43,44 +33,37 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
     // DB lookup would always miss.
     const prefix = delivery.cmsPathPrefix;
     if (pathname === prefix || pathname.startsWith(prefix + "/")) {
-        return { response: new Response("Not Found", { status: 404 }) };
+        return new Response("Not Found", { status: 404 });
     }
 
     const storedRoute = await delivery.repository.resolvePublishedRoute(pathname);
     if (storedRoute?.kind === "updating") {
-        return {
-            response: new Response("Service unavailable", {
-                status: 503,
-                headers: { "Cache-Control": "no-store", "Retry-After": "5" },
-            }),
-        };
+        return new Response("Service unavailable", {
+            status: 503,
+            headers: { "Cache-Control": "no-store", "Retry-After": "5" },
+        });
     }
     if (storedRoute?.kind === "gone") {
-        return { response: await renderRef(req, delivery, "notFound", 410, "Page not found", storedRoute.language) };
+        return renderRef(req, delivery, "notFound", 410, "Page not found", storedRoute.language);
     }
     if (storedRoute?.kind === "unavailable") {
-        return { response: await renderRef(req, delivery, "notFound", 404, "Page not found") };
+        return renderRef(req, delivery, "notFound", 404, "Page not found");
     }
     if (storedRoute?.kind === "redirect") {
-        return {
-            response: new Response(null, {
-                status: 301,
-                headers: { Location: `${storedRoute.path}${url.search}`, "Cache-Control": "no-store" },
-            }),
-        };
+        return new Response(null, {
+            status: 301,
+            headers: { Location: `${storedRoute.path}${url.search}`, "Cache-Control": "no-store" },
+        });
     }
     const page =
         storedRoute?.kind === "current" ? storedRoute.page : await delivery.repository.getPublishedPage(pathname);
     if (page) {
         const sourceAccess = await preflightPageGatewayAccess(req, page, delivery);
         if (sourceAccess) {
-            return { response: sourceAccess, pageId: page.id };
+            return sourceAccess;
         }
 
-        return {
-            response: await renderIndexedPage(req, page, pathname, delivery, null, 200, storedRoute?.language),
-            pageId: page.id,
-        };
+        return renderIndexedPage(req, page, pathname, delivery, null, 200, storedRoute?.language);
     }
 
     let dynamicPage;
@@ -88,37 +71,32 @@ export async function handlePageRequestWithResult(req: Request, delivery: Delive
         dynamicPage = await resolvePublicPage(pathname, delivery, url.search);
     } catch (err) {
         if (err instanceof InvalidPublicPageRequestError) {
-            return {
-                response: new Response("Bad Request", {
-                    status: err.status,
-                    headers: { "cache-control": "no-store", "content-type": "text/plain; charset=utf-8" },
-                }),
-            };
+            return new Response("Bad Request", {
+                status: err.status,
+                headers: { "cache-control": "no-store", "content-type": "text/plain; charset=utf-8" },
+            });
         }
         reportPageFailure("resolve", pathname, err);
-        return { response: await renderRef(req, delivery, "serverError", 500, "Internal server error") };
+        return renderRef(req, delivery, "serverError", 500, "Internal server error");
     }
 
     if (dynamicPage) {
         const sourceAccess = await preflightPageGatewayAccess(req, dynamicPage.page, delivery);
         if (sourceAccess) {
-            return { response: sourceAccess, pageId: dynamicPage.page.id };
+            return sourceAccess;
         }
         const status = dynamicPage.status ?? 200;
-        return {
-            response: await renderIndexedPage(
-                req,
-                dynamicPage.page,
-                pathname,
-                delivery,
-                status === 200 && !url.search ? dynamicPage.cacheIdentity : undefined,
-                status,
-            ),
-            pageId: dynamicPage.page.id,
-        };
+        return renderIndexedPage(
+            req,
+            dynamicPage.page,
+            pathname,
+            delivery,
+            status === 200 && !url.search ? dynamicPage.cacheIdentity : undefined,
+            status,
+        );
     }
 
-    return { response: await renderRef(req, delivery, "notFound", 404, "Page not found") };
+    return renderRef(req, delivery, "notFound", 404, "Page not found");
 }
 
 async function renderIndexedPage(

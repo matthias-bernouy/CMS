@@ -1,8 +1,8 @@
 # @bernouy/cms-delivery
 
 Public rendering surface. It mounts page rendering, bloc bundles, theme CSS,
-component runtime, gateway capability routes, file serving, sitemap, robots, public auth,
-and analytics collection onto a provided `Runner`.
+component runtime, gateway capability routes, file serving, sitemap, robots and public auth
+onto a provided `Runner`.
 
 ## Boundaries
 
@@ -12,8 +12,7 @@ and analytics collection onto a provided `Runner`.
   `@bernouy/cms-content/files/serving`, plus browser-safe `/editor`, `/theme`,
   `/page-path` and `/files/urls` helpers. Do not import the authoring root,
   `/files`, Mongo, S3, filesystem implementations or runtime composition code.
-- Persistence, auth, files, cache, gateway, and analytics are
-  injected through config.
+- Persistence, auth, files, cache and gateway are injected through config.
 
 ## Rules
 
@@ -25,13 +24,12 @@ and analytics collection onto a provided `Runner`.
 - `ContentReader` returns published pages, projected rendering settings and
   renderable bloc artifacts. Helpers receive only the methods they use.
 - Delivery reads original blobs but may write variants and generate/retain
-  sitemap snapshots through separate capabilities. Analytics/auth writes are
-  independent of editorial content.
+  sitemap snapshots through separate capabilities. Auth writes are independent
+  of editorial content.
 - Keep temporary route-updating responses non-cacheable. Editorial draft
   preview belongs to authenticated Control, not public Delivery.
 - Preserve `/.cms/*` route semantics for blocs, blocsets, style, files, image
   variants, gateway capabilities, and auth. Delivery does not mount public
   `/.cms/sources` routes.
 - Gateway execution uses the selected contract and injected runtime transport.
-- Analytics collection must remain server-side and privacy-preserving.
 - Public routes should be careful with cache headers and CSP-related settings.

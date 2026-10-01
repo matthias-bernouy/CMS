@@ -5,7 +5,6 @@
     "": {
       "name": "@bernouy/cms-core",
       "devDependencies": {
-        "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
@@ -29,18 +28,6 @@
         "mongodb": "^7.6.0",
         "playwright": "^1.63.0",
         "sharp": "^0.35.4",
-        "typescript": "^7.0.2",
-      },
-    },
-    "packages/features/cms-analytics": {
-      "name": "@bernouy/cms-analytics",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/http-runner": "workspace:*",
-        "tldts": "^7.4.14",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.2.0",
         "typescript": "^7.0.2",
       },
     },
@@ -194,18 +181,10 @@
         "typescript": "^7.0.2",
       },
     },
-    "packages/resources/collection-examples": {
-      "name": "@bernouy/collection-examples",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cms-repository": "workspace:*",
-      },
-    },
     "packages/runtimes/cms-server": {
       "name": "@bernouy/cms-server",
       "version": "0.1.0",
       "dependencies": {
-        "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-control": "workspace:*",
@@ -251,7 +230,6 @@
       "name": "@bernouy/cms-control",
       "version": "0.1.0",
       "dependencies": {
-        "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
@@ -279,7 +257,6 @@
       "name": "@bernouy/cms-delivery",
       "version": "0.1.0",
       "dependencies": {
-        "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
@@ -296,8 +273,6 @@
     },
   },
   "packages": {
-    "@bernouy/cms-analytics": ["@bernouy/cms-analytics@workspace:packages/features/cms-analytics"],
-
     "@bernouy/cms-auth": ["@bernouy/cms-auth@workspace:packages/features/cms-auth"],
 
     "@bernouy/cms-bloc-compile": ["@bernouy/cms-bloc-compile@workspace:packages/features/cms-bloc-compile"],
@@ -317,8 +292,6 @@
     "@bernouy/cms-repository": ["@bernouy/cms-repository@workspace:packages/features/cms-repository"],
 
     "@bernouy/cms-server": ["@bernouy/cms-server@workspace:packages/runtimes/cms-server"],
-
-    "@bernouy/collection-examples": ["@bernouy/collection-examples@workspace:packages/resources/collection-examples"],
 
     "@bernouy/components": ["@bernouy/components@workspace:packages/foundation/components"],
 
@@ -535,10 +508,6 @@
     "sharp": ["sharp@0.35.4", "", { "dependencies": { "@img/colour": "^1.1.0", "detect-libc": "^2.1.2", "semver": "^7.8.5" }, "optionalDependencies": { "@img/sharp-darwin-arm64": "0.35.4", "@img/sharp-darwin-x64": "0.35.4", "@img/sharp-freebsd-wasm32": "0.35.4", "@img/sharp-libvips-darwin-arm64": "1.3.3", "@img/sharp-libvips-darwin-x64": "1.3.3", "@img/sharp-libvips-linux-arm": "1.3.3", "@img/sharp-libvips-linux-arm64": "1.3.3", "@img/sharp-libvips-linux-ppc64": "1.3.3", "@img/sharp-libvips-linux-riscv64": "1.3.3", "@img/sharp-libvips-linux-s390x": "1.3.3", "@img/sharp-libvips-linux-x64": "1.3.3", "@img/sharp-libvips-linuxmusl-arm64": "1.3.3", "@img/sharp-libvips-linuxmusl-x64": "1.3.3", "@img/sharp-linux-arm": "0.35.4", "@img/sharp-linux-arm64": "0.35.4", "@img/sharp-linux-ppc64": "0.35.4", "@img/sharp-linux-riscv64": "0.35.4", "@img/sharp-linux-s390x": "0.35.4", "@img/sharp-linux-x64": "0.35.4", "@img/sharp-linuxmusl-arm64": "0.35.4", "@img/sharp-linuxmusl-x64": "0.35.4", "@img/sharp-webcontainers-wasm32": "0.35.4", "@img/sharp-win32-arm64": "0.35.4", "@img/sharp-win32-ia32": "0.35.4", "@img/sharp-win32-x64": "0.35.4" }, "peerDependencies": { "@types/node": "*" }, "optionalPeers": ["@types/node"] }, "sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn0ImXqpGVv5zliDs0V9HbmbCQLpbuo2ej9rAoOQTvMDA=="],
 
     "sparse-bitfield": ["sparse-bitfield@3.0.3", "", { "dependencies": { "memory-pager": "^1.0.2" } }, "sha512-kvzhi7vqKTfkh0PZU+2D2PIllw2ymqJKujUcyPMd9Y75Nv4nPbGJZXNhxsgdQab2BmlDct1YnfQCguEvHr7VsQ=="],
-
-    "tldts": ["tldts@7.4.14", "", { "dependencies": { "tldts-core": "^7.4.14" }, "bin": { "tldts": "bin/cli.js" } }, "sha512-EahQoi+Q5oqmG3yxRHx+bwn36OaLbtw6jnTFcGjc8fcmktzTgk45xRnzAx8Ch87PFEiqRhoc3FWBmY+LBrvEGQ=="],
-
-    "tldts-core": ["tldts-core@7.4.14", "", {}, "sha512-KYkjfJHnIC5t+Gy7hPrMHgJmWc/N9FfmS+fggRPSlpFckidpB9HD6OzPsSTkfDH+MpZgcu2tJPGgLfHl979N1Q=="],
 
     "tr46": ["tr46@5.1.1", "", { "dependencies": { "punycode": "^2.3.1" } }, "sha512-hdF5ZgjTqgAntKkklYw0R03MG2x/bSzTtkxmIRw/sTNV8YXsCJ1tfLAX23lhxhHJlEf3CRCOCGGWw3vI3GaSPw=="],
 

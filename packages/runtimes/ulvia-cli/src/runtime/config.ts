@@ -10,7 +10,6 @@ export type DevRuntimeConfig = Readonly<{
     adminPassword: string;
     sessionSecret: string;
     kekHex: string;
-    analyticsSecret: string;
 }>;
 
 export async function loadOrCreateDevRuntimeConfig(devRoot: string): Promise<DevRuntimeConfig> {
@@ -25,7 +24,6 @@ export async function loadOrCreateDevRuntimeConfig(devRoot: string): Promise<Dev
         adminPassword: `${randomBytes(24).toString("base64url")}Aa1!`,
         sessionSecret: randomBytes(48).toString("base64url"),
         kekHex: randomBytes(32).toString("hex"),
-        analyticsSecret: randomBytes(32).toString("base64url"),
     };
     try {
         await writeFile(path, `${JSON.stringify(config, null, 2)}\n`, { flag: "wx", mode: 0o600 });
@@ -59,8 +57,7 @@ async function readConfig(path: string): Promise<DevRuntimeConfig | null> {
         !validEmail(value.adminEmail) ||
         !secret(value.adminPassword) ||
         !secret(value.sessionSecret) ||
-        !/^[a-f0-9]{64}$/u.test(value.kekHex ?? "") ||
-        !secret(value.analyticsSecret)
+        !/^[a-f0-9]{64}$/u.test(value.kekHex ?? "")
     ) {
         throw new Error("Ulvia dev runtime configuration is invalid");
     }
