@@ -6,7 +6,7 @@ import { verifyAdmission } from "./verifyAdmission";
 import type { AdmittedContractRelease, VerifiedFixtureAsset } from "./admitContractRelease";
 import type { ContractBundleAsset } from "./admitContractBundle";
 import type { ReleaseDigest } from "./digest";
-import { verifyFixtureAssets } from "./verifyFixtureAssets";
+import { snapshotFixtureAssets, verifyFixtureAssets } from "./verifyFixtureAssets";
 import { indexDependencyContext } from "../conformance/dependencies/references";
 
 export interface AdmittedConformanceSuite {
@@ -25,9 +25,14 @@ export async function admitConformanceSuite(
     limits: Readonly<ReleaseLimits> = DEFAULT_RELEASE_LIMITS,
     dependencies: readonly AdmittedContractRelease[] = [],
 ): Promise<AdmittedConformanceSuite> {
-    const verified = await verifyAdmission(release, limits);
-    const verifiedDependencies = await verifyDependencies(dependencies, limits);
-    return admitParsedSuite(parseConformanceSuite(value, verified, limits, verifiedDependencies), assets, limits);
+    const snapshot = snapshotAdmissionInput(value, release, assets, limits, dependencies);
+    const verified = await verifyAdmission(snapshot.release, snapshot.limits);
+    const verifiedDependencies = await verifyDependencies(snapshot.dependencies, snapshot.limits);
+    return admitParsedSuite(
+        parseConformanceSuite(snapshot.value, verified, snapshot.limits, verifiedDependencies),
+        snapshot.assets,
+        snapshot.limits,
+    );
 }
 
 export async function admitConformanceSuiteJson(
@@ -37,9 +42,38 @@ export async function admitConformanceSuiteJson(
     limits: Readonly<ReleaseLimits> = DEFAULT_RELEASE_LIMITS,
     dependencies: readonly AdmittedContractRelease[] = [],
 ): Promise<AdmittedConformanceSuite> {
-    const verified = await verifyAdmission(release, limits);
-    const verifiedDependencies = await verifyDependencies(dependencies, limits);
-    return admitParsedSuite(parseConformanceSuiteJson(input, verified, limits, verifiedDependencies), assets, limits);
+    const value = typeof input === "string" ? input : input.slice();
+    const snapshot = snapshotAdmissionInput(value, release, assets, limits, dependencies);
+    const verified = await verifyAdmission(snapshot.release, snapshot.limits);
+    const verifiedDependencies = await verifyDependencies(snapshot.dependencies, snapshot.limits);
+    return admitParsedSuite(
+        parseConformanceSuiteJson(
+            snapshot.value as string | Uint8Array,
+            verified,
+            snapshot.limits,
+            verifiedDependencies,
+        ),
+        snapshot.assets,
+        snapshot.limits,
+    );
+}
+
+function snapshotAdmissionInput(
+    value: unknown,
+    release: AdmittedContractRelease,
+    assets: readonly ContractBundleAsset[],
+    limits: Readonly<ReleaseLimits>,
+    dependencies: readonly AdmittedContractRelease[],
+) {
+    return {
+        value: typeof value === "string" ? value : structuredClone(value),
+        release: structuredClone(release) as AdmittedContractRelease,
+        assets: snapshotFixtureAssets(assets),
+        limits: Object.freeze({ ...limits }),
+        dependencies: Object.freeze(
+            dependencies.map((dependency) => structuredClone(dependency) as AdmittedContractRelease),
+        ),
+    };
 }
 
 /** Artifact integrity is verified locally; suite admission never resolves a catalogue or contacts a provider. */

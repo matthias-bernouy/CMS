@@ -38,6 +38,18 @@ describe("conformance suite admission", () => {
         expect(first.canonicalJson).toContain("contract-conformance-suite");
     });
 
+    test("owns the suite document before verifying asynchronous dependencies", async () => {
+        const release = await admitContractRelease(releaseFixture);
+        const document = suite();
+        const pending = admitConformanceSuite(document, release);
+        document.version = "caller-mutated";
+        (document.scenarios as unknown[]).length = 0;
+
+        const admitted = await pending;
+        expect(admitted.suite.version).toBe("0.1.0");
+        expect(admitted.suite.scenarios).not.toHaveLength(0);
+    });
+
     test("rejects a mismatched release reference, publisher, or unsupported isolation", async () => {
         const release = await admitContractRelease(releaseFixture);
         const digest = suite();

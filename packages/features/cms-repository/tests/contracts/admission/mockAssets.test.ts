@@ -88,6 +88,46 @@ describe("contract mock assets", () => {
         await expect(new InMemoryReleaseCatalogue().publish(forged)).rejects.toThrow("digest mismatch");
     });
 
+    test("snapshots every supplied buffer before hashing any asset", async () => {
+        const first = new Uint8Array([1]);
+        const second = new Uint8Array([2]);
+        const definition = (id: string, bytes: Uint8Array) => ({
+            id,
+            mediaType: "application/octet-stream",
+            byteLength: bytes.byteLength,
+            digest: `sha256:${new Bun.CryptoHasher("sha256").update(bytes).digest("hex")}`,
+        });
+        const fixtureAssets = [definition("first.bin", first), definition("second.bin", second)];
+        const release = contractDocument({
+            fixtureAssets,
+            capabilities: [
+                capabilityDocument({
+                    output: { type: "binary", maxBytes: 8, mediaTypes: ["application/octet-stream"] },
+                    binding: {
+                        transport: "http",
+                        method: "POST",
+                        path: "/v1/messages",
+                        input: { body: true },
+                        response: { successStatuses: [200], contentTypes: ["application/octet-stream"] },
+                    },
+                    mocks: fixtureAssets.map(({ id }) => ({
+                        id,
+                        input,
+                        outcome: { kind: "success", output: { assetId: id } },
+                    })),
+                }),
+            ],
+        });
+
+        const pending = admitContractBundle(release, [
+            { id: "first.bin", bytes: first },
+            { id: "second.bin", bytes: second },
+        ]);
+        second[0] = 3;
+
+        await expect(pending).resolves.toMatchObject({ fixtureAssets: [{ id: "first.bin" }, { id: "second.bin" }] });
+    });
+
     test("accepts a binary input body mock referencing the same verified asset", async () => {
         const release = contractDocument({
             fixtureAssets: [asset],
