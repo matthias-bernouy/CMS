@@ -1,0 +1,114 @@
+:host {
+    display: block;
+    min-height: 240px;
+    color: var(--text-muted);
+}
+
+:host([hidden]) {
+    display: none;
+}
+
+.panel {
+    box-sizing: border-box;
+    display: flex;
+    min-height: inherit;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 32px 24px;
+    text-align: center;
+}
+
+.visual {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    color: var(--text-muted);
+}
+
+.spinner {
+    width: 24px;
+    height: 24px;
+    box-sizing: border-box;
+    border: 2px solid var(--border-default);
+    border-top-color: var(--primary-base);
+    border-radius: 50%;
+    animation: view-state-spin .8s linear infinite;
+}
+
+.error-icon {
+    display: none;
+    width: 34px;
+    height: 34px;
+    stroke-width: 1.7;
+}
+
+:host([state="error"]) .spinner,
+:host([state="empty"]) .spinner {
+    display: none;
+}
+
+:host([state="error"]) .error-icon {
+    display: block;
+}
+
+:host([state="empty"]) .visual {
+    display: none;
+}
+
+::slotted([slot="title"]) {
+    margin: 0;
+    color: var(--text-main);
+    font-size: .9375rem;
+    font-weight: 650;
+}
+
+::slotted([slot="hint"]) {
+    max-width: 520px;
+    margin: 0;
+    font-size: .8125rem;
+    line-height: 1.55;
+}
+
+button,
+::slotted([slot="action"]) {
+    min-height: 36px;
+    margin-top: 4px;
+    padding: 7px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 7px;
+    background: var(--bg-surface);
+    color: var(--text-main);
+    font: inherit;
+    font-size: .8125rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+button:focus-visible,
+::slotted([slot="action"]:focus-visible) {
+    outline: 2px solid var(--primary-base);
+    outline-offset: 2px;
+}
+
+:host([table]) {
+    position: relative;
+    display: table-row;
+    height: 320px;
+}
+
+:host([table]) .panel {
+    position: absolute;
+    inset: 0;
+}
+
+@keyframes view-state-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .spinner { animation: none; }
+}

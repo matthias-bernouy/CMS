@@ -27,6 +27,7 @@ class SourcesWorkspace extends HTMLElement {
             return;
         }
         this.innerHTML = `<style>${css}</style>${template}`;
+        this.querySelector("[data-view-error]")!.addEventListener("retry", () => void this.load());
         this.querySelector("[data-search]")!.addEventListener("input", () => this.renderCatalogue());
         this.querySelector("[data-upgrade]")!.addEventListener("click", () => {
             const contractId = new URLSearchParams(location.search).get("source");
@@ -56,6 +57,7 @@ class SourcesWorkspace extends HTMLElement {
     }
 
     private async load(): Promise<void> {
+        this.showState("loading");
         try {
             const base = getMetaBasePath();
             const responses = await Promise.all([
@@ -70,10 +72,23 @@ class SourcesWorkspace extends HTMLElement {
             this.installations = (await responses[1]!.json()) as SourceInstallations;
             this.dashboards = ((await responses[2]!.json()) as { dashboards: Dashboard[] }).dashboards;
             this.render();
+            this.showState("ready");
             this.status("");
         } catch (error) {
-            this.status(String(error));
+            this.querySelector("[data-view-error-message]")!.textContent =
+                error instanceof Error ? error.message : "Sources could not be loaded.";
+            this.showState("error");
         }
+    }
+
+    private showState(state: "loading" | "error" | "ready"): void {
+        this.querySelector<HTMLElement>("[data-view-loading]")!.hidden = state !== "loading";
+        this.querySelector<HTMLElement>("[data-view-error]")!.hidden = state !== "error";
+        if (state !== "ready") {
+            this.querySelector<HTMLElement>("[data-explore]")!.hidden = true;
+            this.querySelector<HTMLElement>("[data-detail]")!.hidden = true;
+        }
+        this.setAttribute("aria-busy", String(state === "loading"));
     }
 
     private render(): void {

@@ -1,4 +1,12 @@
 <p9r-container size="xl">
+    <cms-view-state state="loading" data-view-loading>
+        <p slot="title">Loading sources</p>
+        <p slot="hint">Checking repositories, provider readiness and installed sources.</p>
+    </cms-view-state>
+    <cms-view-state state="error" retry data-view-error hidden>
+        <p slot="title">Sources could not be loaded</p>
+        <p slot="hint" data-view-error-message>Check the repository and provider connections, then try again.</p>
+    </cms-view-state>
     <cms-shell-detail size="xl" data-explore>
         <span slot="title">Explore sources</span>
         <span slot="description">Browse contracts released by your repositories and connect one through a ready provider.</span>

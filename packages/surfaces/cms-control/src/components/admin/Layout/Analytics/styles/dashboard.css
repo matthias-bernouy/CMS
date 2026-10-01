@@ -75,6 +75,12 @@ cms-analytics-dashboard {
     height: 15px;
 }
 
+.health-rate--empty {
+    border-color: var(--border-default);
+    background: var(--bg-base);
+    color: var(--text-muted);
+}
+
 .report-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

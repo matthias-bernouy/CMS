@@ -1,3 +1,4 @@
+import "./admin/Common/ViewState/ViewState";
 import "./admin/Resources/Collections/AvailableCollections";
 import "./admin/Resources/Providers/ProviderCatalogue";
 import "./admin/Resources/Sources/SourcesWorkspace";

@@ -1,0 +1,14 @@
+<div class="panel" part="panel">
+    <div class="visual" aria-hidden="true">
+        <span class="spinner"></span>
+        <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 7v6"></path>
+            <path d="M12 17h.01"></path>
+        </svg>
+    </div>
+    <slot name="title"></slot>
+    <slot name="hint"></slot>
+    <button type="button" data-retry hidden>Try again</button>
+    <slot name="action"></slot>
+</div>

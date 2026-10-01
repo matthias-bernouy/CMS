@@ -133,6 +133,25 @@ describe("analytics dashboards", () => {
         expect(dashboard.querySelector('[data-role="health-rate"]')?.textContent).toContain("error rate");
     });
 
+    test("does not present an error rate when no requests were observed", async () => {
+        globalThis.fetch = (async (input) => {
+            const url = String(input);
+            if (url.includes("/health")) {
+                return report({ requests: 0, notFound: 0, clientErrors: 0, serverErrors: 0, avgMs: 0, maxMs: 0 });
+            }
+            return report([]);
+        }) as typeof fetch;
+
+        const dashboard = document.createElement("cms-analytics-dashboard");
+        dashboard.setAttribute("view", "health");
+        document.body.append(dashboard);
+        await waitFor(() => dashboard.querySelector<HTMLElement>('[data-state="ready"]')?.hidden === false);
+
+        const rate = dashboard.querySelector('[data-role="health-rate"]');
+        expect(rate?.textContent).toBe("No request data");
+        expect(rate?.classList.contains("health-rate--empty")).toBe(true);
+    });
+
     test("renders literal bounded traffic origins without marketing attribution", async () => {
         globalThis.fetch = (async () =>
             report([

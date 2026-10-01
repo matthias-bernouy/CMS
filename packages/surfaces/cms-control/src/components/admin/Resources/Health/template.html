@@ -1,5 +1,13 @@
 <p9r-container size="xl">
-    <cms-shell-detail size="xl">
+    <cms-view-state state="loading" data-view-loading>
+        <p slot="title">Checking site health</p>
+        <p slot="hint">Reading the latest provider, source, collection and dashboard state.</p>
+    </cms-view-state>
+    <cms-view-state state="error" retry data-view-error hidden>
+        <p slot="title">Site health could not be checked</p>
+        <p slot="hint">None of the health areas responded. Try again when the CMS services are available.</p>
+    </cms-view-state>
+    <cms-shell-detail size="xl" data-view-content hidden>
         <span slot="title">Site health</span>
         <span slot="description" data-health-summary>Checking providers, sources, collections and dashboards…</span>
         <cms-shell-detail-body slot="body">
@@ -21,5 +29,5 @@
             </cms-detail-section>
         </cms-shell-detail-body>
     </cms-shell-detail>
-    <p data-health-status role="status" aria-live="polite"></p>
+    <p data-health-status role="status" aria-live="polite" hidden></p>
 </p9r-container>

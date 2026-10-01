@@ -1,4 +1,12 @@
 <p9r-container size="xl">
+    <cms-view-state state="loading" data-view-loading>
+        <p slot="title">Loading provider connections</p>
+        <p slot="hint">Checking connected accounts and providers available from repositories.</p>
+    </cms-view-state>
+    <cms-view-state state="error" retry data-view-error hidden>
+        <p slot="title">Provider connections could not be loaded</p>
+        <p slot="hint" data-view-error-message>Check the provider repositories, then try again.</p>
+    </cms-view-state>
     <cms-shell-detail size="xl" data-overview>
         <span slot="title">Provider connections</span>
         <span slot="description">Providers connected to this site and the accounts they expose.</span>

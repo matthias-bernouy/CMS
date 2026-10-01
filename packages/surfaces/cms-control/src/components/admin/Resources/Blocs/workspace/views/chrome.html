@@ -32,6 +32,13 @@
     </div>
 </w13c-lateral-menu>
 
-<p role="status" cms-condition="!workspace && !$source.error">Loading collections…</p>
-<p9r-alert type="error" cms-condition="$source.error">Collections could not be loaded. {{ $source.message }}</p9r-alert>
+<cms-view-state state="loading" cms-condition="!workspace && !$source.error">
+    <p slot="title">Loading collections</p>
+    <p slot="hint">Preparing installed collections, themes, blocs and texts.</p>
+</cms-view-state>
+<cms-view-state state="error" cms-condition="$source.error">
+    <p slot="title">Collections could not be loaded</p>
+    <p slot="hint">{{ $source.message }}</p>
+    <a slot="action" href="">Try again</a>
+</cms-view-state>
 <p9r-alert type="error" hidden data-invalid-route>Unknown collection route.</p9r-alert>

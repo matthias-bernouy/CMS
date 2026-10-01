@@ -1,4 +1,12 @@
 <p9r-container size="xl">
+    <cms-view-state state="loading" data-view-loading>
+        <p slot="title">Loading dashboards</p>
+        <p slot="hint">Preparing repository dashboards, private dashboards and member access.</p>
+    </cms-view-state>
+    <cms-view-state state="error" retry data-view-error hidden>
+        <p slot="title">Dashboards could not be loaded</p>
+        <p slot="hint" data-view-error-message>Check collection repositories and dashboard storage, then try again.</p>
+    </cms-view-state>
     <cms-shell-detail size="xl" data-overview>
         <span slot="title">Explore dashboards</span>
         <span slot="description">Browse dashboards offered by your repositories. Install a collection to activate its dashboard, or create a private dashboard from installed views.</span>

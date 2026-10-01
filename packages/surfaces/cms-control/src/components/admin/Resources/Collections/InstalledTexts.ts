@@ -22,7 +22,7 @@ export class InstalledTexts extends HTMLElement {
         if (this.ready) {
             this.language = "";
             this.group = "";
-            void this.load().catch((error) => this.status(String(error)));
+            void this.loadSafe();
         }
     }
     disconnectedCallback() {
@@ -43,14 +43,27 @@ export class InstalledTexts extends HTMLElement {
                 this.render();
             });
             this.querySelector("[data-save]")!.addEventListener("click", () => void this.save());
+            this.querySelector("[data-view-error]")!.addEventListener("retry", () => void this.loadSafe());
         }
-        void this.load().catch((error) => this.status(String(error)));
+        void this.loadSafe();
     }
-    private async load() {
+    private async loadSafe() {
+        this.showState("loading");
+        try {
+            if (await this.load()) {
+                this.showState("ready");
+            }
+        } catch (error) {
+            this.querySelector("[data-view-error-message]")!.textContent =
+                error instanceof Error ? error.message : "Collection texts could not be loaded.";
+            this.showState("error");
+        }
+    }
+    private async load(): Promise<boolean> {
         const generation = ++this.generation;
         const data = await collectionRequest("installed");
         if (generation !== this.generation || !this.isConnected) {
-            return;
+            return false;
         }
         this.item = data.collections.find(
             (item: InstalledCollection) => item.collectionId === this.getAttribute("collection-id"),
@@ -68,6 +81,7 @@ export class InstalledTexts extends HTMLElement {
         this.dirty.clear();
         this.modified.clear();
         this.render();
+        return true;
     }
     private render() {
         if (!this.item) {
@@ -163,6 +177,12 @@ export class InstalledTexts extends HTMLElement {
     }
     private status(message: string) {
         this.querySelector("[data-status]")!.textContent = message;
+    }
+    private showState(state: "loading" | "error" | "ready") {
+        this.querySelector<HTMLElement>("[data-view-loading]")!.hidden = state !== "loading";
+        this.querySelector<HTMLElement>("[data-view-error]")!.hidden = state !== "error";
+        this.querySelector<HTMLElement>("[data-view-content]")!.hidden = state !== "ready";
+        this.setAttribute("aria-busy", String(state === "loading"));
     }
 }
 customElements.define("cms-installed-texts", InstalledTexts);

@@ -59,7 +59,7 @@ export function renderAnalyticsDashboard(root: HTMLElement, data: AnalyticsDashb
 
     const errorRate = data.health.requests
         ? (data.health.clientErrors + data.health.serverErrors) / data.health.requests
-        : 0;
+        : null;
     renderMetrics(target(root, "health-metrics"), [
         { label: "Requests", value: formatInteger(data.health.requests), hint: "Non-automated delivery requests" },
         {
@@ -83,7 +83,9 @@ export function renderAnalyticsDashboard(root: HTMLElement, data: AnalyticsDashb
         { label: "Average latency", value: formatMilliseconds(data.health.avgMs), hint: "Across published requests" },
         { label: "Slowest request", value: formatMilliseconds(data.health.maxMs), hint: "Maximum aggregate value" },
     ]);
-    target(root, "health-rate").textContent = `${formatPercent(errorRate)} error rate`;
+    const rate = target(root, "health-rate");
+    rate.textContent = errorRate === null ? "No request data" : `${formatPercent(errorRate)} error rate`;
+    rate.classList.toggle("health-rate--empty", errorRate === null);
     renderBars(target(root, "statuses"), data.statuses, {
         empty: "No publishable request statuses in this period.",
         label: (key) => `HTTP ${key}`,

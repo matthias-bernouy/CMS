@@ -5,6 +5,15 @@
     </p9r-open-modal>
 
     <p9r-table cms-source="{{BASE_PATH}}/api/users" cms-reload-on="user:updated">
+        <cms-view-state table state="loading" cms-condition="$source.loading">
+            <p slot="title">Loading users</p>
+            <p slot="hint">Reading members and workspace access.</p>
+        </cms-view-state>
+        <cms-view-state table state="error" cms-condition="$source.error">
+            <p slot="title">Users could not be loaded</p>
+            <p slot="hint">{{ $source.message }}</p>
+            <a slot="action" href="">Try again</a>
+        </cms-view-state>
         <p9r-row slot="header" cms-condition="$source.loaded">
             <p9r-cell><strong>User</strong></p9r-cell>
             <p9r-cell><strong>Provider</strong></p9r-cell>

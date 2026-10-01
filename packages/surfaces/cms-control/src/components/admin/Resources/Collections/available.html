@@ -1,4 +1,12 @@
-<section>
+<cms-view-state state="loading" data-view-loading>
+    <p slot="title">Loading collections</p>
+    <p slot="hint">Checking the latest releases from connected repositories.</p>
+</cms-view-state>
+<cms-view-state state="error" retry data-view-error hidden>
+    <p slot="title">Collections could not be loaded</p>
+    <p slot="hint" data-view-error-message>Check the collection repositories, then try again.</p>
+</cms-view-state>
+<section data-view-content hidden>
     <h2>Available collections</h2>
     <p>Browse releases from connected repositories.</p>
     <div data-list></div>

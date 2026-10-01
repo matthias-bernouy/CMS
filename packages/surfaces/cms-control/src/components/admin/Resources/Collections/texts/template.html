@@ -1,4 +1,12 @@
-<cms-shell-detail size="xl">
+<cms-view-state state="loading" data-view-loading>
+    <p slot="title">Loading collection texts</p>
+    <p slot="hint">Preparing languages, defaults and saved translations.</p>
+</cms-view-state>
+<cms-view-state state="error" retry data-view-error hidden>
+    <p slot="title">Collection texts could not be loaded</p>
+    <p slot="hint" data-view-error-message>Check the collection installation, then try again.</p>
+</cms-view-state>
+<cms-shell-detail size="xl" data-view-content hidden>
     <span slot="title" data-title>Collection texts</span>
     <span slot="description">Translate the texts provided by this collection.</span>
     <p9r-button slot="actions" type="button" color="primary" data-save>Save translations</p9r-button>

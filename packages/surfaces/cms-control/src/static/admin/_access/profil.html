@@ -36,7 +36,7 @@
     <span slot="title">Profile</span>
 
     <div slot="action" cms-source="{{BASE_PATH}}/api/profil">
-        <a href="{{ logoutUrl }}">
+        <a href="{{ logoutUrl }}" cms-condition="$source.loaded">
             <p9r-button color="danger">Log out</p9r-button>
         </a>
     </div>
@@ -46,6 +46,16 @@
 
             <p9r-tab-panel id="profile" label="Profile">
                 <div cms-source="{{BASE_PATH}}/api/profil" cms-reload-on="profil:updated">
+                    <cms-view-state state="loading" cms-condition="$source.loading">
+                        <p slot="title">Loading profile</p>
+                        <p slot="hint">Reading your account and authentication options.</p>
+                    </cms-view-state>
+                    <cms-view-state state="error" cms-condition="$source.error">
+                        <p slot="title">Profile could not be loaded</p>
+                        <p slot="hint">{{ $source.message }}</p>
+                        <a slot="action" href="">Try again</a>
+                    </cms-view-state>
+                    <div cms-condition="$source.loaded">
                         <p9r-stack gap="lg">
                             <div class="profil-hero">
                                 <p9r-avatar size="xl" color="primary" name="{{ email }}"></p9r-avatar>
@@ -79,6 +89,7 @@
                                 </p9r-stack>
                             </p9r-card>
                         </p9r-stack>
+                    </div>
                 </div>
             </p9r-tab-panel>
 
@@ -96,6 +107,15 @@
                     </p9r-stack>
 
                     <div cms-source="{{BASE_PATH}}/api/pats" cms-reload-on="pat:changed">
+                        <cms-view-state state="loading" cms-condition="$source.loading">
+                            <p slot="title">Loading access tokens</p>
+                            <p slot="hint">Reading active CLI and server credentials.</p>
+                        </cms-view-state>
+                        <cms-view-state state="error" cms-condition="$source.error">
+                            <p slot="title">Access tokens could not be loaded</p>
+                            <p slot="hint">{{ $source.message }}</p>
+                            <a slot="action" href="">Try again</a>
+                        </cms-view-state>
                         <p9r-table cms-condition="$source.loaded">
                             <p9r-row slot="header">
                                 <p9r-cell><strong>Name</strong></p9r-cell>

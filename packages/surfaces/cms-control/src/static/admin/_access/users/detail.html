@@ -5,6 +5,15 @@
 
     <p9r-container size="lg">
         <div cms-source="{{BASE_PATH}}/api/users?sub=#{sub}" cms-reload-on="user:updated">
+            <cms-view-state state="loading" cms-condition="$source.loading">
+                <p slot="title">Loading user</p>
+                <p slot="hint">Reading profile, access and account activity.</p>
+            </cms-view-state>
+            <cms-view-state state="error" cms-condition="$source.error">
+                <p slot="title">User could not be loaded</p>
+                <p slot="hint">{{ $source.message }}</p>
+                <a slot="action" href="">Try again</a>
+            </cms-view-state>
             <template>
                 <cms-shell-detail cms-condition="$source.loaded">
                     <a slot="back" href="{{BASE_PATH}}/admin/users" aria-label="Back to users">

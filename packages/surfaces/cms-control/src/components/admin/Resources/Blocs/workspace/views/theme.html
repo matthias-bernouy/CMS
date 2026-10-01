@@ -7,8 +7,9 @@
         <p9r-select aria-label="Theme profile" value="{{ workspace.themeDetail.profile.selectedThemeId }}" data-theme-profile-select data-theme-profile-control>
             <option cms-repeat="workspace.themeDetail.profile.themes as theme" value="{{ theme.id }}">{{ theme.name }}</option>
         </p9r-select>
-        <p9r-tag color="success" cms-condition="workspace.themeDetail.profile.active">Active</p9r-tag>
-        <p9r-tag cms-condition="!workspace.themeDetail.profile.active">Draft</p9r-tag>
+        <p9r-tag color="success" cms-condition="workspace.themeDetail.categories.length && workspace.themeDetail.profile.active">Active</p9r-tag>
+        <p9r-tag cms-condition="workspace.themeDetail.categories.length && !workspace.themeDetail.profile.active">Draft</p9r-tag>
+        <p9r-tag color="warning" cms-condition="workspace.themeDetail.categories.length == 0">Unavailable</p9r-tag>
         <p9r-button type="button" color="primary" data-theme-save disabled cms-condition="workspace.themeDetail.token">Save</p9r-button>
         <p9r-action-menu label="Theme actions" data-theme-profile-control>
             <p9r-action-menu-section label="Theme profile">

@@ -21,15 +21,27 @@ export class AvailableCollections extends HTMLElement {
         }
         const root = this.attachShadow({ mode: "open" });
         root.innerHTML = `<style>${css}</style>${template}`;
+        root.querySelector("[data-view-error]")!.addEventListener("retry", () => void this.load());
         void this.load();
     }
     private async load() {
+        this.showState("loading");
         try {
             this.catalogue = (await collectionRequest("available")) as Catalogue;
             this.render();
+            this.showState("ready");
         } catch (error) {
-            this.shadowRoot!.querySelector("[role=status]")!.textContent = String(error);
+            this.shadowRoot!.querySelector("[data-view-error-message]")!.textContent =
+                error instanceof Error ? error.message : "Collections could not be loaded.";
+            this.showState("error");
         }
+    }
+    private showState(state: "loading" | "error" | "ready") {
+        const root = this.shadowRoot!;
+        root.querySelector<HTMLElement>("[data-view-loading]")!.hidden = state !== "loading";
+        root.querySelector<HTMLElement>("[data-view-error]")!.hidden = state !== "error";
+        root.querySelector<HTMLElement>("[data-view-content]")!.hidden = state !== "ready";
+        this.setAttribute("aria-busy", String(state === "loading"));
     }
     private render() {
         const root = this.shadowRoot!;

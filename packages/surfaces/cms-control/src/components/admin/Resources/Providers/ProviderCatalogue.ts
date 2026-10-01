@@ -27,6 +27,7 @@ export class ProviderCatalogue extends HTMLElement {
         }
         const root = this.attachShadow({ mode: "open" });
         root.innerHTML = `<style>${css}</style>${template}`;
+        root.querySelector("[data-view-error]")!.addEventListener("retry", () => void this.load());
         root.querySelector("[data-back]")!.setAttribute("href", location.pathname);
         root.querySelector("[data-source-link]")!.setAttribute("href", `${getMetaBasePath()}/admin/sources`);
         root.querySelector("cms-provider-management")!.addEventListener("provider-connection-opened", () => {
@@ -46,6 +47,7 @@ export class ProviderCatalogue extends HTMLElement {
     }
 
     private async load(): Promise<void> {
+        this.showState("loading");
         try {
             const [catalogue, installations] = await Promise.all([
                 fetch(`${getMetaBasePath()}/api/provider-catalogue`, { cache: "no-store" }),
@@ -59,10 +61,24 @@ export class ProviderCatalogue extends HTMLElement {
                 (await installations.json()) as { installations: ProviderInstallation[] }
             ).installations;
             this.render();
+            this.showState("ready");
             this.status("");
         } catch (error) {
-            this.status(String(error));
+            this.shadowRoot!.querySelector("[data-view-error-message]")!.textContent =
+                error instanceof Error ? error.message : "Provider connections could not be loaded.";
+            this.showState("error");
         }
+    }
+
+    private showState(state: "loading" | "error" | "ready"): void {
+        const root = this.shadowRoot!;
+        root.querySelector<HTMLElement>("[data-view-loading]")!.hidden = state !== "loading";
+        root.querySelector<HTMLElement>("[data-view-error]")!.hidden = state !== "error";
+        if (state !== "ready") {
+            root.querySelector<HTMLElement>("[data-overview]")!.hidden = true;
+            root.querySelector<HTMLElement>("[data-detail]")!.hidden = true;
+        }
+        this.setAttribute("aria-busy", String(state === "loading"));
     }
 
     private render(): void {

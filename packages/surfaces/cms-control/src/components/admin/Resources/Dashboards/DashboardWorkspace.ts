@@ -25,6 +25,7 @@ class DashboardWorkspace extends HTMLElement {
             return;
         }
         this.innerHTML = `<style>${css}</style>${template}`;
+        this.querySelector("[data-view-error]")!.addEventListener("retry", () => void this.load());
         this.selectedId = new URLSearchParams(location.search).get("dashboardId") ?? "";
         document
             .querySelector("[data-create-dashboard-action]")
@@ -60,6 +61,7 @@ class DashboardWorkspace extends HTMLElement {
     }
 
     private async load(): Promise<void> {
+        this.showState("loading");
         try {
             const data = await loadDashboards();
             this.dashboards = data.dashboards;
@@ -72,6 +74,7 @@ class DashboardWorkspace extends HTMLElement {
                 this.querySelector("[data-editor]")!.setAttribute("hidden", "");
                 this.querySelector("[data-collection]")!.setAttribute("hidden", "");
                 renderMemberDashboardList(this, this.dashboards);
+                this.showState("ready");
                 this.status("");
                 return;
             }
@@ -86,10 +89,24 @@ class DashboardWorkspace extends HTMLElement {
                 this.navigation()?.render(this.dashboards, "", false);
                 await this.loadExplore();
             }
+            this.showState("ready");
             this.status("");
         } catch (error) {
-            this.status(String(error));
+            this.querySelector("[data-view-error-message]")!.textContent =
+                error instanceof Error ? error.message : "Dashboards could not be loaded.";
+            this.showState("error");
         }
+    }
+
+    private showState(state: "loading" | "error" | "ready"): void {
+        this.querySelector<HTMLElement>("[data-view-loading]")!.hidden = state !== "loading";
+        this.querySelector<HTMLElement>("[data-view-error]")!.hidden = state !== "error";
+        if (state !== "ready") {
+            this.querySelector<HTMLElement>("[data-overview]")!.hidden = true;
+            this.querySelector<HTMLElement>("[data-editor]")!.hidden = true;
+            this.querySelector<HTMLElement>("[data-collection]")!.hidden = true;
+        }
+        this.setAttribute("aria-busy", String(state === "loading"));
     }
 
     private select(id: string): void {

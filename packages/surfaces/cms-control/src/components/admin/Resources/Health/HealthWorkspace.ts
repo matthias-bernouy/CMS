@@ -25,6 +25,7 @@ class HealthWorkspace extends HTMLElement {
             return;
         }
         this.innerHTML = `<style>${css}</style>${template}`;
+        this.querySelector("[data-view-error]")!.addEventListener("retry", () => void this.load());
         const base = getMetaBasePath();
         for (const [selector, path] of [
             ["[data-providers-link]", "/admin/settings/providers"],
@@ -38,6 +39,7 @@ class HealthWorkspace extends HTMLElement {
     }
 
     private async load(): Promise<void> {
+        this.showState("loading");
         const base = getMetaBasePath();
         const paths = ["provider-installations", "provider-catalogue", "collections/available", "dashboards"];
         const results = await Promise.allSettled(
@@ -57,6 +59,10 @@ class HealthWorkspace extends HTMLElement {
             Collections | null,
             Dashboards | null,
         ];
+        if (results.every((result) => result.status === "rejected")) {
+            this.showState("error");
+            return;
+        }
         this.renderProviders(providers);
         this.renderSources(providers, catalogue);
         this.renderCollections(collections);
@@ -65,9 +71,19 @@ class HealthWorkspace extends HTMLElement {
         this.querySelector("[data-health-summary]")!.textContent = unavailable.length
             ? `${unavailable.length} area${unavailable.length === 1 ? "" : "s"} could not be checked.`
             : `${providers?.installations.length ?? 0} provider${providers?.installations.length === 1 ? "" : "s"} connected · ${providers?.selected.length ?? 0} source${providers?.selected.length === 1 ? "" : "s"} · ${collections?.installed.length ?? 0} collection${collections?.installed.length === 1 ? "" : "s"} · ${dashboards?.dashboards.filter((item) => item.enabled).length ?? 0} active dashboard${dashboards?.dashboards.filter((item) => item.enabled).length === 1 ? "" : "s"}`;
-        this.querySelector("[data-health-status]")!.textContent = unavailable.length
+        const status = this.querySelector<HTMLElement>("[data-health-status]")!;
+        status.textContent = unavailable.length
             ? `Some checks are unavailable: ${unavailable.join(", ")}.`
             : "Provider and source readiness reflects the last recorded observation, not a live probe.";
+        this.showState("ready");
+    }
+
+    private showState(state: "loading" | "error" | "ready"): void {
+        this.querySelector<HTMLElement>("[data-view-loading]")!.hidden = state !== "loading";
+        this.querySelector<HTMLElement>("[data-view-error]")!.hidden = state !== "error";
+        this.querySelector<HTMLElement>("[data-view-content]")!.hidden = state !== "ready";
+        this.querySelector<HTMLElement>("[data-health-status]")!.hidden = state !== "ready";
+        this.setAttribute("aria-busy", String(state === "loading"));
     }
 
     private renderProviders(data: Providers | null): void {
