@@ -23,7 +23,7 @@ import {
 } from "@bernouy/cms-content/files/serving";
 import {
     generateStyleEntry,
-    P9R_CACHE,
+    CMS_CACHE_KEYS,
     PUBLISHED_PAGE_SNAPSHOT_ROUTE,
     servePublishedPageSnapshot,
 } from "@bernouy/cms-content/rendering";
@@ -82,7 +82,7 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
     runner.addEndpoint("GET", "/.cms/style", (req) =>
         cachedResponseAsync(
             req,
-            P9R_CACHE.STYLE,
+            CMS_CACHE_KEYS.STYLE,
             delivery.cache,
             async () => generateStyleEntry(delivery.repository),
             publicAssetCacheControl(req),

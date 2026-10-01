@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { compress, InMemoryCache } from "@bernouy/http-runner";
-import { defaultSystem, P9R_CACHE, type ContentReader, type TPage } from "@bernouy/cms-content";
+import { CMS_CACHE_KEYS, defaultSystem, type ContentReader, type TPage } from "@bernouy/cms-content";
 import { componentJsCacheKey, generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
 import { resolveRuntimeAssets } from "cms-delivery/core/assets/resolveAssets";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
@@ -13,8 +13,8 @@ system.site.name = "Site";
 function deliveryWith(repository: ContentReader): DeliveryCms {
     const cache = new InMemoryCache();
     cache.set(componentJsCacheKey("/.cms/assets/component.js"), compress("component", "text/javascript"));
-    cache.set(P9R_CACHE.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
-    cache.set(P9R_CACHE.STYLE, compress("body{}", "text/css"));
+    cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
+    cache.set(CMS_CACHE_KEYS.STYLE, compress("body{}", "text/css"));
 
     return {
         cmsPathPrefix: "/.cms",
@@ -54,14 +54,14 @@ describe("resolveRuntimeAssets", () => {
         const js = new TextDecoder().decode(entry.raw);
 
         expect(entry.contentType).toBe("text/javascript");
-        expect(js).toMatch(/window\.p9r\s*=\s*\{[\s\S]*Component\s*:/);
+        expect(js).toMatch(/window\.cmsRuntime\s*=\s*\{[\s\S]*Component\s*:/);
         expect(js).toContain("syncProviderMediaImage");
         expect(js).not.toContain("syncResponsiveSourceImageElement");
 
-        (window as any).p9r = {};
+        (window as any).cmsRuntime = {};
         window.eval(js);
-        expect((window as any).p9r.Composition).toBeUndefined();
-        expect((window as any).p9r.PROVIDER_IMAGE_WIDTHS).toEqual([
+        expect((window as any).cmsRuntime.Composition).toBeUndefined();
+        expect((window as any).cmsRuntime.PROVIDER_IMAGE_WIDTHS).toEqual([
             64, 128, 256, 384, 512, 768, 1_024, 1_280, 1_600, 1_920, 2_560,
         ]);
     });
@@ -76,13 +76,13 @@ describe("resolveRuntimeAssets", () => {
         );
         expect(current.status).toBe(200);
         expect(immutable.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
-        (window as any).p9r = {};
+        (window as any).cmsRuntime = {};
         window.eval(await immutable.text());
         const image = document.createElement("img");
         image.setAttribute("data-cms-src", "/.cms/media/catalog/photo/file-7");
         image.setAttribute("data-cms-width", "800");
         image.setAttribute("data-cms-height", "600");
-        (window as any).p9r.syncProviderMediaImage(image);
+        (window as any).cmsRuntime.syncProviderMediaImage(image);
         expect(image.getAttribute("srcset")).toContain("/.cms/image/catalog/photo/file-7/384.webp 384w");
 
         const unknown = await ComponentServer(

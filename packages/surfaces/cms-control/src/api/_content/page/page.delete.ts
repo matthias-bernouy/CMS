@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { P9R_CACHE } from "@bernouy/cms-content";
+import { CMS_CACHE_KEYS } from "@bernouy/cms-content";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 import { invalidateAllPages } from "cms-control/core/admin/server/cache/invalidation";
 
@@ -28,7 +28,7 @@ export default async function deletePage(req: Request, cms: ControlCms) {
     } else {
         await cms.repository.deletePage(id);
     }
-    cms.cache.delete(P9R_CACHE.page(page.path));
+    cms.cache.delete(CMS_CACHE_KEYS.page(page.path));
     invalidateAllPages(cms);
     return new Response("Deleted", { status: 200 });
 }

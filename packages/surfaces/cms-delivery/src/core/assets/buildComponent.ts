@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { P9R_CACHE } from "@bernouy/cms-content/rendering";
+import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
 import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
 
@@ -12,7 +12,7 @@ const SOURCE = join(import.meta.dir, "../../endpoints/assets/component.client.ts
 
 /**
  * Build the `component.js` bundle — the runtime that exposes
- * `window.p9r.Component` to every bloc IIFE.
+ * `window.cmsRuntime.Component` to every Bloc IIFE.
  * Compiled once, cached, and
  * served with a content-hash URL so browsers can cache it forever.
  */
@@ -26,5 +26,5 @@ export async function generateComponentJsEntry(): Promise<CacheEntry> {
 }
 
 export function componentJsCacheKey(pathname: string): string {
-    return P9R_CACHE.js(pathname);
+    return CMS_CACHE_KEYS.js(pathname);
 }

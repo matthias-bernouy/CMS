@@ -14,7 +14,7 @@ test("provider media helpers use the host browser runtime", async () => {
     );
     const bloc = await buildCollectionBloc(view, "Provider image", "Content", "", "demo-provider-image");
     for (const name of ["PROVIDER_IMAGE_WIDTHS", "buildProviderImageAttributes", "syncProviderMediaImage"]) {
-        expect(bloc.viewJS).toContain(`window.p9r.${name}`);
+        expect(bloc.viewJS).toContain(`window.cmsRuntime.${name}`);
     }
     expect(bloc.viewJS).not.toContain("@bernouy/cms-gateway/media/browser");
 });

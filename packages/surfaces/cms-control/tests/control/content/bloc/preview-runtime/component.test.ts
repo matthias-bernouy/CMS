@@ -14,7 +14,7 @@ function previewCms() {
 }
 
 describe("Bloc preview component runtime", () => {
-    test("serves the provider media runtime through window.p9r", async () => {
+    test("serves the provider media runtime through window.cmsRuntime", async () => {
         const response = await buildPreviewComponentRuntime(
             new Request("http://localhost/cms/api/bloc/preview"),
             previewCms() as never,
@@ -25,12 +25,12 @@ describe("Bloc preview component runtime", () => {
         expect(js).toContain("syncProviderMediaImage");
         expect(js).not.toContain("syncResponsiveSourceImageElement");
 
-        (window as any).p9r = {};
+        (window as any).cmsRuntime = {};
         window.eval(js);
-        expect((window as any).p9r.PROVIDER_IMAGE_WIDTHS).toEqual([
+        expect((window as any).cmsRuntime.PROVIDER_IMAGE_WIDTHS).toEqual([
             64, 128, 256, 384, 512, 768, 1_024, 1_280, 1_600, 1_920, 2_560,
         ]);
-        expect((window as any).p9r.syncProviderMediaImage).toBeFunction();
+        expect((window as any).cmsRuntime.syncProviderMediaImage).toBeFunction();
     });
 
     test("revalidates an arbitrary preview query version", async () => {

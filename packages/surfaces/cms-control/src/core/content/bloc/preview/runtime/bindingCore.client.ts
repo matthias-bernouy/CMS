@@ -9,7 +9,7 @@ import {
     SourceFormError,
 } from "@bernouy/components/binding";
 
-Object.assign(((window as any).p9r ??= {}), {
+Object.assign(((window as any).cmsRuntime ??= {}), {
     observeSource,
     readSourceData,
     refreshSourceContext,

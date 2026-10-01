@@ -4,12 +4,12 @@ import { parseHTML } from "linkedom";
 
 test("fixed collection text rendering preserves authored slot input", () => {
     const document = parseHTML(`<main>
-        <test-card data-p9r-component-composition>
-            <template data-p9r-composition-input><h2 slot="title">{{ cms.i18n.test.title }}</h2></template>
-            <!--p9r-component-output-start-->
-            <h2 data-p9r-composition-authored="title">{{ cms.i18n.test.title }}</h2>
+        <test-card data-cms-component-composition>
+            <template data-cms-composition-input><h2 slot="title">{{ cms.i18n.test.title }}</h2></template>
+            <!--cms-component-output-start-->
+            <h2 data-cms-composition-authored="title">{{ cms.i18n.test.title }}</h2>
             <p>{{ cms.i18n.test.title }}</p>
-            <!--p9r-component-output-end-->
+            <!--cms-component-output-end-->
         </test-card>
     </main>`).document;
 

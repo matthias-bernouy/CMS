@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { P9R_CACHE } from "@bernouy/cms-content";
+import { CMS_CACHE_KEYS } from "@bernouy/cms-content";
 import type { TPage } from "@bernouy/cms-content";
 import { invalidatePagesReferencingFile } from "cms-control/core/admin/server/cache/invalidation";
 
@@ -39,7 +39,7 @@ describe("invalidatePagesReferencingFile", () => {
         const localized = { ...page("/a", imgRef), paths: { fr: "/a", en: "/a" } };
         const { cms, deleteSpy } = makeCms({ pages: [localized, page("/b", "<p>none</p>")] });
         await invalidatePagesReferencingFile(cms, FID);
-        expect(deleteSpy).toEqual([P9R_CACHE.page("/a"), P9R_CACHE.page("/en/a")]);
+        expect(deleteSpy).toEqual([CMS_CACHE_KEYS.page("/a"), CMS_CACHE_KEYS.page("/en/a")]);
     });
 
     test("no invalidation when nothing references the file", async () => {

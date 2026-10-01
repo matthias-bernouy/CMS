@@ -14,7 +14,7 @@ import type {
 // scoped instead of reaching global scope.
 
 declare global {
-    var p9r: {
+    var cmsRuntime: {
         readonly Component: typeof Component;
         readonly observeSource: typeof observeSource;
         readonly readSourceData: typeof readSourceData;

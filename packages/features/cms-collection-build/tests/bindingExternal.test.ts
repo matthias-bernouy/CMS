@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { buildCollectionBloc } from "../src/exports";
 
 describe("binding Bloc external", () => {
-    test("maps the public source coordination helpers to window.p9r", async () => {
+    test("maps the public source coordination helpers to window.cmsRuntime", async () => {
         const view = new File(
             [
                 `import { observeSource, readSourceData, refreshSourceContext, setSourceContext, sourceFormRequest, SourceFormError } from "@bernouy/components/binding";`,
@@ -24,7 +24,7 @@ describe("binding Bloc external", () => {
             "sourceFormRequest",
             "SourceFormError",
         ]) {
-            expect(bloc.viewJS).toContain(`window.p9r.${name}`);
+            expect(bloc.viewJS).toContain(`window.cmsRuntime.${name}`);
         }
         expect(bloc.viewJS).not.toContain("@bernouy/components/binding");
     });

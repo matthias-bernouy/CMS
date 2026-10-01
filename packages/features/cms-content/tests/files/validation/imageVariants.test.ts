@@ -69,7 +69,7 @@ describe("image variants (sharp)", () => {
         expect(variantKey("abc", { width: 640, format: "webp" })).not.toContain("/");
         expect(manifestKey("abc")).not.toContain("/");
         // The real dev blob store rejects slash keys; round-trip to prove it accepts ours.
-        const dir = await mkdtemp(join(tmpdir(), "p9r-variants-"));
+        const dir = await mkdtemp(join(tmpdir(), "cms-variants-"));
         try {
             const store = new LocalFsCmsFilesBlob(dir);
             await store.put(manifestKey("h"), new TextEncoder().encode("{}"));

@@ -2,7 +2,7 @@ import { blocThumbnailFromSource, parsePresentationImage, type PresentationImage
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
-import { p9rExternalsPlugin } from "./p9rExternalsPlugin";
+import { hostRuntimeExternalsPlugin } from "./hostRuntimeExternalsPlugin";
 import { writeViewRegistrationEntry } from "./viewRegistrationEntry";
 import { isNativeBlocTag, nativeBlocOwnershipError } from "./nativeBlocTags";
 import { validateBlocTag } from "./validateBloc";
@@ -41,7 +41,7 @@ export async function buildCollectionBloc(
         throw new Error(tagIssue);
     }
     const thumbnail = parsePresentationImage(options.thumbnail) ?? blocThumbnailFromSource(source);
-    const tempDir = await mkdtemp(join(tmpdir(), "p9r-bloc-"));
+    const tempDir = await mkdtemp(join(tmpdir(), "cms-bloc-"));
     const nativeElement = options.nativeElement?.toLowerCase();
 
     try {
@@ -52,7 +52,7 @@ export async function buildCollectionBloc(
             target: "browser" as const,
             format: "iife" as const,
             minify: true,
-            plugins: [p9rExternalsPlugin],
+            plugins: [hostRuntimeExternalsPlugin],
         });
 
         const viewPath = options.viewPath

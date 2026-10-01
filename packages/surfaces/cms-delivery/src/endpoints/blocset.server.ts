@@ -1,6 +1,6 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
-import { P9R_CACHE } from "@bernouy/cms-content/rendering";
+import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
 import { generateBlocSetEntry } from "@bernouy/cms-content/rendering";
 
 /**
@@ -9,7 +9,7 @@ import { generateBlocSetEntry } from "@bernouy/cms-content/rendering";
  * `/.cms/blocset?tags=<a,b,c>&v=<hash>`.
  *
  * The tag set is canonicalised (deduped + sorted) in both the cache key
- * (`P9R_CACHE.blocset`) and the generator, so any page referencing the same
+ * (`CMS_CACHE_KEYS.blocset`) and the generator, so any page referencing the same
  * set hits the same immutable bytes. Mirrors `bloc.server.ts`; the `?v` hash
  * flips `publicAssetCacheControl` to `immutable` exactly as for single blocs.
  *
@@ -34,7 +34,7 @@ export default async function BlocSetServer(req: Request, delivery: DeliveryCms)
 
     return cachedResponseAsync(
         req,
-        P9R_CACHE.blocset(tags),
+        CMS_CACHE_KEYS.blocset(tags),
         delivery.cache,
         () => generateBlocSetEntry(tags, delivery.repository),
         publicAssetCacheControl(req),

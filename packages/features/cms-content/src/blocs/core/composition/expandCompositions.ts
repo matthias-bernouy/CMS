@@ -1,17 +1,17 @@
-export const COMPOSITION_RUNTIME_ATTRIBUTE = "data-p9r-composition";
-export const COMPOSITION_INPUT_ATTRIBUTE = "data-p9r-composition-input";
-export const COMPOSITION_OUTPUT_ATTRIBUTE = "data-p9r-composition-output";
-export const COMPOSITION_CONTROLLER_ATTRIBUTE = "data-p9r-composition-controller";
-export const COMPOSITION_AUTHORED_ATTRIBUTE = "data-p9r-composition-authored";
-export const COMPOSITION_CONTROLLER_RUNTIME_ATTRIBUTE = "data-p9r-composition-controller-runtime";
-export const COMPONENT_COMPOSITION_ATTRIBUTE = "data-p9r-component-composition";
+export const COMPOSITION_RUNTIME_ATTRIBUTE = "data-cms-composition";
+export const COMPOSITION_INPUT_ATTRIBUTE = "data-cms-composition-input";
+export const COMPOSITION_OUTPUT_ATTRIBUTE = "data-cms-composition-output";
+export const COMPOSITION_CONTROLLER_ATTRIBUTE = "data-cms-composition-controller";
+export const COMPOSITION_AUTHORED_ATTRIBUTE = "data-cms-composition-authored";
+export const COMPOSITION_CONTROLLER_RUNTIME_ATTRIBUTE = "data-cms-composition-controller-runtime";
+export const COMPONENT_COMPOSITION_ATTRIBUTE = "data-cms-component-composition";
 
-const SLOT_START = "p9r-composition-slot-start:";
-const SLOT_END = "p9r-composition-slot-end:";
-const FALLBACK_START = "p9r-composition-slot-fallback-start:";
-const FALLBACK_END = "p9r-composition-slot-fallback-end:";
-const COMPONENT_OUTPUT_START = "p9r-component-output-start";
-const COMPONENT_OUTPUT_END = "p9r-component-output-end";
+const SLOT_START = "cms-composition-slot-start:";
+const SLOT_END = "cms-composition-slot-end:";
+const FALLBACK_START = "cms-composition-slot-fallback-start:";
+const FALLBACK_END = "cms-composition-slot-fallback-end:";
+const COMPONENT_OUTPUT_START = "cms-component-output-start";
+const COMPONENT_OUTPUT_END = "cms-component-output-end";
 
 export type CompositionDefinition = { id: string; compositionHTML?: string; componentHTML?: string };
 export type CompositionExpansionMode = "delivery" | "preview";
@@ -81,13 +81,13 @@ function expandHost(host: Element, definition: Template, mode: CompositionExpans
     template.innerHTML = definition.html;
     const forwarding = projectSlots(template.content, authored, mode);
     if (input) {
-        input.setAttribute("data-p9r-composition-slot-forwarding", JSON.stringify(forwarding));
+        input.setAttribute("data-cms-composition-slot-forwarding", JSON.stringify(forwarding));
     }
     const controller = definition.retainHost ? null : copyHostAttributes(host, template.content);
     if (definition.retainHost) {
         if (input) {
             input.setAttribute(
-                "data-p9r-composition-host-attributes",
+                "data-cms-composition-host-attributes",
                 JSON.stringify(Array.from(host.attributes).map((attribute) => [attribute.name, attribute.value])),
             );
         }
@@ -113,7 +113,7 @@ function expandHost(host: Element, definition: Template, mode: CompositionExpans
         return;
     }
 
-    const output = document.createElement("p9r-composition-output");
+    const output = document.createElement("cms-composition-output");
     output.setAttribute(COMPOSITION_OUTPUT_ATTRIBUTE, "");
     controller?.setAttribute(COMPOSITION_CONTROLLER_RUNTIME_ATTRIBUTE, "");
     output.append(...Array.from(template.content.childNodes));
@@ -214,7 +214,7 @@ function copyHostAttributes(host: Element, fragment: DocumentFragment): Element 
     }
     controller.removeAttribute(COMPOSITION_CONTROLLER_ATTRIBUTE);
     for (const attribute of Array.from(host.attributes)) {
-        if (attribute.name !== "slot" && !attribute.name.startsWith("data-p9r-composition")) {
+        if (attribute.name !== "slot" && !attribute.name.startsWith("data-cms-composition")) {
             controller.setAttribute(attribute.name, attribute.value);
         }
     }

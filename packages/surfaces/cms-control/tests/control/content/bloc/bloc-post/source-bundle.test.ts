@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { Buffer } from "node:buffer";
-import { DuplicateBlocTagError, P9R_CACHE } from "@bernouy/cms-content";
+import { CMS_CACHE_KEYS, DuplicateBlocTagError } from "@bernouy/cms-content";
 import type { TBloc } from "@bernouy/cms-content";
 import importBloc from "cms-control/api/_content/bloc/bloc.post";
 
@@ -10,8 +10,8 @@ function makeSystem(opts: { existingTags?: string[]; throwOnCreate?: unknown } =
     const createBlocCalls: CreateBlocCall[] = [];
     const deleteSpy: string[] = [];
     const cache = new Map<string, unknown>();
-    cache.set(P9R_CACHE.blocset(["my-bloc", "other-bloc"]), {});
-    cache.set(P9R_CACHE.page("/kept"), {});
+    cache.set(CMS_CACHE_KEYS.blocset(["my-bloc", "other-bloc"]), {});
+    cache.set(CMS_CACHE_KEYS.page("/kept"), {});
     const cms: any = {
         repository: {
             getBlocRecord: async (tag: string) => {

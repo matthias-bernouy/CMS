@@ -3,7 +3,7 @@ import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
 /**
  * Deferred `<script>` tags — downloaded in parallel, executed in document
  * order after HTML parsing. `component.js` is emitted first (see
- * `assets.scriptUrls`) so every bloc IIFE can read `window.p9r.Component`
+ * `assets.scriptUrls`) so every Bloc IIFE can read `window.cmsRuntime.Component`
  * at execution time.
  */
 export function buildScriptTags(

@@ -19,7 +19,7 @@ describe("generateSiteBlocSourceBundle", () => {
 }
 `);
         expect(source["template.html"]).toBe(
-            '<basic-container aria-label="A &quot;&lt;&amp;" width="wide" data-p9r-composition-controller><slot name="title" slot="title"></slot><slot></slot></basic-container>\n',
+            '<basic-container aria-label="A &quot;&lt;&amp;" width="wide" data-cms-composition-controller><slot name="title" slot="title"></slot><slot></slot></basic-container>\n',
         );
         expect(source["default.html"]).toBe('<site-hero><h1 slot="title">Hello</h1><p>Body</p></site-hero>\n');
         expect(source["builder.json"]).toBe(expectedBuilderJson);
@@ -39,7 +39,7 @@ describe("generateSiteBlocSourceBundle", () => {
         const source = generateSiteBlocSourceBundle(definition());
 
         expect(source["template.html"]).toContain(
-            '<basic-container aria-label="A &quot;&lt;&amp;" width="wide" data-p9r-composition-controller>',
+            '<basic-container aria-label="A &quot;&lt;&amp;" width="wide" data-cms-composition-controller>',
         );
     });
 

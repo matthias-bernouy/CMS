@@ -1,6 +1,6 @@
 import {
     createContentReader,
-    P9R_CACHE,
+    CMS_CACHE_KEYS,
     type CmsRepository,
     type ContentReader,
     type TPage,
@@ -42,8 +42,8 @@ export function mountPublicPages(options: HarnessOptions = {}) {
         componentJsCacheKey("/.cms/assets/component.js", { public: false, private: false }),
         cacheEntry("text/javascript"),
     );
-    cache.set(P9R_CACHE.js("/.cms/assets/cms-binding-core.js"), cacheEntry("text/javascript"));
-    cache.set(P9R_CACHE.STYLE, cacheEntry("text/css"));
+    cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), cacheEntry("text/javascript"));
+    cache.set(CMS_CACHE_KEYS.STYLE, cacheEntry("text/css"));
     const storedPages = [...(options.storedPages ?? [])];
     const storedLookups: string[] = [];
     const repository: ContentReader = options.repository

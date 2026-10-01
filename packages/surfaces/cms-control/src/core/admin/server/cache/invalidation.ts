@@ -2,7 +2,7 @@ import type { ControlCms } from "cms-control/ControlCms";
 import {
     createBlocUsageResolver,
     findPagesReferencingText,
-    P9R_CACHE,
+    CMS_CACHE_KEYS,
     publicPagePath,
     type TPage,
 } from "@bernouy/cms-content";
@@ -34,8 +34,8 @@ export async function invalidatePagesReferencingBloc(cms: ControlCms, blocTag: s
 }
 
 export function invalidateBlocAssets(cms: ControlCms, blocTag: string): void {
-    cms.cache.delete(P9R_CACHE.bloc(blocTag));
-    cms.cache.deleteMatching((key) => key.startsWith(P9R_CACHE.BLOCSET_PREFIX));
+    cms.cache.delete(CMS_CACHE_KEYS.bloc(blocTag));
+    cms.cache.deleteMatching((key) => key.startsWith(CMS_CACHE_KEYS.BLOCSET_PREFIX));
 }
 
 export async function invalidateUpdatedPage(cms: ControlCms, page: TPage, defaultLanguage?: string): Promise<void> {
@@ -45,7 +45,7 @@ export async function invalidateUpdatedPage(cms: ControlCms, page: TPage, defaul
         paths.add(publicPagePath(code, local, language));
     }
     for (const path of paths) {
-        const key = P9R_CACHE.page(path);
+        const key = CMS_CACHE_KEYS.page(path);
         cms.cache.delete(key);
         cms.cache.deleteMatching((candidate) => candidate.startsWith(`${key}:`));
     }
@@ -89,6 +89,6 @@ export function invalidateAllPages(cms: ControlCms): void {
 
 /** Invalidate a global stylesheet and every page carrying its content hash. */
 export function invalidateGlobalStyleAndPages(cms: ControlCms): void {
-    cms.cache.delete(P9R_CACHE.STYLE);
+    cms.cache.delete(CMS_CACHE_KEYS.STYLE);
     invalidateAllPages(cms);
 }

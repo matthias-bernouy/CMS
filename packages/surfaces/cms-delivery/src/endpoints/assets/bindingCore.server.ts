@@ -1,7 +1,7 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { generateBindingCoreJsEntry } from "cms-delivery/core/assets/buildBindingCore";
-import { P9R_CACHE } from "@bernouy/cms-content/rendering";
+import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
 
 /**
  * Serves the `cms-binding-core` system-bloc bundle at
@@ -12,6 +12,6 @@ import { P9R_CACHE } from "@bernouy/cms-content/rendering";
  */
 export default async function BindingCoreServer(req: Request, delivery: DeliveryCms) {
     const url = new URL(req.url);
-    const cacheKey = P9R_CACHE.js(url.pathname);
+    const cacheKey = CMS_CACHE_KEYS.js(url.pathname);
     return cachedResponseAsync(req, cacheKey, delivery.cache, generateBindingCoreJsEntry, publicAssetCacheControl(req));
 }

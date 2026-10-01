@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { resolve } from "node:path";
-import { InMemoryCmsRepository, P9R_CACHE } from "@bernouy/cms-content";
+import { CMS_CACHE_KEYS, InMemoryCmsRepository } from "@bernouy/cms-content";
 import { serveApi } from "cms-control/core/admin/registerEndpoints/serveApiFolder";
 import getPageSeo from "cms-control/api/_content/page/_routes/seo.get";
 import putPageSeo from "cms-control/api/_content/page/_routes/seo.put";
@@ -47,7 +47,7 @@ test("page SEO API saves translations and invalidates both language caches", asy
     expect((await updated.json()).translations.en).toEqual({ title: "About us", description: "Our company" });
     expect((await repository.getPageById(page.id))?.seo?.fr?.title).toBe("Notre société");
     expect((await repository.getPageById(page.id))?.seo?.en?.title).toBe("About us");
-    expect(invalidated).toEqual([P9R_CACHE.page("/a-propos"), P9R_CACHE.page("/en/about")]);
+    expect(invalidated).toEqual([CMS_CACHE_KEYS.page("/a-propos"), CMS_CACHE_KEYS.page("/en/about")]);
 });
 
 test("page SEO API rejects unconfigured languages and oversized titles", async () => {

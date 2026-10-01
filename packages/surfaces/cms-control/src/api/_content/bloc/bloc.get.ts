@@ -1,6 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
-import { generateBlocEntry, P9R_CACHE } from "@bernouy/cms-content";
+import { CMS_CACHE_KEYS, generateBlocEntry } from "@bernouy/cms-content";
 
 /**
  * Serves a bloc's compiled view JS so the editor preview can register the
@@ -12,7 +12,7 @@ import { generateBlocEntry, P9R_CACHE } from "@bernouy/cms-content";
  * Cache key `bloc:${tag}` is shared with Delivery's own endpoint so a
  * single-process deploy serves one entry to both layers; in split deploys
  * the two caches stay in sync through the bloc-upload invalidation path
- * (`bloc.post.ts` → `cache.delete(P9R_CACHE.bloc(tag))`).
+ * (`bloc.post.ts` → `cache.delete(CMS_CACHE_KEYS.bloc(tag))`).
  */
 export default async function BlocGet(req: Request, cms: ControlCms) {
     const url = new URL(req.url);
@@ -23,7 +23,7 @@ export default async function BlocGet(req: Request, cms: ControlCms) {
 
     return cachedResponseAsync(
         req,
-        P9R_CACHE.bloc(tag),
+        CMS_CACHE_KEYS.bloc(tag),
         cms.cache,
         () => generateBlocEntry(tag, cms.repository),
         publicAssetCacheControl(req),

@@ -46,7 +46,7 @@ if (!(HTMLElement.prototype as any).attachInternals) {
 (globalThis as any).AbortController = BunAbortController;
 (globalThis as any).AbortSignal = BunAbortSignal;
 
-(globalThis as any).p9r = {
+(globalThis as any).cmsRuntime = {
     observeSource,
     readSourceData,
     refreshSourceContext,

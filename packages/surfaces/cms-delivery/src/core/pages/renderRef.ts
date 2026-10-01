@@ -1,6 +1,6 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { cachedResponseAsync, compress, sendCompressed } from "@bernouy/http-runner";
-import { P9R_CACHE } from "@bernouy/cms-content/rendering";
+import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
 import { renderPage } from "cms-delivery/core/html/renderPage";
 import { makeRuntimeRenderContext } from "cms-delivery/core/html/runtimeContext";
 
@@ -55,7 +55,7 @@ export async function renderRef(
                 const collectionRevision = (await delivery.repository.getCollectionRevision?.()) ?? 0;
                 return await cachedResponseAsync(
                     req,
-                    `${P9R_CACHE.page(page.path)}:collections:${collectionRevision}`,
+                    `${CMS_CACHE_KEYS.page(page.path)}:collections:${collectionRevision}`,
                     delivery.cache,
                     () => renderPage(page, makeRuntimeRenderContext(delivery)),
                     delivery.repository.getCollectionRevision ? "public, no-cache" : undefined,

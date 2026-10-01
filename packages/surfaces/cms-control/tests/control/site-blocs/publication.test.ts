@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { ContentValidationError, P9R_CACHE } from "@bernouy/cms-content";
+import { CMS_CACHE_KEYS, ContentValidationError } from "@bernouy/cms-content";
 import { createSiteBloc, publishSiteBloc, saveSiteBloc } from "cms-control/core/content/siteBloc/service";
 import { seedBloc, siteBlocHarness, siteSnapshot } from "./fixtures";
 
@@ -76,9 +76,9 @@ describe("site bloc publication", () => {
         expect(JSON.parse(builder)).toEqual(JSON.parse(JSON.stringify(published)));
         expect(cache.deleted).toEqual(
             expect.arrayContaining([
-                P9R_CACHE.bloc("site-published-feature"),
+                CMS_CACHE_KEYS.bloc("site-published-feature"),
                 "blocset:old-signature",
-                P9R_CACHE.page("/home"),
+                CMS_CACHE_KEYS.page("/home"),
             ]),
         );
     });

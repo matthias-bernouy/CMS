@@ -19,7 +19,7 @@ export const IMAGE_PERFORMANCE_CODE_INPUTS = [
     "packages/features/cms-gateway/package.json",
     "packages/features/cms-gateway/src",
     "packages/foundation/image-processing/src",
-    "packages/features/cms-collection-build/src/core/p9rExternalsPlugin.ts",
+    "packages/features/cms-collection-build/src/core/hostRuntimeExternalsPlugin.ts",
     "packages/surfaces/cms-delivery/src/endpoints/assets/component.client.ts",
     "packages/surfaces/cms-delivery/src/core/assets/buildComponent.ts",
     "packages/surfaces/cms-delivery/src/core/assets/resolveAssets.ts",

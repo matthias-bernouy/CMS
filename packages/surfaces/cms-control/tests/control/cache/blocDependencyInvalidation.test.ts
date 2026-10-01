@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { P9R_CACHE } from "@bernouy/cms-content";
+import { CMS_CACHE_KEYS } from "@bernouy/cms-content";
 import {
     invalidatePagesReferencingBloc,
     invalidateUpdatedPage,
@@ -32,7 +32,7 @@ describe("invalidatePagesReferencingBloc", () => {
     test("invalidates a page that reaches the updated bloc transitively", async () => {
         const { cms, deleted } = system();
         await invalidatePagesReferencingBloc(cms as never, "base-link");
-        expect(deleted).toEqual([P9R_CACHE.page("/"), P9R_CACHE.page("/en/home")]);
+        expect(deleted).toEqual([CMS_CACHE_KEYS.page("/"), CMS_CACHE_KEYS.page("/en/home")]);
     });
 
     test("keeps unrelated pages cached", async () => {
@@ -44,10 +44,10 @@ describe("invalidatePagesReferencingBloc", () => {
 
 test("page updates clear collection revision variants without touching neighboring paths", async () => {
     const keys = new Set([
-        P9R_CACHE.page("/a"),
-        `${P9R_CACHE.page("/a")}:collections:1`,
-        `${P9R_CACHE.page("/a")}:collections:2`,
-        P9R_CACHE.page("/about"),
+        CMS_CACHE_KEYS.page("/a"),
+        `${CMS_CACHE_KEYS.page("/a")}:collections:1`,
+        `${CMS_CACHE_KEYS.page("/a")}:collections:2`,
+        CMS_CACHE_KEYS.page("/about"),
     ]);
     const cms = {
         cache: {
@@ -62,5 +62,5 @@ test("page updates clear collection revision variants without touching neighbori
         },
     };
     await invalidateUpdatedPage(cms as never, { path: "/a" } as never, "en");
-    expect([...keys]).toEqual([P9R_CACHE.page("/about")]);
+    expect([...keys]).toEqual([CMS_CACHE_KEYS.page("/about")]);
 });

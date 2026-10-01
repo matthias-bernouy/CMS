@@ -1,5 +1,5 @@
 import { describe, expect, mock, test } from "bun:test";
-import { defaultSystem, P9R_CACHE } from "@bernouy/cms-content";
+import { CMS_CACHE_KEYS, defaultSystem } from "@bernouy/cms-content";
 import type { ControlCms } from "cms-control/ControlCms";
 import { getSettings } from "cms-control/core/management/settings/getSettings";
 import { updateSettings } from "cms-control/core/management/settings/updateSettings";
@@ -43,7 +43,7 @@ describe("settings runtime", () => {
         await updateSettings(cms, update);
 
         expect(updateSystem).toHaveBeenCalledWith(update);
-        expect(deleteKey).toHaveBeenCalledWith(P9R_CACHE.STYLE);
+        expect(deleteKey).toHaveBeenCalledWith(CMS_CACHE_KEYS.STYLE);
         expect(deleteMatching).toHaveBeenCalledTimes(1);
     });
 });

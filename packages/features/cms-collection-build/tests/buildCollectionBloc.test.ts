@@ -95,7 +95,7 @@ describe("buildCollectionBloc output", () => {
     });
 
     test.failing("rejects imports that resolve outside the uploaded source bundle", async () => {
-        const outsideDir = await mkdtemp(join(tmpdir(), "p9r-bloc-outside-"));
+        const outsideDir = await mkdtemp(join(tmpdir(), "cms-bloc-outside-"));
         const outsidePath = join(outsideDir, "outside.ts");
         await Bun.write(outsidePath, 'export const marker = "OUTSIDE_BUNDLE";');
         const view = new File(
@@ -125,7 +125,7 @@ describe("buildCollectionBloc output", () => {
             { type: "text/typescript" },
         );
         const bloc = await buildCollectionBloc(view, "Demo component", "Content", "", "demo-component");
-        expect(bloc.viewJS).toContain("window.p9r.Component");
+        expect(bloc.viewJS).toContain("window.cmsRuntime.Component");
         expect(bloc.viewJS).toContain("demo-component");
 
         const definitions = new Map<string, unknown>();
@@ -134,7 +134,7 @@ describe("buildCollectionBloc output", () => {
             get: (tag: string) => definitions.get(tag),
         };
         new Function("window", "customElements", "HTMLElement", bloc.viewJS)(
-            { p9r: { Component: class {} } },
+            { cmsRuntime: { Component: class {} } },
             customElements,
             class {},
         );

@@ -91,7 +91,7 @@ describe("expandCompositions", () => {
         const input = host.querySelector(`template[${COMPOSITION_INPUT_ATTRIBUTE}]`) as HTMLTemplateElement;
         expect(input.content.firstChild?.toString()).toBe('<h1 slot="content">Title</h1>');
         expect(host.querySelector(`[${COMPOSITION_OUTPUT_ATTRIBUTE}]`)?.innerHTML).toContain(
-            '<h1 data-p9r-composition-authored="content">Title</h1>',
+            '<h1 data-cms-composition-authored="content">Title</h1>',
         );
     });
 
@@ -102,7 +102,7 @@ describe("expandCompositions", () => {
             {
                 id: "account-form",
                 compositionHTML:
-                    "<account-form-controller data-p9r-composition-controller><form></form></account-form-controller>",
+                    "<account-form-controller data-cms-composition-controller><form></form></account-form-controller>",
             },
         ]);
 
@@ -121,13 +121,13 @@ describe("expandCompositions", () => {
             {
                 id: "site-header",
                 compositionHTML:
-                    '<site-navbar data-p9r-composition-controller><slot name="actions" slot="actions"></slot></site-navbar>',
+                    '<site-navbar data-cms-composition-controller><slot name="actions" slot="actions"></slot></site-navbar>',
             },
         ]);
 
         const navbar = document.querySelector("site-navbar")!;
         expect(navbar.getAttribute("cms-source")).toBe("/.cms/call/system-auth/me as auth");
-        expect(navbar.hasAttribute("data-p9r-composition-controller")).toBe(false);
+        expect(navbar.hasAttribute("data-cms-composition-controller")).toBe(false);
         expect(navbar.querySelector('a[slot="actions"]')?.getAttribute("cms-condition")).toBe("!auth.subject");
         expect(navbar.querySelector('user-menu[slot="actions"]')?.getAttribute("cms-condition")).toBe("auth.subject");
     });

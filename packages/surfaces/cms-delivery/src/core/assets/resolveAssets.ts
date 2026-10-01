@@ -4,7 +4,7 @@ import { getBlocGroupManifest } from "cms-delivery/core/blocs/blocGroupManifest"
 import { generateBlocSetEntry, generateStyleEntry } from "@bernouy/cms-content/rendering";
 import { componentJsCacheKey, generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
 import { generateBindingCoreJsEntry } from "cms-delivery/core/assets/buildBindingCore";
-import { P9R_CACHE } from "@bernouy/cms-content/rendering";
+import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
 
 /**
  * Content-addressed URLs for every asset a page references. The hash is the
@@ -51,7 +51,7 @@ export async function resolveRuntimeAssets(delivery: DeliveryCms, usedTags: stri
     const componentJsUrl = `${prefix}/assets/component.js`;
     const componentCacheKey = componentJsCacheKey(componentJsUrl);
     const bindingCoreJsUrl = `${prefix}/assets/cms-binding-core.js`;
-    const bindingCoreJsCacheKey = P9R_CACHE.js(bindingCoreJsUrl);
+    const bindingCoreJsCacheKey = CMS_CACHE_KEYS.js(bindingCoreJsUrl);
 
     // Partition the page's blocs into the stable signature groups that cover
     // them + a fallback bundle for any tag the manifest doesn't know yet.
@@ -78,9 +78,9 @@ export async function resolveRuntimeAssets(delivery: DeliveryCms, usedTags: stri
     const [componentEntry, bindingCoreEntry, styleEntry, ...bundleEntries] = await Promise.all([
         getOrGenerateEntryAsync(componentCacheKey, delivery.cache, generateComponentJsEntry),
         getOrGenerateEntryAsync(bindingCoreJsCacheKey, delivery.cache, generateBindingCoreJsEntry),
-        getOrGenerateEntryAsync(P9R_CACHE.STYLE, delivery.cache, () => generateStyleEntry(delivery.repository)),
+        getOrGenerateEntryAsync(CMS_CACHE_KEYS.STYLE, delivery.cache, () => generateStyleEntry(delivery.repository)),
         ...bundles.map((tags) =>
-            getOrGenerateEntryAsync(P9R_CACHE.blocset(tags), delivery.cache, () =>
+            getOrGenerateEntryAsync(CMS_CACHE_KEYS.blocset(tags), delivery.cache, () =>
                 generateBlocSetEntry(tags, delivery.repository),
             ),
         ),

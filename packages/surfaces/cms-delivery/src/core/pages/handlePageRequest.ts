@@ -4,7 +4,7 @@ import { cachedResponseAsync, sendCompressed } from "@bernouy/http-runner";
 import { renderPage } from "cms-delivery/core/html/renderPage";
 import { makeRuntimeRenderContext } from "cms-delivery/core/html/runtimeContext";
 import { renderRef } from "cms-delivery/core/pages/renderRef";
-import { P9R_CACHE } from "@bernouy/cms-content/rendering";
+import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
 import { preflightPageGatewayAccess } from "cms-delivery/core/pages/preflightPageGatewayAccess";
 import { publicPageCacheKey, resolvePublicPage } from "cms-delivery/core/pages/resolvePublicPage";
 import { InvalidPublicPageRequestError } from "cms-delivery/core/pages/publicPageRequest";
@@ -154,7 +154,7 @@ async function renderWithFallbacks(
         const collectionRevision = (await delivery.repository.getCollectionRevision?.()) ?? 0;
         const cacheKey =
             publicCacheIdentity === null
-                ? P9R_CACHE.page(cachePath)
+                ? CMS_CACHE_KEYS.page(cachePath)
                 : publicPageCacheKey(cachePath, publicCacheIdentity);
         return withStatus(
             await cachedResponseAsync(

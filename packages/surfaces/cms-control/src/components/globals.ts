@@ -14,7 +14,7 @@ import {
     SourceFormError,
 } from "@bernouy/components/binding";
 
-(window as any).p9r = {
+(window as any).cmsRuntime = {
     Component,
     PROVIDER_IMAGE_WIDTHS,
     buildProviderImageAttributes,

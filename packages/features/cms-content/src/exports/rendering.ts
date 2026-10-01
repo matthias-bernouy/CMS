@@ -32,7 +32,7 @@ export {
     servePublishedPageSnapshot,
 } from "cms-content/pages/http/publishedPageSnapshot";
 export { sanitizeDomTree } from "cms-content/blocs/core/markup/security/sanitizeDomTree";
-export { P9R_CACHE } from "cms-content/application/core/cacheKeys";
+export { CMS_CACHE_KEYS } from "cms-content/application/core/cacheKeys";
 
 export { renderCollectionTexts } from "cms-content/pages/core/rendering/collectionTexts";
 export type { CollectionTextSource } from "cms-content/pages/core/rendering/collectionTexts";

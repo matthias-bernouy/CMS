@@ -5,10 +5,10 @@ Feature package for collection Bloc validation and bundling.
 ## Boundaries
 
 - Root export exposes `buildCollectionBloc`, `validateBloc`, `validateBlocTag`, and
-  `p9rExternalsPlugin`.
+  `hostRuntimeExternalsPlugin`.
 - The package is compile-time/browser-bundle infrastructure. Do not import
   surfaces, runtimes, Mongo adapters, or CMS admin internals.
-- Shared browser view imports are rewritten by `p9rExternalsPlugin`; the
+- Shared browser view imports are rewritten by `hostRuntimeExternalsPlugin`; the
   compiler produces no editor-side artifact.
 
 ## Rules

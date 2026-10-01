@@ -2,7 +2,7 @@
  * Cache key builders. Every `system.cache.{get,set,delete}` call should go
  * through one of these so the prefixes stay consistent and greppable.
  */
-export const P9R_CACHE = {
+export const CMS_CACHE_KEYS = {
     bloc: (id: string) => `bloc:${id}`,
     BLOCSET_PREFIX: "blocset:",
     /** A signature-grouped bundle = several blocs concatenated. Keyed on the

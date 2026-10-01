@@ -53,12 +53,6 @@
       "import": "./dist/binding-dom.js",
       "default": "./dist/binding-dom.js"
     },
-    "./composition-runtime": {
-      "types": "./dist/base/compositionRuntime.d.ts",
-      "bun": "./src/base/compositionRuntime.ts",
-      "import": "./dist/composition-runtime.js",
-      "default": "./dist/composition-runtime.js"
-    },
     "./style.css": "./dist/style.css",
     "./blocs/*": {
       "types": "./dist/blocs/*.d.ts",

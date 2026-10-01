@@ -25,7 +25,7 @@ describe("LocalFsCmsFiles (filesystem-native, uuid id + registry)", () => {
     const isUuid = (s: string) => !s.includes("/");
 
     beforeEach(async () => {
-        site = await mkdtemp(join(tmpdir(), "p9r-site-"));
+        site = await mkdtemp(join(tmpdir(), "cms-site-"));
         root = join(site, "files");
         await mkdir(root);
         fs = new LocalFsCmsFiles(root);

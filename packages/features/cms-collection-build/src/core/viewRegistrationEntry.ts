@@ -1,6 +1,6 @@
 import { relative } from "node:path";
 
-const VIEW_ENTRY_FILE = "__p9r_view_entry__.ts";
+const VIEW_ENTRY_FILE = "__cms_view_entry__.ts";
 
 export async function writeViewRegistrationEntry(tempDir: string, viewPath: string): Promise<string> {
     const entryPath = `${tempDir}/${VIEW_ENTRY_FILE}`;

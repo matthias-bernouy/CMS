@@ -1,5 +1,5 @@
 import DeliveryCms from "cms-delivery/DeliveryCms";
-import { P9R_CACHE, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
+import { CMS_CACHE_KEYS, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
 import { GatewayError, type GatewayAccessProbe } from "@bernouy/cms-gateway";
 import { compress, InMemoryCache, type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
 
@@ -78,9 +78,9 @@ export async function mountPage(options: {
 }): Promise<{ handler: RouteHandler }> {
     const runner = new CaptureRunner();
     const cache = new InMemoryCache();
-    cache.set(P9R_CACHE.js("/.cms/assets/component.js"), compress("component", "text/javascript"));
-    cache.set(P9R_CACHE.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
-    cache.set(P9R_CACHE.STYLE, compress("body{}", "text/css"));
+    cache.set(CMS_CACHE_KEYS.js("/.cms/assets/component.js"), compress("component", "text/javascript"));
+    cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
+    cache.set(CMS_CACHE_KEYS.STYLE, compress("body{}", "text/css"));
     new DeliveryCms({
         runner,
         repository: pageRepository(options.content, options.systemPages),

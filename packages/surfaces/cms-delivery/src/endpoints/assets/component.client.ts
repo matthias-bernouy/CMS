@@ -6,7 +6,7 @@ import {
     syncProviderMediaImage,
 } from "@bernouy/cms-gateway/media/browser";
 
-(window as any).p9r = {
+(window as any).cmsRuntime = {
     Component,
     PROVIDER_IMAGE_WIDTHS,
     buildProviderImageAttributes,

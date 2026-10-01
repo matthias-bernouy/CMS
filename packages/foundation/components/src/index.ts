@@ -3,16 +3,6 @@ export {
     Component,
     type ComponentMetadata,
 } from "./base";
-export {
-    COMPOSITION_AUTHORED_ATTRIBUTE,
-    COMPONENT_COMPOSITION_ATTRIBUTE,
-    COMPOSITION_INPUT_ATTRIBUTE,
-    COMPOSITION_OUTPUT_ATTRIBUTE,
-    COMPOSITION_RUNTIME_ATTRIBUTE,
-    clearCompositionRuntimeState,
-    isCompositionRuntimeElement,
-    insertCompositionSlotNodes,
-} from "./base/compositionRuntime";
 
 // Accordion
 export { Accordion } from "./ui/Content/Accordion/Accordion";

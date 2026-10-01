@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { P9R_CACHE, type TPage } from "@bernouy/cms-content";
+import { CMS_CACHE_KEYS, type TPage } from "@bernouy/cms-content";
 import type { GatewayEditorCapability } from "@bernouy/cms-gateway";
 import putConfigDetail from "cms-control/api/_content/page/_editing/configDetail.put";
 import putPageContent from "cms-control/api/_content/page/_editing/content.put";
@@ -113,7 +113,7 @@ describe("page management writes", () => {
             },
         });
         expect(updates[0]).not.toHaveProperty("content");
-        expect(invalidations).toEqual([P9R_CACHE.page("/draft")]);
+        expect(invalidations).toEqual([CMS_CACHE_KEYS.page("/draft")]);
     });
 
     test("rejects a candidate no longer present on the page", async () => {
@@ -229,6 +229,6 @@ describe("page management writes", () => {
         );
         expect(response.status).toBe(204);
         expect(updates).toEqual([{ id: existingPage.id, content: "<main>Updated content</main>" }]);
-        expect(invalidations).toEqual([P9R_CACHE.page("/draft")]);
+        expect(invalidations).toEqual([CMS_CACHE_KEYS.page("/draft")]);
     });
 });

@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import putPage from "cms-control/api/_content/page/page.put";
-import { P9R_CACHE, type TPage } from "@bernouy/cms-content";
+import { CMS_CACHE_KEYS, type TPage } from "@bernouy/cms-content";
 
 function makeSystem(opts: { existing?: TPage | null } = {}) {
     const updateCalls: Partial<TPage>[] = [];
@@ -110,7 +110,7 @@ describe("PUT /api/page (update)", () => {
                 variables: {},
             },
         });
-        expect(deleteSpy).toEqual([P9R_CACHE.page("/draft")]);
+        expect(deleteSpy).toEqual([CMS_CACHE_KEYS.page("/draft")]);
     });
 
     test("invalidates the page once when path stays the same", async () => {
@@ -127,7 +127,7 @@ describe("PUT /api/page (update)", () => {
 
         expect(res.ok).toBe(true);
         expect(updateCalls[0]).not.toHaveProperty("indexing");
-        expect(deleteSpy).toEqual([P9R_CACHE.page("/draft")]);
+        expect(deleteSpy).toEqual([CMS_CACHE_KEYS.page("/draft")]);
     });
 
     test("requires the language editor for path changes", async () => {

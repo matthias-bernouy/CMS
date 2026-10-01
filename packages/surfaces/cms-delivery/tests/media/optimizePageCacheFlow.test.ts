@@ -4,7 +4,7 @@ import DeliveryCms from "cms-delivery/DeliveryCms";
 import { TtlCache } from "@bernouy/http-runner";
 import { type CacheEntry } from "@bernouy/http-runner";
 import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, sha256Hex } from "@bernouy/cms-content/files";
-import { P9R_CACHE } from "@bernouy/cms-content";
+import { CMS_CACHE_KEYS } from "@bernouy/cms-content";
 import { readManifest } from "@bernouy/cms-content/files/serving";
 import type { ContentReader } from "@bernouy/cms-content";
 
@@ -60,7 +60,7 @@ describe("optimizePage — PROD cache flow (the pickup that dev-mode + the integ
             variantStore,
         });
 
-        const key = P9R_CACHE.page("/p");
+        const key = CMS_CACHE_KEYS.page("/p");
         cache.set(key, fakeEntry()); // the cold render cached the un-optimized page
         expect(cache.get(key)).not.toBeNull();
 
@@ -81,7 +81,7 @@ describe("optimizePage — PROD cache flow (the pickup that dev-mode + the integ
             filesBlob: new InMemoryCmsFilesBlob(),
             variantStore: new InMemoryCmsFilesBlob(),
         });
-        const key = P9R_CACHE.page("/p");
+        const key = CMS_CACHE_KEYS.page("/p");
         cache.set(key, fakeEntry());
         delivery.optimizePage("/p", []); // no image ids → no-op
         expect(cache.get(key)).not.toBeNull(); // untouched

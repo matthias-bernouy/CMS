@@ -1,4 +1,4 @@
-import { P9R_CACHE } from "@bernouy/cms-content/rendering";
+import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
 import {
     type BlobReader,
     type VariantStore,
@@ -27,7 +27,7 @@ export class PageOptimizer {
 
         this.queue.enqueue(path, async () => {
             await optimizePageImages(this.config, imageIds);
-            this.config.cache.delete(P9R_CACHE.page(path));
+            this.config.cache.delete(CMS_CACHE_KEYS.page(path));
         });
     }
 }

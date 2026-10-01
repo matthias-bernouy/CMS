@@ -20,23 +20,4 @@ describe("Composition artifact", () => {
         expect(bloc.viewJS).toBe("");
         expect(bloc.compositionHTML).toBe(compositionHTML);
     });
-
-    test("keeps historical client compositions installable during an upgrade", async () => {
-        const view = new File(
-            [
-                `import { Composition } from "@bernouy/components/base";`,
-                `class LegacyComposition extends Composition {`,
-                `  constructor() { super({ template: "<slot></slot>" }); }`,
-                `}`,
-                `customElements.define("BE5_TAG_TO_BE_REPLACED", LegacyComposition);`,
-            ],
-            "Bloc.ts",
-            { type: "text/typescript" },
-        );
-
-        const bloc = await buildCollectionBloc(view, "Legacy composition", "Composition", "", "legacy-composition");
-
-        expect(bloc.viewJS).toContain("window.p9r.Composition");
-        expect(bloc.viewJS).toContain("data-p9r-legacy-composition");
-    });
 });

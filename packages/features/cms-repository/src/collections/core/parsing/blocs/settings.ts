@@ -32,7 +32,7 @@ export function parseComponentSettings(
             !/^[a-z][a-z0-9-]*$/.test(id) ||
             id.startsWith("on") ||
             id.startsWith("cms-") ||
-            id.startsWith("data-p9r-") ||
+            id.startsWith("data-cms-") ||
             ["class", "style", "slot", "id"].includes(id)
         ) {
             invalid("setting IDs must be safe, lowercase HTML attributes", `${itemPath}.id`);
