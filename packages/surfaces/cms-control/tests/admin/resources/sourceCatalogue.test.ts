@@ -4,6 +4,7 @@ import { renderSourceCatalogue } from "cms-control/components/admin/Resources/So
 import {
     type SourceCatalogue,
     type SourceInstallations,
+    readyProviders,
     sourceUpgrade,
     sourceUpgradeNote,
 } from "cms-control/components/admin/Resources/Sources/model";
@@ -69,6 +70,7 @@ test("source cards present discovery metadata without technical release noise", 
     expect(host.textContent).not.toContain("0.2.0");
     expect(host.textContent).not.toContain("forms.submissions");
     expect(host.querySelector('[slot="actions"]')?.textContent).toBe("Manage source");
+    expect(host.querySelector(".source-card-availability")?.textContent).toBe("Connected to this site");
 });
 
 test("upgrade state distinguishes repository availability from provider readiness", () => {
@@ -106,4 +108,44 @@ test("upgrade state distinguishes repository availability from provider readines
     const offered = sourceUpgrade(catalogue, ready, selected);
     expect(offered.readyRelease?.version).toBe("0.2.0");
     expect(offered.readyProvider?.accountId).toBe("next");
+});
+
+test("source connection lists only providers with a ready compatible release", () => {
+    const state: SourceInstallations = {
+        selected: [],
+        installations: [
+            {
+                id: "ready",
+                providerId: "official",
+                accountId: "ready",
+                status: "enabled",
+                observedAt: null,
+                contracts: [
+                    {
+                        contractId: "forms.submissions",
+                        version: "0.2.0",
+                        digest: "sha256:two",
+                        status: "ready",
+                    },
+                ],
+            },
+            {
+                id: "unavailable",
+                providerId: "official",
+                accountId: "unavailable",
+                status: "enabled",
+                observedAt: null,
+                contracts: [
+                    {
+                        contractId: "forms.submissions",
+                        version: "0.2.0",
+                        digest: "sha256:two",
+                        status: "unavailable",
+                    },
+                ],
+            },
+        ],
+    };
+
+    expect(readyProviders(catalogue, state, "forms.submissions").map((provider) => provider.id)).toEqual(["ready"]);
 });

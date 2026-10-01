@@ -17,7 +17,7 @@ export function healthReport(
         providers: providerRows(base, providers, now),
         sources: sourceRows(base, providers, catalogue, now),
         collections: collectionRows(base, collections),
-        dashboards: dashboardRows(base, dashboards),
+        dashboards: dashboardRows(base, dashboards, providers),
     };
     return {
         ...report,
@@ -111,19 +111,37 @@ function collectionRows(base: string, data: Collections | null): HealthRow[] {
     });
 }
 
-function dashboardRows(base: string, data: Dashboards | null): HealthRow[] {
+function dashboardRows(base: string, data: Dashboards | null, providers: Providers | null): HealthRow[] {
     if (!data) {
         return [unavailable("Dashboard state", `${base}/admin/dashboards`)];
     }
-    return data.dashboards.map((dashboard) => ({
-        name: dashboard.name,
-        detail: dashboard.enabled
-            ? `${dashboard.members.length} member${dashboard.members.length === 1 ? "" : "s"} assigned`
-            : "Hidden from members",
-        state: !dashboard.enabled ? "Inactive" : dashboard.members.length ? "Active" : "No members",
-        tone: !dashboard.enabled ? "neutral" : dashboard.members.length ? "good" : "warning",
-        href: `${base}/admin/dashboards?dashboardId=${encodeURIComponent(dashboard.id)}`,
-    }));
+    const selected = new Set(providers?.selected.map((selection) => selection.contractId) ?? []);
+    return data.dashboards.map((dashboard) => {
+        const missing = (dashboard.sourceContracts ?? []).filter((contractId) => !selected.has(contractId));
+        return {
+            name: dashboard.name,
+            detail: !dashboard.enabled
+                ? "Hidden from members"
+                : missing.length
+                  ? `Connect ${missing.join(", ")} in Sources`
+                  : `${dashboard.members.length} member${dashboard.members.length === 1 ? "" : "s"} assigned`,
+            state: !dashboard.enabled
+                ? "Inactive"
+                : missing.length
+                  ? "Source missing"
+                  : dashboard.members.length
+                    ? "Active"
+                    : "No members",
+            tone: !dashboard.enabled
+                ? "neutral"
+                : missing.length
+                  ? "danger"
+                  : dashboard.members.length
+                    ? "good"
+                    : "warning",
+            href: `${base}/admin/dashboards?dashboardId=${encodeURIComponent(dashboard.id)}`,
+        };
+    });
 }
 
 function isProviderStale(provider: Provider, now: number): boolean {

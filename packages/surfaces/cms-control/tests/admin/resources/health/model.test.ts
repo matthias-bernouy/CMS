@@ -73,3 +73,30 @@ test("health report marks fresh ready resources as healthy", () => {
     expect(report.dashboards[0]!.state).toBe("Active");
     expect(report.issues).toBe(0);
 });
+
+test("health report links an active dashboard to its missing source", () => {
+    const report = healthReport(
+        "/cms",
+        { installations: [], selected: [] },
+        { available: [] },
+        { installed: [], releases: [] },
+        {
+            dashboards: [
+                {
+                    id: "catalog",
+                    name: "Catalog workspace",
+                    enabled: true,
+                    members: ["member"],
+                    sourceContracts: ["catalog.items"],
+                },
+            ],
+        },
+    );
+
+    expect(report.dashboards[0]).toMatchObject({
+        state: "Source missing",
+        tone: "danger",
+        detail: "Connect catalog.items in Sources",
+    });
+    expect(report.issues).toBe(1);
+});

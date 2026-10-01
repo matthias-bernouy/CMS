@@ -153,3 +153,13 @@ export function readyProviderCount(
             ),
     ).length;
 }
+
+export function readyProviders(
+    catalogue: SourceCatalogue,
+    state: SourceInstallations,
+    contractId: string,
+): ProviderInstallation[] {
+    return state.installations.filter(
+        (provider) => readyContractVersions(catalogue, state, provider.id, contractId).length > 0,
+    );
+}

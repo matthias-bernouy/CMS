@@ -25,7 +25,14 @@ export type Collections = {
     releases: { collectionId: string; version: string }[];
 };
 export type Dashboards = {
-    dashboards: { id: string; name: string; enabled: boolean; members: string[]; origin?: unknown }[];
+    dashboards: {
+        id: string;
+        name: string;
+        enabled: boolean;
+        members: string[];
+        sourceContracts?: string[];
+        origin?: unknown;
+    }[];
 };
 
 export type HealthReport = {

@@ -1,6 +1,12 @@
 import type { RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/sources";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
-import { contractReleases, readyContractVersions, type SourceCatalogue, type SourceInstallations } from "./model";
+import {
+    contractReleases,
+    readyContractVersions,
+    readyProviders,
+    type SourceCatalogue,
+    type SourceInstallations,
+} from "./model";
 
 type ValueControl = HTMLElement & { value: string };
 type Modal = HTMLElement & { showModal(): void; hide(): void };
@@ -14,7 +20,7 @@ export class SourceDialogController {
     ) {
         this.query("[data-source-cancel]").addEventListener("click", () => this.modal().hide());
         this.query("[data-provider]").addEventListener("change", () => this.renderVersions());
-        this.query("[data-contract]").addEventListener("change", () => this.renderVersions());
+        this.query("[data-contract]").addEventListener("change", () => this.renderProviders());
         this.query("[data-source-form]").addEventListener("submit", (event) => {
             event.preventDefault();
             void this.install();
@@ -23,10 +29,6 @@ export class SourceDialogController {
 
     open(contractId = ""): void {
         const state = this.installations();
-        const provider = this.field("[data-provider]");
-        provider.replaceChildren(
-            ...state.installations.map((item) => new Option(`${item.providerId} · ${item.accountId}`, item.id)),
-        );
         const contracts = [
             ...new Set(
                 this.catalogue()
@@ -39,22 +41,25 @@ export class SourceDialogController {
             ...contracts.map((id) => new Option(contractReleases(this.catalogue(), id)[0]?.name ?? id, id)),
         );
         const initialContract = contractId || contracts[0] || "";
-        contract.setAttribute("value", initialContract);
+        contract.value = initialContract;
         const upgrading = state.selected.some((item) => item.contractId === initialContract);
         contract.toggleAttribute("disabled", upgrading);
         const selectedProvider = state.selected.find((item) => item.contractId === initialContract)?.installationId;
-        const initialProvider =
-            [
-                ...state.installations.filter((item) => item.id === selectedProvider),
-                ...state.installations.filter((item) => item.id !== selectedProvider),
-            ].find((item) => this.readyVersions(item.id, initialContract).length)?.id ??
-            state.installations[0]?.id ??
-            "";
-        provider.setAttribute("value", initialProvider);
         this.query("[data-modal-title]").textContent = upgrading ? "Upgrade source" : "Connect source";
         this.query("[data-modal-submit]").textContent = upgrading ? "Save source" : "Connect source";
-        this.renderVersions(initialProvider, initialContract);
+        this.renderProviders(initialContract, selectedProvider);
         this.modal().showModal();
+    }
+
+    private renderProviders(contractId = this.field("[data-contract]").value, preferredId = ""): void {
+        const providers = readyProviders(this.catalogue(), this.installations(), contractId);
+        const provider = this.field("[data-provider]");
+        provider.replaceChildren(
+            ...providers.map((item) => new Option(`${item.providerId} · ${item.accountId}`, item.id)),
+        );
+        const selected = providers.find((item) => item.id === preferredId) ?? providers[0];
+        provider.value = selected?.id ?? "";
+        this.renderVersions(provider.value, contractId);
     }
 
     private renderVersions(
@@ -67,12 +72,12 @@ export class SourceDialogController {
         version.replaceChildren(
             ...versions.map((entry, index) => new Option(`${entry.version} · ${entry.repositoryId}`, String(index))),
         );
-        version.setAttribute("value", versions.length ? "0" : "");
+        version.value = versions.length ? "0" : "";
         this.query("[data-source-hint]").textContent = !provider
-            ? "Connect a provider in Settings first."
+            ? "Connect a compatible provider in Settings first."
             : versions.length
-              ? "Only releases reported ready by this provider are listed."
-              : "This provider has no ready release for this contract or upgrade.";
+              ? "This provider has reported the selected contract release ready."
+              : "No compatible release is ready through this provider.";
         (this.query('[form="source-import-form"]') as HTMLElement & { disabled: boolean }).disabled = !versions.length;
     }
 

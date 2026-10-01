@@ -103,6 +103,15 @@ function sourceCard(contractId: string, catalogue: SourceCatalogue, state: Sourc
         categories.append(badge);
     }
 
+    const availability = document.createElement("p");
+    availability.className = "source-card-availability";
+    availability.dataset.state = selection ? "connected" : providers > 0 ? "ready" : "unavailable";
+    availability.textContent = selection
+        ? "Connected to this site"
+        : providers > 0
+          ? `${providers} compatible provider${providers === 1 ? "" : "s"} ready`
+          : "A compatible provider is required";
+
     const action = document.createElement("p9r-button") as HTMLElement & { disabled: boolean };
     action.slot = "actions";
     action.dataset.importContract = contractId;
@@ -117,7 +126,7 @@ function sourceCard(contractId: string, catalogue: SourceCatalogue, state: Sourc
         action.setAttribute("color", "primary");
     }
 
-    card.append(heading, description, categories);
+    card.append(heading, description, categories, availability);
     if (latest.publishedAt) {
         const meta = document.createElement("span");
         meta.slot = "meta";

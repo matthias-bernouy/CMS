@@ -59,6 +59,9 @@ export function renderSourceDetail(
     providerLink.href = installation
         ? `${getMetaBasePath()}/admin/settings/providers?provider=${encodeURIComponent(installation.id)}`
         : `${getMetaBasePath()}/admin/settings/providers`;
+    const providerAction = host.querySelector<HTMLElement>("[data-manage-provider]")!;
+    providerAction.toggleAttribute("hidden", !installation);
+    providerAction.dataset.href = providerLink.href;
     text(host, "[data-provider-state]", installation ? capitalize(installation.status) : "Unavailable");
     text(
         host,

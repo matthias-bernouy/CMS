@@ -16,6 +16,8 @@ cms-sources-workspace .source-card-heading h2 { font-size: 1rem; font-weight: 65
 cms-sources-workspace .source-card-icon { background: var(--primary-muted); border-radius: 10px; box-sizing: border-box; color: var(--primary-base); flex: 0 0 42px; height: 42px; padding: 9px; width: 42px; }
 cms-sources-workspace .source-card-publisher { align-items: center; color: var(--text-muted); display: flex; flex-wrap: wrap; font-size: .75rem; font-weight: 450; gap: 7px; margin-top: 3px; }
 cms-sources-workspace .source-card-categories { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+cms-sources-workspace .source-card-availability { color: var(--text-muted); font-size: .75rem; font-weight: 600; margin: 2px 0 0; }
+cms-sources-workspace .source-card-availability[data-state="connected"], cms-sources-workspace .source-card-availability[data-state="ready"] { color: var(--success-base, var(--primary-base)); }
 cms-sources-workspace .source-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 28px; }
 cms-sources-workspace .source-facts p { display: grid; align-content: start; gap: 5px; margin: 0; min-width: 0; }
 cms-sources-workspace .source-facts strong { color: var(--text-muted); font-size: .75rem; }

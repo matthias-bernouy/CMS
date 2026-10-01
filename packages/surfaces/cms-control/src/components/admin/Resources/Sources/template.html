@@ -22,6 +22,7 @@
     <cms-shell-detail size="xl" data-detail hidden>
         <span slot="title" data-source-title></span>
         <span slot="description" data-source-description></span>
+        <p9r-button slot="actions" type="button" variant="outlined" data-manage-provider>Manage provider</p9r-button>
         <cms-shell-detail-body slot="body">
             <cms-detail-section slot="main" heading="Status">
                 <div class="source-facts">
@@ -49,7 +50,7 @@
     <span slot="title" data-modal-title>Connect source</span>
     <form id="source-import-form" data-source-form>
         <p9r-stack gap="md">
-            <p9r-select data-provider label="Connected provider" required></p9r-select>
+            <p9r-select data-provider label="Compatible provider" required></p9r-select>
             <p9r-select data-contract label="Contract" required></p9r-select>
             <p9r-select data-version label="Contract version" required></p9r-select>
             <p data-source-hint></p>

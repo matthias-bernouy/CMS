@@ -32,6 +32,12 @@ class SourcesWorkspace extends HTMLElement {
                 this.dialog!.open(contractId);
             }
         });
+        this.querySelector("[data-manage-provider]")!.addEventListener("click", (event) => {
+            const href = (event.currentTarget as HTMLElement).dataset.href;
+            if (href) {
+                location.href = href;
+            }
+        });
         this.querySelector("[data-catalogue]")!.addEventListener("click", (event) => this.onCatalogueClick(event));
         void this.load();
     }
