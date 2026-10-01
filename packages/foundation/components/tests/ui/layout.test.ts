@@ -11,7 +11,7 @@ if (!customElements.get("w13c-left-menu-layout-test")) {
     customElements.define("w13c-left-menu-layout-test", LeftMenuLayout);
 }
 
-const DESKTOP_WIDTH = 1024;
+const DESKTOP_WIDTH = 1280;
 const MOBILE_WIDTH = 390;
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 const setViewportWidth = (width: number): void => {
@@ -46,7 +46,7 @@ describe("LeftMenuLayout mobile navigation", () => {
         const layout = document.createElement("w13c-left-menu-layout-test");
         const styles = layout.shadowRoot!.querySelector("style")!.textContent ?? "";
 
-        expect(styles).toContain("@media (max-width: 720px)");
+        expect(styles).toContain("@media (max-width: 1100px)");
         expect(styles).toContain('"content" minmax(0, 1fr)');
         expect(styles).toContain(".app-content {\n        grid-area: content;\n        width: 100%;");
         expect(styles).toContain("min-width: 0;");

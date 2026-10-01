@@ -7,6 +7,7 @@ cms-collection-workspace .collection-texts-nav::part(header) { display: none; }
 cms-collection-workspace .collection-texts-editor {
     display: grid;
     gap: 16px;
+    container-type: inline-size;
 }
 
 cms-collection-workspace .collection-texts-language {
@@ -100,7 +101,7 @@ cms-collection-workspace .collection-text-table tbody td {
     line-height: 1.5;
 }
 
-@media (max-width: 720px) {
+@container (max-width: 720px) {
     cms-collection-workspace .collection-texts-language {
         align-items: stretch;
         flex-direction: column;

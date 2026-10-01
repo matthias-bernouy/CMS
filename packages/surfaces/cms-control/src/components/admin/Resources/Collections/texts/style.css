@@ -1,7 +1,60 @@
-cms-installed-texts { display: block; color: var(--text-main); }
+cms-installed-texts { display: block; color: var(--text-main); container-type: inline-size; }
 cms-installed-texts .collection-text-key-column { width: 18%; }
-cms-installed-texts .collection-text-table code { font-size: .75rem; overflow-wrap: anywhere; }
+cms-installed-texts .collection-text-table { width: 100%; table-layout: fixed; }
+cms-installed-texts .collection-text-table code { font-size: .75rem; overflow-wrap: anywhere; word-break: normal; }
 cms-installed-texts .collection-text-table td { overflow-wrap: anywhere; white-space: pre-wrap; }
 cms-installed-texts p9r-textarea { width: 100%; }
 cms-installed-texts [data-reset] { margin-top: 8px; }
 cms-installed-texts [data-status] { color: var(--text-muted); font-size: .8125rem; }
+
+@container (max-width: 780px) {
+    cms-installed-texts .collection-texts-language {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    cms-installed-texts .collection-texts-language p9r-select { width: 100%; }
+
+    cms-installed-texts .collection-text-table,
+    cms-installed-texts .collection-text-table tbody,
+    cms-installed-texts .collection-text-table tr,
+    cms-installed-texts .collection-text-table th,
+    cms-installed-texts .collection-text-table td {
+        display: block;
+        width: 100%;
+    }
+
+    cms-installed-texts .collection-text-table colgroup,
+    cms-installed-texts .collection-text-table thead { display: none; }
+
+    cms-installed-texts .collection-text-table tbody tr {
+        padding: 22px 0;
+        border-bottom: 1px solid var(--border-default);
+    }
+
+    cms-installed-texts .collection-text-table tbody tr:first-child { padding-top: 0; }
+    cms-installed-texts .collection-text-table tbody tr:last-child { padding-bottom: 0; border-bottom: 0; }
+
+    cms-installed-texts .collection-text-table th,
+    cms-installed-texts .collection-text-table td {
+        padding: 0;
+        border: 0;
+    }
+
+    cms-installed-texts .collection-text-table th,
+    cms-installed-texts .collection-text-table td { margin-top: 16px; }
+    cms-installed-texts .collection-text-table th:first-child { margin-top: 0; }
+
+    cms-installed-texts .collection-text-table th::before,
+    cms-installed-texts .collection-text-table td::before {
+        display: block;
+        margin-bottom: 7px;
+        color: var(--text-muted);
+        content: attr(data-label);
+        font-size: .6875rem;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+}

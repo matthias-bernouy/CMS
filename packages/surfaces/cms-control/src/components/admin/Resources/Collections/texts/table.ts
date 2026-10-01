@@ -23,6 +23,7 @@ export function renderTextRow(
     key.append(code);
     const label = document.createElement("th");
     label.scope = "row";
+    label.dataset.label = "Label";
     const strong = document.createElement("strong");
     strong.textContent = text.label ?? text.id;
     label.append(strong);
