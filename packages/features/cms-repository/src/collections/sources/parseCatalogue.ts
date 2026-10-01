@@ -1,10 +1,6 @@
 import type { CollectionRepositoryEntry } from "./interfaces";
 import { isCollectionNamespace } from "../core/namespace";
-import {
-    assertUniqueCatalogueCoordinates,
-    isPlainRecord,
-    validCanonicalVersion,
-} from "cms-repository/catalogues/core/values";
+import { isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
 
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
 const DIGEST = /^sha256:[0-9a-f]{64}$/;
@@ -18,7 +14,7 @@ export function validCollectionReference(reference: {
     return (
         validIdentifier(reference.publisherId) &&
         isCollectionNamespace(reference.collectionId) &&
-        validCanonicalVersion(reference.version) &&
+        isCanonicalSemVer(reference.version) &&
         DIGEST.test(reference.digest)
     );
 }
@@ -64,7 +60,7 @@ export function parseCollectionCatalogue(data: unknown, repositoryId: string): C
         }
         if (
             typeof entry.version !== "string" ||
-            !validCanonicalVersion(entry.version) ||
+            !isCanonicalSemVer(entry.version) ||
             typeof entry.digest !== "string" ||
             !DIGEST.test(entry.digest)
         ) {
@@ -121,14 +117,21 @@ export function parseCollectionCatalogue(data: unknown, repositoryId: string): C
             ...(entry.dashboards === undefined ? {} : { dashboards: entry.dashboards }),
         } as CollectionRepositoryEntry;
     });
-    assertUniqueCatalogueCoordinates(
-        entries,
-        (entry) => `${entry.publisherId}\0${entry.collectionId}\0${entry.version}`,
-        "collection",
-    );
+    const coordinates = entries.map((entry) => `${entry.publisherId}\0${entry.collectionId}\0${entry.version}`);
+    if (new Set(coordinates).size !== coordinates.length) {
+        throw new TypeError("Duplicate collection repository release coordinates");
+    }
     return entries;
 }
 
 function validIdentifier(value: string): boolean {
     return value.length <= 96 && IDENTIFIER.test(value);
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) {
+        return false;
+    }
+    const prototype = Object.getPrototypeOf(value);
+    return prototype === Object.prototype || prototype === null;
 }

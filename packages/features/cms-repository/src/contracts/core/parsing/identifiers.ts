@@ -24,8 +24,12 @@ export function parseErrorCode(value: unknown, path: string): string {
 
 export function parseSemVer(value: unknown, path: string): string {
     const version = expectString(value, path, "invalid_contract", 128);
-    if (!SEMVER_PATTERN.test(version)) {
+    if (!isCanonicalSemVer(version)) {
         throw new ReleaseValidationError("invalid_contract", "must be canonical SemVer", path);
     }
     return version;
+}
+
+export function isCanonicalSemVer(value: unknown): value is string {
+    return typeof value === "string" && value.length <= 128 && SEMVER_PATTERN.test(value);
 }

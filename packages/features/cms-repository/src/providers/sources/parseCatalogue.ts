@@ -1,24 +1,20 @@
 import type { RepositoryArtifactEntry, RepositoryArtifactKind, RepositoryArtifactReference } from "./interfaces";
-import {
-    assertUniqueCatalogueCoordinates,
-    isPlainRecord,
-    validCanonicalVersion,
-    validDottedIdentifier,
-} from "cms-repository/catalogues/core/values";
+import { isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
 
+const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/u;
 const DIGEST = /^sha256:[0-9a-f]{64}$/u;
 const CATALOGUE_TOKEN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
 
 export function validProviderRepositoryId(id: string): boolean {
-    return validDottedIdentifier(id);
+    return validIdentifier(id);
 }
 
 export function validProviderReference(reference: RepositoryArtifactReference): boolean {
     return (
-        validDottedIdentifier(reference.publisherId) &&
-        validDottedIdentifier(reference.id) &&
-        validCanonicalVersion(reference.version) &&
+        validIdentifier(reference.publisherId) &&
+        validIdentifier(reference.id) &&
+        isCanonicalSemVer(reference.version) &&
         DIGEST.test(reference.digest)
     );
 }
@@ -56,11 +52,11 @@ export function parseProviderCatalogue(
         const id = item[idKey];
         if (
             typeof item.publisherId !== "string" ||
-            !validDottedIdentifier(item.publisherId) ||
+            !validIdentifier(item.publisherId) ||
             typeof id !== "string" ||
-            !validDottedIdentifier(id) ||
+            !validIdentifier(id) ||
             typeof item.version !== "string" ||
-            !validCanonicalVersion(item.version) ||
+            !isCanonicalSemVer(item.version) ||
             typeof item.digest !== "string" ||
             !DIGEST.test(item.digest) ||
             typeof item.name !== "string" ||
@@ -91,12 +87,23 @@ export function parseProviderCatalogue(
             ...(item.links ? { links: item.links as RepositoryArtifactEntry["links"] } : {}),
         };
     });
-    assertUniqueCatalogueCoordinates(
-        entries,
-        (entry) => `${entry.publisherId}\0${entry.id}\0${entry.version}`,
-        "provider",
-    );
+    const coordinates = entries.map((entry) => `${entry.publisherId}\0${entry.id}\0${entry.version}`);
+    if (new Set(coordinates).size !== coordinates.length) {
+        throw new TypeError("Duplicate provider repository release coordinates");
+    }
     return entries;
+}
+
+function validIdentifier(value: string): boolean {
+    return value.length <= 96 && IDENTIFIER.test(value);
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) {
+        return false;
+    }
+    const prototype = Object.getPrototypeOf(value);
+    return prototype === Object.prototype || prototype === null;
 }
 
 function validLinks(value: unknown): boolean {
