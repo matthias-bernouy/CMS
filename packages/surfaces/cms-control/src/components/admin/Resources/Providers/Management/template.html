@@ -1,0 +1,25 @@
+<cms-shell-detail size="xl" contained data-connection hidden>
+    <span slot="title">Connect a provider</span>
+    <span slot="description" data-target></span>
+    <cms-shell-detail-body slot="body">
+        <cms-detail-section slot="main" heading="Connection">
+            <form data-form>
+                <p9r-stack gap="md">
+                    <p9r-input name="endpoint" type="url" label="Endpoint" required></p9r-input>
+                    <p9r-input name="token" type="password" label="Provider token" minlength="20" autocomplete="off" required></p9r-input>
+                    <a data-setup-link target="_blank" rel="noopener noreferrer" hidden>Get or manage a provider token</a>
+                    <p9r-button type="submit" color="primary">Check connection</p9r-button>
+                </p9r-stack>
+            </form>
+            <div data-review hidden>
+                <h3>Review installation</h3>
+                <p data-review-summary></p>
+                <ul data-review-contracts></ul>
+                <p>Approval stores the provider token. Choose exact contract releases in Sources.</p>
+                <p data-review-check></p>
+                <p9r-button type="button" color="primary" data-approve>Approve installation</p9r-button>
+            </div>
+        </cms-detail-section>
+    </cms-shell-detail-body>
+</cms-shell-detail>
+<p role="status" aria-live="polite"></p>

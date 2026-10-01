@@ -1,0 +1,25 @@
+<p9r-container size="xl">
+    <cms-shell-detail size="xl">
+        <span slot="title">Site health</span>
+        <span slot="description" data-health-summary>Checking providers, sources, collections and dashboards…</span>
+        <cms-shell-detail-body slot="body">
+            <cms-detail-section slot="main" heading="Providers">
+                <div data-provider-list></div>
+                <a data-providers-link>Manage provider connections</a>
+            </cms-detail-section>
+            <cms-detail-section slot="main" heading="Sources">
+                <div data-source-list></div>
+                <a data-sources-link>Explore sources</a>
+            </cms-detail-section>
+            <cms-detail-section slot="aside" heading="Collections">
+                <div data-collection-list></div>
+                <a data-collections-link>Explore collections</a>
+            </cms-detail-section>
+            <cms-detail-section slot="aside" heading="Dashboards">
+                <p data-dashboard-list></p>
+                <a data-dashboards-link>Manage dashboards</a>
+            </cms-detail-section>
+        </cms-shell-detail-body>
+    </cms-shell-detail>
+    <p data-health-status role="status" aria-live="polite"></p>
+</p9r-container>

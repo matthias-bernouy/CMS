@@ -1,0 +1,4 @@
+:host { color: var(--text-main); display: block; }
+.introduction { font-size: .875rem; line-height: 1.5; margin: 0; }
+.hint, [role="status"] { color: var(--text-muted); font-size: .8125rem; line-height: 1.5; margin: 0; }
+[role="status"]:empty { display: none; }
