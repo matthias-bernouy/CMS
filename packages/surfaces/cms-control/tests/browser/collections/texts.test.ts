@@ -7,7 +7,7 @@ import saveTexts from "cms-control/api/_content/collections/texts.put";
 
 const sourceRoot = resolve(import.meta.dir, "../../../src");
 const bundle = await Bun.file(`${sourceRoot}/static/assets/control-components.js`).text();
-const collectionRoot = resolve(import.meta.dir, "../../../../../resources/collections/test");
+const collectionRoot = resolve(import.meta.dir, "../../../../../resources/collections/ulvia-official");
 const release = {
     ...(await Bun.file(resolve(collectionRoot, "definition.json")).json()),
     blocs: [],

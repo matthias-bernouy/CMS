@@ -7,16 +7,16 @@ import { LocalCollectionRepository } from "../../src/repository/local";
 
 test("release publishes a folder explicitly, survives CLI runs, and prune clears only the repository", async () => {
     const data = await mkdtemp(join(tmpdir(), "ulvia-cli-release-"));
-    const source = resolve(import.meta.dir, "../../../../resources/collections/test");
+    const source = resolve(import.meta.dir, "../../../../resources/collections/ulvia-official");
     const definition = (await Bun.file(join(source, "definition.json")).json()) as { version: string };
     const output: string[] = [];
     const options = { environment: { ULVIA_DATA_DIR: data }, log: (line: string) => output.push(line) };
     try {
         const repository = new LocalCollectionRepository(join(data, "repository"));
         await runCli(["release", source], options);
-        expect((await repository.list()).map((item) => item.release.collectionId)).toEqual(["test"]);
+        expect((await repository.list()).map((item) => item.release.collectionId)).toEqual(["ulvia-official"]);
         await runCli(["release", source], options);
-        expect(output.at(-1)).toStartWith(`= collection ulvia.examples/test@${definition.version}`);
+        expect(output.at(-1)).toStartWith(`= collection ulvia.official/ulvia-official@${definition.version}`);
         await runCli(["prune"], options);
         expect(await repository.list()).toEqual([]);
         expect(await readdir(join(data, "repository"))).toEqual([]);

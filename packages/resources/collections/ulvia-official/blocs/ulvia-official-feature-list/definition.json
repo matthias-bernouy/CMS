@@ -1,0 +1,10 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-feature-list",
+    "description": "Three introductory features",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "body": {}
+    }
+}

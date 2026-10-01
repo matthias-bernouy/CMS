@@ -1,3 +1,0 @@
-.card{display:block;background:var(--test-surface);color:var(--test-foreground);padding:var(--test-space);border-radius:var(--test-radius)}
-:host([tone="accent"]) .card{border:2px solid var(--test-accent)}
-:host([compact]) .card{padding:calc(var(--test-space)/2)}

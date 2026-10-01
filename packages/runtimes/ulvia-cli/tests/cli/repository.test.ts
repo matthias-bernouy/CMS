@@ -16,23 +16,29 @@ test("local repository lists immutable metadata and serves matching release byte
         const source = new HttpCollectionRepository("local", server.url);
         expect(await source.list()).toEqual([]);
         const artifact = await prepareCollectionRelease(
-            resolve(import.meta.dir, "../../../../resources/collections/test"),
+            resolve(import.meta.dir, "../../../../resources/collections/ulvia-official"),
         );
         const version = artifact.release.version;
         expect(await repository.store(artifact)).toBe(true);
         expect(await repository.store(artifact)).toBe(false);
         const entries = await source.list();
         expect(entries).toHaveLength(1);
-        expect(entries[0]).toMatchObject({ collectionId: "test", version, blocCount: 8, hasTheme: true });
+        expect(entries[0]).toMatchObject({
+            publisherId: "ulvia.official",
+            collectionId: "ulvia-official",
+            version,
+            blocCount: 8,
+            hasTheme: true,
+        });
         const release = await source.get(entries[0]!);
         expect((await admitCollectionRelease(release)).digest).toBe(entries[0]!.digest);
         expect(release.blocs).toHaveLength(8);
         expect(release.theme?.categories.flatMap((category) => category.tokens)).toHaveLength(7);
-        const card = release.blocs.find((bloc) => bloc.id === "test-feature-card");
+        const card = release.blocs.find((bloc) => bloc.id === "ulvia-official-feature-card");
         expect(card?.kind).toBe("component");
         if (card?.kind === "component") {
-            expect(card.runtime?.viewJS).toContain("test-feature-card");
-            expect(card.runtime?.editorJS).toContain("test-feature-card");
+            expect(card.runtime?.viewJS).toContain("ulvia-official-feature-card");
+            expect(card.runtime?.editorJS).toContain("ulvia-official-feature-card");
             expect(card.lightdom).toContain("feature-card-note");
             expect(card.defaultContent).toContain("Feature title");
             expect(card.settings).toEqual([
@@ -60,7 +66,7 @@ test("local repository lists immutable metadata and serves matching release byte
             if (!bloc.lightdom) {
                 continue;
             }
-            for (const match of bloc.lightdom.matchAll(/cms\.i18n\.test\.([a-z-]+)/g)) {
+            for (const match of bloc.lightdom.matchAll(/cms\.i18n\.ulvia-official\.([a-z-]+)/g)) {
                 expect(textIds.has(match[1]!)).toBeTrue();
             }
         }
@@ -76,7 +82,7 @@ test("local repository lists immutable metadata and serves matching release byte
         await chmod(join(root, "legacy-packages", "sealed"), 0o500);
         await repository.prune();
         expect(await source.list()).toEqual([]);
-        expect((await fetch(`${server.url}/v1/collections/ulvia.examples/test/${version}`)).status).toBe(404);
+        expect((await fetch(`${server.url}/v1/collections/ulvia.official/ulvia-official/${version}`)).status).toBe(404);
     } finally {
         server.stop();
         await rm(root, { recursive: true, force: true });
@@ -88,12 +94,12 @@ test("a release coordinate cannot be replaced with different content", async () 
     try {
         const repository = new LocalCollectionRepository(root);
         const artifact = await prepareCollectionRelease(
-            resolve(import.meta.dir, "../../../../resources/collections/test"),
+            resolve(import.meta.dir, "../../../../resources/collections/ulvia-official"),
         );
         await repository.store(artifact);
         const changed = await admitCollectionRelease({ ...artifact.release, name: "Changed" });
         await expect(repository.store(changed)).rejects.toThrow("already exists with different content");
-        expect((await repository.get("ulvia.examples", "test", artifact.release.version))?.digest).toBe(
+        expect((await repository.get("ulvia.official", "ulvia-official", artifact.release.version))?.digest).toBe(
             artifact.digest,
         );
     } finally {

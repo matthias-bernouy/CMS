@@ -1,0 +1,11 @@
+{
+    "kind": "collection",
+    "protocol": "ulvia-collection/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "collectionId": "ulvia-official",
+    "publisherId": "ulvia.official",
+    "version": "1.0.0",
+    "name": "Ulvia Official",
+    "description": "Official starter blocs, translated texts, theme tokens and a dashboard demonstrating the complete workspace navigation.",
+    "locale": "en"
+}

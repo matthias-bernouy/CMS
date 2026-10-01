@@ -1,0 +1,10 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-feature-card",
+    "description": "A single feature card",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "body": {}
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-faq",
+    "description": "A frequently asked question",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "body": {}
+    }
+}

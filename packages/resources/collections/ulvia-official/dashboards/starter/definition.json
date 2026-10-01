@@ -1,0 +1,27 @@
+{
+    "id": "starter",
+    "name": "Ulvia workspace",
+    "icon": "layout",
+    "description": "The official Ulvia workspace with reusable HTML views and complete dashboard navigation.",
+    "navigation": [
+        {
+            "id": "workspace",
+            "label": "Ulvia",
+            "icon": "layout",
+            "childPlacement": "lateral",
+            "children": [
+                { "id": "overview", "label": "Overview", "icon": "layout", "use": "overview" },
+                {
+                    "id": "resources",
+                    "label": "Resources",
+                    "icon": "package",
+                    "childPlacement": "tabs",
+                    "children": [
+                        { "id": "blocs", "label": "Blocs", "icon": "grid", "use": "resources" },
+                        { "id": "theme", "label": "Theme", "icon": "settings", "use": "theme" }
+                    ]
+                }
+            ]
+        }
+    ]
+}

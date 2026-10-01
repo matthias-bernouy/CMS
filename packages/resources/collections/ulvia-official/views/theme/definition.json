@@ -1,0 +1,6 @@
+{
+    "id": "theme",
+    "name": "Theme",
+    "icon": "settings",
+    "description": "Official theme tokens available to this workspace."
+}

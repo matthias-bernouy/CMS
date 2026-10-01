@@ -1,0 +1,6 @@
+{
+    "id": "resources",
+    "name": "Blocs",
+    "icon": "grid",
+    "description": "Official reusable blocs available to this workspace."
+}

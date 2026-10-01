@@ -1,0 +1,10 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-footer",
+    "description": "A minimal footer",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "body": {}
+    }
+}

@@ -91,7 +91,7 @@ site-language removal/migration workflows are not implemented.
 
 ## Examples and limits
 
-`packages/resources/collections/test/texts/` contains the installable Test
+`packages/resources/collections/ulvia-official/texts/` contains the installable Ulvia Official
 catalogue, split by category. Its eight compositions use the declared keys.
 The checkout example remains an admission fixture. The temporary preview route
 has been removed. Existing private/code collections retain the earlier Texts

@@ -1,0 +1,10 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-testimonial",
+    "description": "A short testimonial",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "body": {}
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-stats",
+    "description": "Two translated statistics",
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "body": {}
+    }
+}
