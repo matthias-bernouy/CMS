@@ -32,11 +32,13 @@ export default async function selectSource(request: Request, cms: ControlCms): P
     const installations = (await resources.management.list()) as {
         installations: {
             id: string;
+            status: string;
             contracts: { contractId: string; version: string; digest: string; status: string }[];
         }[];
     };
     const installation = installations.installations.find((item) => item.id === body.installationId);
     if (
+        installation?.status !== "enabled" ||
         !installation?.contracts.some(
             (item) =>
                 item.contractId === reference.id &&

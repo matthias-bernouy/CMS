@@ -22,7 +22,9 @@ cms-sources-workspace .source-card-categories { display: flex; flex-wrap: wrap; 
 cms-sources-workspace .source-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 28px; }
 cms-sources-workspace .source-facts p { display: grid; align-content: start; gap: 5px; margin: 0; min-width: 0; }
 cms-sources-workspace .source-facts strong { color: var(--text-muted); font-size: .75rem; }
-cms-sources-workspace .source-facts span { font-size: .875rem; overflow-wrap: anywhere; }
+cms-sources-workspace .source-facts span, cms-sources-workspace .source-facts a { font-size: .875rem; overflow-wrap: anywhere; }
+cms-sources-workspace .source-facts a { color: var(--primary-base); font-weight: 600; text-decoration: none; }
+cms-sources-workspace .source-facts a:hover { text-decoration: underline; }
 cms-sources-workspace [data-upgrade-note], cms-sources-workspace .source-empty { color: var(--text-muted); font-size: .875rem; margin: 18px 0 0; }
 cms-sources-workspace [data-status] { color: var(--text-muted); }
 cms-sources-workspace [hidden] { display: none !important; }
