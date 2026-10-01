@@ -133,8 +133,8 @@ export class P9rInput extends ValidatableFormControlElement {
         this.input?.focus();
     }
 
-    private readonly onInput = (): void => {
-        handleInput(this, this.input, this._internals, this.counter, this.count);
+    private readonly onInput = (event: Event): void => {
+        handleInput(this, this.input, this._internals, this.counter, this.count, event);
         this.validityController.sync();
     };
 

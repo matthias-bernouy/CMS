@@ -74,6 +74,18 @@ describe("P9rInput", () => {
         expect(inputEvents).toBe(1);
     });
 
+    test("forwards a non-composed native input event through the host", () => {
+        const control = document.createElement(tag);
+        document.body.append(control);
+        const input = control.shadowRoot!.querySelector<HTMLInputElement>("input")!;
+        let inputEvents = 0;
+        control.addEventListener("input", () => {
+            inputEvents += 1;
+        });
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        expect(inputEvents).toBe(1);
+    });
+
     test("exposes one composed change event for a native change", () => {
         const control = document.createElement(tag);
         document.body.append(control);

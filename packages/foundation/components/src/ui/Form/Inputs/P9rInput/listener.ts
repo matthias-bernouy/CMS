@@ -6,12 +6,16 @@ export const handleInput = (
     internals: ElementInternals,
     counter: HTMLElement | null,
     countEl: HTMLElement | null,
+    event: Event,
 ) => {
     if (!input) {
         return;
     }
     internals.setFormValue(input.value);
     updateCounter(host, input, counter, countEl);
+    if (!event.composed) {
+        host.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+    }
 };
 
 export const handleChange = (host: HTMLElement, input: HTMLInputElement | null, internals: ElementInternals) => {
