@@ -7,12 +7,23 @@ import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/in
 import { createOfficialProviderHandler } from "../src/http/handler";
 import { FileSubmissionStore } from "../src/local-fs/FileSubmissionStore";
 
+async function contracts() {
+    const load = async (id: string) =>
+        (
+            await admitContractReleaseJson(
+                await readFile(resolve(import.meta.dir, `../../../resources/contracts/${id}/definition.json`)),
+            )
+        ).release;
+    return {
+        catalog: await load("catalog.items"),
+        forms: await load("forms.submissions"),
+        media: await load("media.assets"),
+    };
+}
+
 test("the official provider accepts canonical gateway paths and declared error envelopes", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-official-provider-"));
     try {
-        const contract = await admitContractReleaseJson(
-            await readFile(resolve(import.meta.dir, "../../../resources/contracts/forms.submissions/definition.json")),
-        );
         const report = {
             protocol: "ulvia-provider/v1",
             providerId: "ulvia.official",
@@ -24,7 +35,7 @@ test("the official provider accepts canonical gateway paths and declared error e
         const handler = createOfficialProviderHandler({
             token: "test-token",
             report,
-            forms: contract.release,
+            contracts: await contracts(),
             submissions: new FileSubmissionStore(root),
         });
         const request = (path: string, init: RequestInit = {}) =>
@@ -60,4 +71,28 @@ test("the official provider accepts canonical gateway paths and declared error e
     } finally {
         await rm(root, { recursive: true, force: true });
     }
+});
+
+test("the official provider rejects blank credentials and incompatible contract sets at startup", async () => {
+    const releases = await contracts();
+    const report = {
+        protocol: "ulvia-provider/v1",
+        providerId: "ulvia.official",
+        account: { id: "local-dev", label: "Local" },
+        buildVersion: "test",
+        manifest: { version: "0.2.0", digest: `sha256:${"0".repeat(64)}` },
+        implementations: [],
+    } as ProviderRuntimeReport;
+    const submissions = new FileSubmissionStore(join(tmpdir(), "unused-ulvia-submissions"));
+    expect(() => createOfficialProviderHandler({ token: " ", report, contracts: releases, submissions })).toThrow(
+        "must not be blank",
+    );
+    expect(() =>
+        createOfficialProviderHandler({
+            token: "test-token",
+            report,
+            contracts: { ...releases, catalog: releases.forms },
+            submissions,
+        }),
+    ).toThrow("Expected catalog.items");
 });

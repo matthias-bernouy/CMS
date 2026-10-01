@@ -32,6 +32,8 @@ export class ProviderCatalogue extends HTMLElement {
         root.querySelector("[data-back]")!.setAttribute("href", location.pathname);
         root.querySelector("[data-source-link]")!.setAttribute("href", `${getMetaBasePath()}/admin/sources`);
         root.querySelector("[data-provider-reconnect]")!.addEventListener("click", () => void this.reconnectActive());
+        root.querySelector("[data-provider-toggle]")!.addEventListener("click", () => void this.toggleActive());
+        root.querySelector("[data-provider-revoke]")!.addEventListener("click", () => void this.revokeActive());
         root.querySelector("cms-provider-management")!.addEventListener("provider-connection-opened", () => {
             this.connectModal().showModal();
         });
@@ -138,6 +140,49 @@ export class ProviderCatalogue extends HTMLElement {
             installationId: installation.id,
             revision: installation.revision,
         });
+    }
+
+    private async toggleActive(): Promise<void> {
+        const installation = this.activeInstallation();
+        if (!installation || installation.status === "revoked") {
+            return;
+        }
+        await this.updateStatus(installation.status === "enabled" ? "disable" : "enable");
+    }
+
+    private async revokeActive(): Promise<void> {
+        const installation = this.activeInstallation();
+        if (!installation || installation.status === "revoked") {
+            return;
+        }
+        if (!confirm("Revoke this provider connection permanently and delete its stored credentials?")) {
+            return;
+        }
+        await this.updateStatus("revoke");
+    }
+
+    private async updateStatus(action: "enable" | "disable" | "revoke"): Promise<void> {
+        const installation = this.activeInstallation();
+        if (!installation) {
+            this.status("Provider connection is unavailable.");
+            return;
+        }
+        this.status(`${action === "enable" ? "Enabling" : action === "disable" ? "Disabling" : "Revoking"} provider…`);
+        const response = await fetch(`${getMetaBasePath()}/api/provider-status`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ installationId: installation.id, revision: installation.revision, action }),
+        });
+        if (!response.ok) {
+            this.status(`Provider lifecycle update failed (${response.status}): ${await response.text()}`);
+            return;
+        }
+        await this.load();
+    }
+
+    private activeInstallation(): ProviderInstallation | undefined {
+        const id = new URLSearchParams(location.search).get("provider");
+        return this.installations.find((item) => item.id === id);
     }
 
     private renderAvailable(): void {

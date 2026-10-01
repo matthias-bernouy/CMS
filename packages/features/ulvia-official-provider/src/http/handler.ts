@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { decodeHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
 import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
-import type { ContractRelease } from "@bernouy/cms-repository/contracts";
+import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
 import type { OfficialSubmissionStore } from "../core/submissions";
 
@@ -13,17 +13,24 @@ const ITEMS = Object.freeze([
 ]);
 const MEDIA =
     '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="80" viewBox="0 0 160 80"><rect width="160" height="80" rx="12" fill="#1d4ed8"/><circle cx="42" cy="40" r="20" fill="#ffffff"/><path d="M80 40h48" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/></svg>';
+const MEDIA_BYTES = new TextEncoder().encode(MEDIA);
+
+export interface OfficialProviderContracts {
+    readonly catalog: ContractRelease;
+    readonly forms: ContractRelease;
+    readonly media: ContractRelease;
+}
 
 export function createOfficialProviderHandler(options: {
     token: string;
     report: ProviderRuntimeReport;
-    forms: ContractRelease;
+    contracts: OfficialProviderContracts;
     submissions: OfficialSubmissionStore;
 }): (request: Request) => Promise<Response> {
-    const createSchema = options.forms.capabilities.find((item) => item.id === "submission.create")?.input;
-    if (!createSchema) {
-        throw new Error("Official forms contract lacks submission.create");
+    if (!options.token.trim()) {
+        throw new Error("Official provider token must not be blank");
     }
+    const capabilities = resolveCapabilities(options.contracts);
     return async (request) => {
         if (!authorized(request.headers.get("authorization"), options.token)) {
             return new Response(null, { status: 401, headers: { "WWW-Authenticate": "Bearer" } });
@@ -33,34 +40,45 @@ export function createOfficialProviderHandler(options: {
             return Response.json(options.report, { headers: { "Cache-Control": "no-store" } });
         }
         if (request.method === "GET" && path === "/v1/catalog/items") {
-            return Response.json({ items: ITEMS });
+            const output = { items: ITEMS };
+            validateSchemaValue(capabilities.itemList.output, output);
+            return Response.json(output);
         }
         if (request.method === "GET" && path.startsWith("/v1/catalog/items/")) {
             const id = pathParameter(path, "/v1/catalog/items/", 64);
             const item = ITEMS.find((candidate) => candidate.id === id);
-            return item ? Response.json(item) : error("NOT_FOUND", 404);
+            if (!item) {
+                return error("NOT_FOUND", 404);
+            }
+            validateSchemaValue(capabilities.itemGet.output, item);
+            return Response.json(item);
         }
         if (request.method === "POST" && path === "/v1/forms/submissions") {
             let input: unknown;
             try {
                 const bytes = await readBody(request, 8192);
                 input = parseStrictJson(bytes, 8192, 8);
-                validateSchemaValue(createSchema, input);
+                validateSchemaValue(capabilities.submissionCreate.input, input);
             } catch {
                 return error("INVALID_SUBMISSION", 422);
             }
             const { email, message } = input as { email: string; message: string };
             const submission = await options.submissions.create({ email, message });
-            return Response.json({ id: submission.id }, { status: 201 });
+            const output = { id: submission.id };
+            validateSchemaValue(capabilities.submissionCreate.output, output);
+            return Response.json(output, { status: 201 });
         }
         if (request.method === "GET" && path.startsWith("/v1/forms/submissions/")) {
             const id = pathParameter(path, "/v1/forms/submissions/", 36);
             const submission = id ? await options.submissions.get(id) : null;
-            return submission
-                ? Response.json(submission, { headers: { "Cache-Control": "no-store" } })
-                : error("NOT_FOUND", 404);
+            if (!submission) {
+                return error("NOT_FOUND", 404);
+            }
+            validateSchemaValue(capabilities.submissionGet.output, submission);
+            return Response.json(submission, { headers: { "Cache-Control": "no-store" } });
         }
         if (request.method === "GET" && pathParameter(path, "/v1/media/", 64) === "starter-mark") {
+            validateSchemaValue(capabilities.assetRead.output, MEDIA_BYTES);
             return new Response(MEDIA, { headers: { "Content-Type": "image/svg+xml" } });
         }
         if (request.method === "GET" && path.startsWith("/v1/media/")) {
@@ -68,6 +86,43 @@ export function createOfficialProviderHandler(options: {
         }
         return new Response(null, { status: 404 });
     };
+}
+
+function resolveCapabilities(contracts: OfficialProviderContracts): {
+    itemList: CapabilityDefinition;
+    itemGet: CapabilityDefinition;
+    submissionCreate: CapabilityDefinition;
+    submissionGet: CapabilityDefinition;
+    assetRead: CapabilityDefinition;
+} {
+    assertContract(contracts.catalog, "catalog.items");
+    assertContract(contracts.forms, "forms.submissions");
+    assertContract(contracts.media, "media.assets");
+    const assetRead = requiredCapability(contracts.media, "asset.read");
+    if (assetRead.media?.idInput !== "fileId") {
+        throw new Error("Official media contract must expose asset.read through fileId media identity");
+    }
+    return {
+        itemList: requiredCapability(contracts.catalog, "item.list"),
+        itemGet: requiredCapability(contracts.catalog, "item.get"),
+        submissionCreate: requiredCapability(contracts.forms, "submission.create"),
+        submissionGet: requiredCapability(contracts.forms, "submission.get"),
+        assetRead,
+    };
+}
+
+function assertContract(release: ContractRelease, contractId: string): void {
+    if (release.contractId !== contractId) {
+        throw new Error(`Expected ${contractId}, received ${release.contractId}`);
+    }
+}
+
+function requiredCapability(release: ContractRelease, capabilityId: string): CapabilityDefinition {
+    const capability = release.capabilities.find((item) => item.id === capabilityId);
+    if (!capability) {
+        throw new Error(`${release.contractId} lacks ${capabilityId}`);
+    }
+    return capability;
 }
 
 function pathParameter(path: string, prefix: string, maxLength: number): string | null {

@@ -26,7 +26,7 @@ const report: ProviderRuntimeReport = {
     protocol: "ulvia-provider/v1",
     providerId: admission.manifest.providerId,
     account: { id: "local-dev", label: "Ulvia local provider" },
-    buildVersion: "0.1.0",
+    buildVersion: admission.manifest.version,
     manifest: { version: admission.manifest.version, digest: admission.digest },
     implementations: admission.manifest.implementations.map((item) => ({
         contractId: item.contractId,
@@ -35,14 +35,14 @@ const report: ProviderRuntimeReport = {
         status: "ready" as const,
     })),
 };
-const forms = await contracts.get("forms.submissions", "0.1.1");
-if (!forms) {
-    throw new Error("Official forms contract is missing");
-}
 const handler = createOfficialProviderHandler({
     token,
     report,
-    forms: forms.admission.release,
+    contracts: {
+        catalog: await implementedRelease("catalog.items"),
+        forms: await implementedRelease("forms.submissions"),
+        media: await implementedRelease("media.assets"),
+    },
     submissions: new FileSubmissionStore(join(dataRoot, "submissions")),
 });
 const server = Bun.serve({ hostname: "127.0.0.1", port, fetch: handler });
@@ -54,4 +54,16 @@ function required(name: string): string {
         throw new Error(`${name} is required`);
     }
     return value;
+}
+
+async function implementedRelease(contractId: string) {
+    const implementation = admission.manifest.implementations.find((item) => item.contractId === contractId);
+    if (!implementation) {
+        throw new Error(`Official provider manifest lacks ${contractId}`);
+    }
+    const published = await contracts.get(contractId, implementation.version);
+    if (!published || published.admission.digest !== implementation.digest) {
+        throw new Error(`Official provider contract ${contractId}@${implementation.version} is unavailable`);
+    }
+    return published.admission.release;
 }

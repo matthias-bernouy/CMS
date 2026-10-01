@@ -27,6 +27,10 @@ export function renderProviderDetail(
         item && manifest && compareSemVer(manifest.version, item.manifestVersion) > 0
             ? "Upgrade connection"
             : "Reconnect";
+    const toggle = root.querySelector<HTMLElement>("[data-provider-toggle]")!;
+    toggle.hidden = !item || item.status === "revoked";
+    toggle.textContent = item?.status === "enabled" ? "Disable" : "Enable";
+    root.querySelector<HTMLElement>("[data-provider-revoke]")!.hidden = !item || item.status === "revoked";
     const facts = root.querySelector("[data-provider-facts]")!;
     facts.replaceChildren();
     if (!item) {

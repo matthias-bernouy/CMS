@@ -1,5 +1,6 @@
 import { importProviderManifest, type ProviderRepositorySource } from "@bernouy/cms-repository/providers/sources";
-import type { SecretStore } from "@bernouy/secret-store";
+import { ProviderInstallationLifecycle } from "@bernouy/cms-repository/providers/installations";
+import { secretRefToKey, type SecretStore } from "@bernouy/secret-store";
 import type { ProductionGateway } from "./createProductionGateway";
 import { activateProviderContract } from "./activateProviderContracts";
 import { ProviderConnectionWorkflow, type ProviderConnectionPreviewInput } from "./ProviderConnectionWorkflow";
@@ -7,13 +8,17 @@ import { ProviderConnectionWorkflow, type ProviderConnectionPreviewInput } from 
 /** Host-owned orchestration: report probing and approval are separate admin actions. */
 export class ProviderManagement {
     private readonly connections: ProviderConnectionWorkflow;
+    private readonly lifecycle: ProviderInstallationLifecycle;
 
     constructor(
         private readonly gateway: ProductionGateway,
-        secrets: SecretStore,
+        private readonly secrets: SecretStore,
         private readonly sources: readonly ProviderRepositorySource[] = [],
     ) {
         this.connections = new ProviderConnectionWorkflow(gateway, secrets);
+        this.lifecycle = new ProviderInstallationLifecycle(gateway.installations, gateway.manifests, () =>
+            new Date().toISOString(),
+        );
     }
 
     async importManifest(manifest: string): Promise<unknown> {
@@ -58,4 +63,34 @@ export class ProviderManagement {
     async selectContract(input: { installationId: string; contractId: string; version: string; digest: string }) {
         return activateProviderContract(this.gateway, input);
     }
+
+    async setStatus(input: { installationId: string; revision: number; action: "enable" | "disable" | "revoke" }) {
+        const scope = { siteId: this.gateway.siteId, installationId: input.installationId };
+        const current = await this.gateway.installations.get(scope);
+        if (!current) {
+            throw new Error("Provider installation is unavailable");
+        }
+        const credentialKeys =
+            input.action === "revoke"
+                ? [current.installation.providerTokenRef, current.installation.gatewayTokenRef]
+                      .filter((reference): reference is string => Boolean(reference))
+                      .map(requiredSecretKey)
+                : [];
+        const stored = await this.lifecycle[input.action](scope, input.revision);
+        const deletions = await Promise.allSettled(credentialKeys.map((key) => this.secrets.delete(key)));
+        return {
+            installationId: stored.installation.id,
+            status: stored.installation.status,
+            revision: stored.revision,
+            credentialsDeleted: deletions.every((result) => result.status === "fulfilled"),
+        };
+    }
+}
+
+function requiredSecretKey(reference: string): string {
+    const key = secretRefToKey(reference);
+    if (!key) {
+        throw new Error("Provider credential reference is invalid");
+    }
+    return key;
 }

@@ -58,6 +58,11 @@ export type ControlCmsOptions = Configuration & {
                 actorId: string,
             ): Promise<unknown>;
             approve(ticket: string, actorId: string): Promise<unknown>;
+            setStatus(input: {
+                installationId: string;
+                revision: number;
+                action: "enable" | "disable" | "revoke";
+            }): Promise<unknown>;
             selectContract(input: {
                 installationId: string;
                 contractId: string;
