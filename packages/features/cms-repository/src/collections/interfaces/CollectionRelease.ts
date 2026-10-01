@@ -3,6 +3,8 @@ import type { CollectionText } from "./CollectionText";
 import type { CollectionTheme } from "./CollectionTheme";
 import type { CollectionBloc } from "./CollectionBloc";
 import type { CollectionAssetDefinition } from "./CollectionAssets";
+import type { CollectionView } from "./CollectionView";
+import type { CollectionDashboard } from "./CollectionDashboard";
 
 export interface CollectionConfiguration {
     readonly schema: UlviaObjectSchema;
@@ -32,4 +34,6 @@ export interface CollectionRelease {
     readonly theme?: CollectionTheme;
     readonly assets: readonly CollectionAssetDefinition[];
     readonly blocs: readonly CollectionBloc[];
+    readonly views?: readonly CollectionView[];
+    readonly dashboards?: readonly CollectionDashboard[];
 }

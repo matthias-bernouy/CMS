@@ -49,7 +49,7 @@ describe("collection release parsing", () => {
         for (const patch of [
             { providerId: "provider" },
             { imports: [] },
-            { views: [] },
+            { views: null },
             { locale: "en_US" },
             { kind: "contract" },
             { protocol: "ulvia-provider/v1" },

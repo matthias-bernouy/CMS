@@ -88,6 +88,12 @@ export class CollectionStore {
             (old.release.texts ?? []).some(
                 (text) => !(artifact.release.texts ?? []).some((next) => next.id === text.id),
             ) ||
+            (old.release.views ?? []).some(
+                (view) => !(artifact.release.views ?? []).some((next) => next.id === view.id),
+            ) ||
+            (old.release.dashboards ?? []).some(
+                (dashboard) => !(artifact.release.dashboards ?? []).some((next) => next.id === dashboard.id),
+            ) ||
             JSON.stringify(old.release.configuration) !== JSON.stringify(artifact.release.configuration)
         ) {
             throw Object.assign(new Error("Upgrade removes existing resources or changes configuration"), {

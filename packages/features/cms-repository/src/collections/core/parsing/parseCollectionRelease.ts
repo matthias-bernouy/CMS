@@ -10,6 +10,8 @@ import { parseAssets } from "./assets";
 import { parseBlocs } from "./blocs/parseBlocs";
 import { validateBlocs } from "./blocs/validateBlocs";
 import { parseConfiguration } from "./configuration";
+import { parseCollectionViews } from "./views";
+import { parseCollectionDashboards } from "./dashboards";
 
 export function parseCollectionRelease(
     value: unknown,
@@ -36,6 +38,8 @@ export function parseCollectionRelease(
                 "theme",
                 "assets",
                 "blocs",
+                "views",
+                "dashboards",
             ],
             "$",
         );
@@ -53,6 +57,10 @@ export function parseCollectionRelease(
         const assets = parseAssets(source.assets === undefined ? [] : source.assets, limits);
         const blocs = parseBlocs(source.blocs === undefined ? [] : source.blocs, collectionId, limits);
         validateBlocs(blocs, new Set(assets.map((asset) => asset.id)), limits);
+        const views =
+            source.views === undefined
+                ? undefined
+                : parseCollectionViews(source.views, new Set(blocs.map((bloc) => bloc.id)));
         const release: CollectionRelease = {
             kind: "collection",
             protocol: "ulvia-collection/v1",
@@ -72,6 +80,15 @@ export function parseCollectionRelease(
                 : { configuration: parseConfiguration(source.configuration, "$.configuration", limits) }),
             assets,
             blocs,
+            ...(views === undefined ? {} : { views }),
+            ...(source.dashboards === undefined
+                ? {}
+                : {
+                      dashboards: parseCollectionDashboards(
+                          source.dashboards,
+                          new Set(views?.map((view) => view.id) ?? []),
+                      ),
+                  }),
         };
         assertSize(release, limits);
         return deepFreeze(release);

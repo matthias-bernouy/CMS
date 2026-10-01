@@ -68,6 +68,26 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
             ) {
                 throw new TypeError("Invalid repository entry metadata");
             }
+            if (
+                entry.dashboards !== undefined &&
+                (!Array.isArray(entry.dashboards) ||
+                    entry.dashboards.length > 32 ||
+                    entry.dashboards.some(
+                        (dashboard: unknown) =>
+                            !dashboard ||
+                            typeof dashboard !== "object" ||
+                            typeof (dashboard as Record<string, unknown>).id !== "string" ||
+                            !IDENTIFIER.test((dashboard as { id: string }).id) ||
+                            typeof (dashboard as Record<string, unknown>).name !== "string" ||
+                            (dashboard as { name: string }).name.length > 128 ||
+                            typeof (dashboard as Record<string, unknown>).description !== "string" ||
+                            (dashboard as { description: string }).description.length > 4096 ||
+                            !Number.isSafeInteger((dashboard as Record<string, unknown>).viewCount) ||
+                            ((dashboard as Record<string, unknown>).viewCount as number) < 1,
+                    ))
+            ) {
+                throw new TypeError("Invalid repository dashboard summaries");
+            }
             return {
                 repositoryId: this.id,
                 publisherId: entry.publisherId,
@@ -78,6 +98,7 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
                 description: entry.description,
                 blocCount: entry.blocCount,
                 hasTheme: entry.hasTheme,
+                ...(entry.dashboards === undefined ? {} : { dashboards: entry.dashboards }),
             } as CollectionRepositoryEntry;
         });
     }

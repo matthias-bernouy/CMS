@@ -1,0 +1,17 @@
+{
+    "id": "starter",
+    "name": "Test dashboard",
+    "description": "A collection-provided workspace with two HTML views.",
+    "navigation": [
+        {
+            "id": "workspace",
+            "label": "Workspace",
+            "icon": "layout",
+            "childPlacement": "tabs",
+            "children": [
+                { "id": "overview", "label": "Overview", "use": "overview" },
+                { "id": "resources", "label": "Resources", "use": "resources" }
+            ]
+        }
+    ]
+}

@@ -4,8 +4,8 @@
     "schemaDialect": "ulvia-schema/v1",
     "collectionId": "test",
     "publisherId": "ulvia.examples",
-    "version": "1.3.2",
+    "version": "1.3.7",
     "name": "Test",
-    "description": "Eight starter blocs with shared compositions, a theme and English/French text catalogues.",
+    "description": "Eight starter blocs, translated texts, theme tokens and a dashboard with direct tabs.",
     "locale": "en"
 }

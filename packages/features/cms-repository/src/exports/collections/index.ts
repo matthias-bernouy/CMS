@@ -3,6 +3,12 @@ export type {
     CollectionConfiguration,
     CollectionCapabilityRequirement,
 } from "cms-repository/collections/interfaces/CollectionRelease";
+export type { CollectionView } from "cms-repository/collections/interfaces/CollectionView";
+export type {
+    CollectionDashboard,
+    CollectionDashboardView,
+    CollectionDashboardNavigationItem,
+} from "cms-repository/collections/interfaces/CollectionDashboard";
 export type {
     CollectionTheme,
     CollectionThemeCategory,

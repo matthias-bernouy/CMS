@@ -17,6 +17,7 @@ This slice supports:
   values. `./collections/texts` exposes validation, fallback resolution and
   formatting; see [collection texts](../../../../../docs/blocs/texts.md).
 - Optional theme categories with typed light/dark token defaults.
+- Optional Control HTML views: bounded collection-owned fragments.
 - Assets declared by stable ID, concrete MIME type, byte length and SHA-256.
 - Component blocs with a static `shadowdom` shell and optional fixed `lightdom`,
   `style` source and declarative setting items.
@@ -106,12 +107,29 @@ size, markup, slots and requirements. `limits.schema` explicitly carries the
 schema policy through configurations. Locale tags normalize using
 `Intl.getCanonicalLocales`; names and source strings remain as authored.
 
+## Views and dashboards
+
+The local release command reads `views/<view-id>/definition.json` and
+`view.html` and places the HTML in the immutable release. Admission permits
+text, a small semantic HTML set and declared local bloc tags. It rejects
+scripts, links, inline handlers, inline styles and undeclared attributes.
+The current Control view runner supplies dashboard name and view count through
+its document binding core. Arbitrary provider calls and form actions in
+authored views are not admitted yet; they need compiled execution grants.
+The local release command also reads `dashboards/<dashboard-id>/definition.json`.
+Each dashboard declares a navigation tree of groups and local views. A primary
+item can open lateral navigation or tabs directly; a lateral item can open
+tabs. Admission rejects unknown or repeated view IDs and duplicate dashboard
+IDs. Optional contract IDs connect source discovery to dashboards that use
+those contracts. The definition is immutable collection content; its site
+activation and membership are separate mutable state. Private site dashboards
+may mount views from several installed collections.
+
 ## Next slices
 
-Presets, imports, views and dashboard templates remain absent from the public
-format: unsupported fields reject.
-Views must retain composition-only Light DOM semantics; dashboard assignments,
-site overrides and published execution plans must remain site-owned state.
+Presets and imports remain absent from the public format: unsupported fields
+reject. Expanded view bindings, published execution plans and capability grants
+remain future work.
 
 Compatibility analysis, remote catalogue publication, complex upgrade
 migrations and component renderer compilation are not implemented yet.

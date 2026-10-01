@@ -27,14 +27,9 @@
             "shadowdom": "<section><slot name=\"body\"></slot></section>",
             "style": ":host { display: block; } :host([tone=\"muted\"]) { opacity: 0.8; }",
             "slots": { "body": {} },
-            "settings": {
-                "schema": {
-                    "type": "object",
-                    "properties": { "tone": { "type": "string", "maxLength": 7, "enum": ["default", "muted"] } },
-                    "required": ["tone"]
-                },
-                "defaults": { "tone": "default" }
-            }
+            "settings": [
+                { "id": "tone", "label": "Tone", "type": "string", "enum": ["default", "muted"], "maxLength": 7, "default": "default" }
+            ]
         },
         {
             "kind": "composition",
