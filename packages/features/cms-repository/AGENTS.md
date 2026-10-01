@@ -255,6 +255,10 @@ models and validation for CMS-owned installations and site selections.
   overrides; publication to a remote registry remains unsupported.
 - Text metadata (`category`, `group`, `label`, `description`) is declarative and
   bounded. It does not change interpolation keys or grant runtime capabilities.
+- Treat `collectionId` as the runtime namespace. It is lowercase kebab-case,
+  excludes platform-owned roots, prefixes every custom-element tag and derives
+  global theme token IDs and CSS variables. Validate derived identities during
+  collection admission rather than waiting for installation or compilation.
 - Collection theme categories and tokens, HTML views, and dashboard templates
   are admitted and included in the release digest. Dashboard templates reference
   only local declared views; site activation and membership live outside the

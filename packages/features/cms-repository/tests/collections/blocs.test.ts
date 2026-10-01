@@ -8,8 +8,14 @@ describe("collection bloc admission", () => {
         const blocs = check([composition(), component({ thumbnail: "preview" })], new Set(["preview"]));
         expect(blocs.map((bloc) => bloc.id)).toEqual(["demo-card", "demo-page"]);
         expect(blocs[0]?.uses).toEqual([]);
-        expect(parseBlocs([component({ id: "demo.widgets-card" })], "demo.widgets", limits)[0]?.id).toBe(
-            "demo.widgets-card",
+    });
+
+    test("requires platform-safe namespaced custom-element tags", () => {
+        expect(() => parseBlocs([component({ id: "demo.widgets-card" })], "demo", limits)).toThrow("custom-element");
+        expect(() => parseBlocs([component({ id: "font-face" })], "font", limits)).toThrow("custom-element");
+        expect(() => parseBlocs([component({ id: "cms-card" })], "cms", limits)).toThrow("reserved");
+        expect(() => parseBlocs([component({ id: "demo-card" })], "other", limits)).toThrow(
+            "other- collection namespace",
         );
     });
 
@@ -22,7 +28,7 @@ describe("collection bloc admission", () => {
     });
 
     test("enforces IDs, booleans, finite lists and markup bounds", () => {
-        expect(() => check([component({ id: "foreign-card" })])).toThrow("prefixed");
+        expect(() => check([component({ id: "foreign-card" })])).toThrow("collection namespace");
         expect(() => check([component({ internal: "true" })])).toThrow("boolean");
         expect(() => parseBlocs([component(), component()], "demo", { ...limits, maxBlocs: 1 })).toThrow("at most 1");
         expect(() => parseBlocs([component()], "demo", { ...limits, maxMarkupLength: 2 })).toThrow("at most 2");

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
-import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
+import { admitCollectionRelease, isCollectionNamespace } from "@bernouy/cms-repository/collections";
 import { buildCollectionBloc } from "@bernouy/cms-collection-build";
 
 const DEFAULT_BLOC_SOURCE = `
@@ -20,7 +20,7 @@ export class Bloc extends Component {
 export async function prepareCollectionRelease(directory: string) {
     const collectionRoot = resolve(directory);
     const collectionId = basename(collectionRoot);
-    if (!/^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u.test(collectionId)) {
+    if (!isCollectionNamespace(collectionId)) {
         throw new Error("Invalid collection ID");
     }
     const definition = (await Bun.file(join(collectionRoot, "definition.json")).json()) as Record<string, unknown>;

@@ -3,6 +3,7 @@ import { chmod, link, lstat, mkdir, readFile, readdir, rm, writeFile } from "nod
 import { join } from "node:path";
 import {
     admitCollectionReleaseJson,
+    isCollectionNamespace,
     parseCollectionReleaseJson,
     type AdmittedCollectionRelease,
 } from "@bernouy/cms-repository/collections";
@@ -67,7 +68,7 @@ export class LocalCollectionRepository {
     }
 
     async get(publisherId: string, collectionId: string, version: string): Promise<AdmittedCollectionRelease | null> {
-        if (!IDENTIFIER.test(publisherId) || !IDENTIFIER.test(collectionId) || !VERSION.test(version)) {
+        if (!IDENTIFIER.test(publisherId) || !isCollectionNamespace(collectionId) || !VERSION.test(version)) {
             return null;
         }
         const path = this.releasePath(publisherId, collectionId, version);

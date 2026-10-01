@@ -1,5 +1,6 @@
 import type { CollectionTheme, CollectionThemeToken, CollectionThemeTokenType } from "../../interfaces/CollectionTheme";
 import { invalid } from "../errors";
+import { collectionThemeSourceId, collectionThemeTokenId } from "../namespace";
 import { array, identifier, keys, record, string, unique } from "../values";
 
 const TYPES = new Set<CollectionThemeTokenType>(["color", "font-family", "length", "number", "shadow", "value"]);
@@ -26,7 +27,8 @@ function css(value: unknown, path: string): string {
     }
     return parsed;
 }
-export function parseCollectionTheme(input: unknown): CollectionTheme {
+export function parseCollectionTheme(input: unknown, collectionId: string): CollectionTheme {
+    collectionThemeSourceId(collectionId);
     const source = record(input, "$.theme");
     keys(source, ["label", "categories"], "$.theme");
     const categories = array(source.categories, 16, "$.theme.categories").map((entry, index) => {
@@ -42,8 +44,10 @@ export function parseCollectionTheme(input: unknown): CollectionTheme {
             }
             const defaults = record(token.defaults, `${tokenPath}.defaults`);
             keys(defaults, ["light", "dark"], `${tokenPath}.defaults`);
+            const id = name(token.id, `${tokenPath}.id`);
+            collectionThemeTokenId(collectionId, id);
             return {
-                id: name(token.id, `${tokenPath}.id`),
+                id,
                 label: label(token.label, `${tokenPath}.label`),
                 ...(token.description === undefined
                     ? {}

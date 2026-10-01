@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import {
     DEFAULT_COLLECTION_LIMITS,
+    collectionThemeSourceId,
+    collectionThemeTokenId,
+    isCollectionNamespace,
     parseCollectionRelease,
     parseCollectionReleaseJson,
 } from "@bernouy/cms-repository/collections";
@@ -8,6 +11,31 @@ import { canonicalIJsonBytes } from "@bernouy/cms-repository/contracts/protocol"
 import { collectionDocument } from "./fixtures";
 
 describe("collection release parsing", () => {
+    test("reserves one HTML and CSS safe namespace for every collection", () => {
+        expect(isCollectionNamespace("atlas")).toBe(true);
+        expect(isCollectionNamespace("atlas-widgets")).toBe(true);
+        expect(collectionThemeSourceId("atlas-widgets")).toBe("collection-atlas-widgets");
+        expect(collectionThemeTokenId("atlas-widgets", "accent")).toBe("atlas-widgets-accent");
+        expect(() => collectionThemeTokenId("atlas-widgets", "accent--strong")).toThrow("Invalid local");
+
+        for (const collectionId of [
+            "atlas.widgets",
+            "cms",
+            "cms-tools",
+            "p9r-library",
+            "w13c-kit",
+            "be5-components",
+            "site",
+            "site-private",
+        ]) {
+            expect(isCollectionNamespace(collectionId)).toBe(false);
+            expect(() => parseCollectionRelease({ ...collectionDocument(), collectionId })).toThrow(/namespace/i);
+        }
+        expect(() =>
+            parseCollectionReleaseJson(JSON.stringify({ ...collectionDocument(), collectionId: "cms-tools" })),
+        ).toThrow(/namespace/i);
+    });
+
     test("reports validation paths in the collection document", () => {
         try {
             parseCollectionRelease({ ...collectionDocument(), version: "v1.0.0" });
@@ -125,5 +153,26 @@ describe("collection release parsing", () => {
                 parseCollectionRelease({ ...source, configuration: { ...configuration, ...patch } }, limits),
             ).toThrow();
         }
+    });
+
+    test("keeps theme token IDs local after validating their global names", () => {
+        const parsed = parseCollectionRelease({
+            ...collectionDocument(),
+            theme: {
+                label: "Atlas theme",
+                categories: [
+                    {
+                        id: "colors",
+                        label: "Colors",
+                        tokens: [{ id: "accent", label: "Accent", type: "color", defaults: { light: "#123456" } }],
+                    },
+                ],
+            },
+        });
+
+        expect(parsed.theme?.categories[0]?.tokens[0]?.id).toBe("accent");
+        expect(collectionThemeTokenId(parsed.collectionId, parsed.theme!.categories[0]!.tokens[0]!.id)).toBe(
+            "atlas-accent",
+        );
     });
 });

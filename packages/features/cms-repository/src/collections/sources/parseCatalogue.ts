@@ -1,4 +1,5 @@
 import type { CollectionRepositoryEntry } from "./interfaces";
+import { isCollectionNamespace } from "../core/namespace";
 
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
 const VERSION = /^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
@@ -12,7 +13,7 @@ export function validCollectionReference(reference: {
 }): boolean {
     return (
         IDENTIFIER.test(reference.publisherId) &&
-        IDENTIFIER.test(reference.collectionId) &&
+        isCollectionNamespace(reference.collectionId) &&
         VERSION.test(reference.version) &&
         DIGEST.test(reference.digest)
     );
@@ -35,10 +36,11 @@ export function parseCollectionCatalogue(data: unknown, repositoryId: string): C
             throw new TypeError("Invalid repository entry");
         }
         const entry = item as Record<string, unknown>;
-        for (const key of ["publisherId", "collectionId"] as const) {
-            if (typeof entry[key] !== "string" || !IDENTIFIER.test(entry[key])) {
-                throw new TypeError(`Invalid repository ${key}`);
-            }
+        if (typeof entry.publisherId !== "string" || !IDENTIFIER.test(entry.publisherId)) {
+            throw new TypeError("Invalid repository publisherId");
+        }
+        if (!isCollectionNamespace(entry.collectionId)) {
+            throw new TypeError("Invalid repository collectionId");
         }
         if (
             typeof entry.version !== "string" ||

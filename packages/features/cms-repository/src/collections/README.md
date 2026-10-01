@@ -67,9 +67,20 @@ executable behavior; installation therefore trusts the configured repository.
 
 ## Dependencies and identity
 
-Bloc tags are prefixed with `<collectionId>-`; all `uses` and slot `accepts`
-references must resolve locally. External collection imports are not supported
-yet and are rejected, rather than silently left unresolved.
+The collection ID is its global runtime namespace. It uses lowercase kebab-case
+without dots and cannot claim the platform-owned `be5-`, `cms-`, `p9r-`,
+`site-`, or `w13c-` roots. Every Bloc is a valid custom-element tag prefixed
+with `<collectionId>-`; all `uses` and slot `accepts` references resolve
+locally. External collection imports are not supported yet and are rejected,
+rather than silently left unresolved.
+
+Theme token IDs remain local in release JSON and are projected as both the
+global token ID and CSS variable name `<collectionId>-<tokenId>`. Texts and
+Views similarly retain local IDs: text expressions use
+`cms.i18n.<collectionId>.<textId>`, while dashboard navigation identifies Views
+as `<collectionId>:<viewId>`. Assets remain scoped by the immutable release
+digest. Installation and upgrade reject exact Bloc-tag or projected theme-token
+collisions between collections.
 
 Each requirement names `contractId`, `capabilityId` and a bounded SemVer range.
 Admission requires a supplied `ReleaseCatalogue` whenever requirements exist.

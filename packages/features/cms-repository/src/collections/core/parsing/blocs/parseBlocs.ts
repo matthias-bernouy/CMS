@@ -5,6 +5,7 @@ import { array, identifier, keys, ordinal, record, string, unique } from "../../
 import { parseRequirements } from "../requirements";
 import { parseComponentSettings } from "./settings";
 import { blocReferences, parseSlots } from "./slots";
+import { parseCollectionBlocTag, parseCollectionNamespace } from "../../namespace";
 
 const common = [
     "kind",
@@ -44,10 +45,7 @@ function parseBloc(
         ],
         path,
     );
-    const id = identifier(source.id, `${path}.id`);
-    if (!id.startsWith(`${collectionId}-`) || id.length === collectionId.length + 1) {
-        invalid(`must be a custom-element tag prefixed by ${collectionId}-`, `${path}.id`);
-    }
+    const id = parseCollectionBlocTag(source.id, collectionId, `${path}.id`);
     if (source.internal !== undefined && typeof source.internal !== "boolean") {
         invalid("must be a boolean", `${path}.internal`);
     }
@@ -107,6 +105,7 @@ export function parseBlocs(
     collectionId: string,
     limits: Readonly<CollectionLimits>,
 ): readonly CollectionBloc[] {
+    parseCollectionNamespace(collectionId, "$.collectionId");
     const result = array(value, limits.maxBlocs, "$.blocs").map((item, index) =>
         parseBloc(item, collectionId, `$.blocs[${index}]`, limits),
     );

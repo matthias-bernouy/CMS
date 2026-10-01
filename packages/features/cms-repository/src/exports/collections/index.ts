@@ -41,6 +41,11 @@ export type {
 export { CollectionValidationError, type CollectionValidationCode } from "cms-repository/collections/core/errors";
 export { DEFAULT_COLLECTION_LIMITS, type CollectionLimits } from "cms-repository/collections/core/limits";
 export {
+    collectionThemeSourceId,
+    collectionThemeTokenId,
+    isCollectionNamespace,
+} from "cms-repository/collections/core/namespace";
+export {
     parseCollectionRelease,
     parseCollectionReleaseJson,
 } from "cms-repository/collections/core/parsing/parseCollectionRelease";

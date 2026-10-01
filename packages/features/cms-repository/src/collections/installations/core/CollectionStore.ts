@@ -4,6 +4,7 @@ import { admitCollectionRelease } from "../../core/admission/admitCollectionRele
 import { parseCollectionTextOverrides } from "../../core/texts/parseCollectionTexts";
 import type { CollectionBundleAsset } from "../../interfaces/CollectionAssets";
 import type { CollectionStorage, InstalledCollection } from "../interfaces/store";
+import { assertCollectionResourceIsolation, assertInstallableCollectionResources } from "./resourceIsolation";
 
 export class CollectionStore {
     constructor(
@@ -39,6 +40,7 @@ export class CollectionStore {
                 return { ...installation, release: artifact.release };
             }),
         );
+        assertCollectionResourceIsolation(collections.map(({ release }) => release));
         return structuredClone({ revision: state.revision, collections });
     }
 
@@ -53,6 +55,7 @@ export class CollectionStore {
                 status: 409,
             });
         }
+        await assertInstallableCollectionResources(this.storage, state.installations, artifact.release);
         const next = {
             revision: expectedRevision + 1,
             installations: [
@@ -115,6 +118,11 @@ export class CollectionStore {
                 status: 409,
             });
         }
+        await assertInstallableCollectionResources(
+            this.storage,
+            state.installations.filter((item) => item !== previous),
+            artifact.release,
+        );
         const textOverrides = parseCollectionTextOverrides(previous.textOverrides, artifact.release.texts ?? []);
         const next = {
             revision: expectedRevision + 1,

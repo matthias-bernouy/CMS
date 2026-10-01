@@ -4,6 +4,7 @@ import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { CollectionValidationError, invalid, translateCollectionError } from "../errors";
 import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../limits";
 import { identifier, keys, record, string } from "../values";
+import { parseCollectionNamespace } from "../namespace";
 import { parseCollectionTheme } from "./theme";
 import { parseCollectionTexts } from "../texts/parseCollectionTexts";
 import { parseAssets } from "./assets";
@@ -52,7 +53,7 @@ export function parseCollectionRelease(
                 invalid(`must be ${expected}`, `$.${key}`);
             }
         }
-        const collectionId = identifier(source.collectionId, "$.collectionId");
+        const collectionId = parseCollectionNamespace(source.collectionId, "$.collectionId");
         const version = parseVersion(source.version);
         const assets = parseAssets(source.assets === undefined ? [] : source.assets, limits);
         const blocs = parseBlocs(source.blocs === undefined ? [] : source.blocs, collectionId, limits);
@@ -74,7 +75,7 @@ export function parseCollectionRelease(
                 : { description: string(source.description, 4096, "$.description") }),
             locale: parseLocale(source.locale),
             ...(source.texts === undefined ? {} : { texts: parseTexts(source.texts, parseLocale(source.locale)) }),
-            ...(source.theme === undefined ? {} : { theme: parseCollectionTheme(source.theme) }),
+            ...(source.theme === undefined ? {} : { theme: parseCollectionTheme(source.theme, collectionId) }),
             ...(source.configuration === undefined
                 ? {}
                 : { configuration: parseConfiguration(source.configuration, "$.configuration", limits) }),

@@ -1,4 +1,8 @@
-import type { CollectionRelease } from "@bernouy/cms-repository/collections";
+import {
+    collectionThemeSourceId,
+    collectionThemeTokenId,
+    type CollectionRelease,
+} from "@bernouy/cms-repository/collections";
 import type { ThemeSettings, ThemeSource } from "cms-content/theme/interfaces/theme";
 import { validateThemeSettings } from "cms-content/theme/core/validation";
 
@@ -7,7 +11,7 @@ export function collectionThemeSource(release: CollectionRelease): ThemeSource |
         return null;
     }
     return {
-        id: `collection-${release.collectionId}`,
+        id: collectionThemeSourceId(release.collectionId),
         label: release.theme.label,
         supportsModes: release.theme.categories.some((category) =>
             category.tokens.some((token) => token.defaults.dark !== undefined),
@@ -18,8 +22,8 @@ export function collectionThemeSource(release: CollectionRelease): ThemeSource |
             label: category.label,
             description: category.description ?? "",
             tokens: category.tokens.map((token) => ({
-                id: `${release.collectionId}-${token.id}`,
-                variable: `${release.collectionId}-${token.id}`,
+                id: collectionThemeTokenId(release.collectionId, token.id),
+                variable: collectionThemeTokenId(release.collectionId, token.id),
                 label: token.label,
                 description: token.description ?? "",
                 type: token.type,
