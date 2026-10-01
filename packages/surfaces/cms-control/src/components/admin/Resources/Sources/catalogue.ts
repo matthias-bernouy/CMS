@@ -5,6 +5,7 @@ import {
     type SourceInstallations,
     sourceUpgrade,
 } from "./model";
+import "../Blocs/icons/CertifiedBadge";
 
 const LEGACY_CATEGORIES: Readonly<Record<string, readonly string[]>> = {
     catalog: ["catalog", "commerce"],
@@ -74,7 +75,9 @@ function sourceCard(contractId: string, catalogue: SourceCatalogue, state: Sourc
     publisherName.textContent = `By ${latest.publisherId === "ulvia.official" ? "Ulvia" : latest.publisherId}`;
     publisher.append(publisherName);
     if (latest.publisherId === "ulvia.official") {
-        publisher.append(certifiedBadge());
+        const badge = document.createElement("cms-certified-badge");
+        badge.setAttribute("label", "Certified official Ulvia contract");
+        publisher.append(badge);
     }
     copy.append(title, publisher);
     heading.append(icon, copy);
@@ -130,28 +133,6 @@ function sourceIcon(name: string): HTMLElement {
     icon.classList.add("source-card-icon");
     icon.setAttribute("name", name);
     return icon;
-}
-
-function certifiedBadge(): HTMLElement {
-    const badge = document.createElement("span");
-    badge.className = "source-certified-badge";
-    badge.setAttribute("role", "img");
-    badge.setAttribute("aria-label", "Certified official Ulvia contract");
-    badge.title = "Certified official Ulvia contract";
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("viewBox", "0 0 24 24");
-    svg.setAttribute("aria-hidden", "true");
-    const seal = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    seal.setAttribute(
-        "d",
-        "m12 2 2.2 2.1 3-.1.8 2.9 2.5 1.7-1.1 2.8 1.1 2.8-2.5 1.7-.8 2.9-3-.1L12 22l-2.2-2.1-3 .1-.8-2.9-2.5-1.7 1.1-2.8-1.1-2.8L6 7.1 6.8 4.2l3 .1L12 2Z",
-    );
-    const check = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    check.setAttribute("d", "m8.3 12.2 2.3 2.3 5.1-5.2");
-    check.setAttribute("class", "source-certified-check");
-    svg.append(seal, check);
-    badge.append(svg);
-    return badge;
 }
 
 function categoryLabel(category: string): string {

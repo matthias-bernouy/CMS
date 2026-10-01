@@ -13,6 +13,7 @@ cms-dashboard-workspace .dashboard-card-title strong,
 cms-dashboard-workspace .dashboard-card-title small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 cms-dashboard-workspace .dashboard-card-title strong { font-size: .9375rem; }
 cms-dashboard-workspace .dashboard-card-title small { color: var(--text-muted); font-size: .75rem; font-weight: 450; }
+cms-dashboard-workspace .dashboard-card-publisher { align-items: center; display: flex; gap: 6px; min-width: 0; }
 cms-dashboard-workspace .dashboard-card-icon {
     align-items: center;
     background: var(--primary-muted);

@@ -1,6 +1,9 @@
 import { expect, test } from "bun:test";
 import type { CollectionRepositoryEntry } from "@bernouy/cms-repository/collections/sources";
-import { collectionCatalogueItems } from "cms-control/components/admin/Resources/Collections/catalogue";
+import {
+    collectionCatalogueItems,
+    renderCollectionCatalogue,
+} from "cms-control/components/admin/Resources/Collections/catalogue";
 
 const base: CollectionRepositoryEntry = {
     repositoryId: "local",
@@ -38,4 +41,20 @@ test("collection catalogue does not offer a cross-publisher upgrade", () => {
         [{ collectionId: "test", publisherId: "other", version: "0.9.0", digest: "c".repeat(64) }],
     );
     expect(item!.state).toBe("conflict");
+});
+
+test("official collection cards identify Ulvia with the certified badge", () => {
+    const host = document.createElement("div");
+    const official = {
+        ...base,
+        publisherId: "ulvia.official",
+        collectionId: "ulvia-official",
+        name: "Ulvia Official",
+    };
+    renderCollectionCatalogue(host, [{ release: official, state: "available" }], () => {});
+
+    expect(host.querySelector(".collection-heading p")?.textContent).toBe("By Ulvia");
+    expect(host.querySelector("cms-certified-badge")?.getAttribute("aria-label")).toBe(
+        "Certified official Ulvia collection",
+    );
 });

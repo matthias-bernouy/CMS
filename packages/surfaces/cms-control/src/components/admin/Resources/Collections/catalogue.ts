@@ -1,6 +1,7 @@
 import type { CollectionRepositoryEntry } from "@bernouy/cms-repository/collections/sources";
 import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
+import "../Blocs/icons/CertifiedBadge";
 
 export type InstalledCollectionSummary = {
     collectionId: string;
@@ -80,7 +81,14 @@ function collectionCard(
     const title = document.createElement("h3");
     title.textContent = item.release.name;
     const publisher = document.createElement("p");
-    publisher.textContent = `By ${item.release.publisherId}`;
+    const publisherName = document.createElement("span");
+    publisherName.textContent = `By ${item.release.publisherId === "ulvia.official" ? "Ulvia" : item.release.publisherId}`;
+    publisher.append(publisherName);
+    if (item.release.publisherId === "ulvia.official") {
+        const badge = document.createElement("cms-certified-badge");
+        badge.setAttribute("label", "Certified official Ulvia collection");
+        publisher.append(badge);
+    }
     copy.append(title, publisher);
     heading.append(icon, copy, stateBadge(item.state));
     const description = document.createElement("p");

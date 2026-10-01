@@ -15,9 +15,6 @@ cms-sources-workspace .source-card-heading-copy { min-width: 0; }
 cms-sources-workspace .source-card-heading h2 { font-size: 1rem; font-weight: 650; line-height: 1.3; margin: 0; }
 cms-sources-workspace .source-card-icon { background: var(--primary-muted); border-radius: 10px; box-sizing: border-box; color: var(--primary-base); flex: 0 0 42px; height: 42px; padding: 9px; width: 42px; }
 cms-sources-workspace .source-card-publisher { align-items: center; color: var(--text-muted); display: flex; flex-wrap: wrap; font-size: .75rem; font-weight: 450; gap: 7px; margin-top: 3px; }
-cms-sources-workspace .source-certified-badge { color: var(--success-base); display: inline-flex; height: 17px; width: 17px; }
-cms-sources-workspace .source-certified-badge svg { fill: currentColor; height: 100%; overflow: visible; width: 100%; }
-cms-sources-workspace .source-certified-check { fill: none; stroke: var(--bg-surface); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.1; }
 cms-sources-workspace .source-card-categories { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
 cms-sources-workspace .source-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 28px; }
 cms-sources-workspace .source-facts p { display: grid; align-content: start; gap: 5px; margin: 0; min-width: 0; }

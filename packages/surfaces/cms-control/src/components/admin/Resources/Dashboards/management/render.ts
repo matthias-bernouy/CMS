@@ -1,5 +1,6 @@
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 import type { Dashboard, ExploreDashboard } from "../domain/types";
+import "../../Blocs/icons/CertifiedBadge";
 
 export function renderMemberDashboardList(root: HTMLElement, dashboards: Dashboard[]): void {
     const list = root.querySelector("[data-list]")!;
@@ -41,7 +42,12 @@ export function renderCollectionMounts(root: HTMLElement, dashboard: Dashboard):
 export function exploreDashboardCard(item: ExploreDashboard, index: number): HTMLElement {
     const card = document.createElement("p9r-card");
     card.setAttribute("stretch", "");
-    const title = dashboardTitle(item.name, item.icon, item.collectionName);
+    const title = dashboardTitle(
+        item.name,
+        item.icon,
+        item.publisherId === "ulvia.official" ? "Ulvia" : item.collectionName,
+        item.publisherId === "ulvia.official",
+    );
     const description = document.createElement("p");
     description.textContent = item.description;
     const meta = document.createElement("span");
@@ -60,21 +66,30 @@ export function exploreDashboardCard(item: ExploreDashboard, index: number): HTM
     return card;
 }
 
-function dashboardTitle(name: string, iconName: string, detail: string): HTMLElement {
+function dashboardTitle(name: string, iconName: string | undefined, detail: string, official = false): HTMLElement {
     const title = document.createElement("div");
     title.slot = "title";
     title.className = "dashboard-card-title";
     const icon = document.createElement("span");
     icon.className = "dashboard-card-icon";
     const glyph = document.createElement("cms-library-icon");
-    glyph.setAttribute("name", iconName);
+    glyph.setAttribute("name", iconName || "layout");
     icon.append(glyph);
     const copy = document.createElement("span");
     const heading = document.createElement("strong");
     heading.textContent = name;
     const secondary = document.createElement("small");
     secondary.textContent = detail;
-    copy.append(heading, secondary);
+    if (official) {
+        const publisher = document.createElement("span");
+        publisher.className = "dashboard-card-publisher";
+        const badge = document.createElement("cms-certified-badge");
+        badge.setAttribute("label", "Certified official Ulvia dashboard");
+        publisher.append(secondary, badge);
+        copy.append(heading, publisher);
+    } else {
+        copy.append(heading, secondary);
+    }
     title.append(icon, copy);
     return title;
 }

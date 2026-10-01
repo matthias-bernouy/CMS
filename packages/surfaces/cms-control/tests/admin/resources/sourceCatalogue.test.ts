@@ -61,7 +61,7 @@ test("source cards present discovery metadata without technical release noise", 
     expect(host.querySelector('[slot="title"] h2')?.textContent).toBe("Form submissions");
     expect(host.querySelector('[slot="description"]')?.textContent).toContain("Submit public forms");
     expect(host.querySelector(".source-card-publisher")?.textContent).toBe("By Ulvia");
-    expect(host.querySelector(".source-certified-badge")?.getAttribute("aria-label")).toBe(
+    expect(host.querySelector("cms-certified-badge")?.getAttribute("aria-label")).toBe(
         "Certified official Ulvia contract",
     );
     expect(host.querySelector(".source-card-categories")?.textContent).toBe("FeedbackForms");

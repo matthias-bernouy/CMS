@@ -38,7 +38,7 @@ input:focus-visible { outline: 2px solid var(--primary-base); outline-offset: 2p
 }
 .collection-heading > div { min-width: 0; }
 .collection-heading h3 { font-size: 1rem; line-height: 1.3; margin: 0; }
-.collection-heading p { font-size: .75rem; margin-top: 3px; overflow-wrap: anywhere; }
+.collection-heading p { align-items: center; display: flex; font-size: .75rem; gap: 6px; margin-top: 3px; overflow-wrap: anywhere; }
 .collection-state, .collection-chip { background: var(--bg-muted); border-radius: 999px; font-size: .6875rem; font-weight: 650; padding: 4px 8px; }
 .collection-state { margin-left: auto; white-space: nowrap; }
 .collection-state-current { color: var(--success-base); }
