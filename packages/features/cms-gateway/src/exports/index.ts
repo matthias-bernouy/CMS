@@ -3,6 +3,7 @@ export {
     SelectedGatewayCatalogue,
     type GatewayCapabilityCatalogue,
     type GatewayEditorCapability,
+    type GatewayRequirementReadiness,
     type SelectedGatewayCatalogueOptions,
 } from "cms-gateway/invocation/core/SelectedGatewayCatalogue";
 export {

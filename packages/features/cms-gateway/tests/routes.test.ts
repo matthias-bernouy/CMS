@@ -181,3 +181,39 @@ test("editor catalogue hides disabled and stale provider routes", async () => {
     );
     expect(await stale.list("site-a")).toEqual([]);
 });
+
+test("collection requirements report selected provider grants as ready, missing, or degraded", async () => {
+    const fixture = await gatewayRoute({ access: "admin" });
+    let current = fixture;
+    const catalogue = new SelectedGatewayCatalogue(
+        { get: async () => ({ plan: { selections: [fixture.selection] } }) } as never,
+        {
+            resolve: async (_siteId, contractId) => (contractId === "catalog" ? current : null),
+            isCurrent: async () => true,
+        },
+        { now: () => NOW },
+    );
+    const requirements = [
+        { contractId: "catalog", capabilityId: "item.list", versionRange: "^1.0.0" },
+        { contractId: "missing", capabilityId: "item.list", versionRange: "^1.0.0" },
+        { contractId: "catalog", capabilityId: "item.list", versionRange: "^2.0.0" },
+    ];
+
+    expect((await catalogue.checkRequirements("site-a", requirements)).map((item) => item.status)).toEqual([
+        "ready",
+        "missing",
+        "missing",
+    ]);
+    current = {
+        ...fixture,
+        installation: {
+            ...fixture.installation,
+            installation: { ...fixture.installation.installation, status: "disabled" },
+        },
+    };
+    expect((await catalogue.checkRequirements("site-a", [requirements[0]!]))[0]).toMatchObject({
+        status: "degraded",
+        installationId: "install-a",
+        selectedVersion: "1.0.0",
+    });
+});

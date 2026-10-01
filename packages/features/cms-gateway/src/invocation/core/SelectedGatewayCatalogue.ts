@@ -1,4 +1,6 @@
 import type { UlviaObjectSchema, UlviaSchema } from "@bernouy/cms-repository/contracts/schema";
+import { satisfiesVersionRange } from "@bernouy/cms-repository/contracts/compatibility";
+import type { CollectionCapabilityRequirement } from "@bernouy/cms-repository/collections";
 import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
 import type { GatewayRouteResolver } from "cms-gateway/invocation/interfaces/Invocation";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
@@ -19,6 +21,17 @@ export interface GatewayEditorCapability {
 
 export interface GatewayCapabilityCatalogue {
     list(siteId: string): Promise<readonly GatewayEditorCapability[]>;
+    checkRequirements(
+        siteId: string,
+        requirements: readonly CollectionCapabilityRequirement[],
+    ): Promise<readonly GatewayRequirementReadiness[]>;
+}
+
+export interface GatewayRequirementReadiness extends CollectionCapabilityRequirement {
+    readonly status: "ready" | "missing" | "degraded";
+    readonly selectedVersion?: string;
+    readonly installationId?: string;
+    readonly reason?: string;
 }
 
 export interface SelectedGatewayCatalogueOptions {
@@ -95,6 +108,50 @@ export class SelectedGatewayCatalogue implements GatewayCapabilityCatalogue {
         return listed.sort(
             (left, right) =>
                 left.contractId.localeCompare(right.contractId) || left.capabilityId.localeCompare(right.capabilityId),
+        );
+    }
+
+    async checkRequirements(
+        siteId: string,
+        requirements: readonly CollectionCapabilityRequirement[],
+    ): Promise<readonly GatewayRequirementReadiness[]> {
+        const now = (this.options.now ?? (() => new Date().toISOString()))();
+        const maxAgeMs = this.options.maxObservationAgeMs ?? 60_000;
+        return Promise.all(
+            requirements.map(async (requirement): Promise<GatewayRequirementReadiness> => {
+                const route = await this.routes.resolve(siteId, requirement.contractId);
+                if (!route) {
+                    return { ...requirement, status: "missing", reason: "No contract release is selected" };
+                }
+                const release = route.release.admission.release;
+                const selected = {
+                    selectedVersion: release.version,
+                    installationId: route.installation.installation.id,
+                };
+                if (
+                    !satisfiesVersionRange(release.version, requirement.versionRange) ||
+                    !release.capabilities.some((capability) => capability.id === requirement.capabilityId)
+                ) {
+                    return {
+                        ...requirement,
+                        ...selected,
+                        status: "missing",
+                        reason: "The selected release does not satisfy this requirement",
+                    };
+                }
+                try {
+                    resolveRoute(route, siteId, requirement.contractId, now, maxAgeMs);
+                    return { ...requirement, ...selected, status: "ready" };
+                } catch (error) {
+                    if (
+                        error instanceof GatewayError &&
+                        (error.code === "installation_unavailable" || error.code === "not_ready")
+                    ) {
+                        return { ...requirement, ...selected, status: "degraded", reason: error.message };
+                    }
+                    throw error;
+                }
+            }),
         );
     }
 }
