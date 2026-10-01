@@ -60,6 +60,43 @@ test("provider setup links stay optional and open outside the CMS", () => {
     expect(link.rel).toContain("noopener");
 });
 
+test("provider reconnection sends the installation revision with the new token", async () => {
+    const originalFetch = globalThis.fetch;
+    const bodies: unknown[] = [];
+    globalThis.fetch = (async (_input: string | URL | Request, init?: RequestInit) => {
+        bodies.push(JSON.parse(String(init?.body)));
+        return Response.json({
+            ticket: "preview-a",
+            operation: "reconnect",
+            providerName: "Ulvia provider",
+            accountLabel: "Local development",
+            accountId: "local-dev",
+            endpoint: "http://127.0.0.1:5103",
+            manifestVersion: "0.1.1",
+            manifestDigest: `sha256:${"a".repeat(64)}`,
+            contracts: [],
+            check: "Connection checked.",
+        });
+    }) as typeof fetch;
+    try {
+        const component = new ProviderManagement();
+        document.body.append(component);
+        component.open("ulvia.official", "0.1.1", "http://127.0.0.1:5103", undefined, {
+            installationId: "installation-a",
+            revision: 7,
+        });
+        (component.shadowRoot!.querySelector('[name="token"]') as HTMLElement & { value: string }).value =
+            "provider-token-at-least-twenty";
+        component.shadowRoot!.querySelector("form")!.dispatchEvent(new Event("submit", { cancelable: true }));
+        await waitFor(() => bodies.length === 1);
+
+        expect(component.shadowRoot!.querySelector("[data-title]")?.textContent).toBe("Reconnect provider");
+        expect(bodies[0]).toMatchObject({ installationId: "installation-a", revision: 7 });
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
 async function waitFor(condition: () => boolean): Promise<void> {
     for (let attempt = 0; attempt < 50 && !condition(); attempt++) {
         await new Promise((resolve) => setTimeout(resolve, 0));

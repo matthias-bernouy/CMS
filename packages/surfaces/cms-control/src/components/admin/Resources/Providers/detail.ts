@@ -21,6 +21,7 @@ export function renderProviderDetail(
         ? `${item.providerId} · ${item.accountId}`
         : "This connection is no longer available.";
     root.querySelector("[data-provider-status]")!.textContent = item ? capitalize(item.status) : "Unavailable";
+    root.querySelector<HTMLElement>("[data-provider-reconnect]")!.hidden = !item || item.status === "revoked";
     const facts = root.querySelector("[data-provider-facts]")!;
     facts.replaceChildren();
     if (!item) {

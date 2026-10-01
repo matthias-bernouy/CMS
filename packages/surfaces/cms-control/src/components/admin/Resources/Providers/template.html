@@ -46,6 +46,7 @@
         </a>
         <span slot="title" data-provider-title></span>
         <span slot="description" data-provider-description></span>
+        <p9r-button slot="actions" type="button" data-provider-reconnect hidden>Reconnect</p9r-button>
         <p9r-tag slot="actions" data-provider-status></p9r-tag>
         <cms-shell-detail-body slot="body">
             <cms-detail-section slot="main" heading="Connection">
@@ -62,7 +63,7 @@
     <p role="status" aria-live="polite"></p>
 </p9r-container>
 
-<p9r-modal placement="end" content-layout="contained" data-connect-modal aria-label="Connect a provider">
+<p9r-modal placement="end" content-layout="contained" data-connect-modal aria-label="Connect or reconnect a provider">
     <cms-provider-management mode="connect"></cms-provider-management>
 </p9r-modal>
 <p9r-modal data-custom-modal aria-label="Connect a custom provider">

@@ -1,4 +1,5 @@
 import type { RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/sources";
+import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 import "./Management/ProviderManagement";
 import type { ProviderManagement } from "./Management/ProviderManagement";
@@ -30,6 +31,7 @@ export class ProviderCatalogue extends HTMLElement {
         root.querySelector("[data-view-error]")!.addEventListener("retry", () => void this.load());
         root.querySelector("[data-back]")!.setAttribute("href", location.pathname);
         root.querySelector("[data-source-link]")!.setAttribute("href", `${getMetaBasePath()}/admin/sources`);
+        root.querySelector("[data-provider-reconnect]")!.addEventListener("click", () => this.reconnectActive());
         root.querySelector("cms-provider-management")!.addEventListener("provider-connection-opened", () => {
             this.connectModal().showModal();
         });
@@ -97,6 +99,26 @@ export class ProviderCatalogue extends HTMLElement {
     private renderDetail(id: string): void {
         const item = this.installations.find((installation) => installation.id === id);
         renderProviderDetail(this.shadowRoot!, item, this.catalogue);
+    }
+
+    private reconnectActive(): void {
+        const id = new URLSearchParams(location.search).get("provider");
+        const installation = this.installations.find((item) => item.id === id);
+        if (!installation) {
+            this.status("Provider connection is unavailable.");
+            return;
+        }
+        const manifest = this.catalogue.imported
+            .filter((item) => item.id === installation.providerId)
+            .sort((left, right) => compareSemVer(right.version, left.version))[0];
+        if (!manifest) {
+            this.status("Import a provider manifest before reconnecting this account.");
+            return;
+        }
+        this.management().open(manifest.id, manifest.version, installation.endpoint, manifest.links, {
+            installationId: installation.id,
+            revision: installation.revision,
+        });
     }
 
     private renderAvailable(): void {

@@ -26,6 +26,7 @@ export type ProviderInstallation = {
     endpoint: string;
     status: string;
     manifestVersion: string;
+    revision: number;
     observedAt: string | null;
     contracts: { contractId: string; version: string; status: string }[];
 };

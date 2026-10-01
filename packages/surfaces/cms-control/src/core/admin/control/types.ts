@@ -47,7 +47,14 @@ export type ControlCmsOptions = Configuration & {
             list(): Promise<unknown>;
             importManifest(manifest: string): Promise<unknown>;
             preview(
-                input: { providerId: string; version: string; endpoint: string; token: string },
+                input: {
+                    providerId: string;
+                    version: string;
+                    endpoint: string;
+                    token: string;
+                    installationId?: string;
+                    revision?: number;
+                },
                 actorId: string,
             ): Promise<unknown>;
             approve(ticket: string, actorId: string): Promise<unknown>;

@@ -5,6 +5,7 @@ import css from "./style.css" with { type: "text" };
 
 type Preview = {
     ticket: string;
+    operation: "connect" | "reconnect";
     providerName: string;
     accountLabel: string;
     accountId: string;
@@ -19,6 +20,7 @@ export class ProviderManagement extends HTMLElement {
     private providerId = "";
     private version = "";
     private preview?: Preview;
+    private reconnect?: { installationId: string; revision: number };
 
     connectedCallback(): void {
         if (this.shadowRoot) {
@@ -33,15 +35,24 @@ export class ProviderManagement extends HTMLElement {
         root.querySelector("[data-approve]")!.addEventListener("click", () => void this.approve());
     }
 
-    open(providerId: string, version: string, endpoint: string, links?: ProviderManifestLinks): void {
+    open(
+        providerId: string,
+        version: string,
+        endpoint: string,
+        links?: ProviderManifestLinks,
+        reconnect?: { installationId: string; revision: number },
+    ): void {
         this.dispatchEvent(new CustomEvent("provider-connection-opened", { bubbles: true, composed: true }));
         this.providerId = providerId;
         this.version = version;
         this.preview = undefined;
+        this.reconnect = reconnect;
         const root = this.shadowRoot!;
         root.querySelector("[data-connection]")!.removeAttribute("hidden");
         root.querySelector("[data-review]")!.setAttribute("hidden", "");
+        root.querySelector("[data-title]")!.textContent = reconnect ? "Reconnect provider" : "Connect a provider";
         root.querySelector("[data-target]")!.textContent = `${providerId} · manifest ${version}`;
+        root.querySelector("[data-approve]")!.textContent = reconnect ? "Approve reconnection" : "Approve installation";
         (root.querySelector('[name="endpoint"]') as HTMLElement & { value: string }).value = endpoint;
         (root.querySelector('[name="token"]') as HTMLElement & { value: string }).value = "";
         const setup = root.querySelector("[data-setup-link]") as HTMLAnchorElement;
@@ -64,6 +75,7 @@ export class ProviderManagement extends HTMLElement {
                 version: this.version,
                 endpoint: String(fields.get("endpoint") ?? ""),
                 token: String(fields.get("token") ?? ""),
+                ...(this.reconnect ?? {}),
             })) as Preview;
             (root.querySelector('[name="token"]') as HTMLElement & { value: string }).value = "";
             root.querySelector("[data-review]")!.removeAttribute("hidden");
@@ -78,7 +90,7 @@ export class ProviderManagement extends HTMLElement {
                     return row;
                 }),
             );
-            this.status("Review the installation before approving it.");
+            this.status(`Review the ${this.preview.operation} before approving it.`);
         } catch (error) {
             this.status(String(error));
         }
