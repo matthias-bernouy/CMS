@@ -76,7 +76,7 @@ export class SourceDialogController {
         this.query("[data-source-hint]").textContent = !provider
             ? "Connect a compatible provider in Settings first."
             : versions.length
-              ? "This provider has reported the selected contract release ready."
+              ? "Only releases reported ready by this provider are listed."
               : "No compatible release is ready through this provider.";
         (this.query('[form="source-import-form"]') as HTMLElement & { disabled: boolean }).disabled = !versions.length;
     }
