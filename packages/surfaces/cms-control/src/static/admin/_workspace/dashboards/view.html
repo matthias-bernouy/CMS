@@ -1,13 +1,22 @@
 <style>
     [data-dashboard-switcher] { display: block; padding: 4px 10px 10px; }
-    [data-dashboard-switcher] select { appearance: none; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 8px; color: var(--text-main); cursor: pointer; font: inherit; font-weight: 600; min-height: 40px; padding: 8px 12px; width: 100%; }
-    [data-dashboard-switcher] select:focus-visible { outline: 2px solid var(--primary-base); outline-offset: 2px; }
+    [data-dashboard-switcher] .dashboard-switcher { position: relative; }
+    [data-dashboard-switcher] .dashboard-switcher > cms-library-icon { color: var(--primary-base); left: 12px; pointer-events: none; position: absolute; top: 50%; transform: translateY(-50%); width: 17px; z-index: 1; }
+    [data-dashboard-switcher] p9r-action-menu { display: block; width: 100%; --action-menu-panel-min-width: 220px; }
+    [data-dashboard-switcher] p9r-action-menu::part(trigger) { font-size: .8125rem; min-height: 42px; padding-left: 38px; text-align: left; width: 100%; }
+    [data-dashboard-switcher] p9r-action-menu-item[aria-current="page"]::part(item) { background: var(--primary-muted); color: var(--primary-contrasted); font-weight: 700; }
     [data-dashboard-tabs] cms-library-icon { margin-right: 6px; vertical-align: -3px; }
 </style>
 <w13c-fixed-admin-layout operator>
     <div slot="operator-dashboard-switcher" data-dashboard-switcher></div>
     <div slot="operator-primary-navigation" data-primary-navigation></div>
-    <a slot="operator-profile" href="{{BASE_PATH}}/admin/dashboards">Manage dashboards</a>
+    <w13c-lateral-menu-item slot="operator-profile" href="{{BASE_PATH}}/admin/dashboards" data-admin-return hidden>
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m12 19-7-7 7-7" />
+            <path d="M19 12H5" />
+        </svg>
+        Back to admin
+    </w13c-lateral-menu-item>
     <w13c-lateral-menu slot="secondary-lateral-nav" aria-label="Dashboard sections" data-secondary-navigation hidden>
         <span slot="header" data-secondary-title>Sections</span>
     </w13c-lateral-menu>

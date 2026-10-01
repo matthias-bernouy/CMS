@@ -76,30 +76,44 @@ export function renderRuntimeNavigation(dashboardId: string, items: NavigationIt
 export async function renderDashboardSwitcher(dashboardId: string): Promise<void> {
     const base = getMetaBasePath();
     let response = await fetch(`${base}/api/dashboards`, { cache: "no-store" });
+    const isAdmin = response.ok;
     if (response.status === 403) {
         response = await fetch(`${base}/api/my-dashboards`, { cache: "no-store" });
     }
+    document.querySelector<HTMLElement>("[data-admin-return]")?.toggleAttribute("hidden", !isAdmin);
     if (!response.ok) {
         return;
     }
     const data = (await response.json()) as {
-        dashboards: { id: string; name: string; mounts: { collectionId: string; viewId: string }[] }[];
+        dashboards: { id: string; name: string; icon?: string; mounts: { collectionId: string; viewId: string }[] }[];
     };
-    const select = document.createElement("select");
-    select.setAttribute("aria-label", "Switch dashboard");
-    for (const dashboard of data.dashboards.filter((item) => item.mounts.length)) {
-        const option = document.createElement("option");
-        option.value = dashboard.id;
-        option.textContent = dashboard.name;
-        select.append(option);
+    const available = data.dashboards.filter((item) => item.mounts.length);
+    const current = available.find((item) => item.id === dashboardId) ?? available[0];
+    if (!current) {
+        return;
     }
-    select.value = dashboardId;
-    select.addEventListener("change", () => {
-        const chosen = data.dashboards.find((item) => item.id === select.value);
-        const first = chosen?.mounts[0];
-        if (first) {
-            location.href = viewUrl(chosen!.id, `${first.collectionId}:${first.viewId}`);
+    const wrapper = document.createElement("div");
+    wrapper.className = "dashboard-switcher";
+    const currentIcon = document.createElement("cms-library-icon");
+    currentIcon.setAttribute("name", current.icon || "layout");
+    const menu = document.createElement("p9r-action-menu");
+    menu.setAttribute("label", current.name);
+    menu.setAttribute("align", "start");
+    menu.setAttribute("aria-label", `Switch dashboard, current dashboard: ${current.name}`);
+    for (const dashboard of available) {
+        const first = dashboard.mounts[0]!;
+        const item = document.createElement("p9r-action-menu-item");
+        item.setAttribute("href", viewUrl(dashboard.id, `${first.collectionId}:${first.viewId}`));
+        item.setAttribute("data-dashboard-id", dashboard.id);
+        if (dashboard.id === current.id) {
+            item.setAttribute("aria-current", "page");
         }
-    });
-    document.querySelector("[data-dashboard-switcher]")?.replaceChildren(select);
+        const icon = document.createElement("cms-library-icon");
+        icon.slot = "icon";
+        icon.setAttribute("name", dashboard.icon || "layout");
+        item.append(icon, document.createTextNode(dashboard.name));
+        menu.append(item);
+    }
+    wrapper.append(currentIcon, menu);
+    document.querySelector("[data-dashboard-switcher]")?.replaceChildren(wrapper);
 }
