@@ -1,8 +1,12 @@
 import type { CollectionRepositoryEntry } from "./interfaces";
 import { isCollectionNamespace } from "../core/namespace";
+import {
+    assertUniqueCatalogueCoordinates,
+    isPlainRecord,
+    validCanonicalVersion,
+} from "cms-repository/catalogues/core/values";
 
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
-const VERSION = /^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 const DIGEST = /^sha256:[0-9a-f]{64}$/;
 
 export function validCollectionReference(reference: {
@@ -12,31 +16,47 @@ export function validCollectionReference(reference: {
     digest: string;
 }): boolean {
     return (
-        IDENTIFIER.test(reference.publisherId) &&
+        validIdentifier(reference.publisherId) &&
         isCollectionNamespace(reference.collectionId) &&
-        VERSION.test(reference.version) &&
+        validCanonicalVersion(reference.version) &&
         DIGEST.test(reference.digest)
     );
 }
 
 export function validCollectionRepositoryId(id: string): boolean {
-    return IDENTIFIER.test(id);
+    return validIdentifier(id);
 }
 
 export function parseCollectionCatalogue(data: unknown, repositoryId: string): CollectionRepositoryEntry[] {
-    if (!data || typeof data !== "object" || !Array.isArray((data as { releases?: unknown }).releases)) {
+    if (!isPlainRecord(data) || Object.keys(data).some((key) => key !== "releases") || !Array.isArray(data.releases)) {
         throw new TypeError("Invalid repository catalogue");
     }
-    const releases = (data as { releases: unknown[] }).releases;
+    const releases = data.releases;
     if (releases.length > 256) {
         throw new TypeError("Repository catalogue is too large");
     }
-    return releases.map((item) => {
-        if (!item || typeof item !== "object") {
+    const entries = releases.map((item) => {
+        if (
+            !isPlainRecord(item) ||
+            Object.keys(item).some(
+                (key) =>
+                    ![
+                        "publisherId",
+                        "collectionId",
+                        "version",
+                        "digest",
+                        "name",
+                        "description",
+                        "blocCount",
+                        "hasTheme",
+                        "dashboards",
+                    ].includes(key),
+            )
+        ) {
             throw new TypeError("Invalid repository entry");
         }
-        const entry = item as Record<string, unknown>;
-        if (typeof entry.publisherId !== "string" || !IDENTIFIER.test(entry.publisherId)) {
+        const entry = item;
+        if (typeof entry.publisherId !== "string" || !validIdentifier(entry.publisherId)) {
             throw new TypeError("Invalid repository publisherId");
         }
         if (!isCollectionNamespace(entry.collectionId)) {
@@ -44,7 +64,7 @@ export function parseCollectionCatalogue(data: unknown, repositoryId: string): C
         }
         if (
             typeof entry.version !== "string" ||
-            !VERSION.test(entry.version) ||
+            !validCanonicalVersion(entry.version) ||
             typeof entry.digest !== "string" ||
             !DIGEST.test(entry.digest)
         ) {
@@ -52,6 +72,7 @@ export function parseCollectionCatalogue(data: unknown, repositoryId: string): C
         }
         if (
             typeof entry.name !== "string" ||
+            entry.name.length === 0 ||
             entry.name.length > 128 ||
             typeof entry.description !== "string" ||
             entry.description.length > 4096 ||
@@ -67,15 +88,18 @@ export function parseCollectionCatalogue(data: unknown, repositoryId: string): C
                 entry.dashboards.length > 32 ||
                 entry.dashboards.some(
                     (dashboard: unknown) =>
-                        !dashboard ||
-                        typeof dashboard !== "object" ||
+                        !isPlainRecord(dashboard) ||
+                        Object.keys(dashboard).some(
+                            (key) => !["id", "name", "icon", "description", "viewCount"].includes(key),
+                        ) ||
                         typeof (dashboard as Record<string, unknown>).id !== "string" ||
-                        !IDENTIFIER.test((dashboard as { id: string }).id) ||
+                        !validIdentifier((dashboard as { id: string }).id) ||
                         typeof (dashboard as Record<string, unknown>).name !== "string" ||
+                        (dashboard as { name: string }).name.length === 0 ||
                         (dashboard as { name: string }).name.length > 128 ||
                         ((dashboard as Record<string, unknown>).icon !== undefined &&
                             (typeof (dashboard as Record<string, unknown>).icon !== "string" ||
-                                !IDENTIFIER.test((dashboard as { icon: string }).icon))) ||
+                                !validIdentifier((dashboard as { icon: string }).icon))) ||
                         typeof (dashboard as Record<string, unknown>).description !== "string" ||
                         (dashboard as { description: string }).description.length > 4096 ||
                         !Number.isSafeInteger((dashboard as Record<string, unknown>).viewCount) ||
@@ -97,4 +121,14 @@ export function parseCollectionCatalogue(data: unknown, repositoryId: string): C
             ...(entry.dashboards === undefined ? {} : { dashboards: entry.dashboards }),
         } as CollectionRepositoryEntry;
     });
+    assertUniqueCatalogueCoordinates(
+        entries,
+        (entry) => `${entry.publisherId}\0${entry.collectionId}\0${entry.version}`,
+        "collection",
+    );
+    return entries;
+}
+
+function validIdentifier(value: string): boolean {
+    return value.length <= 96 && IDENTIFIER.test(value);
 }

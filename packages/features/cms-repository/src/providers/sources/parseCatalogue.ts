@@ -1,20 +1,24 @@
 import type { RepositoryArtifactEntry, RepositoryArtifactKind, RepositoryArtifactReference } from "./interfaces";
+import {
+    assertUniqueCatalogueCoordinates,
+    isPlainRecord,
+    validCanonicalVersion,
+    validDottedIdentifier,
+} from "cms-repository/catalogues/core/values";
 
-const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
-const VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u;
 const DIGEST = /^sha256:[0-9a-f]{64}$/u;
 const CATALOGUE_TOKEN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
 
 export function validProviderRepositoryId(id: string): boolean {
-    return IDENTIFIER.test(id);
+    return validDottedIdentifier(id);
 }
 
 export function validProviderReference(reference: RepositoryArtifactReference): boolean {
     return (
-        IDENTIFIER.test(reference.publisherId) &&
-        IDENTIFIER.test(reference.id) &&
-        VERSION.test(reference.version) &&
+        validDottedIdentifier(reference.publisherId) &&
+        validDottedIdentifier(reference.id) &&
+        validCanonicalVersion(reference.version) &&
         DIGEST.test(reference.digest)
     );
 }
@@ -24,26 +28,43 @@ export function parseProviderCatalogue(
     repositoryId: string,
     kind: RepositoryArtifactKind,
 ): readonly RepositoryArtifactEntry[] {
-    const releases = (data as { releases?: unknown } | null)?.releases;
+    if (!isPlainRecord(data) || Object.keys(data).some((key) => key !== "releases")) {
+        throw new TypeError("Invalid provider repository catalogue");
+    }
+    const releases = data.releases;
     if (!Array.isArray(releases) || releases.length > 256) {
         throw new TypeError("Invalid provider repository catalogue");
     }
-    return releases.map((value) => {
-        if (!value || typeof value !== "object" || Array.isArray(value)) {
+    const idKey = kind === "contract" ? "contractId" : "providerId";
+    const allowed = new Set([
+        "publisherId",
+        idKey,
+        "version",
+        "digest",
+        "name",
+        "description",
+        "icon",
+        "categories",
+        "publishedAt",
+        "links",
+    ]);
+    const entries = releases.map((value) => {
+        if (!isPlainRecord(value) || Object.keys(value).some((key) => !allowed.has(key))) {
             throw new TypeError("Invalid provider repository entry");
         }
-        const item = value as Record<string, unknown>;
-        const id = item[kind === "contract" ? "contractId" : "providerId"];
+        const item = value;
+        const id = item[idKey];
         if (
             typeof item.publisherId !== "string" ||
-            !IDENTIFIER.test(item.publisherId) ||
+            !validDottedIdentifier(item.publisherId) ||
             typeof id !== "string" ||
-            !IDENTIFIER.test(id) ||
+            !validDottedIdentifier(id) ||
             typeof item.version !== "string" ||
-            !VERSION.test(item.version) ||
+            !validCanonicalVersion(item.version) ||
             typeof item.digest !== "string" ||
             !DIGEST.test(item.digest) ||
             typeof item.name !== "string" ||
+            item.name.length === 0 ||
             item.name.length > 128 ||
             (item.description !== undefined &&
                 (typeof item.description !== "string" || item.description.length > 4096)) ||
@@ -70,16 +91,22 @@ export function parseProviderCatalogue(
             ...(item.links ? { links: item.links as RepositoryArtifactEntry["links"] } : {}),
         };
     });
+    assertUniqueCatalogueCoordinates(
+        entries,
+        (entry) => `${entry.publisherId}\0${entry.id}\0${entry.version}`,
+        "provider",
+    );
+    return entries;
 }
 
 function validLinks(value: unknown): boolean {
     if (value === undefined) {
         return true;
     }
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
+    if (!isPlainRecord(value)) {
         return false;
     }
-    const record = value as Record<string, unknown>;
+    const record = value;
     const allowed = ["website", "setup", "documentation", "support"];
     const keys = Object.keys(record);
     return (
