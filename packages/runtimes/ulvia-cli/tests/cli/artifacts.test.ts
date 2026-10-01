@@ -78,9 +78,10 @@ test("contract and provider releases use explicit kinds and exact local contract
             expect(contractReference.categories).toEqual(["communication"]);
             expect(contractReference.publishedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
             const providerReference = listedProviders[0]!;
-            await expect(
-                importRepositoryArtifact(remote, providerReference, importedContracts, importedProviders),
-            ).rejects.toThrow();
+            await importRepositoryArtifact(remote, providerReference, importedContracts, importedProviders);
+            expect((await importedContracts.get("protocol.examples", "1.0.0"))?.admission.digest).toBe(
+                contractReference.digest,
+            );
             await expect(
                 importRepositoryArtifact(
                     remote,
@@ -89,7 +90,6 @@ test("contract and provider releases use explicit kinds and exact local contract
                     importedProviders,
                 ),
             ).rejects.toThrow(/not listed/);
-            await importRepositoryArtifact(remote, contractReference, importedContracts, importedProviders);
             await importRepositoryArtifact(remote, providerReference, importedContracts, importedProviders);
             expect((await importedContracts.list()).length).toBe(1);
             expect((await importedProviders.list()).length).toBe(1);

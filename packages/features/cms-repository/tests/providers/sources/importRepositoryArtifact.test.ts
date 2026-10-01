@@ -45,6 +45,25 @@ describe("repository provider imports", () => {
         expect(await manifests.list()).toEqual([]);
     });
 
+    test("preflights manifest conflicts before publishing loaded contracts", async () => {
+        const fixture = await providerFixture(true);
+        const contracts = new InMemoryReleaseCatalogue();
+        const otherContract = await admitContractRelease(contractDocument("other.items", "list"));
+        await contracts.publish(otherContract);
+        const manifests = new InMemoryProviderManifestCatalogue(contracts);
+        const conflicting = await admitProviderManifest(
+            manifestDocument([implementation("other.items", "1.0.0", otherContract.digest)]),
+            contracts,
+        );
+        await manifests.publish(conflicting);
+
+        await expect(importRepositoryArtifact(fixture.source, fixture.reference, contracts, manifests)).rejects.toThrow(
+            "already published",
+        );
+        expect(await contracts.get("catalog.items", "1.0.0")).toBeNull();
+        expect(await contracts.list()).toHaveLength(1);
+    });
+
     test("imports an administrator-supplied manifest and resolves its contracts from configured repositories", async () => {
         const fixture = await providerFixture(true);
         const contracts = new InMemoryReleaseCatalogue();

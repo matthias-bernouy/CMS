@@ -5,6 +5,7 @@ import { parseProviderManifestJson } from "cms-repository/providers/manifests/co
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
 import type { ProviderRepositorySource, RepositoryArtifactReference } from "./interfaces";
 import { loadImplementedContracts } from "./implementedContracts";
+import { publishProviderImport } from "./publishProviderImport";
 import { stagedReleaseCatalogue } from "./stagedReleaseCatalogue";
 
 /** Re-admit immutable bytes before publishing into the CMS-owned catalogues. */
@@ -57,10 +58,7 @@ export async function importRepositoryArtifact(
     ) {
         throw new Error("Repository provider differs from its catalogue entry");
     }
-    for (const dependency of dependencies) {
-        await contracts.publish(dependency);
-    }
-    await manifests.publish(admitted);
+    await publishProviderImport(dependencies, admitted, contracts, manifests);
     return {
         kind: reference.kind,
         id: releasedManifest.providerId,

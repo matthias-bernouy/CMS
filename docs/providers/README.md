@@ -37,7 +37,9 @@ folders declare `kind: "provider-manifest"`. Release contracts before provider
 manifests that reference their exact version and digest. The loopback local
 repository lists and serves both types at `/v1/contracts` and `/v1/providers`.
 Control can list and import exact contract and manifest releases from this
-repository. Releasing an artifact does not contact a provider, execute
+repository. Importing a provider manifest resolves and preflights its exact
+implemented contract releases from the same configured repository before any
+catalogue publication. Releasing an artifact does not contact a provider, execute
 conformance tests, or approve an installation.
 Declared contract fixture assets live in `fixtures/<asset-id>` inside the
 authored folder and are validated before the local release is stored.

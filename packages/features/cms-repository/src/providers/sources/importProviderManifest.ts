@@ -4,6 +4,7 @@ import type { ProviderManifestCatalogue } from "cms-repository/providers/manifes
 import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import type { ProviderRepositorySource } from "./interfaces";
 import { loadImplementedContracts } from "./implementedContracts";
+import { publishProviderImport } from "./publishProviderImport";
 import { stagedReleaseCatalogue } from "./stagedReleaseCatalogue";
 
 /** Imports an administrator-supplied manifest after resolving its exact contracts from configured repositories. */
@@ -21,10 +22,7 @@ export async function importProviderManifest(
         "implemented contract is not available from the configured repositories",
     );
     const admitted = await admitProviderManifestJson(bytes, stagedReleaseCatalogue(contracts, dependencies));
-    for (const dependency of dependencies) {
-        await contracts.publish(dependency);
-    }
-    await manifests.publish(admitted);
+    await publishProviderImport(dependencies, admitted, contracts, manifests);
     return {
         kind: admitted.manifest.kind,
         id: admitted.manifest.providerId,

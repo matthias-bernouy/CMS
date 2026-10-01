@@ -5,3 +5,4 @@ export type {
     ContractReleaseYank,
     ReleaseCatalogue,
 } from "cms-repository/contracts/interfaces/ReleaseCatalogue";
+export { planContractPublications } from "cms-repository/contracts/core/catalogue/planPublications";
