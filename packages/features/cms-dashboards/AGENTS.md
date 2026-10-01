@@ -1,18 +1,16 @@
 # @bernouy/cms-dashboards
 
-Temporary feature boundary for dashboard-to-subject assignments while the new
-collection-owned dashboard contracts are being designed.
+Site dashboard records and dashboard-to-subject assignments. A dashboard mounts
+collection-owned HTML views; it does not own their content. Collection releases
+can define dashboards, while this feature stores per-site activation and members.
 
 ## Boundaries
 
-- Root export exposes only the assignment contract and its in-memory repository.
-- `@bernouy/cms-dashboards/mongo` exposes only the Mongo assignment repository
-  for composition roots.
+- Root export exposes dashboard and assignment contracts and memory repositories.
+- `@bernouy/cms-dashboards/mongo` exposes Mongo repositories for composition roots.
 - Do not import surfaces, runtimes, or concrete source repositories.
 
 ## Rules
 
-- Keep this package limited to assignment persistence until the replacement
-  dashboard and view contracts land.
-- Do not reintroduce widgets, source execution plans, view definitions, or
-  dashboard CRUD through this transitional package.
+- Keep HTML views in collection releases and site dashboard navigation here.
+- Do not reintroduce widgets or embed provider endpoints in dashboards.

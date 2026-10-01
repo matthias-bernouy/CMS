@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-dashboards",
     "version": "0.1.0",
-    "description": "Temporary dashboard assignment boundary during the views and dashboards transition.",
+    "description": "Site dashboards, collection view mounts and member assignments.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./src/exports/index.ts",
