@@ -2,7 +2,7 @@ import { READY_ATTR } from "../../core/attrs";
 import type { FormSubmitResult } from "../../submit/formSubmit";
 import { CMS_SOURCE_FAILED_EVENT, CMS_SOURCE_SUCCESS_EVENT } from "../submissionEvents";
 
-const submittedControls = new WeakMap<HTMLFormElement, HTMLInputElement[]>();
+const submittedControls = new WeakMap<HTMLFormElement, HTMLElement[]>();
 
 export class SourceFormError extends Error {
     constructor(
@@ -44,7 +44,7 @@ function replaceSubmittedControls(form: HTMLFormElement, values: Record<string, 
     for (const control of submittedControls.get(form) || []) {
         control.remove();
     }
-    const controls: HTMLInputElement[] = [];
+    const controls: HTMLElement[] = [];
     for (const [name, value] of Object.entries(values)) {
         appendValue(form, controls, name, value);
     }
@@ -52,11 +52,19 @@ function replaceSubmittedControls(form: HTMLFormElement, values: Record<string, 
     submittedControls.set(form, controls);
 }
 
-function appendValue(form: HTMLFormElement, controls: HTMLInputElement[], name: string, value: unknown): void {
+function appendValue(form: HTMLFormElement, controls: HTMLElement[], name: string, value: unknown): void {
     if (value === undefined || value === null || value === "") {
         return;
     }
     if (Array.isArray(value)) {
+        if (value.length === 0) {
+            const select = form.ownerDocument.createElement("select");
+            select.name = name;
+            select.multiple = true;
+            select.hidden = true;
+            controls.push(select);
+            return;
+        }
         for (const [index, item] of value.entries()) {
             appendValue(
                 form,

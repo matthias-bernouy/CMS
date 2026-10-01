@@ -110,6 +110,7 @@ describe("Source — submit request", () => {
             expect(form.querySelector('[name="enabled"]')?.getAttribute("cms-form-value-type")).toBe("boolean");
             expect(form.querySelectorAll('[name="tags[]"]')).toHaveLength(2);
             expect(form.querySelector('[name="profile[city]"]')).not.toBeNull();
+            expect(form.querySelector<HTMLSelectElement>('[name="navigation"]')?.multiple).toBe(true);
             form.dispatchEvent(
                 new CustomEvent("cms-source:success", {
                     bubbles: true,
@@ -125,6 +126,7 @@ describe("Source — submit request", () => {
                 enabled: false,
                 tags: ["binding", "cms"],
                 profile: { city: "Paris" },
+                navigation: [],
             }),
         ).resolves.toEqual({ saved: true });
     });
