@@ -1,0 +1,28 @@
+<cms-detail-section heading="Navigation">
+    <p9r-button slot="actions" type="button" variant="outlined" data-add-root>+ New item</p9r-button>
+    <p class="editor-hint">Arrange views and groups. A primary item can open lateral navigation or tabs directly.</p>
+    <ol class="navigation-tree" data-tree aria-label="Dashboard navigation"></ol>
+</cms-detail-section>
+<p9r-modal data-dialog aria-label="Navigation item settings">
+    <span slot="title">Navigation item</span>
+    <form id="dashboard-navigation-item-form" data-item-form>
+        <p9r-stack gap="md">
+            <p9r-select data-kind label="Item type"><option value="view">View</option><option value="group">Group</option></p9r-select>
+            <p9r-select data-view label="Collection view"></p9r-select>
+            <p9r-input data-label label="Navigation label" maxlength="32" required></p9r-input>
+            <p9r-select data-icon label="Icon">
+                <option value="layout">Layout</option><option value="database">Database</option>
+                <option value="shopping-bag">Shopping bag</option><option value="package">Package</option>
+                <option value="users">Users</option><option value="settings">Settings</option>
+                <option value="search">Search</option><option value="tag">Tag</option>
+            </p9r-select>
+            <p9r-select data-placement label="Children appear as">
+                <option value="lateral">Lateral navigation</option><option value="tabs">Tabs</option>
+            </p9r-select>
+        </p9r-stack>
+    </form>
+    <div slot="footer" class="modal-actions">
+        <p9r-button type="button" variant="outlined" data-cancel>Cancel</p9r-button>
+        <p9r-button type="submit" form="dashboard-navigation-item-form" color="primary">Save item</p9r-button>
+    </div>
+</p9r-modal>

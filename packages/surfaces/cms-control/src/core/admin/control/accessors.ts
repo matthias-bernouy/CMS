@@ -8,6 +8,7 @@ export const controlCmsAccessors = {
     cache: (state: ControlCmsState) => state.cache,
     secrets: (state: ControlCmsState) => state.secrets,
     dashboardAssignments: (state: ControlCmsState) => state.dashboardAssignments,
+    dashboards: (state: ControlCmsState) => state.dashboards,
     identities: (state: ControlCmsState) => state.identities,
     filesMetadata: (state: ControlCmsState) => required(state.filesMetadata, "files metadata backend not configured"),
     filesBlob: (state: ControlCmsState) => required(state.filesBlob, "files blob backend not configured"),

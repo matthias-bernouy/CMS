@@ -1,0 +1,17 @@
+:host { display: block; }
+.editor-hint { color: var(--text-muted); font-size: .875rem; margin: 0 0 16px; }
+.navigation-tree { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.navigation-tree .navigation-tree { border-left: 1px solid var(--border-strong); margin: 8px 0 0 22px; padding-left: 12px; }
+.navigation-row { align-items: center; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 8px; display: flex; gap: 8px; min-height: 52px; padding: 6px 8px; }
+.navigation-row:hover, .navigation-row:focus-within { border-color: var(--border-strong); background: var(--bg-hover); }
+.navigation-icon { align-items: center; background: var(--primary-muted); border-radius: 6px; color: var(--primary-base); display: inline-flex; font-size: .75rem; font-weight: 700; height: 28px; justify-content: center; width: 28px; }
+.navigation-copy { display: grid; flex: 1; min-width: 0; }
+.navigation-copy strong, .navigation-copy span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.navigation-copy strong { font-size: .875rem; }
+.navigation-copy span { color: var(--text-muted); font-size: .75rem; }
+.navigation-actions { display: flex; gap: 3px; }
+.navigation-actions button { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 5px; color: var(--text-main); cursor: pointer; min-height: 30px; min-width: 30px; }
+.navigation-actions button:hover { background: var(--primary-muted); color: var(--text-main); }
+.navigation-actions button:disabled { cursor: default; opacity: .35; }
+.modal-actions { display: flex; gap: 8px; }
+[hidden] { display: none !important; }
