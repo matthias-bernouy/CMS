@@ -12,6 +12,7 @@ export default async function myDashboards(request: Request, cms: ControlCms): P
         .map((record) => ({
             id: record.id,
             name: record.name,
+            icon: record.icon ?? "layout",
             navigation: recordNavigation(record),
             mounts: navigationMounts(recordNavigation(record)),
         }));

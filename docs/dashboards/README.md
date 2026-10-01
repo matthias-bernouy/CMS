@@ -12,8 +12,10 @@ directly to tabs or to a lateral section whose children may lead to tabs. A
 view can appear only once in one dashboard. The collection owns its dashboard
 definition; the site owns activation and member assignments. Collection
 dashboards start inactive after installation, and a collection upgrade updates
-their definitions. The optional `contracts` list identifies sources actually
-used by a dashboard for links on the Sources page.
+their definitions. An optional `icon` names the library icon shown in Explore,
+the dashboard navigation and member cards; missing icons fall back to `layout`.
+The optional `contracts` list identifies sources actually used by a dashboard
+for links on the Sources page.
 
 `/admin/dashboards` explores dashboard definitions in configured repositories,
 grouped at the latest collection release, and can install or upgrade the
@@ -22,7 +24,8 @@ grouped by collection. Administrators can activate them, assign members and
 make a private copy. The same page can create, edit and delete private site
 dashboards. Its navigation editor selects views from installed collections,
 arranges up to three levels and permits a primary item to open tabs directly.
-A new private dashboard starts inactive.
+A new private dashboard starts inactive. Its icon is selected when it is created
+and remains editable with its name.
 
 Active assigned dashboards appear in the header dashboard switcher. The view
 page uses the defined primary, lateral and tab navigation. Every view and
