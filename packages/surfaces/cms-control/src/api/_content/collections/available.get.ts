@@ -13,6 +13,8 @@ export default async function available(_req: Request, cms: ControlCms) {
             revision: snapshot.revision,
             installed: snapshot.collections.map((item) => ({
                 collectionId: item.collectionId,
+                publisherId: item.release.publisherId,
+                repositoryId: item.repositoryId,
                 digest: item.digest,
                 version: item.release.version,
             })),

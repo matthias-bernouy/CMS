@@ -1,30 +1,32 @@
 import type { CollectionRepositoryEntry } from "@bernouy/cms-repository/collections/sources";
-import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
+import { collectionCatalogueItems, renderCollectionCatalogue, type InstalledCollectionSummary } from "./catalogue";
 import { collectionRequest } from "./client";
 import template from "./available.html" with { type: "text" };
 import css from "./available.css" with { type: "text" };
 
-type Installed = { collectionId: string; digest: string; version: string };
 type Catalogue = {
     repositories: string[];
     releases: CollectionRepositoryEntry[];
     revision: number;
-    installed: Installed[];
+    installed: InstalledCollectionSummary[];
 };
 
 export class AvailableCollections extends HTMLElement {
     private catalogue?: Catalogue;
-    connectedCallback() {
+
+    connectedCallback(): void {
         if (this.shadowRoot) {
             return;
         }
         const root = this.attachShadow({ mode: "open" });
         root.innerHTML = `<style>${css}</style>${template}`;
         root.querySelector("[data-view-error]")!.addEventListener("retry", () => void this.load());
+        root.querySelector("[data-search]")!.addEventListener("input", () => this.render());
         void this.load();
     }
-    private async load() {
+
+    private async load(): Promise<void> {
         this.showState("loading");
         try {
             this.catalogue = (await collectionRequest("available")) as Catalogue;
@@ -36,62 +38,38 @@ export class AvailableCollections extends HTMLElement {
             this.showState("error");
         }
     }
-    private showState(state: "loading" | "error" | "ready") {
+
+    private showState(state: "loading" | "error" | "ready"): void {
         const root = this.shadowRoot!;
         root.querySelector<HTMLElement>("[data-view-loading]")!.hidden = state !== "loading";
         root.querySelector<HTMLElement>("[data-view-error]")!.hidden = state !== "error";
         root.querySelector<HTMLElement>("[data-view-content]")!.hidden = state !== "ready";
         this.setAttribute("aria-busy", String(state === "loading"));
     }
-    private render() {
+
+    private render(): void {
+        if (!this.catalogue) {
+            return;
+        }
         const root = this.shadowRoot!;
-        const data = this.catalogue!;
-        const list = root.querySelector("[data-list]")!;
-        list.replaceChildren();
-        const latest = new Map<string, CollectionRepositoryEntry>();
-        for (const release of data.releases) {
-            const key = `${release.publisherId}/${release.collectionId}`;
-            const previous = latest.get(key);
-            if (!previous || compareSemVer(release.version, previous.version) > 0) {
-                latest.set(key, release);
-            }
-        }
-        for (const release of latest.values()) {
-            const installed = data.installed.find((item) => item.collectionId === release.collectionId);
-            const upgrade = installed && compareSemVer(release.version, installed.version) > 0;
-            const card = document.createElement("article");
-            const title = document.createElement("h3");
-            title.textContent = release.name;
-            const details = document.createElement("p");
-            details.textContent = `${release.publisherId} · Latest v${release.version}${installed ? ` · Installed v${installed.version}` : ""} · ${release.blocCount} blocs${release.hasTheme ? " · Theme" : ""} · ${release.repositoryId}`;
-            const description = document.createElement("p");
-            description.textContent = release.description;
-            const actions = document.createElement("div");
-            actions.className = "collection-actions";
-            if (installed) {
-                const manage = document.createElement("a");
-                manage.href = `${getMetaBasePath()}/admin/collections/${encodeURIComponent(`installed:${release.collectionId}`)}/overview`;
-                manage.textContent = "Manage";
-                actions.append(manage);
-            }
-            if (!installed || upgrade) {
-                const action = document.createElement("button");
-                action.type = "button";
-                action.textContent = installed ? `Upgrade to ${release.version}` : "Install collection";
-                action.addEventListener("click", () => void this.install(release, action));
-                actions.append(action);
-            }
-            card.append(title, details, description, actions);
-            list.append(card);
-        }
-        root.querySelector("[data-empty]")!.toggleAttribute("hidden", latest.size > 0);
-        root.querySelector("[data-unconfigured]")!.toggleAttribute("hidden", data.repositories.length > 0);
+        const query = root.querySelector<HTMLInputElement>("[data-search]")!.value.trim().toLowerCase();
+        const items = collectionCatalogueItems(this.catalogue.releases, this.catalogue.installed, query);
+        renderCollectionCatalogue(root.querySelector("[data-list]")!, items, (release, button) =>
+            this.install(release, button),
+        );
+        root.querySelector("[data-empty]")!.toggleAttribute("hidden", items.length > 0);
+        root.querySelector("[data-unconfigured]")!.toggleAttribute("hidden", this.catalogue.repositories.length > 0);
         root.querySelector("[data-no-releases]")!.toggleAttribute(
             "hidden",
-            data.repositories.length === 0 || latest.size > 0,
+            this.catalogue.repositories.length === 0 || this.catalogue.releases.length > 0,
+        );
+        root.querySelector("[data-no-results]")!.toggleAttribute(
+            "hidden",
+            !query || this.catalogue.releases.length === 0 || items.length > 0,
         );
     }
-    private async install(release: CollectionRepositoryEntry, button: HTMLButtonElement) {
+
+    private async install(release: CollectionRepositoryEntry, button: HTMLButtonElement): Promise<void> {
         button.disabled = true;
         try {
             const result = await collectionRequest("install", {
@@ -109,4 +87,5 @@ export class AvailableCollections extends HTMLElement {
         }
     }
 }
+
 customElements.define("cms-available-collections", AvailableCollections);

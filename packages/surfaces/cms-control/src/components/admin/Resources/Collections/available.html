@@ -7,10 +7,17 @@
     <p slot="hint" data-view-error-message>Check the collection repositories, then try again.</p>
 </cms-view-state>
 <section data-view-content hidden>
-    <h2>Available collections</h2>
-    <p>Browse releases from connected repositories.</p>
+    <div class="catalogue-heading">
+        <div>
+            <h2>Explore collections</h2>
+            <p>Install reusable blocs, theme tokens, texts and dashboards released by your repositories.</p>
+        </div>
+        <label for="collection-search">Search collections</label>
+        <input id="collection-search" data-search type="search" placeholder="Search by name, collection or publisher" autocomplete="off">
+    </div>
     <div data-list></div>
     <p data-empty data-unconfigured hidden>No collection repository is connected.</p>
     <p data-empty data-no-releases hidden>No releases are available.</p>
+    <p data-empty data-no-results hidden>No collections match this search.</p>
     <p role="status" aria-live="polite"></p>
 </section>
