@@ -9,4 +9,7 @@ article p { overflow-wrap: anywhere; }
 article p:first-of-type { font-size: .8125rem; }
 button { font: inherit; padding: 9px 14px; border: 1px solid var(--border-default); border-radius: 7px; cursor: pointer; background: var(--primary-base); color: white; }
 button:disabled { cursor: default; opacity: .6; }
+.collection-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }
+.collection-actions a { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 7px; color: var(--primary-base); font-weight: 600; padding: 9px 14px; text-decoration: none; }
+.collection-actions a:hover { background: var(--bg-hover); border-color: var(--border-strong); }
 [hidden] { display: none !important; }

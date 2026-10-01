@@ -6,6 +6,7 @@ describe("editor catalog script endpoint", () => {
         const cache = new Map<string, unknown>();
         const cms = {
             repository: {
+                getBlocRecords: async () => [],
                 getBlocsJS: async () => [
                     {
                         id: "demo-card",
@@ -36,6 +37,7 @@ describe("editor catalog script endpoint", () => {
         const cache = new Map<string, unknown>();
         const cms = {
             repository: {
+                getBlocRecords: async () => [],
                 getBlocsJS: async () => [
                     {
                         id: "placeholder-card",
@@ -66,6 +68,7 @@ describe("editor catalog script endpoint", () => {
         const unsafeId = `native-"form\nnext`;
         const cms = {
             repository: {
+                getBlocRecords: async () => [],
                 getBlocsJS: async () => [
                     {
                         id: unsafeId,

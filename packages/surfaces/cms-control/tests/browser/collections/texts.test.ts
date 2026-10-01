@@ -7,16 +7,24 @@ import saveTexts from "cms-control/api/_content/collections/texts.put";
 
 const sourceRoot = resolve(import.meta.dir, "../../../src");
 const bundle = await Bun.file(`${sourceRoot}/static/assets/control-components.js`).text();
-const release = await Bun.file(
-    resolve(import.meta.dir, "../../../../../resources/collection-examples/src/test.json"),
-).json();
+const collectionRoot = resolve(import.meta.dir, "../../../../../resources/collections/test");
+const release = {
+    ...(await Bun.file(resolve(collectionRoot, "definition.json")).json()),
+    blocs: [],
+    assets: [],
+    texts: [
+        ...(await Bun.file(resolve(collectionRoot, "texts/storefront.json")).json()),
+        ...(await Bun.file(resolve(collectionRoot, "texts/support.json")).json()),
+    ],
+};
 
 test("installed texts keep drafts across groups, persist overrides, reset and reject stale saves", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const artifact = await store.importRelease(release);
     await store.install("site", artifact.digest, 0);
     const cms = {
-        config: { collections: { store, siteId: "site" } },
+        auth: { getSubject: async () => ({ identifier: "local:admin" }) },
+        config: { administrator: async () => true, collections: { store, siteId: "site" } },
         repository: { getSystem: async () => ({ site: { language: "", additionalLanguages: ["fr"] } }) },
         cache: { delete: () => {}, deleteMatching: () => {} },
     } as never;

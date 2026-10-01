@@ -1,4 +1,5 @@
 import type { CollectionRepositoryEntry } from "@bernouy/cms-repository/collections/sources";
+import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 import { collectionRequest } from "./client";
 import template from "./available.html" with { type: "text" };
@@ -35,33 +36,47 @@ export class AvailableCollections extends HTMLElement {
         const data = this.catalogue!;
         const list = root.querySelector("[data-list]")!;
         list.replaceChildren();
+        const latest = new Map<string, CollectionRepositoryEntry>();
         for (const release of data.releases) {
+            const key = `${release.publisherId}/${release.collectionId}`;
+            const previous = latest.get(key);
+            if (!previous || compareSemVer(release.version, previous.version) > 0) {
+                latest.set(key, release);
+            }
+        }
+        for (const release of latest.values()) {
             const installed = data.installed.find((item) => item.collectionId === release.collectionId);
+            const upgrade = installed && compareSemVer(release.version, installed.version) > 0;
             const card = document.createElement("article");
             const title = document.createElement("h3");
             title.textContent = release.name;
             const details = document.createElement("p");
-            details.textContent = `${release.publisherId} · ${release.version} · ${release.blocCount} blocs${release.hasTheme ? " · Theme" : ""} · ${release.repositoryId}`;
+            details.textContent = `${release.publisherId} · Latest v${release.version}${installed ? ` · Installed v${installed.version}` : ""} · ${release.blocCount} blocs${release.hasTheme ? " · Theme" : ""} · ${release.repositoryId}`;
             const description = document.createElement("p");
             description.textContent = release.description;
-            const action = document.createElement("button");
-            action.type = "button";
-            action.textContent =
-                installed?.digest === release.digest
-                    ? "Installed"
-                    : installed
-                      ? "Update collection"
-                      : "Install collection";
-            action.disabled = installed?.digest === release.digest;
-            action.addEventListener("click", () => void this.install(release, action));
-            card.append(title, details, description, action);
+            const actions = document.createElement("div");
+            actions.className = "collection-actions";
+            if (installed) {
+                const manage = document.createElement("a");
+                manage.href = `${getMetaBasePath()}/admin/collections/${encodeURIComponent(`installed:${release.collectionId}`)}/overview`;
+                manage.textContent = "Manage";
+                actions.append(manage);
+            }
+            if (!installed || upgrade) {
+                const action = document.createElement("button");
+                action.type = "button";
+                action.textContent = installed ? `Upgrade to ${release.version}` : "Install collection";
+                action.addEventListener("click", () => void this.install(release, action));
+                actions.append(action);
+            }
+            card.append(title, details, description, actions);
             list.append(card);
         }
-        root.querySelector("[data-empty]")!.toggleAttribute("hidden", data.releases.length > 0);
+        root.querySelector("[data-empty]")!.toggleAttribute("hidden", latest.size > 0);
         root.querySelector("[data-unconfigured]")!.toggleAttribute("hidden", data.repositories.length > 0);
         root.querySelector("[data-no-releases]")!.toggleAttribute(
             "hidden",
-            data.repositories.length === 0 || data.releases.length > 0,
+            data.repositories.length === 0 || latest.size > 0,
         );
     }
     private async install(release: CollectionRepositoryEntry, button: HTMLButtonElement) {

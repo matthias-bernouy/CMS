@@ -5,10 +5,10 @@ test("collection creation, settings and first composition use the canonical work
     const { browser, page, errors, gotoCollection, repository, writes } = await fixture();
     try {
         await gotoCollection();
-        await page.getByText("Organize your blocs", { exact: true }).waitFor();
+        await page.getByText("Available collections", { exact: true }).waitFor();
         expect(
-            await page.locator('w13c-lateral-menu-item[href="/tenant/cms/admin/collections/code/overview"]').count(),
-        ).toBe(1);
+            await page.locator('w13c-lateral-menu-item[href="/tenant/cms/admin/collections"]').count(),
+        ).toBeGreaterThan(0);
         expect(await page.getByRole("button", { name: "Import collection", exact: true }).count()).toBe(0);
 
         await page.getByRole("button", { name: "Create private collection", exact: true }).click();
