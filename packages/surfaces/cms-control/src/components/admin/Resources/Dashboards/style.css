@@ -25,13 +25,12 @@ cms-dashboard-workspace .dashboard-card-icon {
     width: 36px;
 }
 cms-dashboard-workspace .dashboard-card-icon cms-library-icon { height: 18px; width: 18px; }
-cms-dashboard-workspace [data-editor] [slot="main"],
+cms-dashboard-workspace [data-editor] cms-dashboard-navigation-editor,
 cms-dashboard-workspace [data-editor] [slot="aside"],
 cms-dashboard-workspace [data-collection] [slot="aside"] { display: grid; gap: 16px; }
 cms-dashboard-workspace [data-status],
 cms-dashboard-workspace p { color: var(--text-muted); line-height: 1.5; }
 cms-dashboard-workspace form { max-width: 680px; }
-cms-dashboard-workspace .toggle { align-items: center; display: flex; gap: 10px; }
 cms-dashboard-workspace [data-collection-views] { margin: 0; padding-left: 20px; }
 cms-dashboard-workspace [data-collection-views] li { margin-block: 10px; }
 cms-dashboard-workspace .modal-actions { display: flex; gap: 8px; }

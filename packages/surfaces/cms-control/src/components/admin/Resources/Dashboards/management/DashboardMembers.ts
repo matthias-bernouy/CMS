@@ -4,11 +4,12 @@ import template from "./members.html" with { type: "text" };
 import css from "./members.css" with { type: "text" };
 
 type Modal = HTMLElement & { showModal(): void; hide(): void };
-type ValueControl = HTMLElement & { value: string };
+type ValueControl = HTMLElement & { value?: string };
 
 export class DashboardMembers extends Component {
     private users: User[] = [];
     private memberIds = new Set<string>();
+    private pendingIds = new Set<string>();
     private connected = false;
 
     constructor() {
@@ -30,7 +31,23 @@ export class DashboardMembers extends Component {
     set value(value: { users: User[]; members: string[] }) {
         this.users = value.users;
         this.memberIds = new Set(value.members);
+        this.pendingIds.clear();
         this.render();
+    }
+
+    setAssigned(subjectId: string, assigned: boolean): void {
+        if (assigned) {
+            this.memberIds.add(subjectId);
+        } else {
+            this.memberIds.delete(subjectId);
+        }
+        this.pendingIds.delete(subjectId);
+        this.render();
+    }
+
+    clearPending(subjectId: string): void {
+        this.pendingIds.delete(subjectId);
+        this.renderList();
     }
 
     private render(): void {
@@ -48,7 +65,7 @@ export class DashboardMembers extends Component {
         if (!list) {
             return;
         }
-        const query = this.field("[data-search]").value.trim().toLocaleLowerCase();
+        const query = (this.field("[data-search]").value ?? "").trim().toLocaleLowerCase();
         const visible = this.users.filter((user) => `${user.label} ${user.email}`.toLocaleLowerCase().includes(query));
         list.replaceChildren(...visible.map((user) => this.row(user)));
         this.root.querySelector("[data-empty]")!.toggleAttribute("hidden", visible.length > 0);
@@ -76,6 +93,7 @@ export class DashboardMembers extends Component {
         action.dataset.memberAction = assigned ? "unassign" : "assign";
         action.dataset.subjectId = user.sub;
         action.textContent = assigned ? "Remove" : "Add";
+        action.toggleAttribute("disabled", this.pendingIds.has(user.sub));
         if (assigned) {
             action.setAttribute("color", "danger");
         }
@@ -88,6 +106,11 @@ export class DashboardMembers extends Component {
         if (!action?.dataset.subjectId) {
             return;
         }
+        if (this.pendingIds.has(action.dataset.subjectId)) {
+            return;
+        }
+        this.pendingIds.add(action.dataset.subjectId);
+        action.setAttribute("disabled", "");
         this.dispatchEvent(
             new CustomEvent("dashboard-member-change", {
                 bubbles: true,

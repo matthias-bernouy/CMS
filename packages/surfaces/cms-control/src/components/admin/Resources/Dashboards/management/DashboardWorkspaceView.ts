@@ -4,6 +4,7 @@ import type { DashboardMembers } from "./DashboardMembers";
 import { exploreDashboardCard, renderCollectionMounts, renderMemberDashboardList } from "./render";
 
 type ValueControl = HTMLElement & { value: string };
+type ToggleControl = HTMLElement & { checked: boolean };
 
 export class DashboardWorkspaceView {
     constructor(private readonly root: HTMLElement) {
@@ -49,10 +50,9 @@ export class DashboardWorkspaceView {
         this.hide("[data-collection]");
         this.show("[data-editor]");
         this.element("[data-editor-title]").textContent = record.name;
-        this.renderState("[data-private-state]", record.enabled);
         this.field("[data-name]").value = record.name;
         this.field("[data-icon]").value = record.icon ?? "layout";
-        this.element<HTMLInputElement>("[data-enabled]").checked = record.enabled;
+        this.element<ToggleControl>("[data-enabled]").checked = record.enabled;
         this.editor().views = views;
         this.editor().value = record.navigation ?? [];
         this.syncOpenLink("[data-private-open]", record);
@@ -67,8 +67,7 @@ export class DashboardWorkspaceView {
         this.element("[data-collection-description]").textContent = record.description ?? "";
         this.element("[data-collection-origin]").textContent =
             `${record.collectionName} · ${record.origin!.publisherId} / ${record.origin!.collectionId}`;
-        this.renderState("[data-collection-state]", record.enabled);
-        this.element<HTMLInputElement>("[data-collection-enabled]").checked = record.enabled;
+        this.element<ToggleControl>("[data-collection-enabled]").checked = record.enabled;
         this.syncOpenLink("[data-collection-open]", record);
         renderCollectionMounts(this.root, record);
         this.members("[data-collection-members]").value = { users, members: record.members };
@@ -95,21 +94,32 @@ export class DashboardWorkspaceView {
         return {
             name: this.field("[data-name]").value,
             icon: this.field("[data-icon]").value,
-            enabled: this.element<HTMLInputElement>("[data-enabled]").checked,
+            enabled: this.element<ToggleControl>("[data-enabled]").checked,
             navigation: this.editor().value,
         };
     }
 
     privateValidationMessage(): string {
         const navigation = this.editor().value;
-        if (this.element<HTMLInputElement>("[data-enabled]").checked && navigation.length === 0) {
+        if (this.element<ToggleControl>("[data-enabled]").checked && navigation.length === 0) {
             return "Add a view before activating this dashboard.";
         }
         return this.editor().validationMessage();
     }
 
     collectionEnabled(): boolean {
-        return this.element<HTMLInputElement>("[data-collection-enabled]").checked;
+        return this.element<ToggleControl>("[data-collection-enabled]").checked;
+    }
+
+    updateMember(record: Dashboard, action: "assign" | "unassign", subjectId: string): void {
+        this.members(record.origin ? "[data-collection-members]" : "[data-private-members]").setAssigned(
+            subjectId,
+            action === "assign",
+        );
+    }
+
+    clearMemberPending(record: Dashboard, subjectId: string): void {
+        this.members(record.origin ? "[data-collection-members]" : "[data-private-members]").clearPending(subjectId);
     }
 
     setRepositoryWarning(repositories: string[]): void {
@@ -128,16 +138,6 @@ export class DashboardWorkspaceView {
         open.toggleAttribute("hidden", !first);
         if (first) {
             open.href = `${location.pathname}/view?dashboardId=${encodeURIComponent(record.id)}&viewId=${encodeURIComponent(`${first.collectionId}:${first.viewId}`)}`;
-        }
-    }
-
-    private renderState(selector: string, enabled: boolean): void {
-        const tag = this.element(selector);
-        tag.textContent = enabled ? "Active" : "Inactive";
-        if (enabled) {
-            tag.setAttribute("color", "success");
-        } else {
-            tag.removeAttribute("color");
         }
     }
 

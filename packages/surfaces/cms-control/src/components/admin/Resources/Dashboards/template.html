@@ -29,7 +29,6 @@
         <a slot="back" data-back aria-label="Back to dashboards">←</a>
         <span slot="title" data-collection-name></span>
         <span slot="description" data-collection-description></span>
-        <p9r-tag slot="actions" data-collection-state></p9r-tag>
         <a slot="actions" data-collection-open><p9r-button type="button" variant="outlined">Open dashboard</p9r-button></a>
         <p9r-action-menu slot="actions" label="More actions">
             <p9r-action-menu-item data-collection-copy>Create a private copy</p9r-action-menu-item>
@@ -40,9 +39,8 @@
                 <ol data-collection-views></ol>
             </cms-detail-section>
             <div slot="aside">
-                <cms-detail-section heading="Availability" description="Controls member access without changing the collection.">
-                    <label class="toggle"><input data-collection-enabled type="checkbox"> Available to assigned members</label>
-                    <p>Administrators can still preview an inactive dashboard.</p>
+                <cms-detail-section heading="Availability">
+                    <w13c-switch slot="actions" size="sm" data-collection-enabled aria-label="Enable dashboard"></w13c-switch>
                 </cms-detail-section>
                 <cms-detail-section heading="Collection">
                     <p data-collection-origin></p>
@@ -55,26 +53,22 @@
     <cms-shell-detail size="xl" data-editor hidden>
         <a slot="back" data-back aria-label="Back to dashboards">←</a>
         <span slot="title" data-editor-title>Private dashboard</span>
-        <span slot="description">Private dashboard</span>
-        <p9r-tag slot="actions" data-private-state></p9r-tag>
         <a slot="actions" data-private-open hidden><p9r-button type="button" variant="outlined">Open dashboard</p9r-button></a>
         <p9r-action-menu slot="actions" label="More actions">
             <p9r-action-menu-item color="danger" data-delete-open>Delete dashboard</p9r-action-menu-item>
         </p9r-action-menu>
         <p9r-button slot="actions" type="button" color="primary" data-save>Save changes</p9r-button>
         <cms-shell-detail-body slot="body">
-            <div slot="main">
-                <cms-detail-section heading="General" description="Name and icon shown in the dashboard switcher.">
+            <cms-dashboard-navigation-editor slot="main"></cms-dashboard-navigation-editor>
+            <div slot="aside">
+                <cms-detail-section heading="Dashboard">
                     <p9r-stack gap="md">
                         <p9r-input data-name name="name" label="Dashboard name" maxlength="120" required></p9r-input>
                         <p9r-select data-icon label="Icon"><option value="layout">Layout</option><option value="database">Database</option><option value="package">Package</option><option value="users">Users</option><option value="settings">Settings</option></p9r-select>
                     </p9r-stack>
                 </cms-detail-section>
-                <cms-dashboard-navigation-editor></cms-dashboard-navigation-editor>
-            </div>
-            <div slot="aside">
-                <cms-detail-section heading="Availability" description="A dashboard needs at least one view and one member before it is useful.">
-                    <label class="toggle"><input data-enabled type="checkbox"> Available to assigned members</label>
+                <cms-detail-section heading="Availability">
+                    <w13c-switch slot="actions" size="sm" data-enabled aria-label="Enable dashboard"></w13c-switch>
                 </cms-detail-section>
                 <cms-dashboard-members data-private-members></cms-dashboard-members>
             </div>

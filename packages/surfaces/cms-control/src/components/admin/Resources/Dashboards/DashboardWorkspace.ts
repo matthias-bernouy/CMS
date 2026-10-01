@@ -125,15 +125,29 @@ class DashboardWorkspace extends HTMLElement {
     }
 
     private async changeMember(action: "assign" | "unassign", subjectId: string): Promise<void> {
-        if (!this.selectedId) {
+        const record = this.dashboards.find((item) => item.id === this.selectedId);
+        if (!record) {
             return;
         }
-        await this.mutate(
-            async () => {
-                await postDashboard("dashboard-members", { dashboardId: this.selectedId, subjectId, action });
-            },
-            action === "assign" ? "Member added." : "Member removed.",
-        );
+        try {
+            await postDashboard("dashboard-members", { dashboardId: record.id, subjectId, action });
+            const members = new Set(record.members);
+            if (action === "assign") {
+                members.add(subjectId);
+            } else {
+                members.delete(subjectId);
+            }
+            record.members = [...members];
+            if (this.selectedId === record.id) {
+                this.view.updateMember(record, action, subjectId);
+            }
+            this.status(action === "assign" ? "Member added." : "Member removed.");
+        } catch (error) {
+            if (this.selectedId === record.id) {
+                this.view.clearMemberPending(record, subjectId);
+            }
+            this.status(String(error));
+        }
     }
 
     private async saveCollectionAccess(): Promise<void> {
