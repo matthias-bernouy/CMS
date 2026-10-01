@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import type { NavigationItem } from "../../../src/components/admin/Resources/Dashboards/domain/types";
 import { DashboardNavigationEditor } from "../../../src/components/admin/Resources/Dashboards/editor/NavigationEditor";
-import { moveItem, navigationError } from "../../../src/components/admin/Resources/Dashboards/editor/tree";
+import { moveItem, navigationError, reorderItem } from "../../../src/components/admin/Resources/Dashboards/editor/tree";
 
 test("navigation editor only renders the editable navigation tree", () => {
     const editor = new DashboardNavigationEditor();
@@ -78,4 +78,15 @@ test("moving items preserves the navigation placement invariants", () => {
     expect(items).toHaveLength(2);
     expect(items[0]?.children).toBeUndefined();
     expect(items[0]?.childPlacement).toBeUndefined();
+});
+
+test("drag reordering stays inside the current navigation level", () => {
+    const items: NavigationItem[] = [
+        { id: "one", label: "One", use: "test:one" },
+        { id: "two", label: "Two", use: "test:two" },
+        { id: "three", label: "Three", use: "test:three" },
+    ];
+    expect(reorderItem(items, [0], [2], true)).toBeTrue();
+    expect(items.map((item) => item.id)).toEqual(["two", "three", "one"]);
+    expect(reorderItem(items, [0], [0, 0], false)).toBeFalse();
 });

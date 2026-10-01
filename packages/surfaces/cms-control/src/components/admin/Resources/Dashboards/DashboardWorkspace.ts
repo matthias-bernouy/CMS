@@ -42,6 +42,17 @@ class DashboardWorkspace extends HTMLElement {
         this.querySelector("[data-list]")!.addEventListener("click", (event) => void this.onExploreClick(event));
         this.querySelector("[data-explore-search]")!.addEventListener("input", () => this.renderExplore());
         this.querySelector("[data-save]")!.addEventListener("click", () => void this.save());
+        const name = this.querySelector("[data-name]")!;
+        name.addEventListener("input", () => this.view.setPrivateDirty(true));
+        name.addEventListener("change", () => this.view.setPrivateDirty(true));
+        this.querySelector("[data-dashboard-icon]")!.addEventListener("change", () => {
+            this.view.syncPrivateIcon();
+            this.view.setPrivateDirty(true);
+        });
+        this.querySelector("[data-enabled]")!.addEventListener("change", () => this.view.setPrivateDirty(true));
+        this.querySelector("cms-dashboard-navigation-editor")!.addEventListener("navigation-change", () =>
+            this.view.setPrivateDirty(true),
+        );
         this.querySelector("[data-collection-save]")!.addEventListener("click", () => void this.saveCollectionAccess());
         this.querySelector("[data-collection-copy]")!.addEventListener(
             "click",

@@ -40,26 +40,37 @@ export class DashboardWorkspaceView {
     }
 
     showOverview(): void {
+        this.setPageTitleVisible(true);
         this.show("[data-overview]");
         this.hide("[data-editor]");
         this.hide("[data-collection]");
     }
 
     showPrivate(record: Dashboard, views: AvailableView[], users: User[]): void {
+        this.setPageTitleVisible(false);
         this.hide("[data-overview]");
         this.hide("[data-collection]");
         this.show("[data-editor]");
         this.element("[data-editor-title]").textContent = record.name;
         this.field("[data-name]").value = record.name;
-        this.field("[data-icon]").value = record.icon ?? "layout";
+        const icon = record.icon ?? "layout";
+        this.field("[data-dashboard-icon]").setAttribute("value", icon);
+        this.field("[data-dashboard-icon]").value = icon;
+        this.syncPrivateIcon();
+        queueMicrotask(() => {
+            this.field("[data-dashboard-icon]").value = icon;
+            this.syncPrivateIcon();
+        });
         this.element<ToggleControl>("[data-enabled]").checked = record.enabled;
         this.editor().views = views;
         this.editor().value = record.navigation ?? [];
         this.syncOpenLink("[data-private-open]", record);
         this.members("[data-private-members]").value = { users, members: record.members };
+        this.setPrivateDirty(false);
     }
 
     showCollection(record: Dashboard, users: User[]): void {
+        this.setPageTitleVisible(false);
         this.hide("[data-overview]");
         this.hide("[data-editor]");
         this.show("[data-collection]");
@@ -71,6 +82,15 @@ export class DashboardWorkspaceView {
         this.syncOpenLink("[data-collection-open]", record);
         renderCollectionMounts(this.root, record);
         this.members("[data-collection-members]").value = { users, members: record.members };
+    }
+
+    syncPrivateIcon(): void {
+        this.element("[data-icon-preview]").setAttribute("name", this.field("[data-dashboard-icon]").value || "layout");
+    }
+
+    setPrivateDirty(dirty: boolean): void {
+        this.element("[data-dirty]").toggleAttribute("hidden", !dirty);
+        this.element("[data-save]").toggleAttribute("disabled", !dirty);
     }
 
     renderExplore(catalogue: ExploreDashboard[]): void {
@@ -93,7 +113,7 @@ export class DashboardWorkspaceView {
     privateDraft(): { name: string; icon: string; enabled: boolean; navigation: Dashboard["navigation"] } {
         return {
             name: this.field("[data-name]").value,
-            icon: this.field("[data-icon]").value,
+            icon: this.field("[data-dashboard-icon]").value,
             enabled: this.element<ToggleControl>("[data-enabled]").checked,
             navigation: this.editor().value,
         };
@@ -139,6 +159,13 @@ export class DashboardWorkspaceView {
         if (first) {
             open.href = `${location.pathname}/view?dashboardId=${encodeURIComponent(record.id)}&viewId=${encodeURIComponent(`${first.collectionId}:${first.viewId}`)}`;
         }
+    }
+
+    private setPageTitleVisible(visible: boolean): void {
+        this.root
+            .closest("w13c-fixed-admin-layout")
+            ?.querySelector("[data-dashboard-page-title]")
+            ?.toggleAttribute("hidden", !visible);
     }
 
     private members(selector: string): DashboardMembers {

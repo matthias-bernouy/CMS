@@ -1,10 +1,11 @@
-<cms-detail-section heading="Members">
-    <p9r-button slot="actions" type="button" variant="outlined" data-open>Manage</p9r-button>
+<div class="member-setting">
+    <div class="member-avatars" data-avatars aria-hidden="true"></div>
     <div class="member-summary">
-        <strong data-count>0</strong>
-        <span data-summary>members assigned</span>
+        <strong>Members</strong>
+        <span data-summary>No members assigned</span>
     </div>
-</cms-detail-section>
+    <p9r-button type="button" variant="outlined" data-open>Manage</p9r-button>
+</div>
 <p9r-modal data-modal aria-label="Manage dashboard members">
     <span slot="title">Manage members</span>
     <p9r-input data-search type="search" label="Search members" placeholder="Name or email"></p9r-input>

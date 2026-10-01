@@ -1,6 +1,6 @@
 import type { AvailableView, NavigationItem } from "../domain/types";
 import { fillItemDialog, readItemDialog, syncItemKind } from "./dialog";
-import { itemAt, listAt, moveItem, navigationError } from "./tree";
+import { itemAt, listAt, moveItem, navigationError, reorderItem } from "./tree";
 import { renderTree } from "./treeView";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
@@ -13,6 +13,7 @@ export class DashboardNavigationEditor extends HTMLElement {
     private available: AvailableView[] = [];
     private editing: number[] | null = null;
     private snapshot: NavigationItem[] | null = null;
+    private dragging: number[] | null = null;
 
     connectedCallback(): void {
         if (this.querySelector("[data-tree]")) {
@@ -20,7 +21,12 @@ export class DashboardNavigationEditor extends HTMLElement {
         }
         this.innerHTML = `<style>${css}</style>${template}`;
         this.querySelector("[data-add-root]")!.addEventListener("click", () => this.add([]));
-        this.querySelector("[data-tree]")!.addEventListener("click", (event) => this.onTreeClick(event));
+        const tree = this.querySelector("[data-tree]")!;
+        tree.addEventListener("click", (event) => this.onTreeClick(event));
+        tree.addEventListener("dragstart", (event) => this.onDragStart(event as DragEvent));
+        tree.addEventListener("dragover", (event) => this.onDragOver(event as DragEvent));
+        tree.addEventListener("drop", (event) => this.onDrop(event as DragEvent));
+        tree.addEventListener("dragend", () => this.clearDragState());
         this.querySelector("[data-item-form]")!.addEventListener("submit", (event) => this.saveItem(event));
         this.querySelector("[data-cancel]")!.addEventListener("click", () => this.cancelItem());
         this.querySelector("[data-kind]")!.addEventListener("change", () => {
@@ -83,6 +89,55 @@ export class DashboardNavigationEditor extends HTMLElement {
         } else if (action && moveItem(this.items, path, action)) {
             this.changed();
         }
+    }
+
+    private onDragStart(event: DragEvent): void {
+        const target = event.target as Element;
+        if (!target.closest("[data-drag-handle]")) {
+            event.preventDefault();
+            return;
+        }
+        this.dragging = this.pathFrom(target);
+        event.dataTransfer?.setData("text/plain", this.dragging?.join(".") ?? "");
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = "move";
+        }
+        target.closest<HTMLElement>("[data-path]")?.setAttribute("data-dragging", "");
+    }
+
+    private onDragOver(event: DragEvent): void {
+        const target = (event.target as Element).closest<HTMLElement>("[data-path]");
+        const targetPath = target ? this.pathFrom(target) : null;
+        if (!target || !targetPath || !this.sameParent(this.dragging, targetPath)) {
+            return;
+        }
+        event.preventDefault();
+        this.querySelectorAll("[data-drop-position]").forEach((row) => row.removeAttribute("data-drop-position"));
+        const after = event.clientY > target.getBoundingClientRect().top + target.getBoundingClientRect().height / 2;
+        target.dataset.dropPosition = after ? "after" : "before";
+    }
+
+    private onDrop(event: DragEvent): void {
+        const target = (event.target as Element).closest<HTMLElement>("[data-path]");
+        const targetPath = target ? this.pathFrom(target) : null;
+        const after = target?.dataset.dropPosition === "after";
+        event.preventDefault();
+        if (this.dragging && targetPath && reorderItem(this.items, this.dragging, targetPath, after)) {
+            this.changed();
+        }
+        this.clearDragState();
+    }
+
+    private sameParent(left: number[] | null, right: number[]): boolean {
+        return Boolean(left && left.slice(0, -1).join(".") === right.slice(0, -1).join("."));
+    }
+
+    private clearDragState(): void {
+        this.dragging = null;
+        this.querySelectorAll("[data-dragging], [data-drop-position]").forEach((row) => {
+            row.removeAttribute("data-dragging");
+            row.removeAttribute("data-drop-position");
+        });
     }
 
     private add(parentPath: number[]): void {

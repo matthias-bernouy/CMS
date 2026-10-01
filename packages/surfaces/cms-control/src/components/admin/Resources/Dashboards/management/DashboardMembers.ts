@@ -51,13 +51,43 @@ export class DashboardMembers extends Component {
     }
 
     private render(): void {
-        if (!this.root.querySelector("[data-count]")) {
+        if (!this.root.querySelector("[data-summary]")) {
             return;
         }
         const count = this.memberIds.size;
-        this.root.querySelector("[data-count]")!.textContent = String(count);
-        this.root.querySelector("[data-summary]")!.textContent = count === 1 ? "member assigned" : "members assigned";
+        this.root.querySelector("[data-summary]")!.textContent =
+            count === 0 ? "No members assigned" : `${count} ${count === 1 ? "member" : "members"} assigned`;
+        this.renderAvatars();
         this.renderList();
+    }
+
+    private renderAvatars(): void {
+        const assigned = this.users.filter((user) => this.memberIds.has(user.sub));
+        const avatars = assigned.slice(0, 3).map((user) => {
+            const avatar = document.createElement("span");
+            avatar.className = "member-avatar";
+            avatar.title = user.label || user.email;
+            avatar.textContent = this.initials(user.label || user.email);
+            return avatar;
+        });
+        if (assigned.length > 3) {
+            const more = document.createElement("span");
+            more.className = "member-avatar member-avatar-more";
+            more.textContent = `+${assigned.length - 3}`;
+            avatars.push(more);
+        }
+        this.root.querySelector("[data-avatars]")!.replaceChildren(...avatars);
+    }
+
+    private initials(label: string): string {
+        return (
+            label
+                .trim()
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((part) => part[0]?.toUpperCase() ?? "")
+                .join("") || "?"
+        );
     }
 
     private renderList(): void {

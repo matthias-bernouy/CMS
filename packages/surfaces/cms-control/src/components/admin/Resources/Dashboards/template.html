@@ -39,13 +39,24 @@
                 <ol data-collection-views></ol>
             </cms-detail-section>
             <div slot="aside">
-                <cms-detail-section heading="Availability">
-                    <w13c-switch slot="actions" size="sm" data-collection-enabled aria-label="Enable dashboard"></w13c-switch>
+                <cms-detail-section heading="Dashboard settings">
+                    <div class="settings-stack">
+                        <div class="settings-row">
+                            <div class="settings-copy">
+                                <strong>Availability</strong>
+                                <span>Make this dashboard available to assigned members.</span>
+                            </div>
+                            <w13c-switch size="sm" data-collection-enabled aria-label="Enable dashboard"></w13c-switch>
+                        </div>
+                        <div class="settings-row settings-origin">
+                            <div class="settings-copy">
+                                <strong>Collection</strong>
+                                <span data-collection-origin></span>
+                            </div>
+                        </div>
+                        <cms-dashboard-members data-collection-members></cms-dashboard-members>
+                    </div>
                 </cms-detail-section>
-                <cms-detail-section heading="Collection">
-                    <p data-collection-origin></p>
-                </cms-detail-section>
-                <cms-dashboard-members data-collection-members></cms-dashboard-members>
             </div>
         </cms-shell-detail-body>
     </cms-shell-detail>
@@ -57,20 +68,30 @@
         <p9r-action-menu slot="actions" label="More actions">
             <p9r-action-menu-item color="danger" data-delete-open>Delete dashboard</p9r-action-menu-item>
         </p9r-action-menu>
-        <p9r-button slot="actions" type="button" color="primary" data-save>Save changes</p9r-button>
+        <p9r-tag slot="actions" color="warning" data-dirty hidden>Unsaved changes</p9r-tag>
+        <p9r-button slot="actions" type="button" color="primary" data-save disabled>Save changes</p9r-button>
         <cms-shell-detail-body slot="body">
             <cms-dashboard-navigation-editor slot="main"></cms-dashboard-navigation-editor>
             <div slot="aside">
-                <cms-detail-section heading="Dashboard">
-                    <p9r-stack gap="md">
+                <cms-detail-section heading="Dashboard settings">
+                    <div class="settings-stack">
                         <p9r-input data-name name="name" label="Dashboard name" maxlength="120" required></p9r-input>
-                        <p9r-select data-icon label="Icon"><option value="layout">Layout</option><option value="database">Database</option><option value="package">Package</option><option value="users">Users</option><option value="settings">Settings</option></p9r-select>
-                    </p9r-stack>
+                        <div class="dashboard-icon-control">
+                            <span class="dashboard-icon-preview" aria-hidden="true">
+                                <cms-library-icon data-icon-preview name="layout"></cms-library-icon>
+                            </span>
+                            <p9r-select data-dashboard-icon label="Icon"><option value="layout">Layout</option><option value="database">Database</option><option value="shopping-bag">Shopping bag</option><option value="package">Package</option><option value="users">Users</option><option value="settings">Settings</option><option value="search">Search</option><option value="tag">Tag</option></p9r-select>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-copy">
+                                <strong>Availability</strong>
+                                <span>Make this dashboard available to assigned members.</span>
+                            </div>
+                            <w13c-switch size="sm" data-enabled aria-label="Enable dashboard"></w13c-switch>
+                        </div>
+                        <cms-dashboard-members data-private-members></cms-dashboard-members>
+                    </div>
                 </cms-detail-section>
-                <cms-detail-section heading="Availability">
-                    <w13c-switch slot="actions" size="sm" data-enabled aria-label="Enable dashboard"></w13c-switch>
-                </cms-detail-section>
-                <cms-dashboard-members data-private-members></cms-dashboard-members>
             </div>
         </cms-shell-detail-body>
     </cms-shell-detail>

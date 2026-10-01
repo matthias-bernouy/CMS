@@ -57,6 +57,30 @@ export function moveItem(items: NavigationItem[], path: number[], direction: str
     return false;
 }
 
+export function reorderItem(
+    items: NavigationItem[],
+    sourcePath: number[],
+    targetPath: number[],
+    afterTarget: boolean,
+): boolean {
+    const sourceParent = sourcePath.slice(0, -1);
+    const targetParent = targetPath.slice(0, -1);
+    if (sourceParent.join(".") !== targetParent.join(".")) {
+        return false;
+    }
+    const siblings = listAt(items, sourceParent);
+    const sourceIndex = sourcePath.at(-1)!;
+    const targetIndex = targetPath.at(-1)!;
+    const item = siblings?.[sourceIndex];
+    if (!siblings || !item || sourceIndex === targetIndex) {
+        return false;
+    }
+    siblings.splice(sourceIndex, 1);
+    const adjustedTarget = targetIndex - (sourceIndex < targetIndex ? 1 : 0);
+    siblings.splice(adjustedTarget + (afterTarget ? 1 : 0), 0, item);
+    return true;
+}
+
 export function navigationError(items: NavigationItem[]): string {
     return validateItems(items, new Set<string>(), 1);
 }
