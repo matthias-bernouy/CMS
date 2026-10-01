@@ -27,6 +27,8 @@ export class ActionMenu extends Component {
         this.addEventListener("click", this._onMenuClick);
         document.addEventListener("click", this._onDocumentClick);
         document.addEventListener("keydown", this._onDocumentKeydown);
+        document.addEventListener("scroll", this._onViewportChange, true);
+        window.addEventListener("resize", this._onViewportChange);
         this.sync();
     }
 
@@ -35,6 +37,8 @@ export class ActionMenu extends Component {
         this.removeEventListener("click", this._onMenuClick);
         document.removeEventListener("click", this._onDocumentClick);
         document.removeEventListener("keydown", this._onDocumentKeydown);
+        document.removeEventListener("scroll", this._onViewportChange, true);
+        window.removeEventListener("resize", this._onViewportChange);
     }
 
     attributeChangedCallback(): void {
@@ -62,8 +66,39 @@ export class ActionMenu extends Component {
             this._trigger.querySelector("[data-label]")!.textContent = this.label;
         }
         if (this._panel) {
-            this._panel.hidden = !this.open;
+            this.syncPanel();
         }
+    }
+
+    private syncPanel(): void {
+        const panel = this._panel!;
+        if (!this.open) {
+            hidePopover(panel);
+            panel.hidden = true;
+            return;
+        }
+        panel.hidden = false;
+        showPopover(panel);
+        this.positionPanel();
+    }
+
+    private positionPanel(): void {
+        if (!this._trigger || !this._panel || !this.open) {
+            return;
+        }
+        const gap = 6;
+        const edge = 8;
+        const trigger = this._trigger.getBoundingClientRect();
+        const panel = this._panel.getBoundingClientRect();
+        const preferredLeft = this.getAttribute("align") === "start" ? trigger.left : trigger.right - panel.width;
+        const left = Math.max(edge, Math.min(preferredLeft, window.innerWidth - panel.width - edge));
+        const below = trigger.bottom + gap;
+        const top =
+            below + panel.height <= window.innerHeight - edge
+                ? below
+                : Math.max(edge, trigger.top - panel.height - gap);
+        this._panel.style.setProperty("--action-menu-panel-left", `${left}px`);
+        this._panel.style.setProperty("--action-menu-panel-top", `${top}px`);
     }
 
     private _onTriggerClick = (event: Event): void => {
@@ -94,6 +129,26 @@ export class ActionMenu extends Component {
         this.open = false;
         this._trigger?.focus();
     };
+
+    private _onViewportChange = (): void => {
+        this.positionPanel();
+    };
+}
+
+function showPopover(panel: HTMLElement): void {
+    try {
+        panel.showPopover?.();
+    } catch {
+        // Attribute changes can run before the host is connected. connectedCallback retries the sync.
+    }
+}
+
+function hidePopover(panel: HTMLElement): void {
+    try {
+        panel.hidePopover?.();
+    } catch {
+        // A disconnected or already hidden popover needs no further cleanup.
+    }
 }
 
 function isActionMenuItem(target: EventTarget | undefined): target is HTMLElement {
