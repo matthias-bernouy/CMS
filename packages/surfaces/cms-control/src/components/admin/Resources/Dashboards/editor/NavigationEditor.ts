@@ -1,6 +1,5 @@
 import type { AvailableView, NavigationItem } from "../domain/types";
 import { fillItemDialog, readItemDialog, syncItemKind } from "./dialog";
-import { renderPreview } from "./preview";
 import { itemAt, listAt, moveItem, navigationError } from "./tree";
 import { renderTree } from "./treeView";
 import template from "./template.html" with { type: "text" };
@@ -13,7 +12,6 @@ export class DashboardNavigationEditor extends HTMLElement {
     private items: NavigationItem[] = [];
     private available: AvailableView[] = [];
     private editing: number[] | null = null;
-    private selectedPath: number[] = [];
     private snapshot: NavigationItem[] | null = null;
 
     connectedCallback(): void {
@@ -23,7 +21,6 @@ export class DashboardNavigationEditor extends HTMLElement {
         this.innerHTML = `<style>${css}</style>${template}`;
         this.querySelector("[data-add-root]")!.addEventListener("click", () => this.add([]));
         this.querySelector("[data-tree]")!.addEventListener("click", (event) => this.onTreeClick(event));
-        this.querySelector("[data-preview]")!.addEventListener("click", (event) => this.selectPreview(event));
         this.querySelector("[data-item-form]")!.addEventListener("submit", (event) => this.saveItem(event));
         this.querySelector("[data-cancel]")!.addEventListener("click", () => this.cancelItem());
         this.querySelector("[data-kind]")!.addEventListener("change", () => {
@@ -41,7 +38,6 @@ export class DashboardNavigationEditor extends HTMLElement {
 
     set value(value: NavigationItem[]) {
         this.items = structuredClone(value);
-        this.selectedPath = this.items.length ? [0] : [];
         this.render();
     }
 
@@ -60,9 +56,6 @@ export class DashboardNavigationEditor extends HTMLElement {
             return;
         }
         tree.replaceChildren(...renderTree(this.items, this.available).children);
-        this.querySelector("[data-preview]")!.replaceChildren(
-            renderPreview(this.items, this.available, this.selectedPath),
-        );
         this.querySelector("[data-empty]")!.toggleAttribute("hidden", this.items.length > 0);
         this.querySelector("[data-tree]")!.toggleAttribute("hidden", this.items.length === 0);
         (this.querySelector("[data-add-root]") as HTMLElement & { disabled: boolean }).disabled =
@@ -77,8 +70,6 @@ export class DashboardNavigationEditor extends HTMLElement {
         }
         const button = target.closest<HTMLElement>("[data-action]");
         if (!button) {
-            this.selectedPath = path;
-            this.render();
             return;
         }
         const action = button.dataset.action;
@@ -88,10 +79,8 @@ export class DashboardNavigationEditor extends HTMLElement {
             this.add(path);
         } else if (action === "delete") {
             listAt(this.items, path.slice(0, -1))?.splice(path.at(-1)!, 1);
-            this.selectedPath = [0];
             this.changed();
         } else if (action && moveItem(this.items, path, action)) {
-            this.selectedPath = [0];
             this.changed();
         }
     }
@@ -151,7 +140,6 @@ export class DashboardNavigationEditor extends HTMLElement {
         } else {
             delete item.childPlacement;
         }
-        this.selectedPath = [...this.editing];
         this.snapshot = null;
         this.editing = null;
         this.modal().hide();
@@ -168,14 +156,6 @@ export class DashboardNavigationEditor extends HTMLElement {
             this.items = this.snapshot;
             this.snapshot = null;
             this.editing = null;
-            this.render();
-        }
-    }
-
-    private selectPreview(event: Event): void {
-        const value = (event.target as Element).closest<HTMLElement>("[data-preview-select]")?.dataset.previewSelect;
-        if (value !== undefined) {
-            this.selectedPath = value.split(".").map(Number);
             this.render();
         }
     }

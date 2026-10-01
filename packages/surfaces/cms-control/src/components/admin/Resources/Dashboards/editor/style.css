@@ -1,5 +1,4 @@
 :host { display: block; }
-.navigation-editor-layout { display: grid; gap: 16px; grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); }
 .navigation-builder { min-width: 0; }
 .navigation-tree { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
 .navigation-children { border-left: 1px solid var(--border-strong); margin: 8px 0 0 22px; padding-left: 12px; }
@@ -40,7 +39,7 @@
     text-transform: uppercase;
 }
 .navigation-actions { display: flex; gap: 3px; }
-.navigation-actions button, .preview-navigation button {
+.navigation-actions button {
     background: var(--bg-surface);
     border: 1px solid var(--border-default);
     border-radius: 5px;
@@ -49,23 +48,10 @@
     min-height: 30px;
     padding-inline: 8px;
 }
-.navigation-actions button:hover, .preview-navigation button:hover { background: var(--primary-muted); }
+.navigation-actions button:hover { background: var(--primary-muted); }
 .navigation-actions button:disabled { cursor: default; opacity: .3; }
-.navigation-preview { background: var(--bg-muted); border: 1px solid var(--border-default); border-radius: 8px; min-height: 220px; padding: 14px; }
-.preview-heading { display: grid; margin-bottom: 14px; }
-.preview-heading strong { font-size: .875rem; }
-.preview-heading span, .preview-empty { color: var(--text-muted); font-size: .75rem; }
-.preview-navigation { display: grid; gap: 5px; margin-top: 12px; }
-.preview-navigation > span { color: var(--text-muted); font-size: .625rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
-.preview-navigation > div { display: flex; flex-wrap: wrap; gap: 5px; }
-.preview-navigation button { font-size: .75rem; min-height: 28px; }
-.preview-navigation button[data-active] { background: var(--primary-muted); border-color: var(--primary-base); color: var(--primary-base); font-weight: 700; }
-.preview-content { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: 7px; display: grid; margin-top: 14px; padding: 12px; }
-.preview-content span, .preview-content small { color: var(--text-muted); font-size: .6875rem; }
-.preview-content strong { font-size: .875rem; margin-block: 3px; }
 .modal-actions { display: flex; gap: 8px; }
 [hidden] { display: none !important; }
-@media (max-width: 960px) { .navigation-editor-layout { grid-template-columns: 1fr; } }
 @media (max-width: 620px) {
     .navigation-row { align-items: flex-start; flex-wrap: wrap; }
     .navigation-role { margin-left: 38px; order: 3; }

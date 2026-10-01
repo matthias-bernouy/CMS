@@ -28,7 +28,6 @@ function renderItem(
     row.dataset.path = path.join(".");
     const bar = document.createElement("div");
     bar.className = "navigation-row";
-    bar.dataset.previewPath = path.join(".");
     const icon = document.createElement("span");
     icon.className = "navigation-icon";
     const glyph = document.createElement("cms-library-icon");

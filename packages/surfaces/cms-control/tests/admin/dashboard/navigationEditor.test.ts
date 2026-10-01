@@ -1,6 +1,18 @@
 import { expect, test } from "bun:test";
 import type { NavigationItem } from "../../../src/components/admin/Resources/Dashboards/domain/types";
+import { DashboardNavigationEditor } from "../../../src/components/admin/Resources/Dashboards/editor/NavigationEditor";
 import { moveItem, navigationError } from "../../../src/components/admin/Resources/Dashboards/editor/tree";
+
+test("navigation editor only renders the editable navigation tree", () => {
+    const editor = new DashboardNavigationEditor();
+    document.body.append(editor);
+
+    expect(editor.querySelector("[data-tree]")).not.toBeNull();
+    expect(editor.querySelector("[data-preview]")).toBeNull();
+    expect(editor.textContent).not.toContain("Navigation preview");
+
+    editor.remove();
+});
 
 test("navigation editor validates direct tabs and three-level navigation", () => {
     const directTabs: NavigationItem[] = [

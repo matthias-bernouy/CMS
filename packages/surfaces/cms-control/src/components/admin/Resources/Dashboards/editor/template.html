@@ -3,15 +3,12 @@
     description="Build a primary navigation, an optional side navigation and optional tabs. Tabs can also live directly below a primary item."
 >
     <p9r-button slot="actions" type="button" variant="outlined" data-add-root>+ Add primary item</p9r-button>
-    <div class="navigation-editor-layout">
-        <div class="navigation-builder">
-            <cms-empty-state fluid data-empty>
-                <p slot="title">No navigation yet</p>
-                <p slot="hint">Add a collection view as the first primary item.</p>
-            </cms-empty-state>
-            <ol class="navigation-tree" data-tree aria-label="Dashboard navigation"></ol>
-        </div>
-        <div data-preview></div>
+    <div class="navigation-builder">
+        <cms-empty-state fluid data-empty>
+            <p slot="title">No navigation yet</p>
+            <p slot="hint">Add a collection view as the first primary item.</p>
+        </cms-empty-state>
+        <ol class="navigation-tree" data-tree aria-label="Dashboard navigation"></ol>
     </div>
 </cms-detail-section>
 
