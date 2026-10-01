@@ -30,7 +30,7 @@
                     <p9r-cell><strong>{{ label }}</strong></p9r-cell>
                     <p9r-cell>{{ providerLabel }}</p9r-cell>
                     <p9r-cell>
-                        <cms-user-admin sub="{{ sub }}" enabled="{{ administrator }}" editable="{{ canChangeAdministrator }}" emit="user:updated"></cms-user-admin>
+                        <cms-user-admin enabled="{{ administrator }}"></cms-user-admin>
                     </p9r-cell>
                     <p9r-cell>{{ emailStatusLabel }}</p9r-cell>
                     <p9r-cell>{{ lastSeenAtLabel }}</p9r-cell>
@@ -39,6 +39,8 @@
                             base-path="{{BASE_PATH}}"
                             sub="{{ sub }}"
                             sub-param="{{ subParam }}"
+                            administrator="{{ administrator }}"
+                            administrator-editable="{{ canChangeAdministrator }}"
                             password-reset="{{ passwordResetAction }}"
                             email-verification="{{ emailVerificationAction }}"
                             mark-verified="{{ markVerifiedAction }}"

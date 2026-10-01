@@ -1,5 +1,6 @@
 import { afterEach, expect, test } from "bun:test";
 import { Toast, ToastStack } from "@bernouy/components";
+import { CmsUserActions } from "cms-control/components/admin/Actions/UserActions/UserActions";
 import { UserAdmin } from "cms-control/components/admin/Actions/UserAdmin/UserAdmin";
 
 const realFetch = globalThis.fetch;
@@ -21,35 +22,55 @@ test("administrator access updates without reloading the page", async () => {
         request = { url: String(input), body: JSON.parse(String(init?.body)) };
         return Response.json({ administrator: true });
     }) as typeof fetch;
-    document.head.innerHTML = '<meta name="basePath" content="/cms">';
-    const access = new UserAdmin();
-    access.setAttribute("sub", "local:member");
-    access.setAttribute("enabled", "false");
-    access.setAttribute("editable", "true");
-    document.body.append(access);
+    const actions = new CmsUserActions();
+    actions.setAttribute("base-path", "/cms");
+    actions.setAttribute("sub", "local:member");
+    actions.setAttribute("administrator", "false");
+    actions.setAttribute("administrator-editable", "true");
+    document.body.append(actions);
     let updated = false;
     document.addEventListener("user:updated", () => (updated = true), { once: true });
 
-    access.querySelector<HTMLElement>("p9r-button")!.click();
+    actions.shadowRoot?.querySelector<HTMLElement>('[data-action="administrator"]')?.click();
     await waitFor(() => updated);
 
     expect(request).toEqual({
         url: "/cms/api/users/admin",
         body: { sub: "local:member", enabled: true },
     });
-    expect(access.getAttribute("enabled")).toBe("true");
-    expect(access.textContent).toContain("Remove admin");
+    expect(actions.getAttribute("administrator")).toBe("true");
+    expect(actions.shadowRoot?.querySelector('[data-action="administrator"]')?.textContent).toBe("Remove admin");
 });
 
-test("protected administrator access has no mutation control", () => {
+test("the access cell only displays the current role", () => {
     const access = new UserAdmin();
-    access.setAttribute("sub", "local:bootstrap");
     access.setAttribute("enabled", "true");
-    access.setAttribute("editable", "false");
     document.body.append(access);
 
     expect(access.textContent).toBe("Administrator");
     expect(access.querySelector("p9r-button")).toBeNull();
+});
+
+test("protected administrator access stays disabled in the actions menu", async () => {
+    let requests = 0;
+    globalThis.fetch = (async () => {
+        requests++;
+        return Response.json({ administrator: false });
+    }) as unknown as typeof fetch;
+    const actions = new CmsUserActions();
+    actions.setAttribute("base-path", "/cms");
+    actions.setAttribute("sub", "local:bootstrap");
+    actions.setAttribute("administrator", "true");
+    actions.setAttribute("administrator-editable", "false");
+    document.body.append(actions);
+    const item = actions.shadowRoot?.querySelector<HTMLElement>('[data-action="administrator"]');
+
+    item?.click();
+    await Promise.resolve();
+
+    expect(item?.hasAttribute("disabled")).toBe(true);
+    expect(item?.textContent).toBe("Remove admin");
+    expect(requests).toBe(0);
 });
 
 async function waitFor(condition: () => boolean): Promise<void> {

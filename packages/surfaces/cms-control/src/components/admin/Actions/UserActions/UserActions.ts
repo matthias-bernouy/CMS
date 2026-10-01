@@ -4,9 +4,10 @@ import BubblesEvent from "cms-control/core/dom/BubblesEvent";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 
-type Action = "password-reset" | "email-verification" | "mark-verified" | "delete";
+type Action = "administrator" | "password-reset" | "email-verification" | "mark-verified" | "delete";
 
 const ACTIONS: Record<Action, { endpoint: string; label: string }> = {
+    "administrator": { endpoint: "/api/users/admin", label: "Administrator access updated" },
     "password-reset": { endpoint: "/api/users/password-reset", label: "Password reset sent" },
     "email-verification": { endpoint: "/api/users/email-verification", label: "Verification email sent" },
     "mark-verified": { endpoint: "/api/users/email-verified", label: "Email marked verified" },
@@ -15,7 +16,7 @@ const ACTIONS: Record<Action, { endpoint: string; label: string }> = {
 
 export class CmsUserActions extends Component {
     static get observedAttributes(): string[] {
-        return ["password-reset", "email-verification", "mark-verified"];
+        return ["administrator", "administrator-editable", "password-reset", "email-verification", "mark-verified"];
     }
 
     constructor() {
@@ -38,7 +39,7 @@ export class CmsUserActions extends Component {
     private onClick = (event: Event): void => {
         const item = event.composedPath().find(isActionItem);
         const action = item?.dataset.action as Action | undefined;
-        if (!action || !ACTIONS[action]) {
+        if (!item || !action || !ACTIONS[action] || item.hasAttribute("disabled")) {
             return;
         }
         event.preventDefault();
@@ -64,6 +65,9 @@ export class CmsUserActions extends Component {
             return;
         }
         showToast(ACTIONS[action].label, { type: "success" });
+        if (action === "administrator") {
+            this.setAttribute("administrator", String(this.getAttribute("administrator") !== "true"));
+        }
         if (action === "delete") {
             window.location.href = `${this.basePath}/admin/users`;
         } else {
@@ -75,10 +79,12 @@ export class CmsUserActions extends Component {
         if (action === "delete") {
             return { method: "DELETE" };
         }
+        const body =
+            action === "administrator" ? { sub, enabled: this.getAttribute("administrator") !== "true" } : { sub };
         return {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sub }),
+            body: JSON.stringify(body),
         };
     }
 
@@ -95,6 +101,11 @@ export class CmsUserActions extends Component {
     }
 
     private sync(): void {
+        const administrator = this.item("administrator");
+        if (administrator) {
+            administrator.textContent = this.getAttribute("administrator") === "true" ? "Remove admin" : "Make admin";
+            administrator.toggleAttribute("disabled", this.getAttribute("administrator-editable") !== "true");
+        }
         for (const action of ["password-reset", "email-verification", "mark-verified"] as Action[]) {
             this.item(action)?.toggleAttribute("disabled", this.getAttribute(action) !== "true");
         }
@@ -111,7 +122,8 @@ async function errorMessage(res: Response | null): Promise<string> {
     }
     const text = await res.text().catch(() => "");
     try {
-        return JSON.parse(text)?.error ?? (text || `HTTP ${res.status}`);
+        const error = JSON.parse(text)?.error;
+        return (typeof error === "string" ? error : error?.message) ?? (text || `HTTP ${res.status}`);
     } catch {
         return text || `HTTP ${res.status}`;
     }
