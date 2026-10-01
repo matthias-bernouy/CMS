@@ -1,45 +1,59 @@
 <w13c-fixed-admin-layout>
-    <span slot="title">Users</span>
-    <p9r-open-modal modal-target="create-user-modal" slot="action">
-        <p9r-button color="primary">+ Add user</p9r-button>
-    </p9r-open-modal>
+    <p9r-container size="xl">
+        <cms-shell-detail size="xl">
+            <span slot="title">Users</span>
+            <span slot="description">Manage members, administrator access and local accounts.</span>
+            <p9r-open-modal modal-target="create-user-modal" slot="actions">
+                <p9r-button color="primary">Add user</p9r-button>
+            </p9r-open-modal>
 
-    <p9r-table cms-source="{{BASE_PATH}}/api/users" cms-reload-on="user:updated">
-        <cms-view-state table state="loading" cms-condition="$source.loading">
-            <p slot="title">Loading users</p>
-            <p slot="hint">Reading members and workspace access.</p>
-        </cms-view-state>
-        <cms-view-state table state="error" cms-condition="$source.error">
-            <p slot="title">Users could not be loaded</p>
-            <p slot="hint">{{ $source.message }}</p>
-            <a slot="action" href="">Try again</a>
-        </cms-view-state>
-        <p9r-row slot="header" cms-condition="$source.loaded">
-            <p9r-cell><strong>User</strong></p9r-cell>
-            <p9r-cell><strong>Provider</strong></p9r-cell>
-            <p9r-cell><strong>Access</strong></p9r-cell>
-            <p9r-cell><strong>Email</strong></p9r-cell>
-            <p9r-cell><strong>Last seen</strong></p9r-cell>
-        </p9r-row>
+            <p9r-table slot="body" cms-source="{{BASE_PATH}}/api/users" cms-reload-on="user:updated">
+                <cms-view-state table state="loading" cms-condition="$source.loading">
+                    <p slot="title">Loading users</p>
+                    <p slot="hint">Reading members and workspace access.</p>
+                </cms-view-state>
+                <cms-view-state table state="error" cms-condition="$source.error">
+                    <p slot="title">Users could not be loaded</p>
+                    <p slot="hint">{{ $source.message }}</p>
+                    <a slot="action" href="">Try again</a>
+                </cms-view-state>
+                <p9r-row slot="header" cms-condition="$source.loaded">
+                    <p9r-cell><strong>User</strong></p9r-cell>
+                    <p9r-cell><strong>Provider</strong></p9r-cell>
+                    <p9r-cell><strong>Access</strong></p9r-cell>
+                    <p9r-cell><strong>Email</strong></p9r-cell>
+                    <p9r-cell><strong>Last seen</strong></p9r-cell>
+                    <p9r-cell><strong>Actions</strong></p9r-cell>
+                </p9r-row>
 
-        <p9r-row cms-repeat="." cms-condition="$source.loaded">
-            <p9r-cell>
-                <p9r-stack gap="xs">
-                    <a href="{{BASE_PATH}}/admin/users/detail?sub={{ subParam }}"><strong>{{ label }}</strong></a>
-                    <span>{{ email }}</span>
-                </p9r-stack>
-            </p9r-cell>
-            <p9r-cell>{{ providerLabel }}</p9r-cell>
-            <p9r-cell><cms-user-admin sub="{{ sub }}" enabled="{{ administrator }}" editable="{{ canChangeAdministrator }}"></cms-user-admin></p9r-cell>
-            <p9r-cell>{{ emailStatusLabel }}</p9r-cell>
-            <p9r-cell>{{ lastSeenAtLabel }}</p9r-cell>
-        </p9r-row>
+                <p9r-row cms-repeat="." cms-condition="$source.loaded">
+                    <p9r-cell><strong>{{ label }}</strong></p9r-cell>
+                    <p9r-cell>{{ providerLabel }}</p9r-cell>
+                    <p9r-cell>
+                        <cms-user-admin sub="{{ sub }}" enabled="{{ administrator }}" editable="{{ canChangeAdministrator }}" emit="user:updated"></cms-user-admin>
+                    </p9r-cell>
+                    <p9r-cell>{{ emailStatusLabel }}</p9r-cell>
+                    <p9r-cell>{{ lastSeenAtLabel }}</p9r-cell>
+                    <p9r-cell>
+                        <cms-user-actions
+                            base-path="{{BASE_PATH}}"
+                            sub="{{ sub }}"
+                            sub-param="{{ subParam }}"
+                            password-reset="{{ passwordResetAction }}"
+                            email-verification="{{ emailVerificationAction }}"
+                            mark-verified="{{ markVerifiedAction }}"
+                            emit="user:updated">
+                        </cms-user-actions>
+                    </p9r-cell>
+                </p9r-row>
 
-        <cms-empty-state cms-condition="$source.empty">
-            <p slot="title">No users yet</p>
-            <p slot="hint">Users appear here after their first login.</p>
-        </cms-empty-state>
-    </p9r-table>
+                <cms-empty-state cms-condition="$source.empty">
+                    <p slot="title">No users yet</p>
+                    <p slot="hint">Add a local user or wait for a member to sign in.</p>
+                </cms-empty-state>
+            </p9r-table>
+        </cms-shell-detail>
+    </p9r-container>
 </w13c-fixed-admin-layout>
 
 <p9r-modal id="create-user-modal" aria-label="Add a local user">

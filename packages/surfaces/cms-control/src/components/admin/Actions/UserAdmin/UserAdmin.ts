@@ -1,6 +1,8 @@
+import { showToast } from "@bernouy/components";
+import BubblesEvent from "cms-control/core/dom/BubblesEvent";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 
-class UserAdmin extends HTMLElement {
+export class UserAdmin extends HTMLElement {
     static get observedAttributes(): string[] {
         return ["sub", "enabled", "editable"];
     }
@@ -21,16 +23,16 @@ class UserAdmin extends HTMLElement {
             return;
         }
         const enabled = this.getAttribute("enabled") === "true";
-        const button = document.createElement("p9r-button") as HTMLElement & { disabled: boolean };
-        button.setAttribute("type", "button");
-        button.setAttribute("variant", "outlined");
-        button.textContent = enabled ? "Remove admin" : "Make admin";
-        const role = document.createElement("strong");
+        const role = document.createElement("p9r-tag");
         role.textContent = enabled ? "Administrator" : "Member";
         if (this.getAttribute("editable") !== "true") {
             this.replaceChildren(role);
             return;
         }
+        const button = document.createElement("p9r-button") as HTMLElement & { disabled: boolean };
+        button.setAttribute("type", "button");
+        button.setAttribute("variant", "outlined");
+        button.textContent = enabled ? "Remove admin" : "Make admin";
         button.addEventListener("click", async (event) => {
             event.stopPropagation();
             button.disabled = true;
@@ -38,19 +40,36 @@ class UserAdmin extends HTMLElement {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ sub, enabled: !enabled }),
-            });
-            if (response.ok) {
-                location.reload();
+            }).catch(() => null);
+            if (response?.ok) {
+                this.setAttribute("enabled", String(!enabled));
+                document.dispatchEvent(new BubblesEvent(this.getAttribute("emit") ?? "user:updated"));
+                showToast(!enabled ? "Administrator access granted" : "Administrator access removed", {
+                    type: "success",
+                });
                 return;
             }
-            const error = document.createElement("span");
-            error.setAttribute("role", "alert");
-            error.textContent = `Could not change access (${response.status}).`;
-            this.append(error);
+            showToast(await errorMessage(response), { type: "error" });
             button.disabled = false;
         });
-        this.replaceChildren(role, document.createTextNode(" "), button);
+        const actions = document.createElement("p9r-stack");
+        actions.setAttribute("direction", "row");
+        actions.setAttribute("align-items", "center");
+        actions.setAttribute("gap", "sm");
+        actions.append(role, button);
+        this.replaceChildren(actions);
     }
 }
 
-customElements.define("cms-user-admin", UserAdmin);
+async function errorMessage(response: Response | null): Promise<string> {
+    if (!response) {
+        return "Administrator access could not be changed because the CMS is unavailable.";
+    }
+    const payload = (await response.json().catch(() => null)) as { error?: string | { message?: string } } | null;
+    const detail = typeof payload?.error === "string" ? payload.error : payload?.error?.message;
+    return detail ?? `Administrator access could not be changed (${response.status}).`;
+}
+
+if (!customElements.get("cms-user-admin")) {
+    customElements.define("cms-user-admin", UserAdmin);
+}
