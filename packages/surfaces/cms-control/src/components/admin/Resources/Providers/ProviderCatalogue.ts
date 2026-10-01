@@ -31,7 +31,7 @@ export class ProviderCatalogue extends HTMLElement {
         root.querySelector("[data-view-error]")!.addEventListener("retry", () => void this.load());
         root.querySelector("[data-back]")!.setAttribute("href", location.pathname);
         root.querySelector("[data-source-link]")!.setAttribute("href", `${getMetaBasePath()}/admin/sources`);
-        root.querySelector("[data-provider-reconnect]")!.addEventListener("click", () => this.reconnectActive());
+        root.querySelector("[data-provider-reconnect]")!.addEventListener("click", () => void this.reconnectActive());
         root.querySelector("cms-provider-management")!.addEventListener("provider-connection-opened", () => {
             this.connectModal().showModal();
         });
@@ -101,14 +101,33 @@ export class ProviderCatalogue extends HTMLElement {
         renderProviderDetail(this.shadowRoot!, item, this.catalogue);
     }
 
-    private reconnectActive(): void {
+    private async reconnectActive(): Promise<void> {
         const id = new URLSearchParams(location.search).get("provider");
         const installation = this.installations.find((item) => item.id === id);
         if (!installation) {
             this.status("Provider connection is unavailable.");
             return;
         }
-        const manifest = this.catalogue.imported
+        const entry = this.catalogue.available
+            .filter((item) => item.kind === "provider-manifest" && item.id === installation.providerId)
+            .sort((left, right) => compareSemVer(right.version, left.version))[0];
+        let manifest = entry
+            ? this.catalogue.imported.find(
+                  (item) => item.id === entry.id && item.version === entry.version && item.digest === entry.digest,
+              )
+            : undefined;
+        if (entry && !manifest) {
+            const button = this.shadowRoot!.querySelector<HTMLElement>("[data-provider-reconnect]")!;
+            button.setAttribute("disabled", "");
+            try {
+                manifest = await this.importManifest(entry);
+            } catch (error) {
+                this.status(String(error));
+                button.removeAttribute("disabled");
+                return;
+            }
+        }
+        manifest ??= this.catalogue.imported
             .filter((item) => item.id === installation.providerId)
             .sort((left, right) => compareSemVer(right.version, left.version))[0];
         if (!manifest) {
@@ -168,32 +187,42 @@ export class ProviderCatalogue extends HTMLElement {
         row.setAttribute("disabled", "");
         this.status("Importing manifest…");
         try {
-            const response = await fetch(`${getMetaBasePath()}/api/provider-import`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    repositoryId: entry.repositoryId,
-                    kind: entry.kind,
-                    publisherId: entry.publisherId,
-                    id: entry.id,
-                    version: entry.version,
-                    digest: entry.digest,
-                }),
-            });
-            if (!response.ok) {
-                throw new Error(`Manifest import failed (${response.status}): ${await response.text()}`);
-            }
-            await this.load();
-            const imported = this.catalogue.imported.find(
-                (item) => item.kind === entry.kind && item.id === entry.id && item.version === entry.version,
-            );
-            if (imported) {
-                this.management().open(entry.id, entry.version, imported.defaultOrigin ?? "", imported.links);
-            }
+            const imported = await this.importManifest(entry);
+            this.management().open(entry.id, entry.version, imported.defaultOrigin ?? "", imported.links);
         } catch (error) {
             this.status(String(error));
             row.removeAttribute("disabled");
         }
+    }
+
+    private async importManifest(entry: RepositoryArtifactEntry): Promise<ImportedProvider> {
+        const response = await fetch(`${getMetaBasePath()}/api/provider-import`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                repositoryId: entry.repositoryId,
+                kind: entry.kind,
+                publisherId: entry.publisherId,
+                id: entry.id,
+                version: entry.version,
+                digest: entry.digest,
+            }),
+        });
+        if (!response.ok) {
+            throw new Error(`Manifest import failed (${response.status}): ${await response.text()}`);
+        }
+        await this.load();
+        const imported = this.catalogue.imported.find(
+            (item) =>
+                item.kind === entry.kind &&
+                item.id === entry.id &&
+                item.version === entry.version &&
+                item.digest === entry.digest,
+        );
+        if (!imported) {
+            throw new Error("Imported provider manifest is unavailable");
+        }
+        return imported;
     }
 
     private status(message: string): void {

@@ -21,7 +21,12 @@ export function renderProviderDetail(
         ? `${item.providerId} · ${item.accountId}`
         : "This connection is no longer available.";
     root.querySelector("[data-provider-status]")!.textContent = item ? capitalize(item.status) : "Unavailable";
-    root.querySelector<HTMLElement>("[data-provider-reconnect]")!.hidden = !item || item.status === "revoked";
+    const reconnect = root.querySelector<HTMLElement>("[data-provider-reconnect]")!;
+    reconnect.hidden = !item || item.status === "revoked";
+    reconnect.textContent =
+        item && manifest && compareSemVer(manifest.version, item.manifestVersion) > 0
+            ? "Upgrade connection"
+            : "Reconnect";
     const facts = root.querySelector("[data-provider-facts]")!;
     facts.replaceChildren();
     if (!item) {

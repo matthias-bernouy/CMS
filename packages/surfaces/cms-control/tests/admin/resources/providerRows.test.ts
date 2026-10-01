@@ -5,6 +5,7 @@ import {
     renderProviderManifests,
 } from "cms-control/components/admin/Resources/Providers/rows";
 import { renderCustomProviders } from "cms-control/components/admin/Resources/Providers/Custom/rows";
+import { renderProviderDetail } from "cms-control/components/admin/Resources/Providers/detail";
 
 const manifest = (version: string, digest: string): RepositoryArtifactEntry => ({
     repositoryId: "local",
@@ -109,6 +110,37 @@ test("available providers keep only the latest release and expose the connection
     expect(row.querySelector('[slot="badge"]')?.textContent).toBe("Connect");
     row.click();
     expect(selected).toEqual(["1.1.0"]);
+});
+
+test("provider detail offers a connection upgrade when the repository has a newer manifest", () => {
+    const host = document.createElement("div");
+    const root = host.attachShadow({ mode: "open" });
+    root.innerHTML = `
+        <span data-provider-title></span><span data-provider-description></span><span data-provider-status></span>
+        <button data-provider-reconnect></button><dl data-provider-facts></dl>
+        <div data-provider-contracts></div><nav data-provider-links></nav>
+    `;
+    renderProviderDetail(
+        root,
+        {
+            id: "connection-1",
+            providerId: "ulvia.official",
+            accountId: "local-dev",
+            endpoint: "http://127.0.0.1:5103",
+            status: "enabled",
+            manifestVersion: "0.1.1",
+            revision: 2,
+            observedAt: null,
+            contracts: [],
+        },
+        {
+            repositories: ["local"],
+            available: [manifest("0.1.2", "sha256:two")],
+            imported: [],
+        },
+    );
+
+    expect(root.querySelector("[data-provider-reconnect]")?.textContent).toBe("Upgrade connection");
 });
 
 test("custom providers remain connectable when no repository lists their manifest", () => {
