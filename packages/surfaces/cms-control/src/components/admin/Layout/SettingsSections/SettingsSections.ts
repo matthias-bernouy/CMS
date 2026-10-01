@@ -10,6 +10,7 @@ const SETTINGS_SECTIONS = [
     "email",
     "privacy-analytics",
     "secrets",
+    "providers",
     "authentication",
 ] as const;
 const DEFAULT_SECTION: SettingsSection = "general";

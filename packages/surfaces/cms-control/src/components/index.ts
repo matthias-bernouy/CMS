@@ -1,4 +1,12 @@
 import "./admin/Resources/Collections/AvailableCollections";
+import "./admin/Resources/Providers/ProviderCatalogue";
+import "./admin/Resources/Sources/SourcesWorkspace";
+import "./admin/Resources/Health/HealthWorkspace";
+import "./admin/Actions/UserAdmin/UserAdmin";
+import "./admin/Resources/Dashboards/DashboardWorkspace";
+import "./admin/Resources/Dashboards/editor/NavigationEditor";
+import "./admin/Resources/Dashboards/navigation/DashboardNav";
+import "./admin/Resources/Dashboards/DashboardView";
 import "./admin/Resources/Collections/InstalledTexts";
 import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import {
@@ -28,6 +36,8 @@ import {
     MoneyInput,
     NavTab,
     NavTabs,
+    NavigationList,
+    NavigationListItem,
     P9rSelect,
     PhotoAlbum,
     SegmentedSwitch,
@@ -103,6 +113,8 @@ define("p9r-input", P9rInput);
 define("p9r-money-input", MoneyInput);
 define("p9r-nav-tab", NavTab);
 define("p9r-nav-tabs", NavTabs);
+define("p9r-navigation-list", NavigationList);
+define("p9r-navigation-list-item", NavigationListItem);
 define("p9r-select", P9rSelect);
 define("p9r-photo-album", PhotoAlbum);
 define("p9r-segmented-switch", SegmentedSwitch);

@@ -8,18 +8,20 @@
         <p9r-row slot="header" cms-condition="$source.loaded">
             <p9r-cell><strong>User</strong></p9r-cell>
             <p9r-cell><strong>Provider</strong></p9r-cell>
+            <p9r-cell><strong>Access</strong></p9r-cell>
             <p9r-cell><strong>Email</strong></p9r-cell>
             <p9r-cell><strong>Last seen</strong></p9r-cell>
         </p9r-row>
 
-        <p9r-row cms-repeat="." cms-condition="$source.loaded" href="{{BASE_PATH}}/admin/users/detail?sub={{ subParam }}">
+        <p9r-row cms-repeat="." cms-condition="$source.loaded">
             <p9r-cell>
                 <p9r-stack gap="xs">
-                    <strong>{{ label }}</strong>
+                    <a href="{{BASE_PATH}}/admin/users/detail?sub={{ subParam }}"><strong>{{ label }}</strong></a>
                     <span>{{ email }}</span>
                 </p9r-stack>
             </p9r-cell>
             <p9r-cell>{{ providerLabel }}</p9r-cell>
+            <p9r-cell><cms-user-admin sub="{{ sub }}" enabled="{{ administrator }}" editable="{{ canChangeAdministrator }}"></cms-user-admin></p9r-cell>
             <p9r-cell>{{ emailStatusLabel }}</p9r-cell>
             <p9r-cell>{{ lastSeenAtLabel }}</p9r-cell>
         </p9r-row>

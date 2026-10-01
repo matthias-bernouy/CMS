@@ -25,6 +25,7 @@ export class FixedAdminLayout extends Component {
     private _tabsSlot: HTMLSlotElement | null = null;
     private _pageHeader: HTMLElement | null = null;
     private _pageTabs: HTMLElement | null = null;
+    private _chromeObserver: MutationObserver | null = null;
 
     constructor() {
         super({
@@ -53,6 +54,8 @@ export class FixedAdminLayout extends Component {
         }
         this._setBrandName(root, DEFAULT_BRAND_NAME);
         this._syncPageChrome();
+        this._chromeObserver = new MutationObserver(() => this._syncPageChrome());
+        this._chromeObserver.observe(this, { attributes: true, attributeFilter: ["hidden"], subtree: true });
         if (!this.hasAttribute("operator")) {
             void this._syncSiteName(root);
         }
@@ -64,6 +67,7 @@ export class FixedAdminLayout extends Component {
     }
 
     disconnectedCallback() {
+        this._chromeObserver?.disconnect();
         document.removeEventListener("settings:saved", this._onSettingsSaved);
         this._titleSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
         this._actionSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);

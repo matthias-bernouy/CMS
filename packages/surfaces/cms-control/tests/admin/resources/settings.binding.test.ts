@@ -89,5 +89,7 @@ describe("admin settings binding", () => {
         const settingsNav = document.querySelector("cms-settings-nav");
         const general = settingsNav?.shadowRoot?.querySelector<HTMLElement>("[data-settings-section='general']");
         expect(general?.hasAttribute("active")).toBe(true);
+        expect(settingsNav?.shadowRoot?.querySelector("[data-settings-section='providers']")).not.toBeNull();
+        expect(settingsNav?.shadowRoot?.querySelector("[data-provider-group]")).toBeNull();
     });
 });

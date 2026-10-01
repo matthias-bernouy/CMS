@@ -36,6 +36,10 @@
                             </p9r-stack>
                         </cms-detail-section>
 
+                        <cms-detail-section slot="aside" heading="Workspace access">
+                            <cms-user-admin sub="{{ sub }}" enabled="{{ administrator }}" editable="{{ canChangeAdministrator }}"></cms-user-admin>
+                        </cms-detail-section>
+
                         <cms-detail-section slot="aside" heading="Activity">
                             <p9r-stack gap="sm">
                                 <span>Created {{ createdAtLabel }}</span>
