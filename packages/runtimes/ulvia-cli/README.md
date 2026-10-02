@@ -54,6 +54,19 @@ source of display order. A category filename must match its ID, duplicate IDs
 and orphan files reject, and category/token metadata uses the shared translation
 keys.
 
+Collection texts use recursive `texts/definitions/**/*.json` arrays for stable
+IDs and administration metadata, plus recursive
+`texts/locales/<locale>/**/*.json` objects for content values. The release
+command joins them into ordinary collection text records. Paths never prefix a
+text ID; duplicate definitions, duplicate per-locale values and unknown value
+IDs reject.
+
+Bloc roots are discovered recursively below `blocs/`. A folder becomes a Bloc
+when it contains `definition.json`, its basename must match the declared Bloc
+ID, and discovery stops there so `settings/definition.json` is never mistaken
+for a nested Bloc. Intermediate grouping directories contain only directories
+and do not affect release identity.
+
 To try the official provider, release these resources in order, then start `dev`
 and open `/admin/settings/providers` on the Control port:
 

@@ -9,3 +9,6 @@
   `translations/<locale>/`; paths organize authorship and never prefix keys.
 - Theme category files may be grouped recursively below `theme/`. Keep their
   filename and internal stable ID equal; `theme/definition.json` owns ordering.
+- Split collection texts between recursive `texts/definitions/` metadata and
+  `texts/locales/<locale>/` content trees. Group Bloc folders recursively below
+  `blocs/`; source paths never contribute to stable text or Bloc IDs.

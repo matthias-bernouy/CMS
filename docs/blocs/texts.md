@@ -11,6 +11,29 @@ and the immutable release digest. The official catalogue examples live under
 }
 ```
 
+## Authored source layout
+
+The local release source separates text definitions from localized content:
+
+```text
+texts/
+├── definitions/
+│   ├── storefront/welcome.json
+│   └── support/faq.json
+└── locales/
+    ├── en/storefront/welcome.json
+    ├── en/support/faq.json
+    └── fr/storefront/welcome.json
+```
+
+Definition fragments are arrays containing `id` and optional administration
+metadata keys, without `values`. Locale fragments are objects from text ID to
+static content value. Both trees are scanned recursively. Paths organize the
+source but never prefix or otherwise change text IDs. Duplicate definitions,
+duplicate values within one locale and values for unknown IDs reject. The CLI
+assembles these fragments into the canonical release records shown above, so
+site overrides and repository transport do not depend on the source layout.
+
 ## Server ownership
 
 `@bernouy/cms-repository/collections/texts` provides pure parsing and locale
@@ -95,7 +118,8 @@ languages. Complete site-language removal/migration workflows are not implemente
 ## Examples and limits
 
 `packages/official-repository/collections/ulvia-official/texts/` contains the installable Ulvia Official
-catalogue, split by category. Its eight compositions use the declared keys.
+catalogue, split recursively by definition, locale, domain and group. Its eight
+compositions use the declared keys.
 The checkout example remains an admission fixture. The temporary preview route
 has been removed. Existing private/code collections retain the earlier Texts
 mockup; only installed immutable releases have persisted translation editing.

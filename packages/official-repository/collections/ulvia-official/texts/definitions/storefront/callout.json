@@ -1,0 +1,14 @@
+[
+    {
+        "id": "callout-title",
+        "label": "text.callout-title.label",
+        "category": "text.category.storefront",
+        "group": "text.group.callout"
+    },
+    {
+        "id": "callout-body",
+        "label": "text.callout-body.label",
+        "category": "text.category.storefront",
+        "group": "text.group.callout"
+    }
+]

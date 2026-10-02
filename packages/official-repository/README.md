@@ -14,3 +14,6 @@ Official collections keep reusable administration copy in recursively scanned
 translation keys; duplicate keys across locale fragments reject, and page-owned,
 site-overridable content remains in `texts/`. Theme category files may likewise
 be grouped in subdirectories below `theme/` without changing their stable IDs.
+Text definitions and per-locale values are separate recursive trees below
+`texts/`; Bloc folders may be grouped recursively below `blocs/`. These source
+paths never become release identities.

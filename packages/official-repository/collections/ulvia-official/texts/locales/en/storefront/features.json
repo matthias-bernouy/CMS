@@ -1,0 +1,9 @@
+{
+    "feature-one-title": "Reusable blocs",
+    "feature-one-body": "Compose pages from installed resources.",
+    "feature-two-title": "Local repository",
+    "feature-two-body": "Keep releases versioned and pinned.",
+    "feature-three-title": "Translations",
+    "feature-three-body": "Edit site text without changing the release.",
+    "feature-card-note": "Part of the shared feature card"
+}

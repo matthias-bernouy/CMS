@@ -12,14 +12,15 @@ Author a declarative collection folder such as
 ```text
 packages/official-repository/collections/ulvia-official/
 ├── definition.json          # collection identity, version, locale and metadata
-├── blocs/<bloc>/definition.json
-├── blocs/<bloc>/shadowdom.html  # required for components
-├── blocs/<bloc>/lightdom.html   # required for compositions, optional for components
-├── blocs/<bloc>/default.html    # optional initial page-owned slot content
-├── blocs/<bloc>/settings/definition.json  # optional component attributes and authoring controls
-├── blocs/<bloc>/style.css    # optional for shadow components
-├── blocs/<bloc>/bloc.ts      # optional browser behavior
-├── texts/*.json             # arrays of localized text definitions
+├── blocs/**/<bloc>/definition.json
+├── blocs/**/<bloc>/shadowdom.html  # required for components
+├── blocs/**/<bloc>/lightdom.html   # required for compositions, optional for components
+├── blocs/**/<bloc>/default.html    # optional initial page-owned slot content
+├── blocs/**/<bloc>/settings/definition.json  # optional component settings
+├── blocs/**/<bloc>/style.css    # optional for shadow components
+├── blocs/**/<bloc>/bloc.ts      # optional browser behavior
+├── texts/definitions/**/*.json  # text IDs and administration metadata
+├── texts/locales/<locale>/**/*.json  # site-overridable content defaults
 ├── translations/<locale>/**/*.json  # reusable administration copy fragments
 ├── theme/definition.json    # ordered theme category IDs
 ├── theme/**/*.json          # recursively organized category/token defaults
@@ -44,6 +45,10 @@ Control.
 
 Components use `shadowdom.html`, optional fixed `lightdom.html`, optional
 `style.css`, and optional `bloc.ts`.
+Bloc folders may be grouped at any supported depth below `blocs/`. A directory
+containing `definition.json` is a Bloc root and stops recursive discovery; its
+basename must equal the Bloc ID. Parent grouping directories contain only
+directories and never contribute to the Bloc ID, label or runtime bundle.
 The release command generates a default component runtime when `bloc.ts`
 is absent. Compositions use `lightdom.html` without a browser component class.
 Their template is shared across every page using the installed release; an

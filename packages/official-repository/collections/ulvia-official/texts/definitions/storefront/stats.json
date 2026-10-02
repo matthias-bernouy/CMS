@@ -1,0 +1,26 @@
+[
+    {
+        "id": "stat-one-value",
+        "label": "text.stat-one-value.label",
+        "category": "text.category.storefront",
+        "group": "text.group.stats"
+    },
+    {
+        "id": "stat-one-label",
+        "label": "text.stat-one-label.label",
+        "category": "text.category.storefront",
+        "group": "text.group.stats"
+    },
+    {
+        "id": "stat-two-value",
+        "label": "text.stat-two-value.label",
+        "category": "text.category.storefront",
+        "group": "text.group.stats"
+    },
+    {
+        "id": "stat-two-label",
+        "label": "text.stat-two-label.label",
+        "category": "text.category.storefront",
+        "group": "text.group.stats"
+    }
+]

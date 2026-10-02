@@ -1,23 +1,15 @@
-import { readdir } from "node:fs/promises";
 import { basename, join } from "node:path";
-
-const MAX_TREE_DEPTH = 16;
-const MAX_JSON_FILES = 2_048;
-
-type JsonSourceFile = Readonly<{
-    absolutePath: string;
-    relativePath: string;
-}>;
+import { readSourceEntries, scanJsonSourceTree } from "./sourceTree";
 
 /** Merge recursively authored locale fragments into one immutable catalogue candidate. */
 export async function loadCollectionTranslations(directory: string): Promise<Record<string, unknown>> {
     const catalogues: [string, Record<string, unknown>][] = [];
-    for (const entry of await readEntries(directory)) {
+    for (const entry of await readSourceEntries(directory)) {
         if (!entry.isDirectory()) {
             throw new Error(`Translation entry ${entry.name} must be a locale directory`);
         }
         const root = join(directory, entry.name);
-        const files = await scanJsonTree(root);
+        const files = await scanJsonSourceTree(root);
         if (files.length === 0) {
             throw new Error(`Translation locale ${entry.name} must contain at least one JSON file`);
         }
@@ -63,7 +55,7 @@ export async function loadCollectionTheme(directory: string): Promise<unknown | 
         throw new Error("Theme category references must be unique lowercase identifiers");
     }
     const categories = new Map<string, { value: Record<string, unknown>; source: string }>();
-    for (const file of await scanJsonTree(directory, new Set(["definition.json"]))) {
+    for (const file of await scanJsonSourceTree(directory, new Set(["definition.json"]))) {
         const category = (await Bun.file(file.absolutePath).json()) as Record<string, unknown>;
         const id = category.id;
         if (typeof id !== "string" || basename(file.relativePath, ".json") !== id) {
@@ -84,49 +76,4 @@ export async function loadCollectionTheme(directory: string): Promise<unknown | 
         throw new Error("Theme category files must exactly match theme/definition.json");
     }
     return { label: definition.label, categories: orderedIds.map((id) => categories.get(id)!.value) };
-}
-
-async function scanJsonTree(
-    root: string,
-    excludedRootFiles: ReadonlySet<string> = new Set(),
-): Promise<JsonSourceFile[]> {
-    const files: JsonSourceFile[] = [];
-    await visitJsonTree(root, root, 0, excludedRootFiles, files);
-    return files.sort((left, right) => left.relativePath.localeCompare(right.relativePath));
-}
-
-async function visitJsonTree(
-    root: string,
-    directory: string,
-    depth: number,
-    excludedRootFiles: ReadonlySet<string>,
-    files: JsonSourceFile[],
-): Promise<void> {
-    if (depth > MAX_TREE_DEPTH) {
-        throw new Error(`JSON source tree must not exceed ${MAX_TREE_DEPTH} directory levels`);
-    }
-    for (const entry of await readEntries(directory)) {
-        const absolutePath = join(directory, entry.name);
-        const relativePath = absolutePath.slice(root.length + 1).replaceAll("\\", "/");
-        if (entry.isDirectory()) {
-            await visitJsonTree(root, absolutePath, depth + 1, excludedRootFiles, files);
-            continue;
-        }
-        if (!entry.isFile() || !entry.name.endsWith(".json")) {
-            throw new Error(`Unsupported entry in JSON source tree: ${relativePath}`);
-        }
-        if (depth === 0 && excludedRootFiles.has(entry.name)) {
-            continue;
-        }
-        files.push({ absolutePath, relativePath });
-        if (files.length > MAX_JSON_FILES) {
-            throw new Error(`JSON source tree must contain at most ${MAX_JSON_FILES} files`);
-        }
-    }
-}
-
-async function readEntries(directory: string) {
-    return (await readdir(directory, { withFileTypes: true })).sort((left, right) =>
-        left.name.localeCompare(right.name),
-    );
 }

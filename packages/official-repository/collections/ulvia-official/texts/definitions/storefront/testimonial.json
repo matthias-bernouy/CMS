@@ -1,0 +1,14 @@
+[
+    {
+        "id": "quote",
+        "label": "text.quote.label",
+        "category": "text.category.storefront",
+        "group": "text.group.testimonial"
+    },
+    {
+        "id": "quote-attribution",
+        "label": "text.quote-attribution.label",
+        "category": "text.category.storefront",
+        "group": "text.group.testimonial"
+    }
+]

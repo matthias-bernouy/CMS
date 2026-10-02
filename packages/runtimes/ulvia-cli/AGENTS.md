@@ -23,6 +23,9 @@ Local Ulvia CMS development runtime.
   `translations/<locale>/` directory and discover theme category files
   recursively by stable ID. Reject duplicate translation keys, duplicate theme
   IDs, filename/ID mismatches and files absent from the theme manifest.
+- Collection text sources recursively merge definition arrays separately from
+  `locales/<locale>/` value objects. Bloc discovery recursively traverses pure
+  grouping directories and stops at a folder-owned `definition.json`.
 - `dev` serves only stored releases on loopback; it must never read authored folders.
 - `prune` clears the local repository without touching the persistent dev stack.
 - Do not reintroduce the removed integration repository or Supabase bridge.

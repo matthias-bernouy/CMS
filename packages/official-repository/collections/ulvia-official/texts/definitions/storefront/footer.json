@@ -1,0 +1,8 @@
+[
+    {
+        "id": "footer-copy",
+        "label": "text.footer-copy.label",
+        "category": "text.category.storefront",
+        "group": "text.group.footer"
+    }
+]
