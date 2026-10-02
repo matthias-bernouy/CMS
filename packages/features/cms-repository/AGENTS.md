@@ -237,7 +237,9 @@ models and validation for CMS-owned installations and site selections.
   Optional `visibleWhen` is editor-only and may reference declared boolean or
   finite-option string items. Validate comparisons and reject visibility cycles;
   hiding a control never clears or exempts its stored attribute.
-- Every bloc declares its author-facing label. Slot acceptance is declarative:
+- Every bloc declares its author-facing label. Optional catalogue categories are
+  translation keys and optional nonnegative order values are stable within that
+  category; source paths never become catalogue metadata. Slot acceptance is declarative:
   exact component tags, any component, bounded media kinds, plain text, or the
   closed inline/prose rich-text profiles. Rich text remains page-owned HTML and
   never becomes a setting attribute or collection-owned editor document. Verify all local

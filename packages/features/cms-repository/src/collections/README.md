@@ -28,7 +28,9 @@ This slice supports:
 - Optional Control HTML views: bounded collection-owned fragments.
 - Assets declared by stable ID, concrete MIME type, byte length and SHA-256.
 - Component blocs with a static `shadowdom` shell and optional fixed `lightdom`,
-  `style` source and declarative setting items.
+  `style` source and declarative setting items. Optional translated `category`
+  and numeric `order` metadata organize the author-facing catalogue without
+  deriving public identity from source paths.
 - Composition blocs with fixed `lightdom` only: their authoring host is replaced
   by their content at delivery. They have no own shell, settings or stylesheet.
 - Explicit local `uses`, named slots for components, media, plain text or bounded

@@ -54,6 +54,7 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
                 active: record.artifact?.catalogue !== "inactive",
                 name: metadata?.name ?? record.tag,
                 group: metadata?.group ?? "",
+                catalogueOrder: record.artifact?.catalogueOrder,
                 description: metadata?.description ?? "",
                 origin,
                 state,
@@ -92,7 +93,12 @@ export async function siteBlocCatalogue(cms: ControlCms, query: BlocCatalogueQue
                     value.toLowerCase().includes(normalizedSearch),
                 ),
         )
-        .sort((left, right) => left.name.localeCompare(right.name) || left.tag.localeCompare(right.tag));
+        .sort(
+            (left, right) =>
+                (left.catalogueOrder ?? Number.MAX_SAFE_INTEGER) - (right.catalogueOrder ?? Number.MAX_SAFE_INTEGER) ||
+                left.name.localeCompare(right.name) ||
+                left.tag.localeCompare(right.tag),
+        );
 }
 
 function ownershipView(ownership: BlocOwnership) {

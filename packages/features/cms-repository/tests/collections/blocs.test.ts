@@ -5,9 +5,14 @@ import { checkDemoBlocs as check, demoComponent as component, demoComposition as
 
 describe("collection bloc admission", () => {
     test("accepts component and composition variants with normalized declarations", () => {
-        const blocs = check([composition(), component({ thumbnail: "preview" })], new Set(["preview"]));
+        const blocs = check(
+            [composition(), component({ thumbnail: "preview", category: "Content", order: 20 })],
+            new Set(["preview"]),
+        );
         expect(blocs.map((bloc) => bloc.id)).toEqual(["demo-card", "demo-page"]);
         expect(blocs[0]?.uses).toEqual([]);
+        expect(blocs[0]).toMatchObject({ category: "Content", order: 20 });
+        expect(() => check([component({ order: -1 })])).toThrow("integer");
     });
 
     test("requires platform-safe namespaced custom-element tags", () => {

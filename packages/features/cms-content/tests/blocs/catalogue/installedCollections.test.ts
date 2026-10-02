@@ -16,6 +16,7 @@ const release = {
     translations: {
         en: {
             "bloc.card.label": "Card",
+            "bloc.category.content": "Content",
             "bloc.welcome.label": "Welcome",
             "collection.name": "Test",
             "setting.compact.label": "Compact",
@@ -36,6 +37,8 @@ const release = {
             kind: "composition",
             id: "test-welcome",
             label: "bloc.welcome.label",
+            category: "bloc.category.content",
+            order: 30,
             lightdom: "<h1>{{ cms.i18n.test.title }}</h1>",
             uses: [],
             requires: [],
@@ -55,6 +58,10 @@ test("installed resources participate in authoring validation and public read mo
     await repository.updatePage({ id: page.id, visible: true });
     expect(await local.getBlocRecord("test-welcome")).toBeNull();
     expect((await repository.getBlocRecord("test-welcome"))!.collectionId).toBe("test");
+    expect((await repository.getBlocRecord("test-welcome"))!.artifact).toMatchObject({
+        group: "Content",
+        catalogueOrder: 30,
+    });
     const reader = createContentReader(repository);
     expect((await reader.getRenderableBlocs())[0]!.compositionHTML).toContain("cms.i18n.test.title");
     expect((await reader.getPublishedPage("/test"))!.content).toContain("test-welcome");

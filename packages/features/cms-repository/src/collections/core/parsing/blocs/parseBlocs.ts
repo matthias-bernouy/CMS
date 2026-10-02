@@ -1,7 +1,7 @@
 import type { CollectionBloc } from "cms-repository/collections/interfaces/CollectionBloc";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
-import { array, identifier, keys, ordinal, record, string, unique } from "../../values";
+import { array, identifier, integer, keys, ordinal, record, string, unique } from "../../values";
 import { parseRequirements } from "../requirements";
 import { parseComponentSettings } from "./settings";
 import { blocReferences, parseSlots } from "./slots";
@@ -12,6 +12,8 @@ const common = [
     "id",
     "label",
     "description",
+    "category",
+    "order",
     "internal",
     "thumbnail",
     "uses",
@@ -55,6 +57,10 @@ function parseBloc(
         ...(source.description === undefined
             ? {}
             : { description: string(source.description, 4096, `${path}.description`) }),
+        ...(source.category === undefined ? {} : { category: string(source.category, 120, `${path}.category`) }),
+        ...(source.order === undefined
+            ? {}
+            : { order: integer(source.order, 0, Number.MAX_SAFE_INTEGER, `${path}.order`) }),
         ...(source.internal === undefined ? {} : { internal: source.internal as boolean }),
         ...(source.thumbnail === undefined ? {} : { thumbnail: identifier(source.thumbnail, `${path}.thumbnail`) }),
         uses: blocReferences(source.uses === undefined ? [] : source.uses, `${path}.uses`, limits),

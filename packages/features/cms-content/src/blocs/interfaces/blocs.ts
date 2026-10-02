@@ -10,6 +10,8 @@ export type TBloc = {
     id: string;
     name: string;
     group: string;
+    /** Optional stable order supplied by an installed collection catalogue. */
+    catalogueOrder?: number;
     description: string;
     /** Optional authored image under the immutable package's assets/ directory. */
     thumbnail?: PresentationImage;

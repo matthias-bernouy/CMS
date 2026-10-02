@@ -57,6 +57,9 @@ Bloc folders may be grouped at any supported depth below `blocs/`. A directory
 containing `definition.json` is a Bloc root and stops recursive discovery; its
 basename must equal the Bloc ID. Parent grouping directories contain only
 directories and never contribute to the Bloc ID, label or runtime bundle.
+An optional translated `category` and nonnegative integer `order` in the Bloc
+definition control its author-facing catalogue group and position. Source folder
+names remain organizational only.
 The release command generates a default component runtime when `bloc.ts`
 is absent. Compositions use `lightdom.html` without a browser component class.
 Their template is shared across every page using the installed release; an

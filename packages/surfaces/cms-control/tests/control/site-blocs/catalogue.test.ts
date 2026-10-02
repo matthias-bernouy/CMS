@@ -32,6 +32,14 @@ async function catalogueFixture() {
 }
 
 describe("site bloc catalogue", () => {
+    test("uses an installed collection's stable catalogue order", async () => {
+        const { cms, repository } = siteBlocHarness();
+        await seedBloc(repository, "alpha-late", { name: "Alpha", catalogueOrder: 20 });
+        await seedBloc(repository, "zulu-early", { name: "Zulu", catalogueOrder: 10 });
+
+        expect((await siteBlocCatalogue(cms)).map((item) => item.tag)).toEqual(["zulu-early", "alpha-late"]);
+    });
+
     test("keeps internal behavior controllers out of the author catalogue", async () => {
         const { cms, repository } = siteBlocHarness();
         await seedBloc(repository, "site-shell", {

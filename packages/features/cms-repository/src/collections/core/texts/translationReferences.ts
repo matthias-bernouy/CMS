@@ -53,6 +53,7 @@ function collectReferences(release: CollectionRelease): Reference[] {
         const path = `$.blocs[${blocIndex}]`;
         references.push(reference(bloc.label, `${path}.label`, 120));
         optional(references, bloc.description, `${path}.description`, 4096);
+        optional(references, bloc.category, `${path}.category`, 120);
         for (const [settingIndex, setting] of (bloc.kind === "component" ? (bloc.settings ?? []) : []).entries()) {
             const settingPath = `${path}.settings[${settingIndex}]`;
             references.push(reference(setting.label, `${settingPath}.label`, 120));

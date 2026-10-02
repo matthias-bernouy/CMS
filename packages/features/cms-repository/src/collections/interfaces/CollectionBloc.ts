@@ -92,6 +92,10 @@ interface CollectionBlocBase {
     readonly id: string;
     readonly label: CollectionTranslationKey;
     readonly description?: CollectionTranslationKey;
+    /** Author-facing library category translation key. */
+    readonly category?: CollectionTranslationKey;
+    /** Stable ascending position inside the category. */
+    readonly order?: number;
     readonly internal?: boolean;
     readonly thumbnail?: string;
     readonly uses: readonly string[];

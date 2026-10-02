@@ -39,7 +39,8 @@ export function withInstalledCollections(
                             artifact: {
                                 id: bloc.id,
                                 name: resolveCollectionTranslation(release, bloc.label),
-                                group: resolveCollectionTranslation(release, release.name),
+                                group: resolveCollectionTranslation(release, bloc.category ?? release.name),
+                                ...(bloc.order === undefined ? {} : { catalogueOrder: bloc.order }),
                                 description: bloc.description
                                     ? resolveCollectionTranslation(release, bloc.description)
                                     : "",
