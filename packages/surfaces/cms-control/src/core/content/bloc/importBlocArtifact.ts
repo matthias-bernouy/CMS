@@ -32,7 +32,7 @@ export type BlocImportInput = {
     description?: string;
     catalogue?: "active" | "inactive";
     internal?: boolean;
-    nativeElement?: string;
+    nativeElement?: { accepts: readonly string[] };
     thumbnail?: PresentationImage;
     viewPath?: string;
     viewJS?: string | File | null;
@@ -58,16 +58,29 @@ export async function importBlocArtifact(
     input: BlocImportInput,
     runtime: BlocImportRuntime = {},
 ): Promise<BlocImportResult> {
-    const nativeElement = input.nativeElement?.trim().toLowerCase();
+    const nativeElementCandidate = input.nativeElement
+        ? { accepts: input.nativeElement.accepts.map((tag) => tag.trim().toLowerCase()) }
+        : undefined;
     if (!input.name || !input.tag || (!input.viewJS && input.compositionHTML === undefined)) {
         throw new BlocImportError("Missing argument (name, tag and viewJS or compositionHTML required)", 400);
     }
     if (input.viewJS && input.compositionHTML !== undefined) {
         throw new BlocImportError("A bloc cannot define both viewJS and compositionHTML", 400);
     }
-    if (nativeElement && !isPlatformManagedNativeElementTag(nativeElement)) {
-        throw new BlocImportError(`Unsupported managed native element "${nativeElement}"`, 400);
+    if (
+        nativeElementCandidate &&
+        (nativeElementCandidate.accepts.length === 0 ||
+            new Set(nativeElementCandidate.accepts).size !== nativeElementCandidate.accepts.length)
+    ) {
+        throw new BlocImportError("Managed native elements require a non-empty unique accepts list", 400);
     }
+    const unsupportedNativeElement = nativeElementCandidate?.accepts.find(
+        (tag) => !isPlatformManagedNativeElementTag(tag),
+    );
+    if (unsupportedNativeElement) {
+        throw new BlocImportError(`Unsupported managed native element "${unsupportedNativeElement}"`, 400);
+    }
+    const nativeElement = nativeElementCandidate as TBloc["nativeElement"];
     if (nativeElement && (input.internal || input.compositionHTML !== undefined)) {
         throw new BlocImportError("Managed native elements require an editable component view", 400);
     }
@@ -96,6 +109,9 @@ export async function importBlocArtifact(
     const defaultContentResult = resolveDefaultContent(input.source);
     if (defaultContentResult.error) {
         throw new BlocImportError(defaultContentResult.error, 400);
+    }
+    if (nativeElement && defaultContentResult.content === undefined) {
+        throw new BlocImportError("Managed native elements require default content", 400);
     }
     const managedNativeIssue =
         nativeElement && defaultContentResult.content !== undefined

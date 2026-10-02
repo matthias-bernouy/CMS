@@ -3,12 +3,15 @@ import { ContentValidationError } from "cms-content/application/core/validation/
 import { managedNativeElementIssue } from "cms-content/blocs/core/markup/validation/managedNativeElements";
 import { assertCollectionSettingAttributes } from "cms-content/blocs/core/markup/validation/collectionSettings";
 import type { CollectionComponentSettings } from "@bernouy/cms-repository/collections";
+import type { TBloc } from "cms-content/blocs/interfaces/blocs";
 
 /** Minimal reader — `CmsRepository` satisfies it structurally. */
 export type ContentRefsReader = {
     getBlocsList(options?: {
         includeInactive?: boolean;
-    }): Promise<Array<{ id: string; nativeElement?: string; collectionSettings?: CollectionComponentSettings }>>;
+    }): Promise<
+        Array<{ id: string; nativeElement?: TBloc["nativeElement"]; collectionSettings?: CollectionComponentSettings }>
+    >;
 };
 
 /**

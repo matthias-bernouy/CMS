@@ -1,4 +1,5 @@
 import type { CollectionTextSource } from "cms-content/pages/core/rendering/collectionTexts";
+import type { TBloc } from "cms-content/blocs/interfaces/blocs";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 import type { RenderingSettings } from "cms-content/settings/interfaces/settings";
 
@@ -6,7 +7,7 @@ export type RenderableBloc = {
     id: string;
     compositionHTML?: string;
     componentHTML?: string;
-    nativeElement?: string;
+    nativeElement?: TBloc["nativeElement"];
 };
 
 export type PublishedRouteResolution =

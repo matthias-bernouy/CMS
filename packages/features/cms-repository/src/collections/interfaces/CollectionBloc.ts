@@ -18,6 +18,25 @@ export type CollectionSlotAccept =
 
 export type CollectionRichTextProfile = "inline" | "prose";
 
+export type CollectionManagedNativeElementTag =
+    | "h1"
+    | "h2"
+    | "h3"
+    | "h4"
+    | "h5"
+    | "h6"
+    | "p"
+    | "a"
+    | "button"
+    | "img"
+    | "svg"
+    | "span";
+
+export interface CollectionManagedNativeElement {
+    /** Native tags an author may select for the single page-owned child. */
+    readonly accepts: readonly CollectionManagedNativeElementTag[];
+}
+
 export interface CollectionSettingOption {
     readonly value: string;
     readonly label: CollectionTranslationKey;
@@ -44,6 +63,7 @@ export type CollectionSettingControl =
     | { readonly kind: "number" | "range"; readonly step?: number; readonly suffix?: CollectionTranslationKey }
     | { readonly kind: "toggle" };
 
+/** Collection settings always target attributes on the custom-element wrapper. */
 interface CollectionSettingBase {
     /** Safe HTML attribute name. */
     readonly id: string;
@@ -107,6 +127,8 @@ interface CollectionBlocBase {
 
 export interface CollectionComponent extends CollectionBlocBase {
     readonly kind: "component";
+    /** Contract for the single page-owned native Light DOM child. */
+    readonly nativeElement?: CollectionManagedNativeElement;
     /** Static shadow shell; dynamic bindings belong to the light DOM. */
     readonly shadowdom: string;
     readonly lightdom?: string;

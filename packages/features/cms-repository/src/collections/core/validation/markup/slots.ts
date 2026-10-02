@@ -11,6 +11,9 @@ export interface BlocMarkup {
 }
 
 export function validatePageSlots(bloc: CollectionBloc, markup: BlocMarkup, path: string): void {
+    if (bloc.kind === "component" && bloc.nativeElement) {
+        return;
+    }
     if (markup.pageSlots.has("")) {
         invalid("slots the page fills must have a name", `${path}.slots`);
     }

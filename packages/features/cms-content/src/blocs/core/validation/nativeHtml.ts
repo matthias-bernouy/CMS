@@ -1,3 +1,5 @@
+import { COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS } from "@bernouy/cms-repository/collections";
+
 const NATIVE_HTML_TAGS = new Set([
     "a",
     "abbr",
@@ -141,20 +143,7 @@ export const PLATFORM_NATIVE_RICH_TEXT_TAGS = ["strong", "em", "code"] as const;
  * Native elements that a custom bloc may own as its single, managed Light DOM
  * child. Containers with content-slot semantics are intentionally excluded.
  */
-export const PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS = [
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "p",
-    "a",
-    "button",
-    "img",
-    "svg",
-    "span",
-] as const;
+export const PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS = COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS;
 
 export type PlatformManagedNativeElementTag = (typeof PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS)[number];
 

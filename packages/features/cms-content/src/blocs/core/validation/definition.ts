@@ -38,16 +38,36 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     if (bloc.internal && (bloc.compositionHTML !== undefined || !bloc.viewJS.trim())) {
         throw new ContentValidationError("internal", "internal blocs must provide a component view");
     }
-    if (bloc.nativeElement !== undefined && !isPlatformManagedNativeElementTag(bloc.nativeElement)) {
-        throw new ContentValidationError("nativeElement", "unsupported managed native element tag");
-    }
-    if (bloc.nativeElement !== undefined && bloc.nativeElement !== bloc.nativeElement.toLowerCase()) {
-        throw new ContentValidationError("nativeElement", "lower-case native element tag expected");
-    }
+    validateManagedNativeElement(bloc.nativeElement);
     if (bloc.nativeElement !== undefined && (bloc.internal || bloc.compositionHTML !== undefined)) {
         throw new ContentValidationError("nativeElement", "managed native elements require an editable component view");
     }
     return bloc;
+}
+
+function validateManagedNativeElement(value: TBloc["nativeElement"]): void {
+    if (value === undefined) {
+        return;
+    }
+    if (
+        value === null ||
+        typeof value !== "object" ||
+        Array.isArray(value) ||
+        Object.keys(value).some((key) => key !== "accepts") ||
+        !Array.isArray(value.accepts) ||
+        value.accepts.length === 0 ||
+        new Set(value.accepts).size !== value.accepts.length
+    ) {
+        throw new ContentValidationError("nativeElement", "non-empty unique accepts list expected");
+    }
+    for (const tag of value.accepts) {
+        if (!isPlatformManagedNativeElementTag(tag)) {
+            throw new ContentValidationError("nativeElement", `unsupported managed native element tag ${tag}`);
+        }
+        if (tag !== tag.toLowerCase()) {
+            throw new ContentValidationError("nativeElement", "lower-case native element tags expected");
+        }
+    }
 }
 
 export function validateSiteBlocDefinition(value: SiteBlocDefinition): SiteBlocDefinition {

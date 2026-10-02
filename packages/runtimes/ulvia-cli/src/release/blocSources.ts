@@ -74,6 +74,12 @@ async function compileBlocSource(source: BlocSource, group: string): Promise<unk
     if (definition.kind !== "component" || !(await shadow.exists())) {
         throw new Error(`Component ${id} requires shadowdom.html`);
     }
+    if (definition.nativeElement !== undefined && (await light.exists())) {
+        throw new Error(`Managed native component ${id} cannot declare lightdom.html`);
+    }
+    if (definition.nativeElement !== undefined && !defaultContent) {
+        throw new Error(`Managed native component ${id} requires default.html`);
+    }
     const shadowdom = (await shadow.text()).trim();
     const lightdom = (await light.exists()) ? (await light.text()).trim() : undefined;
     const css = (await style.exists()) ? (await style.text()).trim() : undefined;

@@ -1,5 +1,6 @@
 import type {
     CollectionComponentSettings,
+    CollectionManagedNativeElement,
     CollectionSlot,
     CollectionSlotAccept,
 } from "@bernouy/cms-repository/collections";
@@ -19,8 +20,8 @@ export type TBloc = {
     catalogue?: "active" | "inactive";
     /** Internal behavior component omitted from the authoring catalogue. */
     internal?: boolean;
-    /** Single required native Light DOM child managed as part of this bloc. */
-    nativeElement?: string;
+    /** Allowed tags for the single required native Light DOM child. */
+    nativeElement?: CollectionManagedNativeElement;
     viewJS: string;
     /**
      * Server-rendered light-DOM template. A bloc carrying this field is a

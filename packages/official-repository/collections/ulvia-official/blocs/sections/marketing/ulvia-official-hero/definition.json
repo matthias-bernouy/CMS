@@ -5,7 +5,7 @@
     "description": "bloc.hero.description",
     "category": "bloc.category.sections",
     "order": 10,
-    "uses": ["ulvia-official-button"],
+    "uses": ["ulvia-official-action"],
     "requires": [],
     "slots": {
         "eyebrow": {
@@ -22,7 +22,7 @@
             "max": 1
         },
         "actions": {
-            "accepts": [{ "kind": "component", "tag": "ulvia-official-button" }],
+            "accepts": [{ "kind": "component", "tag": "ulvia-official-action" }],
             "max": 2
         },
         "media": {

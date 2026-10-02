@@ -1,14 +1,5 @@
 [
     {
-        "id": "href",
-        "label": "setting.destination.label",
-        "group": "setting.group.action",
-        "type": "string",
-        "default": "#",
-        "maxLength": 2048,
-        "control": { "kind": "page-link", "allowPage": true, "allowExternal": true, "allowMedia": true }
-    },
-    {
         "id": "appearance",
         "label": "setting.appearance.label",
         "group": "setting.group.appearance",

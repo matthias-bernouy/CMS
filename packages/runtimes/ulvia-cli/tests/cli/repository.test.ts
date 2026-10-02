@@ -42,14 +42,24 @@ test("local repository lists immutable metadata and serves matching release byte
             "/.cms/call/catalog.items/item.list",
         );
         expect(release.dashboards?.[0]?.contracts).toEqual(["catalog.items"]);
-        const button = release.blocs.find((bloc) => bloc.id === "ulvia-official-button");
-        expect(button?.kind).toBe("component");
-        if (button?.kind === "component") {
-            expect(button.runtime?.viewJS).toContain("ulvia-official-button");
-            expect(button.lightdom).toContain("data-ulvia-control");
-            expect(button.defaultContent).toContain("Button label");
-            expect(button.settings?.map((setting) => setting.id)).toEqual(["href", "appearance", "size", "wide"]);
+        const action = release.blocs.find((bloc) => bloc.id === "ulvia-official-action");
+        expect(action?.kind).toBe("component");
+        if (action?.kind === "component") {
+            expect(action.runtime?.viewJS).toContain("ulvia-official-action");
+            expect(action.nativeElement).toEqual({ accepts: ["button", "a"] });
+            expect(action.lightdom).toBeUndefined();
+            expect(action.defaultContent).toContain('<button type="button">');
+            expect(action.settings?.map((setting) => setting.id)).toEqual(["appearance", "size", "wide"]);
         }
+        const heading = release.blocs.find((bloc) => bloc.id === "ulvia-official-heading");
+        expect(heading?.kind === "component" ? heading.nativeElement?.accepts : undefined).toEqual([
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
+        ]);
         const grid = release.blocs.find((bloc) => bloc.id === "ulvia-official-grid");
         expect(grid?.settings?.find((setting) => setting.id === "columns")).toMatchObject({
             type: "integer",

@@ -73,6 +73,36 @@ inside Shadow DOM, and permits bindings only inside Light DOM. Shadow shells
 also reject visible text, links, headings and images, so crawlable content stays
 in Light DOM.
 
+A component may instead declare one page-owned managed native child:
+
+```json
+{
+    "kind": "component",
+    "id": "example-action",
+    "nativeElement": {
+        "accepts": ["button", "a"]
+    },
+    "slots": {}
+}
+```
+
+Such a component cannot have `lightdom.html`. Its `shadowdom.html` must expose
+exactly one unnamed `<slot>`, `default.html` must contain exactly one direct,
+un-slotted accepted native root, and `slots` must remain empty. The native child
+is the structural source of truth: `<button>` and `<a>` are two valid instances
+of the example contract, without a duplicate `as` attribute on the wrapper.
+The accepted list is also sufficient for a future editor to offer a structural
+element selector. Changing that selector replaces the real native child rather
+than changing only presentation metadata.
+
+Settings always target the custom-element wrapper. Native attributes and text
+belong to the child. Therefore the wrapper and its child may safely carry an
+attribute with the same name; they are validated and edited as separate DOM
+targets. Components embedded in another collection template must still contain
+a concrete accepted child. A composition may place its own editable slot inside
+that child, for example `<example-heading><h2><slot
+name="heading"></slot></h2></example-heading>`.
+
 Slot acceptance distinguishes components, media and editorial content.
 `plain-text` describes an unformatted page-owned text region. `rich-text`
 requires the closed `inline` or `prose` profile and is intended to drive a

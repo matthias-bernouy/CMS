@@ -142,6 +142,65 @@ test("installed shadow component is served as browser bloc JavaScript", async ()
     ).toBeUndefined();
 });
 
+test("installed polymorphic native components project their contract and keep wrapper attributes separate", async () => {
+    const store = new CollectionStore(new MemoryCollectionStorage());
+    const artifact = await store.importRelease({
+        ...release,
+        translations: {
+            en: {
+                ...release.translations.en,
+                "setting.title.label": "Wrapper title",
+            },
+        },
+        blocs: [
+            ...release.blocs,
+            {
+                kind: "component",
+                id: "test-action",
+                label: "bloc.card.label",
+                nativeElement: { accepts: ["button", "a"] },
+                shadowdom: "<slot></slot>",
+                defaultContent: '<button type="button">Action</button>',
+                settings: [
+                    {
+                        id: "title",
+                        label: "setting.title.label",
+                        type: "string",
+                        default: "",
+                        maxLength: 120,
+                        control: { kind: "text" },
+                    },
+                ],
+                uses: [],
+                requires: [],
+                slots: {},
+            },
+        ],
+    });
+    await store.install("site", artifact.digest, 0);
+    const repository = new ValidatingCmsRepository(
+        withInstalledCollections(new InMemoryCmsRepository(), store, "site"),
+    );
+    const projected = (await repository.getBlocRecord("test-action"))!.artifact!;
+    expect(projected.nativeElement).toEqual({ accepts: ["button", "a"] });
+    expect((await createContentReader(repository).getRenderableBlocs()).find(({ id }) => id === "test-action")).toEqual(
+        expect.objectContaining({ nativeElement: { accepts: ["button", "a"] } }),
+    );
+    await repository.insertPage(
+        "/native-button",
+        "Button",
+        '<test-action title="Wrapper title"><button type="button" title="Native title">Save</button></test-action>',
+    );
+    await repository.insertPage(
+        "/native-link",
+        "Link",
+        '<test-action title="Wrapper title"><a href="/about" title="Native title">About</a></test-action>',
+    );
+    await expect(
+        repository.insertPage("/native-wrong", "Wrong", "<test-action><p>Wrong</p></test-action>"),
+    ).rejects.toThrow("accepted native child");
+});
+
 test("installed collection thumbnails are projected from verified release assets", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const bytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0"/></svg>');

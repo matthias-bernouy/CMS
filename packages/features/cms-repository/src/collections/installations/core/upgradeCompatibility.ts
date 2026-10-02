@@ -19,12 +19,13 @@ function assertBlocCompatibility(previous: CollectionBloc, next: CollectionBloc 
             reject(`Upgrade removes or changes existing slot contract ${previous.id}.${slotId}`);
         }
     }
-    if (
-        previous.kind === "component" &&
-        next.kind === "component" &&
-        !sameJson(previous.settings ?? [], next.settings ?? [])
-    ) {
-        reject(`Upgrade changes existing settings contract ${previous.id}`);
+    if (previous.kind === "component" && next.kind === "component") {
+        if (!sameJson(previous.settings ?? [], next.settings ?? [])) {
+            reject(`Upgrade changes existing settings contract ${previous.id}`);
+        }
+        if (!sameJson(previous.nativeElement ?? null, next.nativeElement ?? null)) {
+            reject(`Upgrade changes existing managed native contract ${previous.id}`);
+        }
     }
 }
 

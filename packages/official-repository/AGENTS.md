@@ -12,3 +12,7 @@
 - Split collection texts between recursive `texts/definitions/` metadata and
   `texts/locales/<locale>/` content trees. Group Bloc folders recursively below
   `blocs/`; source paths never contribute to stable text or Bloc IDs.
+- A managed native component declares `nativeElement.accepts`, has exactly one
+  unnamed Shadow DOM slot, no named page slots or fixed Light DOM, and one
+  accepted native root in `default.html`. Keep wrapper settings separate from
+  native child attributes; do not duplicate the selected tag in an `as` setting.

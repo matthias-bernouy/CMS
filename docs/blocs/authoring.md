@@ -133,30 +133,38 @@ whose root tag is native HTML, including a legacy artifact marked `native`.
 Collections may still use semantic native elements inside a custom element's
 template.
 
-A custom Bloc may instead own one editable native Light DOM child through the
-artifact-level `nativeElement` contract:
+A custom Bloc may instead own one editable native Light DOM child through a
+polymorphic `nativeElement` contract. The low-level multipart import accepts one
+or more `nativeElement` entries:
 
 ```text
 POST <basePath>/api/bloc
-  tag=example-link
-  name=Link
+  tag=example-action
+  name=Action
+  nativeElement=button
   nativeElement=a
   viewJS=<view source file>
   source=<Base64 source map containing manifest.json and default.html>
 ```
 
-The default content must then contain exactly one direct, un-slotted child of
-that type, for example
-`<example-link><a href="/">Link</a></example-link>`. When no default content is
-declared, insertion creates the required child. Control presents the wrapper
-and native child as one logical tree node: collection settings remain on the
-wrapper, while native attributes and direct text editing target the child.
-Page writes and direct API calls validate the same structure server-side.
+The default content must then contain exactly one direct, un-slotted child whose
+tag appears in the accepted list, for example
+`<example-action><a href="/">Link</a></example-action>`. Stored page HTML keeps
+that real native tag as its only structural source of truth. There is no `as`
+attribute to synchronize. Page writes and direct API calls validate the same
+structure server-side.
+
+The current editor has been removed. A future editor can derive a structural
+select from the accepted tags, replace the child while preserving compatible
+content, and show tag-specific native attributes separately from wrapper
+settings. This contract and validation exist independently of that future UI.
 
 This V1 supports `h1` through `h6`, `p`, `a`, `button`, `img`, `svg`, and
 `span`. Container elements with their own content-slot semantics are excluded.
-Do not also declare an unnamed content slot or a wrapper text capability: the
-managed native element owns the child text contract.
+Collection sources add stricter authored-bundle rules: the component declares
+no named page slots, its Shadow DOM contains exactly one unnamed slot,
+`default.html` supplies one accepted native root, and fixed `lightdom.html` is
+forbidden. See [Collection API](./collections.md).
 
 The platform authoring set is intentionally narrow:
 

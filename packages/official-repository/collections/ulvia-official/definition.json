@@ -10,7 +10,7 @@
     "locale": "en",
     "exports": {
         "blocs": [
-            "ulvia-official-button",
+            "ulvia-official-action",
             "ulvia-official-card",
             "ulvia-official-container",
             "ulvia-official-faq",

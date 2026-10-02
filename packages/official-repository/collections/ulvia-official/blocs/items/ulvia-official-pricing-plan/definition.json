@@ -5,7 +5,7 @@
     "description": "bloc.pricing-plan.description",
     "category": "bloc.category.components",
     "order": 30,
-    "uses": ["ulvia-official-button"],
+    "uses": ["ulvia-official-action"],
     "requires": [],
     "slots": {
         "name": {
@@ -27,7 +27,7 @@
             "max": 1
         },
         "action": {
-            "accepts": [{ "kind": "component", "tag": "ulvia-official-button" }],
+            "accepts": [{ "kind": "component", "tag": "ulvia-official-action" }],
             "min": 1,
             "max": 1
         }

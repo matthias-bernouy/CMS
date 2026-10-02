@@ -16,9 +16,10 @@ export default async function importBloc(req: Request, cms: ControlCms) {
     const source = parseSourceMap(sourceRaw);
     const force = formData.get("force") === "true";
     const internal = formData.get("internal") === "true";
-    const nativeElementEntry = formData.get("nativeElement");
-    const nativeElement =
-        typeof nativeElementEntry === "string" && nativeElementEntry.trim() ? nativeElementEntry : undefined;
+    const nativeElementTags = formData
+        .getAll("nativeElement")
+        .filter((entry): entry is string => typeof entry === "string" && Boolean(entry.trim()));
+    const nativeElement = nativeElementTags.length > 0 ? { accepts: nativeElementTags } : undefined;
 
     try {
         await importBlocArtifact(cms, {

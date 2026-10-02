@@ -32,8 +32,11 @@ export type {
     CollectionSettingOption,
     CollectionSettingVisibilityRule,
     CollectionSettingVisibilityValue,
+    CollectionManagedNativeElementTag,
+    CollectionManagedNativeElement,
 } from "cms-repository/collections/interfaces/CollectionBloc";
 export { collectionSettingsSchema } from "cms-repository/collections/core/parsing/blocs/settingSchema";
+export { COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS } from "cms-repository/collections/core/parsing/blocs/managedNativeElement";
 export type {
     CollectionAssetDefinition,
     CollectionBundleAsset,

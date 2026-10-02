@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { assertContentRefsExist } from "@bernouy/cms-content";
 
-function makeSystem(opts: { blocs?: string[]; managed?: Record<string, string> } = {}) {
+function makeSystem(opts: { blocs?: string[]; managed?: Record<string, string[]> } = {}) {
     const cms: any = {
         getBlocsList: async () =>
             [...(opts.blocs ?? []), ...Object.keys(opts.managed ?? {})].map((id) => ({
@@ -9,7 +9,7 @@ function makeSystem(opts: { blocs?: string[]; managed?: Record<string, string> }
                 name: id,
                 group: "",
                 description: "",
-                ...(opts.managed?.[id] ? { nativeElement: opts.managed[id] } : {}),
+                ...(opts.managed?.[id] ? { nativeElement: { accepts: opts.managed[id] } } : {}),
             })),
     };
     return cms;
@@ -53,20 +53,22 @@ describe("assertContentRefsExist", () => {
     });
 
     test("accepts exactly one direct managed native child", async () => {
-        const cms = makeSystem({ managed: { "fixture-link": "a" } });
-        await assertContentRefsExist(cms, `<fixture-link><a href="/about">About</a></fixture-link>`);
+        const cms = makeSystem({ managed: { "fixture-action": ["button", "a"] } });
+        await assertContentRefsExist(cms, `<fixture-action><button type="button">Save</button></fixture-action>`);
+        await assertContentRefsExist(cms, `<fixture-action><a href="/about">About</a></fixture-action>`);
     });
 
     test("rejects missing, duplicated, slotted, or indirect managed native children", async () => {
-        const cms = makeSystem({ managed: { "fixture-link": "a" } });
+        const cms = makeSystem({ managed: { "fixture-action": ["button", "a"] } });
         for (const content of [
-            `<fixture-link></fixture-link>`,
-            `<fixture-link><a href="/one">One</a><a href="/two">Two</a></fixture-link>`,
-            `<fixture-link><a slot="link" href="/">Link</a></fixture-link>`,
-            `<fixture-link><span><a href="/">Link</a></span></fixture-link>`,
+            `<fixture-action></fixture-action>`,
+            `<fixture-action><a href="/one">One</a><button type="button">Two</button></fixture-action>`,
+            `<fixture-action><a slot="link" href="/">Link</a></fixture-action>`,
+            `<fixture-action><span><a href="/">Link</a></span></fixture-action>`,
+            `<fixture-action><p>Wrong</p></fixture-action>`,
         ]) {
             await expect(assertContentRefsExist(cms, content)).rejects.toThrow(
-                /requires exactly one direct, un-slotted <a> child/,
+                /requires exactly one direct, un-slotted accepted native child \(<button>, <a>\)/,
             );
         }
     });

@@ -57,3 +57,29 @@ test("upgrades preserve existing slot contracts and theme token types", async ()
     const admitted = await store.importRelease(compatible);
     await expect(store.upgrade("site", admitted.digest, 1, "local")).resolves.toMatchObject({ revision: 2 });
 });
+
+test("upgrades preserve managed native element choices", async () => {
+    const managedRelease = (version: string, accepts: string[], root: string) => {
+        const source = release(version);
+        source.blocs = [
+            {
+                kind: "component",
+                id: "atlas-action",
+                label: "bloc.panel.label",
+                nativeElement: { accepts },
+                shadowdom: "<slot></slot>",
+                defaultContent: `<${root}>Action</${root}>`,
+                uses: [],
+                requires: [],
+                slots: {},
+            },
+        ];
+        return source;
+    };
+    const store = new CollectionStore(new MemoryCollectionStorage());
+    const initial = await store.importRelease(managedRelease("1.0.0", ["button", "a"], "button"));
+    await store.install("site", initial.digest, 0, "local");
+    const changed = await store.importRelease(managedRelease("1.1.0", ["button"], "button"));
+
+    await expect(store.upgrade("site", changed.digest, 1, "local")).rejects.toThrow("managed native contract");
+});

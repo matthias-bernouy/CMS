@@ -4,6 +4,7 @@ import type { CollectionLimits } from "../../limits";
 import { validateDeclarative, validateHost, validateNoBindings, validateShadow } from "./shell";
 import { type BlocMarkup, pageSlots, validatePageSlots, validateSlotTargets } from "./slots";
 import { elements, type MarkupTree, markupTree, offeredSlots, significantRoots } from "./tree";
+import { validateManagedNativeDefinition, validateManagedNativeHosts } from "./managedNative";
 
 function inspect(bloc: CollectionBloc): BlocMarkup {
     const shadow = bloc.kind === "component" ? markupTree(bloc.shadowdom) : undefined;
@@ -43,6 +44,7 @@ export function validateMarkup(
     for (const bloc of blocs) {
         const path = `$.blocs[${bloc.id}]`;
         const content = markup.get(bloc.id)!;
+        validateManagedNativeDefinition(bloc, content, path);
         if (content.shellSlots.size > limits.maxSlots || content.pageSlots.size > limits.maxSlots) {
             invalid(`markup must offer at most ${limits.maxSlots} slots`, `${path}.slots`);
         }
@@ -60,12 +62,14 @@ export function validateMarkup(
                 invalid("component lightdom needs element roots for slot projection", `${path}.lightdom`);
             }
             validateDeclarative(content.light, `${path}.lightdom`);
+            validateManagedNativeHosts(content.light, byId, `${path}.lightdom`);
             validateHost(content.light, bloc, `${path}.lightdom`);
             validatePlacedBlocs(content.light, bloc, ids, `${path}.lightdom`);
             validateSlotTargets(content.light, content.shellSlots, byId, markup, `${path}.lightdom`, importedBlocs);
         }
         if (content.initial) {
             validateDeclarative(content.initial, `${path}.defaultContent`);
+            validateManagedNativeHosts(content.initial, byId, `${path}.defaultContent`);
             validateNoBindings(content.initial, `${path}.defaultContent`);
             if (elements(content.initial).some((node) => node.name === "cms-host")) {
                 invalid("cms-host is only supported in component lightdom", `${path}.defaultContent`);

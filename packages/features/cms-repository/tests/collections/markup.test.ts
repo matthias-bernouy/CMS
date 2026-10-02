@@ -37,6 +37,35 @@ describe("collection markup admission", () => {
         expect(() => check([composition({ lightdom: "<slot></slot>", slots: {} })])).toThrow("must have a name");
     });
 
+    test("validates polymorphic managed-native definitions and placed hosts", () => {
+        const action = component({
+            nativeElement: { accepts: ["button", "a"] },
+            shadowdom: "<span><slot></slot></span>",
+            slots: {},
+            defaultContent: '<button type="button">Action</button>',
+        });
+        const page = composition({
+            uses: ["demo-card"],
+            lightdom: '<demo-card><a href="/about">About</a></demo-card>',
+            slots: {},
+        });
+        expect(() => check([action, page])).not.toThrow();
+        expect(() => check([{ ...action, defaultContent: "<a>Link</a>" }, page])).not.toThrow();
+        expect(() => check([{ ...action, shadowdom: '<slot name="content"></slot>' }])).toThrow(
+            "one default shadow slot",
+        );
+        expect(() => check([{ ...action, slots: { content: {} } }])).toThrow("cannot declare page slots");
+        expect(() => check([{ ...action, defaultContent: "<span>Wrong</span>" }])).toThrow("accepted native root");
+        for (const lightdom of [
+            "<demo-card></demo-card>",
+            "<demo-card><span>Wrong</span></demo-card>",
+            '<demo-card><a slot="action">Wrong</a></demo-card>',
+            "<demo-card><button>One</button><a>Two</a></demo-card>",
+        ]) {
+            expect(() => check([action, { ...page, lightdom }])).toThrow("accepted native child");
+        }
+    });
+
     test("resolves slot targets against their actual parent, not unrelated shells", () => {
         const card = component({ shadowdom: '<slot name="heading"></slot>', slots: { heading: {} } });
         const page = composition({

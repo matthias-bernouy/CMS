@@ -69,6 +69,16 @@ The local repository may read this list from a bloc's
 Optional `visibleWhen` rules reference other finite-valued items and affect
 editor visibility only; admission rejects invalid references and cycles.
 
+A component may declare a managed native child with
+`nativeElement: { accepts: ["button", "a"] }`. The accepted list is nonempty,
+unique and restricted to the platform-managed vocabulary. These components
+have exactly one unnamed Shadow DOM slot, no named page slots or fixed Light
+DOM, and one direct, un-slotted accepted native root in `defaultContent`.
+Nested authored occurrences must contain the same single-child structure. The
+real child tag is authoritative; wrapper settings and native child attributes
+remain separate targets even when they use the same attribute name. Changing
+the accepted set is an incompatible installed component-contract change.
+
 String controls are `text`, `select`, `segmented`, `color`, `page-link`,
 `media-picker` and `theme-token-picker`. Booleans use `toggle`; numbers and
 integers use `number` or a bounded `range`. Media content normally belongs in a

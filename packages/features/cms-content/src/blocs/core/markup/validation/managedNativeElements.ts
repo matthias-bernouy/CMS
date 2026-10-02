@@ -2,7 +2,7 @@ import { parseHTML } from "linkedom";
 
 export type ManagedNativeElementContract = {
     tag: string;
-    nativeElement: string;
+    nativeElement: { accepts: readonly string[] };
 };
 
 /** Returns the first managed-native structure issue found in an HTML fragment. */
@@ -31,11 +31,13 @@ export function managedNativeElementIssue(
             );
             if (
                 children.length !== 1 ||
-                child?.localName !== contract.nativeElement.toLowerCase() ||
+                !child ||
+                !contract.nativeElement.accepts.includes(child.localName.toLowerCase()) ||
                 child.hasAttribute("slot") ||
                 hasAuthoredSiblingText
             ) {
-                return `bloc "${contract.tag}" requires exactly one direct, un-slotted <${contract.nativeElement}> child`;
+                const accepted = contract.nativeElement.accepts.map((tag) => `<${tag}>`).join(", ");
+                return `bloc "${contract.tag}" requires exactly one direct, un-slotted accepted native child (${accepted})`;
             }
         }
     }

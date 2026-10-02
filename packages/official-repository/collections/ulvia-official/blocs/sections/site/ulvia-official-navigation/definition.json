@@ -5,7 +5,7 @@
     "description": "bloc.navigation.description",
     "category": "bloc.category.site",
     "order": 10,
-    "uses": ["ulvia-official-button"],
+    "uses": ["ulvia-official-action"],
     "requires": [],
     "slots": {
         "brand": {
@@ -23,7 +23,7 @@
             ]
         },
         "actions": {
-            "accepts": [{ "kind": "component", "tag": "ulvia-official-button" }],
+            "accepts": [{ "kind": "component", "tag": "ulvia-official-action" }],
             "max": 2
         }
     }

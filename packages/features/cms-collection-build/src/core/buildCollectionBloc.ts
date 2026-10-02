@@ -1,4 +1,9 @@
-import { blocThumbnailFromSource, parsePresentationImage, type PresentationImage } from "@bernouy/cms-content";
+import {
+    blocThumbnailFromSource,
+    parsePresentationImage,
+    type PresentationImage,
+    type TBloc,
+} from "@bernouy/cms-content";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
@@ -28,7 +33,7 @@ export async function buildCollectionBloc(
     options: {
         thumbnail?: PresentationImage;
         native?: boolean;
-        nativeElement?: string;
+        nativeElement?: TBloc["nativeElement"];
         compositionHTML?: string;
         viewPath?: string;
     } = {},
@@ -42,7 +47,9 @@ export async function buildCollectionBloc(
     }
     const thumbnail = parsePresentationImage(options.thumbnail) ?? blocThumbnailFromSource(source);
     const tempDir = await mkdtemp(join(tmpdir(), "cms-bloc-"));
-    const nativeElement = options.nativeElement?.toLowerCase();
+    const nativeElement: TBloc["nativeElement"] = options.nativeElement
+        ? { accepts: [...options.nativeElement.accepts] }
+        : undefined;
 
     try {
         await materializeSourceBundle(tempDir, source);

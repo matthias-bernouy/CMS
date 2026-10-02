@@ -23,3 +23,9 @@ layout and content components, reusable content items, composed page sections,
 and the theme tokens they consume. Compositions declare their exact local Bloc
 dependencies through `uses`; authored content remains page-owned through typed
 slots instead of being embedded in collection settings.
+
+Managed native components declare an accepted tag set in `nativeElement`, expose
+one unnamed Shadow DOM slot, and supply one concrete native root in
+`default.html`; they never add fixed `lightdom.html`. The official action accepts
+`button` and `a`, while the official heading accepts `h1` through `h6`. Wrapper
+settings remain separate from native child attributes.

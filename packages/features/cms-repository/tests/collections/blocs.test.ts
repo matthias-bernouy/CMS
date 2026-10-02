@@ -24,8 +24,39 @@ describe("collection bloc admission", () => {
         );
     });
 
-    test.each(["settings", "style", "shadowdom", "behaviour", "behaviourJS"])("refuses composition %s", (key) => {
-        expect(() => check([composition({ [key]: {} })])).toThrow("unknown property");
+    test.each(["settings", "style", "shadowdom", "behaviour", "behaviourJS", "nativeElement"])(
+        "refuses composition %s",
+        (key) => {
+            expect(() => check([composition({ [key]: {} })])).toThrow("unknown property");
+        },
+    );
+
+    test("admits bounded polymorphic native-element contracts", () => {
+        const nativeElement = { accepts: ["button", "a"] };
+        const parsed = check([
+            component({
+                nativeElement,
+                shadowdom: "<span><slot></slot></span>",
+                slots: {},
+                defaultContent: '<button type="button">Action</button>',
+            }),
+        ])[0];
+        expect(parsed?.kind === "component" ? parsed.nativeElement : undefined).toEqual(nativeElement);
+        expect(() => check([component({ nativeElement: "button" })])).toThrow("object");
+        expect(() => check([component({ nativeElement: { accepts: [] } })])).toThrow("at least one");
+        expect(() => check([component({ nativeElement: { accepts: ["a", "a"] } })])).toThrow("duplicate");
+        expect(() => check([component({ nativeElement: { accepts: ["form"] } })])).toThrow("must be one of");
+        expect(() =>
+            check([
+                component({
+                    nativeElement,
+                    shadowdom: "<slot></slot>",
+                    lightdom: "<a>Fixed</a>",
+                    slots: {},
+                    defaultContent: "<a>Action</a>",
+                }),
+            ]),
+        ).toThrow("cannot declare fixed lightdom");
     });
 
     test.each(["uses", "requires", "slots"])("does not normalize explicit null %s into omission", (key) => {

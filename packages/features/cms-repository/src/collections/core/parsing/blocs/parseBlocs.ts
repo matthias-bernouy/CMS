@@ -6,6 +6,7 @@ import { parseRequirements } from "../requirements";
 import { parseComponentSettings } from "./settings";
 import { blocReferences, parseSlots } from "./slots";
 import { parseCollectionBlocTag, parseCollectionNamespace } from "../../namespace";
+import { parseManagedNativeElement } from "./managedNativeElement";
 
 const common = [
     "kind",
@@ -43,7 +44,9 @@ function parseBloc(
         source,
         [
             ...common,
-            ...(source.kind === "component" ? ["shadowdom", "lightdom", "style", "settings", "runtime"] : ["lightdom"]),
+            ...(source.kind === "component"
+                ? ["shadowdom", "lightdom", "style", "settings", "runtime", "nativeElement"]
+                : ["lightdom"]),
         ],
         path,
     );
@@ -81,6 +84,13 @@ function parseBloc(
     }
     const settings =
         source.settings === undefined ? undefined : parseComponentSettings(source.settings, `${path}.settings`, limits);
+    const nativeElement =
+        source.nativeElement === undefined
+            ? undefined
+            : parseManagedNativeElement(source.nativeElement, `${path}.nativeElement`);
+    if (nativeElement && source.lightdom !== undefined) {
+        invalid("managed native components cannot declare fixed lightdom", `${path}.lightdom`);
+    }
     const runtime = source.runtime === undefined ? undefined : record(source.runtime, `${path}.runtime`);
     if (runtime) {
         keys(runtime, ["viewJS"], `${path}.runtime`);
@@ -88,6 +98,7 @@ function parseBloc(
     return {
         ...base,
         kind: "component",
+        ...(nativeElement === undefined ? {} : { nativeElement }),
         shadowdom: string(source.shadowdom, limits.maxMarkupLength, `${path}.shadowdom`),
         ...(source.lightdom === undefined
             ? {}

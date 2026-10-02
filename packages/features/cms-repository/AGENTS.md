@@ -237,6 +237,10 @@ models and validation for CMS-owned installations and site selections.
   Optional `visibleWhen` is editor-only and may reference declared boolean or
   finite-option string items. Validate comparisons and reject visibility cycles;
   hiding a control never clears or exempts its stored attribute.
+- Managed native components declare a nonempty unique `nativeElement.accepts`
+  list. They have exactly one unnamed Shadow DOM slot, no named page slots or
+  fixed Light DOM, and one direct accepted native root in default content. The
+  real child tag is authoritative; wrapper settings never duplicate it.
 - Every bloc declares its author-facing label. Optional catalogue categories are
   translation keys and optional nonnegative order values are stable within that
   category; source paths never become catalogue metadata. Slot acceptance is declarative:

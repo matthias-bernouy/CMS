@@ -33,7 +33,7 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
             "Ulvia Official foundation",
         );
         expect(releases[0]!.release.blocs.map((bloc) => bloc.id)).toEqual([
-            "ulvia-official-button",
+            "ulvia-official-action",
             "ulvia-official-card",
             "ulvia-official-container",
             "ulvia-official-faq",

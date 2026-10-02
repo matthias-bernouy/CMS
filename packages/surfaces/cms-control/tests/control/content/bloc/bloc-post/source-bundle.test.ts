@@ -144,7 +144,7 @@ describe("bloc.post", () => {
             valid.cms,
         );
         expect(validResponse.status).toBe(200);
-        expect(valid.createBlocCalls[0]?.bloc.nativeElement).toBe("a");
+        expect(valid.createBlocCalls[0]?.bloc.nativeElement).toEqual({ accepts: ["a"] });
 
         const invalid = makeSystem();
         const invalidResponse = await importBloc(
@@ -162,8 +162,23 @@ describe("bloc.post", () => {
             invalid.cms,
         );
         expect(invalidResponse.status).toBe(400);
-        expect(await invalidResponse.text()).toMatch(/exactly one direct, un-slotted <a> child/);
+        expect(await invalidResponse.text()).toMatch(/accepted native child \(<a>\)/);
         expect(invalid.createBlocCalls).toHaveLength(0);
+
+        const missing = makeSystem();
+        const missingResponse = await importBloc(
+            makeRequest({
+                name: "Link",
+                tag: "my-link",
+                group: "Navigation",
+                nativeElement: "a",
+                viewJS: viewFile(),
+            }),
+            missing.cms,
+        );
+        expect(missingResponse.status).toBe(400);
+        expect(await missingResponse.text()).toMatch(/require default content/);
+        expect(missing.createBlocCalls).toHaveLength(0);
     });
 
     test("rejects native bloc artifacts owned by the platform", async () => {

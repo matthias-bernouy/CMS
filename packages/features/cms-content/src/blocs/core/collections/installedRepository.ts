@@ -50,6 +50,9 @@ export function withInstalledCollections(
                                         ? (bloc.runtime?.viewJS ?? compileCollectionComponent(bloc))
                                         : "",
                                 internal: bloc.internal,
+                                ...(bloc.kind === "component" && bloc.nativeElement
+                                    ? { nativeElement: bloc.nativeElement }
+                                    : {}),
                                 ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
                                 ...(bloc.kind === "component" && bloc.lightdom ? { componentHTML: bloc.lightdom } : {}),
                                 ...(bloc.defaultContent ? { defaultContent: bloc.defaultContent } : {}),
