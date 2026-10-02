@@ -1,0 +1,50 @@
+[
+    {
+        "id": "href",
+        "label": "setting.destination.label",
+        "group": "setting.group.action",
+        "type": "string",
+        "default": "#",
+        "maxLength": 2048,
+        "control": { "kind": "page-link", "allowPage": true, "allowExternal": true, "allowMedia": true }
+    },
+    {
+        "id": "appearance",
+        "label": "setting.appearance.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "primary",
+        "control": {
+            "kind": "select",
+            "options": [
+                { "value": "primary", "label": "setting.option.primary" },
+                { "value": "secondary", "label": "setting.option.secondary" },
+                { "value": "outline", "label": "setting.option.outline" },
+                { "value": "ghost", "label": "setting.option.ghost" }
+            ]
+        }
+    },
+    {
+        "id": "size",
+        "label": "setting.size.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "md",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" }
+            ]
+        }
+    },
+    {
+        "id": "wide",
+        "label": "setting.wide.label",
+        "group": "setting.group.layout",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    }
+]

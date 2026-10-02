@@ -1,0 +1,17 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-button",
+    "label": "bloc.button.label",
+    "description": "bloc.button.description",
+    "category": "bloc.category.actions",
+    "order": 10,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "label": {
+            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "min": 1,
+            "max": 1
+        }
+    }
+}

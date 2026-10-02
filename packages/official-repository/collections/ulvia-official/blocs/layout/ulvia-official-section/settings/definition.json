@@ -1,0 +1,50 @@
+[
+    {
+        "id": "surface",
+        "label": "setting.surface.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "base",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "base", "label": "setting.option.base" },
+                { "value": "subtle", "label": "setting.option.subtle" },
+                { "value": "inverse", "label": "setting.option.inverse" }
+            ]
+        }
+    },
+    {
+        "id": "width",
+        "label": "setting.width.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "lg",
+        "control": {
+            "kind": "select",
+            "options": [
+                { "value": "sm", "label": "setting.option.width-sm" },
+                { "value": "md", "label": "setting.option.width-md" },
+                { "value": "lg", "label": "setting.option.width-lg" },
+                { "value": "xl", "label": "setting.option.width-xl" },
+                { "value": "full", "label": "setting.option.width-full" }
+            ]
+        }
+    },
+    {
+        "id": "spacing",
+        "label": "setting.spacing.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "md",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "none", "label": "setting.option.none" },
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" }
+            ]
+        }
+    }
+]

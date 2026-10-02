@@ -32,49 +32,31 @@ test("local repository lists immutable metadata and serves matching release byte
         });
         const bundle = await source.get(entries[0]!);
         expect((await admitCollectionRelease(bundle.release, bundle.assets)).digest).toBe(entries[0]!.digest);
-        expect(bundle.assets).toHaveLength(1);
-        expect(new TextDecoder().decode(bundle.assets[0]!.bytes as Uint8Array)).toContain("<svg");
+        expect(bundle.assets).toEqual([]);
         const release = bundle.release;
         expect(release.blocs).toHaveLength(8);
-        expect(release.theme?.categories.flatMap((category) => category.tokens)).toHaveLength(7);
+        expect(release.exports?.blocs).toHaveLength(8);
+        expect(release.exports?.themeTokens).toHaveLength(119);
+        expect(release.theme?.categories.flatMap((category) => category.tokens)).toHaveLength(119);
         expect(release.views?.find((view) => view.id === "catalog")?.html).toContain(
             "/.cms/call/catalog.items/item.list",
         );
         expect(release.dashboards?.[0]?.contracts).toEqual(["catalog.items"]);
-        const card = release.blocs.find((bloc) => bloc.id === "ulvia-official-feature-card");
-        expect(card?.kind).toBe("component");
-        if (card?.kind === "component") {
-            expect(card.runtime?.viewJS).toContain("ulvia-official-feature-card");
-            expect(card.thumbnail).toBe("feature-card.svg");
-            expect(card.lightdom).toContain("feature-card-note");
-            expect(card.defaultContent).toContain("Feature title");
-            expect(card.settings).toEqual([
-                {
-                    id: "tone",
-                    label: "Tone",
-                    group: "Appearance",
-                    type: "string",
-                    control: {
-                        kind: "select",
-                        options: [
-                            { value: "quiet", label: "Quiet" },
-                            { value: "accent", label: "Accent" },
-                        ],
-                    },
-                    maxLength: 16,
-                    default: "quiet",
-                },
-                {
-                    id: "compact",
-                    label: "Compact",
-                    group: "Layout",
-                    type: "boolean",
-                    default: false,
-                    control: { kind: "toggle" },
-                    visibleWhen: [{ setting: "tone", equals: "accent" }],
-                },
-            ]);
+        const button = release.blocs.find((bloc) => bloc.id === "ulvia-official-button");
+        expect(button?.kind).toBe("component");
+        if (button?.kind === "component") {
+            expect(button.runtime?.viewJS).toContain("ulvia-official-button");
+            expect(button.lightdom).toContain("data-ulvia-link");
+            expect(button.defaultContent).toContain("Get started");
+            expect(button.settings?.map((setting) => setting.id)).toEqual(["href", "appearance", "size", "wide"]);
         }
+        const grid = release.blocs.find((bloc) => bloc.id === "ulvia-official-grid");
+        expect(grid?.settings?.find((setting) => setting.id === "columns")).toMatchObject({
+            type: "integer",
+            minimum: 1,
+            maximum: 6,
+            default: 3,
+        });
         const textIds = new Set(release.texts?.map((entry) => entry.id));
         for (const bloc of release.blocs) {
             if (!bloc.lightdom) {
@@ -114,7 +96,13 @@ test("a release coordinate cannot be replaced with different content", async () 
         );
         await repository.store(artifact);
         const changed = await admitCollectionRelease(
-            { ...artifact.release, name: "Changed" },
+            {
+                ...artifact.release,
+                translations: {
+                    ...artifact.release.translations,
+                    en: { ...artifact.release.translations.en, "collection.name": "Changed" },
+                },
+            },
             artifact.assets.map(({ id, bytes }) => ({ id, bytes })),
         );
         await expect(repository.store(changed)).rejects.toThrow("already exists with different content");

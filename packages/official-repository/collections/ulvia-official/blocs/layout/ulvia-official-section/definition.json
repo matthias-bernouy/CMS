@@ -1,0 +1,19 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-section",
+    "label": "bloc.section.label",
+    "description": "bloc.section.description",
+    "category": "bloc.category.layout",
+    "order": 10,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "content": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "media" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        }
+    }
+}

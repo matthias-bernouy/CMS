@@ -1,0 +1,33 @@
+[
+    {
+        "id": "size",
+        "label": "setting.size.label",
+        "group": "setting.group.typography",
+        "type": "string",
+        "default": "lg",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" },
+                { "value": "xl", "label": "setting.option.extra-large" }
+            ]
+        }
+    },
+    {
+        "id": "align",
+        "label": "setting.alignment.label",
+        "group": "setting.group.typography",
+        "type": "string",
+        "default": "start",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "start", "label": "setting.option.start" },
+                { "value": "center", "label": "setting.option.center" },
+                { "value": "end", "label": "setting.option.end" }
+            ]
+        }
+    }
+]

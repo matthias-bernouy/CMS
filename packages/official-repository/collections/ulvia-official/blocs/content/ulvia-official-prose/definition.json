@@ -1,0 +1,17 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-prose",
+    "label": "bloc.prose.label",
+    "description": "bloc.prose.description",
+    "category": "bloc.category.content",
+    "order": 20,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "content": {
+            "accepts": [{ "kind": "rich-text", "profile": "prose" }],
+            "min": 1,
+            "max": 1
+        }
+    }
+}

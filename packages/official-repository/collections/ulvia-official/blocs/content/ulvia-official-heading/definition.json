@@ -1,0 +1,17 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-heading",
+    "label": "bloc.heading.label",
+    "description": "bloc.heading.description",
+    "category": "bloc.category.content",
+    "order": 10,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "content": {
+            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "min": 1,
+            "max": 1
+        }
+    }
+}

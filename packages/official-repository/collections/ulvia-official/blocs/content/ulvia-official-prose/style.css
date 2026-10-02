@@ -1,0 +1,16 @@
+:host {
+    --ulvia-official-prose-color: var(--ulvia-official-text-secondary, CanvasText);
+    --ulvia-official-prose-measure: 65ch;
+    --ulvia-official-prose-size: var(--ulvia-official-font-size-md, 1rem);
+    display: block;
+    color: var(--ulvia-official-prose-color);
+    font-family: var(--ulvia-official-font-family-main, inherit);
+    font-size: var(--ulvia-official-prose-size);
+    line-height: var(--ulvia-official-line-height-relaxed, 1.7);
+}
+
+[part="prose"] { max-width: var(--ulvia-official-prose-measure); }
+:host([measure="narrow"]) { --ulvia-official-prose-measure: 48ch; }
+:host([measure="wide"]) { --ulvia-official-prose-measure: 78ch; }
+:host([size="sm"]) { --ulvia-official-prose-size: var(--ulvia-official-font-size-sm, .875rem); }
+:host([size="lg"]) { --ulvia-official-prose-size: var(--ulvia-official-font-size-lg, 1.125rem); }

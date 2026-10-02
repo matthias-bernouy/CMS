@@ -33,20 +33,17 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
             "Ulvia Official foundation",
         );
         expect(releases[0]!.release.blocs.map((bloc) => bloc.id)).toEqual([
-            "ulvia-official-callout",
-            "ulvia-official-faq",
-            "ulvia-official-feature-card",
-            "ulvia-official-feature-list",
-            "ulvia-official-footer",
-            "ulvia-official-stats",
-            "ulvia-official-testimonial",
-            "ulvia-official-welcome",
+            "ulvia-official-button",
+            "ulvia-official-container",
+            "ulvia-official-grid",
+            "ulvia-official-heading",
+            "ulvia-official-media-figure",
+            "ulvia-official-prose",
+            "ulvia-official-section",
+            "ulvia-official-stack",
         ]);
-        expect(releases[0]!.release.texts).toHaveLength(24);
-        expect(releases[0]!.release.texts?.find((text) => text.id === "title")?.values).toEqual({
-            en: "Welcome to Ulvia Official",
-            fr: "Bienvenue dans Ulvia Official",
-        });
+        expect(releases[0]!.release.exports?.blocs).toHaveLength(8);
+        expect(releases[0]!.release.exports?.themeTokens).toHaveLength(119);
         await runCli(["release", source], options);
         expect(output.at(-1)).toStartWith(`= collection ulvia.official/ulvia-official@${definition.version}`);
         await runCli(["prune"], options);

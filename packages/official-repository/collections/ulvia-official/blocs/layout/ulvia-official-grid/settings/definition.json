@@ -1,0 +1,29 @@
+[
+    {
+        "id": "columns",
+        "label": "setting.columns.label",
+        "group": "setting.group.layout",
+        "type": "integer",
+        "default": 3,
+        "minimum": 1,
+        "maximum": 6,
+        "control": { "kind": "range", "step": 1, "suffix": "setting.columns.suffix" }
+    },
+    {
+        "id": "gap",
+        "label": "setting.gap.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "lg",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "none", "label": "setting.option.none" },
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" },
+                { "value": "xl", "label": "setting.option.extra-large" }
+            ]
+        }
+    }
+]

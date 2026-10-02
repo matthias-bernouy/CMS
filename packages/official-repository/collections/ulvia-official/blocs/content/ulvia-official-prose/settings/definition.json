@@ -1,0 +1,32 @@
+[
+    {
+        "id": "measure",
+        "label": "setting.measure.label",
+        "group": "setting.group.typography",
+        "type": "string",
+        "default": "default",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "narrow", "label": "setting.option.narrow" },
+                { "value": "default", "label": "setting.option.default" },
+                { "value": "wide", "label": "setting.option.wide" }
+            ]
+        }
+    },
+    {
+        "id": "size",
+        "label": "setting.size.label",
+        "group": "setting.group.typography",
+        "type": "string",
+        "default": "md",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" }
+            ]
+        }
+    }
+]

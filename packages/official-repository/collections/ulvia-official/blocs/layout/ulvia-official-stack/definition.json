@@ -1,0 +1,19 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-stack",
+    "label": "bloc.stack.label",
+    "description": "bloc.stack.description",
+    "category": "bloc.category.layout",
+    "order": 30,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "items": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "media" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        }
+    }
+}
