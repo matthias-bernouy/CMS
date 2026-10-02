@@ -1,0 +1,9 @@
+{
+    "theme.category.elevation.label": "Elevation",
+    "theme.category.elevation.description": "Layered shadows for raised surfaces without changing their semantic color.",
+    "theme.token.shadow-none.label": "No shadow",
+    "theme.token.shadow-sm.label": "Shadow SM",
+    "theme.token.shadow-md.label": "Shadow MD",
+    "theme.token.shadow-lg.label": "Shadow LG",
+    "theme.token.shadow-xl.label": "Shadow XL"
+}

@@ -19,6 +19,10 @@ Local Ulvia CMS development runtime.
   immutable releases below the persistent user data directory. Provider
   manifests require their exact contract releases locally; release never probes
   a provider or handles credentials.
+- Collection release sources merge recursive JSON fragments below each
+  `translations/<locale>/` directory and discover theme category files
+  recursively by stable ID. Reject duplicate translation keys, duplicate theme
+  IDs, filename/ID mismatches and files absent from the theme manifest.
 - `dev` serves only stored releases on loopback; it must never read authored folders.
 - `prune` clears the local repository without touching the persistent dev stack.
 - Do not reintroduce the removed integration repository or Supabase bridge.

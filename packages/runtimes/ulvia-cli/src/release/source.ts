@@ -3,6 +3,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import { admitCollectionRelease, isCollectionNamespace } from "@bernouy/cms-repository/collections";
 import { buildCollectionBloc } from "@bernouy/cms-collection-build";
+import { loadCollectionTheme, loadCollectionTranslations } from "./metadataSources";
 
 const DEFAULT_BLOC_SOURCE = `
 import { Component } from "@bernouy/components/base";
@@ -24,12 +25,12 @@ export async function prepareCollectionRelease(directory: string) {
         throw new Error("Invalid collection ID");
     }
     const definition = (await Bun.file(join(collectionRoot, "definition.json")).json()) as Record<string, unknown>;
-    const translations = await loadTranslations(join(collectionRoot, "translations"));
+    const translations = await loadCollectionTranslations(join(collectionRoot, "translations"));
     const blocs = await loadBlocs(join(collectionRoot, "blocs"), String(definition.name ?? collectionId));
     const texts = await readJsonFiles(join(collectionRoot, "texts"), true);
     const views = await loadViews(join(collectionRoot, "views"));
     const dashboards = await loadDashboards(join(collectionRoot, "dashboards"));
-    const theme = await loadTheme(join(collectionRoot, "theme"));
+    const theme = await loadCollectionTheme(join(collectionRoot, "theme"));
     const assets = await loadAssets(join(collectionRoot, "assets"), definition.assets);
     const candidate = {
         ...definition,
@@ -46,56 +47,6 @@ export async function prepareCollectionRelease(directory: string) {
         throw new Error(`Collection folder ${collectionId} does not match its definition`);
     }
     return artifact;
-}
-
-async function loadTranslations(directory: string): Promise<Record<string, unknown>> {
-    const translations: Record<string, unknown> = {};
-    const files = (await readEntries(directory)).filter((entry) => entry.isFile() && entry.name.endsWith(".json"));
-    for (const file of files.sort((left, right) => left.name.localeCompare(right.name))) {
-        translations[file.name.slice(0, -5)] = await Bun.file(join(directory, file.name)).json();
-    }
-    return translations;
-}
-
-async function loadTheme(directory: string): Promise<unknown | undefined> {
-    const definitionFile = Bun.file(join(directory, "definition.json"));
-    if (!(await definitionFile.exists())) {
-        return undefined;
-    }
-    const definition = (await definitionFile.json()) as Record<string, unknown>;
-    if (
-        Object.keys(definition).some((key) => !["label", "categories"].includes(key)) ||
-        !Array.isArray(definition.categories)
-    ) {
-        throw new Error("Theme definition accepts only label and an ordered categories array");
-    }
-    const categoryIds = definition.categories;
-    if (
-        categoryIds.some((id) => typeof id !== "string" || !/^[a-z][a-z0-9-]*$/u.test(id)) ||
-        new Set(categoryIds).size !== categoryIds.length
-    ) {
-        throw new Error("Theme category references must be unique lowercase identifiers");
-    }
-    const orderedIds = categoryIds as string[];
-    const files = (await readEntries(directory))
-        .filter((entry) => entry.isFile() && entry.name.endsWith(".json") && entry.name !== "definition.json")
-        .map((entry) => entry.name.slice(0, -5));
-    if (
-        files.length !== orderedIds.length ||
-        files.some((id) => !orderedIds.includes(id)) ||
-        orderedIds.some((id) => !files.includes(id))
-    ) {
-        throw new Error("Theme category files must exactly match theme/definition.json");
-    }
-    const categories = [];
-    for (const id of orderedIds) {
-        const category = (await Bun.file(join(directory, `${id}.json`)).json()) as Record<string, unknown>;
-        if (category.id !== id) {
-            throw new Error(`Theme category file ${id}.json must match its definition`);
-        }
-        categories.push(category);
-    }
-    return { label: definition.label, categories };
 }
 
 async function loadAssets(directory: string, value: unknown) {

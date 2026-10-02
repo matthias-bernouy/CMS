@@ -20,7 +20,9 @@ packages/official-repository/collections/ulvia-official/
 ├── blocs/<bloc>/style.css    # optional for shadow components
 ├── blocs/<bloc>/bloc.ts      # optional browser behavior
 ├── texts/*.json             # arrays of localized text definitions
-├── theme/definition.json    # theme categories and light/dark token defaults
+├── translations/<locale>/**/*.json  # reusable administration copy fragments
+├── theme/definition.json    # ordered theme category IDs
+├── theme/**/*.json          # recursively organized category/token defaults
 ├── definitions/             # reserved for later collection definitions
 ├── views/<view>/definition.json  # view identity and label
 ├── views/<view>/view.html   # Control HTML fragment

@@ -9,6 +9,8 @@ The official Ulvia provider implementation lives separately in
 `packages/official-provider`. Generic protocol fixtures remain beside the
 `cms-repository` tests and must not be moved here.
 
-Official collections keep reusable administration copy in
-`translations/<locale>.json`. Resource definitions contain only translation
-keys; page-owned, site-overridable content remains in `texts/`.
+Official collections keep reusable administration copy in recursively scanned
+`translations/<locale>/**/*.json` fragments. Resource definitions contain only
+translation keys; duplicate keys across locale fragments reject, and page-owned,
+site-overridable content remains in `texts/`. Theme category files may likewise
+be grouped in subdirectories below `theme/` without changing their stable IDs.

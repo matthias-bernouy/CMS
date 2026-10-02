@@ -36,17 +36,23 @@ Explore sources for gateway calls. `prune` empties all local repository content 
 deleting `dev/` data. Pull and push remain future commands; the removed
 integration repository/Supabase bridge is not run.
 
-A collection keeps immutable administration copy in
-`translations/<locale>.json`. Collection, Bloc, setting, text, theme, View and
-dashboard metadata stores reusable keys from those catalogues rather than
-inline labels. The collection locale must define every referenced key;
-additional locale files may be partial and fall back to it.
+A collection keeps immutable administration copy in recursive locale
+directories such as `translations/en/collection.json` and
+`translations/en/theme/colors.json`. Every JSON object below
+`translations/<locale>/` contributes to that locale's flat catalogue.
+Collection, Bloc, setting, text, theme, View and dashboard metadata stores
+reusable keys from those catalogues rather than inline labels. A key may occur
+in only one fragment per locale. The collection locale must define every
+referenced key; additional locale directories may be partial and fall back to
+it.
 
 A collection theme is authored as an ordered set of files. Its
 `theme/definition.json` contains the theme label key and the ordered list of
-category IDs; every ID resolves to one adjacent
-`theme/<category-id>.json` file. Category and token files use the same shared
-translation keys.
+category IDs. Category files may be organized recursively below `theme/`; the
+scanner finds them by their internal `id`, while the manifest remains the only
+source of display order. A category filename must match its ID, duplicate IDs
+and orphan files reject, and category/token metadata uses the shared translation
+keys.
 
 To try the official provider, release these resources in order, then start `dev`
 and open `/admin/settings/providers` on the Control port:

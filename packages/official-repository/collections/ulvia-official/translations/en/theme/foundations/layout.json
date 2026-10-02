@@ -1,0 +1,14 @@
+{
+    "theme.category.layout.label": "Layout",
+    "theme.category.layout.description": "Content widths, responsive gutters, section rhythm and control heights.",
+    "theme.token.content-width-sm.label": "Content width SM",
+    "theme.token.content-width-md.label": "Content width MD",
+    "theme.token.content-width-lg.label": "Content width LG",
+    "theme.token.content-width-xl.label": "Content width XL",
+    "theme.token.page-gutter.label": "Page gutter",
+    "theme.token.page-gutter-wide.label": "Wide page gutter",
+    "theme.token.section-spacing.label": "Section spacing",
+    "theme.token.control-height-sm.label": "Control height SM",
+    "theme.token.control-height-md.label": "Control height MD",
+    "theme.token.control-height-lg.label": "Control height LG"
+}

@@ -41,8 +41,8 @@ provide both light and dark defaults for a token.
 ## Collection Theme Sources
 
 Collection authors keep theme metadata in `theme/definition.json`. Its
-`categories` array orders adjacent category files without putting the full token
-catalogue in one document:
+`categories` array orders recursively discovered category files without putting
+the full token catalogue in one document:
 
 ```json
 {
@@ -51,12 +51,18 @@ catalogue in one document:
 }
 ```
 
-Each entry resolves to `theme/<category-id>.json`. Theme, category and token
-labels and descriptions are reusable keys resolved from
-`translations/<locale>.json`, the same immutable catalogue used by other
-collection metadata. Admission requires every key in the collection's default
-locale; partial additional locales fall back to it. This administration copy is
-deliberately separate from site-owned, overridable collection texts.
+Each category file may live anywhere below `theme/`, for example
+`theme/colors/colors.json` or `theme/foundations/spacing.json`. Its filename and
+internal `id` must equal the manifest ID. The recursive scan rejects duplicate
+IDs and files absent from the manifest; the manifest remains the only source of
+category order.
+
+Theme, category and token labels and descriptions are reusable keys resolved
+from all JSON fragments below `translations/<locale>/`, the same immutable
+catalogue used by other collection metadata. Duplicate keys within one locale
+reject. Admission requires every key in the collection's default locale;
+partial additional locale directories fall back to it. This administration
+copy is deliberately separate from site-owned, overridable collection texts.
 
 ## Bloc-Level Contract
 

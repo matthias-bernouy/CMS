@@ -1,0 +1,15 @@
+{
+    "theme.category.spacing.label": "Spacing",
+    "theme.category.spacing.description": "A proportional spacing scale for gaps, padding and vertical rhythm.",
+    "theme.token.spacing-none.label": "No spacing",
+    "theme.token.spacing-3xs.label": "Spacing 3XS",
+    "theme.token.spacing-2xs.label": "Spacing 2XS",
+    "theme.token.spacing-xs.label": "Spacing XS",
+    "theme.token.spacing-sm.label": "Spacing SM",
+    "theme.token.spacing-md.label": "Spacing MD",
+    "theme.token.spacing-lg.label": "Spacing LG",
+    "theme.token.spacing-xl.label": "Spacing XL",
+    "theme.token.spacing-2xl.label": "Spacing 2XL",
+    "theme.token.spacing-3xl.label": "Spacing 3XL",
+    "theme.token.spacing-4xl.label": "Spacing 4XL"
+}
