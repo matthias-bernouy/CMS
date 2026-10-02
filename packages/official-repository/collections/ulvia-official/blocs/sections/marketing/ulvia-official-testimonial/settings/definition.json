@@ -1,0 +1,17 @@
+[
+    {
+        "id": "surface",
+        "label": "setting.surface.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "subtle",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "base", "label": "setting.option.base" },
+                { "value": "subtle", "label": "setting.option.subtle" },
+                { "value": "inverse", "label": "setting.option.inverse" }
+            ]
+        }
+    }
+]

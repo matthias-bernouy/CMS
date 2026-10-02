@@ -17,3 +17,9 @@ be grouped in subdirectories below `theme/` without changing their stable IDs.
 Text definitions and per-locale values are separate recursive trees below
 `texts/`; Bloc folders may be grouped recursively below `blocs/`. These source
 paths never become release identities.
+
+The Ulvia Official collection publishes a selective public surface: foundational
+layout and content components, reusable content items, composed page sections,
+and the theme tokens they consume. Compositions declare their exact local Bloc
+dependencies through `uses`; authored content remains page-owned through typed
+slots instead of being embedded in collection settings.

@@ -1,0 +1,30 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-navigation",
+    "label": "bloc.navigation.label",
+    "description": "bloc.navigation.description",
+    "category": "bloc.category.site",
+    "order": 10,
+    "uses": ["ulvia-official-button"],
+    "requires": [],
+    "slots": {
+        "brand": {
+            "accepts": [
+                { "kind": "rich-text", "profile": "inline" },
+                { "kind": "media", "accept": ["image", "bitmap", "svg"] }
+            ],
+            "min": 1,
+            "max": 1
+        },
+        "links": {
+            "accepts": [
+                { "kind": "rich-text", "profile": "inline" },
+                { "kind": "any-component" }
+            ]
+        },
+        "actions": {
+            "accepts": [{ "kind": "component", "tag": "ulvia-official-button" }],
+            "max": 2
+        }
+    }
+}

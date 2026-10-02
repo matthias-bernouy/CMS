@@ -1,0 +1,25 @@
+[
+    {
+        "id": "surface",
+        "label": "setting.surface.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "base",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "base", "label": "setting.option.base" },
+                { "value": "subtle", "label": "setting.option.subtle" },
+                { "value": "inverse", "label": "setting.option.inverse" }
+            ]
+        }
+    },
+    {
+        "id": "sticky",
+        "label": "setting.sticky.label",
+        "group": "setting.group.behavior",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    }
+]

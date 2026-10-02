@@ -1,0 +1,33 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-card",
+    "label": "bloc.card.label",
+    "description": "bloc.card.description",
+    "category": "bloc.category.components",
+    "order": 10,
+    "uses": ["ulvia-official-button"],
+    "requires": [],
+    "slots": {
+        "media": {
+            "accepts": [{ "kind": "media", "accept": ["image", "bitmap", "svg", "video"] }],
+            "max": 1
+        },
+        "eyebrow": {
+            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "max": 1
+        },
+        "title": {
+            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "min": 1,
+            "max": 1
+        },
+        "body": {
+            "accepts": [{ "kind": "rich-text", "profile": "prose" }],
+            "max": 1
+        },
+        "actions": {
+            "accepts": [{ "kind": "component", "tag": "ulvia-official-button" }],
+            "max": 2
+        }
+    }
+}

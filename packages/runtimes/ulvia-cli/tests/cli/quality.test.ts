@@ -74,6 +74,11 @@ test("the official collection passes its source quality contract", async () => {
     expect(visible.every((bloc) => bloc.category !== undefined && bloc.order !== undefined)).toBeTrue();
     expect(new Set(visible.map((bloc) => `${bloc.category}:${bloc.order}`)).size).toBe(visible.length);
     expect(
+        visible.every((bloc) => Object.values(bloc.slots).every((slot) => (slot.accepts?.length ?? 0) > 0)),
+    ).toBeTrue();
+    expect(
         visible.filter((bloc) => bloc.kind === "component").every((bloc) => bloc.style?.includes(":host")),
     ).toBeTrue();
+    expect(visible.filter((bloc) => bloc.kind === "composition").every((bloc) => bloc.uses.length > 0)).toBeTrue();
+    expect(artifact.release.exports?.blocs).toEqual(visible.map((bloc) => bloc.id).toSorted());
 });

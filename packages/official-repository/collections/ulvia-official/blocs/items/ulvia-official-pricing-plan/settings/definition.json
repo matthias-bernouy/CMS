@@ -1,0 +1,10 @@
+[
+    {
+        "id": "featured",
+        "label": "setting.featured.label",
+        "group": "setting.group.appearance",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    }
+]

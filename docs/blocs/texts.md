@@ -118,8 +118,9 @@ languages. Complete site-language removal/migration workflows are not implemente
 ## Examples and limits
 
 `packages/official-repository/collections/ulvia-official/texts/` contains the installable Ulvia Official
-catalogue, split recursively by definition, locale, domain and group. Its eight
-compositions use the declared keys.
+catalogue, split recursively by definition, locale, domain and group. It also
+serves as the reference release for validating text metadata independently from
+page-owned Bloc slot content.
 The checkout example remains an admission fixture. The temporary preview route
 has been removed. Existing private/code collections retain the earlier Texts
 mockup; only installed immutable releases have persisted translation editing.

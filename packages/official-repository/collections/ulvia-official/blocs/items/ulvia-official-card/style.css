@@ -1,0 +1,22 @@
+:host {
+    --ulvia-official-card-background: var(--ulvia-official-background-surface, Canvas);
+    --ulvia-official-card-border: var(--ulvia-official-border-subtle, #dfe2e7);
+    --ulvia-official-card-padding: var(--ulvia-official-spacing-lg, 1.5rem);
+    --ulvia-official-card-shadow: var(--ulvia-official-shadow-none, none);
+    display: block;
+    height: 100%;
+    color: var(--ulvia-official-text-primary, CanvasText);
+    font-family: var(--ulvia-official-font-family-main, inherit);
+}
+
+[part="card"] { display: flex; height: 100%; box-sizing: border-box; flex-direction: column; overflow: hidden; border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-card-border); border-radius: var(--ulvia-official-radius-lg, .75rem); background: var(--ulvia-official-card-background); box-shadow: var(--ulvia-official-card-shadow); }
+[part="media"] { margin: 0; }
+[part="content"] { display: flex; flex: 1; flex-direction: column; gap: var(--ulvia-official-spacing-sm, .75rem); padding: var(--ulvia-official-card-padding); }
+[part="actions"] { display: flex; flex-wrap: wrap; gap: var(--ulvia-official-spacing-sm, .75rem); margin-block-start: auto; padding-block-start: var(--ulvia-official-spacing-sm, .75rem); }
+::slotted([slot="media"]) { display: block; width: 100%; }
+::slotted([slot="eyebrow"]) { color: var(--ulvia-official-primary, #3157d5); font-size: var(--ulvia-official-font-size-sm, .875rem); font-weight: var(--ulvia-official-font-weight-semibold, 600); }
+::slotted([slot="title"]), ::slotted([slot="body"]) { margin: 0; }
+:host([surface="subtle"]) { --ulvia-official-card-background: var(--ulvia-official-background-subtle, #f4f5f7); }
+:host([surface="raised"]) { --ulvia-official-card-background: var(--ulvia-official-background-raised, #ffffff); --ulvia-official-card-shadow: var(--ulvia-official-shadow-md, 0 8px 24px rgb(0 0 0 / 12%)); }
+:host([padding="sm"]) { --ulvia-official-card-padding: var(--ulvia-official-spacing-md, 1rem); }
+:host([padding="lg"]) { --ulvia-official-card-padding: var(--ulvia-official-spacing-xl, 2rem); }

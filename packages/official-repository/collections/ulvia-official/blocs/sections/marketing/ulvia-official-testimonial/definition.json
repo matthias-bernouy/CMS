@@ -1,0 +1,30 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-testimonial",
+    "label": "bloc.testimonial.label",
+    "description": "bloc.testimonial.description",
+    "category": "bloc.category.sections",
+    "order": 50,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "quote": {
+            "accepts": [{ "kind": "rich-text", "profile": "prose" }],
+            "min": 1,
+            "max": 1
+        },
+        "author": {
+            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "min": 1,
+            "max": 1
+        },
+        "role": {
+            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "max": 1
+        },
+        "media": {
+            "accepts": [{ "kind": "media", "accept": ["image", "bitmap"] }],
+            "max": 1
+        }
+    }
+}

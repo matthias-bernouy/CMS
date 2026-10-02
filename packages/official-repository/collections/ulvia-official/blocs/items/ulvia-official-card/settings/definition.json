@@ -1,0 +1,32 @@
+[
+    {
+        "id": "surface",
+        "label": "setting.surface.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "base",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "base", "label": "setting.option.base" },
+                { "value": "subtle", "label": "setting.option.subtle" },
+                { "value": "raised", "label": "setting.option.raised" }
+            ]
+        }
+    },
+    {
+        "id": "padding",
+        "label": "setting.padding.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "md",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" }
+            ]
+        }
+    }
+]

@@ -27,15 +27,15 @@ test("local repository lists immutable metadata and serves matching release byte
             publisherId: "ulvia.official",
             collectionId: "ulvia-official",
             version,
-            blocCount: 8,
+            blocCount: 19,
             hasTheme: true,
         });
         const bundle = await source.get(entries[0]!);
         expect((await admitCollectionRelease(bundle.release, bundle.assets)).digest).toBe(entries[0]!.digest);
         expect(bundle.assets).toEqual([]);
         const release = bundle.release;
-        expect(release.blocs).toHaveLength(8);
-        expect(release.exports?.blocs).toHaveLength(8);
+        expect(release.blocs).toHaveLength(19);
+        expect(release.exports?.blocs).toHaveLength(19);
         expect(release.exports?.themeTokens).toHaveLength(119);
         expect(release.theme?.categories.flatMap((category) => category.tokens)).toHaveLength(119);
         expect(release.views?.find((view) => view.id === "catalog")?.html).toContain(
@@ -46,8 +46,8 @@ test("local repository lists immutable metadata and serves matching release byte
         expect(button?.kind).toBe("component");
         if (button?.kind === "component") {
             expect(button.runtime?.viewJS).toContain("ulvia-official-button");
-            expect(button.lightdom).toContain("data-ulvia-link");
-            expect(button.defaultContent).toContain("Get started");
+            expect(button.lightdom).toContain("data-ulvia-control");
+            expect(button.defaultContent).toContain("Button label");
             expect(button.settings?.map((setting) => setting.id)).toEqual(["href", "appearance", "size", "wide"]);
         }
         const grid = release.blocs.find((bloc) => bloc.id === "ulvia-official-grid");

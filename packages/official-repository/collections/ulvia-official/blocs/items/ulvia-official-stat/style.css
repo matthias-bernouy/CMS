@@ -1,0 +1,8 @@
+:host { display: block; color: var(--ulvia-official-text-primary, CanvasText); font-family: var(--ulvia-official-font-family-main, inherit); }
+[part="stat"] { display: grid; gap: var(--ulvia-official-spacing-xs, .5rem); }
+[part="value"] { color: var(--ulvia-official-primary, #3157d5); font-family: var(--ulvia-official-font-family-secondary, inherit); font-size: var(--ulvia-official-font-size-4xl, 2.5rem); font-weight: var(--ulvia-official-font-weight-bold, 700); line-height: var(--ulvia-official-line-height-tight, 1.15); }
+[part="label"] { font-size: var(--ulvia-official-font-size-lg, 1.125rem); font-weight: var(--ulvia-official-font-weight-semibold, 600); }
+[part="description"] { color: var(--ulvia-official-text-secondary, #5b6472); }
+::slotted(*) { margin: 0; }
+:host([align="center"]) [part="stat"] { text-align: center; }
+:host([align="end"]) [part="stat"] { text-align: end; }

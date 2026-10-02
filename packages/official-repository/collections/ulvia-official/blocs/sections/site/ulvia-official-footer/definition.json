@@ -1,0 +1,35 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-footer",
+    "label": "bloc.footer.label",
+    "description": "bloc.footer.description",
+    "category": "bloc.category.site",
+    "order": 20,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "brand": {
+            "accepts": [
+                { "kind": "rich-text", "profile": "inline" },
+                { "kind": "media", "accept": ["image", "bitmap", "svg"] }
+            ],
+            "max": 1
+        },
+        "navigation": {
+            "accepts": [
+                { "kind": "rich-text", "profile": "prose" },
+                { "kind": "any-component" }
+            ]
+        },
+        "social": {
+            "accepts": [
+                { "kind": "rich-text", "profile": "inline" },
+                { "kind": "any-component" }
+            ]
+        },
+        "legal": {
+            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "max": 1
+        }
+    }
+}

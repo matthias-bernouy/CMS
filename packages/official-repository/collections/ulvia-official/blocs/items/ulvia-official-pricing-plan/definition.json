@@ -1,0 +1,35 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-pricing-plan",
+    "label": "bloc.pricing-plan.label",
+    "description": "bloc.pricing-plan.description",
+    "category": "bloc.category.components",
+    "order": 30,
+    "uses": ["ulvia-official-button"],
+    "requires": [],
+    "slots": {
+        "name": {
+            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "min": 1,
+            "max": 1
+        },
+        "price": {
+            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "min": 1,
+            "max": 1
+        },
+        "description": {
+            "accepts": [{ "kind": "rich-text", "profile": "prose" }],
+            "max": 1
+        },
+        "features": {
+            "accepts": [{ "kind": "rich-text", "profile": "prose" }],
+            "max": 1
+        },
+        "action": {
+            "accepts": [{ "kind": "component", "tag": "ulvia-official-button" }],
+            "min": 1,
+            "max": 1
+        }
+    }
+}

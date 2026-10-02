@@ -1,0 +1,22 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-faq-item",
+    "label": "bloc.faq-item.label",
+    "description": "bloc.faq-item.description",
+    "category": "bloc.category.components",
+    "order": 40,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "question": {
+            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "min": 1,
+            "max": 1
+        },
+        "answer": {
+            "accepts": [{ "kind": "rich-text", "profile": "prose" }],
+            "min": 1,
+            "max": 1
+        }
+    }
+}

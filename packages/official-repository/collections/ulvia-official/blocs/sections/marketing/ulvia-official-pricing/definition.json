@@ -1,0 +1,33 @@
+{
+    "kind": "composition",
+    "id": "ulvia-official-pricing",
+    "label": "bloc.pricing.label",
+    "description": "bloc.pricing.description",
+    "category": "bloc.category.sections",
+    "order": 30,
+    "uses": [
+        "ulvia-official-button",
+        "ulvia-official-grid",
+        "ulvia-official-heading",
+        "ulvia-official-pricing-plan",
+        "ulvia-official-prose",
+        "ulvia-official-section",
+        "ulvia-official-stack"
+    ],
+    "requires": [],
+    "slots": {
+        "heading": {
+            "accepts": [{ "kind": "rich-text", "profile": "inline" }],
+            "min": 1,
+            "max": 1
+        },
+        "intro": {
+            "accepts": [{ "kind": "rich-text", "profile": "prose" }],
+            "max": 1
+        },
+        "plans": {
+            "accepts": [{ "kind": "component", "tag": "ulvia-official-pricing-plan" }],
+            "min": 1
+        }
+    }
+}

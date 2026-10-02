@@ -1,0 +1,27 @@
+:host {
+    --ulvia-official-hero-background: var(--ulvia-official-background-base, Canvas);
+    --ulvia-official-hero-color: var(--ulvia-official-text-primary, CanvasText);
+    display: block;
+    color: var(--ulvia-official-hero-color);
+    background: var(--ulvia-official-hero-background);
+    font-family: var(--ulvia-official-font-family-main, inherit);
+    container-type: inline-size;
+}
+
+[part="section"] { padding-block: var(--ulvia-official-spacing-4xl, 6rem); }
+[part="container"] { display: grid; width: min(100% - (2 * var(--ulvia-official-page-gutter, 1rem)), var(--ulvia-official-content-width-xl, 88rem)); margin-inline: auto; grid-template-columns: minmax(0, 1fr) minmax(18rem, .8fr); gap: var(--ulvia-official-spacing-3xl, 4rem); align-items: center; }
+[part="content"], [part="header"] { display: grid; gap: var(--ulvia-official-spacing-lg, 1.5rem); }
+[part="actions"] { display: flex; flex-wrap: wrap; gap: var(--ulvia-official-spacing-sm, .75rem); margin-block-start: var(--ulvia-official-spacing-xl, 2rem); }
+[part="media"] { min-width: 0; margin: 0; }
+::slotted([slot="eyebrow"]) { color: var(--ulvia-official-primary, #3157d5); font-weight: var(--ulvia-official-font-weight-semibold, 600); letter-spacing: var(--ulvia-official-letter-spacing-wide, .04em); }
+::slotted([slot="heading"]) { margin: 0; font-family: var(--ulvia-official-font-family-secondary, inherit); font-size: var(--ulvia-official-font-size-5xl, 3rem); line-height: var(--ulvia-official-line-height-tight, 1.15); letter-spacing: var(--ulvia-official-letter-spacing-tight, -.02em); }
+::slotted([slot="body"]) { max-width: 42rem; margin: 0; color: var(--ulvia-official-text-secondary, #5b6472); font-size: var(--ulvia-official-font-size-lg, 1.125rem); line-height: var(--ulvia-official-line-height-relaxed, 1.65); }
+::slotted([slot="media"]) { display: block; width: 100%; border-radius: var(--ulvia-official-radius-xl, 1rem); }
+:host([surface="subtle"]) { --ulvia-official-hero-background: var(--ulvia-official-background-subtle, #f4f5f7); }
+:host([surface="inverse"]) { --ulvia-official-hero-background: var(--ulvia-official-background-inverse, #17191c); --ulvia-official-hero-color: var(--ulvia-official-text-inverse, #ffffff); }
+:host([surface="inverse"]) ::slotted([slot="body"]) { color: var(--ulvia-official-text-inverse, #ffffff); }
+:host([align="center"]) [part="container"] { display: block; max-width: var(--ulvia-official-content-width-md, 56rem); text-align: center; }
+:host([align="center"]) [part="actions"] { justify-content: center; }
+:host([align="center"]) ::slotted([slot="body"]) { margin-inline: auto; }
+:host([align="center"]) [part="media"] { margin-block-start: var(--ulvia-official-spacing-3xl, 4rem); }
+@container (max-width: 48rem) { [part="container"] { grid-template-columns: minmax(0, 1fr); } [part="section"] { padding-block: var(--ulvia-official-spacing-3xl, 4rem); } }
