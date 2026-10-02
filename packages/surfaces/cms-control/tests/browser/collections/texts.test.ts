@@ -10,6 +10,9 @@ const bundle = await Bun.file(`${sourceRoot}/static/assets/control-components.js
 const collectionRoot = resolve(import.meta.dir, "../../../../../official-repository/collections/ulvia-official");
 const release = {
     ...(await Bun.file(resolve(collectionRoot, "definition.json")).json()),
+    translations: {
+        en: await Bun.file(resolve(collectionRoot, "translations/en.json")).json(),
+    },
     blocs: [],
     assets: [],
     texts: [

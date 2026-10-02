@@ -1,8 +1,8 @@
 {
     "kind": "composition",
     "id": "ulvia-official-welcome",
-    "label": "Welcome page",
-    "description": "A translated welcome section",
+    "label": "bloc.welcome.label",
+    "description": "bloc.welcome.description",
     "uses": [
         "ulvia-official-feature-card",
         "ulvia-official-feature-list",

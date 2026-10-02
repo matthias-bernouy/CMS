@@ -1,6 +1,7 @@
 import {
     collectionThemeSourceId,
     collectionThemeTokenId,
+    resolveCollectionTranslation,
     type CollectionRelease,
 } from "@bernouy/cms-repository/collections";
 import type { ThemeSettings, ThemeSource } from "cms-content/theme/interfaces/theme";
@@ -12,20 +13,20 @@ export function collectionThemeSource(release: CollectionRelease): ThemeSource |
     }
     return {
         id: collectionThemeSourceId(release.collectionId),
-        label: release.theme.label,
+        label: resolveCollectionTranslation(release, release.theme.label),
         supportsModes: release.theme.categories.some((category) =>
             category.tokens.some((token) => token.defaults.dark !== undefined),
         ),
         owner: { kind: "collection", collectionId: release.collectionId },
         categories: release.theme.categories.map((category) => ({
             id: category.id,
-            label: category.label,
-            description: category.description ?? "",
+            label: resolveCollectionTranslation(release, category.label),
+            description: category.description ? resolveCollectionTranslation(release, category.description) : "",
             tokens: category.tokens.map((token) => ({
                 id: collectionThemeTokenId(release.collectionId, token.id),
                 variable: collectionThemeTokenId(release.collectionId, token.id),
-                label: token.label,
-                description: token.description ?? "",
+                label: resolveCollectionTranslation(release, token.label),
+                description: token.description ? resolveCollectionTranslation(release, token.description) : "",
                 type: token.type,
                 defaults: { ...token.defaults },
             })),

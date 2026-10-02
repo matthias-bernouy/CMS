@@ -1,8 +1,8 @@
 {
     "kind": "component",
     "id": "ulvia-official-feature-list",
-    "label": "Feature list",
-    "description": "Three introductory features",
+    "label": "bloc.feature-list.label",
+    "description": "bloc.feature-list.description",
     "uses": [],
     "requires": [],
     "slots": {

@@ -5,8 +5,18 @@
     "collectionId": "atlas",
     "publisherId": "atlas.official",
     "version": "1.0.0",
-    "name": "Atlas starter collection",
+    "name": "collection.name",
     "locale": "en-US",
+    "translations": {
+        "en-US": {
+            "bloc.page.label": "Page",
+            "bloc.panel.label": "Panel",
+            "collection.name": "Atlas starter collection",
+            "setting.option.default": "Default",
+            "setting.option.muted": "Muted",
+            "setting.tone.label": "Tone"
+        }
+    },
     "configuration": {
         "schema": { "type": "object", "properties": {}, "required": [] },
         "defaults": {}
@@ -23,7 +33,7 @@
         {
             "kind": "component",
             "id": "atlas-panel",
-            "label": "Panel",
+            "label": "bloc.panel.label",
             "thumbnail": "preview",
             "shadowdom": "<section><slot name=\"body\"></slot></section>",
             "style": ":host { display: block; } :host([tone=\"muted\"]) { opacity: 0.8; }",
@@ -31,13 +41,13 @@
             "settings": [
                 {
                     "id": "tone",
-                    "label": "Tone",
+                    "label": "setting.tone.label",
                     "type": "string",
                     "control": {
                         "kind": "select",
                         "options": [
-                            { "value": "default", "label": "Default" },
-                            { "value": "muted", "label": "Muted" }
+                            { "value": "default", "label": "setting.option.default" },
+                            { "value": "muted", "label": "setting.option.muted" }
                         ]
                     },
                     "maxLength": 7,
@@ -48,7 +58,7 @@
         {
             "kind": "composition",
             "id": "atlas-page",
-            "label": "Page",
+            "label": "bloc.page.label",
             "uses": ["atlas-panel"],
             "lightdom": "<atlas-panel tone=\"default\"><slot name=\"main\" slot=\"body\"></slot></atlas-panel>",
             "slots": { "main": { "max": 8 } },

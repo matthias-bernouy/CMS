@@ -6,6 +6,7 @@ import {
     isCollectionNamespace,
     parseCollectionRelease,
     parseCollectionReleaseJson,
+    resolveCollectionTranslation,
 } from "@bernouy/cms-repository/collections";
 import { canonicalIJsonBytes } from "@bernouy/cms-repository/contracts/protocol";
 import { collectionDocument } from "./fixtures";
@@ -157,22 +158,77 @@ describe("collection release parsing", () => {
 
     test("keeps theme token IDs local after validating their global names", () => {
         const parsed = parseCollectionRelease({
-            ...collectionDocument(),
+            ...collectionDocument({
+                "theme.category.colors.description": "Theme colors",
+                "theme.category.colors.label": "Colors",
+                "theme.label": "Atlas theme",
+                "theme.token.accent.description": "Primary emphasis",
+                "theme.token.accent.label": "Accent",
+            }),
             theme: {
-                label: "Atlas theme",
+                label: "theme.label",
                 categories: [
                     {
                         id: "colors",
-                        label: "Colors",
-                        tokens: [{ id: "accent", label: "Accent", type: "color", defaults: { light: "#123456" } }],
+                        label: "theme.category.colors.label",
+                        description: "theme.category.colors.description",
+                        tokens: [
+                            {
+                                id: "accent",
+                                label: "theme.token.accent.label",
+                                description: "theme.token.accent.description",
+                                type: "color",
+                                defaults: { light: "#123456" },
+                            },
+                        ],
                     },
                 ],
             },
         });
 
+        expect(parsed.theme?.label).toBe("theme.label");
+        expect(parsed.theme?.categories[0]?.label).toBe("theme.category.colors.label");
+        expect(resolveCollectionTranslation(parsed, parsed.theme!.label)).toBe("Atlas theme");
         expect(parsed.theme?.categories[0]?.tokens[0]?.id).toBe("accent");
         expect(collectionThemeTokenId(parsed.collectionId, parsed.theme!.categories[0]!.tokens[0]!.id)).toBe(
             "atlas-accent",
         );
+    });
+
+    test("validates reusable translation keys and locale fallback", () => {
+        const source = collectionDocument({ "theme.label": "Atlas theme" });
+        (source.translations as Record<string, Record<string, string>>).fr = {
+            "collection.name": "Interface Atlas",
+            "theme.label": "Thème Atlas",
+        };
+        const parsed = parseCollectionRelease({
+            ...source,
+            theme: { label: "theme.label", categories: [] },
+        });
+        expect(resolveCollectionTranslation(parsed, "theme.label", "fr-FR")).toBe("Thème Atlas");
+        expect(resolveCollectionTranslation(parsed, "bloc.panel.label", "fr-FR")).toBe("Panel");
+
+        expect(() =>
+            parseCollectionRelease({
+                ...collectionDocument(),
+                locale: "fr",
+                translations: { en: { "collection.name": "Atlas" } },
+            }),
+        ).toThrow(/collection locale/);
+        expect(() =>
+            parseCollectionRelease({
+                ...collectionDocument(),
+                translations: {
+                    "en-us": { "collection.name": "Atlas" },
+                    "en-US": { "collection.name": "Duplicate" },
+                },
+            }),
+        ).toThrow(/duplicate canonical locales/);
+        expect(() =>
+            parseCollectionRelease({
+                ...collectionDocument(),
+                theme: { label: "theme.missing", categories: [] },
+            }),
+        ).toThrow(/missing default translation/);
     });
 });

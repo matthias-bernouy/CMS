@@ -5,13 +5,17 @@ import { contractDocument, releaseCatalogue } from "../../providers/support/fixt
 
 function release() {
     return {
-        ...collectionDocument(),
+        ...collectionDocument({
+            "bloc.card.label": "Card",
+            "bloc.welcome.label": "Welcome",
+            "setting.tone.label": "Tone",
+        }),
         assets: [],
         blocs: [
             {
                 kind: "composition",
                 id: "atlas-welcome",
-                label: "Welcome",
+                label: "bloc.welcome.label",
                 lightdom: "<p>Hello</p>",
                 uses: [],
                 requires: [],
@@ -105,7 +109,7 @@ test("upgrades preserve the declared settings contract", async () => {
     initial.blocs[0] = {
         kind: "component",
         id: "atlas-card",
-        label: "Card",
+        label: "bloc.card.label",
         shadowdom: "<article></article>",
         uses: [],
         requires: [],
@@ -113,7 +117,7 @@ test("upgrades preserve the declared settings contract", async () => {
         settings: [
             {
                 id: "tone",
-                label: "Tone",
+                label: "setting.tone.label",
                 type: "string",
                 default: "quiet",
                 maxLength: 16,

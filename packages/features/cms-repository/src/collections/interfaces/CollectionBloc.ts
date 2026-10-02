@@ -1,4 +1,4 @@
-import type { CollectionCapabilityRequirement } from "./CollectionRelease";
+import type { CollectionCapabilityRequirement, CollectionTranslationKey } from "./CollectionRelease";
 import type { CollectionThemeTokenType } from "./CollectionTheme";
 
 export interface CollectionSlot {
@@ -20,12 +20,12 @@ export type CollectionRichTextProfile = "inline" | "prose";
 
 export interface CollectionSettingOption {
     readonly value: string;
-    readonly label: string;
+    readonly label: CollectionTranslationKey;
     readonly icon?: string;
 }
 
 export type CollectionSettingControl =
-    | { readonly kind: "text"; readonly placeholder?: string }
+    | { readonly kind: "text"; readonly placeholder?: CollectionTranslationKey }
     | { readonly kind: "select" | "segmented"; readonly options: readonly CollectionSettingOption[] }
     | {
           readonly kind: "color";
@@ -41,15 +41,15 @@ export type CollectionSettingControl =
       }
     | { readonly kind: "media-picker"; readonly accept?: readonly CollectionMediaAccept[] }
     | { readonly kind: "theme-token-picker"; readonly accept?: readonly CollectionThemeTokenType[] }
-    | { readonly kind: "number" | "range"; readonly step?: number; readonly suffix?: string }
+    | { readonly kind: "number" | "range"; readonly step?: number; readonly suffix?: CollectionTranslationKey }
     | { readonly kind: "toggle" };
 
 interface CollectionSettingBase {
     /** Safe HTML attribute name. */
     readonly id: string;
-    readonly label: string;
-    readonly group?: string;
-    readonly help?: string;
+    readonly label: CollectionTranslationKey;
+    readonly group?: CollectionTranslationKey;
+    readonly help?: CollectionTranslationKey;
     /** Editor visibility only; hidden values remain stored. */
     readonly visibleWhen?: readonly CollectionSettingVisibilityRule[];
 }
@@ -90,8 +90,8 @@ export type CollectionComponentSettings = readonly CollectionSettingItem[];
 interface CollectionBlocBase {
     /** A stable custom-element tag prefixed by the collection ID. */
     readonly id: string;
-    readonly label: string;
-    readonly description?: string;
+    readonly label: CollectionTranslationKey;
+    readonly description?: CollectionTranslationKey;
     readonly internal?: boolean;
     readonly thumbnail?: string;
     readonly uses: readonly string[];

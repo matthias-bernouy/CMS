@@ -1,0 +1,47 @@
+{
+    "id": "motion",
+    "label": "theme.category.motion.label",
+    "description": "theme.category.motion.description",
+    "tokens": [
+        {
+            "id": "duration-fast",
+            "label": "theme.token.duration-fast.label",
+            "type": "value",
+            "defaults": {
+                "light": "120ms"
+            }
+        },
+        {
+            "id": "duration-normal",
+            "label": "theme.token.duration-normal.label",
+            "type": "value",
+            "defaults": {
+                "light": "200ms"
+            }
+        },
+        {
+            "id": "duration-slow",
+            "label": "theme.token.duration-slow.label",
+            "type": "value",
+            "defaults": {
+                "light": "320ms"
+            }
+        },
+        {
+            "id": "easing-standard",
+            "label": "theme.token.easing-standard.label",
+            "type": "value",
+            "defaults": {
+                "light": "cubic-bezier(0.2, 0, 0, 1)"
+            }
+        },
+        {
+            "id": "easing-emphasized",
+            "label": "theme.token.easing-emphasized.label",
+            "type": "value",
+            "defaults": {
+                "light": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+            }
+        }
+    ]
+}

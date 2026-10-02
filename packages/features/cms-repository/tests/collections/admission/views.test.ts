@@ -3,10 +3,10 @@ import { parseCollectionRelease } from "../../../src/exports/collections";
 import { collectionDocument } from "../fixtures";
 
 test("collection views keep Control HTML while rejecting executable markup", () => {
-    const document = collectionDocument();
+    const document = collectionDocument({ "view.overview.name": "Overview" });
     const view = {
         id: "overview",
-        name: "Overview",
+        name: "view.overview.name",
         icon: "star",
         html: "<section><h2>{{ dashboard.name }}</h2><atlas-panel></atlas-panel></section>",
     };

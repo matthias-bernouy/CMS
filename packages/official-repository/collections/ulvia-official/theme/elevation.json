@@ -1,0 +1,51 @@
+{
+    "id": "elevation",
+    "label": "theme.category.elevation.label",
+    "description": "theme.category.elevation.description",
+    "tokens": [
+        {
+            "id": "shadow-none",
+            "label": "theme.token.shadow-none.label",
+            "type": "shadow",
+            "defaults": {
+                "light": "none"
+            }
+        },
+        {
+            "id": "shadow-sm",
+            "label": "theme.token.shadow-sm.label",
+            "type": "shadow",
+            "defaults": {
+                "light": "0 1px 2px rgb(21 53 43 / 8%)",
+                "dark": "0 1px 2px rgb(0 0 0 / 24%)"
+            }
+        },
+        {
+            "id": "shadow-md",
+            "label": "theme.token.shadow-md.label",
+            "type": "shadow",
+            "defaults": {
+                "light": "0 0.5rem 1.5rem rgb(21 53 43 / 12%)",
+                "dark": "0 0.5rem 1.5rem rgb(0 0 0 / 30%)"
+            }
+        },
+        {
+            "id": "shadow-lg",
+            "label": "theme.token.shadow-lg.label",
+            "type": "shadow",
+            "defaults": {
+                "light": "0 1rem 2.5rem rgb(21 53 43 / 16%)",
+                "dark": "0 1rem 2.5rem rgb(0 0 0 / 38%)"
+            }
+        },
+        {
+            "id": "shadow-xl",
+            "label": "theme.token.shadow-xl.label",
+            "type": "shadow",
+            "defaults": {
+                "light": "0 1.5rem 4rem rgb(21 53 43 / 20%)",
+                "dark": "0 1.5rem 4rem rgb(0 0 0 / 46%)"
+            }
+        }
+    ]
+}

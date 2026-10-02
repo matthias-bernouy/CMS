@@ -1,14 +1,20 @@
 [
     {
         "id": "tone",
-        "label": "Tone",
-        "group": "Appearance",
+        "label": "setting.feature-card.tone.label",
+        "group": "setting.group.appearance",
         "type": "string",
         "control": {
             "kind": "select",
             "options": [
-                { "value": "quiet", "label": "Quiet" },
-                { "value": "accent", "label": "Accent" }
+                {
+                    "value": "quiet",
+                    "label": "setting.option.quiet"
+                },
+                {
+                    "value": "accent",
+                    "label": "setting.option.accent"
+                }
             ]
         },
         "maxLength": 16,
@@ -16,10 +22,13 @@
     },
     {
         "id": "compact",
-        "label": "Compact",
-        "group": "Layout",
+        "label": "setting.feature-card.compact.label",
+        "group": "setting.group.layout",
         "type": "boolean",
         "default": false,
-        "visibleWhen": { "setting": "tone", "equals": "accent" }
+        "visibleWhen": {
+            "setting": "tone",
+            "equals": "accent"
+        }
     }
 ]

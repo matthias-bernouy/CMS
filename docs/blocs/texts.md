@@ -79,15 +79,17 @@ an installed-catalogue implementation.
 Installed collections have a working Texts editor: category sections contain
 groups, each displaying a table with Key, Label, immutable default-language value
 and editable selected-language value. Optional `category`, `group`, `label` and
-`description` metadata belong to the JSON definition. Unclassified texts appear
-under General / Texts. Navigation keeps unsaved edits; language changes require
-saving first. Reset removes the site override after Save. Concurrent stale writes
-return 409 and require reloading; they never overwrite newer translations.
+`description` metadata are keys in the collection's immutable administration
+catalogue under `translations/<locale>.json`. Unclassified texts appear under
+General / Texts. Navigation keeps unsaved edits; language changes require saving
+first. Reset removes the site override after Save. Concurrent stale writes return
+409 and require reloading; they never overwrite newer translations.
 
-`category`, `group` and `label` accept nonblank strings up to 120 characters;
-`description` accepts up to 500. IDs and server expression syntax remain unchanged.
-The selector includes collection locales and configured site languages. Complete
-site-language removal/migration workflows are not implemented.
+Resolved `category`, `group` and `label` values accept nonblank strings up to 120
+characters; `description` accepts up to 500. Metadata translations are not site
+overrides and may be reused by other resources. IDs and server expression syntax
+remain unchanged. The selector includes collection locales and configured site
+languages. Complete site-language removal/migration workflows are not implemented.
 
 ## Examples and limits
 

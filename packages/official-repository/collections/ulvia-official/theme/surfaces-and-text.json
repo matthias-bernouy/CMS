@@ -1,0 +1,165 @@
+{
+    "id": "surfaces-and-text",
+    "label": "theme.category.surfaces-and-text.label",
+    "description": "theme.category.surfaces-and-text.description",
+    "tokens": [
+        {
+            "id": "background-base",
+            "label": "theme.token.background-base.label",
+            "description": "theme.token.background-base.description",
+            "type": "color",
+            "defaults": {
+                "light": "#f7faf8",
+                "dark": "#101714"
+            }
+        },
+        {
+            "id": "background-subtle",
+            "label": "theme.token.background-subtle.label",
+            "description": "theme.token.background-subtle.description",
+            "type": "color",
+            "defaults": {
+                "light": "#eef4f1",
+                "dark": "#16211c"
+            }
+        },
+        {
+            "id": "background-surface",
+            "label": "theme.token.background-surface.label",
+            "description": "theme.token.background-surface.description",
+            "type": "color",
+            "defaults": {
+                "light": "#ffffff",
+                "dark": "#1c2822"
+            }
+        },
+        {
+            "id": "background-raised",
+            "label": "theme.token.background-raised.label",
+            "description": "theme.token.background-raised.description",
+            "type": "color",
+            "defaults": {
+                "light": "#ffffff",
+                "dark": "#25332c"
+            }
+        },
+        {
+            "id": "background-inverse",
+            "label": "theme.token.background-inverse.label",
+            "description": "theme.token.background-inverse.description",
+            "type": "color",
+            "defaults": {
+                "light": "#15352b",
+                "dark": "#eef7f2"
+            }
+        },
+        {
+            "id": "text-primary",
+            "label": "theme.token.text-primary.label",
+            "description": "theme.token.text-primary.description",
+            "type": "color",
+            "defaults": {
+                "light": "#15352b",
+                "dark": "#f0f7f3"
+            }
+        },
+        {
+            "id": "text-secondary",
+            "label": "theme.token.text-secondary.label",
+            "description": "theme.token.text-secondary.description",
+            "type": "color",
+            "defaults": {
+                "light": "#365247",
+                "dark": "#c8d8cf"
+            }
+        },
+        {
+            "id": "text-muted",
+            "label": "theme.token.text-muted.label",
+            "description": "theme.token.text-muted.description",
+            "type": "color",
+            "defaults": {
+                "light": "#526b61",
+                "dark": "#a8bbb1"
+            }
+        },
+        {
+            "id": "text-disabled",
+            "label": "theme.token.text-disabled.label",
+            "description": "theme.token.text-disabled.description",
+            "type": "color",
+            "defaults": {
+                "light": "#84958c",
+                "dark": "#71847a"
+            }
+        },
+        {
+            "id": "text-inverse",
+            "label": "theme.token.text-inverse.label",
+            "description": "theme.token.text-inverse.description",
+            "type": "color",
+            "defaults": {
+                "light": "#f7faf8",
+                "dark": "#102018"
+            }
+        },
+        {
+            "id": "link",
+            "label": "theme.token.link.label",
+            "description": "theme.token.link.description",
+            "type": "color",
+            "defaults": {
+                "light": "var(--ulvia-official-primary)"
+            }
+        },
+        {
+            "id": "link-hover",
+            "label": "theme.token.link-hover.label",
+            "description": "theme.token.link-hover.description",
+            "type": "color",
+            "defaults": {
+                "light": "var(--ulvia-official-primary-hover)"
+            }
+        },
+        {
+            "id": "border-subtle",
+            "label": "theme.token.border-subtle.label",
+            "description": "theme.token.border-subtle.description",
+            "type": "color",
+            "defaults": {
+                "light": "#dce7e1",
+                "dark": "#2d3d35"
+            }
+        },
+        {
+            "id": "border-default",
+            "label": "theme.token.border-default.label",
+            "description": "theme.token.border-default.description",
+            "type": "color",
+            "defaults": {
+                "light": "#c2d1ca",
+                "dark": "#40534a"
+            }
+        },
+        {
+            "id": "border-strong",
+            "label": "theme.token.border-strong.label",
+            "description": "theme.token.border-strong.description",
+            "type": "color",
+            "defaults": {
+                "light": "#8da299",
+                "dark": "#6d8579"
+            }
+        },
+        {
+            "id": "focus-ring",
+            "label": "theme.token.focus-ring.label",
+            "description": "theme.token.focus-ring.description",
+            "type": "color",
+            "defaults": {
+                "light": "#167c5e",
+                "dark": "#77e4bd"
+            }
+        }
+    ]
+}

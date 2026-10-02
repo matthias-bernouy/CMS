@@ -1,0 +1,287 @@
+{
+    "id": "feedback",
+    "label": "theme.category.feedback.label",
+    "description": "theme.category.feedback.description",
+    "tokens": [
+        {
+            "id": "success",
+            "label": "theme.token.success.label",
+            "description": "theme.token.success.description",
+            "type": "color",
+            "defaults": {
+                "light": "#18794e",
+                "dark": "#5ad6a0"
+            }
+        },
+        {
+            "id": "success-hover",
+            "label": "theme.token.success-hover.label",
+            "description": "theme.token.success-hover.description",
+            "type": "color",
+            "defaults": {
+                "light": "#12623e",
+                "dark": "#78e1b3"
+            }
+        },
+        {
+            "id": "success-active",
+            "label": "theme.token.success-active.label",
+            "description": "theme.token.success-active.description",
+            "type": "color",
+            "defaults": {
+                "light": "#0d4d31",
+                "dark": "#3fc58b"
+            }
+        },
+        {
+            "id": "on-success",
+            "label": "theme.token.on-success.label",
+            "description": "theme.token.on-success.description",
+            "type": "color",
+            "defaults": {
+                "light": "#ffffff",
+                "dark": "#0d2d20"
+            }
+        },
+        {
+            "id": "success-subtle",
+            "label": "theme.token.success-subtle.label",
+            "description": "theme.token.success-subtle.description",
+            "type": "color",
+            "defaults": {
+                "light": "#dff3e8",
+                "dark": "#173b2b"
+            }
+        },
+        {
+            "id": "on-success-subtle",
+            "label": "theme.token.on-success-subtle.label",
+            "description": "theme.token.on-success-subtle.description",
+            "type": "color",
+            "defaults": {
+                "light": "#0f5738",
+                "dark": "#a7edcf"
+            }
+        },
+        {
+            "id": "success-border",
+            "label": "theme.token.success-border.label",
+            "description": "theme.token.success-border.description",
+            "type": "color",
+            "defaults": {
+                "light": "#7cc9a4",
+                "dark": "#357c5c"
+            }
+        },
+        {
+            "id": "warning",
+            "label": "theme.token.warning.label",
+            "description": "theme.token.warning.description",
+            "type": "color",
+            "defaults": {
+                "light": "#9a5b00",
+                "dark": "#f2b84b"
+            }
+        },
+        {
+            "id": "warning-hover",
+            "label": "theme.token.warning-hover.label",
+            "description": "theme.token.warning-hover.description",
+            "type": "color",
+            "defaults": {
+                "light": "#7d4900",
+                "dark": "#ffc967"
+            }
+        },
+        {
+            "id": "warning-active",
+            "label": "theme.token.warning-active.label",
+            "description": "theme.token.warning-active.description",
+            "type": "color",
+            "defaults": {
+                "light": "#633a00",
+                "dark": "#d89b2f"
+            }
+        },
+        {
+            "id": "on-warning",
+            "label": "theme.token.on-warning.label",
+            "description": "theme.token.on-warning.description",
+            "type": "color",
+            "defaults": {
+                "light": "#ffffff",
+                "dark": "#2c1b00"
+            }
+        },
+        {
+            "id": "warning-subtle",
+            "label": "theme.token.warning-subtle.label",
+            "description": "theme.token.warning-subtle.description",
+            "type": "color",
+            "defaults": {
+                "light": "#fff1d6",
+                "dark": "#3c2b12"
+            }
+        },
+        {
+            "id": "on-warning-subtle",
+            "label": "theme.token.on-warning-subtle.label",
+            "description": "theme.token.on-warning-subtle.description",
+            "type": "color",
+            "defaults": {
+                "light": "#6b3f00",
+                "dark": "#ffe0a3"
+            }
+        },
+        {
+            "id": "warning-border",
+            "label": "theme.token.warning-border.label",
+            "description": "theme.token.warning-border.description",
+            "type": "color",
+            "defaults": {
+                "light": "#e7b55e",
+                "dark": "#8b642a"
+            }
+        },
+        {
+            "id": "danger",
+            "label": "theme.token.danger.label",
+            "description": "theme.token.danger.description",
+            "type": "color",
+            "defaults": {
+                "light": "#b4233c",
+                "dark": "#ff8091"
+            }
+        },
+        {
+            "id": "danger-hover",
+            "label": "theme.token.danger-hover.label",
+            "description": "theme.token.danger-hover.description",
+            "type": "color",
+            "defaults": {
+                "light": "#941d32",
+                "dark": "#ff9aaa"
+            }
+        },
+        {
+            "id": "danger-active",
+            "label": "theme.token.danger-active.label",
+            "description": "theme.token.danger-active.description",
+            "type": "color",
+            "defaults": {
+                "light": "#771728",
+                "dark": "#e86578"
+            }
+        },
+        {
+            "id": "on-danger",
+            "label": "theme.token.on-danger.label",
+            "description": "theme.token.on-danger.description",
+            "type": "color",
+            "defaults": {
+                "light": "#ffffff",
+                "dark": "#3a0e17"
+            }
+        },
+        {
+            "id": "danger-subtle",
+            "label": "theme.token.danger-subtle.label",
+            "description": "theme.token.danger-subtle.description",
+            "type": "color",
+            "defaults": {
+                "light": "#fde7eb",
+                "dark": "#461b24"
+            }
+        },
+        {
+            "id": "on-danger-subtle",
+            "label": "theme.token.on-danger-subtle.label",
+            "description": "theme.token.on-danger-subtle.description",
+            "type": "color",
+            "defaults": {
+                "light": "#7c182b",
+                "dark": "#ffc3cc"
+            }
+        },
+        {
+            "id": "danger-border",
+            "label": "theme.token.danger-border.label",
+            "description": "theme.token.danger-border.description",
+            "type": "color",
+            "defaults": {
+                "light": "#e59aa7",
+                "dark": "#9e4959"
+            }
+        },
+        {
+            "id": "info",
+            "label": "theme.token.info.label",
+            "description": "theme.token.info.description",
+            "type": "color",
+            "defaults": {
+                "light": "#1769aa",
+                "dark": "#6dbcf2"
+            }
+        },
+        {
+            "id": "info-hover",
+            "label": "theme.token.info-hover.label",
+            "description": "theme.token.info-hover.description",
+            "type": "color",
+            "defaults": {
+                "light": "#12568c",
+                "dark": "#8ccbf6"
+            }
+        },
+        {
+            "id": "info-active",
+            "label": "theme.token.info-active.label",
+            "description": "theme.token.info-active.description",
+            "type": "color",
+            "defaults": {
+                "light": "#0e4571",
+                "dark": "#51a5df"
+            }
+        },
+        {
+            "id": "on-info",
+            "label": "theme.token.on-info.label",
+            "description": "theme.token.on-info.description",
+            "type": "color",
+            "defaults": {
+                "light": "#ffffff",
+                "dark": "#082b44"
+            }
+        },
+        {
+            "id": "info-subtle",
+            "label": "theme.token.info-subtle.label",
+            "description": "theme.token.info-subtle.description",
+            "type": "color",
+            "defaults": {
+                "light": "#e1f0fb",
+                "dark": "#17364b"
+            }
+        },
+        {
+            "id": "on-info-subtle",
+            "label": "theme.token.on-info-subtle.label",
+            "description": "theme.token.on-info-subtle.description",
+            "type": "color",
+            "defaults": {
+                "light": "#104d7d",
+                "dark": "#bde5ff"
+            }
+        },
+        {
+            "id": "info-border",
+            "label": "theme.token.info-border.label",
+            "description": "theme.token.info-border.description",
+            "type": "color",
+            "defaults": {
+                "light": "#88bfe5",
+                "dark": "#3b789f"
+            }
+        }
+    ]
+}

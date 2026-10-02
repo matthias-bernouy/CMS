@@ -1,4 +1,5 @@
 import type { InstalledCollection } from "@bernouy/cms-repository/collections/installations";
+import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
 import type { SiteBlocCollection } from "@bernouy/cms-content";
 import type { LibraryBloc, LibraryCollection } from "./types";
 
@@ -30,8 +31,10 @@ export function libraryCollectionRows(
                     key: `installed:${item.collectionId}`,
                     installedId: item.collectionId,
                     kind: "installed",
-                    name: item.release.name,
-                    description: item.release.description ?? "",
+                    name: resolveCollectionTranslation(item.release, item.release.name),
+                    description: item.release.description
+                        ? resolveCollectionTranslation(item.release, item.release.description)
+                        : "",
                     version: item.release.version,
                     digest: item.digest,
                 },

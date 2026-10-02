@@ -1,6 +1,6 @@
 {
     "id": "resources",
-    "name": "Blocs",
+    "name": "view.resources.name",
     "icon": "grid",
-    "description": "Official reusable blocs available to this workspace."
+    "description": "view.resources.description"
 }

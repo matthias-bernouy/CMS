@@ -147,14 +147,29 @@ function release(version: string, marker: string): Record<string, unknown> {
         collectionId: "ulvia-official",
         publisherId: "ulvia.official",
         version,
-        name: "Ulvia Official",
+        name: "collection.name",
         locale: "en",
+        translations: {
+            en: {
+                "bloc.page.label": "Page",
+                "collection.name": "Ulvia Official",
+                "dashboard.starter.name": `Ulvia workspace ${marker}`,
+                "nav.blocs": "Blocs",
+                "nav.overview": "Overview",
+                "nav.resources": "Resources",
+                "nav.theme": "Theme",
+                "nav.workspace": "Ulvia",
+                "view.overview.name": "Overview",
+                "view.resources.name": "Blocs",
+                "view.theme.name": "Theme",
+            },
+        },
         assets: [],
         blocs: [
             {
                 kind: "composition",
                 id: "ulvia-official-page",
-                label: "Page",
+                label: "bloc.page.label",
                 lightdom: "<section><p>Ulvia</p></section>",
                 uses: [],
                 requires: [],
@@ -162,29 +177,44 @@ function release(version: string, marker: string): Record<string, unknown> {
             },
         ],
         views: [
-            { id: "overview", name: "Overview", icon: "layout", html: `<section><h2>${marker}</h2></section>` },
-            { id: "resources", name: "Blocs", icon: "grid", html: "<section><h2>Blocs</h2></section>" },
-            { id: "theme", name: "Theme", icon: "settings", html: "<section><h2>Theme</h2></section>" },
+            {
+                id: "overview",
+                name: "view.overview.name",
+                icon: "layout",
+                html: `<section><h2>${marker}</h2></section>`,
+            },
+            {
+                id: "resources",
+                name: "view.resources.name",
+                icon: "grid",
+                html: "<section><h2>Blocs</h2></section>",
+            },
+            {
+                id: "theme",
+                name: "view.theme.name",
+                icon: "settings",
+                html: "<section><h2>Theme</h2></section>",
+            },
         ],
         dashboards: [
             {
                 id: "starter",
-                name: `Ulvia workspace ${marker}`,
+                name: "dashboard.starter.name",
                 icon: "layout",
                 navigation: [
                     {
                         id: "workspace",
-                        label: "Ulvia",
+                        label: "nav.workspace",
                         childPlacement: "lateral",
                         children: [
-                            { id: "overview", label: "Overview", use: "overview" },
+                            { id: "overview", label: "nav.overview", use: "overview" },
                             {
                                 id: "resources",
-                                label: "Resources",
+                                label: "nav.resources",
                                 childPlacement: "tabs",
                                 children: [
-                                    { id: "blocs", label: "Blocs", use: "resources" },
-                                    { id: "theme", label: "Theme", use: "theme" },
+                                    { id: "blocs", label: "nav.blocs", use: "resources" },
+                                    { id: "theme", label: "nav.theme", use: "theme" },
                                 ],
                             },
                         ],

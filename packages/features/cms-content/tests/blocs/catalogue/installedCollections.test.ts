@@ -11,15 +11,31 @@ const release = {
     collectionId: "test",
     publisherId: "example",
     version: "1.0.0",
-    name: "Test",
+    name: "collection.name",
     locale: "en",
+    translations: {
+        en: {
+            "bloc.card.label": "Card",
+            "bloc.welcome.label": "Welcome",
+            "collection.name": "Test",
+            "setting.compact.label": "Compact",
+            "setting.group.appearance": "Appearance",
+            "setting.group.layout": "Layout",
+            "setting.option.accent": "Accent",
+            "setting.option.quiet": "Quiet",
+            "setting.tone.label": "Tone",
+            "theme.category.colors.label": "Colors",
+            "theme.label": "Test theme",
+            "theme.token.accent.label": "Accent",
+        },
+    },
     assets: [],
     texts: [{ id: "title", values: { en: "Welcome" } }],
     blocs: [
         {
             kind: "composition",
             id: "test-welcome",
-            label: "Welcome",
+            label: "bloc.welcome.label",
             lightdom: "<h1>{{ cms.i18n.test.title }}</h1>",
             uses: [],
             requires: [],
@@ -56,15 +72,15 @@ test("installed collection theme contributes immutable tokens to editing and pub
     const artifact = await store.importRelease({
         ...release,
         theme: {
-            label: "Test theme",
+            label: "theme.label",
             categories: [
                 {
                     id: "colors",
-                    label: "Colors",
+                    label: "theme.category.colors.label",
                     tokens: [
                         {
                             id: "accent",
-                            label: "Accent",
+                            label: "theme.token.accent.label",
                             type: "color",
                             defaults: { light: "#116149", dark: "#57cda3" },
                         },
@@ -99,7 +115,7 @@ test("installed shadow component is served as browser bloc JavaScript", async ()
             {
                 kind: "component",
                 id: "test-card",
-                label: "Card",
+                label: "bloc.card.label",
                 shadowdom: '<article class="card"><slot name="body"></slot></article>',
                 style: ".card { color: var(--test-accent); }",
                 uses: [],
@@ -137,7 +153,7 @@ test("installed collection thumbnails are projected from verified release assets
                 {
                     kind: "component",
                     id: "test-card",
-                    label: "Card",
+                    label: "bloc.card.label",
                     thumbnail: "card.svg",
                     shadowdom: "<article></article>",
                     uses: [],
@@ -164,7 +180,7 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
             {
                 kind: "component",
                 id: "test-card",
-                label: "Card",
+                label: "bloc.card.label",
                 shadowdom: '<article><slot name="body"></slot></article>',
                 lightdom:
                     '<slot name="title" slot="body"></slot><section slot="body"><p>{{ cms.i18n.test.title }}</p></section>',
@@ -172,20 +188,26 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
                 settings: [
                     {
                         id: "tone",
-                        label: "Tone",
-                        group: "Appearance",
+                        label: "setting.tone.label",
+                        group: "setting.group.appearance",
                         type: "string",
                         control: {
                             kind: "select",
                             options: [
-                                { value: "quiet", label: "Quiet" },
-                                { value: "accent", label: "Accent" },
+                                { value: "quiet", label: "setting.option.quiet" },
+                                { value: "accent", label: "setting.option.accent" },
                             ],
                         },
                         maxLength: 16,
                         default: "quiet",
                     },
-                    { id: "compact", label: "Compact", group: "Layout", type: "boolean", default: false },
+                    {
+                        id: "compact",
+                        label: "setting.compact.label",
+                        group: "setting.group.layout",
+                        type: "boolean",
+                        default: false,
+                    },
                 ],
                 uses: [],
                 requires: [],

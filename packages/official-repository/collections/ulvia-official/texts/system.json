@@ -1,9 +1,9 @@
 [
     {
         "id": "empty-message",
-        "label": "Empty state",
-        "category": "System",
-        "group": "Messages",
+        "label": "text.empty-message.label",
+        "category": "text.category.system",
+        "group": "text.group.messages",
         "values": {
             "en": "Nothing to display yet.",
             "fr": "Aucun contenu pour le moment."

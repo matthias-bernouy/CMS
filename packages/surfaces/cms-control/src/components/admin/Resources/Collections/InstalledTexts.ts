@@ -1,4 +1,6 @@
 import type { InstalledCollection } from "@bernouy/cms-repository/collections/installations";
+import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
+import type { CollectionText } from "@bernouy/cms-repository/collections/texts";
 import { collectionRequest } from "./client";
 import { languageLabel, renderTextLanguages, renderTextNavigation, textGroup } from "./texts/navigation";
 import { renderTextRow, type TextInput } from "./texts/table";
@@ -87,7 +89,7 @@ export class InstalledTexts extends HTMLElement {
         if (!this.item) {
             return;
         }
-        const texts = this.item.release.texts ?? [];
+        const texts = localizeTextMetadata(this.item);
         if (!texts.some((text) => textGroup(text) === this.group)) {
             this.group = texts[0] ? textGroup(texts[0]) : "";
         }
@@ -184,3 +186,13 @@ export class InstalledTexts extends HTMLElement {
     }
 }
 customElements.define("cms-installed-texts", InstalledTexts);
+
+function localizeTextMetadata(item: InstalledCollection): CollectionText[] {
+    return (item.release.texts ?? []).map((text) => ({
+        ...text,
+        ...(text.label ? { label: resolveCollectionTranslation(item.release, text.label) } : {}),
+        ...(text.description ? { description: resolveCollectionTranslation(item.release, text.description) } : {}),
+        ...(text.category ? { category: resolveCollectionTranslation(item.release, text.category) } : {}),
+        ...(text.group ? { group: resolveCollectionTranslation(item.release, text.group) } : {}),
+    }));
+}

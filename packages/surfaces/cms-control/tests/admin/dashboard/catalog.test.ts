@@ -8,14 +8,23 @@ test("collection dashboards start inactive and follow collection updates without
     let siteId = "site-a";
     const release = {
         publisherId: "ulvia.examples",
-        name: "Test",
-        views: [{ id: "overview", name: "Overview", icon: "star", html: "<section>Overview</section>" }],
+        locale: "en",
+        translations: {
+            en: {
+                "collection.name": "Test",
+                "dashboard.starter.name": "Starter",
+                "nav.overview": "Overview",
+                "view.overview.name": "Overview",
+            },
+        },
+        name: "collection.name",
+        views: [{ id: "overview", name: "view.overview.name", icon: "star", html: "<section>Overview</section>" }],
         dashboards: [
             {
                 id: "starter",
-                name: "Starter",
+                name: "dashboard.starter.name",
                 icon: "database",
-                navigation: [{ id: "overview", label: "Overview", use: "overview" }],
+                navigation: [{ id: "overview", label: "nav.overview", use: "overview" }],
             },
         ],
     };
@@ -36,8 +45,8 @@ test("collection dashboards start inactive and follow collection updates without
     expect(initial).toMatchObject({ icon: "database", enabled: false, revision: 0, origin: { collectionId: "test" } });
     expect(initial?.navigation?.[0]?.icon).toBe("star");
     await repository.create({ ...initial!, enabled: true, revision: 1 });
-    release.dashboards[0]!.name = "Updated starter";
-    release.dashboards[0]!.navigation[0]!.label = "Updated overview";
+    release.translations.en["dashboard.starter.name"] = "Updated starter";
+    release.translations.en["nav.overview"] = "Updated overview";
     const [updated] = await dashboardCatalog(cms);
     expect(updated).toMatchObject({ enabled: true, revision: 1, name: "Updated starter" });
     expect(updated?.navigation?.[0]?.label).toBe("Updated overview");

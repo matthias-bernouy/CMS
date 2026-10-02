@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { DashboardRecord } from "@bernouy/cms-dashboards";
+import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
 import type { ControlCms } from "cms-control/ControlCms";
 import { dashboardCollections } from "./access";
 
@@ -9,11 +10,11 @@ export async function availableDashboardViews(cms: ControlCms) {
     return snapshot.collections.flatMap((item) =>
         (item.release.views ?? []).map((view) => ({
             collectionId: item.collectionId,
-            collectionName: item.release.name,
+            collectionName: resolveCollectionTranslation(item.release, item.release.name),
             viewId: view.id,
-            name: view.name,
+            name: resolveCollectionTranslation(item.release, view.name),
             icon: view.icon ?? "layout",
-            description: view.description ?? "",
+            description: view.description ? resolveCollectionTranslation(item.release, view.description) : "",
         })),
     );
 }

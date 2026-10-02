@@ -9,14 +9,23 @@ function release(collectionId: string, version: string, blocId: string, tokenId?
         collectionId,
         publisherId: "atlas.official",
         version,
-        name: collectionId,
+        name: "collection.name",
         locale: "en",
+        translations: {
+            en: {
+                "bloc.welcome.label": "Welcome",
+                "collection.name": collectionId,
+                "theme.category.colors.label": "Colors",
+                "theme.label": "Theme",
+                "theme.token.accent.label": "Accent",
+            },
+        },
         assets: [],
         blocs: [
             {
                 kind: "composition",
                 id: blocId,
-                label: "Welcome",
+                label: "bloc.welcome.label",
                 lightdom: "<p>Hello</p>",
                 uses: [],
                 requires: [],
@@ -26,12 +35,19 @@ function release(collectionId: string, version: string, blocId: string, tokenId?
         ...(tokenId
             ? {
                   theme: {
-                      label: "Theme",
+                      label: "theme.label",
                       categories: [
                           {
                               id: "colors",
-                              label: "Colors",
-                              tokens: [{ id: tokenId, label: "Accent", type: "color", defaults: { light: "#111111" } }],
+                              label: "theme.category.colors.label",
+                              tokens: [
+                                  {
+                                      id: tokenId,
+                                      label: "theme.token.accent.label",
+                                      type: "color",
+                                      defaults: { light: "#111111" },
+                                  },
+                              ],
                           },
                       ],
                   },

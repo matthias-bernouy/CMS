@@ -1,0 +1,87 @@
+{
+    "id": "layout",
+    "label": "theme.category.layout.label",
+    "description": "theme.category.layout.description",
+    "tokens": [
+        {
+            "id": "content-width-sm",
+            "label": "theme.token.content-width-sm.label",
+            "type": "length",
+            "defaults": {
+                "light": "40rem"
+            }
+        },
+        {
+            "id": "content-width-md",
+            "label": "theme.token.content-width-md.label",
+            "type": "length",
+            "defaults": {
+                "light": "64rem"
+            }
+        },
+        {
+            "id": "content-width-lg",
+            "label": "theme.token.content-width-lg.label",
+            "type": "length",
+            "defaults": {
+                "light": "80rem"
+            }
+        },
+        {
+            "id": "content-width-xl",
+            "label": "theme.token.content-width-xl.label",
+            "type": "length",
+            "defaults": {
+                "light": "90rem"
+            }
+        },
+        {
+            "id": "page-gutter",
+            "label": "theme.token.page-gutter.label",
+            "type": "length",
+            "defaults": {
+                "light": "var(--ulvia-official-spacing-md)"
+            }
+        },
+        {
+            "id": "page-gutter-wide",
+            "label": "theme.token.page-gutter-wide.label",
+            "type": "length",
+            "defaults": {
+                "light": "var(--ulvia-official-spacing-xl)"
+            }
+        },
+        {
+            "id": "section-spacing",
+            "label": "theme.token.section-spacing.label",
+            "type": "length",
+            "defaults": {
+                "light": "var(--ulvia-official-spacing-3xl)"
+            }
+        },
+        {
+            "id": "control-height-sm",
+            "label": "theme.token.control-height-sm.label",
+            "type": "length",
+            "defaults": {
+                "light": "2rem"
+            }
+        },
+        {
+            "id": "control-height-md",
+            "label": "theme.token.control-height-md.label",
+            "type": "length",
+            "defaults": {
+                "light": "2.5rem"
+            }
+        },
+        {
+            "id": "control-height-lg",
+            "label": "theme.token.control-height-lg.label",
+            "type": "length",
+            "defaults": {
+                "light": "3rem"
+            }
+        }
+    ]
+}

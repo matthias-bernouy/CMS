@@ -1,8 +1,8 @@
 {
     "kind": "component",
     "id": "ulvia-official-faq",
-    "label": "Frequently asked question",
-    "description": "A frequently asked question",
+    "label": "bloc.faq.label",
+    "description": "bloc.faq.description",
     "uses": [],
     "requires": [],
     "slots": {

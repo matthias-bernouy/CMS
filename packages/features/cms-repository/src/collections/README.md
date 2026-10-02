@@ -8,11 +8,18 @@ authorization engine or a general-purpose executable package format.
 
 The envelope identifies `kind: "collection"`, `protocol: "ulvia-collection/v1"`,
 `schemaDialect: "ulvia-schema/v1"`, collection ID, publisher ID, exact SemVer,
-name and default locale. Optional configuration has a nonnullable object schema
-and validated defaults. Binary leaves are forbidden in configuration schemas.
+name translation key and default locale. Its immutable `translations` catalogue
+contains static administration copy. Optional configuration has a nonnullable
+object schema and validated defaults. Binary leaves are forbidden in
+configuration schemas.
 
 This slice supports:
 
+- A reusable administration translation catalogue shared by collection, Bloc,
+  setting, text, theme, View and dashboard metadata. Every metadata field stores
+  a key, every key must exist in the default locale and additional locales may
+  be partial. Resolution tries the requested locale, its regional parents and
+  finally the collection locale.
 - Optional JSON text definitions with static locale values. Dynamic parameters
   and plural forms are deliberately outside this catalogue. `./collections/texts`
   exposes validation and fallback resolution; see
@@ -49,7 +56,7 @@ text, semantic content and CMS directives. Inline styles are forbidden in all
 markup; classes belong only in shadow shells and bindings only in light DOM.
 Composition-only settings, styles and behaviour fields reject.
 Component settings are an ordered list of items. Each item owns a safe lowercase
-attribute ID, label, optional group, scalar type, constraints and default.
+attribute ID, label key, optional group key, scalar type, constraints and default.
 Supported values are strings, booleans, finite numbers and safe integers.
 Admission validates the list and defaults against a derived object schema;
 arbitrary nested JSON settings are not exposed as HTML attributes. Numeric page
@@ -131,7 +138,8 @@ before the first asynchronous step; caller-owned objects are never frozen.
 `CollectionLimits` bounds JSON bytes/depth, resources, assets and their aggregate
 size, markup, slots and requirements. `limits.schema` explicitly carries the
 schema policy through configurations. Locale tags normalize using
-`Intl.getCanonicalLocales`; names and source strings remain as authored.
+`Intl.getCanonicalLocales`; administration copy resolves through the immutable
+catalogue while content text overrides remain separate.
 
 ## Views and dashboards
 

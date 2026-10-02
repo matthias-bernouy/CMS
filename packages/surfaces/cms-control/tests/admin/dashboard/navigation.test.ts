@@ -14,10 +14,18 @@ const cms = {
                         {
                             collectionId: "test",
                             release: {
-                                name: "Test",
+                                locale: "en",
+                                translations: {
+                                    en: {
+                                        "collection.name": "Test",
+                                        "view.overview.name": "Overview",
+                                        "view.resources.name": "Resources",
+                                    },
+                                },
+                                name: "collection.name",
                                 views: [
-                                    { id: "overview", name: "Overview" },
-                                    { id: "resources", name: "Resources" },
+                                    { id: "overview", name: "view.overview.name" },
+                                    { id: "resources", name: "view.resources.name" },
                                 ],
                             },
                         },

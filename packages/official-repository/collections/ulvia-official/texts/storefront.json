@@ -1,9 +1,9 @@
 [
     {
         "id": "title",
-        "label": "Welcome title",
-        "category": "Storefront",
-        "group": "Welcome",
+        "label": "text.title.label",
+        "category": "text.category.storefront",
+        "group": "text.group.welcome",
         "values": {
             "en": "Welcome to Ulvia Official",
             "fr": "Bienvenue dans Ulvia Official"
@@ -11,9 +11,9 @@
     },
     {
         "id": "description",
-        "label": "Welcome description",
-        "category": "Storefront",
-        "group": "Welcome",
+        "label": "text.description.label",
+        "category": "text.category.storefront",
+        "group": "text.group.welcome",
         "values": {
             "en": "A small collection for exploring the CMS.",
             "fr": "Une petite collection pour découvrir le CMS."
@@ -21,9 +21,9 @@
     },
     {
         "id": "hero-action",
-        "label": "Hero action",
-        "category": "Storefront",
-        "group": "Welcome",
+        "label": "text.hero-action.label",
+        "category": "text.category.storefront",
+        "group": "text.group.welcome",
         "values": {
             "en": "Explore the features",
             "fr": "Découvrir les fonctionnalités"
@@ -31,9 +31,9 @@
     },
     {
         "id": "feature-one-title",
-        "label": "First feature title",
-        "category": "Storefront",
-        "group": "Features",
+        "label": "text.feature-one-title.label",
+        "category": "text.category.storefront",
+        "group": "text.group.features",
         "values": {
             "en": "Reusable blocs",
             "fr": "Blocs réutilisables"
@@ -41,9 +41,9 @@
     },
     {
         "id": "feature-one-body",
-        "label": "First feature description",
-        "category": "Storefront",
-        "group": "Features",
+        "label": "text.feature-one-body.label",
+        "category": "text.category.storefront",
+        "group": "text.group.features",
         "values": {
             "en": "Compose pages from installed resources.",
             "fr": "Composez des pages avec les ressources installées."
@@ -51,9 +51,9 @@
     },
     {
         "id": "feature-two-title",
-        "label": "Second feature title",
-        "category": "Storefront",
-        "group": "Features",
+        "label": "text.feature-two-title.label",
+        "category": "text.category.storefront",
+        "group": "text.group.features",
         "values": {
             "en": "Local repository",
             "fr": "Repository local"
@@ -61,9 +61,9 @@
     },
     {
         "id": "feature-two-body",
-        "label": "Second feature description",
-        "category": "Storefront",
-        "group": "Features",
+        "label": "text.feature-two-body.label",
+        "category": "text.category.storefront",
+        "group": "text.group.features",
         "values": {
             "en": "Keep releases versioned and pinned.",
             "fr": "Conservez des releases versionnées et épinglées."
@@ -71,9 +71,9 @@
     },
     {
         "id": "feature-three-title",
-        "label": "Third feature title",
-        "category": "Storefront",
-        "group": "Features",
+        "label": "text.feature-three-title.label",
+        "category": "text.category.storefront",
+        "group": "text.group.features",
         "values": {
             "en": "Translations",
             "fr": "Traductions"
@@ -81,9 +81,9 @@
     },
     {
         "id": "feature-three-body",
-        "label": "Third feature description",
-        "category": "Storefront",
-        "group": "Features",
+        "label": "text.feature-three-body.label",
+        "category": "text.category.storefront",
+        "group": "text.group.features",
         "values": {
             "en": "Edit site text without changing the release.",
             "fr": "Modifiez les textes du site sans changer la release."
@@ -91,9 +91,9 @@
     },
     {
         "id": "callout-title",
-        "label": "Callout title",
-        "category": "Storefront",
-        "group": "Callout",
+        "label": "text.callout-title.label",
+        "category": "text.category.storefront",
+        "group": "text.group.callout",
         "values": {
             "en": "Ready to build?",
             "fr": "Prêt à créer ?"
@@ -101,9 +101,9 @@
     },
     {
         "id": "callout-body",
-        "label": "Callout description",
-        "category": "Storefront",
-        "group": "Callout",
+        "label": "text.callout-body.label",
+        "category": "text.category.storefront",
+        "group": "text.group.callout",
         "values": {
             "en": "Start with the basics and make them yours.",
             "fr": "Commencez par les bases et personnalisez-les."
@@ -111,9 +111,9 @@
     },
     {
         "id": "stat-one-value",
-        "label": "First statistic value",
-        "category": "Storefront",
-        "group": "Stats",
+        "label": "text.stat-one-value.label",
+        "category": "text.category.storefront",
+        "group": "text.group.stats",
         "values": {
             "en": "8",
             "fr": "8"
@@ -121,9 +121,9 @@
     },
     {
         "id": "stat-one-label",
-        "label": "First statistic label",
-        "category": "Storefront",
-        "group": "Stats",
+        "label": "text.stat-one-label.label",
+        "category": "text.category.storefront",
+        "group": "text.group.stats",
         "values": {
             "en": "Starter blocs",
             "fr": "Blocs de départ"
@@ -131,9 +131,9 @@
     },
     {
         "id": "stat-two-value",
-        "label": "Second statistic value",
-        "category": "Storefront",
-        "group": "Stats",
+        "label": "text.stat-two-value.label",
+        "category": "text.category.storefront",
+        "group": "text.group.stats",
         "values": {
             "en": "2",
             "fr": "2"
@@ -141,9 +141,9 @@
     },
     {
         "id": "stat-two-label",
-        "label": "Second statistic label",
-        "category": "Storefront",
-        "group": "Stats",
+        "label": "text.stat-two-label.label",
+        "category": "text.category.storefront",
+        "group": "text.group.stats",
         "values": {
             "en": "Languages",
             "fr": "Langues"
@@ -151,9 +151,9 @@
     },
     {
         "id": "quote",
-        "label": "Testimonial quote",
-        "category": "Storefront",
-        "group": "Testimonial",
+        "label": "text.quote.label",
+        "category": "text.category.storefront",
+        "group": "text.group.testimonial",
         "values": {
             "en": "Simple foundations make room for good ideas.",
             "fr": "De bonnes bases laissent place aux idées."
@@ -161,9 +161,9 @@
     },
     {
         "id": "quote-attribution",
-        "label": "Testimonial attribution",
-        "category": "Storefront",
-        "group": "Testimonial",
+        "label": "text.quote-attribution.label",
+        "category": "text.category.storefront",
+        "group": "text.group.testimonial",
         "values": {
             "en": "Ulvia Official",
             "fr": "Ulvia Official"
@@ -171,9 +171,9 @@
     },
     {
         "id": "footer-copy",
-        "label": "Footer copy",
-        "category": "Storefront",
-        "group": "Footer",
+        "label": "text.footer-copy.label",
+        "category": "text.category.storefront",
+        "group": "text.group.footer",
         "values": {
             "en": "Made with Ulvia CMS",
             "fr": "Créé avec Ulvia CMS"
@@ -181,9 +181,9 @@
     },
     {
         "id": "feature-card-note",
-        "label": "Feature card note",
-        "category": "Storefront",
-        "group": "Features",
+        "label": "text.feature-card-note.label",
+        "category": "text.category.storefront",
+        "group": "text.group.features",
         "values": {
             "en": "Part of the shared feature card",
             "fr": "Élément de la carte de fonctionnalité partagée"
@@ -191,9 +191,9 @@
     },
     {
         "id": "navigation-home",
-        "label": "Home link",
-        "category": "Storefront",
-        "group": "Navigation",
+        "label": "text.navigation-home.label",
+        "category": "text.category.storefront",
+        "group": "text.group.navigation",
         "values": {
             "en": "Home",
             "fr": "Accueil"

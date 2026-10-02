@@ -1,1 +1,13 @@
-.callout{display:block;background:var(--ulvia-official-accent);color:var(--ulvia-official-on-accent);padding:var(--ulvia-official-space);border-radius:var(--ulvia-official-radius)}
+:host {
+    display: block;
+    color: var(--ulvia-official-on-primary);
+    font-family: var(--ulvia-official-font-family-main);
+    line-height: var(--ulvia-official-line-height-normal);
+}
+
+.callout {
+    padding: var(--ulvia-official-spacing-xl);
+    border-radius: var(--ulvia-official-radius-lg);
+    background: var(--ulvia-official-primary);
+    box-shadow: var(--ulvia-official-shadow-sm);
+}

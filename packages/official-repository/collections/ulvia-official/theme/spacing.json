@@ -1,0 +1,95 @@
+{
+    "id": "spacing",
+    "label": "theme.category.spacing.label",
+    "description": "theme.category.spacing.description",
+    "tokens": [
+        {
+            "id": "spacing-none",
+            "label": "theme.token.spacing-none.label",
+            "type": "length",
+            "defaults": {
+                "light": "0"
+            }
+        },
+        {
+            "id": "spacing-3xs",
+            "label": "theme.token.spacing-3xs.label",
+            "type": "length",
+            "defaults": {
+                "light": "0.125rem"
+            }
+        },
+        {
+            "id": "spacing-2xs",
+            "label": "theme.token.spacing-2xs.label",
+            "type": "length",
+            "defaults": {
+                "light": "0.25rem"
+            }
+        },
+        {
+            "id": "spacing-xs",
+            "label": "theme.token.spacing-xs.label",
+            "type": "length",
+            "defaults": {
+                "light": "0.5rem"
+            }
+        },
+        {
+            "id": "spacing-sm",
+            "label": "theme.token.spacing-sm.label",
+            "type": "length",
+            "defaults": {
+                "light": "0.75rem"
+            }
+        },
+        {
+            "id": "spacing-md",
+            "label": "theme.token.spacing-md.label",
+            "type": "length",
+            "defaults": {
+                "light": "1rem"
+            }
+        },
+        {
+            "id": "spacing-lg",
+            "label": "theme.token.spacing-lg.label",
+            "type": "length",
+            "defaults": {
+                "light": "1.5rem"
+            }
+        },
+        {
+            "id": "spacing-xl",
+            "label": "theme.token.spacing-xl.label",
+            "type": "length",
+            "defaults": {
+                "light": "2rem"
+            }
+        },
+        {
+            "id": "spacing-2xl",
+            "label": "theme.token.spacing-2xl.label",
+            "type": "length",
+            "defaults": {
+                "light": "3rem"
+            }
+        },
+        {
+            "id": "spacing-3xl",
+            "label": "theme.token.spacing-3xl.label",
+            "type": "length",
+            "defaults": {
+                "light": "4rem"
+            }
+        },
+        {
+            "id": "spacing-4xl",
+            "label": "theme.token.spacing-4xl.label",
+            "type": "length",
+            "defaults": {
+                "light": "6rem"
+            }
+        }
+    ]
+}

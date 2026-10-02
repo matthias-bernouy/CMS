@@ -53,7 +53,9 @@ test("Mongo collection storage rejects a release whose persisted identity was al
 
     const releases = db.collection<Record<string, unknown>>("collection_releases");
     const stored = await releases.findOne({ _id: admitted.digest });
-    (stored!.release as Record<string, unknown>).name = "Tampered";
+    const persistedRelease = stored!.release as Record<string, unknown>;
+    const translations = persistedRelease.translations as Record<string, Record<string, string>>;
+    translations["en-US"]!["collection.name"] = "Tampered";
     await releases.replaceOne({ _id: stored!._id }, stored!);
 
     await expect(storage.getRelease(admitted.digest)).rejects.toThrow("release digest mismatch");

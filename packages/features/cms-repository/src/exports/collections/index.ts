@@ -2,6 +2,8 @@ export type {
     CollectionRelease,
     CollectionConfiguration,
     CollectionCapabilityRequirement,
+    CollectionTranslationKey,
+    CollectionTranslations,
 } from "cms-repository/collections/interfaces/CollectionRelease";
 export type { CollectionView } from "cms-repository/collections/interfaces/CollectionView";
 export type {
@@ -50,6 +52,11 @@ export {
     parseCollectionRelease,
     parseCollectionReleaseJson,
 } from "cms-repository/collections/core/parsing/parseCollectionRelease";
+export {
+    parseCollectionTranslationKey,
+    parseCollectionTranslations,
+    resolveCollectionTranslation,
+} from "cms-repository/collections/core/texts/translationCatalogue";
 export {
     admitCollectionRelease,
     admitCollectionReleaseJson,

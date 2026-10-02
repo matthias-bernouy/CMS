@@ -1,0 +1,79 @@
+{
+    "id": "borders-and-shape",
+    "label": "theme.category.borders-and-shape.label",
+    "description": "theme.category.borders-and-shape.description",
+    "tokens": [
+        {
+            "id": "border-width",
+            "label": "theme.token.border-width.label",
+            "type": "length",
+            "defaults": {
+                "light": "1px"
+            }
+        },
+        {
+            "id": "border-width-strong",
+            "label": "theme.token.border-width-strong.label",
+            "type": "length",
+            "defaults": {
+                "light": "2px"
+            }
+        },
+        {
+            "id": "radius-none",
+            "label": "theme.token.radius-none.label",
+            "type": "length",
+            "defaults": {
+                "light": "0"
+            }
+        },
+        {
+            "id": "radius-sm",
+            "label": "theme.token.radius-sm.label",
+            "type": "length",
+            "defaults": {
+                "light": "0.25rem"
+            }
+        },
+        {
+            "id": "radius-md",
+            "label": "theme.token.radius-md.label",
+            "type": "length",
+            "defaults": {
+                "light": "0.5rem"
+            }
+        },
+        {
+            "id": "radius-lg",
+            "label": "theme.token.radius-lg.label",
+            "type": "length",
+            "defaults": {
+                "light": "0.75rem"
+            }
+        },
+        {
+            "id": "radius-xl",
+            "label": "theme.token.radius-xl.label",
+            "type": "length",
+            "defaults": {
+                "light": "1rem"
+            }
+        },
+        {
+            "id": "radius-2xl",
+            "label": "theme.token.radius-2xl.label",
+            "type": "length",
+            "defaults": {
+                "light": "1.5rem"
+            }
+        },
+        {
+            "id": "radius-full",
+            "label": "theme.token.radius-full.label",
+            "type": "length",
+            "defaults": {
+                "light": "9999px"
+            }
+        }
+    ]
+}

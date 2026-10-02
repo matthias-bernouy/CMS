@@ -1,5 +1,12 @@
 import { composeCollectionThemes } from "cms-content/theme/core/collections";
 import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
+import {
+    type CollectionComponentSettings,
+    type CollectionRelease,
+    type CollectionSettingControl,
+    type CollectionSettingItem,
+    resolveCollectionTranslation,
+} from "@bernouy/cms-repository/collections";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { BlocRecord, TBloc } from "cms-content/blocs/interfaces/blocs";
 import { presentationImageContentType } from "cms-content/blocs/core/presentationImage";
@@ -31,9 +38,11 @@ export function withInstalledCollections(
                             ownership: { kind: "code-managed" as const },
                             artifact: {
                                 id: bloc.id,
-                                name: bloc.label,
-                                group: release.name,
-                                description: bloc.description ?? "",
+                                name: resolveCollectionTranslation(release, bloc.label),
+                                group: resolveCollectionTranslation(release, release.name),
+                                description: bloc.description
+                                    ? resolveCollectionTranslation(release, bloc.description)
+                                    : "",
                                 ownership: { kind: "code-managed" },
                                 viewJS:
                                     bloc.kind === "component"
@@ -45,7 +54,7 @@ export function withInstalledCollections(
                                 ...(bloc.defaultContent ? { defaultContent: bloc.defaultContent } : {}),
                                 collectionSlots: bloc.slots,
                                 ...(bloc.kind === "component" && bloc.settings
-                                    ? { collectionSettings: bloc.settings }
+                                    ? { collectionSettings: localizeSettings(release, bloc.settings) }
                                     : {}),
                                 ...(thumbnailPath && thumbnailBytes
                                     ? {
@@ -127,4 +136,54 @@ export function withInstalledCollections(
             };
         },
     });
+}
+
+function localizeSettings(
+    release: CollectionRelease,
+    settings: CollectionComponentSettings,
+): CollectionComponentSettings {
+    return settings.map(
+        (setting) =>
+            ({
+                ...setting,
+                label: resolveCollectionTranslation(release, setting.label),
+                ...(setting.group ? { group: resolveCollectionTranslation(release, setting.group) } : {}),
+                ...(setting.help ? { help: resolveCollectionTranslation(release, setting.help) } : {}),
+                control: localizeControl(release, setting.control),
+            }) as CollectionSettingItem,
+    );
+}
+
+function localizeControl(release: CollectionRelease, control: CollectionSettingControl): CollectionSettingControl {
+    if (control.kind === "text") {
+        return {
+            ...control,
+            ...(control.placeholder ? { placeholder: resolveCollectionTranslation(release, control.placeholder) } : {}),
+        };
+    }
+    if (control.kind === "number" || control.kind === "range") {
+        return {
+            ...control,
+            ...(control.suffix ? { suffix: resolveCollectionTranslation(release, control.suffix) } : {}),
+        };
+    }
+    if (control.kind === "select" || control.kind === "segmented") {
+        return {
+            ...control,
+            options: control.options.map((option) => ({
+                ...option,
+                label: resolveCollectionTranslation(release, option.label),
+            })),
+        };
+    }
+    if (control.kind === "color" && control.tokens) {
+        return {
+            ...control,
+            tokens: control.tokens.map((option) => ({
+                ...option,
+                label: resolveCollectionTranslation(release, option.label),
+            })),
+        };
+    }
+    return control;
 }

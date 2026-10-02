@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { DashboardNavigationItem, DashboardRecord } from "@bernouy/cms-dashboards";
 import type { CollectionDashboardNavigationItem } from "@bernouy/cms-repository/collections";
+import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
 import type { ControlCms } from "cms-control/ControlCms";
 import { dashboardCollections } from "./access";
 
@@ -13,6 +14,7 @@ export async function dashboardCatalog(cms: ControlCms): Promise<DashboardRecord
     const collectionDashboards = snapshot.collections.flatMap((installation) => {
         const viewIcons = new Map((installation.release.views ?? []).map((view) => [view.id, view.icon ?? "layout"]));
         return (installation.release.dashboards ?? []).map((definition) => {
+            const translate = (key: string) => resolveCollectionTranslation(installation.release, key);
             const id = collectionDashboardId(
                 siteId,
                 installation.release.publisherId,
@@ -23,13 +25,13 @@ export async function dashboardCatalog(cms: ControlCms): Promise<DashboardRecord
             return {
                 id,
                 siteId,
-                name: definition.name,
+                name: translate(definition.name),
                 icon: definition.icon ?? "layout",
-                description: definition.description,
+                description: definition.description ? translate(definition.description) : undefined,
                 enabled: state?.enabled ?? false,
                 revision: state?.revision ?? 0,
                 navigation: definition.navigation.map((item) =>
-                    bindCollectionNavigation(item, installation.collectionId, viewIcons),
+                    bindCollectionNavigation(item, installation.collectionId, viewIcons, translate),
                 ),
                 sourceContracts: definition.contracts ?? [],
                 origin: {
@@ -38,7 +40,7 @@ export async function dashboardCatalog(cms: ControlCms): Promise<DashboardRecord
                     collectionId: installation.collectionId,
                     dashboardId: definition.id,
                 },
-                collectionName: installation.release.name,
+                collectionName: translate(installation.release.name),
             };
         });
     });
@@ -49,16 +51,19 @@ function bindCollectionNavigation(
     item: CollectionDashboardNavigationItem,
     collectionId: string,
     viewIcons: ReadonlyMap<string, string>,
+    translate: (key: string) => string,
 ): DashboardNavigationItem {
     return {
         id: item.id,
-        label: item.label,
+        label: translate(item.label),
         ...(item.icon ? { icon: item.icon } : item.use ? { icon: viewIcons.get(item.use) ?? "layout" } : {}),
         ...(item.use ? { use: `${collectionId}:${item.use}` } : {}),
         ...(item.children
             ? {
                   childPlacement: item.childPlacement,
-                  children: item.children.map((child) => bindCollectionNavigation(child, collectionId, viewIcons)),
+                  children: item.children.map((child) =>
+                      bindCollectionNavigation(child, collectionId, viewIcons, translate),
+                  ),
               }
             : {}),
     };

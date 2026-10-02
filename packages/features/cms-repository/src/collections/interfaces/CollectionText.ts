@@ -1,9 +1,11 @@
+import type { CollectionTranslationKey } from "./CollectionRelease";
+
 export interface CollectionText {
     readonly id: string;
-    readonly label?: string;
-    readonly description?: string;
-    readonly category?: string;
-    readonly group?: string;
+    readonly label?: CollectionTranslationKey;
+    readonly description?: CollectionTranslationKey;
+    readonly category?: CollectionTranslationKey;
+    readonly group?: CollectionTranslationKey;
     readonly values: Readonly<Record<string, string>>;
 }
 

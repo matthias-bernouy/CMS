@@ -2,7 +2,10 @@ import { LocalArtifactFiles } from "../repository/artifactFiles";
 import { LocalContractReleases } from "../repository/contracts";
 import { LocalCollectionRepository } from "../repository/local";
 import { LocalProviderReleases } from "../repository/providers";
-import type { CollectionDashboardNavigationItem } from "@bernouy/cms-repository/collections";
+import {
+    type CollectionDashboardNavigationItem,
+    resolveCollectionTranslation,
+} from "@bernouy/cms-repository/collections";
 
 function countDashboardViews(items: readonly CollectionDashboardNavigationItem[]): number {
     return items.reduce(
@@ -36,15 +39,19 @@ export function startLocalRepository(port: number, root: string) {
                         collectionId: release.collectionId,
                         version: release.version,
                         digest,
-                        name: release.name,
-                        description: release.description ?? "",
+                        name: resolveCollectionTranslation(release, release.name),
+                        description: release.description
+                            ? resolveCollectionTranslation(release, release.description)
+                            : "",
                         blocCount: release.blocs.length,
                         hasTheme: Boolean(release.theme),
                         dashboards: (release.dashboards ?? []).map((dashboard) => ({
                             id: dashboard.id,
-                            name: dashboard.name,
+                            name: resolveCollectionTranslation(release, dashboard.name),
                             ...(dashboard.icon ? { icon: dashboard.icon } : {}),
-                            description: dashboard.description ?? "",
+                            description: dashboard.description
+                                ? resolveCollectionTranslation(release, dashboard.description)
+                                : "",
                             viewCount: countDashboardViews(dashboard.navigation),
                         })),
                     }));

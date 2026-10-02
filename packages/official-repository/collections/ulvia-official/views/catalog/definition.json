@@ -1,6 +1,6 @@
 {
     "id": "catalog",
-    "name": "Catalog",
+    "name": "view.catalog.name",
     "icon": "catalog",
-    "description": "Live catalog items provided through the selected catalog.items source."
+    "description": "view.catalog.description"
 }

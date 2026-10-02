@@ -1,1 +1,13 @@
-.faq{display:block;padding:var(--ulvia-official-space);color:var(--ulvia-official-foreground)}
+:host {
+    display: block;
+    color: var(--ulvia-official-text-primary);
+    font-family: var(--ulvia-official-font-family-main);
+    line-height: var(--ulvia-official-line-height-normal);
+}
+
+.faq {
+    padding: var(--ulvia-official-spacing-xl);
+    border: var(--ulvia-official-border-width) solid var(--ulvia-official-border-subtle);
+    border-radius: var(--ulvia-official-radius-lg);
+    background: var(--ulvia-official-background-surface);
+}

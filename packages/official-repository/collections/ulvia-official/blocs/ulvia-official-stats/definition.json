@@ -1,8 +1,8 @@
 {
     "kind": "component",
     "id": "ulvia-official-stats",
-    "label": "Statistics",
-    "description": "Two translated statistics",
+    "label": "bloc.stats.label",
+    "description": "bloc.stats.description",
     "uses": [],
     "requires": [],
     "slots": {

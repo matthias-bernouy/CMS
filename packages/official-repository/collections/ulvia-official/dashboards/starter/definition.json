@@ -1,26 +1,48 @@
 {
     "id": "starter",
-    "name": "Ulvia workspace",
+    "name": "dashboard.starter.name",
     "icon": "layout",
-    "description": "The official Ulvia workspace with reusable HTML views and complete dashboard navigation.",
-    "contracts": ["catalog.items"],
+    "description": "dashboard.starter.description",
+    "contracts": [
+        "catalog.items"
+    ],
     "navigation": [
         {
             "id": "workspace",
-            "label": "Ulvia",
+            "label": "nav.starter.workspace",
             "icon": "layout",
             "childPlacement": "lateral",
             "children": [
-                { "id": "overview", "label": "Overview", "icon": "layout", "use": "overview" },
+                {
+                    "id": "overview",
+                    "label": "nav.starter.overview",
+                    "icon": "layout",
+                    "use": "overview"
+                },
                 {
                     "id": "resources",
-                    "label": "Resources",
+                    "label": "nav.starter.resources",
                     "icon": "package",
                     "childPlacement": "tabs",
                     "children": [
-                        { "id": "blocs", "label": "Blocs", "icon": "grid", "use": "resources" },
-                        { "id": "theme", "label": "Theme", "icon": "settings", "use": "theme" },
-                        { "id": "catalog", "label": "Catalog", "icon": "catalog", "use": "catalog" }
+                        {
+                            "id": "blocs",
+                            "label": "nav.starter.blocs",
+                            "icon": "grid",
+                            "use": "resources"
+                        },
+                        {
+                            "id": "theme",
+                            "label": "nav.starter.theme",
+                            "icon": "settings",
+                            "use": "theme"
+                        },
+                        {
+                            "id": "catalog",
+                            "label": "nav.starter.catalog",
+                            "icon": "catalog",
+                            "use": "catalog"
+                        }
                     ]
                 }
             ]

@@ -4,15 +4,27 @@ import { collectionDocument } from "../fixtures";
 
 function release(version: string) {
     return {
-        ...collectionDocument(),
+        ...collectionDocument({
+            "theme.category.colors.label": "Colors",
+            "theme.label": "Atlas",
+            "theme.token.accent.label": "Accent",
+            "theme.token.surface.label": "Surface",
+        }),
         version,
         theme: {
-            label: "Atlas",
+            label: "theme.label",
             categories: [
                 {
                     id: "colors",
-                    label: "Colors",
-                    tokens: [{ id: "accent", label: "Accent", type: "color", defaults: { light: "#123456" } }],
+                    label: "theme.category.colors.label",
+                    tokens: [
+                        {
+                            id: "accent",
+                            label: "theme.token.accent.label",
+                            type: "color",
+                            defaults: { light: "#123456" },
+                        },
+                    ],
                 },
             ],
         },
@@ -38,7 +50,7 @@ test("upgrades preserve existing slot contracts and theme token types", async ()
     compatible.theme.categories[0]!.tokens[0]!.defaults.light = "#654321";
     compatible.theme.categories[0]!.tokens.push({
         id: "surface",
-        label: "Surface",
+        label: "theme.token.surface.label",
         type: "color",
         defaults: { light: "#ffffff" },
     });

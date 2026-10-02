@@ -18,6 +18,12 @@ export interface CollectionCapabilityRequirement {
     readonly versionRange: string;
 }
 
+/** Stable collection-local key resolved through the immutable translations catalogue. */
+export type CollectionTranslationKey = string;
+
+/** Immutable administration copy: canonical locale -> translation key -> static value. */
+export type CollectionTranslations = Readonly<Record<string, Readonly<Record<string, string>>>>;
+
 /** Authored release data; admission does not compile rendering or grant execution authority. */
 export interface CollectionRelease {
     readonly kind: "collection";
@@ -26,9 +32,12 @@ export interface CollectionRelease {
     readonly collectionId: string;
     readonly publisherId: string;
     readonly version: string;
-    readonly name: string;
-    readonly description?: string;
+    /** Collection translation key. */
+    readonly name: CollectionTranslationKey;
+    /** Collection translation key. */
+    readonly description?: CollectionTranslationKey;
     readonly locale: string;
+    readonly translations: CollectionTranslations;
     readonly configuration?: CollectionConfiguration;
     readonly texts?: readonly CollectionText[];
     readonly theme?: CollectionTheme;

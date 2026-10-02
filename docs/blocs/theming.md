@@ -19,10 +19,11 @@ variables** source and one **Default theme** with empty light/dark values.
 It does not install a built-in Ulvia token catalogue.
 
 Authors can create `--site-variable-*` tokens through the theme editor. Existing
-integration contribution APIs can compose additional token sources, but the new
-repository collection format does not yet admit or install theme definitions.
-Use only tokens present in the site's settings or supplied by an explicitly
-configured contribution. Neither `--ctx-*` nor `--ulvia-*` is an automatically
+collection releases can contribute immutable token catalogues when installed.
+The collection namespace prefixes every resulting CSS variable, so the local
+`primary` token from `ulvia-official` becomes `--ulvia-official-primary`.
+Use only tokens contributed by installed collections or created in the site's
+settings. Neither `--ctx-*` nor an unnamespaced `--ulvia-*` is an automatically
 available cross-collection API.
 
 Control edits structured theme values. Delivery serves the document foundation
@@ -36,6 +37,26 @@ When an active theme defines dark values, they apply through
 `prefers-color-scheme: dark` and may be forced with
 `data-theme-mode="dark"` on the root element. A configured contribution may
 provide both light and dark defaults for a token.
+
+## Collection Theme Sources
+
+Collection authors keep theme metadata in `theme/definition.json`. Its
+`categories` array orders adjacent category files without putting the full token
+catalogue in one document:
+
+```json
+{
+  "label": "theme.label",
+  "categories": ["colors", "spacing"]
+}
+```
+
+Each entry resolves to `theme/<category-id>.json`. Theme, category and token
+labels and descriptions are reusable keys resolved from
+`translations/<locale>.json`, the same immutable catalogue used by other
+collection metadata. Admission requires every key in the collection's default
+locale; partial additional locales fall back to it. This administration copy is
+deliberately separate from site-owned, overridable collection texts.
 
 ## Bloc-Level Contract
 

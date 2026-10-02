@@ -1,6 +1,6 @@
 {
     "id": "theme",
-    "name": "Theme",
+    "name": "view.theme.name",
     "icon": "settings",
-    "description": "Official theme tokens available to this workspace."
+    "description": "view.theme.description"
 }

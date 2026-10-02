@@ -1,6 +1,6 @@
 {
     "id": "overview",
-    "name": "Overview",
+    "name": "view.overview.name",
     "icon": "layout",
-    "description": "An official overview for the Ulvia workspace."
+    "description": "view.overview.description"
 }

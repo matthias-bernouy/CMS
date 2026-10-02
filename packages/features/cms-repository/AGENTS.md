@@ -258,8 +258,9 @@ models and validation for CMS-owned installations and site selections.
   catalogue. Compatible upgrades preserve site overrides, existing slot
   contracts and theme-token types; publication to a remote registry remains
   unsupported.
-- Text metadata (`category`, `group`, `label`, `description`) is declarative and
-  bounded. It does not change server text keys or grant runtime capabilities.
+- Text metadata (`category`, `group`, `label`, `description`) uses collection
+  translation keys. It is declarative and bounded, does not change server text
+  keys and does not grant runtime capabilities.
   Text locale values are static strings: parameters, plural forms and braces are
   not part of the collection contract.
 - Treat `collectionId` as the runtime namespace. It is lowercase kebab-case,
@@ -271,3 +272,10 @@ models and validation for CMS-owned installations and site selections.
   only local declared views; site activation and membership live outside the
   immutable release. External imports and remote publication remain future
   slices. Reject unsupported fields until validated.
+- Collection, Bloc, setting, text, theme, View and dashboard administration
+  metadata always stores translation keys, never inline display copy. The
+  immutable collection translation catalogue is keyed first by canonical BCP
+  47 locale, then by reusable collection-local key. Require every reference in
+  the collection's default locale and allow partial additional locales to fall
+  back through regional parents to that default. These translations are not
+  site-overridable content texts.

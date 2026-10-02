@@ -26,7 +26,9 @@ describe("collection authored bundle admission", () => {
             `sha256:${new Bun.CryptoHasher("sha256").update(canonicalIJsonBytes(admission.release)).digest("hex")}`,
         );
         expect(Object.isFrozen(admission)).toBe(true);
-        expect((await admitCollectionRelease({ ...source, name: "New name" })).digest).not.toBe(admission.digest);
+        const renamed = structuredClone(source);
+        (renamed.translations as Record<string, Record<string, string>>)["en-US"]!["collection.name"] = "New name";
+        expect((await admitCollectionRelease(renamed)).digest).not.toBe(admission.digest);
     });
 
     test("requires one common contract witness for all requirements of one bloc", async () => {
@@ -78,9 +80,10 @@ describe("collection authored bundle admission", () => {
         ]);
         first.fill(9);
         second.fill(9);
-        source.name = "Mutated";
+        (source.translations as Record<string, Record<string, string>>)["en-US"]!["collection.name"] = "Mutated";
         const admission = await pending;
-        expect(admission.release.name).toBe("Atlas UI");
+        expect(admission.release.name).toBe("collection.name");
+        expect(admission.release.translations["en-US"]![admission.release.name]).toBe("Atlas UI");
         expect(new Uint8Array(await admission.assets[0]!.bytes.arrayBuffer())).toEqual(new Uint8Array([1, 2]));
         expect(new Uint8Array(await admission.assets[1]!.bytes.arrayBuffer())).toEqual(new Uint8Array([3, 4]));
         await expect(admitCollectionRelease(source)).rejects.toMatchObject({ code: "asset_mismatch" });

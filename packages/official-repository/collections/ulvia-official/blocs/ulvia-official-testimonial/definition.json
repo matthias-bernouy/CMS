@@ -1,8 +1,8 @@
 {
     "kind": "component",
     "id": "ulvia-official-testimonial",
-    "label": "Testimonial",
-    "description": "A short testimonial",
+    "label": "bloc.testimonial.label",
+    "description": "bloc.testimonial.description",
     "uses": [],
     "requires": [],
     "slots": {

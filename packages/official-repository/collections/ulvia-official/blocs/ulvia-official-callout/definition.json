@@ -1,8 +1,8 @@
 {
     "kind": "component",
     "id": "ulvia-official-callout",
-    "label": "Callout",
-    "description": "A simple callout",
+    "label": "bloc.callout.label",
+    "description": "bloc.callout.description",
     "uses": [],
     "requires": [],
     "slots": {

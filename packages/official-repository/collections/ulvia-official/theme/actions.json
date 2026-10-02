@@ -1,0 +1,127 @@
+{
+    "id": "actions",
+    "label": "theme.category.actions.label",
+    "description": "theme.category.actions.description",
+    "tokens": [
+        {
+            "id": "primary",
+            "label": "theme.token.primary.label",
+            "description": "theme.token.primary.description",
+            "type": "color",
+            "defaults": {
+                "light": "#116149",
+                "dark": "#57cda3"
+            }
+        },
+        {
+            "id": "primary-hover",
+            "label": "theme.token.primary-hover.label",
+            "description": "theme.token.primary-hover.description",
+            "type": "color",
+            "defaults": {
+                "light": "#0d4f3b",
+                "dark": "#73dcb8"
+            }
+        },
+        {
+            "id": "primary-active",
+            "label": "theme.token.primary-active.label",
+            "description": "theme.token.primary-active.description",
+            "type": "color",
+            "defaults": {
+                "light": "#093f2f",
+                "dark": "#3db98f"
+            }
+        },
+        {
+            "id": "on-primary",
+            "label": "theme.token.on-primary.label",
+            "description": "theme.token.on-primary.description",
+            "type": "color",
+            "defaults": {
+                "light": "#ffffff",
+                "dark": "#10251c"
+            }
+        },
+        {
+            "id": "primary-subtle",
+            "label": "theme.token.primary-subtle.label",
+            "description": "theme.token.primary-subtle.description",
+            "type": "color",
+            "defaults": {
+                "light": "#d8f0e7",
+                "dark": "#163c30"
+            }
+        },
+        {
+            "id": "on-primary-subtle",
+            "label": "theme.token.on-primary-subtle.label",
+            "description": "theme.token.on-primary-subtle.description",
+            "type": "color",
+            "defaults": {
+                "light": "#0b4a37",
+                "dark": "#a9ead2"
+            }
+        },
+        {
+            "id": "secondary",
+            "label": "theme.token.secondary.label",
+            "description": "theme.token.secondary.description",
+            "type": "color",
+            "defaults": {
+                "light": "#5153a6",
+                "dark": "#b7b8ff"
+            }
+        },
+        {
+            "id": "secondary-hover",
+            "label": "theme.token.secondary-hover.label",
+            "description": "theme.token.secondary-hover.description",
+            "type": "color",
+            "defaults": {
+                "light": "#414386",
+                "dark": "#cbcbff"
+            }
+        },
+        {
+            "id": "secondary-active",
+            "label": "theme.token.secondary-active.label",
+            "description": "theme.token.secondary-active.description",
+            "type": "color",
+            "defaults": {
+                "light": "#35376e",
+                "dark": "#9698ef"
+            }
+        },
+        {
+            "id": "on-secondary",
+            "label": "theme.token.on-secondary.label",
+            "description": "theme.token.on-secondary.description",
+            "type": "color",
+            "defaults": {
+                "light": "#ffffff",
+                "dark": "#16174d"
+            }
+        },
+        {
+            "id": "secondary-subtle",
+            "label": "theme.token.secondary-subtle.label",
+            "description": "theme.token.secondary-subtle.description",
+            "type": "color",
+            "defaults": {
+                "light": "#e8e8ff",
+                "dark": "#292953"
+            }
+        },
+        {
+            "id": "on-secondary-subtle",
+            "label": "theme.token.on-secondary-subtle.label",
+            "description": "theme.token.on-secondary-subtle.description",
+            "type": "color",
+            "defaults": {
+                "light": "#34357d",
+                "dark": "#d8d8ff"
+            }
+        }
+    ]
+}
