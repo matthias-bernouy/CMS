@@ -8,6 +8,7 @@ import type { CollectionLimits } from "../../limits";
 import { array, identifier, integer, keys, ordinal, record, unique } from "../../values";
 
 const MEDIA_ACCEPTS: CollectionMediaAccept[] = ["image", "bitmap", "svg", "video", "audio", "document"];
+const RICH_TEXT_PROFILES = ["inline", "prose"] as const;
 
 export function blocReferences(value: unknown, path: string, limits: Readonly<CollectionLimits>): string[] {
     const result = array(value, limits.maxBlocs, path).map((item, index) => identifier(item, `${path}[${index}]`));
@@ -76,7 +77,21 @@ function parseSlotAccepts(value: unknown, path: string, limits: Readonly<Collect
                     : { accept: parseMediaAccepts(source.accept, `${itemPath}.accept`) }),
             };
         }
-        return invalid("slot acceptance kind must be component, any-component or media", `${itemPath}.kind`);
+        if (source.kind === "plain-text") {
+            keys(source, ["kind"], itemPath);
+            return { kind: "plain-text" };
+        }
+        if (source.kind === "rich-text") {
+            keys(source, ["kind", "profile"], itemPath);
+            if (!RICH_TEXT_PROFILES.includes(source.profile as (typeof RICH_TEXT_PROFILES)[number])) {
+                invalid(`must be one of ${RICH_TEXT_PROFILES.join(", ")}`, `${itemPath}.profile`);
+            }
+            return { kind: "rich-text", profile: source.profile as (typeof RICH_TEXT_PROFILES)[number] };
+        }
+        return invalid(
+            "slot acceptance kind must be component, any-component, media, plain-text or rich-text",
+            `${itemPath}.kind`,
+        );
     });
     const signatures = accepts.map((accept) => JSON.stringify(accept));
     unique(signatures, path);

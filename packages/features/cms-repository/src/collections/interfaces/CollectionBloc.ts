@@ -1,4 +1,5 @@
 import type { CollectionCapabilityRequirement } from "./CollectionRelease";
+import type { CollectionThemeTokenType } from "./CollectionTheme";
 
 export interface CollectionSlot {
     readonly accepts?: readonly CollectionSlotAccept[];
@@ -11,7 +12,11 @@ export type CollectionMediaAccept = "image" | "bitmap" | "svg" | "video" | "audi
 export type CollectionSlotAccept =
     | { readonly kind: "component"; readonly tag: string }
     | { readonly kind: "any-component" }
-    | { readonly kind: "media"; readonly accept?: readonly CollectionMediaAccept[] };
+    | { readonly kind: "media"; readonly accept?: readonly CollectionMediaAccept[] }
+    | { readonly kind: "plain-text" }
+    | { readonly kind: "rich-text"; readonly profile: CollectionRichTextProfile };
+
+export type CollectionRichTextProfile = "inline" | "prose";
 
 export interface CollectionSettingOption {
     readonly value: string;
@@ -21,7 +26,6 @@ export interface CollectionSettingOption {
 
 export type CollectionSettingControl =
     | { readonly kind: "text"; readonly placeholder?: string }
-    | { readonly kind: "textarea"; readonly placeholder?: string; readonly rows?: number }
     | { readonly kind: "select" | "segmented"; readonly options: readonly CollectionSettingOption[] }
     | {
           readonly kind: "color";
@@ -35,10 +39,10 @@ export type CollectionSettingControl =
           readonly allowMedia?: boolean;
           readonly mediaAccept?: readonly CollectionMediaAccept[];
       }
-    | { readonly kind: "endpoint-picker"; readonly methods?: readonly CollectionEndpointMethod[] }
+    | { readonly kind: "media-picker"; readonly accept?: readonly CollectionMediaAccept[] }
+    | { readonly kind: "theme-token-picker"; readonly accept?: readonly CollectionThemeTokenType[] }
+    | { readonly kind: "number" | "range"; readonly step?: number; readonly suffix?: string }
     | { readonly kind: "toggle" };
-
-export type CollectionEndpointMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 
 interface CollectionSettingBase {
     /** Safe HTML attribute name. */
@@ -65,12 +69,19 @@ export type CollectionSettingItem = CollectionSettingBase &
               readonly default: string;
               readonly minLength?: number;
               readonly maxLength: number;
-              readonly control: Exclude<CollectionSettingControl, { readonly kind: "toggle" }>;
+              readonly control: Exclude<CollectionSettingControl, { readonly kind: "toggle" | "number" | "range" }>;
           }
         | {
               readonly type: "boolean";
               readonly default: boolean;
               readonly control: Extract<CollectionSettingControl, { readonly kind: "toggle" }>;
+          }
+        | {
+              readonly type: "number" | "integer";
+              readonly default: number;
+              readonly minimum?: number;
+              readonly maximum?: number;
+              readonly control: Extract<CollectionSettingControl, { readonly kind: "number" | "range" }>;
           }
     );
 

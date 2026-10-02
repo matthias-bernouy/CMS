@@ -34,7 +34,10 @@ export function parseSettingVisibility(
         if (setting === ownId) {
             invalid("a setting cannot control its own visibility", `${rulePath}.setting`);
         }
-        if (referenced.type === "string" && !settingControlValues(referenced.control)) {
+        if (
+            referenced.type !== "boolean" &&
+            (referenced.type !== "string" || !settingControlValues(referenced.control))
+        ) {
             invalid("visibility requires a boolean or enumerated setting", `${rulePath}.setting`);
         }
         if (source.equals === undefined && source.notEquals === undefined) {

@@ -285,13 +285,11 @@ states instead of a custom renderer.
 
 ## Editor Integration
 
-Use an `endpoint-picker` setting when a site author may choose the endpoint.
-The setting writes the capability URL attribute and can coordinate a method
-attribute and default body. Keep fixed capability endpoints in `default.html`
-when they are part of the Bloc contract, rather than presenting a meaningless
-choice. The picker type also exposes `OPTIONS`, but the binding submission
-runtime does not; when the picker writes `cms-source-method`, restrict its
-`methods` to the six runtime methods listed above.
+Collection settings do not select endpoints. A collection resource declares
+provider-neutral capability requirements, while its fixed Light DOM owns any
+binding path that is part of the Bloc contract. The CMS gateway resolves the
+installed provider. Site-owned form tooling may still help an author construct
+a binding, but that is an editor workflow rather than a collection setting.
 
 `dataScopes()` advertises expression names and fields to editor tools; it does
 not activate or fetch data. The saved `cms-source` markup remains the

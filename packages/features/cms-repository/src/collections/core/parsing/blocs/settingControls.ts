@@ -1,25 +1,36 @@
 import type {
-    CollectionEndpointMethod,
     CollectionMediaAccept,
     CollectionSettingControl,
     CollectionSettingOption,
 } from "cms-repository/collections/interfaces/CollectionBloc";
+import type { CollectionThemeTokenType } from "cms-repository/collections/interfaces/CollectionTheme";
 import type { CollectionLimits } from "../../limits";
-import { array, integer, keys, record, string, unique } from "../../values";
+import { array, keys, record, string, unique } from "../../values";
 import { invalid } from "../../errors";
 
-const CONTROL_KINDS = ["text", "textarea", "select", "segmented", "color", "page-link", "endpoint-picker"];
+const STRING_CONTROL_KINDS = [
+    "text",
+    "select",
+    "segmented",
+    "color",
+    "page-link",
+    "media-picker",
+    "theme-token-picker",
+];
 const MEDIA_ACCEPTS: CollectionMediaAccept[] = ["image", "bitmap", "svg", "video", "audio", "document"];
-const ENDPOINT_METHODS: CollectionEndpointMethod[] = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
+const THEME_TOKEN_TYPES: CollectionThemeTokenType[] = ["color", "font-family", "length", "number", "shadow", "value"];
 
 export function parseSettingControl(
     value: unknown,
-    type: "string" | "boolean",
+    type: "string" | "boolean" | "number" | "integer",
     path: string,
     limits: Readonly<CollectionLimits>,
 ): CollectionSettingControl {
     if (value === undefined) {
-        return type === "boolean" ? { kind: "toggle" } : { kind: "text" };
+        if (type === "boolean") {
+            return { kind: "toggle" };
+        }
+        return type === "number" || type === "integer" ? { kind: "number" } : { kind: "text" };
     }
     const source = record(value, path);
     const kind = string(source.kind, 32, `${path}.kind`);
@@ -30,20 +41,27 @@ export function parseSettingControl(
         }
         return { kind: "toggle" };
     }
-    if (!CONTROL_KINDS.includes(kind)) {
+    if (type === "number" || type === "integer") {
+        keys(source, ["kind", "step", "suffix"], path);
+        if (kind !== "number" && kind !== "range") {
+            invalid("numeric settings require a number or range control", `${path}.kind`);
+        }
+        const step = source.step === undefined ? undefined : positiveNumber(source.step, `${path}.step`);
+        if (type === "integer" && step !== undefined && !Number.isSafeInteger(step)) {
+            invalid("integer setting steps must be safe integers", `${path}.step`);
+        }
+        return {
+            kind,
+            ...(step === undefined ? {} : { step }),
+            ...(source.suffix === undefined ? {} : { suffix: string(source.suffix, 32, `${path}.suffix`) }),
+        };
+    }
+    if (!STRING_CONTROL_KINDS.includes(kind)) {
         invalid("unsupported string setting control", `${path}.kind`);
     }
     if (kind === "text") {
         keys(source, ["kind", "placeholder"], path);
         return { kind, ...optionalText(source.placeholder, `${path}.placeholder`) };
-    }
-    if (kind === "textarea") {
-        keys(source, ["kind", "placeholder", "rows"], path);
-        return {
-            kind,
-            ...optionalText(source.placeholder, `${path}.placeholder`),
-            ...(source.rows === undefined ? {} : { rows: integer(source.rows, 1, 40, `${path}.rows`) }),
-        };
     }
     if (kind === "select" || kind === "segmented") {
         keys(source, ["kind", "options"], path);
@@ -70,12 +88,21 @@ export function parseSettingControl(
                 : { mediaAccept: finiteList(source.mediaAccept, MEDIA_ACCEPTS, `${path}.mediaAccept`) }),
         };
     }
-    keys(source, ["kind", "methods"], path);
+    if (kind === "media-picker") {
+        keys(source, ["kind", "accept"], path);
+        return {
+            kind,
+            ...(source.accept === undefined
+                ? {}
+                : { accept: finiteList(source.accept, MEDIA_ACCEPTS, `${path}.accept`) }),
+        };
+    }
+    keys(source, ["kind", "accept"], path);
     return {
-        kind: "endpoint-picker",
-        ...(source.methods === undefined
+        kind: "theme-token-picker",
+        ...(source.accept === undefined
             ? {}
-            : { methods: finiteList(source.methods, ENDPOINT_METHODS, `${path}.methods`) }),
+            : { accept: finiteList(source.accept, THEME_TOKEN_TYPES, `${path}.accept`) }),
     };
 }
 
@@ -120,6 +147,13 @@ function finiteList<T extends string>(value: unknown, allowed: readonly T[], pat
 
 function optionalText(value: unknown, path: string): { placeholder?: string } {
     return value === undefined ? {} : { placeholder: string(value, 240, path) };
+}
+
+function positiveNumber(value: unknown, path: string): number {
+    if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+        invalid("must be a positive finite number", path);
+    }
+    return value;
 }
 
 function optionalBooleans(

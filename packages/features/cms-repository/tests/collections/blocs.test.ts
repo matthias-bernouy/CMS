@@ -82,7 +82,9 @@ describe("collection bloc admission", () => {
         expect(() => check([component({ settings: [{ ...tone, id: "Tone" }] })])).toThrow("safe, lowercase");
         expect(() => check([component({ settings: [{ ...tone, default: "invalid" }] })])).toThrow("invalid defaults");
         expect(() => check([component({ settings: [{ ...tone, default: "quietly-too-long" }] })])).toThrow();
-        expect(() => check([component({ settings: [{ ...tone, type: "integer" }] })])).toThrow("string and boolean");
+        expect(() => check([component({ settings: [{ ...tone, type: "object" }] })])).toThrow(
+            "string, boolean, number and integer",
+        );
         expect(() => check([component({ settings: [{ ...tone, id: "onclick" }] })])).toThrow("safe, lowercase");
         expect(() => check([component({ settings: [{ ...compact, maxLength: 10 }] })])).toThrow("boolean settings");
         expect(() => check([component({ settings: [{ id: "missing", label: "Missing", type: "boolean" }] })])).toThrow(
@@ -158,12 +160,52 @@ describe("collection bloc admission", () => {
         );
     });
 
-    test("admits declarative controls and rich slot acceptance", () => {
+    test("admits bounded numeric settings and their authoring controls", () => {
+        const columns = {
+            id: "columns",
+            label: "Columns",
+            type: "integer",
+            default: 3,
+            minimum: 1,
+            maximum: 6,
+            control: { kind: "range", step: 1, suffix: "columns" },
+        };
+        const opacity = {
+            id: "opacity",
+            label: "Opacity",
+            type: "number",
+            default: 0.5,
+            minimum: 0,
+            maximum: 1,
+            control: { kind: "number", step: 0.1 },
+        };
+        const parsed = check([component({ settings: [columns, opacity] })])[0];
+        expect(parsed?.kind === "component" ? parsed.settings : undefined).toEqual([columns, opacity]);
+        expect(() => check([component({ settings: [{ ...columns, default: 7 }] })])).toThrow("invalid defaults");
+        expect(() => check([component({ settings: [{ ...columns, default: 1.5 }] })])).toThrow("safe integer");
+        expect(() => check([component({ settings: [{ ...columns, minimum: 8 }] })])).toThrow();
+        expect(() => check([component({ settings: [{ ...columns, control: { kind: "range", step: 0.5 } }] })])).toThrow(
+            "safe integers",
+        );
+        expect(() => check([component({ settings: [{ ...columns, control: { kind: "text" } }] })])).toThrow(
+            "number or range",
+        );
+        expect(() =>
+            check([component({ settings: [{ ...opacity, maximum: undefined, control: { kind: "range" } }] })]),
+        ).toThrow("require minimum and maximum");
+    });
+
+    test("admits focused string controls and editorial slot acceptance", () => {
         const parsed = check([
             component({
                 slots: {
                     body: {
-                        accepts: [{ kind: "any-component" }, { kind: "media", accept: ["image", "svg"] }],
+                        accepts: [
+                            { kind: "any-component" },
+                            { kind: "media", accept: ["image", "svg"] },
+                            { kind: "plain-text" },
+                            { kind: "rich-text", profile: "prose" },
+                        ],
                     },
                 },
                 settings: [
@@ -174,7 +216,7 @@ describe("collection bloc admission", () => {
                         type: "string",
                         default: "",
                         maxLength: 500,
-                        control: { kind: "textarea", placeholder: "Short summary", rows: 4 },
+                        control: { kind: "text", placeholder: "Short summary" },
                     },
                     {
                         id: "destination",
@@ -184,10 +226,45 @@ describe("collection bloc admission", () => {
                         maxLength: 512,
                         control: { kind: "page-link", allowPage: true, allowExternal: true },
                     },
+                    {
+                        id: "image",
+                        label: "Image",
+                        type: "string",
+                        default: "",
+                        control: { kind: "media-picker", accept: ["image", "svg"] },
+                    },
+                    {
+                        id: "background",
+                        label: "Background",
+                        type: "string",
+                        default: "",
+                        control: { kind: "theme-token-picker", accept: ["color"] },
+                    },
                 ],
             }),
         ])[0];
-        expect(parsed?.slots.body?.accepts).toHaveLength(2);
-        expect(parsed?.kind === "component" ? parsed.settings?.[0]?.control.kind : undefined).toBe("textarea");
+        expect(parsed?.slots.body?.accepts).toHaveLength(4);
+        expect(parsed?.kind === "component" ? parsed.settings?.map(({ control }) => control.kind) : undefined).toEqual([
+            "text",
+            "page-link",
+            "media-picker",
+            "theme-token-picker",
+        ]);
+        expect(() =>
+            check([
+                component({
+                    slots: { body: { accepts: [{ kind: "rich-text", profile: "arbitrary" }] } },
+                }),
+            ]),
+        ).toThrow("inline, prose");
+        for (const kind of ["textarea", "endpoint-picker"]) {
+            expect(() =>
+                check([
+                    component({
+                        settings: [{ id: "legacy", label: "Legacy", type: "string", default: "", control: { kind } }],
+                    }),
+                ]),
+            ).toThrow("unsupported string setting control");
+        }
     });
 });

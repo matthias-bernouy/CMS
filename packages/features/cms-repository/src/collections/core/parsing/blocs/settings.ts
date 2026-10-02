@@ -1,4 +1,3 @@
-import type { UlviaObjectSchema } from "cms-repository/exports/contracts/schema";
 import type { CollectionComponentSettings, CollectionSettingItem } from "../../../interfaces/CollectionBloc";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
@@ -24,7 +23,20 @@ export function parseComponentSettings(
         const source = record(value, itemPath);
         keys(
             source,
-            ["id", "label", "group", "help", "type", "default", "control", "minLength", "maxLength", "visibleWhen"],
+            [
+                "id",
+                "label",
+                "group",
+                "help",
+                "type",
+                "default",
+                "control",
+                "minLength",
+                "maxLength",
+                "minimum",
+                "maximum",
+                "visibleWhen",
+            ],
             itemPath,
         );
         const id = string(source.id, 96, `${itemPath}.id`);
@@ -37,8 +49,8 @@ export function parseComponentSettings(
         ) {
             invalid("setting IDs must be safe, lowercase HTML attributes", `${itemPath}.id`);
         }
-        if (source.type !== "string" && source.type !== "boolean") {
-            invalid("settings currently support string and boolean attributes", `${itemPath}.type`);
+        if (!["string", "boolean", "number", "integer"].includes(source.type as string)) {
+            invalid("settings support string, boolean, number and integer attributes", `${itemPath}.type`);
         }
         if (!Object.hasOwn(source, "default")) {
             invalid("must declare a default value", `${itemPath}.default`);
@@ -46,20 +58,33 @@ export function parseComponentSettings(
         const label = nonblank(source.label, `${itemPath}.label`);
         const group = source.group === undefined ? undefined : nonblank(source.group, `${itemPath}.group`);
         const help = source.help === undefined ? undefined : nonblank(source.help, `${itemPath}.help`);
-        const control = parseSettingControl(source.control, source.type, `${itemPath}.control`, limits);
-        if (source.type === "boolean" && ["minLength", "maxLength"].some((key) => key in source)) {
-            invalid("boolean settings cannot declare string constraints", itemPath);
+        const type = source.type as CollectionSettingItem["type"];
+        const control = parseSettingControl(source.control, type, `${itemPath}.control`, limits);
+        if (control.kind === "range" && (source.minimum === undefined || source.maximum === undefined)) {
+            invalid("range controls require minimum and maximum constraints", `${itemPath}.control`);
+        }
+        if (type !== "string" && ["minLength", "maxLength"].some((key) => key in source)) {
+            invalid(`${type} settings cannot declare string constraints`, itemPath);
+        }
+        if ((type === "string" || type === "boolean") && ["minimum", "maximum"].some((key) => key in source)) {
+            invalid(`${type} settings cannot declare numeric constraints`, itemPath);
         }
         const values = settingControlValues(control);
         const schema =
-            source.type === "boolean"
+            type === "boolean"
                 ? { type: "boolean" }
-                : {
-                      type: "string",
-                      maxLength: source.maxLength === undefined ? DEFAULT_MAX_LENGTH : source.maxLength,
-                      ...(source.minLength === undefined ? {} : { minLength: source.minLength }),
-                      ...(values === undefined ? {} : { enum: values }),
-                  };
+                : type === "string"
+                  ? {
+                        type: "string",
+                        maxLength: source.maxLength === undefined ? DEFAULT_MAX_LENGTH : source.maxLength,
+                        ...(source.minLength === undefined ? {} : { minLength: source.minLength }),
+                        ...(values === undefined ? {} : { enum: values }),
+                    }
+                  : {
+                        type,
+                        ...(source.minimum === undefined ? {} : { minimum: source.minimum }),
+                        ...(source.maximum === undefined ? {} : { maximum: source.maximum }),
+                    };
         return {
             id,
             label,
@@ -100,6 +125,19 @@ export function parseComponentSettings(
                 control: control as Extract<CollectionSettingItem["control"], { kind: "toggle" }>,
             };
         }
+        if (schema.type === "number" || schema.type === "integer") {
+            return {
+                id,
+                label,
+                ...(group ? { group } : {}),
+                ...(help ? { help } : {}),
+                type: schema.type,
+                default: defaultValue as number,
+                ...(schema.minimum === undefined ? {} : { minimum: schema.minimum }),
+                ...(schema.maximum === undefined ? {} : { maximum: schema.maximum }),
+                control: control as Extract<CollectionSettingItem["control"], { kind: "number" | "range" }>,
+            } satisfies CollectionSettingItem;
+        }
         if (schema.type === "string") {
             return {
                 id,
@@ -110,7 +148,7 @@ export function parseComponentSettings(
                 default: defaultValue as string,
                 maxLength: schema.maxLength,
                 ...(schema.minLength === undefined ? {} : { minLength: schema.minLength }),
-                control: control as Exclude<CollectionSettingItem["control"], { kind: "toggle" }>,
+                control: control as Extract<CollectionSettingItem, { type: "string" }>["control"],
             } satisfies CollectionSettingItem;
         }
         return invalid("unsupported setting schema", `${path}.${id}`);
@@ -127,28 +165,6 @@ export function parseComponentSettings(
     });
     assertVisibilityAcyclic(settings, path);
     return settings;
-}
-
-export function collectionSettingsSchema(settings: CollectionComponentSettings): UlviaObjectSchema {
-    return {
-        type: "object",
-        properties: Object.fromEntries(
-            settings.map((item) => [
-                item.id,
-                item.type === "boolean"
-                    ? { type: "boolean" as const }
-                    : {
-                          type: "string" as const,
-                          maxLength: item.maxLength,
-                          ...(item.minLength === undefined ? {} : { minLength: item.minLength }),
-                          ...(settingControlValues(item.control) === undefined
-                              ? {}
-                              : { enum: settingControlValues(item.control) }),
-                      },
-            ]),
-        ),
-        required: settings.map((item) => item.id),
-    };
 }
 
 function nonblank(value: unknown, path: string): string {

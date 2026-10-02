@@ -4,6 +4,7 @@ import { parseHTML } from "linkedom";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 
 type BlocSettings = { id: string; collectionSettings?: CollectionComponentSettings };
+const JSON_NUMBER = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/u;
 
 /** Validate each stored host's attributes against its installed bloc definition. */
 export function assertCollectionSettingAttributes(content: string, blocs: readonly BlocSettings[]): void {
@@ -17,17 +18,19 @@ export function assertCollectionSettingAttributes(content: string, blocs: readon
         const items = bloc.collectionSettings!;
         const schema = collectionSettingsSchema(items);
         for (const host of Array.from(document.querySelectorAll(bloc.id))) {
-            const settings: Record<string, unknown> = {};
-            for (const item of items) {
-                if (item.type === "boolean") {
-                    settings[item.id] = host.hasAttribute(item.id);
-                    continue;
-                }
-                if (host.hasAttribute(item.id)) {
-                    settings[item.id] = host.getAttribute(item.id)!;
-                }
-            }
             try {
+                const settings: Record<string, unknown> = {};
+                for (const item of items) {
+                    if (item.type === "boolean") {
+                        settings[item.id] = host.hasAttribute(item.id);
+                        continue;
+                    }
+                    if (!host.hasAttribute(item.id)) {
+                        continue;
+                    }
+                    const value = host.getAttribute(item.id)!;
+                    settings[item.id] = item.type === "number" || item.type === "integer" ? parseNumber(value) : value;
+                }
                 validateSchemaValue(schema, settings);
             } catch (error) {
                 throw new ContentValidationError(
@@ -37,4 +40,15 @@ export function assertCollectionSettingAttributes(content: string, blocs: readon
             }
         }
     }
+}
+
+function parseNumber(value: string): number {
+    if (!JSON_NUMBER.test(value)) {
+        throw new TypeError("numeric attributes must use JSON number syntax");
+    }
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+        throw new TypeError("numeric attributes must be finite");
+    }
+    return parsed;
 }

@@ -23,8 +23,9 @@ This slice supports:
   `style` source and declarative setting items.
 - Composition blocs with fixed `lightdom` only: their authoring host is replaced
   by their content at delivery. They have no own shell, settings or stylesheet.
-- Explicit local `uses`, named slots, optional thumbnail asset, initial editable
-  `defaultContent` and resource-level capability requirements.
+- Explicit local `uses`, named slots for components, media, plain text or bounded
+  rich-text profiles, optional thumbnail asset, initial editable `defaultContent`
+  and resource-level capability requirements.
 
 Collection and bloc configuration are distinct. `defaultContent` belongs to
 the editable page instance; `lightdom` describes the reusable fixed assembly.
@@ -47,17 +48,29 @@ text, semantic content and CMS directives. Inline styles are forbidden in all
 markup; classes belong only in shadow shells and bindings only in light DOM.
 Composition-only settings, styles and behaviour fields reject.
 Component settings are an ordered list of items. Each item owns a safe lowercase
-attribute ID, label, optional group, string or boolean type, constraints and
-default. Admission validates the list and defaults against a derived object
-schema; arbitrary nested JSON settings are not exposed as HTML attributes.
+attribute ID, label, optional group, scalar type, constraints and default.
+Supported values are strings, booleans, finite numbers and safe integers.
+Admission validates the list and defaults against a derived object schema;
+arbitrary nested JSON settings are not exposed as HTML attributes. Numeric page
+attributes use JSON number syntax before their type and bounds are checked.
 The local repository may read this list from a bloc's
 `settings/definition.json`; release data carries the same normalized list.
 Optional `visibleWhen` rules reference other finite-valued items and affect
 editor visibility only; admission rejects invalid references and cycles.
 
+String controls are `text`, `select`, `segmented`, `color`, `page-link`,
+`media-picker` and `theme-token-picker`. Booleans use `toggle`; numbers and
+integers use `number` or a bounded `range`. Media content normally belongs in a
+media slot; the setting control is for component configuration such as a poster
+or background. Rich text is page-owned HTML in a `plain-text` or `rich-text`
+slot, never an HTML string stored in a setting. Rich-text profiles are currently
+the closed `inline` and `prose` vocabulary; the future editor may expose only
+features permitted by that profile.
+
 **Admission is not an HTML/CSS sanitizer or template compiler.** It does not
-type-check expressions, capability calls embedded in markup, placed settings,
-slot content cardinalities, CSS or render expansion. The HTML parser applies
+type-check expressions, capability calls embedded in markup, slot content
+cardinalities, rich-text profile conformance, CSS or render expansion. Stored
+component settings are validated separately by `cms-content`. The HTML parser applies
 its parsing rules; acceptance does not certify author syntax as conforming HTML.
 Never render or execute an admitted bundle directly as trusted code. Renderer
 compilation, content policies and execution authorization are separate future

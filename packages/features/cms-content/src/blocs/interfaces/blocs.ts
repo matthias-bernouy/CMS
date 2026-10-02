@@ -58,6 +58,8 @@ export type SiteBlocNode =
       }
     | { kind: "slot"; slotId: string };
 
+type SiteBlocSlotAccept = Extract<CollectionSlotAccept, { readonly kind: "component" | "any-component" | "media" }>;
+
 /** A named editable region in a site-owned bloc definition. */
 export type SiteBlocSlot = {
     id: string;
@@ -65,7 +67,7 @@ export type SiteBlocSlot = {
     slot?: string;
     min?: number;
     max?: number;
-    accepts: CollectionSlotAccept[];
+    accepts: SiteBlocSlotAccept[];
 };
 
 export type SiteBlocSnapshot = {

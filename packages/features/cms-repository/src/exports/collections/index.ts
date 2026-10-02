@@ -12,6 +12,7 @@ export type {
     CollectionTheme,
     CollectionThemeCategory,
     CollectionThemeToken,
+    CollectionThemeTokenType,
 } from "cms-repository/collections/interfaces/CollectionTheme";
 export type {
     CollectionBloc,
@@ -19,16 +20,16 @@ export type {
     CollectionComposition,
     CollectionSlot,
     CollectionSlotAccept,
+    CollectionRichTextProfile,
     CollectionMediaAccept,
     CollectionComponentSettings,
-    CollectionEndpointMethod,
     CollectionSettingControl,
     CollectionSettingItem,
     CollectionSettingOption,
     CollectionSettingVisibilityRule,
     CollectionSettingVisibilityValue,
 } from "cms-repository/collections/interfaces/CollectionBloc";
-export { collectionSettingsSchema } from "cms-repository/collections/core/parsing/blocs/settings";
+export { collectionSettingsSchema } from "cms-repository/collections/core/parsing/blocs/settingSchema";
 export type {
     CollectionAssetDefinition,
     CollectionBundleAsset,

@@ -55,16 +55,26 @@ inside Shadow DOM, and permits bindings only inside Light DOM. Shadow shells
 also reject visible text, links, headings and images, so crawlable content stays
 in Light DOM.
 
+Slot acceptance distinguishes components, media and editorial content.
+`plain-text` describes an unformatted page-owned text region. `rich-text`
+requires the closed `inline` or `prose` profile and is intended to drive a
+future bounded rich-text editor. In both cases the stored value remains real
+page HTML assigned to the slot; it is not collection configuration, an encoded
+HTML attribute or an EditorJS document.
+
 Component attributes may be declared in the bloc's `definition.json` under
 `settings`, or in a separate `settings/definition.json`. The release command
 rejects using both locations for one bloc. Settings are an ordered JSON array;
 each item has an `id`, `label`, `type` and `default`, plus an optional `group`.
 String items may set `minLength` and `maxLength`; an omitted `maxLength`
-defaults to 256. Every item has a declarative `control`. String controls include
-text, textarea, select, segmented, color, page-link and endpoint-picker;
-booleans use toggle. Select and segmented options carry stable values and
+defaults to 256. Finite numbers and safe integers may set `minimum` and
+`maximum`. Every item has a declarative `control`. String controls are `text`,
+`select`, `segmented`, `color`, `page-link`, `media-picker` and
+`theme-token-picker`; booleans use `toggle`; numeric settings use `number` or a
+bounded `range`. Select and segmented options carry stable string values and
 author-facing labels. The same items supply insertion defaults and the
-server-side value schema.
+server-side value schema. Numeric HTML attributes must use JSON number syntax;
+empty strings, hexadecimal forms, `NaN` and infinities reject.
 An item may add `visibleWhen: { "setting": "tone", "equals": "accent" }`;
 `notEquals` and arrays of accepted values are supported. Multiple rules form
 an AND condition. Conditions may reference a boolean item or a string item
@@ -76,6 +86,9 @@ Changing a controlling value does not clear other attributes.
 Inserting a bloc writes its default attributes onto that page's host, and page
 saves validate changed values against the installed schema. `bloc.ts` remains
 optional behavior code; it is not required to describe the settings panel.
+Long or formatted editorial content does not belong in a string setting. Use a
+page-owned rich-text slot instead. Media normally belongs in a media slot;
+`media-picker` is reserved for configuration such as a background or poster.
 
 `GET <basePath>/api/collections/available` lists configured sources and release
 metadata. `POST <basePath>/api/collections/install` takes a repository ID, release

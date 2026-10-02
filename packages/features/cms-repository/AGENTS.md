@@ -227,8 +227,9 @@ models and validation for CMS-owned installations and site selections.
   JSON-representable leaves. Keep page-owned initial content separate from a
   bloc's fixed light-DOM assembly.
 - Component settings form an ordered item list. Each item owns a safe lowercase
-  HTML attribute ID, label, optional group, string or boolean type, constraints
-  and default. Its declarative control owns authoring hints and finite options;
+  HTML attribute ID, label, optional group, scalar string, boolean, finite-number
+  or safe-integer type, constraints and default. Its declarative control owns
+  authoring hints and finite options;
   keep these hints in the collection JSON rather than compiled editor code. The
   parser derives the validation schema from those items;
   collection-level configuration keeps its broader JSON schema. Local sources
@@ -237,7 +238,9 @@ models and validation for CMS-owned installations and site selections.
   finite-option string items. Validate comparisons and reject visibility cycles;
   hiding a control never clears or exempts its stored attribute.
 - Every bloc declares its author-facing label. Slot acceptance is declarative:
-  exact component tags, any component, or bounded media kinds. Verify all local
+  exact component tags, any component, bounded media kinds, plain text, or the
+  closed inline/prose rich-text profiles. Rich text remains page-owned HTML and
+  never becomes a setting attribute or collection-owned editor document. Verify all local
   uses, exact component accepts, slots and thumbnail references and reject cycles.
   Structural markup validation must use a parser. It is not a renderer,
   sanitizer, binding/CSS compiler or permission proof; never treat an admitted
