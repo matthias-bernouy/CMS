@@ -1,15 +1,10 @@
 import type { CollectionRelease } from "@bernouy/cms-repository/collections";
-import {
-    resolveCollectionTexts,
-    formatCollectionText,
-    replaceCollectionTextExpressions,
-} from "@bernouy/cms-repository/collections/texts";
+import { resolveCollectionTexts, replaceCollectionTextExpressions } from "@bernouy/cms-repository/collections/texts";
 
-/** Trusted, public render inputs. Do not include actor-specific values in cached pages. */
+/** Trusted, public catalogue inputs. */
 export interface CollectionTextSource {
     collection: Pick<CollectionRelease, "collectionId" | "locale" | "texts">;
     overrides?: unknown;
-    parameters?: Readonly<Record<string, string | number>>;
 }
 
 const ATTRIBUTES = new Set(["title", "placeholder", "alt", "aria-label", "aria-description"]);
@@ -22,14 +17,12 @@ export function renderCollectionTexts(
     options: { skipSubtree?: (element: Element) => boolean } = {},
 ): void {
     const catalogues = new Map<string, ReturnType<typeof resolveCollectionTexts>>();
-    const parameters = new Map<string, CollectionTextSource["parameters"]>();
     for (const source of sources) {
         const id = source.collection.collectionId;
         if (catalogues.has(id)) {
             throw new TypeError(`Duplicate text collection: ${id}`);
         }
         catalogues.set(id, resolveCollectionTexts(source.collection, locale, source.overrides));
-        parameters.set(id, source.parameters);
     }
     const message = (collection: string, id: string): string => {
         const key = `${collection}:${id}`;
@@ -37,8 +30,7 @@ export function renderCollectionTexts(
         if (!texts || !Object.hasOwn(texts, id)) {
             throw new TypeError(`Unknown collection text: ${key}`);
         }
-        const value = formatCollectionText(texts[id], parameters.get(collection!));
-        return value;
+        return texts[id]!.value;
     };
     const walk = (element: Element, inert = false): void => {
         if (options.skipSubtree?.(element)) {

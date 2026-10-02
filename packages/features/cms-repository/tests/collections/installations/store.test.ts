@@ -99,7 +99,7 @@ test("imports verified assets and contract requirements into the installation st
     expect((await store.snapshot("site")).collections[0]!.release.blocs[0]!.requires).toHaveLength(1);
 });
 
-test("upgrades preserve the declared settings contract and revalidate saved text locales", async () => {
+test("upgrades preserve the declared settings contract", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const initial = release();
     initial.blocs[0] = {
@@ -129,16 +129,4 @@ test("upgrades preserve the declared settings contract and revalidate saved text
     changedSettings.blocs[0]!.settings[0]!.maxLength = 32;
     const settingsArtifact = await store.importRelease(changedSettings);
     await expect(store.upgrade("site", settingsArtifact.digest, 2, "local")).rejects.toThrow("settings");
-    const changedTextShape = structuredClone(initial);
-    changedTextShape.version = "1.2.0";
-    changedTextShape.texts = [
-        {
-            id: "title",
-            parameters: { count: "number" },
-            plural: "count",
-            values: { en: { other: "{count} items" } },
-        },
-    ];
-    const textArtifact = await store.importRelease(changedTextShape);
-    await expect(store.upgrade("site", textArtifact.digest, 2, "local")).rejects.toThrow();
 });

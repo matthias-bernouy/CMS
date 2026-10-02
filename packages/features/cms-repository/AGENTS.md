@@ -259,7 +259,9 @@ models and validation for CMS-owned installations and site selections.
   contracts and theme-token types; publication to a remote registry remains
   unsupported.
 - Text metadata (`category`, `group`, `label`, `description`) is declarative and
-  bounded. It does not change interpolation keys or grant runtime capabilities.
+  bounded. It does not change server text keys or grant runtime capabilities.
+  Text locale values are static strings: parameters, plural forms and braces are
+  not part of the collection contract.
 - Treat `collectionId` as the runtime namespace. It is lowercase kebab-case,
   excludes platform-owned roots, prefixes every custom-element tag and derives
   global theme token IDs and CSS variables. Validate derived identities during

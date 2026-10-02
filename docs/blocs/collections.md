@@ -113,8 +113,9 @@ The theme workspace projects installed collection tokens into the shared site
 theme. The collection owns token definitions and defaults; the site may edit
 token values. Delivery includes the resulting CSS variables in its public
 stylesheet. The Texts workspace groups translations by category and group and
-persists site overrides. Delivery interpolates `cms.i18n` expressions on the
-server after expanding installed compositions.
+persists site overrides. Delivery replaces `cms.i18n` expressions on the server
+after expanding installed compositions. Catalogue values are static; dynamic
+parameters and plural forms are not collection text features.
 
 `GET <basePath>/api/collections/workspace` supplies the workspace snapshot.
 `GET <basePath>/api/collections/installed` returns installed releases and site

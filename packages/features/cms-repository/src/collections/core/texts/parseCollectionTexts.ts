@@ -1,4 +1,4 @@
-import type { CollectionText, CollectionTextOverrides, TextParameterType } from "../../interfaces/CollectionText";
+import type { CollectionText, CollectionTextOverrides } from "../../interfaces/CollectionText";
 import { parseTextLocales, TEXT_LIMITS, textIdentifier, textKeys, textLocale, textRecord } from "./validation";
 
 export function parseCollectionTexts(value: unknown, defaultLocale: string): readonly CollectionText[] {
@@ -13,7 +13,7 @@ export function parseCollectionTexts(value: unknown, defaultLocale: string): rea
     const locale = textLocale(defaultLocale);
     const texts = value.map((item) => {
         const source = textRecord(item);
-        textKeys(source, ["id", "label", "description", "category", "group", "parameters", "plural", "values"]);
+        textKeys(source, ["id", "label", "description", "category", "group", "values"]);
         const id = textIdentifier(source.id);
         const metadata = Object.fromEntries(
             ["label", "description", "category", "group"].flatMap((key) => {
@@ -27,30 +27,11 @@ export function parseCollectionTexts(value: unknown, defaultLocale: string): rea
                 return [[key, value]];
             }),
         );
-        const entries = Object.entries(textRecord(source.parameters ?? {}));
-        if (entries.length > TEXT_LIMITS.parameters) {
-            throw new TypeError("Too many text parameters");
-        }
-        const parameters = Object.freeze(
-            Object.fromEntries(
-                entries.sort().map(([name, type]) => {
-                    textIdentifier(name);
-                    if (type !== "string" && type !== "number") {
-                        throw new TypeError("Text parameters must declare string or number");
-                    }
-                    return [name, type as TextParameterType];
-                }),
-            ),
-        );
-        const plural = source.plural === undefined ? undefined : textIdentifier(source.plural);
-        if (plural && parameters[plural] !== "number") {
-            throw new TypeError("Plural selection requires a declared number parameter");
-        }
-        const values = parseTextLocales(source.values, parameters, plural);
+        const values = parseTextLocales(source.values);
         if (!Object.hasOwn(values, locale)) {
             throw new TypeError(`Text ${id} is missing its default locale ${locale}`);
         }
-        return Object.freeze({ id, ...metadata, parameters, ...(plural ? { plural } : {}), values });
+        return Object.freeze({ id, ...metadata, values });
     });
     if (new Set(texts.map(({ id }) => id)).size !== texts.length) {
         throw new TypeError("Duplicate text ID");
@@ -73,7 +54,7 @@ export function parseCollectionTextOverrides(
                 if (!definition) {
                     throw new TypeError(`Unknown overridden text: ${id}`);
                 }
-                return [id, parseTextLocales(values, definition.parameters, definition.plural)];
+                return [id, parseTextLocales(values)];
             }),
         ),
     );

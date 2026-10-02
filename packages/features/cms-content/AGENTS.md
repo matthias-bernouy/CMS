@@ -52,8 +52,8 @@ library, declarative bindings, validation, and read models.
 - Rendering settings must not contain initialization state or SMTP settings.
 - Control owns authenticated draft preview. Never add a preview mode to the
   public reader.
-- Collection text interpolation runs on the server through `/rendering`, after
-  composition expansion. Browser binding has no i18n filter or catalogue.
+- Static collection text substitution runs on the server through `/rendering`,
+  after composition expansion. Browser binding has no i18n filter or catalogue.
 - Stored HTML/SVG must pass through the existing hardening/sanitizing helpers.
 - Page bloc references should use the existing content-ref helpers.
 - Editor contracts must remain stable; authored blocs depend on them.

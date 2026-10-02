@@ -35,8 +35,6 @@ export function resolveCollectionTexts(
                                 locale: language,
                                 origin,
                                 fallback: language !== locale,
-                                parameters: definition.parameters,
-                                ...(definition.plural ? { plural: definition.plural } : {}),
                                 value,
                             }),
                         ];
@@ -46,42 +44,4 @@ export function resolveCollectionTexts(
             }),
         ),
     );
-}
-
-/** Pure formatter: emits plain text only, with a visible marker for invalid parameters. */
-export function formatCollectionText(value: unknown, parameters: unknown = {}): string {
-    const text = value as ResolvedCollectionText | undefined;
-    if (!text || typeof text.key !== "string" || !text.parameters || typeof text.locale !== "string") {
-        return "[missing text]";
-    }
-    const marker = `[${text.key}]`;
-    if (!parameters || typeof parameters !== "object" || Array.isArray(parameters)) {
-        return marker;
-    }
-    const args = parameters as Record<string, unknown>;
-    for (const [name, type] of Object.entries(text.parameters)) {
-        if (
-            !Object.hasOwn(args, name) ||
-            typeof args[name] !== type ||
-            (type === "number" && !Number.isFinite(args[name])) ||
-            (type === "string" && (args[name] as string).length > 8192)
-        ) {
-            return marker;
-        }
-    }
-    try {
-        const message =
-            typeof text.value === "string"
-                ? text.value
-                : (text.value[new Intl.PluralRules(text.locale).select(args[text.plural!] as number)] ??
-                  text.value.other);
-        if (typeof message !== "string") {
-            return marker;
-        }
-        return message.replace(/\{([a-z][a-z0-9-]*)\}/g, (_match, name: string) =>
-            Object.hasOwn(args, name) ? String(args[name]) : marker,
-        );
-    } catch {
-        return marker;
-    }
 }

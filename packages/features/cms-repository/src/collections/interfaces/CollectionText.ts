@@ -1,27 +1,19 @@
-export type TextParameterType = "string" | "number";
-export type TextPluralCategory = "zero" | "one" | "two" | "few" | "many" | "other";
-export type CollectionTextValue = string | (Partial<Record<TextPluralCategory, string>> & { other: string });
-
 export interface CollectionText {
     readonly id: string;
     readonly label?: string;
     readonly description?: string;
     readonly category?: string;
     readonly group?: string;
-    readonly parameters: Readonly<Record<string, TextParameterType>>;
-    readonly plural?: string;
-    readonly values: Readonly<Record<string, CollectionTextValue>>;
+    readonly values: Readonly<Record<string, string>>;
 }
 
 /** Site-owned values, stored separately from immutable collection releases. */
-export type CollectionTextOverrides = Readonly<Record<string, Readonly<Record<string, CollectionTextValue>>>>;
+export type CollectionTextOverrides = Readonly<Record<string, Readonly<Record<string, string>>>>;
 
 export interface ResolvedCollectionText {
     readonly key: string;
     readonly locale: string;
     readonly origin: "collection" | "site";
     readonly fallback: boolean;
-    readonly parameters: CollectionText["parameters"];
-    readonly plural?: string;
-    readonly value: CollectionTextValue;
+    readonly value: string;
 }

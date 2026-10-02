@@ -314,9 +314,9 @@ compiled, immutable binding plan instead.
   says this is not a sandbox, but no runtime sandbox exists.
 - Bloc configuration, collection installation configuration, provider
   configuration, and page content are not clearly separated.
-- Text variables cover a good base—parameters, plural forms, locales, and
-  fallback—but not rich text, escaping, typed parameters, override storage,
-  cache invalidation, locale deletion, or compatibility.
+- Text catalogues cover static locale values, fallback and site overrides.
+  Parameters and plural forms are deliberately excluded; dynamic translated
+  sentences belong to the future bloc data-rendering model.
 - The view example proves list rendering, but not command forms, uploads,
   operation progress, validation errors, navigation, confirmations, or
   reload/invalidation behavior.
@@ -1071,10 +1071,10 @@ directly.
 
 Status: open for the new collection model. `cms-collection-build` now owns
 collection browser artifacts and site Bloc source bundles. The remaining trust
-model and replacement flows still need joint review. JSON release
-texts, typed parameters, plurals, fallback and shared server rendering are now
-implemented, with a declarative checkout fixture. Site override persistence,
-site-language integration and published catalogue loading remain open.
+model and replacement flows still need joint review. JSON release texts use
+static locale values; validation, fallback, installed catalogue loading,
+revisioned site overrides and shared server rendering are implemented. Dynamic
+parameters and plurals are deliberately deferred to the future bloc data model.
 
 1. Replace bespoke bloc editor bundles with bounded configuration schemas,
    defaults, presets, and declarative UI hints.
@@ -1086,10 +1086,9 @@ site-language integration and published catalogue loading remain open.
    official/signed-only code, a real sandbox, or no code in Protocol v1. A
    forbidden-word scan is insufficient.
 5. Port theme tokens and site overrides; remove integration ownership terms.
-6. Complete text integration: definitions, locale values, typed parameters,
-   plurals, fallback and plain-text interpolation are implemented. Persist site
-   overrides and load installed catalogues into published pages. Rich text is
-   unsupported; site override persistence is not connected.
+6. Complete text integration: static definitions, locale fallback, revisioned
+   site overrides, installed catalogue loading and server substitution are
+   implemented. Parameters, plurals and rich text are not catalogue features.
 7. Integrate text and locale editing with current site languages and define
    what happens when a locale is disabled or deleted.
 8. Feed contract mocks into editor previews without requiring an installed

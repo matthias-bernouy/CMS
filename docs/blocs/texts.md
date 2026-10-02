@@ -6,16 +6,15 @@ and the immutable release digest. The official catalogue examples live under
 
 ```json
 {
-  "id": "greeting",
-  "parameters": { "name": "string" },
-  "values": { "en": "Hello {name}", "fr": "Bonjour {name}" }
+  "id": "checkout-title",
+  "values": { "en": "Checkout", "fr": "Paiement" }
 }
 ```
 
 ## Server ownership
 
-`@bernouy/cms-repository/collections/texts` provides pure parsing, locale
-resolution and formatting. `@bernouy/cms-content/rendering` provides the shared
+`@bernouy/cms-repository/collections/texts` provides pure parsing and locale
+resolution. `@bernouy/cms-content/rendering` provides the shared
 server DOM pass `renderCollectionTexts(root, locale, sources)`. Delivery runs
 this pass after composition expansion, before serializing and caching HTML.
 The same helper is available to Control for future workspace views.
@@ -32,22 +31,24 @@ A bounded expression scanner accepts exactly `cms.i18n.<collection>.<text>`.
 Filters, calls, bracket access and other `cms` paths are rejected. Collection
 and text IDs are lowercase names with optional hyphens. Expressions outside the
 reserved root remain unchanged, including in the same text node or attribute.
-The server substitutes parameters from the render context; browser data paths
-cannot supply i18n arguments. Plural selection remains server-side.
+
+Collection text values are intentionally static strings. They do not accept
+parameters, plural objects or braces. Dynamic names, counts, dates, prices and
+other request data belong to the bloc data-rendering model, not to the collection
+text catalogue. They remain ordinary business expressions outside the reserved
+`cms` root until that model defines translated dynamic sentences explicitly.
 
 The browser receives final translations, without catalogues or an i18n filter.
 Source and repeat aliases cannot be named `cms`; scope lookup cannot resolve
 that root from provider values or parent frames. Nested business fields such
-as `order.cms` remain ordinary data. Changing data affecting a translated
-sentence requires a new server render in this slice.
+as `order.cms` remain ordinary data and render independently. Collection text
+substitution never reads them.
 
-Each render receives explicit collection sources with `collection`, optional
-`overrides` and `parameters`. There is no global current language or catalogue.
+Each render receives explicit collection sources with `collection` and optional
+`overrides`. There is no global current language or catalogue.
 For each key, resolution checks the requested locale, regional parents and the
 collection default. Overrides win within the same locale. Every definition
-requires the default-language value. Plurals use the resolved message's locale
-and `Intl.PluralRules`; a plural selector must name a declared number parameter,
-and every locale must provide an `other` form.
+requires the default-language value.
 
 ## HTML safety and limits
 
@@ -56,15 +57,14 @@ Server expressions are allowed in text nodes and these attributes: `title`,
 assignment preserves children and escapes values during HTML serialization.
 Script/style/raw-text targets and inert templates are unsupported. Unknown
 keys, duplicate collection IDs and malformed reserved expressions fail rendering.
-Resolved values containing braces are rejected so interpolation cannot construct
-new browser expressions, including across replacement boundaries. Invalid
-runtime parameter types produce a visible `[collection:key]` marker.
+Values containing braces are rejected so a collection text cannot construct a
+browser expression, including across replacement boundaries.
 
-The catalogue permits at most 256 definitions, 32 locales per definition and
-16 typed parameters. Messages have at most 8192 UTF-16 code units; release-wide
-bounds also apply. IDs are lowercase names without dots. Unknown fields,
-duplicate IDs/locales, undeclared parameters and malformed plurals reject.
-This is a plain-text format, not HTML or the full ICU message grammar.
+The catalogue permits at most 256 definitions and 32 locales per definition.
+Messages have at most 8192 UTF-16 code units; release-wide bounds also apply.
+IDs are lowercase names without dots. Unknown fields, duplicate IDs/locales,
+object values and dynamic text syntax reject. This is a static plain-text format,
+not HTML or an ICU message grammar.
 
 ## Installed catalogues and editing
 
@@ -85,7 +85,7 @@ saving first. Reset removes the site override after Save. Concurrent stale write
 return 409 and require reloading; they never overwrite newer translations.
 
 `category`, `group` and `label` accept nonblank strings up to 120 characters;
-`description` accepts up to 500. IDs and runtime interpolation remain unchanged.
+`description` accepts up to 500. IDs and server expression syntax remain unchanged.
 The selector includes collection locales and configured site languages. Complete
 site-language removal/migration workflows are not implemented.
 

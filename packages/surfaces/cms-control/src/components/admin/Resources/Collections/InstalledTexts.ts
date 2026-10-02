@@ -137,7 +137,7 @@ export class InstalledTexts extends HTMLElement {
         if (!this.item) {
             return;
         }
-        const overrides = this.item.textOverrides as Record<string, Record<string, unknown>>;
+        const overrides = this.item.textOverrides as Record<string, Record<string, string>>;
         const fields = [...this.querySelectorAll<TextInput>("[data-fields] [data-id]")];
         for (const id of this.modified) {
             const inputs = fields.filter((field) => field.dataset.id === id);
@@ -145,9 +145,7 @@ export class InstalledTexts extends HTMLElement {
                 continue;
             }
             overrides[id] ??= {};
-            overrides[id]![this.language] = inputs[0]!.dataset.form
-                ? Object.fromEntries(inputs.map((field) => [field.dataset.form, field.value]))
-                : inputs[0]!.value;
+            overrides[id]![this.language] = inputs[0]!.value;
         }
         this.modified.clear();
     }

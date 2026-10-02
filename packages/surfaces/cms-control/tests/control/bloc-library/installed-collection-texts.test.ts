@@ -18,7 +18,7 @@ test("fixed collection text rendering preserves authored slot input", () => {
             collection: {
                 collectionId: "test",
                 locale: "en",
-                texts: [{ id: "title", parameters: {}, values: { en: "Shared title" } }],
+                texts: [{ id: "title", values: { en: "Shared title" } }],
             },
         },
     ]);

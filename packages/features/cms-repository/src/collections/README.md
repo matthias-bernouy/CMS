@@ -13,9 +13,10 @@ and validated defaults. Binary leaves are forbidden in configuration schemas.
 
 This slice supports:
 
-- Optional JSON text definitions with typed parameters, plural forms and locale
-  values. `./collections/texts` exposes validation, fallback resolution and
-  formatting; see [collection texts](../../../../../docs/blocs/texts.md).
+- Optional JSON text definitions with static locale values. Dynamic parameters
+  and plural forms are deliberately outside this catalogue. `./collections/texts`
+  exposes validation and fallback resolution; see
+  [collection texts](../../../../../docs/blocs/texts.md).
 - Optional theme categories with typed light/dark token defaults.
 - Optional Control HTML views: bounded collection-owned fragments.
 - Assets declared by stable ID, concrete MIME type, byte length and SHA-256.
