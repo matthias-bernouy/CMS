@@ -16,7 +16,7 @@ test("local repository lists immutable metadata and serves matching release byte
         const source = new HttpCollectionRepository("local", server.url);
         expect(await source.list()).toEqual([]);
         const artifact = await prepareCollectionRelease(
-            resolve(import.meta.dir, "../../../../resources/collections/ulvia-official"),
+            resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official"),
         );
         const version = artifact.release.version;
         expect(await repository.store(artifact)).toBe(true);
@@ -110,7 +110,7 @@ test("a release coordinate cannot be replaced with different content", async () 
     try {
         const repository = new LocalCollectionRepository(root);
         const artifact = await prepareCollectionRelease(
-            resolve(import.meta.dir, "../../../../resources/collections/ulvia-official"),
+            resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official"),
         );
         await repository.store(artifact);
         const changed = await admitCollectionRelease(

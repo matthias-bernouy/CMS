@@ -23,7 +23,7 @@
             "path": "../../features/cms-repository"
         },
         {
-            "path": "../ulvia-provider"
+            "path": "../../official-provider"
         }
     ]
 }

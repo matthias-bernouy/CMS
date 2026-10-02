@@ -7,10 +7,10 @@
     },
     "workspaces": [
         "packages/foundation/*",
-        "packages/resources/*",
         "packages/features/*",
         "packages/surfaces/*",
-        "packages/runtimes/*"
+        "packages/runtimes/*",
+        "packages/official-provider"
     ],
     "scripts": {
         "ulvia": "bun run packages/runtimes/ulvia-cli/src/index.ts",
@@ -47,6 +47,7 @@
         "@bernouy/image-processing": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/ulvia-cli": "workspace:*",
+        "@bernouy/ulvia-official-provider": "workspace:*",
         "@biomejs/biome": "2.5.14",
         "@typescript/typescript6": "6.0.2",
         "@types/bun": "1.4.2",

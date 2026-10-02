@@ -20,7 +20,9 @@ describe("declarative source form contracts", () => {
         for (const value of ["/api/remove", "https://example.test/logout", "/logout-history", "{{ endpoint }}"]) {
             expect(inspect(`<div cms-source="${value}"></div>`)).toEqual([]);
         }
-        expect(inspect('<div cms-source="/logout"></div>', "packages/resources/example/template.html")).toEqual([]);
+        expect(
+            inspect('<div cms-source="/logout"></div>', "packages/official-repository/example/template.html"),
+        ).toEqual([]);
     });
 
     test("does not confuse static method metadata with dynamic values", () => {

@@ -1,7 +1,7 @@
 # CmsCore Agent Instructions
 
-These rules apply to the whole CmsCore workspace. When working inside
-`packages/<layer>/<package>/`, also read that package's own `AGENTS.md`.
+These rules apply to the whole CmsCore workspace. When working inside a package,
+also read that package's own `AGENTS.md`.
 Package instructions override or specialize the rules below.
 
 ## Language
@@ -12,23 +12,31 @@ Package instructions override or specialize the rules below.
 
 ## Workspace Shape
 
-Packages live under five layers:
+Reusable CMS packages live under four layers:
 
 ```text
-runtimes -> surfaces -> resources -> features -> foundation
+runtimes -> surfaces -> features -> foundation
 ```
 
 - `foundation/` contains generic utilities with no CMS-domain knowledge.
 - `features/` contains CMS domain modules, contracts, validation, default
   implementations, and optional HTTP handlers or registrars.
-- `resources/` contains versioned, declarative CMS resources, including
-  `@bernouy/collection-examples` for declarative checkout fixtures. Resource packages may depend on feature
-  contracts but do not mount routes, connect to databases, or choose adapters.
 - `surfaces/` mounts features into HTTP applications. Surfaces receive
   dependencies through constructors or config; they do not pick production
   adapters.
 - `runtimes/` are executable composition roots. They read environment,
   instantiate adapters, mount surfaces, and start listeners.
+
+Direct product packages may live at `packages/<product>/` when they are not a
+CMS layer. `packages/official-provider` owns the official provider product and
+declares its dependency rank in `package.json`. `packages/official-repository`
+contains authored official releases only; it is not a runtime dependency and
+does not mount routes, connect to databases or choose adapters.
+
+`official-provider` may import generic packages from Foundation and the public
+provider-protocol/contract facades it implements. CMS features and surfaces must
+not import the official provider. The local CLI may depend on its `./server`
+entrypoint solely to compose the complete development environment.
 
 Never introduce dependencies against the direction above. Feature-to-feature
 dependencies are allowed only through the published package exports.
@@ -78,7 +86,7 @@ belong to Foundation. See the [package map](docs/architecture/packages.md).
 - Aim to keep each directory near seven immediate files and subdirectories.
   Eight entries produce an informational finding; more than eight produce a
   blocking error.
-- Directory fanout checks cover each real `packages/<layer>/<package>/` root
+- Directory fanout checks cover each real package root
   (identified by its `package.json`), all descendants, and `quality/`. Repository,
   layer-grouping, documentation, and infrastructure directories outside those
   roots are not subject to this structural limit.

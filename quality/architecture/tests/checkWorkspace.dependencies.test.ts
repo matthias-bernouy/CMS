@@ -33,6 +33,22 @@ describe("workspace dependency rules", () => {
         expect(await checkWorkspaceArchitecture({ rootDir: root })).toEqual([]);
     });
 
+    test("checks direct product packages through their declared architecture layer", async () => {
+        const root = await createWorkspace({
+            "packages/features/domain/package.json": manifest("@fixture/domain", {
+                exports: { ".": "./src/index.ts" },
+            }),
+            "packages/features/domain/src/index.ts": "export const domain = true;\n",
+            "packages/product/package.json": manifest("@fixture/product", {
+                architecture: { layer: "runtimes" },
+                dependencies: { "@fixture/domain": "workspace:*" },
+                exports: { ".": "./src/index.ts" },
+            }),
+            "packages/product/src/index.ts": "export { domain } from '@fixture/domain';\n",
+        });
+        expect(await checkWorkspaceArchitecture({ rootDir: root })).toEqual([]);
+    });
+
     test("reports reversed layer dependencies from manifests and source imports", async () => {
         const root = await createWorkspace({
             "packages/foundation/base/package.json": manifest("@fixture/base", {

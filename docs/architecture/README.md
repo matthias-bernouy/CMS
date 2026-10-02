@@ -1,22 +1,31 @@
 # Workspace Architecture
 
 CmsCore is a Bun and TypeScript workspace. The root `package.json` declares
-five package layers, with dependencies permitted toward lower layers:
+four reusable CMS package layers, with dependencies permitted toward lower layers:
 
 ```text
-runtimes -> surfaces -> resources -> features -> foundation
+runtimes -> surfaces -> features -> foundation
 ```
 
 | Layer | Responsibility |
 | --- | --- |
 | `foundation/` | Generic building blocks without CMS-domain knowledge. |
 | `features/` | CMS contracts, validation, domain behavior and optional adapters or handlers. |
-| `resources/` | Declarative, versioned CMS resources, including the collection text example. |
 | `surfaces/` | HTTP applications assembled from injected feature dependencies. |
 | `runtimes/` | Executable composition roots that choose adapters, read configuration and start listeners. |
 
 A package can skip intermediate layers. Feature-to-feature imports use declared
 package exports. See the [package map](packages.md) and [import rules](imports.md).
+
+Products that are not CMS layers can live directly below `packages/`.
+`official-provider` contains the official provider domain, adapters and server
+entrypoint. `official-repository` contains its versioned catalogue of official
+contracts, provider manifests and collections; it is authored publication data,
+not an executable dependency layer.
+
+The official provider may consume Foundation and public provider-protocol
+facades. CMS features and surfaces do not depend on its implementation; only
+the local CLI composes its declared server entrypoint for development.
 
 ## Domain Organization
 

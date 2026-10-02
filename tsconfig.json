@@ -29,7 +29,7 @@
             "path": "packages/features/cms-repository"
         },
         {
-            "path": "packages/features/ulvia-official-provider"
+            "path": "packages/official-provider"
         },
         {
             "path": "packages/features/cms-gateway"
@@ -48,9 +48,6 @@
         },
         {
             "path": "packages/runtimes/ulvia-cli"
-        },
-        {
-            "path": "packages/runtimes/ulvia-provider"
         },
         {
             "path": "packages/runtimes/cms-server"

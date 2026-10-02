@@ -48,10 +48,12 @@ test("scoped guidance only inspects real package trees and the quality tree", ()
         "packages/features/alpha/package.json",
         ...files("packages/features/alpha/src/wide", 9),
         ...files("packages/features/not-a-package/wide", 9),
+        "packages/product/package.json",
+        ...files("packages/product/src/review", 8),
         ...files("quality/ci/wide", 9),
     ];
 
-    expect(findDirectoryFanoutScopeRoots(paths)).toEqual(["packages/features/alpha", "quality"]);
+    expect(findDirectoryFanoutScopeRoots(paths)).toEqual(["packages/features/alpha", "packages/product", "quality"]);
 
     const directories = collectScopedDirectoryEntries(paths);
     const findings = findDirectoryFanoutFindings(directories);
@@ -62,6 +64,7 @@ test("scoped guidance only inspects real package trees and the quality tree", ()
     expect(directories.has("outside")).toBeFalse();
     expect(directories.has("packages/features/not-a-package/wide")).toBeFalse();
     expect([...(directories.get("packages/features/alpha") ?? [])].sort()).toEqual(["package.json", "src"]);
+    expect([...(directories.get("packages/product") ?? [])].sort()).toEqual(["package.json", "src"]);
     expect(findings.filter(({ severity }) => severity === "error")).toEqual([
         { path: "packages/features/alpha/src/wide", currentEntries: 9, severity: "error" },
         { path: "quality/ci/wide", currentEntries: 9, severity: "error" },

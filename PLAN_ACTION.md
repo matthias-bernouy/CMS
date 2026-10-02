@@ -527,7 +527,7 @@ are identical.
 - A binding is authored declaratively and compiled at release time.
 - Consumers address capability IDs, not provider URLs or HTTP methods.
 - The CMS gateway is the only consumer/provider route.
-- Official releases may initially ship as checked resource packages in this
+- Official releases may initially ship from the checked official repository in this
   monorepo behind a `ReleaseCatalogue` interface.
 - A remote registry service is not required for the first vertical slice.
   When added, it must use the same immutable release format and verification
@@ -550,7 +550,7 @@ are identical.
 ## 4. Target architecture
 
 ```text
-Official resource packages / local approved resources
+Official repository / locally approved releases
         |
         v
 Release catalogue
@@ -633,19 +633,17 @@ below remain subject to implementation, but their boundaries should stay stable.
   site dashboard records and direct member assignments live in
   `@bernouy/cms-dashboards`. Compiled grants and execution plans still need a
   domain owner as provider-backed views expand.
-- `@bernouy/ulvia-official-provider` is the first local provider domain slice.
-  Further capabilities need domain services and persistence ports rather than
-  one runtime file tree of handlers.
+- `@bernouy/ulvia-official-provider` is a direct product package containing the
+  official provider domain, adapters and declared server entrypoint. Further
+  capabilities need domain services and persistence ports rather than one file
+  tree of handlers.
 
-### Resources
+### Official repository
 
-- No resource package currently publishes official contract, provider or
-  collection releases.
-- One official Ulvia resource package, or a few responsibility-based packages,
-  containing validated contract releases, the official provider manifest, and
-  official collection releases.
-- Resources are immutable data. They do not mount routes, connect to Mongo, or
-  read environment variables.
+- `packages/official-repository` contains the authored official contract,
+  provider-manifest and collection releases.
+- Official releases are immutable data. They do not mount routes, connect to
+  Mongo or read environment variables.
 - Build tooling verifies and emits canonical bundles and digests. Generated
   bundles are artifacts; authored folders remain reviewable.
 
@@ -665,10 +663,11 @@ below remain subject to implementation, but their boundaries should stay stable.
   gateway transport/identity/media adapters, Control and Delivery when
   `CMS_GATEWAY_SITE_ID` is configured. Provider management and release
   resources remain planned.
-- A new `ulvia-provider` runtime composes official domain services, persistence,
-  file storage, workers, and the provider HTTP surface.
-- `ulvia-cli` currently starts the local CMS and Mongo; it can later start the
-  official provider with persistent private credentials.
+- `@bernouy/ulvia-official-provider/server` composes the current official domain,
+  local persistence and provider HTTP handler. It is no longer a CMS runtime
+  package.
+- `ulvia-cli` starts the local CMS, Mongo and the official provider with
+  persistent private credentials.
 
 ## 6. Canonical records
 

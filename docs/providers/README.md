@@ -47,8 +47,8 @@ Control's Mongo contract catalogue does not yet persist fixture assets, so
 the current import flow accepts only contracts without them.
 
 The first official resources are `catalog.items`, `forms.submissions`,
-`media.assets` and the `ulvia.official` manifest under `packages/resources/`.
-The local `@bernouy/ulvia-provider` runtime serves one authenticated account,
+`media.assets` and the `ulvia.official` manifest under `packages/official-repository/`.
+The `@bernouy/ulvia-official-provider/server` entrypoint serves one authenticated account,
 a starter catalogue item, provider-owned form receipts and one SVG asset.
 The [CLI guide](../../packages/runtimes/ulvia-cli/README.md) gives the local
 release and connection steps.

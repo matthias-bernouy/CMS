@@ -49,8 +49,10 @@ jobs:
             path: packages/foundation
           - name: features
             path: packages/features
-          - name: resources
-            path: packages/resources
+          - name: official provider
+            path: packages/official-provider
+          - name: official repository
+            path: packages/official-repository
           - name: surfaces
             path: packages/surfaces
           - name: runtimes

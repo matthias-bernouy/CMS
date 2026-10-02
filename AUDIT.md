@@ -18,7 +18,7 @@ There is no production deployment or production data to preserve. Historical imp
 | `cms-dashboards` | Cleaned up after audit | One navigation grammar now lives in the feature and is shared by site and collection dashboards. |
 | `cms-editor-system-v2` | Removed after audit | The retired editor package and its Control shell were deleted before the planned rewrite. |
 | `cms-gateway` | Completed | Media is coupled to generic invocation by an implicit `fileId` convention; HTTP handling is duplicated. |
-| `ulvia-official-provider` | Completed | Its media contract currently disagrees with Gateway media URLs. |
+| `ulvia-official-provider` | Relocated after audit | The official provider is now a direct product package with explicit media identity and a declared server entrypoint. |
 | `cms-repository` | Completed | Collection admission and installation disagree; upgrade checks miss text override validity; HTTP source clients duplicate policy. |
 
 ## Highest-priority verified findings
@@ -76,8 +76,8 @@ There is no production deployment or production data to preserve. Historical imp
 
 - Resolved after audit: the handler receives the exact catalogue, forms and media releases claimed by its manifest, requires every served capability at startup and validates JSON/binary outputs against them.
 - Resolved after audit: the public handler rejects blank credentials before serving requests.
-- The bounded body reader duplicates a pattern used in Gateway and Repository. [`handler.ts`](packages/features/ulvia-official-provider/src/http/handler.ts#L98)
-- Its single package test imports source files directly rather than the declared package exports, so export breakage is not covered there. [`handler.test.ts`](packages/features/ulvia-official-provider/tests/handler.test.ts#L7)
+- The bounded body reader duplicates a pattern used in Gateway and Repository. [`handler.ts`](packages/official-provider/src/http/handler.ts#L98)
+- Resolved after relocation: provider tests consume the declared root and `./local-fs` exports instead of its source tree. [`handler.test.ts`](packages/official-provider/tests/handler.test.ts#L7)
 
 ### `cms-repository`
 

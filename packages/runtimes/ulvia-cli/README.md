@@ -7,7 +7,7 @@ bun run ulvia -- dev
 bun run ulvia -- dev status
 bun run ulvia -- dev credentials
 bun run ulvia -- dev stop
-bun run ulvia -- release packages/resources/collections/test
+bun run ulvia -- release packages/official-repository/collections/test
 bun run ulvia -- release /path/to/contract-directory
 bun run ulvia -- release /path/to/provider-directory
 bun run ulvia -- prune
@@ -40,10 +40,10 @@ To try the official provider, release these resources in order, then start `dev`
 and open `/admin/settings/providers` on the Control port:
 
 ```bash
-bun run ulvia -- release packages/resources/contracts/catalog.items
-bun run ulvia -- release packages/resources/contracts/forms.submissions
-bun run ulvia -- release packages/resources/contracts/media.assets
-bun run ulvia -- release packages/resources/providers/ulvia.official
+bun run ulvia -- release packages/official-repository/contracts/catalog.items
+bun run ulvia -- release packages/official-repository/contracts/forms.submissions
+bun run ulvia -- release packages/official-repository/contracts/media.assets
+bun run ulvia -- release packages/official-repository/providers/ulvia.official
 bun run ulvia -- dev
 ```
 

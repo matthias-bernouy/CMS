@@ -40,18 +40,65 @@ export async function discoverWorkspacePackages(
             if (!manifest?.name) {
                 continue;
             }
-            packages.push({
-                name: manifest.name,
-                layer,
-                root: packageRoot,
-                relativeRoot,
-                manifest,
-                sourceFiles: await collectCodeFiles(packageRoot, rootDir, ignoredPaths),
-                pathAliases: await readPackagePathAliases(packageRoot, manifest.name),
-            });
+            packages.push(await workspacePackage(packageRoot, relativeRoot, manifest, layer, rootDir, ignoredPaths));
         }
     }
+    const packagesRoot = join(rootDir, "packages");
+    for (const entry of await readDirectories(packagesRoot)) {
+        const packageRoot = join(packagesRoot, entry);
+        const relativeRoot = toRelativePath(rootDir, packageRoot);
+        if (isIgnored(relativeRoot, ignoredPaths)) {
+            continue;
+        }
+        const manifest = await readManifest(join(packageRoot, "package.json"));
+        const layer = manifest ? declaredLayer(manifest) : undefined;
+        if (!manifest?.name || !layer) {
+            continue;
+        }
+        packages.push(await workspacePackage(packageRoot, relativeRoot, manifest, layer, rootDir, ignoredPaths));
+    }
     return packages.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+async function readDirectories(root: string): Promise<string[]> {
+    try {
+        return (await readdir(root, { withFileTypes: true }))
+            .filter((entry) => entry.isDirectory())
+            .map((entry) => entry.name);
+    } catch (error) {
+        if (isMissingPathError(error)) {
+            return [];
+        }
+        throw error;
+    }
+}
+
+function declaredLayer(manifest: PackageManifest): (typeof WORKSPACE_LAYERS)[number] | undefined {
+    const layer = manifest.architecture?.layer;
+    return WORKSPACE_LAYERS.find((candidate) => candidate === layer);
+}
+
+async function workspacePackage(
+    packageRoot: string,
+    relativeRoot: string,
+    manifest: PackageManifest,
+    layer: (typeof WORKSPACE_LAYERS)[number],
+    rootDir: string,
+    ignoredPaths: readonly string[],
+): Promise<WorkspacePackage> {
+    const name = manifest.name;
+    if (!name) {
+        throw new Error(`Workspace package at ${relativeRoot} has no name`);
+    }
+    return {
+        name,
+        layer,
+        root: packageRoot,
+        relativeRoot,
+        manifest,
+        sourceFiles: await collectCodeFiles(packageRoot, rootDir, ignoredPaths),
+        pathAliases: await readPackagePathAliases(packageRoot, name),
+    };
 }
 
 async function readManifest(path: string): Promise<PackageManifest | undefined> {

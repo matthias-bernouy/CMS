@@ -4,14 +4,14 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
-import { createOfficialProviderHandler } from "../src/http/handler";
-import { FileSubmissionStore } from "../src/local-fs/FileSubmissionStore";
+import { createOfficialProviderHandler } from "@bernouy/ulvia-official-provider";
+import { FileSubmissionStore } from "@bernouy/ulvia-official-provider/local-fs";
 
 async function contracts() {
     const load = async (id: string) =>
         (
             await admitContractReleaseJson(
-                await readFile(resolve(import.meta.dir, `../../../resources/contracts/${id}/definition.json`)),
+                await readFile(resolve(import.meta.dir, `../../official-repository/contracts/${id}/definition.json`)),
             )
         ).release;
     return {

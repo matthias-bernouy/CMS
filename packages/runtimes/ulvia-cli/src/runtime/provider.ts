@@ -30,8 +30,8 @@ export async function loadOrCreateProviderToken(devRoot: string): Promise<string
 
 export async function startLocalProvider(paths: UlviaPaths, ports: DevPorts) {
     const token = await loadOrCreateProviderToken(paths.dev);
-    const entrypoint = fileURLToPath(import.meta.resolve("@bernouy/ulvia-provider"));
-    const resourceRoot = resolve(import.meta.dir, "../../../../resources");
+    const entrypoint = fileURLToPath(import.meta.resolve("@bernouy/ulvia-official-provider/server"));
+    const resourceRoot = resolve(import.meta.dir, "../../../../official-repository");
     const provider = spawnCommand([process.execPath, entrypoint], {
         inherit: true,
         env: {

@@ -1,8 +1,8 @@
 # Server-rendered Collection Texts
 
 Collection releases declare optional `texts`: JSON data included in validation
-and the immutable release digest. The example catalogue is
-[`texts.json`](../../packages/resources/collection-examples/src/texts.json).
+and the immutable release digest. The official catalogue examples live under
+[`texts/`](../../packages/official-repository/collections/ulvia-official/texts/).
 
 ```json
 {
@@ -91,7 +91,7 @@ site-language removal/migration workflows are not implemented.
 
 ## Examples and limits
 
-`packages/resources/collections/ulvia-official/texts/` contains the installable Ulvia Official
+`packages/official-repository/collections/ulvia-official/texts/` contains the installable Ulvia Official
 catalogue, split by category. Its eight compositions use the declared keys.
 The checkout example remains an admission fixture. The temporary preview route
 has been removed. Existing private/code collections retain the earlier Texts

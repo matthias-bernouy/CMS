@@ -1,4 +1,4 @@
-export const WORKSPACE_LAYERS = ["foundation", "features", "resources", "surfaces", "runtimes"] as const;
+export const WORKSPACE_LAYERS = ["foundation", "features", "surfaces", "runtimes"] as const;
 
 export type WorkspaceLayer = (typeof WORKSPACE_LAYERS)[number];
 
@@ -37,6 +37,7 @@ export interface WorkspaceCheckOptions {
 export interface PackageManifest {
     name?: string;
     exports?: unknown;
+    architecture?: { layer?: unknown };
     dependencies?: Record<string, string>;
     optionalDependencies?: Record<string, string>;
     peerDependencies?: Record<string, string>;

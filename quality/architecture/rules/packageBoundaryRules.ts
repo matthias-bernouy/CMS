@@ -142,7 +142,7 @@ export function checkCrossPackageSourceImport(
     } else if (targetPaths.length === 0 && isAbsolute(specifier)) {
         targetPaths.push(normalize(specifier));
     } else if (
-        /(?:^|\/)packages\/(?:foundation|features|resources|surfaces|runtimes)\/[^/]+\/src(?:\/|$)/.test(specifier)
+        /(?:^|\/)packages\/(?:(?:foundation|features|surfaces|runtimes)\/[^/]+|[^/]+)\/src(?:\/|$)/.test(specifier)
     ) {
         targetPaths.push(resolve(rootDir, specifier));
     }

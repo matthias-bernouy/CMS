@@ -7,10 +7,10 @@ installed blocs are read-only and can be placed on pages.
 ## Local collection releases
 
 Author a declarative collection folder such as
-`packages/resources/collections/ulvia-official/`. It is not a Bun workspace package.
+`packages/official-repository/collections/ulvia-official/`. It is not a Bun workspace package.
 
 ```text
-packages/resources/collections/ulvia-official/
+packages/official-repository/collections/ulvia-official/
 ├── definition.json          # collection identity, version, locale and metadata
 ├── blocs/<bloc>/definition.json
 ├── blocs/<bloc>/shadowdom.html  # required for components
@@ -27,7 +27,7 @@ packages/resources/collections/ulvia-official/
 └── dashboards/<dashboard>/definition.json  # navigation tree of local views
 ```
 
-`bun run ulvia -- release packages/resources/collections/ulvia-official` assembles the
+`bun run ulvia -- release packages/official-repository/collections/ulvia-official` assembles the
 supported files into one `ulvia-collection/v1` release, validates it, and
 stores immutable canonical bytes in the user's local repository. That repository
 lives at `ULVIA_DATA_DIR/repository`, or below `$XDG_DATA_HOME/ulvia/repository`

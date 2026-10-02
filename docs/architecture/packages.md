@@ -24,7 +24,6 @@ files explain implementation invariants.
 | `@bernouy/cms-gateway` | Authorized capability invocation, provider identity aliases, file reads and image derivatives. |
 | `@bernouy/cms-auth` | Accounts, local/OIDC providers, PATs, signed sessions, public auth operations and email composition. |
 | `@bernouy/cms-dashboards` | Site dashboard records, collection view mounts and direct subject assignments. |
-| `@bernouy/ulvia-official-provider` | Initial local provider capabilities for catalogue reads, form receipts and one media asset. |
 | `@bernouy/cms-collection-build` | Collection Bloc validation, browser artifact builds and source-bundle generation. |
 
 `cms-dashboards` owns site activation, private dashboard records and member
@@ -38,11 +37,13 @@ packages are absent. Provider invocation, identities and media belong to
 Gateway; generic secret storage and image processing belong to Foundation.
 The `cms-source` HTML attribute remains the active binding API.
 
-## Resources
+## Official Products
 
-`@bernouy/collection-examples` contains a checkout composition and its JSON
-translation catalogue, covered by admission tests. It has no runtime
-adapters or routes. There is no `packages/resources/sites` template catalogue.
+`packages/official-repository` contains the authored official contract releases,
+the `ulvia.official` provider manifest and official collections. It has no
+runtime adapters or routes. `@bernouy/ulvia-official-provider` is the separate
+provider product; its root exports domain behavior, `./local-fs` exports the
+development adapter and `./server` is its executable entrypoint.
 
 ## Surfaces And Runtimes
 
@@ -52,7 +53,6 @@ adapters or routes. There is no `packages/resources/sites` template catalogue.
 | `@bernouy/cms-delivery` | Public pages, Bloc assets, binding runtime, auth, media, gateway calls and SEO. |
 | `@bernouy/cms-server` | Production adapter composition and Control/Delivery startup. |
 | `@bernouy/ulvia-cli` | Persistent local CMS development stack backed by MongoDB. |
-| `@bernouy/ulvia-provider` | Loopback official provider executable for local development. |
 
 See [workspace architecture](README.md) for dependency direction and
 [repository and gateway flows](../providers/README.md) for runtime wiring.

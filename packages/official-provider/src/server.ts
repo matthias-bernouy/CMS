@@ -4,8 +4,8 @@ import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
-import { createOfficialProviderHandler } from "@bernouy/ulvia-official-provider";
-import { FileSubmissionStore } from "@bernouy/ulvia-official-provider/local-fs";
+import { createOfficialProviderHandler } from "./http/handler";
+import { FileSubmissionStore } from "./local-fs/FileSubmissionStore";
 
 const resourceRoot = required("ULVIA_OFFICIAL_RESOURCE_ROOT");
 const dataRoot = required("ULVIA_OFFICIAL_DATA_DIR");

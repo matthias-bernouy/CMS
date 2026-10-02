@@ -18,8 +18,8 @@
     "dependencies": {
         "@bernouy/cms-server": "workspace:*",
         "@bernouy/cms-collection-build": "workspace:*",
-        "@bernouy/cms-repository": "workspace:*"
-        ,"@bernouy/ulvia-provider": "workspace:*"
+        "@bernouy/cms-repository": "workspace:*",
+        "@bernouy/ulvia-official-provider": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

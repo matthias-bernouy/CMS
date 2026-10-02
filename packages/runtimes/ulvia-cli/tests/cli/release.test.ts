@@ -7,7 +7,7 @@ import { LocalCollectionRepository } from "../../src/repository/local";
 
 test("release publishes a folder explicitly, survives CLI runs, and prune clears only the repository", async () => {
     const data = await mkdtemp(join(tmpdir(), "ulvia-cli-release-"));
-    const source = resolve(import.meta.dir, "../../../../resources/collections/ulvia-official");
+    const source = resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official");
     const definition = (await Bun.file(join(source, "definition.json")).json()) as { version: string };
     const output: string[] = [];
     const options = { environment: { ULVIA_DATA_DIR: data }, log: (line: string) => output.push(line) };

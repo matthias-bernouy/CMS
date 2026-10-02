@@ -10,6 +10,8 @@ export function findDirectoryFanoutScopeRoots(paths: Iterable<string>): string[]
 
         if (segments.length === 4 && segments[0] === "packages" && segments[3] === "package.json") {
             roots.add(segments.slice(0, 3).join("/"));
+        } else if (segments.length === 3 && segments[0] === "packages" && segments[2] === "package.json") {
+            roots.add(segments.slice(0, 2).join("/"));
         }
     }
 
@@ -51,9 +53,14 @@ function getScopeDepth(segments: string[], scopeRoots: Set<string>): number | un
         return 1;
     }
 
-    if (segments[0] !== "packages" || segments.length < 4) {
+    if (segments[0] !== "packages" || segments.length < 3) {
         return undefined;
     }
-
-    return scopeRoots.has(segments.slice(0, 3).join("/")) ? 3 : undefined;
+    for (const root of scopeRoots) {
+        const depth = root.split("/").length;
+        if (segments.slice(0, depth).join("/") === root) {
+            return depth;
+        }
+    }
+    return undefined;
 }

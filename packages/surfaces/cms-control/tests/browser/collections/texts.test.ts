@@ -7,7 +7,7 @@ import saveTexts from "cms-control/api/_content/collections/texts.put";
 
 const sourceRoot = resolve(import.meta.dir, "../../../src");
 const bundle = await Bun.file(`${sourceRoot}/static/assets/control-components.js`).text();
-const collectionRoot = resolve(import.meta.dir, "../../../../../resources/collections/ulvia-official");
+const collectionRoot = resolve(import.meta.dir, "../../../../../official-repository/collections/ulvia-official");
 const release = {
     ...(await Bun.file(resolve(collectionRoot, "definition.json")).json()),
     blocs: [],
@@ -56,7 +56,7 @@ test("installed texts keep drafts across groups, persist overrides, reset and re
             } else {
                 await route.fulfill({
                     contentType: "text/html; charset=utf-8",
-                    body: '<meta name="basePath" content="/cms"><cms-installed-texts collection-id="test"></cms-installed-texts><script src="/bundle.js"></script>',
+                    body: '<meta name="basePath" content="/cms"><cms-installed-texts collection-id="ulvia-official"></cms-installed-texts><script src="/bundle.js"></script>',
                 });
             }
         });
@@ -89,7 +89,7 @@ test("installed texts keep drafts across groups, persist overrides, reset and re
         await panel.getByText("Translations saved.", { exact: true }).waitFor();
         expect((await store.snapshot("site")).collections[0]!.textOverrides.title?.fr).toBeUndefined();
         const snapshot = await store.snapshot("site");
-        await store.saveTexts("site", "test", snapshot.revision, { title: { fr: "Concurrent edit" } });
+        await store.saveTexts("site", "ulvia-official", snapshot.revision, { title: { fr: "Concurrent edit" } });
         await title.fill("Stale edit");
         await panel.getByRole("button", { name: "Save translations", exact: true }).click();
         await panel.getByText("The collection changed. Reload before saving.", { exact: false }).waitFor();
