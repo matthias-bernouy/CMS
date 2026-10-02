@@ -3,6 +3,8 @@
     "id": "ulvia-official-feature-card",
     "label": "bloc.feature-card.label",
     "description": "bloc.feature-card.description",
+    "category": "bloc.category.layout",
+    "order": 10,
     "thumbnail": "feature-card.svg",
     "uses": [],
     "requires": [],

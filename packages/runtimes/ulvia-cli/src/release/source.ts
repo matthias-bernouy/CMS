@@ -5,6 +5,7 @@ import { admitCollectionRelease, isCollectionNamespace } from "@bernouy/cms-repo
 import { loadCollectionBlocs } from "./blocSources";
 import { loadCollectionTheme, loadCollectionTranslations } from "./metadataSources";
 import { loadCollectionTexts } from "./textSources";
+import { assertCollectionSourceQuality } from "./quality";
 
 /** Compile one authored folder into an immutable, admitted release candidate. */
 export async function prepareCollectionRelease(directory: string) {
@@ -32,6 +33,7 @@ export async function prepareCollectionRelease(directory: string) {
         ...(theme === undefined ? {} : { theme }),
     };
     const artifact = await admitCollectionRelease(candidate, assets.bundle);
+    assertCollectionSourceQuality(artifact.release);
     if (artifact.release.collectionId !== collectionId) {
         throw new Error(`Collection folder ${collectionId} does not match its definition`);
     }

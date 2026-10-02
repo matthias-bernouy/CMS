@@ -277,6 +277,9 @@ models and validation for CMS-owned installations and site selections.
   bounded version range. Installation resolves the complete graph, rejects
   cycles, and revalidates dependents during upgrades. Remote publication remains
   a future slice. Reject unsupported fields until validated.
+- Theme defaults may reference local or selectively imported tokens. Reject
+  dangling references and local cycles; exact token aliases must preserve types,
+  including across the installed dependency graph.
 - Collection, Bloc, setting, text, theme, View and dashboard administration
   metadata always stores translation keys, never inline display copy. The
   immutable collection translation catalogue is keyed first by canonical BCP

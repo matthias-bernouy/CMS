@@ -26,6 +26,9 @@ Local Ulvia CMS development runtime.
 - Collection text sources recursively merge definition arrays separately from
   `locales/<locale>/` value objects. Bloc discovery recursively traverses pure
   grouping directories and stops at a folder-owned `definition.json`.
+- Before storing a collection release, validate namespaced CSS variable
+  references against its local tokens, selective dependency imports and
+  Bloc-owned custom-property declarations.
 - `dev` serves only stored releases on loopback; it must never read authored folders.
 - `prune` clears the local repository without touching the persistent dev stack.
 - Do not reintroduce the removed integration repository or Supabase bridge.

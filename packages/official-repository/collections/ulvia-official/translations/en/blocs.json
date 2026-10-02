@@ -1,6 +1,9 @@
 {
     "bloc.callout.description": "A simple callout",
     "bloc.callout.label": "Callout",
+    "bloc.category.content": "Content",
+    "bloc.category.layout": "Layout",
+    "bloc.category.pages": "Page sections",
     "bloc.faq.description": "A frequently asked question",
     "bloc.faq.label": "Frequently asked question",
     "bloc.feature-card.description": "A single feature card",

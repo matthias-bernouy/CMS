@@ -83,6 +83,34 @@ function validateDependencies(release: CollectionRelease, byId: ReadonlyMap<stri
             }
         }
     }
+    validateImportedThemeTypes(release, byId);
+}
+
+function validateImportedThemeTypes(release: CollectionRelease, byId: ReadonlyMap<string, CollectionRelease>): void {
+    const imported = new Map(
+        (release.dependencies ?? []).flatMap((dependency) => {
+            const target = byId.get(dependency.collectionId)!;
+            const tokens = new Map(
+                (target.theme?.categories ?? []).flatMap((category) =>
+                    category.tokens.map((token) => [token.id, token] as const),
+                ),
+            );
+            return dependency.imports.themeTokens.map(
+                (id) => [collectionThemeTokenId(dependency.collectionId, id), tokens.get(id)!] as const,
+            );
+        }),
+    );
+    for (const token of release.theme?.categories.flatMap((category) => category.tokens) ?? []) {
+        for (const value of Object.values(token.defaults)) {
+            const match = /^var\(\s*--([a-z][a-z0-9-]*)\s*\)$/iu.exec(value);
+            const target = match ? imported.get(match[1]!) : undefined;
+            if (target && token.type !== "value" && target.type !== "value" && token.type !== target.type) {
+                reject(
+                    `Theme token ${release.collectionId}-${token.id} cannot use ${target.type} token --${match![1]}`,
+                );
+            }
+        }
+    }
 }
 
 function visit(

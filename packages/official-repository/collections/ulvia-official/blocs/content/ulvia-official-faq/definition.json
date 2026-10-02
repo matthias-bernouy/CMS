@@ -3,6 +3,8 @@
     "id": "ulvia-official-faq",
     "label": "bloc.faq.label",
     "description": "bloc.faq.description",
+    "category": "bloc.category.content",
+    "order": 50,
     "uses": [],
     "requires": [],
     "slots": {

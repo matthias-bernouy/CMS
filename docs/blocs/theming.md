@@ -57,6 +57,13 @@ internal `id` must equal the manifest ID. The recursive scan rejects duplicate
 IDs and files absent from the manifest; the manifest remains the only source of
 category order.
 
+Token defaults may reference another local token or a token explicitly imported
+from a collection dependency. Admission rejects missing local/imported
+references, cycles between local tokens, and exact aliases whose token types do
+not match. The local release command also scans Bloc styles: a variable in the
+collection or dependency namespace must be a declared Bloc custom property or a
+known theme token, so misspelled `var(--...)` references fail before publication.
+
 Theme, category and token labels and descriptions are reusable keys resolved
 from all JSON fragments below `translations/<locale>/`, the same immutable
 catalogue used by other collection metadata. Duplicate keys within one locale

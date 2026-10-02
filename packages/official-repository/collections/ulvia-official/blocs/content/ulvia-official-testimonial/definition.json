@@ -3,6 +3,8 @@
     "id": "ulvia-official-testimonial",
     "label": "bloc.testimonial.label",
     "description": "bloc.testimonial.description",
+    "category": "bloc.category.content",
+    "order": 40,
     "uses": [],
     "requires": [],
     "slots": {

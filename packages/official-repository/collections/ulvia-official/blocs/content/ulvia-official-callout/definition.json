@@ -3,6 +3,8 @@
     "id": "ulvia-official-callout",
     "label": "bloc.callout.label",
     "description": "bloc.callout.description",
+    "category": "bloc.category.content",
+    "order": 10,
     "uses": [],
     "requires": [],
     "slots": {

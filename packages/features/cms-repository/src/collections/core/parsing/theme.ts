@@ -1,10 +1,12 @@
 import type { CollectionTheme, CollectionThemeToken, CollectionThemeTokenType } from "../../interfaces/CollectionTheme";
+import type { CollectionDependency } from "../../interfaces/CollectionRelease";
 import { invalid } from "../errors";
 import { collectionThemeSourceId, collectionThemeTokenId } from "../namespace";
 import { array, identifier, keys, record, string, unique } from "../values";
 
 const TYPES = new Set<CollectionThemeTokenType>(["color", "font-family", "length", "number", "shadow", "value"]);
 const NAME = /^[a-z][a-z0-9-]*$/;
+const VARIABLE_REFERENCE = /var\(\s*--([a-z][a-z0-9-]*)/giu;
 
 function name(value: unknown, path: string): string {
     const parsed = identifier(value, path);
@@ -27,7 +29,11 @@ function css(value: unknown, path: string): string {
     }
     return parsed;
 }
-export function parseCollectionTheme(input: unknown, collectionId: string): CollectionTheme {
+export function parseCollectionTheme(
+    input: unknown,
+    collectionId: string,
+    dependencies: readonly CollectionDependency[] = [],
+): CollectionTheme {
     collectionThemeSourceId(collectionId);
     const source = record(input, "$.theme");
     keys(source, ["label", "categories"], "$.theme");
@@ -80,5 +86,90 @@ export function parseCollectionTheme(input: unknown, collectionId: string): Coll
         categories.flatMap((category) => category.tokens.map((token) => token.id)),
         "$.theme.tokens",
     );
-    return { label: label(source.label, "$.theme.label"), categories };
+    const theme = { label: label(source.label, "$.theme.label"), categories };
+    validateThemeReferences(theme, collectionId, dependencies);
+    return theme;
+}
+
+function validateThemeReferences(
+    theme: CollectionTheme,
+    collectionId: string,
+    dependencies: readonly CollectionDependency[],
+): void {
+    const tokens = theme.categories.flatMap((category) => category.tokens);
+    const local = new Map(tokens.map((token) => [collectionThemeTokenId(collectionId, token.id), token]));
+    const imported = new Set(
+        dependencies.flatMap((dependency) =>
+            dependency.imports.themeTokens.map((token) => collectionThemeTokenId(dependency.collectionId, token)),
+        ),
+    );
+    const namespaces = [collectionId, ...dependencies.map((dependency) => dependency.collectionId)].sort(
+        (left, right) => right.length - left.length,
+    );
+    const graph = new Map(tokens.map((token) => [token.id, new Set<string>()]));
+    for (const [categoryIndex, category] of theme.categories.entries()) {
+        for (const [tokenIndex, token] of category.tokens.entries()) {
+            for (const mode of ["light", "dark"] as const) {
+                const value = token.defaults[mode];
+                if (value === undefined) {
+                    continue;
+                }
+                const path = `$.theme.categories[${categoryIndex}].tokens[${tokenIndex}].defaults.${mode}`;
+                for (const variable of references(value)) {
+                    const target = local.get(variable);
+                    if (target) {
+                        graph.get(token.id)!.add(target.id);
+                        validateReferenceType(token, target, value, variable, path);
+                        continue;
+                    }
+                    if (imported.has(variable)) {
+                        continue;
+                    }
+                    if (namespaces.some((namespace) => variable.startsWith(`${namespace}-`))) {
+                        invalid(`unknown or unimported theme token --${variable}`, path);
+                    }
+                }
+            }
+        }
+    }
+    assertAcyclicTheme(graph);
+}
+
+function references(value: string): string[] {
+    return [...value.matchAll(VARIABLE_REFERENCE)].map((match) => match[1]!);
+}
+
+function validateReferenceType(
+    source: CollectionThemeToken,
+    target: CollectionThemeToken,
+    value: string,
+    variable: string,
+    path: string,
+): void {
+    const exact = new RegExp(`^var\\(\\s*--${variable}\\s*\\)$`, "iu").test(value);
+    if (exact && source.type !== "value" && target.type !== "value" && source.type !== target.type) {
+        invalid(`cannot use ${target.type} token --${variable} as ${source.type}`, path);
+    }
+}
+
+function assertAcyclicTheme(graph: ReadonlyMap<string, ReadonlySet<string>>): void {
+    const visiting = new Set<string>();
+    const visited = new Set<string>();
+    const visit = (token: string, path: readonly string[]): void => {
+        if (visiting.has(token)) {
+            invalid(`cyclic theme token reference: ${[...path, token].join(" -> ")}`, "$.theme");
+        }
+        if (visited.has(token)) {
+            return;
+        }
+        visiting.add(token);
+        for (const target of graph.get(token) ?? []) {
+            visit(target, [...path, token]);
+        }
+        visiting.delete(token);
+        visited.add(token);
+    };
+    for (const token of graph.keys()) {
+        visit(token, []);
+    }
 }

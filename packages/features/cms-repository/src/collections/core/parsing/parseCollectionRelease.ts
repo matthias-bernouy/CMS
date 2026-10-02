@@ -78,7 +78,10 @@ export function parseCollectionRelease(
             new Set(dependencies?.flatMap((dependency) => dependency.imports.blocs) ?? []),
         );
         validateCollectionTextReferences(blocs, collectionId, new Set(texts?.map((text) => text.id) ?? []));
-        const theme = source.theme === undefined ? undefined : parseCollectionTheme(source.theme, collectionId);
+        const theme =
+            source.theme === undefined
+                ? undefined
+                : parseCollectionTheme(source.theme, collectionId, dependencies ?? []);
         const exports =
             source.exports === undefined ? undefined : parseCollectionExports(source.exports, collectionId, limits);
         if (exports) {

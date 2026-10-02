@@ -1,0 +1,79 @@
+import { expect, test } from "bun:test";
+import { resolve } from "node:path";
+import { parseCollectionRelease } from "@bernouy/cms-repository/collections";
+import { assertCollectionSourceQuality } from "../../src/release/quality";
+import { prepareCollectionRelease } from "../../src/release/source";
+
+function release(style: string) {
+    return parseCollectionRelease({
+        kind: "collection",
+        protocol: "ulvia-collection/v1",
+        schemaDialect: "ulvia-schema/v1",
+        collectionId: "example",
+        publisherId: "example.official",
+        version: "1.0.0",
+        name: "collection.name",
+        locale: "en",
+        translations: {
+            en: {
+                "bloc.card.label": "Card",
+                "collection.name": "Example",
+                "theme.category.colors.label": "Colors",
+                "theme.label": "Theme",
+                "theme.token.primary.label": "Primary",
+            },
+        },
+        theme: {
+            label: "theme.label",
+            categories: [
+                {
+                    id: "colors",
+                    label: "theme.category.colors.label",
+                    tokens: [
+                        {
+                            id: "primary",
+                            label: "theme.token.primary.label",
+                            type: "color",
+                            defaults: { light: "#123456" },
+                        },
+                    ],
+                },
+            ],
+        },
+        assets: [],
+        blocs: [
+            {
+                kind: "component",
+                id: "example-card",
+                label: "bloc.card.label",
+                shadowdom: "<div></div>",
+                style,
+                slots: {},
+                uses: [],
+                requires: [],
+            },
+        ],
+    });
+}
+
+test("collection source quality accepts theme tokens and declared Bloc properties", () => {
+    expect(() =>
+        assertCollectionSourceQuality(
+            release(":host { --example-card-color: var(--example-primary); color: var(--example-card-color); }"),
+        ),
+    ).not.toThrow();
+    expect(() => assertCollectionSourceQuality(release(":host { color: var(--example-prmary); }"))).toThrow(
+        "unknown or unimported",
+    );
+});
+
+test("the official collection passes its source quality contract", async () => {
+    const source = resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official");
+    const artifact = await prepareCollectionRelease(source);
+    const visible = artifact.release.blocs.filter((bloc) => !bloc.internal);
+    expect(visible.every((bloc) => bloc.category !== undefined && bloc.order !== undefined)).toBeTrue();
+    expect(new Set(visible.map((bloc) => `${bloc.category}:${bloc.order}`)).size).toBe(visible.length);
+    expect(
+        visible.filter((bloc) => bloc.kind === "component").every((bloc) => bloc.style?.includes(":host")),
+    ).toBeTrue();
+});

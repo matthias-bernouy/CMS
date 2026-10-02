@@ -3,6 +3,8 @@
     "id": "ulvia-official-footer",
     "label": "bloc.footer.label",
     "description": "bloc.footer.description",
+    "category": "bloc.category.layout",
+    "order": 30,
     "uses": [],
     "requires": [],
     "slots": {

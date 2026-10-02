@@ -3,6 +3,8 @@
     "id": "ulvia-official-welcome",
     "label": "bloc.welcome.label",
     "description": "bloc.welcome.description",
+    "category": "bloc.category.pages",
+    "order": 10,
     "uses": [
         "ulvia-official-feature-card",
         "ulvia-official-feature-list",

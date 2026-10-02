@@ -78,9 +78,13 @@ slot, never an HTML string stored in a setting. Rich-text profiles are currently
 the closed `inline` and `prose` vocabulary; the future editor may expose only
 features permitted by that profile.
 
+Theme defaults do validate local and selectively imported token references.
+Exact local aliases must preserve token types, and local reference cycles reject.
+Installation repeats type checks for exact aliases to imported tokens.
+
 **Admission is not an HTML/CSS sanitizer or template compiler.** It does not
 type-check expressions, capability calls embedded in markup, slot content
-cardinalities, rich-text profile conformance, CSS or render expansion. Stored
+cardinalities, rich-text profile conformance, general CSS or render expansion. Stored
 component settings are validated separately by `cms-content`. The HTML parser applies
 its parsing rules; acceptance does not certify author syntax as conforming HTML.
 Never render or execute an admitted bundle directly as trusted code. Renderer

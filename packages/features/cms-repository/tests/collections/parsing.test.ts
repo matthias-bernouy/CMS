@@ -195,6 +195,44 @@ describe("collection release parsing", () => {
         );
     });
 
+    test("validates theme token references, types and cycles", () => {
+        const themed = (tokens: Record<string, unknown>[]) => ({
+            ...collectionDocument({
+                "theme.category.values.label": "Values",
+                "theme.label": "Atlas theme",
+                "theme.token.first.label": "First",
+                "theme.token.second.label": "Second",
+            }),
+            theme: {
+                label: "theme.label",
+                categories: [{ id: "values", label: "theme.category.values.label", tokens }],
+            },
+        });
+        const token = (id: string, type: string, light: string) => ({
+            id,
+            label: `theme.token.${id}.label`,
+            type,
+            defaults: { light },
+        });
+
+        expect(() => parseCollectionRelease(themed([token("first", "color", "var(--atlas-missing)")]))).toThrow(
+            "unknown or unimported",
+        );
+        expect(() =>
+            parseCollectionRelease(
+                themed([token("first", "color", "var(--atlas-second)"), token("second", "length", "1rem")]),
+            ),
+        ).toThrow("cannot use length");
+        expect(() =>
+            parseCollectionRelease(
+                themed([
+                    token("first", "color", "var(--atlas-second)"),
+                    token("second", "color", "var(--atlas-first)"),
+                ]),
+            ),
+        ).toThrow("cyclic theme token");
+    });
+
     test("declares selective exports and cross-collection imports", () => {
         const source = collectionDocument({
             "theme.category.colors.label": "Colors",

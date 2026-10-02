@@ -107,6 +107,38 @@ test("installs only declared public resources from compatible collection depende
     const breakingFoundation = { ...structuredClone(foundation), version: "2.0.0" };
     const breakingArtifact = await store.importRelease(breakingFoundation);
     await expect(store.upgrade("site", breakingArtifact.digest, 2, "local")).rejects.toThrow("requires");
+
+    const wrongType = await store.importRelease({
+        ...consumer,
+        version: "1.1.0",
+        translations: {
+            en: {
+                ...consumer.translations.en,
+                "theme.category.layout.label": "Layout",
+                "theme.label": "Shop theme",
+                "theme.token.gap.label": "Gap",
+            },
+        },
+        theme: {
+            label: "theme.label",
+            categories: [
+                {
+                    id: "layout",
+                    label: "theme.category.layout.label",
+                    tokens: [
+                        {
+                            id: "gap",
+                            label: "theme.token.gap.label",
+                            type: "length",
+                            defaults: { light: "var(--ulvia-official-primary)" },
+                        },
+                    ],
+                },
+            ],
+        },
+    });
+    await store.install("types", foundationArtifact.digest, 0);
+    await expect(store.install("types", wrongType.digest, 1)).rejects.toThrow("cannot use color token");
 });
 
 test("rejects imports that the dependency does not export", async () => {

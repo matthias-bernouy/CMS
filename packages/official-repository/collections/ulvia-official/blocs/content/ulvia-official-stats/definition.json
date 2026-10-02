@@ -3,6 +3,8 @@
     "id": "ulvia-official-stats",
     "label": "bloc.stats.label",
     "description": "bloc.stats.description",
+    "category": "bloc.category.content",
+    "order": 30,
     "uses": [],
     "requires": [],
     "slots": {

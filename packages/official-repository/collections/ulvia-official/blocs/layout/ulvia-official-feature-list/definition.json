@@ -3,6 +3,8 @@
     "id": "ulvia-official-feature-list",
     "label": "bloc.feature-list.label",
     "description": "bloc.feature-list.description",
+    "category": "bloc.category.layout",
+    "order": 20,
     "uses": [],
     "requires": [],
     "slots": {
