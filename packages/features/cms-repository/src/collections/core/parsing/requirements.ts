@@ -1,8 +1,13 @@
 import { isVersionRangeSubset, parseVersionRange } from "cms-repository/exports/contracts/compatibility";
-import type { CollectionCapabilityRequirement } from "../../interfaces/CollectionRelease";
+import type {
+    CollectionCapabilityRequirement,
+    CollectionDependency,
+    CollectionResourceSelection,
+} from "../../interfaces/CollectionRelease";
 import { invalid } from "../errors";
 import type { CollectionLimits } from "../limits";
 import { array, keys, ordinal, record, string, unique } from "../values";
+import { collectionThemeTokenId, parseCollectionBlocTag, parseCollectionNamespace } from "../namespace";
 
 export function parseRequirements(
     value: unknown,
@@ -33,6 +38,97 @@ export function parseRequirements(
         path,
     );
     return requirements.sort((a, b) => ordinal(a.contractId, b.contractId) || ordinal(a.capabilityId, b.capabilityId));
+}
+
+export function parseCollectionDependencies(
+    value: unknown,
+    ownerCollectionId: string,
+    limits: Readonly<CollectionLimits>,
+): readonly CollectionDependency[] {
+    const dependencies = array(value, limits.maxBlocs, "$.dependencies").map((entry, index) => {
+        const path = `$.dependencies[${index}]`;
+        const source = record(entry, path);
+        keys(source, ["collectionId", "publisherId", "versionRange", "imports"], path);
+        const collectionId = parseCollectionNamespace(source.collectionId, `${path}.collectionId`);
+        if (collectionId === ownerCollectionId) {
+            invalid("must reference another collection", `${path}.collectionId`);
+        }
+        const versionRange = parseVersionRange(
+            string(source.versionRange, 256, `${path}.versionRange`),
+            `${path}.versionRange`,
+        );
+        if (isVersionRangeSubset(versionRange, "<0.0.0")) {
+            invalid("must accept at least one collection version", `${path}.versionRange`);
+        }
+        const imports = parseResourceSelection(source.imports, collectionId, `${path}.imports`, limits);
+        if (imports.blocs.length === 0 && imports.themeTokens.length === 0) {
+            invalid("must import at least one bloc or theme token", `${path}.imports`);
+        }
+        return {
+            collectionId,
+            publisherId: contractIdentifier(source.publisherId, 96, `${path}.publisherId`),
+            versionRange,
+            imports,
+        };
+    });
+    unique(
+        dependencies.map((dependency) => dependency.collectionId),
+        "$.dependencies",
+    );
+    return dependencies.sort((left, right) => ordinal(left.collectionId, right.collectionId));
+}
+
+export function parseCollectionExports(
+    value: unknown,
+    collectionId: string,
+    limits: Readonly<CollectionLimits>,
+): CollectionResourceSelection {
+    return parseResourceSelection(value, collectionId, "$.exports", limits);
+}
+
+export function validateCollectionExports(
+    exports: CollectionResourceSelection,
+    blocIds: ReadonlySet<string>,
+    themeTokenIds: ReadonlySet<string>,
+): void {
+    for (const bloc of exports.blocs) {
+        if (!blocIds.has(bloc)) {
+            invalid(`unknown exported bloc ${bloc}`, "$.exports.blocs");
+        }
+    }
+    for (const token of exports.themeTokens) {
+        if (!themeTokenIds.has(token)) {
+            invalid(`unknown exported theme token ${token}`, "$.exports.themeTokens");
+        }
+    }
+}
+
+function parseResourceSelection(
+    value: unknown,
+    collectionId: string,
+    path: string,
+    limits: Readonly<CollectionLimits>,
+): CollectionResourceSelection {
+    const source = record(value, path);
+    keys(source, ["blocs", "themeTokens"], path);
+    const blocs = array(source.blocs ?? [], limits.maxBlocs, `${path}.blocs`).map((entry, index) =>
+        parseCollectionBlocTag(entry, collectionId, `${path}.blocs[${index}]`),
+    );
+    const themeTokens = array(source.themeTokens ?? [], limits.maxBlocs, `${path}.themeTokens`).map((entry, index) => {
+        const token = string(entry, 96, `${path}.themeTokens[${index}]`);
+        try {
+            collectionThemeTokenId(collectionId, token);
+            return token;
+        } catch {
+            return invalid("must be a lowercase kebab-case token ID", `${path}.themeTokens[${index}]`);
+        }
+    });
+    unique(blocs, `${path}.blocs`);
+    unique(themeTokens, `${path}.themeTokens`);
+    return {
+        blocs: blocs.sort(ordinal),
+        themeTokens: themeTokens.sort(ordinal),
+    };
 }
 
 function contractIdentifier(value: unknown, maximum: number, path: string): string {

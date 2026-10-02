@@ -51,9 +51,14 @@ export function validateSlotTargets(
     blocs: ReadonlyMap<string, CollectionBloc>,
     markup: ReadonlyMap<string, BlocMarkup>,
     path: string,
+    importedBlocs: ReadonlySet<string> = new Set(),
 ): void {
     for (const node of elements(tree)) {
         const name = node.attribs.slot;
+        const parent = node.parent;
+        if (name !== undefined && parent && isElement(parent) && importedBlocs.has(parent.name)) {
+            continue;
+        }
         if (name !== undefined && !targets(node, tree, rootSlots, blocs, markup)?.has(name)) {
             invalid(`slot target ${JSON.stringify(name)} does not exist on its direct parent host`, path);
         }

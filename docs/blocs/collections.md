@@ -30,6 +30,14 @@ packages/official-repository/collections/ulvia-official/
 └── dashboards/<dashboard>/definition.json  # navigation tree of local views
 ```
 
+`definition.json` may publish a selective `exports` surface containing Bloc
+tags and collection-local theme token IDs. Its `dependencies` entries identify
+one collection and publisher, constrain its version, and list only the exported
+Blocs and tokens this release imports. External Bloc references in `uses`, slot
+acceptance or authored markup must be present in that import list. The site
+installer requires dependencies first and revalidates the complete acyclic graph
+on install and upgrade.
+
 `bun run ulvia -- release packages/official-repository/collections/ulvia-official` assembles the
 supported files into one `ulvia-collection/v1` release, validates it, and
 stores immutable canonical bytes in the user's local repository. That repository

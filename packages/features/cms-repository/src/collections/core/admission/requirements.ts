@@ -50,7 +50,10 @@ function usedBlocs(root: CollectionBloc, blocs: ReadonlyMap<string, CollectionBl
         seen.add(bloc.id);
         result.push(bloc);
         for (const id of bloc.uses) {
-            pending.push(blocs.get(id)!);
+            const local = blocs.get(id);
+            if (local) {
+                pending.push(local);
+            }
         }
     }
     return result;

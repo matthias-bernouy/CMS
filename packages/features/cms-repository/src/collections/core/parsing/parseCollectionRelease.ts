@@ -16,6 +16,7 @@ import { parseCollectionDashboards } from "./dashboards";
 import { validateCollectionTextReferences } from "../validation/markup/texts";
 import { parseCollectionTranslations } from "../texts/translationCatalogue";
 import { validateCollectionTranslationReferences } from "../texts/translationReferences";
+import { parseCollectionDependencies, parseCollectionExports, validateCollectionExports } from "./requirements";
 
 export function parseCollectionRelease(
     value: unknown,
@@ -38,6 +39,8 @@ export function parseCollectionRelease(
                 "description",
                 "locale",
                 "translations",
+                "exports",
+                "dependencies",
                 "configuration",
                 "texts",
                 "theme",
@@ -63,9 +66,28 @@ export function parseCollectionRelease(
         const translations = parseCollectionTranslations(source.translations, locale);
         const texts = source.texts === undefined ? undefined : parseTexts(source.texts, locale);
         const assets = parseAssets(source.assets === undefined ? [] : source.assets, limits);
+        const dependencies =
+            source.dependencies === undefined
+                ? undefined
+                : parseCollectionDependencies(source.dependencies, collectionId, limits);
         const blocs = parseBlocs(source.blocs === undefined ? [] : source.blocs, collectionId, limits);
-        validateBlocs(blocs, new Set(assets.map((asset) => asset.id)), limits);
+        validateBlocs(
+            blocs,
+            new Set(assets.map((asset) => asset.id)),
+            limits,
+            new Set(dependencies?.flatMap((dependency) => dependency.imports.blocs) ?? []),
+        );
         validateCollectionTextReferences(blocs, collectionId, new Set(texts?.map((text) => text.id) ?? []));
+        const theme = source.theme === undefined ? undefined : parseCollectionTheme(source.theme, collectionId);
+        const exports =
+            source.exports === undefined ? undefined : parseCollectionExports(source.exports, collectionId, limits);
+        if (exports) {
+            validateCollectionExports(
+                exports,
+                new Set(blocs.map((bloc) => bloc.id)),
+                new Set(theme?.categories.flatMap((category) => category.tokens.map((token) => token.id)) ?? []),
+            );
+        }
         const views =
             source.views === undefined
                 ? undefined
@@ -83,8 +105,10 @@ export function parseCollectionRelease(
                 : { description: string(source.description, 4096, "$.description") }),
             locale,
             translations,
+            ...(exports === undefined ? {} : { exports }),
+            ...(dependencies === undefined ? {} : { dependencies }),
             ...(texts === undefined ? {} : { texts }),
-            ...(source.theme === undefined ? {} : { theme: parseCollectionTheme(source.theme, collectionId) }),
+            ...(theme === undefined ? {} : { theme }),
             ...(source.configuration === undefined
                 ? {}
                 : { configuration: parseConfiguration(source.configuration, "$.configuration", limits) }),

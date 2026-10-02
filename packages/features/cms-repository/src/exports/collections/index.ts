@@ -2,6 +2,8 @@ export type {
     CollectionRelease,
     CollectionConfiguration,
     CollectionCapabilityRequirement,
+    CollectionDependency,
+    CollectionResourceSelection,
     CollectionTranslationKey,
     CollectionTranslations,
 } from "cms-repository/collections/interfaces/CollectionRelease";

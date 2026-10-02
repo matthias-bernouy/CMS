@@ -32,9 +32,13 @@ function validatePlacedBlocs(tree: MarkupTree, bloc: CollectionBloc, ids: Readon
 }
 
 /** Checks authored structure, not binding types, CSS validity, or executable safety. */
-export function validateMarkup(blocs: readonly CollectionBloc[], limits: Readonly<CollectionLimits>): void {
+export function validateMarkup(
+    blocs: readonly CollectionBloc[],
+    limits: Readonly<CollectionLimits>,
+    importedBlocs: ReadonlySet<string> = new Set(),
+): void {
     const byId = new Map(blocs.map((bloc) => [bloc.id, bloc]));
-    const ids = new Set(byId.keys());
+    const ids = new Set([...byId.keys(), ...importedBlocs]);
     const markup = new Map(blocs.map((bloc) => [bloc.id, inspect(bloc)]));
     for (const bloc of blocs) {
         const path = `$.blocs[${bloc.id}]`;
@@ -58,7 +62,7 @@ export function validateMarkup(blocs: readonly CollectionBloc[], limits: Readonl
             validateDeclarative(content.light, `${path}.lightdom`);
             validateHost(content.light, bloc, `${path}.lightdom`);
             validatePlacedBlocs(content.light, bloc, ids, `${path}.lightdom`);
-            validateSlotTargets(content.light, content.shellSlots, byId, markup, `${path}.lightdom`);
+            validateSlotTargets(content.light, content.shellSlots, byId, markup, `${path}.lightdom`, importedBlocs);
         }
         if (content.initial) {
             validateDeclarative(content.initial, `${path}.defaultContent`);
@@ -67,7 +71,14 @@ export function validateMarkup(blocs: readonly CollectionBloc[], limits: Readonl
                 invalid("cms-host is only supported in component lightdom", `${path}.defaultContent`);
             }
             validatePlacedBlocs(content.initial, bloc, ids, `${path}.defaultContent`);
-            validateSlotTargets(content.initial, content.pageSlots, byId, markup, `${path}.defaultContent`);
+            validateSlotTargets(
+                content.initial,
+                content.pageSlots,
+                byId,
+                markup,
+                `${path}.defaultContent`,
+                importedBlocs,
+            );
         }
     }
 }

@@ -34,6 +34,7 @@ This slice supports:
 - Explicit local `uses`, named slots for components, media, plain text or bounded
   rich-text profiles, optional thumbnail asset, initial editable `defaultContent`
   and resource-level capability requirements.
+- Selective public Bloc/theme-token exports and bounded cross-collection imports.
 
 Collection and bloc configuration are distinct. `defaultContent` belongs to
 the editable page instance; `lightdom` describes the reusable fixed assembly.
@@ -91,9 +92,14 @@ executable behavior; installation therefore trusts the configured repository.
 The collection ID is its global runtime namespace. It uses lowercase kebab-case
 without dots and cannot claim the platform-owned `be5-`, `cms-`, `p9r-`,
 `site-`, or `w13c-` roots. Every Bloc is a valid custom-element tag prefixed
-with `<collectionId>-`; all `uses` and slot `accepts` references resolve
-locally. External collection imports are not supported yet and are rejected,
-rather than silently left unresolved.
+with `<collectionId>-`. Local `uses` and slot `accepts` references resolve inside
+the release. External references must appear in one dependency's exact imported
+Bloc list. A dependency pins the target collection ID, publisher ID and bounded
+SemVer range; it separately imports public Bloc tags and collection-local theme
+token IDs. Installation requires the dependency first, verifies every requested
+resource against its target release's explicit `exports`, validates cross-release
+slot targets, and rejects collection dependency cycles. Upgrades revalidate all
+installed dependents.
 
 Theme token IDs remain local in release JSON and are projected as both the
 global token ID and CSS variable name `<collectionId>-<tokenId>`. Texts and
@@ -175,9 +181,8 @@ stable and revalidate saved text overrides before changing the digest.
 
 ## Next slices
 
-Presets and imports remain absent from the public format: unsupported fields
-reject. Expanded view bindings, published execution plans and capability grants
-remain future work.
+Presets remain absent from the public format: unsupported fields reject. Expanded
+view bindings, published execution plans and capability grants remain future work.
 
 Affected-page analysis, remote publication, explicit upgrade migrations and
 component renderer trust hardening are not implemented yet.

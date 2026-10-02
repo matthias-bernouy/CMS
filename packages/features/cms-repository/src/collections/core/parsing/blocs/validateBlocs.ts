@@ -3,14 +3,21 @@ import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { validateMarkup } from "../../validation/markup/validateMarkup";
 
-function validateUsesGraph(blocs: readonly CollectionBloc[], byId: ReadonlyMap<string, CollectionBloc>): void {
+function validateUsesGraph(
+    blocs: readonly CollectionBloc[],
+    byId: ReadonlyMap<string, CollectionBloc>,
+    importedBlocs: ReadonlySet<string>,
+): void {
     const dependents = new Map(blocs.map((bloc) => [bloc.id, [] as string[]]));
-    const remaining = new Map(blocs.map((bloc) => [bloc.id, bloc.uses.length]));
-    const ready = blocs.filter((bloc) => bloc.uses.length === 0).map((bloc) => bloc.id);
+    const remaining = new Map(blocs.map((bloc) => [bloc.id, bloc.uses.filter((id) => byId.has(id)).length]));
+    const ready = blocs.filter((bloc) => remaining.get(bloc.id) === 0).map((bloc) => bloc.id);
     for (const bloc of blocs) {
         for (const id of bloc.uses) {
             if (!byId.has(id)) {
-                invalid(`unknown local bloc ${id}`, `$.blocs[${bloc.id}].uses`);
+                if (!importedBlocs.has(id)) {
+                    invalid(`bloc ${id} is neither local nor imported`, `$.blocs[${bloc.id}].uses`);
+                }
+                continue;
             }
             dependents.get(id)!.push(bloc.id);
         }
@@ -37,6 +44,7 @@ export function validateBlocs(
     blocs: readonly CollectionBloc[],
     assetIds: ReadonlySet<string>,
     limits: Readonly<CollectionLimits>,
+    importedBlocs: ReadonlySet<string> = new Set(),
 ): void {
     const byId = new Map(blocs.map((bloc) => [bloc.id, bloc]));
     for (const bloc of blocs) {
@@ -46,12 +54,15 @@ export function validateBlocs(
         }
         for (const [name, slot] of Object.entries(bloc.slots)) {
             for (const accept of slot.accepts ?? []) {
-                if (accept.kind === "component" && !byId.has(accept.tag)) {
-                    invalid(`unknown accepted bloc ${accept.tag}`, `${path}.slots.${name}.accepts`);
+                if (accept.kind === "component" && !byId.has(accept.tag) && !importedBlocs.has(accept.tag)) {
+                    invalid(
+                        `accepted bloc ${accept.tag} is neither local nor imported`,
+                        `${path}.slots.${name}.accepts`,
+                    );
                 }
             }
         }
     }
-    validateUsesGraph(blocs, byId);
-    validateMarkup(blocs, limits);
+    validateUsesGraph(blocs, byId, importedBlocs);
+    validateMarkup(blocs, limits, importedBlocs);
 }

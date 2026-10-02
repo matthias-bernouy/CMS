@@ -195,6 +195,65 @@ describe("collection release parsing", () => {
         );
     });
 
+    test("declares selective exports and cross-collection imports", () => {
+        const source = collectionDocument({
+            "theme.category.colors.label": "Colors",
+            "theme.label": "Atlas theme",
+            "theme.token.accent.label": "Accent",
+        });
+        source.theme = {
+            label: "theme.label",
+            categories: [
+                {
+                    id: "colors",
+                    label: "theme.category.colors.label",
+                    tokens: [
+                        {
+                            id: "accent",
+                            label: "theme.token.accent.label",
+                            type: "color",
+                            defaults: { light: "#123456" },
+                        },
+                    ],
+                },
+            ],
+        };
+        source.exports = { blocs: ["atlas-panel"], themeTokens: ["accent"] };
+        source.dependencies = [
+            {
+                collectionId: "ulvia-official",
+                publisherId: "ulvia.official",
+                versionRange: "^1.0.0",
+                imports: { blocs: ["ulvia-official-button"], themeTokens: ["primary"] },
+            },
+        ];
+        (source.blocs as Record<string, unknown>[])[1]!.uses = ["atlas-panel", "ulvia-official-button"];
+        (source.blocs as Record<string, unknown>[])[1]!.lightdom =
+            '<atlas-panel><slot name="main" slot="body"></slot><ulvia-official-button slot="body"></ulvia-official-button></atlas-panel>';
+
+        const parsed = parseCollectionRelease(source);
+        expect(parsed.exports).toEqual({ blocs: ["atlas-panel"], themeTokens: ["accent"] });
+        expect(parsed.dependencies?.[0]).toEqual({
+            collectionId: "ulvia-official",
+            publisherId: "ulvia.official",
+            versionRange: "^1.0.0",
+            imports: { blocs: ["ulvia-official-button"], themeTokens: ["primary"] },
+        });
+
+        expect(() =>
+            parseCollectionRelease({ ...source, exports: { blocs: ["atlas-missing"], themeTokens: [] } }),
+        ).toThrow("unknown exported bloc");
+        expect(() =>
+            parseCollectionRelease({
+                ...source,
+                dependencies: (source.dependencies as Record<string, unknown>[]).map((dependency) => ({
+                    ...dependency,
+                    imports: { blocs: [], themeTokens: [] },
+                })),
+            }),
+        ).toThrow("at least one");
+    });
+
     test("validates reusable translation keys and locale fallback", () => {
         const source = collectionDocument({ "theme.label": "Atlas theme" });
         (source.translations as Record<string, Record<string, string>>).fr = {

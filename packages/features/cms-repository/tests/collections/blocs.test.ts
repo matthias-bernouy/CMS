@@ -37,7 +37,7 @@ describe("collection bloc admission", () => {
     test("checks duplicates, local references, thumbnails and cycles", () => {
         expect(() => check([component(), component()])).toThrow("duplicate");
         expect(() => check([component({ uses: ["demo-other", "demo-other"] })])).toThrow("duplicate");
-        expect(() => check([component({ uses: ["demo-other"] })])).toThrow("unknown local bloc");
+        expect(() => check([component({ uses: ["demo-other"] })])).toThrow("neither local nor imported");
         expect(() => check([component({ thumbnail: "missing" })])).toThrow("thumbnail");
         expect(() => check([component({ uses: ["demo-page"] }), composition({ uses: ["demo-card"] })])).toThrow(
             "cyclic",
@@ -47,7 +47,7 @@ describe("collection bloc admission", () => {
     test("checks accepted blocs and slot cardinality", () => {
         expect(() =>
             check([component({ slots: { body: { accepts: [{ kind: "component", tag: "demo-other" }] } } })]),
-        ).toThrow("unknown accepted bloc");
+        ).toThrow("neither local nor imported");
         expect(() => check([component({ slots: { body: { min: 2, max: 1 } } })])).toThrow("min must not exceed max");
         expect(() => check([component({ slots: { body: { min: -1 } } })])).toThrow("integer");
     });

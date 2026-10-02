@@ -18,6 +18,21 @@ export interface CollectionCapabilityRequirement {
     readonly versionRange: string;
 }
 
+/** Stable collection resources intentionally exposed to other collections. */
+export interface CollectionResourceSelection {
+    readonly blocs: readonly string[];
+    /** Collection-local token IDs; their runtime namespace is derived from the owner. */
+    readonly themeTokens: readonly string[];
+}
+
+/** A selective dependency on another collection's public resource surface. */
+export interface CollectionDependency {
+    readonly collectionId: string;
+    readonly publisherId: string;
+    readonly versionRange: string;
+    readonly imports: CollectionResourceSelection;
+}
+
 /** Stable collection-local key resolved through the immutable translations catalogue. */
 export type CollectionTranslationKey = string;
 
@@ -38,6 +53,8 @@ export interface CollectionRelease {
     readonly description?: CollectionTranslationKey;
     readonly locale: string;
     readonly translations: CollectionTranslations;
+    readonly exports?: CollectionResourceSelection;
+    readonly dependencies?: readonly CollectionDependency[];
     readonly configuration?: CollectionConfiguration;
     readonly texts?: readonly CollectionText[];
     readonly theme?: CollectionTheme;

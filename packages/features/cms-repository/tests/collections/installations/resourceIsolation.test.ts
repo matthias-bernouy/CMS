@@ -70,3 +70,74 @@ test("installations and upgrades reject global Bloc and theme token collisions",
     const themeCollision = await store.importRelease(release("atlas-tools", "1.1.0", "atlas-tools-welcome", "accent"));
     await expect(store.upgrade("themes", themeCollision.digest, 2, "local")).rejects.toThrow("theme token");
 });
+
+test("installs only declared public resources from compatible collection dependencies", async () => {
+    const store = new CollectionStore(new MemoryCollectionStorage());
+    const foundation = {
+        ...release("ulvia-official", "1.0.0", "ulvia-official-button", "primary"),
+        publisherId: "ulvia.official",
+        exports: { blocs: ["ulvia-official-button"], themeTokens: ["primary"] },
+    };
+    const baseConsumer = release("shop", "1.0.0", "shop-hero");
+    const consumer = {
+        ...baseConsumer,
+        blocs: [
+            {
+                ...baseConsumer.blocs[0]!,
+                lightdom: "<ulvia-official-button></ulvia-official-button>",
+                uses: ["ulvia-official-button"],
+            },
+        ],
+        dependencies: [
+            {
+                collectionId: "ulvia-official",
+                publisherId: "ulvia.official",
+                versionRange: "^1.0.0",
+                imports: { blocs: ["ulvia-official-button"], themeTokens: ["primary"] },
+            },
+        ],
+    };
+
+    const foundationArtifact = await store.importRelease(foundation);
+    const consumerArtifact = await store.importRelease(consumer);
+    await expect(store.install("site", consumerArtifact.digest, 0)).rejects.toThrow("requires ulvia-official");
+    await store.install("site", foundationArtifact.digest, 0);
+    await expect(store.install("site", consumerArtifact.digest, 1)).resolves.toMatchObject({ revision: 2 });
+
+    const breakingFoundation = { ...structuredClone(foundation), version: "2.0.0" };
+    const breakingArtifact = await store.importRelease(breakingFoundation);
+    await expect(store.upgrade("site", breakingArtifact.digest, 2, "local")).rejects.toThrow("requires");
+});
+
+test("rejects imports that the dependency does not export", async () => {
+    const store = new CollectionStore(new MemoryCollectionStorage());
+    const foundation = {
+        ...release("ulvia-official", "1.0.0", "ulvia-official-button"),
+        publisherId: "ulvia.official",
+        exports: { blocs: [], themeTokens: [] },
+    };
+    const baseConsumer = release("shop", "1.0.0", "shop-hero");
+    const consumer = {
+        ...baseConsumer,
+        blocs: [
+            {
+                ...baseConsumer.blocs[0]!,
+                lightdom: "<ulvia-official-button></ulvia-official-button>",
+                uses: ["ulvia-official-button"],
+            },
+        ],
+        dependencies: [
+            {
+                collectionId: "ulvia-official",
+                publisherId: "ulvia.official",
+                versionRange: ">=0.0.0",
+                imports: { blocs: ["ulvia-official-button"], themeTokens: [] },
+            },
+        ],
+    };
+
+    const foundationArtifact = await store.importRelease(foundation);
+    const consumerArtifact = await store.importRelease(consumer);
+    await store.install("site", foundationArtifact.digest, 0);
+    await expect(store.install("site", consumerArtifact.digest, 1)).rejects.toThrow("unavailable bloc");
+});
