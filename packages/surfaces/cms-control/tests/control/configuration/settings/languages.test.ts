@@ -138,6 +138,11 @@ describe("site language settings", () => {
             "site.activeLanguages": "fr",
         });
         await waitFor(() => document.querySelector("cms-form-save-action")?.getAttribute("state") === "saved");
+        await waitFor(
+            () =>
+                document.querySelector("cms-language-settings")?.getAttribute("default-language") === "de" &&
+                Boolean(document.querySelector('cms-language-settings w13c-switch[data-language-code="fr"]')),
+        );
 
         const refreshed = document.querySelector("cms-language-settings")!;
         refreshed.querySelector<HTMLElement>('w13c-switch[data-language-code="fr"]')!.click();

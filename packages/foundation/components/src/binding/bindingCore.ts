@@ -59,13 +59,18 @@ export { setSourceContext, refreshSourceContext, type SourceContext } from "./so
 export { observeSource, type SourceObservation } from "./source/runtime/observation";
 export { sourceFormRequest, SourceFormError } from "./source/runtime/formRequest";
 
-/** Filter set passed to every source's interpolation. Empty until a host wires
- *  one in via `setBindingFilters` (the concrete filters are a later step). */
-let FILTERS: FilterMap = {};
+const BINDING_FILTERS_KEY = Symbol.for("@bernouy/components.binding.filters");
+
+/** Filter set passed to every source's interpolation. The registry lives on
+ *  the browser realm so independently bundled public entrypoints still share
+ *  the host configuration. */
+function bindingFilters(): FilterMap {
+    return ((globalThis as typeof globalThis & Record<PropertyKey, unknown>)[BINDING_FILTERS_KEY] as FilterMap) ?? {};
+}
 
 /** Set the filter set used by all binding cores (call before they connect). */
 export function setBindingFilters(filters: FilterMap): void {
-    FILTERS = filters;
+    (globalThis as typeof globalThis & Record<PropertyKey, unknown>)[BINDING_FILTERS_KEY] = filters;
 }
 
 export class BindingCore extends HTMLElement {
@@ -110,7 +115,7 @@ export class BindingCore extends HTMLElement {
             return;
         }
         const locale = this.ownerDocument?.documentElement.lang;
-        const filters = { ...createBuiltinFilters(locale), ...FILTERS };
+        const filters = { ...createBuiltinFilters(locale), ...bindingFilters() };
         this._runtime = new BindingRuntime(this, filters, {
             sourceStateForce: this._sourceStateForce(),
         });

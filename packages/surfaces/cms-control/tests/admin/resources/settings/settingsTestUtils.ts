@@ -20,11 +20,12 @@ export function json(data: unknown): Response {
     });
 }
 
-export async function waitFor(predicate: () => boolean, tries = 50): Promise<void> {
+export async function waitFor(predicate: () => boolean, tries = 400): Promise<void> {
     for (let i = 0; i < tries; i++) {
         if (predicate()) {
             return;
         }
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 5));
     }
+    throw new Error("Timed out waiting for the settings test condition");
 }

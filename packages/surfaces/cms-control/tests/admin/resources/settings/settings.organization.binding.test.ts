@@ -36,7 +36,17 @@ describe("admin organization settings binding", () => {
             </cms-binding-core>
         `;
 
-        await waitFor(() => document.querySelector("#organization-settings-form") !== null);
+        await waitFor(
+            () =>
+                document.querySelector("p9r-input[name='site.organization.name']")?.getAttribute("value") ===
+                    "Example" &&
+                document
+                    .querySelector("cms-settings-nav")
+                    ?.shadowRoot?.querySelector("[data-settings-section='organization']")
+                    ?.hasAttribute("active") === true &&
+                document.querySelector("p9r-textarea[name='site.organization.sameAs']")?.getAttribute("value") ===
+                    "https://linkedin.com/company/example\nhttps://github.com/example",
+        );
 
         expect(document.querySelector("p9r-input[name='site.organization.name']")?.getAttribute("value")).toBe(
             "Example",
