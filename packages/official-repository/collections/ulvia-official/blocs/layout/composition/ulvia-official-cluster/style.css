@@ -1,6 +1,7 @@
 :host {
     --cluster-gap: var(--ulvia-official-spacing-md, 1rem);
     display: block;
+    text-align: inherit;
 }
 
 [part="cluster"] {

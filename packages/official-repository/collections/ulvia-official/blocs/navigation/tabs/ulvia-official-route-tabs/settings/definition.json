@@ -42,5 +42,13 @@
                 { "value": "lg", "label": "setting.option.large" }
             ]
         }
+    },
+    {
+        "id": "label",
+        "label": "setting.navigation-label.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "Page navigation",
+        "control": { "kind": "text" }
     }
 ]

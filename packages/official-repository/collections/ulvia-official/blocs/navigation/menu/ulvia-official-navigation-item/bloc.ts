@@ -20,14 +20,14 @@ export class Bloc extends Component {
     }
 
     private sync(): void {
-        const link = this.querySelector<HTMLAnchorElement>(":scope > a");
-        if (!link) {
+        const control = this.querySelector<HTMLElement>(":scope > a, :scope > button");
+        if (!control) {
             return;
         }
         if (this.hasAttribute("active")) {
-            link.setAttribute("aria-current", "page");
+            control.setAttribute("aria-current", "page");
         } else {
-            link.removeAttribute("aria-current");
+            control.removeAttribute("aria-current");
         }
     }
 }

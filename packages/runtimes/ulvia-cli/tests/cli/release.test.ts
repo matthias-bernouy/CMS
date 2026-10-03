@@ -9,7 +9,10 @@ import { resolveCollectionTranslation } from "@bernouy/cms-repository/collection
 test("release publishes a folder explicitly, survives CLI runs, and prune clears only the repository", async () => {
     const data = await mkdtemp(join(tmpdir(), "ulvia-cli-release-"));
     const source = resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official");
-    const definition = (await Bun.file(join(source, "definition.json")).json()) as { version: string };
+    const definition = (await Bun.file(join(source, "definition.json")).json()) as {
+        version: string;
+        exports: { blocs: string[] };
+    };
     const output: string[] = [];
     const options = { environment: { ULVIA_DATA_DIR: data }, log: (line: string) => output.push(line) };
     try {
@@ -32,28 +35,10 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
         expect(resolveCollectionTranslation(releases[0]!.release, releases[0]!.release.theme!.label)).toBe(
             "Ulvia Official foundation",
         );
-        expect(releases[0]!.release.blocs.map((bloc) => bloc.id)).toEqual([
-            "ulvia-official-action",
-            "ulvia-official-card",
-            "ulvia-official-container",
-            "ulvia-official-faq",
-            "ulvia-official-faq-item",
-            "ulvia-official-features",
-            "ulvia-official-footer",
-            "ulvia-official-grid",
-            "ulvia-official-heading",
-            "ulvia-official-hero",
-            "ulvia-official-media-figure",
-            "ulvia-official-navigation",
-            "ulvia-official-pricing",
-            "ulvia-official-pricing-plan",
-            "ulvia-official-prose",
-            "ulvia-official-section",
-            "ulvia-official-stack",
-            "ulvia-official-stat",
-            "ulvia-official-testimonial",
-        ]);
-        expect(releases[0]!.release.exports?.blocs).toHaveLength(19);
+        const releaseBlocIds = releases[0]!.release.blocs.map((bloc) => bloc.id);
+        expect([...(releases[0]!.release.exports?.blocs ?? [])].sort()).toEqual([...definition.exports.blocs].sort());
+        expect(definition.exports.blocs.every((id) => releaseBlocIds.includes(id))).toBe(true);
+        expect(releaseBlocIds).toContain("ulvia-official-choice-copy");
         expect(releases[0]!.release.exports?.themeTokens).toHaveLength(119);
         await runCli(["release", source], options);
         expect(output.at(-1)).toStartWith(`= collection ulvia.official/ulvia-official@${definition.version}`);

@@ -3,6 +3,7 @@
     --route-tab-inline-padding: var(--ulvia-official-spacing-sm, .75rem);
     display: block;
     min-width: 0;
+    text-align: inherit;
 }
 
 [part="navigation"] { min-width: 0; overflow-x: auto; scrollbar-width: none; }

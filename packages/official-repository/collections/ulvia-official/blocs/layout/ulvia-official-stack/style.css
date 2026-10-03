@@ -3,6 +3,7 @@
     --ulvia-official-stack-direction: column;
     --ulvia-official-stack-wrap: nowrap;
     display: block;
+    text-align: inherit;
 }
 
 [part="stack"] { display: flex; flex-direction: var(--ulvia-official-stack-direction); flex-wrap: var(--ulvia-official-stack-wrap); gap: var(--ulvia-official-stack-gap); align-items: stretch; }

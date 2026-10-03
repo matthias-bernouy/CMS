@@ -9,6 +9,7 @@ export class Bloc extends Component {
 
     private trigger: HTMLButtonElement | null = null;
     private region: HTMLElement | null = null;
+    private labelObserver: MutationObserver | null = null;
 
     constructor() {
         super({ css, template });
@@ -18,11 +19,14 @@ export class Bloc extends Component {
         this.trigger = this.querySelector(":scope > button");
         this.region = this.shadowRoot?.querySelector('[part="region"]') ?? null;
         this.trigger?.addEventListener("click", this.toggle);
+        this.labelObserver = new MutationObserver(this.sync);
+        this.labelObserver.observe(this, { childList: true, characterData: true, subtree: true });
         this.sync();
     }
 
     disconnectedCallback(): void {
         this.trigger?.removeEventListener("click", this.toggle);
+        this.labelObserver?.disconnect();
     }
 
     attributeChangedCallback(): void {
@@ -36,6 +40,10 @@ export class Bloc extends Component {
     private sync(): void {
         const expanded = this.hasAttribute("expanded");
         this.trigger?.setAttribute("aria-expanded", String(expanded));
+        const label = this.trigger?.textContent?.trim();
+        if (label) {
+            this.trigger?.setAttribute("aria-label", label);
+        }
         this.region?.setAttribute("aria-hidden", String(!expanded));
         if (this.region) {
             this.region.inert = !expanded;

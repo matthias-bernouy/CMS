@@ -1,4 +1,4 @@
-:host { display: block; font-family: var(--ulvia-official-font-family-main, inherit); container-type: inline-size; }
+:host { display: block; font-family: var(--ulvia-official-font-family-main, inherit); text-align: inherit; container-type: inline-size; }
 [part="actions"] { display: flex; flex-wrap: wrap; gap: var(--ulvia-official-spacing-sm, .75rem); align-items: center; }
 :host([align="center"]) [part="actions"] { justify-content: center; }
 :host([align="end"]) [part="actions"] { justify-content: flex-end; }
