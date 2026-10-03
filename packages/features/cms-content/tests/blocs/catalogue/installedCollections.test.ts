@@ -74,6 +74,37 @@ test("installed resources participate in authoring validation and public read mo
     ).rejects.toThrow("immutable");
 });
 
+test("installed internal blocs stay out of the authoring catalogue but remain available to rendering", async () => {
+    const store = new CollectionStore(new MemoryCollectionStorage());
+    const artifact = await store.importRelease({
+        ...release,
+        translations: {
+            en: {
+                ...release.translations.en,
+                "bloc.helper.label": "Helper",
+            },
+        },
+        blocs: [
+            {
+                kind: "component",
+                id: "test-helper",
+                label: "bloc.helper.label",
+                internal: true,
+                shadowdom: "<div></div>",
+                uses: [],
+                requires: [],
+                slots: {},
+            },
+        ],
+    });
+    await store.install("site", artifact.digest, 0);
+    const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
+
+    expect((await repository.getBlocsList()).map(({ id }) => id)).toEqual([]);
+    expect((await repository.getBlocsList({ includeInactive: true })).map(({ id }) => id)).toEqual(["test-helper"]);
+    expect((await createContentReader(repository).getRenderableBlocs()).map(({ id }) => id)).toEqual(["test-helper"]);
+});
+
 test("installed collection theme contributes immutable tokens to editing and public CSS", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const artifact = await store.importRelease({

@@ -100,7 +100,7 @@ export function withInstalledCollections(
             const resources = (await records())
                 .filter((record) => record.collectionId)
                 .map((record) => record.artifact!);
-            return [...local, ...resources.filter((bloc) => !bloc.internal)];
+            return [...local, ...resources.filter((bloc) => options?.includeInactive || !bloc.internal)];
         },
         getBlocViewJS: async (tag) => {
             const record = await read(tag);
