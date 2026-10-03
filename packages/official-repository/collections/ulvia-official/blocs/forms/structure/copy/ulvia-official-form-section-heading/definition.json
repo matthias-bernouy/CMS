@@ -1,0 +1,12 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-form-section-heading",
+    "label": "bloc.form-section.label",
+    "description": "bloc.form-section.description",
+    "internal": true,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "label": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "min": 1, "max": 1 }
+    }
+}

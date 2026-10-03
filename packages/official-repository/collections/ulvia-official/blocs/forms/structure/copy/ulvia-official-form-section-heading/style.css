@@ -1,0 +1,4 @@
+:host { display: block; min-width: 0; color: inherit; font-family: var(--ulvia-official-font-family-main, inherit); }
+[part="heading"] { display: grid; min-width: 0; grid-template-columns: .25rem minmax(0, 1fr); align-items: center; gap: var(--ulvia-official-spacing-sm, .75rem); }
+[part="accent"] { display: block; width: .25rem; height: 1.5rem; border-radius: var(--ulvia-official-radius-full, 999px); background: var(--ulvia-official-primary, #086c55); }
+[part="label"] { font-size: var(--ulvia-official-font-size-md, 1rem); font-weight: var(--ulvia-official-font-weight-semibold, 600); line-height: var(--ulvia-official-line-height-snug, 1.35); }

@@ -9,12 +9,16 @@ export class Bloc extends Component {
     private support: HTMLElement | null;
     private fileName: HTMLElement | null;
     private preview: HTMLElement | null;
+    private cardPreview: HTMLElement | null;
+    private cardActions: HTMLElement | null;
+    private replaceButton: HTMLButtonElement;
+    private removeButton: HTMLButtonElement;
     private root: Document | ShadowRoot | null = null;
     private previewUrls: string[] = [];
     private observer = new MutationObserver(() => this.sync());
 
     static get observedAttributes(): string[] {
-        return ["button-label", "drop-label", "empty-label"];
+        return ["button-label", "drop-label", "empty-label", "remove-label", "replace-label", "variant"];
     }
 
     constructor() {
@@ -24,6 +28,10 @@ export class Bloc extends Component {
         this.support = this.shadowRoot?.querySelector('[part="support"]') ?? null;
         this.fileName = this.shadowRoot?.querySelector('[part="file-name"]') ?? null;
         this.preview = this.shadowRoot?.querySelector('[part="preview"]') ?? null;
+        this.cardPreview = this.shadowRoot?.querySelector('[part="card-preview"]') ?? null;
+        this.cardActions = this.shadowRoot?.querySelector('[part="card-actions"]') ?? null;
+        this.replaceButton = this.createAction("replace-shell", "replace");
+        this.removeButton = this.createAction("remove-shell", "remove");
     }
 
     override connectedCallback(): void {
@@ -31,16 +39,22 @@ export class Bloc extends Component {
         this.root = this.getRootNode() as Document | ShadowRoot;
         this.root.addEventListener("reset", this.handleReset);
         this.addEventListener("dragenter", this.handleDragEnter);
+        this.addEventListener("dragover", this.handleDragOver);
         this.addEventListener("dragleave", this.handleDragLeave);
         this.addEventListener("drop", this.handleDrop);
+        this.replaceButton.addEventListener("click", this.replaceFile);
+        this.removeButton.addEventListener("click", this.removeFile);
         this.bindInput();
     }
 
     disconnectedCallback(): void {
         this.slotElement?.removeEventListener("slotchange", this.bindInput);
         this.removeEventListener("dragenter", this.handleDragEnter);
+        this.removeEventListener("dragover", this.handleDragOver);
         this.removeEventListener("dragleave", this.handleDragLeave);
         this.removeEventListener("drop", this.handleDrop);
+        this.replaceButton.removeEventListener("click", this.replaceFile);
+        this.removeButton.removeEventListener("click", this.removeFile);
         this.input?.removeEventListener("change", this.sync);
         this.root?.removeEventListener("reset", this.handleReset);
         this.root = null;
@@ -76,8 +90,25 @@ export class Bloc extends Component {
         this.removeAttribute("data-dragging");
     };
 
-    private handleDrop = (): void => {
+    private handleDragOver = (event: DragEvent): void => {
+        if (this.input?.disabled) {
+            return;
+        }
+        event.preventDefault();
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = "copy";
+        }
+    };
+
+    private handleDrop = (event: DragEvent): void => {
         this.removeAttribute("data-dragging");
+        if (this.input?.disabled || !event.dataTransfer?.files.length) {
+            return;
+        }
+        event.preventDefault();
+        this.input.files = event.dataTransfer.files;
+        this.input.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+        this.input.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
         queueMicrotask(this.sync);
     };
 
@@ -94,6 +125,8 @@ export class Bloc extends Component {
                 ? files.map((file) => file.name).join(", ")
                 : this.getAttribute("empty-label") || "No file selected";
         }
+        this.replaceButton.textContent = this.getAttribute("replace-label") || "Replace";
+        this.removeButton.textContent = this.getAttribute("remove-label") || "Remove";
         this.renderPreview(files);
         this.toggleAttribute("data-has-files", files.length > 0);
         this.toggleAttribute("data-disabled", this.input?.disabled === true);
@@ -108,17 +141,22 @@ export class Bloc extends Component {
     };
 
     private renderPreview(files: File[]): void {
-        if (!this.preview) {
+        if (!this.preview || !this.cardPreview || !this.cardActions) {
             return;
         }
         this.clearPreviewUrls();
-        this.preview.replaceChildren(...files.map((file) => this.createPreviewCard(file)));
-        this.preview.toggleAttribute("hidden", files.length === 0);
+        const cardVariant = this.getAttribute("variant") === "card";
+        const cardFile = cardVariant ? files.at(0) : undefined;
+        this.cardPreview.replaceChildren(...(cardFile ? [this.createPreviewCard(cardFile, true)] : []));
+        this.cardPreview.toggleAttribute("hidden", !cardFile);
+        this.cardActions.toggleAttribute("hidden", !cardFile);
+        this.preview.replaceChildren(...(cardVariant ? [] : files.map((file) => this.createPreviewCard(file, false))));
+        this.preview.toggleAttribute("hidden", cardVariant || files.length === 0);
     }
 
-    private createPreviewCard(file: File): HTMLElement {
+    private createPreviewCard(file: File, cardPreview: boolean): HTMLElement {
         const card = document.createElement("span");
-        card.setAttribute("part", "preview-card");
+        card.setAttribute("part", cardPreview ? "preview-card card-preview-card" : "preview-card");
         if (file.type.startsWith("image/")) {
             const image = document.createElement("img");
             image.src = this.createPreviewUrl(file);
@@ -150,6 +188,30 @@ export class Bloc extends Component {
         copy.append(name, meta);
         card.append(copy);
         return card;
+    }
+
+    private replaceFile = (): void => {
+        if (!this.input?.disabled) {
+            this.input?.click();
+        }
+    };
+
+    private removeFile = (): void => {
+        if (!this.input || this.input.disabled) {
+            return;
+        }
+        this.input.value = "";
+        this.input.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+        this.input.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+        this.sync();
+    };
+
+    private createAction(shellPart: string, part: string): HTMLButtonElement {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.setAttribute("part", part);
+        this.shadowRoot?.querySelector(`[part="${shellPart}"]`)?.append(button);
+        return button;
     }
 
     private createPreviewUrl(file: File): string {

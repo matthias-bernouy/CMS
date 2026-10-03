@@ -40,5 +40,23 @@
         "default": "No file selected",
         "maxLength": 120,
         "control": { "kind": "text" }
+    },
+    {
+        "id": "replace-label",
+        "label": "setting.file-replace-label.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "Replace",
+        "maxLength": 40,
+        "control": { "kind": "text" }
+    },
+    {
+        "id": "remove-label",
+        "label": "setting.file-remove-label.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "Remove",
+        "maxLength": 40,
+        "control": { "kind": "text" }
     }
 ]

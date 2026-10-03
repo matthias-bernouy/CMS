@@ -11,6 +11,8 @@
     "setting.file-button-label.label": "Upload prompt",
     "setting.file-drop-label.label": "Drop prompt",
     "setting.file-empty-label.label": "Empty file message",
+    "setting.file-replace-label.label": "Replace action label",
+    "setting.file-remove-label.label": "Remove action label",
     "setting.joined.label": "Join controls",
     "setting.label-position.label": "Label position",
     "setting.option.both": "Both directions",

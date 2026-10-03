@@ -5,7 +5,13 @@
     "description": "bloc.form-section.description",
     "category": "bloc.category.forms",
     "order": 150,
-    "uses": ["ulvia-official-field", "ulvia-official-input", "ulvia-official-prose", "ulvia-official-stack"],
+    "uses": [
+        "ulvia-official-field",
+        "ulvia-official-form-section-heading",
+        "ulvia-official-input",
+        "ulvia-official-prose",
+        "ulvia-official-stack"
+    ],
     "requires": [],
     "slots": {
         "legend": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "min": 1, "max": 1 },

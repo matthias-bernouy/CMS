@@ -11,19 +11,26 @@
     container-type: inline-size;
 }
 
-[part="section"] { min-width: 0; }
+[part="section"] {
+    min-width: 0;
+    box-sizing: border-box;
+    padding: var(--form-section-padding);
+    border: var(--form-section-border);
+    border-radius: var(--form-section-radius);
+    background: var(--form-section-background);
+    box-shadow: var(--form-section-shadow);
+}
 ::slotted(fieldset[slot="form-section"]) {
     display: grid;
     min-width: 0;
     box-sizing: border-box;
     margin: 0;
-    padding: var(--form-section-padding);
-    border: var(--form-section-border);
-    border-radius: var(--form-section-radius);
+    padding: 0;
+    border: 0;
     gap: var(--ulvia-official-spacing-lg, 1.5rem);
     color: inherit;
-    background: var(--form-section-background);
-    box-shadow: var(--form-section-shadow);
+    background: transparent;
+    box-shadow: none;
     font: inherit;
 }
 
@@ -45,10 +52,10 @@
 }
 
 @container (max-width: 30rem) {
-    ::slotted(fieldset[slot="form-section"]) {
+    [part="section"] {
         --form-section-padding: var(--ulvia-official-spacing-lg, 1.5rem);
         --form-section-radius: var(--ulvia-official-radius-lg, .75rem);
     }
 
-    :host([appearance="plain"]) ::slotted(fieldset[slot="form-section"]) { --form-section-padding: 0; }
+    :host([appearance="plain"]) [part="section"] { --form-section-padding: 0; }
 }

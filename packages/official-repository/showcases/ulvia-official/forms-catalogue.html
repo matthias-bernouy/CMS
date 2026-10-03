@@ -88,7 +88,7 @@
                     <span slot="description">Purpose-built interactions keep the native form value and submission behaviour.</span>
                     <ulvia-official-field label-position="top" slot="content">
                         <span slot="label">Budget</span>
-                        <ulvia-official-range-control editable-value value-label="Current value (thousands)" slot="control"><ulvia-official-range value-prefix="$" value-suffix="k" slot="control"><input type="range" name="budget" min="0" max="100" step="5" value="60"></ulvia-official-range></ulvia-official-range-control>
+                        <ulvia-official-range-control editable-value value-label="Current value" slot="control"><ulvia-official-range value-prefix="$" value-suffix="k" slot="control"><input type="range" name="budget" min="0" max="100" step="5" value="60"></ulvia-official-range></ulvia-official-range-control>
                     </ulvia-official-field>
                     <ulvia-official-grid slot="content" columns="2" gap="lg">
                         <ulvia-official-field label-position="top" slot="items">
@@ -122,17 +122,17 @@
                     <ulvia-official-grid slot="content" columns="2" gap="lg">
                         <ulvia-official-field label-position="top" slot="items">
                             <span slot="label">Upload card</span>
-                            <ulvia-official-file-input variant="card" button-label="Choose a document" drop-label="or drag it here" empty-label="Image, PDF or Word · up to 10 MB" slot="control"><input type="file" name="brief" accept="image/*,.pdf,.doc,.docx"></ulvia-official-file-input>
-                            <span slot="description">Images are shown directly; PDFs and other files receive a useful preview card.</span>
+                            <ulvia-official-file-input variant="card" button-label="Choose a document" drop-label="or drag it here" empty-label="Image, PDF or Word · up to 10 MB" replace-label="Replace" remove-label="Remove" slot="control"><input type="file" name="brief" accept="image/*,.pdf,.doc,.docx"></ulvia-official-file-input>
+                            <span slot="description">The preview replaces the upload surface; replace or remove the file without leaving the card.</span>
                         </ulvia-official-field>
                         <ulvia-official-stack align="stretch" slot="items" gap="lg">
                             <ulvia-official-field label-position="top" slot="items">
                                 <span slot="label">Drop zone</span>
-                                <ulvia-official-file-input variant="dropzone" button-label="Choose brand assets" drop-label="or drag them here" empty-label="PNG, SVG or ZIP · up to 25 MB" slot="control"><input type="file" name="assets" accept=".png,.svg,.zip" multiple></ulvia-official-file-input>
+                                <ulvia-official-file-input variant="dropzone" button-label="Choose brand assets" drop-label="or drag them here" empty-label="PNG, SVG or ZIP · up to 25 MB" replace-label="Replace" remove-label="Remove" slot="control"><input type="file" name="assets" accept=".png,.svg,.zip" multiple></ulvia-official-file-input>
                             </ulvia-official-field>
                             <ulvia-official-field label-position="top" slot="items">
                                 <span slot="label">Compact upload</span>
-                                <ulvia-official-file-input variant="compact" button-label="Choose a file" drop-label="or drop it here" empty-label="Any file · up to 10 MB" slot="control"><input type="file" name="compactFile"></ulvia-official-file-input>
+                                <ulvia-official-file-input variant="compact" button-label="Choose a file" drop-label="or drop it here" empty-label="Any file · up to 10 MB" replace-label="Replace" remove-label="Remove" slot="control"><input type="file" name="compactFile"></ulvia-official-file-input>
                             </ulvia-official-field>
                         </ulvia-official-stack>
                     </ulvia-official-grid>

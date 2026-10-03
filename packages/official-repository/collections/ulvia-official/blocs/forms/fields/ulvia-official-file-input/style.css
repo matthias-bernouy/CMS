@@ -8,6 +8,13 @@
 [part="prompt"] { color: var(--ulvia-official-primary, #086c55); font-weight: var(--ulvia-official-font-weight-semibold, 600); }
 [part="file-name"] { display: block; max-width: 28rem; margin-block-start: var(--ulvia-official-spacing-2xs, .25rem); color: var(--ulvia-official-text-muted, #737985); font-size: var(--ulvia-official-font-size-xs, .75rem); font-family: var(--ulvia-official-font-family-monospace, monospace); overflow-wrap: anywhere; }
 ::slotted(input) { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+[part="card-preview"] { position: absolute; z-index: 1; inset: 0; display: block; pointer-events: none; }
+[part="card-preview"][hidden], [part="card-actions"][hidden] { display: none; }
+[part="card-actions"] { position: absolute; z-index: 3; inset-block-start: var(--ulvia-official-spacing-sm, .75rem); inset-inline-end: var(--ulvia-official-spacing-sm, .75rem); display: flex; gap: var(--ulvia-official-spacing-xs, .5rem); }
+[part="replace"], [part="remove"] { min-height: 2.25rem; padding-inline: var(--ulvia-official-spacing-sm, .75rem); border: var(--ulvia-official-border-width, 1px) solid rgb(255 255 255 / 45%); border-radius: var(--ulvia-official-radius-md, .5rem); color: white; background: rgb(19 31 27 / 76%); box-shadow: 0 2px 8px rgb(16 24 21 / 22%); backdrop-filter: blur(.5rem); font: inherit; font-size: var(--ulvia-official-font-size-xs, .75rem); font-weight: var(--ulvia-official-font-weight-semibold, 600); cursor: pointer; }
+[part="replace"]:hover { background: var(--ulvia-official-primary-hover, #075642); }
+[part="remove"]:hover { background: var(--ulvia-official-danger, #b42318); }
+[part="replace"]:focus-visible, [part="remove"]:focus-visible { outline: 3px solid white; outline-offset: 2px; }
 [part="preview"] { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: var(--ulvia-official-spacing-sm, .75rem); }
 [part="preview"][hidden] { display: none; }
 [part~="preview-card"] { position: relative; display: grid; min-width: 0; min-height: 8rem; align-content: end; box-sizing: border-box; border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd); border-radius: var(--ulvia-official-radius-lg, .75rem); background: var(--ulvia-official-background-surface, Canvas); box-shadow: 0 1px 3px rgb(23 33 30 / 7%); overflow: hidden; }
@@ -30,4 +37,11 @@
 :host([variant="card"]) [part="icon"] { width: 2.25rem; height: 2.25rem; }
 :host([data-has-files]) [part="drop-zone"] { min-height: 4.75rem; justify-content: flex-start; padding: var(--ulvia-official-spacing-sm, .75rem) var(--ulvia-official-spacing-md, 1rem); border-style: solid; background: var(--ulvia-official-background-surface, Canvas); }
 :host([data-has-files]) [part="file-name"] { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-:host([variant="card"][data-has-files]) [part="drop-zone"] { min-height: 0; align-items: center; justify-content: center; padding: var(--ulvia-official-spacing-xl, 2rem); background: linear-gradient(145deg, var(--ulvia-official-background-subtle, #eef1f0), var(--ulvia-official-background-surface, Canvas)); }
+:host([variant="card"][data-has-files]) [part="drop-zone"] { min-height: 0; align-items: center; justify-content: center; padding: 0; border-style: solid; background: var(--ulvia-official-background-subtle, #eef1f0); }
+:host([variant="card"][data-has-files]) [part="icon"], :host([variant="card"][data-has-files]) [part="copy"] { display: none; }
+:host([variant="card"][data-has-files]) ::slotted(input) { z-index: 2; }
+:host([variant="card"]) [part~="card-preview-card"] { width: 100%; height: 100%; min-height: 0; border: 0; border-radius: 0; background: var(--ulvia-official-background-subtle, #eef1f0); box-shadow: none; }
+:host([variant="card"]) [part~="card-preview-card"] [part~="preview-media"] { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+:host([variant="card"]) [part~="card-preview-card"] [part~="preview-generic"] { position: absolute; inset: 0; display: grid; height: auto; place-items: center; background: var(--ulvia-official-primary-subtle, #dff3ed); font-size: var(--ulvia-official-font-size-2xl, 1.5rem); }
+:host([variant="card"]) [part~="card-preview-card"] [part~="preview-copy"] { position: absolute; z-index: 1; inset-inline: 0; inset-block-end: 0; padding: 3rem var(--ulvia-official-spacing-md, 1rem) var(--ulvia-official-spacing-md, 1rem); color: white; background: linear-gradient(transparent, rgb(12 22 18 / 82%)); text-align: start; }
+:host([variant="card"]) [part~="card-preview-card"] [part~="preview-name"], :host([variant="card"]) [part~="card-preview-card"] [part~="preview-meta"] { color: inherit; text-shadow: 0 1px 2px rgb(0 0 0 / 30%); }
