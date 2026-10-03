@@ -8,6 +8,7 @@ import deleteUser from "cms-control/api/_access/users/users.delete";
 import listUsers from "cms-control/api/_access/users/users.get";
 import createUser from "cms-control/api/_access/users/users.post";
 import installCollection from "cms-control/api/_content/collections/install.post";
+import saveCollectionConfiguration from "cms-control/api/_content/collections/configuration.put";
 import saveCollectionTexts from "cms-control/api/_content/collections/texts.put";
 import importCustomProvider from "cms-control/api/_integrations/provider-custom-import.post";
 import { requireControlAdministrator } from "cms-control/core/admin/control/adminAccess";
@@ -23,6 +24,7 @@ const protectedHandlers: readonly [string, Handler, string][] = [
     ["mark email verified", markVerified, "POST"],
     ["send password reset", sendReset, "POST"],
     ["install collections", installCollection, "POST"],
+    ["save collection configuration", saveCollectionConfiguration, "PUT"],
     ["save collection texts", saveCollectionTexts, "PUT"],
     ["import custom providers", importCustomProvider, "POST"],
 ];

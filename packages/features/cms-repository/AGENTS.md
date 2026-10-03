@@ -261,9 +261,10 @@ models and validation for CMS-owned installations and site selections.
   installation/text overrides; `/collections/mongo` is a runtime-only adapter.
   The installer accepts complete admitted bundles, persists verified assets and
   resolves resource capability requirements through its configured contract
-  catalogue. Compatible upgrades preserve site overrides, existing slot
-  contracts and theme-token types; publication to a remote registry remains
-  unsupported.
+  catalogue. Compatible upgrades preserve site overrides and stored setting
+  value schemas, may only widen existing slot/native-element contracts, and
+  preserve theme-token types. Validate the candidate installation before the
+  revisioned write; publication to a remote registry remains unsupported.
 - Text metadata (`category`, `group`, `label`, `description`) uses collection
   translation keys. It is declarative and bounded, does not change server text
   keys and does not grant runtime capabilities.

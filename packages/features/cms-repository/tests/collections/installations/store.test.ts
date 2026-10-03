@@ -103,7 +103,7 @@ test("imports verified assets and contract requirements into the installation st
     expect((await store.snapshot("site")).collections[0]!.release.blocs[0]!.requires).toHaveLength(1);
 });
 
-test("upgrades preserve the declared settings contract", async () => {
+test("upgrades may widen but never narrow the stored settings contract", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const initial = release();
     initial.blocs[0] = {
@@ -132,5 +132,11 @@ test("upgrades preserve the declared settings contract", async () => {
     changedSettings.version = "1.1.0";
     changedSettings.blocs[0]!.settings[0]!.maxLength = 32;
     const settingsArtifact = await store.importRelease(changedSettings);
-    await expect(store.upgrade("site", settingsArtifact.digest, 2, "local")).rejects.toThrow("settings");
+    await expect(store.upgrade("site", settingsArtifact.digest, 2, "local")).resolves.toMatchObject({ revision: 3 });
+
+    const narrowedSettings = structuredClone(changedSettings);
+    narrowedSettings.version = "1.2.0";
+    narrowedSettings.blocs[0]!.settings[0]!.maxLength = 8;
+    const narrowedArtifact = await store.importRelease(narrowedSettings);
+    await expect(store.upgrade("site", narrowedArtifact.digest, 3, "local")).rejects.toThrow("settings");
 });

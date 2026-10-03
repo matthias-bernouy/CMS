@@ -1,4 +1,11 @@
+import { firstSchemaSubsetViolation } from "cms-repository/exports/contracts/compatibility";
 import { canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
+import { collectionSettingsSchema } from "../../core/parsing/blocs/settingSchema";
+import type {
+    CollectionComponentSettings,
+    CollectionSlot,
+    CollectionSlotAccept,
+} from "../../interfaces/CollectionBloc";
 import type { CollectionBloc } from "../../interfaces/CollectionBloc";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 
@@ -15,18 +22,79 @@ function assertBlocCompatibility(previous: CollectionBloc, next: CollectionBloc 
         reject(`Upgrade removes or changes existing bloc ${previous.id}`);
     }
     for (const [slotId, slot] of Object.entries(previous.slots)) {
-        if (!Object.hasOwn(next.slots, slotId) || !sameJson(slot, next.slots[slotId])) {
+        if (!slotAcceptsPrevious(slot, next.slots[slotId])) {
             reject(`Upgrade removes or changes existing slot contract ${previous.id}.${slotId}`);
         }
     }
     if (previous.kind === "component" && next.kind === "component") {
-        if (!sameJson(previous.settings ?? [], next.settings ?? [])) {
+        if (!settingsAcceptPrevious(previous.settings ?? [], next.settings ?? [])) {
             reject(`Upgrade changes existing settings contract ${previous.id}`);
         }
-        if (!sameJson(previous.nativeElement ?? null, next.nativeElement ?? null)) {
+        if (!nativeElementAcceptsPrevious(previous.nativeElement, next.nativeElement)) {
             reject(`Upgrade changes existing managed native contract ${previous.id}`);
         }
     }
+}
+
+function settingsAcceptPrevious(previous: CollectionComponentSettings, next: CollectionComponentSettings): boolean {
+    if (previous.length !== next.length) {
+        return false;
+    }
+    const nextById = new Map(next.map((setting) => [setting.id, setting]));
+    return previous.every((setting) => {
+        const replacement = nextById.get(setting.id);
+        if (!replacement) {
+            return false;
+        }
+        const previousSchema = collectionSettingsSchema([setting]).properties[setting.id]!;
+        const nextSchema = collectionSettingsSchema([replacement]).properties[replacement.id]!;
+        return firstSchemaSubsetViolation(previousSchema, nextSchema, `settings.${setting.id}`) === null;
+    });
+}
+
+function nativeElementAcceptsPrevious(
+    previous: Extract<CollectionBloc, { kind: "component" }>["nativeElement"],
+    next: Extract<CollectionBloc, { kind: "component" }>["nativeElement"],
+): boolean {
+    if (!previous || !next) {
+        return previous === next;
+    }
+    return (
+        previous.accepts.every((tag) => next.accepts.includes(tag)) &&
+        sameJson(previous.attributes ?? {}, next.attributes ?? {})
+    );
+}
+
+function slotAcceptsPrevious(previous: CollectionSlot, next: CollectionSlot | undefined): boolean {
+    if (!next || (next.min ?? 0) > (previous.min ?? 0) || (next.max ?? Infinity) < (previous.max ?? Infinity)) {
+        return false;
+    }
+    if (!next.accepts) {
+        return true;
+    }
+    if (!previous.accepts) {
+        return false;
+    }
+    return previous.accepts.every((accepted) => next.accepts!.some((candidate) => acceptIncludes(candidate, accepted)));
+}
+
+function acceptIncludes(candidate: CollectionSlotAccept, previous: CollectionSlotAccept): boolean {
+    if (candidate.kind === "any-component") {
+        return previous.kind === "any-component" || previous.kind === "component";
+    }
+    if (candidate.kind !== previous.kind) {
+        return false;
+    }
+    if (candidate.kind === "component" && previous.kind === "component") {
+        return candidate.tag === previous.tag;
+    }
+    if (candidate.kind === "rich-text" && previous.kind === "rich-text") {
+        return candidate.profile === previous.profile;
+    }
+    if (candidate.kind === "media" && previous.kind === "media") {
+        return !candidate.accept || Boolean(previous.accept?.every((type) => candidate.accept!.includes(type)));
+    }
+    return true;
 }
 
 function assertThemeCompatibility(previous: CollectionRelease, next: CollectionRelease): void {
@@ -60,8 +128,15 @@ export function assertCompatibleCollectionUpgrade(previous: CollectionRelease, n
             }
         }
     }
-    if (!sameJson(previous.configuration ?? null, next.configuration ?? null)) {
-        reject("Upgrade changes the collection configuration contract");
+    if (previous.configuration && !next.configuration) {
+        reject("Upgrade removes the collection configuration contract");
+    }
+    if (
+        previous.configuration &&
+        next.configuration &&
+        firstSchemaSubsetViolation(previous.configuration.schema, next.configuration.schema, "configuration")
+    ) {
+        reject("Upgrade narrows the collection configuration contract");
     }
     assertThemeCompatibility(previous, next);
 }

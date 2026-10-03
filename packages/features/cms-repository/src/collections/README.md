@@ -112,10 +112,12 @@ with `<collectionId>-`. Local `uses` and slot `accepts` references resolve insid
 the release. External references must appear in one dependency's exact imported
 Bloc list. A dependency pins the target collection ID, publisher ID and bounded
 SemVer range; it separately imports public Bloc tags and collection-local theme
-token IDs. Installation requires the dependency first, verifies every requested
-resource against its target release's explicit `exports`, validates cross-release
-slot targets, and rejects collection dependency cycles. Upgrades revalidate all
-installed dependents.
+token IDs. Single-release installation requires the dependency first. The
+installation store also accepts an exact multi-release plan and validates then
+commits the whole graph atomically, independently of request order. Both paths
+verify every requested resource against its target release's explicit `exports`,
+validate cross-release slot targets and reject collection dependency cycles.
+Upgrades revalidate all installed dependents.
 
 Theme token IDs remain local in release JSON and are projected as both the
 global token ID and CSS variable name `<collectionId>-<tokenId>`. Texts and
@@ -192,15 +194,24 @@ thumbnails.
 
 Site installation pins the collection digest, repository ID, configuration and
 text overrides. Upgrades require a newer release from the same publisher,
-preserve existing resource IDs and Bloc kinds, keep existing setting declarations
-stable and revalidate saved text overrides before changing the digest.
+preserve existing resource IDs and Bloc kinds, keep stored setting value schemas
+stable and revalidate saved configuration and text overrides before changing the
+digest. Setting presentation metadata and order may evolve; slot cardinalities
+and accepted native tags may widen but cannot invalidate existing content.
+Collection configuration is mutable per site through a schema-validated,
+revision-checked store operation and the administrator-only Control API.
+
+The store can remove a collection only when no installed collection depends on
+it. This is deliberately not exposed as a Control HTTP action yet: pages, private
+Blocs, theme overrides and dashboards still need affected-resource analysis
+before removal is safe.
 
 ## Next slices
 
 Presets remain absent from the public format: unsupported fields reject. Expanded
 view bindings, published execution plans and capability grants remain future work.
 
-Affected-page analysis, remote publication, explicit upgrade migrations and
+Affected-resource analysis, remote publication, explicit breaking upgrade migrations and
 component renderer trust hardening are not implemented yet.
 The [starter bundle](../../fixtures/collections/v1/README.md) exercises the
 implemented authoring/admission path without a provider or renderer.

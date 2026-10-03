@@ -14,6 +14,7 @@ export type CollectionInstallation = {
     configuration: Readonly<Record<string, unknown>>;
     textOverrides: CollectionTextOverrides;
 };
+export type CollectionInstallRequest = { digest: string; repositoryId?: string };
 export type CollectionSiteState = { revision: number; installations: CollectionInstallation[] };
 export type InstalledCollection = CollectionInstallation & { release: CollectionRelease };
 export interface CollectionStorage {

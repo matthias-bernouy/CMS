@@ -4,7 +4,7 @@ import { parseCollectionNamespace } from "../../core/namespace";
 import { parseCollectionTextOverrides } from "../../core/texts/parseCollectionTexts";
 import { array, identifier, keys, record } from "../../core/values";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
-import type { CollectionInstallation, CollectionSiteState } from "../interfaces/store";
+import type { CollectionInstallation, CollectionSiteState, CollectionStorage } from "../interfaces/store";
 
 const MAX_INSTALLATIONS = 256;
 const MAX_STATE_BYTES = 2 * 1024 * 1024;
@@ -65,4 +65,21 @@ export function validateStoredCollectionInstallation(
         configuration: structuredClone(installation.configuration),
         textOverrides: parseCollectionTextOverrides(installation.textOverrides, release.texts ?? []),
     };
+}
+
+export async function writeCollectionSiteState(
+    storage: CollectionStorage,
+    siteId: string,
+    actualRevision: number,
+    expectedRevision: number,
+    next: CollectionSiteState,
+): Promise<void> {
+    if (
+        !Number.isSafeInteger(expectedRevision) ||
+        expectedRevision < 0 ||
+        actualRevision !== expectedRevision ||
+        !(await storage.compareAndSet(siteId, expectedRevision, parseCollectionSiteState(next)))
+    ) {
+        throw Object.assign(new Error("Collection state changed; reload before saving"), { status: 409 });
+    }
 }

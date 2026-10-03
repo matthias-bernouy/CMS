@@ -83,3 +83,76 @@ test("upgrades preserve managed native element choices", async () => {
 
     await expect(store.upgrade("site", changed.digest, 1, "local")).rejects.toThrow("managed native contract");
 });
+
+test("upgrades accept wider slot and managed native contracts", async () => {
+    const initial = release("1.0.0");
+    const panel = (initial.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-panel")!;
+    panel.slots = { body: { min: 1, max: 1 } };
+    const managed = {
+        kind: "component",
+        id: "atlas-action",
+        label: "bloc.panel.label",
+        nativeElement: { accepts: ["button"] },
+        shadowdom: "<slot></slot>",
+        defaultContent: "<button>Action</button>",
+        uses: [],
+        requires: [],
+        slots: {},
+    };
+    initial.blocs = [...initial.blocs, managed];
+    const store = new CollectionStore(new MemoryCollectionStorage());
+    const first = await store.importRelease(initial);
+    await store.install("site", first.digest, 0, "local");
+
+    const next = structuredClone(initial);
+    next.version = "1.1.0";
+    const nextPanel = (next.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-panel")!;
+    nextPanel.slots = { body: { min: 0, max: 2 } };
+    const nextManaged = (next.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-action")!;
+    nextManaged.nativeElement = { accepts: ["button", "a"] };
+    const admitted = await store.importRelease(next);
+
+    await expect(store.upgrade("site", admitted.digest, 1, "local")).resolves.toMatchObject({ revision: 2 });
+});
+
+test("upgrades allow setting presentation changes while preserving the stored value contract", async () => {
+    const initial = release("1.0.0");
+    for (const messages of Object.values(initial.translations)) {
+        messages["setting.tone.label"] = "Tone";
+        messages["setting.tone.help"] = "Choose a tone";
+        messages["setting.compact.label"] = "Compact";
+    }
+    const panel = (initial.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-panel")!;
+    panel.settings = [
+        {
+            id: "tone",
+            label: "setting.tone.label",
+            help: "setting.tone.help",
+            type: "string",
+            default: "quiet",
+            maxLength: 16,
+            control: { kind: "text" },
+        },
+        {
+            id: "compact",
+            label: "setting.compact.label",
+            type: "boolean",
+            default: false,
+            control: { kind: "toggle" },
+        },
+    ];
+    const store = new CollectionStore(new MemoryCollectionStorage());
+    const first = await store.importRelease(initial);
+    await store.install("site", first.digest, 0, "local");
+
+    const next = structuredClone(initial);
+    next.version = "1.1.0";
+    for (const messages of Object.values(next.translations)) {
+        messages["setting.tone.help"] = "Updated author guidance";
+    }
+    const nextPanel = (next.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-panel")!;
+    nextPanel.settings = [nextPanel.settings[1], { ...nextPanel.settings[0], default: "calm", maxLength: 32 }];
+    const admitted = await store.importRelease(next);
+
+    await expect(store.upgrade("site", admitted.digest, 1, "local")).resolves.toMatchObject({ revision: 2 });
+});

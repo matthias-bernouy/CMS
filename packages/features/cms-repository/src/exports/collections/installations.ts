@@ -2,6 +2,7 @@ export { CollectionStore } from "cms-repository/collections/installations/core/C
 export { MemoryCollectionStorage } from "cms-repository/collections/installations/default-implementation/memory/MemoryCollectionStorage";
 export type {
     CollectionStorage,
+    CollectionInstallRequest,
     InstalledCollection,
     CollectionSiteState,
     StoredCollectionRelease,

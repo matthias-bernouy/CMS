@@ -35,8 +35,10 @@ tags and collection-local theme token IDs. Its `dependencies` entries identify
 one collection and publisher, constrain its version, and list only the exported
 Blocs and tokens this release imports. External Bloc references in `uses`, slot
 acceptance or authored markup must be present in that import list. The site
-installer requires dependencies first and revalidates the complete acyclic graph
-on install and upgrade.
+single-release installer requires dependencies first and revalidates the complete
+acyclic graph on install and upgrade. The core installation store can also commit
+an exact multi-release dependency graph atomically when a caller has already
+selected every release.
 
 `bun run ulvia -- release packages/official-repository/collections/ulvia-official` assembles the
 supported files into one `ulvia-collection/v1` release, validates it, and
@@ -187,13 +189,15 @@ read-only.
 ## Current limits
 
 The installed-collection bridge accepts compositions and Shadow components,
-including fixed Light DOM, named slots and initial page content. Asset bytes,
-provider grants, configuration editing, uninstall and registry publication
-remain future work. Basic HTML views, collection dashboard templates and
-private site dashboards are available; views currently receive only dashboard
-metadata through Control binding. Provider execution plans are not implemented.
-A source adapter exists for multiple repositories, while the dev runtime
-configures one local source.
+including fixed Light DOM, named slots and initial page content. Verified asset
+bytes and revision-checked collection configuration are implemented. The store
+can remove a collection after checking installed dependants, but Control does not
+expose removal until it can also report affected pages, private Blocs, theme
+references and dashboards. Provider grants and registry publication remain
+future work. Basic HTML views, collection dashboard templates and private site
+dashboards are available; views currently receive only dashboard metadata through
+Control binding. Provider execution plans are not implemented. A source adapter
+exists for multiple repositories, while the dev runtime configures one local source.
 
 See the [collection release format](../../packages/features/cms-repository/src/collections/README.md)
 for admission constraints.
