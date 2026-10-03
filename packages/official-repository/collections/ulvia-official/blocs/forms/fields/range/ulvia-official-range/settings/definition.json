@@ -1,0 +1,36 @@
+[
+    {
+        "id": "hide-value",
+        "label": "setting.hide-value.label",
+        "group": "setting.group.appearance",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    },
+    {
+        "id": "hide-bounds",
+        "label": "setting.hide-bounds.label",
+        "group": "setting.group.appearance",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    },
+    {
+        "id": "value-prefix",
+        "label": "setting.value-prefix.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "",
+        "maxLength": 12,
+        "control": { "kind": "text" }
+    },
+    {
+        "id": "value-suffix",
+        "label": "setting.value-suffix.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "",
+        "maxLength": 12,
+        "control": { "kind": "text" }
+    }
+]

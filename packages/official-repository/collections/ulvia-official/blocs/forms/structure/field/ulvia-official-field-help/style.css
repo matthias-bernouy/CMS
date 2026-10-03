@@ -1,0 +1,3 @@
+:host { position: relative; display: inline-block; color: var(--ulvia-official-text-secondary, #5b6472); font-family: var(--ulvia-official-font-family-main, inherit); }
+[part="help"] { position: relative; display: inline-block; }
+::slotted([slot="help-shell"]) { position: relative; display: inline-block; }

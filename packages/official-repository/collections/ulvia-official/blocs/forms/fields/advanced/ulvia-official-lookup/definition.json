@@ -1,0 +1,12 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-lookup",
+    "label": "bloc.lookup.label",
+    "description": "bloc.lookup.description",
+    "category": "bloc.category.forms",
+    "order": 35,
+    "nativeElement": { "accepts": ["select"] },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

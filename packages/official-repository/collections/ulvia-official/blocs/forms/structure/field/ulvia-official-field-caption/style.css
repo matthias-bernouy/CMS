@@ -1,0 +1,4 @@
+:host { display: inline; color: inherit; font: inherit; }
+[part="caption"] { display: inline-flex; align-items: baseline; gap: var(--ulvia-official-spacing-3xs, .25rem); }
+[part="required"] { display: var(--field-required-marker-display, none); color: var(--ulvia-official-danger, #b42318); }
+[part="required"]::before { content: "*"; }

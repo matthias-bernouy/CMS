@@ -1,0 +1,15 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-checkbox",
+    "label": "bloc.checkbox.label",
+    "description": "bloc.checkbox.description",
+    "category": "bloc.category.forms",
+    "order": 80,
+    "nativeElement": {
+        "accepts": ["input"],
+        "attributes": { "type": { "required": true, "values": ["checkbox"] } }
+    },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

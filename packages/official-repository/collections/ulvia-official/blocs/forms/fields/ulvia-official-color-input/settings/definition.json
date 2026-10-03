@@ -1,0 +1,11 @@
+[
+    {
+        "id": "action-label",
+        "label": "setting.color-action-label.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "Change",
+        "maxLength": 40,
+        "control": { "kind": "text" }
+    }
+]

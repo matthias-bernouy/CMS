@@ -1,0 +1,11 @@
+:host { display: block; min-width: 0; font-family: var(--ulvia-official-font-family-main, inherit); }
+[part="control"] { display: grid; gap: var(--ulvia-official-spacing-2xs, .375rem); }
+::slotted(textarea) { width: 100%; min-width: 0; min-height: 8rem; box-sizing: border-box; padding: var(--ulvia-official-spacing-sm, .75rem) var(--ulvia-official-spacing-md, 1rem); border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd); border-radius: var(--ulvia-official-radius-md, .5rem); color: var(--ulvia-official-text-primary, CanvasText); background: var(--ulvia-official-background-surface, Canvas); box-shadow: inset 0 1px 0 rgb(23 33 30 / 3%); font: inherit; line-height: var(--ulvia-official-line-height-relaxed, 1.65); resize: vertical; }
+::slotted(textarea:hover:not(:disabled)) { border-color: var(--ulvia-official-border-strong, #737985); }
+::slotted(textarea:focus-visible) { border-color: var(--ulvia-official-primary, #086c55); outline: 3px solid color-mix(in srgb, var(--ulvia-official-focus-ring, #167c5e) 28%, transparent); outline-offset: 1px; box-shadow: 0 0 0 1px var(--ulvia-official-primary, #086c55); }
+::slotted(textarea:user-invalid), ::slotted(textarea[aria-invalid="true"]) { border-color: var(--ulvia-official-danger-border, #b42318); }
+::slotted(textarea:disabled) { color: var(--ulvia-official-text-disabled, #858b95); background: var(--ulvia-official-background-subtle, #f4f5f7); cursor: not-allowed; opacity: 1; }
+:host([resize="none"]) ::slotted(textarea) { resize: none; }
+:host([resize="both"]) ::slotted(textarea) { resize: both; }
+[part="count"] { display: none; justify-self: end; color: var(--ulvia-official-text-muted, #68766f); font-size: var(--ulvia-official-font-size-xs, .75rem); font-variant-numeric: tabular-nums; line-height: var(--ulvia-official-line-height-snug, 1.35); }
+:host([show-count][data-count-ready]) [part="count"] { display: block; }

@@ -1,0 +1,31 @@
+[
+    {
+        "id": "clear-label",
+        "label": "setting.clear-search-label.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "Clear search",
+        "maxLength": 80,
+        "control": { "kind": "text" }
+    },
+    {
+        "id": "auto-submit",
+        "label": "setting.auto-submit.label",
+        "help": "setting.auto-submit.help",
+        "group": "setting.group.behavior",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    },
+    {
+        "id": "submit-delay",
+        "label": "setting.submit-delay.label",
+        "group": "setting.group.behavior",
+        "type": "integer",
+        "default": 300,
+        "minimum": 0,
+        "maximum": 2000,
+        "control": { "kind": "number", "step": 50 },
+        "visibleWhen": { "setting": "auto-submit", "equals": true }
+    }
+]

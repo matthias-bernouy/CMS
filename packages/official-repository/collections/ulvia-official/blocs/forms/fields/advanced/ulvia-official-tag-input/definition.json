@@ -1,0 +1,15 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-tag-input",
+    "label": "bloc.tag-input.label",
+    "description": "bloc.tag-input.description",
+    "category": "bloc.category.forms",
+    "order": 75,
+    "nativeElement": {
+        "accepts": ["input"],
+        "attributes": { "type": { "required": true, "values": ["text"] } }
+    },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

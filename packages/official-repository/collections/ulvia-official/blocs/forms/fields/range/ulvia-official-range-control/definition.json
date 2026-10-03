@@ -1,0 +1,13 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-range-control",
+    "label": "bloc.range-control.label",
+    "description": "bloc.range-control.description",
+    "category": "bloc.category.forms",
+    "order": 45,
+    "uses": ["ulvia-official-input", "ulvia-official-range"],
+    "requires": [],
+    "slots": {
+        "control": { "accepts": [{ "kind": "component", "tag": "ulvia-official-range" }], "min": 1, "max": 1 }
+    }
+}

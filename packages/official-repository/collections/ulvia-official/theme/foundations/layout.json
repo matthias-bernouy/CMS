@@ -64,7 +64,7 @@
             "label": "theme.token.control-height-sm.label",
             "type": "length",
             "defaults": {
-                "light": "2rem"
+                "light": "2.25rem"
             }
         },
         {
@@ -72,7 +72,7 @@
             "label": "theme.token.control-height-md.label",
             "type": "length",
             "defaults": {
-                "light": "2.5rem"
+                "light": "2.875rem"
             }
         },
         {
@@ -80,7 +80,7 @@
             "label": "theme.token.control-height-lg.label",
             "type": "length",
             "defaults": {
-                "light": "3rem"
+                "light": "3.25rem"
             }
         }
     ]

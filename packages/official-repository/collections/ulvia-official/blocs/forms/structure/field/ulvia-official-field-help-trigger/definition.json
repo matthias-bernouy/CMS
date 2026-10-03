@@ -1,0 +1,12 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-field-help-trigger",
+    "label": "bloc.field-help-trigger.label",
+    "description": "bloc.field-help-trigger.description",
+    "internal": true,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "trigger": { "min": 1, "max": 1 }
+    }
+}

@@ -1,0 +1,4 @@
+:host { display: block; color: var(--ulvia-official-on-danger-subtle, #60150f); font-family: var(--ulvia-official-font-family-main, inherit); }
+[part="summary"] { display: contents; }
+::slotted(section[slot="summary"]) { padding: var(--ulvia-official-spacing-lg, 1.5rem); border: var(--ulvia-official-border-width-strong, 2px) solid var(--ulvia-official-danger-border, #b42318); border-radius: var(--ulvia-official-radius-md, .5rem); background: var(--ulvia-official-danger-subtle, #fff0ee); line-height: var(--ulvia-official-line-height-relaxed, 1.65); }
+::slotted(section[slot="summary"]:focus) { outline: 3px solid var(--ulvia-official-focus-ring, Highlight); outline-offset: 3px; }

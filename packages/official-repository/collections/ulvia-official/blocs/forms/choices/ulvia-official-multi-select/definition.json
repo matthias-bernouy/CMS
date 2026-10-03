@@ -1,0 +1,15 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-multi-select",
+    "label": "bloc.multi-select.label",
+    "description": "bloc.multi-select.description",
+    "category": "bloc.category.forms",
+    "order": 70,
+    "nativeElement": {
+        "accepts": ["select"],
+        "attributes": { "multiple": { "required": true, "values": [""] } }
+    },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

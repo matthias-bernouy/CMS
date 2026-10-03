@@ -1,0 +1,12 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-field-caption",
+    "label": "bloc.field-caption.label",
+    "description": "bloc.field-caption.description",
+    "internal": true,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "label": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "min": 1, "max": 1 }
+    }
+}

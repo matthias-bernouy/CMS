@@ -1,0 +1,16 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-choice-field",
+    "label": "bloc.choice-field.label",
+    "description": "bloc.choice-field.description",
+    "category": "bloc.category.forms",
+    "order": 120,
+    "uses": ["ulvia-official-checkbox", "ulvia-official-choice-copy"],
+    "requires": [],
+    "slots": {
+        "control": { "accepts": [{ "kind": "any-component" }], "min": 1, "max": 1 },
+        "label": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "min": 1, "max": 1 },
+        "help": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "max": 1 },
+        "error": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "max": 1 }
+    }
+}

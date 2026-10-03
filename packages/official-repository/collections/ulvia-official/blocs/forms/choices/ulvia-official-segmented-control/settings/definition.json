@@ -1,0 +1,24 @@
+[
+    {
+        "id": "orientation",
+        "label": "setting.orientation.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "horizontal",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "horizontal", "label": "setting.option.horizontal" },
+                { "value": "vertical", "label": "setting.option.vertical" }
+            ]
+        }
+    },
+    {
+        "id": "wide",
+        "label": "setting.wide.label",
+        "group": "setting.group.layout",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    }
+]

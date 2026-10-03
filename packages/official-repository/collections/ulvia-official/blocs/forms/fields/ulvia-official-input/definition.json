@@ -1,0 +1,20 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-input",
+    "label": "bloc.input.label",
+    "description": "bloc.input.description",
+    "category": "bloc.category.forms",
+    "order": 10,
+    "nativeElement": {
+        "accepts": ["input"],
+        "attributes": {
+            "type": {
+                "required": true,
+                "values": ["text", "email", "password", "search", "tel", "url", "number", "date", "time", "datetime-local", "month", "week"]
+            }
+        }
+    },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

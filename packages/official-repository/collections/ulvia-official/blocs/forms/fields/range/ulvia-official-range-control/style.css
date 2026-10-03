@@ -1,0 +1,8 @@
+:host { display: block; min-width: 0; font-family: var(--ulvia-official-font-family-main, inherit); }
+[part="control"] { display: grid; min-width: 0; gap: var(--ulvia-official-spacing-sm, .75rem); }
+::slotted([slot="range-shell"]) { display: block; min-width: 0; }
+[part="manual"] { display: none; align-items: center; justify-content: space-between; gap: var(--ulvia-official-spacing-md, 1rem); }
+:host([editable-value]) [part="manual"] { display: flex; order: -1; }
+:host([editable-value]) ::slotted([slot="range-shell"]) { --range-value-row-display: none; }
+::slotted([slot="manual-label"]) { color: var(--ulvia-official-text-secondary, #5b6472); font-size: var(--ulvia-official-font-size-sm, .875rem); font-weight: var(--ulvia-official-font-weight-semibold, 600); }
+::slotted(ulvia-official-input[slot="manual-input"]) { width: 6.5rem; }

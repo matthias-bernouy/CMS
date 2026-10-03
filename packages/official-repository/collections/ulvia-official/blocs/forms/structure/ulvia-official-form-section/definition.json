@@ -1,0 +1,15 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-form-section",
+    "label": "bloc.form-section.label",
+    "description": "bloc.form-section.description",
+    "category": "bloc.category.forms",
+    "order": 150,
+    "uses": ["ulvia-official-field", "ulvia-official-input", "ulvia-official-prose", "ulvia-official-stack"],
+    "requires": [],
+    "slots": {
+        "legend": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "min": 1, "max": 1 },
+        "description": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "max": 1 },
+        "content": { "accepts": [{ "kind": "any-component" }], "min": 1 }
+    }
+}

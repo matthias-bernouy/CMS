@@ -1,0 +1,16 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-choice-group",
+    "label": "bloc.choice-group.label",
+    "description": "bloc.choice-group.description",
+    "category": "bloc.category.forms",
+    "order": 130,
+    "uses": ["ulvia-official-choice-copy", "ulvia-official-choice-field", "ulvia-official-option-list", "ulvia-official-radio"],
+    "requires": [],
+    "slots": {
+        "legend": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "min": 1, "max": 1 },
+        "help": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "max": 1 },
+        "items": { "accepts": [{ "kind": "any-component" }], "min": 1 },
+        "error": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "max": 1 }
+    }
+}

@@ -1,0 +1,16 @@
+[
+    {
+        "id": "density",
+        "label": "setting.density.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "comfortable",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "compact", "label": "setting.option.compact" },
+                { "value": "comfortable", "label": "setting.option.comfortable" }
+            ]
+        }
+    }
+]

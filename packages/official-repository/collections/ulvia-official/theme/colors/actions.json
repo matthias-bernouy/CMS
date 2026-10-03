@@ -9,8 +9,8 @@
             "description": "theme.token.primary.description",
             "type": "color",
             "defaults": {
-                "light": "#116149",
-                "dark": "#57cda3"
+                "light": "#086c55",
+                "dark": "#62d6b1"
             }
         },
         {
@@ -19,8 +19,8 @@
             "description": "theme.token.primary-hover.description",
             "type": "color",
             "defaults": {
-                "light": "#0d4f3b",
-                "dark": "#73dcb8"
+                "light": "#075844",
+                "dark": "#7be0bf"
             }
         },
         {
@@ -29,8 +29,8 @@
             "description": "theme.token.primary-active.description",
             "type": "color",
             "defaults": {
-                "light": "#093f2f",
-                "dark": "#3db98f"
+                "light": "#064737",
+                "dark": "#47c69e"
             }
         },
         {
@@ -40,7 +40,7 @@
             "type": "color",
             "defaults": {
                 "light": "#ffffff",
-                "dark": "#10251c"
+                "dark": "#10251f"
             }
         },
         {
@@ -49,8 +49,8 @@
             "description": "theme.token.primary-subtle.description",
             "type": "color",
             "defaults": {
-                "light": "#d8f0e7",
-                "dark": "#163c30"
+                "light": "#dff3ed",
+                "dark": "#153b31"
             }
         },
         {
@@ -59,8 +59,8 @@
             "description": "theme.token.on-primary-subtle.description",
             "type": "color",
             "defaults": {
-                "light": "#0b4a37",
-                "dark": "#a9ead2"
+                "light": "#075642",
+                "dark": "#b0ead6"
             }
         },
         {

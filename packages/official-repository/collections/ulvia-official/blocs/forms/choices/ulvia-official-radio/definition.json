@@ -1,0 +1,15 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-radio",
+    "label": "bloc.radio.label",
+    "description": "bloc.radio.description",
+    "category": "bloc.category.forms",
+    "order": 90,
+    "nativeElement": {
+        "accepts": ["input"],
+        "attributes": { "type": { "required": true, "values": ["radio"] } }
+    },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

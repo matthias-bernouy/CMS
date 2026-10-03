@@ -1,0 +1,15 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-file-input",
+    "label": "bloc.file-input.label",
+    "description": "bloc.file-input.description",
+    "category": "bloc.category.forms",
+    "order": 50,
+    "nativeElement": {
+        "accepts": ["input"],
+        "attributes": { "type": { "required": true, "values": ["file"] } }
+    },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

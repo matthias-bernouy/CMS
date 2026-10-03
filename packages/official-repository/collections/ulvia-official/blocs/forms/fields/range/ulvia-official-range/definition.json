@@ -1,0 +1,15 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-range",
+    "label": "bloc.range.label",
+    "description": "bloc.range.description",
+    "category": "bloc.category.forms",
+    "order": 40,
+    "nativeElement": {
+        "accepts": ["input"],
+        "attributes": { "type": { "required": true, "values": ["range"] } }
+    },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

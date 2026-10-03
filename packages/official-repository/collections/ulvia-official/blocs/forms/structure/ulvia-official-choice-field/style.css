@@ -1,0 +1,6 @@
+:host { display: block; color: var(--ulvia-official-text-primary, CanvasText); font-family: var(--ulvia-official-font-family-main, inherit); }
+[part="field"] { display: grid; gap: var(--ulvia-official-spacing-2xs, .375rem); }
+::slotted(label[slot="choice-label"]) { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--ulvia-official-spacing-sm, .75rem); align-items: start; min-height: 2.75rem; box-sizing: border-box; padding-block: var(--ulvia-official-spacing-2xs, .375rem); line-height: var(--ulvia-official-line-height-snug, 1.35); cursor: pointer; }
+::slotted([slot="choice-error"]) { margin-inline-start: 2.75rem; color: var(--ulvia-official-danger, #b42318); font-size: var(--ulvia-official-font-size-sm, .875rem); font-weight: var(--ulvia-official-font-weight-medium, 500); line-height: var(--ulvia-official-line-height-normal, 1.5); }
+::slotted([slot="choice-error"]:empty) { display: none; }
+:host([invalid]) { padding: var(--ulvia-official-spacing-sm, .75rem); border-inline-start: var(--ulvia-official-border-width-strong, 2px) solid var(--ulvia-official-danger-border, #b42318); background: var(--ulvia-official-danger-subtle, #fff0ee); }

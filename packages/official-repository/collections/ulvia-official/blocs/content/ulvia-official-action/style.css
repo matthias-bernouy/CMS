@@ -1,25 +1,37 @@
 :host {
-    --ulvia-official-action-background: var(--ulvia-official-primary, #3157d5);
-    --ulvia-official-action-background-hover: var(--ulvia-official-primary-hover, #2747b2);
-    --ulvia-official-action-background-active: var(--ulvia-official-primary-active, #203b94);
-    --ulvia-official-action-color: var(--ulvia-official-on-primary, #ffffff);
-    --ulvia-official-action-border: transparent;
+    --action-tone: var(--ulvia-official-primary, #3157d5);
+    --action-tone-hover: var(--ulvia-official-primary-hover, #2747b2);
+    --action-tone-active: var(--ulvia-official-primary-active, #203b94);
+    --action-on-tone: var(--ulvia-official-on-primary, #ffffff);
+    --action-tone-subtle: var(--ulvia-official-primary-subtle, #e9edff);
+    --ulvia-official-action-background: var(--action-tone);
+    --ulvia-official-action-background-hover: var(--action-tone-hover);
+    --ulvia-official-action-background-active: var(--action-tone-active);
+    --ulvia-official-action-color: var(--action-on-tone);
+    --ulvia-official-action-border: var(--action-tone);
     --ulvia-official-action-height: var(--ulvia-official-control-height-md, 2.75rem);
+    --action-padding-inline: var(--ulvia-official-spacing-lg, 1.5rem);
     display: inline-block;
+    width: var(--action-width, auto);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 
 [part="wrapper"] { display: contents; }
-::slotted(a), ::slotted(button) { display: inline-flex; min-height: var(--ulvia-official-action-height); align-items: center; justify-content: center; box-sizing: border-box; padding-inline: var(--ulvia-official-spacing-lg, 1.5rem); border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-action-border); border-radius: var(--ulvia-official-radius-md, .5rem); color: var(--ulvia-official-action-color); background: var(--ulvia-official-action-background); font: inherit; font-weight: var(--ulvia-official-font-weight-semibold, 600); line-height: var(--ulvia-official-line-height-tight, 1.15); text-decoration: none; cursor: pointer; transition: background var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease), border-color var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease); }
-::slotted(a:hover), ::slotted(button:hover) { background: var(--ulvia-official-action-background-hover); }
-::slotted(a:active), ::slotted(button:active) { background: var(--ulvia-official-action-background-active); }
+::slotted(a), ::slotted(button) { display: inline-flex; width: var(--action-width, auto); min-height: var(--ulvia-official-action-height); align-items: center; justify-content: center; box-sizing: border-box; padding-inline: var(--action-padding-inline); border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-action-border); border-radius: var(--form-action-radius, var(--ulvia-official-radius-md, .5rem)); color: var(--ulvia-official-action-color); background: var(--ulvia-official-action-background); box-shadow: var(--ulvia-official-shadow-sm, 0 1px 2px rgb(0 0 0 / 8%)); font: inherit; font-weight: var(--ulvia-official-font-weight-semibold, 600); line-height: var(--ulvia-official-line-height-tight, 1.15); text-decoration: none; cursor: pointer; }
+::slotted(a:hover), ::slotted(button:hover:not(:disabled)) { background: var(--ulvia-official-action-background-hover); }
+::slotted(a:active), ::slotted(button:active:not(:disabled)) { background: var(--ulvia-official-action-background-active); }
 ::slotted(a:focus-visible), ::slotted(button:focus-visible) { outline: 3px solid var(--ulvia-official-focus-ring, Highlight); outline-offset: 3px; }
 ::slotted(button:disabled) { opacity: .55; cursor: not-allowed; }
-:host([appearance="secondary"]) { --ulvia-official-action-background: var(--ulvia-official-secondary, #5b6472); --ulvia-official-action-background-hover: var(--ulvia-official-secondary-hover, #4a5260); --ulvia-official-action-background-active: var(--ulvia-official-secondary-active, #3e4550); --ulvia-official-action-color: var(--ulvia-official-on-secondary, #ffffff); }
-:host([appearance="outline"]) { --ulvia-official-action-background: transparent; --ulvia-official-action-background-hover: var(--ulvia-official-primary-subtle, #e9edff); --ulvia-official-action-background-active: var(--ulvia-official-primary-subtle, #e9edff); --ulvia-official-action-color: var(--ulvia-official-primary, #3157d5); --ulvia-official-action-border: var(--ulvia-official-primary, #3157d5); }
-:host([appearance="ghost"]) { --ulvia-official-action-background: transparent; --ulvia-official-action-background-hover: var(--ulvia-official-background-subtle, #f4f5f7); --ulvia-official-action-background-active: var(--ulvia-official-background-raised, #e8eaed); --ulvia-official-action-color: var(--ulvia-official-text-primary, CanvasText); }
-:host([size="sm"]) { --ulvia-official-action-height: var(--ulvia-official-control-height-sm, 2.25rem); }
+:host([tone="secondary"]) { --action-tone: var(--ulvia-official-secondary, #5b6472); --action-tone-hover: var(--ulvia-official-secondary-hover, #4a5260); --action-tone-active: var(--ulvia-official-secondary-active, #3e4550); --action-on-tone: var(--ulvia-official-on-secondary, #ffffff); --action-tone-subtle: var(--ulvia-official-secondary-subtle, #e8e8ff); }
+:host([tone="neutral"]) { --action-tone: var(--ulvia-official-text-primary, #15352b); --action-tone-hover: var(--ulvia-official-text-secondary, #365247); --action-tone-active: var(--ulvia-official-text-muted, #526b61); --action-on-tone: var(--ulvia-official-text-inverse, #ffffff); --action-tone-subtle: var(--ulvia-official-background-subtle, #f4f5f7); }
+:host([tone="info"]) { --action-tone: var(--ulvia-official-info, #1769aa); --action-tone-hover: var(--ulvia-official-info-hover, #12568c); --action-tone-active: var(--ulvia-official-info-active, #0e4571); --action-on-tone: var(--ulvia-official-on-info, #ffffff); --action-tone-subtle: var(--ulvia-official-info-subtle, #e7f2fb); }
+:host([tone="success"]) { --action-tone: var(--ulvia-official-success, #18794e); --action-tone-hover: var(--ulvia-official-success-hover, #12623e); --action-tone-active: var(--ulvia-official-success-active, #0d4d31); --action-on-tone: var(--ulvia-official-on-success, #ffffff); --action-tone-subtle: var(--ulvia-official-success-subtle, #dff3e8); }
+:host([tone="warning"]) { --action-tone: var(--ulvia-official-warning, #9a5b00); --action-tone-hover: var(--ulvia-official-warning-hover, #7d4900); --action-tone-active: var(--ulvia-official-warning-active, #633a00); --action-on-tone: var(--ulvia-official-on-warning, #ffffff); --action-tone-subtle: var(--ulvia-official-warning-subtle, #fff1d6); }
+:host([tone="danger"]) { --action-tone: var(--ulvia-official-danger, #b4233c); --action-tone-hover: var(--ulvia-official-danger-hover, #941d32); --action-tone-active: var(--ulvia-official-danger-active, #771728); --action-on-tone: var(--ulvia-official-on-danger, #ffffff); --action-tone-subtle: var(--ulvia-official-danger-subtle, #fde7eb); }
+:host([variant="outline"]) { --ulvia-official-action-background: transparent; --ulvia-official-action-background-hover: var(--action-tone-subtle); --ulvia-official-action-background-active: var(--action-tone-subtle); --ulvia-official-action-color: var(--action-tone); }
+:host([variant="ghost"]) { --ulvia-official-action-background: transparent; --ulvia-official-action-background-hover: var(--action-tone-subtle); --ulvia-official-action-background-active: var(--action-tone-subtle); --ulvia-official-action-color: var(--action-tone); --ulvia-official-action-border: transparent; }
+:host([variant="outline"]) ::slotted(a), :host([variant="outline"]) ::slotted(button), :host([variant="ghost"]) ::slotted(a), :host([variant="ghost"]) ::slotted(button) { box-shadow: none; }
+:host([size="sm"]) { --ulvia-official-action-height: var(--ulvia-official-control-height-sm, 2.25rem); --action-padding-inline: var(--ulvia-official-spacing-sm, .75rem); }
 :host([size="lg"]) { --ulvia-official-action-height: var(--ulvia-official-control-height-lg, 3.25rem); }
 :host([wide]) { display: block; }
 :host([wide]) ::slotted(a), :host([wide]) ::slotted(button) { width: 100%; }
-@media (prefers-reduced-motion: reduce) { ::slotted(a), ::slotted(button) { transition: none; } }

@@ -1,0 +1,21 @@
+[
+    {
+        "id": "editable-value",
+        "label": "setting.editable-value.label",
+        "help": "setting.editable-value.help",
+        "group": "setting.group.behavior",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    },
+    {
+        "id": "value-label",
+        "label": "setting.value-label.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "Value",
+        "maxLength": 40,
+        "control": { "kind": "text" },
+        "visibleWhen": { "setting": "editable-value", "equals": true }
+    }
+]

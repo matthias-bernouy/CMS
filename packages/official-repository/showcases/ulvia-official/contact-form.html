@@ -1,0 +1,42 @@
+<ulvia-official-section spacing="sm" width="md" surface="base" viewport-height>
+    <ulvia-official-grid slot="content" columns="2" gap="xl">
+        <ulvia-official-stack align="start" slot="items" gap="lg">
+            <ulvia-official-stack align="start" slot="items" gap="sm">
+                <ulvia-official-heading size="xl" align="start" slot="items"><h1>Let’s talk</h1></ulvia-official-heading>
+                <ulvia-official-prose measure="narrow" size="lg" slot="items"><div slot="content"><p>Tell us what you are working on. We will reply with a clear next step.</p></div></ulvia-official-prose>
+            </ulvia-official-stack>
+            <ulvia-official-form-status slot="items" tone="info"><output aria-live="polite">Typical response time: one business day.</output></ulvia-official-form-status>
+            <ulvia-official-action size="md" tone="neutral" variant="ghost" slot="items"><a href="/forms/catalogue">View every form component</a></ulvia-official-action>
+        </ulvia-official-stack>
+
+        <form slot="items" cms-source="/.cms/call/forms/submission.create" cms-source-method="POST" cms-source-trigger="submit">
+                <ulvia-official-form-section appearance="elevated">
+                    <span slot="legend">Contact details</span>
+                    <span slot="description">Required fields are marked with an asterisk.</span>
+                    <ulvia-official-field label-position="top" slot="content" required>
+                        <span slot="label">Name</span>
+                        <ulvia-official-input size="md" slot="control"><input type="text" name="name" autocomplete="name" required></ulvia-official-input>
+                    </ulvia-official-field>
+                    <ulvia-official-field label-position="top" slot="content" required>
+                        <span slot="label">Email</span>
+                        <ulvia-official-field-help slot="help"><span slot="label">How the email address is used</span><span slot="content">The address is only used to reply to this request.</span></ulvia-official-field-help>
+                        <ulvia-official-input size="md" slot="control"><input type="email" name="email" autocomplete="email" required></ulvia-official-input>
+                    </ulvia-official-field>
+                    <ulvia-official-field label-position="top" slot="content">
+                        <span slot="label">Organisation</span>
+                        <ulvia-official-input size="md" slot="control"><input type="text" name="organisation" autocomplete="organization"></ulvia-official-input>
+                    </ulvia-official-field>
+                    <ulvia-official-field label-position="top" slot="content" required>
+                        <span slot="label">Message</span>
+                        <ulvia-official-textarea resize="vertical" show-count slot="control"><textarea name="details" rows="5" maxlength="600" required></textarea></ulvia-official-textarea>
+                        <span slot="description">Include the goal and any constraints that matter.</span>
+                    </ulvia-official-field>
+                    <ulvia-official-choice-field slot="content"><ulvia-official-checkbox slot="control"><input type="checkbox" name="copy" value="yes"></ulvia-official-checkbox><span slot="label">Send me a copy</span></ulvia-official-choice-field>
+                    <ulvia-official-form-actions align="start" responsive-layout="stack" slot="content">
+                        <ulvia-official-action size="md" tone="primary" variant="filled" slot="actions"><button type="submit">Send message</button></ulvia-official-action>
+                        <ulvia-official-action size="md" tone="neutral" variant="ghost" slot="actions"><button type="reset">Clear form</button></ulvia-official-action>
+                    </ulvia-official-form-actions>
+                </ulvia-official-form-section>
+        </form>
+    </ulvia-official-grid>
+</ulvia-official-section>

@@ -1,0 +1,29 @@
+[
+    {
+        "id": "placeholder",
+        "label": "setting.lookup-placeholder.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "Search options",
+        "maxLength": 80,
+        "control": { "kind": "text" }
+    },
+    {
+        "id": "no-results-label",
+        "label": "setting.no-results-label.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "No matching options",
+        "maxLength": 80,
+        "control": { "kind": "text" }
+    },
+    {
+        "id": "clear-label",
+        "label": "setting.clear-selection-label.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "Clear selection",
+        "maxLength": 80,
+        "control": { "kind": "text" }
+    }
+]

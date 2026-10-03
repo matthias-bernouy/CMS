@@ -1,7 +1,22 @@
 [
     {
-        "id": "appearance",
-        "label": "setting.appearance.label",
+        "id": "variant",
+        "label": "setting.variant.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "filled",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "filled", "label": "setting.option.filled" },
+                { "value": "outline", "label": "setting.option.outline" },
+                { "value": "ghost", "label": "setting.option.ghost" }
+            ]
+        }
+    },
+    {
+        "id": "tone",
+        "label": "setting.tone.label",
         "group": "setting.group.appearance",
         "type": "string",
         "default": "primary",
@@ -10,8 +25,11 @@
             "options": [
                 { "value": "primary", "label": "setting.option.primary" },
                 { "value": "secondary", "label": "setting.option.secondary" },
-                { "value": "outline", "label": "setting.option.outline" },
-                { "value": "ghost", "label": "setting.option.ghost" }
+                { "value": "neutral", "label": "setting.option.neutral" },
+                { "value": "info", "label": "setting.option.info" },
+                { "value": "success", "label": "setting.option.success" },
+                { "value": "warning", "label": "setting.option.warning" },
+                { "value": "danger", "label": "setting.option.danger" }
             ]
         }
     },

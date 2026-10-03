@@ -1,0 +1,14 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-field-help",
+    "label": "bloc.field-help.label",
+    "description": "bloc.field-help.description",
+    "category": "bloc.category.forms",
+    "order": 115,
+    "uses": ["ulvia-official-field-help-panel", "ulvia-official-field-help-trigger"],
+    "requires": [],
+    "slots": {
+        "label": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "min": 1, "max": 1 },
+        "content": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "min": 1, "max": 1 }
+    }
+}

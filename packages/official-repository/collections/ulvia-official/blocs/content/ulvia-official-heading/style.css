@@ -8,9 +8,9 @@
 }
 
 [part="header"] { text-align: start; }
-::slotted(*) { margin: 0; color: inherit; font: inherit; font-size: var(--ulvia-official-heading-size); font-weight: var(--ulvia-official-font-weight-bold, 700); line-height: var(--ulvia-official-heading-line-height); letter-spacing: var(--ulvia-official-letter-spacing-tight, -.02em); }
+::slotted(*) { margin: 0; color: inherit; font: inherit; font-size: var(--ulvia-official-heading-size); font-weight: var(--ulvia-official-font-weight-bold, 700); line-height: var(--ulvia-official-heading-line-height); letter-spacing: var(--ulvia-official-letter-spacing-tight, -.025em); }
 :host([size="sm"]) { --ulvia-official-heading-size: var(--ulvia-official-font-size-xl, 1.5rem); }
 :host([size="md"]) { --ulvia-official-heading-size: var(--ulvia-official-font-size-2xl, 1.75rem); }
-:host([size="xl"]) { --ulvia-official-heading-size: var(--ulvia-official-font-size-4xl, 2.5rem); }
+:host([size="xl"]) { --ulvia-official-heading-size: var(--ulvia-official-font-size-5xl, 3rem); }
 :host([align="center"]) [part="header"] { text-align: center; }
 :host([align="end"]) [part="header"] { text-align: end; }

@@ -1,0 +1,44 @@
+[
+    {
+        "id": "variant",
+        "label": "setting.variant.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "dropzone",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "dropzone", "label": "setting.option.dropzone" },
+                { "value": "compact", "label": "setting.option.compact" },
+                { "value": "card", "label": "setting.option.card" }
+            ]
+        }
+    },
+    {
+        "id": "button-label",
+        "label": "setting.file-button-label.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "Choose a file",
+        "maxLength": 80,
+        "control": { "kind": "text" }
+    },
+    {
+        "id": "drop-label",
+        "label": "setting.file-drop-label.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "or drag it here",
+        "maxLength": 80,
+        "control": { "kind": "text" }
+    },
+    {
+        "id": "empty-label",
+        "label": "setting.file-empty-label.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "No file selected",
+        "maxLength": 120,
+        "control": { "kind": "text" }
+    }
+]

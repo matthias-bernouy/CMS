@@ -1,0 +1,12 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-textarea",
+    "label": "bloc.textarea.label",
+    "description": "bloc.textarea.description",
+    "category": "bloc.category.forms",
+    "order": 20,
+    "nativeElement": { "accepts": ["textarea"] },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

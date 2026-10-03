@@ -1,0 +1,16 @@
+[
+    {
+        "id": "orientation",
+        "label": "setting.orientation.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "vertical",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "vertical", "label": "setting.option.vertical" },
+                { "value": "horizontal", "label": "setting.option.horizontal" }
+            ]
+        }
+    }
+]

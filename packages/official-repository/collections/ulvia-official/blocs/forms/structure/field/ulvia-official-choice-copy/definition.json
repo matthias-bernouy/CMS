@@ -1,0 +1,13 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-choice-copy",
+    "label": "bloc.choice-copy.label",
+    "description": "bloc.choice-copy.description",
+    "internal": true,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "label": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "max": 1 },
+        "help": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "max": 1 }
+    }
+}

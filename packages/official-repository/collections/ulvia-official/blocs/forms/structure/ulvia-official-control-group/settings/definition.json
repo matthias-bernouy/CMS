@@ -1,0 +1,10 @@
+[
+    {
+        "id": "joined",
+        "label": "setting.joined.label",
+        "group": "setting.group.appearance",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    }
+]

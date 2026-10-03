@@ -1,0 +1,26 @@
+[
+    {
+        "id": "resize",
+        "label": "setting.resize.label",
+        "group": "setting.group.behavior",
+        "type": "string",
+        "default": "vertical",
+        "control": {
+            "kind": "select",
+            "options": [
+                { "value": "vertical", "label": "setting.option.vertical" },
+                { "value": "both", "label": "setting.option.both" },
+                { "value": "none", "label": "setting.option.none" }
+            ]
+        }
+    },
+    {
+        "id": "show-count",
+        "label": "setting.show-count.label",
+        "help": "setting.show-count.help",
+        "group": "setting.group.behavior",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    }
+]

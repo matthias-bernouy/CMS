@@ -12,11 +12,20 @@
 [part="section"] { padding-block: var(--ulvia-official-section-block-spacing); }
 [part="container"] { width: min(100% - (2 * var(--ulvia-official-section-gutter)), var(--ulvia-official-content-width-lg, 72rem)); margin-inline: auto; }
 :host([surface="subtle"]) { --ulvia-official-section-background: var(--ulvia-official-background-subtle, #f4f5f7); }
-:host([surface="inverse"]) { --ulvia-official-section-background: var(--ulvia-official-background-inverse, #17191c); --ulvia-official-section-color: var(--ulvia-official-text-inverse, #ffffff); }
+:host([surface="inverse"]) {
+    --ulvia-official-section-background: var(--ulvia-official-background-inverse, #17191c);
+    --ulvia-official-section-color: var(--ulvia-official-text-inverse, #ffffff);
+    --ulvia-official-text-primary: var(--ulvia-official-text-inverse, #ffffff);
+    --ulvia-official-text-secondary: color-mix(in srgb, var(--ulvia-official-text-inverse, #ffffff) 78%, transparent);
+    --ulvia-official-text-muted: color-mix(in srgb, var(--ulvia-official-text-inverse, #ffffff) 62%, transparent);
+    --ulvia-official-border-subtle: color-mix(in srgb, var(--ulvia-official-text-inverse, #ffffff) 18%, transparent);
+}
 :host([width="sm"]) [part="container"] { max-width: var(--ulvia-official-content-width-sm, 40rem); }
 :host([width="md"]) [part="container"] { max-width: var(--ulvia-official-content-width-md, 56rem); }
 :host([width="xl"]) [part="container"] { max-width: var(--ulvia-official-content-width-xl, 88rem); }
 :host([width="full"]) [part="container"] { max-width: none; }
 :host([spacing="none"]) { --ulvia-official-section-block-spacing: 0rem; }
 :host([spacing="sm"]) { --ulvia-official-section-block-spacing: var(--ulvia-official-spacing-xl, 2rem); }
-:host([spacing="lg"]) { --ulvia-official-section-block-spacing: var(--ulvia-official-spacing-4xl, 6rem); }
+:host([spacing="lg"]) { --ulvia-official-section-block-spacing: var(--ulvia-official-spacing-3xl, 4rem); }
+:host([viewport-height]) [part="section"] { display: grid; min-height: 100svh; align-items: center; box-sizing: border-box; }
+@container (max-width: 30rem) { :host([spacing="lg"]) [part="section"] { padding-block: var(--ulvia-official-spacing-2xl, 3rem); } }

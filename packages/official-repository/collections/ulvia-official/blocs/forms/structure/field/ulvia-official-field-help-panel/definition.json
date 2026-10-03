@@ -1,0 +1,12 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-field-help-panel",
+    "label": "bloc.field-help-panel.label",
+    "description": "bloc.field-help-panel.description",
+    "internal": true,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "panel": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "min": 1, "max": 1 }
+    }
+}

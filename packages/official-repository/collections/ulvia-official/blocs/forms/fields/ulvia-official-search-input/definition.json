@@ -1,0 +1,13 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-search-input",
+    "label": "bloc.search-input.label",
+    "description": "bloc.search-input.description",
+    "category": "bloc.category.forms",
+    "order": 15,
+    "uses": ["ulvia-official-input"],
+    "requires": [],
+    "slots": {
+        "control": { "accepts": [{ "kind": "component", "tag": "ulvia-official-input" }], "min": 1, "max": 1 }
+    }
+}

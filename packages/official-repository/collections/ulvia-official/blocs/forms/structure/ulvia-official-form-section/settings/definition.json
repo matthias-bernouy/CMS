@@ -1,0 +1,18 @@
+[
+    {
+        "id": "appearance",
+        "label": "setting.appearance.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "elevated",
+        "control": {
+            "kind": "select",
+            "options": [
+                { "value": "elevated", "label": "setting.option.elevated" },
+                { "value": "outlined", "label": "setting.option.outlined" },
+                { "value": "soft", "label": "setting.option.soft" },
+                { "value": "plain", "label": "setting.option.plain" }
+            ]
+        }
+    }
+]

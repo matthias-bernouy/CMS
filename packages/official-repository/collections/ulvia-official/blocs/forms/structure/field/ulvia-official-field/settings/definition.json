@@ -1,0 +1,25 @@
+[
+    {
+        "id": "label-position",
+        "label": "setting.label-position.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "top",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "top", "label": "setting.option.top" },
+                { "value": "inline", "label": "setting.option.inline" }
+            ]
+        }
+    },
+    {
+        "id": "required",
+        "label": "setting.required-marker.label",
+        "help": "setting.required-marker.help",
+        "group": "setting.group.behavior",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    }
+]

@@ -1,0 +1,11 @@
+:host { --input-padding-start: 3rem; --input-padding-end: 3rem; display: block; min-width: 0; font-family: var(--ulvia-official-font-family-main, inherit); }
+[part="control"] { position: relative; display: block; }
+[part="icon-shell"] { position: absolute; z-index: 1; inset-block-start: 50%; inset-inline-start: .5rem; display: grid; width: 2rem; height: 2rem; transform: translateY(-50%); place-items: center; border-radius: var(--ulvia-official-radius-sm, .375rem); color: var(--ulvia-official-text-muted, #737985); background: var(--ulvia-official-background-subtle, #eef1f0); pointer-events: none; }
+[part="search-icon"] { position: relative; width: .75rem; height: .75rem; border: .1rem solid currentColor; border-radius: var(--ulvia-official-radius-full, 999px); }
+[part="search-icon"]::after { position: absolute; inset-block-end: -.3rem; inset-inline-end: -.28rem; width: .4rem; height: .1rem; transform: rotate(45deg); content: ""; background: currentColor; }
+:host(:focus-within) [part="icon-shell"] { color: var(--ulvia-official-primary, #086c55); background: var(--ulvia-official-primary-subtle, #dff3ed); }
+::slotted([slot="search-control"]) { display: block; min-width: 0; }
+::slotted(button[slot="clear"]) { position: absolute; z-index: 1; inset-block-start: 50%; inset-inline-end: var(--ulvia-official-spacing-xs, .5rem); width: 2rem; height: 2rem; transform: translateY(-50%); padding: 0; border: 0; border-radius: var(--ulvia-official-radius-full, 999px); background-color: transparent; background-image: linear-gradient(45deg, transparent 45%, currentColor 46% 54%, transparent 55%), linear-gradient(-45deg, transparent 45%, currentColor 46% 54%, transparent 55%); background-position: center; background-size: .75rem .75rem; background-repeat: no-repeat; color: var(--ulvia-official-text-secondary, #5b6472); cursor: pointer; }
+::slotted(button[slot="clear"][hidden]) { display: none; }
+::slotted(button[slot="clear"]:hover) { color: var(--ulvia-official-text-primary, CanvasText); background-color: var(--ulvia-official-background-subtle, #f4f5f7); }
+::slotted(button[slot="clear"]:focus-visible) { outline: 3px solid var(--ulvia-official-focus-ring, Highlight); outline-offset: 1px; }

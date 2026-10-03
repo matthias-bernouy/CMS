@@ -1,0 +1,193 @@
+<ulvia-official-section spacing="lg" width="md" surface="subtle">
+    <ulvia-official-stack align="stretch" slot="content" gap="xl">
+        <ulvia-official-grid slot="items" columns="2" gap="lg">
+            <ulvia-official-stack align="start" slot="items" gap="sm">
+                <ulvia-official-heading size="xl" align="start" slot="items"><h1>Form components</h1></ulvia-official-heading>
+                <ulvia-official-prose measure="narrow" size="lg" slot="items"><div slot="content"><p>Accessible controls for clear, dependable forms—from first input to final feedback.</p></div></ulvia-official-prose>
+            </ulvia-official-stack>
+            <ulvia-official-form-actions align="end" responsive-layout="stack" slot="items">
+                <ulvia-official-action size="md" tone="primary" variant="outline" slot="actions"><a href="/forms/contact">Open contact example</a></ulvia-official-action>
+            </ulvia-official-form-actions>
+        </ulvia-official-grid>
+
+        <form id="catalogue-search-form" slot="items" cms-source="/.cms/call/forms/submission.create" cms-source-method="POST" cms-source-trigger="submit" hidden></form>
+        <form slot="items" cms-source="/.cms/call/forms/submission.create" cms-source-method="POST" cms-source-trigger="submit">
+            <ulvia-official-stack align="stretch" gap="lg">
+                <ulvia-official-form-section appearance="elevated" slot="items">
+                    <span slot="legend">Core fields</span>
+                    <span slot="description">Labels, descriptions, required states and contextual help stay close to the control.</span>
+                    <ulvia-official-grid slot="content" columns="2" gap="lg">
+                        <ulvia-official-field label-position="top" slot="items" required>
+                            <span slot="label">Full name</span>
+                            <ulvia-official-field-help slot="help"><span slot="label">Help for full name</span><span slot="content">Enter the name displayed on the account.</span></ulvia-official-field-help>
+                            <ulvia-official-input size="md" slot="control"><input id="name-example" type="text" name="name" autocomplete="name" required></ulvia-official-input>
+                            <span slot="description">As shown on the account.</span>
+                        </ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Work email</span>
+                            <ulvia-official-input size="md" slot="control"><input id="email-example" type="email" name="email" autocomplete="email" placeholder="alex@example.com"></ulvia-official-input>
+                        </ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Start date</span>
+                            <ulvia-official-input size="md" slot="control"><input type="date" name="startDate"></ulvia-official-input>
+                        </ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Team</span>
+                            <ulvia-official-select size="md" slot="control"><select name="team"><option value="">Choose a team</option><option value="design">Design</option><option value="engineering">Engineering</option><option value="operations">Operations</option></select></ulvia-official-select>
+                        </ulvia-official-field>
+                    </ulvia-official-grid>
+                        <ulvia-official-field label-position="top" slot="content">
+                            <span slot="label">Project notes</span>
+                            <ulvia-official-textarea resize="vertical" show-count slot="control"><textarea name="message" rows="4" maxlength="240" placeholder="Add useful context"></textarea></ulvia-official-textarea>
+                            <span slot="description">This field can grow vertically without breaking the surrounding layout.</span>
+                        </ulvia-official-field>
+                </ulvia-official-form-section>
+
+                <ulvia-official-form-section appearance="outlined" slot="items">
+                    <span slot="legend">Compositions and states</span>
+                    <span slot="description">Sizes, validation, disabled controls and mixed actions remain visually consistent.</span>
+                    <ulvia-official-grid slot="content" columns="3" gap="md">
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Small input</span>
+                            <ulvia-official-input size="sm" slot="control"><input type="text" name="projectCode" placeholder="ULV-104"></ulvia-official-input>
+                        </ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Medium select</span>
+                            <ulvia-official-select size="md" slot="control"><select name="priority"><option>Normal priority</option><option>High priority</option></select></ulvia-official-select>
+                        </ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Large input</span>
+                            <ulvia-official-input size="lg" slot="control"><input type="url" name="website" placeholder="https://example.com"></ulvia-official-input>
+                        </ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Disabled</span>
+                            <ulvia-official-input size="md" slot="control"><input type="text" value="Managed by your organisation" disabled></ulvia-official-input>
+                        </ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items" invalid required>
+                            <span slot="label">Validation error</span>
+                            <ulvia-official-input size="md" slot="control"><input type="email" value="alex@" aria-invalid="true" required></ulvia-official-input>
+                            <span slot="error">Enter a complete email address.</span>
+                        </ulvia-official-field>
+                    </ulvia-official-grid>
+                    <ulvia-official-field label-position="inline" slot="content">
+                        <span slot="label">Inline label</span>
+                        <ulvia-official-input size="md" slot="control"><input type="number" name="seats" min="1" value="8"></ulvia-official-input>
+                    </ulvia-official-field>
+                    <ulvia-official-field label-position="top" slot="content">
+                        <span slot="label">Joined composition</span>
+                        <ulvia-official-control-group joined slot="control">
+                            <span slot="leading">https://</span>
+                            <ulvia-official-input size="md" slot="control"><input type="text" name="domain" placeholder="your-domain.com"></ulvia-official-input>
+                            <ulvia-official-action size="md" tone="primary" variant="filled" slot="trailing"><button type="button">Check domain</button></ulvia-official-action>
+                        </ulvia-official-control-group>
+                    </ulvia-official-field>
+                </ulvia-official-form-section>
+
+                <ulvia-official-form-section appearance="elevated" slot="items">
+                    <span slot="legend">Specialised controls</span>
+                    <span slot="description">Purpose-built interactions keep the native form value and submission behaviour.</span>
+                    <ulvia-official-field label-position="top" slot="content">
+                        <span slot="label">Budget</span>
+                        <ulvia-official-range-control editable-value value-label="Current value (thousands)" slot="control"><ulvia-official-range value-prefix="$" value-suffix="k" slot="control"><input type="range" name="budget" min="0" max="100" step="5" value="60"></ulvia-official-range></ulvia-official-range-control>
+                    </ulvia-official-field>
+                    <ulvia-official-grid slot="content" columns="2" gap="lg">
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Relevant disciplines</span>
+                            <ulvia-official-multi-select density="compact" slot="control"><select name="disciplines" multiple size="5"><option value="research" selected>Research</option><option value="content">Content design</option><option value="product" selected>Product design</option><option value="development">Development</option><option value="quality">Quality assurance</option></select></ulvia-official-multi-select>
+                            <span slot="description">Select any combination. Use the arrow keys to move and Space to toggle.</span>
+                        </ulvia-official-field>
+                        <ulvia-official-stack align="stretch" slot="items" gap="lg">
+                            <ulvia-official-field label-position="top" slot="items">
+                                <span slot="label">Search the catalogue</span>
+                                <ulvia-official-search-input auto-submit submit-delay="400" clear-label="Clear search" slot="control"><ulvia-official-input size="md" slot="control"><input type="search" name="query" form="catalogue-search-form" placeholder="Search components"></ulvia-official-input></ulvia-official-search-input>
+                                <span slot="description">Submits automatically 400 ms after typing.</span>
+                            </ulvia-official-field>
+                            <ulvia-official-field label-position="top" slot="items">
+                                <span slot="label">Brand colour</span>
+                                <ulvia-official-color-input action-label="Change" slot="control"><input type="color" name="brandColor" value="#086c55"></ulvia-official-color-input>
+                            </ulvia-official-field>
+                        </ulvia-official-stack>
+                    </ulvia-official-grid>
+                    <ulvia-official-grid slot="content" columns="2" gap="lg">
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Team lookup</span>
+                            <ulvia-official-lookup placeholder="Find a team" no-results-label="No team matches your search" clear-label="Clear selected team" slot="control"><select name="teamLookup"><option value="">Choose a team</option><option value="brand">Brand design</option><option value="content">Content design</option><option value="engineering">Engineering</option><option value="growth">Growth</option><option value="operations">Operations</option><option value="research">User research</option></select></ulvia-official-lookup>
+                            <span slot="description">Search, use the arrow keys, then press Enter to select.</span>
+                        </ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Project tags</span>
+                            <ulvia-official-tag-input placeholder="Add a topic" hint="Type a topic and press Enter. Select × to remove it." separator="," max-tags="8" add-on-blur="false" slot="control"><input type="text" name="topics" value="accessibility,design systems" autocomplete="off"></ulvia-official-tag-input>
+                        </ulvia-official-field>
+                    </ulvia-official-grid>
+                    <ulvia-official-grid slot="content" columns="2" gap="lg">
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Upload card</span>
+                            <ulvia-official-file-input variant="card" button-label="Choose a document" drop-label="or drag it here" empty-label="Image, PDF or Word · up to 10 MB" slot="control"><input type="file" name="brief" accept="image/*,.pdf,.doc,.docx"></ulvia-official-file-input>
+                            <span slot="description">Images are shown directly; PDFs and other files receive a useful preview card.</span>
+                        </ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Drop zone</span>
+                            <ulvia-official-file-input variant="dropzone" button-label="Choose brand assets" drop-label="or drag them here" empty-label="PNG, SVG or ZIP · up to 25 MB" slot="control"><input type="file" name="assets" accept=".png,.svg,.zip" multiple></ulvia-official-file-input>
+                        </ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Compact upload</span>
+                            <ulvia-official-file-input variant="compact" button-label="Choose a file" drop-label="or drop it here" empty-label="Any file · up to 10 MB" slot="control"><input type="file" name="compactFile"></ulvia-official-file-input>
+                        </ulvia-official-field>
+                    </ulvia-official-grid>
+                </ulvia-official-form-section>
+
+                <ulvia-official-form-section appearance="elevated" slot="items">
+                    <span slot="legend">Selection controls</span>
+                    <span slot="description">Single choices, binary choices and compact exclusive options.</span>
+                    <ulvia-official-grid slot="content" columns="2" gap="lg">
+                        <ulvia-official-choice-group slot="items" orientation="vertical">
+                            <span slot="legend">Preferred contact method</span>
+                            <span slot="help">Used when we need to reply about this project.</span>
+                            <ulvia-official-choice-field slot="items"><ulvia-official-radio slot="control"><input type="radio" name="contact" value="email" checked></ulvia-official-radio><span slot="label">Email</span></ulvia-official-choice-field>
+                            <ulvia-official-choice-field slot="items"><ulvia-official-radio slot="control"><input type="radio" name="contact" value="phone"></ulvia-official-radio><span slot="label">Phone</span></ulvia-official-choice-field>
+                        </ulvia-official-choice-group>
+                        <ulvia-official-segmented-control orientation="horizontal" wide slot="items">
+                            <span slot="legend">Display density</span>
+                            <ulvia-official-segment slot="items"><ulvia-official-radio slot="control"><input type="radio" name="density" value="comfortable" checked></ulvia-official-radio><span slot="label">Comfortable</span></ulvia-official-segment>
+                            <ulvia-official-segment slot="items"><ulvia-official-radio slot="control"><input type="radio" name="density" value="compact"></ulvia-official-radio><span slot="label">Compact</span></ulvia-official-segment>
+                        </ulvia-official-segmented-control>
+                        <ulvia-official-choice-field slot="items"><ulvia-official-checkbox slot="control"><input id="terms-example" type="checkbox" name="terms" value="accepted"></ulvia-official-checkbox><span slot="label">I agree to the terms</span><span slot="help">Required before submission.</span></ulvia-official-choice-field>
+                        <ulvia-official-choice-field slot="items"><ulvia-official-toggle slot="control"><input type="checkbox" role="switch" name="updates" value="yes" checked></ulvia-official-toggle><span slot="label">Product updates</span><span slot="help">Receive occasional email updates.</span></ulvia-official-choice-field>
+                    </ulvia-official-grid>
+                    <ulvia-official-form-actions align="start" responsive-layout="wrap" slot="content">
+                        <ulvia-official-action size="sm" tone="neutral" variant="outline" slot="actions"><button type="button" disabled>Disabled action</button></ulvia-official-action>
+                    </ulvia-official-form-actions>
+                </ulvia-official-form-section>
+
+                <ulvia-official-form-section appearance="elevated" slot="items">
+                    <span slot="legend">Button variants</span>
+                    <span slot="description">Three levels of emphasis across every semantic tone.</span>
+                    <ulvia-official-grid slot="content" columns="2" gap="lg">
+                        <ulvia-official-stack align="stretch" slot="items" gap="sm"><ulvia-official-prose measure="wide" size="sm" slot="items"><div slot="content"><strong>Primary</strong></div></ulvia-official-prose><ulvia-official-form-actions align="start" responsive-layout="wrap" slot="items"><ulvia-official-action size="sm" tone="primary" variant="filled" slot="actions"><button type="button">Filled</button></ulvia-official-action><ulvia-official-action size="sm" tone="primary" variant="outline" slot="actions"><button type="button">Outline</button></ulvia-official-action><ulvia-official-action size="sm" tone="primary" variant="ghost" slot="actions"><button type="button">Ghost</button></ulvia-official-action></ulvia-official-form-actions></ulvia-official-stack>
+                        <ulvia-official-stack align="stretch" slot="items" gap="sm"><ulvia-official-prose measure="wide" size="sm" slot="items"><div slot="content"><strong>Secondary</strong></div></ulvia-official-prose><ulvia-official-form-actions align="start" responsive-layout="wrap" slot="items"><ulvia-official-action size="sm" tone="secondary" variant="filled" slot="actions"><button type="button">Filled</button></ulvia-official-action><ulvia-official-action size="sm" tone="secondary" variant="outline" slot="actions"><button type="button">Outline</button></ulvia-official-action><ulvia-official-action size="sm" tone="secondary" variant="ghost" slot="actions"><button type="button">Ghost</button></ulvia-official-action></ulvia-official-form-actions></ulvia-official-stack>
+                        <ulvia-official-stack align="stretch" slot="items" gap="sm"><ulvia-official-prose measure="wide" size="sm" slot="items"><div slot="content"><strong>Neutral</strong></div></ulvia-official-prose><ulvia-official-form-actions align="start" responsive-layout="wrap" slot="items"><ulvia-official-action size="sm" tone="neutral" variant="filled" slot="actions"><button type="button">Filled</button></ulvia-official-action><ulvia-official-action size="sm" tone="neutral" variant="outline" slot="actions"><button type="button">Outline</button></ulvia-official-action><ulvia-official-action size="sm" tone="neutral" variant="ghost" slot="actions"><button type="button">Ghost</button></ulvia-official-action></ulvia-official-form-actions></ulvia-official-stack>
+                        <ulvia-official-stack align="stretch" slot="items" gap="sm"><ulvia-official-prose measure="wide" size="sm" slot="items"><div slot="content"><strong>Information</strong></div></ulvia-official-prose><ulvia-official-form-actions align="start" responsive-layout="wrap" slot="items"><ulvia-official-action size="sm" tone="info" variant="filled" slot="actions"><button type="button">Filled</button></ulvia-official-action><ulvia-official-action size="sm" tone="info" variant="outline" slot="actions"><button type="button">Outline</button></ulvia-official-action><ulvia-official-action size="sm" tone="info" variant="ghost" slot="actions"><button type="button">Ghost</button></ulvia-official-action></ulvia-official-form-actions></ulvia-official-stack>
+                        <ulvia-official-stack align="stretch" slot="items" gap="sm"><ulvia-official-prose measure="wide" size="sm" slot="items"><div slot="content"><strong>Success</strong></div></ulvia-official-prose><ulvia-official-form-actions align="start" responsive-layout="wrap" slot="items"><ulvia-official-action size="sm" tone="success" variant="filled" slot="actions"><button type="button">Filled</button></ulvia-official-action><ulvia-official-action size="sm" tone="success" variant="outline" slot="actions"><button type="button">Outline</button></ulvia-official-action><ulvia-official-action size="sm" tone="success" variant="ghost" slot="actions"><button type="button">Ghost</button></ulvia-official-action></ulvia-official-form-actions></ulvia-official-stack>
+                        <ulvia-official-stack align="stretch" slot="items" gap="sm"><ulvia-official-prose measure="wide" size="sm" slot="items"><div slot="content"><strong>Warning</strong></div></ulvia-official-prose><ulvia-official-form-actions align="start" responsive-layout="wrap" slot="items"><ulvia-official-action size="sm" tone="warning" variant="filled" slot="actions"><button type="button">Filled</button></ulvia-official-action><ulvia-official-action size="sm" tone="warning" variant="outline" slot="actions"><button type="button">Outline</button></ulvia-official-action><ulvia-official-action size="sm" tone="warning" variant="ghost" slot="actions"><button type="button">Ghost</button></ulvia-official-action></ulvia-official-form-actions></ulvia-official-stack>
+                        <ulvia-official-stack align="stretch" slot="items" gap="sm"><ulvia-official-prose measure="wide" size="sm" slot="items"><div slot="content"><strong>Danger</strong></div></ulvia-official-prose><ulvia-official-form-actions align="start" responsive-layout="wrap" slot="items"><ulvia-official-action size="sm" tone="danger" variant="filled" slot="actions"><button type="button">Filled</button></ulvia-official-action><ulvia-official-action size="sm" tone="danger" variant="outline" slot="actions"><button type="button">Outline</button></ulvia-official-action><ulvia-official-action size="sm" tone="danger" variant="ghost" slot="actions"><button type="button">Ghost</button></ulvia-official-action></ulvia-official-form-actions></ulvia-official-stack>
+                    </ulvia-official-grid>
+                </ulvia-official-form-section>
+
+                <ulvia-official-form-actions align="start" responsive-layout="wrap" slot="items">
+                    <ulvia-official-action size="md" tone="primary" variant="filled" slot="actions"><button type="submit">Save example</button></ulvia-official-action>
+                    <ulvia-official-action size="md" tone="neutral" variant="ghost" slot="actions"><button type="reset">Reset form</button></ulvia-official-action>
+                </ulvia-official-form-actions>
+            </ulvia-official-stack>
+        </form>
+
+        <ulvia-official-form-section appearance="elevated" slot="items">
+            <span slot="legend">Feedback</span>
+            <span slot="description">Status messages remain distinct from actionable validation errors.</span>
+            <ulvia-official-grid slot="content" columns="2" gap="lg">
+                <ulvia-official-form-status slot="items" tone="success"><output aria-live="polite">Example saved successfully.</output></ulvia-official-form-status>
+                <ulvia-official-form-status slot="items" tone="warning"><output aria-live="polite">The current draft expires in ten minutes.</output></ulvia-official-form-status>
+            </ulvia-official-grid>
+            <ulvia-official-error-summary slot="content"><strong slot="title">Please correct two fields</strong><ul slot="items"><li><a href="#email-example">Enter a valid email address</a></li><li><a href="#terms-example">Accept the terms to continue</a></li></ul></ulvia-official-error-summary>
+        </ulvia-official-form-section>
+    </ulvia-official-stack>
+</ulvia-official-section>

@@ -9,8 +9,8 @@
             "description": "theme.token.background-base.description",
             "type": "color",
             "defaults": {
-                "light": "#f7faf8",
-                "dark": "#101714"
+                "light": "#f6f7f7",
+                "dark": "#111513"
             }
         },
         {
@@ -19,8 +19,8 @@
             "description": "theme.token.background-subtle.description",
             "type": "color",
             "defaults": {
-                "light": "#eef4f1",
-                "dark": "#16211c"
+                "light": "#eef1f0",
+                "dark": "#171d1a"
             }
         },
         {
@@ -30,7 +30,7 @@
             "type": "color",
             "defaults": {
                 "light": "#ffffff",
-                "dark": "#1c2822"
+                "dark": "#1d2421"
             }
         },
         {
@@ -40,7 +40,7 @@
             "type": "color",
             "defaults": {
                 "light": "#ffffff",
-                "dark": "#25332c"
+                "dark": "#252e2a"
             }
         },
         {
@@ -49,8 +49,8 @@
             "description": "theme.token.background-inverse.description",
             "type": "color",
             "defaults": {
-                "light": "#15352b",
-                "dark": "#eef7f2"
+                "light": "#17211e",
+                "dark": "#f2f5f3"
             }
         },
         {
@@ -59,8 +59,8 @@
             "description": "theme.token.text-primary.description",
             "type": "color",
             "defaults": {
-                "light": "#15352b",
-                "dark": "#f0f7f3"
+                "light": "#17211e",
+                "dark": "#f2f5f3"
             }
         },
         {
@@ -69,8 +69,8 @@
             "description": "theme.token.text-secondary.description",
             "type": "color",
             "defaults": {
-                "light": "#365247",
-                "dark": "#c8d8cf"
+                "light": "#42504a",
+                "dark": "#c8d1cc"
             }
         },
         {
@@ -79,8 +79,8 @@
             "description": "theme.token.text-muted.description",
             "type": "color",
             "defaults": {
-                "light": "#526b61",
-                "dark": "#a8bbb1"
+                "light": "#68766f",
+                "dark": "#a7b3ad"
             }
         },
         {
@@ -89,8 +89,8 @@
             "description": "theme.token.text-disabled.description",
             "type": "color",
             "defaults": {
-                "light": "#84958c",
-                "dark": "#71847a"
+                "light": "#8e9994",
+                "dark": "#74817b"
             }
         },
         {
@@ -99,8 +99,8 @@
             "description": "theme.token.text-inverse.description",
             "type": "color",
             "defaults": {
-                "light": "#f7faf8",
-                "dark": "#102018"
+                "light": "#f7f9f8",
+                "dark": "#151a18"
             }
         },
         {
@@ -127,8 +127,8 @@
             "description": "theme.token.border-subtle.description",
             "type": "color",
             "defaults": {
-                "light": "#dce7e1",
-                "dark": "#2d3d35"
+                "light": "#e1e6e3",
+                "dark": "#303a35"
             }
         },
         {
@@ -137,8 +137,8 @@
             "description": "theme.token.border-default.description",
             "type": "color",
             "defaults": {
-                "light": "#c2d1ca",
-                "dark": "#40534a"
+                "light": "#c8d1cd",
+                "dark": "#435049"
             }
         },
         {
@@ -147,8 +147,8 @@
             "description": "theme.token.border-strong.description",
             "type": "color",
             "defaults": {
-                "light": "#8da299",
-                "dark": "#6d8579"
+                "light": "#89968f",
+                "dark": "#718078"
             }
         },
         {

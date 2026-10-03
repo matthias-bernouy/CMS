@@ -46,5 +46,13 @@
                 { "value": "lg", "label": "setting.option.large" }
             ]
         }
+    },
+    {
+        "id": "viewport-height",
+        "label": "setting.viewport-height.label",
+        "group": "setting.group.layout",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
     }
 ]

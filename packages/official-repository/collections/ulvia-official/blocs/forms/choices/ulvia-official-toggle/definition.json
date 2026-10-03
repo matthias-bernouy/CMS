@@ -1,0 +1,18 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-toggle",
+    "label": "bloc.toggle.label",
+    "description": "bloc.toggle.description",
+    "category": "bloc.category.forms",
+    "order": 100,
+    "nativeElement": {
+        "accepts": ["input"],
+        "attributes": {
+            "type": { "required": true, "values": ["checkbox"] },
+            "role": { "required": true, "values": ["switch"] }
+        }
+    },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

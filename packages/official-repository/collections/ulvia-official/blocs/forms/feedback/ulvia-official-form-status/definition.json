@@ -1,0 +1,15 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-form-status",
+    "label": "bloc.form-status.label",
+    "description": "bloc.form-status.description",
+    "category": "bloc.category.forms",
+    "order": 170,
+    "nativeElement": {
+        "accepts": ["output"],
+        "attributes": { "aria-live": { "required": true, "values": ["polite", "assertive"] } }
+    },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

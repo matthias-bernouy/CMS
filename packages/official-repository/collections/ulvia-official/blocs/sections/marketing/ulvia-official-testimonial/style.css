@@ -1,4 +1,4 @@
-:host { display: block; color: var(--ulvia-official-text-primary, CanvasText); background: var(--ulvia-official-background-subtle, #f4f5f7); font-family: var(--ulvia-official-font-family-main, inherit); }
+:host { display: block; color: var(--ulvia-official-text-primary, CanvasText); background: var(--ulvia-official-background-subtle, #f4f5f7); font-family: var(--ulvia-official-font-family-main, inherit); container-type: inline-size; }
 [part="section"] { padding-block: var(--ulvia-official-section-spacing, 4rem); }
 [part="container"] { display: grid; width: min(100% - (2 * var(--ulvia-official-page-gutter, 1rem)), var(--ulvia-official-content-width-lg, 72rem)); margin-inline: auto; grid-template-columns: auto minmax(0, 1fr); gap: var(--ulvia-official-spacing-xl, 2rem); align-items: center; }
 [part="media"], [part="testimonial"] { margin: 0; }
@@ -11,4 +11,4 @@
 :host([surface="base"]) { background: var(--ulvia-official-background-base, Canvas); }
 :host([surface="inverse"]) { color: var(--ulvia-official-text-inverse, #ffffff); background: var(--ulvia-official-background-inverse, #17191c); }
 :host([surface="inverse"]) [part="attribution"] { color: var(--ulvia-official-text-inverse, #ffffff); }
-@media (max-width: 36rem) { [part="container"] { grid-template-columns: minmax(0, 1fr); } [part="media"] { width: 6rem; } }
+@container (max-width: 36rem) { [part="container"] { grid-template-columns: minmax(0, 1fr); } [part="media"] { width: 6rem; } }

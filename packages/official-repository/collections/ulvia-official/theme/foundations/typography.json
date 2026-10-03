@@ -18,7 +18,7 @@
             "description": "theme.token.font-family-secondary.description",
             "type": "font-family",
             "defaults": {
-                "light": "Georgia, \"Times New Roman\", serif"
+                "light": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif"
             }
         },
         {
@@ -171,7 +171,7 @@
             "label": "theme.token.letter-spacing-tight.label",
             "type": "length",
             "defaults": {
-                "light": "-0.015em"
+                "light": "-0.025em"
             }
         },
         {

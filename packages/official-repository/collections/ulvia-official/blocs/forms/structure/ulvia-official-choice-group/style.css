@@ -1,0 +1,6 @@
+:host { display: block; min-width: 0; color: var(--ulvia-official-text-primary, CanvasText); font-family: var(--ulvia-official-font-family-main, inherit); container-type: inline-size; }
+[part="group"] { min-width: 0; }
+::slotted(fieldset[slot="choice-group"]) { display: grid; min-width: 0; margin: 0; padding: 0; border: 0; gap: var(--ulvia-official-spacing-2xs, .375rem); color: inherit; font: inherit; }
+:host([orientation="horizontal"]) { --option-list-columns: none; --option-list-rows: auto; --option-list-flow: column; --option-list-auto-columns: minmax(11rem, auto); --option-list-gap: var(--ulvia-official-spacing-md, 1rem); }
+:host([orientation="horizontal"]) ::slotted(fieldset[slot="choice-group"]) { width: fit-content; max-width: 100%; }
+@container (max-width: 28rem) { :host([orientation="horizontal"]) ::slotted(fieldset[slot="choice-group"]) { width: 100%; --option-list-columns: minmax(0, 1fr); --option-list-rows: none; --option-list-flow: row; --option-list-auto-columns: auto; } }

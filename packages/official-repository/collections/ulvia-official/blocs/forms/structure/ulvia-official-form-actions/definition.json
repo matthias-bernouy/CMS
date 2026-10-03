@@ -1,0 +1,13 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-form-actions",
+    "label": "bloc.form-actions.label",
+    "description": "bloc.form-actions.description",
+    "category": "bloc.category.forms",
+    "order": 150,
+    "uses": ["ulvia-official-action"],
+    "requires": [],
+    "slots": {
+        "actions": { "accepts": [{ "kind": "any-component" }], "min": 1 }
+    }
+}

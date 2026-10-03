@@ -1,0 +1,109 @@
+:host {
+    --field-required-marker-display: none;
+    display: block;
+    min-width: 0;
+    color: var(--ulvia-official-text-primary, CanvasText);
+    font-family: var(--ulvia-official-font-family-main, inherit);
+    container-type: inline-size;
+}
+
+[part="field"] {
+    display: grid;
+    min-width: 0;
+    gap: var(--ulvia-official-spacing-xs, .5rem);
+}
+
+[part="heading"] {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ulvia-official-spacing-sm, .75rem);
+}
+
+::slotted(label[slot="field-label"]) {
+    min-width: 0;
+    cursor: pointer;
+    font-size: var(--ulvia-official-font-size-sm, .875rem);
+    font-weight: var(--ulvia-official-font-weight-semibold, 600);
+    line-height: var(--ulvia-official-line-height-snug, 1.35);
+}
+
+::slotted([slot="field-control"]) {
+    display: block;
+    min-width: 0;
+}
+
+::slotted([slot="field-description"]),
+::slotted([slot="field-error"]) {
+    font-size: var(--ulvia-official-font-size-sm, .875rem);
+    line-height: var(--ulvia-official-line-height-normal, 1.5);
+}
+
+::slotted([slot="field-help"]:empty),
+::slotted([slot="field-description"]:empty),
+::slotted([slot="field-error"]:empty) {
+    display: none;
+}
+
+::slotted([slot="field-help"]) {
+    position: relative;
+    z-index: 2;
+    flex: 0 0 auto;
+    line-height: 1;
+}
+
+::slotted([slot="field-description"]) {
+    color: var(--ulvia-official-text-muted, #68766f);
+}
+
+::slotted([slot="field-error"]) {
+    color: var(--ulvia-official-danger, #b42318);
+    font-weight: var(--ulvia-official-font-weight-medium, 500);
+}
+
+:host([required]) {
+    --field-required-marker-display: inline;
+}
+
+:host([invalid]) {
+    padding: var(--ulvia-official-spacing-sm, .75rem);
+    border-inline-start: var(--ulvia-official-border-width-strong, 2px) solid
+        var(--ulvia-official-danger-border, #b42318);
+    border-radius: var(--ulvia-official-radius-sm, .375rem);
+    background: var(--ulvia-official-danger-subtle, #fff0ee);
+}
+
+:host([label-position="inline"]) [part="field"] {
+    grid-template-columns: minmax(7.5rem, 8rem) minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--ulvia-official-spacing-md, 1rem);
+}
+
+:host([label-position="inline"]) [part="heading"] {
+    grid-column: 1;
+}
+
+:host([label-position="inline"]) ::slotted([slot="field-control"]) {
+    grid-column: 2;
+}
+
+:host([label-position="inline"]) ::slotted([slot="field-description"]),
+:host([label-position="inline"]) ::slotted([slot="field-error"]) {
+    grid-column: 2;
+}
+
+@container (max-width: 28rem) {
+    :host([label-position="inline"]) [part="field"] {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: stretch;
+        column-gap: 0;
+    }
+
+    :host([label-position="inline"]) [part="heading"],
+    :host([label-position="inline"]) ::slotted([slot="field-control"]),
+    :host([label-position="inline"]) ::slotted([slot="field-description"]),
+    :host([label-position="inline"]) ::slotted([slot="field-error"]) {
+        grid-column: 1;
+    }
+}

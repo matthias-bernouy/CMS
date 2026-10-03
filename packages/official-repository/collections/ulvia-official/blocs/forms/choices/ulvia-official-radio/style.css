@@ -1,0 +1,8 @@
+:host { position: var(--radio-host-position, static); display: inline-block; width: var(--radio-host-size, auto); height: var(--radio-host-size, auto); overflow: var(--radio-host-overflow, visible); clip-path: var(--radio-host-clip, none); font-family: var(--ulvia-official-font-family-main, inherit); }
+[part="control"] { display: inline-flex; width: 2rem; min-height: 2rem; align-items: center; justify-content: center; }
+::slotted(input) { width: 1.375rem; height: 1.375rem; box-sizing: border-box; margin: 0; border: var(--ulvia-official-border-width-strong, 2px) solid var(--ulvia-official-border-strong, #89968f); border-radius: var(--ulvia-official-radius-full, 999px); appearance: none; background: var(--ulvia-official-background-surface, Canvas); cursor: pointer; }
+::slotted(input:checked) { border: .4rem solid var(--ulvia-official-primary, #086c55); }
+::slotted(input:hover:not(:disabled)) { border-color: var(--ulvia-official-primary, #086c55); }
+::slotted(input:focus-visible) { outline: 3px solid var(--ulvia-official-focus-ring, Highlight); outline-offset: 3px; }
+::slotted(input[aria-invalid="true"]) { outline: 2px solid var(--ulvia-official-danger-border, #b42318); outline-offset: 2px; }
+::slotted(input:disabled) { cursor: not-allowed; opacity: .55; }

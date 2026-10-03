@@ -1,0 +1,14 @@
+:host { display: block; min-width: 0; }
+[part="items"] {
+    display: grid;
+    grid-template-columns: var(--option-list-columns, minmax(0, 1fr));
+    grid-template-rows: var(--option-list-rows, none);
+    grid-auto-flow: var(--option-list-flow, row);
+    grid-auto-columns: var(--option-list-auto-columns, auto);
+    box-sizing: border-box;
+    padding: var(--option-list-padding, 0);
+    border: var(--option-list-border, 0);
+    border-radius: var(--option-list-radius, 0);
+    gap: var(--option-list-gap, var(--ulvia-official-spacing-2xs, .375rem));
+    background: var(--option-list-background, transparent);
+}

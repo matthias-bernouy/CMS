@@ -1,0 +1,14 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-error-summary",
+    "label": "bloc.error-summary.label",
+    "description": "bloc.error-summary.description",
+    "category": "bloc.category.forms",
+    "order": 160,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "title": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "min": 1, "max": 1 },
+        "items": { "accepts": [{ "kind": "rich-text", "profile": "prose" }], "min": 1, "max": 1 }
+    }
+}

@@ -1,0 +1,39 @@
+[
+    {
+        "id": "align",
+        "label": "setting.alignment.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "start",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "start", "label": "setting.option.start" },
+                { "value": "center", "label": "setting.option.center" },
+                { "value": "end", "label": "setting.option.end" }
+            ]
+        }
+    },
+    {
+        "id": "wide",
+        "label": "setting.wide.label",
+        "group": "setting.group.layout",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    },
+    {
+        "id": "responsive-layout",
+        "label": "setting.responsive-layout.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "stack",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "stack", "label": "setting.option.stack" },
+                { "value": "wrap", "label": "setting.option.wrap" }
+            ]
+        }
+    }
+]
