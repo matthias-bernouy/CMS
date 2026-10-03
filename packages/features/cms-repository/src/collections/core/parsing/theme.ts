@@ -2,7 +2,7 @@ import type { CollectionTheme, CollectionThemeToken, CollectionThemeTokenType } 
 import type { CollectionDependency } from "../../interfaces/CollectionRelease";
 import { invalid } from "../errors";
 import { collectionThemeSourceId, collectionThemeTokenId } from "../namespace";
-import { array, identifier, keys, record, string, unique } from "../values";
+import { array, identifier, integer, keys, record, string, unique } from "../values";
 
 const TYPES = new Set<CollectionThemeTokenType>(["color", "font-family", "length", "number", "shadow", "value"]);
 const NAME = /^[a-z][a-z0-9-]*$/;
@@ -44,7 +44,7 @@ export function parseCollectionTheme(
         const tokens = array(category.tokens, 64, `${path}.tokens`).map((item, offset) => {
             const tokenPath = `${path}.tokens[${offset}]`;
             const token = record(item, tokenPath);
-            keys(token, ["id", "label", "description", "type", "defaults"], tokenPath);
+            keys(token, ["id", "generation", "label", "description", "type", "defaults"], tokenPath);
             if (!TYPES.has(token.type as CollectionThemeTokenType)) {
                 invalid("unsupported token type", `${tokenPath}.type`);
             }
@@ -54,6 +54,10 @@ export function parseCollectionTheme(
             collectionThemeTokenId(collectionId, id);
             return {
                 id,
+                generation:
+                    token.generation === undefined
+                        ? 1
+                        : integer(token.generation, 1, Number.MAX_SAFE_INTEGER, `${tokenPath}.generation`),
                 label: label(token.label, `${tokenPath}.label`),
                 ...(token.description === undefined
                     ? {}

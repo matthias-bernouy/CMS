@@ -79,6 +79,7 @@ compilation, site installation or execution authorization.
 | `@bernouy/cms-repository/providers/selections` | Bounded full-site graph planning, revisioned memory store and catalogue dependency source |
 | `@bernouy/cms-repository/providers/mongo` | Mongo manifest catalogue, installation and selection stores with revision-checked writes |
 | `@bernouy/cms-repository/collections` | Authored release parsing, Light DOM structure, asset and requirement verification, bundle digests |
+| `@bernouy/cms-repository/collections/installations` | Revisioned site installations, compatibility analysis, resource digests and atomic migration replacement/restoration |
 
 Use explicit domain subpaths for executable APIs. There are no compatibility
 packages or wrappers under the former package names.

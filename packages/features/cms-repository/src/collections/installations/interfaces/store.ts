@@ -15,6 +15,13 @@ export type CollectionInstallation = {
     textOverrides: CollectionTextOverrides;
 };
 export type CollectionInstallRequest = { digest: string; repositoryId?: string };
+export type CollectionMigrationReplacement = {
+    collectionId: string;
+    digest: string;
+    repositoryId?: string;
+    configuration: Readonly<Record<string, unknown>>;
+    textOverrides: CollectionTextOverrides;
+};
 export type CollectionSiteState = { revision: number; installations: CollectionInstallation[] };
 export type InstalledCollection = CollectionInstallation & { release: CollectionRelease };
 export interface CollectionStorage {

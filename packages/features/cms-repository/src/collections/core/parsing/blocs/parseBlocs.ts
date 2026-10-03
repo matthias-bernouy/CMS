@@ -11,6 +11,7 @@ import { parseManagedNativeElement } from "./managedNativeElement";
 const common = [
     "kind",
     "id",
+    "generation",
     "label",
     "description",
     "category",
@@ -56,6 +57,10 @@ function parseBloc(
     }
     const base = {
         id,
+        generation:
+            source.generation === undefined
+                ? 1
+                : integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${path}.generation`),
         label: string(source.label, 120, `${path}.label`),
         ...(source.description === undefined
             ? {}

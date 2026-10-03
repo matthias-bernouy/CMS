@@ -265,6 +265,11 @@ models and validation for CMS-owned installations and site selections.
   value schemas, may only widen existing slot/native-element contracts, and
   preserve theme-token types. Validate the candidate installation before the
   revisioned write; publication to a remote registry remains unsupported.
+- Collection releases carry cumulative adjacent data-generation migrations and
+  per-resource generations. Migration operations are closed, declarative data;
+  never accept executable migration code. Contract and implementation digests
+  are derived after admission and do not replace the collection SemVer or
+  immutable release digest.
 - Text metadata (`category`, `group`, `label`, `description`) uses collection
   translation keys. It is declarative and bounded, does not change server text
   keys and does not grant runtime capabilities.

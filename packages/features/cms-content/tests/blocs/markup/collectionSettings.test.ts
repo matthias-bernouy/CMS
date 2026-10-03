@@ -52,7 +52,7 @@ test("collection number attributes use strict JSON syntax before schema validati
     }
 });
 
-test("collection number attributes enforce numeric type, presence and bounds", () => {
+test("collection number attributes enforce explicit values and accept absent attributes through defaults", () => {
     expect(() =>
         assertCollectionSettingAttributes('<example-counter count="1.5" ratio="0.5"></example-counter>', configured),
     ).toThrow("safe integer");
@@ -64,5 +64,5 @@ test("collection number attributes enforce numeric type, presence and bounds", (
     ).toThrow("at most 1");
     expect(() =>
         assertCollectionSettingAttributes('<example-counter ratio="0.5"></example-counter>', configured),
-    ).toThrow("required property");
+    ).not.toThrow();
 });

@@ -1,4 +1,5 @@
 import type { CollectionText, CollectionTextOverrides } from "../../interfaces/CollectionText";
+import { integer } from "../values";
 import { parseTextLocales, TEXT_LIMITS, textIdentifier, textKeys, textLocale, textRecord } from "./validation";
 
 export function parseCollectionTexts(value: unknown, defaultLocale: string): readonly CollectionText[] {
@@ -13,8 +14,12 @@ export function parseCollectionTexts(value: unknown, defaultLocale: string): rea
     const locale = textLocale(defaultLocale);
     const texts = value.map((item) => {
         const source = textRecord(item);
-        textKeys(source, ["id", "label", "description", "category", "group", "values"]);
+        textKeys(source, ["id", "generation", "label", "description", "category", "group", "values"]);
         const id = textIdentifier(source.id);
+        const generation =
+            source.generation === undefined
+                ? 1
+                : integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `$.texts.${id}.generation`);
         const metadata = Object.fromEntries(
             ["label", "description", "category", "group"].flatMap((key) => {
                 const value = source[key];
@@ -31,7 +36,7 @@ export function parseCollectionTexts(value: unknown, defaultLocale: string): rea
         if (!Object.hasOwn(values, locale)) {
             throw new TypeError(`Text ${id} is missing its default locale ${locale}`);
         }
-        return Object.freeze({ id, ...metadata, values });
+        return Object.freeze({ id, generation, ...metadata, values });
     });
     if (new Set(texts.map(({ id }) => id)).size !== texts.length) {
         throw new TypeError("Duplicate text ID");

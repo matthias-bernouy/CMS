@@ -149,9 +149,20 @@ test("upgrades allow setting presentation changes while preserving the stored va
     next.version = "1.1.0";
     for (const messages of Object.values(next.translations)) {
         messages["setting.tone.help"] = "Updated author guidance";
+        messages["setting.layout.label"] = "Layout";
     }
     const nextPanel = (next.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-panel")!;
-    nextPanel.settings = [nextPanel.settings[1], { ...nextPanel.settings[0], default: "calm", maxLength: 32 }];
+    nextPanel.settings = [
+        nextPanel.settings[1],
+        { ...nextPanel.settings[0], default: "calm", maxLength: 32 },
+        {
+            id: "layout",
+            label: "setting.layout.label",
+            type: "string",
+            default: "stack",
+            control: { kind: "text" },
+        },
+    ];
     const admitted = await store.importRelease(next);
 
     await expect(store.upgrade("site", admitted.digest, 1, "local")).resolves.toMatchObject({ revision: 2 });

@@ -4,6 +4,7 @@ import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { loadCollectionBlocs } from "../../src/release/blocSources";
 import { loadCollectionTexts } from "../../src/release/textSources";
+import { loadCollectionMigrations } from "../../src/release/migrationSources";
 
 const temporaryDirectories: string[] = [];
 
@@ -71,6 +72,19 @@ test("Bloc discovery rejects duplicate IDs and files in grouping directories", a
     await expect(loadCollectionBlocs(orphanRoot, "Example")).rejects.toThrow(
         "Bloc grouping directories may not contain files",
     );
+});
+
+test("migration steps are discovered recursively and named after their adjacent generations", async () => {
+    const root = await temporaryDirectory();
+    expect(await loadCollectionMigrations(join(root, "missing"))).toEqual([]);
+    const first = { fromGeneration: 1, toGeneration: 2, operations: [] };
+    const second = { fromGeneration: 2, toGeneration: 3, operations: [] };
+    await writeJson(join(root, "legacy", "1-to-2.json"), first);
+    await writeJson(join(root, "current", "2-to-3.json"), second);
+    expect(await loadCollectionMigrations(root)).toEqual([second, first]);
+
+    await writeJson(join(root, "current", "wrong.json"), { fromGeneration: 3, toGeneration: 4, operations: [] });
+    await expect(loadCollectionMigrations(root)).rejects.toThrow("must be named 3-to-4.json");
 });
 
 async function writeComposition(root: string, id: string): Promise<void> {

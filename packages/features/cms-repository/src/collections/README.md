@@ -8,7 +8,7 @@ authorization engine or a general-purpose executable package format.
 
 The envelope identifies `kind: "collection"`, `protocol: "ulvia-collection/v1"`,
 `schemaDialect: "ulvia-schema/v1"`, collection ID, publisher ID, exact SemVer,
-name translation key and default locale. Its immutable `translations` catalogue
+name translation key, default locale and collection `dataGeneration`. Its immutable `translations` catalogue
 contains static administration copy. Optional configuration has a nonnullable
 object schema and validated defaults. Binary leaves are forbidden in
 configuration schemas.
@@ -37,6 +37,7 @@ This slice supports:
   rich-text profiles, optional thumbnail asset, initial editable `defaultContent`
   and resource-level capability requirements.
 - Selective public Bloc/theme-token exports and bounded cross-collection imports.
+- Cumulative adjacent, declarative migration steps for site-owned data.
 
 Collection and bloc configuration are distinct. `defaultContent` belongs to
 the editable page instance; `lightdom` describes the reusable fixed assembly.
@@ -201,6 +202,19 @@ and accepted native tags may widen but cannot invalidate existing content.
 Collection configuration is mutable per site through a schema-validated,
 revision-checked store operation and the administrator-only Control API.
 
+Every independently consumable resource has a positive generation and derived
+contract/implementation SHA-256 digests. The collection SemVer and immutable
+release digest remain authoritative publication identities; resource digests
+provide precise impact reporting. Breaking site-owned data changes increment
+`dataGeneration`. A generation `N` release retains every adjacent transition
+from generation `1`; the runtime composes those steps for any older installed
+generation. Operations are a closed JSON vocabulary and never executable code.
+
+Migration execution belongs to `@bernouy/cms-content/migrations`, not this
+package. The collection store only validates and atomically commits an exact
+multi-collection replacement or restoration after the content layer has planned
+the affected pages and site-owned values.
+
 The store can remove a collection only when no installed collection depends on
 it. This is deliberately not exposed as a Control HTTP action yet: pages, private
 Blocs, theme overrides and dashboards still need affected-resource analysis
@@ -211,7 +225,7 @@ before removal is safe.
 Presets remain absent from the public format: unsupported fields reject. Expanded
 view bindings, published execution plans and capability grants remain future work.
 
-Affected-resource analysis, remote publication, explicit breaking upgrade migrations and
-component renderer trust hardening are not implemented yet.
+Remote publication, JavaScript trust scanning and component renderer trust
+hardening are not implemented yet.
 The [starter bundle](../../fixtures/collections/v1/README.md) exercises the
 implemented authoring/admission path without a provider or renderer.

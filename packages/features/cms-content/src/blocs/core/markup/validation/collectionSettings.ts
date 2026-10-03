@@ -26,6 +26,7 @@ export function assertCollectionSettingAttributes(content: string, blocs: readon
                         continue;
                     }
                     if (!host.hasAttribute(item.id)) {
+                        settings[item.id] = item.default;
                         continue;
                     }
                     const value = host.getAttribute(item.id)!;

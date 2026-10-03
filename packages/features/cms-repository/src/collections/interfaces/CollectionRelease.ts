@@ -7,8 +7,49 @@ import type { CollectionView } from "./CollectionView";
 import type { CollectionDashboard } from "./CollectionDashboard";
 
 export interface CollectionConfiguration {
+    readonly generation?: number;
     readonly schema: UlviaObjectSchema;
     readonly defaults: Readonly<Record<string, unknown>>;
+}
+
+export type CollectionMigrationOperation =
+    | { readonly kind: "rename-bloc"; readonly from: string; readonly to: string }
+    | { readonly kind: "rename-setting"; readonly bloc: string; readonly from: string; readonly to: string }
+    | { readonly kind: "set-setting-default"; readonly bloc: string; readonly setting: string; readonly value: string }
+    | { readonly kind: "remove-setting"; readonly bloc: string; readonly setting: string }
+    | {
+          readonly kind: "map-setting-value";
+          readonly bloc: string;
+          readonly setting: string;
+          readonly values: Readonly<Record<string, string>>;
+      }
+    | { readonly kind: "rename-theme-token"; readonly from: string; readonly to: string }
+    | { readonly kind: "move-configuration-value"; readonly from: readonly string[]; readonly to: readonly string[] }
+    | { readonly kind: "set-configuration-default"; readonly path: readonly string[]; readonly value: unknown }
+    | { readonly kind: "remove-configuration-value"; readonly path: readonly string[] }
+    | {
+          readonly kind: "map-configuration-value";
+          readonly path: readonly string[];
+          readonly values: readonly { readonly from: unknown; readonly to: unknown }[];
+      }
+    | { readonly kind: "rename-text-override"; readonly from: string; readonly to: string }
+    | { readonly kind: "remove-text-override"; readonly id: string };
+
+/** One cumulative, deterministic transition. Releases carry every step needed from supported generations. */
+export interface CollectionDataMigration {
+    readonly fromGeneration: number;
+    readonly toGeneration: number;
+    readonly operations: readonly CollectionMigrationOperation[];
+}
+
+export type CollectionResourceKind = "bloc" | "theme-token" | "configuration" | "text" | "view" | "dashboard";
+
+export interface CollectionResourceDescriptor {
+    readonly kind: CollectionResourceKind;
+    readonly id: string;
+    readonly generation: number;
+    readonly contractDigest: `sha256:${string}`;
+    readonly implementationDigest: `sha256:${string}`;
 }
 
 /** A provider-neutral dependency of one reusable resource, not of the entire site. */
@@ -47,6 +88,10 @@ export interface CollectionRelease {
     readonly collectionId: string;
     readonly publisherId: string;
     readonly version: string;
+    /** Persisted collection-data format. Increment only when site-owned data needs a migration. */
+    readonly dataGeneration: number;
+    /** Adjacent transitions retained cumulatively so an old site can reach this release. */
+    readonly migrations: readonly CollectionDataMigration[];
     /** Collection translation key. */
     readonly name: CollectionTranslationKey;
     /** Collection translation key. */

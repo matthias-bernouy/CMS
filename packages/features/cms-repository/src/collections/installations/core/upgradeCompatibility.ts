@@ -37,7 +37,7 @@ function assertBlocCompatibility(previous: CollectionBloc, next: CollectionBloc 
 }
 
 function settingsAcceptPrevious(previous: CollectionComponentSettings, next: CollectionComponentSettings): boolean {
-    if (previous.length !== next.length) {
+    if (previous.length > next.length) {
         return false;
     }
     const nextById = new Map(next.map((setting) => [setting.id, setting]));
@@ -139,4 +139,72 @@ export function assertCompatibleCollectionUpgrade(previous: CollectionRelease, n
         reject("Upgrade narrows the collection configuration contract");
     }
     assertThemeCompatibility(previous, next);
+}
+
+export type CollectionBreakingResource = {
+    kind: "bloc" | "theme-token" | "configuration" | "text" | "view" | "dashboard";
+    id: string;
+    reason: string;
+};
+
+/** Structural breaks only. Semantic breaks remain author-declared through a resource generation bump. */
+export function collectionUpgradeBreakingResources(
+    previous: CollectionRelease,
+    next: CollectionRelease,
+): readonly CollectionBreakingResource[] {
+    const changes: CollectionBreakingResource[] = [];
+    const nextBlocs = new Map(next.blocs.map((bloc) => [bloc.id, bloc]));
+    for (const bloc of previous.blocs) {
+        collectBreak(changes, "bloc", bloc.id, () => assertBlocCompatibility(bloc, nextBlocs.get(bloc.id)));
+    }
+    const nextTokens = new Map(
+        (next.theme?.categories ?? []).flatMap((category) =>
+            category.tokens.map((token) => [token.id, token] as const),
+        ),
+    );
+    for (const token of previous.theme?.categories.flatMap((category) => category.tokens) ?? []) {
+        const replacement = nextTokens.get(token.id);
+        if (!replacement || replacement.type !== token.type) {
+            changes.push({
+                kind: "theme-token",
+                id: token.id,
+                reason: `theme token ${token.id} was removed or changed`,
+            });
+        }
+    }
+    for (const [kind, oldItems, newItems] of [
+        ["text", previous.texts ?? [], next.texts ?? []],
+        ["view", previous.views ?? [], next.views ?? []],
+        ["dashboard", previous.dashboards ?? [], next.dashboards ?? []],
+    ] as const) {
+        const nextIds = new Set(newItems.map(({ id }) => id));
+        for (const { id } of oldItems) {
+            if (!nextIds.has(id)) {
+                changes.push({ kind, id, reason: `${kind} ${id} was removed` });
+            }
+        }
+    }
+    if (previous.configuration && !next.configuration) {
+        changes.push({ kind: "configuration", id: previous.collectionId, reason: "configuration was removed" });
+    } else if (
+        previous.configuration &&
+        next.configuration &&
+        firstSchemaSubsetViolation(previous.configuration.schema, next.configuration.schema, "configuration")
+    ) {
+        changes.push({ kind: "configuration", id: previous.collectionId, reason: "configuration schema narrowed" });
+    }
+    return changes;
+}
+
+function collectBreak(
+    output: CollectionBreakingResource[],
+    kind: CollectionBreakingResource["kind"],
+    id: string,
+    check: () => void,
+): void {
+    try {
+        check();
+    } catch (error) {
+        output.push({ kind, id, reason: error instanceof Error ? error.message : `${kind} ${id} changed` });
+    }
 }

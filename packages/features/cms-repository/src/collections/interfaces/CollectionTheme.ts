@@ -4,6 +4,7 @@ export type CollectionThemeTokenType = "color" | "font-family" | "length" | "num
 
 export type CollectionThemeToken = {
     readonly id: string;
+    readonly generation?: number;
     /** Collection translation key. */
     readonly label: CollectionTranslationKey;
     /** Collection translation key. */

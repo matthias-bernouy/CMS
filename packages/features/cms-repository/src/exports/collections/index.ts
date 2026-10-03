@@ -6,6 +6,10 @@ export type {
     CollectionResourceSelection,
     CollectionTranslationKey,
     CollectionTranslations,
+    CollectionDataMigration,
+    CollectionMigrationOperation,
+    CollectionResourceDescriptor,
+    CollectionResourceKind,
 } from "cms-repository/collections/interfaces/CollectionRelease";
 export type { CollectionView } from "cms-repository/collections/interfaces/CollectionView";
 export type {
@@ -71,5 +75,6 @@ export {
     admitCollectionReleaseJson,
     type CollectionAdmissionOptions,
 } from "cms-repository/collections/core/admission/admitCollectionRelease";
+export { describeCollectionResources } from "cms-repository/collections/core/admission/resourceDescriptors";
 
 export * from "./texts";

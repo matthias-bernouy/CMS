@@ -29,6 +29,11 @@ export async function upgradeCollection(
     ) {
         throw Object.assign(new Error("Upgrade requires a newer release from the same publisher"), { status: 409 });
     }
+    if ((old.release.dataGeneration ?? 1) !== (artifact.release.dataGeneration ?? 1)) {
+        throw Object.assign(new Error("Collection data generation changed; use the migration workflow"), {
+            status: 409,
+        });
+    }
     assertCompatibleCollectionUpgrade(old.release, artifact.release);
     await assertInstallableCollectionResources(
         storage,

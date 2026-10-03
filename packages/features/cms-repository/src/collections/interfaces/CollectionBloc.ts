@@ -124,6 +124,8 @@ export type CollectionComponentSettings = readonly CollectionSettingItem[];
 interface CollectionBlocBase {
     /** A stable custom-element tag prefixed by the collection ID. */
     readonly id: string;
+    /** Independent public-contract generation for selective consumers. */
+    readonly generation?: number;
     readonly label: CollectionTranslationKey;
     readonly description?: CollectionTranslationKey;
     /** Author-facing library category translation key. */

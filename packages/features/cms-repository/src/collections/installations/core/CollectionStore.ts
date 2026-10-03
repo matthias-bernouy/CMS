@@ -2,12 +2,19 @@ import type { ReleaseCatalogue } from "../../../exports/contracts/catalogue";
 import { admitCollectionRelease } from "../../core/admission/admitCollectionRelease";
 import { parseCollectionTextOverrides } from "../../core/texts/parseCollectionTexts";
 import type { CollectionBundleAsset } from "../../interfaces/CollectionAssets";
-import type { CollectionInstallRequest, CollectionStorage, InstalledCollection } from "../interfaces/store";
+import type {
+    CollectionInstallRequest,
+    CollectionInstallation,
+    CollectionMigrationReplacement,
+    CollectionStorage,
+    InstalledCollection,
+} from "../interfaces/store";
 import { installCollections } from "./mutations/install";
 import { saveCollectionConfiguration, uninstallCollection } from "./mutations/site";
 import { upgradeCollection } from "./mutations/upgrade";
 import { assertCollectionResourceIsolation } from "./resourceIsolation";
 import { validateStoredCollectionInstallation, writeCollectionSiteState } from "./siteState";
+import { replaceCollectionsAfterMigration, restoreCollectionsAfterMigration } from "./mutations/migrate";
 
 export class CollectionStore {
     constructor(
@@ -30,6 +37,10 @@ export class CollectionStore {
 
     getReleaseAsset(digest: string, assetId: string): Promise<Uint8Array | null> {
         return this.storage.getAsset(digest, assetId);
+    }
+
+    async getRelease(digest: string) {
+        return structuredClone(await this.storage.getRelease(digest));
     }
 
     async snapshot(siteId: string): Promise<{ revision: number; collections: InstalledCollection[] }> {
@@ -62,6 +73,20 @@ export class CollectionStore {
 
     async upgrade(siteId: string, digest: string, expectedRevision: number, repositoryId: string) {
         await upgradeCollection(this.storage, siteId, digest, expectedRevision, repositoryId);
+        return this.snapshot(siteId);
+    }
+
+    async commitMigration(
+        siteId: string,
+        replacements: readonly CollectionMigrationReplacement[],
+        expectedRevision: number,
+    ) {
+        await replaceCollectionsAfterMigration(this.storage, siteId, replacements, expectedRevision);
+        return this.snapshot(siteId);
+    }
+
+    async restoreMigration(siteId: string, installations: readonly CollectionInstallation[], expectedRevision: number) {
+        await restoreCollectionsAfterMigration(this.storage, siteId, installations, expectedRevision);
         return this.snapshot(siteId);
     }
 

@@ -2,6 +2,7 @@ import type { CollectionTranslationKey } from "./CollectionRelease";
 
 export interface CollectionText {
     readonly id: string;
+    readonly generation?: number;
     readonly label?: CollectionTranslationKey;
     readonly description?: CollectionTranslationKey;
     readonly category?: CollectionTranslationKey;

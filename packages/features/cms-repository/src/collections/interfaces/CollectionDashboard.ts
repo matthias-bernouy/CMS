@@ -4,6 +4,7 @@ import type { CollectionTranslationKey } from "./CollectionRelease";
 /** A collection-owned dashboard template. Site activation and membership are separate. */
 export interface CollectionDashboard {
     readonly id: string;
+    readonly generation?: number;
     readonly name: CollectionTranslationKey;
     readonly icon?: string;
     readonly description?: CollectionTranslationKey;

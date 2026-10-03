@@ -3,6 +3,7 @@ import {
     DEFAULT_COLLECTION_LIMITS,
     collectionThemeSourceId,
     collectionThemeTokenId,
+    describeCollectionResources,
     isCollectionNamespace,
     parseCollectionRelease,
     parseCollectionReleaseJson,
@@ -135,8 +136,11 @@ describe("collection release parsing", () => {
             ...DEFAULT_COLLECTION_LIMITS,
             schema: { ...DEFAULT_COLLECTION_LIMITS.schema, maxStringLength: 10000 },
         };
-        expect(parseCollectionRelease(source, limits).configuration).toEqual(configuration);
-        expect(parseCollectionReleaseJson(JSON.stringify(source), limits).configuration).toEqual(configuration);
+        expect(parseCollectionRelease(source, limits).configuration).toEqual({ ...configuration, generation: 1 });
+        expect(parseCollectionReleaseJson(JSON.stringify(source), limits).configuration).toEqual({
+            ...configuration,
+            generation: 1,
+        });
         for (const patch of [
             { defaults: {} },
             { defaults: { label: 1 } },
@@ -327,5 +331,96 @@ describe("collection release parsing", () => {
                 theme: { label: "theme.missing", categories: [] },
             }),
         ).toThrow(/missing default translation/);
+    });
+
+    test("normalizes resource generations and computes contract and implementation digests separately", async () => {
+        const previous = parseCollectionRelease(collectionDocument());
+        const nextSource = collectionDocument();
+        (nextSource.blocs as Record<string, unknown>[])[0]!.style = ":host { display: grid; }";
+        const next = parseCollectionRelease({ ...nextSource, version: "1.0.1" });
+        const previousPanel = (await describeCollectionResources(previous)).find(
+            (resource) => resource.id === "atlas-panel",
+        )!;
+        const nextPanel = (await describeCollectionResources(next)).find((resource) => resource.id === "atlas-panel")!;
+        expect(previous.dataGeneration).toBe(1);
+        expect(previous.migrations).toEqual([]);
+        expect(previousPanel.generation).toBe(1);
+        expect(nextPanel.contractDigest).toBe(previousPanel.contractDigest);
+        expect(nextPanel.implementationDigest).not.toBe(previousPanel.implementationDigest);
+
+        const translatedSource = collectionDocument();
+        translatedSource.translations.en!["bloc.panel.label"] = "Translated panel";
+        const translatedPanel = (await describeCollectionResources(parseCollectionRelease(translatedSource))).find(
+            (resource) => resource.id === "atlas-panel",
+        )!;
+        expect(translatedPanel.contractDigest).toBe(previousPanel.contractDigest);
+        expect(translatedPanel.implementationDigest).not.toBe(previousPanel.implementationDigest);
+
+        const unrelatedSource = collectionDocument({ "unused.label": "Unrelated" });
+        const unrelatedPanel = (await describeCollectionResources(parseCollectionRelease(unrelatedSource))).find(
+            (resource) => resource.id === "atlas-panel",
+        )!;
+        expect(unrelatedPanel.implementationDigest).toBe(previousPanel.implementationDigest);
+    });
+
+    test("requires one cumulative adjacent migration chain from generation one", () => {
+        const migration = {
+            fromGeneration: 1,
+            toGeneration: 2,
+            operations: [{ kind: "rename-bloc", from: "atlas-panel", to: "atlas-surface" }],
+        };
+        const parsed = parseCollectionRelease({ ...collectionDocument(), dataGeneration: 2, migrations: [migration] });
+        expect(parsed.migrations[0]).toEqual(migration);
+        expect(() =>
+            parseCollectionRelease({
+                ...collectionDocument(),
+                dataGeneration: 3,
+                migrations: [{ ...migration, fromGeneration: 2, toGeneration: 3 }],
+            }),
+        ).toThrow(/cumulative|contiguous/);
+        expect(() =>
+            parseCollectionRelease({
+                ...collectionDocument(),
+                dataGeneration: 2,
+                migrations: [{ ...migration, toGeneration: 3 }],
+            }),
+        ).toThrow(/adjacent/);
+
+        const configurationMigration = parseCollectionRelease({
+            ...collectionDocument(),
+            dataGeneration: 2,
+            migrations: [
+                {
+                    fromGeneration: 1,
+                    toGeneration: 2,
+                    operations: [
+                        { kind: "set-configuration-default", path: ["presentation", "density"], value: "compact" },
+                        {
+                            kind: "map-configuration-value",
+                            path: ["presentation", "columns"],
+                            values: [
+                                { from: 2, to: 3 },
+                                { from: null, to: 1 },
+                            ],
+                        },
+                        { kind: "remove-configuration-value", path: ["legacy"] },
+                    ],
+                },
+            ],
+        });
+        expect(configurationMigration.migrations[0]?.operations).toHaveLength(3);
+        expect(() =>
+            parseCollectionRelease({
+                ...collectionDocument(),
+                dataGeneration: 2,
+                migrations: [
+                    {
+                        fromGeneration: 1,
+                        toGeneration: 2,
+                        operations: [{ kind: "remove-configuration-value", path: ["__proto__"] }],
+                    },
+                ],
+            }),
+        ).toThrow(/safe object path/);
     });
 });

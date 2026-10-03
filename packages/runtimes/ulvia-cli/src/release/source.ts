@@ -6,6 +6,7 @@ import { loadCollectionBlocs } from "./blocSources";
 import { loadCollectionTheme, loadCollectionTranslations } from "./metadataSources";
 import { loadCollectionTexts } from "./textSources";
 import { assertCollectionSourceQuality } from "./quality";
+import { loadCollectionMigrations } from "./migrationSources";
 
 /** Compile one authored folder into an immutable, admitted release candidate. */
 export async function prepareCollectionRelease(directory: string) {
@@ -21,12 +22,14 @@ export async function prepareCollectionRelease(directory: string) {
     const views = await loadViews(join(collectionRoot, "views"));
     const dashboards = await loadDashboards(join(collectionRoot, "dashboards"));
     const theme = await loadCollectionTheme(join(collectionRoot, "theme"));
+    const migrations = await loadCollectionMigrations(join(collectionRoot, "migrations"));
     const assets = await loadAssets(join(collectionRoot, "assets"), definition.assets);
     const candidate = {
         ...definition,
         translations,
         assets: assets.definitions,
         blocs,
+        migrations,
         ...(texts.length ? { texts } : {}),
         ...(views.length ? { views } : {}),
         ...(dashboards.length ? { dashboards } : {}),

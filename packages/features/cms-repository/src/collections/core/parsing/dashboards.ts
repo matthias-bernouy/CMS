@@ -1,7 +1,7 @@
 import { parseDashboardNavigation } from "@bernouy/cms-dashboards";
 import type { CollectionDashboard } from "../../interfaces/CollectionDashboard";
 import { invalid } from "../errors";
-import { array, identifier, keys, record, string, unique } from "../values";
+import { array, identifier, integer, keys, record, string, unique } from "../values";
 
 export function parseCollectionDashboards(
     value: unknown,
@@ -10,7 +10,7 @@ export function parseCollectionDashboards(
     const dashboards = array(value, 32, "$.dashboards").map((entry, index) => {
         const path = `$.dashboards[${index}]`;
         const source = record(entry, path);
-        keys(source, ["id", "name", "icon", "description", "navigation", "contracts"], path);
+        keys(source, ["id", "generation", "name", "icon", "description", "navigation", "contracts"], path);
         let navigation;
         try {
             navigation = parseDashboardNavigation(source.navigation, viewIds);
@@ -31,6 +31,10 @@ export function parseCollectionDashboards(
         }
         return {
             id: identifier(source.id, `${path}.id`),
+            generation:
+                source.generation === undefined
+                    ? 1
+                    : integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${path}.generation`),
             name: string(source.name, 128, `${path}.name`),
             ...(source.icon === undefined ? {} : { icon: identifier(source.icon, `${path}.icon`) }),
             ...(source.description === undefined
