@@ -19,7 +19,10 @@ export default async function importBloc(req: Request, cms: ControlCms) {
     const nativeElementTags = formData
         .getAll("nativeElement")
         .filter((entry): entry is string => typeof entry === "string" && Boolean(entry.trim()));
-    const nativeElement = nativeElementTags.length > 0 ? { accepts: nativeElementTags } : undefined;
+    const nativeElement =
+        nativeElementTags.length > 0
+            ? ({ accepts: nativeElementTags } as import("@bernouy/cms-content").TBloc["nativeElement"])
+            : undefined;
 
     try {
         await importBlocArtifact(cms, {

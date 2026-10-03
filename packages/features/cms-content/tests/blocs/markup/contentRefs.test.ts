@@ -73,6 +73,24 @@ describe("assertContentRefsExist", () => {
         }
     });
 
+    test("rejects managed native children with incompatible structural attributes", async () => {
+        const cms: any = {
+            getBlocsList: async () => [
+                {
+                    id: "fixture-checkbox",
+                    nativeElement: {
+                        accepts: ["input"],
+                        attributes: { type: { required: true, values: ["checkbox"] } },
+                    },
+                },
+            ],
+        };
+        await assertContentRefsExist(cms, '<fixture-checkbox><input type="checkbox"></fixture-checkbox>');
+        await expect(
+            assertContentRefsExist(cms, '<fixture-checkbox><input type="text"></fixture-checkbox>'),
+        ).rejects.toThrow(/requires exactly one direct/);
+    });
+
     test("aggregates multiple missing refs in one error", async () => {
         const cms = makeSystem();
         await expect(

@@ -13,7 +13,13 @@ export function collectionSettingsSchema(settings: CollectionComponentSettings):
                     : item.type === "string"
                       ? {
                             type: "string" as const,
-                            maxLength: item.maxLength,
+                            maxLength:
+                                item.maxLength ??
+                                settingControlValues(item.control)?.reduce(
+                                    (maximum, value) => Math.max(maximum, value.length),
+                                    0,
+                                ) ??
+                                256,
                             ...(item.minLength === undefined ? {} : { minLength: item.minLength }),
                             ...(settingControlValues(item.control) === undefined
                                 ? {}

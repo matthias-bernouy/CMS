@@ -28,13 +28,26 @@ export type CollectionManagedNativeElementTag =
     | "p"
     | "a"
     | "button"
+    | "input"
+    | "textarea"
+    | "select"
+    | "output"
     | "img"
     | "svg"
     | "span";
 
+export interface CollectionManagedNativeAttributeConstraint {
+    /** Whether the authored child must explicitly carry this attribute. */
+    readonly required?: boolean;
+    /** Optional finite set accepted when the attribute is present. */
+    readonly values?: readonly string[];
+}
+
 export interface CollectionManagedNativeElement {
     /** Native tags an author may select for the single page-owned child. */
     readonly accepts: readonly CollectionManagedNativeElementTag[];
+    /** Structural attributes that keep specialized controls semantically honest. */
+    readonly attributes?: Readonly<Record<string, CollectionManagedNativeAttributeConstraint>>;
 }
 
 export interface CollectionSettingOption {
@@ -88,7 +101,8 @@ export type CollectionSettingItem = CollectionSettingBase &
               readonly type: "string";
               readonly default: string;
               readonly minLength?: number;
-              readonly maxLength: number;
+              /** Optional authoring override; admission always normalizes a safe bound. */
+              readonly maxLength?: number;
               readonly control: Exclude<CollectionSettingControl, { readonly kind: "toggle" | "number" | "range" }>;
           }
         | {

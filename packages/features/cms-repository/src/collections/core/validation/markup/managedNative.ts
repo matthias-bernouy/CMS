@@ -2,6 +2,7 @@ import type { CollectionBloc, CollectionComponent } from "../../../interfaces/Co
 import { invalid } from "../../errors";
 import type { BlocMarkup } from "./slots";
 import { elements, isElement, type MarkupTree, significantRoots } from "./tree";
+import { managedNativeAttributesIssue } from "../../parsing/blocs/managedNativeElement";
 
 export function validateManagedNativeDefinition(bloc: CollectionBloc, markup: BlocMarkup, path: string): void {
     if (bloc.kind !== "component" || !bloc.nativeElement) {
@@ -29,6 +30,12 @@ export function validateManagedNativeDefinition(bloc: CollectionBloc, markup: Bl
             `defaultContent must contain exactly one un-slotted accepted native root (${formatAccepted(bloc)})`,
             `${path}.defaultContent`,
         );
+    }
+    const attributeIssue = isElement(roots[0]!)
+        ? managedNativeAttributesIssue(bloc.nativeElement, roots[0]!.attribs)
+        : null;
+    if (attributeIssue) {
+        invalid(`defaultContent ${attributeIssue}`, `${path}.defaultContent`);
     }
 }
 
@@ -59,10 +66,17 @@ function hasOnlyManagedChild(host: ReturnType<typeof elements>[number], bloc: Co
         bloc.nativeElement?.accepts.includes(children[0]!.name as (typeof bloc.nativeElement.accepts)[number]) ===
             true &&
         children[0]!.attribs.slot === undefined &&
-        !siblingText
+        !siblingText &&
+        managedNativeAttributesIssue(bloc.nativeElement!, children[0]!.attribs) === null
     );
 }
 
 function formatAccepted(bloc: CollectionComponent): string {
-    return bloc.nativeElement!.accepts.map((tag) => `<${tag}>`).join(", ");
+    const elements = bloc.nativeElement!.accepts.map((tag) => `<${tag}>`).join(", ");
+    const attributes = Object.entries(bloc.nativeElement!.attributes ?? {})
+        .map(([name, constraint]) =>
+            constraint.values ? `${name}=${constraint.values.map((value) => JSON.stringify(value)).join("|")}` : name,
+        )
+        .join(", ");
+    return attributes ? `${elements}; ${attributes}` : elements;
 }

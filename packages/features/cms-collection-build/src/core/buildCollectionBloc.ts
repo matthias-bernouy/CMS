@@ -48,7 +48,22 @@ export async function buildCollectionBloc(
     const thumbnail = parsePresentationImage(options.thumbnail) ?? blocThumbnailFromSource(source);
     const tempDir = await mkdtemp(join(tmpdir(), "cms-bloc-"));
     const nativeElement: TBloc["nativeElement"] = options.nativeElement
-        ? { accepts: [...options.nativeElement.accepts] }
+        ? {
+              accepts: [...options.nativeElement.accepts],
+              ...(options.nativeElement.attributes
+                  ? {
+                        attributes: Object.fromEntries(
+                            Object.entries(options.nativeElement.attributes).map(([name, constraint]) => [
+                                name,
+                                {
+                                    ...constraint,
+                                    ...(constraint.values ? { values: [...constraint.values] } : {}),
+                                },
+                            ]),
+                        ),
+                    }
+                  : {}),
+          }
         : undefined;
 
     try {

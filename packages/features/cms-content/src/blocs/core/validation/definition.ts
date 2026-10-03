@@ -53,7 +53,7 @@ function validateManagedNativeElement(value: TBloc["nativeElement"]): void {
         value === null ||
         typeof value !== "object" ||
         Array.isArray(value) ||
-        Object.keys(value).some((key) => key !== "accepts") ||
+        Object.keys(value).some((key) => key !== "accepts" && key !== "attributes") ||
         !Array.isArray(value.accepts) ||
         value.accepts.length === 0 ||
         new Set(value.accepts).size !== value.accepts.length
@@ -66,6 +66,33 @@ function validateManagedNativeElement(value: TBloc["nativeElement"]): void {
         }
         if (tag !== tag.toLowerCase()) {
             throw new ContentValidationError("nativeElement", "lower-case native element tags expected");
+        }
+    }
+    if (value.attributes !== undefined) {
+        if (
+            value.attributes === null ||
+            typeof value.attributes !== "object" ||
+            Array.isArray(value.attributes) ||
+            Object.keys(value.attributes).length === 0
+        ) {
+            throw new ContentValidationError("nativeElement", "non-empty native attribute constraints expected");
+        }
+        for (const [name, constraint] of Object.entries(value.attributes)) {
+            if (!/^[a-z][a-z0-9-]*$/u.test(name) || constraint === null || typeof constraint !== "object") {
+                throw new ContentValidationError("nativeElement", "valid native attribute constraints expected");
+            }
+            if (
+                Object.keys(constraint).some((key) => key !== "required" && key !== "values") ||
+                (constraint.required !== undefined && typeof constraint.required !== "boolean") ||
+                (constraint.values !== undefined &&
+                    (!Array.isArray(constraint.values) ||
+                        constraint.values.length === 0 ||
+                        new Set(constraint.values).size !== constraint.values.length ||
+                        constraint.values.some((entry) => typeof entry !== "string"))) ||
+                (constraint.required === undefined && constraint.values === undefined)
+            ) {
+                throw new ContentValidationError("nativeElement", "valid native attribute constraints expected");
+            }
         }
     }
 }

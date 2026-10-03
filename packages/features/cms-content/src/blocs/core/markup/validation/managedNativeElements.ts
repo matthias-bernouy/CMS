@@ -1,8 +1,9 @@
 import { parseHTML } from "linkedom";
+import { managedNativeAttributesIssue, type CollectionManagedNativeElement } from "@bernouy/cms-repository/collections";
 
 export type ManagedNativeElementContract = {
     tag: string;
-    nativeElement: { accepts: readonly string[] };
+    nativeElement: CollectionManagedNativeElement;
 };
 
 /** Returns the first managed-native structure issue found in an HTML fragment. */
@@ -32,7 +33,13 @@ export function managedNativeElementIssue(
             if (
                 children.length !== 1 ||
                 !child ||
-                !contract.nativeElement.accepts.includes(child.localName.toLowerCase()) ||
+                !contract.nativeElement.accepts.includes(
+                    child.localName.toLowerCase() as (typeof contract.nativeElement.accepts)[number],
+                ) ||
+                managedNativeAttributesIssue(
+                    contract.nativeElement,
+                    Object.fromEntries(child.getAttributeNames().map((name) => [name, child.getAttribute(name) ?? ""])),
+                ) !== null ||
                 child.hasAttribute("slot") ||
                 hasAuthoredSiblingText
             ) {

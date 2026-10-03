@@ -66,6 +66,29 @@ describe("collection markup admission", () => {
         }
     });
 
+    test("enforces managed-native attribute discriminators in defaults and placements", () => {
+        const checkbox = component({
+            id: "demo-checkbox",
+            nativeElement: {
+                accepts: ["input"],
+                attributes: { type: { required: true, values: ["checkbox"] } },
+            },
+            shadowdom: "<slot></slot>",
+            slots: {},
+            defaultContent: '<input type="checkbox">',
+        });
+        const page = composition({
+            uses: ["demo-checkbox"],
+            lightdom: '<demo-checkbox><input type="checkbox"></demo-checkbox>',
+            slots: {},
+        });
+        expect(() => check([checkbox, page])).not.toThrow();
+        expect(() => check([{ ...checkbox, defaultContent: "<input>" }])).toThrow("requires native attribute");
+        expect(() =>
+            check([checkbox, { ...page, lightdom: '<demo-checkbox><input type="radio"></demo-checkbox>' }]),
+        ).toThrow("accepted native child");
+    });
+
     test("resolves slot targets against their actual parent, not unrelated shells", () => {
         const card = component({ shadowdom: '<slot name="heading"></slot>', slots: { heading: {} } });
         const page = composition({

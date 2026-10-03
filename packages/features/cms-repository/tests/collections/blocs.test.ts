@@ -45,7 +45,31 @@ describe("collection bloc admission", () => {
         expect(() => check([component({ nativeElement: "button" })])).toThrow("object");
         expect(() => check([component({ nativeElement: { accepts: [] } })])).toThrow("at least one");
         expect(() => check([component({ nativeElement: { accepts: ["a", "a"] } })])).toThrow("duplicate");
-        expect(() => check([component({ nativeElement: { accepts: ["form"] } })])).toThrow("must be one of");
+        expect(() => check([component({ nativeElement: { accepts: ["div"] } })])).toThrow("must be one of");
+        const checkbox = {
+            accepts: ["input"],
+            attributes: { type: { required: true, values: ["checkbox"] } },
+        };
+        expect(
+            check([
+                component({
+                    nativeElement: checkbox,
+                    shadowdom: "<slot></slot>",
+                    slots: {},
+                    defaultContent: '<input type="checkbox">',
+                }),
+            ])[0],
+        ).toMatchObject({ nativeElement: checkbox });
+        expect(() =>
+            check([
+                component({
+                    nativeElement: checkbox,
+                    shadowdom: "<slot></slot>",
+                    slots: {},
+                    defaultContent: '<input type="radio">',
+                }),
+            ]),
+        ).toThrow("native attribute");
         expect(() =>
             check([
                 component({
@@ -114,6 +138,11 @@ describe("collection bloc admission", () => {
         };
         const parsed = check([component({ settings: [tone, compact] })])[0];
         expect(parsed?.kind === "component" ? parsed.settings : undefined).toEqual([tone, compact]);
+        const inferred = check([component({ settings: [{ ...tone, maxLength: undefined }] })])[0];
+        expect(inferred?.kind === "component" ? inferred.settings?.[0]?.maxLength : undefined).toBe(6);
+        const hyphenated = { ...compact, id: "full-width" };
+        const parsedHyphenated = check([component({ settings: [hyphenated] })])[0];
+        expect(parsedHyphenated?.kind === "component" ? parsedHyphenated.settings : undefined).toEqual([hyphenated]);
         expect(() => check([component({ settings: [tone, tone] })])).toThrow("duplicate");
         expect(() => check([component({ settings: [{ ...tone, id: "Tone" }] })])).toThrow("safe, lowercase");
         expect(() => check([component({ settings: [{ ...tone, default: "invalid" }] })])).toThrow("invalid defaults");

@@ -25,9 +25,18 @@ describe("site bloc validation", () => {
         expect(validateBlocWrite({ ...artifact, nativeElement: { accepts: ["button", "a"] } }).nativeElement).toEqual({
             accepts: ["button", "a"],
         });
-        expect(() => validateBlocWrite({ ...artifact, nativeElement: { accepts: ["form"] as never[] } })).toThrow(
+        expect(() => validateBlocWrite({ ...artifact, nativeElement: { accepts: ["div"] as never[] } })).toThrow(
             /nativeElement/,
         );
+        expect(
+            validateBlocWrite({
+                ...artifact,
+                nativeElement: {
+                    accepts: ["input"],
+                    attributes: { type: { required: true, values: ["checkbox"] } },
+                },
+            }).nativeElement,
+        ).toMatchObject({ attributes: { type: { required: true, values: ["checkbox"] } } });
         expect(() => validateBlocWrite({ ...artifact, nativeElement: { accepts: [] } })).toThrow(/nativeElement/);
         expect(() =>
             validateBlocWrite({

@@ -32,7 +32,7 @@ export type BlocImportInput = {
     description?: string;
     catalogue?: "active" | "inactive";
     internal?: boolean;
-    nativeElement?: { accepts: readonly string[] };
+    nativeElement?: TBloc["nativeElement"];
     thumbnail?: PresentationImage;
     viewPath?: string;
     viewJS?: string | File | null;
@@ -59,7 +59,12 @@ export async function importBlocArtifact(
     runtime: BlocImportRuntime = {},
 ): Promise<BlocImportResult> {
     const nativeElementCandidate = input.nativeElement
-        ? { accepts: input.nativeElement.accepts.map((tag) => tag.trim().toLowerCase()) }
+        ? {
+              accepts: input.nativeElement.accepts.map((tag) => tag.trim().toLowerCase()),
+              ...(input.nativeElement.attributes
+                  ? { attributes: structuredClone(input.nativeElement.attributes) }
+                  : {}),
+          }
         : undefined;
     if (!input.name || !input.tag || (!input.viewJS && input.compositionHTML === undefined)) {
         throw new BlocImportError("Missing argument (name, tag and viewJS or compositionHTML required)", 400);

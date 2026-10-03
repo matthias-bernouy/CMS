@@ -70,13 +70,14 @@ export function parseComponentSettings(
             invalid(`${type} settings cannot declare numeric constraints`, itemPath);
         }
         const values = settingControlValues(control);
+        const inferredMaxLength = values?.reduce((maximum, value) => Math.max(maximum, value.length), 0);
         const schema =
             type === "boolean"
                 ? { type: "boolean" }
                 : type === "string"
                   ? {
                         type: "string",
-                        maxLength: source.maxLength === undefined ? DEFAULT_MAX_LENGTH : source.maxLength,
+                        maxLength: source.maxLength ?? inferredMaxLength ?? DEFAULT_MAX_LENGTH,
                         ...(source.minLength === undefined ? {} : { minLength: source.minLength }),
                         ...(values === undefined ? {} : { enum: values }),
                     }
@@ -99,21 +100,26 @@ export function parseComponentSettings(
         entries.map((entry) => entry.id),
         path,
     );
+    // Setting IDs are HTML attribute names and may contain hyphens. Contract
+    // schema property names are intentionally narrower, so validate the same
+    // values through stable internal keys instead of leaking that restriction.
+    const configurationKeys = entries.map((_, index) => `setting${index}`);
     const parsed = parseConfiguration(
         {
             schema: {
                 type: "object",
-                properties: Object.fromEntries(entries.map((entry) => [entry.id, entry.schema])),
-                required: entries.map((entry) => entry.id),
+                properties: Object.fromEntries(entries.map((entry, index) => [configurationKeys[index], entry.schema])),
+                required: configurationKeys,
             },
-            defaults: Object.fromEntries(entries.map((entry) => [entry.id, entry.default])),
+            defaults: Object.fromEntries(entries.map((entry, index) => [configurationKeys[index], entry.default])),
         },
         path,
         limits,
     );
-    const baseSettings: CollectionComponentSettings = entries.map(({ id, label, group, help, control }) => {
-        const schema = parsed.schema.properties[id]!;
-        const defaultValue = parsed.defaults[id];
+    const baseSettings: CollectionComponentSettings = entries.map(({ id, label, group, help, control }, index) => {
+        const configurationKey = configurationKeys[index]!;
+        const schema = parsed.schema.properties[configurationKey]!;
+        const defaultValue = parsed.defaults[configurationKey];
         if (schema.type === "boolean") {
             return {
                 id,
