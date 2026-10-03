@@ -31,6 +31,7 @@ import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runn
 import { handlePageRequest } from "cms-delivery/core/pages/handlePageRequest";
 import { FAVICON_ROUTE } from "cms-delivery/core/assets/defaultFavicon";
 import { matchRootSitemapChunkPath } from "cms-delivery/core/seo/sitemap/manifest";
+import { createDeliveryMaintenanceGuard } from "cms-delivery/core/maintenance";
 
 /**
  * Wire every Delivery endpoint onto `delivery.runner`. Called from the
@@ -52,6 +53,7 @@ import { matchRootSitemapChunkPath } from "cms-delivery/core/seo/sitemap/manifes
  */
 export function registerDeliveryEndpoints(delivery: DeliveryCms) {
     const runner = delivery.runner;
+    runner.use(createDeliveryMaintenanceGuard(delivery));
 
     runner.addEndpoint("GET", "/.cms/bloc", (req) => BlocServer(req, delivery));
     runner.addEndpoint("GET", "/.cms/blocset", (req) => BlocSetServer(req, delivery));

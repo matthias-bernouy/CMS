@@ -14,6 +14,7 @@ import type {
 } from "@bernouy/cms-auth";
 import type { PublicAuthRoutesConfig, OidcAuthHandlers } from "@bernouy/cms-auth/http";
 import type { CmsRepository } from "@bernouy/cms-content";
+import type { CollectionMigrationService } from "@bernouy/cms-content/migrations";
 import type { DashboardAssignmentRepository, DashboardRepository } from "@bernouy/cms-dashboards";
 import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { IdentityService } from "@bernouy/cms-gateway/identity";
@@ -37,7 +38,12 @@ export type ControlCmsOptions = Configuration & {
         list(): Promise<string[]>;
         set(sub: string, enabled: boolean): Promise<void>;
     };
-    collections?: { store: CollectionStore; siteId: string; sources?: readonly CollectionRepositorySource[] };
+    collections?: {
+        store: CollectionStore;
+        siteId: string;
+        sources?: readonly CollectionRepositorySource[];
+        migrations?: CollectionMigrationService;
+    };
     providerResources?: {
         sources: readonly ProviderRepositorySource[];
         contracts: ReleaseCatalogue;

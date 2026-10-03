@@ -22,6 +22,7 @@ packages/official-repository/collections/ulvia-official/
 ├── texts/definitions/**/*.json  # text IDs and administration metadata
 ├── texts/locales/<locale>/**/*.json  # site-overridable content defaults
 ├── translations/<locale>/**/*.json  # reusable administration copy fragments
+├── migrations/**/<from>-to-<to>.json  # adjacent declarative data transitions
 ├── theme/definition.json    # ordered theme category IDs
 ├── theme/**/*.json          # recursively organized category/token defaults
 ├── definitions/             # reserved for later collection definitions
@@ -149,6 +150,50 @@ Upgrade when a newer release is available. Immutable
 release bytes and mutable per-site state are stored separately. An upgrade
 retains site text overrides and checks revision and compatible resource IDs.
 
+## Release evolution and migrations
+
+The collection SemVer remains the publication version. Each Bloc, theme token,
+configuration, text, View and dashboard also has a positive `generation`
+(default `1`) and deterministic contract and implementation digests. An
+implementation-only change leaves the contract digest stable. A compatible
+contract extension may change the contract digest without changing the resource
+generation; a breaking contract requires a generation increment.
+
+`dataGeneration` describes the format of site-owned data. It increments only
+when pages, collection configuration, text overrides or site theme overrides
+need a transition. A release at generation `N` contains the complete adjacent
+chain `1→2`, `2→3`, …, `N-1→N`; a site at generation `X` executes each retained
+step through `Y`. This avoids direct `X→Y` migration files while keeping old
+sites upgradeable.
+
+Migration files contain only bounded declarative operations. They can rename a
+Bloc, rename/add/remove/map a setting, rename a theme token, move/add/remove/map
+a configuration value, and rename or remove a text override. Arbitrary
+JavaScript migration code is not accepted.
+
+Control exposes administrator-only plan, execute, status, resume and rollback
+endpoints below `<basePath>/api/collections/migration/`. Planning validates the
+complete target collection graph, transformed pages, configuration, text
+overrides and theme references without changing the installed site state.
+Execution then:
+
+1. persists a technical journal and enters maintenance;
+2. rechecks the collection revision plus one digest of every page revision;
+3. atomically commits all target collection pins;
+4. rewrites affected pages with compare-and-swap revisions;
+5. validates the result and commits the transformed site theme.
+
+Delivery returns `503` with `Retry-After` while a migration is active. Control
+keeps reads and migration recovery available, but ordinary writes return `423`.
+A failed run stays in maintenance until it is resumed or rolled back. Rollback
+is rejected if committed collections or migrated pages changed afterward. Page
+revisions always increase, including rollback; they are concurrency tokens, not
+page-version history.
+
+Mongo stores the journal header and each affected page snapshot separately, so
+the journal does not hit one aggregate document-size ceiling. Public maintenance
+checks read only the lightweight active state and never hydrate page snapshots.
+
 ## Workspace
 
 The admin entry point is `<basePath>/admin/collections`. The collection key is
@@ -194,7 +239,8 @@ bytes and revision-checked collection configuration are implemented. The store
 can remove a collection after checking installed dependants, but Control does not
 expose removal until it can also report affected pages, private Blocs, theme
 references and dashboards. Provider grants and registry publication remain
-future work. Basic HTML views, collection dashboard templates and private site
+future work. JavaScript trust scanning is also separate; migration files
+themselves are data-only. Basic HTML views, collection dashboard templates and private site
 dashboards are available; views currently receive only dashboard metadata through
 Control binding. Provider execution plans are not implemented. A source adapter
 exists for multiple repositories, while the dev runtime configures one local source.

@@ -5,6 +5,7 @@ import {
     createControlAccessGuard,
     createControlApiAuthorizationGuard,
 } from "cms-control/core/admin/control/adminAccess";
+import { createControlMaintenanceGuard } from "cms-control/core/admin/control/maintenance";
 
 describe("Control authenticated access", () => {
     test("allows authenticated members through the Control guard", async () => {
@@ -37,6 +38,28 @@ describe("Control API authorization", () => {
     test("allows administrators through every Control API route", async () => {
         expect(await apiStatus("DELETE", "/cms/api/users?sub=member", true)).toBe(200);
         expect(await apiStatus("PATCH", "/cms/api/files", true)).toBe(200);
+    });
+});
+
+describe("Control collection maintenance", () => {
+    test("keeps reads and recovery endpoints available while fencing ordinary writes", async () => {
+        const cms = {
+            config: {
+                collections: {
+                    siteId: "site",
+                    migrations: { getActive: async () => ({ id: "migration", status: "failed" }) },
+                },
+            },
+        } as unknown as ControlCms;
+        const guard = createControlMaintenanceGuard(cms);
+        const next = async () => new Response("ok");
+
+        expect((await guard(new Request("http://localhost/api/page"), next)).status).toBe(200);
+        expect((await guard(new Request("http://localhost/api/page", { method: "PUT" }), next)).status).toBe(423);
+        expect(
+            (await guard(new Request("http://localhost/api/collections/migration/rollback", { method: "POST" }), next))
+                .status,
+        ).toBe(200);
     });
 });
 

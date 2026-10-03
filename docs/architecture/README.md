@@ -45,7 +45,7 @@ every package must reproduce.
 ### Content And Authoring
 
 `cms-content/src/` groups `pages`, `blocs`, `files`, `settings`, `theme`,
-`editor`, `application` and `exports`. Its `CmsRepository` is the content
+`application` and `exports`. Its `CmsRepository` is the content
 persistence facade; it is distinct from the `@bernouy/cms-repository` package.
 
 Control receives a writable `CmsRepository` and authoring file dependencies.
@@ -54,15 +54,16 @@ published pages/routes, projected settings and renderable Bloc artifacts.
 `@bernouy/cms-content/files/serving` exposes original reads, writable variants
 and separate sitemap storage. Runtimes construct these facades and adapters.
 
-Page publication is `visible === true`; separate publication revisions are not
-implemented. Editorial preview belongs to Control. Author files are publicly
+Every page has a monotonic concurrency revision used by authoring and collection
+migrations. This is not user-facing page history. Page publication is
+`visible === true`; separate publication versions are not implemented.
+Editorial preview belongs to Control. Author files are publicly
 readable by ID/path, including files used only by drafts or no page at all.
 The shared runtime does not provide confidential author-file enforcement.
 
-The current Bloc compiler and editor consume stored compiled artifacts. The
-repository's new collection format has admission and structure validation, but
-no renderer/publication/installation bridge to those artifacts yet. See
-[collections](../blocs/collections.md).
+Installed collection Blocs, themes, texts, views and dashboards are projected
+from immutable releases. Breaking stored-data upgrades use the maintenance-mode
+workflow documented in [collections](../blocs/collections.md).
 
 ### Repository And Gateway
 

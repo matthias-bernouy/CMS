@@ -46,6 +46,10 @@ export class DeliveryCmsContext {
         return this.resolvedCache;
     }
 
+    get maintenance(): DeliveryCmsConfig["maintenance"] {
+        return this.config.maintenance;
+    }
+
     get headInjectors(): readonly HeadInjector[] {
         return this.config.headInjectors ?? [];
     }

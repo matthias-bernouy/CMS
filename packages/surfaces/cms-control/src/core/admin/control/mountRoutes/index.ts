@@ -23,6 +23,7 @@ import { mountControlCapabilityRoutes } from "cms-control/core/admin/control/mou
 import serveStaticFolder from "cms-control/core/admin/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "cms-control/core/admin/registerEndpoints/serveApiFolder";
 import type { ControlCms } from "cms-control/ControlCms";
+import { createControlMaintenanceGuard } from "cms-control/core/admin/control/maintenance";
 
 export function mountControlCmsRoutes(
     cms: ControlCms,
@@ -34,6 +35,7 @@ export function mountControlCmsRoutes(
     const authGuard = createControlAccessGuard(cms.basePath, state.auth);
     const authenticatedGuard = createAuthenticatedControlGuard(cms.basePath, state.auth);
     const apiAuthorizationGuard = createControlApiAuthorizationGuard(cms.basePath, cms);
+    const maintenanceGuard = createControlMaintenanceGuard(cms);
     runner.addEndpoint("GET", "/login", (req) => renderLoginPage(req, cms.basePath));
 
     const controlPublicAuth = state.configuration.publicAuth
@@ -112,7 +114,7 @@ export function mountControlCmsRoutes(
         (apiRunner) => {
             apiRoutesReady = serveApi(apiRunner, apiDir, cms);
         },
-        [authenticatedGuard, apiAuthorizationGuard],
+        [authenticatedGuard, apiAuthorizationGuard, maintenanceGuard],
     );
     return Promise.all([staticRoutesReady, apiRoutesReady]).then(() => undefined);
 }

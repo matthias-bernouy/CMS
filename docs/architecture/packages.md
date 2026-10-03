@@ -19,7 +19,7 @@ files explain implementation invariants.
 
 | Package | Responsibility |
 | --- | --- |
-| `@bernouy/cms-content` | Pages, routes, Blocs, settings, themes, authoring contracts and the author file library. |
+| `@bernouy/cms-content` | Pages, routes, Blocs, settings, themes, authoring contracts, collection migration execution and the author file library. |
 | `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues and authored collections with Control HTML views. |
 | `@bernouy/cms-gateway` | Authorized capability invocation, provider identity aliases, file reads and image derivatives. |
 | `@bernouy/cms-auth` | Accounts, local/OIDC providers, PATs, signed sessions, public auth operations and email composition. |

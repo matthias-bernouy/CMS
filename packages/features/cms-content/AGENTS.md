@@ -15,6 +15,9 @@ library, declarative bindings, validation, and read models.
 - `@bernouy/cms-content/theme` exposes browser-safe theme value resolution.
 - `@bernouy/cms-content/mongo` exposes `MongoCmsRepository` for composition
   roots.
+- `@bernouy/cms-content/migrations` exposes collection migration planning,
+  execution, journals and the memory adapter. The Mongo journal adapter is
+  exported from `./mongo`.
 - `@bernouy/cms-content/files` exposes authoring metadata/blob contracts,
   lifecycle, validation and in-memory implementations.
 - `@bernouy/cms-content/files/serving` exposes public metadata lookup, get-only
@@ -56,6 +59,9 @@ library, declarative bindings, validation, and read models.
   after composition expansion. Browser binding has no i18n filter or catalogue.
 - Stored HTML/SVG must pass through the existing hardening/sanitizing helpers.
 - Page bloc references should use the existing content-ref helpers.
+- Collection migrations are maintenance-mode operations. Keep their impact
+  plan read-only, their page writes revision-checked, their journal resumable,
+  and their rollback snapshots separate from user-facing page history.
 - Editor contracts must remain stable; authored blocs depend on them.
 - When changing repository behavior, update both in-memory and Mongo behavior
   or document why only one implementation changes.

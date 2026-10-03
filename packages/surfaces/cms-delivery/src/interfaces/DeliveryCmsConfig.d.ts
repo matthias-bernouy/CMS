@@ -1,6 +1,7 @@
 import type { CollectionTextSource } from "@bernouy/cms-content/rendering";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
+import type { CollectionMigrationService } from "@bernouy/cms-content/migrations";
 import type {
     BlobReader,
     VariantStore,
@@ -19,6 +20,7 @@ export type DeliveryCmsConfig = {
     /** Public collection texts, fixed for this instance. Recreate/invalidate page cache when changing them. */
     collectionTexts?: readonly CollectionTextSource[];
     cache?: Cache;
+    maintenance?: { siteId: string; migrations: Pick<CollectionMigrationService, "getActive"> };
     /**
      * Extensions called in registration order for each rendered document,
      * immediately after the basic HTML head is built.

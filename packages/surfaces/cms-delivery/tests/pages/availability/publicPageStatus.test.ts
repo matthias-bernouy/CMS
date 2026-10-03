@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mountPublicPages, publicPage } from "./publicPage.fixture";
+import { mountPublicPages, publicPage } from "../publicPage.fixture";
 
 describe("Delivery public page response status", () => {
     test("preserves an explicit provider error status without caching it", async () => {

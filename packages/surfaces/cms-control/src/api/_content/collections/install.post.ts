@@ -9,11 +9,16 @@ import { collectionService, invalidateCollections } from "cms-control/core/conte
 export default async function install(req: Request, cms: ControlCms) {
     await requireControlAdministrator(req, cms);
     const input = await collectionBody(req);
+    if (!Number.isSafeInteger(input.revision) || (input.revision as number) < 0) {
+        throw Object.assign(new Error("A nonnegative collection revision is required"), { status: 400 });
+    }
+    const revision = input.revision as number;
     const { store, siteId, sources = [] } = collectionService(cms);
     const source = sources.find((item) => item.id === input.repositoryId);
     if (!source) {
         throw Object.assign(new Error("Unknown collection repository"), { status: 404 });
     }
+    const sourceId = source.id;
     const entries = await source.list();
     const selected = entries.find(
         (item) =>
@@ -50,9 +55,29 @@ export default async function install(req: Request, cms: ControlCms) {
             .map((item) => item.release),
         admitted.release,
     ]);
-    const result = installed.collections.some((item) => item.collectionId === admitted.release.collectionId)
-        ? await store.upgrade(siteId, admitted.digest, input.revision as number, source.id)
-        : await store.install(siteId, admitted.digest, input.revision as number, source.id);
+    const previous = installed.collections.find((item) => item.collectionId === admitted.release.collectionId);
+    let migrationId: string | undefined;
+    const result = previous
+        ? (previous.release.dataGeneration ?? 1) !== (admitted.release.dataGeneration ?? 1)
+            ? await migrateCollection()
+            : await store.upgrade(siteId, admitted.digest, revision, source.id)
+        : await store.install(siteId, admitted.digest, revision, source.id);
     invalidateCollections(cms);
-    return Response.json({ ...result, collectionId: admitted.release.collectionId }, { status: 201 });
+    return Response.json(
+        { ...result, collectionId: admitted.release.collectionId, ...(migrationId ? { migrationId } : {}) },
+        { status: 201 },
+    );
+
+    async function migrateCollection() {
+        if (!cms.config.collections?.migrations) {
+            throw Object.assign(new Error("This upgrade needs the collection migration service"), { status: 503 });
+        }
+        const record = await cms.config.collections.migrations.execute(
+            siteId,
+            [{ digest: admitted.digest, repositoryId: sourceId }],
+            revision,
+        );
+        migrationId = record.id;
+        return store.snapshot(siteId);
+    }
 }

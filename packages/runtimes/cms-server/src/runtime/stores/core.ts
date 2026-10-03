@@ -2,6 +2,7 @@ import { CollectionStore } from "@bernouy/cms-repository/collections/installatio
 import { MongoCollectionStorage } from "@bernouy/cms-repository/collections/mongo";
 import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
 import { withInstalledCollections } from "@bernouy/cms-content";
+import { CollectionMigrationService } from "@bernouy/cms-content/migrations";
 import {
     MongoAuthTokenStore,
     MongoIdentityProviderRepository,
@@ -10,7 +11,7 @@ import {
     MongoUsersRepository,
 } from "@bernouy/cms-auth/mongo";
 import { ValidatingCmsRepository } from "@bernouy/cms-content";
-import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
+import { MongoCmsRepository, MongoCollectionMigrationStorage } from "@bernouy/cms-content/mongo";
 import { ValidatingCmsFilesMetadata } from "@bernouy/cms-content/files";
 import { createLocalAuthorFileStores } from "./authorFiles";
 import { MongoCmsFilesMetadata } from "@bernouy/cms-content/files/mongo";
@@ -41,6 +42,9 @@ export async function createCoreStores(env: RuntimeEnv) {
     await collectionStorage.init();
     const collections = new CollectionStore(collectionStorage, new MongoReleaseCatalogue(db));
     const repo = new ValidatingCmsRepository(withInstalledCollections(innerRepo, collections, SCOPE_ID));
+    const migrationStorage = new MongoCollectionMigrationStorage(db);
+    await migrationStorage.init();
+    const collectionMigrations = new CollectionMigrationService(repo, collections, migrationStorage);
 
     const mongoFilesMetadata = new MongoCmsFilesMetadata(db);
     await mongoFilesMetadata.init();
@@ -68,6 +72,7 @@ export async function createCoreStores(env: RuntimeEnv) {
 
     return {
         collections,
+        collectionMigrations,
         mongo,
         db,
         repo,

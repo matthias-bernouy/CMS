@@ -12,6 +12,7 @@
         "./theme": "./src/exports/theme.ts",
         "./page-path": "./src/exports/page-path.ts",
         "./mongo": "./src/exports/mongo.ts",
+        "./migrations": "./src/exports/migrations.ts",
         "./files": "./src/exports/files/index.ts",
         "./files/serving": "./src/exports/files/serving.ts",
         "./files/local-fs": "./src/exports/files/local-fs.ts",
