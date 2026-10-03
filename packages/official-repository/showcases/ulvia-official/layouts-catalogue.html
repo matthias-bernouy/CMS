@@ -1,4 +1,4 @@
-<ulvia-official-app-shell layout="sidebar" width="full" sticky-header>
+<ulvia-official-app-shell layout="dual-sidebar" width="full" sticky-header>
     <ulvia-official-icon slot="brand" name="layout" size="lg" tone="primary"></ulvia-official-icon>
     <strong slot="brand">Ulvia Console</strong>
     <ulvia-official-navigation-menu slot="secondary-navigation" appearance="plain" density="compact" label="Workspace navigation">
@@ -40,6 +40,36 @@
             <button type="button"><ulvia-official-icon name="profile" size="md" tone="current"></ulvia-official-icon><span>Profile</span></button>
         </ulvia-official-navigation-item>
     </ulvia-official-navigation-menu>
+    <ulvia-official-navigation-menu slot="secondary-sidebar" appearance="subtle" density="compact" label="Collection navigation">
+        <strong slot="header">Ulvia Official</strong>
+        <ulvia-official-navigation-section slot="sections" divider>
+            <span slot="label">Collection</span>
+            <ulvia-official-navigation-item slot="items" active emphasis="default">
+                <a href="#overview"><ulvia-official-icon name="dashboard" size="md" tone="current"></ulvia-official-icon><span>Overview</span></a>
+            </ulvia-official-navigation-item>
+            <ulvia-official-navigation-item slot="items" emphasis="default">
+                <a href="#primitives"><ulvia-official-icon name="layout" size="md" tone="current"></ulvia-official-icon><span>Blocks</span></a>
+            </ulvia-official-navigation-item>
+            <ulvia-official-navigation-item slot="items" emphasis="default">
+                <a href="#tokens"><ulvia-official-icon name="media" size="md" tone="current"></ulvia-official-icon><span>Theme tokens</span></a>
+            </ulvia-official-navigation-item>
+            <ulvia-official-navigation-item slot="items" emphasis="default">
+                <button type="button"><ulvia-official-icon name="pages" size="md" tone="current"></ulvia-official-icon><span>Texts</span></button>
+            </ulvia-official-navigation-item>
+        </ulvia-official-navigation-section>
+        <ulvia-official-navigation-section slot="sections">
+            <span slot="label">Release</span>
+            <ulvia-official-navigation-item slot="items" emphasis="default">
+                <button type="button"><ulvia-official-icon name="collections" size="md" tone="current"></ulvia-official-icon><span>Versions</span></button>
+            </ulvia-official-navigation-item>
+            <ulvia-official-navigation-item slot="items" emphasis="default">
+                <button type="button"><ulvia-official-icon name="sources" size="md" tone="current"></ulvia-official-icon><span>Dependencies</span></button>
+            </ulvia-official-navigation-item>
+        </ulvia-official-navigation-section>
+        <ulvia-official-navigation-item slot="footer" emphasis="muted">
+            <button type="button"><ulvia-official-icon name="settings" size="md" tone="current"></ulvia-official-icon><span>Collection settings</span></button>
+        </ulvia-official-navigation-item>
+    </ulvia-official-navigation-menu>
 
     <ulvia-official-stack slot="content" gap="xl" align="stretch">
         <ulvia-official-page-shell id="workspace" slot="items" width="xl" appearance="plain" density="default">
@@ -60,19 +90,8 @@
                 <ulvia-official-route-tab slot="items"><a href="#activity">Activity</a></ulvia-official-route-tab>
             </ulvia-official-route-tabs>
 
-            <ulvia-official-detail-layout slot="content" navigation-width="sm" aside-width="md" gap="lg" narrow-layout="main-first">
-                <ulvia-official-sticky-region slot="navigation" position="top" offset="md">
-                    <ulvia-official-surface slot="content" appearance="outlined" padding="sm" radius="lg">
-                        <ulvia-official-stack slot="content" gap="sm" align="stretch">
-                            <ulvia-official-prose slot="items" measure="wide" size="sm"><strong slot="content">On this page</strong></ulvia-official-prose>
-                            <ulvia-official-action slot="items" variant="ghost" tone="primary" size="sm" wide><a href="#overview">Health summary</a></ulvia-official-action>
-                            <ulvia-official-action slot="items" variant="ghost" tone="neutral" size="sm" wide><a href="#review-notes">Review notes</a></ulvia-official-action>
-                            <ulvia-official-action slot="items" variant="ghost" tone="neutral" size="sm" wide><a href="#activity">Recent activity</a></ulvia-official-action>
-                        </ulvia-official-stack>
-                    </ulvia-official-surface>
-                </ulvia-official-sticky-region>
-
-                <ulvia-official-stack slot="main" gap="lg" align="stretch">
+            <ulvia-official-sidebar slot="content" side="end" sidebar-width="md" gap="lg" collapse="automatic">
+                <ulvia-official-stack slot="content" gap="lg" align="stretch">
                     <ulvia-official-panel id="overview" slot="items" appearance="elevated" density="default">
                         <ulvia-official-heading slot="header" size="md" align="start"><h2>Collection health</h2></ulvia-official-heading>
                         <ulvia-official-action slot="actions" variant="ghost" tone="neutral" size="sm"><button type="button"><ulvia-official-icon name="health" size="sm" tone="current"></ulvia-official-icon><span>View report</span></button></ulvia-official-action>
@@ -103,7 +122,7 @@
                     </ulvia-official-panel>
                 </ulvia-official-stack>
 
-                <ulvia-official-stack slot="aside" gap="md" align="stretch">
+                <ulvia-official-stack slot="sidebar" gap="md" align="stretch">
                     <ulvia-official-surface slot="items" appearance="inverse" padding="lg" radius="lg">
                         <ulvia-official-stack slot="content" gap="md" align="start">
                             <ulvia-official-prose slot="items" measure="wide" size="sm"><strong slot="content">Release confidence</strong></ulvia-official-prose>
@@ -118,7 +137,7 @@
                         </ulvia-official-stack>
                     </ulvia-official-surface>
                 </ulvia-official-stack>
-            </ulvia-official-detail-layout>
+            </ulvia-official-sidebar>
         </ulvia-official-page-shell>
 
         <ulvia-official-page-shell id="primitives" slot="items" width="xl" appearance="surface" density="comfortable">

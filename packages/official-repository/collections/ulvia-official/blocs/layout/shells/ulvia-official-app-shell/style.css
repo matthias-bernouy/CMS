@@ -1,6 +1,7 @@
 :host {
     --shell-width: var(--ulvia-official-content-width-xl, 88rem);
     --shell-sidebar-width: 15rem;
+    --shell-secondary-sidebar-width: 15.5rem;
     display: block;
     min-height: 100svh;
     color: var(--ulvia-official-text-primary, #17211d);
@@ -16,6 +17,7 @@
 [part="primary-navigation"] { min-width: 0; }
 [part="actions"] { display: flex; justify-content: flex-end; }
 [part="secondary-navigation"] { grid-area: secondary; padding: var(--ulvia-official-spacing-sm, .75rem) max(var(--ulvia-official-page-gutter, 1rem), calc((100% - var(--shell-width)) / 2)); border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); background: var(--ulvia-official-background-base, #fff); }
+[part="secondary-sidebar"] { display: none; grid-area: contextual; min-height: 0; overflow: auto; background: var(--ulvia-official-background-base, #fff); }
 [part="content"] { grid-area: content; min-width: 0; width: min(100%, var(--shell-width)); box-sizing: border-box; margin-inline: auto; padding: var(--ulvia-official-spacing-xl, 2rem) var(--ulvia-official-page-gutter, 1rem); }
 [part="footer"] { grid-area: footer; padding: var(--ulvia-official-spacing-lg, 1.5rem) max(var(--ulvia-official-page-gutter, 1rem), calc((100% - var(--shell-width)) / 2)); border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); }
 :host([width="contained"]) { --shell-width: var(--ulvia-official-content-width-lg, 72rem); }
@@ -24,24 +26,27 @@
 
 :host([layout="hybrid"]) [part="shell"] { grid-template-columns: var(--shell-sidebar-width) minmax(0, 1fr); grid-template-areas: "header header" "secondary content" "footer footer"; grid-template-rows: auto minmax(0, 1fr) auto; }
 :host([layout="sidebar"]) [part="shell"] { height: 100svh; max-height: 100svh; grid-template-columns: var(--shell-sidebar-width) minmax(0, 1fr); grid-template-areas: "header content" "secondary content" "footer content"; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; }
-:host([layout="sidebar"]) [part="primary-navigation"] { display: none; }
-:host([layout="sidebar"]) [part="header"] { grid-template-columns: minmax(0, 1fr); padding: var(--ulvia-official-spacing-md, 1rem); border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); border-bottom: 0; backdrop-filter: none; }
-:host([layout="sidebar"]) [part="actions"] { display: none; }
-:host([layout="sidebar"]) [part="secondary-navigation"] { min-height: 0; overflow: auto; padding: 0; border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); border-bottom: 0; }
-:host([layout="sidebar"]) [part="content"] { height: 100%; min-height: 0; overflow: auto; scrollbar-gutter: stable; }
-:host([layout="sidebar"]) [part="footer"] { padding: var(--ulvia-official-spacing-md, 1rem); border-top: 0; border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); background: var(--ulvia-official-background-base, #fff); }
+:host([layout="dual-sidebar"]) [part="shell"] { height: 100svh; max-height: 100svh; grid-template-columns: var(--shell-sidebar-width) var(--shell-secondary-sidebar-width) minmax(0, 1fr); grid-template-areas: "header contextual content" "secondary contextual content" "footer contextual content"; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; }
+:host([layout="dual-sidebar"]) [part="secondary-sidebar"] { display: block; border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); }
+:host([layout="sidebar"]) [part="primary-navigation"], :host([layout="dual-sidebar"]) [part="primary-navigation"] { display: none; }
+:host([layout="sidebar"]) [part="header"], :host([layout="dual-sidebar"]) [part="header"] { grid-template-columns: minmax(0, 1fr); padding: var(--ulvia-official-spacing-md, 1rem); border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); border-bottom: 0; backdrop-filter: none; }
+:host([layout="sidebar"]) [part="actions"], :host([layout="dual-sidebar"]) [part="actions"] { display: none; }
+:host([layout="sidebar"]) [part="secondary-navigation"], :host([layout="dual-sidebar"]) [part="secondary-navigation"] { min-height: 0; overflow: auto; padding: 0; border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); border-bottom: 0; }
+:host([layout="sidebar"]) [part="content"], :host([layout="dual-sidebar"]) [part="content"] { height: 100%; min-height: 0; overflow: auto; scrollbar-gutter: stable; }
+:host([layout="sidebar"]) [part="footer"], :host([layout="dual-sidebar"]) [part="footer"] { padding: var(--ulvia-official-spacing-md, 1rem); border-top: 0; border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); background: var(--ulvia-official-background-base, #fff); }
 :host([layout="hybrid"]) [part="secondary-navigation"] { padding: var(--ulvia-official-spacing-lg, 1.5rem) var(--ulvia-official-spacing-md, 1rem); border-right: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); border-bottom: 0; }
 
 @container (max-width: 52rem) {
     :host([layout="sidebar"]) [part="shell"], :host([layout="hybrid"]) [part="shell"] { grid-template-columns: minmax(0, 1fr); grid-template-areas: "header" "secondary" "content" "footer"; grid-template-rows: auto auto minmax(0, 1fr) auto; }
+    :host([layout="dual-sidebar"]) [part="shell"] { grid-template-columns: minmax(0, 1fr); grid-template-areas: "header" "secondary" "contextual" "content" "footer"; grid-template-rows: auto auto auto minmax(0, 1fr) auto; }
     [part="header"] { grid-template-columns: minmax(0, 1fr) auto; gap: var(--ulvia-official-spacing-sm, .75rem); }
     [part="primary-navigation"] { grid-column: 1 / -1; grid-row: 2; overflow-x: auto; }
-    :host([layout="sidebar"]) [part="secondary-navigation"], :host([layout="hybrid"]) [part="secondary-navigation"] { padding: var(--ulvia-official-spacing-sm, .75rem) var(--ulvia-official-page-gutter, 1rem); border-right: 0; border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); overflow-x: auto; scrollbar-width: none; }
-    :host([layout="sidebar"]) [part="secondary-navigation"]::-webkit-scrollbar, :host([layout="hybrid"]) [part="secondary-navigation"]::-webkit-scrollbar { display: none; }
-    :host([layout="sidebar"]) [part="shell"] { height: auto; max-height: none; overflow: visible; }
-    :host([layout="sidebar"]) [part="content"] { height: auto; overflow: visible; scrollbar-gutter: auto; }
-    :host([layout="sidebar"]) [part="header"] { grid-template-columns: minmax(0, 1fr) auto; border-right: 0; border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); }
-    :host([layout="sidebar"]) [part="footer"] { border-right: 0; border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); }
-    [part="secondary-navigation"] ::slotted(*) { --navigation-menu-height: auto; --navigation-menu-header-display: none; --navigation-menu-footer-display: none; --navigation-menu-sections-flow: row; --navigation-menu-sections-wrap: nowrap; --navigation-section-label-display: none; --navigation-section-direction: row; --navigation-section-wrap: nowrap; --navigation-item-flex: 0 0 auto; }
+    :host([layout="sidebar"]) [part="secondary-navigation"], :host([layout="dual-sidebar"]) [part="secondary-navigation"], :host([layout="hybrid"]) [part="secondary-navigation"], :host([layout="dual-sidebar"]) [part="secondary-sidebar"] { padding: var(--ulvia-official-spacing-sm, .75rem) var(--ulvia-official-page-gutter, 1rem); border-right: 0; border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); overflow-x: auto; scrollbar-width: none; }
+    :host([layout="sidebar"]) [part="secondary-navigation"]::-webkit-scrollbar, :host([layout="dual-sidebar"]) [part="secondary-navigation"]::-webkit-scrollbar, :host([layout="hybrid"]) [part="secondary-navigation"]::-webkit-scrollbar, :host([layout="dual-sidebar"]) [part="secondary-sidebar"]::-webkit-scrollbar { display: none; }
+    :host([layout="sidebar"]) [part="shell"], :host([layout="dual-sidebar"]) [part="shell"] { height: auto; max-height: none; overflow: visible; }
+    :host([layout="sidebar"]) [part="content"], :host([layout="dual-sidebar"]) [part="content"] { height: auto; overflow: visible; scrollbar-gutter: auto; }
+    :host([layout="sidebar"]) [part="header"], :host([layout="dual-sidebar"]) [part="header"] { grid-template-columns: minmax(0, 1fr) auto; border-right: 0; border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); }
+    :host([layout="sidebar"]) [part="footer"], :host([layout="dual-sidebar"]) [part="footer"] { border-right: 0; border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); }
+    [part="secondary-navigation"] ::slotted(*), [part="secondary-sidebar"] ::slotted(*) { --navigation-menu-height: auto; --navigation-menu-header-display: none; --navigation-menu-footer-display: none; --navigation-menu-sections-flow: row; --navigation-menu-sections-wrap: nowrap; --navigation-section-label-display: none; --navigation-section-direction: row; --navigation-section-wrap: nowrap; --navigation-item-flex: 0 0 auto; }
     [part="content"] { padding-block: var(--ulvia-official-spacing-lg, 1.5rem); }
 }

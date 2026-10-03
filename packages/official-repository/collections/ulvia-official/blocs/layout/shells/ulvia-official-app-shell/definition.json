@@ -27,6 +27,12 @@
                 { "kind": "rich-text", "profile": "prose" }
             ]
         },
+        "secondary-sidebar": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        },
         "actions": {
             "accepts": [
                 { "kind": "any-component" }
