@@ -1,0 +1,19 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-surface",
+    "label": "bloc.surface.label",
+    "description": "bloc.surface.description",
+    "category": "bloc.category.layout",
+    "order": 100,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "content": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "media" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        }
+    }
+}

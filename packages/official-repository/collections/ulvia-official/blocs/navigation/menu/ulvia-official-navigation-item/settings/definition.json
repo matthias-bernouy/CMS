@@ -1,0 +1,24 @@
+[
+    {
+        "id": "active",
+        "label": "setting.active.label",
+        "group": "setting.group.state",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    },
+    {
+        "id": "emphasis",
+        "label": "setting.emphasis.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "default",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "default", "label": "setting.option.default" },
+                { "value": "muted", "label": "setting.option.muted" }
+            ]
+        }
+    }
+]

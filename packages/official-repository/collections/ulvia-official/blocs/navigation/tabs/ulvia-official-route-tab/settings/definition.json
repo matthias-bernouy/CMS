@@ -1,0 +1,10 @@
+[
+    {
+        "id": "active",
+        "label": "setting.active.label",
+        "group": "setting.group.state",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    }
+]

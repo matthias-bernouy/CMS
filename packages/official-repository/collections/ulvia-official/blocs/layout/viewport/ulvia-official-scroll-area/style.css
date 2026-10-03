@@ -1,0 +1,13 @@
+:host {
+    --scroll-area-height: 20rem;
+    display: block;
+}
+
+[part="scroll-area"] { max-height: var(--scroll-area-height); overflow: auto; overscroll-behavior: contain; scrollbar-color: var(--ulvia-official-border-strong, #899b94) transparent; }
+[part="scroll-area"]:focus-visible { outline: 3px solid var(--ulvia-official-focus-ring, Highlight); outline-offset: 3px; }
+:host([height="sm"]) { --scroll-area-height: 12rem; }
+:host([height="lg"]) { --scroll-area-height: 32rem; }
+:host([height="viewport"]) { --scroll-area-height: 100svh; }
+:host([scrollbar="thin"]) [part="scroll-area"] { scrollbar-width: thin; }
+:host([scrollbar="hidden"]) [part="scroll-area"] { scrollbar-width: none; }
+:host([scrollbar="hidden"]) [part="scroll-area"]::-webkit-scrollbar { display: none; }

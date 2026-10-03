@@ -1,0 +1,13 @@
+{
+    "bloc.category.navigation": "Navigation",
+    "bloc.navigation-item.description": "A native link or button with optional icon and active state",
+    "bloc.navigation-item.label": "Navigation item",
+    "bloc.navigation-menu.description": "A structured application menu with grouped sections and footer actions",
+    "bloc.navigation-menu.label": "Navigation menu",
+    "bloc.navigation-section.description": "A labelled group of related navigation items",
+    "bloc.navigation-section.label": "Navigation section",
+    "bloc.route-tab.description": "A page link presented inside route tabs",
+    "bloc.route-tab.label": "Route tab",
+    "bloc.route-tabs.description": "Local page navigation rendered as underline or pill tabs",
+    "bloc.route-tabs.label": "Route tabs"
+}

@@ -1,0 +1,10 @@
+[
+    {
+        "id": "divider",
+        "label": "setting.divider.label",
+        "group": "setting.group.appearance",
+        "type": "boolean",
+        "default": true,
+        "control": { "kind": "toggle" }
+    }
+]

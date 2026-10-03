@@ -1,0 +1,28 @@
+:host {
+    --sidebar-width: 15rem;
+    --sidebar-gap: var(--ulvia-official-spacing-lg, 1.5rem);
+    display: block;
+    container-type: inline-size;
+}
+
+[part="layout"] {
+    display: grid;
+    grid-template-columns: minmax(0, var(--sidebar-width)) minmax(0, 1fr);
+    gap: var(--sidebar-gap);
+    align-items: start;
+}
+
+[part="sidebar"], [part="content"] { min-width: 0; }
+:host([side="end"]) [part="layout"] { grid-template-columns: minmax(0, 1fr) minmax(0, var(--sidebar-width)); }
+:host([side="end"]) [part="sidebar"] { order: 2; }
+:host([sidebar-width="sm"]) { --sidebar-width: 11rem; }
+:host([sidebar-width="lg"]) { --sidebar-width: 20rem; }
+:host([gap="sm"]) { --sidebar-gap: var(--ulvia-official-spacing-sm, .75rem); }
+:host([gap="md"]) { --sidebar-gap: var(--ulvia-official-spacing-md, 1rem); }
+:host([gap="xl"]) { --sidebar-gap: var(--ulvia-official-spacing-xl, 2rem); }
+
+@container (max-width: 44rem) {
+    :host(:not([collapse="never"])) [part="layout"] {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

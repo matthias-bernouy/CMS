@@ -1,0 +1,52 @@
+[
+    {
+        "id": "appearance",
+        "label": "setting.appearance.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "plain",
+        "control": {
+            "kind": "select",
+            "options": [
+                { "value": "plain", "label": "setting.option.plain" },
+                { "value": "subtle", "label": "setting.option.subtle" },
+                { "value": "outlined", "label": "setting.option.outlined" },
+                { "value": "elevated", "label": "setting.option.elevated" },
+                { "value": "inverse", "label": "setting.option.inverse" }
+            ]
+        }
+    },
+    {
+        "id": "padding",
+        "label": "setting.padding.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "md",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "none", "label": "setting.option.none" },
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" },
+                { "value": "xl", "label": "setting.option.extra-large" }
+            ]
+        }
+    },
+    {
+        "id": "radius",
+        "label": "setting.radius.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "lg",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "none", "label": "setting.option.none" },
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" }
+            ]
+        }
+    }
+]

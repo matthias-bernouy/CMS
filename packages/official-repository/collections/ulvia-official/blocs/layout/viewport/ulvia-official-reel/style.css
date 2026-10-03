@@ -1,0 +1,15 @@
+:host {
+    --reel-item-width: 18rem;
+    --reel-gap: var(--ulvia-official-spacing-md, 1rem);
+    display: block;
+}
+
+[part="reel"] { display: flex; gap: var(--reel-gap); overflow-x: auto; overscroll-behavior-inline: contain; padding-block-end: var(--ulvia-official-spacing-sm, .75rem); scrollbar-color: var(--ulvia-official-border-strong, #899b94) transparent; scrollbar-width: thin; }
+[part="reel"]:focus-visible { outline: 3px solid var(--ulvia-official-focus-ring, Highlight); outline-offset: 3px; }
+::slotted(*) { flex: 0 0 min(var(--reel-item-width), 85cqi); }
+:host([item-width="sm"]) { --reel-item-width: 13rem; }
+:host([item-width="lg"]) { --reel-item-width: 26rem; }
+:host([gap="sm"]) { --reel-gap: var(--ulvia-official-spacing-sm, .75rem); }
+:host([gap="lg"]) { --reel-gap: var(--ulvia-official-spacing-lg, 1.5rem); }
+:host([snap]) [part="reel"] { scroll-snap-type: inline mandatory; }
+:host([snap]) ::slotted(*) { scroll-snap-align: start; }

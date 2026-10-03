@@ -1,0 +1,40 @@
+[
+    {
+        "id": "item-width",
+        "label": "setting.item-width.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "md",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" }
+            ]
+        }
+    },
+    {
+        "id": "gap",
+        "label": "setting.gap.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "md",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" }
+            ]
+        }
+    },
+    {
+        "id": "snap",
+        "label": "setting.snap.label",
+        "group": "setting.group.behaviour",
+        "type": "boolean",
+        "default": true,
+        "control": { "kind": "toggle" }
+    }
+]

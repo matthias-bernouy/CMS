@@ -1,0 +1,18 @@
+:host {
+    --icon-size: 1.125rem;
+    display: inline-flex;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    flex: 0 0 var(--icon-size);
+    color: currentcolor;
+    vertical-align: -.16em;
+}
+
+[part="icon"] { display: contents; }
+[part="icon"] svg { width: 100%; height: 100%; overflow: visible; fill: none; stroke: currentcolor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.9; }
+:host([size="sm"]) { --icon-size: .875rem; }
+:host([size="lg"]) { --icon-size: 1.5rem; }
+:host([tone="primary"]) { color: var(--ulvia-official-primary, #3157d5); }
+:host([tone="muted"]) { color: var(--ulvia-official-text-muted, #6d7e77); }
+:host([tone="success"]) { color: var(--ulvia-official-success, #18794e); }
+:host([tone="danger"]) { color: var(--ulvia-official-danger, #b4233c); }

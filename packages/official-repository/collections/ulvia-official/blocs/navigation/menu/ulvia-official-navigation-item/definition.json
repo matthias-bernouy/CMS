@@ -1,0 +1,14 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-navigation-item",
+    "label": "bloc.navigation-item.label",
+    "description": "bloc.navigation-item.description",
+    "category": "bloc.category.navigation",
+    "order": 50,
+    "nativeElement": {
+        "accepts": ["a", "button"]
+    },
+    "uses": ["ulvia-official-icon"],
+    "requires": [],
+    "slots": {}
+}

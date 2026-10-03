@@ -1,0 +1,48 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-app-shell",
+    "label": "bloc.app-shell.label",
+    "description": "bloc.app-shell.description",
+    "category": "bloc.category.layout",
+    "order": 160,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "brand": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "media" },
+                { "kind": "rich-text", "profile": "inline" }
+            ]
+        },
+        "primary-navigation": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        },
+        "secondary-navigation": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        },
+        "actions": {
+            "accepts": [
+                { "kind": "any-component" }
+            ]
+        },
+        "content": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        },
+        "footer": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        }
+    }
+}

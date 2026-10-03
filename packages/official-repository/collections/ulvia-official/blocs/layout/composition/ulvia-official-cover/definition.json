@@ -1,0 +1,31 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-cover",
+    "label": "bloc.cover.label",
+    "description": "bloc.cover.description",
+    "category": "bloc.category.layout",
+    "order": 90,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "header": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        },
+        "content": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "media" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        },
+        "footer": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-reel",
+    "label": "bloc.reel.label",
+    "description": "bloc.reel.description",
+    "category": "bloc.category.layout",
+    "order": 130,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "items": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "media" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        }
+    }
+}

@@ -1,0 +1,47 @@
+[
+    {
+        "id": "ratio",
+        "label": "setting.ratio.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "landscape",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "square", "label": "setting.option.square" },
+                { "value": "portrait", "label": "setting.option.portrait" },
+                { "value": "landscape", "label": "setting.option.landscape" },
+                { "value": "wide", "label": "setting.option.wide" }
+            ]
+        }
+    },
+    {
+        "id": "fit",
+        "label": "setting.fit.label",
+        "group": "setting.group.media",
+        "type": "string",
+        "default": "cover",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "cover", "label": "setting.option.cover" },
+                { "value": "contain", "label": "setting.option.contain" }
+            ]
+        }
+    },
+    {
+        "id": "radius",
+        "label": "setting.radius.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "lg",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "none", "label": "setting.option.none" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" }
+            ]
+        }
+    }
+]

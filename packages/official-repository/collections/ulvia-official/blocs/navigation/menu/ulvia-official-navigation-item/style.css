@@ -1,0 +1,15 @@
+:host {
+    display: block;
+    min-width: 0;
+    color: var(--ulvia-official-text-secondary, #4f625a);
+}
+
+[part="item"] { display: contents; }
+::slotted(a), ::slotted(button) { position: relative; display: flex; width: 100%; min-width: 0; min-height: var(--navigation-item-height, 2.25rem); align-items: center; box-sizing: border-box; gap: var(--ulvia-official-spacing-sm, .75rem); padding: var(--navigation-item-padding, .5rem .625rem); border: 0; border-radius: var(--ulvia-official-radius-md, .5rem); color: inherit; background: transparent; font: inherit; font-size: var(--navigation-item-font-size, .875rem); font-weight: var(--ulvia-official-font-weight-medium, 500); line-height: var(--ulvia-official-line-height-tight, 1.15); text-align: start; text-decoration: none; cursor: pointer; transition: color var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease), background var(--ulvia-official-duration-fast, 120ms) var(--ulvia-official-easing-standard, ease); }
+::slotted(a:hover), ::slotted(button:hover:not(:disabled)) { color: var(--ulvia-official-text-primary, #17211d); background: var(--ulvia-official-background-subtle, #f3f7f5); }
+::slotted(a:focus-visible), ::slotted(button:focus-visible) { outline: 3px solid var(--ulvia-official-focus-ring, Highlight); outline-offset: 2px; }
+:host([active]) { color: var(--ulvia-official-primary, #3157d5); }
+:host([active]) ::slotted(a), :host([active]) ::slotted(button) { background: var(--ulvia-official-primary-subtle, #e9edff); font-weight: var(--ulvia-official-font-weight-bold, 700); }
+:host([active]) ::slotted(a)::before, :host([active]) ::slotted(button)::before { position: absolute; top: .55rem; bottom: .55rem; left: 0; width: 3px; border-radius: var(--ulvia-official-radius-full, 999px); background: currentcolor; content: ""; }
+:host([emphasis="muted"]) { color: var(--ulvia-official-text-muted, #6d7e77); }
+::slotted(button:disabled) { opacity: .55; cursor: not-allowed; }

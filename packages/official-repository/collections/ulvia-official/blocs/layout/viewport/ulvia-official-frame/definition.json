@@ -1,0 +1,18 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-frame",
+    "label": "bloc.frame.label",
+    "description": "bloc.frame.description",
+    "category": "bloc.category.layout",
+    "order": 120,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "content": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "media" }
+            ]
+        }
+    }
+}

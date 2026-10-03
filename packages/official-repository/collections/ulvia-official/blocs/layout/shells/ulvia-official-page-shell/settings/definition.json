@@ -1,0 +1,48 @@
+[
+    {
+        "id": "width",
+        "label": "setting.width.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "lg",
+        "control": {
+            "kind": "select",
+            "options": [
+                { "value": "sm", "label": "setting.option.width-sm" },
+                { "value": "md", "label": "setting.option.width-md" },
+                { "value": "lg", "label": "setting.option.width-lg" },
+                { "value": "xl", "label": "setting.option.width-xl" },
+                { "value": "full", "label": "setting.option.width-full" }
+            ]
+        }
+    },
+    {
+        "id": "appearance",
+        "label": "setting.appearance.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "plain",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "plain", "label": "setting.option.plain" },
+                { "value": "surface", "label": "setting.option.surface" }
+            ]
+        }
+    },
+    {
+        "id": "density",
+        "label": "setting.density.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "default",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "compact", "label": "setting.option.compact" },
+                { "value": "default", "label": "setting.option.default" },
+                { "value": "comfortable", "label": "setting.option.comfortable" }
+            ]
+        }
+    }
+]

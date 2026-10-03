@@ -1,0 +1,25 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-sidebar",
+    "label": "bloc.sidebar.label",
+    "description": "bloc.sidebar.description",
+    "category": "bloc.category.layout",
+    "order": 70,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "sidebar": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        },
+        "content": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "media" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        }
+    }
+}

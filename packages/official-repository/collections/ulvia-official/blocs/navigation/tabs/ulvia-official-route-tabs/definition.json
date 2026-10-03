@@ -1,0 +1,18 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-route-tabs",
+    "label": "bloc.route-tabs.label",
+    "description": "bloc.route-tabs.description",
+    "category": "bloc.category.navigation",
+    "order": 10,
+    "uses": ["ulvia-official-route-tab"],
+    "requires": [],
+    "slots": {
+        "items": {
+            "min": 1,
+            "accepts": [
+                { "kind": "component", "tag": "ulvia-official-route-tab" }
+            ]
+        }
+    }
+}

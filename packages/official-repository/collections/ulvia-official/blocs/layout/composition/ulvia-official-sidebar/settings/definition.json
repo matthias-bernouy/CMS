@@ -1,0 +1,61 @@
+[
+    {
+        "id": "side",
+        "label": "setting.side.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "start",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "start", "label": "setting.option.start" },
+                { "value": "end", "label": "setting.option.end" }
+            ]
+        }
+    },
+    {
+        "id": "sidebar-width",
+        "label": "setting.sidebar-width.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "md",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" }
+            ]
+        }
+    },
+    {
+        "id": "gap",
+        "label": "setting.gap.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "lg",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" },
+                { "value": "xl", "label": "setting.option.extra-large" }
+            ]
+        }
+    },
+    {
+        "id": "collapse",
+        "label": "setting.collapse.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "automatic",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "automatic", "label": "setting.option.automatic" },
+                { "value": "never", "label": "setting.option.never" }
+            ]
+        }
+    }
+]

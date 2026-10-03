@@ -1,0 +1,22 @@
+:host {
+    --cluster-gap: var(--ulvia-official-spacing-md, 1rem);
+    display: block;
+}
+
+[part="cluster"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cluster-gap);
+    align-items: center;
+    justify-content: flex-start;
+}
+
+:host([gap="none"]) { --cluster-gap: 0rem; }
+:host([gap="sm"]) { --cluster-gap: var(--ulvia-official-spacing-sm, .75rem); }
+:host([gap="lg"]) { --cluster-gap: var(--ulvia-official-spacing-lg, 1.5rem); }
+:host([align="start"]) [part="cluster"] { align-items: flex-start; }
+:host([align="end"]) [part="cluster"] { align-items: flex-end; }
+:host([align="stretch"]) [part="cluster"] { align-items: stretch; }
+:host([justify="center"]) [part="cluster"] { justify-content: center; }
+:host([justify="end"]) [part="cluster"] { justify-content: flex-end; }
+:host([justify="between"]) [part="cluster"] { justify-content: space-between; }

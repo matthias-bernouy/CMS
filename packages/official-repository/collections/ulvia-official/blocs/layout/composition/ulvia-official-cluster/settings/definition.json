@@ -1,0 +1,50 @@
+[
+    {
+        "id": "gap",
+        "label": "setting.gap.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "md",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "none", "label": "setting.option.none" },
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" }
+            ]
+        }
+    },
+    {
+        "id": "align",
+        "label": "setting.alignment.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "center",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "start", "label": "setting.option.start" },
+                { "value": "center", "label": "setting.option.center" },
+                { "value": "end", "label": "setting.option.end" },
+                { "value": "stretch", "label": "setting.option.stretch" }
+            ]
+        }
+    },
+    {
+        "id": "justify",
+        "label": "setting.justification.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "start",
+        "control": {
+            "kind": "select",
+            "options": [
+                { "value": "start", "label": "setting.option.start" },
+                { "value": "center", "label": "setting.option.center" },
+                { "value": "end", "label": "setting.option.end" },
+                { "value": "between", "label": "setting.option.space-between" }
+            ]
+        }
+    }
+]

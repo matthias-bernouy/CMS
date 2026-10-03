@@ -1,0 +1,19 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-scroll-area",
+    "label": "bloc.scroll-area.label",
+    "description": "bloc.scroll-area.description",
+    "category": "bloc.category.layout",
+    "order": 140,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "content": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "media" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        }
+    }
+}

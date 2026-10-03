@@ -1,0 +1,33 @@
+:host {
+    --surface-background: transparent;
+    --surface-color: var(--ulvia-official-text-primary, #17211d);
+    --surface-border: transparent;
+    --surface-padding: var(--ulvia-official-spacing-md, 1rem);
+    --surface-radius: var(--ulvia-official-radius-lg, .75rem);
+    --surface-shadow: none;
+    display: block;
+}
+
+[part="surface"] {
+    min-width: 0;
+    min-height: 100%;
+    box-sizing: border-box;
+    padding: var(--surface-padding);
+    border: var(--ulvia-official-border-width, 1px) solid var(--surface-border);
+    border-radius: var(--surface-radius);
+    color: var(--surface-color);
+    background: var(--surface-background);
+    box-shadow: var(--surface-shadow);
+}
+
+:host([appearance="subtle"]) { --surface-background: var(--ulvia-official-background-subtle, #f3f7f5); }
+:host([appearance="outlined"]) { --surface-background: var(--ulvia-official-background-base, #fff); --surface-border: var(--ulvia-official-border-default, #c9d5d0); }
+:host([appearance="elevated"]) { --surface-background: var(--ulvia-official-background-raised, #fff); --surface-border: var(--ulvia-official-border-subtle, #e2e9e6); --surface-shadow: var(--ulvia-official-shadow-md, 0 8px 24px rgb(20 40 32 / 10%)); }
+:host([appearance="inverse"]) { --surface-background: var(--ulvia-official-background-inverse, #15221d); --surface-color: var(--ulvia-official-text-inverse, #fff); --ulvia-official-text-primary: var(--ulvia-official-text-inverse, #fff); --ulvia-official-text-secondary: rgb(255 255 255 / 76%); --ulvia-official-text-muted: rgb(255 255 255 / 62%); --ulvia-official-border-subtle: rgb(255 255 255 / 16%); }
+:host([padding="none"]) { --surface-padding: 0rem; }
+:host([padding="sm"]) { --surface-padding: var(--ulvia-official-spacing-sm, .75rem); }
+:host([padding="lg"]) { --surface-padding: var(--ulvia-official-spacing-lg, 1.5rem); }
+:host([padding="xl"]) { --surface-padding: var(--ulvia-official-spacing-xl, 2rem); }
+:host([radius="none"]) { --surface-radius: 0rem; }
+:host([radius="sm"]) { --surface-radius: var(--ulvia-official-radius-sm, .25rem); }
+:host([radius="md"]) { --surface-radius: var(--ulvia-official-radius-md, .5rem); }

@@ -1,0 +1,11 @@
+:host {
+    --sticky-offset: var(--ulvia-official-spacing-md, 1rem);
+    display: block;
+    align-self: start;
+}
+
+[part="sticky"] { position: sticky; z-index: 2; top: var(--sticky-offset); }
+:host([position="bottom"]) [part="sticky"] { top: auto; bottom: var(--sticky-offset); }
+:host([offset="none"]) { --sticky-offset: 0rem; }
+:host([offset="sm"]) { --sticky-offset: var(--ulvia-official-spacing-sm, .75rem); }
+:host([offset="lg"]) { --sticky-offset: var(--ulvia-official-spacing-lg, 1.5rem); }

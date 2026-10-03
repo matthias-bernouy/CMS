@@ -1,0 +1,26 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-split",
+    "label": "bloc.split.label",
+    "description": "bloc.split.description",
+    "category": "bloc.category.layout",
+    "order": 60,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "primary": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "media" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        },
+        "secondary": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "media" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        }
+    }
+}

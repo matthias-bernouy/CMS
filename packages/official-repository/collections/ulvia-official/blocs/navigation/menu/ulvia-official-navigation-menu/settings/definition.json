@@ -1,0 +1,39 @@
+[
+    {
+        "id": "appearance",
+        "label": "setting.appearance.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "plain",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "plain", "label": "setting.option.plain" },
+                { "value": "subtle", "label": "setting.option.subtle" }
+            ]
+        }
+    },
+    {
+        "id": "density",
+        "label": "setting.density.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "default",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "compact", "label": "setting.option.compact" },
+                { "value": "default", "label": "setting.option.default" },
+                { "value": "comfortable", "label": "setting.option.comfortable" }
+            ]
+        }
+    },
+    {
+        "id": "label",
+        "label": "setting.navigation-label.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "Navigation",
+        "control": { "kind": "text" }
+    }
+]

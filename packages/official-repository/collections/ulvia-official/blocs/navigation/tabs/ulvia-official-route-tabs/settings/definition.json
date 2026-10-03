@@ -1,0 +1,46 @@
+[
+    {
+        "id": "appearance",
+        "label": "setting.appearance.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "underline",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "underline", "label": "setting.option.underline" },
+                { "value": "pills", "label": "setting.option.pills" }
+            ]
+        }
+    },
+    {
+        "id": "align",
+        "label": "setting.alignment.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "start",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "start", "label": "setting.option.start" },
+                { "value": "center", "label": "setting.option.center" },
+                { "value": "stretch", "label": "setting.option.stretch" }
+            ]
+        }
+    },
+    {
+        "id": "size",
+        "label": "setting.size.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "md",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" }
+            ]
+        }
+    }
+]

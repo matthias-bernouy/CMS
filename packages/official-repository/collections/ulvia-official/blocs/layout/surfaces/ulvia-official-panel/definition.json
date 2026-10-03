@@ -1,0 +1,36 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-panel",
+    "label": "bloc.panel.label",
+    "description": "bloc.panel.description",
+    "category": "bloc.category.layout",
+    "order": 110,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "header": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        },
+        "actions": {
+            "accepts": [
+                { "kind": "any-component" }
+            ]
+        },
+        "content": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "media" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        },
+        "footer": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        }
+    }
+}

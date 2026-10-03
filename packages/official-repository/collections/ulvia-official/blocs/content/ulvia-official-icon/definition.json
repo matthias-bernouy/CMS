@@ -1,0 +1,11 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-icon",
+    "label": "bloc.icon.label",
+    "description": "bloc.icon.description",
+    "category": "bloc.category.content",
+    "order": 30,
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

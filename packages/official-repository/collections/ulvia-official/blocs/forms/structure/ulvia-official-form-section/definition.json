@@ -4,7 +4,7 @@
     "label": "bloc.form-section.label",
     "description": "bloc.form-section.description",
     "category": "bloc.category.forms",
-    "order": 150,
+    "order": 145,
     "uses": [
         "ulvia-official-field",
         "ulvia-official-form-section-heading",

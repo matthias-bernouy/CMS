@@ -1,0 +1,17 @@
+:host {
+    --center-width: var(--ulvia-official-content-width-md, 56rem);
+    display: block;
+}
+
+[part="center"] {
+    width: min(100%, var(--center-width));
+    box-sizing: border-box;
+    margin-inline: auto;
+    text-align: start;
+}
+
+:host([width="sm"]) { --center-width: var(--ulvia-official-content-width-sm, 40rem); }
+:host([width="lg"]) { --center-width: var(--ulvia-official-content-width-lg, 72rem); }
+:host([text-align="center"]) [part="center"] { text-align: center; }
+:host([text-align="end"]) [part="center"] { text-align: end; }
+:host([intrinsic]) [part="center"] { display: flex; flex-direction: column; align-items: center; }

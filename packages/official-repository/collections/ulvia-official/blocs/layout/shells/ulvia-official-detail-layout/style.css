@@ -1,0 +1,29 @@
+:host {
+    --detail-navigation-width: 12rem;
+    --detail-aside-width: 18rem;
+    --detail-gap: var(--ulvia-official-spacing-lg, 1.5rem);
+    display: block;
+    container-type: inline-size;
+}
+
+[part="layout"] { display: grid; grid-template-columns: minmax(0, var(--detail-navigation-width)) minmax(0, 1fr) minmax(0, var(--detail-aside-width)); gap: var(--detail-gap); align-items: start; }
+[part="navigation"], [part="main"], [part="aside"] { min-width: 0; }
+:host([navigation-width="sm"]) { --detail-navigation-width: 9rem; }
+:host([navigation-width="lg"]) { --detail-navigation-width: 15rem; }
+:host([aside-width="sm"]) { --detail-aside-width: 14rem; }
+:host([aside-width="lg"]) { --detail-aside-width: 22rem; }
+:host([gap="md"]) { --detail-gap: var(--ulvia-official-spacing-md, 1rem); }
+:host([gap="xl"]) { --detail-gap: var(--ulvia-official-spacing-xl, 2rem); }
+
+@container (max-width: 64rem) {
+    [part="layout"] { grid-template-columns: minmax(0, var(--detail-navigation-width)) minmax(0, 1fr); }
+    [part="aside"] { grid-column: 2; }
+}
+
+@container (max-width: 42rem) {
+    [part="layout"] { grid-template-columns: minmax(0, 1fr); }
+    [part="main"] { order: 1; }
+    [part="aside"] { grid-column: auto; order: 2; }
+    [part="navigation"] { order: 3; }
+    :host([narrow-layout="navigation-first"]) [part="navigation"] { order: 0; }
+}

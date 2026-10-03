@@ -1,0 +1,19 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-sticky-region",
+    "label": "bloc.sticky-region.label",
+    "description": "bloc.sticky-region.description",
+    "category": "bloc.category.layout",
+    "order": 150,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "content": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "media" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        }
+    }
+}

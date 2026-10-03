@@ -1,0 +1,59 @@
+[
+    {
+        "id": "name",
+        "label": "setting.icon.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "layout",
+        "control": {
+            "kind": "select",
+            "options": [
+                { "value": "layout", "label": "setting.option.icon-layout" },
+                { "value": "pages", "label": "setting.option.icon-pages" },
+                { "value": "media", "label": "setting.option.icon-media" },
+                { "value": "collections", "label": "setting.option.icon-collections" },
+                { "value": "dashboard", "label": "setting.option.icon-dashboard" },
+                { "value": "sources", "label": "setting.option.icon-sources" },
+                { "value": "health", "label": "setting.option.icon-health" },
+                { "value": "users", "label": "setting.option.icon-users" },
+                { "value": "settings", "label": "setting.option.icon-settings" },
+                { "value": "profile", "label": "setting.option.icon-profile" },
+                { "value": "search", "label": "setting.option.icon-search" },
+                { "value": "check", "label": "setting.option.icon-check" },
+                { "value": "alert", "label": "setting.option.icon-alert" }
+            ]
+        }
+    },
+    {
+        "id": "size",
+        "label": "setting.size.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "md",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" }
+            ]
+        }
+    },
+    {
+        "id": "tone",
+        "label": "setting.tone.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "current",
+        "control": {
+            "kind": "select",
+            "options": [
+                { "value": "current", "label": "setting.option.current" },
+                { "value": "primary", "label": "setting.option.primary" },
+                { "value": "muted", "label": "setting.option.muted" },
+                { "value": "success", "label": "setting.option.success" },
+                { "value": "danger", "label": "setting.option.danger" }
+            ]
+        }
+    }
+]

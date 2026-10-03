@@ -1,0 +1,19 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-page-shell",
+    "label": "bloc.page-shell.label",
+    "description": "bloc.page-shell.description",
+    "category": "bloc.category.layout",
+    "order": 170,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "breadcrumb": { "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "inline" }] },
+        "title": { "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }] },
+        "description": { "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }] },
+        "actions": { "accepts": [{ "kind": "any-component" }] },
+        "navigation": { "accepts": [{ "kind": "any-component" }] },
+        "content": { "accepts": [{ "kind": "any-component" }, { "kind": "media" }, { "kind": "rich-text", "profile": "prose" }] },
+        "footer": { "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }] }
+    }
+}

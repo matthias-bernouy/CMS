@@ -1,0 +1,47 @@
+[
+    {
+        "id": "height",
+        "label": "setting.height.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "half",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "content", "label": "setting.option.content" },
+                { "value": "half", "label": "setting.option.half-screen" },
+                { "value": "viewport", "label": "setting.option.full-screen" }
+            ]
+        }
+    },
+    {
+        "id": "align",
+        "label": "setting.alignment.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "center",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "start", "label": "setting.option.start" },
+                { "value": "center", "label": "setting.option.center" },
+                { "value": "end", "label": "setting.option.end" }
+            ]
+        }
+    },
+    {
+        "id": "spacing",
+        "label": "setting.spacing.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "lg",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" }
+            ]
+        }
+    }
+]

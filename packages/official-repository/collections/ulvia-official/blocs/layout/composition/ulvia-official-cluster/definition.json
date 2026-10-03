@@ -1,0 +1,19 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-cluster",
+    "label": "bloc.cluster.label",
+    "description": "bloc.cluster.description",
+    "category": "bloc.category.layout",
+    "order": 50,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "items": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "media" },
+                { "kind": "rich-text", "profile": "prose" }
+            ]
+        }
+    }
+}

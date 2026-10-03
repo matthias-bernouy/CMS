@@ -1,0 +1,63 @@
+[
+    {
+        "id": "ratio",
+        "label": "setting.ratio.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "equal",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "equal", "label": "setting.option.equal" },
+                { "value": "primary-wide", "label": "setting.option.primary-wide" },
+                { "value": "secondary-wide", "label": "setting.option.secondary-wide" }
+            ]
+        }
+    },
+    {
+        "id": "gap",
+        "label": "setting.gap.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "lg",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" },
+                { "value": "xl", "label": "setting.option.extra-large" }
+            ]
+        }
+    },
+    {
+        "id": "align",
+        "label": "setting.alignment.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "center",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "start", "label": "setting.option.start" },
+                { "value": "center", "label": "setting.option.center" },
+                { "value": "end", "label": "setting.option.end" },
+                { "value": "stretch", "label": "setting.option.stretch" }
+            ]
+        }
+    },
+    {
+        "id": "narrow-order",
+        "label": "setting.narrow-order.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "primary-first",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "primary-first", "label": "setting.option.primary-first" },
+                { "value": "secondary-first", "label": "setting.option.secondary-first" }
+            ]
+        }
+    }
+]

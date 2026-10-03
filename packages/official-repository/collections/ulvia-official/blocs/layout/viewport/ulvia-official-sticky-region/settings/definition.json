@@ -1,0 +1,32 @@
+[
+    {
+        "id": "position",
+        "label": "setting.position.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "top",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "top", "label": "setting.option.top" },
+                { "value": "bottom", "label": "setting.option.bottom" }
+            ]
+        }
+    },
+    {
+        "id": "offset",
+        "label": "setting.offset.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "md",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "none", "label": "setting.option.none" },
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" }
+            ]
+        }
+    }
+]

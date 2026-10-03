@@ -1,0 +1,27 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-navigation-menu",
+    "label": "bloc.navigation-menu.label",
+    "description": "bloc.navigation-menu.description",
+    "category": "bloc.category.navigation",
+    "order": 30,
+    "uses": ["ulvia-official-icon", "ulvia-official-navigation-section", "ulvia-official-navigation-item"],
+    "requires": [],
+    "slots": {
+        "header": {
+            "accepts": [
+                { "kind": "any-component" },
+                { "kind": "media", "accept": ["image", "bitmap", "svg"] },
+                { "kind": "rich-text", "profile": "inline" }
+            ],
+            "max": 1
+        },
+        "sections": {
+            "accepts": [{ "kind": "component", "tag": "ulvia-official-navigation-section" }],
+            "min": 1
+        },
+        "footer": {
+            "accepts": [{ "kind": "component", "tag": "ulvia-official-navigation-item" }]
+        }
+    }
+}

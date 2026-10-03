@@ -1,0 +1,33 @@
+[
+    {
+        "id": "height",
+        "label": "setting.height.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "md",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" },
+                { "value": "lg", "label": "setting.option.large" },
+                { "value": "viewport", "label": "setting.option.viewport" }
+            ]
+        }
+    },
+    {
+        "id": "scrollbar",
+        "label": "setting.scrollbar.label",
+        "group": "setting.group.behaviour",
+        "type": "string",
+        "default": "auto",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "auto", "label": "setting.option.automatic" },
+                { "value": "thin", "label": "setting.option.thin" },
+                { "value": "hidden", "label": "setting.option.hidden" }
+            ]
+        }
+    }
+]
