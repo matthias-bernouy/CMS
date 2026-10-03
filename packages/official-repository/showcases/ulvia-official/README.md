@@ -14,6 +14,8 @@ keep the native `form` element page-owned.
 
 The four layout pages share the same application shell, use native links for
 route navigation and expose exactly one current page in each navigation level.
+Below the shell's compact breakpoint, both lateral navigations become labelled,
+mutually exclusive drawers instead of horizontal link strips.
 
 Review the live Delivery pages at desktop and narrow container widths. Static
 captures are deliberately not the source of truth because the collection evolves.

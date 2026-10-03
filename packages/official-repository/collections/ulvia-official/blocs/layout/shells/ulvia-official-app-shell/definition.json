@@ -21,6 +21,18 @@
                 { "kind": "rich-text", "profile": "prose" }
             ]
         },
+        "primary-mobile-label": {
+            "accepts": [
+                { "kind": "rich-text", "profile": "inline" }
+            ],
+            "max": 1
+        },
+        "secondary-mobile-label": {
+            "accepts": [
+                { "kind": "rich-text", "profile": "inline" }
+            ],
+            "max": 1
+        },
         "secondary-navigation": {
             "accepts": [
                 { "kind": "any-component" },
