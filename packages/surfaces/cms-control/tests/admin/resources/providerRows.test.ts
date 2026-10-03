@@ -117,7 +117,8 @@ test("provider detail offers a connection upgrade when the repository has a newe
     const root = host.attachShadow({ mode: "open" });
     root.innerHTML = `
         <span data-provider-title></span><span data-provider-description></span><span data-provider-status></span>
-        <button data-provider-reconnect></button><dl data-provider-facts></dl>
+        <button data-provider-reconnect></button><button data-provider-toggle></button>
+        <button data-provider-revoke></button><dl data-provider-facts></dl>
         <div data-provider-contracts></div><nav data-provider-links></nav>
     `;
     renderProviderDetail(

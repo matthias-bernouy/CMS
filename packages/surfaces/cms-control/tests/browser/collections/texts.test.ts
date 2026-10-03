@@ -8,18 +8,53 @@ import saveTexts from "cms-control/api/_content/collections/texts.put";
 const sourceRoot = resolve(import.meta.dir, "../../../src");
 const bundle = await Bun.file(`${sourceRoot}/static/assets/control-components.js`).text();
 const collectionRoot = resolve(import.meta.dir, "../../../../../official-repository/collections/ulvia-official");
+const { exports: _exports, ...definition } = await Bun.file(resolve(collectionRoot, "definition.json")).json();
 const release = {
-    ...(await Bun.file(resolve(collectionRoot, "definition.json")).json()),
-    translations: {
-        en: await Bun.file(resolve(collectionRoot, "translations/en.json")).json(),
-    },
+    ...definition,
+    translations: { en: await mergeJsonObjects(resolve(collectionRoot, "translations/en")) },
     blocs: [],
     assets: [],
-    texts: [
-        ...(await Bun.file(resolve(collectionRoot, "texts/storefront.json")).json()),
-        ...(await Bun.file(resolve(collectionRoot, "texts/support.json")).json()),
-    ],
+    texts: await loadTexts(resolve(collectionRoot, "texts")),
 };
+
+async function jsonFiles(root: string): Promise<{ relativePath: string; value: unknown }[]> {
+    const relativePaths: string[] = [];
+    for await (const relativePath of new Bun.Glob("**/*.json").scan({ cwd: root, onlyFiles: true })) {
+        relativePaths.push(relativePath);
+    }
+    return Promise.all(
+        relativePaths
+            .sort((left, right) => left.localeCompare(right))
+            .map(async (relativePath) => ({
+                relativePath,
+                value: await Bun.file(resolve(root, relativePath)).json(),
+            })),
+    );
+}
+
+async function mergeJsonObjects(root: string): Promise<Record<string, unknown>> {
+    return Object.assign({}, ...(await jsonFiles(root)).map(({ value }) => value));
+}
+
+async function loadTexts(root: string): Promise<Record<string, unknown>[]> {
+    const definitions = (await jsonFiles(resolve(root, "definitions"))).flatMap(({ value }) =>
+        Array.isArray(value) ? (value as Record<string, unknown>[]) : [],
+    );
+    const localeValues = new Map<string, Record<string, unknown>>();
+    for (const { relativePath, value } of await jsonFiles(resolve(root, "locales"))) {
+        const locale = relativePath.split("/")[0]!;
+        const values = localeValues.get(locale) ?? {};
+        localeValues.set(locale, Object.assign(values, value as Record<string, unknown>));
+    }
+    return definitions.map((definition) => ({
+        ...definition,
+        values: Object.fromEntries(
+            [...localeValues].flatMap(([locale, values]) =>
+                Object.hasOwn(values, String(definition.id)) ? [[locale, values[String(definition.id)]]] : [],
+            ),
+        ),
+    }));
+}
 
 test("installed texts keep drafts across groups, persist overrides, reset and reject stale saves", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
@@ -66,6 +101,17 @@ test("installed texts keep drafts across groups, persist overrides, reset and re
         await page.goto("http://cms.test/texts");
         const panel = page.locator("cms-installed-texts");
         const welcome = panel.locator('w13c-lateral-menu-item[aria-label="Welcome"]');
+        await Promise.race([
+            welcome.waitFor(),
+            panel
+                .locator("[data-view-error]:not([hidden])")
+                .waitFor()
+                .then(async () => {
+                    throw new Error(
+                        (await panel.locator("[data-view-error-message]").textContent()) ?? "Unknown error",
+                    );
+                }),
+        ]);
         await welcome.click();
         expect(await panel.getByRole("columnheader").allTextContents()).toEqual([
             "Key",
