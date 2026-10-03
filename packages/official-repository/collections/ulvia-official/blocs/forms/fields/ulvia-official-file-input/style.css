@@ -25,7 +25,9 @@
 :host([variant="compact"]) [part="icon"] { width: 1.5rem; height: 1.5rem; }
 :host([variant="compact"]) [part="support"] { display: none; }
 :host([variant="compact"]) [part="file-name"] { max-width: min(28rem, 60vw); }
-:host([variant="card"]) [part="drop-zone"] { min-height: 10rem; align-items: flex-end; justify-content: flex-start; border-style: solid; background: linear-gradient(145deg, var(--ulvia-official-background-subtle, #eef1f0), var(--ulvia-official-background-surface, Canvas)); }
+:host([variant="card"]) { width: min(100%, 20rem); }
+:host([variant="card"]) [part="drop-zone"] { width: 100%; min-height: 0; aspect-ratio: 1; flex-direction: column; align-items: center; justify-content: center; border-style: solid; background: linear-gradient(145deg, var(--ulvia-official-background-subtle, #eef1f0), var(--ulvia-official-background-surface, Canvas)); text-align: center; }
 :host([variant="card"]) [part="icon"] { width: 2.25rem; height: 2.25rem; }
 :host([data-has-files]) [part="drop-zone"] { min-height: 4.75rem; justify-content: flex-start; padding: var(--ulvia-official-spacing-sm, .75rem) var(--ulvia-official-spacing-md, 1rem); border-style: solid; background: var(--ulvia-official-background-surface, Canvas); }
 :host([data-has-files]) [part="file-name"] { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:host([variant="card"][data-has-files]) [part="drop-zone"] { min-height: 0; align-items: center; justify-content: center; padding: var(--ulvia-official-spacing-xl, 2rem); background: linear-gradient(145deg, var(--ulvia-official-background-subtle, #eef1f0), var(--ulvia-official-background-surface, Canvas)); }

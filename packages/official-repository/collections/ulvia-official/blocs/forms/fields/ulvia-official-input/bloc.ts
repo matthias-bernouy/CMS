@@ -7,20 +7,24 @@ const DATE_INPUT_TYPES = new Set(["date", "datetime-local", "month", "time", "we
 export class Bloc extends Component {
     private input: HTMLInputElement | null = null;
     private slotElement: HTMLSlotElement | null;
+    private dateIndicator: HTMLElement | null;
     private observer = new MutationObserver(() => this.syncState());
 
     constructor() {
         super({ css, template });
         this.slotElement = this.shadowRoot?.querySelector("slot") ?? null;
+        this.dateIndicator = this.shadowRoot?.querySelector('[part="date-indicator"]') ?? null;
     }
 
     override connectedCallback(): void {
         this.slotElement?.addEventListener("slotchange", this.bindInput);
+        this.dateIndicator?.addEventListener("click", this.openDatePicker);
         this.bindInput();
     }
 
     disconnectedCallback(): void {
         this.slotElement?.removeEventListener("slotchange", this.bindInput);
+        this.dateIndicator?.removeEventListener("click", this.openDatePicker);
         this.observer.disconnect();
     }
 
@@ -40,4 +44,16 @@ export class Bloc extends Component {
         this.toggleAttribute("data-date", DATE_INPUT_TYPES.has(this.input?.type ?? ""));
         this.toggleAttribute("data-disabled", this.input?.disabled === true);
     }
+
+    private openDatePicker = (): void => {
+        if (!this.input || this.input.disabled || this.input.readOnly) {
+            return;
+        }
+        this.input.focus({ preventScroll: true });
+        try {
+            this.input.showPicker();
+        } catch {
+            this.input.click();
+        }
+    };
 }
