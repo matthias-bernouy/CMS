@@ -11,13 +11,21 @@ export function collectionThemeSource(release: CollectionRelease): ThemeSource |
     if (!release.theme) {
         return null;
     }
+    const themeTokenImports =
+        release.dependencies?.flatMap((dependency) =>
+            dependency.imports.themeTokens.map((token) => collectionThemeTokenId(dependency.collectionId, token)),
+        ) ?? [];
     return {
         id: collectionThemeSourceId(release.collectionId),
         label: resolveCollectionTranslation(release, release.theme.label),
         supportsModes: release.theme.categories.some((category) =>
             category.tokens.some((token) => token.defaults.dark !== undefined),
         ),
-        owner: { kind: "collection", collectionId: release.collectionId },
+        owner: {
+            kind: "collection",
+            collectionId: release.collectionId,
+            ...(themeTokenImports.length ? { themeTokenImports } : {}),
+        },
         categories: release.theme.categories.map((category) => ({
             id: category.id,
             label: resolveCollectionTranslation(release, category.label),

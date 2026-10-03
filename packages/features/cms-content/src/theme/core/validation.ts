@@ -17,7 +17,7 @@ export function validateThemeSettings(settings: ThemeSettings): ThemeSettings {
     const sourceIds = new Set<string>();
     const integrationOwners = new Set<string>();
     const tokenSources = new Map<string, ThemeSource>();
-    const variableSources = new Map<string, ThemeSource>();
+    const variableSources = new Map<string, { source: ThemeSource; token: ThemeToken }>();
     for (const source of settings.sources) {
         validateSource(source, sourceIds, integrationOwners);
     }
@@ -27,13 +27,13 @@ export function validateThemeSettings(settings: ThemeSettings): ThemeSettings {
             assertUnique(tokenIds, token.id, "token id");
             assertUnique(variables, token.variable, "CSS variable");
             tokenSources.set(token.id, source);
-            variableSources.set(token.variable, source);
+            variableSources.set(token.variable, { source, token });
         }
     }
     for (const source of settings.sources) {
         for (const token of source.categories.flatMap((category) => category.tokens)) {
             for (const value of Object.values(token.defaults ?? {})) {
-                assertIntegrationIsolation(source, value, variableSources);
+                assertOwnerIsolation(source, value, variableSources);
             }
         }
     }
@@ -56,7 +56,7 @@ export function validateThemeSettings(settings: ThemeSettings): ThemeSettings {
                     throw new ContentValidationError("theme", `unknown token: ${tokenId}`);
                 }
                 assertCssValue(tokenId, value);
-                assertIntegrationIsolation(tokenSources.get(tokenId), value, variableSources);
+                assertOwnerIsolation(tokenSources.get(tokenId), value, variableSources);
             }
         }
     }
@@ -66,20 +66,32 @@ export function validateThemeSettings(settings: ThemeSettings): ThemeSettings {
     return structuredClone(settings);
 }
 
-function assertIntegrationIsolation(
+function assertOwnerIsolation(
     source: ThemeSource | undefined,
     value: string,
-    variableSources: Map<string, ThemeSource>,
+    variableSources: Map<string, { source: ThemeSource; token: ThemeToken }>,
 ): void {
-    if (source?.owner?.kind !== "integration") {
+    if (!source?.owner) {
         return;
     }
     for (const match of value.matchAll(/var\s*\(\s*--([a-z][a-z0-9-]*)/gi)) {
         const target = variableSources.get(match[1]!.toLowerCase());
         if (
-            target?.owner?.kind === "integration" &&
-            target.owner.integrationId !== source.owner.integrationId &&
-            !source.owner.dependencies?.includes(target.owner.integrationId)
+            source.owner.kind === "collection" &&
+            target?.source.owner?.kind === "collection" &&
+            target.source.owner.collectionId !== source.owner.collectionId &&
+            !source.owner.themeTokenImports?.includes(target.token.id)
+        ) {
+            throw new ContentValidationError(
+                "theme",
+                `collection token cannot reference undeclared collection dependency: ${source.owner.collectionId}`,
+            );
+        }
+        if (
+            source.owner.kind === "integration" &&
+            target?.source.owner?.kind === "integration" &&
+            target.source.owner.integrationId !== source.owner.integrationId &&
+            !source.owner.dependencies?.includes(target.source.owner.integrationId)
         ) {
             throw new ContentValidationError(
                 "theme",
@@ -116,6 +128,14 @@ function validateSource(source: ThemeSource, sourceIds: Set<string>, integration
         }
     } else if (owner?.kind === "collection") {
         assertIdentifier("collection id", owner.collectionId);
+        const imports = new Set<string>();
+        for (const tokenId of owner.themeTokenImports ?? []) {
+            assertIdentifier("collection theme token import", tokenId);
+            if (tokenId.startsWith(`${owner.collectionId}-`)) {
+                throw new ContentValidationError("theme", `collection theme cannot import itself: ${source.id}`);
+            }
+            assertUnique(imports, tokenId, "collection theme token import");
+        }
         if (source.id !== `collection-${owner.collectionId}`) {
             throw new ContentValidationError("theme", `source id is not derived for collection: ${owner.collectionId}`);
         }

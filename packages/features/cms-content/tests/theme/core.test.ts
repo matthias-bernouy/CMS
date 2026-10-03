@@ -138,6 +138,27 @@ describe("structured themes", () => {
 
         expect(validateThemeSettings(settings)).toEqual(settings);
     });
+
+    test("requires collection-owned theme links to use an explicitly imported token", () => {
+        const settings = defaultThemeSettings();
+        const shop = collectionSource("shop", "Shop accent");
+        const foundation = collectionSource("foundation", "Foundation accent");
+        foundation.categories[0]!.tokens.push({
+            ...foundation.categories[0]!.tokens[0]!,
+            id: "foundation-muted",
+            variable: "foundation-muted",
+            label: "Foundation muted",
+        });
+        settings.sources.push(shop, foundation);
+        settings.themes[0]!.values.light["shop-accent"] = "var(--foundation-accent)";
+
+        expect(() => validateThemeSettings(settings)).toThrow("undeclared collection dependency");
+
+        shop.owner.themeTokenImports = ["foundation-accent"];
+        expect(validateThemeSettings(settings)).toEqual(settings);
+        settings.themes[0]!.values.light["shop-accent"] = "var(--foundation-muted)";
+        expect(() => validateThemeSettings(settings)).toThrow("undeclared collection dependency");
+    });
 });
 
 function addCustomToken(settings: ReturnType<typeof defaultThemeSettings>, id: string, type: "color"): void {
@@ -162,6 +183,33 @@ function integrationSource(integrationId: string, label: string) {
                 id: "general",
                 label: "General",
                 description: `${integrationId} tokens`,
+                tokens: [
+                    {
+                        id,
+                        variable: id,
+                        label,
+                        description: "Accent color",
+                        type: "color" as const,
+                        defaults: { light: "#336699" },
+                    },
+                ],
+            },
+        ],
+    };
+}
+
+function collectionSource(collectionId: string, label: string) {
+    const id = `${collectionId}-accent`;
+    return {
+        id: `collection-${collectionId}`,
+        label: collectionId,
+        supportsModes: true,
+        owner: { kind: "collection" as const, collectionId },
+        categories: [
+            {
+                id: "general",
+                label: "General",
+                description: `${collectionId} tokens`,
                 tokens: [
                     {
                         id,

@@ -13,6 +13,8 @@ export type ThemeSourceOwner =
     | {
           kind: "collection";
           collectionId: string;
+          /** Fully qualified public token IDs explicitly imported by this collection. */
+          themeTokenImports?: string[];
           dependencies?: never;
       };
 
