@@ -87,9 +87,25 @@
                     <span slot="legend">Specialised controls</span>
                     <span slot="description">Purpose-built interactions keep the native form value and submission behaviour.</span>
                     <ulvia-official-field label-position="top" slot="content">
-                        <span slot="label">Budget</span>
-                        <ulvia-official-range-control editable-value value-label="Current value" slot="control"><ulvia-official-range value-prefix="$" value-suffix="k" slot="control"><input type="range" name="budget" min="0" max="100" step="5" value="60"></ulvia-official-range></ulvia-official-range-control>
+                        <span slot="label">Budget · responsive layout</span>
+                        <ulvia-official-range-control editable-value value-label="Exact value" layout="auto" value-placement="field" slot="control"><ulvia-official-range value-prefix="$" value-suffix="k" bounds-layout="below" slot="control"><input type="range" name="budget" min="0" max="100" step="5" value="60"></ulvia-official-range></ulvia-official-range-control>
+                        <span slot="description">The current value stays beside the field label. Direct entry remains next to the slider, then moves below it in narrow containers.</span>
                     </ulvia-official-field>
+                    <ulvia-official-field label-position="top" slot="content">
+                        <span slot="label">Monthly capacity · inline layout</span>
+                        <ulvia-official-range-control editable-value value-label="Hours" layout="inline" value-placement="field" slot="control"><ulvia-official-range value-prefix="" value-suffix=" h" bounds-layout="inline" slot="control"><input type="range" name="capacity" min="0" max="160" step="8" value="96"></ulvia-official-range></ulvia-official-range-control>
+                        <span slot="description">The direct entry stays beside the range in a wide container and drops below it when space becomes tight.</span>
+                    </ulvia-official-field>
+                    <ulvia-official-grid slot="content" columns="2" gap="lg">
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Confidence · stacked layout</span>
+                            <ulvia-official-range-control editable-value value-label="Score" layout="stacked" value-placement="field" slot="control"><ulvia-official-range value-prefix="" value-suffix="%" bounds-layout="below" slot="control"><input type="range" name="confidence" min="0" max="100" step="1" value="72"></ulvia-official-range></ulvia-official-range-control>
+                        </ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Satisfaction · range only</span>
+                            <ulvia-official-range-control value-label="Value" layout="auto" value-placement="field" slot="control"><ulvia-official-range value-prefix="" value-suffix=" / 10" bounds-layout="inline" slot="control"><input type="range" name="satisfaction" min="0" max="10" step="1" value="8"></ulvia-official-range></ulvia-official-range-control>
+                        </ulvia-official-field>
+                    </ulvia-official-grid>
                     <ulvia-official-grid slot="content" columns="2" gap="lg">
                         <ulvia-official-field label-position="top" slot="items">
                             <span slot="label">Relevant disciplines</span>
@@ -110,9 +126,9 @@
                     </ulvia-official-grid>
                     <ulvia-official-grid slot="content" columns="2" gap="lg">
                         <ulvia-official-field label-position="top" slot="items">
-                            <span slot="label">Team lookup</span>
-                            <ulvia-official-lookup placeholder="Find a team" no-results-label="No team matches your search" clear-label="Clear selected team" slot="control"><select name="teamLookup"><option value="">Choose a team</option><option value="brand">Brand design</option><option value="content">Content design</option><option value="engineering">Engineering</option><option value="growth">Growth</option><option value="operations">Operations</option><option value="research">User research</option></select></ulvia-official-lookup>
-                            <span slot="description">Search, use the arrow keys, then press Enter to select.</span>
+                            <span slot="label">Team lookup · multiple</span>
+                            <ulvia-official-lookup placeholder="Find another team" no-results-label="No team matches your search" clear-label="Clear selected teams" remove-label="Remove" slot="control"><select name="teamLookup" multiple><option value="brand" selected>Brand design</option><option value="content">Content design</option><option value="engineering">Engineering</option><option value="growth">Growth</option><option value="operations">Operations</option><option value="research" selected>User research</option></select></ulvia-official-lookup>
+                        <span slot="description">Selected teams appear as removable badges below the lookup while you search for more.</span>
                         </ulvia-official-field>
                         <ulvia-official-field label-position="top" slot="items">
                             <span slot="label">Project tags</span>

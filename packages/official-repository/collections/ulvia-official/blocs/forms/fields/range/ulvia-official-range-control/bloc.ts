@@ -6,11 +6,13 @@ export class Bloc extends Component {
     private rangeInput: HTMLInputElement | null = null;
     private manualInput: HTMLInputElement | null = null;
     private manualLabel: HTMLElement | null = null;
+    private rangeElement: HTMLElement | null = null;
+    private fieldValue: HTMLElement | null = null;
     private root: Document | ShadowRoot | null = null;
     private observer = new MutationObserver(() => this.sync());
 
     static get observedAttributes(): string[] {
-        return ["value-label"];
+        return ["value-label", "value-placement"];
     }
 
     constructor() {
@@ -21,6 +23,7 @@ export class Bloc extends Component {
         this.rangeInput = this.querySelector<HTMLInputElement>('input[type="range"]');
         this.manualInput = this.querySelector<HTMLInputElement>("[data-range-manual]");
         this.manualLabel = this.querySelector<HTMLElement>("[data-range-label]");
+        this.rangeElement = this.querySelector<HTMLElement>("ulvia-official-range");
         this.root = this.getRootNode() as Document | ShadowRoot;
         this.rangeInput?.addEventListener("input", this.sync);
         this.rangeInput?.addEventListener("change", this.sync);
@@ -31,6 +34,12 @@ export class Bloc extends Component {
             this.observer.observe(this.rangeInput, {
                 attributes: true,
                 attributeFilter: ["min", "max", "step", "value", "disabled"],
+            });
+        }
+        if (this.rangeElement) {
+            this.observer.observe(this.rangeElement, {
+                attributes: true,
+                attributeFilter: ["hide-value", "value-prefix", "value-suffix"],
             });
         }
         this.sync();
@@ -44,6 +53,7 @@ export class Bloc extends Component {
         this.manualInput?.removeEventListener("input", this.handleManualInput);
         this.manualInput?.removeEventListener("change", this.handleManualChange);
         this.observer.disconnect();
+        this.clearFieldValue();
     }
 
     attributeChangedCallback(): void {
@@ -85,7 +95,35 @@ export class Bloc extends Component {
         if (this.manualLabel) {
             this.manualLabel.textContent = valueLabel;
         }
+        this.syncFieldValue();
     };
+
+    private syncFieldValue(): void {
+        const placeInField = this.getAttribute("value-placement") === "field";
+        this.toggleAttribute("data-field-value", placeInField);
+        if (!placeInField || !this.rangeInput || !this.rangeElement) {
+            this.clearFieldValue();
+            return;
+        }
+        const fieldValue = this.closest("ulvia-official-field")?.querySelector<HTMLElement>("[data-field-value]");
+        if (!fieldValue) {
+            return;
+        }
+        if (this.fieldValue && this.fieldValue !== fieldValue) {
+            this.clearFieldValue();
+        }
+        this.fieldValue = fieldValue;
+        fieldValue.textContent = `${this.rangeElement.getAttribute("value-prefix") ?? ""}${this.rangeInput.value}${this.rangeElement.getAttribute("value-suffix") ?? ""}`;
+        fieldValue.toggleAttribute("hidden", this.rangeElement.hasAttribute("hide-value"));
+    }
+
+    private clearFieldValue(): void {
+        if (this.fieldValue) {
+            this.fieldValue.hidden = true;
+            this.fieldValue.textContent = "";
+            this.fieldValue = null;
+        }
+    }
 
     private handleReset = (event: Event): void => {
         if (event.target !== this.rangeInput?.form) {

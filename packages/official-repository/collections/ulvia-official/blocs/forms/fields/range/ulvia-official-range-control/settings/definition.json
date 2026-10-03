@@ -17,5 +17,34 @@
         "maxLength": 40,
         "control": { "kind": "text" },
         "visibleWhen": { "setting": "editable-value", "equals": true }
+    },
+    {
+        "id": "layout",
+        "label": "setting.range-layout.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "auto",
+        "control": {
+            "kind": "select",
+            "options": [
+                { "value": "auto", "label": "setting.option.range-auto" },
+                { "value": "inline", "label": "setting.option.range-inline" },
+                { "value": "stacked", "label": "setting.option.stacked" }
+            ]
+        }
+    },
+    {
+        "id": "value-placement",
+        "label": "setting.range-value-placement.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "field",
+        "control": {
+            "kind": "select",
+            "options": [
+                { "value": "field", "label": "setting.option.field-label" },
+                { "value": "control", "label": "setting.option.range-control" }
+            ]
+        }
     }
 ]

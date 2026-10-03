@@ -32,5 +32,19 @@
         "default": "",
         "maxLength": 12,
         "control": { "kind": "text" }
+    },
+    {
+        "id": "bounds-layout",
+        "label": "setting.range-bounds-layout.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "below",
+        "control": {
+            "kind": "select",
+            "options": [
+                { "value": "below", "label": "setting.option.below" },
+                { "value": "inline", "label": "setting.option.slider-inline" }
+            ]
+        }
     }
 ]

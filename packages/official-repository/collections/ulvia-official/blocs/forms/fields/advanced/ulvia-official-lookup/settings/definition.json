@@ -25,5 +25,14 @@
         "default": "Clear selection",
         "maxLength": 80,
         "control": { "kind": "text" }
+    },
+    {
+        "id": "remove-label",
+        "label": "setting.remove-selection-label.label",
+        "group": "setting.group.content",
+        "type": "string",
+        "default": "Remove",
+        "maxLength": 80,
+        "control": { "kind": "text" }
     }
 ]

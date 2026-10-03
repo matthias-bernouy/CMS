@@ -165,6 +165,7 @@ export class Bloc extends Component {
                 return item;
             }),
         );
+        this.tagsContainer?.toggleAttribute("hidden", this.tags.length === 0);
     }
 
     private syncState(): void {

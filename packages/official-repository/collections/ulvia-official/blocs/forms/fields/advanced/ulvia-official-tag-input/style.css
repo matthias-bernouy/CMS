@@ -11,11 +11,10 @@
     min-height: var(--ulvia-official-control-height-md, 2.875rem);
     align-items: center;
     box-sizing: border-box;
-    padding: var(--ulvia-official-spacing-xs, .5rem);
-    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
+    padding: .375rem var(--ulvia-official-spacing-sm, .75rem);
+    border: var(--ulvia-official-border-width, 1px) solid
+        var(--form-control-border-color, var(--ulvia-official-border-default, #c8d1cd));
     border-radius: var(--ulvia-official-radius-md, .5rem);
-    flex-wrap: wrap;
-    gap: var(--ulvia-official-spacing-xs, .5rem);
     background: var(--ulvia-official-background-surface, Canvas);
     box-shadow: 0 1px 2px rgb(23 33 30 / 5%);
     cursor: text;
@@ -29,22 +28,37 @@
 }
 
 [part="tags"] {
-    display: contents;
+    display: flex;
+    min-width: 0;
+    gap: var(--ulvia-official-spacing-2xs, .375rem);
+    flex-wrap: wrap;
+}
+
+[part="tags"][hidden] {
+    display: none;
 }
 
 [part~="tag"] {
     display: inline-flex;
-    min-height: 2rem;
+    max-width: 100%;
+    min-height: 1.875rem;
     align-items: center;
     box-sizing: border-box;
-    padding: .25rem .375rem .25rem var(--ulvia-official-spacing-sm, .75rem);
-    border: var(--ulvia-official-border-width, 1px) solid color-mix(in srgb, var(--ulvia-official-primary, #086c55) 35%, transparent);
+    padding: 0 var(--ulvia-official-spacing-3xs, .25rem) 0 var(--ulvia-official-spacing-sm, .75rem);
+    border: var(--ulvia-official-border-width, 1px) solid
+        color-mix(in srgb, var(--ulvia-official-primary, #086c55) 30%, transparent);
     border-radius: var(--ulvia-official-radius-full, 999px);
-    gap: var(--ulvia-official-spacing-xs, .5rem);
+    gap: var(--ulvia-official-spacing-3xs, .25rem);
     color: var(--ulvia-official-on-primary-subtle, #075642);
     background: var(--ulvia-official-primary-subtle, #dff3ed);
     font-size: var(--ulvia-official-font-size-sm, .875rem);
     font-weight: var(--ulvia-official-font-weight-medium, 500);
+}
+
+[part~="tag"] > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 [part~="remove"] {
@@ -89,15 +103,22 @@
 }
 
 [part="input"] {
-    min-width: 6rem;
-    min-height: 2rem;
-    flex: 1 1 7rem;
-    padding: 0 var(--ulvia-official-spacing-2xs, .375rem);
+    width: 100%;
+    min-width: 0;
+    height: 2rem;
+    box-sizing: border-box;
+    padding: 0;
     border: 0;
     outline: 0;
     color: inherit;
     background: transparent;
     font: inherit;
+}
+
+[part="draft"] {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
 }
 
 [part="input"]::placeholder {

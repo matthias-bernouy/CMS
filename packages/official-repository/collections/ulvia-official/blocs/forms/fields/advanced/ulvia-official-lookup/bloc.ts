@@ -10,6 +10,7 @@ export class Bloc extends Component {
     private listbox: HTMLElement | null;
     private popover: HTMLElement | null;
     private empty: HTMLElement | null;
+    private chips: HTMLElement | null;
     private clearButton: HTMLButtonElement | null;
     private filteredOptions: HTMLOptionElement[] = [];
     private activeIndex = 0;
@@ -17,9 +18,10 @@ export class Bloc extends Component {
     private sourceTabIndex: string | null = null;
     private sourcePrepared = false;
     private observer = new MutationObserver(() => this.syncSelection());
+    private root: Document | ShadowRoot | null = null;
 
     static get observedAttributes(): string[] {
-        return ["placeholder", "no-results-label", "clear-label"];
+        return ["placeholder", "no-results-label", "clear-label", "remove-label"];
     }
 
     constructor() {
@@ -34,6 +36,7 @@ export class Bloc extends Component {
         this.listbox = this.shadowRoot?.querySelector('[part="listbox"]') ?? null;
         this.popover = this.shadowRoot?.querySelector('[part="popover"]') ?? null;
         this.empty = this.shadowRoot?.querySelector('[part="empty"]') ?? null;
+        this.chips = this.shadowRoot?.querySelector('[part="chips"]') ?? null;
         this.clearButton = document.createElement("button");
         this.clearButton.type = "button";
         this.clearButton.hidden = true;
@@ -47,10 +50,13 @@ export class Bloc extends Component {
         this.input?.addEventListener("focus", this.open);
         this.input?.addEventListener("keydown", this.handleKeydown);
         this.listbox?.addEventListener("click", this.handleOptionClick);
+        this.chips?.addEventListener("click", this.handleChipClick);
         this.clearButton?.addEventListener("click", this.clear);
         this.select?.addEventListener("change", this.syncSelection);
         this.select?.addEventListener("focus", this.redirectFocus);
         document.addEventListener("pointerdown", this.closeFromOutside);
+        this.root = this.getRootNode() as Document | ShadowRoot;
+        this.root.addEventListener("reset", this.handleReset);
         if (this.select) {
             this.hideSourceFromAccessibilityTree();
             this.observer.observe(this.select, { attributes: true, childList: true, subtree: true });
@@ -64,10 +70,13 @@ export class Bloc extends Component {
         this.input?.removeEventListener("focus", this.open);
         this.input?.removeEventListener("keydown", this.handleKeydown);
         this.listbox?.removeEventListener("click", this.handleOptionClick);
+        this.chips?.removeEventListener("click", this.handleChipClick);
         this.clearButton?.removeEventListener("click", this.clear);
         this.select?.removeEventListener("change", this.syncSelection);
         this.select?.removeEventListener("focus", this.redirectFocus);
         document.removeEventListener("pointerdown", this.closeFromOutside);
+        this.root?.removeEventListener("reset", this.handleReset);
+        this.root = null;
         this.observer.disconnect();
         this.restoreSourceAccessibility();
     }
@@ -88,6 +97,7 @@ export class Bloc extends Component {
         this.input.setAttribute("aria-label", this.accessibleName());
         this.input.placeholder = this.getAttribute("placeholder") || "Search options";
         this.clearButton.setAttribute("aria-label", this.getAttribute("clear-label") || "Clear selection");
+        this.listbox.setAttribute("aria-multiselectable", String(this.select?.multiple ?? false));
     }
 
     private handleInput = (): void => {
@@ -119,6 +129,13 @@ export class Bloc extends Component {
             }
         } else if (event.key === "Escape") {
             this.setOpen(false);
+        } else if (event.key === "Backspace" && this.select?.multiple && !this.input?.value) {
+            const selected = Array.from(this.select.selectedOptions).filter((option) => option.value);
+            const lastOption = selected.at(-1);
+            if (lastOption) {
+                this.setOptionSelected(lastOption, false);
+                event.preventDefault();
+            }
         }
     };
 
@@ -137,22 +154,46 @@ export class Bloc extends Component {
         if (!this.select || !this.input) {
             return;
         }
-        this.select.value = option.value;
-        this.input.value = option.text;
-        this.select.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
-        this.select.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-        this.setOpen(false);
+        if (this.select.multiple) {
+            option.selected = !option.selected;
+            this.input.value = "";
+        } else {
+            this.select.value = option.value;
+            this.input.value = option.text;
+        }
+        this.dispatchSelectionEvents();
+        this.render();
+        this.setOpen(this.select.multiple);
         this.input.focus();
     }
+
+    private handleChipClick = (event: Event): void => {
+        const button =
+            event.target instanceof Element
+                ? event.target.closest<HTMLButtonElement>("button[data-remove-value]")
+                : null;
+        const option = button
+            ? Array.from(this.select?.options ?? []).find((item) => item.value === button.dataset.removeValue)
+            : null;
+        if (option && !this.select?.disabled) {
+            this.setOptionSelected(option, false);
+            this.input?.focus();
+        }
+    };
 
     private clear = (): void => {
         if (!this.select || !this.input || this.select.disabled) {
             return;
         }
-        this.select.value = "";
+        if (this.select.multiple) {
+            for (const option of Array.from(this.select.options)) {
+                option.selected = false;
+            }
+        } else {
+            this.select.value = "";
+        }
         this.input.value = "";
-        this.select.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
-        this.select.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+        this.dispatchSelectionEvents();
         this.render();
         this.input.focus();
     };
@@ -161,11 +202,14 @@ export class Bloc extends Component {
         if (!this.select || !this.input) {
             return;
         }
-        const selected = this.select.selectedOptions.item(0);
-        this.input.value = selected?.value ? selected.text : "";
+        const selected = Array.from(this.select.selectedOptions).filter((option) => option.value);
+        if (!this.select.multiple) {
+            this.input.value = selected[0]?.text ?? "";
+        }
         this.input.disabled = this.select.disabled;
         this.toggleAttribute("data-disabled", this.select.disabled);
-        this.clearButton?.toggleAttribute("hidden", !selected?.value || this.select.disabled);
+        this.clearButton?.toggleAttribute("hidden", selected.length === 0 || this.select.disabled);
+        this.prepareAccessibility();
         this.render();
     };
 
@@ -174,7 +218,9 @@ export class Bloc extends Component {
             return;
         }
         const query = this.input.value.trim().toLocaleLowerCase();
-        const selectedText = this.select.selectedOptions.item(0)?.text.toLocaleLowerCase();
+        const selectedText = this.select.multiple
+            ? null
+            : this.select.selectedOptions.item(0)?.text.toLocaleLowerCase();
         const effectiveQuery = query === selectedText ? "" : query;
         this.filteredOptions = Array.from(this.select.options).filter(
             (option) => option.value && !option.disabled && option.text.toLocaleLowerCase().includes(effectiveQuery),
@@ -203,7 +249,49 @@ export class Bloc extends Component {
         } else {
             this.input.removeAttribute("aria-activedescendant");
         }
-        this.clearButton?.toggleAttribute("hidden", !this.select.value || this.select.disabled);
+        this.renderChips();
+        const selectedCount = Array.from(this.select.selectedOptions).filter((option) => option.value).length;
+        this.clearButton?.toggleAttribute("hidden", selectedCount === 0 || this.select.disabled);
+    }
+
+    private renderChips(): void {
+        if (!this.select || !this.chips) {
+            return;
+        }
+        const selected = this.select.multiple
+            ? Array.from(this.select.selectedOptions).filter((option) => option.value)
+            : [];
+        const removeLabel = this.getAttribute("remove-label") || "Remove";
+        this.chips.replaceChildren(
+            ...selected.map((option) => {
+                const chip = document.createElement("span");
+                chip.setAttribute("part", "chip");
+                chip.setAttribute("role", "listitem");
+                const label = document.createElement("span");
+                label.textContent = option.text;
+                const remove = document.createElement("button");
+                remove.type = "button";
+                remove.dataset.removeValue = option.value;
+                remove.setAttribute("part", "chip-remove");
+                remove.setAttribute("aria-label", `${removeLabel} ${option.text}`);
+                remove.disabled = this.select?.disabled ?? false;
+                chip.append(label, remove);
+                return chip;
+            }),
+        );
+        this.chips.toggleAttribute("hidden", selected.length === 0);
+        this.toggleAttribute("data-multiple", this.select.multiple);
+    }
+
+    private setOptionSelected(option: HTMLOptionElement, selected: boolean): void {
+        option.selected = selected;
+        this.dispatchSelectionEvents();
+        this.render();
+    }
+
+    private dispatchSelectionEvents(): void {
+        this.select?.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+        this.select?.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
     }
 
     private setOpen(open: boolean): void {
@@ -220,6 +308,18 @@ export class Bloc extends Component {
 
     private redirectFocus = (): void => {
         this.input?.focus();
+    };
+
+    private handleReset = (event: Event): void => {
+        if (event.target !== this.select?.form) {
+            return;
+        }
+        window.setTimeout(() => {
+            if (this.input) {
+                this.input.value = "";
+            }
+            this.syncSelection();
+        });
     };
 
     private accessibleName(): string {

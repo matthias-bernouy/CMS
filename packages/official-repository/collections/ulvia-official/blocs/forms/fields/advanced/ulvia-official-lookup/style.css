@@ -1,36 +1,127 @@
 :host {
     position: relative;
-    display: block;
+    display: grid;
     min-width: 0;
+    gap: var(--ulvia-official-spacing-xs, .5rem);
     color: var(--ulvia-official-text-primary, CanvasText);
     font-family: var(--ulvia-official-font-family-main, inherit);
 }
 
 [part="control"] {
     position: relative;
-    display: block;
+    display: flex;
+    min-height: var(--ulvia-official-control-height-md, 2.875rem);
+    align-items: center;
+    box-sizing: border-box;
+    padding: .375rem 2.75rem .375rem 2.625rem;
+    border: var(--ulvia-official-border-width, 1px) solid
+        var(--form-control-border-color, var(--ulvia-official-border-default, #c8d1cd));
+    border-radius: var(--ulvia-official-radius-md, .5rem);
+    background: var(--ulvia-official-background-surface, Canvas);
+    box-shadow: 0 1px 2px rgb(23 33 30 / 5%);
+}
+
+[part="query"] {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
 }
 
 [part="input"] {
     width: 100%;
     min-width: 0;
-    min-height: var(--ulvia-official-control-height-md, 2.875rem);
+    height: 2rem;
     box-sizing: border-box;
-    padding: var(--ulvia-official-spacing-sm, .75rem) 3rem var(--ulvia-official-spacing-sm, .75rem) 2.75rem;
-    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
-    border-radius: var(--ulvia-official-radius-md, .5rem);
+    padding: 0;
+    border: 0;
+    outline: 0;
     color: inherit;
-    background: var(--ulvia-official-background-surface, Canvas);
-    box-shadow: 0 1px 2px rgb(23 33 30 / 5%);
+    background: transparent;
     font: inherit;
     line-height: var(--ulvia-official-line-height-normal, 1.5);
 }
 
-[part="input"]:focus-visible {
+[part="control"]:focus-within {
     border-color: var(--ulvia-official-primary, #086c55);
     outline: 3px solid color-mix(in srgb, var(--ulvia-official-focus-ring, #167c5e) 28%, transparent);
     outline-offset: 1px;
     box-shadow: 0 0 0 1px var(--ulvia-official-primary, #086c55);
+}
+
+[part="chips"] {
+    display: flex;
+    min-width: 0;
+    gap: var(--ulvia-official-spacing-2xs, .375rem);
+    flex-wrap: wrap;
+}
+
+[part="chips"][hidden] {
+    display: none;
+}
+
+[part="chip"] {
+    display: inline-flex;
+    max-width: 100%;
+    min-height: 1.875rem;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 0 var(--ulvia-official-spacing-3xs, .25rem) 0 var(--ulvia-official-spacing-sm, .75rem);
+    border: var(--ulvia-official-border-width, 1px) solid
+        color-mix(in srgb, var(--ulvia-official-primary, #086c55) 30%, transparent);
+    border-radius: var(--ulvia-official-radius-full, 999px);
+    gap: var(--ulvia-official-spacing-3xs, .25rem);
+    color: var(--ulvia-official-on-primary-subtle, #075642);
+    background: var(--ulvia-official-primary-subtle, #dff3ed);
+    font-size: var(--ulvia-official-font-size-sm, .875rem);
+    font-weight: var(--ulvia-official-font-weight-medium, 500);
+}
+
+[part="chip"] > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+[part="chip-remove"] {
+    position: relative;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    color: currentColor;
+    background: transparent;
+    cursor: pointer;
+}
+
+[part="chip-remove"]::before,
+[part="chip-remove"]::after {
+    position: absolute;
+    inset-block-start: calc(50% - .0625rem);
+    inset-inline-start: calc(50% - .3125rem);
+    width: .625rem;
+    height: .125rem;
+    content: "";
+    background: currentColor;
+}
+
+[part="chip-remove"]::before {
+    transform: rotate(45deg);
+}
+
+[part="chip-remove"]::after {
+    transform: rotate(-45deg);
+}
+
+[part="chip-remove"]:hover {
+    color: var(--ulvia-official-on-primary, #fff);
+    background: var(--ulvia-official-primary, #086c55);
+}
+
+[part="chip-remove"]:focus-visible {
+    outline: 3px solid var(--ulvia-official-focus-ring, #167c5e);
+    outline-offset: 1px;
 }
 
 [part="search"] {
@@ -114,7 +205,7 @@
 [part="popover"] {
     position: absolute;
     z-index: 30;
-    inset-block-start: calc(100% + var(--ulvia-official-spacing-xs, .5rem));
+    inset-block-start: calc(var(--ulvia-official-control-height-md, 2.875rem) + var(--ulvia-official-spacing-xs, .5rem));
     inset-inline: 0;
     display: block;
     max-height: 18rem;
@@ -171,6 +262,9 @@
 
 :host([data-disabled]) [part="input"] {
     color: var(--ulvia-official-text-disabled, #858b95);
-    background: var(--ulvia-official-background-subtle, #f4f5f7);
     cursor: not-allowed;
+}
+
+:host([data-disabled]) [part="control"] {
+    background: var(--ulvia-official-background-subtle, #f4f5f7);
 }
