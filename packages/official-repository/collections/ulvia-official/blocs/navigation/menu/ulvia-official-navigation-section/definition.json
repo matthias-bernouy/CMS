@@ -5,7 +5,7 @@
     "description": "bloc.navigation-section.description",
     "category": "bloc.category.navigation",
     "order": 40,
-    "uses": ["ulvia-official-icon", "ulvia-official-navigation-item"],
+    "uses": ["ulvia-official-icon", "ulvia-official-navigation-group", "ulvia-official-navigation-item"],
     "requires": [],
     "slots": {
         "label": {
@@ -14,7 +14,10 @@
             "max": 1
         },
         "items": {
-            "accepts": [{ "kind": "component", "tag": "ulvia-official-navigation-item" }],
+            "accepts": [
+                { "kind": "component", "tag": "ulvia-official-navigation-group" },
+                { "kind": "component", "tag": "ulvia-official-navigation-item" }
+            ],
             "min": 1
         }
     }

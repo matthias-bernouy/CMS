@@ -2,7 +2,10 @@
     "setting.active.label": "Current page",
     "setting.divider.label": "Section divider",
     "setting.emphasis.label": "Emphasis",
+    "setting.expanded.label": "Expanded initially",
     "setting.group.state": "State",
+    "setting.item-count.help": "Set to zero to hide the count badge",
+    "setting.item-count.label": "Item count",
     "setting.navigation-label.label": "Accessible navigation label",
     "setting.option.pills": "Pills",
     "setting.option.underline": "Underline"

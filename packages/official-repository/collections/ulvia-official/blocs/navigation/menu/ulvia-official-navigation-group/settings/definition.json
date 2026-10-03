@@ -1,0 +1,21 @@
+[
+    {
+        "id": "expanded",
+        "label": "setting.expanded.label",
+        "group": "setting.group.state",
+        "type": "boolean",
+        "default": false,
+        "control": { "kind": "toggle" }
+    },
+    {
+        "id": "count",
+        "label": "setting.item-count.label",
+        "help": "setting.item-count.help",
+        "group": "setting.group.content",
+        "type": "integer",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 999,
+        "control": { "kind": "number", "step": 1 }
+    }
+]

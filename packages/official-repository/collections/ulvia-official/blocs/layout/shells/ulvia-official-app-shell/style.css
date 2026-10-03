@@ -20,6 +20,7 @@
 [part="secondary-sidebar"] { display: none; grid-area: contextual; min-height: 0; overflow: auto; background: var(--ulvia-official-background-base, #fff); }
 [part="content"] { grid-area: content; min-width: 0; width: min(100%, var(--shell-width)); box-sizing: border-box; margin-inline: auto; padding: var(--ulvia-official-spacing-xl, 2rem) var(--ulvia-official-page-gutter, 1rem); }
 [part="footer"] { grid-area: footer; padding: var(--ulvia-official-spacing-lg, 1.5rem) max(var(--ulvia-official-page-gutter, 1rem), calc((100% - var(--shell-width)) / 2)); border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); }
+[part="footer"][hidden] { display: none; }
 :host([width="contained"]) { --shell-width: var(--ulvia-official-content-width-lg, 72rem); }
 :host([width="full"]) { --shell-width: 100%; }
 :host([sticky-header]) [part="header"] { position: sticky; top: 0; }
@@ -48,5 +49,6 @@
     :host([layout="sidebar"]) [part="header"], :host([layout="dual-sidebar"]) [part="header"] { grid-template-columns: minmax(0, 1fr) auto; border-right: 0; border-bottom: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); }
     :host([layout="sidebar"]) [part="footer"], :host([layout="dual-sidebar"]) [part="footer"] { border-right: 0; border-top: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-subtle, #e2e9e6); }
     [part="secondary-navigation"] ::slotted(*), [part="secondary-sidebar"] ::slotted(*) { --navigation-menu-height: auto; --navigation-menu-header-display: none; --navigation-menu-footer-display: none; --navigation-menu-sections-flow: row; --navigation-menu-sections-wrap: nowrap; --navigation-section-label-display: none; --navigation-section-direction: row; --navigation-section-wrap: nowrap; --navigation-item-flex: 0 0 auto; }
+    [part="secondary-navigation"] ::slotted(*), [part="secondary-sidebar"] ::slotted(*) { --navigation-group-layout: flex; --navigation-group-collapsed-display: none; --navigation-group-items-layout: flex; --navigation-group-items-flow: row nowrap; --navigation-group-items-indent: 0; --navigation-group-edge-display: none; --navigation-group-item-flex: 0 0 auto; }
     [part="content"] { padding-block: var(--ulvia-official-spacing-lg, 1.5rem); }
 }

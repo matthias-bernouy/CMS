@@ -5,7 +5,7 @@
     "description": "bloc.navigation-menu.description",
     "category": "bloc.category.navigation",
     "order": 30,
-    "uses": ["ulvia-official-icon", "ulvia-official-navigation-section", "ulvia-official-navigation-item"],
+    "uses": ["ulvia-official-icon", "ulvia-official-navigation-group", "ulvia-official-navigation-section", "ulvia-official-navigation-item"],
     "requires": [],
     "slots": {
         "header": {

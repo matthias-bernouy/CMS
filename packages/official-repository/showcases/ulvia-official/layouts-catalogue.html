@@ -17,15 +17,14 @@
         </ulvia-official-navigation-section>
         <ulvia-official-navigation-section slot="sections" divider>
             <span slot="label">Workspace</span>
-            <ulvia-official-navigation-item slot="items" emphasis="default">
-                <a href="#workspace"><ulvia-official-icon name="collections" size="md" tone="current"></ulvia-official-icon><span>Release</span></a>
-            </ulvia-official-navigation-item>
-            <ulvia-official-navigation-item slot="items" emphasis="default">
-                <a href="#primitives"><ulvia-official-icon name="dashboard" size="md" tone="current"></ulvia-official-icon><span>Components</span></a>
-            </ulvia-official-navigation-item>
-            <ulvia-official-navigation-item slot="items" emphasis="default">
-                <a href="#responsive"><ulvia-official-icon name="media" size="md" tone="current"></ulvia-official-icon><span>Responsive</span></a>
-            </ulvia-official-navigation-item>
+            <ulvia-official-navigation-group slot="items" expanded count="4">
+                <ulvia-official-icon slot="icon" name="collections" size="md" tone="current"></ulvia-official-icon>
+                <span slot="label">Collection tools</span>
+                <ulvia-official-navigation-item slot="items" emphasis="default"><a href="#workspace"><span>Release</span></a></ulvia-official-navigation-item>
+                <ulvia-official-navigation-item slot="items" emphasis="default"><a href="#primitives"><span>Components</span></a></ulvia-official-navigation-item>
+                <ulvia-official-navigation-item slot="items" emphasis="default"><a href="#responsive"><span>Responsive</span></a></ulvia-official-navigation-item>
+                <ulvia-official-navigation-item slot="items" emphasis="default"><a href="#detail-shells"><span>Detail views</span></a></ulvia-official-navigation-item>
+            </ulvia-official-navigation-group>
         </ulvia-official-navigation-section>
         <ulvia-official-navigation-section slot="sections">
             <span slot="label">System</span>
@@ -47,24 +46,22 @@
             <ulvia-official-navigation-item slot="items" active emphasis="default">
                 <a href="#overview"><ulvia-official-icon name="dashboard" size="md" tone="current"></ulvia-official-icon><span>Overview</span></a>
             </ulvia-official-navigation-item>
-            <ulvia-official-navigation-item slot="items" emphasis="default">
-                <a href="#primitives"><ulvia-official-icon name="layout" size="md" tone="current"></ulvia-official-icon><span>Blocks</span></a>
-            </ulvia-official-navigation-item>
-            <ulvia-official-navigation-item slot="items" emphasis="default">
-                <a href="#tokens"><ulvia-official-icon name="media" size="md" tone="current"></ulvia-official-icon><span>Theme tokens</span></a>
-            </ulvia-official-navigation-item>
-            <ulvia-official-navigation-item slot="items" emphasis="default">
-                <button type="button"><ulvia-official-icon name="pages" size="md" tone="current"></ulvia-official-icon><span>Texts</span></button>
-            </ulvia-official-navigation-item>
+            <ulvia-official-navigation-group slot="items" expanded count="3">
+                <ulvia-official-icon slot="icon" name="layout" size="md" tone="current"></ulvia-official-icon>
+                <span slot="label">Resources</span>
+                <ulvia-official-navigation-item slot="items" emphasis="default"><a href="#primitives"><span>Blocks</span></a></ulvia-official-navigation-item>
+                <ulvia-official-navigation-item slot="items" emphasis="default"><a href="#tokens"><span>Theme tokens</span></a></ulvia-official-navigation-item>
+                <ulvia-official-navigation-item slot="items" emphasis="default"><button type="button"><span>Texts</span></button></ulvia-official-navigation-item>
+            </ulvia-official-navigation-group>
         </ulvia-official-navigation-section>
         <ulvia-official-navigation-section slot="sections">
             <span slot="label">Release</span>
-            <ulvia-official-navigation-item slot="items" emphasis="default">
-                <button type="button"><ulvia-official-icon name="collections" size="md" tone="current"></ulvia-official-icon><span>Versions</span></button>
-            </ulvia-official-navigation-item>
-            <ulvia-official-navigation-item slot="items" emphasis="default">
-                <button type="button"><ulvia-official-icon name="sources" size="md" tone="current"></ulvia-official-icon><span>Dependencies</span></button>
-            </ulvia-official-navigation-item>
+            <ulvia-official-navigation-group slot="items" count="2">
+                <ulvia-official-icon slot="icon" name="collections" size="md" tone="current"></ulvia-official-icon>
+                <span slot="label">Release management</span>
+                <ulvia-official-navigation-item slot="items" emphasis="default"><button type="button"><span>Versions</span></button></ulvia-official-navigation-item>
+                <ulvia-official-navigation-item slot="items" emphasis="default"><button type="button"><span>Dependencies</span></button></ulvia-official-navigation-item>
+            </ulvia-official-navigation-group>
         </ulvia-official-navigation-section>
         <ulvia-official-navigation-item slot="footer" emphasis="muted">
             <button type="button"><ulvia-official-icon name="settings" size="md" tone="current"></ulvia-official-icon><span>Collection settings</span></button>
@@ -87,7 +84,7 @@
                 <ulvia-official-route-tab slot="items" active><a href="#overview">Overview</a></ulvia-official-route-tab>
                 <ulvia-official-route-tab slot="items"><a href="#components">Components</a></ulvia-official-route-tab>
                 <ulvia-official-route-tab slot="items"><a href="#tokens">Theme tokens</a></ulvia-official-route-tab>
-                <ulvia-official-route-tab slot="items"><a href="#activity">Activity</a></ulvia-official-route-tab>
+                <ulvia-official-route-tab slot="items"><a href="#detail-shells">Detail views</a></ulvia-official-route-tab>
             </ulvia-official-route-tabs>
 
             <ulvia-official-sidebar slot="content" side="end" sidebar-width="md" gap="lg" collapse="automatic">
@@ -138,6 +135,94 @@
                     </ulvia-official-surface>
                 </ulvia-official-stack>
             </ulvia-official-sidebar>
+        </ulvia-official-page-shell>
+
+        <ulvia-official-page-shell id="detail-shells" slot="items" width="xl" appearance="surface" density="comfortable">
+            <ulvia-official-cluster slot="breadcrumb" gap="sm" align="center" justify="start">
+                <ulvia-official-icon slot="items" name="layout" size="sm" tone="muted"></ulvia-official-icon>
+                <ulvia-official-prose slot="items" measure="wide" size="sm"><span slot="content">Layouts / Application shells / Detail views</span></ulvia-official-prose>
+            </ulvia-official-cluster>
+            <ulvia-official-heading slot="title" size="lg" align="start"><h2>Detail shell views</h2></ulvia-official-heading>
+            <ulvia-official-prose slot="description" measure="wide" size="md"><p slot="content">Two realistic compositions for a focused resource view: a structured editor and a review workspace. The columns collapse from the space offered by their container.</p></ulvia-official-prose>
+            <ulvia-official-stack slot="content" gap="xl" align="stretch">
+                <ulvia-official-panel slot="items" appearance="outlined" density="default">
+                    <ulvia-official-cluster slot="header" gap="sm" align="center" justify="start">
+                        <ulvia-official-icon slot="items" name="collections" size="md" tone="primary"></ulvia-official-icon>
+                        <ulvia-official-heading slot="items" size="md" align="start"><h3>Block detail</h3></ulvia-official-heading>
+                    </ulvia-official-cluster>
+                    <ulvia-official-action slot="actions" variant="outline" tone="neutral" size="sm"><button type="button"><span>Open preview</span></button></ulvia-official-action>
+                    <ulvia-official-detail-layout slot="content" navigation-width="sm" aside-width="sm" gap="md" narrow-layout="navigation-first">
+                        <ulvia-official-surface slot="navigation" appearance="subtle" padding="sm" radius="lg">
+                            <ulvia-official-stack slot="content" gap="sm" align="stretch">
+                                <ulvia-official-prose slot="items" measure="wide" size="sm"><strong slot="content">Configuration</strong></ulvia-official-prose>
+                                <ulvia-official-navigation-item slot="items" active emphasis="default"><button type="button"><span>General</span></button></ulvia-official-navigation-item>
+                                <ulvia-official-navigation-item slot="items" emphasis="default"><button type="button"><span>Slots</span></button></ulvia-official-navigation-item>
+                                <ulvia-official-navigation-item slot="items" emphasis="default"><button type="button"><span>Settings</span></button></ulvia-official-navigation-item>
+                                <ulvia-official-navigation-item slot="items" emphasis="default"><button type="button"><span>Dependencies</span></button></ulvia-official-navigation-item>
+                            </ulvia-official-stack>
+                        </ulvia-official-surface>
+                        <ulvia-official-panel slot="main" appearance="elevated" density="default">
+                            <ulvia-official-heading slot="header" size="sm" align="start"><h4>General information</h4></ulvia-official-heading>
+                            <ulvia-official-stack slot="content" gap="md" align="stretch">
+                                <ulvia-official-field slot="items" label-position="top" required><span slot="label">Display name</span><ulvia-official-input slot="control" size="md"><input type="text" value="Navigation group"></ulvia-official-input><span slot="description">Shown to authors in the block catalogue.</span></ulvia-official-field>
+                                <ulvia-official-field slot="items" label-position="top"><span slot="label">Description</span><ulvia-official-textarea slot="control" size="md" resize="vertical"><textarea rows="4">An expandable navigation parent with nested links or groups.</textarea></ulvia-official-textarea></ulvia-official-field>
+                                <ulvia-official-form-actions slot="items" align="end" responsive-layout="wrap"><ulvia-official-action slot="actions" variant="ghost" tone="neutral" size="md"><button type="button">Cancel</button></ulvia-official-action><ulvia-official-action slot="actions" variant="filled" tone="primary" size="md"><button type="button">Save changes</button></ulvia-official-action></ulvia-official-form-actions>
+                            </ulvia-official-stack>
+                        </ulvia-official-panel>
+                        <ulvia-official-stack slot="aside" gap="md" align="stretch">
+                            <ulvia-official-surface slot="items" appearance="inverse" padding="md" radius="lg">
+                                <ulvia-official-stack slot="content" gap="sm" align="start">
+                                    <ulvia-official-prose slot="items" measure="wide" size="sm"><strong slot="content">Publication</strong></ulvia-official-prose>
+                                    <ulvia-official-prose slot="items" measure="wide" size="md"><span slot="content">Included in the next immutable collection release.</span></ulvia-official-prose>
+                                </ulvia-official-stack>
+                            </ulvia-official-surface>
+                            <ulvia-official-surface slot="items" appearance="outlined" padding="md" radius="lg">
+                                <ulvia-official-stack slot="content" gap="sm" align="stretch">
+                                    <ulvia-official-prose slot="items" measure="wide" size="sm"><strong slot="content">Quality checks</strong></ulvia-official-prose>
+                                    <ulvia-official-prose slot="items" measure="wide" size="sm"><span slot="content">Keyboard navigation<br>Slot compatibility<br>Translation keys</span></ulvia-official-prose>
+                                </ulvia-official-stack>
+                            </ulvia-official-surface>
+                        </ulvia-official-stack>
+                    </ulvia-official-detail-layout>
+                </ulvia-official-panel>
+
+                <ulvia-official-panel slot="items" appearance="outlined" density="default">
+                    <ulvia-official-cluster slot="header" gap="sm" align="center" justify="start">
+                        <ulvia-official-icon slot="items" name="media" size="md" tone="primary"></ulvia-official-icon>
+                        <ulvia-official-heading slot="items" size="md" align="start"><h3>Asset review</h3></ulvia-official-heading>
+                    </ulvia-official-cluster>
+                    <ulvia-official-detail-layout slot="content" navigation-width="sm" aside-width="md" gap="lg" narrow-layout="main-first">
+                        <ulvia-official-surface slot="navigation" appearance="subtle" padding="sm" radius="lg">
+                            <ulvia-official-stack slot="content" gap="sm" align="stretch">
+                                <ulvia-official-prose slot="items" measure="wide" size="sm"><strong slot="content">Assets</strong></ulvia-official-prose>
+                                <ulvia-official-navigation-item slot="items" active emphasis="default"><button type="button"><span>Hero image</span></button></ulvia-official-navigation-item>
+                                <ulvia-official-navigation-item slot="items" emphasis="default"><button type="button"><span>Product view</span></button></ulvia-official-navigation-item>
+                                <ulvia-official-navigation-item slot="items" emphasis="default"><button type="button"><span>Social card</span></button></ulvia-official-navigation-item>
+                            </ulvia-official-stack>
+                        </ulvia-official-surface>
+                        <ulvia-official-frame slot="main" ratio="landscape" fit="cover" radius="lg">
+                            <ulvia-official-surface slot="content" appearance="inverse" padding="xl" radius="none">
+                                <ulvia-official-center slot="content" width="sm" text-align="center" intrinsic>
+                                    <ulvia-official-stack slot="content" gap="sm" align="center">
+                                        <ulvia-official-icon slot="items" name="media" size="lg" tone="current"></ulvia-official-icon>
+                                        <ulvia-official-heading slot="items" size="lg" align="center"><h4>Media preview</h4></ulvia-official-heading>
+                                        <ulvia-official-prose slot="items" measure="wide" size="sm"><span slot="content">1600 × 900 · WebP</span></ulvia-official-prose>
+                                    </ulvia-official-stack>
+                                </ulvia-official-center>
+                            </ulvia-official-surface>
+                        </ulvia-official-frame>
+                        <ulvia-official-panel slot="aside" appearance="elevated" density="compact">
+                            <ulvia-official-heading slot="header" size="sm" align="start"><h4>Asset information</h4></ulvia-official-heading>
+                            <ulvia-official-stack slot="content" gap="md" align="stretch">
+                                <ulvia-official-prose slot="items" measure="wide" size="sm"><span slot="content"><strong>Alternative text</strong><br>Abstract green composition</span></ulvia-official-prose>
+                                <ulvia-official-prose slot="items" measure="wide" size="sm"><span slot="content"><strong>Usage</strong><br>3 pages · 2 blocks</span></ulvia-official-prose>
+                                <ulvia-official-action slot="items" variant="outline" tone="neutral" size="sm"><button type="button">Replace asset</button></ulvia-official-action>
+                            </ulvia-official-stack>
+                        </ulvia-official-panel>
+                    </ulvia-official-detail-layout>
+                </ulvia-official-panel>
+            </ulvia-official-stack>
+            <ulvia-official-prose slot="footer" measure="wide" size="sm"><span slot="content">Navigation-first suits configuration flows; main-first prioritises content on narrow containers.</span></ulvia-official-prose>
         </ulvia-official-page-shell>
 
         <ulvia-official-page-shell id="primitives" slot="items" width="xl" appearance="surface" density="comfortable">
@@ -202,8 +287,4 @@
         </ulvia-official-page-shell>
     </ulvia-official-stack>
 
-    <ulvia-official-cluster slot="footer" gap="sm" align="center" justify="start">
-        <ulvia-official-icon slot="items" name="check" size="sm" tone="success"></ulvia-official-icon>
-        <ulvia-official-prose slot="items" measure="wide" size="sm"><span slot="content">Collection 1.0.0 ready</span></ulvia-official-prose>
-    </ulvia-official-cluster>
 </ulvia-official-app-shell>

@@ -3,4 +3,4 @@
 [part="label"] { display: var(--navigation-section-label-display, flex); align-items: center; gap: var(--ulvia-official-spacing-sm, .75rem); padding: var(--ulvia-official-spacing-sm, .75rem) var(--ulvia-official-spacing-sm, .75rem) var(--ulvia-official-spacing-xs, .5rem); color: var(--ulvia-official-text-muted, #6d7e77); font-size: var(--ulvia-official-font-size-xs, .75rem); font-weight: var(--ulvia-official-font-weight-bold, 700); letter-spacing: var(--ulvia-official-letter-spacing-wide, .04em); line-height: 1; text-transform: uppercase; }
 :host([divider]) [part="label"]::after { height: var(--ulvia-official-border-width, 1px); flex: 1; background: var(--ulvia-official-border-subtle, #e2e9e6); content: ""; }
 [part="items"] { display: flex; flex-direction: var(--navigation-section-direction, column); flex-wrap: var(--navigation-section-wrap, nowrap); gap: var(--navigation-section-gap, .125rem); }
-::slotted(ulvia-official-navigation-item) { flex: var(--navigation-item-flex, 0 1 auto); }
+::slotted(ulvia-official-navigation-group), ::slotted(ulvia-official-navigation-item) { flex: var(--navigation-item-flex, 0 1 auto); }

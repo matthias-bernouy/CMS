@@ -1,5 +1,7 @@
 {
     "bloc.category.navigation": "Navigation",
+    "bloc.navigation-group.description": "An expandable navigation parent with nested links or groups",
+    "bloc.navigation-group.label": "Navigation group",
     "bloc.navigation-item.description": "A native link or button with optional icon and active state",
     "bloc.navigation-item.label": "Navigation item",
     "bloc.navigation-menu.description": "A structured application menu with grouped sections and footer actions",
