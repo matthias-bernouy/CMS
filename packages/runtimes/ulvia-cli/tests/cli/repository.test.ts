@@ -27,15 +27,15 @@ test("local repository lists immutable metadata and serves matching release byte
             publisherId: "ulvia.official",
             collectionId: "ulvia-official",
             version,
-            blocCount: 19,
+            blocCount: 74,
             hasTheme: true,
         });
         const bundle = await source.get(entries[0]!);
         expect((await admitCollectionRelease(bundle.release, bundle.assets)).digest).toBe(entries[0]!.digest);
         expect(bundle.assets).toEqual([]);
         const release = bundle.release;
-        expect(release.blocs).toHaveLength(19);
-        expect(release.exports?.blocs).toHaveLength(19);
+        expect(release.blocs).toHaveLength(74);
+        expect(release.exports?.blocs).toHaveLength(67);
         expect(release.exports?.themeTokens).toHaveLength(119);
         expect(release.theme?.categories.flatMap((category) => category.tokens)).toHaveLength(119);
         expect(release.views?.find((view) => view.id === "catalog")?.html).toContain(
@@ -49,7 +49,7 @@ test("local repository lists immutable metadata and serves matching release byte
             expect(action.nativeElement).toEqual({ accepts: ["button", "a"] });
             expect(action.lightdom).toBeUndefined();
             expect(action.defaultContent).toContain('<button type="button">');
-            expect(action.settings?.map((setting) => setting.id)).toEqual(["appearance", "size", "wide"]);
+            expect(action.settings?.map((setting) => setting.id)).toEqual(["variant", "tone", "size", "wide"]);
         }
         const heading = release.blocs.find((bloc) => bloc.id === "ulvia-official-heading");
         expect(heading?.kind === "component" ? heading.nativeElement?.accepts : undefined).toEqual([
