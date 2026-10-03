@@ -1,0 +1,15 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-time-input",
+    "label": "bloc.time-input.label",
+    "description": "bloc.time-input.description",
+    "category": "bloc.category.forms",
+    "order": 62,
+    "nativeElement": {
+        "accepts": ["input"],
+        "attributes": { "type": { "required": true, "values": ["text"] } }
+    },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

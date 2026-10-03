@@ -1,5 +1,6 @@
 :host { display: block; min-width: 0; }
 [part="items"] {
+    position: relative;
     display: grid;
     grid-template-columns: var(--option-list-columns, minmax(0, 1fr));
     grid-template-rows: var(--option-list-rows, none);
@@ -11,4 +12,24 @@
     border-radius: var(--option-list-radius, 0);
     gap: var(--option-list-gap, var(--ulvia-official-spacing-2xs, .375rem));
     background: var(--option-list-background, transparent);
+}
+
+[part="items"]::before {
+    position: absolute;
+    z-index: 0;
+    inset-block-start: var(--option-list-indicator-block-start, 0);
+    inset-inline-start: var(--option-list-indicator-inline-start, 0);
+    width: var(--option-list-indicator-width, 0);
+    height: var(--option-list-indicator-height, 0);
+    border-radius: calc(var(--ulvia-official-radius-md, .5rem) - var(--ulvia-official-spacing-3xs, .25rem));
+    content: "";
+    background: var(--option-list-indicator-background, var(--ulvia-official-primary, #086c55));
+    box-shadow: var(--ulvia-official-shadow-sm, 0 1px 2px rgb(0 0 0 / 8%));
+    opacity: var(--option-list-indicator-opacity, 0);
+    transition: inset-inline-start var(--ulvia-official-duration-normal, 180ms), inset-block-start var(--ulvia-official-duration-normal, 180ms), width var(--ulvia-official-duration-normal, 180ms), height var(--ulvia-official-duration-normal, 180ms), opacity var(--ulvia-official-duration-fast, 120ms);
+}
+
+::slotted(*) {
+    position: relative;
+    z-index: 1;
 }

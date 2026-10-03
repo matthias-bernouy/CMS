@@ -1,0 +1,15 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-color-presets",
+    "label": "bloc.color-presets.label",
+    "description": "bloc.color-presets.description",
+    "category": "bloc.category.forms",
+    "order": 61,
+    "nativeElement": {
+        "accepts": ["input"],
+        "attributes": { "type": { "required": true, "values": ["color"] } }
+    },
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

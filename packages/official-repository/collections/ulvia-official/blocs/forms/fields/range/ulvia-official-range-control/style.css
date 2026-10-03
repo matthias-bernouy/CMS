@@ -1,4 +1,4 @@
-:host { display: block; min-width: 0; font-family: var(--ulvia-official-font-family-main, inherit); container-type: inline-size; }
+:host { --range-track-height: .5rem; --range-thumb-size: 1.375rem; --range-hit-height: 2.5rem; display: block; min-width: 0; font-family: var(--ulvia-official-font-family-main, inherit); container-type: inline-size; }
 [part="control"] { position: relative; display: grid; min-width: 0; gap: var(--ulvia-official-spacing-sm, .75rem); }
 ::slotted([slot="range-shell"]) { display: block; min-width: 0; }
 [part="manual"] { display: none; align-items: center; justify-content: flex-end; gap: var(--ulvia-official-spacing-sm, .75rem); }
@@ -17,6 +17,9 @@
 :host([data-field-value][editable-value]:not([layout="inline"]):not([layout="stacked"])) [part="control"] { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--ulvia-official-spacing-lg, 1.5rem); }
 :host([data-field-value][editable-value]:not([layout="inline"]):not([layout="stacked"])) [part="manual"] { position: static; }
 :host([data-field-value][editable-value]:not([layout="inline"]):not([layout="stacked"])) ::slotted([slot="range-shell"]) { --range-value-row-padding-end: 0; }
+
+:host([size="sm"]) { --range-track-height: .375rem; --range-thumb-size: 1.125rem; --range-hit-height: 2.25rem; }
+:host([size="lg"]) { --range-track-height: .625rem; --range-thumb-size: 1.625rem; --range-hit-height: 3rem; }
 
 @container (max-width: 24rem) {
     :host([editable-value]:not([layout="inline"]):not([layout="stacked"])) [part="manual"] { position: static; justify-content: space-between; }

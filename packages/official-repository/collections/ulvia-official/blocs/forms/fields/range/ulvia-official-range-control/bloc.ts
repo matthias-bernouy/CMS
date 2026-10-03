@@ -5,6 +5,7 @@ import css from "./style.css" with { type: "text" };
 export class Bloc extends Component {
     private rangeInput: HTMLInputElement | null = null;
     private manualInput: HTMLInputElement | null = null;
+    private manualComponent: HTMLElement | null = null;
     private manualLabel: HTMLElement | null = null;
     private rangeElement: HTMLElement | null = null;
     private fieldValue: HTMLElement | null = null;
@@ -12,7 +13,7 @@ export class Bloc extends Component {
     private observer = new MutationObserver(() => this.sync());
 
     static get observedAttributes(): string[] {
-        return ["value-label", "value-placement"];
+        return ["size", "value-label", "value-placement"];
     }
 
     constructor() {
@@ -22,6 +23,7 @@ export class Bloc extends Component {
     override connectedCallback(): void {
         this.rangeInput = this.querySelector<HTMLInputElement>('input[type="range"]');
         this.manualInput = this.querySelector<HTMLInputElement>("[data-range-manual]");
+        this.manualComponent = this.querySelector<HTMLElement>('ulvia-official-input[slot="manual-input"]');
         this.manualLabel = this.querySelector<HTMLElement>("[data-range-label]");
         this.rangeElement = this.querySelector<HTMLElement>("ulvia-official-range");
         this.root = this.getRootNode() as Document | ShadowRoot;
@@ -90,6 +92,7 @@ export class Bloc extends Component {
         this.manualInput.step = this.rangeInput.step || "1";
         this.manualInput.value = this.rangeInput.value;
         this.manualInput.disabled = this.rangeInput.disabled;
+        this.manualComponent?.setAttribute("size", this.getAttribute("size") || "md");
         const valueLabel = this.getAttribute("value-label") || "Value";
         this.manualInput.setAttribute("aria-label", valueLabel);
         if (this.manualLabel) {

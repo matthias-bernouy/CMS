@@ -38,9 +38,51 @@
                     </ulvia-official-grid>
                         <ulvia-official-field label-position="top" slot="content">
                             <span slot="label">Project notes</span>
-                            <ulvia-official-textarea resize="vertical" show-count slot="control"><textarea name="message" rows="4" maxlength="240" placeholder="Add useful context"></textarea></ulvia-official-textarea>
+                            <ulvia-official-textarea size="md" resize="vertical" show-count slot="control"><textarea name="message" rows="4" maxlength="240" placeholder="Add useful context"></textarea></ulvia-official-textarea>
                             <span slot="description">This field can grow vertically without breaking the surrounding layout.</span>
                         </ulvia-official-field>
+                </ulvia-official-form-section>
+
+                <ulvia-official-form-section appearance="outlined" slot="items">
+                    <span slot="legend">Control sizing</span>
+                    <span slot="description">Small, medium and large change control density without changing semantics or native form behaviour.</span>
+                    <ulvia-official-grid slot="content" columns="3" gap="lg">
+                        <ulvia-official-stack align="stretch" slot="items" gap="md">
+                            <ulvia-official-prose measure="wide" size="sm" slot="items"><div slot="content"><strong>Small</strong> · compact interfaces</div></ulvia-official-prose>
+                            <ulvia-official-field label-position="top" slot="items"><span slot="label">Text input</span><ulvia-official-input size="sm" slot="control"><input type="text" name="sizeSmallText" value="Small control"></ulvia-official-input></ulvia-official-field>
+                            <ulvia-official-field label-position="top" slot="items"><span slot="label">Select</span><ulvia-official-select size="sm" slot="control"><select name="sizeSmallSelect"><option>Small option</option><option>Alternative</option></select></ulvia-official-select></ulvia-official-field>
+                            <ulvia-official-segmented-control size="sm" orientation="horizontal" wide slot="items"><span slot="legend">View</span><ulvia-official-segment slot="items"><ulvia-official-radio size="sm" slot="control"><input type="radio" name="sizeSmallView" value="list" checked></ulvia-official-radio><span slot="label">List</span></ulvia-official-segment><ulvia-official-segment slot="items"><ulvia-official-radio size="sm" slot="control"><input type="radio" name="sizeSmallView" value="grid"></ulvia-official-radio><span slot="label">Grid</span></ulvia-official-segment></ulvia-official-segmented-control>
+                            <ulvia-official-choice-field slot="items"><ulvia-official-checkbox size="sm" slot="control"><input type="checkbox" name="sizeSmallCheck" checked></ulvia-official-checkbox><span slot="label">Checkbox</span></ulvia-official-choice-field>
+                            <ulvia-official-choice-field slot="items"><ulvia-official-radio size="sm" slot="control"><input type="radio" name="sizeSmallRadio" checked></ulvia-official-radio><span slot="label">Radio</span></ulvia-official-choice-field>
+                            <ulvia-official-choice-field slot="items"><ulvia-official-toggle size="sm" slot="control"><input type="checkbox" role="switch" name="sizeSmallToggle" checked></ulvia-official-toggle><span slot="label">Toggle</span></ulvia-official-choice-field>
+                            <ulvia-official-form-actions align="start" responsive-layout="wrap" slot="items"><ulvia-official-action size="sm" tone="primary" variant="filled" slot="actions"><button type="button">Small action</button></ulvia-official-action></ulvia-official-form-actions>
+                        </ulvia-official-stack>
+                        <ulvia-official-stack align="stretch" slot="items" gap="md">
+                            <ulvia-official-prose measure="wide" size="sm" slot="items"><div slot="content"><strong>Medium</strong> · default</div></ulvia-official-prose>
+                            <ulvia-official-field label-position="top" slot="items"><span slot="label">Text input</span><ulvia-official-input size="md" slot="control"><input type="text" name="sizeMediumText" value="Medium control"></ulvia-official-input></ulvia-official-field>
+                            <ulvia-official-field label-position="top" slot="items"><span slot="label">Select</span><ulvia-official-select size="md" slot="control"><select name="sizeMediumSelect"><option>Medium option</option><option>Alternative</option></select></ulvia-official-select></ulvia-official-field>
+                            <ulvia-official-segmented-control size="md" orientation="horizontal" wide slot="items"><span slot="legend">View</span><ulvia-official-segment slot="items"><ulvia-official-radio size="md" slot="control"><input type="radio" name="sizeMediumView" value="list" checked></ulvia-official-radio><span slot="label">List</span></ulvia-official-segment><ulvia-official-segment slot="items"><ulvia-official-radio size="md" slot="control"><input type="radio" name="sizeMediumView" value="grid"></ulvia-official-radio><span slot="label">Grid</span></ulvia-official-segment></ulvia-official-segmented-control>
+                            <ulvia-official-choice-field slot="items"><ulvia-official-checkbox size="md" slot="control"><input type="checkbox" name="sizeMediumCheck" checked></ulvia-official-checkbox><span slot="label">Checkbox</span></ulvia-official-choice-field>
+                            <ulvia-official-choice-field slot="items"><ulvia-official-radio size="md" slot="control"><input type="radio" name="sizeMediumRadio" checked></ulvia-official-radio><span slot="label">Radio</span></ulvia-official-choice-field>
+                            <ulvia-official-choice-field slot="items"><ulvia-official-toggle size="md" slot="control"><input type="checkbox" role="switch" name="sizeMediumToggle" checked></ulvia-official-toggle><span slot="label">Toggle</span></ulvia-official-choice-field>
+                            <ulvia-official-form-actions align="start" responsive-layout="wrap" slot="items"><ulvia-official-action size="md" tone="primary" variant="filled" slot="actions"><button type="button">Medium action</button></ulvia-official-action></ulvia-official-form-actions>
+                        </ulvia-official-stack>
+                        <ulvia-official-stack align="stretch" slot="items" gap="md">
+                            <ulvia-official-prose measure="wide" size="sm" slot="items"><div slot="content"><strong>Large</strong> · prominent actions</div></ulvia-official-prose>
+                            <ulvia-official-field label-position="top" slot="items"><span slot="label">Text input</span><ulvia-official-input size="lg" slot="control"><input type="text" name="sizeLargeText" value="Large control"></ulvia-official-input></ulvia-official-field>
+                            <ulvia-official-field label-position="top" slot="items"><span slot="label">Select</span><ulvia-official-select size="lg" slot="control"><select name="sizeLargeSelect"><option>Large option</option><option>Alternative</option></select></ulvia-official-select></ulvia-official-field>
+                            <ulvia-official-segmented-control size="lg" orientation="horizontal" wide slot="items"><span slot="legend">View</span><ulvia-official-segment slot="items"><ulvia-official-radio size="lg" slot="control"><input type="radio" name="sizeLargeView" value="list" checked></ulvia-official-radio><span slot="label">List</span></ulvia-official-segment><ulvia-official-segment slot="items"><ulvia-official-radio size="lg" slot="control"><input type="radio" name="sizeLargeView" value="grid"></ulvia-official-radio><span slot="label">Grid</span></ulvia-official-segment></ulvia-official-segmented-control>
+                            <ulvia-official-choice-field slot="items"><ulvia-official-checkbox size="lg" slot="control"><input type="checkbox" name="sizeLargeCheck" checked></ulvia-official-checkbox><span slot="label">Checkbox</span></ulvia-official-choice-field>
+                            <ulvia-official-choice-field slot="items"><ulvia-official-radio size="lg" slot="control"><input type="radio" name="sizeLargeRadio" checked></ulvia-official-radio><span slot="label">Radio</span></ulvia-official-choice-field>
+                            <ulvia-official-choice-field slot="items"><ulvia-official-toggle size="lg" slot="control"><input type="checkbox" role="switch" name="sizeLargeToggle" checked></ulvia-official-toggle><span slot="label">Toggle</span></ulvia-official-choice-field>
+                            <ulvia-official-form-actions align="start" responsive-layout="wrap" slot="items"><ulvia-official-action size="lg" tone="primary" variant="filled" slot="actions"><button type="button">Large action</button></ulvia-official-action></ulvia-official-form-actions>
+                        </ulvia-official-stack>
+                    </ulvia-official-grid>
+                    <ulvia-official-grid slot="content" columns="3" gap="lg">
+                        <ulvia-official-field label-position="top" slot="items"><span slot="label">Small textarea</span><ulvia-official-textarea size="sm" resize="vertical" slot="control"><textarea name="sizeSmallTextarea" rows="3">Compact content</textarea></ulvia-official-textarea></ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items"><span slot="label">Medium textarea</span><ulvia-official-textarea size="md" resize="vertical" slot="control"><textarea name="sizeMediumTextarea" rows="3">Default content</textarea></ulvia-official-textarea></ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items"><span slot="label">Large textarea</span><ulvia-official-textarea size="lg" resize="vertical" slot="control"><textarea name="sizeLargeTextarea" rows="3">Prominent content</textarea></ulvia-official-textarea></ulvia-official-field>
+                    </ulvia-official-grid>
                 </ulvia-official-form-section>
 
                 <ulvia-official-form-section appearance="outlined" slot="items">
@@ -88,51 +130,77 @@
                     <span slot="description">Purpose-built interactions keep the native form value and submission behaviour.</span>
                     <ulvia-official-field label-position="top" slot="content">
                         <span slot="label">Budget · responsive layout</span>
-                        <ulvia-official-range-control editable-value value-label="Exact value" layout="auto" value-placement="field" slot="control"><ulvia-official-range value-prefix="$" value-suffix="k" bounds-layout="below" slot="control"><input type="range" name="budget" min="0" max="100" step="5" value="60"></ulvia-official-range></ulvia-official-range-control>
+                        <ulvia-official-range-control size="md" editable-value value-label="Exact value" layout="auto" value-placement="field" slot="control"><ulvia-official-range value-prefix="$" value-suffix="k" bounds-layout="below" slot="control"><input type="range" name="budget" min="0" max="100" step="5" value="60"></ulvia-official-range></ulvia-official-range-control>
                         <span slot="description">The current value stays beside the field label. Direct entry remains next to the slider, then moves below it in narrow containers.</span>
                     </ulvia-official-field>
                     <ulvia-official-field label-position="top" slot="content">
                         <span slot="label">Monthly capacity · inline layout</span>
-                        <ulvia-official-range-control editable-value value-label="Hours" layout="inline" value-placement="field" slot="control"><ulvia-official-range value-prefix="" value-suffix=" h" bounds-layout="inline" slot="control"><input type="range" name="capacity" min="0" max="160" step="8" value="96"></ulvia-official-range></ulvia-official-range-control>
+                        <ulvia-official-range-control size="lg" editable-value value-label="Hours" layout="inline" value-placement="field" slot="control"><ulvia-official-range value-prefix="" value-suffix=" h" bounds-layout="inline" slot="control"><input type="range" name="capacity" min="0" max="160" step="8" value="96"></ulvia-official-range></ulvia-official-range-control>
                         <span slot="description">The direct entry stays beside the range in a wide container and drops below it when space becomes tight.</span>
                     </ulvia-official-field>
                     <ulvia-official-grid slot="content" columns="2" gap="lg">
                         <ulvia-official-field label-position="top" slot="items">
                             <span slot="label">Confidence · stacked layout</span>
-                            <ulvia-official-range-control editable-value value-label="Score" layout="stacked" value-placement="field" slot="control"><ulvia-official-range value-prefix="" value-suffix="%" bounds-layout="below" slot="control"><input type="range" name="confidence" min="0" max="100" step="1" value="72"></ulvia-official-range></ulvia-official-range-control>
+                            <ulvia-official-range-control size="sm" editable-value value-label="Score" layout="stacked" value-placement="field" slot="control"><ulvia-official-range value-prefix="" value-suffix="%" bounds-layout="below" slot="control"><input type="range" name="confidence" min="0" max="100" step="1" value="72"></ulvia-official-range></ulvia-official-range-control>
                         </ulvia-official-field>
                         <ulvia-official-field label-position="top" slot="items">
                             <span slot="label">Satisfaction · range only</span>
-                            <ulvia-official-range-control value-label="Value" layout="auto" value-placement="field" slot="control"><ulvia-official-range value-prefix="" value-suffix=" / 10" bounds-layout="inline" slot="control"><input type="range" name="satisfaction" min="0" max="10" step="1" value="8"></ulvia-official-range></ulvia-official-range-control>
+                            <ulvia-official-range-control size="md" value-label="Value" layout="auto" value-placement="field" slot="control"><ulvia-official-range value-prefix="" value-suffix=" / 10" bounds-layout="inline" slot="control"><input type="range" name="satisfaction" min="0" max="10" step="1" value="8"></ulvia-official-range></ulvia-official-range-control>
                         </ulvia-official-field>
                     </ulvia-official-grid>
                     <ulvia-official-grid slot="content" columns="2" gap="lg">
                         <ulvia-official-field label-position="top" slot="items">
                             <span slot="label">Relevant disciplines</span>
-                            <ulvia-official-multi-select density="compact" slot="control"><select name="disciplines" multiple size="5"><option value="research" selected>Research</option><option value="content">Content design</option><option value="product" selected>Product design</option><option value="development">Development</option><option value="quality">Quality assurance</option></select></ulvia-official-multi-select>
+                            <ulvia-official-multi-select size="sm" slot="control"><select name="disciplines" multiple size="5"><option value="research" selected>Research</option><option value="content">Content design</option><option value="product" selected>Product design</option><option value="development">Development</option><option value="quality">Quality assurance</option></select></ulvia-official-multi-select>
                             <span slot="description">Select any combination. Use the arrow keys to move and Space to toggle.</span>
                         </ulvia-official-field>
                         <ulvia-official-stack align="stretch" slot="items" gap="lg">
                             <ulvia-official-field label-position="top" slot="items">
                                 <span slot="label">Search the catalogue</span>
-                                <ulvia-official-search-input auto-submit submit-delay="400" clear-label="Clear search" slot="control"><ulvia-official-input size="md" slot="control"><input type="search" name="query" form="catalogue-search-form" placeholder="Search components"></ulvia-official-input></ulvia-official-search-input>
+                                <ulvia-official-search-input size="sm" auto-submit submit-delay="400" clear-label="Clear search" slot="control"><ulvia-official-input size="sm" slot="control"><input type="search" name="query" form="catalogue-search-form" placeholder="Search components"></ulvia-official-input></ulvia-official-search-input>
                                 <span slot="description">Submits automatically 400 ms after typing.</span>
-                            </ulvia-official-field>
-                            <ulvia-official-field label-position="top" slot="items">
-                                <span slot="label">Brand colour</span>
-                                <ulvia-official-color-input action-label="Change" slot="control"><input type="color" name="brandColor" value="#086c55"></ulvia-official-color-input>
                             </ulvia-official-field>
                         </ulvia-official-stack>
                     </ulvia-official-grid>
                     <ulvia-official-grid slot="content" columns="2" gap="lg">
                         <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Custom brand colour</span>
+                            <ulvia-official-color-input size="lg" default-mode="hex" action-label="Compose" slot="control"><input type="color" name="brandColor" value="#086c55"></ulvia-official-color-input>
+                            <span slot="description">Compose an exact colour in HEX, RGB, HSL, HSV or CMYK.</span>
+                        </ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Approved palette</span>
+                            <ulvia-official-color-presets size="lg" action-label="Choose" colours="#086c55,#3157d5,#7c3aed,#be185d,#b42318,#c2410c,#ca8a04,#111827,#64748b,#ffffff" slot="control"><input type="color" name="approvedColor" value="#3157d5"></ulvia-official-color-presets>
+                            <span slot="description">Restrict selection to a configurable set of approved colours.</span>
+                        </ulvia-official-field>
+                    </ulvia-official-grid>
+                    <ulvia-official-grid slot="content" columns="2" gap="lg">
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Meeting time · hours and minutes</span>
+                            <ulvia-official-time-input size="md" parts="hours-minutes" slot="control"><input type="text" name="meetingTime" value="09:30" inputmode="numeric"></ulvia-official-time-input>
+                        </ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Precise time · with seconds</span>
+                            <ulvia-official-time-input size="lg" parts="hours-minutes-seconds" slot="control"><input type="text" name="preciseTime" value="14:08:35" inputmode="numeric"></ulvia-official-time-input>
+                        </ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Opening hour · hours only</span>
+                            <ulvia-official-time-input size="sm" parts="hours" slot="control"><input type="text" name="openingHour" value="08" inputmode="numeric"></ulvia-official-time-input>
+                        </ulvia-official-field>
+                        <ulvia-official-field label-position="top" slot="items">
+                            <span slot="label">Reminder offset · minutes only</span>
+                            <ulvia-official-time-input size="sm" parts="minutes" slot="control"><input type="text" name="reminderMinute" value="15" inputmode="numeric"></ulvia-official-time-input>
+                        </ulvia-official-field>
+                    </ulvia-official-grid>
+                    <ulvia-official-grid slot="content" columns="2" gap="lg">
+                        <ulvia-official-field label-position="top" slot="items">
                             <span slot="label">Team lookup · multiple</span>
-                            <ulvia-official-lookup placeholder="Find another team" no-results-label="No team matches your search" clear-label="Clear selected teams" remove-label="Remove" slot="control"><select name="teamLookup" multiple><option value="brand" selected>Brand design</option><option value="content">Content design</option><option value="engineering">Engineering</option><option value="growth">Growth</option><option value="operations">Operations</option><option value="research" selected>User research</option></select></ulvia-official-lookup>
+                            <ulvia-official-lookup size="lg" placeholder="Find another team" no-results-label="No team matches your search" clear-label="Clear selected teams" remove-label="Remove" slot="control"><select name="teamLookup" multiple><option value="brand" selected>Brand design</option><option value="content">Content design</option><option value="engineering">Engineering</option><option value="growth">Growth</option><option value="operations">Operations</option><option value="research" selected>User research</option></select></ulvia-official-lookup>
                         <span slot="description">Selected teams appear as removable badges below the lookup while you search for more.</span>
                         </ulvia-official-field>
                         <ulvia-official-field label-position="top" slot="items">
                             <span slot="label">Project tags</span>
-                            <ulvia-official-tag-input placeholder="Add a topic" hint="Type a topic and press Enter. Select × to remove it." separator="," max-tags="8" add-on-blur="false" slot="control"><input type="text" name="topics" value="accessibility,design systems" autocomplete="off"></ulvia-official-tag-input>
+                            <ulvia-official-tag-input size="sm" placeholder="Add a topic" hint="Type a topic and press Enter. Select × to remove it." separator="," max-tags="8" add-on-blur="false" slot="control"><input type="text" name="topics" value="accessibility,design systems" autocomplete="off"></ulvia-official-tag-input>
                         </ulvia-official-field>
                     </ulvia-official-grid>
                     <ulvia-official-grid slot="content" columns="2" gap="lg">
@@ -161,16 +229,19 @@
                         <ulvia-official-choice-group slot="items" orientation="vertical">
                             <span slot="legend">Preferred contact method</span>
                             <span slot="help">Used when we need to reply about this project.</span>
-                            <ulvia-official-choice-field slot="items"><ulvia-official-radio slot="control"><input type="radio" name="contact" value="email" checked></ulvia-official-radio><span slot="label">Email</span></ulvia-official-choice-field>
-                            <ulvia-official-choice-field slot="items"><ulvia-official-radio slot="control"><input type="radio" name="contact" value="phone"></ulvia-official-radio><span slot="label">Phone</span></ulvia-official-choice-field>
+                            <ulvia-official-choice-field slot="items"><ulvia-official-radio size="md" slot="control"><input type="radio" name="contact" value="email" checked></ulvia-official-radio><span slot="label">Email</span></ulvia-official-choice-field>
+                            <ulvia-official-choice-field slot="items"><ulvia-official-radio size="md" slot="control"><input type="radio" name="contact" value="phone"></ulvia-official-radio><span slot="label">Phone</span></ulvia-official-choice-field>
                         </ulvia-official-choice-group>
-                        <ulvia-official-segmented-control orientation="horizontal" wide slot="items">
+                        <ulvia-official-segmented-control size="md" orientation="horizontal" wide slot="items">
                             <span slot="legend">Display density</span>
-                            <ulvia-official-segment slot="items"><ulvia-official-radio slot="control"><input type="radio" name="density" value="comfortable" checked></ulvia-official-radio><span slot="label">Comfortable</span></ulvia-official-segment>
-                            <ulvia-official-segment slot="items"><ulvia-official-radio slot="control"><input type="radio" name="density" value="compact"></ulvia-official-radio><span slot="label">Compact</span></ulvia-official-segment>
+                            <ulvia-official-segment slot="items"><ulvia-official-radio size="md" slot="control"><input type="radio" name="density" value="comfortable" checked></ulvia-official-radio><span slot="label">Comfortable</span></ulvia-official-segment>
+                            <ulvia-official-segment slot="items"><ulvia-official-radio size="md" slot="control"><input type="radio" name="density" value="compact"></ulvia-official-radio><span slot="label">Compact</span></ulvia-official-segment>
                         </ulvia-official-segmented-control>
-                        <ulvia-official-choice-field slot="items"><ulvia-official-checkbox slot="control"><input id="terms-example" type="checkbox" name="terms" value="accepted"></ulvia-official-checkbox><span slot="label">I agree to the terms</span><span slot="help">Required before submission.</span></ulvia-official-choice-field>
-                        <ulvia-official-choice-field slot="items"><ulvia-official-toggle slot="control"><input type="checkbox" role="switch" name="updates" value="yes" checked></ulvia-official-toggle><span slot="label">Product updates</span><span slot="help">Receive occasional email updates.</span></ulvia-official-choice-field>
+                        <ulvia-official-choice-field slot="items"><ulvia-official-checkbox size="md" slot="control"><input id="terms-example" type="checkbox" name="terms" value="accepted"></ulvia-official-checkbox><span slot="label">I agree to the terms</span><span slot="help">Required before submission.</span></ulvia-official-choice-field>
+                        <ulvia-official-stack align="stretch" slot="items" gap="sm">
+                            <ulvia-official-choice-field slot="items"><ulvia-official-toggle size="md" slot="control"><input type="checkbox" role="switch" name="updates" value="yes" checked></ulvia-official-toggle><span slot="label">Product updates</span><span slot="help">Receive occasional email updates.</span></ulvia-official-choice-field>
+                            <ulvia-official-choice-field slot="items"><ulvia-official-toggle size="md" slot="control"><input type="checkbox" role="switch" name="activity" value="shared"></ulvia-official-toggle><span slot="label">Share activity status</span><span slot="help">Off state shown with the same clear thumb and boundary.</span></ulvia-official-choice-field>
+                        </ulvia-official-stack>
                     </ulvia-official-grid>
                     <ulvia-official-form-actions align="start" responsive-layout="wrap" slot="content">
                         <ulvia-official-action size="sm" tone="neutral" variant="outline" slot="actions"><button type="button" disabled>Disabled action</button></ulvia-official-action>

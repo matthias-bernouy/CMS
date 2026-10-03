@@ -1,0 +1,2 @@
+:host { display: block; min-width: 0; margin-block-end: var(--ulvia-official-spacing-xs, .5rem); color: var(--ulvia-official-text-primary, CanvasText); font-family: var(--ulvia-official-font-family-main, inherit); }
+[part="caption"] { display: block; font-size: var(--ulvia-official-font-size-sm, .875rem); font-weight: var(--ulvia-official-font-weight-semibold, 600); line-height: var(--ulvia-official-line-height-snug, 1.35); }

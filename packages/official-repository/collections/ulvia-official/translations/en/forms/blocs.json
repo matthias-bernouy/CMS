@@ -8,8 +8,10 @@
     "bloc.choice-copy.label": "Choice copy",
     "bloc.choice-group.description": "A semantic fieldset for related choices from this or another collection",
     "bloc.choice-group.label": "Choice group",
-    "bloc.color-input.description": "A native colour input with a usable touch target",
+    "bloc.color-input.description": "A custom HSL colour composer backed by a native colour value",
     "bloc.color-input.label": "Colour input",
+    "bloc.color-presets.description": "A configurable palette of approved colours backed by a native colour value",
+    "bloc.color-presets.label": "Colour presets",
     "bloc.control-group.description": "A responsive row combining a control with leading or trailing blocks",
     "bloc.control-group.label": "Control group",
     "bloc.error-summary.description": "A focusable validation summary linking people to fields that need attention",
@@ -58,6 +60,8 @@
     "bloc.tag-input.label": "Tag input",
     "bloc.textarea.description": "A native multiline text control with configurable resize behaviour",
     "bloc.textarea.label": "Text area",
+    "bloc.time-input.description": "A composed time input that can expose hours, minutes and seconds independently",
+    "bloc.time-input.label": "Time input",
     "bloc.toggle.description": "A native checkbox exposed as an on-or-off switch",
     "bloc.toggle.label": "Toggle"
 }

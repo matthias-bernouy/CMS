@@ -15,28 +15,20 @@
         }
     },
     {
-        "id": "default-mode",
-        "label": "setting.color-mode.label",
-        "group": "setting.group.behavior",
+        "id": "colours",
+        "label": "setting.preset-colours.label",
+        "group": "setting.group.content",
         "type": "string",
-        "default": "hex",
-        "control": {
-            "kind": "segmented",
-            "options": [
-                { "value": "hex", "label": "setting.option.hex" },
-                { "value": "rgb", "label": "setting.option.rgb" },
-                { "value": "hsl", "label": "setting.option.hsl" },
-                { "value": "hsv", "label": "setting.option.hsv" },
-                { "value": "cmyk", "label": "setting.option.cmyk" }
-            ]
-        }
+        "default": "#086c55,#3157d5,#7c3aed,#be185d,#b42318,#c2410c,#ca8a04,#111827,#64748b,#ffffff",
+        "maxLength": 300,
+        "control": { "kind": "text" }
     },
     {
         "id": "action-label",
         "label": "setting.color-action-label.label",
         "group": "setting.group.content",
         "type": "string",
-        "default": "Compose",
+        "default": "Choose",
         "maxLength": 40,
         "control": { "kind": "text" }
     }

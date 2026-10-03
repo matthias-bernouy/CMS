@@ -1,4 +1,7 @@
 :host {
+    --multi-select-option-height: 2.25rem;
+    --multi-select-option-padding: var(--ulvia-official-spacing-sm, .75rem);
+    --multi-select-option-font-size: var(--ulvia-official-font-size-sm, .875rem);
     display: block;
     min-width: 0;
     font-family: var(--ulvia-official-font-family-main, inherit);
@@ -46,15 +49,15 @@
 
 [part="option"] {
     display: inline-flex;
-    min-height: 2.25rem;
+    min-height: var(--multi-select-option-height);
     align-items: center;
-    padding-inline: var(--ulvia-official-spacing-sm, .75rem);
+    padding-inline: var(--multi-select-option-padding);
     border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c8d1cd);
     border-radius: var(--ulvia-official-radius-full, 999px);
     color: var(--ulvia-official-text-secondary, #42504a);
     background: var(--ulvia-official-background-surface, Canvas);
     font: inherit;
-    font-size: var(--ulvia-official-font-size-sm, .875rem);
+    font-size: var(--multi-select-option-font-size);
     font-weight: var(--ulvia-official-font-weight-medium, 500);
     cursor: pointer;
 }
@@ -67,5 +70,5 @@
 [part="listbox"]:focus { outline: none; }
 :host([data-invalid]) [part="listbox"] { border-inline-start: var(--ulvia-official-border-width-strong, 2px) solid var(--ulvia-official-danger-border, #b42318); padding-inline-start: var(--ulvia-official-spacing-sm, .75rem); }
 :host([data-disabled]) [part="listbox"] { opacity: .6; }
-:host([density="compact"]) [part="listbox"] { padding: var(--ulvia-official-spacing-3xs, .25rem) 0; }
-:host([density="compact"]) [part="option"] { min-height: 2rem; padding-inline: var(--ulvia-official-spacing-xs, .5rem); font-size: var(--ulvia-official-font-size-xs, .75rem); }
+:host([size="sm"]) { --multi-select-option-height: 2rem; --multi-select-option-padding: var(--ulvia-official-spacing-xs, .5rem); --multi-select-option-font-size: var(--ulvia-official-font-size-xs, .75rem); }
+:host([size="lg"]) { --multi-select-option-height: 2.75rem; --multi-select-option-padding: var(--ulvia-official-spacing-md, 1rem); --multi-select-option-font-size: var(--ulvia-official-font-size-md, 1rem); }

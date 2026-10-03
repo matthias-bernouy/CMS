@@ -15,23 +15,25 @@
         }
     },
     {
-        "id": "orientation",
-        "label": "setting.orientation.label",
-        "group": "setting.group.layout",
+        "id": "parts",
+        "label": "setting.time-parts.label",
+        "group": "setting.group.behavior",
         "type": "string",
-        "default": "horizontal",
+        "default": "hours-minutes",
         "control": {
             "kind": "segmented",
             "options": [
-                { "value": "horizontal", "label": "setting.option.horizontal" },
-                { "value": "vertical", "label": "setting.option.vertical" }
+                { "value": "hours", "label": "setting.option.hours" },
+                { "value": "minutes", "label": "setting.option.minutes" },
+                { "value": "hours-minutes", "label": "setting.option.hours-minutes" },
+                { "value": "hours-minutes-seconds", "label": "setting.option.hours-minutes-seconds" }
             ]
         }
     },
     {
-        "id": "wide",
-        "label": "setting.wide.label",
-        "group": "setting.group.layout",
+        "id": "show-units",
+        "label": "setting.show-time-units.label",
+        "group": "setting.group.content",
         "type": "boolean",
         "default": false,
         "control": { "kind": "toggle" }

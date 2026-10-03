@@ -5,7 +5,7 @@
     "description": "bloc.segmented-control.description",
     "category": "bloc.category.forms",
     "order": 190,
-    "uses": ["ulvia-official-option-list", "ulvia-official-segment", "ulvia-official-radio"],
+    "uses": ["ulvia-official-option-list", "ulvia-official-segment", "ulvia-official-radio", "ulvia-official-segmented-caption"],
     "requires": [],
     "slots": {
         "legend": { "accepts": [{ "kind": "rich-text", "profile": "inline" }], "min": 1, "max": 1 },

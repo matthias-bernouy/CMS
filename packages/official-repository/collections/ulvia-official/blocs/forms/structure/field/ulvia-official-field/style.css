@@ -85,8 +85,16 @@
 }
 
 ::slotted([slot="field-error"]) {
+    display: flex;
+    min-height: 2.25rem;
+    align-items: center;
+    box-sizing: border-box;
+    padding: var(--ulvia-official-spacing-xs, .5rem) var(--ulvia-official-spacing-sm, .75rem);
+    border-inline-start: .25rem solid var(--ulvia-official-danger-border, #b42318);
+    border-radius: var(--ulvia-official-radius-sm, .375rem);
     color: var(--ulvia-official-danger, #b42318);
-    font-weight: var(--ulvia-official-font-weight-medium, 500);
+    background: color-mix(in srgb, var(--ulvia-official-danger-subtle, #fef3f2) 82%, transparent);
+    font-weight: var(--ulvia-official-font-weight-semibold, 600);
 }
 
 :host([required]) {
@@ -95,6 +103,8 @@
 
 :host([invalid]) {
     --form-control-border-color: var(--ulvia-official-danger-border, #b42318);
+    --form-control-border-width: var(--ulvia-official-border-width-strong, 2px);
+    --form-control-invalid-shadow: 0 0 0 3px color-mix(in srgb, var(--ulvia-official-danger-border, #b42318) 22%, transparent);
 }
 
 :host([invalid]) ::slotted(label[slot="field-label"]) {

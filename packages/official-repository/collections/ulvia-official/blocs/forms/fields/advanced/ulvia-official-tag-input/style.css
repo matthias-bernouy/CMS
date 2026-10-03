@@ -1,4 +1,10 @@
 :host {
+    --tag-control-height: var(--ulvia-official-control-height-md, 2.875rem);
+    --tag-font-size: var(--ulvia-official-font-size-md, 1rem);
+    --tag-input-height: 2rem;
+    --tag-chip-height: 1.875rem;
+    --tag-chip-font-size: var(--ulvia-official-font-size-sm, .875rem);
+    --tag-chip-action-size: 1.5rem;
     display: grid;
     min-width: 0;
     gap: var(--ulvia-official-spacing-xs, .5rem);
@@ -8,7 +14,7 @@
 
 [part="control"] {
     display: flex;
-    min-height: var(--ulvia-official-control-height-md, 2.875rem);
+    height: var(--tag-control-height);
     align-items: center;
     box-sizing: border-box;
     padding: .375rem var(--ulvia-official-spacing-sm, .75rem);
@@ -41,7 +47,7 @@
 [part~="tag"] {
     display: inline-flex;
     max-width: 100%;
-    min-height: 1.875rem;
+    min-height: var(--tag-chip-height);
     align-items: center;
     box-sizing: border-box;
     padding: 0 var(--ulvia-official-spacing-3xs, .25rem) 0 var(--ulvia-official-spacing-sm, .75rem);
@@ -51,7 +57,7 @@
     gap: var(--ulvia-official-spacing-3xs, .25rem);
     color: var(--ulvia-official-on-primary-subtle, #075642);
     background: var(--ulvia-official-primary-subtle, #dff3ed);
-    font-size: var(--ulvia-official-font-size-sm, .875rem);
+    font-size: var(--tag-chip-font-size);
     font-weight: var(--ulvia-official-font-weight-medium, 500);
 }
 
@@ -63,8 +69,8 @@
 
 [part~="remove"] {
     position: relative;
-    width: 1.5rem;
-    height: 1.5rem;
+    width: var(--tag-chip-action-size);
+    height: var(--tag-chip-action-size);
     padding: 0;
     border: 0;
     border-radius: var(--ulvia-official-radius-full, 999px);
@@ -105,7 +111,7 @@
 [part="input"] {
     width: 100%;
     min-width: 0;
-    height: 2rem;
+    height: var(--tag-input-height);
     box-sizing: border-box;
     padding: 0;
     border: 0;
@@ -113,6 +119,7 @@
     color: inherit;
     background: transparent;
     font: inherit;
+    font-size: var(--tag-font-size);
 }
 
 [part="draft"] {
@@ -151,4 +158,22 @@
     color: var(--ulvia-official-text-disabled, #858b95);
     background: var(--ulvia-official-background-subtle, #f4f5f7);
     cursor: not-allowed;
+}
+
+:host([size="sm"]) {
+    --tag-control-height: var(--ulvia-official-control-height-sm, 2.25rem);
+    --tag-font-size: var(--ulvia-official-font-size-sm, .875rem);
+    --tag-input-height: 1.75rem;
+    --tag-chip-height: 1.625rem;
+    --tag-chip-font-size: var(--ulvia-official-font-size-xs, .75rem);
+    --tag-chip-action-size: 1.5rem;
+}
+
+:host([size="lg"]) {
+    --tag-control-height: var(--ulvia-official-control-height-lg, 3.25rem);
+    --tag-font-size: var(--ulvia-official-font-size-lg, 1.125rem);
+    --tag-input-height: 2.25rem;
+    --tag-chip-height: 2.125rem;
+    --tag-chip-font-size: var(--ulvia-official-font-size-md, 1rem);
+    --tag-chip-action-size: 1.75rem;
 }
