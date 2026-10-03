@@ -7,6 +7,7 @@ import {
     DuplicatePagePathError,
     PagePathUpdateConflictError,
     PagePathsStaleError,
+    PageRevisionConflictError,
 } from "cms-content/application/core/validation/errors";
 import {
     fromPageDoc,
@@ -26,10 +27,16 @@ export async function updateMongoPagePaths(
     plan: PlannedPagePaths,
     system: TSystem,
     expectedPaths?: Record<string, string>,
+    expectedRevision?: number,
 ): Promise<TPage> {
     const token = randomUUIDv7();
     const claim = await pages.updateOne(
-        { _id: id, deletionIntent: { $exists: false }, pathUpdateIntent: { $exists: false } },
+        {
+            _id: id,
+            deletionIntent: { $exists: false },
+            pathUpdateIntent: { $exists: false },
+            ...(expectedRevision === undefined ? {} : { revision: expectedRevision }),
+        },
         { $set: { pathUpdateIntent: { token, requestedAt: new Date(), phase: "preparing" } } },
     );
     if (!claim.matchedCount) {
@@ -39,6 +46,10 @@ export async function updateMongoPagePaths(
         }
         if (existing.deletionIntent) {
             throw new Error("Page deletion is in progress.");
+        }
+        const page = fromPageDoc(existing)!;
+        if (expectedRevision !== undefined && page.revision !== expectedRevision) {
+            throw new PageRevisionConflictError(expectedRevision, page.revision);
         }
         throw new PagePathUpdateConflictError();
     }
@@ -84,7 +95,10 @@ export async function updateMongoPagePaths(
         }
         const saved = await pages.updateOne(
             { _id: id, "pathUpdateIntent.token": token, deletionIntent: { $exists: false } },
-            { $set: { path: plan.primaryPath, paths: plan.paths, "pathUpdateIntent.phase": "committed" } },
+            {
+                $set: { path: plan.primaryPath, paths: plan.paths, "pathUpdateIntent.phase": "committed" },
+                $inc: { revision: 1 },
+            },
         );
         if (!saved.matchedCount) {
             throw new PagePathUpdateConflictError();
@@ -97,7 +111,7 @@ export async function updateMongoPagePaths(
         }
         await routes.updateMany({ pathUpdateToken: token }, { $set: {}, $unset: { pathUpdateToken: "" } });
         await releasePagePathClaim(pages, id, token);
-        return { ...page, path: plan.primaryPath, paths: plan.paths };
+        return { ...page, path: plan.primaryPath, paths: plan.paths, revision: page.revision + 1 };
     } catch (error) {
         const stored = await pages.findOne({ _id: id, "pathUpdateIntent.token": token });
         if (stored?.pathUpdateIntent?.phase !== "committed") {

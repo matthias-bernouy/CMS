@@ -2,9 +2,11 @@ import type { PageIndexingConfiguration } from "@bernouy/cms-content";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 import { coerceVisible } from "./visible";
 import { coerceTags } from "./tags";
+import { parsePageRevision } from "./revision";
 
 export type PageUpdateDto = {
     id: string;
+    revision: number;
     title: string;
     path: string;
     content: string;
@@ -32,6 +34,7 @@ export function parsePageUpdateDto(body: Record<string, unknown>): PageUpdateDto
     }
     return {
         id: String(id),
+        revision: parsePageRevision(body.revision),
         title: String(title),
         path: String(path),
         content: body.content == null ? "" : String(body.content),

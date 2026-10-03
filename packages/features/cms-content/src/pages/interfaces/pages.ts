@@ -33,6 +33,8 @@ export type PageIndexingConfiguration = {
 
 export type TPage = {
     id: string;
+    /** Monotonic persistence revision used for optimistic concurrency and migration rollback safety. */
+    revision: number;
     /** Primary public path used by delivery and route lookups. */
     path: string;
     /** Local path per site language. Absent until the site has a default language. */

@@ -26,13 +26,14 @@ function makeSystem(opts: { existing?: TPage | null } = {}) {
 function makeRequest(body: Record<string, unknown>) {
     return new Request("http://localhost/cms/api/page", {
         method: "PUT",
-        body: JSON.stringify(body),
+        body: JSON.stringify({ revision: 1, ...body }),
         headers: { "content-type": "application/json" },
     });
 }
 
 const existingPage: TPage = {
     id: "page-1",
+    revision: 1,
     path: "/draft",
     title: "Draft",
     description: "draft desc",

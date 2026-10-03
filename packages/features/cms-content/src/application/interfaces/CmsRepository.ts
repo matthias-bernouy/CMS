@@ -110,15 +110,16 @@ export interface CmsRepository {
     /** Editorial route record access. Public consumers use `resolvePublishedRoute`. */
     getPageRoute(path: string): Promise<PageRoute | null>;
     insertPage(path: string, title: string, content?: string): Promise<void>;
-    updatePage(page: Partial<TPage>): Promise<void>;
-    deletePage(id: string): Promise<void>;
+    updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<TPage | null>;
+    deletePage(id: string, expectedRevision?: number): Promise<void>;
     setPagePaths?(
         id: string,
         paths: Record<string, string>,
         system?: TSystem,
         expectedPaths?: Record<string, string>,
+        expectedRevision?: number,
     ): Promise<TPage>;
-    deletePageWithAlternative?(id: string, alternativeId: string | null): Promise<void>;
+    deletePageWithAlternative?(id: string, alternativeId: string | null, expectedRevision?: number): Promise<void>;
     getLinks(): Promise<PageLink[]>;
     getPagesMetadata(opts?: PagesQuery): Promise<PageMeta[]>;
     getTagCounts(): Promise<ValueCount[]>;

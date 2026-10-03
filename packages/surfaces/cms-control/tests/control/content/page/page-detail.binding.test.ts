@@ -118,7 +118,12 @@ describe("admin page detail", () => {
         expect(document.querySelector('p9r-token-input[name="tags"]')?.getAttribute("form")).toBe("page-settings-form");
         expect(document.querySelector('p9r-token-input[name="tags"]')?.hasAttribute("creatable")).toBe(true);
         const indexing = document.querySelector("cms-page-indexing-settings");
-        await waitFor(() => indexing?.shadowRoot?.querySelector(".binding") !== null);
+        await waitFor(
+            () =>
+                indexing?.shadowRoot?.querySelector(".binding") !== null &&
+                (document.querySelector('p9r-input[name="title"]') as (HTMLElement & { value: string }) | null)
+                    ?.value === "${content.title}",
+        );
         expect((document.querySelector('p9r-input[name="title"]') as HTMLElement & { value: string }).value).toBe(
             "${content.title}",
         );
@@ -354,11 +359,12 @@ function pageDetailHtml(): string {
     return readFileSync(path, "utf8").replaceAll("{{BASE_PATH}}", "");
 }
 
-async function waitFor(predicate: () => boolean, tries = 50): Promise<void> {
+async function waitFor(predicate: () => boolean, tries = 400): Promise<void> {
     for (let index = 0; index < tries; index += 1) {
         if (predicate()) {
             return;
         }
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 5));
     }
+    throw new Error("Timed out waiting for the page detail test condition");
 }

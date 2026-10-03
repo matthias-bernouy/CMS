@@ -57,6 +57,18 @@ export class PagePathsStaleError extends ContentConflictError {
     }
 }
 
+export class PageRevisionConflictError extends ContentConflictError {
+    readonly publicCode = "page_revision_changed";
+
+    constructor(
+        readonly expectedRevision: number,
+        readonly actualRevision: number,
+    ) {
+        super(`Page revision changed (expected ${expectedRevision}, current ${actualRevision}).`);
+        this.name = "PageRevisionConflictError";
+    }
+}
+
 export class BlocOwnershipConflictError extends ContentConflictError {
     constructor(tag: string) {
         super(`Bloc with tag "${tag}" belongs to a different owner`);

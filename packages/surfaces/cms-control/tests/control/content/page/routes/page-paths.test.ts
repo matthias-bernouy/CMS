@@ -52,7 +52,11 @@ test("page path API edits one page and reserves every old URL", async () => {
         new Request(`https://cms.test/api/page/paths?id=${first.id}`, {
             method: "PUT",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ paths: { fr: "/premier", en: "/first" }, expectedPaths: { fr: "/first" } }),
+            body: JSON.stringify({
+                revision: (await repository.getPageById(first.id))!.revision,
+                paths: { fr: "/premier", en: "/first" },
+                expectedPaths: { fr: "/first" },
+            }),
         }),
         cms,
     );
@@ -64,14 +68,23 @@ test("page path API edits one page and reserves every old URL", async () => {
         DuplicatePagePathError,
     );
     const deletion = await deletePage(
-        new Request(`https://cms.test/api/page?id=${first.id}&alternativeId=${second.id}`, { method: "DELETE" }),
+        new Request(
+            `https://cms.test/api/page?id=${first.id}&alternativeId=${second.id}&revision=${(await repository.getPageById(first.id))!.revision}`,
+            { method: "DELETE" },
+        ),
         cms,
     );
     expect(deletion.status).toBe(200);
     expect(await repository.getPageRoute("/first")).toMatchObject({ state: "redirect", pageId: second.id });
     expect(await repository.getPageRoute("/en/first")).toMatchObject({ state: "redirect", pageId: second.id });
 
-    await deletePage(new Request(`https://cms.test/api/page?id=${second.id}`, { method: "DELETE" }), cms);
+    await deletePage(
+        new Request(
+            `https://cms.test/api/page?id=${second.id}&revision=${(await repository.getPageById(second.id))!.revision}`,
+            { method: "DELETE" },
+        ),
+        cms,
+    );
     expect(await repository.getPageRoute("/first")).toMatchObject({ state: "gone" });
     expect(await repository.getPageRoute("/en/first")).toMatchObject({ state: "gone" });
 });

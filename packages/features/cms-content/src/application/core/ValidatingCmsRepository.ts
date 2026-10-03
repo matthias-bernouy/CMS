@@ -63,12 +63,12 @@ export class ValidatingCmsRepository implements CmsRepository {
         return this.inner.insertPage(validPath, validTitle, validContent);
     }
 
-    async updatePage(page: Partial<TPage>): Promise<void> {
+    async updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<TPage | null> {
         const valid = validatePagePatch(page);
         if (valid.content !== undefined) {
             await assertContentRefsExist(this.inner, valid.content);
         }
-        return this.inner.updatePage(valid);
+        return this.inner.updatePage(valid, expectedRevision);
     }
 
     // ── Pass-through: blocs (compiled + validated upstream) ────────────────
@@ -157,27 +157,28 @@ export class ValidatingCmsRepository implements CmsRepository {
     getPageById(id: string) {
         return this.inner.getPageById(id);
     }
-    deletePage(id: string) {
-        return this.inner.deletePage(id);
+    deletePage(id: string, expectedRevision?: number) {
+        return this.inner.deletePage(id, expectedRevision);
     }
     async setPagePaths(
         id: string,
         paths: Record<string, string>,
         _system?: TSystem,
         expectedPaths?: Record<string, string>,
+        expectedRevision?: number,
     ) {
         if (!this.inner.setPagePaths) {
             throw new Error("Page path management is not available.");
         }
         const system = await this.inner.getSystem();
         const plan = planPagePaths(paths, system);
-        return this.inner.setPagePaths(id, plan.paths, system, expectedPaths);
+        return this.inner.setPagePaths(id, plan.paths, system, expectedPaths, expectedRevision);
     }
-    deletePageWithAlternative(id: string, alternativeId: string | null) {
+    deletePageWithAlternative(id: string, alternativeId: string | null, expectedRevision?: number) {
         if (!this.inner.deletePageWithAlternative) {
             throw new Error("Page deletion with alternatives is not available.");
         }
-        return this.inner.deletePageWithAlternative(id, alternativeId);
+        return this.inner.deletePageWithAlternative(id, alternativeId, expectedRevision);
     }
     getLinks(): Promise<PageLink[]> {
         return this.inner.getLinks();

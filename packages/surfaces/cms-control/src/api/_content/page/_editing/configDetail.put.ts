@@ -11,6 +11,5 @@ export default async function putConfigDetail(req: Request, cms: ControlCms): Pr
     }
 
     const body = await readJsonBody(req);
-    const updatedId = await updatePageConfig(cms, parsePageConfigUpdateDto(id, body));
-    return Response.json({ id: updatedId });
+    return Response.json(await updatePageConfig(cms, parsePageConfigUpdateDto(id, body)));
 }

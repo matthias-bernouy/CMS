@@ -7,6 +7,7 @@ import {
 
 export type PageConfigDetailResponse = {
     id: string;
+    revision: number;
     title: string;
     description: string;
     path: string;
@@ -33,6 +34,7 @@ export default async function getConfigDetail(req: Request, cms: ControlCms): Pr
 
     const response: PageConfigDetailResponse = {
         id: page.id,
+        revision: page.revision,
         title: page.title,
         description: page.description,
         path: page.path,

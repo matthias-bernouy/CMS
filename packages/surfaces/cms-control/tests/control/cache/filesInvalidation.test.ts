@@ -5,6 +5,7 @@ import { invalidatePagesReferencingFile } from "cms-control/core/admin/server/ca
 
 const page = (path: string, content: string): TPage => ({
     id: path,
+    revision: 1,
     path,
     title: "",
     description: "",

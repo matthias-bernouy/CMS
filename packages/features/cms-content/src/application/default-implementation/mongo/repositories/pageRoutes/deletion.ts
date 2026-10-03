@@ -1,5 +1,5 @@
 import type { Collection } from "mongodb";
-import { PagePathUpdateConflictError } from "cms-content/application/core/validation/errors";
+import { PagePathUpdateConflictError, PageRevisionConflictError } from "cms-content/application/core/validation/errors";
 import type {
     PageDeletionIntent,
     PageDoc,
@@ -10,11 +10,18 @@ type Routes = Collection<PageRouteDoc>;
 type Pages = Collection<PageDoc>;
 
 /** Persist the decision before changing any route so startup can finish an interrupted deletion. */
-export async function deleteMongoPage(pages: Pages, routes: Routes, id: string, alternativeId: string | null) {
+export async function deleteMongoPage(
+    pages: Pages,
+    routes: Routes,
+    id: string,
+    alternativeId: string | null,
+    expectedRevision?: number,
+) {
     const original = await pages.findOne({ _id: id });
     if (!original) {
         return;
     }
+    assertRevision(original, expectedRevision);
     if (original.pathUpdateIntent) {
         throw new PagePathUpdateConflictError();
     }
@@ -26,6 +33,7 @@ export async function deleteMongoPage(pages: Pages, routes: Routes, id: string, 
     if (!page) {
         return;
     }
+    assertRevision(page, expectedRevision);
     const alternative = alternativeId ? await pages.findOne({ _id: alternativeId }) : null;
     if (alternativeId && (!alternative || alternativeId === id || !alternative.visible || alternative.deletionIntent)) {
         throw new Error("Alternative must be another published page.");
@@ -36,7 +44,12 @@ export async function deleteMongoPage(pages: Pages, routes: Routes, id: string, 
         requestedAt: new Date(),
     };
     const claimed = await pages.updateOne(
-        { _id: id, deletionIntent: { $exists: false }, pathUpdateIntent: { $exists: false } },
+        {
+            _id: id,
+            deletionIntent: { $exists: false },
+            pathUpdateIntent: { $exists: false },
+            ...(expectedRevision === undefined ? {} : { revision: expectedRevision }),
+        },
         { $set: { deletionIntent: intent } },
     );
     if (!claimed.matchedCount) {
@@ -44,6 +57,7 @@ export async function deleteMongoPage(pages: Pages, routes: Routes, id: string, 
         if (!concurrent) {
             return;
         }
+        assertRevision(concurrent, expectedRevision);
         if (concurrent.pathUpdateIntent) {
             throw new PagePathUpdateConflictError();
         }
@@ -54,6 +68,13 @@ export async function deleteMongoPage(pages: Pages, routes: Routes, id: string, 
         return;
     }
     await finishPageDeletion(pages, routes, { ...page, deletionIntent: intent });
+}
+
+function assertRevision(page: PageDoc, expectedRevision?: number): void {
+    const actualRevision = Number.isSafeInteger(page.revision) ? page.revision : 1;
+    if (expectedRevision !== undefined && actualRevision !== expectedRevision) {
+        throw new PageRevisionConflictError(expectedRevision, actualRevision);
+    }
 }
 
 /** Run before page-path migration or new deletions; only the indexed pending pages are scanned. */

@@ -34,29 +34,50 @@ export class FakeContentCollection {
         this.documents.set(document._id, structuredClone(document));
     }
 
+    async insertMany(documents: StoredDocument[]): Promise<void> {
+        for (const document of documents) {
+            await this.insertOne(document);
+        }
+    }
+
     async replaceOne(
         filter: Filter,
         document: ReplacementDocument,
         options: { session?: unknown; upsert?: boolean } = {},
-    ): Promise<{ matchedCount: number; upsertedCount: number }> {
+    ): Promise<{ matchedCount: number; modifiedCount: number; upsertedCount: number }> {
         this.recordSession(options.session);
         this.replaceOneCalls.push(structuredClone({ filter, document, options }));
         const current = this.findStored(filter);
         if (current) {
             this.documents.set(current._id, structuredClone({ ...document, _id: current._id }));
-            return { matchedCount: 1, upsertedCount: 0 };
+            return { matchedCount: 1, modifiedCount: 1, upsertedCount: 0 };
         }
         if (options.upsert) {
             const id = document._id ?? String(filter._id);
             this.documents.set(id, structuredClone({ ...document, _id: id }));
-            return { matchedCount: 0, upsertedCount: 1 };
+            return { matchedCount: 0, modifiedCount: 0, upsertedCount: 1 };
         }
-        return { matchedCount: 0, upsertedCount: 0 };
+        return { matchedCount: 0, modifiedCount: 0, upsertedCount: 0 };
     }
 
-    find(filter: Filter = {}): { toArray: () => Promise<StoredDocument[]> } {
-        const documents = [...this.documents.values()].filter((document) => matches(document, filter));
-        return { toArray: async () => structuredClone(documents) };
+    find(filter: Filter = {}): {
+        sort: (order: Filter) => { toArray: () => Promise<StoredDocument[]> };
+        toArray: () => Promise<StoredDocument[]>;
+    } {
+        let documents = [...this.documents.values()].filter((document) => matches(document, filter));
+        const query = {
+            sort: (order: Filter) => {
+                const [key, direction] = Object.entries(order)[0] ?? [];
+                if (key) {
+                    documents = documents.sort(
+                        (left, right) => Number(direction) * (Number(left[key] ?? 0) - Number(right[key] ?? 0)),
+                    );
+                }
+                return query;
+            },
+            toArray: async () => structuredClone(documents),
+        };
+        return query;
     }
 
     async findOne(filter: Filter, options: { session?: unknown } = {}): Promise<StoredDocument | null> {
@@ -130,6 +151,14 @@ export class FakeContentCollection {
             return { deletedCount: 1 };
         }
         return { deletedCount: 0 };
+    }
+
+    async deleteMany(filter: Filter): Promise<{ deletedCount: number }> {
+        const documents = await this.find(filter).toArray();
+        for (const document of documents) {
+            this.documents.delete(document._id);
+        }
+        return { deletedCount: documents.length };
     }
 
     private findStored(filter: Filter): StoredDocument | undefined {

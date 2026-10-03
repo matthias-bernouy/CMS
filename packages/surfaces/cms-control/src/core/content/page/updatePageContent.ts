@@ -11,6 +11,9 @@ export async function updatePageContent(cms: ControlCms, dto: PageContentUpdateD
     }
 
     await assertContentRefsExist(cms.repository, dto.content);
-    await cms.repository.updatePage({ id: existing.id, content: dto.content });
+    const updated = await cms.repository.updatePage({ id: existing.id, content: dto.content }, dto.revision);
+    if (updated === null) {
+        throw new InvalidParam("id", "The page disappeared before it could be updated.");
+    }
     await invalidateUpdatedPage(cms, existing);
 }

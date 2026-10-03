@@ -78,5 +78,10 @@ export function fromPageDoc(document: PageDoc | null): TPage | null {
         return null;
     }
     const { _id, deletionIntent: _deletionIntent, pathUpdateIntent: _pathUpdateIntent, ...rest } = document;
-    return { id: _id, ...rest, visible: document.visible === true && !document.deletionIntent };
+    return {
+        id: _id,
+        ...rest,
+        revision: Number.isSafeInteger(document.revision) ? document.revision : 1,
+        visible: document.visible === true && !document.deletionIntent,
+    };
 }

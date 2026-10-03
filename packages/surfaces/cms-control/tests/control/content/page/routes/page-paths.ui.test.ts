@@ -13,8 +13,8 @@ afterEach(() => {
 test("the language editor shows the lowercase public prefix for a regional language", () => {
     const [row] = languageRows(
         { code: "en-US", default: false, active: true, publicPath: "" },
-        { id: "page-1", paths: {}, languages: [] },
-        { id: "page-1", defaults: { title: "", description: "" }, languages: [], translations: {} },
+        { id: "page-1", revision: 1, paths: {}, languages: [] },
+        { id: "page-1", revision: 1, defaults: { title: "", description: "" }, languages: [], translations: {} },
         false,
     );
     expect(row.querySelector("p9r-input")?.getAttribute("prefix")).toBe("/en-us");
@@ -26,10 +26,12 @@ test("language matrix saves local paths and reports a reserved URL", async () =>
     let saved = 0;
     const detail: {
         id: string;
+        revision: number;
         paths: Record<string, string>;
         languages: Array<{ code: string; default: boolean; active: boolean; publicPath: string }>;
     } = {
         id: "page-1",
+        revision: 1,
         paths: { fr: "/about" },
         languages: [
             { code: "fr", default: true, active: true, publicPath: "/about" },
@@ -41,6 +43,7 @@ test("language matrix saves local paths and reports a reserved URL", async () =>
         if (url.includes("/api/page/seo")) {
             return Response.json({
                 id: "page-1",
+                revision: detail.revision,
                 defaults: { title: "About", description: "" },
                 languages: ["fr", "en"],
                 translations: {},
@@ -53,6 +56,7 @@ test("language matrix saves local paths and reports a reserved URL", async () =>
             const body = JSON.parse(String(init.body)) as { paths: Record<string, string> };
             writes.push(body);
             detail.paths = body.paths;
+            detail.revision += 1;
             detail.languages[1]!.publicPath = body.paths.en ? `/en${body.paths.en}` : "";
             return Response.json(detail);
         }
@@ -83,7 +87,7 @@ test("language matrix saves local paths and reports a reserved URL", async () =>
     expect(en.value).toBe("/about");
     matrix.querySelector("form")!.dispatchEvent(new Event("submit", { cancelable: true }));
     await waitFor(() => saved === 1);
-    expect(writes).toEqual([{ paths: { fr: "/about", en: "/about" }, expectedPaths: { fr: "/about" } }]);
+    expect(writes).toEqual([{ paths: { fr: "/about", en: "/about" }, expectedPaths: { fr: "/about" }, revision: 1 }]);
     expect(matrix.querySelector("p9r-button")?.hasAttribute("disabled")).toBe(true);
     expect(
         matrix.querySelectorAll(".page-language-row")[1]?.querySelector(".page-language-old-value")?.textContent,
@@ -114,6 +118,7 @@ test("language matrix loads after a bound page ID becomes available", async () =
         if (url.pathname === "/cms/api/page/seo") {
             return Response.json({
                 id: "page-1",
+                revision: 1,
                 defaults: { title: "About", description: "" },
                 languages: ["fr"],
                 translations: {},
@@ -125,6 +130,7 @@ test("language matrix loads after a bound page ID becomes available", async () =
             return id === "page-1"
                 ? Response.json({
                       id,
+                      revision: 1,
                       paths: { fr: "/about" },
                       languages: [{ code: "fr", default: true, active: true, publicPath: "/about" }],
                   })

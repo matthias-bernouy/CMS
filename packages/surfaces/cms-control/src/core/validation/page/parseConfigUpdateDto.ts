@@ -4,9 +4,11 @@ import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 import type { PageIndexingSelectionUpdate } from "cms-control/core/content/page/indexing/pageIndexingSelection";
 import { coerceTags } from "./tags";
 import { coerceVisible } from "./visible";
+import { parsePageRevision } from "./revision";
 
 export type PageConfigUpdateDto = {
     id: string;
+    revision: number;
     title: string;
     path: string;
     description: string;
@@ -32,6 +34,7 @@ export function parsePageConfigUpdateDto(id: string, body: Record<string, unknow
 
     return {
         id,
+        revision: parsePageRevision(body.revision),
         title: String(title),
         path: String(path),
         description: body.description == null ? "" : String(body.description),

@@ -53,7 +53,7 @@ export async function saveLanguages(
         const response = await fetch(`${basePath}/api/page/paths?id=${encodeURIComponent(paths.id)}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ paths: nextPaths, expectedPaths: paths.paths }),
+            body: JSON.stringify({ paths: nextPaths, expectedPaths: paths.paths, revision: paths.revision }),
         });
         if (!response.ok) {
             if (response.status === 409) {
@@ -81,7 +81,7 @@ export async function saveLanguages(
     const response = await fetch(`${basePath}/api/page/seo?id=${encodeURIComponent(seo.id)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ translations: readTranslations(form) }),
+        body: JSON.stringify({ translations: readTranslations(form), revision: paths.revision }),
     });
     if (!response.ok) {
         throw new Error("Could not save SEO translations.");

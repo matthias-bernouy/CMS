@@ -133,7 +133,10 @@ export class PageLanguages extends HTMLElement {
                         new CustomEvent("page:paths-saved", {
                             bubbles: true,
                             composed: true,
-                            detail: { primaryPath: updated.languages.find((language) => language.default)?.publicPath },
+                            detail: {
+                                primaryPath: updated.languages.find((language) => language.default)?.publicPath,
+                                revision: updated.revision,
+                            },
                         }),
                     );
                     if (version !== this.requestVersion) {
@@ -143,6 +146,13 @@ export class PageLanguages extends HTMLElement {
             );
             if (this.isConnected && version === this.requestVersion) {
                 this.seo = updatedSeo;
+                this.dispatchEvent(
+                    new CustomEvent("page:revision-saved", {
+                        bubbles: true,
+                        composed: true,
+                        detail: { revision: updatedSeo.revision },
+                    }),
+                );
                 this.render(true);
             }
         } catch (error) {

@@ -10,7 +10,7 @@ export class PageDelete extends HTMLElement {
     private requestVersion = 0;
 
     static get observedAttributes(): string[] {
-        return ["page-id", "base-path"];
+        return ["page-id", "page-revision", "base-path"];
     }
 
     connectedCallback(): void {
@@ -105,8 +105,10 @@ export class PageDelete extends HTMLElement {
         submit.setAttribute("disabled", "");
         const basePath = this.getAttribute("base-path") ?? "";
         const id = this.getAttribute("page-id") ?? "";
+        const revision = this.getAttribute("page-revision") ?? "";
         const url = new URL(`${basePath}/api/page`, document.baseURI);
         url.searchParams.set("id", id);
+        url.searchParams.set("revision", revision);
         if (alternativeId) {
             url.searchParams.set("alternativeId", alternativeId);
         }

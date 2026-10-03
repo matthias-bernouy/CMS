@@ -15,16 +15,22 @@ export async function updatePage(cms: ControlCms, dto: PageUpdateDto): Promise<v
 
     await assertContentRefsExist(cms.repository, dto.content);
 
-    await cms.repository.updatePage({
-        id: existing.id,
-        title: dto.title,
-        path: dto.path,
-        content: dto.content,
-        description: dto.description,
-        visible: dto.visible,
-        tags: dto.tags,
-        ...(dto.indexing !== undefined ? { indexing: dto.indexing } : {}),
-    });
+    const updated = await cms.repository.updatePage(
+        {
+            id: existing.id,
+            title: dto.title,
+            path: dto.path,
+            content: dto.content,
+            description: dto.description,
+            visible: dto.visible,
+            tags: dto.tags,
+            ...(dto.indexing !== undefined ? { indexing: dto.indexing } : {}),
+        },
+        dto.revision,
+    );
+    if (updated === null) {
+        throw new InvalidParam("id", "The page disappeared before it could be updated.");
+    }
 
     await invalidateUpdatedPage(cms, existing);
 }

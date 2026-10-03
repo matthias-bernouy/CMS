@@ -40,6 +40,7 @@ const listCapability: GatewayEditorCapability = {
 };
 const existingPage: TPage = {
     id: "page-1",
+    revision: 1,
     path: "/draft",
     title: "Draft",
     description: "Draft description",
@@ -82,7 +83,7 @@ function jsonRequest(url: string, body: Record<string, unknown>): Request {
     return new Request(url, {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ revision: 1, ...body }),
     });
 }
 

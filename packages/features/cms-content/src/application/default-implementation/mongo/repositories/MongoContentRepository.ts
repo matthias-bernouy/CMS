@@ -10,6 +10,7 @@ import {
     ContentValidationError,
     DuplicatePagePathError,
     PagePathUpdateConflictError,
+    PageRevisionConflictError,
 } from "cms-content/application/core/validation/errors";
 import { SYSTEM_ID } from "cms-content/application/default-implementation/mongo/repositories/MongoRepositoryStorage";
 import {
@@ -40,6 +41,7 @@ import {
 export class MongoContentRepository extends MongoBlocRepository {
     override async init(): Promise<void> {
         await super.init();
+        await this.pages.updateMany({ revision: { $exists: false } }, { $set: { revision: 1 } });
         for (let attempt = 0; attempt < 20; attempt++) {
             const stored = await readSystemDocument(this.system);
             let revision = stored.settingsRevision ?? 0;
@@ -169,6 +171,7 @@ export class MongoContentRepository extends MongoBlocRepository {
             try {
                 await this.pages.insertOne({
                     _id: id,
+                    revision: 1,
                     path: publicPath,
                     ...(language ? { paths: { [language]: path } } : {}),
                     title,
@@ -194,15 +197,15 @@ export class MongoContentRepository extends MongoBlocRepository {
         return fromPageDoc(await this.pages.findOne({ _id: id }));
     }
 
-    async updatePage(page: Partial<TPage>): Promise<void> {
+    async updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<TPage | null> {
         if (!page.id) {
             throw new Error("updatePage requires `id` on the input.");
         }
-        const { id, ...rest } = page;
+        const { id, revision: _revision, ...rest } = page;
         delete rest.paths;
         const stored = await this.pages.findOne({ _id: id });
         if (!stored) {
-            return;
+            return null;
         }
         if (stored.deletionIntent) {
             throw new Error("Page deletion is in progress.");
@@ -211,10 +214,21 @@ export class MongoContentRepository extends MongoBlocRepository {
             throw new PagePathUpdateConflictError();
         }
         const existing = fromPageDoc(stored)!;
+        if (expectedRevision !== undefined && existing.revision !== expectedRevision) {
+            throw new PageRevisionConflictError(expectedRevision, existing.revision);
+        }
+        let writeRevision = expectedRevision;
         if (rest.path && rest.path !== existing.path) {
             const language = (await this.routeSystem()).site.language;
             if (language) {
-                await this.setPagePaths(id, { ...existing.paths, [language]: rest.path });
+                const updated = await this.setPagePaths(
+                    id,
+                    { ...existing.paths, [language]: rest.path },
+                    undefined,
+                    undefined,
+                    expectedRevision,
+                );
+                writeRevision = updated.revision;
                 delete rest.path;
             } else {
                 throw new ContentValidationError(
@@ -227,19 +241,29 @@ export class MongoContentRepository extends MongoBlocRepository {
         }
         try {
             const saved = await this.pages.updateOne(
-                { _id: id, deletionIntent: { $exists: false }, pathUpdateIntent: { $exists: false } },
-                { $set: rest },
+                {
+                    _id: id,
+                    deletionIntent: { $exists: false },
+                    pathUpdateIntent: { $exists: false },
+                    ...(writeRevision === undefined ? {} : { revision: writeRevision }),
+                },
+                { $set: rest, $inc: { revision: 1 } },
             );
             if (!saved.matchedCount) {
+                const actual = fromPageDoc(await this.pages.findOne({ _id: id }));
+                if (writeRevision !== undefined && actual && actual.revision !== writeRevision) {
+                    throw new PageRevisionConflictError(writeRevision, actual.revision);
+                }
                 throw new PagePathUpdateConflictError();
             }
+            return fromPageDoc(await this.pages.findOne({ _id: id }));
         } catch (error) {
             rethrowPagePathConflict(error, page.path ?? "");
         }
     }
 
-    async deletePage(id: string): Promise<void> {
-        return this.deletePageWithAlternative(id, null);
+    async deletePage(id: string, expectedRevision?: number): Promise<void> {
+        return this.deletePageWithAlternative(id, null, expectedRevision);
     }
 
     async setPagePaths(
@@ -247,21 +271,34 @@ export class MongoContentRepository extends MongoBlocRepository {
         paths: Record<string, string>,
         system?: TSystem,
         expectedPaths?: Record<string, string>,
+        expectedRevision?: number,
         duringRouteReconfiguration = false,
     ): Promise<TPage> {
         const save = async (routeSystem: TSystem) => {
             const plan = planPagePaths(paths, routeSystem);
-            return updateMongoPagePaths(this.pages, this.pageRoutes, id, plan, routeSystem, expectedPaths);
+            return updateMongoPagePaths(
+                this.pages,
+                this.pageRoutes,
+                id,
+                plan,
+                routeSystem,
+                expectedPaths,
+                expectedRevision,
+            );
         };
         return duringRouteReconfiguration
             ? save(system ?? (await this.routeSystem()))
             : withPageRouteWrite(this.system, save);
     }
 
-    async deletePageWithAlternative(id: string, alternativeId: string | null): Promise<void> {
+    async deletePageWithAlternative(
+        id: string,
+        alternativeId: string | null,
+        expectedRevision?: number,
+    ): Promise<void> {
         await withPageRouteWrite(this.system, async (_system, permitToken) =>
             withPageDeletionLock(this.system, permitToken, () =>
-                deleteMongoPage(this.pages, this.pageRoutes, id, alternativeId),
+                deleteMongoPage(this.pages, this.pageRoutes, id, alternativeId, expectedRevision),
             ),
         );
     }
@@ -324,7 +361,7 @@ export class MongoContentRepository extends MongoBlocRepository {
                 )?.[0] ?? "";
             await this.ensureCurrentRoute(document.path, document._id, oldLanguage);
             if (document.path !== plan.primaryPath || !samePagePaths(document.paths, plan.paths)) {
-                await this.setPagePaths(document._id, plan.paths, system, undefined, true);
+                await this.setPagePaths(document._id, plan.paths, system, undefined, undefined, true);
                 continue;
             }
             for (const route of plan.current) {

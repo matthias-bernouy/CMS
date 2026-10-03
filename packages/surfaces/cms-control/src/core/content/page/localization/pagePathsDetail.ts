@@ -13,6 +13,7 @@ export async function pagePathsDetail(cms: ControlCms, id: string) {
     const paths = page.paths ?? {};
     return {
         id: page.id,
+        revision: page.revision,
         paths,
         languages: languages.map((code) => ({
             code,

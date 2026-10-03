@@ -14,6 +14,7 @@ function makeSystem(paths: string[]) {
                 }
                 return {
                     id: `page-${path}`,
+                    revision: 1,
                     path,
                     title: "",
                     description: "",

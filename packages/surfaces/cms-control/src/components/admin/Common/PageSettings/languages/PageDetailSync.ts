@@ -1,4 +1,6 @@
-type PathSavedEvent = CustomEvent<{ primaryPath: string }>;
+type PathSavedEvent = CustomEvent<{ primaryPath: string; revision: number }>;
+type RevisionSavedEvent = CustomEvent<{ revision: number }>;
+type SourceSuccessEvent = CustomEvent<{ body?: { revision?: number } }>;
 
 /** Keep the bound page detail in place while its independent forms save. */
 export class PageDetailSync extends HTMLElement {
@@ -7,12 +9,14 @@ export class PageDetailSync extends HTMLElement {
         this.addEventListener("click", this.openAction);
         this.addEventListener("cms-source:success", this.settingsSaved);
         this.addEventListener("page:paths-saved", this.pathsSaved);
+        this.addEventListener("page:revision-saved", this.revisionSaved);
     }
 
     disconnectedCallback(): void {
         this.removeEventListener("click", this.openAction);
         this.removeEventListener("cms-source:success", this.settingsSaved);
         this.removeEventListener("page:paths-saved", this.pathsSaved);
+        this.removeEventListener("page:revision-saved", this.revisionSaved);
     }
 
     private readonly openAction = (event: Event): void => {
@@ -34,6 +38,8 @@ export class PageDetailSync extends HTMLElement {
         if (!(form instanceof HTMLFormElement) || form.id !== "page-settings-form") {
             return;
         }
+        const revision = (event as SourceSuccessEvent).detail?.body?.revision;
+        this.updateRevision(revision);
         const title = form.querySelector<HTMLElement & { value: string }>('p9r-input[name="title"]')?.value.trim();
         const heading = this.querySelector('cms-shell-detail > [slot="title"]');
         if (title && heading) {
@@ -51,6 +57,7 @@ export class PageDetailSync extends HTMLElement {
 
     private readonly pathsSaved = (event: Event): void => {
         const path = (event as PathSavedEvent).detail?.primaryPath;
+        this.updateRevision((event as PathSavedEvent).detail?.revision);
         if (!path) {
             return;
         }
@@ -65,4 +72,19 @@ export class PageDetailSync extends HTMLElement {
             link?.setAttribute("href", currentUrl.startsWith("/") ? path : new URL(path, currentUrl).href);
         }
     };
+
+    private readonly revisionSaved = (event: Event): void => {
+        this.updateRevision((event as RevisionSavedEvent).detail?.revision);
+    };
+
+    private updateRevision(revision: number | undefined): void {
+        if (!Number.isSafeInteger(revision)) {
+            return;
+        }
+        const revisionInput = this.querySelector<HTMLInputElement>('input[name="revision"]');
+        if (revisionInput) {
+            revisionInput.value = String(revision);
+        }
+        this.querySelector("cms-page-delete")?.setAttribute("page-revision", String(revision));
+    }
 }

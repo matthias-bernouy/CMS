@@ -10,6 +10,7 @@ export async function pageSeoDetail(cms: ControlCms, id: string) {
     const languages = [...new Set([system.site.language, ...(system.site.additionalLanguages ?? [])].filter(Boolean))];
     return {
         id: page.id,
+        revision: page.revision,
         defaults: { title: page.title, description: page.description },
         languages,
         translations: Object.fromEntries(languages.map((code) => [code, pageSeoForLanguage(page, code) ?? {}])),

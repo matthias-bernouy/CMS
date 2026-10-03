@@ -3,6 +3,7 @@ import type { ControlCms } from "cms-control/ControlCms";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 import { invalidateUpdatedPage } from "cms-control/core/admin/server/cache/invalidation";
 import { pageSeoDetail } from "cms-control/core/content/page/localization/pageSeoDetail";
+import { parsePageRevision } from "cms-control/core/validation/page/revision";
 
 export async function updatePageSeo(cms: ControlCms, id: string, body: Record<string, unknown>) {
     const translations = body.translations;
@@ -22,7 +23,10 @@ export async function updatePageSeo(cms: ControlCms, id: string, body: Record<st
             throw new InvalidParam("translations", `Language ${code} is not configured for this site.`);
         }
     }
-    await cms.repository.updatePage({ id, seo: normalized });
+    const updated = await cms.repository.updatePage({ id, seo: normalized }, parsePageRevision(body.revision));
+    if (updated === null) {
+        throw new InvalidParam("id", "The page disappeared before it could be updated.");
+    }
     await invalidateUpdatedPage(cms, page, system.site.language);
     return pageSeoDetail(cms, id);
 }

@@ -30,6 +30,7 @@
                         </div>
 
                         <form slot="body" id="page-settings-form" cms-source="{{BASE_PATH}}/api/page/configDetail as result" cms-source-trigger="submit" cms-source-method="PUT" cms-source-success-reset="false">
+                            <input type="hidden" name="revision" value="{{ revision }}">
                             <p9r-alert type="success" cms-condition="result.ok" role="status">Settings saved.</p9r-alert>
                             <p9r-alert type="error" cms-condition="$source.error" role="alert">{{ $source.message }}</p9r-alert>
                             <cms-shell-detail-body>
@@ -67,7 +68,7 @@
                     </p9r-modal>
                     <p9r-modal id="delete-page-modal" aria-label="Delete page">
                         <span slot="title">Delete page</span>
-                        <cms-page-delete page-id="{{ id }}" base-path="{{BASE_PATH}}"></cms-page-delete>
+                        <cms-page-delete page-id="{{ id }}" page-revision="{{ revision }}" base-path="{{BASE_PATH}}"></cms-page-delete>
                     </p9r-modal>
                 </cms-page-detail-sync>
             </template>

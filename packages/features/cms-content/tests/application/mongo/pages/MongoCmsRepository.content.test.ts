@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { TBloc } from "@bernouy/cms-content";
-import { DuplicateBlocTagError, DuplicatePagePathError } from "@bernouy/cms-content";
+import { DuplicateBlocTagError, DuplicatePagePathError, PageRevisionConflictError } from "@bernouy/cms-content";
 import { createMongoContentRepository } from "../contentMongoFixture";
 
 const card: TBloc = {
@@ -63,16 +63,22 @@ describe("MongoCmsRepository content persistence", () => {
         await repository.insertPage("/draft", "Draft");
         const draft = await repository.getPage("/draft");
 
-        expect(draft).toMatchObject({ path: "/draft", title: "Draft", visible: false });
+        expect(draft).toMatchObject({ path: "/draft", title: "Draft", visible: false, revision: 1 });
         expect(await repository.getPublishedPage("/draft")).toBeNull();
         expect(await repository.getPublishedPageById(draft!.id)).toBeNull();
-        await repository.updatePage({ id: draft!.id, visible: true, tags: ["news"] });
+        await repository.updatePage({ id: draft!.id, visible: true, tags: ["news"] }, draft!.revision);
+        await expect(repository.updatePage({ id: draft!.id, title: "Stale" }, draft!.revision)).rejects.toBeInstanceOf(
+            PageRevisionConflictError,
+        );
 
-        expect(await repository.getPageById(draft!.id)).toMatchObject({ visible: true, tags: ["news"] });
+        expect(await repository.getPageById(draft!.id)).toMatchObject({ visible: true, tags: ["news"], revision: 2 });
         expect(await repository.getPublishedPageById(draft!.id)).toMatchObject({ visible: true, tags: ["news"] });
         expect((await repository.getPublishedPages()).map((page) => page.id)).toEqual([draft!.id]);
         expect(await repository.getLinks()).toEqual([{ path: "/draft", title: "Draft" }]);
-        await repository.deletePage(draft!.id);
+        await expect(repository.deletePage(draft!.id, draft!.revision)).rejects.toBeInstanceOf(
+            PageRevisionConflictError,
+        );
+        await repository.deletePage(draft!.id, 2);
         expect(await repository.getAllPages()).toEqual([]);
         await expect(repository.updatePage({ title: "Missing id" })).rejects.toThrow(/requires `id`/);
     });

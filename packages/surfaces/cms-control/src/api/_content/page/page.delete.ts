@@ -2,6 +2,7 @@ import type { ControlCms } from "cms-control/ControlCms";
 import { CMS_CACHE_KEYS } from "@bernouy/cms-content";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 import { invalidateAllPages } from "cms-control/core/admin/server/cache/invalidation";
+import { parsePageRevision } from "cms-control/core/validation/page/revision";
 
 /** Delete a page and retain its paths as redirects or 410 Gone tombstones. */
 export default async function deletePage(req: Request, cms: ControlCms) {
@@ -17,6 +18,7 @@ export default async function deletePage(req: Request, cms: ControlCms) {
     }
 
     const alternativeId = url.searchParams.get("alternativeId");
+    const revision = parsePageRevision(url.searchParams.get("revision"));
     if (alternativeId) {
         const alternative = await cms.repository.getPageById(alternativeId);
         if (!alternative || !alternative.visible || alternative.id === id) {
@@ -24,9 +26,9 @@ export default async function deletePage(req: Request, cms: ControlCms) {
         }
     }
     if (cms.repository.deletePageWithAlternative) {
-        await cms.repository.deletePageWithAlternative(id, alternativeId);
+        await cms.repository.deletePageWithAlternative(id, alternativeId, revision);
     } else {
-        await cms.repository.deletePage(id);
+        await cms.repository.deletePage(id, revision);
     }
     cms.cache.delete(CMS_CACHE_KEYS.page(page.path));
     invalidateAllPages(cms);

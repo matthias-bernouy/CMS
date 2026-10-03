@@ -2,6 +2,7 @@ import type { ControlCms } from "cms-control/ControlCms";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 import { invalidateAllPages } from "cms-control/core/admin/server/cache/invalidation";
 import { pagePathsDetail } from "cms-control/core/content/page/localization/pagePathsDetail";
+import { parsePageRevision } from "cms-control/core/validation/page/revision";
 
 export async function updatePagePaths(cms: ControlCms, id: string, body: Record<string, unknown>) {
     const paths = readPaths(body.paths, "paths");
@@ -9,7 +10,7 @@ export async function updatePagePaths(cms: ControlCms, id: string, body: Record<
     if (!cms.repository.setPagePaths) {
         throw new Error("Page path management is not available.");
     }
-    await cms.repository.setPagePaths(id, paths, undefined, expectedPaths);
+    await cms.repository.setPagePaths(id, paths, undefined, expectedPaths, parsePageRevision(body.revision));
     invalidateAllPages(cms);
     return pagePathsDetail(cms, id);
 }

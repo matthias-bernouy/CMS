@@ -6,7 +6,10 @@ import type { PageConfigUpdateDto } from "cms-control/core/validation/page/parse
 import { resolvePageIndexingSelection } from "cms-control/core/content/page/indexing/pageIndexingSelection";
 import { validateIndexingProjection } from "cms-control/core/content/page/indexing/pageIndexingProjectionValidation";
 
-export async function updatePageConfig(cms: ControlCms, dto: PageConfigUpdateDto): Promise<string> {
+export async function updatePageConfig(
+    cms: ControlCms,
+    dto: PageConfigUpdateDto,
+): Promise<{ id: string; revision: number }> {
     const existing = await cms.repository.getPageById(dto.id);
     if (!existing) {
         throw new InvalidParam("id", "Unknown page id.");
@@ -36,16 +39,22 @@ export async function updatePageConfig(cms: ControlCms, dto: PageConfigUpdateDto
         validateIndexingProjection(indexing.entity, capability, capabilities);
     }
 
-    await cms.repository.updatePage({
-        id: existing.id,
-        title: dto.title,
-        path: dto.path,
-        description: dto.description,
-        visible: dto.visible,
-        tags: dto.tags,
-        ...(indexing !== undefined ? { indexing } : {}),
-    });
+    const updated = await cms.repository.updatePage(
+        {
+            id: existing.id,
+            title: dto.title,
+            path: dto.path,
+            description: dto.description,
+            visible: dto.visible,
+            tags: dto.tags,
+            ...(indexing !== undefined ? { indexing } : {}),
+        },
+        dto.revision,
+    );
+    if (updated === null) {
+        throw new InvalidParam("id", "The page disappeared before it could be updated.");
+    }
 
     await invalidateUpdatedPage(cms, existing);
-    return (await cms.repository.getPage(dto.path))?.id ?? dto.id;
+    return { id: updated?.id ?? dto.id, revision: updated?.revision ?? dto.revision + 1 };
 }

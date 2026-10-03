@@ -5,6 +5,7 @@ import {
     DuplicatePagePathError,
     InMemoryCmsRepository,
     isPublishedPage,
+    PageRevisionConflictError,
 } from "@bernouy/cms-content";
 
 /** Seed three pages with distinct titles/paths/tags/visibility. */
@@ -171,5 +172,25 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
         );
         expect((await repo.getPage("/about"))?.title).toBe("About");
         expect((await repo.getPage("/contact"))?.title).toBe("Contact");
+    });
+
+    test("increments page revisions and rejects stale content and route writes", async () => {
+        const repo = new InMemoryCmsRepository();
+        await repo.updateSystem({ site: { language: "en" } as never });
+        await repo.insertPage("/before", "Before");
+        const initial = (await repo.getPage("/before"))!;
+        expect(initial.revision).toBe(1);
+        const updated = await repo.updatePage({ id: initial.id, title: "After" }, initial.revision);
+        expect(updated?.revision).toBe(2);
+        await expect(repo.updatePage({ id: initial.id, title: "Stale" }, initial.revision)).rejects.toBeInstanceOf(
+            PageRevisionConflictError,
+        );
+        const moved = await repo.setPagePaths(initial.id, { en: "/after" }, undefined, undefined, 2);
+        expect(moved.revision).toBe(3);
+        await expect(repo.setPagePaths(initial.id, { en: "/stale" }, undefined, undefined, 2)).rejects.toBeInstanceOf(
+            PageRevisionConflictError,
+        );
+        await expect(repo.deletePage(initial.id, 2)).rejects.toBeInstanceOf(PageRevisionConflictError);
+        expect(await repo.getPageById(initial.id)).not.toBeNull();
     });
 });

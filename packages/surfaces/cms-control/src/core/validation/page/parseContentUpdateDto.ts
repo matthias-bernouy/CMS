@@ -1,7 +1,9 @@
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
+import { parsePageRevision } from "./revision";
 
 export type PageContentUpdateDto = {
     id: string;
+    revision: number;
     content: string;
 };
 
@@ -15,6 +17,7 @@ export function parsePageContentUpdateDto(body: Record<string, unknown>): PageCo
 
     return {
         id: String(body.id),
+        revision: parsePageRevision(body.revision),
         content: String(body.content),
     };
 }

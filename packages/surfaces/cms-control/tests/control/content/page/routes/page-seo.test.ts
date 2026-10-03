@@ -36,6 +36,7 @@ test("page SEO API saves translations and invalidates both language caches", asy
             method: "PUT",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
+                revision: (await repository.getPageById(page.id))!.revision,
                 translations: {
                     fr: { title: "Notre société" },
                     en: { title: "About us", description: "Our company" },
@@ -62,7 +63,7 @@ test("page SEO API rejects unconfigured languages and oversized titles", async (
                 new Request(`https://cms.test/api/page/seo?id=${page.id}`, {
                     method: "PUT",
                     headers: { "content-type": "application/json" },
-                    body: JSON.stringify({ translations }),
+                    body: JSON.stringify({ revision: page.revision, translations }),
                 }),
                 cms,
             ),
@@ -82,7 +83,7 @@ test("page SEO editor reads canonical SEO keys for an older lowercase site langu
         new Request(`https://cms.test/api/page/seo?id=${page.id}`, {
             method: "PUT",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ translations: { "fr-fr": { title: "À propos" } } }),
+            body: JSON.stringify({ revision: page.revision, translations: { "fr-fr": { title: "À propos" } } }),
         }),
         cms,
     );

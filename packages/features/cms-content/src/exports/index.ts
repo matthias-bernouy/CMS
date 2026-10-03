@@ -106,6 +106,7 @@ export {
     DuplicatePagePathError,
     PagePathUpdateConflictError,
     PagePathsStaleError,
+    PageRevisionConflictError,
     SiteBlocLifecycleConflictError,
     SiteBlocNotFoundError,
     SiteBlocPublishedSlotConflictError,

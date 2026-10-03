@@ -10,6 +10,7 @@ import {
     ContentValidationError,
     DuplicatePagePathError,
     PagePathsStaleError,
+    PageRevisionConflictError,
 } from "cms-content/application/core/validation/errors";
 import { pagePathsForSystem, planPagePaths } from "cms-content/pages/core/lifecycle/pagePaths";
 import { publicPagePath } from "cms-content/pages/core/paths/localizedPagePath";
@@ -61,6 +62,7 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         }
         const page: TPage = {
             id: randomUUIDv7(),
+            revision: 1,
             path: publicPath,
             ...(language ? { paths: { [language]: path } } : {}),
             title,
@@ -85,19 +87,28 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         return entry ? { ...entry[1] } : null;
     }
 
-    async updatePage(page: Partial<TPage>): Promise<void> {
+    async updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<TPage | null> {
         if (!page.id) {
             throw new Error("updatePage requires `id` on the input.");
         }
         const entry = this.findPageEntryById(page.id);
         if (!entry) {
-            return;
+            return null;
         }
         let current = entry[1];
+        if (expectedRevision !== undefined && current.revision !== expectedRevision) {
+            throw new PageRevisionConflictError(expectedRevision, current.revision);
+        }
         if (page.path && page.path !== current.path) {
             const language = this.system.site.language;
             if (language) {
-                current = await this.setPagePaths(page.id, { ...current.paths, [language]: page.path });
+                current = await this.setPagePaths(
+                    page.id,
+                    { ...current.paths, [language]: page.path },
+                    this.system,
+                    undefined,
+                    expectedRevision,
+                );
             } else {
                 throw new ContentValidationError(
                     "path",
@@ -105,8 +116,16 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
                 );
             }
         }
-        const merged: TPage = { ...current, ...page, path: current.path, paths: current.paths };
+        const { revision: _revision, ...patch } = page;
+        const merged: TPage = {
+            ...current,
+            ...patch,
+            path: current.path,
+            paths: current.paths,
+            revision: current.revision + 1,
+        };
         this.pages.set(merged.path, merged);
+        return { ...merged };
     }
 
     async setPagePaths(
@@ -114,6 +133,7 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         paths: Record<string, string>,
         system = this.system,
         expectedPaths?: Record<string, string>,
+        expectedRevision?: number,
         duringRouteReconfiguration = false,
     ): Promise<TPage> {
         if (!duringRouteReconfiguration) {
@@ -122,6 +142,9 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         const entry = this.findPageEntryById(id);
         if (!entry) {
             throw new Error("Unknown page id.");
+        }
+        if (expectedRevision !== undefined && entry[1].revision !== expectedRevision) {
+            throw new PageRevisionConflictError(expectedRevision, entry[1].revision);
         }
         if (expectedPaths && !samePagePaths(entry[1].paths ?? pagePathsForSystem(entry[1], system), expectedPaths)) {
             throw new PagePathsStaleError();
@@ -134,7 +157,7 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
             }
         }
         const [oldPrimaryPath, page] = entry;
-        const next = { ...page, path: plan.primaryPath, paths: plan.paths };
+        const next = { ...page, path: plan.primaryPath, paths: plan.paths, revision: page.revision + 1 };
         for (const route of this.pageRoutes.values()) {
             if (
                 route.pageId === id &&
@@ -153,15 +176,22 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         return { ...next };
     }
 
-    async deletePage(id: string): Promise<void> {
-        return this.deletePageWithAlternative(id, null);
+    async deletePage(id: string, expectedRevision?: number): Promise<void> {
+        return this.deletePageWithAlternative(id, null, expectedRevision);
     }
 
-    async deletePageWithAlternative(id: string, alternativeId: string | null): Promise<void> {
+    async deletePageWithAlternative(
+        id: string,
+        alternativeId: string | null,
+        expectedRevision?: number,
+    ): Promise<void> {
         this.assertPageRoutesReady();
         const entry = this.findPageEntryById(id);
         if (!entry) {
             return;
+        }
+        if (expectedRevision !== undefined && entry[1].revision !== expectedRevision) {
+            throw new PageRevisionConflictError(expectedRevision, entry[1].revision);
         }
         const alternative = alternativeId ? this.findPageEntryById(alternativeId)?.[1] : null;
         if (alternativeId && (!alternative || alternative.id === id || !alternative.visible)) {
@@ -212,7 +242,7 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
             return;
         }
         for (const { page, plan } of plans) {
-            await this.setPagePaths(page.id, plan.paths, system, undefined, true);
+            await this.setPagePaths(page.id, plan.paths, system, undefined, undefined, true);
         }
     }
 
