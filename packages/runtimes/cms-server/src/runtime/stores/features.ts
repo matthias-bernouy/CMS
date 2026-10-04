@@ -2,6 +2,7 @@ import { MongoDashboardAssignmentRepository, MongoDashboardRepository } from "@b
 import { MongoIdentityService } from "@bernouy/cms-gateway/identity/mongo";
 import { type CollectionMigrationWriteFence, withCollectionMigrationWriteFence } from "@bernouy/cms-content/migrations";
 import type { Db } from "mongodb";
+import { createDashboardMigrationParticipant } from "./dashboardMigrationParticipant";
 
 export async function createFeatureStores(db: Db, migrationFence: CollectionMigrationWriteFence) {
     const identities = new MongoIdentityService(db);
@@ -21,7 +22,7 @@ export async function createFeatureStores(db: Db, migrationFence: CollectionMigr
         identities,
         dashboardAssignments,
         dashboards,
-        dashboardRepository,
+        migrationParticipants: [createDashboardMigrationParticipant(dashboardRepository)],
     };
 }
 

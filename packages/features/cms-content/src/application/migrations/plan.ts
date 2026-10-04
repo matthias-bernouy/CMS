@@ -9,7 +9,7 @@ import { analyzeResourceChanges } from "./impact";
 import type {
     CollectionMigrationTarget,
     CollectionMigrationResourceChange,
-    CollectionMigrationReferenceSource,
+    CollectionMigrationParticipant,
     PreparedCollectionMigration,
 } from "./interfaces";
 import { migratePageContent } from "./transforms/page";
@@ -17,6 +17,7 @@ import { migrateConfiguration, migrateTextOverrides, migrateThemeTokens } from "
 import { dependencyIssues, migrationOperations } from "./planning/evolution";
 import { migrationIssue, validateTargetData, validateTargetPages, validateTargetTheme } from "./planning/validation";
 import { validateTargetSiteResources } from "./planning/siteResources";
+import { snapshotMigrationParticipants } from "./planning/participants";
 
 export async function prepareCollectionMigration(
     repository: CmsRepository,
@@ -24,7 +25,7 @@ export async function prepareCollectionMigration(
     siteId: string,
     targets: readonly CollectionMigrationTarget[],
     expectedRevision?: number,
-    referenceSources: readonly CollectionMigrationReferenceSource[] = [],
+    participants: readonly CollectionMigrationParticipant[] = [],
 ): Promise<PreparedCollectionMigration> {
     if (targets.length === 0 || targets.length > 256) {
         throw new TypeError("A migration needs between 1 and 256 target releases");
@@ -34,7 +35,7 @@ export async function prepareCollectionMigration(
         repository.getAllPages(),
         repository.getSystem(),
         repository.getBlocRecords(),
-        Promise.all(referenceSources.map((source) => source.snapshot(siteId))),
+        snapshotMigrationParticipants(siteId, participants),
     ]);
     if (expectedRevision !== undefined && snapshot.revision !== expectedRevision) {
         throw Object.assign(new Error("Collection state changed; reload the migration plan"), { status: 409 });
@@ -208,7 +209,7 @@ export function collectionPageRevisionDigest(pages: readonly { id: string; revis
 
 export function collectionSiteResourceDigest(
     records: readonly unknown[],
-    references: readonly { digest: string }[],
+    participants: readonly { id: string; digest: string }[],
 ): string {
     const normalized = JSON.parse(
         JSON.stringify({
@@ -217,7 +218,9 @@ export function collectionSiteResourceDigest(
                     String((right as { tag?: string }).tag ?? ""),
                 ),
             ),
-            references: references.map(({ digest }) => digest).sort(),
+            participants: participants
+                .map(({ id, digest }) => ({ id, digest }))
+                .sort((left, right) => left.id.localeCompare(right.id)),
         }),
     );
     return `sha256:${createHash("sha256").update(canonicalizeIJson(normalized)).digest("hex")}`;

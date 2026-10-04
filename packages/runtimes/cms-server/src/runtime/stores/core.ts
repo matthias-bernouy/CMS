@@ -46,7 +46,10 @@ export async function createCoreStores(env: RuntimeEnv) {
     );
     const migrationStorage = new MongoCollectionMigrationStorage(db);
     await migrationStorage.init();
-    const collectionMigrations = new CollectionMigrationService(migrationRepo, migrationCollections, migrationStorage);
+    const collectionMigrations = new CollectionMigrationService(migrationRepo, migrationCollections, migrationStorage, {
+        rollbackRetentionCount: env.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION,
+        onRetentionError: (error) => console.error("Collection migration retention cleanup failed", error),
+    });
     const repo = withCollectionMigrationWriteFence(migrationRepo, migrationStorage, SCOPE_ID, [
         "updateSiteBlocCollection",
         "createSiteBlocCollection",

@@ -19,6 +19,7 @@ export class FakeContentCollection {
     beforeUpdateOne?: (update: { $set: Filter }) => Promise<void>;
     afterUpdateOne?: (update: { $set: Filter }) => Promise<void>;
     beforeDeleteOne?: (filter: Filter) => Promise<void>;
+    beforeDeleteMany?: (filter: Filter) => Promise<void>;
     private readonly documents = new Map<string, StoredDocument>();
 
     async createIndex(keys: Filter, options: Filter): Promise<string> {
@@ -61,7 +62,11 @@ export class FakeContentCollection {
     }
 
     find(filter: Filter = {}): {
-        sort: (order: Filter) => { toArray: () => Promise<StoredDocument[]> };
+        sort: (order: Filter) => {
+            limit: (count: number) => { toArray: () => Promise<StoredDocument[]> };
+            toArray: () => Promise<StoredDocument[]>;
+        };
+        limit: (count: number) => { toArray: () => Promise<StoredDocument[]> };
         toArray: () => Promise<StoredDocument[]>;
     } {
         let documents = [...this.documents.values()].filter((document) => matches(document, filter));
@@ -69,10 +74,14 @@ export class FakeContentCollection {
             sort: (order: Filter) => {
                 const [key, direction] = Object.entries(order)[0] ?? [];
                 if (key) {
-                    documents = documents.sort(
-                        (left, right) => Number(direction) * (Number(left[key] ?? 0) - Number(right[key] ?? 0)),
+                    documents = documents.sort((left, right) =>
+                        compareValues(left[key], right[key], Number(direction)),
                     );
                 }
+                return query;
+            },
+            limit: (count: number) => {
+                documents = documents.slice(0, count);
                 return query;
             },
             toArray: async () => structuredClone(documents),
@@ -154,6 +163,7 @@ export class FakeContentCollection {
     }
 
     async deleteMany(filter: Filter): Promise<{ deletedCount: number }> {
+        await this.beforeDeleteMany?.(structuredClone(filter));
         const documents = await this.find(filter).toArray();
         for (const document of documents) {
             this.documents.delete(document._id);
@@ -170,6 +180,13 @@ export class FakeContentCollection {
             this.usedSessions.push(session);
         }
     }
+}
+
+function compareValues(left: unknown, right: unknown, direction: number): number {
+    if (typeof left === "number" && typeof right === "number") {
+        return direction * (left - right);
+    }
+    return direction * String(left ?? "").localeCompare(String(right ?? ""));
 }
 
 export class FakeContentDb {

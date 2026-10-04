@@ -62,6 +62,9 @@ library, declarative bindings, validation, and read models.
 - Collection migrations are maintenance-mode operations. Keep their impact
   plan read-only, their page writes revision-checked, their journal resumable,
   and their rollback snapshots separate from user-facing page history.
+- Features persisting references to collection resources must register a
+  `CollectionMigrationParticipant`; every mutation of that persisted state must
+  use the shared site migration write fence.
 - Editor contracts must remain stable; authored blocs depend on them.
 - When changing repository behavior, update both in-memory and Mongo behavior
   or document why only one implementation changes.

@@ -27,6 +27,7 @@ export type RuntimeEnv = {
     MONGO_URL: string;
     CMS_AUTH_SITE_NAME: string;
     CMS_AUTH_EMAIL_COOLDOWN_SECONDS: number;
+    CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: number;
     CMS_AUTH_EMAIL_VERIFICATION_URL: string;
     CMS_AUTH_PASSWORD_RESET_URL: string;
     CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL: string;
@@ -45,6 +46,14 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     const CONTROL_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "CONTROL_PUBLIC_URL"), "CONTROL_PUBLIC_URL");
     const DELIVERY_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "DELIVERY_PUBLIC_URL"), "DELIVERY_PUBLIC_URL");
     const clientAddress = parseClientAddressConfig(source);
+    const migrationRetention = parseNonNegativeInteger(
+        source.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION,
+        "CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION",
+        100,
+    );
+    if (migrationRetention > 10_000) {
+        throw new Error("CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION must be at most 10000");
+    }
 
     return {
         CONTROL_PORT,
@@ -74,6 +83,7 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
             "CMS_AUTH_EMAIL_COOLDOWN_SECONDS",
             300,
         ),
+        CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: migrationRetention,
         CMS_AUTH_EMAIL_VERIFICATION_URL: parseOptionalHttpUrl(
             source.CMS_AUTH_EMAIL_VERIFICATION_URL,
             "CMS_AUTH_EMAIL_VERIFICATION_URL",

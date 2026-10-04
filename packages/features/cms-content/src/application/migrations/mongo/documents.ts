@@ -1,12 +1,15 @@
 import { createHash } from "node:crypto";
-import type { CollectionMigrationPageChange, CollectionMigrationRecord } from "../interfaces";
+import type { CollectionMigrationAudit, CollectionMigrationPageChange, CollectionMigrationRecord } from "../interfaces";
 
 export type MigrationDocument = Omit<CollectionMigrationRecord, "id" | "pages"> & {
     _id: string;
     active?: true;
     ready: boolean;
     pageCount: number;
+    pruning?: true;
 };
+
+export type MigrationAuditDocument = Omit<CollectionMigrationAudit, "id"> & { _id: string };
 
 export type MigrationPageDocument = CollectionMigrationPageChange & {
     _id: string;
@@ -60,6 +63,16 @@ export function fromMigrationPageDocument(document: MigrationPageDocument): Coll
         throw new Error(`Collection migration page snapshot failed its digest: ${_id}`);
     }
     return snapshot;
+}
+
+export function toMigrationAuditDocument(audit: CollectionMigrationAudit): MigrationAuditDocument {
+    const { id, ...document } = structuredClone(audit);
+    return { _id: id, ...document };
+}
+
+export function fromMigrationAuditDocument(document: MigrationAuditDocument): CollectionMigrationAudit {
+    const { _id, ...audit } = structuredClone(document);
+    return { id: _id, ...audit };
 }
 
 export function digestText(value: string): string {

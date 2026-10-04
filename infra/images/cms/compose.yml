@@ -53,6 +53,7 @@ services:
             # Public authentication links and throttling.
             CMS_AUTH_SITE_NAME:                      ${CMS_AUTH_SITE_NAME:-CMS}
             CMS_AUTH_EMAIL_COOLDOWN_SECONDS:         "${CMS_AUTH_EMAIL_COOLDOWN_SECONDS:-300}"
+            CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: "${CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION:-100}"
             CMS_AUTH_EMAIL_VERIFICATION_URL:         ${CMS_AUTH_EMAIL_VERIFICATION_URL:-https://${DOMAIN}/auth/confirm-email}
             CMS_AUTH_PASSWORD_RESET_URL:             ${CMS_AUTH_PASSWORD_RESET_URL:-https://${DOMAIN}/auth/reset-password}
             CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL: ${CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL:-https://admin.${DOMAIN}/auth/verify-email}

@@ -1,4 +1,7 @@
-export { CollectionMigrationService } from "cms-content/application/migrations/runtime/CollectionMigrationService";
+export {
+    CollectionMigrationService,
+    type CollectionMigrationServiceOptions,
+} from "cms-content/application/migrations/runtime/CollectionMigrationService";
 export { prepareCollectionMigration } from "cms-content/application/migrations/plan";
 export {
     MemoryCollectionMigrationStorage,
@@ -8,10 +11,11 @@ export { withCollectionMigrationWriteFence } from "cms-content/application/migra
 export type {
     CollectionMigrationPageChange,
     CollectionMigrationActive,
+    CollectionMigrationAudit,
+    CollectionMigrationParticipant,
+    CollectionMigrationParticipantSnapshot,
     CollectionMigrationProgress,
     CollectionMigrationRecord,
-    CollectionMigrationReferenceSnapshot,
-    CollectionMigrationReferenceSource,
     CollectionMigrationResourceReference,
     CollectionMigrationResourceChange,
     CollectionMigrationStatus,

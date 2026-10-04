@@ -309,6 +309,7 @@ environment file.
 | `CMS_GATEWAY_SITE_ID` | Optional stable opaque site ID. When set, mounts capability call routes in Control and Delivery backed by Mongo catalogues and the provider gateway. Publication and installation management routes are still pending. |
 | `CMS_AUTH_SITE_NAME` | Public authentication site name; defaults to `CMS`. |
 | `CMS_AUTH_EMAIL_COOLDOWN_SECONDS` | Email throttle interval; defaults to 300 seconds. |
+| `CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION` | Full rollback journals retained per site; defaults to 100. Purged journals keep a lightweight audit summary. |
 | `CMS_AUTH_EMAIL_VERIFICATION_URL` | Delivery email-verification URL. |
 | `CMS_AUTH_PASSWORD_RESET_URL` | Delivery password-reset URL. |
 | `CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL` | Control email-verification URL. |

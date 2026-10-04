@@ -1,6 +1,7 @@
 import type { Collection, Db } from "mongodb";
 import type {
     CollectionMigrationActive,
+    CollectionMigrationAudit,
     CollectionMigrationPageChange,
     CollectionMigrationProgress,
     CollectionMigrationRecord,
@@ -9,24 +10,28 @@ import type {
 import {
     digestText,
     fromMigrationPageDocument,
+    type MigrationAuditDocument,
     type MigrationDocument,
     type MigrationPageDocument,
-    TERMINAL_MIGRATION_STATUSES,
     toMigrationDocument,
+    toMigrationAuditDocument,
     toMigrationPageDocument,
 } from "./documents";
+import { cleanupStagedMigrations, pruneTerminalMigrations, resumeMigrationPruning } from "./retention";
+import { migrationAudit } from "../storage/audit";
 import { MongoCollectionMigrationWriteFence } from "./writeFence";
-
-const STAGED_TTL_MS = 10 * 60_000;
+import { listMigrationAudits, migrationProgress } from "./queries";
 
 export class MongoCollectionMigrationStorage implements CollectionMigrationStorage {
     private readonly records: Collection<MigrationDocument>;
     private readonly pages: Collection<MigrationPageDocument>;
+    private readonly audits: Collection<MigrationAuditDocument>;
     private readonly fence: MongoCollectionMigrationWriteFence;
 
     constructor(db: Db) {
         this.records = db.collection("collection_migrations");
         this.pages = db.collection("collection_migration_pages");
+        this.audits = db.collection("collection_migration_audits");
         this.fence = new MongoCollectionMigrationWriteFence(
             this.records,
             db.collection("collection_migration_maintenance"),
@@ -46,20 +51,15 @@ export class MongoCollectionMigrationStorage implements CollectionMigrationStora
             ),
             this.pages.createIndex({ migrationId: 1, index: 1 }, { name: "collection_migration_pages_order" }),
             this.pages.createIndex({ migrationId: 1, state: 1 }, { name: "collection_migration_pages_state" }),
+            this.audits.createIndex({ siteId: 1, updatedAt: -1 }, { name: "collection_migration_audits_site" }),
             this.fence.init(),
         ]);
-        const staged = await this.records
-            .find({ ready: false, createdAt: { $lt: new Date(Date.now() - STAGED_TTL_MS).toISOString() } })
-            .toArray();
-        const ids = staged.map(({ _id }) => _id);
-        if (ids.length) {
-            await this.pages.deleteMany({ migrationId: { $in: ids } });
-            await this.records.deleteMany({ _id: { $in: ids }, ready: false });
-        }
+        await resumeMigrationPruning(this.records, this.pages);
+        await cleanupStagedMigrations(this.records, this.pages);
     }
 
     async get(id: string): Promise<CollectionMigrationRecord | null> {
-        return this.hydrate(await this.records.findOne({ _id: id, ready: true }));
+        return this.hydrate(await this.records.findOne({ _id: id, ready: true, pruning: { $ne: true } }));
     }
 
     async getActive(siteId: string): Promise<CollectionMigrationActive | null> {
@@ -73,30 +73,11 @@ export class MongoCollectionMigrationStorage implements CollectionMigrationStora
     }
 
     async getProgress(id: string): Promise<CollectionMigrationProgress | null> {
-        const document = await this.records.findOne(
-            { _id: id, ready: true },
-            { projection: { _id: 1, siteId: 1, status: 1, createdAt: 1, updatedAt: 1, error: 1, pageCount: 1 } },
-        );
-        if (!document) {
-            return null;
-        }
-        const [pendingPages, appliedPages, rolledBackPages] = await Promise.all([
-            count(this.pages, { migrationId: id, state: "pending" }),
-            count(this.pages, { migrationId: id, state: "applied" }),
-            count(this.pages, { migrationId: id, state: "rolled-back" }),
-        ]);
-        return {
-            id: document._id,
-            siteId: document.siteId,
-            status: document.status,
-            createdAt: document.createdAt,
-            updatedAt: document.updatedAt,
-            ...(document.error ? { error: document.error } : {}),
-            totalPages: document.pageCount,
-            pendingPages,
-            appliedPages,
-            rolledBackPages,
-        };
+        return migrationProgress(this.records, this.pages, this.audits, id);
+    }
+
+    async listAudits(siteId: string, limit: number): Promise<readonly CollectionMigrationAudit[]> {
+        return listMigrationAudits(this.audits, siteId, limit);
     }
 
     claimMaintenance(siteId: string, migrationId: string): Promise<boolean> {
@@ -164,15 +145,12 @@ export class MongoCollectionMigrationStorage implements CollectionMigrationStora
     }
 
     async pruneTerminal(siteId: string, keep: number): Promise<void> {
-        const terminal = await this.records
-            .find({ siteId, ready: true, status: { $in: [...TERMINAL_MIGRATION_STATUSES] } })
-            .sort({ updatedAt: -1 })
-            .toArray();
-        const ids = terminal.slice(Math.max(0, keep)).map(({ _id }) => _id);
-        if (ids.length) {
-            await this.records.deleteMany({ _id: { $in: ids }, status: { $in: [...TERMINAL_MIGRATION_STATUSES] } });
-            await this.pages.deleteMany({ migrationId: { $in: ids } });
-        }
+        await pruneTerminalMigrations(this.records, this.pages, this.audits, siteId, keep);
+    }
+
+    async archiveTerminal(record: CollectionMigrationRecord): Promise<void> {
+        const audit = toMigrationAuditDocument(migrationAudit(record));
+        await this.audits.replaceOne({ _id: audit._id }, audit, { upsert: true });
     }
 
     private async hydrate(document: MigrationDocument | null): Promise<CollectionMigrationRecord | null> {
@@ -183,14 +161,14 @@ export class MongoCollectionMigrationStorage implements CollectionMigrationStora
         if (pages.length !== document.pageCount) {
             throw new Error(`Incomplete collection migration journal: ${document._id}`);
         }
-        const { _id, active: _active, ready: _ready, pageCount: _pageCount, ...record } = structuredClone(document);
+        const {
+            _id,
+            active: _active,
+            ready: _ready,
+            pageCount: _pageCount,
+            pruning: _pruning,
+            ...record
+        } = structuredClone(document);
         return { id: _id, ...record, pages: pages.map(fromMigrationPageDocument) };
     }
-}
-
-async function count<T extends { _id: string }>(collection: Collection<T>, filter: object): Promise<number> {
-    if (typeof collection.countDocuments === "function") {
-        return collection.countDocuments(filter);
-    }
-    return (await collection.find(filter).toArray()).length;
 }

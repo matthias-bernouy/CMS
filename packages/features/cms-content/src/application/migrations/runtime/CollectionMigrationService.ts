@@ -3,9 +3,10 @@ import type { CollectionStore } from "@bernouy/cms-repository/collections/instal
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type {
     CollectionMigrationActive,
+    CollectionMigrationAudit,
+    CollectionMigrationParticipant,
     CollectionMigrationRecord,
     CollectionMigrationProgress,
-    CollectionMigrationReferenceSource,
     CollectionMigrationStorage,
     CollectionMigrationSummary,
     CollectionMigrationTarget,
@@ -18,22 +19,26 @@ import { rollbackCollectionMigration } from "./rollback";
 
 export class CollectionMigrationService {
     private readonly journal: MigrationJournal;
-    private readonly referenceSources: CollectionMigrationReferenceSource[] = [];
+    private readonly participants: CollectionMigrationParticipant[] = [];
     private readonly running = new Set<string>();
 
     constructor(
         private readonly repository: CmsRepository,
         private readonly collections: CollectionStore,
         storage: CollectionMigrationStorage,
+        options: CollectionMigrationServiceOptions = {},
     ) {
-        this.journal = new MigrationJournal(storage);
+        this.journal = new MigrationJournal(storage, options);
     }
 
-    addReferenceSource(source: CollectionMigrationReferenceSource): void {
-        if (this.referenceSources.some(({ id }) => id === source.id)) {
-            throw new TypeError(`Duplicate collection migration reference source: ${source.id}`);
+    addParticipant(participant: CollectionMigrationParticipant): void {
+        if (!/^[a-z][a-z0-9-]{0,95}$/u.test(participant.id)) {
+            throw new TypeError(`Invalid collection migration participant ID: ${participant.id}`);
         }
-        this.referenceSources.push(source);
+        if (this.participants.some(({ id }) => id === participant.id)) {
+            throw new TypeError(`Duplicate collection migration participant: ${participant.id}`);
+        }
+        this.participants.push(participant);
     }
 
     getActive(siteId: string): Promise<CollectionMigrationActive | null> {
@@ -48,6 +53,13 @@ export class CollectionMigrationService {
         return this.journal.getProgress(siteId, id);
     }
 
+    listAudits(siteId: string, limit = 100): Promise<readonly CollectionMigrationAudit[]> {
+        if (!Number.isSafeInteger(limit) || limit < 1 || limit > 500) {
+            throw new TypeError("Collection migration audit limit must be between 1 and 500");
+        }
+        return this.journal.listAudits(siteId, limit);
+    }
+
     async plan(
         siteId: string,
         targets: readonly CollectionMigrationTarget[],
@@ -59,7 +71,7 @@ export class CollectionMigrationService {
             siteId,
             targets,
             expectedRevision,
-            this.referenceSources,
+            this.participants,
         );
         return summarizeMigration(plan);
     }
@@ -76,7 +88,7 @@ export class CollectionMigrationService {
             siteId,
             targets,
             expectedRevision,
-            this.referenceSources,
+            this.participants,
         );
         if (expectedPlanDigest !== undefined && prepared.planDigest !== expectedPlanDigest) {
             throw Object.assign(new Error("The migration plan changed; review the new plan before executing it"), {
@@ -137,7 +149,7 @@ export class CollectionMigrationService {
             repository: this.repository,
             collections: this.collections,
             journal: this.journal,
-            referenceSources: this.referenceSources,
+            participants: this.participants,
         };
     }
 
@@ -153,3 +165,8 @@ export class CollectionMigrationService {
         }
     }
 }
+
+export type CollectionMigrationServiceOptions = {
+    rollbackRetentionCount?: number;
+    onRetentionError?: (error: Error) => void;
+};

@@ -19,6 +19,9 @@ Production runtime composition root.
   data unreadable.
 - Keep startup order explicit. Many stores require `init()` before being passed
   to surfaces.
+- Keep raw feature stores private when their public facade is migration-fenced,
+  and register every returned collection migration participant before mounting
+  surfaces.
 - Changes here usually need an integration-style test or a clear manual
   verification path.
 - Give Control the authoring repository and stores. Construct Delivery's

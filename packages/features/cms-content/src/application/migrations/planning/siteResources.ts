@@ -1,9 +1,13 @@
-import type { CollectionRelease } from "@bernouy/cms-repository/collections";
+import {
+    collectionThemeTokenId,
+    type CollectionRelease,
+    type CollectionResourceKind,
+} from "@bernouy/cms-repository/collections";
 import { replaceCollectionTextExpressions } from "@bernouy/cms-repository/collections/texts";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import { assertContentRefsExist } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
 import type { BlocRecord, SiteBlocNode } from "cms-content/blocs/interfaces/blocs";
-import type { CollectionMigrationReferenceSnapshot } from "../interfaces";
+import type { CollectionMigrationParticipantSnapshot } from "../interfaces";
 import { referencesThemeToken } from "../transforms/themeTokenReferences";
 import { migrationIssue } from "./validation";
 
@@ -12,7 +16,7 @@ export async function validateTargetSiteResources(
     installed: readonly { release: CollectionRelease }[],
     targets: readonly { artifact: { release: CollectionRelease } }[],
     records: readonly BlocRecord[],
-    references: readonly CollectionMigrationReferenceSnapshot[],
+    participants: readonly CollectionMigrationParticipantSnapshot[],
     removedThemeTokens: readonly string[],
     blocked: string[],
 ): Promise<void> {
@@ -35,9 +39,7 @@ export async function validateTargetSiteResources(
     const texts = new Map(
         releases.map((release) => [release.collectionId, new Set((release.texts ?? []).map(({ id }) => id))]),
     );
-    const finalViews = new Set(
-        releases.flatMap((release) => (release.views ?? []).map((view) => `${release.collectionId}:${view.id}`)),
-    );
+    const availableResources = collectionResourceKeys(releases);
     for (const record of records.filter(({ collectionId }) => !collectionId)) {
         for (const [location, content] of recordContents(record)) {
             try {
@@ -53,15 +55,53 @@ export async function validateTargetSiteResources(
             }
         }
     }
-    for (const snapshot of references) {
-        for (const reference of snapshot.references) {
-            if (reference.kind === "view" && !finalViews.has(`${reference.collectionId}:${reference.id}`)) {
+    for (const participant of participants) {
+        for (const reference of participant.references) {
+            if (!availableResources.has(resourceKey(reference.kind, reference.collectionId, reference.id))) {
                 blocked.push(
-                    `${reference.location} still references removed collection view ${reference.collectionId}:${reference.id}.`,
+                    `${reference.location} still references removed collection ${reference.kind} ` +
+                        `${reference.collectionId}:${reference.id}.`,
                 );
             }
         }
     }
+}
+
+function collectionResourceKeys(releases: readonly CollectionRelease[]): Set<string> {
+    const keys = new Set<string>();
+    for (const release of releases) {
+        for (const bloc of release.blocs) {
+            keys.add(resourceKey("bloc", release.collectionId, bloc.id));
+        }
+        for (const category of release.theme?.categories ?? []) {
+            for (const token of category.tokens) {
+                keys.add(
+                    resourceKey(
+                        "theme-token",
+                        release.collectionId,
+                        collectionThemeTokenId(release.collectionId, token.id),
+                    ),
+                );
+            }
+        }
+        if (release.configuration) {
+            keys.add(resourceKey("configuration", release.collectionId, release.collectionId));
+        }
+        for (const [kind, resources] of [
+            ["text", release.texts ?? []],
+            ["view", release.views ?? []],
+            ["dashboard", release.dashboards ?? []],
+        ] as const) {
+            for (const resource of resources) {
+                keys.add(resourceKey(kind, release.collectionId, resource.id));
+            }
+        }
+    }
+    return keys;
+}
+
+function resourceKey(kind: CollectionResourceKind, collectionId: string, id: string): string {
+    return `${kind}:${collectionId}:${id}`;
 }
 
 function finalReleases(

@@ -2,8 +2,9 @@ import type { CollectionStore } from "@bernouy/cms-repository/collections/instal
 import { isDeepStrictEqual } from "node:util";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { CollectionMigrationRecord } from "../interfaces";
-import type { CollectionMigrationReferenceSource } from "../interfaces";
+import type { CollectionMigrationParticipant } from "../interfaces";
 import { collectionPageRevisionDigest, collectionSiteResourceDigest } from "../plan";
+import { snapshotMigrationParticipants } from "../planning/participants";
 import { forEachMigrationPage } from "./concurrency";
 import { installationsMatch, migrationTargetsMatch } from "./helpers";
 import type { MigrationJournal } from "./journal";
@@ -12,7 +13,7 @@ type ExecutionContext = {
     repository: CmsRepository;
     collections: CollectionStore;
     journal: MigrationJournal;
-    referenceSources: readonly CollectionMigrationReferenceSource[];
+    participants: readonly CollectionMigrationParticipant[];
 };
 
 export async function runCollectionMigration(
@@ -128,7 +129,7 @@ async function assertSnapshotCurrent(context: ExecutionContext, record: Collecti
         context.repository.getAllPages(),
         context.repository.getSystem(),
         context.repository.getBlocRecords(),
-        Promise.all(context.referenceSources.map((source) => source.snapshot(record.siteId))),
+        snapshotMigrationParticipants(record.siteId, context.participants),
     ]);
     if (
         state.revision !== record.expectedCollectionRevision ||

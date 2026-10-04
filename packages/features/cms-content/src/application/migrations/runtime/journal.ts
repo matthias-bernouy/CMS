@@ -1,13 +1,28 @@
 import type {
     CollectionMigrationActive,
+    CollectionMigrationAudit,
     CollectionMigrationRecord,
     CollectionMigrationProgress,
     CollectionMigrationStatus,
     CollectionMigrationStorage,
 } from "../interfaces";
+import type { CollectionMigrationServiceOptions } from "./CollectionMigrationService";
 
 export class MigrationJournal {
-    constructor(private readonly storage: CollectionMigrationStorage) {}
+    private readonly rollbackRetentionCount: number;
+    private readonly onRetentionError: (error: Error) => void;
+
+    constructor(
+        private readonly storage: CollectionMigrationStorage,
+        options: CollectionMigrationServiceOptions = {},
+    ) {
+        const retention = options.rollbackRetentionCount ?? 100;
+        if (!Number.isSafeInteger(retention) || retention < 0 || retention > 10_000) {
+            throw new TypeError("Collection migration rollback retention must be between 0 and 10000");
+        }
+        this.rollbackRetentionCount = retention;
+        this.onRetentionError = options.onRetentionError ?? (() => undefined);
+    }
 
     getActive(siteId: string): Promise<CollectionMigrationActive | null> {
         return this.storage.getActive(siteId);
@@ -25,6 +40,10 @@ export class MigrationJournal {
     async get(siteId: string, id: string): Promise<CollectionMigrationRecord | null> {
         const record = await this.storage.get(id);
         return record?.siteId === siteId ? record : null;
+    }
+
+    listAudits(siteId: string, limit: number): Promise<readonly CollectionMigrationAudit[]> {
+        return this.storage.listAudits(siteId, limit);
     }
 
     async require(siteId: string, id: string): Promise<CollectionMigrationRecord> {
@@ -78,7 +97,14 @@ export class MigrationJournal {
         }
         if (next.status === "completed" || next.status === "rolled-back") {
             await this.storage.releaseMaintenance(next.siteId, next.id).catch(() => undefined);
-            void this.storage.pruneTerminal(next.siteId, 100).catch(() => undefined);
+            try {
+                await this.storage.archiveTerminal(next);
+                void this.storage
+                    .pruneTerminal(next.siteId, this.rollbackRetentionCount)
+                    .catch((error) => this.onRetentionError(safeError(error)));
+            } catch (error) {
+                this.onRetentionError(safeError(error));
+            }
         }
         return next;
     }
@@ -108,4 +134,8 @@ export class MigrationJournal {
         });
         await this.storage.yieldMaintenance(current.siteId, current.id).catch(() => undefined);
     }
+}
+
+function safeError(error: unknown): Error {
+    return error instanceof Error ? error : new Error("Unknown collection migration retention failure");
 }

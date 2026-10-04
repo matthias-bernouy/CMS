@@ -4,7 +4,8 @@ import { replaceCollectionTextExpressions } from "@bernouy/cms-repository/collec
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import { assertContentRefsExist } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
 import type { TPage } from "cms-content/pages/interfaces/pages";
-import type { CollectionMigrationRecord, CollectionMigrationReferenceSource } from "../interfaces";
+import type { CollectionMigrationParticipant, CollectionMigrationRecord } from "../interfaces";
+import { snapshotMigrationParticipants } from "../planning/participants";
 import { referencesThemeToken } from "../transforms/themeTokenReferences";
 import { validateTargetSiteResources } from "../planning/siteResources";
 import { migrationThemeTokenIds, themeTokenValuesMatch } from "./theme";
@@ -14,7 +15,7 @@ import { migrationTargetInstallationsMatch } from "./helpers";
 type RollbackValidationContext = {
     repository: CmsRepository;
     collections: CollectionStore;
-    referenceSources: readonly CollectionMigrationReferenceSource[];
+    participants: readonly CollectionMigrationParticipant[];
 };
 
 export async function assertRollbackSafe(
@@ -33,7 +34,7 @@ export async function assertRollbackSafe(
                 .map(({ digest }) => context.collections.getRelease(digest)),
         ),
         context.repository.getBlocRecords(),
-        Promise.all(context.referenceSources.map((source) => source.snapshot(record.siteId))),
+        snapshotMigrationParticipants(record.siteId, context.participants),
     ]);
     const targetsApplied = migrationTargetInstallationsMatch(state.collections, record, "after");
     const targetsRestored = migrationTargetInstallationsMatch(state.collections, record, "before");

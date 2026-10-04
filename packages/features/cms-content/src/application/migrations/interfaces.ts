@@ -2,7 +2,11 @@ import type {
     CollectionInstallation,
     CollectionMigrationReplacement,
 } from "@bernouy/cms-repository/collections/installations";
-import type { CollectionMigrationOperation, CollectionResourceDescriptor } from "@bernouy/cms-repository/collections";
+import type {
+    CollectionMigrationOperation,
+    CollectionResourceDescriptor,
+    CollectionResourceKind,
+} from "@bernouy/cms-repository/collections";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 
@@ -23,20 +27,22 @@ export type CollectionMigrationTarget = {
 };
 
 export type CollectionMigrationResourceReference = {
-    kind: "view";
+    kind: CollectionResourceKind;
     collectionId: string;
+    /** Exact resource descriptor ID. Theme token IDs therefore include their collection namespace. */
     id: string;
     location: string;
 };
 
-export type CollectionMigrationReferenceSnapshot = {
+export type CollectionMigrationParticipantSnapshot = {
+    id: string;
     digest: string;
     references: readonly CollectionMigrationResourceReference[];
 };
 
-export interface CollectionMigrationReferenceSource {
+export interface CollectionMigrationParticipant {
     readonly id: string;
-    snapshot(siteId: string): Promise<CollectionMigrationReferenceSnapshot>;
+    collectReferences(siteId: string): Promise<readonly CollectionMigrationResourceReference[]>;
 }
 
 export type CollectionMigrationResourceChange = {
@@ -116,6 +122,19 @@ export type CollectionMigrationProgress = Pick<
     rolledBackPages: number;
 };
 
+export type CollectionMigrationAudit = Pick<
+    CollectionMigrationRecord,
+    "id" | "siteId" | "createdAt" | "updatedAt" | "error" | "planDigest"
+> & {
+    status: Extract<CollectionMigrationStatus, "completed" | "rolled-back">;
+    targets: readonly { collectionId: string; fromDigest: string; toDigest: string }[];
+    resources: readonly CollectionMigrationResourceChange[];
+    operationCount: number;
+    totalPages: number;
+    appliedPages: number;
+    rolledBackPages: number;
+};
+
 /**
  * Site-wide write barrier used by every public persistence facade. Migration
  * code owns the barrier and deliberately writes through its unfenced stores.
@@ -132,6 +151,7 @@ export interface CollectionMigrationStorage extends CollectionMigrationWriteFenc
     get(id: string): Promise<CollectionMigrationRecord | null>;
     getActive(siteId: string): Promise<CollectionMigrationActive | null>;
     getProgress(id: string): Promise<CollectionMigrationProgress | null>;
+    listAudits(siteId: string, limit: number): Promise<readonly CollectionMigrationAudit[]>;
     create(record: CollectionMigrationRecord): Promise<boolean>;
     replace(id: string, expectedRevision: number, next: CollectionMigrationRecord): Promise<boolean>;
     replacePage(
@@ -140,5 +160,6 @@ export interface CollectionMigrationStorage extends CollectionMigrationWriteFenc
         expectedState: CollectionMigrationPageChange["state"],
         next: CollectionMigrationPageChange,
     ): Promise<boolean>;
+    archiveTerminal(record: CollectionMigrationRecord): Promise<void>;
     pruneTerminal(siteId: string, keep: number): Promise<void>;
 }

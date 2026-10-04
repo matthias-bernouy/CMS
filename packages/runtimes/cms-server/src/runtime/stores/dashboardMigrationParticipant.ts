@@ -1,17 +1,14 @@
 import { dashboardNavigationViews, type DashboardRepository } from "@bernouy/cms-dashboards";
-import type { CollectionMigrationReferenceSource } from "@bernouy/cms-content/migrations";
-import { createHash } from "node:crypto";
+import type { CollectionMigrationParticipant } from "@bernouy/cms-content/migrations";
 
-export function createDashboardMigrationReferences(
-    dashboards: DashboardRepository,
-): CollectionMigrationReferenceSource {
+export function createDashboardMigrationParticipant(dashboards: DashboardRepository): CollectionMigrationParticipant {
     return {
         id: "cms-dashboards",
-        async snapshot(siteId) {
+        async collectReferences(siteId) {
             const records = (await dashboards.list(siteId))
                 .filter(({ origin }) => !origin)
                 .sort((left, right) => left.id.localeCompare(right.id));
-            const references = records.flatMap((record) =>
+            return records.flatMap((record) =>
                 dashboardNavigationViews(record.navigation).map(({ use }) => {
                     const separator = use.indexOf(":");
                     return {
@@ -22,10 +19,6 @@ export function createDashboardMigrationReferences(
                     };
                 }),
             );
-            return {
-                digest: `sha256:${createHash("sha256").update(JSON.stringify(records)).digest("hex")}`,
-                references,
-            };
         },
     };
 }

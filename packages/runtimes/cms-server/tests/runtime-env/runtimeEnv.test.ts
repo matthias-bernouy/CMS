@@ -20,6 +20,20 @@ describe("runtime env validation", () => {
         expect(env.DELIVERY_PORT).toBe(3001);
         expect(env.CMS_AUTH_EMAIL_VERIFICATION_URL).toBe("https://www.example.com/auth/confirm-email");
         expect(env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL).toBe("https://admin.example.com/auth/reset-password");
+        expect(env.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION).toBe(100);
+    });
+
+    test("validates collection migration rollback retention", () => {
+        expect(
+            readRuntimeEnv({ ...validEnv(), CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: "0" })
+                .CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION,
+        ).toBe(0);
+        expect(() => readRuntimeEnv({ ...validEnv(), CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: "-1" })).toThrow(
+            /non-negative integer/,
+        );
+        expect(() => readRuntimeEnv({ ...validEnv(), CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: "10001" })).toThrow(
+            /at most 10000/,
+        );
     });
 
     test.failing("parses listener hosts with wildcard production defaults", () => {

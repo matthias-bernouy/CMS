@@ -2,7 +2,7 @@ import type { CollectionStore } from "@bernouy/cms-repository/collections/instal
 import { isDeepStrictEqual } from "node:util";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { CollectionMigrationRecord } from "../interfaces";
-import type { CollectionMigrationReferenceSource } from "../interfaces";
+import type { CollectionMigrationParticipant } from "../interfaces";
 import { forEachMigrationPage } from "./concurrency";
 import { migrationTargetInstallationsMatch } from "./helpers";
 import type { MigrationJournal } from "./journal";
@@ -13,7 +13,7 @@ type RollbackContext = {
     repository: CmsRepository;
     collections: CollectionStore;
     journal: MigrationJournal;
-    referenceSources: readonly CollectionMigrationReferenceSource[];
+    participants: readonly CollectionMigrationParticipant[];
 };
 
 export async function rollbackCollectionMigration(
