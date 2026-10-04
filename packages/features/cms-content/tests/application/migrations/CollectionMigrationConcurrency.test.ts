@@ -65,6 +65,7 @@ test("cancels a plan that acquires the journal only after another migration comp
     );
     await repository.insertPage("/demo", "Demo", "<atlas-card></atlas-card>");
     const storage = new MemoryCollectionMigrationStorage();
+    let claimCount = 0;
     let createCount = 0;
     let releaseDelayed!: () => void;
     let announceDelayed!: () => void;
@@ -74,15 +75,23 @@ test("cancels a plan that acquires the journal only after another migration comp
     let delayedId = "";
     const delayed = new Proxy(storage, {
         get(target, property) {
+            if (property === "claimMaintenance") {
+                return async (...args: Parameters<typeof target.claimMaintenance>) => {
+                    claimCount += 1;
+                    if (claimCount === 2) {
+                        await new Promise<void>((resolve) => {
+                            releaseDelayed = resolve;
+                            announceDelayed();
+                        });
+                    }
+                    return target.claimMaintenance(...args);
+                };
+            }
             if (property === "create") {
                 return async (record: Parameters<typeof target.create>[0]) => {
                     createCount += 1;
                     if (createCount === 2) {
                         delayedId = record.id;
-                        await new Promise<void>((resolve) => {
-                            releaseDelayed = resolve;
-                            announceDelayed();
-                        });
                     }
                     return target.create(record);
                 };
