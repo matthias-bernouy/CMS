@@ -9,12 +9,14 @@ import { analyzeResourceChanges } from "./impact";
 import type {
     CollectionMigrationTarget,
     CollectionMigrationResourceChange,
+    CollectionMigrationReferenceSource,
     PreparedCollectionMigration,
 } from "./interfaces";
 import { migratePageContent } from "./transforms/page";
 import { migrateConfiguration, migrateTextOverrides, migrateThemeTokens } from "./transforms/siteData";
 import { dependencyIssues, migrationOperations } from "./planning/evolution";
 import { migrationIssue, validateTargetData, validateTargetPages, validateTargetTheme } from "./planning/validation";
+import { validateTargetSiteResources } from "./planning/siteResources";
 
 export async function prepareCollectionMigration(
     repository: CmsRepository,
@@ -22,14 +24,17 @@ export async function prepareCollectionMigration(
     siteId: string,
     targets: readonly CollectionMigrationTarget[],
     expectedRevision?: number,
+    referenceSources: readonly CollectionMigrationReferenceSource[] = [],
 ): Promise<PreparedCollectionMigration> {
     if (targets.length === 0 || targets.length > 256) {
         throw new TypeError("A migration needs between 1 and 256 target releases");
     }
-    const [snapshot, pages, system] = await Promise.all([
+    const [snapshot, pages, system, blocRecords, referenceSnapshots] = await Promise.all([
         collections.snapshot(siteId),
         repository.getAllPages(),
         repository.getSystem(),
+        repository.getBlocRecords(),
+        Promise.all(referenceSources.map((source) => source.snapshot(siteId))),
     ]);
     if (expectedRevision !== undefined && snapshot.revision !== expectedRevision) {
         throw Object.assign(new Error("Collection state changed; reload the migration plan"), { status: 409 });
@@ -132,6 +137,15 @@ export async function prepareCollectionMigration(
         return { page, content, applied };
     });
     await validateTargetPages(repository, snapshot.collections, targetArtifacts, transformedPages, blockedReasons);
+    await validateTargetSiteResources(
+        repository,
+        snapshot.collections,
+        targetArtifacts,
+        blocRecords,
+        referenceSnapshots,
+        resources.filter(({ kind, change }) => kind === "theme-token" && change === "removed").map(({ id }) => id),
+        blockedReasons,
+    );
     const pageChanges = transformedPages.flatMap(({ page, content, applied }) =>
         applied
             ? [{ before: structuredClone(page), afterContent: content, operations: applied, state: "pending" as const }]
@@ -166,10 +180,11 @@ export async function prepareCollectionMigration(
     } catch (error) {
         blockedReasons.push(migrationIssue("Collection theme transition is invalid", error));
     }
-    return {
+    const prepared = {
         siteId,
         expectedCollectionRevision: snapshot.revision,
         pageRevisionDigest: collectionPageRevisionDigest(pages),
+        siteResourceDigest: collectionSiteResourceDigest(blocRecords, referenceSnapshots),
         installationsBefore: snapshot.collections.map(({ release: _release, ...installation }) => installation),
         replacements,
         operationGroups,
@@ -181,6 +196,7 @@ export async function prepareCollectionMigration(
         systemAfterCollectionRollback,
         blockedReasons: [...new Set(blockedReasons)],
     };
+    return { ...prepared, planDigest: collectionMigrationPlanDigest(prepared) };
 }
 
 export function collectionPageRevisionDigest(pages: readonly { id: string; revision: number }[]): string {
@@ -188,4 +204,26 @@ export function collectionPageRevisionDigest(pages: readonly { id: string; revis
         .map(({ id, revision }) => ({ id, revision }))
         .sort((left, right) => left.id.localeCompare(right.id));
     return `sha256:${createHash("sha256").update(canonicalizeIJson(entries)).digest("hex")}`;
+}
+
+export function collectionSiteResourceDigest(
+    records: readonly unknown[],
+    references: readonly { digest: string }[],
+): string {
+    const normalized = JSON.parse(
+        JSON.stringify({
+            records: [...records].sort((left, right) =>
+                String((left as { tag?: string }).tag ?? "").localeCompare(
+                    String((right as { tag?: string }).tag ?? ""),
+                ),
+            ),
+            references: references.map(({ digest }) => digest).sort(),
+        }),
+    );
+    return `sha256:${createHash("sha256").update(canonicalizeIJson(normalized)).digest("hex")}`;
+}
+
+function collectionMigrationPlanDigest(plan: Omit<PreparedCollectionMigration, "planDigest">): string {
+    const normalized = JSON.parse(JSON.stringify(plan));
+    return `sha256:${createHash("sha256").update(canonicalizeIJson(normalized)).digest("hex")}`;
 }

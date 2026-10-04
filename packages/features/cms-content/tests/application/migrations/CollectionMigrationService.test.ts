@@ -117,7 +117,7 @@ test("blocks a removed bloc only while stored pages still reference it", async (
     expect(safe.pages).toEqual([]);
 });
 
-test("stores page snapshots separately and reconstructs transformed content from its digest", async () => {
+test("stores exact page snapshots separately and verifies their digest", async () => {
     const fixture = await migrationFixture();
     const db = new FakeContentDb();
     const storage = new MongoCollectionMigrationStorage(db as unknown as Db);
@@ -129,11 +129,17 @@ test("stores page snapshots separately and reconstructs transformed content from
 
     expect(main.pages).toBeUndefined();
     expect(main.pageCount).toBe(1);
-    expect(page.afterContent).toBeUndefined();
+    expect(page.afterContent).toBe("<atlas-panel></atlas-panel>");
     expect(page.afterContentDigest).toMatch(/^sha256:/);
+    await db.get("collection_migrations").updateOne({ _id: completed.id }, { $set: { operationGroups: [] } });
     expect(await storage.get(completed.id)).toMatchObject({
         pages: [{ afterContent: "<atlas-panel></atlas-panel>", state: "applied" }],
     });
+    await db
+        .get("collection_migration_pages")
+        .updateOne({ migrationId: completed.id }, { $set: { afterContentDigest: "sha256:corrupt" } });
+    expect(await storage.getProgress(completed.id)).toMatchObject({ totalPages: 1, appliedPages: 1 });
+    await expect(storage.get(completed.id)).rejects.toThrow("failed its digest");
 });
 
 test("resumes rollback when the page write succeeded before its journal update", async () => {
@@ -254,6 +260,17 @@ test("migrates collection configuration through declarative value operations", a
         mode: "modern",
         density: "compact",
     });
+});
+
+test("rejects execution when the reviewed plan digest changed", async () => {
+    const fixture = await migrationFixture();
+    const plan = await fixture.service.plan("site", [{ digest: fixture.next.digest }], 1);
+    await fixture.repository.updatePage({ id: fixture.page.id, title: "Changed" }, fixture.page.revision);
+
+    await expect(
+        fixture.service.execute("site", [{ digest: fixture.next.digest }], 1, plan.planDigest),
+    ).rejects.toThrow("migration plan changed");
+    expect((await fixture.collections.snapshot("site")).collections[0]!.digest).toBe(fixture.previous.digest);
 });
 
 async function migrationFixture() {

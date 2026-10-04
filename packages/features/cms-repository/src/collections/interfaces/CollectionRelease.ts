@@ -32,7 +32,8 @@ export type CollectionMigrationOperation =
           readonly path: readonly string[];
           readonly values: readonly { readonly from: unknown; readonly to: unknown }[];
       }
-    | { readonly kind: "rename-text-override"; readonly from: string; readonly to: string }
+    /** Renames both site overrides and persisted CMS text expressions. */
+    | { readonly kind: "rename-text"; readonly from: string; readonly to: string }
     | { readonly kind: "remove-text-override"; readonly id: string };
 
 /** One cumulative, deterministic transition. Releases carry every step needed from supported generations. */

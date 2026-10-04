@@ -4,13 +4,19 @@ export {
     MemoryCollectionMigrationStorage,
     isCollectionMigrationActive,
 } from "cms-content/application/migrations/storage";
+export { withCollectionMigrationWriteFence } from "cms-content/application/migrations/storage/writeFence";
 export type {
     CollectionMigrationPageChange,
     CollectionMigrationActive,
+    CollectionMigrationProgress,
     CollectionMigrationRecord,
+    CollectionMigrationReferenceSnapshot,
+    CollectionMigrationReferenceSource,
+    CollectionMigrationResourceReference,
     CollectionMigrationResourceChange,
     CollectionMigrationStatus,
     CollectionMigrationStorage,
+    CollectionMigrationWriteFence,
     CollectionMigrationSummary,
     CollectionMigrationTarget,
     PreparedCollectionMigration,

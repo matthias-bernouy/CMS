@@ -15,7 +15,7 @@ const OPERATION_KEYS = {
     "set-configuration-default": ["kind", "path", "value"],
     "remove-configuration-value": ["kind", "path"],
     "map-configuration-value": ["kind", "path", "values"],
-    "rename-text-override": ["kind", "from", "to"],
+    "rename-text": ["kind", "from", "to"],
     "remove-text-override": ["kind", "id"],
 } as const;
 
@@ -105,7 +105,7 @@ function parseOperation(value: unknown, collectionId: string, path: string): Col
                 path: pathParts(source.path, `${path}.path`),
                 values: valueMappings(source.values, `${path}.values`),
             };
-        case "rename-text-override":
+        case "rename-text":
             return { kind, from: setting("from"), to: setting("to") };
         case "remove-text-override":
             return { kind, id: setting("id") };

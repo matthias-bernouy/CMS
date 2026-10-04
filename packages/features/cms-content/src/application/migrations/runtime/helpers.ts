@@ -19,6 +19,24 @@ export function migrationTargetsMatch(
     return installationsMatch(collections, expected);
 }
 
+export function migrationTargetInstallationsMatch(
+    collections: readonly InstalledCollection[],
+    record: CollectionMigrationRecord,
+    side: "before" | "after",
+): boolean {
+    const current = new Map(
+        collections.map(({ release: _release, ...installation }) => [installation.collectionId, installation]),
+    );
+    const replacements = new Map(record.replacements.map((replacement) => [replacement.collectionId, replacement]));
+    return record.replacements.every((replacement) => {
+        const expected =
+            side === "after"
+                ? replacement
+                : record.installationsBefore.find(({ collectionId }) => collectionId === replacement.collectionId);
+        return !!expected && isDeepStrictEqual(current.get(replacement.collectionId), expected);
+    });
+}
+
 export function installationsMatch(
     collections: readonly InstalledCollection[],
     installations: readonly CollectionInstallation[],
@@ -35,6 +53,7 @@ export function summarizeMigration(
     return {
         siteId: plan.siteId,
         expectedCollectionRevision: plan.expectedCollectionRevision,
+        planDigest: plan.planDigest,
         targets: plan.replacements.map((target) => ({
             collectionId: target.collectionId,
             fromDigest: plan.installationsBefore.find((item) => item.collectionId === target.collectionId)!.digest,

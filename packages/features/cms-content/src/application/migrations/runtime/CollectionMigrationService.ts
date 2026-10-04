@@ -4,6 +4,8 @@ import type { CmsRepository } from "cms-content/application/interfaces/CmsReposi
 import type {
     CollectionMigrationActive,
     CollectionMigrationRecord,
+    CollectionMigrationProgress,
+    CollectionMigrationReferenceSource,
     CollectionMigrationStorage,
     CollectionMigrationSummary,
     CollectionMigrationTarget,
@@ -16,6 +18,8 @@ import { rollbackCollectionMigration } from "./rollback";
 
 export class CollectionMigrationService {
     private readonly journal: MigrationJournal;
+    private readonly referenceSources: CollectionMigrationReferenceSource[] = [];
+    private readonly running = new Set<string>();
 
     constructor(
         private readonly repository: CmsRepository,
@@ -25,12 +29,23 @@ export class CollectionMigrationService {
         this.journal = new MigrationJournal(storage);
     }
 
+    addReferenceSource(source: CollectionMigrationReferenceSource): void {
+        if (this.referenceSources.some(({ id }) => id === source.id)) {
+            throw new TypeError(`Duplicate collection migration reference source: ${source.id}`);
+        }
+        this.referenceSources.push(source);
+    }
+
     getActive(siteId: string): Promise<CollectionMigrationActive | null> {
         return this.journal.getActive(siteId);
     }
 
     get(siteId: string, id: string): Promise<CollectionMigrationRecord | null> {
         return this.journal.get(siteId, id);
+    }
+
+    getProgress(siteId: string, id: string): Promise<CollectionMigrationProgress | null> {
+        return this.journal.getProgress(siteId, id);
     }
 
     async plan(
@@ -44,6 +59,7 @@ export class CollectionMigrationService {
             siteId,
             targets,
             expectedRevision,
+            this.referenceSources,
         );
         return summarizeMigration(plan);
     }
@@ -52,6 +68,7 @@ export class CollectionMigrationService {
         siteId: string,
         targets: readonly CollectionMigrationTarget[],
         expectedRevision?: number,
+        expectedPlanDigest?: string,
     ): Promise<CollectionMigrationRecord> {
         const prepared = await prepareCollectionMigration(
             this.repository,
@@ -59,7 +76,13 @@ export class CollectionMigrationService {
             siteId,
             targets,
             expectedRevision,
+            this.referenceSources,
         );
+        if (expectedPlanDigest !== undefined && prepared.planDigest !== expectedPlanDigest) {
+            throw Object.assign(new Error("The migration plan changed; review the new plan before executing it"), {
+                status: 409,
+            });
+        }
         if (prepared.blockedReasons.length) {
             throw Object.assign(new Error(`Migration is blocked: ${prepared.blockedReasons.join(" ")}`), {
                 status: 409,
@@ -79,7 +102,7 @@ export class CollectionMigrationService {
                 status: 423,
             });
         }
-        return runCollectionMigration(this.context(), siteId, record.id);
+        return this.runExclusive(record.id, () => runCollectionMigration(this.context(), siteId, record.id));
     }
 
     async resume(siteId: string, id: string): Promise<CollectionMigrationRecord> {
@@ -87,10 +110,15 @@ export class CollectionMigrationService {
         if (record.status === "completed" || record.status === "rolled-back") {
             return record;
         }
-        if (record.rollbackStartedAt || record.status === "rolling-back") {
-            return rollbackCollectionMigration(this.context(), record);
+        if (!(await this.journal.claim(record))) {
+            throw Object.assign(new Error("Another collection migration already owns maintenance mode"), {
+                status: 423,
+            });
         }
-        return runCollectionMigration(this.context(), siteId, id);
+        if (record.rollbackStartedAt || record.status === "rolling-back") {
+            return this.runExclusive(record.id, () => rollbackCollectionMigration(this.context(), record));
+        }
+        return this.runExclusive(record.id, () => runCollectionMigration(this.context(), siteId, id));
     }
 
     async rollback(siteId: string, id: string): Promise<CollectionMigrationRecord> {
@@ -98,16 +126,30 @@ export class CollectionMigrationService {
         if (record.status === "rolled-back") {
             return record;
         }
-        if (record.status === "completed") {
-            const active = await this.journal.getActive(record.siteId);
-            if (active && active.id !== record.id) {
-                throw Object.assign(new Error("Another migration already owns maintenance mode"), { status: 423 });
-            }
+        if (!(await this.journal.claim(record))) {
+            throw Object.assign(new Error("Another migration already owns maintenance mode"), { status: 423 });
         }
-        return rollbackCollectionMigration(this.context(), record);
+        return this.runExclusive(record.id, () => rollbackCollectionMigration(this.context(), record));
     }
 
     private context() {
-        return { repository: this.repository, collections: this.collections, journal: this.journal };
+        return {
+            repository: this.repository,
+            collections: this.collections,
+            journal: this.journal,
+            referenceSources: this.referenceSources,
+        };
+    }
+
+    private async runExclusive<T>(id: string, operation: () => Promise<T>): Promise<T> {
+        if (this.running.has(id)) {
+            throw Object.assign(new Error("This collection migration is already running"), { status: 423 });
+        }
+        this.running.add(id);
+        try {
+            return await operation();
+        } finally {
+            this.running.delete(id);
+        }
     }
 }

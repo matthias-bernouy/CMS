@@ -1,51 +1,58 @@
 import { collectionThemeTokenId, type CollectionRelease } from "@bernouy/cms-repository/collections";
 import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import { replaceCollectionTextExpressions } from "@bernouy/cms-repository/collections/texts";
-import { isDeepStrictEqual } from "node:util";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import { assertContentRefsExist } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
 import type { TPage } from "cms-content/pages/interfaces/pages";
-import type { CollectionMigrationRecord } from "../interfaces";
+import type { CollectionMigrationRecord, CollectionMigrationReferenceSource } from "../interfaces";
 import { referencesThemeToken } from "../transforms/themeTokenReferences";
+import { validateTargetSiteResources } from "../planning/siteResources";
+import { migrationThemeTokenIds, themeTokenValuesMatch } from "./theme";
 import { forEachMigrationPage } from "./concurrency";
-import { installationsMatch, migrationTargetsMatch } from "./helpers";
+import { migrationTargetInstallationsMatch } from "./helpers";
 
 type RollbackValidationContext = {
     repository: CmsRepository;
     collections: CollectionStore;
+    referenceSources: readonly CollectionMigrationReferenceSource[];
 };
 
 export async function assertRollbackSafe(
     context: RollbackValidationContext,
     record: CollectionMigrationRecord,
 ): Promise<void> {
-    const [state, system, pages, previousArtifacts] = await Promise.all([
+    const [state, system, pages, previousArtifacts, records, referenceSnapshots] = await Promise.all([
         context.collections.snapshot(record.siteId),
         context.repository.getSystem(),
         context.repository.getAllPages(),
-        Promise.all(record.installationsBefore.map(({ digest }) => context.collections.getRelease(digest))),
+        Promise.all(
+            record.installationsBefore
+                .filter(({ collectionId }) =>
+                    record.replacements.some((replacement) => replacement.collectionId === collectionId),
+                )
+                .map(({ digest }) => context.collections.getRelease(digest)),
+        ),
+        context.repository.getBlocRecords(),
+        Promise.all(context.referenceSources.map((source) => source.snapshot(record.siteId))),
     ]);
-    const restoredCollection =
-        !!record.rollbackStartedAt &&
-        state.revision === record.expectedCollectionRevision + 2 &&
-        installationsMatch(state.collections, record.installationsBefore);
-    if (
-        state.revision !== record.expectedCollectionRevision &&
-        (state.revision !== record.expectedCollectionRevision + 1 ||
-            !migrationTargetsMatch(state.collections, record)) &&
-        !restoredCollection
-    ) {
-        unsafe("Collections changed after the migration; rollback is unsafe");
+    const targetsApplied = migrationTargetInstallationsMatch(state.collections, record, "after");
+    const targetsRestored = migrationTargetInstallationsMatch(state.collections, record, "before");
+    if (!targetsApplied && !targetsRestored) {
+        unsafe("A migrated collection changed after the migration; rollback is unsafe");
     }
     if (
-        ![
-            record.systemBefore,
-            record.systemAfterCollectionCommit,
-            record.systemAfter,
-            record.systemAfterCollectionRollback,
-        ].some((expected) => isDeepStrictEqual(system, expected))
+        !themeTokenValuesMatch(
+            system.theme,
+            [
+                record.systemBefore.theme,
+                record.systemAfterCollectionCommit.theme,
+                record.systemAfter.theme,
+                record.systemAfterCollectionRollback.theme,
+            ],
+            migrationThemeTokenIds(record),
+        )
     ) {
-        unsafe("System settings changed after the migration; rollback is unsafe");
+        unsafe("Migrated theme token values changed after the migration; rollback is unsafe");
     }
     if (previousArtifacts.some((artifact) => !artifact)) {
         unsafe("A collection release required by the rollback is no longer available");
@@ -53,6 +60,19 @@ export async function assertRollbackSafe(
     const previousReleases = previousArtifacts.map((artifact) => artifact!.release);
     const prospectivePages = assertMigratedPagesUnchanged(record, pages);
     await assertProspectivePagesValid(context.repository, state.collections, previousReleases, prospectivePages);
+    const blocked: string[] = [];
+    await validateTargetSiteResources(
+        context.repository,
+        state.collections,
+        previousReleases.map((release) => ({ artifact: { release } })),
+        records,
+        referenceSnapshots,
+        record.resources.filter(({ kind, change }) => kind === "theme-token" && change === "added").map(({ id }) => id),
+        blocked,
+    );
+    if (blocked.length) {
+        unsafe(`Rollback would invalidate site resources: ${blocked.join(" ")}`);
+    }
 }
 
 function assertMigratedPagesUnchanged(record: CollectionMigrationRecord, pages: readonly TPage[]): TPage[] {
@@ -60,17 +80,14 @@ function assertMigratedPagesUnchanged(record: CollectionMigrationRecord, pages: 
     const prospectiveById = new Map(currentById);
     for (const change of record.pages) {
         const page = currentById.get(change.before.id);
-        const untouched = page?.revision === change.before.revision && page.content === change.before.content;
-        const appliedRevision = change.appliedRevision ?? change.before.revision + 1;
-        const migrated = page?.revision === appliedRevision && page.content === change.afterContent;
-        const restored =
-            !!record.rollbackStartedAt &&
-            page?.revision === (change.rolledBackRevision ?? appliedRevision + 1) &&
-            page.content === change.before.content;
-        if (!untouched && !migrated && !restored) {
+        if (!page) {
+            prospectiveById.delete(change.before.id);
+            continue;
+        }
+        if (page.content !== change.before.content && page.content !== change.afterContent) {
             unsafe(`Page changed after migration: ${change.before.path}`);
         }
-        prospectiveById.set(change.before.id, change.before);
+        prospectiveById.set(change.before.id, { ...page, content: change.before.content });
     }
     return [...prospectiveById.values()];
 }
@@ -81,7 +98,12 @@ async function assertProspectivePagesValid(
     previousReleases: readonly CollectionRelease[],
     pages: readonly TPage[],
 ): Promise<void> {
-    const currentBlocIds = new Set(currentCollections.flatMap(({ release }) => release.blocs.map((bloc) => bloc.id)));
+    const targetIds = new Set(previousReleases.map(({ collectionId }) => collectionId));
+    const replacedBlocIds = new Set(
+        currentCollections
+            .filter(({ release }) => targetIds.has(release.collectionId))
+            .flatMap(({ release }) => release.blocs.map((bloc) => bloc.id)),
+    );
     const currentBlocs = await repository.getBlocsList({ includeInactive: true });
     const previousBlocs = previousReleases.flatMap((release) =>
         release.blocs.map((bloc) => ({
@@ -90,12 +112,20 @@ async function assertProspectivePagesValid(
             ...(bloc.kind === "component" && bloc.settings ? { collectionSettings: bloc.settings } : {}),
         })),
     );
-    const prospectiveBlocs = [...currentBlocs.filter(({ id }) => !currentBlocIds.has(id)), ...previousBlocs];
-    const currentTokens = collectionTokenIds(currentCollections.map(({ release }) => release));
+    const prospectiveBlocs = [...currentBlocs.filter(({ id }) => !replacedBlocIds.has(id)), ...previousBlocs];
+    const finalReleases = [
+        ...currentCollections
+            .filter(({ release }) => !targetIds.has(release.collectionId))
+            .map(({ release }) => release),
+        ...previousReleases,
+    ];
+    const currentTokens = collectionTokenIds(
+        currentCollections.filter(({ release }) => targetIds.has(release.collectionId)).map(({ release }) => release),
+    );
     const previousTokens = collectionTokenIds(previousReleases);
     const removedTokens = [...currentTokens].filter((id) => !previousTokens.has(id));
     const texts = new Map(
-        previousReleases.map((release) => [release.collectionId, new Set((release.texts ?? []).map(({ id }) => id))]),
+        finalReleases.map((release) => [release.collectionId, new Set((release.texts ?? []).map(({ id }) => id))]),
     );
 
     await forEachMigrationPage(pages, async (page) => {

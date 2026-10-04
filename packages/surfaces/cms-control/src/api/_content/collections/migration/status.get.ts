@@ -9,16 +9,17 @@ export default async function migrationStatus(request: Request, cms: ControlCms)
     if (!service.migrations || !id) {
         throw Object.assign(new Error("Collection migration service and ID are required"), { status: 400 });
     }
-    const record = await service.migrations.get(service.siteId, id);
-    if (!record) {
+    const progress = await service.migrations.getProgress(service.siteId, id);
+    if (!progress) {
         throw Object.assign(new Error("Unknown collection migration"), { status: 404 });
     }
     return Response.json({
-        id: record.id,
-        status: record.status,
-        updatedAt: record.updatedAt,
-        error: record.error,
-        migratedPages: record.pages.filter((page) => page.state === "applied").length,
-        totalPages: record.pages.length,
+        id: progress.id,
+        status: progress.status,
+        updatedAt: progress.updatedAt,
+        error: progress.error,
+        migratedPages: progress.appliedPages,
+        rolledBackPages: progress.rolledBackPages,
+        totalPages: progress.totalPages,
     });
 }

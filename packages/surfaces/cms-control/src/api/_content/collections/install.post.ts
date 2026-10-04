@@ -72,11 +72,9 @@ export default async function install(req: Request, cms: ControlCms) {
         if (!cms.config.collections?.migrations) {
             throw Object.assign(new Error("This upgrade needs the collection migration service"), { status: 503 });
         }
-        const record = await cms.config.collections.migrations.execute(
-            siteId,
-            [{ digest: admitted.digest, repositoryId: sourceId }],
-            revision,
-        );
+        const targets = [{ digest: admitted.digest, repositoryId: sourceId }];
+        const plan = await cms.config.collections.migrations.plan(siteId, targets, revision);
+        const record = await cms.config.collections.migrations.execute(siteId, targets, revision, plan.planDigest);
         migrationId = record.id;
         return store.snapshot(siteId);
     }

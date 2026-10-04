@@ -2,6 +2,7 @@ import { createProductionAuth } from "./runtime/auth";
 import { mountProductionSurfaces } from "./runtime/mountSurfaces";
 import { createCoreStores } from "./runtime/stores/core";
 import { createFeatureStores } from "./runtime/stores/features";
+import { createDashboardMigrationReferences } from "./runtime/stores/dashboardMigrationReferences";
 import { createProductionGateway } from "./runtime/gateway/createProductionGateway";
 import { validateCmsStorageRoots } from "./runtime/stores/storageRoots";
 import { readRuntimeEnv } from "./runtimeEnv";
@@ -11,7 +12,8 @@ const env = readRuntimeEnv(process.env);
 await validateCmsStorageRoots(env.CMS_FILES_DIR);
 
 const core = await createCoreStores(env);
-const features = await createFeatureStores(core.db);
+const features = await createFeatureStores(core.db, core.migrationStorage);
+core.collectionMigrations.addReferenceSource(createDashboardMigrationReferences(features.dashboardRepository));
 const authentication = await createProductionAuth(env, core);
 const gateway = env.CMS_GATEWAY_SITE_ID
     ? await createProductionGateway(

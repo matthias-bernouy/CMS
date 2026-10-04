@@ -2,7 +2,7 @@ import { CollectionStore } from "@bernouy/cms-repository/collections/installatio
 import { MongoCollectionStorage } from "@bernouy/cms-repository/collections/mongo";
 import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
 import { withInstalledCollections } from "@bernouy/cms-content";
-import { CollectionMigrationService } from "@bernouy/cms-content/migrations";
+import { CollectionMigrationService, withCollectionMigrationWriteFence } from "@bernouy/cms-content/migrations";
 import {
     MongoAuthTokenStore,
     MongoIdentityProviderRepository,
@@ -40,11 +40,45 @@ export async function createCoreStores(env: RuntimeEnv) {
     await innerRepo.init();
     const collectionStorage = new MongoCollectionStorage(db);
     await collectionStorage.init();
-    const collections = new CollectionStore(collectionStorage, new MongoReleaseCatalogue(db));
-    const repo = new ValidatingCmsRepository(withInstalledCollections(innerRepo, collections, SCOPE_ID));
+    const migrationCollections = new CollectionStore(collectionStorage, new MongoReleaseCatalogue(db));
+    const migrationRepo = new ValidatingCmsRepository(
+        withInstalledCollections(innerRepo, migrationCollections, SCOPE_ID),
+    );
     const migrationStorage = new MongoCollectionMigrationStorage(db);
     await migrationStorage.init();
-    const collectionMigrations = new CollectionMigrationService(repo, collections, migrationStorage);
+    const collectionMigrations = new CollectionMigrationService(migrationRepo, migrationCollections, migrationStorage);
+    const repo = withCollectionMigrationWriteFence(migrationRepo, migrationStorage, SCOPE_ID, [
+        "updateSiteBlocCollection",
+        "createSiteBlocCollection",
+        "createBloc",
+        "replaceBloc",
+        "createSiteBloc",
+        "saveSiteBlocDraft",
+        "publishSiteBloc",
+        "archiveSiteBloc",
+        "restoreSiteBloc",
+        "insertPage",
+        "updatePage",
+        "deletePage",
+        "setPagePaths",
+        "deletePageWithAlternative",
+        "updateSystem",
+    ]);
+    const collections = withCollectionMigrationWriteFence(
+        migrationCollections,
+        migrationStorage,
+        (_method, args) => String(args[0]),
+        [
+            "install",
+            "installMany",
+            "upgrade",
+            "commitMigration",
+            "restoreMigration",
+            "saveConfiguration",
+            "uninstall",
+            "saveTexts",
+        ],
+    );
 
     const mongoFilesMetadata = new MongoCmsFilesMetadata(db);
     await mongoFilesMetadata.init();
@@ -73,6 +107,7 @@ export async function createCoreStores(env: RuntimeEnv) {
     return {
         collections,
         collectionMigrations,
+        migrationStorage,
         mongo,
         db,
         repo,

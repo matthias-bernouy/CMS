@@ -1,4 +1,5 @@
 import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
+import { isDeepStrictEqual } from "node:util";
 import type { CollectionInstallation, CollectionMigrationReplacement, CollectionStorage } from "../../interfaces/store";
 import { assertCollectionResourceIsolation } from "../resourceIsolation";
 import { validateStoredCollectionInstallation, writeCollectionSiteState } from "../siteState";
@@ -56,10 +57,37 @@ export async function restoreCollectionsAfterMigration(
     storage: CollectionStorage,
     siteId: string,
     installations: readonly CollectionInstallation[],
+    replacements: readonly CollectionMigrationReplacement[],
     expectedRevision: number,
 ): Promise<void> {
     const state = await storage.readSite(siteId);
-    const restored = installations.map((installation) => structuredClone(installation));
+    const originals = new Map(installations.map((installation) => [installation.collectionId, installation]));
+    const targets = new Map(replacements.map((replacement) => [replacement.collectionId, replacement]));
+    if (!targets.size || targets.size !== replacements.length) {
+        throw new TypeError("A rollback needs unique collection replacements");
+    }
+    const restored = state.installations.map((installation) => {
+        const target = targets.get(installation.collectionId);
+        if (!target) {
+            return installation;
+        }
+        const original = originals.get(installation.collectionId);
+        if (!original) {
+            throw new Error(`Missing original collection installation: ${installation.collectionId}`);
+        }
+        if (!isDeepStrictEqual(installation, target) && !isDeepStrictEqual(installation, original)) {
+            throw Object.assign(new Error(`Collection changed after migration: ${installation.collectionId}`), {
+                status: 409,
+            });
+        }
+        targets.delete(installation.collectionId);
+        return structuredClone(original);
+    });
+    if (targets.size) {
+        throw Object.assign(new Error(`Collection is no longer installed: ${[...targets.keys()].join(", ")}`), {
+            status: 409,
+        });
+    }
     await validateGraph(storage, restored);
     await writeCollectionSiteState(storage, siteId, state.revision, expectedRevision, {
         revision: expectedRevision + 1,

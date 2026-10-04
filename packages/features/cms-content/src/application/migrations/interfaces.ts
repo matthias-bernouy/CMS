@@ -22,6 +22,23 @@ export type CollectionMigrationTarget = {
     repositoryId?: string;
 };
 
+export type CollectionMigrationResourceReference = {
+    kind: "view";
+    collectionId: string;
+    id: string;
+    location: string;
+};
+
+export type CollectionMigrationReferenceSnapshot = {
+    digest: string;
+    references: readonly CollectionMigrationResourceReference[];
+};
+
+export interface CollectionMigrationReferenceSource {
+    readonly id: string;
+    snapshot(siteId: string): Promise<CollectionMigrationReferenceSnapshot>;
+}
+
 export type CollectionMigrationResourceChange = {
     collectionId: string;
     kind: CollectionResourceDescriptor["kind"];
@@ -38,12 +55,18 @@ export type CollectionMigrationPageChange = {
     state: "pending" | "applied" | "rolled-back";
     appliedRevision?: number;
     rolledBackRevision?: number;
+    /** The page was deliberately deleted after migration; rollback keeps it deleted. */
+    deletedAfterMigration?: true;
 };
 
 export type PreparedCollectionMigration = {
     siteId: string;
     expectedCollectionRevision: number;
     pageRevisionDigest: string;
+    /** Digest of site-owned blocs and registered feature references. */
+    siteResourceDigest: string;
+    /** Digest of the complete executable plan, including exact page snapshots. */
+    planDigest: string;
     installationsBefore: readonly CollectionInstallation[];
     replacements: readonly CollectionMigrationReplacement[];
     operationGroups: readonly { collectionId: string; operations: readonly CollectionMigrationOperation[] }[];
@@ -75,6 +98,7 @@ export type CollectionMigrationActive = Pick<CollectionMigrationRecord, "id" | "
 export type CollectionMigrationSummary = {
     siteId: string;
     expectedCollectionRevision: number;
+    planDigest: string;
     targets: readonly { collectionId: string; fromDigest: string; toDigest: string }[];
     resources: readonly CollectionMigrationResourceChange[];
     pages: readonly { id: string; path: string; revision: number; operations: number }[];
@@ -82,9 +106,32 @@ export type CollectionMigrationSummary = {
     blockedReasons: readonly string[];
 };
 
-export interface CollectionMigrationStorage {
+export type CollectionMigrationProgress = Pick<
+    CollectionMigrationRecord,
+    "id" | "siteId" | "status" | "createdAt" | "updatedAt" | "error"
+> & {
+    totalPages: number;
+    pendingPages: number;
+    appliedPages: number;
+    rolledBackPages: number;
+};
+
+/**
+ * Site-wide write barrier used by every public persistence facade. Migration
+ * code owns the barrier and deliberately writes through its unfenced stores.
+ */
+export interface CollectionMigrationWriteFence {
+    claimMaintenance(siteId: string, migrationId: string): Promise<boolean>;
+    /** Stops renewing ownership while keeping the site locked for an explicit resume or rollback. */
+    yieldMaintenance(siteId: string, migrationId: string): Promise<void>;
+    releaseMaintenance(siteId: string, migrationId: string): Promise<void>;
+    withWrite<T>(siteId: string, operation: () => Promise<T>): Promise<T>;
+}
+
+export interface CollectionMigrationStorage extends CollectionMigrationWriteFence {
     get(id: string): Promise<CollectionMigrationRecord | null>;
     getActive(siteId: string): Promise<CollectionMigrationActive | null>;
+    getProgress(id: string): Promise<CollectionMigrationProgress | null>;
     create(record: CollectionMigrationRecord): Promise<boolean>;
     replace(id: string, expectedRevision: number, next: CollectionMigrationRecord): Promise<boolean>;
     replacePage(
@@ -93,4 +140,5 @@ export interface CollectionMigrationStorage {
         expectedState: CollectionMigrationPageChange["state"],
         next: CollectionMigrationPageChange,
     ): Promise<boolean>;
+    pruneTerminal(siteId: string, keep: number): Promise<void>;
 }

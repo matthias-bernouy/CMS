@@ -45,6 +45,48 @@ test("keeps compatible pages created after migration when rollback succeeds", as
     expect((await fixture.collections.snapshot("site")).collections[0]!.digest).not.toBe(fixture.next.digest);
 });
 
+test("preserves page metadata changes while restoring only migrated content", async () => {
+    const fixture = await rollbackFixture();
+    const completed = await fixture.service.execute("site", [{ digest: fixture.next.digest }], 1);
+    const page = (await fixture.repository.getPage("/existing"))!;
+    await fixture.repository.updatePage({ id: page.id, title: "Renamed after migration" }, page.revision);
+
+    await fixture.service.rollback("site", completed.id);
+    expect(await fixture.repository.getPage("/existing")).toMatchObject({
+        title: "Renamed after migration",
+        content: "<atlas-card></atlas-card>",
+    });
+});
+
+test("keeps a deliberately deleted migrated page deleted on rollback", async () => {
+    const fixture = await rollbackFixture();
+    const completed = await fixture.service.execute("site", [{ digest: fixture.next.digest }], 1);
+    const page = (await fixture.repository.getPage("/existing"))!;
+    await fixture.repository.deletePage(page.id, page.revision);
+
+    const rolledBack = await fixture.service.rollback("site", completed.id);
+    expect(rolledBack.pages[0]).toMatchObject({ state: "rolled-back", deletedAfterMigration: true });
+    expect(await fixture.repository.getPage("/existing")).toBeNull();
+});
+
+test("preserves unrelated collection installations during rollback", async () => {
+    const fixture = await rollbackFixture();
+    const completed = await fixture.service.execute("site", [{ digest: fixture.next.digest }], 1);
+    const companion = await fixture.collections.importRelease({
+        ...release("1.0.0", "companion-widget", false),
+        collectionId: "companion",
+        publisherId: "companion.official",
+    });
+    await fixture.collections.install("site", companion.digest, 2);
+
+    await fixture.service.rollback("site", completed.id);
+    const snapshot = await fixture.collections.snapshot("site");
+    expect(snapshot.collections.map(({ collectionId }) => collectionId).sort()).toEqual(["atlas", "companion"]);
+    expect(snapshot.collections.find(({ collectionId }) => collectionId === "companion")?.digest).toBe(
+        companion.digest,
+    );
+});
+
 async function rollbackFixture() {
     const collections = new CollectionStore(new MemoryCollectionStorage());
     const previous = await collections.importRelease(release("1.0.0", "atlas-card", false));

@@ -1,5 +1,8 @@
 import type { CollectionRelease } from "@bernouy/cms-repository/collections";
-import { parseCollectionTextOverrides } from "@bernouy/cms-repository/collections/texts";
+import {
+    parseCollectionTextOverrides,
+    replaceCollectionTextExpressions,
+} from "@bernouy/cms-repository/collections/texts";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import { assertContentRefsExist } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
@@ -47,13 +50,11 @@ export async function validateTargetPages(
         })),
     );
     const finalBlocs = [...current.filter((bloc) => !oldIds.has(bloc.id)), ...targetBlocs];
-    const collectionPrefixes = [...targetIds].map((collectionId) => `<${collectionId}-`);
+    const texts = collectionTexts(finalReleases(installed, targets));
     for (const { page, content } of pages) {
-        if (!collectionPrefixes.some((prefix) => content.includes(prefix))) {
-            continue;
-        }
         try {
             await assertContentRefsExist({ getBlocsList: async () => finalBlocs }, content);
+            assertTextReferences(content, texts);
         } catch (error) {
             blocked.push(migrationIssue(`Page ${page.path} is incompatible with the target collections`, error));
         }
@@ -94,4 +95,27 @@ export function validateTargetTheme(
 
 export function migrationIssue(context: string, error: unknown): string {
     return `${context}: ${error instanceof Error ? error.message : "unknown validation error"}.`;
+}
+
+function finalReleases(
+    installed: readonly { release: CollectionRelease }[],
+    targets: readonly { artifact: { release: CollectionRelease } }[],
+): CollectionRelease[] {
+    const byId = new Map(targets.map(({ artifact }) => [artifact.release.collectionId, artifact.release]));
+    return installed.map(({ release }) => byId.get(release.collectionId) ?? release);
+}
+
+function collectionTexts(releases: readonly CollectionRelease[]): Map<string, Set<string>> {
+    return new Map(
+        releases.map((release) => [release.collectionId, new Set((release.texts ?? []).map(({ id }) => id))]),
+    );
+}
+
+function assertTextReferences(content: string, texts: ReadonlyMap<string, ReadonlySet<string>>): void {
+    replaceCollectionTextExpressions(content, (collectionId, textId) => {
+        if (!texts.get(collectionId)?.has(textId)) {
+            throw new Error(`references collection text ${collectionId}.${textId}`);
+        }
+        return "";
+    });
 }

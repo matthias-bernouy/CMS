@@ -85,8 +85,13 @@ export class CollectionStore {
         return this.snapshot(siteId);
     }
 
-    async restoreMigration(siteId: string, installations: readonly CollectionInstallation[], expectedRevision: number) {
-        await restoreCollectionsAfterMigration(this.storage, siteId, installations, expectedRevision);
+    async restoreMigration(
+        siteId: string,
+        installations: readonly CollectionInstallation[],
+        replacements: readonly CollectionMigrationReplacement[],
+        expectedRevision: number,
+    ) {
+        await restoreCollectionsAfterMigration(this.storage, siteId, installations, replacements, expectedRevision);
         return this.snapshot(siteId);
     }
 

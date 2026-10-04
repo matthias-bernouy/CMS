@@ -1,6 +1,7 @@
 import type {
     CollectionMigrationActive,
     CollectionMigrationRecord,
+    CollectionMigrationProgress,
     CollectionMigrationStatus,
     CollectionMigrationStorage,
 } from "../interfaces";
@@ -10,6 +11,11 @@ export class MigrationJournal {
 
     getActive(siteId: string): Promise<CollectionMigrationActive | null> {
         return this.storage.getActive(siteId);
+    }
+
+    async getProgress(siteId: string, id: string): Promise<CollectionMigrationProgress | null> {
+        const progress = await this.storage.getProgress(id);
+        return progress?.siteId === siteId ? progress : null;
     }
 
     current(id: string): Promise<CollectionMigrationRecord | null> {
@@ -29,8 +35,24 @@ export class MigrationJournal {
         return record;
     }
 
-    create(record: CollectionMigrationRecord): Promise<boolean> {
-        return this.storage.create(record);
+    async create(record: CollectionMigrationRecord): Promise<boolean> {
+        if (!(await this.storage.claimMaintenance(record.siteId, record.id))) {
+            return false;
+        }
+        try {
+            if (await this.storage.create(record)) {
+                return true;
+            }
+        } catch (error) {
+            await this.storage.releaseMaintenance(record.siteId, record.id);
+            throw error;
+        }
+        await this.storage.releaseMaintenance(record.siteId, record.id);
+        return false;
+    }
+
+    claim(record: Pick<CollectionMigrationRecord, "id" | "siteId">): Promise<boolean> {
+        return this.storage.claimMaintenance(record.siteId, record.id);
     }
 
     transition(
@@ -53,6 +75,10 @@ export class MigrationJournal {
         };
         if (!(await this.storage.replace(record.id, record.revision, next))) {
             throw Object.assign(new Error("Migration journal changed concurrently"), { status: 409 });
+        }
+        if (next.status === "completed" || next.status === "rolled-back") {
+            await this.storage.releaseMaintenance(next.siteId, next.id).catch(() => undefined);
+            void this.storage.pruneTerminal(next.siteId, 100).catch(() => undefined);
         }
         return next;
     }
@@ -80,5 +106,6 @@ export class MigrationJournal {
             updatedAt: new Date().toISOString(),
             error: error instanceof Error ? error.message : "Unknown migration failure",
         });
+        await this.storage.yieldMaintenance(current.siteId, current.id).catch(() => undefined);
     }
 }

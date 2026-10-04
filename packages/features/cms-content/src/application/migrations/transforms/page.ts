@@ -7,8 +7,17 @@ export function migratePageContent(
     operations: readonly CollectionMigrationOperation[],
     collectionId: string,
 ): { content: string; applied: number } {
-    const { document } = parseHTML(`<!doctype html><html><body>${html}</body></html>`);
+    let migratedHtml = html;
     let applied = 0;
+    for (const operation of operations) {
+        if (operation.kind === "rename-text") {
+            const migrated = renameTextReferences(migratedHtml, collectionId, operation.from, operation.to);
+            migratedHtml = migrated.content;
+            applied += migrated.applied;
+        }
+    }
+    const { document } = parseHTML(`<!doctype html><html><body>${migratedHtml}</body></html>`);
+    let markupApplied = 0;
     for (const operation of operations) {
         if (operation.kind === "rename-bloc") {
             for (const element of [...document.querySelectorAll(operation.from)]) {
@@ -18,7 +27,7 @@ export function migratePageContent(
                 }
                 replacement.append(...[...element.childNodes]);
                 element.replaceWith(replacement);
-                applied += 1;
+                markupApplied += 1;
             }
             continue;
         }
@@ -29,7 +38,7 @@ export function migratePageContent(
             operation.kind === "map-setting-value"
         ) {
             for (const element of [...document.querySelectorAll(operation.bloc)]) {
-                applied += migrateSetting(element, operation);
+                markupApplied += migrateSetting(element, operation);
             }
             continue;
         }
@@ -41,13 +50,36 @@ export function migratePageContent(
                     const value = replaceThemeTokenReference(attribute.value, from, to);
                     if (value !== attribute.value) {
                         element.setAttribute(attribute.name, value);
-                        applied += 1;
+                        markupApplied += 1;
                     }
                 }
             }
         }
     }
-    return { content: applied ? document.body.innerHTML : html, applied };
+    return {
+        content: markupApplied ? document.body.innerHTML : migratedHtml,
+        applied: applied + markupApplied,
+    };
+}
+
+function renameTextReferences(
+    content: string,
+    collectionId: string,
+    from: string,
+    to: string,
+): { content: string; applied: number } {
+    let applied = 0;
+    const migrated = content.replace(
+        /\{\{\s*cms\.i18n\.([a-z][a-z0-9-]{0,95})\.([a-z][a-z0-9-]{0,95})\s*\}\}/gu,
+        (expression, owner: string, textId: string) => {
+            if (owner !== collectionId || textId !== from) {
+                return expression;
+            }
+            applied += 1;
+            return `{{ cms.i18n.${collectionId}.${to} }}`;
+        },
+    );
+    return { content: migrated, applied };
 }
 
 function migrateSetting(element: Element, operation: CollectionMigrationOperation): number {

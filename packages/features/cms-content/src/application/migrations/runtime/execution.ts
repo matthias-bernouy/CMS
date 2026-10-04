@@ -2,7 +2,8 @@ import type { CollectionStore } from "@bernouy/cms-repository/collections/instal
 import { isDeepStrictEqual } from "node:util";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { CollectionMigrationRecord } from "../interfaces";
-import { collectionPageRevisionDigest } from "../plan";
+import type { CollectionMigrationReferenceSource } from "../interfaces";
+import { collectionPageRevisionDigest, collectionSiteResourceDigest } from "../plan";
 import { forEachMigrationPage } from "./concurrency";
 import { installationsMatch, migrationTargetsMatch } from "./helpers";
 import type { MigrationJournal } from "./journal";
@@ -11,6 +12,7 @@ type ExecutionContext = {
     repository: CmsRepository;
     collections: CollectionStore;
     journal: MigrationJournal;
+    referenceSources: readonly CollectionMigrationReferenceSource[];
 };
 
 export async function runCollectionMigration(
@@ -65,13 +67,13 @@ export async function runCollectionMigration(
 
 async function applySystemMigration(repository: CmsRepository, record: CollectionMigrationRecord): Promise<void> {
     const current = await repository.getSystem();
-    if (isDeepStrictEqual(current, record.systemAfter)) {
+    if (isDeepStrictEqual(current.theme, record.systemAfter.theme)) {
         return;
     }
-    if (!isDeepStrictEqual(current, record.systemAfterCollectionCommit)) {
+    if (!isDeepStrictEqual(current.theme, record.systemAfterCollectionCommit.theme)) {
         throw new Error("System settings changed during migration");
     }
-    await repository.updateSystem(record.systemAfter);
+    await repository.updateSystem({ theme: record.systemAfter.theme });
 }
 
 async function migratePages(context: ExecutionContext, record: CollectionMigrationRecord): Promise<void> {
@@ -121,15 +123,18 @@ async function assertPagesApplied(repository: CmsRepository, record: CollectionM
 }
 
 async function assertSnapshotCurrent(context: ExecutionContext, record: CollectionMigrationRecord): Promise<void> {
-    const [state, pages, system] = await Promise.all([
+    const [state, pages, system, blocRecords, referenceSnapshots] = await Promise.all([
         context.collections.snapshot(record.siteId),
         context.repository.getAllPages(),
         context.repository.getSystem(),
+        context.repository.getBlocRecords(),
+        Promise.all(context.referenceSources.map((source) => source.snapshot(record.siteId))),
     ]);
     if (
         state.revision !== record.expectedCollectionRevision ||
         !installationsMatch(state.collections, record.installationsBefore) ||
         collectionPageRevisionDigest(pages) !== record.pageRevisionDigest ||
+        collectionSiteResourceDigest(blocRecords, referenceSnapshots) !== record.siteResourceDigest ||
         !isDeepStrictEqual(system, record.systemBefore)
     ) {
         throw Object.assign(new Error("Site content changed while the migration plan was being acquired; retry"), {

@@ -37,7 +37,7 @@ export function migrateTextOverrides(
 ): Readonly<Record<string, Readonly<Record<string, string>>>> {
     const output = structuredClone(input) as Record<string, Readonly<Record<string, string>>>;
     for (const operation of operations) {
-        if (operation.kind === "rename-text-override" && Object.hasOwn(output, operation.from)) {
+        if (operation.kind === "rename-text" && Object.hasOwn(output, operation.from)) {
             if (Object.hasOwn(output, operation.to)) {
                 throw new Error(`Text override migration collides with ${operation.to}`);
             }
