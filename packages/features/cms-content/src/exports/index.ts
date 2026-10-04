@@ -64,6 +64,7 @@ export type {
     BlocListOptions,
     PageLink,
     PageMeta,
+    PageScan,
     PagesQuery,
     SiteBlocPublicationGuard,
     ValueCount,

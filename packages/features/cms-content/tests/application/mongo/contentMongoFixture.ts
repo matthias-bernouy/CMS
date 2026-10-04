@@ -224,7 +224,7 @@ function matches(document: StoredDocument, filter: Filter): boolean {
     return Object.entries(filter).every(([key, expected]) => {
         const { exists, value } = nestedValue(document, key);
         if (expected && typeof expected === "object" && !Array.isArray(expected)) {
-            const operator = expected as { $eq?: unknown; $exists?: boolean; $ne?: unknown };
+            const operator = expected as { $eq?: unknown; $exists?: boolean; $gt?: unknown; $ne?: unknown };
             if (operator.$exists !== undefined && exists !== operator.$exists) {
                 return false;
             }
@@ -234,10 +234,14 @@ function matches(document: StoredDocument, filter: Filter): boolean {
             if (Object.prototype.hasOwnProperty.call(operator, "$eq") && !Bun.deepEquals(value, operator.$eq)) {
                 return false;
             }
+            if (Object.prototype.hasOwnProperty.call(operator, "$gt") && String(value) <= String(operator.$gt)) {
+                return false;
+            }
             if (
                 operator.$exists !== undefined ||
                 Object.prototype.hasOwnProperty.call(operator, "$ne") ||
-                Object.prototype.hasOwnProperty.call(operator, "$eq")
+                Object.prototype.hasOwnProperty.call(operator, "$eq") ||
+                Object.prototype.hasOwnProperty.call(operator, "$gt")
             ) {
                 return true;
             }

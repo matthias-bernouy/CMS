@@ -36,6 +36,19 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         return Array.from(this.pages.values()).map((page) => ({ ...page }));
     }
 
+    async scanPages(cursor: string | undefined, limit: number) {
+        requirePageScan(cursor, limit);
+        const pages = [...this.pages.values()]
+            .filter((page) => cursor === undefined || page.id > cursor)
+            .sort((left, right) => left.id.localeCompare(right.id))
+            .slice(0, limit)
+            .map((page) => structuredClone(page));
+        return {
+            pages,
+            ...(pages.length === limit ? { nextCursor: pages.at(-1)!.id } : {}),
+        };
+    }
+
     async getPublishedPage(path: string): Promise<TPage | null> {
         if (this.pageRoutes.get(path)?.state === "gone") {
             return null;
@@ -273,6 +286,17 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         if (this.system.pageRoutesUpdating) {
             throw new Error("Page route migration is in progress.");
         }
+    }
+}
+
+function requirePageScan(cursor: string | undefined, limit: number): void {
+    if (
+        (cursor !== undefined && (typeof cursor !== "string" || !cursor || cursor.length > 256)) ||
+        !Number.isSafeInteger(limit) ||
+        limit < 1 ||
+        limit > 1_000
+    ) {
+        throw new TypeError("Page scan requires a valid cursor and a limit between 1 and 1000");
     }
 }
 

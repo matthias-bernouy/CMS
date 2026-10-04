@@ -3,7 +3,6 @@ import type { CollectionStore } from "@bernouy/cms-repository/collections/instal
 import { replaceCollectionTextExpressions } from "@bernouy/cms-repository/collections/texts";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import { assertContentRefsExist } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
-import type { TPage } from "cms-content/pages/interfaces/pages";
 import type { CollectionMigrationParticipant, CollectionMigrationRecord } from "../interfaces";
 import { snapshotMigrationParticipants } from "../planning/participants";
 import { referencesThemeToken } from "../transforms/themeTokenReferences";
@@ -11,6 +10,7 @@ import { validateTargetSiteResources } from "../planning/siteResources";
 import { migrationThemeTokenIds, themeTokenValuesMatch } from "./theme";
 import { forEachMigrationPage } from "./concurrency";
 import { migrationTargetInstallationsMatch } from "./helpers";
+import { collectionPageBatches } from "../planning/pageScan";
 
 type RollbackValidationContext = {
     repository: CmsRepository;
@@ -22,10 +22,9 @@ export async function assertRollbackSafe(
     context: RollbackValidationContext,
     record: CollectionMigrationRecord,
 ): Promise<void> {
-    const [state, system, pages, previousArtifacts, records, referenceSnapshots] = await Promise.all([
+    const [state, system, previousArtifacts, records, referenceSnapshots] = await Promise.all([
         context.collections.snapshot(record.siteId),
         context.repository.getSystem(),
-        context.repository.getAllPages(),
         Promise.all(
             record.installationsBefore
                 .filter(({ collectionId }) =>
@@ -59,8 +58,8 @@ export async function assertRollbackSafe(
         unsafe("A collection release required by the rollback is no longer available");
     }
     const previousReleases = previousArtifacts.map((artifact) => artifact!.release);
-    const prospectivePages = assertMigratedPagesUnchanged(record, pages);
-    await assertProspectivePagesValid(context.repository, state.collections, previousReleases, prospectivePages);
+    await assertMigratedPagesUnchanged(context.repository, record);
+    await assertProspectivePagesValid(context.repository, state.collections, previousReleases, record);
     const blocked: string[] = [];
     await validateTargetSiteResources(
         context.repository,
@@ -76,28 +75,26 @@ export async function assertRollbackSafe(
     }
 }
 
-function assertMigratedPagesUnchanged(record: CollectionMigrationRecord, pages: readonly TPage[]): TPage[] {
-    const currentById = new Map(pages.map((page) => [page.id, page]));
-    const prospectiveById = new Map(currentById);
-    for (const change of record.pages) {
-        const page = currentById.get(change.before.id);
+async function assertMigratedPagesUnchanged(
+    repository: CmsRepository,
+    record: CollectionMigrationRecord,
+): Promise<void> {
+    await forEachMigrationPage(record.pages, async (change) => {
+        const page = await repository.getPageById(change.before.id);
         if (!page) {
-            prospectiveById.delete(change.before.id);
-            continue;
+            return;
         }
         if (page.content !== change.before.content && page.content !== change.afterContent) {
             unsafe(`Page changed after migration: ${change.before.path}`);
         }
-        prospectiveById.set(change.before.id, { ...page, content: change.before.content });
-    }
-    return [...prospectiveById.values()];
+    });
 }
 
 async function assertProspectivePagesValid(
     repository: CmsRepository,
     currentCollections: readonly { release: CollectionRelease }[],
     previousReleases: readonly CollectionRelease[],
-    pages: readonly TPage[],
+    record: CollectionMigrationRecord,
 ): Promise<void> {
     const targetIds = new Set(previousReleases.map(({ collectionId }) => collectionId));
     const replacedBlocIds = new Set(
@@ -129,26 +126,30 @@ async function assertProspectivePagesValid(
         finalReleases.map((release) => [release.collectionId, new Set((release.texts ?? []).map(({ id }) => id))]),
     );
 
-    await forEachMigrationPage(pages, async (page) => {
-        try {
-            await assertContentRefsExist({ getBlocsList: async () => prospectiveBlocs }, page.content);
-            for (const tokenId of removedTokens) {
-                if (referencesThemeToken(page.content, tokenId)) {
-                    throw new Error(`references theme token ${tokenId}`);
+    const changes = new Map(record.pages.map((change) => [change.before.id, change]));
+    for await (const pages of collectionPageBatches(repository)) {
+        await forEachMigrationPage(pages, async (page) => {
+            const content = changes.get(page.id)?.before.content ?? page.content;
+            try {
+                await assertContentRefsExist({ getBlocsList: async () => prospectiveBlocs }, content);
+                for (const tokenId of removedTokens) {
+                    if (referencesThemeToken(content, tokenId)) {
+                        throw new Error(`references theme token ${tokenId}`);
+                    }
                 }
+                replaceCollectionTextExpressions(content, (collectionId, textId) => {
+                    if (!texts.get(collectionId)?.has(textId)) {
+                        throw new Error(`references collection text ${collectionId}.${textId}`);
+                    }
+                    return "";
+                });
+            } catch (error) {
+                unsafe(
+                    `Rollback would invalidate page ${page.path}: ${error instanceof Error ? error.message : "unknown error"}`,
+                );
             }
-            replaceCollectionTextExpressions(page.content, (collectionId, textId) => {
-                if (!texts.get(collectionId)?.has(textId)) {
-                    throw new Error(`references collection text ${collectionId}.${textId}`);
-                }
-                return "";
-            });
-        } catch (error) {
-            unsafe(
-                `Rollback would invalidate page ${page.path}: ${error instanceof Error ? error.message : "unknown error"}`,
-            );
-        }
-    });
+        });
+    }
 }
 
 function collectionTokenIds(releases: readonly CollectionRelease[]): Set<string> {

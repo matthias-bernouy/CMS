@@ -128,6 +128,20 @@ export class MongoContentRepository extends MongoBlocRepository {
         return documents.map((document) => fromPageDoc(document)!);
     }
 
+    async scanPages(cursor: string | undefined, limit: number) {
+        requirePageScan(cursor, limit);
+        const documents = await this.pages
+            .find(cursor === undefined ? {} : { _id: { $gt: cursor } })
+            .sort({ _id: 1 })
+            .limit(limit)
+            .toArray();
+        const pages = documents.map((document) => fromPageDoc(document)!);
+        return {
+            pages,
+            ...(pages.length === limit ? { nextCursor: pages.at(-1)!.id } : {}),
+        };
+    }
+
     async getPublishedPage(path: string): Promise<TPage | null> {
         if ((await this.getPageRoute(path))?.state === "gone") {
             return null;
@@ -405,6 +419,17 @@ export class MongoContentRepository extends MongoBlocRepository {
         } catch (error) {
             rethrowPagePathConflict(error, path);
         }
+    }
+}
+
+function requirePageScan(cursor: string | undefined, limit: number): void {
+    if (
+        (cursor !== undefined && (typeof cursor !== "string" || !cursor || cursor.length > 256)) ||
+        !Number.isSafeInteger(limit) ||
+        limit < 1 ||
+        limit > 1_000
+    ) {
+        throw new TypeError("Page scan requires a valid cursor and a limit between 1 and 1000");
     }
 }
 

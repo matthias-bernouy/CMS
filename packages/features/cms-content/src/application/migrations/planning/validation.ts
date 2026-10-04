@@ -81,12 +81,8 @@ export function validateTargetTheme(
     pages: readonly { page: { path: string }; content: string }[],
     blocked: string[],
 ): void {
+    validateTargetPageThemeReferences(resources, pages, blocked);
     for (const resource of resources.filter((change) => change.kind === "theme-token" && change.change === "removed")) {
-        pages
-            .filter(({ content }) => referencesThemeToken(content, resource.id))
-            .forEach(({ page }) =>
-                blocked.push(`Page ${page.path} still references removed theme token ${resource.id}.`),
-            );
         if (
             system.theme.themes.some(({ values }) =>
                 [values.light, values.dark].some(
@@ -103,6 +99,20 @@ export function validateTargetTheme(
         composeCollectionThemes(system.theme, releases);
     } catch (error) {
         blocked.push(migrationIssue("Target theme graph is invalid", error));
+    }
+}
+
+export function validateTargetPageThemeReferences(
+    resources: readonly CollectionMigrationResourceChange[],
+    pages: readonly { page: { path: string }; content: string }[],
+    blocked: string[],
+): void {
+    for (const resource of resources.filter((change) => change.kind === "theme-token" && change.change === "removed")) {
+        pages
+            .filter(({ content }) => referencesThemeToken(content, resource.id))
+            .forEach(({ page }) =>
+                blocked.push(`Page ${page.path} still references removed theme token ${resource.id}.`),
+            );
     }
 }
 

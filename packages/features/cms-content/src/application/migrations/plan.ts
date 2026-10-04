@@ -15,9 +15,16 @@ import type {
 import { migratePageContent } from "./transforms/page";
 import { migrateConfiguration, migrateTextOverrides, migrateThemeTokens } from "./transforms/siteData";
 import { dependencyIssues, migrationOperations } from "./planning/evolution";
-import { migrationIssue, validateTargetData, validateTargetPages, validateTargetTheme } from "./planning/validation";
+import {
+    migrationIssue,
+    validateTargetData,
+    validateTargetPages,
+    validateTargetPageThemeReferences,
+    validateTargetTheme,
+} from "./planning/validation";
 import { validateTargetSiteResources } from "./planning/siteResources";
 import { snapshotMigrationParticipants } from "./planning/participants";
+import { collectionPageBatches } from "./planning/pageScan";
 
 export async function prepareCollectionMigration(
     repository: CmsRepository,
@@ -30,9 +37,8 @@ export async function prepareCollectionMigration(
     if (targets.length === 0 || targets.length > 256) {
         throw new TypeError("A migration needs between 1 and 256 target releases");
     }
-    const [snapshot, pages, system, blocRecords, referenceSnapshots] = await Promise.all([
+    const [snapshot, system, blocRecords, referenceSnapshots] = await Promise.all([
         collections.snapshot(siteId),
-        repository.getAllPages(),
         repository.getSystem(),
         repository.getBlocRecords(),
         snapshotMigrationParticipants(siteId, participants),
@@ -123,21 +129,6 @@ export async function prepareCollectionMigration(
             targetArtifacts.map(({ artifact }) => artifact.release),
         ),
     );
-    const transformedPages = pages.map((page) => {
-        let content = page.content;
-        let applied = 0;
-        for (const group of operationGroups) {
-            try {
-                const migrated = migratePageContent(content, group.operations, group.collectionId);
-                content = migrated.content;
-                applied += migrated.applied;
-            } catch (error) {
-                blockedReasons.push(migrationIssue(`Page ${page.path} migration failed`, error));
-            }
-        }
-        return { page, content, applied };
-    });
-    await validateTargetPages(repository, snapshot.collections, targetArtifacts, transformedPages, blockedReasons);
     await validateTargetSiteResources(
         repository,
         snapshot.collections,
@@ -147,18 +138,13 @@ export async function prepareCollectionMigration(
         resources.filter(({ kind, change }) => kind === "theme-token" && change === "removed").map(({ id }) => id),
         blockedReasons,
     );
-    const pageChanges = transformedPages.flatMap(({ page, content, applied }) =>
-        applied
-            ? [{ before: structuredClone(page), afterContent: content, operations: applied, state: "pending" as const }]
-            : [],
-    );
     let migratedSystem = system;
     try {
         migratedSystem = migrateThemeTokens(system, operationGroups);
     } catch (error) {
         blockedReasons.push(migrationIssue("Site theme migration failed", error));
     }
-    validateTargetTheme(migratedSystem, finalReleases, resources, transformedPages, blockedReasons);
+    validateTargetTheme(migratedSystem, finalReleases, resources, [], blockedReasons);
     let systemAfterCollectionCommit = system;
     let systemAfter = migratedSystem;
     let systemAfterCollectionRollback = migratedSystem;
@@ -181,10 +167,30 @@ export async function prepareCollectionMigration(
     } catch (error) {
         blockedReasons.push(migrationIssue("Collection theme transition is invalid", error));
     }
+    const pageChanges: PreparedCollectionMigration["pages"][number][] = [];
+    const pageRevisionHash = createHash("sha256").update("ulvia-page-revisions/v1\n");
+    for await (const pages of collectionPageBatches(repository)) {
+        const transformedPages = pages.map((page) => transformPage(page, operationGroups, blockedReasons));
+        for (const { id, revision } of pages) {
+            pageRevisionHash.update(canonicalizeIJson({ id, revision })).update("\n");
+        }
+        await validateTargetPages(repository, snapshot.collections, targetArtifacts, transformedPages, blockedReasons);
+        validateTargetPageThemeReferences(resources, transformedPages, blockedReasons);
+        for (const { page, content, applied } of transformedPages) {
+            if (applied) {
+                pageChanges.push({
+                    before: structuredClone(page),
+                    afterContent: content,
+                    operations: applied,
+                    state: "pending",
+                });
+            }
+        }
+    }
     const prepared = {
         siteId,
         expectedCollectionRevision: snapshot.revision,
-        pageRevisionDigest: collectionPageRevisionDigest(pages),
+        pageRevisionDigest: `sha256:${pageRevisionHash.digest("hex")}`,
         siteResourceDigest: collectionSiteResourceDigest(blocRecords, referenceSnapshots),
         installationsBefore: snapshot.collections.map(({ release: _release, ...installation }) => installation),
         replacements,
@@ -201,10 +207,11 @@ export async function prepareCollectionMigration(
 }
 
 export function collectionPageRevisionDigest(pages: readonly { id: string; revision: number }[]): string {
-    const entries = pages
-        .map(({ id, revision }) => ({ id, revision }))
-        .sort((left, right) => left.id.localeCompare(right.id));
-    return `sha256:${createHash("sha256").update(canonicalizeIJson(entries)).digest("hex")}`;
+    const hash = createHash("sha256").update("ulvia-page-revisions/v1\n");
+    for (const { id, revision } of [...pages].sort((left, right) => left.id.localeCompare(right.id))) {
+        hash.update(canonicalizeIJson({ id, revision })).update("\n");
+    }
+    return `sha256:${hash.digest("hex")}`;
 }
 
 export function collectionSiteResourceDigest(
@@ -229,4 +236,23 @@ export function collectionSiteResourceDigest(
 function collectionMigrationPlanDigest(plan: Omit<PreparedCollectionMigration, "planDigest">): string {
     const normalized = JSON.parse(JSON.stringify(plan));
     return `sha256:${createHash("sha256").update(canonicalizeIJson(normalized)).digest("hex")}`;
+}
+
+function transformPage(
+    page: PreparedCollectionMigration["pages"][number]["before"],
+    operationGroups: PreparedCollectionMigration["operationGroups"],
+    blockedReasons: string[],
+) {
+    let content = page.content;
+    let applied = 0;
+    for (const group of operationGroups) {
+        try {
+            const migrated = migratePageContent(content, group.operations, group.collectionId);
+            content = migrated.content;
+            applied += migrated.applied;
+        } catch (error) {
+            blockedReasons.push(migrationIssue(`Page ${page.path} migration failed`, error));
+        }
+    }
+    return { page, content, applied };
 }

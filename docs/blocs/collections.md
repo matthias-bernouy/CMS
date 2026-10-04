@@ -182,7 +182,10 @@ JavaScript migration code is not accepted.
 Control exposes administrator-only plan, execute, status, resume and rollback
 endpoints below `<basePath>/api/collections/migration/`. Planning validates the
 complete target collection graph, transformed pages, configuration, text
-overrides and theme references without changing the installed site state.
+overrides and theme references without changing the installed site state. Page
+planning and snapshot verification use stable ID cursors in batches of at most
+500 pages; neither path loads every page body through `getAllPages()`. Only pages
+whose content actually changes are retained as exact rollback snapshots.
 Execution then:
 
 1. persists a technical journal and enters maintenance;

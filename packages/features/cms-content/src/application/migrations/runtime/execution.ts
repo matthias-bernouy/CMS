@@ -3,7 +3,8 @@ import { isDeepStrictEqual } from "node:util";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { CollectionMigrationRecord } from "../interfaces";
 import type { CollectionMigrationParticipant } from "../interfaces";
-import { collectionPageRevisionDigest, collectionSiteResourceDigest } from "../plan";
+import { collectionSiteResourceDigest } from "../plan";
+import { collectionPageRevisionDigestFromRepository } from "../planning/pageScan";
 import { snapshotMigrationParticipants } from "../planning/participants";
 import { forEachMigrationPage } from "./concurrency";
 import { installationsMatch, migrationTargetsMatch } from "./helpers";
@@ -124,9 +125,9 @@ async function assertPagesApplied(repository: CmsRepository, record: CollectionM
 }
 
 async function assertSnapshotCurrent(context: ExecutionContext, record: CollectionMigrationRecord): Promise<void> {
-    const [state, pages, system, blocRecords, referenceSnapshots] = await Promise.all([
+    const [state, pageRevisionDigest, system, blocRecords, referenceSnapshots] = await Promise.all([
         context.collections.snapshot(record.siteId),
-        context.repository.getAllPages(),
+        collectionPageRevisionDigestFromRepository(context.repository),
         context.repository.getSystem(),
         context.repository.getBlocRecords(),
         snapshotMigrationParticipants(record.siteId, context.participants),
@@ -134,7 +135,7 @@ async function assertSnapshotCurrent(context: ExecutionContext, record: Collecti
     if (
         state.revision !== record.expectedCollectionRevision ||
         !installationsMatch(state.collections, record.installationsBefore) ||
-        collectionPageRevisionDigest(pages) !== record.pageRevisionDigest ||
+        pageRevisionDigest !== record.pageRevisionDigest ||
         collectionSiteResourceDigest(blocRecords, referenceSnapshots) !== record.siteResourceDigest ||
         !isDeepStrictEqual(system, record.systemBefore)
     ) {

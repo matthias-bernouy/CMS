@@ -70,6 +70,12 @@ export type PagesQuery = {
     sortOrder?: "asc" | "desc";
 };
 
+export type PageScan = {
+    readonly pages: readonly TPage[];
+    /** Opaque stable cursor for the next ID-ordered batch. */
+    readonly nextCursor?: string;
+};
+
 export interface CmsRepository {
     getInstalledCollections?: CollectionStore["snapshot"] extends (siteId: string) => infer R ? () => R : never;
     getSiteBlocCollections(): Promise<SiteBlocCollection[]>;
@@ -104,6 +110,7 @@ export interface CmsRepository {
     getPage(path: string): Promise<TPage | null>;
     getPageById(id: string): Promise<TPage | null>;
     getAllPages(): Promise<TPage[]>;
+    scanPages(cursor: string | undefined, limit: number): Promise<PageScan>;
     getPublishedPage(path: string): Promise<TPage | null>;
     getPublishedPageById(id: string): Promise<TPage | null>;
     getPublishedPages(): Promise<TPage[]>;
