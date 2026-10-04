@@ -47,8 +47,8 @@ test("migrates a renamed bloc under maintenance and rolls it back without rewind
 
 test("migrates an installed collection asset reference and restores it on rollback", async () => {
     const collections = new CollectionStore(new MemoryCollectionStorage());
-    const oldBytes = new TextEncoder().encode("old asset");
-    const newBytes = new TextEncoder().encode("new asset");
+    const oldBytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"><title>Old</title></svg>');
+    const newBytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"><title>New</title></svg>');
     const previous = await collections.importRelease(
         { ...release("1.0.0", "atlas-card"), assets: [asset("old.svg", oldBytes)] },
         [{ id: "old.svg", bytes: oldBytes }],

@@ -26,6 +26,9 @@ Local Ulvia CMS development runtime.
 - Collection text sources recursively merge definition arrays separately from
   `locales/<locale>/` value objects. Bloc discovery recursively traverses pure
   grouping directories and stops at a folder-owned `definition.json`.
+- Collection assets may live recursively below `assets/`; their authored
+  `source` path is compilation-only and remains independent from the stable
+  public asset ID.
 - Collection migrations are recursive JSON files below `migrations/`, named
   `<from>-to-<to>.json`. Release admission enforces a cumulative adjacent chain.
 - Before storing a collection release, validate namespaced CSS variable

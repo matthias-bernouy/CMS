@@ -8,6 +8,7 @@ import type {
     CollectionMigrationReplacement,
     CollectionStorage,
     InstalledCollection,
+    InstalledCollectionAssetMetadata,
 } from "../interfaces/store";
 import { installCollections } from "./mutations/install";
 import { saveCollectionConfiguration, uninstallCollection } from "./mutations/site";
@@ -41,18 +42,42 @@ export class CollectionStore {
 
     /** Resolves one installed asset without hydrating every installed collection release. */
     async getInstalledAssetMetadata(siteId: string, collectionId: string, assetId: string) {
+        return (await this.getInstalledAssetMetadataBatch(siteId, [{ collectionId, assetId }]))[0] ?? null;
+    }
+
+    /** Resolves a unique asset set with one site read and only the referenced release metadata. */
+    async getInstalledAssetMetadataBatch(
+        siteId: string,
+        references: readonly { collectionId: string; assetId: string }[],
+    ): Promise<InstalledCollectionAssetMetadata[]> {
+        const requested = new Map(
+            references.map((reference) => [`${reference.collectionId}\0${reference.assetId}`, reference]),
+        );
+        if (requested.size === 0) {
+            return [];
+        }
         const state = await this.storage.readSite(siteId);
-        const installation = state.installations.find((item) => item.collectionId === collectionId);
-        if (!installation) {
-            return null;
+        const collectionIds = new Set([...requested.values()].map(({ collectionId }) => collectionId));
+        const installations = state.installations.filter(({ collectionId }) => collectionIds.has(collectionId));
+        const releases = await Promise.all(
+            installations.map(async (installation) => {
+                const artifact = await this.storage.getReleaseMetadata(installation.digest);
+                if (!artifact || artifact.release.collectionId !== installation.collectionId) {
+                    throw new Error("Installed collection artifact is missing or inconsistent");
+                }
+                validateStoredCollectionInstallation(installation, artifact.release);
+                return { installation, release: artifact.release };
+            }),
+        );
+        const results: InstalledCollectionAssetMetadata[] = [];
+        for (const { installation, release } of releases) {
+            for (const asset of release.assets) {
+                if (requested.has(`${installation.collectionId}\0${asset.id}`)) {
+                    results.push({ collectionId: installation.collectionId, digest: installation.digest, asset });
+                }
+            }
         }
-        const artifact = await this.storage.getReleaseMetadata(installation.digest);
-        if (!artifact || artifact.release.collectionId !== collectionId) {
-            throw new Error("Installed collection artifact is missing or inconsistent");
-        }
-        validateStoredCollectionInstallation(installation, artifact.release);
-        const asset = artifact.release.assets.find((item) => item.id === assetId);
-        return asset ? structuredClone({ digest: installation.digest, asset }) : null;
+        return structuredClone(results);
     }
 
     async getRelease(digest: string) {

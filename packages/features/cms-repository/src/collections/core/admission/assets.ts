@@ -6,6 +6,7 @@ import type {
 import { CollectionValidationError } from "cms-repository/collections/core/errors";
 import type { CollectionLimits } from "cms-repository/collections/core/limits";
 import { array, identifier, keys, ordinal, record } from "cms-repository/collections/core/values";
+import { collectionAssetMediaTypeIssue } from "./assetMedia";
 
 const blobSize = Object.getOwnPropertyDescriptor(Blob.prototype, "size")!.get!;
 const typedArraySize = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8Array.prototype), "byteLength")!.get!;
@@ -78,10 +79,22 @@ export async function verifyCollectionAssets(
         if (!bytes || bytes.size !== declaration.byteLength) {
             mismatch("asset size mismatch or missing snapshot", path);
         }
-        const hash = new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", await bytes.arrayBuffer()));
+        const content = new Uint8Array(await bytes.arrayBuffer());
+        const hash = new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", content));
         const digest = `sha256:${Array.from(hash, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
         if (digest !== declaration.digest) {
             mismatch("asset digest mismatch", path);
         }
+        const mediaIssue = collectionAssetMediaTypeIssue(declaration.mediaType, content);
+        if (mediaIssue) {
+            mismatch(mediaIssue, path);
+        }
     }
+}
+
+/** Commits every response-relevant immutable property, not only the raw bytes. */
+export async function collectionAssetRepresentationVersion(asset: CollectionAssetDefinition): Promise<string> {
+    const identity = new TextEncoder().encode(`${asset.digest}\0${asset.byteLength}\0${asset.mediaType}`);
+    const hash = new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", identity));
+    return Array.from(hash, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }

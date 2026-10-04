@@ -103,6 +103,56 @@ test("imports verified assets and contract requirements into the installation st
     expect((await store.snapshot("site")).collections[0]!.release.blocs[0]!.requires).toHaveLength(1);
 });
 
+test("resolves asset metadata in one batch without hydrating unrelated releases", async () => {
+    const storage = new MemoryCollectionStorage();
+    const store = new CollectionStore(storage);
+    const asset = async (id: string, value: string) => {
+        const bytes = new TextEncoder().encode(value);
+        return {
+            definition: {
+                id,
+                mediaType: "text/plain",
+                byteLength: bytes.byteLength,
+                digest: `sha256:${new Bun.CryptoHasher("sha256").update(bytes).digest("hex")}` as const,
+            },
+            bytes,
+        };
+    };
+    const firstAsset = await asset("first.txt", "first");
+    const secondAsset = await asset("second.txt", "second");
+    const first = await store.importRelease({ ...release(), assets: [firstAsset.definition], blocs: [] }, [
+        { id: firstAsset.definition.id, bytes: firstAsset.bytes },
+    ]);
+    const second = await store.importRelease(
+        {
+            ...release(),
+            collectionId: "other",
+            version: "1.0.0",
+            assets: [secondAsset.definition],
+            blocs: [],
+        },
+        [{ id: secondAsset.definition.id, bytes: secondAsset.bytes }],
+    );
+    await store.installMany("site", [{ digest: first.digest }, { digest: second.digest }], 0);
+    const reads: string[] = [];
+    const readMetadata = storage.getReleaseMetadata.bind(storage);
+    storage.getReleaseMetadata = async (digest) => {
+        reads.push(digest);
+        return readMetadata(digest);
+    };
+
+    const resolved = await store.getInstalledAssetMetadataBatch("site", [
+        { collectionId: "atlas", assetId: "first.txt" },
+        { collectionId: "atlas", assetId: "first.txt" },
+        { collectionId: "missing", assetId: "none" },
+    ]);
+
+    expect(resolved).toEqual([
+        { collectionId: "atlas", digest: first.digest, asset: { ...firstAsset.definition, generation: 1 } },
+    ]);
+    expect(reads).toEqual([first.digest]);
+});
+
 test("upgrades may widen but never narrow the stored settings contract", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const initial = release();

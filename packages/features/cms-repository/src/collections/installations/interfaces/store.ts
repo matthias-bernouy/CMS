@@ -1,3 +1,4 @@
+import type { CollectionAssetDefinition } from "../../interfaces/CollectionAssets";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import type { CollectionTextOverrides } from "../../interfaces/CollectionText";
 
@@ -25,6 +26,11 @@ export type CollectionMigrationReplacement = {
 };
 export type CollectionSiteState = { revision: number; installations: CollectionInstallation[] };
 export type InstalledCollection = CollectionInstallation & { release: CollectionRelease };
+export type InstalledCollectionAssetMetadata = {
+    collectionId: string;
+    digest: string;
+    asset: CollectionAssetDefinition;
+};
 export interface CollectionStorage {
     putRelease(artifact: StoredCollectionRelease): Promise<void>;
     getRelease(digest: string): Promise<StoredCollectionRelease | null>;

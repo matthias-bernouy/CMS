@@ -146,7 +146,7 @@ test("installed collection theme contributes immutable tokens to editing and pub
 });
 
 test("installed shadow component is served as browser bloc JavaScript", async () => {
-    const bytes = new TextEncoder().encode("asset");
+    const bytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
     const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}` as const;
     const store = new CollectionStore(new MemoryCollectionStorage());
     const artifact = await store.importRelease(

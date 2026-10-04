@@ -291,6 +291,8 @@ models and validation for CMS-owned installations and site selections.
   dangling references and local cycles; exact token aliases must preserve types,
   including across the installed dependency graph.
 - Collection asset expressions keep the owner namespace (`cms.asset.<collection>.<asset>`).
+- Collection asset admission verifies declared size, digest, and recognizable media signatures. Installed asset
+  metadata can be resolved in batches without hydrating unrelated releases or binary payloads.
   Export controls dependency authority, while Delivery may serve any installed immutable
   asset needed by its owning collection. Public URLs include the verified content digest.
 - Collection, Bloc, setting, text, theme, View and dashboard administration

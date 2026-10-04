@@ -48,8 +48,9 @@ async function loadAssets(directory: string, value: unknown) {
     if (!Array.isArray(declarations)) {
         throw new Error("Collection source assets must be an array");
     }
-    const files = (await readEntries(directory)).filter((entry) => entry.isFile()).map((entry) => entry.name);
-    const seen = new Set<string>();
+    const files = await readAssetFiles(directory);
+    const seenIds = new Set<string>();
+    const seenSources = new Set<string>();
     const bundle: { id: string; bytes: Uint8Array }[] = [];
     const definitions = [];
     for (const [index, value] of declarations.entries()) {
@@ -57,20 +58,25 @@ async function loadAssets(directory: string, value: unknown) {
             throw new Error(`Collection source asset ${index} must be an object`);
         }
         const source = value as Record<string, unknown>;
-        if (Object.keys(source).some((key) => !["id", "generation", "mediaType"].includes(key))) {
-            throw new Error(`Collection source asset ${index} accepts only id, generation and mediaType`);
+        if (Object.keys(source).some((key) => !["id", "source", "generation", "mediaType"].includes(key))) {
+            throw new Error(`Collection source asset ${index} accepts only id, source, generation and mediaType`);
         }
         if (
             typeof source.id !== "string" ||
             source.id.length > 96 ||
             !/^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u.test(source.id) ||
             typeof source.mediaType !== "string" ||
-            seen.has(source.id)
+            seenIds.has(source.id)
         ) {
             throw new Error(`Collection source asset ${index} requires a unique id and mediaType`);
         }
-        seen.add(source.id);
-        const bytes = await readFile(join(directory, source.id));
+        const sourcePath = collectionAssetSourcePath(source.source, source.id, index);
+        if (seenSources.has(sourcePath)) {
+            throw new Error(`Collection source asset ${index} reuses source ${sourcePath}`);
+        }
+        seenIds.add(source.id);
+        seenSources.add(sourcePath);
+        const bytes = await readFile(join(directory, ...sourcePath.split("/")));
         bundle.push({ id: source.id, bytes });
         definitions.push({
             id: source.id,
@@ -80,11 +86,45 @@ async function loadAssets(directory: string, value: unknown) {
             digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
         });
     }
-    const extras = files.filter((file) => !seen.has(file) && file !== ".gitkeep");
-    if (extras.length || files.filter((file) => seen.has(file)).length !== declarations.length) {
+    const extras = files.filter((file) => !seenSources.has(file));
+    if (extras.length || files.filter((file) => seenSources.has(file)).length !== declarations.length) {
         throw new Error("Collection assets directory must exactly match the source declarations");
     }
     return { definitions, bundle };
+}
+
+function collectionAssetSourcePath(value: unknown, fallback: string, index: number): string {
+    const source = value === undefined ? fallback : value;
+    if (typeof source !== "string" || source.length === 0 || source.length > 512 || source.includes("\\")) {
+        throw new Error(`Collection source asset ${index} has an invalid source path`);
+    }
+    const segments = source.split("/");
+    if (
+        source.startsWith("/") ||
+        segments.some(
+            (segment) => !/^[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(segment) || segment === "." || segment === "..",
+        )
+    ) {
+        throw new Error(`Collection source asset ${index} has an invalid source path`);
+    }
+    return source;
+}
+
+async function readAssetFiles(directory: string, prefix = ""): Promise<string[]> {
+    const files: string[] = [];
+    for (const entry of await readEntries(directory)) {
+        const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+        if (entry.isDirectory()) {
+            files.push(...(await readAssetFiles(join(directory, entry.name), path)));
+        } else if (entry.isFile()) {
+            if (entry.name !== ".gitkeep") {
+                files.push(path);
+            }
+        } else {
+            throw new Error(`Collection assets contain an unsupported entry: ${path}`);
+        }
+    }
+    return files.sort();
 }
 
 async function loadDashboards(directory: string): Promise<unknown[]> {

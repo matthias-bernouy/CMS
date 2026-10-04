@@ -130,36 +130,43 @@ test("collection source assets keep their verified bytes through the repository 
     const repositoryRoot = join(root, "repository");
     const bytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
     try {
-        await mkdir(join(sourceRoot, "assets"), { recursive: true });
+        await mkdir(join(sourceRoot, "assets", "icons", "brand"), { recursive: true });
         await mkdir(join(sourceRoot, "translations", "en"), { recursive: true });
-        await writeFile(
-            join(sourceRoot, "definition.json"),
-            JSON.stringify({
-                kind: "collection",
-                protocol: "ulvia-collection/v1",
-                schemaDialect: "ulvia-schema/v1",
-                collectionId: "asset-example",
-                publisherId: "ulvia.official",
-                version: "1.0.0",
-                name: "collection.name",
-                locale: "en",
-                exports: { blocs: [], themeTokens: [], assets: ["mark.svg"] },
-                assets: [{ id: "mark.svg", generation: 2, mediaType: "image/svg+xml" }],
-            }),
-        );
+        const definition = {
+            kind: "collection",
+            protocol: "ulvia-collection/v1",
+            schemaDialect: "ulvia-schema/v1",
+            collectionId: "asset-example",
+            publisherId: "ulvia.official",
+            version: "1.0.0",
+            name: "collection.name",
+            locale: "en",
+            exports: { blocs: [], themeTokens: [], assets: ["brand-mark"] },
+            assets: [
+                {
+                    id: "brand-mark",
+                    source: "icons/brand/mark.svg",
+                    generation: 2,
+                    mediaType: "image/svg+xml",
+                },
+            ],
+        };
+        const definitionPath = join(sourceRoot, "definition.json");
+        await writeFile(definitionPath, JSON.stringify(definition));
         await writeFile(
             join(sourceRoot, "translations", "en", "collection.json"),
             JSON.stringify({ "collection.name": "Asset example" }),
         );
-        await writeFile(join(sourceRoot, "assets", "mark.svg"), bytes);
+        await writeFile(join(sourceRoot, "assets", "icons", "brand", "mark.svg"), bytes);
 
         const artifact = await prepareCollectionRelease(sourceRoot);
         expect(artifact.release.assets[0]).toMatchObject({
-            id: "mark.svg",
+            id: "brand-mark",
             generation: 2,
             mediaType: "image/svg+xml",
             byteLength: bytes.byteLength,
         });
+        expect(artifact.release.assets[0]).not.toHaveProperty("source");
         expect(new Uint8Array(await artifact.assets[0]!.bytes.arrayBuffer())).toEqual(bytes);
 
         const repository = new LocalCollectionRepository(repositoryRoot);
@@ -169,11 +176,19 @@ test("collection source assets keep their verified bytes through the repository 
             const remote = new HttpCollectionRepository("local", server.url);
             const bundle = await remote.get((await remote.list())[0]!);
             expect(bundle.release.assets[0]).toEqual(artifact.release.assets[0]);
-            expect(bundle.assets).toEqual([{ id: "mark.svg", bytes }]);
+            expect(bundle.assets).toEqual([{ id: "brand-mark", bytes }]);
             expect((await admitCollectionRelease(bundle.release, bundle.assets)).digest).toBe(artifact.digest);
         } finally {
             server.stop();
         }
+
+        definition.assets[0]!.source = "../outside.svg";
+        await writeFile(definitionPath, JSON.stringify(definition));
+        await expect(prepareCollectionRelease(sourceRoot)).rejects.toThrow("invalid source path");
+        definition.assets[0]!.source = "icons/brand/mark.svg";
+        await writeFile(definitionPath, JSON.stringify(definition));
+        await writeFile(join(sourceRoot, "assets", "icons", "unused.svg"), bytes);
+        await expect(prepareCollectionRelease(sourceRoot)).rejects.toThrow("exactly match");
     } finally {
         await rm(root, { recursive: true, force: true });
     }

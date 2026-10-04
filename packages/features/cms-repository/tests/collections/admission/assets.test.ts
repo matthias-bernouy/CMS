@@ -121,6 +121,30 @@ describe("collection assets", () => {
         await expect(verifyCollectionAssets(declared, snapshots)).rejects.toThrow("digest mismatch");
     });
 
+    test("rejects declared media types that do not match the verified bytes", async () => {
+        const svg = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+        const definition = await declaration("mark.svg", svg);
+        const snapshots = snapshotCollectionAssets(
+            [{ ...definition, mediaType: "image/png" }],
+            [{ id: definition.id, bytes: svg }],
+            limits,
+        );
+        await expect(verifyCollectionAssets([{ ...definition, mediaType: "image/png" }], snapshots)).rejects.toThrow(
+            "does not match detected image/svg+xml",
+        );
+
+        const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+        const pngDefinition = await declaration("pixel.png", png);
+        const pngSnapshots = snapshotCollectionAssets(
+            [{ ...pngDefinition, mediaType: "image/png" }],
+            [{ id: pngDefinition.id, bytes: png }],
+            limits,
+        );
+        await expect(
+            verifyCollectionAssets([{ ...pngDefinition, mediaType: "image/png" }], pngSnapshots),
+        ).resolves.toBeUndefined();
+    });
+
     test("snapshots every caller buffer before the first asynchronous hash", async () => {
         const first = new Uint8Array([1, 2, 3]);
         const second = new Uint8Array([4, 5, 6]);

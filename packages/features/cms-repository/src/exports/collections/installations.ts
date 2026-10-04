@@ -10,6 +10,7 @@ export type {
     CollectionStorage,
     CollectionInstallRequest,
     InstalledCollection,
+    InstalledCollectionAssetMetadata,
     CollectionSiteState,
     CollectionInstallation,
     CollectionMigrationReplacement,

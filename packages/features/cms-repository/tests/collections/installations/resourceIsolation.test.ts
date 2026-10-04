@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import { CollectionStore, MemoryCollectionStorage } from "../../../src/exports/collections/installations";
 
 function release(collectionId: string, version: string, blocId: string, tokenId?: string) {
@@ -73,6 +74,7 @@ test("installations and upgrades reject global Bloc and theme token collisions",
 
 test("installs only declared public resources from compatible collection dependencies", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
+    const assetBytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
     const foundation = {
         ...release("ulvia-official", "1.0.0", "ulvia-official-button", "primary"),
         publisherId: "ulvia.official",
@@ -81,8 +83,8 @@ test("installs only declared public resources from compatible collection depende
             {
                 id: "empty.svg",
                 mediaType: "image/svg+xml",
-                byteLength: 0,
-                digest: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                byteLength: assetBytes.byteLength,
+                digest: `sha256:${createHash("sha256").update(assetBytes).digest("hex")}`,
             },
         ],
         exports: {
@@ -118,16 +120,14 @@ test("installs only declared public resources from compatible collection depende
         ],
     };
 
-    const foundationArtifact = await store.importRelease(foundation, [{ id: "empty.svg", bytes: new Uint8Array() }]);
+    const foundationArtifact = await store.importRelease(foundation, [{ id: "empty.svg", bytes: assetBytes }]);
     const consumerArtifact = await store.importRelease(consumer);
     await expect(store.install("site", consumerArtifact.digest, 0)).rejects.toThrow("requires ulvia-official");
     await store.install("site", foundationArtifact.digest, 0);
     await expect(store.install("site", consumerArtifact.digest, 1)).resolves.toMatchObject({ revision: 2 });
 
     const breakingFoundation = { ...structuredClone(foundation), version: "2.0.0" };
-    const breakingArtifact = await store.importRelease(breakingFoundation, [
-        { id: "empty.svg", bytes: new Uint8Array() },
-    ]);
+    const breakingArtifact = await store.importRelease(breakingFoundation, [{ id: "empty.svg", bytes: assetBytes }]);
     await expect(store.upgrade("site", breakingArtifact.digest, 2, "local")).rejects.toThrow("requires");
 
     const wrongType = await store.importRelease({
