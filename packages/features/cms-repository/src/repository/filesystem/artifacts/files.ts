@@ -1,7 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
-import { link, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { link, readFile, readdir, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { stat } from "node:fs/promises";
+import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "../core/durable";
 
 export type ArtifactType = "contracts" | "providers";
 export type StoredArtifact = {
@@ -31,10 +32,10 @@ export class LocalArtifactFiles {
             return sameBytes(existing, canonicalJson, type, id, version);
         }
         const directory = join(this.root, type, publisherId, id);
-        await mkdir(directory, { recursive: true, mode: 0o700 });
+        await ensureDurableDirectory(directory, this.root);
         if (fixtures.length) {
             const fixtureRoot = join(this.root, "assets", "contracts", releaseHash(canonicalJson));
-            await mkdir(fixtureRoot, { recursive: true, mode: 0o700 });
+            await ensureDurableDirectory(fixtureRoot, this.root);
             for (const fixture of fixtures) {
                 if (!IDENTIFIER.test(fixture.id)) {
                     throw new Error("Invalid fixture asset ID");
@@ -95,9 +96,10 @@ export class LocalArtifactFiles {
 async function writeImmutable(path: string, bytes: Uint8Array | Blob): Promise<void> {
     const temporary = join(dirname(path), `.${randomUUID()}.tmp`);
     const snapshot = bytes instanceof Blob ? bytes : new Blob([bytes.slice()]);
-    await Bun.write(temporary, snapshot, { createPath: false });
+    await durableWriteFile(temporary, new Uint8Array(await snapshot.arrayBuffer()), { flag: "wx", mode: 0o600 });
     try {
         await link(temporary, path);
+        await syncDirectory(dirname(path));
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
             throw error;

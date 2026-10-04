@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { link, lstat, mkdir, open, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { link, lstat, readFile, readdir, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import type {
     PublicationEnvelope,
@@ -9,6 +9,8 @@ import type {
     RepositoryPublicationUploadStore,
 } from "cms-repository/repository/publication/types";
 import { digestUploadFile, readUploadResult, writeUploadResult, writeUploadStream } from "./uploadFiles";
+import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "../core/durable";
+import { acquireFilesystemLease } from "../core/lock";
 
 const SCHEMA = "ulvia.repository-upload.v1";
 const UPLOAD_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
@@ -24,16 +26,16 @@ type UploadDocument = Readonly<{
 export class FilesystemRepositoryPublicationUploadStore implements RepositoryPublicationUploadStore {
     private readonly uploadRoot: string;
 
-    constructor(root: string) {
+    constructor(private readonly root: string) {
         this.uploadRoot = join(root, ".publication-uploads");
     }
 
     async create(manifest: PublicationUploadManifest, expiresAt: Date): Promise<PublicationUploadReceipt> {
-        await mkdir(this.uploadRoot, { recursive: true, mode: 0o700 });
+        await ensureDurableDirectory(this.uploadRoot, this.root);
         await this.pruneExpired();
         const uploadId = randomUUID();
         const directory = this.directory(uploadId);
-        await mkdir(join(directory, "assets"), { recursive: true, mode: 0o700 });
+        await ensureDurableDirectory(join(directory, "assets"), this.root);
         const document: UploadDocument = {
             schema: SCHEMA,
             uploadId,
@@ -41,7 +43,11 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
             manifest,
         };
         try {
-            await writeFile(join(directory, "upload.json"), JSON.stringify(document), { flag: "wx", mode: 0o600 });
+            await durableWriteFile(join(directory, "upload.json"), JSON.stringify(document), {
+                flag: "wx",
+                mode: 0o600,
+            });
+            await syncDirectory(directory);
         } catch (error) {
             await rm(directory, { recursive: true, force: true });
             throw error;
@@ -73,6 +79,7 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
             }
             try {
                 await link(temporary, destination);
+                await syncDirectory(join(this.directory(uploadId), "assets"));
             } catch (error) {
                 if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
                     throw error;
@@ -117,12 +124,13 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
                 canonicalJson: document.manifest.canonicalJson,
                 assets,
             });
+            await lock.assertOwnership();
             await writeUploadResult(join(this.directory(uploadId), "result.json"), result);
             await rm(join(this.directory(uploadId), "assets"), { recursive: true, force: true });
+            await syncDirectory(this.directory(uploadId));
             return result;
         } finally {
-            await lock.close();
-            await rm(join(this.directory(uploadId), ".commit-lock"), { force: true });
+            await lock.release();
         }
     }
 
@@ -131,7 +139,7 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
             return;
         }
         const lock = await this.acquireCommitLock(uploadId);
-        await lock.close();
+        await lock.release();
         await rm(this.directory(uploadId), { recursive: true, force: true });
     }
 
@@ -167,17 +175,16 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
 
     private async acquireCommitLock(uploadId: string) {
         await this.readDocument(uploadId);
-        return open(join(this.directory(uploadId), ".commit-lock"), "wx", 0o600).catch(
-            (error: NodeJS.ErrnoException) => {
-                if (error.code === "EEXIST") {
-                    throw new Error("Publication upload commit already in progress");
-                }
-                throw error;
-            },
-        );
+        return acquireFilesystemLease(join(this.directory(uploadId), ".commit-lock"));
+    }
+
+    async recover(): Promise<void> {
+        await ensureDurableDirectory(this.uploadRoot, this.root);
+        await this.pruneExpired();
     }
 
     private async pruneExpired(): Promise<void> {
+        let changed = false;
         for (const entry of await readdir(this.uploadRoot, { withFileTypes: true })) {
             if (!entry.isDirectory() || !UPLOAD_ID.test(entry.name)) {
                 continue;
@@ -189,7 +196,11 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
             const document = await this.readDocument(entry.name).catch(() => null);
             if (document && Date.parse(document.expiresAt) <= Date.now()) {
                 await rm(this.directory(entry.name), { recursive: true, force: true });
+                changed = true;
             }
+        }
+        if (changed) {
+            await syncDirectory(this.uploadRoot);
         }
     }
 

@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 import type { RepositoryArtifactKind } from "cms-repository/repository/publication/types";
+import { durableRename, durableWriteFile, ensureDurableDirectory } from "./core/durable";
 
 export type { RepositoryArtifactKind } from "cms-repository/repository/publication/types";
 export type RepositoryYank = Readonly<{ reason: string; yankedAt: string }>;
@@ -68,11 +69,11 @@ export class LocalRepositoryYanks {
 
     private async write(document: YankDocument): Promise<void> {
         const path = this.path();
-        await mkdir(dirname(path), { recursive: true, mode: 0o700 });
+        await ensureDurableDirectory(dirname(path), this.root);
         const temporary = `${path}.${randomUUID()}.tmp`;
-        await writeFile(temporary, `${JSON.stringify(document, null, 2)}\n`, { flag: "wx", mode: 0o600 });
+        await durableWriteFile(temporary, `${JSON.stringify(document, null, 2)}\n`, { flag: "wx", mode: 0o600 });
         try {
-            await rename(temporary, path);
+            await durableRename(temporary, path);
         } finally {
             await rm(temporary, { force: true });
         }

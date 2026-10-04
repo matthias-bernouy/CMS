@@ -7,7 +7,12 @@ export {
 export { LocalCollectionRepository } from "cms-repository/repository/filesystem/artifacts/collections";
 export { LocalContractReleases } from "cms-repository/repository/filesystem/contracts";
 export { RepositoryReadEndpoint } from "cms-repository/repository/filesystem/http/readEndpoint";
-export { pruneRepository, withRepositoryWriteLock } from "cms-repository/repository/filesystem/lock";
+export {
+    acquireFilesystemLease,
+    type FilesystemLease,
+    withRepositoryWriteLock,
+} from "cms-repository/repository/filesystem/core/lock";
+export { pruneRepository, recoverRepositoryStorage } from "cms-repository/repository/filesystem/core/recovery";
 export { LocalProviderReleases } from "cms-repository/repository/filesystem/providers";
 export {
     FilesystemRepositoryCatalogueIndex,

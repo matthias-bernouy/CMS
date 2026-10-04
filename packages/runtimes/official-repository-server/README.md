@@ -31,5 +31,14 @@ deployment requires shared atomic implementations of the registry, upload store
 and replay store; do not point multiple replicas at unrelated disks.
 
 Startup verifies that the directory is a real writable directory and re-reads
-all stored catalogues before accepting traffic. Corrupt artifacts therefore fail
-the deployment instead of producing a partially available repository.
+all stored catalogues before accepting traffic. It then prunes expired upload
+sessions and only those hash-addressed binary directories that no immutable
+release references. Corrupt artifacts therefore fail the deployment instead of
+producing a partially available repository.
+
+Mutation locks are renewable owner- and process-identified leases. A stale lease
+is recovered only after its owning local process has disappeared. Immutable
+files, mutable metadata and commit receipts are flushed before their containing
+directory entries are exposed. These guarantees assume the documented
+single-host, single-active-replica filesystem deployment; they are not a
+distributed consensus protocol.

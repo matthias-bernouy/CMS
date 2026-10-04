@@ -10,7 +10,7 @@ import type {
 import { LocalArtifactFiles } from "../artifacts/files";
 import { LocalCollectionRepository } from "../artifacts/collections";
 import { LocalContractReleases } from "../contracts";
-import { withRepositoryWriteLock } from "../lock";
+import { withRepositoryWriteLock } from "../core/lock";
 import { LocalProviderReleases } from "../providers";
 import { LocalRepositoryYanks } from "../yanks";
 import type { FilesystemRepositoryCatalogueIndex } from "../catalogueIndex";

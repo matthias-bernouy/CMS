@@ -1,7 +1,8 @@
-import { mkdir, open, readFile, readdir, rm } from "node:fs/promises";
+import { open, readFile, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import type { RepositoryReplayStore } from "cms-repository/repository/publication/types";
-import { withRepositoryWriteLock } from "../lock";
+import { ensureDurableDirectory, syncDirectory } from "../core/durable";
+import { withRepositoryWriteLock } from "../core/lock";
 
 /** Durable replay claims shared by every process using the same repository root. */
 export class FilesystemRepositoryReplayStore implements RepositoryReplayStore {
@@ -11,7 +12,7 @@ export class FilesystemRepositoryReplayStore implements RepositoryReplayStore {
         const key = signatureKey(signature);
         return withRepositoryWriteLock(this.root, async () => {
             const directory = join(this.root, ".publication-replays");
-            await mkdir(directory, { recursive: true, mode: 0o700 });
+            await ensureDurableDirectory(directory, this.root);
             await prune(directory);
             const path = join(directory, key);
             const existing = await readExpiry(path);
@@ -22,9 +23,11 @@ export class FilesystemRepositoryReplayStore implements RepositoryReplayStore {
             const handle = await open(path, "wx", 0o600);
             try {
                 await handle.writeFile(String(expiresAt.getTime()));
+                await handle.sync();
             } finally {
                 await handle.close();
             }
+            await syncDirectory(directory);
             return true;
         });
     }

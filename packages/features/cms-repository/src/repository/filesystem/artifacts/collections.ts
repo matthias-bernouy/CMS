@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
-import { link, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { link, readFile, readdir, rm } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import {
     isCollectionNamespace,
     parseCollectionReleaseJson,
@@ -14,7 +14,8 @@ import { snapshotCollectionAssets, verifyCollectionAssets } from "cms-repository
 import type { CollectionAssetDefinition } from "cms-repository/collections/interfaces/CollectionAssets";
 import type { VerifiedCollectionReleaseMetadata } from "cms-repository/collections/interfaces/CollectionAdmission";
 import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
-import { pruneRepository } from "../lock";
+import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "../core/durable";
+import { pruneRepository } from "../core/recovery";
 
 export class LocalCollectionRepository {
     constructor(private readonly root: string) {}
@@ -33,18 +34,19 @@ export class LocalCollectionRepository {
             await verifyCollectionPublicationEvolution(previous.release, artifact.release);
         }
         const directory = join(this.root, "releases", publisherId, collectionId);
-        await mkdir(directory, { recursive: true, mode: 0o700 });
+        await ensureDurableDirectory(directory, this.root);
         const assetDirectory = join(this.root, "assets", "collections", releaseHash(artifact.canonicalJson));
         if (artifact.assets.length) {
-            await mkdir(assetDirectory, { recursive: true, mode: 0o700 });
+            await ensureDurableDirectory(assetDirectory, this.root);
             for (const asset of artifact.assets) {
                 await writeImmutable(join(assetDirectory, asset.id), new Uint8Array(await asset.bytes.arrayBuffer()));
             }
         }
         const temporary = join(directory, `.${randomUUID()}.tmp`);
-        await writeFile(temporary, artifact.canonicalJson, { flag: "wx", mode: 0o600 });
+        await durableWriteFile(temporary, artifact.canonicalJson, { flag: "wx", mode: 0o600 });
         try {
             await link(temporary, path);
+            await syncDirectory(directory);
             return true;
         } catch (error) {
             if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
@@ -175,9 +177,10 @@ export class LocalCollectionRepository {
 
 async function writeImmutable(path: string, bytes: Uint8Array): Promise<void> {
     const temporary = `${path}.${randomUUID()}.tmp`;
-    await writeFile(temporary, bytes, { flag: "wx", mode: 0o600 });
+    await durableWriteFile(temporary, bytes, { flag: "wx", mode: 0o600 });
     try {
         await link(temporary, path);
+        await syncDirectory(dirname(path));
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
             throw error;

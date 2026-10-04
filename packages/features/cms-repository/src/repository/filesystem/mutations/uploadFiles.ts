@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
-import { open, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { open, readFile, rm } from "node:fs/promises";
 import type { RepositoryPublicationResult } from "cms-repository/repository/publication/types";
+import { durableRename, durableWriteFile } from "../core/durable";
 
 export async function writeUploadStream(path: string, body: ReadableStream<Uint8Array> | null, maximum: number) {
     const handle = await open(path, "wx", 0o600);
@@ -21,6 +22,7 @@ export async function writeUploadStream(path: string, body: ReadableStream<Uint8
             hash.update(part.value);
             await writeAll(handle, part.value);
         }
+        await handle.sync();
     } finally {
         reader?.releaseLock();
         await handle.close();
@@ -48,9 +50,9 @@ export async function digestUploadFile(path: string) {
 
 export async function writeUploadResult(path: string, value: RepositoryPublicationResult): Promise<void> {
     const temporary = `${path}.${randomUUID()}.tmp`;
-    await writeFile(temporary, JSON.stringify(value), { flag: "wx", mode: 0o600 });
+    await durableWriteFile(temporary, JSON.stringify(value), { flag: "wx", mode: 0o600 });
     try {
-        await rename(temporary, path);
+        await durableRename(temporary, path);
     } finally {
         await rm(temporary, { force: true });
     }
