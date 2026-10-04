@@ -74,6 +74,17 @@ test("Bloc discovery rejects duplicate IDs and files in grouping directories", a
     );
 });
 
+test("Bloc discovery follows the collection admission ceiling beyond the former 256 limit", async () => {
+    const root = await temporaryDirectory();
+    await Promise.all(
+        Array.from({ length: 257 }, (_, index) => {
+            const id = `example-bloc-${index}`;
+            return writeComposition(join(root, "catalogue", id), id);
+        }),
+    );
+    expect(await loadCollectionBlocs(root, "Example")).toHaveLength(257);
+});
+
 test("migration steps are discovered recursively and named after their adjacent generations", async () => {
     const root = await temporaryDirectory();
     expect(await loadCollectionMigrations(join(root, "missing"))).toEqual([]);

@@ -1,9 +1,9 @@
 import { stat } from "node:fs/promises";
 import { basename, join } from "node:path";
+import { DEFAULT_COLLECTION_LIMITS } from "@bernouy/cms-repository/collections";
 import { readSourceEntries } from "./sourceTree";
 
 const MAX_BLOC_DEPTH = 16;
-const MAX_BLOCS = 256;
 const BLOC_ENTRIES = new Set([
     "bloc.ts",
     "default.html",
@@ -51,8 +51,8 @@ async function visitBlocSources(base: string, directory: string, depth: number, 
         }
         validateBlocEntries(entries, relativePath);
         sources.push({ id: source.id, root: directory, relativePath, definition: source });
-        if (sources.length > MAX_BLOCS) {
-            throw new Error(`Bloc source tree must contain at most ${MAX_BLOCS} Blocs`);
+        if (sources.length > DEFAULT_COLLECTION_LIMITS.maxBlocs) {
+            throw new Error(`Bloc source tree must contain at most ${DEFAULT_COLLECTION_LIMITS.maxBlocs} Blocs`);
         }
         return;
     }
