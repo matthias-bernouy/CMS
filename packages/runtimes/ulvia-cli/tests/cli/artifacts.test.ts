@@ -54,7 +54,8 @@ test("contract and provider releases use explicit kinds and exact local contract
         await writeFile(join(bundleFolder, "fixtures", "receipt.svg"), await readFile(assetFixture));
         await runCli(["release", bundleFolder], options);
         expect(
-            (await (await contracts.catalogue()).get("communication.receipt", "0.1.0"))?.admission.fixtureAssets,
+            (await (await contracts.catalogue()).get("communication.receipt", "0.1.0"))?.admission.release
+                .fixtureAssets,
         ).toHaveLength(1);
         const published = await (await contracts.catalogue()).get("protocol.examples", "1.0.0");
         expect(published).not.toBeNull();
