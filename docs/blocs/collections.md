@@ -331,5 +331,11 @@ The current first-party JavaScript trust decision and the intended sandbox
 boundary for future third-party collections are recorded in
 [deferred platform work](../TODO.md#collection-javascript-isolation).
 
+Mongo stores collection assets in independently checksummed 256 KiB chunks.
+Full reads still verify the declared whole-asset SHA-256 and media signature;
+HTTP byte ranges fetch and verify only the chunks they cover. Release, chunk and
+site-state writes calculate their BSON size before contacting MongoDB and reject
+documents above its 16 MiB limit with a domain-readable error.
+
 See the [collection release format](../../packages/features/cms-repository/src/collections/README.md)
 for admission constraints.

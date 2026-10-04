@@ -1,4 +1,4 @@
-import { Binary, type Db } from "mongodb";
+import type { Db } from "mongodb";
 import { assertBlobRange, type BlobRange } from "@bernouy/blob-store";
 import {
     verifyStoredCollectionArtifact,
@@ -8,9 +8,10 @@ import { snapshotCollectionAssets, verifyCollectionAssets } from "../../../core/
 import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../../../core/limits";
 import { parseCollectionSiteState } from "../../core/siteState";
 import type { CollectionStorage, CollectionSiteState, StoredCollectionRelease } from "../../interfaces/store";
+import { readAssetChunks, storeAssetChunks, type AssetChunkDocument } from "./assetChunks";
+import { assertMongoBsonDocumentSize } from "./bsonSize";
 
 type ReleaseDocument = { _id: string; digest: unknown; release: unknown; state?: "pending" | "ready" };
-type AssetDocument = { _id: string; digest: unknown; id: unknown; bytes: unknown };
 type SiteDocument = { _id: string; revision: unknown; installations: unknown };
 
 export class MongoCollectionStorage implements CollectionStorage {
@@ -27,7 +28,7 @@ export class MongoCollectionStorage implements CollectionStorage {
             { "release.publisherId": 1, "release.collectionId": 1, "release.version": 1 },
             { unique: true },
         );
-        await this.assets.createIndex({ digest: 1, id: 1 }, { unique: true });
+        await this.assets.createIndex({ digest: 1, id: 1, index: 1 }, { unique: true });
     }
     private get releases() {
         return this.db.collection<ReleaseDocument>("collection_releases");
@@ -36,7 +37,7 @@ export class MongoCollectionStorage implements CollectionStorage {
         return this.db.collection<SiteDocument>("collection_installations");
     }
     private get assets() {
-        return this.db.collection<AssetDocument>("collection_assets");
+        return this.db.collection<AssetChunkDocument>("collection_asset_chunks");
     }
     async putRelease(artifact: StoredCollectionRelease) {
         const verified = await verifyStoredCollectionArtifact(
@@ -52,12 +53,14 @@ export class MongoCollectionStorage implements CollectionStorage {
                 return;
             }
             try {
-                await this.releases.insertOne({
+                const pending: ReleaseDocument = {
                     _id: verified.digest,
                     digest: verified.digest,
                     release: verified.release,
                     state: "pending",
-                });
+                };
+                assertMongoBsonDocumentSize(pending, "Collection release");
+                await this.releases.insertOne(pending);
             } catch (error) {
                 if ((error as { code?: number }).code === 11000) {
                     throw Object.assign(new Error("Immutable collection version already exists"), { status: 409 });
@@ -68,16 +71,11 @@ export class MongoCollectionStorage implements CollectionStorage {
             await verifyStoredCollectionRelease(existing.release, verified.digest, this.limits);
         }
         for (const asset of verified.assets) {
-            await this.assets.updateOne(
-                { _id: `${verified.digest}:${asset.id}` },
-                {
-                    $set: {
-                        digest: verified.digest,
-                        id: asset.id,
-                        bytes: new Binary(new Uint8Array(await asset.bytes.arrayBuffer())),
-                    },
-                },
-                { upsert: true },
+            await storeAssetChunks(
+                this.assets,
+                verified.digest,
+                asset.id,
+                new Uint8Array(await asset.bytes.arrayBuffer()),
             );
         }
         const completed = await this.releases.updateOne(
@@ -93,25 +91,20 @@ export class MongoCollectionStorage implements CollectionStorage {
         await this.getRelease(verified.digest);
     }
     async getRelease(digest: string) {
-        const value = await this.releases.findOne({ _id: digest });
-        if (!value || value.state === "pending") {
+        const metadata = await this.getReleaseMetadata(digest);
+        if (!metadata) {
             return null;
         }
-        if (value._id !== digest || value.digest !== digest) {
-            throw new TypeError("Stored collection release identity is inconsistent");
-        }
-        const documents = await this.assets.find({ digest }).toArray();
-        const assets = documents.map((asset) => {
-            if (
-                asset._id !== `${digest}:${asset.id}` ||
-                typeof asset.id !== "string" ||
-                !(asset.bytes instanceof Binary)
-            ) {
-                throw new TypeError("Stored collection asset identity is inconsistent");
-            }
-            return { id: asset.id, bytes: Uint8Array.from(asset.bytes.buffer) };
-        });
-        const verified = await verifyStoredCollectionArtifact(value.release, assets, value.digest, this.limits);
+        const assets = await Promise.all(
+            metadata.release.assets.map(async (declaration) => {
+                const bytes = await readAssetChunks(this.assets, digest, declaration);
+                if (!bytes) {
+                    throw new TypeError(`Stored collection asset is incomplete: ${declaration.id}`);
+                }
+                return { id: declaration.id, bytes };
+            }),
+        );
+        const verified = await verifyStoredCollectionArtifact(metadata.release, assets, metadata.digest, this.limits);
         return {
             digest: verified.digest,
             release: verified.release,
@@ -135,22 +128,23 @@ export class MongoCollectionStorage implements CollectionStorage {
         return { digest: verified.digest, release: verified.release };
     }
     async getAsset(digest: string, assetId: string, range?: BlobRange) {
-        const [artifact, document] = await Promise.all([
-            this.getReleaseMetadata(digest),
-            this.assets.findOne({ _id: `${digest}:${assetId}`, digest, id: assetId }),
-        ]);
+        const artifact = await this.getReleaseMetadata(digest);
         const declaration = artifact?.release.assets.find((asset) => asset.id === assetId);
-        if (!artifact || !declaration || !document || !(document.bytes instanceof Binary)) {
+        if (!artifact || !declaration) {
             return null;
         }
-        const bytes = Uint8Array.from(document.bytes.buffer);
-        const snapshots = snapshotCollectionAssets([declaration], [{ id: assetId, bytes }], this.limits);
-        await verifyCollectionAssets([declaration], snapshots);
-        if (!range) {
-            return bytes;
+        if (range) {
+            assertBlobRange(range, declaration.byteLength);
         }
-        assertBlobRange(range, bytes.byteLength);
-        return bytes.slice(range.start, range.end + 1);
+        const bytes = await readAssetChunks(this.assets, digest, declaration, range);
+        if (!bytes) {
+            return null;
+        }
+        if (!range) {
+            const snapshots = snapshotCollectionAssets([declaration], [{ id: assetId, bytes }], this.limits);
+            await verifyCollectionAssets([declaration], snapshots);
+        }
+        return bytes;
     }
     async readSite(siteId: string) {
         const value = await this.sites.findOne({ _id: siteId }, { projection: { _id: 0 } });
@@ -161,6 +155,7 @@ export class MongoCollectionStorage implements CollectionStorage {
         if (!Number.isSafeInteger(expected) || expected < 0 || state.revision !== expected + 1) {
             throw new TypeError("Invalid collection site state transition");
         }
+        assertMongoBsonDocumentSize({ _id: siteId, ...state }, "Collection site state");
         try {
             const result = await this.sites.replaceOne({ _id: siteId, revision: expected }, state, {
                 upsert: expected === 0,
