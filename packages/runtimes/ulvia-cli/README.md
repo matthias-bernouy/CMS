@@ -10,6 +10,10 @@ bun run ulvia -- dev stop
 bun run ulvia -- release packages/official-repository/collections/test
 bun run ulvia -- release /path/to/contract-directory
 bun run ulvia -- release /path/to/provider-directory
+bun run ulvia -- push contract ulvia.official/catalog.items@0.1.1 --repository https://repository.example
+bun run ulvia -- pull collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
+bun run ulvia -- yank collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example --reason "Superseded"
+bun run ulvia -- restore collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
 bun run ulvia -- prune
 ```
 
@@ -33,8 +37,26 @@ new releases without restarting. The CMS consumes the collection and provider
 repository endpoints. Control explores manifests in Settings → Provider
 connections, connects an account, then selects exact contract releases in
 Explore sources for gateway calls. `prune` empties all local repository content without
-deleting `dev/` data. Pull and push remain future commands; the removed
-integration repository/Supabase bridge is not run.
+deleting `dev/` data.
+
+`push` publishes one exact local coordinate, and `pull` downloads and re-admits
+one exact remote coordinate before storing it locally. Both support
+`collection`, `contract`, and `provider`; dependencies must be transferred
+first. `ULVIA_REPOSITORY_URL` can replace `--repository`.
+Repository writes require `ULVIA_REPOSITORY_TOKEN`; the token is never accepted
+as a command-line argument. Every mutation carries a timestamp, one-time nonce,
+body digest, and HMAC-SHA-256 signature. The server rejects stale or replayed
+requests, serializes writes across processes, re-runs admission and evolution
+rules, and makes the immutable artifact visible only after all declared assets
+are stored. An exact republish is idempotent; different bytes at an existing
+coordinate reject.
+
+`yank` is reversible catalogue metadata: it hides a release from new catalogue
+resolution without deleting its exact historical bytes. `restore` exposes it
+again. Contract yanks block new dependent publications while previously
+published provider manifests remain readable. The loopback dev server uses the
+same write protocol and prints its generated repository token through `dev
+credentials`. The removed integration repository/Supabase bridge is not run.
 
 A collection keeps immutable administration copy in recursive locale
 directories such as `translations/en/collection.json` and

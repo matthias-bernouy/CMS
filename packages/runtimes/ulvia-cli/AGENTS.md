@@ -35,5 +35,16 @@ Local Ulvia CMS development runtime.
   references against its local tokens, selective dependency imports and
   Bloc-owned custom-property declarations.
 - `dev` serves only stored releases on loopback; it must never read authored folders.
+- `push` and `pull` transfer one exact collection, contract or provider release.
+  Re-admit remote bytes locally and let the receiving repository re-run all
+  publication and evolution rules. Never trust a remote digest without
+  recomputing it.
+- Repository writes use a bearer token plus a timestamped, nonce-bound
+  HMAC-SHA-256 request signature. Keep tokens in environment or private runtime
+  files, never command arguments. Keep write serialization, bounded streaming,
+  replay rejection and artifact-last atomic visibility intact.
+- A yank is reversible repository metadata. It removes a release from new
+  catalogue resolution without deleting immutable bytes or breaking historical
+  exact-coordinate reads.
 - `prune` clears the local repository without touching the persistent dev stack.
 - Do not reintroduce the removed integration repository or Supabase bridge.

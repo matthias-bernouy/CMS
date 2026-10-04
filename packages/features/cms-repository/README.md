@@ -108,8 +108,10 @@ and the proposed connection protocol. [Provider workflows](src/providers/workflo
 details implemented transitions, upgrade boundaries and remaining runtime work.
 The [collections guide](src/collections/README.md) documents admitted themes,
 texts, views, dashboards, assets and resource requirements. The installed
-collection path currently accepts releases without assets or capability
-requirements; remote publication, broad view execution and renderer compilation
-remain unfinished.
+collection path accepts verified assets and capability requirements. The CLI
+runtime provides an immutable filesystem registry, authenticated remote
+publication, exact `push`/`pull`, and reversible yanking. Collection Views and
+dashboards execute through pinned gateway plans; renderer compilation and
+third-party JavaScript isolation remain separate concerns.
 [AGENTS.md](AGENTS.md) defines the domain
 boundaries and implementation invariants.

@@ -132,12 +132,15 @@ clients. See [image delivery](../images/delivery.md).
 
 ## Current Integration Gaps
 
-- Control imports releases, approves a provider connection and selects its contracts;
-  provider upgrades and a general publication workflow remain open.
+- Control imports releases, approves a provider connection and selects its
+  contracts. The CLI can publish and retrieve exact contract and provider
+  coordinates through an authenticated immutable repository; automated provider
+  upgrade policy remains open.
 - Conformance suite validation exists; a live conformance runner is not wired.
 - Mongo contract publication rejects fixture assets until a byte store exists.
-- Collection releases can be installed and upgraded from the local repository;
-  remote registry publication remains open.
+- Collection releases can be installed and upgraded from configured repository
+  sources. Exact remote `push`/`pull` and reversible yanking are implemented;
+  production hosting and multi-publisher authorization remain deployment work.
 - Provider image transforms run on demand; there is no durable derivative queue
   or public shared-cache policy.
 

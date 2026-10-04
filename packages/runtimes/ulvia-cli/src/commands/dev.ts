@@ -1,5 +1,5 @@
 import { startLocalRepository } from "../runtime/repository";
-import { loadOrCreateDevRuntimeConfig } from "../runtime/config";
+import { loadOrCreateDevRuntimeConfig, loadOrCreateRepositoryToken } from "../runtime/config";
 import { startLocalCms, stopLocalCms, type DevPorts } from "../runtime/cms";
 import { localMongoStatus, startLocalMongo, stopLocalMongo } from "../runtime/mongo";
 import { loadOrCreateProviderToken, startLocalProvider, stopLocalProvider } from "../runtime/provider";
@@ -36,6 +36,7 @@ export async function devCommand(
         log(`Email: ${config.adminEmail}`);
         log(`Password: ${config.adminPassword}`);
         log(`Provider token: ${await loadOrCreateProviderToken(paths.dev)}`);
+        log(`Repository token: ${await loadOrCreateRepositoryToken(paths.dev)}`);
         return;
     }
     if (action === "stop") {
@@ -50,7 +51,11 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
     log("Starting persistent local MongoDB...");
     const mongo = await startLocalMongo(paths.mongo, ports.mongo);
     const config = await loadOrCreateDevRuntimeConfig(paths.dev);
-    const repository = startLocalRepository(ports.repository, paths.repository);
+    const repository = startLocalRepository(
+        ports.repository,
+        paths.repository,
+        await loadOrCreateRepositoryToken(paths.dev),
+    );
     const provider = await startLocalProvider(paths, ports).catch((error) => {
         repository.stop();
         throw error;

@@ -3,6 +3,8 @@ import { LocalArtifactFiles } from "../repository/artifactFiles";
 import { LocalContractReleases } from "../repository/contracts";
 import { LocalCollectionRepository } from "../repository/local";
 import { LocalProviderReleases } from "../repository/providers";
+import { withRepositoryWriteLock } from "../repository/lock";
+import { LocalRepositoryYanks } from "../repository/yanks";
 import { prepareCollectionRelease } from "../release/source";
 
 export async function releaseCommand(
@@ -15,11 +17,16 @@ export async function releaseCommand(
         throw new Error("Usage: ulvia release <resource-directory>");
     }
     const directory = resolve(cwd, args[0]!);
+    await withRepositoryWriteLock(repositoryRoot, () => release(directory, repositoryRoot, log));
+}
+
+async function release(directory: string, repositoryRoot: string, log: (message: string) => void): Promise<void> {
     const bytes = await Bun.file(join(directory, "definition.json")).text();
     const definition = JSON.parse(bytes) as Record<string, unknown>;
     const kind = definition.kind;
     const files = new LocalArtifactFiles(repositoryRoot);
-    const contracts = new LocalContractReleases(files);
+    const yanks = new LocalRepositoryYanks(repositoryRoot);
+    const contracts = new LocalContractReleases(files, yanks);
     if (kind === "collection") {
         const artifact = await prepareCollectionRelease(directory, await contracts.catalogue());
         const added = await new LocalCollectionRepository(repositoryRoot).store(artifact);
@@ -36,7 +43,7 @@ export async function releaseCommand(
     }
     if (kind === "provider-manifest") {
         assertFolder(directory, definition.providerId);
-        const { added, admission } = await new LocalProviderReleases(files, contracts).release(bytes);
+        const { added, admission } = await new LocalProviderReleases(files, contracts, yanks).release(bytes);
         const { providerId, version, provenance } = admission.manifest;
         log(`${added ? "+" : "="} provider ${provenance.publisherId}/${providerId}@${version} (${admission.digest})`);
         return;

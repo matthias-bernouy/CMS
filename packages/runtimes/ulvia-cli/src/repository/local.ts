@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { chmod, link, lstat, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { link, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
     isCollectionNamespace,
@@ -9,6 +9,7 @@ import {
     verifyStoredCollectionArtifact,
 } from "@bernouy/cms-repository/collections";
 import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
+import { pruneRepository } from "./lock";
 
 export class LocalCollectionRepository {
     constructor(private readonly root: string) {}
@@ -109,15 +110,7 @@ export class LocalCollectionRepository {
     }
 
     async prune(): Promise<void> {
-        const root = await lstat(this.root);
-        if (!root.isDirectory() || root.isSymbolicLink()) {
-            throw new Error("Local repository root must be a real directory");
-        }
-        for (const name of await readdir(this.root)) {
-            const path = join(this.root, name);
-            await makeDirectoryTreeRemovable(path);
-            await rm(path, { recursive: true, force: true });
-        }
+        await pruneRepository(this.root);
     }
 
     private releasePath(publisherId: string, collectionId: string, version: string): string {
@@ -173,15 +166,4 @@ async function directories(root: string): Promise<string[]> {
         .filter((entry) => entry.isDirectory())
         .map((entry) => entry.name)
         .sort();
-}
-
-async function makeDirectoryTreeRemovable(path: string): Promise<void> {
-    const entry = await lstat(path);
-    if (!entry.isDirectory() || entry.isSymbolicLink()) {
-        return;
-    }
-    await chmod(path, entry.mode | 0o700);
-    for (const name of await readdir(path)) {
-        await makeDirectoryTreeRemovable(join(path, name));
-    }
 }

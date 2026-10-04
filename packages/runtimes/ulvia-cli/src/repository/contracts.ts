@@ -9,9 +9,13 @@ import {
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
 import { LocalArtifactFiles, type LocalFixtureAsset } from "./artifactFiles";
+import { LocalRepositoryYanks } from "./yanks";
 
 export class LocalContractReleases {
-    constructor(private readonly files: LocalArtifactFiles) {}
+    constructor(
+        private readonly files: LocalArtifactFiles,
+        private readonly yanks?: LocalRepositoryYanks,
+    ) {}
 
     async release(
         bytes: string,
@@ -21,7 +25,14 @@ export class LocalContractReleases {
         const fixtures: LocalFixtureAsset[] = await Promise.all(
             definitions.map(async ({ id }) => ({ id, bytes: await readFile(join(sourceDirectory, "fixtures", id)) })),
         );
-        const admission = definitions.length
+        return this.publish(bytes, fixtures);
+    }
+
+    async publish(
+        bytes: string,
+        fixtures: readonly LocalFixtureAsset[] = [],
+    ): Promise<{ added: boolean; admission: AdmittedContractRelease }> {
+        const admission = fixtures.length
             ? await admitContractBundleJson(bytes, fixtures)
             : await admitContractReleaseJson(bytes);
         const catalogue = await this.catalogue();
@@ -38,7 +49,7 @@ export class LocalContractReleases {
         return { added, admission };
     }
 
-    async catalogue(): Promise<InMemoryReleaseCatalogue> {
+    async catalogue(options: { includeYanks?: boolean } = {}): Promise<InMemoryReleaseCatalogue> {
         const pending = await Promise.all(
             (await this.files.list("contracts")).map(async ({ publisherId, id, version, bytes, publishedAt }) => {
                 const definitions = parseContractReleaseJson(bytes).fixtureAssets ?? [];
@@ -85,6 +96,16 @@ export class LocalContractReleases {
             }
             if (!published) {
                 throw firstError;
+            }
+        }
+        if (options.includeYanks !== false) {
+            for (const { coordinate, yank } of (await this.yanks?.entries("contract")) ?? []) {
+                const [, publisherId, contractId, version] = coordinate.split("\0");
+                const record = await catalogue.get(contractId!, version!);
+                if (!record || record.admission.release.publisherId !== publisherId) {
+                    throw new Error(`Yank refers to missing contract ${publisherId}/${contractId}@${version}`);
+                }
+                await catalogue.setYank(contractId!, version!, { reason: yank.reason });
             }
         }
         return catalogue;

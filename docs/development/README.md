@@ -18,9 +18,13 @@ bun run ulvia -- dev stop
 
 The CLI manages a persistent local CMS stack with MongoDB. `ULVIA_DATA_DIR`
 overrides its data directory; `ULVIA_DEV_CONTROL_PORT`,
-`ULVIA_DEV_DELIVERY_PORT` and `ULVIA_DEV_MONGO_PORT` override the local ports.
-Its current command surface is `dev`; collection build, push, publication and
-installation commands are not implemented.
+`ULVIA_DEV_DELIVERY_PORT`, `ULVIA_DEV_MONGO_PORT`, and
+`ULVIA_DEV_REPOSITORY_PORT` override the local ports. `release` validates an
+authored collection, contract, or provider manifest into the local immutable
+repository. `push` and `pull` transfer exact coordinates to and from a compatible
+HTTPS repository; `yank` and `restore` manage reversible catalogue availability.
+`dev credentials` prints the local repository write token. Site installation is
+performed through Control rather than the CLI.
 
 ## Checks And Build
 

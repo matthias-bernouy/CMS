@@ -2,11 +2,13 @@ import { admitProviderManifestJson, type AdmittedProviderManifest } from "@berno
 import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
 import { LocalArtifactFiles } from "./artifactFiles";
 import { LocalContractReleases } from "./contracts";
+import { LocalRepositoryYanks } from "./yanks";
 
 export class LocalProviderReleases {
     constructor(
         private readonly files: LocalArtifactFiles,
         private readonly contracts: LocalContractReleases,
+        private readonly yanks?: LocalRepositoryYanks,
     ) {}
 
     async release(bytes: string): Promise<{ added: boolean; admission: AdmittedProviderManifest }> {
@@ -26,7 +28,9 @@ export class LocalProviderReleases {
     }
 
     async catalogue(): Promise<InMemoryProviderManifestCatalogue> {
-        const contracts = await this.contracts.catalogue();
+        // Reconstruct historical manifests before applying present-day contract availability.
+        // A contract yank blocks new publications and selections, not access to old manifest bytes.
+        const contracts = await this.contracts.catalogue({ includeYanks: false });
         const catalogue = new InMemoryProviderManifestCatalogue(contracts);
         for (const artifact of await this.files.list("providers")) {
             const previous = await admitProviderManifestJson(artifact.bytes, contracts);
@@ -41,6 +45,14 @@ export class LocalProviderReleases {
                 );
             }
             await catalogue.publish(previous);
+        }
+        for (const { coordinate, yank } of (await this.yanks?.entries("provider-manifest")) ?? []) {
+            const [, publisherId, providerId, version] = coordinate.split("\0");
+            const record = await catalogue.get(providerId!, version!);
+            if (!record || record.admission.manifest.provenance.publisherId !== publisherId) {
+                throw new Error(`Yank refers to missing provider ${publisherId}/${providerId}@${version}`);
+            }
+            await catalogue.setYank(providerId!, version!, { reason: yank.reason });
         }
         return catalogue;
     }

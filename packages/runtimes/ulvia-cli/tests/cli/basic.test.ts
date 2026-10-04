@@ -11,8 +11,8 @@ describe("Ulvia CLI", () => {
         expect(output.join("\n")).toContain("ulvia dev");
         expect(output.join("\n")).toContain("ulvia release");
         expect(output.join("\n")).toContain("ulvia prune");
-        expect(output.join("\n")).not.toContain("ulvia pull");
-        expect(output.join("\n")).not.toContain("ulvia push");
+        expect(output.join("\n")).toContain("ulvia pull");
+        expect(output.join("\n")).toContain("ulvia push");
     });
 
     test("accepts isolated dev ports and rejects collisions", () => {
@@ -33,7 +33,7 @@ describe("Ulvia CLI", () => {
         expect(localMongoUrl(27_019)).toBe("mongodb://127.0.0.1:27019/ulvia_dev?retryWrites=false");
     });
 
-    test("rejects removed integration lifecycle commands", async () => {
-        await expect(runCli(["pull", "demo"], { log: () => undefined })).rejects.toThrow("Unknown command: pull");
+    test("rejects obsolete integration-shaped pull arguments", async () => {
+        await expect(runCli(["pull", "demo"], { log: () => undefined })).rejects.toThrow("Usage: ulvia pull");
     });
 });

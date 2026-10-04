@@ -40,6 +40,28 @@ export async function loadOrCreateDevRuntimeConfig(devRoot: string): Promise<Dev
     }
 }
 
+export async function loadOrCreateRepositoryToken(devRoot: string): Promise<string> {
+    const path = join(devRoot, "repository-token");
+    const existing = await readSecret(path);
+    if (existing) {
+        return existing;
+    }
+    const candidate = randomBytes(32).toString("base64url");
+    try {
+        await writeFile(path, candidate, { flag: "wx", mode: 0o600 });
+        return candidate;
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
+            throw error;
+        }
+        const concurrent = await readSecret(path);
+        if (!concurrent) {
+            throw new Error("Repository token disappeared during creation");
+        }
+        return concurrent;
+    }
+}
+
 async function readConfig(path: string): Promise<DevRuntimeConfig | null> {
     const source = await readFile(path, "utf8").catch((error: NodeJS.ErrnoException) => {
         if (error.code === "ENOENT") {
@@ -70,4 +92,17 @@ function validEmail(value: unknown): value is string {
 
 function secret(value: unknown): value is string {
     return typeof value === "string" && value.length >= 24 && value.length <= 256;
+}
+
+async function readSecret(path: string): Promise<string | null> {
+    const value = await readFile(path, "utf8").catch((error: NodeJS.ErrnoException) => {
+        if (error.code === "ENOENT") {
+            return null;
+        }
+        throw error;
+    });
+    if (value !== null && !/^[A-Za-z0-9_-]{43}$/u.test(value)) {
+        throw new Error("Local repository token is invalid");
+    }
+    return value;
 }

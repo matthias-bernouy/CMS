@@ -1,9 +1,9 @@
 # Develop And Validate A Bloc
 
-The former integration audit, release, repository, and installation workflow has
-been removed. During the provider transition, validate Bloc work against the
-compiler and the workspace checks; the new collection format has a separate admission API and no publication or
-renderer bridge yet.
+The former integration package workflow has been removed. Validate Bloc work
+against the collection release admission, compiler, and workspace checks. The
+current collection format has local and remote immutable publication plus a
+Control/Delivery renderer bridge.
 
 ## Local loop
 
@@ -46,9 +46,10 @@ Control bundle used by the browser.
 
 ## Publication status
 
-There is currently no supported collection publication command. Do not restore
-the removed package repository, integration manifests, or installation APIs to
-ship a Bloc. Contract/provider admission and Mongo catalogues already exist. Collection
-publication, installation, renderer compilation and a live conformance runner
-remain separate work. The authenticated `/api/bloc` import described in
-[authoring](authoring.md) still supports the existing compiled format.
+Use `ulvia release` for explicit authored directories, then `ulvia push` for one
+exact admitted coordinate. Do not restore the removed package repository or
+integration manifests. The receiving repository re-runs collection,
+contract/provider and release-evolution validation before making bytes visible.
+Installation remains a separate Control action, and a live provider conformance
+runner remains open. The authenticated `/api/bloc` import described in
+[authoring](authoring.md) still supports private compiled Blocs.

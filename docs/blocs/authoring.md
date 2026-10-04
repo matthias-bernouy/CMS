@@ -18,7 +18,9 @@ example-card/
 └── default.html
 ```
 
-There is no current CLI folder scanner or collection publication command.
+`ulvia release` scans the declarative `ulvia-collection/v1` folder format
+documented in [collections](collections.md). The multipart endpoint below is a
+separate path for private compiled Blocs, not collection publication.
 Control's authenticated `POST <basePath>/api/bloc` accepts multipart fields:
 `tag`, `name`, optional `group`/`description`, a `viewJS` file (view source) or
 `compositionHTML`, and an optional `source` JSON map of relative filenames to

@@ -33,8 +33,10 @@ models and validation for CMS-owned installations and site selections.
   `/contracts/catalogue` exposes an adapter-light port and deterministic memory
   implementation; `/contracts/protocol` exposes strict I-JSON parsing,
   canonicalization and freezing primitives.
-- Filesystem/remote catalogue adapters and registry distribution are future
-  repository capabilities; optional adapters need explicit subpaths. Business
+- HTTP catalogue sources and bounded immutable downloads are implemented here.
+  The CLI runtime owns the filesystem reference registry, authenticated signed
+  publication protocol and remote transfer commands because it owns paths,
+  credentials and listeners. Business
   HTTP execution and gateway routing remain outside this package; runtimes own
   environment access and production adapter selection. `./providers/mongo`
   provides durable manifest, installation and selection stores; `./contracts/mongo`

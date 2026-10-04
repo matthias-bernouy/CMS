@@ -51,9 +51,20 @@ change it); it never scans authored folders. Run `release` again after editing
 the source and increment its version. Contracts required by Blocs or Views must
 already exist in the local repository. `bun run ulvia -- prune` empties the
 local repository without deleting the separate dev CMS data. Pull and push
-remain future commands. The current release format does not install the
-`definitions/` directory. No direct collection JSON upload is available in
-Control.
+transfer one exact release between the local store and an HTTPS repository:
+
+```bash
+ULVIA_REPOSITORY_TOKEN=... bun run ulvia -- push collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
+bun run ulvia -- pull collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
+```
+
+Contracts and provider manifests use the same commands and must be transferred
+before dependants. Remote writes are timestamped, nonce-bound and HMAC-signed;
+the receiving repository re-runs admission, dependency and SemVer/generation
+checks while holding its write lock. `yank` hides a release from new catalogue
+resolution without deleting historical bytes, and `restore` reverses it. The
+current release format does not install the `definitions/` directory. No direct
+collection JSON upload is available in Control.
 
 Components use `shadowdom.html`, optional fixed `lightdom.html`, optional
 `style.css`, and optional `bloc.ts`.
@@ -249,8 +260,10 @@ including fixed Light DOM, named slots and initial page content. Verified asset
 bytes and revision-checked collection configuration are implemented. The store
 can remove a collection after checking installed dependants, but Control does not
 expose removal until it can also report affected pages, private Blocs, theme
-references and dashboards. Remote registry publication remains future work.
-JavaScript trust scanning is also separate; migration files
+references and dashboards. Remote registry transfer and authenticated
+publication are implemented by the CLI and filesystem reference registry.
+Production hosting, key rotation and multi-publisher authorization remain
+deployment work. JavaScript trust scanning is also separate; migration files
 themselves are data-only. Collection Views can render local or explicitly
 imported Blocs; Control expands compositions, loads the transitive component
 runtime (including internal Blocs), resolves collection texts and public assets,
