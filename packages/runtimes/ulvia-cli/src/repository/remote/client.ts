@@ -1,5 +1,6 @@
 import { parseCollectionReleaseJson } from "@bernouy/cms-repository/collections";
 import { parseContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import { parseProviderManifestJson } from "@bernouy/cms-repository/providers";
 import type { RepositoryArtifactKind } from "../yanks";
 import { signRepositoryRequest } from "./auth";
 import { encodePublication, type PublicationEnvelope } from "./protocol";
@@ -29,6 +30,7 @@ export class RemoteRepositoryClient {
         const path = releasePath(coordinate);
         const response = await this.get(path, MAX_RELEASE_BYTES, "application/json");
         const canonicalJson = new TextDecoder("utf-8", { fatal: true }).decode(response.bytes);
+        assertCoordinate(coordinate, canonicalJson);
         const assets = await this.assets(coordinate, canonicalJson);
         return { kind: coordinate.kind, canonicalJson, assets, expectedDigest: response.digest };
     }
@@ -118,6 +120,34 @@ export class RemoteRepositoryClient {
         }
         return value;
     }
+}
+
+function assertCoordinate(coordinate: RemoteCoordinate, canonicalJson: string): void {
+    const actual = readCoordinate(coordinate.kind, canonicalJson);
+    if (
+        actual.publisherId !== coordinate.publisherId ||
+        actual.id !== coordinate.id ||
+        actual.version !== coordinate.version
+    ) {
+        throw new Error("Repository returned a release that does not match the requested coordinate");
+    }
+}
+
+function readCoordinate(kind: RepositoryArtifactKind, canonicalJson: string): Omit<RemoteCoordinate, "kind"> {
+    if (kind === "collection") {
+        const release = parseCollectionReleaseJson(canonicalJson);
+        return { publisherId: release.publisherId, id: release.collectionId, version: release.version };
+    }
+    if (kind === "contract") {
+        const release = parseContractReleaseJson(canonicalJson);
+        return { publisherId: release.publisherId, id: release.contractId, version: release.version };
+    }
+    const manifest = parseProviderManifestJson(canonicalJson);
+    return {
+        publisherId: manifest.provenance.publisherId,
+        id: manifest.providerId,
+        version: manifest.version,
+    };
 }
 
 function releasePath(coordinate: RemoteCoordinate): string {
