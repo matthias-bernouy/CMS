@@ -62,6 +62,41 @@ describe("repository catalogue boundaries", () => {
         expect(() => parseCollectionCatalogue({ releases: [collectionEntry()], extra: true }, "official")).toThrow();
     });
 
+    test("collection dashboard summaries follow the collection admission ceiling", () => {
+        const dashboard = (index: number) => ({
+            id: `dashboard-${index}`,
+            name: `Dashboard ${index}`,
+            description: "",
+            viewCount: 1,
+        });
+        expect(
+            parseCollectionCatalogue(
+                {
+                    releases: [
+                        {
+                            ...collectionEntry(),
+                            dashboards: Array.from({ length: 128 }, (_, index) => dashboard(index)),
+                        },
+                    ],
+                },
+                "official",
+            )[0]!.dashboards,
+        ).toHaveLength(128);
+        expect(() =>
+            parseCollectionCatalogue(
+                {
+                    releases: [
+                        {
+                            ...collectionEntry(),
+                            dashboards: Array.from({ length: 129 }, (_, index) => dashboard(index)),
+                        },
+                    ],
+                },
+                "official",
+            ),
+        ).toThrow("dashboard summaries");
+    });
+
     test("rejects ambiguous release coordinates in both catalogues", () => {
         expect(() =>
             parseProviderCatalogue(

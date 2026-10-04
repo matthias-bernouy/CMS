@@ -1,5 +1,6 @@
 import type { CollectionRepositoryEntry } from "./interfaces";
 import { isCollectionNamespace } from "../core/namespace";
+import { DEFAULT_COLLECTION_LIMITS } from "../core/limits";
 import { isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
 
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
@@ -81,7 +82,7 @@ export function parseCollectionCatalogue(data: unknown, repositoryId: string): C
         if (
             entry.dashboards !== undefined &&
             (!Array.isArray(entry.dashboards) ||
-                entry.dashboards.length > 32 ||
+                entry.dashboards.length > DEFAULT_COLLECTION_LIMITS.maxDashboards ||
                 entry.dashboards.some(
                     (dashboard: unknown) =>
                         !isPlainRecord(dashboard) ||
