@@ -7,6 +7,8 @@
     "main": "./src/exports/index.ts",
     "exports": {
         ".": "./src/exports/index.ts",
+        "./execution": "./src/exports/execution/index.ts",
+        "./execution/mongo": "./src/exports/execution/mongo.ts",
         "./http": "./src/exports/http/index.ts",
         "./http/handlers": "./src/exports/http/handlers.ts",
         "./http/node": "./src/exports/http/node.ts",

@@ -5,6 +5,7 @@ import { requireDashboardAdmin, dashboardCollections } from "cms-control/core/ad
 import { dashboardName } from "cms-control/core/admin/dashboards/model";
 import { dashboardFromCatalog } from "cms-control/core/admin/dashboards/catalog";
 import { parseDashboardNavigation } from "cms-control/core/admin/dashboards/navigation";
+import { activateDashboardViewExecutions } from "cms-control/core/admin/dashboards/requirements";
 
 export default async function updateDashboard(request: Request, cms: ControlCms): Promise<Response> {
     await requireDashboardAdmin(request, cms);
@@ -32,6 +33,9 @@ export default async function updateDashboard(request: Request, cms: ControlCms)
         }
         const { sourceContracts, ...stored } = current;
         const next = { ...stored, enabled: body.enabled, revision: revision + 1 };
+        if (next.enabled) {
+            await activateExecutions(cms, next.navigation);
+        }
         if (revision === 0) {
             await cms.dashboards.create(next);
         } else if (!(await cms.dashboards.replace(next, revision))) {
@@ -60,8 +64,27 @@ export default async function updateDashboard(request: Request, cms: ControlCms)
         navigation,
         revision: revision + 1,
     };
+    if (next.enabled) {
+        await activateExecutions(cms, next.navigation);
+    }
     if (!(await cms.dashboards.replace(next, revision))) {
         throw Object.assign(new Error("Dashboard changed; reload before saving"), { status: 409 });
     }
     return Response.json({ ...next, sourceContracts });
+}
+
+async function activateExecutions(
+    cms: ControlCms,
+    navigation: Parameters<typeof activateDashboardViewExecutions>[1],
+): Promise<void> {
+    try {
+        await activateDashboardViewExecutions(cms, navigation);
+    } catch (error) {
+        throw Object.assign(
+            new Error(
+                `Dashboard execution plan is unavailable: ${error instanceof Error ? error.message : "unknown error"}`,
+            ),
+            { status: 409 },
+        );
+    }
 }

@@ -8,6 +8,7 @@ publish releases or choose providers.
 
 - `src/invocation/` owns route resolution, authorization, response validation,
   HTTP handlers, and transport implementations.
+- `src/execution/` owns immutable collection-view plans and revisioned grants.
 - `src/identity/` owns provider-wide authority aliases, their contracts, and
   memory, Mongo, and request-scoped implementations.
 - `src/media/` owns provider file handlers, derivatives, image policy, storage

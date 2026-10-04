@@ -246,16 +246,19 @@ including fixed Light DOM, named slots and initial page content. Verified asset
 bytes and revision-checked collection configuration are implemented. The store
 can remove a collection after checking installed dependants, but Control does not
 expose removal until it can also report affected pages, private Blocs, theme
-references and dashboards. Provider grants and registry publication remain
-future work. JavaScript trust scanning is also separate; migration files
+references and dashboards. Remote registry publication remains future work.
+JavaScript trust scanning is also separate; migration files
 themselves are data-only. Collection Views can render local or explicitly
 imported Blocs; Control expands compositions, loads the transitive component
 runtime (including internal Blocs), resolves collection texts and public assets,
 and applies the site theme. Capability calls are authorized against the selected
 View and all of its transitive Bloc requirements. Dashboards only define
 navigation and activation: their source list is derived from those Views.
-Provider execution plans are not implemented. A source adapter exists for
-multiple repositories, while the dev runtime configures one local source.
+Activating a dashboard compiles CMS-owned execution grants for its Views. Each
+plan pins the collection digest, View generation, provider-selection revision,
+contract release digest and installation. Calls fail closed after an upgrade or
+selection change until the dashboard is activated against the new state. A source
+adapter exists for multiple repositories, while the dev runtime configures one local source.
 The current first-party JavaScript trust decision and the intended sandbox
 boundary for future third-party collections are recorded in
 [deferred platform work](../TODO.md#collection-javascript-isolation).

@@ -21,6 +21,7 @@ import type { CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { GatewayCapabilityCatalogue } from "@bernouy/cms-gateway";
+import type { CollectionViewExecutionAuthority } from "@bernouy/cms-gateway/execution";
 import type { ProviderImageService } from "@bernouy/cms-gateway/media";
 import type { SecretStore } from "@bernouy/secret-store";
 import type { Cache, Runner } from "@bernouy/http-runner";
@@ -86,6 +87,7 @@ export type ControlCmsOptions = Configuration & {
         readonly invoker: GatewayInvoker;
         readonly images?: Pick<ProviderImageService, "get">;
         readonly catalogue?: GatewayCapabilityCatalogue;
+        readonly viewExecutions?: CollectionViewExecutionAuthority;
         /** Host-owned verified administrator grant, independent of request fields. */
         readonly isAdministrator: (subject: Subject) => Promise<boolean>;
     };

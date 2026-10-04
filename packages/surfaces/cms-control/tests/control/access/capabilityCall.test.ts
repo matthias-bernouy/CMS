@@ -163,8 +163,11 @@ test("a dashboard member can call only capabilities required by the selected vie
             collections: [
                 {
                     collectionId: "test",
+                    digest: `sha256:${"c".repeat(64)}`,
                     release: {
                         collectionId: "test",
+                        publisherId: "ulvia.official",
+                        version: "1.0.0",
                         blocs: [],
                         views: [
                             {
@@ -208,6 +211,17 @@ test("a dashboard member can call only capabilities required by the selected vie
                         return { kind: "success", requestId: "request-1", status: 200, output: { items: [] } };
                     },
                 },
+                viewExecutions: {
+                    activate: async () => {
+                        throw new Error("not used");
+                    },
+                    authorize: async () => ({
+                        planDigest: `sha256:${"a".repeat(64)}`,
+                        version: "1.0.0",
+                        digest: `sha256:${"b".repeat(64)}`,
+                        installationId: "install-a",
+                    }),
+                },
             },
         },
     } as unknown as ControlCmsState;
@@ -232,6 +246,7 @@ test("a dashboard member can call only capabilities required by the selected vie
         origin: "view",
         actor: { kind: "user", subjectId: "member-1" },
         contractId: "catalog.items",
+        execution: { installationId: "install-a" },
     });
     expect((await handleDashboardCapabilityCall(request("forms.submissions"), cms, state)).status).toBe(403);
     expect(calls).toHaveLength(1);

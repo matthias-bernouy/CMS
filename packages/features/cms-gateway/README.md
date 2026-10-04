@@ -6,6 +6,15 @@ manifest claim, current installation state, fresh runtime observation, actor
 access, trusted invocation origin, host grants, input and output schema, and
 compiled binding pin.
 
+`./execution` compiles one immutable plan for each capability-bearing installed
+collection View when a dashboard is activated. The plan pins the collection
+digest and View generation together with the current selection revision and
+each exact contract release, digest and provider installation. Control requires
+that grant for every View call. Collection upgrades and provider-selection
+changes make the old plan stale; execution remains closed until an administrator
+activates the current dashboard state again. `./execution/mongo` persists these
+revisioned grants in production.
+
 `CapabilityGateway` activates synchronous JSON queries, synchronous natural or
 non-idempotent commands, and bounded binary file reads through an injected
 transport. Keyed commands remain closed until a durable idempotency store exists.
@@ -70,7 +79,7 @@ byte fingerprint invalidates a derivative when a provider changes the file.
 
 The source tree follows these responsibilities: `invocation/` contains routing,
 authorization, HTTP handlers, and transport; `identity/` contains provider-wide
-aliases and their stores; `media/` contains authorized derivatives and browser
+aliases and their stores; `execution/` contains View plans and grants; `media/` contains authorized derivatives and browser
 helpers. `exports/` contains the corresponding public entrypoints. The package
 root remains the invocation API; optional adapters use domain-specific subpaths.
 

@@ -65,6 +65,7 @@ export async function mountProductionSurfaces(
                           invoker: gateway.invoker,
                           images: gateway.images,
                           catalogue: gateway.catalogue,
+                          viewExecutions: gateway.viewExecutions,
                           isAdministrator: gateway.isAdministrator,
                       },
                   }

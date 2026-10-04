@@ -86,7 +86,8 @@ export async function handleDashboardCapabilityCall(
     if (!capability || !collectionId || !collectionViewId || !collections) {
         return Response.json({ error: { code: "capability_not_declared" } }, { status: 403 });
     }
-    const releases = (await collections.store.snapshot(collections.siteId)).collections.map(({ release }) => release);
+    const snapshot = await collections.store.snapshot(collections.siteId);
+    const releases = snapshot.collections.map(({ release }) => release);
     const declared = collectionViewRequirements(releases, collectionId, collectionViewId).some(
         (requirement) =>
             requirement.contractId === capability.contractId && requirement.capabilityId === capability.capabilityId,
@@ -94,11 +95,33 @@ export async function handleDashboardCapabilityCall(
     if (!declared) {
         return Response.json({ error: { code: "capability_not_declared" } }, { status: 403 });
     }
+    const installation = snapshot.collections.find((item) => item.collectionId === collectionId);
+    const view = installation?.release.views?.find((item) => item.id === collectionViewId);
+    if (!installation || !view || !configured.viewExecutions) {
+        return Response.json({ error: { code: "execution_plan_unavailable" } }, { status: 503 });
+    }
+    let execution;
+    try {
+        execution = await configured.viewExecutions.authorize({
+            siteId: collections.siteId,
+            publisherId: installation.release.publisherId,
+            collectionId: installation.collectionId,
+            collectionVersion: installation.release.version,
+            collectionDigest: installation.digest,
+            viewId: view.id,
+            viewGeneration: view.generation ?? 1,
+            contractId: capability.contractId,
+            capabilityId: capability.capabilityId,
+        });
+    } catch {
+        return Response.json({ error: { code: "execution_plan_unavailable" } }, { status: 503 });
+    }
     return handleGatewayHttpCall(request, {
         siteId: configured.siteId,
         invoker: configured.invoker,
         origin: "view",
         actor: { kind: administrator ? "administrator" : "user", subjectId: subject.identifier },
+        execution,
         prefix,
     });
 }

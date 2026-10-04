@@ -8,7 +8,7 @@ import {
     type GatewayTransportResponse,
 } from "@bernouy/cms-gateway";
 import { InMemoryIdentityService, ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
-import { gatewayRoute, NOW } from "./fixtures";
+import { gatewayRoute, NOW } from "../fixtures";
 
 function harness(route: GatewayRoute, identities = new ProviderIdentityAliases(new InMemoryIdentityService())) {
     const sent: GatewayTransportRequest[] = [];
@@ -278,6 +278,38 @@ describe("capability gateway", () => {
             });
         }
         expect(scope.sent).toHaveLength(0);
+    });
+
+    test("requires an exact execution pin for view calls", async () => {
+        const route = await gatewayRoute();
+        const scope = harness(route);
+        await expect(scope.gateway.invoke({ ...invocation(), origin: "view" })).rejects.toMatchObject({
+            code: "not_authorized",
+        });
+        await expect(
+            scope.gateway.invoke({
+                ...invocation(),
+                origin: "view",
+                execution: {
+                    planDigest: `sha256:${"a".repeat(64)}`,
+                    version: route.selection.version,
+                    digest: route.selection.digest,
+                    installationId: route.selection.installationId,
+                },
+            }),
+        ).resolves.toMatchObject({ kind: "success" });
+        await expect(
+            scope.gateway.invoke({
+                ...invocation(),
+                origin: "view",
+                execution: {
+                    planDigest: `sha256:${"a".repeat(64)}`,
+                    version: route.selection.version,
+                    digest: route.selection.digest,
+                    installationId: "install-other",
+                },
+            }),
+        ).rejects.toMatchObject({ code: "stale_route" });
     });
 
     test("passes the trusted origin to grants and checks the route after transport", async () => {

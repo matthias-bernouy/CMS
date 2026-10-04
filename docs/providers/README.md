@@ -76,8 +76,10 @@ When `CMS_GATEWAY_SITE_ID` is configured, `cms-server` constructs Mongo release,
 manifest, installation and selection stores, a selected catalogue, network and
 secret adapters, image storage and observation refresh. The current host policy
 allows public/authenticated access on Delivery as declared by the capability;
-Control invocation requires the configured local administrator. A broader grant
-model is not wired into this runtime.
+Control's generic invocation route requires the configured local administrator.
+Dashboard View calls use a separate CMS-owned plan and grant: dashboard access
+selects the View, then its active grant restricts the call to declared capabilities
+and exact provider routes.
 
 | Surface | Routes relative to its base path |
 | --- | --- |
@@ -135,7 +137,7 @@ clients. See [image delivery](../images/delivery.md).
 - Conformance suite validation exists; a live conformance runner is not wired.
 - Mongo contract publication rejects fixture assets until a byte store exists.
 - Collection releases can be installed and upgraded from the local repository;
-  registry publication and provider execution plans in HTML views remain open.
+  remote registry publication remains open.
 - Provider image transforms run on demand; there is no durable derivative queue
   or public shared-cache policy.
 

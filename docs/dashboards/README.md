@@ -35,7 +35,9 @@ context request checks the current dashboard state and member assignment;
 disabling a dashboard removes member access immediately. Administrator edits
 use optimistic revisions to detect concurrent changes.
 
-The current Control view runner does not admit authored provider calls or
-command forms, compile execution grants or render installed bloc browser
-bundles inside dashboard views. The `Test` collection contains two simple
-HTML views and a collection dashboard for local exercises.
+The Control view runner renders the installed View's transitive Bloc runtime and
+admits only the capability calls declared by the View and those Blocs. Dashboard
+activation compiles one revisioned execution grant per capability-bearing View.
+The grant pins the installed collection and exact provider routes; stale plans
+fail closed after collection or selection changes. Dashboards remain navigation
+and membership only—their effective authority is derived from their Views.

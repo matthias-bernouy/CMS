@@ -5,6 +5,7 @@ import type {
     GatewayOrigin,
     GatewayResult,
 } from "cms-gateway/invocation/interfaces/Invocation";
+import type { GatewayExecutionPin } from "cms-gateway/execution/interfaces/ViewExecution";
 import { readGatewayHttpInput } from "cms-gateway/invocation/http/readHttpInput";
 
 export interface GatewayHttpCallOptions {
@@ -12,6 +13,7 @@ export interface GatewayHttpCallOptions {
     readonly siteId: string;
     readonly origin: GatewayOrigin;
     readonly actor: GatewayActor;
+    readonly execution?: GatewayExecutionPin;
     /** Full trusted route prefix, including an optional tenant base path. */
     readonly prefix: string;
 }
@@ -53,6 +55,7 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
             capabilityId,
             origin: options.origin,
             actor: options.actor,
+            ...(options.execution ? { execution: options.execution } : {}),
             input,
         });
         return resultResponse(result);
