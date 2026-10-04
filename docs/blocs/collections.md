@@ -275,6 +275,10 @@ plan pins the collection digest, View generation, provider-selection revision,
 contract release digest and installation. Calls fail closed after an upgrade or
 selection change until the dashboard is activated against the new state. A source
 adapter exists for multiple repositories, while the dev runtime configures one local source.
+Repository catalogue responses are currently bounded to 256 releases and are not
+paginated. This is an explicit V1 limit: a production repository must add cursor
+pagination, and clients must consume it, before any one catalogue can exceed 256
+visible releases. Exact-coordinate reads are not affected by this catalogue limit.
 The current first-party JavaScript trust decision and the intended sandbox
 boundary for future third-party collections are recorded in
 [deferred platform work](../TODO.md#collection-javascript-isolation).
