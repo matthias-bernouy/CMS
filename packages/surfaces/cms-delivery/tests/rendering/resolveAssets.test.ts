@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import { compress, InMemoryCache } from "@bernouy/http-runner";
 import { CMS_CACHE_KEYS, defaultSystem, type ContentReader, type TPage } from "@bernouy/cms-content";
+import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
 import { componentJsCacheKey, generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
-import { resolveRuntimeAssets } from "cms-delivery/core/assets/resolveAssets";
+import { collectionBlocsetCacheKey, resolveRuntimeAssets } from "cms-delivery/core/assets/resolveAssets";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 
@@ -10,16 +12,18 @@ const system = defaultSystem();
 system.initializationStep = 1;
 system.site.name = "Site";
 
-function deliveryWith(repository: ContentReader): DeliveryCms {
+function deliveryWith(repository: ContentReader, collectionAssets?: DeliveryCms["collectionAssets"]): DeliveryCms {
     const cache = new InMemoryCache();
     cache.set(componentJsCacheKey("/.cms/assets/component.js"), compress("component", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.STYLE, compress("body{}", "text/css"));
 
     return {
+        basePath: "",
         cmsPathPrefix: "/.cms",
         cache,
         repository,
+        collectionAssets,
     } as unknown as DeliveryCms;
 }
 
@@ -27,6 +31,7 @@ function repositoryWith(options: {
     pageContent: string;
     blocTags: string[];
     viewJS?: Record<string, string | null>;
+    collectionRevision?: number;
 }): ContentReader {
     const page = {
         path: "/",
@@ -45,6 +50,9 @@ function repositoryWith(options: {
         getPublishedPageById: async () => null,
         getPublishedPages: async () => [page],
         resolvePublishedRoute: async () => null,
+        ...(options.collectionRevision === undefined
+            ? {}
+            : { getCollectionRevision: async () => options.collectionRevision! }),
     };
 }
 
@@ -123,5 +131,43 @@ describe("resolveRuntimeAssets", () => {
         expect(assets.blocUrls).toHaveLength(1);
         expect(assets.blocUrls[0]).toContain("tags=p,site-card");
         expect(assets.scriptUrls).toHaveLength(2);
+    });
+
+    test("resolves collection asset expressions inside immutable Bloc JavaScript", async () => {
+        const bytes = new TextEncoder().encode("asset");
+        const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}` as const;
+        const store = new CollectionStore(new MemoryCollectionStorage());
+        const artifact = await store.importRelease(
+            {
+                kind: "collection",
+                protocol: "ulvia-collection/v1",
+                schemaDialect: "ulvia-schema/v1",
+                collectionId: "design-system",
+                publisherId: "ulvia.official",
+                version: "1.0.0",
+                name: "collection.name",
+                locale: "en",
+                translations: { en: { "collection.name": "Design system" } },
+                assets: [{ id: "mark.svg", mediaType: "image/svg+xml", byteLength: bytes.byteLength, digest }],
+                blocs: [],
+            },
+            [{ id: "mark.svg", bytes }],
+        );
+        await store.install("site", artifact.digest, 0);
+        const repository = repositoryWith({
+            pageContent: "<site-card></site-card>",
+            blocTags: ["site-card"],
+            viewJS: { "site-card": 'const logo = "{{ cms.asset.design-system.mark.svg }}";' },
+            collectionRevision: 1,
+        });
+        const delivery = deliveryWith(repository, { siteId: "site", store });
+
+        const assets = await resolveRuntimeAssets(delivery, ["site-card"]);
+        const entry = delivery.cache.get(collectionBlocsetCacheKey(["site-card"], 1));
+        const js = new TextDecoder().decode(entry!.raw);
+
+        expect(assets.blocUrls[0]).toContain("r=1");
+        expect(js).toContain("/.cms/collections/design-system/assets/mark.svg?v=");
+        expect(js).not.toContain("cms.asset.design-system.mark.svg");
     });
 });

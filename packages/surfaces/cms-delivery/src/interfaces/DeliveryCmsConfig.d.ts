@@ -10,6 +10,7 @@ import type {
 } from "@bernouy/cms-content/files/serving";
 import type { GatewayAccessProbe, GatewayInvoker } from "@bernouy/cms-gateway";
 import type { ProviderImageService } from "@bernouy/cms-gateway/media";
+import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { HeadInjector } from "./HeadInjector";
 import type { PublicPageProvider } from "./PublicPageProvider";
@@ -19,6 +20,11 @@ export type DeliveryCmsConfig = {
     repository: ContentReader;
     /** Public collection texts, fixed for this instance. Recreate/invalidate page cache when changing them. */
     collectionTexts?: readonly CollectionTextSource[];
+    /** Installed immutable collection assets exposed under Delivery's tenant-scoped public asset route. */
+    collectionAssets?: {
+        siteId: string;
+        store: Pick<CollectionStore, "snapshot" | "getInstalledAssetMetadata" | "getReleaseAsset">;
+    };
     cache?: Cache;
     maintenance?: { siteId: string; migrations: Pick<CollectionMigrationService, "getActive"> };
     /**

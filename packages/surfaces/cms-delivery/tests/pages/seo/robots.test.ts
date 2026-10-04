@@ -35,6 +35,7 @@ describe("Delivery robots", () => {
         }
         expect(body).toContain("Allow: /site/.cms/files/\n");
         expect(body).toContain("Allow: /site/.cms/img/\n");
+        expect(body).toContain("Allow: /site/.cms/collections/\n");
         expect(body).toContain("Allow: /site/.cms/media/\n");
         expect(body).toContain("Allow: /site/.cms/image/\n");
         expect(body).not.toContain("/.cms/sources/");

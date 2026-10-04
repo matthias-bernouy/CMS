@@ -65,6 +65,9 @@ export async function renderPage(
         settings.site.language || "en",
         ctx.repository.getCollectionTexts ? await ctx.repository.getCollectionTexts() : (ctx.collectionTexts ?? []),
     );
+    if (ctx.resolveCollectionAssets) {
+        document.body.innerHTML = await ctx.resolveCollectionAssets(document.body.innerHTML);
+    }
     sanitizeDomTree(document.body);
     // A browser may fetch an interpolated img src before the deferred binding
     // runtime executes. Keep only dynamic network attributes inert; static

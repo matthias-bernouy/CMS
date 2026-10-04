@@ -97,6 +97,7 @@ export async function mountProductionSurfaces(
         repository: createContentReader(core.repo),
         cache: core.cache,
         maintenance: { siteId: "default", migrations: core.collectionMigrations },
+        collectionAssets: { siteId: "default", store: core.collections },
         ...(gateway
             ? {
                   capabilityGateway: {

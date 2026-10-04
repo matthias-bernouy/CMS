@@ -18,6 +18,8 @@ const ctx: RenderContext = {
         blocUrls: [],
         scriptUrls: [],
     }),
+    resolveCollectionAssets: async (input) =>
+        input.replace("{{ cms.asset.test.hero.svg }}", "/.cms/collections/test/assets/hero.svg?v=digest"),
     faviconUrl: "/favicon.ico",
     headInjectors: [],
     collectionTexts: [
@@ -36,7 +38,7 @@ const page = {
     description: "",
     tags: [],
     visible: true,
-    content: "<h2>{{ cms.i18n.test.title }}</h2><p>{{ order.total }}</p>",
+    content: '<h2>{{ cms.i18n.test.title }}</h2><img src="{{ cms.asset.test.hero.svg }}"><p>{{ order.total }}</p>',
 } as unknown as TPage;
 
 test("Delivery sends translated HTML for the route language before any browser code runs", async () => {
@@ -48,6 +50,7 @@ test("Delivery sends translated HTML for the route language before any browser c
     expect(french).toContain("<h2>Commande</h2>");
     expect(french).toContain("{{ order.total }}");
     expect(french).not.toContain("cms.i18n");
+    expect(french).toContain('src="/.cms/collections/test/assets/hero.svg?v=digest"');
     expect(new TextDecoder().decode(en.raw)).toContain("<h2>Order</h2>");
 });
 

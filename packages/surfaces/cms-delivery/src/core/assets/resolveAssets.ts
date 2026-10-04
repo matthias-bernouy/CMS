@@ -5,6 +5,7 @@ import { generateBlocSetEntry, generateStyleEntry } from "@bernouy/cms-content/r
 import { componentJsCacheKey, generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
 import { generateBindingCoreJsEntry } from "cms-delivery/core/assets/buildBindingCore";
 import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
+import { resolveCollectionAssetExpressions } from "cms-delivery/core/assets/collectionAssets";
 
 /**
  * Content-addressed URLs for every asset a page references. The hash is the
@@ -52,6 +53,13 @@ export async function resolveRuntimeAssets(delivery: DeliveryCms, usedTags: stri
     const componentCacheKey = componentJsCacheKey(componentJsUrl);
     const bindingCoreJsUrl = `${prefix}/assets/cms-binding-core.js`;
     const bindingCoreJsCacheKey = CMS_CACHE_KEYS.js(bindingCoreJsUrl);
+    const collectionRevision = (await delivery.repository.getCollectionRevision?.()) ?? 0;
+    const collectionAssetReader = {
+        getBlocViewJS: async (tag: string) => {
+            const source = await delivery.repository.getBlocViewJS(tag);
+            return source ? resolveCollectionAssetExpressions(source, delivery) : null;
+        },
+    };
 
     // Partition the page's blocs into the stable signature groups that cover
     // them + a fallback bundle for any tag the manifest doesn't know yet.
@@ -80,8 +88,8 @@ export async function resolveRuntimeAssets(delivery: DeliveryCms, usedTags: stri
         getOrGenerateEntryAsync(bindingCoreJsCacheKey, delivery.cache, generateBindingCoreJsEntry),
         getOrGenerateEntryAsync(CMS_CACHE_KEYS.STYLE, delivery.cache, () => generateStyleEntry(delivery.repository)),
         ...bundles.map((tags) =>
-            getOrGenerateEntryAsync(CMS_CACHE_KEYS.blocset(tags), delivery.cache, () =>
-                generateBlocSetEntry(tags, delivery.repository),
+            getOrGenerateEntryAsync(collectionBlocsetCacheKey(tags, collectionRevision), delivery.cache, () =>
+                generateBlocSetEntry(tags, collectionAssetReader),
             ),
         ),
     ]);
@@ -93,9 +101,14 @@ export async function resolveRuntimeAssets(delivery: DeliveryCms, usedTags: stri
         .map((tags, i) => ({ tags, entry: bundleEntries[i]! }))
         .filter((asset) => asset.entry.raw.length > 0);
     const blocUrls = blocAssets.map(
-        ({ tags, entry }) => `${prefix}/blocset?tags=${[...tags].sort().join(",")}&v=${entry.hash}`,
+        ({ tags, entry }) =>
+            `${prefix}/blocset?tags=${[...tags].sort().join(",")}&r=${collectionRevision}&v=${entry.hash}`,
     );
     const scriptUrls = [componentUrl, ...blocUrls];
 
     return { componentUrl, bindingCoreUrl, styleUrl, blocUrls, scriptUrls };
+}
+
+export function collectionBlocsetCacheKey(tags: string[], collectionRevision: number): string {
+    return `${CMS_CACHE_KEYS.blocset(tags)}:collections:${collectionRevision}`;
 }

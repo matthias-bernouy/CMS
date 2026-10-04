@@ -58,6 +58,10 @@ export class DeliveryCmsContext {
         return this.config.collectionTexts;
     }
 
+    get collectionAssets(): DeliveryCmsConfig["collectionAssets"] {
+        return this.config.collectionAssets;
+    }
+
     get publicPageProviders(): readonly PublicPageProvider[] {
         return this.config.publicPageProviders ?? [];
     }

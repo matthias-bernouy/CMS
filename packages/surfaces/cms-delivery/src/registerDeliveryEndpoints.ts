@@ -32,6 +32,8 @@ import { handlePageRequest } from "cms-delivery/core/pages/handlePageRequest";
 import { FAVICON_ROUTE } from "cms-delivery/core/assets/defaultFavicon";
 import { matchRootSitemapChunkPath } from "cms-delivery/core/seo/sitemap/manifest";
 import { createDeliveryMaintenanceGuard } from "cms-delivery/core/maintenance";
+import CollectionAssetServer from "cms-delivery/endpoints/assets/collectionAsset.server";
+import { COLLECTION_ASSETS_ROUTE } from "cms-delivery/core/assets/collectionAssets";
 
 /**
  * Wire every Delivery endpoint onto `delivery.runner`. Called from the
@@ -60,6 +62,10 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
     runner.addEndpoint("GET", "/.cms/assets/component.js", (req) => ComponentServer(req, delivery));
     runner.addEndpoint("GET", "/.cms/assets/cms-binding-core.js", (req) => BindingCoreServer(req, delivery));
     runner.addEndpoint("GET", "/.cms/assets/favicon", (req) => FaviconServer(req, delivery));
+    runner.group(COLLECTION_ASSETS_ROUTE, (assetsRunner) => {
+        assetsRunner.setDefaultEndpoint("GET", (req) => CollectionAssetServer(req, delivery));
+        assetsRunner.setDefaultEndpoint("HEAD", (req) => CollectionAssetServer(req, delivery));
+    });
     runner.addEndpoint("GET", PUBLISHED_PAGE_SNAPSHOT_ROUTE, (req) =>
         servePublishedPageSnapshot(delivery.repository, req),
     );
