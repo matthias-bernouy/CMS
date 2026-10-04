@@ -2,6 +2,12 @@
     "files": [],
     "references": [
         {
+            "path": "packages/foundation/binary-media"
+        },
+        {
+            "path": "packages/foundation/blob-store"
+        },
+        {
             "path": "packages/foundation/http-runner"
         },
         {

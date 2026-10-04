@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { chmod, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, rm, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
@@ -189,6 +189,14 @@ test("collection source assets keep their verified bytes through the repository 
         await writeFile(definitionPath, JSON.stringify(definition));
         await writeFile(join(sourceRoot, "assets", "icons", "unused.svg"), bytes);
         await expect(prepareCollectionRelease(sourceRoot)).rejects.toThrow("exactly match");
+        await unlink(join(sourceRoot, "assets", "icons", "unused.svg"));
+
+        const viewRoot = join(sourceRoot, "views", "overview");
+        await mkdir(viewRoot, { recursive: true });
+        await writeFile(join(viewRoot, "definition.json"), JSON.stringify({ id: "overview" }));
+        await writeFile(join(viewRoot, "view.html"), "<p>Overview</p>");
+        await writeFile(join(viewRoot, "unexpected.txt"), "not part of the view source contract");
+        await expect(prepareCollectionRelease(sourceRoot)).rejects.toThrow("must contain exactly");
     } finally {
         await rm(root, { recursive: true, force: true });
     }

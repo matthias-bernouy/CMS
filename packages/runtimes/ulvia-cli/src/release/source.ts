@@ -1,12 +1,13 @@
-import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
+import { sha256Digest } from "@bernouy/binary-media";
 import { admitCollectionRelease, isCollectionNamespace } from "@bernouy/cms-repository/collections";
 import { loadCollectionBlocs } from "./blocSources";
 import { loadCollectionTheme, loadCollectionTranslations } from "./metadataSources";
 import { loadCollectionTexts } from "./textSources";
 import { assertCollectionSourceQuality } from "./quality";
 import { loadCollectionMigrations } from "./migrationSources";
+import { readSourceEntries, scanFileSourceTree } from "./sourceTree";
 
 /** Compile one authored folder into an immutable, admitted release candidate. */
 export async function prepareCollectionRelease(directory: string) {
@@ -48,7 +49,7 @@ async function loadAssets(directory: string, value: unknown) {
     if (!Array.isArray(declarations)) {
         throw new Error("Collection source assets must be an array");
     }
-    const files = await readAssetFiles(directory);
+    const files = (await scanFileSourceTree(directory)).map(({ relativePath }) => relativePath);
     const seenIds = new Set<string>();
     const seenSources = new Set<string>();
     const bundle: { id: string; bytes: Uint8Array }[] = [];
@@ -83,7 +84,7 @@ async function loadAssets(directory: string, value: unknown) {
             ...(source.generation === undefined ? {} : { generation: source.generation }),
             mediaType: source.mediaType,
             byteLength: bytes.byteLength,
-            digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
+            digest: await sha256Digest(bytes),
         });
     }
     const extras = files.filter((file) => !seenSources.has(file));
@@ -110,29 +111,17 @@ function collectionAssetSourcePath(value: unknown, fallback: string, index: numb
     return source;
 }
 
-async function readAssetFiles(directory: string, prefix = ""): Promise<string[]> {
-    const files: string[] = [];
-    for (const entry of await readEntries(directory)) {
-        const path = prefix ? `${prefix}/${entry.name}` : entry.name;
-        if (entry.isDirectory()) {
-            files.push(...(await readAssetFiles(join(directory, entry.name), path)));
-        } else if (entry.isFile()) {
-            if (entry.name !== ".gitkeep") {
-                files.push(path);
-            }
-        } else {
-            throw new Error(`Collection assets contain an unsupported entry: ${path}`);
-        }
-    }
-    return files.sort();
-}
-
 async function loadDashboards(directory: string): Promise<unknown[]> {
-    const folders = (await readEntries(directory)).filter((entry) => entry.isDirectory());
+    const entries = (await readEntries(directory)).filter((entry) => entry.name !== ".gitkeep");
+    if (entries.some((entry) => !entry.isDirectory())) {
+        throw new Error("Dashboard source root may contain only dashboard directories");
+    }
+    const folders = entries;
     return Promise.all(
         folders
             .sort((a, b) => a.name.localeCompare(b.name))
             .map(async (folder) => {
+                await assertExactEntries(join(directory, folder.name), ["definition.json"]);
                 const definition = (await Bun.file(join(directory, folder.name, "definition.json")).json()) as Record<
                     string,
                     unknown
@@ -146,12 +135,17 @@ async function loadDashboards(directory: string): Promise<unknown[]> {
 }
 
 async function loadViews(directory: string): Promise<unknown[]> {
-    const folders = (await readEntries(directory)).filter((entry) => entry.isDirectory());
+    const entries = (await readEntries(directory)).filter((entry) => entry.name !== ".gitkeep");
+    if (entries.some((entry) => !entry.isDirectory())) {
+        throw new Error("View source root may contain only view directories");
+    }
+    const folders = entries;
     return Promise.all(
         folders
             .sort((a, b) => a.name.localeCompare(b.name))
             .map(async (folder) => {
                 const root = join(directory, folder.name);
+                await assertExactEntries(root, ["definition.json", "view.html"]);
                 const definition = (await Bun.file(join(root, "definition.json")).json()) as Record<string, unknown>;
                 if (definition.id !== folder.name || Object.hasOwn(definition, "html")) {
                     throw new Error(`View folder ${folder.name} must match its definition and keep HTML separate`);
@@ -159,6 +153,16 @@ async function loadViews(directory: string): Promise<unknown[]> {
                 return { ...definition, html: (await Bun.file(join(root, "view.html")).text()).trim() };
             }),
     );
+}
+
+async function assertExactEntries(directory: string, expected: readonly string[]): Promise<void> {
+    const entries = (await readSourceEntries(directory)).filter((entry) => entry.name !== ".gitkeep");
+    if (
+        entries.length !== expected.length ||
+        entries.some((entry) => !entry.isFile() || !expected.includes(entry.name))
+    ) {
+        throw new Error(`${directory} must contain exactly ${expected.join(" and ")}`);
+    }
 }
 
 async function readEntries(directory: string) {

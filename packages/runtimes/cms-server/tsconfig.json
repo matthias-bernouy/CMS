@@ -6,6 +6,7 @@
     },
     "include": ["src/**/*.ts"],
     "references": [
+        { "path": "../../foundation/blob-store" },
         { "path": "../../foundation/http-runner" },
         { "path": "../../foundation/envelope-crypto" },
         { "path": "../../foundation/rate-limiter" },

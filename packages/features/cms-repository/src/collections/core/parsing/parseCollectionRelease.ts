@@ -84,7 +84,7 @@ export function parseCollectionRelease(
             blocs,
             new Set(assets.map((asset) => asset.id)),
             limits,
-            new Set(dependencies?.flatMap((dependency) => dependency.imports.blocs) ?? []),
+            new Set(dependencies?.flatMap((dependency) => dependency.imports.blocs.map(({ id }) => id)) ?? []),
         );
         validateCollectionTextReferences(
             blocs,
@@ -93,7 +93,7 @@ export function parseCollectionRelease(
             new Map(
                 (dependencies ?? []).map((dependency) => [
                     dependency.collectionId,
-                    new Set(dependency.imports.texts ?? []),
+                    new Set(dependency.imports.texts?.map(({ id }) => id) ?? []),
                 ]),
             ),
         );
@@ -104,7 +104,7 @@ export function parseCollectionRelease(
             new Map(
                 (dependencies ?? []).map((dependency) => [
                     dependency.collectionId,
-                    new Set(dependency.imports.assets ?? []),
+                    new Set(dependency.imports.assets?.map(({ id }) => id) ?? []),
                 ]),
             ),
         );

@@ -1,5 +1,6 @@
 import type { PublicFileMetadataLookup } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
-import type { BlobReader, VariantStore } from "cms-content/files/interfaces/CmsFilesBlobStore";
+import type { BlobReader } from "@bernouy/blob-store";
+import type { VariantStore } from "cms-content/files/interfaces/CmsFileStores";
 import { ensureVariants } from "cms-content/files/core/media/imageVariants";
 
 /** Default width ladder. `ensureVariants` caps each rung at the source width. */

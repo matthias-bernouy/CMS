@@ -1,10 +1,10 @@
-import { LocalFsCmsFilesBlob } from "@bernouy/cms-content/files/local-fs";
+import { LocalFsBlobStore } from "@bernouy/blob-store/local-fs";
+import type { BlobReader } from "@bernouy/blob-store";
 import {
     createOriginalBlobReader,
     createPublicFileMetadataLookup,
     createSitemapStore,
     createVariantStore,
-    type BlobReader,
     type PublicFileMetadataLookup,
     type SitemapStore,
     type VariantStore,
@@ -14,9 +14,9 @@ import { join } from "node:path";
 /** Flat-key stores keep derivative writes and retention in their existing subdirectories. */
 export function createLocalAuthorFileStores(directory: string) {
     return {
-        filesBlob: new LocalFsCmsFilesBlob(directory),
-        variantStore: new LocalFsCmsFilesBlob(join(directory, ".variants")),
-        sitemapStore: new LocalFsCmsFilesBlob(join(directory, ".sitemaps")),
+        filesBlob: new LocalFsBlobStore(directory),
+        variantStore: new LocalFsBlobStore(join(directory, ".variants")),
+        sitemapStore: new LocalFsBlobStore(join(directory, ".sitemaps")),
     };
 }
 

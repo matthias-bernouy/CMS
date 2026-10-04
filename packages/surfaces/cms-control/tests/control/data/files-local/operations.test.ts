@@ -2,13 +2,16 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdtemp, mkdir, rm, rename, writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { sha256Hex } from "@bernouy/binary-media";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { LocalFsCmsFiles } from "@bernouy/cms-content/files/local-fs";
-import { sha256Hex, InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, type FileItem } from "@bernouy/cms-content/files";
+import { InMemoryCmsFilesMetadata, type FileItem } from "@bernouy/cms-content/files";
 import { uploadFile } from "@bernouy/cms-content/files";
 import { updateFileContent } from "@bernouy/cms-content/files";
 import { deleteFileTree } from "@bernouy/cms-content/files";
 
 const file = (name: string, content: string, type = "text/plain") => new File([content], name, { type });
+const pngHeader = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const read = async (s: ReadableStream<Uint8Array> | null) => (s ? await new Response(s).text() : null);
 
 /** The store lives at `<site>/files`; its registry is the sibling `<site>/.cms-files-registry.json`. */
@@ -37,7 +40,7 @@ describe("LocalFsCmsFiles (filesystem-native, uuid id + registry)", () => {
     test("folder = directory, file = filename, id is an opaque uuid", async () => {
         const images = await fs.createFolder({ name: "images", parentId: null });
         expect(isUuid(images.id)).toBe(true);
-        const hero = await uploadFile(fs, fs, file("hero.png", "PNGDATA", "image/png"), images.id);
+        const hero = await uploadFile(fs, fs, file("hero.png", "PNGDATA"), images.id);
         expect(isUuid(hero.id)).toBe(true);
         expect(hero.id).not.toBe(images.id);
 
@@ -48,10 +51,10 @@ describe("LocalFsCmsFiles (filesystem-native, uuid id + registry)", () => {
     });
 
     test("mimeType + size are derived from disk", async () => {
-        const a = await uploadFile(fs, fs, file("a.png", "1234", "image/png"), null);
+        const a = await uploadFile(fs, fs, new File([pngHeader], "a.png", { type: "image/png" }), null);
         const item = await fs.getItem(a.id);
         expect(item?.type).toBe("file");
-        expect(item && item.type === "file" ? item.size : 0).toBe(4);
+        expect(item && item.type === "file" ? item.size : 0).toBe(8);
         expect(item && item.type === "file" ? item.mimeType : "").toContain("image/png");
     });
 
@@ -68,9 +71,9 @@ describe("LocalFsCmsFiles (filesystem-native, uuid id + registry)", () => {
 
     test("uploadFile computes the contentHash (= sha256 of the bytes) and stores it", async () => {
         const meta = new InMemoryCmsFilesMetadata();
-        const blob = new InMemoryCmsFilesBlob();
-        const expected = sha256Hex(new TextEncoder().encode("PNGDATA"));
-        const f = await uploadFile(meta, blob, file("a.png", "PNGDATA", "image/png"), null);
+        const blob = new MemoryBlobStore();
+        const expected = await sha256Hex(new TextEncoder().encode("PNGDATA"));
+        const f = await uploadFile(meta, blob, file("a.png", "PNGDATA"), null);
         expect(f.contentHash).toBe(expected);
         expect(((await meta.getItem(f.id)) as FileItem).contentHash).toBe(expected);
     });
@@ -79,19 +82,19 @@ describe("LocalFsCmsFiles (filesystem-native, uuid id + registry)", () => {
         const f = await uploadFile(fs, fs, file("hero.png", "DATA"), null);
         const item = await fs.getItem(f.id);
         expect(item && item.type === "file" ? item.contentHash : null).toBe(
-            sha256Hex(new TextEncoder().encode("DATA")),
+            await sha256Hex(new TextEncoder().encode("DATA")),
         );
     });
 
     test("updateFileContent swaps bytes in place: same id + name, refreshed hash (memory store)", async () => {
         const meta = new InMemoryCmsFilesMetadata();
-        const blob = new InMemoryCmsFilesBlob();
-        const f = await uploadFile(meta, blob, file("logo.png", "V1", "image/png"), null);
-        const updated = await updateFileContent(meta, blob, f.id, file("ignored-name.png", "V2-longer", "image/png"));
+        const blob = new MemoryBlobStore();
+        const f = await uploadFile(meta, blob, file("logo.png", "V1"), null);
+        const updated = await updateFileContent(meta, blob, f.id, file("ignored-name.png", "V2-longer"));
         expect(updated?.id).toBe(f.id); // same id
         expect(updated?.name).toBe("logo.png"); // name preserved, not "ignored-name.png"
         expect(updated?.size).toBe("V2-longer".length);
-        expect(updated?.contentHash).toBe(sha256Hex(new TextEncoder().encode("V2-longer")));
+        expect(updated?.contentHash).toBe(await sha256Hex(new TextEncoder().encode("V2-longer")));
         expect(updated?.contentHash).not.toBe(f.contentHash);
         expect(await read(await blob.get(f.id))).toBe("V2-longer"); // bytes replaced
     });
@@ -100,7 +103,7 @@ describe("LocalFsCmsFiles (filesystem-native, uuid id + registry)", () => {
         const f = await uploadFile(fs, fs, file("logo.png", "V1"), null);
         const updated = await updateFileContent(fs, fs, f.id, file("logo.png", "V2"));
         expect(updated?.id).toBe(f.id);
-        expect(updated?.contentHash).toBe(sha256Hex(new TextEncoder().encode("V2")));
+        expect(updated?.contentHash).toBe(await sha256Hex(new TextEncoder().encode("V2")));
         expect(await read(await fs.get(f.id))).toBe("V2");
         expect(await updateFileContent(fs, fs, "no-such-id", file("x.png", "x"))).toBeNull();
     });

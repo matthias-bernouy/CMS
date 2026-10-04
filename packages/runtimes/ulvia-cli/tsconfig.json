@@ -14,6 +14,9 @@
     ],
     "references": [
         {
+            "path": "../../foundation/binary-media"
+        },
+        {
             "path": "../cms-server"
         },
         {

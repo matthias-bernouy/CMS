@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import {
     CanonicalSiteHostNotConfiguredError,
     materializeSitemapSnapshot,
@@ -10,7 +10,7 @@ import { mountPublicPages, publicPage } from "../publicPage.fixture";
 describe("Delivery sitemap refresh", () => {
     test("runs immediately, coalesces refreshes, and stops without starting more work", async () => {
         const mounted = mountPublicPages({
-            sitemapStore: new InMemoryCmsFilesBlob(),
+            sitemapStore: new MemoryBlobStore(),
             storedPages: [publicPage("home", "/")],
         });
         const runner = startSitemapSnapshotRefresh(mounted.delivery, {
@@ -33,7 +33,7 @@ describe("Delivery sitemap refresh", () => {
             get siteHost() {
                 return siteHost;
             },
-            sitemapStore: new InMemoryCmsFilesBlob(),
+            sitemapStore: new MemoryBlobStore(),
             storedPages: [publicPage("home", "/")],
         });
         const reported: unknown[] = [];
@@ -59,7 +59,7 @@ describe("Delivery sitemap refresh", () => {
     test("still reports an invalid canonical site host", async () => {
         const mounted = mountPublicPages({
             siteHost: "not-a-url",
-            sitemapStore: new InMemoryCmsFilesBlob(),
+            sitemapStore: new MemoryBlobStore(),
         });
         const reported: unknown[] = [];
         const runner = startSitemapSnapshotRefresh(mounted.delivery, {

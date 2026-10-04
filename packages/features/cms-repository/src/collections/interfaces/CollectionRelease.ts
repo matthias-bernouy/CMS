@@ -72,12 +72,25 @@ export interface CollectionResourceSelection {
     readonly assets?: readonly string[];
 }
 
+export interface CollectionResourceImport {
+    readonly id: string;
+    /** Exact contract generation understood by the dependent collection. */
+    readonly generation: number;
+}
+
+export interface CollectionResourceImportSelection {
+    readonly blocs: readonly CollectionResourceImport[];
+    readonly themeTokens: readonly CollectionResourceImport[];
+    readonly texts?: readonly CollectionResourceImport[];
+    readonly assets?: readonly CollectionResourceImport[];
+}
+
 /** A selective dependency on another collection's public resource surface. */
 export interface CollectionDependency {
     readonly collectionId: string;
     readonly publisherId: string;
     readonly versionRange: string;
-    readonly imports: CollectionResourceSelection;
+    readonly imports: CollectionResourceImportSelection;
 }
 
 /** Stable collection-local key resolved through the immutable translations catalogue. */

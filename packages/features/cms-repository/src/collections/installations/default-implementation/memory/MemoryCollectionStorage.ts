@@ -2,6 +2,7 @@ import {
     verifyStoredCollectionArtifact,
     verifyStoredCollectionRelease,
 } from "../../../core/admission/collectionArtifact";
+import { assertBlobRange, type BlobRange } from "@bernouy/blob-store";
 import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../../../core/limits";
 import { parseCollectionSiteState } from "../../core/siteState";
 import type { CollectionStorage, CollectionSiteState, StoredCollectionRelease } from "../../interfaces/store";
@@ -52,9 +53,16 @@ export class MemoryCollectionStorage implements CollectionStorage {
         const verified = await verifyStoredCollectionRelease(artifact.release, artifact.digest, this.limits);
         return structuredClone({ digest: verified.digest, release: verified.release });
     }
-    async getAsset(digest: string, assetId: string) {
+    async getAsset(digest: string, assetId: string, range?: BlobRange) {
         const asset = this.releases.get(digest)?.assets.find((item) => item.id === assetId);
-        return asset ? new Uint8Array(asset.bytes) : null;
+        if (!asset) {
+            return null;
+        }
+        if (!range) {
+            return new Uint8Array(asset.bytes);
+        }
+        assertBlobRange(range, asset.bytes.byteLength);
+        return asset.bytes.slice(range.start, range.end + 1);
     }
     async readSite(siteId: string) {
         return structuredClone(this.sites.get(siteId) ?? { revision: 0, installations: [] });

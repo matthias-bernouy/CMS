@@ -104,7 +104,7 @@ function validateThemeReferences(
     const local = new Map(tokens.map((token) => [collectionThemeTokenId(collectionId, token.id), token]));
     const imported = new Set(
         dependencies.flatMap((dependency) =>
-            dependency.imports.themeTokens.map((token) => collectionThemeTokenId(dependency.collectionId, token)),
+            dependency.imports.themeTokens.map(({ id }) => collectionThemeTokenId(dependency.collectionId, id)),
         ),
     );
     const namespaces = [collectionId, ...dependencies.map((dependency) => dependency.collectionId)].sort(

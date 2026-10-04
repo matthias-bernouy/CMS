@@ -1,4 +1,5 @@
 import { projectSchemaValue } from "@bernouy/cms-repository/contracts/schema";
+import { parseContentRange } from "@bernouy/http-runner";
 import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
 import type { CompiledHttpBinding } from "@bernouy/cms-repository/contracts/bindings";
 import type { GatewayResult, GatewayTransportResponse } from "cms-gateway/invocation/interfaces/Invocation";
@@ -95,20 +96,8 @@ function checkBinaryRange(response: GatewayTransportResponse): void {
         }
         return;
     }
-    const match = /^bytes (\d+)-(\d+)\/(\d+)$/.exec(range ?? "");
-    const start = Number(match?.[1]);
-    const end = Number(match?.[2]);
-    const total = Number(match?.[3]);
-    if (
-        !match ||
-        !Number.isSafeInteger(start) ||
-        !Number.isSafeInteger(end) ||
-        !Number.isSafeInteger(total) ||
-        start < 0 ||
-        end < start ||
-        end >= total ||
-        end - start + 1 !== response.bytes?.byteLength
-    ) {
+    const parsed = parseContentRange(range ?? null);
+    if (!parsed || parsed.end - parsed.start + 1 !== response.bytes?.byteLength) {
         throw new GatewayError("invalid_provider_response", "provider content range does not match the bytes");
     }
 }

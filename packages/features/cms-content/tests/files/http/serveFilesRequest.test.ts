@@ -1,6 +1,7 @@
 import { describe, test, expect, afterEach } from "bun:test";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { serveFilesRequest } from "@bernouy/cms-content/files/serving";
-import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
+import { InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
 import { encode, FILES_PREFIX, filesRequest, seedFile } from "./serveFilesFixtures";
 
 // Each test pins MODE explicitly; restore afterwards so tests don't leak state.
@@ -17,8 +18,8 @@ describe("serveFilesRequest", () => {
     test("serves an inline-safe file with the security headers", async () => {
         process.env.MODE = "PROD";
         const metadata = new InMemoryCmsFilesMetadata();
-        const blob = new InMemoryCmsFilesBlob();
-        await seedFile(metadata, blob, {
+        const blob = new MemoryBlobStore();
+        const { fileId } = await seedFile(metadata, blob, {
             folder: "logos",
             name: "hero.png",
             mimeType: "image/png",
@@ -38,23 +39,30 @@ describe("serveFilesRequest", () => {
     test("prod + versioned URL (?v=hash) → long immutable cache", async () => {
         process.env.MODE = "PROD";
         const metadata = new InMemoryCmsFilesMetadata();
-        const blob = new InMemoryCmsFilesBlob();
-        await seedFile(metadata, blob, {
+        const blob = new MemoryBlobStore();
+        const { fileId } = await seedFile(metadata, blob, {
             folder: "logos",
             name: "hero.png",
             mimeType: "image/png",
             bytes: encode.encode("X"),
         });
+        await metadata.updateFileContent(fileId, {
+            size: 1,
+            mimeType: "image/png",
+            contentHash: "a".repeat(64),
+        });
+        const item = await metadata.getItem(fileId);
+        const version = item?.type === "file" ? item.representationVersion : undefined;
 
         const res = await serveFilesRequest(
             { metadata, blob },
-            filesRequest(`${FILES_PREFIX}logos/hero.png?v=abc1234567`),
+            filesRequest(`${FILES_PREFIX}logos/hero.png?v=${version}`),
             {
                 prefix: FILES_PREFIX,
             },
         );
         expect(res.headers.get("Cache-Control")).toBe("public, max-age=31536000, immutable");
-        // `?v` is a cache token only — it must not affect path resolution.
+        // A matching representation fingerprint enables immutable caching.
         expect(res.status).toBe(200);
         expect(await res.text()).toBe("X");
     });
@@ -62,14 +70,13 @@ describe("serveFilesRequest", () => {
     test("prod + unversioned URL → revalidate (no immutable cache)", async () => {
         process.env.MODE = "PROD";
         const metadata = new InMemoryCmsFilesMetadata();
-        const blob = new InMemoryCmsFilesBlob();
+        const blob = new MemoryBlobStore();
         await seedFile(metadata, blob, {
             folder: "logos",
             name: "hero.png",
             mimeType: "image/png",
             bytes: encode.encode("X"),
         });
-
         const res = await serveFilesRequest({ metadata, blob }, filesRequest(`${FILES_PREFIX}logos/hero.png`), {
             prefix: FILES_PREFIX,
         });
@@ -79,17 +86,24 @@ describe("serveFilesRequest", () => {
     test("DEV never serves an immutable cache, even when versioned", async () => {
         process.env.MODE = "DEV";
         const metadata = new InMemoryCmsFilesMetadata();
-        const blob = new InMemoryCmsFilesBlob();
-        await seedFile(metadata, blob, {
+        const blob = new MemoryBlobStore();
+        const { fileId } = await seedFile(metadata, blob, {
             folder: "logos",
             name: "hero.png",
             mimeType: "image/png",
             bytes: encode.encode("X"),
         });
+        await metadata.updateFileContent(fileId, {
+            size: 1,
+            mimeType: "image/png",
+            contentHash: "b".repeat(64),
+        });
+        const item = await metadata.getItem(fileId);
+        const version = item?.type === "file" ? item.representationVersion : undefined;
 
         const res = await serveFilesRequest(
             { metadata, blob },
-            filesRequest(`${FILES_PREFIX}logos/hero.png?v=abc1234567`),
+            filesRequest(`${FILES_PREFIX}logos/hero.png?v=${version}`),
             {
                 prefix: FILES_PREFIX,
             },
@@ -100,7 +114,7 @@ describe("serveFilesRequest", () => {
     test("an off-allow-list type is sent as an opaque attachment", async () => {
         process.env.MODE = "PROD";
         const metadata = new InMemoryCmsFilesMetadata();
-        const blob = new InMemoryCmsFilesBlob();
+        const blob = new MemoryBlobStore();
         await seedFile(metadata, blob, {
             folder: "docs",
             name: "evil.svg",
@@ -117,7 +131,7 @@ describe("serveFilesRequest", () => {
 
     test("404 for a missing path and for `..` traversal", async () => {
         const metadata = new InMemoryCmsFilesMetadata();
-        const blob = new InMemoryCmsFilesBlob();
+        const blob = new MemoryBlobStore();
         expect(
             (
                 await serveFilesRequest({ metadata, blob }, filesRequest(`${FILES_PREFIX}nope/x.png`), {

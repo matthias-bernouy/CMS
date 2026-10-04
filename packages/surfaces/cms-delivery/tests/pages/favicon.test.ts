@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import type { ContentReader, TSystem } from "@bernouy/cms-content";
-import { InMemoryCmsFilesBlob, InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
+import { InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { DEFAULT_FAVICON_SVG } from "cms-delivery/core/assets/defaultFavicon";
 import { CaptureRunner } from "../gateway/support/CaptureRunner";
@@ -63,7 +64,7 @@ type Seed = {
 async function mountFavicon(favicon: string, seed?: Seed) {
     const runner = new CaptureRunner();
     const metadata = new InMemoryCmsFilesMetadata();
-    const blob = new InMemoryCmsFilesBlob();
+    const blob = new MemoryBlobStore();
     if (seed) {
         await metadata.createFile({
             id: seed.id,

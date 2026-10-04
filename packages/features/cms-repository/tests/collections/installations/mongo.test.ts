@@ -66,6 +66,35 @@ test("Mongo collection storage rejects a release whose persisted identity was al
     await expect(storage.getRelease(admitted.digest)).rejects.toThrow("release digest mismatch");
 });
 
+test("Mongo collection storage hides and resumes an interrupted release publication", async () => {
+    const db = fakeCatalogueDb();
+    const storage = new MongoCollectionStorage(db);
+    const { admitted, bytes } = await artifact();
+    await db.collection("collection_releases").insertOne({
+        _id: admitted.digest,
+        digest: admitted.digest,
+        release: admitted.release,
+        state: "pending",
+    });
+    await db.collection("collection_assets").insertOne({
+        _id: `${admitted.digest}:payload.bin`,
+        digest: admitted.digest,
+        id: "payload.bin",
+        bytes: new Binary(new Uint8Array([9])),
+    });
+
+    expect(await storage.getReleaseMetadata(admitted.digest)).toBeNull();
+    expect(await storage.getRelease(admitted.digest)).toBeNull();
+
+    await storage.putRelease({
+        digest: admitted.digest,
+        release: admitted.release,
+        assets: [{ id: "payload.bin", bytes }],
+    });
+    expect(await storage.getRelease(admitted.digest)).toMatchObject({ digest: admitted.digest });
+    expect(await storage.getAsset(admitted.digest, "payload.bin")).toEqual(bytes);
+});
+
 test("Mongo collection storage parses site records and snapshots validate installed values", async () => {
     const db = fakeCatalogueDb();
     const storage = new MongoCollectionStorage(db);

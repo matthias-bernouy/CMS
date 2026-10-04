@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { gunzipSync } from "bun";
-import { InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import { materializeSitemapSnapshot } from "cms-delivery/core/seo/sitemap/materialize";
 import SitemapChunkServer from "cms-delivery/endpoints/sitemap-chunk.server";
@@ -10,7 +10,7 @@ import { PRODUCT_PAGE } from "./fixtures";
 
 describe("Delivery dynamic indexing sitemap", () => {
     test("publishes discovery from an anonymous gateway capability as immutable chunks", async () => {
-        const sitemapStore = new InMemoryCmsFilesBlob();
+        const sitemapStore = new MemoryBlobStore();
         const calls: unknown[] = [];
         const gateway: GatewayInvoker = {
             invoke: async (value) => {
@@ -72,7 +72,7 @@ describe("Delivery dynamic indexing sitemap", () => {
     });
 
     test("keeps the last good snapshot when gateway discovery fails", async () => {
-        const sitemapStore = new InMemoryCmsFilesBlob();
+        const sitemapStore = new MemoryBlobStore();
         let fail = false;
         const gateway: GatewayInvoker = {
             invoke: async () => ({

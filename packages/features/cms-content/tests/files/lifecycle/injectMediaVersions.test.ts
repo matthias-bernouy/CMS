@@ -1,11 +1,18 @@
 import { describe, test, expect } from "bun:test";
 import { parseHTML } from "linkedom";
+import { binaryRepresentationFingerprint } from "@bernouy/binary-media";
 import type { CmsFilesMetadataRepository, FilesItem } from "@bernouy/cms-content/files";
 import { InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
 import { injectMediaVersions } from "@bernouy/cms-content/files/serving";
 
-/** Files metadata stub: id → contentHash. A missing id resolves to `null`; a
- *  present id with `undefined` hash resolves to a file with no contentHash. */
+const CONTENT_HASH = "a".repeat(64);
+const REPRESENTATION_VERSION = binaryRepresentationFingerprint({
+    digest: `sha256:${CONTENT_HASH}`,
+    byteLength: 1,
+    mediaType: "image/png",
+});
+
+/** Files metadata stub: id → content digest. */
 const stubFiles = (hashes: Record<string, string | undefined>): CmsFilesMetadataRepository =>
     ({
         async getItem(id: string): Promise<FilesItem | null> {
@@ -33,19 +40,19 @@ async function render(bodyHtml: string, files: CmsFilesMetadataRepository | unde
 }
 
 describe("injectMediaVersions", () => {
-    test("stamps a by-id <img> with ?v=<contentHash>", async () => {
-        const out = await render(`<img src="/.cms/files/by-id/abc">`, stubFiles({ abc: "h1" }));
-        expect(out).toContain(`src="/.cms/files/by-id/abc?v=h1"`);
+    test("stamps a by-id <img> with its representation fingerprint", async () => {
+        const out = await render(`<img src="/.cms/files/by-id/abc">`, stubFiles({ abc: CONTENT_HASH }));
+        expect(out).toContain(`src="/.cms/files/by-id/abc?v=${REPRESENTATION_VERSION}"`);
     });
 
     test("works under a tenant prefix", async () => {
-        const out = await render(`<img src="/cms/.cms/files/by-id/abc">`, stubFiles({ abc: "h1" }));
-        expect(out).toContain(`/cms/.cms/files/by-id/abc?v=h1`);
+        const out = await render(`<img src="/cms/.cms/files/by-id/abc">`, stubFiles({ abc: CONTENT_HASH }));
+        expect(out).toContain(`/cms/.cms/files/by-id/abc?v=${REPRESENTATION_VERSION}`);
     });
 
     test("stamps the favicon <link rel=icon>", async () => {
-        const out = await render(`<link rel="icon" href="/.cms/files/by-id/fav">`, stubFiles({ fav: "h2" }));
-        expect(out).toContain(`href="/.cms/files/by-id/fav?v=h2"`);
+        const out = await render(`<link rel="icon" href="/.cms/files/by-id/fav">`, stubFiles({ fav: CONTENT_HASH }));
+        expect(out).toContain(`href="/.cms/files/by-id/fav?v=${REPRESENTATION_VERSION}"`);
     });
 
     test("a file with no contentHash is left unversioned", async () => {
@@ -61,7 +68,7 @@ describe("injectMediaVersions", () => {
 
     test("non-by-id URLs (data:, external, path route) are untouched", async () => {
         const html = `<img src="data:image/png;base64,AAAA"><img src="https://cdn.example/x.png"><img src="/.cms/files/logos/hero.png">`;
-        const out = await render(html, stubFiles({ abc: "h1" }));
+        const out = await render(html, stubFiles({ abc: CONTENT_HASH }));
         expect(out).not.toContain("?v=");
     });
 
@@ -78,7 +85,7 @@ describe("injectMediaVersions", () => {
             parentId: null,
             size: 2,
             mimeType: "image/png",
-            contentHash: "hash-v1",
+            contentHash: "a".repeat(64),
         });
 
         const renderedSrc = async (): Promise<string> => {
@@ -89,16 +96,21 @@ describe("injectMediaVersions", () => {
             return document.querySelector("img")!.getAttribute("src")!;
         };
 
-        // before: the rendered URL carries the current content hash
-        expect(await renderedSrc()).toBe(`/.cms/files/by-id/${f.id}?v=hash-v1`);
+        const firstVersion = f.representationVersion;
+        expect(firstVersion).toBeDefined();
+        expect(await renderedSrc()).toBe(`/.cms/files/by-id/${f.id}?v=${firstVersion}`);
 
         // replace the bytes IN PLACE — same id, new hash
-        const updated = await meta.updateFileContent(f.id, { size: 9, mimeType: "image/png", contentHash: "hash-v2" });
+        const updated = await meta.updateFileContent(f.id, {
+            size: 9,
+            mimeType: "image/png",
+            contentHash: "b".repeat(64),
+        });
         expect(updated?.id).toBe(f.id); // id is unchanged
-        expect(updated?.contentHash).toBe("hash-v2");
+        expect(updated?.contentHash).toBe("b".repeat(64));
 
         // after: SAME id, new ?v → the immutable cache busts, content URL stayed clean
-        expect(await renderedSrc()).toBe(`/.cms/files/by-id/${f.id}?v=hash-v2`);
+        expect(await renderedSrc()).toBe(`/.cms/files/by-id/${f.id}?v=${updated?.representationVersion}`);
     });
 
     test("dedupes lookups across repeated ids (same id, two imgs)", async () => {
@@ -109,7 +121,7 @@ describe("injectMediaVersions", () => {
                 return {
                     id,
                     type: "file",
-                    contentHash: "h",
+                    contentHash: CONTENT_HASH,
                     name: "x",
                     parentId: null,
                     size: 1,
@@ -121,6 +133,6 @@ describe("injectMediaVersions", () => {
         } as unknown as CmsFilesMetadataRepository;
         const out = await render(`<img src="/.cms/files/by-id/same"><img src="/.cms/files/by-id/same">`, counting);
         expect(calls).toBe(1);
-        expect([...out.matchAll(/\?v=h/g)]).toHaveLength(2);
+        expect(out.split(`?v=${REPRESENTATION_VERSION}`)).toHaveLength(3);
     });
 });

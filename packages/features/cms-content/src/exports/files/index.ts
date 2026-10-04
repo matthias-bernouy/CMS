@@ -1,9 +1,9 @@
 /**
  * @bernouy/cms-content/files — CMS media files.
  *
- * Authoring contracts, in-memory implementations, validation and lifecycle.
- * Serving and derivatives use /files/serving. Filesystem and network adapters
- * use /files/local-fs, /files/mongo and /files/s3 at composition roots only.
+ * Authoring contracts, metadata implementations, validation and lifecycle.
+ * Serving and derivatives use /files/serving. Generic byte stores come from
+ * @bernouy/blob-store; CMS metadata adapters use /files/local-fs and /files/mongo.
  */
 
 // ── Interfaces ─────────────────────────────────────────────────────────
@@ -19,18 +19,14 @@ export type {
     NewFile,
     ItemPatch,
 } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
-export type { CmsFilesBlobStore, BlobInput } from "cms-content/files/interfaces/CmsFilesBlobStore";
-
 // ── In-memory implementations and validation ──────────────────────────
 export { InMemoryCmsFilesMetadata } from "cms-content/files/default-implementation/memory/InMemoryCmsFilesMetadata";
-export { InMemoryCmsFilesBlob } from "cms-content/files/default-implementation/memory/InMemoryCmsFilesBlob";
-
 export { ValidatingCmsFilesMetadata } from "cms-content/files/core/validation/ValidatingCmsFilesMetadata";
 
 // ── Core ───────────────────────────────────────────────────────────────
-export { sha256Hex } from "cms-content/files/core/media/hashBytes";
 export {
     MAX_UPLOAD_BYTES,
+    validateContentHash,
     validateUploadSize,
     validateItemName,
     FileValidationError,

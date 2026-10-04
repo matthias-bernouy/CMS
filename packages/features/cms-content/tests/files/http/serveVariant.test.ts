@@ -1,5 +1,6 @@
 import { describe, test, expect, afterEach } from "bun:test";
-import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
+import { InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
 import { serveVariantRequest } from "@bernouy/cms-content/files/serving";
 import { variantKey } from "@bernouy/cms-content/files/serving";
 
@@ -9,8 +10,8 @@ const req = (path: string) => new Request(`http://x${path}`);
 
 async function setup(opts: { contentHash?: string; withVariant?: boolean; mimeType?: string } = {}) {
     const metadata = new InMemoryCmsFilesMetadata();
-    const sourceBlob = new InMemoryCmsFilesBlob();
-    const variantStore = new InMemoryCmsFilesBlob();
+    const sourceBlob = new MemoryBlobStore();
+    const variantStore = new MemoryBlobStore();
     const file = await metadata.createFile({
         name: "hero.png",
         parentId: null,

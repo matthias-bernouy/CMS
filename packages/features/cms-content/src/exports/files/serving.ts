@@ -1,13 +1,5 @@
 /** Public library lookups and derivative work, without authoring or storage adapters. */
-export type {
-    BlobInput,
-    BlobReader,
-    BlobWriter,
-    BlobDeleter,
-    OriginalBlobReader,
-    VariantStore,
-    SitemapStore,
-} from "cms-content/files/interfaces/CmsFilesBlobStore";
+export type { VariantStore, SitemapStore } from "cms-content/files/interfaces/CmsFileStores";
 export type {
     PublicFileMetadataLookup,
     FileItem,

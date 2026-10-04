@@ -9,6 +9,7 @@
         ".": "./src/index.ts"
     },
     "dependencies": {
+        "@bernouy/blob-store": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "linkedom": "^0.18.13",
@@ -18,6 +19,7 @@
         "@bernouy/cms-repository": "workspace:*"
     },
     "devDependencies": {
+        "@bernouy/binary-media": "workspace:*",
         "sharp": "^0.35.4"
     },
     "peerDependencies": {

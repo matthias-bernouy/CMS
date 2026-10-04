@@ -2,8 +2,10 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdtemp, mkdir, rm, rename, writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { sha256Hex } from "@bernouy/binary-media";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { LocalFsCmsFiles } from "@bernouy/cms-content/files/local-fs";
-import { sha256Hex, InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, type FileItem } from "@bernouy/cms-content/files";
+import { InMemoryCmsFilesMetadata, type FileItem } from "@bernouy/cms-content/files";
 import { uploadFile } from "@bernouy/cms-content/files";
 import { updateFileContent } from "@bernouy/cms-content/files";
 import { deleteFileTree } from "@bernouy/cms-content/files";
@@ -57,12 +59,12 @@ describe("LocalFsCmsFiles (filesystem-native, uuid id + registry)", () => {
 
     test("put re-hashes from the bytes written to disk (not the input stream)", async () => {
         const a = await uploadFile(fs, fs, file("a.bin", "AAAA"), null);
-        expect((await registry()).byId[a.id]!.hash).toBe(sha256Hex(new TextEncoder().encode("AAAA")));
+        expect((await registry()).byId[a.id]!.hash).toBe(await sha256Hex(new TextEncoder().encode("AAAA")));
         // Overwrite via a ReadableStream — Bun.write consumes it, so the hash can
         // only come from re-reading the file.
         const stream = new Response("BBBBBB").body!;
         await fs.put(a.id, stream);
-        expect((await registry()).byId[a.id]!.hash).toBe(sha256Hex(new TextEncoder().encode("BBBBBB")));
+        expect((await registry()).byId[a.id]!.hash).toBe(await sha256Hex(new TextEncoder().encode("BBBBBB")));
     });
 
     test("registry stays bijective through create/rename/move/delete", async () => {
@@ -124,7 +126,7 @@ describe("LocalFsCmsFiles (filesystem-native, uuid id + registry)", () => {
             expect(r1.healed).toHaveLength(0);
             expect(r1.minted).toHaveLength(0);
             expect((await registry()).byPath["a.txt"]).toBe(a.id);
-            expect((await registry()).byId[a.id]!.hash).toBe(sha256Hex(new TextEncoder().encode("V2")));
+            expect((await registry()).byId[a.id]!.hash).toBe(await sha256Hex(new TextEncoder().encode("V2")));
 
             const r2 = await new LocalFsCmsFiles(root).reconcile(); // idempotent
             expect(r2).toEqual({ healed: [], minted: [], deleted: [], errors: [] });

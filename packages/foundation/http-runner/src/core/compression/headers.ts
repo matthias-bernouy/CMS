@@ -1,7 +1,9 @@
 import { buildCspContent, type CspExtras } from "../buildCspContent";
 
 /** Static security headers applied to compressed responses. */
-export function securityHeaders(): Record<string, string> {
+export function securityHeaders(
+    options: { crossOriginResourcePolicy?: "same-origin" | "same-site" | "cross-origin" } = {},
+): Record<string, string> {
     return {
         "X-Content-Type-Options": "nosniff",
         "Strict-Transport-Security": "max-age=31536000",
@@ -11,7 +13,7 @@ export function securityHeaders(): Record<string, string> {
         ...(process.env.MODE === "DEV"
             ? { "Cross-Origin-Opener-Policy-Report-Only": "same-origin" }
             : { "Cross-Origin-Opener-Policy": "same-origin" }),
-        "Cross-Origin-Resource-Policy": "same-origin",
+        "Cross-Origin-Resource-Policy": options.crossOriginResourcePolicy ?? "same-origin",
     };
 }
 

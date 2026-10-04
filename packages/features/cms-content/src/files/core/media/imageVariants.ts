@@ -1,4 +1,5 @@
-import type { BlobReader, VariantStore } from "cms-content/files/interfaces/CmsFilesBlobStore";
+import type { BlobReader } from "@bernouy/blob-store";
+import type { VariantStore } from "cms-content/files/interfaces/CmsFileStores";
 
 /** V1 ships WebP only (fast encode); AVIF is a later add. */
 export type VariantFormat = "webp";
@@ -30,7 +31,7 @@ export async function generateImageVariant(
 
 /**
  * Content-addressed blob key for a variant. FLAT (no `/`) on purpose: the
- * variant store is a dedicated blob store, and `LocalFsCmsFilesBlob` rejects
+ * variant store is a dedicated blob store, and `LocalFsBlobStore` rejects
  * slash-bearing keys (its anti-traversal guard for opaque ids). Keyed by the
  * source's `contentHash`, so it is immutable — the hash changes when the bytes
  * change, so a cached variant can never go stale (and identical sources dedupe).

@@ -1,6 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import sharp from "sharp";
-import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
+import { InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
 import { optimizePageImages } from "@bernouy/cms-content/files/serving";
 import { readManifest, variantKey } from "@bernouy/cms-content/files/serving";
 
@@ -15,8 +16,8 @@ const png = async (w: number, h: number): Promise<Uint8Array> =>
 describe("optimizePageImages", () => {
     test("generates variants + manifest for raster images; skips SVG, hashless files, and unknown ids", async () => {
         const metadata = new InMemoryCmsFilesMetadata();
-        const sourceBlob = new InMemoryCmsFilesBlob();
-        const variantStore = new InMemoryCmsFilesBlob();
+        const sourceBlob = new MemoryBlobStore();
+        const variantStore = new MemoryBlobStore();
 
         const img = await metadata.createFile({
             name: "a.png",

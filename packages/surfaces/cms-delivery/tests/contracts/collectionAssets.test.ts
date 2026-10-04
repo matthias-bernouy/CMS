@@ -42,9 +42,9 @@ test("serves installed collection assets publicly through immutable digest URLs"
                     store.getInstalledAssetMetadata(siteId, collectionId, assetId),
                 getInstalledAssetMetadataBatch: (siteId, references) =>
                     store.getInstalledAssetMetadataBatch(siteId, references),
-                getReleaseAsset: (releaseDigest, assetId) => {
+                getReleaseAsset: (releaseDigest, assetId, range) => {
                     byteReads += 1;
-                    return store.getReleaseAsset(releaseDigest, assetId);
+                    return store.getReleaseAsset(releaseDigest, assetId, range);
                 },
             },
         },
@@ -64,6 +64,8 @@ test("serves installed collection assets publicly through immutable digest URLs"
     expect(response.headers.get("content-type")).toBe("image/svg+xml");
     expect(response.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(response.headers.get("cross-origin-resource-policy")).toBe("cross-origin");
+    expect(response.headers.get("access-control-allow-origin")).toBe("*");
     expect(response.headers.get("accept-ranges")).toBe("bytes");
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(bytes);
     expect(byteReads).toBe(1);

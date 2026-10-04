@@ -1,13 +1,9 @@
 import type { CollectionTextSource } from "@bernouy/cms-content/rendering";
+import type { BlobReader } from "@bernouy/blob-store";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
 import type { CollectionMigrationService } from "@bernouy/cms-content/migrations";
-import type {
-    BlobReader,
-    VariantStore,
-    SitemapStore,
-    PublicFileMetadataLookup,
-} from "@bernouy/cms-content/files/serving";
+import type { VariantStore, SitemapStore, PublicFileMetadataLookup } from "@bernouy/cms-content/files/serving";
 import type { GatewayAccessProbe, GatewayInvoker } from "@bernouy/cms-gateway";
 import type { ProviderImageService } from "@bernouy/cms-gateway/media";
 import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";

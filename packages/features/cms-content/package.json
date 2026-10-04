@@ -17,10 +17,11 @@
         "./files/serving": "./src/exports/files/serving.ts",
         "./files/local-fs": "./src/exports/files/local-fs.ts",
         "./files/urls": "./src/exports/files/urls.ts",
-        "./files/mongo": "./src/exports/files/mongo.ts",
-        "./files/s3": "./src/exports/files/s3.ts"
+        "./files/mongo": "./src/exports/files/mongo.ts"
     },
     "dependencies": {
+        "@bernouy/binary-media": "workspace:*",
+        "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
         "@bernouy/http-runner": "workspace:*",

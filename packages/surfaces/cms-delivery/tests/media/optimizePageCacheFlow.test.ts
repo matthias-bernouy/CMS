@@ -1,9 +1,11 @@
 import { describe, test, expect, afterEach } from "bun:test";
 import sharp from "sharp";
 import DeliveryCms from "cms-delivery/DeliveryCms";
+import { sha256Hex } from "@bernouy/binary-media";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { TtlCache } from "@bernouy/http-runner";
 import { type CacheEntry } from "@bernouy/http-runner";
-import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, sha256Hex } from "@bernouy/cms-content/files";
+import { InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
 import { CMS_CACHE_KEYS } from "@bernouy/cms-content";
 import { readManifest } from "@bernouy/cms-content/files/serving";
 import type { ContentReader } from "@bernouy/cms-content";
@@ -34,15 +36,15 @@ describe("optimizePage — PROD cache flow (the pickup that dev-mode + the integ
         process.env.MODE = "PROD";
         const cache = new TtlCache({ bypass: process.env.MODE === "DEV" });
         const files = new InMemoryCmsFilesMetadata();
-        const sourceBlob = new InMemoryCmsFilesBlob();
-        const variantStore = new InMemoryCmsFilesBlob();
+        const sourceBlob = new MemoryBlobStore();
+        const variantStore = new MemoryBlobStore();
 
         const png = new Uint8Array(
             await sharp({ create: { width: 800, height: 500, channels: 3, background: { r: 50, g: 80, b: 120 } } })
                 .png()
                 .toBuffer(),
         );
-        const hash = sha256Hex(png);
+        const hash = await sha256Hex(png);
         const file = await files.createFile({
             name: "a.png",
             parentId: null,
@@ -78,8 +80,8 @@ describe("optimizePage — PROD cache flow (the pickup that dev-mode + the integ
             repository: stubRepo,
             cache,
             filesMetadata: new InMemoryCmsFilesMetadata(),
-            filesBlob: new InMemoryCmsFilesBlob(),
-            variantStore: new InMemoryCmsFilesBlob(),
+            filesBlob: new MemoryBlobStore(),
+            variantStore: new MemoryBlobStore(),
         });
         const key = CMS_CACHE_KEYS.page("/p");
         cache.set(key, fakeEntry());

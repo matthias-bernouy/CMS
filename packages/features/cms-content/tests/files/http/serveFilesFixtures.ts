@@ -1,11 +1,12 @@
-import { InMemoryCmsFilesBlob, InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
+import { InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
 
 export const FILES_PREFIX = "/.cms/files/";
 export const encode = new TextEncoder();
 
 export async function seedFile(
     metadata: InMemoryCmsFilesMetadata,
-    blob: InMemoryCmsFilesBlob,
+    blob: MemoryBlobStore,
     options: { folder: string; name: string; mimeType: string; bytes: Uint8Array },
 ): Promise<{ folderId: string; fileId: string }> {
     const folder = await metadata.createFolder({ name: options.folder, parentId: null });
@@ -19,6 +20,6 @@ export async function seedFile(
     return { folderId: folder.id, fileId: file.id };
 }
 
-export function filesRequest(path: string): Request {
-    return new Request(`http://x${path}`);
+export function filesRequest(path: string, init?: RequestInit): Request {
+    return new Request(`http://x${path}`, init);
 }

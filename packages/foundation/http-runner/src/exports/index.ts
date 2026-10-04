@@ -51,4 +51,12 @@ export {
     sendCompressed,
     type SendCompressedOptions,
 } from "http-runner/core/compression";
+export {
+    ifNoneMatchMatches,
+    ifRangeAllowsPartial,
+    parseContentRange,
+    parseSingleByteRange,
+    type ByteRange,
+    type ContentRange,
+} from "http-runner/core/byteRanges";
 export { buildCspContent, type CspExtras } from "http-runner/core/buildCspContent";

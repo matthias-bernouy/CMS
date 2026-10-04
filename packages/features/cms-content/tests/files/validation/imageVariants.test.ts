@@ -3,8 +3,8 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import sharp from "sharp";
-import { InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
-import { LocalFsCmsFilesBlob } from "@bernouy/cms-content/files/local-fs";
+import { LocalFsBlobStore } from "@bernouy/blob-store/local-fs";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import {
     generateImageVariant,
     variantKey,
@@ -38,7 +38,7 @@ describe("image variants (sharp)", () => {
     });
 
     test("ensureVariants generates a ladder, dedupes to actual widths, writes a manifest", async () => {
-        const store = new InMemoryCmsFilesBlob();
+        const store = new MemoryBlobStore();
         const src = await sourcePng(400, 300);
         const manifest = await ensureVariants(store, "h1", src, [100, 200, 800]); // 800 collapses to 400
         expect(manifest.widths).toEqual([100, 200, 400]);
@@ -49,14 +49,14 @@ describe("image variants (sharp)", () => {
     });
 
     test("records the source aspect ratio (largest variant's intrinsic w/h) in the manifest", async () => {
-        const store = new InMemoryCmsFilesBlob();
+        const store = new MemoryBlobStore();
         const manifest = await ensureVariants(store, "h2", await sourcePng(400, 300), [100, 200, 800]); // 800 → source 400×300
         expect(manifest.intrinsic).toEqual({ width: 400, height: 300 });
         expect((await readManifest(store, "h2"))?.intrinsic).toEqual({ width: 400, height: 300 });
     });
 
     test("ensureVariants is idempotent: a present manifest short-circuits (no regen)", async () => {
-        const store = new InMemoryCmsFilesBlob();
+        const store = new MemoryBlobStore();
         const src = await sourcePng(400, 300);
         await ensureVariants(store, "h1", src, [200]);
         await store.delete(variantKey("h1", { width: 200, format: "webp" })); // remove a variant
@@ -65,13 +65,13 @@ describe("image variants (sharp)", () => {
         expect(await store.exists(manifestKey("h1"))).toBe(true);
     });
 
-    test("keys are FLAT (no slash) — LocalFsCmsFilesBlob (slash-rejecting) accepts them", async () => {
+    test("keys are FLAT (no slash) — LocalFsBlobStore (slash-rejecting) accepts them", async () => {
         expect(variantKey("abc", { width: 640, format: "webp" })).not.toContain("/");
         expect(manifestKey("abc")).not.toContain("/");
         // The real dev blob store rejects slash keys; round-trip to prove it accepts ours.
         const dir = await mkdtemp(join(tmpdir(), "cms-variants-"));
         try {
-            const store = new LocalFsCmsFilesBlob(dir);
+            const store = new LocalFsBlobStore(dir);
             await store.put(manifestKey("h"), new TextEncoder().encode("{}"));
             await store.put(variantKey("h", { width: 200, format: "webp" }), new Uint8Array([1, 2, 3]));
             expect(await store.exists(manifestKey("h"))).toBe(true);
@@ -82,7 +82,7 @@ describe("image variants (sharp)", () => {
     });
 
     test("a different contentHash is a different variant key (immutable keying)", async () => {
-        const store = new InMemoryCmsFilesBlob();
+        const store = new MemoryBlobStore();
         await ensureVariants(store, "hashA", await sourcePng(400, 300), [200]);
         expect(await store.exists(variantKey("hashA", spec))).toBe(true);
         expect(await store.exists(variantKey("hashB", spec))).toBe(false);

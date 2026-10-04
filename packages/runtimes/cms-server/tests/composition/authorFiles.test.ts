@@ -30,10 +30,10 @@ test("production file composition restricts methods and confines derivative writ
         // Deliberately colliding flat keys demonstrate that destinations, not key naming, isolate stores.
         await stores.filesBlob.put("manifest.json", new TextEncoder().encode("original manifest"));
         const publicStores = createPublicFileStores({ ...stores, filesMetadata: metadata });
-        expect(Object.keys(publicStores.filesBlob)).toEqual(["get"]);
+        expect(Object.keys(publicStores.filesBlob)).toEqual(["get", "head"]);
         expect(Object.keys(publicStores.filesMetadata).sort()).toEqual(["getItem", "getItemByPath"]);
-        expect(Object.keys(publicStores.variantStore).sort()).toEqual(["get", "put"]);
-        expect(Object.keys(publicStores.sitemapStore).sort()).toEqual(["delete", "get", "put"]);
+        expect(Object.keys(publicStores.variantStore).sort()).toEqual(["get", "head", "put"]);
+        expect(Object.keys(publicStores.sitemapStore).sort()).toEqual(["delete", "get", "head", "put"]);
         await optimizePageImages(
             {
                 metadata: publicStores.filesMetadata,

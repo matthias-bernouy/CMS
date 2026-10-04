@@ -2,6 +2,7 @@ import { readdir, stat } from "node:fs/promises";
 import type { FilesItem, FilesListOptions, FilesPage } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
 import { CMS_FILES_REGISTRY_NAME, type LocalFilesRegistry } from "./LocalFilesRegistry";
 import { resolveId } from "./localFsRegistryEntries";
+import { fileRepresentationVersion } from "cms-content/files/core/media/fileIntegrity";
 
 const EMPTY_PAGE: FilesPage = { items: [], total: 0, page: 1, limit: 0, hasMore: false };
 
@@ -67,13 +68,14 @@ export async function statItem(registry: LocalFilesRegistry, path: string): Prom
         return { ...base, type: "folder" };
     }
     const file = Bun.file(registry.abs(path));
-    return {
+    const item = {
         ...base,
         type: "file",
         size: details.size,
         mimeType: file.type || "application/octet-stream",
         contentHash: registry.data!.byId[id]!.hash ?? undefined,
-    };
+    } as const;
+    return { ...item, representationVersion: fileRepresentationVersion(item) ?? undefined };
 }
 
 export async function getItemByPath(registry: LocalFilesRegistry, path: string): Promise<FilesItem | null> {

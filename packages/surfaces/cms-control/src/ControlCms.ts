@@ -6,8 +6,9 @@ import type {
     UsersRepository,
 } from "@bernouy/cms-auth";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
+import type { BlobStore } from "@bernouy/blob-store";
 import type { CmsRepository } from "@bernouy/cms-content";
-import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
+import type { CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { SecretStore } from "@bernouy/secret-store";
 import { join } from "node:path";
@@ -30,7 +31,7 @@ export class ControlCms {
         cache?: Cache,
         secrets?: SecretStore,
         filesMetadata?: CmsFilesMetadataRepository,
-        filesBlob?: CmsFilesBlobStore,
+        filesBlob?: BlobStore,
         users?: UsersRepository,
         identityProviders?: IdentityProviderRepository,
         pats?: PatRepository,

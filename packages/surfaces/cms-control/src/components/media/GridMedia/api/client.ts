@@ -23,6 +23,7 @@ export type FilesItem = {
     size?: number;
     mimeType?: string;
     contentHash?: string;
+    representationVersion?: string;
 };
 
 export type FilesPage = {
@@ -41,8 +42,8 @@ export function filesBase(): string {
 /**
  * Public, opaque-id bytes URL for a file, e.g. `/cms/.cms/files/by-id/<id>`.
  * This is the form STORED in content: the id is immutable per content and stable
- * across rename/move, so the URL caches forever (served `immutable`) and survives
- * a media-tree reorg. Served by both Control (admin-guarded) and Delivery.
+ * across rename/move and survives a media-tree reorg. Rendered URLs append the
+ * representation fingerprint when immutable caching is desired.
  */
 export function cmsFilesIdUrl(id: string): string {
     return cmsFilesByIdUrl(getMetaBasePath(), id);
@@ -58,8 +59,8 @@ export function toLocal(item: FilesItem): LocalMediaItem {
     if (item.type === "file") {
         local.mimetype = item.mimeType;
         local.size = item.size;
-        local.contentHash = item.contentHash; // display cache-bust (see variantUrl)
-        // Address bytes by opaque id (immutable + rename-proof). `absoluteURL`
+        local.contentHash = item.representationVersion; // display representation cache-bust
+        // Address bytes by opaque id (stable + rename-proof). `absoluteURL`
         // stays the clean id URL — copy-URL and what gets stored in content read
         // it as-is; only the display src (variantUrl) appends `?v=contentHash`.
         local.absoluteURL = cmsFilesIdUrl(item.id);

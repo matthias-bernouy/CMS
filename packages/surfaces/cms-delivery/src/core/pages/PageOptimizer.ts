@@ -1,6 +1,6 @@
 import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
+import type { BlobReader } from "@bernouy/blob-store";
 import {
-    type BlobReader,
     type VariantStore,
     type PublicFileMetadataLookup,
     OptimizeQueue,

@@ -4,6 +4,8 @@ export type {
     CollectionCapabilityRequirement,
     CollectionDependency,
     CollectionResourceSelection,
+    CollectionResourceImport,
+    CollectionResourceImportSelection,
     CollectionTranslationKey,
     CollectionTranslations,
     CollectionDataMigration,

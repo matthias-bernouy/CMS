@@ -1,7 +1,9 @@
 import { describe, test, expect } from "bun:test";
 import { parseHTML } from "linkedom";
 import sharp from "sharp";
-import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, sha256Hex } from "@bernouy/cms-content/files";
+import { sha256Hex } from "@bernouy/binary-media";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
+import { InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
 import { injectMediaVersions } from "@bernouy/cms-content/files/serving";
 import { optimizePageImages } from "@bernouy/cms-content/files/serving";
 import { serveVariantRequest } from "@bernouy/cms-content/files/serving";
@@ -14,15 +16,15 @@ import { serveVariantRequest } from "@bernouy/cms-content/files/serving";
 describe("image optimization — full pipeline", () => {
     test("cold original → worker generates → warm srcset → serves a real, smaller WebP", async () => {
         const files = new InMemoryCmsFilesMetadata();
-        const sourceBlob = new InMemoryCmsFilesBlob();
-        const variantStore = new InMemoryCmsFilesBlob();
+        const sourceBlob = new MemoryBlobStore();
+        const variantStore = new MemoryBlobStore();
 
         const png = new Uint8Array(
             await sharp({ create: { width: 1000, height: 600, channels: 3, background: { r: 30, g: 90, b: 160 } } })
                 .png()
                 .toBuffer(),
         );
-        const hash = sha256Hex(png);
+        const hash = await sha256Hex(png);
         const file = await files.createFile({
             name: "hero.png",
             parentId: null,
@@ -44,7 +46,7 @@ describe("image optimization — full pipeline", () => {
         // 1) cold render: original served, image flagged for optimization
         const cold = await renderImg();
         expect(cold.srcset).toBeNull();
-        expect(cold.src).toBe(`/.cms/files/by-id/${file.id}?v=${hash}`);
+        expect(cold.src).toBe(`/.cms/files/by-id/${file.id}?v=${file.representationVersion}`);
         expect(cold.unoptimized).toEqual([file.id]);
 
         // 2) the background worker generates the ladder (real sharp)

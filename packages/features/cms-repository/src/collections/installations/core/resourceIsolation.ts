@@ -65,35 +65,43 @@ function validateDependencies(release: CollectionRelease, byId: ReadonlyMap<stri
             );
         }
         const exportedBlocs = new Set(target.exports?.blocs ?? []);
-        const targetBlocs = new Set(target.blocs.map((bloc) => bloc.id));
+        const targetBlocs = new Map(target.blocs.map((bloc) => [bloc.id, bloc.generation ?? 1]));
         for (const bloc of dependency.imports.blocs) {
-            if (!exportedBlocs.has(bloc) || !targetBlocs.has(bloc)) {
-                reject(`Collection ${release.collectionId} imports unavailable bloc ${bloc}`);
+            if (!exportedBlocs.has(bloc.id) || targetBlocs.get(bloc.id) !== bloc.generation) {
+                reject(
+                    `Collection ${release.collectionId} imports unavailable bloc ${bloc.id} generation ${bloc.generation}`,
+                );
             }
         }
         const exportedTokens = new Set(target.exports?.themeTokens ?? []);
-        const targetTokens = new Set(
-            target.theme?.categories.flatMap((category) => category.tokens.map((token) => token.id)) ?? [],
+        const targetTokens = new Map(
+            target.theme?.categories.flatMap((category) =>
+                category.tokens.map((token) => [token.id, token.generation ?? 1] as const),
+            ) ?? [],
         );
         for (const token of dependency.imports.themeTokens) {
-            if (!exportedTokens.has(token) || !targetTokens.has(token)) {
+            if (!exportedTokens.has(token.id) || targetTokens.get(token.id) !== token.generation) {
                 reject(
-                    `Collection ${release.collectionId} imports unavailable theme token ${target.collectionId}-${token}`,
+                    `Collection ${release.collectionId} imports unavailable theme token ${target.collectionId}-${token.id} generation ${token.generation}`,
                 );
             }
         }
         const exportedTexts = new Set(target.exports?.texts ?? []);
-        const targetTexts = new Set((target.texts ?? []).map((text) => text.id));
+        const targetTexts = new Map((target.texts ?? []).map((text) => [text.id, text.generation ?? 1]));
         for (const text of dependency.imports.texts ?? []) {
-            if (!exportedTexts.has(text) || !targetTexts.has(text)) {
-                reject(`Collection ${release.collectionId} imports unavailable text ${target.collectionId}.${text}`);
+            if (!exportedTexts.has(text.id) || targetTexts.get(text.id) !== text.generation) {
+                reject(
+                    `Collection ${release.collectionId} imports unavailable text ${target.collectionId}.${text.id} generation ${text.generation}`,
+                );
             }
         }
         const exportedAssets = new Set(target.exports?.assets ?? []);
-        const targetAssets = new Set(target.assets.map((asset) => asset.id));
+        const targetAssets = new Map(target.assets.map((asset) => [asset.id, asset.generation ?? 1]));
         for (const asset of dependency.imports.assets ?? []) {
-            if (!exportedAssets.has(asset) || !targetAssets.has(asset)) {
-                reject(`Collection ${release.collectionId} imports unavailable asset ${target.collectionId}.${asset}`);
+            if (!exportedAssets.has(asset.id) || targetAssets.get(asset.id) !== asset.generation) {
+                reject(
+                    `Collection ${release.collectionId} imports unavailable asset ${target.collectionId}.${asset.id} generation ${asset.generation}`,
+                );
             }
         }
     }
@@ -110,7 +118,7 @@ function validateImportedThemeTypes(release: CollectionRelease, byId: ReadonlyMa
                 ),
             );
             return dependency.imports.themeTokens.map(
-                (id) => [collectionThemeTokenId(dependency.collectionId, id), tokens.get(id)!] as const,
+                ({ id }) => [collectionThemeTokenId(dependency.collectionId, id), tokens.get(id)!] as const,
             );
         }),
     );

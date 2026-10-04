@@ -1,4 +1,5 @@
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
+import { ifRangeAllowsPartial, parseSingleByteRange, securityHeaders } from "@bernouy/http-runner";
 import type { GatewayHttpCallOptions } from "cms-gateway/invocation/http/handleHttpCall";
 import { privateMediaError } from "cms-gateway/media/http/privateMediaError";
 
@@ -61,13 +62,12 @@ export async function handleGatewayFileGet(request: Request, options: GatewayHtt
             return privateMediaError(502);
         }
         const canRange =
-            rangeHeader &&
-            (!request.headers.has("if-range") || request.headers.get("if-range") === result.responseHeaders?.etag);
+            rangeHeader && ifRangeAllowsPartial(request.headers.get("if-range"), result.responseHeaders?.etag ?? "");
         if (rangeHeader && result.status !== 200) {
             return privateMediaError(502);
         }
-        const range = canRange ? byteRange(rangeHeader, result.bytes.byteLength) : undefined;
-        if (canRange && !range) {
+        const range = canRange ? parseSingleByteRange(rangeHeader, result.bytes.byteLength) : null;
+        if (canRange && range === "unsatisfiable") {
             return new Response(null, {
                 status: 416,
                 headers: {
@@ -76,16 +76,20 @@ export async function handleGatewayFileGet(request: Request, options: GatewayHtt
                 },
             });
         }
-        const bytes = range ? result.bytes.slice(range.start, range.end + 1) : result.bytes;
+        const bytes =
+            range && range !== "unsatisfiable" ? result.bytes.slice(range.start, range.end + 1) : result.bytes;
         return new Response(new Uint8Array(bytes), {
-            status: range ? 206 : result.status,
+            status: range && range !== "unsatisfiable" ? 206 : result.status,
             headers: {
+                ...securityHeaders(),
                 "content-type": result.contentType,
                 "cache-control": "private, no-store",
                 "x-ulvia-request-id": result.requestId,
                 ...result.responseHeaders,
                 "accept-ranges": "bytes",
-                ...(range ? { "content-range": `bytes ${range.start}-${range.end}/${result.bytes.byteLength}` } : {}),
+                ...(range && range !== "unsatisfiable"
+                    ? { "content-range": `bytes ${range.start}-${range.end}/${result.bytes.byteLength}` }
+                    : {}),
             },
         });
     } catch (error) {
@@ -110,25 +114,4 @@ export async function handleGatewayFileGet(request: Request, options: GatewayHtt
                           : 503;
         return privateMediaError(status, error.requestId ? { "x-ulvia-request-id": error.requestId } : {});
     }
-}
-
-function byteRange(value: string, length: number): { start: number; end: number } | null {
-    const [first, last] = value.slice("bytes=".length).split("-") as [string, string];
-    if (!first) {
-        const suffix = Number(last);
-        return Number.isSafeInteger(suffix) && suffix > 0 && length > 0
-            ? { start: Math.max(0, length - suffix), end: length - 1 }
-            : null;
-    }
-    const start = Number(first);
-    const requestedEnd = last ? Number(last) : length - 1;
-    if (
-        !Number.isSafeInteger(start) ||
-        !Number.isSafeInteger(requestedEnd) ||
-        start >= length ||
-        requestedEnd < start
-    ) {
-        return null;
-    }
-    return { start, end: Math.min(requestedEnd, length - 1) };
 }

@@ -67,13 +67,17 @@ describe("ValidatingCmsFilesMetadata", () => {
 
         expect((await r.getItemByPath("images/hero.png"))?.id).toBe(file.id);
         expect((await r.listSubtree(folder.id)).map((item) => item.id)).toEqual([file.id]);
+        const contentHash = "a".repeat(64);
         expect(
             await r.updateFileContent(file.id, {
                 size: 8,
                 mimeType: "image/webp",
-                contentHash: "hero-v2",
+                contentHash,
             }),
-        ).toMatchObject({ size: 8, mimeType: "image/webp", contentHash: "hero-v2" });
+        ).toMatchObject({ size: 8, mimeType: "image/webp", contentHash });
+        expect(() =>
+            r.updateFileContent(file.id, { size: 8, mimeType: "image/webp", contentHash: "not-sha256" }),
+        ).toThrow(FileValidationError);
     });
 });
 

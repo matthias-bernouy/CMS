@@ -9,6 +9,8 @@ files explain implementation invariants.
 | Package | Responsibility |
 | --- | --- |
 | `@bernouy/components` | Public custom elements, base components and declarative data binding. |
+| `@bernouy/binary-media` | Immutable binary snapshots, SHA-256 identities, representation fingerprints and bounded media signature inspection. |
+| `@bernouy/blob-store` | Stream-first opaque blob contracts with memory, local-filesystem and S3-compatible adapters. |
 | `@bernouy/http-runner` | Runner abstractions, Bun HTTP serving, cache, compression, CSP and test helpers. |
 | `@bernouy/envelope-crypto` | Envelope encryption, KEK/DEK contracts and Mongo DEK storage. |
 | `@bernouy/rate-limiter` | Fixed-window rate limiting with memory and Mongo implementations. |
@@ -34,7 +36,7 @@ a separate feature package.
 
 The old `cms-sources`, `cms-source-images`, `cms-identities` and `cms-secrets`
 packages are absent. Provider invocation, identities and media belong to
-Gateway; generic secret storage and image processing belong to Foundation.
+Gateway; generic binary inspection, blob storage, secret storage and image processing belong to Foundation.
 The `cms-source` HTML attribute remains the active binding API.
 
 ## Official Products

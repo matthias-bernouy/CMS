@@ -1,5 +1,5 @@
 import type { CmsFilesMetadataRepository } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
-import type { CmsFilesBlobStore } from "cms-content/files/interfaces/CmsFilesBlobStore";
+import type { BlobStore } from "@bernouy/blob-store";
 
 /**
  * Delete a file or folder from the tree, then purge the bytes of every file
@@ -8,7 +8,7 @@ import type { CmsFilesBlobStore } from "cms-content/files/interfaces/CmsFilesBlo
  */
 export async function deleteFileTree(
     metadata: CmsFilesMetadataRepository,
-    blob: CmsFilesBlobStore,
+    blob: BlobStore,
     id: string,
     recursive: boolean,
 ): Promise<{ deletedFileIds: string[] }> {

@@ -16,6 +16,7 @@ import {
     listMemoryChildren,
     listMemorySubtree,
 } from "cms-content/files/default-implementation/memory/inMemoryFilesQueries";
+import { fileRepresentationVersion } from "cms-content/files/core/media/fileIntegrity";
 
 /**
  * In-memory `CmsFilesMetadataRepository` for local dev and tests. No
@@ -75,6 +76,7 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
             size: input.size,
             mimeType: input.mimeType,
             contentHash: input.contentHash,
+            representationVersion: fileRepresentationVersion(input) ?? undefined,
             createdAt: existing?.createdAt ?? now,
             updatedAt: now,
         };
@@ -116,6 +118,7 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
             size: fields.size,
             mimeType: fields.mimeType,
             contentHash: fields.contentHash,
+            representationVersion: fileRepresentationVersion(fields) ?? undefined,
             updatedAt: new Date(),
         };
         this._items.set(id, updated);

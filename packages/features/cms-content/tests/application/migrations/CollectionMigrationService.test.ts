@@ -113,7 +113,12 @@ test("reports removed imported texts and assets before a migration acquires main
                 collectionId: "atlas",
                 publisherId: "atlas.official",
                 versionRange: "^2.0.0",
-                imports: { blocs: [], themeTokens: [], texts: ["title"], assets: ["logo.svg"] },
+                imports: {
+                    blocs: [],
+                    themeTokens: [],
+                    texts: [{ id: "title", generation: 1 }],
+                    assets: [{ id: "logo.svg", generation: 1 }],
+                },
             },
         ],
     });
@@ -123,8 +128,8 @@ test("reports removed imported texts and assets before a migration acquires main
     });
 
     expect(dependencyIssues([{ release: provider }, { release: consumer }], [target])).toEqual([
-        "storefront imports removed text atlas.title.",
-        "storefront imports removed asset atlas.logo.svg.",
+        "storefront requires text atlas.title generation 1.",
+        "storefront requires asset atlas.logo.svg generation 1.",
     ]);
 });
 

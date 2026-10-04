@@ -48,25 +48,39 @@ export function dependencyIssues(
             const tokens = new Set(target.exports?.themeTokens ?? []);
             const texts = new Set(target.exports?.texts ?? []);
             const assets = new Set(target.exports?.assets ?? []);
+            const blocGenerations = new Map(target.blocs.map((item) => [item.id, item.generation ?? 1]));
+            const tokenGenerations = new Map(
+                target.theme?.categories.flatMap((category) =>
+                    category.tokens.map((item) => [item.id, item.generation ?? 1] as const),
+                ) ?? [],
+            );
+            const textGenerations = new Map((target.texts ?? []).map((item) => [item.id, item.generation ?? 1]));
+            const assetGenerations = new Map(target.assets.map((item) => [item.id, item.generation ?? 1]));
             dependency.imports.blocs
-                .filter((id) => !blocs.has(id))
-                .forEach((id) => issues.push(`${release.collectionId} imports removed bloc ${id}.`));
+                .filter(({ id, generation }) => !blocs.has(id) || blocGenerations.get(id) !== generation)
+                .forEach(({ id, generation }) =>
+                    issues.push(`${release.collectionId} requires bloc ${id} generation ${generation}.`),
+                );
             dependency.imports.themeTokens
-                .filter((id) => !tokens.has(id))
-                .forEach((id) =>
+                .filter(({ id, generation }) => !tokens.has(id) || tokenGenerations.get(id) !== generation)
+                .forEach(({ id, generation }) =>
                     issues.push(
-                        `${release.collectionId} imports removed token ${collectionThemeTokenId(target.collectionId, id)}.`,
+                        `${release.collectionId} requires token ${collectionThemeTokenId(target.collectionId, id)} generation ${generation}.`,
                     ),
                 );
             dependency.imports.texts
-                ?.filter((id) => !texts.has(id))
-                .forEach((id) =>
-                    issues.push(`${release.collectionId} imports removed text ${target.collectionId}.${id}.`),
+                ?.filter(({ id, generation }) => !texts.has(id) || textGenerations.get(id) !== generation)
+                .forEach(({ id, generation }) =>
+                    issues.push(
+                        `${release.collectionId} requires text ${target.collectionId}.${id} generation ${generation}.`,
+                    ),
                 );
             dependency.imports.assets
-                ?.filter((id) => !assets.has(id))
-                .forEach((id) =>
-                    issues.push(`${release.collectionId} imports removed asset ${target.collectionId}.${id}.`),
+                ?.filter(({ id, generation }) => !assets.has(id) || assetGenerations.get(id) !== generation)
+                .forEach(({ id, generation }) =>
+                    issues.push(
+                        `${release.collectionId} requires asset ${target.collectionId}.${id} generation ${generation}.`,
+                    ),
                 );
         }
     }

@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
-import { InMemoryCmsFilesBlob, InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
+import { InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
 import {
     createOriginalBlobReader,
     createPublicFileMetadataLookup,
@@ -10,7 +11,7 @@ import {
 for (const reference of ["draft-only", "unreferenced"]) {
     test(`public author library retains ${reference} media by ID and path`, async () => {
         const metadata = new InMemoryCmsFilesMetadata();
-        const blob = new InMemoryCmsFilesBlob();
+        const blob = new MemoryBlobStore();
         const file = await metadata.createFile({
             name: "announcement.txt",
             parentId: null,

@@ -1,7 +1,6 @@
-import { securityHeaders } from "@bernouy/http-runner";
+import { ifNoneMatchMatches, ifRangeAllowsPartial, parseSingleByteRange, securityHeaders } from "@bernouy/http-runner";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { COLLECTION_ASSETS_ROUTE, collectionAssetVersion } from "cms-delivery/core/assets/collectionAssets";
-import { ifRangeAllowsPartial, parseByteRange } from "./byteRange";
 
 const IMMUTABLE = "public, max-age=31536000, immutable";
 const REVALIDATE = "public, no-cache";
@@ -27,7 +26,8 @@ export default async function CollectionAssetServer(request: Request, delivery: 
     }
     const etag = `"${expectedVersion}"`;
     const headers = new Headers({
-        ...securityHeaders(),
+        ...securityHeaders({ crossOriginResourcePolicy: "cross-origin" }),
+        "Access-Control-Allow-Origin": "*",
         "Cache-Control": reference.version ? IMMUTABLE : REVALIDATE,
         "Accept-Ranges": "bytes",
         "Content-Disposition": inlineSafe(asset.mediaType) ? "inline" : "attachment",
@@ -36,7 +36,7 @@ export default async function CollectionAssetServer(request: Request, delivery: 
         "Content-Type": asset.mediaType,
         ETag: etag,
     });
-    if (matchesIfNoneMatch(request.headers.get("if-none-match"), etag)) {
+    if (ifNoneMatchMatches(request.headers.get("if-none-match"), etag)) {
         headers.delete("Content-Length");
         return new Response(null, { status: 304, headers });
     }
@@ -44,22 +44,21 @@ export default async function CollectionAssetServer(request: Request, delivery: 
         return new Response(null, { headers });
     }
     const range = ifRangeAllowsPartial(request.headers.get("if-range"), etag)
-        ? parseByteRange(request.headers.get("range"), asset.byteLength)
+        ? parseSingleByteRange(request.headers.get("range"), asset.byteLength)
         : null;
     if (range === "unsatisfiable") {
         headers.set("Content-Length", "0");
         headers.set("Content-Range", `bytes */${asset.byteLength}`);
         return new Response(null, { status: 416, headers });
     }
-    const bytes = await source.store.getReleaseAsset(installedAsset.digest, asset.id);
+    const bytes = await source.store.getReleaseAsset(installedAsset.digest, asset.id, range ?? undefined);
     if (!bytes) {
         return new Response(null, { status: 404 });
     }
     if (range) {
-        const body = bytes.slice(range.start, range.end + 1);
-        headers.set("Content-Length", String(body.byteLength));
-        headers.set("Content-Range", `bytes ${range.start}-${range.end}/${bytes.byteLength}`);
-        return new Response(body.slice().buffer as ArrayBuffer, { status: 206, headers });
+        headers.set("Content-Length", String(bytes.byteLength));
+        headers.set("Content-Range", `bytes ${range.start}-${range.end}/${asset.byteLength}`);
+        return new Response(bytes.slice().buffer as ArrayBuffer, { status: 206, headers });
     }
     return new Response(bytes.slice().buffer as ArrayBuffer, { headers });
 }
@@ -89,7 +88,7 @@ function parseReference(
             return null;
         }
         const version = url.searchParams.get("v");
-        if (version !== null && !/^[0-9a-f]{64}$/u.test(version)) {
+        if (version !== null && (version.length > 640 || !/^[a-z0-9-]+$/u.test(version))) {
             return null;
         }
         return { collectionId, assetId, version };
@@ -98,15 +97,29 @@ function parseReference(
     }
 }
 
-function inlineSafe(mediaType: string): boolean {
-    return /^(?:image|audio|video|font)\//u.test(mediaType) || mediaType === "application/pdf";
-}
+const INLINE_SAFE_TYPES = new Set([
+    "application/pdf",
+    "audio/mpeg",
+    "audio/ogg",
+    "audio/wav",
+    "audio/webm",
+    "font/otf",
+    "font/ttf",
+    "font/woff",
+    "font/woff2",
+    "image/avif",
+    "image/bmp",
+    "image/gif",
+    "image/jpeg",
+    "image/png",
+    "image/svg+xml",
+    "image/vnd.microsoft.icon",
+    "image/webp",
+    "image/x-icon",
+    "video/mp4",
+    "video/webm",
+]);
 
-function matchesIfNoneMatch(value: string | null, etag: string): boolean {
-    return (
-        value
-            ?.split(",")
-            .map((candidate) => candidate.trim().replace(/^W\//u, ""))
-            .some((candidate) => candidate === "*" || candidate === etag) ?? false
-    );
+function inlineSafe(mediaType: string): boolean {
+    return INLINE_SAFE_TYPES.has(mediaType);
 }

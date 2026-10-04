@@ -8,5 +8,9 @@
         }
     },
     "include": ["src/**/*.ts"],
-    "references": [{ "path": "../cms-repository" }, { "path": "../../foundation/image-processing" }]
+    "references": [
+        { "path": "../cms-repository" },
+        { "path": "../../foundation/http-runner" },
+        { "path": "../../foundation/image-processing" }
+    ]
 }

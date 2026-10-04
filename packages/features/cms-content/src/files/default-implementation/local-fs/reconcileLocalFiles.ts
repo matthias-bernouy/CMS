@@ -1,6 +1,6 @@
 import { readdir } from "node:fs/promises";
 import { randomUUIDv7 } from "bun";
-import { sha256Hex } from "cms-content/files/core/media/hashBytes";
+import { sha256Hex } from "@bernouy/binary-media";
 import type { LocalFilesRegistry, ReconcileOptions, ReconcileResult, RegistryEntry } from "./LocalFilesRegistry";
 
 export async function reconcileLocalFiles(
@@ -106,7 +106,7 @@ async function readDiskHashes(
     const hashes = new Map<string, string>();
     for (const path of paths) {
         try {
-            hashes.set(path, sha256Hex(await Bun.file(registry.abs(path)).bytes()));
+            hashes.set(path, await sha256Hex(await Bun.file(registry.abs(path)).bytes()));
         } catch (error) {
             result.errors.push({ path, error: String(error) });
         }

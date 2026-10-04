@@ -36,7 +36,9 @@ This slice supports:
 - Explicit local `uses`, named slots for components, media, plain text or bounded
   rich-text profiles, optional thumbnail asset, initial editable `defaultContent`
   and resource-level capability requirements.
-- Selective public Bloc/theme-token exports and bounded cross-collection imports.
+- Selective public Bloc/theme-token/text/asset exports and bounded cross-collection imports.
+  Every imported resource pins the exact contract generation understood by the
+  dependent collection.
 - Cumulative adjacent, declarative migration steps for site-owned data.
 
 Collection and bloc configuration are distinct. `defaultContent` belongs to
@@ -112,8 +114,9 @@ without dots and cannot claim the platform-owned `be5-`, `cms-`, `p9r-`,
 with `<collectionId>-`. Local `uses` and slot `accepts` references resolve inside
 the release. External references must appear in one dependency's exact imported
 Bloc list. A dependency pins the target collection ID, publisher ID and bounded
-SemVer range; it separately imports public Bloc tags and collection-local theme
-token IDs. Single-release installation requires the dependency first. The
+SemVer range; it separately imports public resources with their exact contract
+generation. Implementation digests may evolve inside that generation, while a
+generation bump requires a coordinated dependent release. Single-release installation requires the dependency first. The
 installation store also accepts an exact multi-release plan and validates then
 commits the whole graph atomically, independently of request order. Both paths
 verify every requested resource against its target release's explicit `exports`,
@@ -142,7 +145,9 @@ Assets, blocs, uses and requirements normalize ordinally; markup strings remain
 exact. The digest hashes canonical release data including asset declarations.
 Changing asset bytes requires changing their declared digest and thus changes
 the collection digest. Asset IDs are logical references, not filesystem paths.
-MIME declarations do not attest to the actual format or safety of the bytes.
+Admission compares recognizable media signatures with their declared MIME type
+and validates UTF-8/JSON payloads. This is bounded format recognition, not full
+decoding, sanitization or proof that active content is safe to render inline.
 
 ## API and bounds
 

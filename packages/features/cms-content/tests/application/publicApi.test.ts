@@ -10,11 +10,11 @@ test("rendering entrypoints omit authoring mutations and concrete stores", () =>
         expect(rendering).not.toHaveProperty(name);
     }
     expect(serving.serveFilesRequest).toBeFunction();
-    for (const name of ["uploadFile", "updateFileContent", "deleteFileTree", "LocalFsCmsFilesBlob"]) {
+    for (const name of ["uploadFile", "updateFileContent", "deleteFileTree", "LocalFsBlobStore"]) {
         expect(serving).not.toHaveProperty(name);
     }
     expect(authoringFiles.uploadFile).toBeFunction();
-    expect(authoringFiles).not.toHaveProperty("LocalFsCmsFilesBlob");
+    expect(authoringFiles).not.toHaveProperty("LocalFsBlobStore");
     expect(authoringFiles).not.toHaveProperty("serveFilesRequest");
 });
 
@@ -30,6 +30,6 @@ test("browser-safe content entrypoints bundle without persistence or image adapt
     expect(result.success).toBe(true);
     expect(result.outputs).toHaveLength(4);
     for (const output of result.outputs) {
-        expect(await output.text()).not.toMatch(/sharp|MongoCmsRepository|LocalFsCmsFilesBlob|S3CmsFilesBlob/);
+        expect(await output.text()).not.toMatch(/sharp|MongoCmsRepository|LocalFsBlobStore|S3BlobStore/);
     }
 });

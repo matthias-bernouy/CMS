@@ -1,6 +1,7 @@
 import type { CmsFilesMetadataRepository, FileItem } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
-import type { CmsFilesBlobStore } from "cms-content/files/interfaces/CmsFilesBlobStore";
-import { sha256Hex } from "cms-content/files/core/media/hashBytes";
+import type { BlobStore } from "@bernouy/blob-store";
+import { sha256Hex } from "@bernouy/binary-media";
+import { assertFileMediaType } from "cms-content/files/core/media/fileIntegrity";
 import { validateUploadSize } from "cms-content/files/core/validation/validation";
 
 /**
@@ -16,7 +17,7 @@ import { validateUploadSize } from "cms-content/files/core/validation/validation
  */
 export async function updateFileContent(
     metadata: CmsFilesMetadataRepository,
-    blob: CmsFilesBlobStore,
+    blob: BlobStore,
     id: string,
     file: File,
 ): Promise<FileItem | null> {
@@ -27,10 +28,12 @@ export async function updateFileContent(
 
     validateUploadSize(file.size);
     const bytes = new Uint8Array(await file.arrayBuffer());
+    const mimeType = file.type || "application/octet-stream";
+    assertFileMediaType(mimeType, bytes);
     await blob.put(id, bytes);
     return metadata.updateFileContent(id, {
         size: file.size,
-        mimeType: file.type || "application/octet-stream",
-        contentHash: sha256Hex(bytes),
+        mimeType,
+        contentHash: await sha256Hex(bytes),
     });
 }

@@ -136,9 +136,9 @@ describe("production surface mounting", () => {
         expect(deliveryConfig?.repository).not.toHaveProperty("getAllPages");
         expect(deliveryConfig?.repository).not.toHaveProperty("updatePage");
         expect(deliveryConfig?.filesBlob).not.toBe(options.core.filesBlob);
-        expect(Object.keys(deliveryConfig?.filesBlob as object)).toEqual(["get"]);
+        expect(Object.keys(deliveryConfig?.filesBlob as object)).toEqual(["get", "head"]);
         expect(Object.keys(deliveryConfig?.filesMetadata as object).sort()).toEqual(["getItem", "getItemByPath"]);
-        expect(Object.keys(deliveryConfig?.variantStore as object).sort()).toEqual(["get", "put"]);
+        expect(Object.keys(deliveryConfig?.variantStore as object).sort()).toEqual(["get", "head", "put"]);
         expect(deliveryConfig?.sitemapStore).not.toBe(options.core.sitemapStore);
         expect(sitemapRefreshOptions).toEqual({ reportError: expect.any(Function) });
         expect(observationStarted).toBe(true);

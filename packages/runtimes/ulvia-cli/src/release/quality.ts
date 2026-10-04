@@ -10,7 +10,7 @@ export function assertCollectionSourceQuality(release: CollectionRelease): void 
             category.tokens.map((token) => collectionThemeTokenId(release.collectionId, token.id)),
         ) ?? []),
         ...(release.dependencies?.flatMap((dependency) =>
-            dependency.imports.themeTokens.map((token) => collectionThemeTokenId(dependency.collectionId, token)),
+            dependency.imports.themeTokens.map(({ id }) => collectionThemeTokenId(dependency.collectionId, id)),
         ) ?? []),
     ]);
     const namespaces = [

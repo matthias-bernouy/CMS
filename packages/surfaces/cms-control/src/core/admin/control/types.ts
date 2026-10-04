@@ -14,9 +14,10 @@ import type {
 } from "@bernouy/cms-auth";
 import type { PublicAuthRoutesConfig, OidcAuthHandlers } from "@bernouy/cms-auth/http";
 import type { CmsRepository } from "@bernouy/cms-content";
+import type { BlobStore } from "@bernouy/blob-store";
 import type { CollectionMigrationService } from "@bernouy/cms-content/migrations";
 import type { DashboardAssignmentRepository, DashboardRepository } from "@bernouy/cms-dashboards";
-import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
+import type { CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { GatewayCapabilityCatalogue } from "@bernouy/cms-gateway";
@@ -103,7 +104,7 @@ export type ControlCmsState = {
     cache: Cache;
     secrets: SecretStore;
     filesMetadata: CmsFilesMetadataRepository | null;
-    filesBlob: CmsFilesBlobStore | null;
+    filesBlob: BlobStore | null;
     users: UsersRepository | null;
     identityProviders: IdentityProviderRepository | null;
     pats: PatRepository | null;

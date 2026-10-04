@@ -20,6 +20,7 @@
         "./media/sharp": "./src/exports/media/sharp.ts"
     },
     "dependencies": {
+        "@bernouy/http-runner": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
         "@bernouy/cms-repository": "workspace:*"
     },

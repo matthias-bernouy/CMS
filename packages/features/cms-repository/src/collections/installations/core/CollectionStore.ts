@@ -1,4 +1,5 @@
 import type { ReleaseCatalogue } from "../../../exports/contracts/catalogue";
+import type { BlobRange } from "@bernouy/blob-store";
 import { admitCollectionRelease } from "../../core/admission/admitCollectionRelease";
 import { parseCollectionTextOverrides } from "../../core/texts/parseCollectionTexts";
 import type { CollectionBundleAsset } from "../../interfaces/CollectionAssets";
@@ -36,8 +37,8 @@ export class CollectionStore {
         return { digest: artifact.digest, release };
     }
 
-    getReleaseAsset(digest: string, assetId: string): Promise<Uint8Array | null> {
-        return this.storage.getAsset(digest, assetId);
+    getReleaseAsset(digest: string, assetId: string, range?: BlobRange): Promise<Uint8Array | null> {
+        return this.storage.getAsset(digest, assetId, range);
     }
 
     /** Resolves one installed asset without hydrating every installed collection release. */

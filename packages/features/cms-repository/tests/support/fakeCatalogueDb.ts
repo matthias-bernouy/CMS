@@ -50,7 +50,7 @@ class Collection {
         if (!options?.upsert) {
             return { matchedCount: 0, modifiedCount: 0, upsertedCount: 0 };
         }
-        const inserted = cloneDocument({ ...filter, ...update.$setOnInsert }) as Document;
+        const inserted = cloneDocument({ ...filter, ...update.$setOnInsert, ...update.$set }) as Document;
         if (typeof inserted._id !== "string" || this.documents.has(inserted._id)) {
             throw new MongoServerError({ ok: 0, code: 11000, errmsg: "duplicate key" });
         }

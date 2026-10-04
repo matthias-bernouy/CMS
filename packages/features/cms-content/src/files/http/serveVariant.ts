@@ -1,5 +1,5 @@
 import type { PublicFileMetadataLookup } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
-import type { BlobReader } from "cms-content/files/interfaces/CmsFilesBlobStore";
+import type { BlobReader } from "@bernouy/blob-store";
 import { variantKey } from "cms-content/files/core/media/imageVariants";
 
 export type VariantServeDeps = {

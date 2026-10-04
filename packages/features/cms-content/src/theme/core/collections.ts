@@ -13,7 +13,7 @@ export function collectionThemeSource(release: CollectionRelease): ThemeSource |
     }
     const themeTokenImports =
         release.dependencies?.flatMap((dependency) =>
-            dependency.imports.themeTokens.map((token) => collectionThemeTokenId(dependency.collectionId, token)),
+            dependency.imports.themeTokens.map(({ id }) => collectionThemeTokenId(dependency.collectionId, id)),
         ) ?? [];
     return {
         id: collectionThemeSourceId(release.collectionId),

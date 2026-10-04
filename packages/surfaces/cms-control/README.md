@@ -43,7 +43,8 @@ import {
 } from "@bernouy/cms-auth";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
-import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
+import { InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
 import { InMemorySecretStore } from "@bernouy/secret-store";
 
 const runner = new BunRunner();
@@ -75,7 +76,7 @@ runner.group("/cms", (sub) => {
         new InMemoryCache(),
         new InMemorySecretStore(),
         new InMemoryCmsFilesMetadata(),
-        new InMemoryCmsFilesBlob(),
+        new MemoryBlobStore(),
         users,
         new InMemoryIdentityProviderRepository(),
         pats,
@@ -99,7 +100,7 @@ new ControlCms(
     cache?:              Cache,
     secrets?:            SecretStore,
     filesMetadata?:      CmsFilesMetadataRepository,
-    filesBlob?:          CmsFilesBlobStore,
+    filesBlob?:          BlobStore,
     users?:              UsersRepository,
     identityProviders?:  IdentityProviderRepository,
     pats?:               PatRepository,

@@ -42,7 +42,7 @@ test("installs an exact dependency graph atomically in any request order", async
                 collectionId: "foundation",
                 publisherId: "atlas.official",
                 versionRange: "^1.0.0",
-                imports: { blocs: ["foundation-block"], themeTokens: [] },
+                imports: { blocs: [{ id: "foundation-block", generation: 1 }], themeTokens: [] },
             },
         ],
     });

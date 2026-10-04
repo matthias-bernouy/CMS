@@ -1,4 +1,5 @@
-import type { BlobReader, VariantStore } from "cms-content/files/interfaces/CmsFilesBlobStore";
+import type { BlobReader } from "@bernouy/blob-store";
+import type { VariantStore } from "cms-content/files/interfaces/CmsFileStores";
 import type { PublicFileMetadataLookup } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
 import { readManifest, type VariantManifest } from "cms-content/files/core/media/imageVariants";
 import {
@@ -6,6 +7,7 @@ import {
     mediaIdFromUrl,
     withFileVersion,
 } from "cms-content/files/core/media/fileUrls";
+import { fileRepresentationVersion } from "cms-content/files/core/media/fileIntegrity";
 
 const isRaster = (mime: string | undefined): boolean => !!mime && mime.startsWith("image/") && mime !== "image/svg+xml";
 
@@ -44,14 +46,23 @@ export async function injectMediaVersions(
         return [];
     }
 
-    const info = new Map<string, { hash?: string; mime?: string; manifest?: VariantManifest | null }>();
+    const info = new Map<
+        string,
+        { hash?: string; version?: string; mime?: string; manifest?: VariantManifest | null }
+    >();
     await Promise.all(
         [...new Set([...imgs, ...favicons].map((t) => t.id))].map(async (id) => {
             const item = await files.getItem(id);
-            info.set(id, {
-                hash: item?.type === "file" ? item.contentHash : undefined,
-                mime: item?.type === "file" ? item.mimeType : undefined,
-            });
+            info.set(
+                id,
+                item?.type === "file"
+                    ? {
+                          hash: item.contentHash,
+                          version: fileRepresentationVersion(item) ?? undefined,
+                          mime: item.mimeType,
+                      }
+                    : {},
+            );
         }),
     );
     if (variantStore) {
@@ -65,9 +76,9 @@ export async function injectMediaVersions(
     }
 
     for (const t of favicons) {
-        const hash = info.get(t.id)?.hash;
-        if (hash) {
-            t.el.setAttribute(t.attr, withFileVersion(t.url, hash));
+        const version = info.get(t.id)?.version;
+        if (version) {
+            t.el.setAttribute(t.attr, withFileVersion(t.url, version));
         }
     }
 
@@ -75,7 +86,8 @@ export async function injectMediaVersions(
     for (const t of imgs) {
         const rec = info.get(t.id);
         const hash = rec?.hash;
-        if (!hash) {
+        const version = rec?.version;
+        if (!hash || !version) {
             continue;
         }
 
@@ -98,7 +110,7 @@ export async function injectMediaVersions(
                 }
             }
         }
-        t.el.setAttribute("src", withFileVersion(t.url, hash));
+        t.el.setAttribute("src", withFileVersion(t.url, version));
         if (variantStore && isRaster(rec!.mime) && !rec!.manifest) {
             unoptimized.add(t.id);
         }

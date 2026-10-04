@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { buildCspContent } from "@bernouy/http-runner";
 
 describe("buildCspContent", () => {

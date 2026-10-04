@@ -18,16 +18,16 @@ library, declarative bindings, validation, and read models.
 - `@bernouy/cms-content/migrations` exposes collection migration planning,
   execution, journals and the memory adapter. The Mongo journal adapter is
   exported from `./mongo`.
-- `@bernouy/cms-content/files` exposes authoring metadata/blob contracts,
-  lifecycle, validation and in-memory implementations.
-- `@bernouy/cms-content/files/serving` exposes public metadata lookup, get-only
-  originals, variant get/put, sitemap get/put/delete, and serving/optimization
+- `@bernouy/cms-content/files` exposes authoring metadata contracts, lifecycle,
+  validation and metadata implementations. Generic byte-store contracts and
+  adapters come directly from `@bernouy/blob-store`.
+- `@bernouy/cms-content/files/serving` exposes public metadata lookup, read-only
+  originals, variant read/write, sitemap read/write/delete, and serving/optimization
   helpers. Fresh facade objects restrict the methods exposed at runtime.
 - `@bernouy/cms-content/files/local-fs` exposes filesystem implementations to
   composition roots.
 - `@bernouy/cms-content/files/urls` is the browser-safe file URL surface.
-- `@bernouy/cms-content/files/mongo` and `./files/s3` expose composition-root
-  adapters.
+- `@bernouy/cms-content/files/mongo` exposes the Mongo metadata adapter.
 - Provider-owned files and collection-release assets do not belong to the CMS
   author file tree.
 - Do not import surfaces, runtimes, Control internals, or persistence adapters

@@ -1,4 +1,5 @@
 import type { ContractFixtureAssetDefinition } from "../../interfaces/ContractRelease";
+import { mediaTypeIssue, sha256Digest, snapshotBinary } from "@bernouy/binary-media";
 import { ReleaseValidationError } from "../protocol/errors";
 import type { ContractBundleAsset } from "./admitContractBundle";
 import type { VerifiedFixtureAsset } from "./admitContractRelease";
@@ -16,7 +17,7 @@ export function snapshotFixtureAssets(assets: readonly ContractBundleAsset[]): r
             if (!(value instanceof Blob || value instanceof Uint8Array)) {
                 throw new ReleaseValidationError("invalid_contract", "invalid fixture asset bytes", "$.fixtureAssets");
             }
-            const bytes = value instanceof Blob ? new Blob([value]) : new Blob([value.slice()]);
+            const bytes = snapshotBinary(value);
             return Object.freeze({ id: asset.id, bytes });
         }),
     );
@@ -57,12 +58,20 @@ export async function verifyFixtureAssets(
             );
         }
         const bytes = value;
-        const hash = new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", await bytes.arrayBuffer()));
-        const digest = `sha256:${Array.from(hash, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+        const content = new Uint8Array(await bytes.arrayBuffer());
+        const digest = await sha256Digest(content);
         if (digest !== declaration.digest) {
             throw new ReleaseValidationError(
                 "invalid_contract",
                 "fixture asset digest mismatch",
+                `$.fixtureAssets.${declaration.id}`,
+            );
+        }
+        const mediaIssue = mediaTypeIssue(declaration.mediaType, content);
+        if (mediaIssue) {
+            throw new ReleaseValidationError(
+                "invalid_contract",
+                `fixture ${mediaIssue}`,
                 `$.fixtureAssets.${declaration.id}`,
             );
         }

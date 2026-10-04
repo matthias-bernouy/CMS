@@ -1,5 +1,4 @@
-/** Filesystem adapters are constructed only by runtimes. */
-export { LocalFsCmsFilesBlob } from "cms-content/files/default-implementation/local-fs/LocalFsCmsFilesBlob";
+/** CMS filesystem metadata adapters are constructed only by runtimes. */
 export {
     CMS_FILES_REGISTRY_NAME,
     LocalFsCmsFiles,

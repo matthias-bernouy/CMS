@@ -16,6 +16,7 @@
         "README.md"
     ],
     "dependencies": {
+        "@bernouy/binary-media": "workspace:*",
         "@bernouy/cms-server": "workspace:*",
         "@bernouy/cms-collection-build": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",

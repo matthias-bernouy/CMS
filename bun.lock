@@ -5,6 +5,8 @@
     "": {
       "name": "@bernouy/cms-core",
       "devDependencies": {
+        "@bernouy/binary-media": "workspace:*",
+        "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-collection-build": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
@@ -62,6 +64,8 @@
       "name": "@bernouy/cms-content",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/binary-media": "workspace:*",
+        "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
@@ -86,6 +90,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/cms-repository": "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
       },
       "peerDependencies": {
@@ -98,6 +103,8 @@
       "name": "@bernouy/cms-repository",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/binary-media": "workspace:*",
+        "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-dashboards": "workspace:*",
         "canonicalize": "^3.0.0",
         "htmlparser2": "^10.1.0",
@@ -105,6 +112,20 @@
       },
       "peerDependencies": {
         "mongodb": "^7.2.0",
+        "typescript": "^7.0.2",
+      },
+    },
+    "packages/foundation/binary-media": {
+      "name": "@bernouy/binary-media",
+      "version": "0.1.0",
+      "peerDependencies": {
+        "typescript": "^7.0.2",
+      },
+    },
+    "packages/foundation/blob-store": {
+      "name": "@bernouy/blob-store",
+      "version": "0.1.0",
+      "peerDependencies": {
         "typescript": "^7.0.2",
       },
     },
@@ -173,6 +194,7 @@
       "name": "@bernouy/cms-server",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-control": "workspace:*",
@@ -197,6 +219,7 @@
         "ulvia": "./src/index.ts",
       },
       "dependencies": {
+        "@bernouy/binary-media": "workspace:*",
         "@bernouy/cms-collection-build": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-server": "workspace:*",
@@ -210,6 +233,7 @@
       "name": "@bernouy/cms-control",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-collection-build": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
@@ -222,6 +246,7 @@
         "linkedom": "^0.18.13",
       },
       "devDependencies": {
+        "@bernouy/binary-media": "workspace:*",
         "@happy-dom/global-registrator": "^20.14.5",
         "@types/bun": "1.4.2",
         "happy-dom": "^20.14.5",
@@ -236,14 +261,17 @@
       "name": "@bernouy/cms-delivery",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-repository": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "linkedom": "^0.18.13",
       },
       "devDependencies": {
+        "@bernouy/binary-media": "workspace:*",
         "sharp": "^0.35.4",
       },
       "peerDependencies": {
@@ -252,6 +280,10 @@
     },
   },
   "packages": {
+    "@bernouy/binary-media": ["@bernouy/binary-media@workspace:packages/foundation/binary-media"],
+
+    "@bernouy/blob-store": ["@bernouy/blob-store@workspace:packages/foundation/blob-store"],
+
     "@bernouy/cms-auth": ["@bernouy/cms-auth@workspace:packages/features/cms-auth"],
 
     "@bernouy/cms-collection-build": ["@bernouy/cms-collection-build@workspace:packages/features/cms-collection-build"],

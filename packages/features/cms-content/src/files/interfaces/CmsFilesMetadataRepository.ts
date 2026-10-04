@@ -33,11 +33,10 @@ export type FileItem = BaseItem & {
     type: "file";
     size: number; // bytes
     mimeType: string;
-    /** sha256-hex of the bytes. Changes on every content edit → the cache token
-     *  (`?v=<contentHash>`) the renderer appends to a `by-id` URL so an in-place
-     *  update busts the immutable cache. Optional for files whose content hash
-     *  has not been indexed yet. */
+    /** SHA-256 hex of the bytes, used for derivative identity and reconciliation. */
     contentHash?: string;
+    /** Fingerprint of bytes, size and MIME used by immutable HTTP URLs. */
+    representationVersion?: string;
 };
 
 export type FilesItem = FolderItem | FileItem;

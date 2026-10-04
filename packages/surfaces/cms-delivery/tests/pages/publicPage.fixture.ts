@@ -7,7 +7,7 @@ import {
     type TSystem,
 } from "@bernouy/cms-content";
 import type { PublicPageProvider } from "@bernouy/cms-delivery";
-import type { CmsFilesBlobStore } from "@bernouy/cms-content/files";
+import type { BlobStore } from "@bernouy/blob-store";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import { type CacheEntry, TtlCache } from "@bernouy/http-runner";
 import DeliveryCms from "cms-delivery/DeliveryCms";
@@ -30,7 +30,7 @@ type HarnessOptions = Readonly<{
     providers?: readonly PublicPageProvider[];
     storedPages?: readonly TPage[];
     gateway?: GatewayInvoker;
-    sitemapStore?: CmsFilesBlobStore;
+    sitemapStore?: BlobStore;
     siteHost?: string;
     repository?: ContentReader | CmsRepository;
 }>;

@@ -8,7 +8,7 @@ import type {
     FileItem,
     FilesItem,
 } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
-import { validateItemName } from "cms-content/files/core/validation/validation";
+import { validateContentHash, validateItemName } from "cms-content/files/core/validation/validation";
 
 /**
  * Decorator that enforces the item-name rule on every metadata write before
@@ -27,7 +27,11 @@ export class ValidatingCmsFilesMetadata implements CmsFilesMetadataRepository {
     }
 
     async createFile(input: NewFile): Promise<FileItem> {
-        return this.inner.createFile({ ...input, name: validateItemName(input.name) });
+        return this.inner.createFile({
+            ...input,
+            name: validateItemName(input.name),
+            contentHash: input.contentHash === undefined ? undefined : validateContentHash(input.contentHash),
+        });
     }
 
     async updateItem(id: string, patch: ItemPatch): Promise<FilesItem | null> {
@@ -48,7 +52,7 @@ export class ValidatingCmsFilesMetadata implements CmsFilesMetadataRepository {
         return this.inner.listSubtree(folderId);
     }
     updateFileContent(id: string, fields: { size: number; mimeType: string; contentHash: string }) {
-        return this.inner.updateFileContent(id, fields);
+        return this.inner.updateFileContent(id, { ...fields, contentHash: validateContentHash(fields.contentHash) });
     }
     deleteItem(id: string, opts?: { recursive?: boolean }) {
         return this.inner.deleteItem(id, opts);

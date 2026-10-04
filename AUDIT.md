@@ -49,7 +49,7 @@ There is no production deployment or production data to preserve. Historical imp
 ### `cms-content`
 
 - The root export repeats `ContentReader`, rendering helpers, and the published snapshot HTTP handler already available through `./rendering`. Control imports some of these from the root. This weakens the documented authoring/rendering split. [`index.ts`](packages/features/cms-content/src/exports/index.ts#L53), [`rendering.ts`](packages/features/cms-content/src/exports/rendering.ts#L3)
-- `LocalFsCmsFiles` and `S3CmsFilesBlob` are exported and tested, but no current server runtime composes them. The runtime uses Mongo metadata and `LocalFsCmsFilesBlob`. They may still be intended for external consumers. [`local-fs.ts`](packages/features/cms-content/src/exports/files/local-fs.ts#L1), [`authorFiles.ts`](packages/runtimes/cms-server/src/runtime/stores/authorFiles.ts#L1)
+- Resolved after audit: generic memory, local-filesystem and S3 blob contracts/adapters now live in `@bernouy/blob-store`; `cms-content` retains only CMS metadata and lifecycle responsibilities. The server composes `LocalFsBlobStore` directly. [`blob-store`](packages/foundation/blob-store/package.json), [`authorFiles.ts`](packages/runtimes/cms-server/src/runtime/stores/authorFiles.ts#L1)
 - `validateCategory` and `isValidCategoryFolder` have no known workspace caller. The latter reaches the public API through a wildcard export. [`fields.ts`](packages/features/cms-content/src/application/core/validation/fields.ts#L38), [`predicates.ts`](packages/features/cms-content/src/application/core/validation/predicates.ts#L54)
 
 ### `cms-dashboards`

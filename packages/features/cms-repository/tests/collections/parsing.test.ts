@@ -267,7 +267,10 @@ describe("collection release parsing", () => {
                 collectionId: "ulvia-official",
                 publisherId: "ulvia.official",
                 versionRange: "^1.0.0",
-                imports: { blocs: ["ulvia-official-button"], themeTokens: ["primary"] },
+                imports: {
+                    blocs: [{ id: "ulvia-official-button", generation: 1 }],
+                    themeTokens: [{ id: "primary", generation: 1 }],
+                },
             },
         ];
         (source.blocs as Record<string, unknown>[])[1]!.uses = ["atlas-panel", "ulvia-official-button"];
@@ -280,7 +283,10 @@ describe("collection release parsing", () => {
             collectionId: "ulvia-official",
             publisherId: "ulvia.official",
             versionRange: "^1.0.0",
-            imports: { blocs: ["ulvia-official-button"], themeTokens: ["primary"] },
+            imports: {
+                blocs: [{ id: "ulvia-official-button", generation: 1 }],
+                themeTokens: [{ id: "primary", generation: 1 }],
+            },
         });
 
         expect(() =>
@@ -295,6 +301,30 @@ describe("collection release parsing", () => {
                 })),
             }),
         ).toThrow("at least one");
+        expect(() =>
+            parseCollectionRelease({
+                ...source,
+                dependencies: (source.dependencies as Record<string, unknown>[]).map((dependency) => ({
+                    ...dependency,
+                    imports: {
+                        blocs: ["ulvia-official-button"],
+                        themeTokens: [{ id: "primary", generation: 1 }],
+                    },
+                })),
+            }),
+        ).toThrow(/object/);
+        expect(() =>
+            parseCollectionRelease({
+                ...source,
+                dependencies: (source.dependencies as Record<string, unknown>[]).map((dependency) => ({
+                    ...dependency,
+                    imports: {
+                        blocs: [{ id: "ulvia-official-button" }],
+                        themeTokens: [{ id: "primary", generation: 1 }],
+                    },
+                })),
+            }),
+        ).toThrow(/generation/);
     });
 
     test("validates reusable translation keys and locale fallback", () => {

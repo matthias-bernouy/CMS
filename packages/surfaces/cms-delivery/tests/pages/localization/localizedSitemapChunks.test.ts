@@ -1,8 +1,8 @@
 import { gunzipSync } from "bun";
 import { expect, test } from "bun:test";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { InMemoryCmsRepository, validateSettingsPatch } from "@bernouy/cms-content";
 import type { PublicPageProvider } from "@bernouy/cms-delivery";
-import { InMemoryCmsFilesBlob } from "@bernouy/cms-content/files";
 import { materializeSitemapSnapshot } from "cms-delivery/core/seo/sitemap/materialize";
 import { readSitemapManifest, sitemapChunkPath } from "cms-delivery/core/seo/sitemap/manifest";
 import SitemapServer from "cms-delivery/endpoints/sitemap.xml.server";
@@ -47,7 +47,7 @@ test("sitemap snapshots separate languages and common URLs while retaining recip
             }),
         },
         providers: [provider],
-        sitemapStore: new InMemoryCmsFilesBlob(),
+        sitemapStore: new MemoryBlobStore(),
     });
 
     const result = await materializeSitemapSnapshot(mounted.delivery);
@@ -112,7 +112,7 @@ test("sitemap snapshots can be read for a valid long language tag", async () => 
     const page = (await repository.getPage("/about"))!;
     await repository.updatePage({ id: page.id, visible: true });
     await repository.setPagePaths(page.id, { fr: "/about", [language]: "/about" });
-    const store = new InMemoryCmsFilesBlob();
+    const store = new MemoryBlobStore();
     const mounted = mountPublicPages({ repository, sitemapStore: store });
 
     const generated = await materializeSitemapSnapshot(mounted.delivery);

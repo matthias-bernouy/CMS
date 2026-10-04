@@ -1,6 +1,6 @@
 import { stat } from "node:fs/promises";
 import { randomUUIDv7 } from "bun";
-import { sha256Hex } from "cms-content/files/core/media/hashBytes";
+import { sha256Hex } from "@bernouy/binary-media";
 import type { LocalFilesRegistry } from "cms-content/files/default-implementation/local-fs/LocalFilesRegistry";
 
 export function childPath(registry: LocalFilesRegistry, parentId: string | null, name: string): string {
@@ -23,7 +23,7 @@ export async function resolveId(registry: LocalFilesRegistry, path: string, isDi
     if (existing) {
         return existing;
     }
-    const hash = isDirectory ? null : sha256Hex(await Bun.file(registry.abs(path)).bytes());
+    const hash = isDirectory ? null : await sha256Hex(await Bun.file(registry.abs(path)).bytes());
     const uuid = randomUUIDv7();
     data.byId[uuid] = { path, hash };
     data.byPath[path] = uuid;

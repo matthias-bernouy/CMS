@@ -1,5 +1,5 @@
 import { mkdir, rename, rm, writeFile } from "node:fs/promises";
-import { sha256Hex } from "cms-content/files/core/media/hashBytes";
+import { sha256Hex } from "@bernouy/binary-media";
 import type {
     FileItem,
     FilesItem,
@@ -25,7 +25,7 @@ export async function createFile(registry: LocalFilesRegistry, input: NewFile): 
     await mkdir(registry.abs(parentOf(path) ?? ""), { recursive: true });
     await writeFile(registry.abs(path), "");
     if (input.id) {
-        registry.data!.byId[input.id] = { path, hash: sha256Hex(new Uint8Array()) };
+        registry.data!.byId[input.id] = { path, hash: await sha256Hex(new Uint8Array()) };
         registry.data!.byPath[path] = input.id;
         registry.dirty = true;
     }

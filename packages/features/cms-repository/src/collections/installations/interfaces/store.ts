@@ -1,6 +1,7 @@
 import type { CollectionAssetDefinition } from "../../interfaces/CollectionAssets";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import type { CollectionTextOverrides } from "../../interfaces/CollectionText";
+import type { BlobRange } from "@bernouy/blob-store";
 
 export type StoredCollectionAsset = { id: string; bytes: Uint8Array };
 export type StoredCollectionRelease = {
@@ -35,7 +36,7 @@ export interface CollectionStorage {
     putRelease(artifact: StoredCollectionRelease): Promise<void>;
     getRelease(digest: string): Promise<StoredCollectionRelease | null>;
     getReleaseMetadata(digest: string): Promise<StoredCollectionReleaseMetadata | null>;
-    getAsset(digest: string, assetId: string): Promise<Uint8Array | null>;
+    getAsset(digest: string, assetId: string, range?: BlobRange): Promise<Uint8Array | null>;
     readSite(siteId: string): Promise<CollectionSiteState>;
     compareAndSet(siteId: string, expected: number, next: CollectionSiteState): Promise<boolean>;
 }

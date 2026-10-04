@@ -111,10 +111,10 @@ test("installs only declared public resources from compatible collection depende
                 publisherId: "ulvia.official",
                 versionRange: "^1.0.0",
                 imports: {
-                    blocs: ["ulvia-official-button"],
-                    themeTokens: ["primary"],
-                    texts: ["submit"],
-                    assets: ["empty.svg"],
+                    blocs: [{ id: "ulvia-official-button", generation: 1 }],
+                    themeTokens: [{ id: "primary", generation: 1 }],
+                    texts: [{ id: "submit", generation: 1 }],
+                    assets: [{ id: "empty.svg", generation: 1 }],
                 },
             },
         ],
@@ -125,6 +125,13 @@ test("installs only declared public resources from compatible collection depende
     await expect(store.install("site", consumerArtifact.digest, 0)).rejects.toThrow("requires ulvia-official");
     await store.install("site", foundationArtifact.digest, 0);
     await expect(store.install("site", consumerArtifact.digest, 1)).resolves.toMatchObject({ revision: 2 });
+
+    const unsupportedGeneration = structuredClone(consumer);
+    unsupportedGeneration.version = "1.0.1";
+    unsupportedGeneration.dependencies[0]!.imports.assets[0]!.generation = 2;
+    const unsupportedArtifact = await store.importRelease(unsupportedGeneration);
+    await store.install("generation", foundationArtifact.digest, 0);
+    await expect(store.install("generation", unsupportedArtifact.digest, 1)).rejects.toThrow("empty.svg generation 2");
 
     const breakingFoundation = { ...structuredClone(foundation), version: "2.0.0" };
     const breakingArtifact = await store.importRelease(breakingFoundation, [{ id: "empty.svg", bytes: assetBytes }]);
@@ -185,7 +192,7 @@ test("rejects imports that the dependency does not export", async () => {
                 collectionId: "ulvia-official",
                 publisherId: "ulvia.official",
                 versionRange: ">=0.0.0",
-                imports: { blocs: ["ulvia-official-button"], themeTokens: [] },
+                imports: { blocs: [{ id: "ulvia-official-button", generation: 1 }], themeTokens: [] },
             },
         ],
     };

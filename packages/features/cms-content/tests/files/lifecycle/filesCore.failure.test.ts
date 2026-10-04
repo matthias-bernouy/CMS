@@ -1,18 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import {
-    deleteFileTree,
-    InMemoryCmsFilesBlob,
-    InMemoryCmsFilesMetadata,
-    updateFileContent,
-    uploadFile,
-} from "@bernouy/cms-content/files";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
+import { deleteFileTree, InMemoryCmsFilesMetadata, updateFileContent, uploadFile } from "@bernouy/cms-content/files";
 
 const file = (name: string, content: string, type = "text/plain") => new File([content], name, { type });
 
 describe("files core failure boundaries", () => {
     test.failing("preserves a pre-existing file when replacement blob storage fails", async () => {
         const metadata = new InMemoryCmsFilesMetadata();
-        const blob = new InMemoryCmsFilesBlob();
+        const blob = new MemoryBlobStore();
         const existing = await uploadFile(metadata, blob, file("stable.txt", "OLD"), null, "stable-id");
         const before = await metadata.getItem(existing.id);
 
@@ -28,7 +23,7 @@ describe("files core failure boundaries", () => {
 
     test.failing("keeps published bytes aligned when the metadata update fails", async () => {
         const metadata = new InMemoryCmsFilesMetadata();
-        const blob = new InMemoryCmsFilesBlob();
+        const blob = new MemoryBlobStore();
         const existing = await uploadFile(metadata, blob, file("stable.txt", "OLD"), null);
         const before = await metadata.getItem(existing.id);
 
@@ -46,7 +41,7 @@ describe("files core failure boundaries", () => {
 
     test.failing("keeps failed physical deletion retryable", async () => {
         const metadata = new InMemoryCmsFilesMetadata();
-        const blob = new InMemoryCmsFilesBlob();
+        const blob = new MemoryBlobStore();
         const existing = await uploadFile(metadata, blob, file("stable.txt", "OLD"), null);
         const deleteBlob = blob.delete.bind(blob);
         let unavailable = true;
@@ -67,7 +62,7 @@ describe("files core failure boundaries", () => {
     });
 });
 
-async function readBlobText(blob: InMemoryCmsFilesBlob, id: string): Promise<string | null> {
+async function readBlobText(blob: MemoryBlobStore, id: string): Promise<string | null> {
     const stream = await blob.get(id);
     return stream ? new Response(stream).text() : null;
 }

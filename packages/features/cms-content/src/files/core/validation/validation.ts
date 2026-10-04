@@ -18,6 +18,13 @@ export function validateUploadSize(size: number): void {
     }
 }
 
+export function validateContentHash(value: unknown): string {
+    if (typeof value !== "string" || !/^[0-9a-f]{64}$/u.test(value)) {
+        throw new FileValidationError("contentHash", "must be a lowercase SHA-256 hex digest");
+    }
+    return value;
+}
+
 /** Item (folder/file) name rule: required, trimmed, single path segment.
  *  Returns the normalized name. Enforced at the seam by
  *  `ValidatingCmsFilesMetadata`. */

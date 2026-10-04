@@ -1,11 +1,7 @@
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
+import type { BlobReader } from "@bernouy/blob-store";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
-import type {
-    BlobReader,
-    VariantStore,
-    SitemapStore,
-    PublicFileMetadataLookup,
-} from "@bernouy/cms-content/files/serving";
+import type { VariantStore, SitemapStore, PublicFileMetadataLookup } from "@bernouy/cms-content/files/serving";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import { BunRunner, type Cache, type Runner, TtlCache } from "@bernouy/http-runner";
 import { PageOptimizer } from "cms-delivery/core/pages/PageOptimizer";

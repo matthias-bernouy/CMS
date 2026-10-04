@@ -6,9 +6,10 @@ import type {
     UsersRepository,
 } from "@bernouy/cms-auth";
 import type { CmsRepository } from "@bernouy/cms-content";
+import type { BlobStore } from "@bernouy/blob-store";
 import { InMemoryDashboardAssignmentRepository, InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import { InMemoryIdentityService } from "@bernouy/cms-gateway/identity";
-import type { CmsFilesBlobStore, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
+import type { CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import { InMemoryCache, type Cache, type Runner } from "@bernouy/http-runner";
 import { InMemorySecretStore, type SecretStore, ValidatingSecretStore } from "@bernouy/secret-store";
 import type { ControlAuthBackends, ControlCmsOptions, ControlCmsState } from "cms-control/core/admin/control/types";
@@ -21,7 +22,7 @@ export type ControlCmsConstructorInput = {
     cache?: Cache;
     secrets?: SecretStore;
     filesMetadata?: CmsFilesMetadataRepository;
-    filesBlob?: CmsFilesBlobStore;
+    filesBlob?: BlobStore;
     users?: UsersRepository;
     identityProviders?: IdentityProviderRepository;
     pats?: PatRepository;

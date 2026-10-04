@@ -1,0 +1,17 @@
+{
+    "name": "@bernouy/blob-store",
+    "version": "0.1.0",
+    "description": "Generic opaque stream-first blob storage contracts and memory, local-filesystem, and S3-compatible adapters.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./memory": "./src/adapters/MemoryBlobStore.ts",
+        "./local-fs": "./src/adapters/LocalFsBlobStore.ts",
+        "./s3": "./src/adapters/S3BlobStore.ts"
+    },
+    "peerDependencies": {
+        "typescript": "^7.0.2"
+    }
+}

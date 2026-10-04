@@ -99,6 +99,9 @@ test("imports verified assets and contract requirements into the installation st
 
     const artifact = await store.importRelease(input, [{ id: "thumbnail.txt", bytes }]);
     expect(await store.getReleaseAsset(artifact.digest, "thumbnail.txt")).toEqual(bytes);
+    expect(await store.getReleaseAsset(artifact.digest, "thumbnail.txt", { start: 1, end: 2 })).toEqual(
+        bytes.slice(1, 3),
+    );
     await store.install("site", artifact.digest, 0, "local");
     expect((await store.snapshot("site")).collections[0]!.release.blocs[0]!.requires).toHaveLength(1);
 });

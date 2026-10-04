@@ -284,7 +284,8 @@ models and validation for CMS-owned installations and site selections.
   only local declared views; site activation and membership live outside the
   immutable release. Cross-collection dependencies import only explicitly
   exported Bloc tags, collection-local theme token IDs, server text IDs and immutable
-  asset IDs from one publisher and bounded version range. Installation resolves the complete graph, rejects
+  asset IDs from one publisher and bounded version range. Every import pins the
+  exact resource contract generation understood by its dependent. Installation resolves the complete graph, rejects
   cycles, and revalidates dependents during upgrades. Remote publication remains
   a future slice. Reject unsupported fields until validated.
 - Theme defaults may reference local or selectively imported tokens. Reject

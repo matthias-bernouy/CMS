@@ -2,11 +2,13 @@ import { isVersionRangeSubset, parseVersionRange } from "cms-repository/exports/
 import type {
     CollectionCapabilityRequirement,
     CollectionDependency,
+    CollectionResourceImport,
+    CollectionResourceImportSelection,
     CollectionResourceSelection,
 } from "../../interfaces/CollectionRelease";
 import { invalid } from "../errors";
 import type { CollectionLimits } from "../limits";
-import { array, identifier, keys, ordinal, record, string, unique } from "../values";
+import { array, identifier, integer, keys, ordinal, record, string, unique } from "../values";
 import { collectionThemeTokenId, parseCollectionBlocTag, parseCollectionNamespace } from "../namespace";
 import { textIdentifier, TEXT_LIMITS } from "../texts/validation";
 
@@ -61,7 +63,7 @@ export function parseCollectionDependencies(
         if (isVersionRangeSubset(versionRange, "<0.0.0")) {
             invalid("must accept at least one collection version", `${path}.versionRange`);
         }
-        const imports = parseResourceSelection(source.imports, collectionId, `${path}.imports`, limits);
+        const imports = parseResourceImports(source.imports, collectionId, `${path}.imports`, limits);
         if (
             imports.blocs.length === 0 &&
             imports.themeTokens.length === 0 &&
@@ -82,6 +84,65 @@ export function parseCollectionDependencies(
         "$.dependencies",
     );
     return dependencies.sort((left, right) => ordinal(left.collectionId, right.collectionId));
+}
+
+function parseResourceImports(
+    value: unknown,
+    collectionId: string,
+    path: string,
+    limits: Readonly<CollectionLimits>,
+): CollectionResourceImportSelection {
+    const source = record(value, path);
+    keys(source, ["blocs", "themeTokens", "texts", "assets"], path);
+    return {
+        blocs: importedResources(source.blocs, limits.maxBlocs, `${path}.blocs`, (entry, at) =>
+            parseCollectionBlocTag(entry, collectionId, at),
+        ),
+        themeTokens: importedResources(source.themeTokens, limits.maxBlocs, `${path}.themeTokens`, (entry, at) => {
+            const token = string(entry, 96, at);
+            try {
+                collectionThemeTokenId(collectionId, token);
+                return token;
+            } catch {
+                return invalid("must be a lowercase kebab-case token ID", at);
+            }
+        }),
+        ...optionalImports(source.texts, TEXT_LIMITS.definitions, `${path}.texts`, (entry) => textIdentifier(entry)),
+        ...optionalImports(source.assets, limits.maxAssets, `${path}.assets`, assetIdentifier),
+    };
+}
+
+function optionalImports(
+    value: unknown,
+    maximum: number,
+    path: string,
+    parseId: (value: unknown, path: string) => string,
+): { texts?: readonly CollectionResourceImport[]; assets?: readonly CollectionResourceImport[] } {
+    const resources = importedResources(value, maximum, path, parseId);
+    const property = path.endsWith(".texts") ? "texts" : "assets";
+    return resources.length ? { [property]: resources } : {};
+}
+
+function importedResources(
+    value: unknown,
+    maximum: number,
+    path: string,
+    parseId: (value: unknown, path: string) => string,
+): CollectionResourceImport[] {
+    const resources = array(value ?? [], maximum, path).map((entry, index) => {
+        const at = `${path}[${index}]`;
+        const source = record(entry, at);
+        keys(source, ["id", "generation"], at);
+        return {
+            id: parseId(source.id, `${at}.id`),
+            generation: integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${at}.generation`),
+        };
+    });
+    unique(
+        resources.map(({ id }) => id),
+        path,
+    );
+    return resources.sort((left, right) => ordinal(left.id, right.id));
 }
 
 export function parseCollectionExports(

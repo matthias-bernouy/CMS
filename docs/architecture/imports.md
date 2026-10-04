@@ -43,8 +43,9 @@ style, but do not cross package boundaries with relative paths.
 Adapter subpaths isolate optional infrastructure:
 
 - `./mongo` imports MongoDB-backed repositories.
-- `./files/s3` on `cms-content` imports S3-backed file blobs.
-- `./files/local-fs` imports filesystem-backed author-file stores.
+- `@bernouy/blob-store/s3` imports the generic S3-backed blob adapter.
+- `@bernouy/blob-store/local-fs` imports the generic filesystem blob adapter;
+  `./files/local-fs` on `cms-content` imports filesystem-backed CMS metadata.
 - `./browser` exposes browser-safe APIs where the package declares it, such as
   `cms-auth/browser`; gateway image helpers use `cms-gateway/media/browser`.
 

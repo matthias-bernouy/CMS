@@ -1,30 +1,38 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
+import { binaryRepresentationFingerprint } from "@bernouy/binary-media";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { injectMediaVersions, manifestKey } from "@bernouy/cms-content/files/serving";
-import { InMemoryCmsFilesBlob, InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
+import { InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
 
 async function setupImage(mimeType: string, withManifest: boolean) {
     const files = new InMemoryCmsFilesMetadata();
-    const variantStore = new InMemoryCmsFilesBlob();
+    const variantStore = new MemoryBlobStore();
+    const contentHash = "a".repeat(64);
     const file = await files.createFile({
         name: "hero",
         parentId: null,
         size: 9,
         mimeType,
-        contentHash: "h9",
+        contentHash,
     });
     if (withManifest) {
         await variantStore.put(
-            manifestKey("h9"),
+            manifestKey(contentHash),
             new TextEncoder().encode(
                 JSON.stringify({ format: "webp", widths: [320, 640], intrinsic: { width: 640, height: 480 } }),
             ),
         );
     }
-    return { files, variantStore, id: file.id };
+    const version = binaryRepresentationFingerprint({
+        digest: `sha256:${contentHash}`,
+        byteLength: 9,
+        mediaType: mimeType,
+    });
+    return { files, variantStore, id: file.id, contentHash, version };
 }
 
-async function renderImage(id: string, files: InMemoryCmsFilesMetadata, variantStore?: InMemoryCmsFilesBlob) {
+async function renderImage(id: string, files: InMemoryCmsFilesMetadata, variantStore?: MemoryBlobStore) {
     const { document } = parseHTML(
         `<!DOCTYPE html><html><head></head><body><img src="/.cms/files/by-id/${id}"></body></html>`,
     );
@@ -43,7 +51,7 @@ async function renderImage(id: string, files: InMemoryCmsFilesMetadata, variantS
 async function renderMarkup(
     markup: string,
     files: InMemoryCmsFilesMetadata,
-    variantStore: InMemoryCmsFilesBlob,
+    variantStore: MemoryBlobStore,
 ): Promise<Element> {
     const { document } = parseHTML(`<!DOCTYPE html><html><head></head><body>${markup}</body></html>`);
     await injectMediaVersions(document as unknown as Document, { files, variantStore });
@@ -52,12 +60,14 @@ async function renderMarkup(
 
 describe("injectMediaVersions responsive expansion", () => {
     test("expands a raster image with a manifest to versioned variants", async () => {
-        const { files, variantStore, id } = await setupImage("image/png", true);
+        const { files, variantStore, id, contentHash, version } = await setupImage("image/png", true);
         const result = await renderImage(id, files, variantStore);
         expect(result.unoptimized).toEqual([]);
-        expect(result.srcset).toBe(`/.cms/img/${id}/320.webp?v=h9 320w, /.cms/img/${id}/640.webp?v=h9 640w`);
+        expect(result.srcset).toBe(
+            `/.cms/img/${id}/320.webp?v=${contentHash} 320w, /.cms/img/${id}/640.webp?v=${contentHash} 640w`,
+        );
         expect(result.sizes).toBe("100vw");
-        expect(result.src).toBe(`/.cms/files/by-id/${id}?v=h9`);
+        expect(result.src).toBe(`/.cms/files/by-id/${id}?v=${version}`);
         expect(result.width).toBe("640");
         expect(result.height).toBe("480");
     });
@@ -76,11 +86,11 @@ describe("injectMediaVersions responsive expansion", () => {
     });
 
     test("returns a raster image without a manifest for optimization", async () => {
-        const { files, variantStore, id } = await setupImage("image/png", false);
+        const { files, variantStore, id, version } = await setupImage("image/png", false);
         const result = await renderImage(id, files, variantStore);
         expect(result.unoptimized).toEqual([id]);
         expect(result.srcset).toBeNull();
-        expect(result.src).toBe(`/.cms/files/by-id/${id}?v=h9`);
+        expect(result.src).toBe(`/.cms/files/by-id/${id}?v=${version}`);
     });
 
     test("never rasterizes SVG images", async () => {
@@ -91,10 +101,10 @@ describe("injectMediaVersions responsive expansion", () => {
     });
 
     test("keeps only the versioned original without a variant store", async () => {
-        const { files, id } = await setupImage("image/png", false);
+        const { files, id, version } = await setupImage("image/png", false);
         const result = await renderImage(id, files);
         expect(result.unoptimized).toEqual([]);
         expect(result.srcset).toBeNull();
-        expect(result.src).toBe(`/.cms/files/by-id/${id}?v=h9`);
+        expect(result.src).toBe(`/.cms/files/by-id/${id}?v=${version}`);
     });
 });

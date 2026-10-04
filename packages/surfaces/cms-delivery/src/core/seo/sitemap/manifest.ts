@@ -1,4 +1,4 @@
-import type { BlobReader } from "@bernouy/cms-content/files/serving";
+import type { BlobReader } from "@bernouy/blob-store";
 
 export const SITEMAP_MANIFEST_KEY = "manifest.json";
 export const SITEMAP_RETAINED_SNAPSHOTS = 5;

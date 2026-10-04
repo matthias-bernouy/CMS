@@ -1,5 +1,6 @@
 import type { ContentReader, RenderingSettings } from "@bernouy/cms-content/rendering";
-import type { OriginalBlobReader, VariantStore, SitemapStore } from "@bernouy/cms-content/files/serving";
+import type { BlobReader } from "@bernouy/blob-store";
+import type { VariantStore, SitemapStore } from "@bernouy/cms-content/files/serving";
 import type { DeliveryCmsConfig } from "@bernouy/cms-delivery";
 
 declare const settings: RenderingSettings;
@@ -13,7 +14,7 @@ const reader: ContentReader = {
     getBlocViewJS: async () => null,
     getRenderingSettings: async () => settings,
 };
-const originals: OriginalBlobReader = { get: async () => null };
+const originals: BlobReader = { get: async () => null, head: async () => null };
 const variants: VariantStore = { ...originals, put: async () => ({ size: 0 }) };
 const sitemaps: SitemapStore = { ...variants, delete: async () => {} };
 

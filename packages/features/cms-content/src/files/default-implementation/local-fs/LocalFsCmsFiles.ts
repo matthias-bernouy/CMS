@@ -1,5 +1,5 @@
 import { mkdir, unlink } from "node:fs/promises";
-import type { BlobInput, CmsFilesBlobStore } from "cms-content/files/interfaces/CmsFilesBlobStore";
+import { assertBlobRange, type BlobInput, type BlobReadOptions, type BlobStore } from "@bernouy/blob-store";
 import type {
     CmsFilesMetadataRepository,
     FileItem,
@@ -20,7 +20,7 @@ import {
 import { collectSubtree, createFile, createFolder, deleteItem, updateItem } from "./localFsMutations";
 import { getItemByPath, listChildren, statItem } from "./localFsQueries";
 import { reconcileLocalFiles } from "./reconcileLocalFiles";
-import { sha256Hex } from "cms-content/files/core/media/hashBytes";
+import { sha256Hex } from "@bernouy/binary-media";
 
 export { CMS_FILES_REGISTRY_NAME, type ReconcileOptions, type ReconcileResult };
 
@@ -29,7 +29,7 @@ export { CMS_FILES_REGISTRY_NAME, type ReconcileOptions, type ReconcileResult };
  * directory is the tree; a sibling registry keeps stable UUIDs across direct
  * filesystem moves and renames.
  */
-export class LocalFsCmsFiles implements CmsFilesMetadataRepository, CmsFilesBlobStore {
+export class LocalFsCmsFiles implements CmsFilesMetadataRepository, BlobStore {
     private readonly registry: LocalFilesRegistry;
 
     constructor(root: string) {
@@ -85,20 +85,37 @@ export class LocalFsCmsFiles implements CmsFilesMetadataRepository, CmsFilesBlob
             const absolutePath = this.registry.abs(path);
             await mkdir(this.registry.abs(parentOf(path) ?? ""), { recursive: true });
             const size = await Bun.write(absolutePath, new Response(data as BodyInit));
-            this.registry.data!.byId[key]!.hash = sha256Hex(await Bun.file(absolutePath).bytes());
+            this.registry.data!.byId[key]!.hash = await sha256Hex(await Bun.file(absolutePath).bytes());
             this.registry.dirty = true;
             return { size };
         });
     }
 
-    async get(key: string): Promise<ReadableStream<Uint8Array> | null> {
+    async get(key: string, options: BlobReadOptions = {}): Promise<ReadableStream<Uint8Array> | null> {
         await this.registry.ensure();
         const path = this.registry.data!.byId[key]?.path;
         if (path === undefined) {
             return null;
         }
         const file = Bun.file(this.registry.abs(path));
-        return (await file.exists()) ? file.stream() : null;
+        if (!(await file.exists())) {
+            return null;
+        }
+        if (!options.range) {
+            return file.stream();
+        }
+        assertBlobRange(options.range, file.size);
+        return file.slice(options.range.start, options.range.end + 1).stream();
+    }
+
+    async head(key: string): Promise<{ size: number } | null> {
+        await this.registry.ensure();
+        const path = this.registry.data!.byId[key]?.path;
+        if (path === undefined) {
+            return null;
+        }
+        const file = Bun.file(this.registry.abs(path));
+        return (await file.exists()) ? { size: file.size } : null;
     }
 
     async delete(key: string): Promise<void> {
@@ -110,9 +127,7 @@ export class LocalFsCmsFiles implements CmsFilesMetadataRepository, CmsFilesBlob
     }
 
     async exists(key: string): Promise<boolean> {
-        await this.registry.ensure();
-        const path = this.registry.data!.byId[key]?.path;
-        return path === undefined ? false : Bun.file(this.registry.abs(path)).exists();
+        return (await this.head(key)) !== null;
     }
 
     reconcile(options: ReconcileOptions = {}): Promise<ReconcileResult> {
