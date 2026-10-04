@@ -3,7 +3,7 @@ import { isDeepStrictEqual } from "node:util";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { CollectionMigrationRecord } from "../interfaces";
 import type { CollectionMigrationParticipant } from "../interfaces";
-import { forEachMigrationPage } from "./concurrency";
+import { forEachMigrationPage, migrationPageBatches } from "./concurrency";
 import { migrationTargetInstallationsMatch, migrationTargetSnapshot, prepareMigrationParticipants } from "./helpers";
 import type { MigrationJournal } from "./journal";
 import { assertRollbackSafe } from "./rollbackValidation";
@@ -85,47 +85,49 @@ async function restoreCollections(
 }
 
 async function restorePages(context: RollbackContext, record: CollectionMigrationRecord): Promise<void> {
-    await forEachMigrationPage([...record.pages].reverse(), async (change) => {
+    for await (const pages of migrationPageBatches(context.journal, record, true)) {
         await context.journal.assertOwnership(record);
-        const current = await context.repository.getPageById(change.before.id);
-        if (!current) {
-            if (change.state !== "rolled-back") {
-                await context.journal.persistPage(record, change, {
-                    ...change,
-                    state: "rolled-back",
-                    deletedAfterMigration: true,
-                });
-            } else if (!change.deletedAfterMigration) {
-                throw new Error(`Page disappeared during rollback: ${change.before.id}`);
+        await forEachMigrationPage(pages, async (change) => {
+            const current = await context.repository.getPageById(change.before.id);
+            if (!current) {
+                if (change.state !== "rolled-back") {
+                    await context.journal.persistPage(record, change, {
+                        ...change,
+                        state: "rolled-back",
+                        deletedAfterMigration: true,
+                    });
+                } else if (!change.deletedAfterMigration) {
+                    throw new Error(`Page disappeared during rollback: ${change.before.id}`);
+                }
+                return;
             }
-            return;
-        }
-        if (change.state === "rolled-back") {
-            if (change.deletedAfterMigration || current.content !== change.before.content) {
-                throw new Error(`Rolled-back page changed unexpectedly: ${change.before.id}`);
+            if (change.state === "rolled-back") {
+                if (change.deletedAfterMigration || current.content !== change.before.content) {
+                    throw new Error(`Rolled-back page changed unexpectedly: ${change.before.id}`);
+                }
+                return;
             }
-            return;
-        }
-        let rolledBackRevision: number;
-        if (current.content === change.before.content) {
-            rolledBackRevision = current.revision;
-        } else if (current.content === change.afterContent) {
-            const restored = await context.repository.updatePage(
-                { id: change.before.id, content: change.before.content },
-                current.revision,
-            );
-            if (!restored) {
-                throw new Error(`Page disappeared during rollback: ${change.before.id}`);
+            let rolledBackRevision: number;
+            if (current.content === change.before.content) {
+                rolledBackRevision = current.revision;
+            } else if (current.content === change.afterContent) {
+                const restored = await context.repository.updatePage(
+                    { id: change.before.id, content: change.before.content },
+                    current.revision,
+                );
+                if (!restored) {
+                    throw new Error(`Page disappeared during rollback: ${change.before.id}`);
+                }
+                rolledBackRevision = restored.revision;
+            } else {
+                throw new Error(`Page revision changed during rollback: ${change.before.id}`);
             }
-            rolledBackRevision = restored.revision;
-        } else {
-            throw new Error(`Page revision changed during rollback: ${change.before.id}`);
-        }
-        await context.journal.persistPage(record, change, {
-            ...change,
-            state: "rolled-back",
-            appliedRevision: change.appliedRevision,
-            rolledBackRevision,
+            await context.journal.persistPage(record, change, {
+                ...change,
+                state: "rolled-back",
+                appliedRevision: change.appliedRevision,
+                rolledBackRevision,
+            });
         });
-    });
+    }
 }

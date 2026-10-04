@@ -223,14 +223,14 @@ test("stores exact page snapshots separately and verifies their digest", async (
     expect(page.afterContent).toBe("<atlas-panel></atlas-panel>");
     expect(page.afterContentDigest).toMatch(/^sha256:/);
     await db.get("collection_migrations").updateOne({ _id: completed.id }, { $set: { operationGroups: [] } });
-    expect(await storage.get(completed.id)).toMatchObject({
-        pages: [{ afterContent: "<atlas-panel></atlas-panel>", state: "applied" }],
-    });
+    expect(await storage.getPageBatch(completed.id, 0, 10)).toMatchObject([
+        { afterContent: "<atlas-panel></atlas-panel>", state: "applied" },
+    ]);
     await db
         .get("collection_migration_pages")
         .updateOne({ migrationId: completed.id }, { $set: { afterContentDigest: "sha256:corrupt" } });
     expect(await storage.getProgress(completed.id)).toMatchObject({ totalPages: 1, appliedPages: 1 });
-    await expect(storage.get(completed.id)).rejects.toThrow("failed its digest");
+    await expect(storage.getPageBatch(completed.id, 0, 1)).rejects.toThrow("failed its digest");
 });
 
 test("resumes rollback when the page write succeeded before its journal update", async () => {
@@ -258,7 +258,10 @@ test("resumes rollback when the page write succeeded before its journal update",
 
     const rolledBack = await service.resume("site", completed.id);
     expect(rolledBack.status).toBe("rolled-back");
-    expect(rolledBack.pages[0]).toMatchObject({ state: "rolled-back", rolledBackRevision: 3 });
+    expect((await fixture.storage.getPageBatch(completed.id, 0, 1))[0]).toMatchObject({
+        state: "rolled-back",
+        rolledBackRevision: 3,
+    });
 });
 
 test("cancels cleanly when a page changes before maintenance owns the snapshot", async () => {
@@ -267,8 +270,9 @@ test("cancels cleanly when a page changes before maintenance owns the snapshot",
     const racingStorage = new Proxy(fixture.storage, {
         get(target, property) {
             if (property === "create") {
-                return async (record: Parameters<typeof target.create>[0]) => {
-                    const created = await target.create(record);
+                return async (...args: Parameters<typeof target.create>) => {
+                    const created = await target.create(...args);
+                    const [record] = args;
                     migrationId = record.id;
                     await fixture.repository.updatePage(
                         { id: fixture.page.id, title: "Changed concurrently" },
@@ -355,12 +359,28 @@ test("migrates collection configuration through declarative value operations", a
 
 test("rejects execution when the reviewed plan digest changed", async () => {
     const fixture = await migrationFixture();
-    const plan = await fixture.service.plan("site", [{ digest: fixture.next.digest }], 1);
+    let stagedId = "";
+    const storage = new Proxy(fixture.storage, {
+        get(target, property) {
+            if (property === "stagePageBatch") {
+                return async (...args: Parameters<typeof target.stagePageBatch>) => {
+                    [stagedId] = args;
+                    return target.stagePageBatch(...args);
+                };
+            }
+            const value = Reflect.get(target, property);
+            return typeof value === "function" ? value.bind(target) : value;
+        },
+    });
+    const service = new CollectionMigrationService(fixture.repository, fixture.collections, storage);
+    const plan = await service.plan("site", [{ digest: fixture.next.digest }], 1);
     await fixture.repository.updatePage({ id: fixture.page.id, title: "Changed" }, fixture.page.revision);
 
-    await expect(
-        fixture.service.execute("site", [{ digest: fixture.next.digest }], 1, plan.planDigest),
-    ).rejects.toThrow("migration plan changed");
+    await expect(service.execute("site", [{ digest: fixture.next.digest }], 1, plan.planDigest)).rejects.toThrow(
+        "migration plan changed",
+    );
+    expect(stagedId).not.toBe("");
+    expect(await fixture.storage.getPageBatch(stagedId, 0, 10)).toEqual([]);
     expect((await fixture.collections.snapshot("site")).collections[0]!.digest).toBe(fixture.previous.digest);
 });
 

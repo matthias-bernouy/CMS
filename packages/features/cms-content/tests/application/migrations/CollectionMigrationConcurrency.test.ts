@@ -72,7 +72,6 @@ test("cancels a plan that acquires the journal only after another migration comp
     const delayedWaiting = new Promise<void>((resolve) => {
         announceDelayed = resolve;
     });
-    let delayedId = "";
     const delayed = new Proxy(storage, {
         get(target, property) {
             if (property === "claimMaintenance") {
@@ -88,12 +87,9 @@ test("cancels a plan that acquires the journal only after another migration comp
                 };
             }
             if (property === "create") {
-                return async (record: Parameters<typeof target.create>[0]) => {
+                return async (...args: Parameters<typeof target.create>) => {
                     createCount += 1;
-                    if (createCount === 2) {
-                        delayedId = record.id;
-                    }
-                    return target.create(record);
+                    return target.create(...args);
                 };
             }
             const value = Reflect.get(target, property);
@@ -112,11 +108,11 @@ test("cancels a plan that acquires the journal only after another migration comp
     releaseDelayed();
     const settled = await Promise.allSettled(attempts);
     expect(settled.filter(({ status }) => status === "rejected")).toHaveLength(1);
-    expect(await storage.get(delayedId)).toMatchObject({ status: "rolled-back" });
+    expect(createCount).toBe(1);
     expect(await storage.getActive("site")).toBeNull();
 });
 
-test("drains an in-flight write before validating the migration snapshot", async () => {
+test("drains an in-flight write before planning and migrating its final snapshot", async () => {
     const collections = new CollectionStore(new MemoryCollectionStorage());
     const previous = await collections.importRelease(release("1.0.0", "atlas-card"));
     const next = await collections.importRelease({
@@ -141,14 +137,18 @@ test("drains an in-flight write before validating the migration snapshot", async
     const writeStarted = new Promise<void>((resolve) => {
         announceWrite = resolve;
     });
+    let delayWrite = true;
     const delayed = new Proxy(repository, {
         get(target, property) {
             if (property === "updatePage") {
                 return async (...args: Parameters<CmsRepository["updatePage"]>) => {
-                    announceWrite();
-                    await new Promise<void>((resolve) => {
-                        releaseWrite = resolve;
-                    });
+                    if (delayWrite) {
+                        delayWrite = false;
+                        announceWrite();
+                        await new Promise<void>((resolve) => {
+                            releaseWrite = resolve;
+                        });
+                    }
                     return target.updatePage(...args);
                 };
             }
@@ -177,9 +177,13 @@ test("drains an in-flight write before validating the migration snapshot", async
     releaseWrite();
     await userWrite;
 
-    await expect(migration).rejects.toMatchObject({ status: 409 });
-    expect((await collections.snapshot("site")).collections[0]!.digest).toBe(previous.digest);
-    expect(await repository.getPage("/demo")).toMatchObject({ title: "Concurrent edit", revision: 2 });
+    await expect(migration).resolves.toMatchObject({ status: "completed" });
+    expect((await collections.snapshot("site")).collections[0]!.digest).toBe(next.digest);
+    expect(await repository.getPage("/demo")).toMatchObject({
+        title: "Concurrent edit",
+        content: "<atlas-panel></atlas-panel>",
+        revision: 3,
+    });
 });
 
 function release(version: string, blocId: string): Record<string, unknown> {

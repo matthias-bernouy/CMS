@@ -65,7 +65,11 @@ test("keeps a deliberately deleted migrated page deleted on rollback", async () 
     await fixture.repository.deletePage(page.id, page.revision);
 
     const rolledBack = await fixture.service.rollback("site", completed.id);
-    expect(rolledBack.pages[0]).toMatchObject({ state: "rolled-back", deletedAfterMigration: true });
+    expect(rolledBack.status).toBe("rolled-back");
+    expect((await fixture.storage.getPageBatch(completed.id, 0, 1))[0]).toMatchObject({
+        state: "rolled-back",
+        deletedAfterMigration: true,
+    });
     expect(await fixture.repository.getPage("/existing")).toBeNull();
 });
 

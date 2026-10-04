@@ -60,8 +60,10 @@ library, declarative bindings, validation, and read models.
 - Stored HTML/SVG must pass through the existing hardening/sanitizing helpers.
 - Page bloc references should use the existing content-ref helpers.
 - Collection migrations are maintenance-mode operations. Keep their impact
-  plan read-only, their page writes revision-checked, their journal resumable,
-  and their rollback snapshots separate from user-facing page history.
+  plan read-only and bounded, their page writes revision-checked, their journal
+  resumable and batch-readable, and their rollback snapshots separate from
+  user-facing page history. Migration writes must retain the exact maintenance
+  lease; never let a stale worker release a successor's lease.
 - Features persisting references to collection resources must register a
   `CollectionMigrationParticipant`; every mutation of that persisted state must
   use the shared site migration write fence.

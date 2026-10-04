@@ -85,6 +85,10 @@ export type PreparedCollectionMigration = {
     replacements: readonly CollectionMigrationReplacement[];
     operationGroups: readonly { collectionId: string; operations: readonly CollectionMigrationOperation[] }[];
     resources: readonly CollectionMigrationResourceChange[];
+    pageCount: number;
+    /** Digest of every exact affected-page snapshot, independent from any bounded preview. */
+    pageChangesDigest: string;
+    /** Bounded planning preview; execution stages the complete set directly in the journal. */
     pages: readonly CollectionMigrationPageChange[];
     systemBefore: TSystem;
     /** System projected through the target collection catalogue, before site-owned token migrations are persisted. */
@@ -95,7 +99,7 @@ export type PreparedCollectionMigration = {
     blockedReasons: readonly string[];
 };
 
-export type CollectionMigrationRecord = PreparedCollectionMigration & {
+export type CollectionMigrationRecord = Omit<PreparedCollectionMigration, "pages"> & {
     id: string;
     revision: number;
     status: CollectionMigrationStatus;
@@ -116,6 +120,7 @@ export type CollectionMigrationSummary = {
     targets: readonly { collectionId: string; fromDigest: string; toDigest: string }[];
     resources: readonly CollectionMigrationResourceChange[];
     pages: readonly { id: string; path: string; revision: number; operations: number }[];
+    totalPages: number;
     operationCount: number;
     blockedReasons: readonly string[];
 };
@@ -162,8 +167,11 @@ export interface CollectionMigrationStorage extends CollectionMigrationWriteFenc
     getActive(siteId: string): Promise<CollectionMigrationActive | null>;
     getProgress(id: string): Promise<CollectionMigrationProgress | null>;
     listAudits(siteId: string, limit: number): Promise<readonly CollectionMigrationAudit[]>;
+    stagePageBatch(id: string, start: number, pages: readonly CollectionMigrationPageChange[]): Promise<void>;
+    discardPageStage(id: string): Promise<void>;
     create(record: CollectionMigrationRecord): Promise<boolean>;
     replace(id: string, expectedRevision: number, next: CollectionMigrationRecord): Promise<boolean>;
+    getPageBatch(id: string, start: number, limit: number): Promise<readonly CollectionMigrationPageChange[]>;
     replacePage(
         id: string,
         pageId: string,

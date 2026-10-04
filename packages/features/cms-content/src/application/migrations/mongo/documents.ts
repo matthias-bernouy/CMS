@@ -1,11 +1,10 @@
 import { createHash } from "node:crypto";
 import type { CollectionMigrationAudit, CollectionMigrationPageChange, CollectionMigrationRecord } from "../interfaces";
 
-export type MigrationDocument = Omit<CollectionMigrationRecord, "id" | "pages"> & {
+export type MigrationDocument = Omit<CollectionMigrationRecord, "id"> & {
     _id: string;
     active?: true;
     ready: boolean;
-    pageCount: number;
     pruning?: true;
 };
 
@@ -17,27 +16,33 @@ export type MigrationPageDocument = CollectionMigrationPageChange & {
     pageId: string;
     index: number;
     afterContentDigest: string;
+    stagedAt?: Date;
 };
 
 export const TERMINAL_MIGRATION_STATUSES = ["completed", "rolled-back"] as const;
 
 export function toMigrationDocument(record: CollectionMigrationRecord): MigrationDocument {
-    const { id, pages, ...rest } = structuredClone(record);
+    const { id, ...rest } = structuredClone(record);
     return {
         _id: id,
         ...rest,
         ready: true,
-        pageCount: pages.length,
         ...(TERMINAL_MIGRATION_STATUSES.includes(record.status as (typeof TERMINAL_MIGRATION_STATUSES)[number])
             ? {}
             : { active: true }),
     };
 }
 
+export function fromMigrationDocument(document: MigrationDocument): CollectionMigrationRecord {
+    const { _id, active: _active, ready: _ready, pruning: _pruning, ...record } = structuredClone(document);
+    return { id: _id, ...record };
+}
+
 export function toMigrationPageDocument(
     migrationId: string,
     index: number,
     change: CollectionMigrationPageChange,
+    stagedAt?: Date,
 ): MigrationPageDocument {
     const snapshot = structuredClone(change);
     return {
@@ -47,6 +52,7 @@ export function toMigrationPageDocument(
         index,
         ...snapshot,
         afterContentDigest: digestText(snapshot.afterContent),
+        ...(stagedAt ? { stagedAt } : {}),
     };
 }
 
@@ -57,6 +63,7 @@ export function fromMigrationPageDocument(document: MigrationPageDocument): Coll
         pageId: _pageId,
         index: _index,
         afterContentDigest,
+        stagedAt: _stagedAt,
         ...snapshot
     } = structuredClone(document);
     if (digestText(snapshot.afterContent) !== afterContentDigest) {

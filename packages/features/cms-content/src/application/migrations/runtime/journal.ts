@@ -3,6 +3,7 @@ import type {
     CollectionMigrationAudit,
     CollectionMigrationRecord,
     CollectionMigrationProgress,
+    CollectionMigrationPageChange,
     CollectionMigrationStatus,
     CollectionMigrationStorage,
 } from "../interfaces";
@@ -54,21 +55,33 @@ export class MigrationJournal {
         return record;
     }
 
+    begin(siteId: string, id: string): Promise<boolean> {
+        return this.storage.claimMaintenance(siteId, id);
+    }
+
+    stagePages(id: string, start: number, pages: readonly CollectionMigrationPageChange[]): Promise<void> {
+        return this.storage.stagePageBatch(id, start, pages);
+    }
+
     async create(record: CollectionMigrationRecord): Promise<boolean> {
-        if (!(await this.storage.claimMaintenance(record.siteId, record.id))) {
-            return false;
-        }
         try {
             await this.assertOwnership(record);
             if (await this.storage.create(record)) {
                 return true;
             }
         } catch (error) {
+            await this.storage.discardPageStage(record.id).catch(() => undefined);
             await this.storage.releaseMaintenance(record.siteId, record.id);
             throw error;
         }
+        await this.storage.discardPageStage(record.id).catch(() => undefined);
         await this.storage.releaseMaintenance(record.siteId, record.id);
         return false;
+    }
+
+    async discard(siteId: string, id: string): Promise<void> {
+        await this.storage.discardPageStage(id).catch(() => undefined);
+        await this.storage.releaseMaintenance(siteId, id).catch(() => undefined);
     }
 
     claim(record: Pick<CollectionMigrationRecord, "id" | "siteId">): Promise<boolean> {
@@ -77,6 +90,10 @@ export class MigrationJournal {
 
     assertOwnership(record: Pick<CollectionMigrationRecord, "id" | "siteId">): Promise<void> {
         return this.storage.assertMaintenance(record.siteId, record.id);
+    }
+
+    pageBatch(id: string, start: number, limit: number): Promise<readonly CollectionMigrationPageChange[]> {
+        return this.storage.getPageBatch(id, start, limit);
     }
 
     transition(
@@ -117,8 +134,8 @@ export class MigrationJournal {
 
     async persistPage(
         record: CollectionMigrationRecord,
-        current: CollectionMigrationRecord["pages"][number],
-        next: CollectionMigrationRecord["pages"][number],
+        current: CollectionMigrationPageChange,
+        next: CollectionMigrationPageChange,
     ): Promise<void> {
         await this.assertOwnership(record);
         if (!(await this.storage.replacePage(record.id, current.before.id, current.state, next))) {

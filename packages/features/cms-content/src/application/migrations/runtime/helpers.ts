@@ -6,12 +6,13 @@ import type {
 import { isDeepStrictEqual } from "node:util";
 import type {
     CollectionMigrationParticipant,
+    CollectionMigrationPageChange,
     CollectionMigrationRecord,
     CollectionMigrationSummary,
 } from "../interfaces";
 import type { prepareCollectionMigration } from "../plan";
 
-export function pagePatch(page: CollectionMigrationRecord["pages"][number]["before"]) {
+export function pagePatch(page: CollectionMigrationPageChange["before"]) {
     const { revision: _revision, ...patch } = page;
     return patch;
 }
@@ -104,6 +105,7 @@ export function summarizeMigration(
             revision: before.revision,
             operations,
         })),
+        totalPages: plan.pageCount,
         operationCount: plan.operationGroups.reduce((count, group) => count + group.operations.length, 0),
         blockedReasons: plan.blockedReasons,
     };

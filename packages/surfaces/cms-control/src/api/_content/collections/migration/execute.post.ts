@@ -27,11 +27,11 @@ export default async function executeMigration(request: Request, cms: ControlCms
     return Response.json(result(record), { status: 201 });
 }
 
-function result(record: { id: string; status: string; expectedCollectionRevision: number; pages: readonly unknown[] }) {
+function result(record: { id: string; status: string; expectedCollectionRevision: number; pageCount: number }) {
     return {
         id: record.id,
         status: record.status,
         collectionRevision: record.expectedCollectionRevision + 1,
-        migratedPages: record.pages.length,
+        migratedPages: record.pageCount,
     };
 }

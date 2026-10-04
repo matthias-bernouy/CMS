@@ -224,7 +224,14 @@ function matches(document: StoredDocument, filter: Filter): boolean {
     return Object.entries(filter).every(([key, expected]) => {
         const { exists, value } = nestedValue(document, key);
         if (expected && typeof expected === "object" && !Array.isArray(expected)) {
-            const operator = expected as { $eq?: unknown; $exists?: boolean; $gt?: unknown; $ne?: unknown };
+            const operator = expected as {
+                $eq?: unknown;
+                $exists?: boolean;
+                $gt?: unknown;
+                $gte?: unknown;
+                $lt?: unknown;
+                $ne?: unknown;
+            };
             if (operator.$exists !== undefined && exists !== operator.$exists) {
                 return false;
             }
@@ -237,11 +244,19 @@ function matches(document: StoredDocument, filter: Filter): boolean {
             if (Object.prototype.hasOwnProperty.call(operator, "$gt") && String(value) <= String(operator.$gt)) {
                 return false;
             }
+            if (Object.prototype.hasOwnProperty.call(operator, "$gte") && Number(value) < Number(operator.$gte)) {
+                return false;
+            }
+            if (Object.prototype.hasOwnProperty.call(operator, "$lt") && Number(value) >= Number(operator.$lt)) {
+                return false;
+            }
             if (
                 operator.$exists !== undefined ||
                 Object.prototype.hasOwnProperty.call(operator, "$ne") ||
                 Object.prototype.hasOwnProperty.call(operator, "$eq") ||
-                Object.prototype.hasOwnProperty.call(operator, "$gt")
+                Object.prototype.hasOwnProperty.call(operator, "$gt") ||
+                Object.prototype.hasOwnProperty.call(operator, "$gte") ||
+                Object.prototype.hasOwnProperty.call(operator, "$lt")
             ) {
                 return true;
             }

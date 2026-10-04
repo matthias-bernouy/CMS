@@ -195,15 +195,18 @@ endpoints below `<basePath>/api/collections/migration/`. Planning validates the
 complete target collection graph, transformed pages, configuration, text
 overrides and theme references without changing the installed site state. Page
 planning and snapshot verification use stable ID cursors in batches of at most
-500 pages; neither path loads every page body through `getAllPages()`. Only pages
-whose content actually changes are retained as exact rollback snapshots.
+500 pages; neither path loads every page body through `getAllPages()`. The plan
+response returns at most 500 affected-page previews plus `totalPages`; its digest
+still covers every exact affected-page snapshot. Only pages whose content
+actually changes are retained for rollback.
 Execution then:
 
-1. persists a technical journal and enters maintenance;
-2. rechecks the collection revision plus one digest of every page revision;
-3. atomically commits all target collection pins;
-4. rewrites affected pages with compare-and-swap revisions;
-5. validates the result and commits the transformed site theme.
+1. enters maintenance and drains writes already in flight;
+2. scans the final stable snapshot and stages rollback pages in bounded batches;
+3. activates the technical journal and rechecks collection, page and feature digests;
+4. atomically commits all target collection pins;
+5. rewrites affected pages with compare-and-swap revisions;
+6. validates the result and commits the transformed site theme.
 
 Delivery returns `503` with `Retry-After` while a migration is active. Control
 keeps reads and migration recovery available, but ordinary writes return `423`.
@@ -213,8 +216,13 @@ revisions always increase, including rollback; they are concurrency tokens, not
 page-version history.
 
 Mongo stores the journal header and each affected page snapshot separately, so
-the journal does not hit one aggregate document-size ceiling. Public maintenance
-checks read only the lightweight active state and never hydrate page snapshots.
+the journal does not hit one aggregate document-size ceiling. Planning, forward
+execution, validation, resume and rollback consume those snapshots in bounded
+batches. Incomplete staging rows have a TTL and are removed when activation
+fails. Public maintenance checks read only the lightweight active state and
+never hydrate page snapshots. A renewable token fences each worker: heartbeat
+failure or lease replacement stops further journal and content writes, and a
+stale worker cannot release its successor's lease.
 
 ## Workspace
 

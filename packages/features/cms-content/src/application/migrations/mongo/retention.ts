@@ -2,7 +2,7 @@ import type { Collection } from "mongodb";
 import { migrationAudit } from "../storage/audit";
 import {
     TERMINAL_MIGRATION_STATUSES,
-    fromMigrationPageDocument,
+    fromMigrationDocument,
     toMigrationAuditDocument,
     type MigrationAuditDocument,
     type MigrationDocument,
@@ -35,8 +35,10 @@ export async function pruneTerminalMigrations(
         .filter(({ status, pruning }) => !pruning && TERMINAL_MIGRATION_STATUSES.includes(terminalStatus(status)))
         .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
     for (const document of terminal.slice(Math.max(0, keep))) {
-        const record = await hydrateForAudit(document, pages);
-        const audit = toMigrationAuditDocument(migrationAudit(record));
+        if ((await count(pages, { migrationId: document._id })) !== document.pageCount) {
+            throw new Error(`Incomplete collection migration journal during retention: ${document._id}`);
+        }
+        const audit = toMigrationAuditDocument(migrationAudit(fromMigrationDocument(document)));
         await audits.replaceOne({ _id: audit._id }, audit, { upsert: true });
         await records.updateOne({ _id: document._id, pruning: { $ne: true } }, { $set: { pruning: true } });
     }
@@ -54,16 +56,11 @@ export async function resumeMigrationPruning(
     }
 }
 
-async function hydrateForAudit(
-    document: MigrationDocument,
-    pages: Collection<MigrationPageDocument>,
-): Promise<import("../interfaces").CollectionMigrationRecord> {
-    const snapshots = await pages.find({ migrationId: document._id }).toArray();
-    if (snapshots.length !== document.pageCount) {
-        throw new Error(`Incomplete collection migration journal during retention: ${document._id}`);
+async function count<T extends { _id: string }>(collection: Collection<T>, filter: object): Promise<number> {
+    if (typeof collection.countDocuments === "function") {
+        return collection.countDocuments(filter);
     }
-    const { _id, active: _active, ready: _ready, pageCount: _pageCount, pruning: _pruning, ...record } = document;
-    return { id: _id, ...structuredClone(record), pages: snapshots.map(fromMigrationPageDocument) };
+    return (await collection.find(filter).toArray()).length;
 }
 
 function terminalStatus(status: MigrationDocument["status"]): (typeof TERMINAL_MIGRATION_STATUSES)[number] {

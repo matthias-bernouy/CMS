@@ -33,6 +33,7 @@ export async function prepareCollectionMigration(
     targets: readonly CollectionMigrationTarget[],
     expectedRevision?: number,
     participants: readonly CollectionMigrationParticipant[] = [],
+    options: CollectionMigrationPreparationOptions = {},
 ): Promise<PreparedCollectionMigration> {
     if (targets.length === 0 || targets.length > 256) {
         throw new TypeError("A migration needs between 1 and 256 target releases");
@@ -167,7 +168,13 @@ export async function prepareCollectionMigration(
     } catch (error) {
         blockedReasons.push(migrationIssue("Collection theme transition is invalid", error));
     }
+    const previewLimit = options.pagePreviewLimit ?? Number.MAX_SAFE_INTEGER;
+    if (!Number.isSafeInteger(previewLimit) || previewLimit < 0) {
+        throw new TypeError("Collection migration page preview limit must be a nonnegative integer");
+    }
     const pageChanges: PreparedCollectionMigration["pages"][number][] = [];
+    const pageChangesHash = createHash("sha256").update("ulvia-migration-pages/v2\n");
+    let pageCount = 0;
     const pageRevisionHash = createHash("sha256").update("ulvia-page-revisions/v1\n");
     for await (const pages of collectionPageBatches(repository)) {
         const transformedPages = pages.map((page) => transformPage(page, operationGroups, blockedReasons));
@@ -176,15 +183,24 @@ export async function prepareCollectionMigration(
         }
         await validateTargetPages(repository, snapshot.collections, targetArtifacts, transformedPages, blockedReasons);
         validateTargetPageThemeReferences(resources, transformedPages, blockedReasons);
+        const batchChanges: PreparedCollectionMigration["pages"][number][] = [];
         for (const { page, content, applied } of transformedPages) {
             if (applied) {
-                pageChanges.push({
+                const change = {
                     before: structuredClone(page),
                     afterContent: content,
                     operations: applied,
-                    state: "pending",
-                });
+                    state: "pending" as const,
+                };
+                pageChangesHash.update(canonicalizeIJson(JSON.parse(JSON.stringify(change)))).update("\n");
+                batchChanges.push(change);
             }
+        }
+        if (batchChanges.length) {
+            await options.onPageChanges?.(batchChanges, pageCount);
+            const available = Math.max(0, previewLimit - pageChanges.length);
+            pageChanges.push(...batchChanges.slice(0, available));
+            pageCount += batchChanges.length;
         }
     }
     const prepared = {
@@ -196,6 +212,8 @@ export async function prepareCollectionMigration(
         replacements,
         operationGroups,
         resources,
+        pageCount,
+        pageChangesDigest: `sha256:${pageChangesHash.digest("hex")}`,
         pages: pageChanges,
         systemBefore: system,
         systemAfterCollectionCommit,
@@ -234,9 +252,17 @@ export function collectionSiteResourceDigest(
 }
 
 function collectionMigrationPlanDigest(plan: Omit<PreparedCollectionMigration, "planDigest">): string {
-    const normalized = JSON.parse(JSON.stringify(plan));
+    const { pages: _pages, ...header } = plan;
+    const normalized = JSON.parse(JSON.stringify(header));
     return `sha256:${createHash("sha256").update(canonicalizeIJson(normalized)).digest("hex")}`;
 }
+
+export type CollectionMigrationPreparationOptions = {
+    /** Maximum exact page snapshots retained in the returned planning preview. */
+    pagePreviewLimit?: number;
+    /** Receives every affected page batch in stable ID order. */
+    onPageChanges?: (pages: readonly PreparedCollectionMigration["pages"][number][], start: number) => Promise<void>;
+};
 
 function transformPage(
     page: PreparedCollectionMigration["pages"][number]["before"],

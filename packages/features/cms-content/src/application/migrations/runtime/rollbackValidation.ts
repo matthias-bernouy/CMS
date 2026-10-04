@@ -8,14 +8,16 @@ import { snapshotMigrationParticipants } from "../planning/participants";
 import { referencesThemeToken } from "../transforms/themeTokenReferences";
 import { validateTargetSiteResources } from "../planning/siteResources";
 import { migrationThemeTokenIds, themeTokenValuesMatch } from "./theme";
-import { forEachMigrationPage } from "./concurrency";
+import { forEachMigrationPage, migrationPageBatches, migrationPageIterator } from "./concurrency";
 import { migrationTargetInstallationsMatch } from "./helpers";
 import { collectionPageBatches } from "../planning/pageScan";
+import type { MigrationJournal } from "./journal";
 
 type RollbackValidationContext = {
     repository: CmsRepository;
     collections: CollectionStore;
     participants: readonly CollectionMigrationParticipant[];
+    journal: MigrationJournal;
 };
 
 export async function assertRollbackSafe(
@@ -58,8 +60,8 @@ export async function assertRollbackSafe(
         unsafe("A collection release required by the rollback is no longer available");
     }
     const previousReleases = previousArtifacts.map((artifact) => artifact!.release);
-    await assertMigratedPagesUnchanged(context.repository, record);
-    await assertProspectivePagesValid(context.repository, state.collections, previousReleases, record);
+    await assertMigratedPagesUnchanged(context, record);
+    await assertProspectivePagesValid(context, state.collections, previousReleases, record);
     const blocked: string[] = [];
     await validateTargetSiteResources(
         context.repository,
@@ -76,22 +78,24 @@ export async function assertRollbackSafe(
 }
 
 async function assertMigratedPagesUnchanged(
-    repository: CmsRepository,
+    context: RollbackValidationContext,
     record: CollectionMigrationRecord,
 ): Promise<void> {
-    await forEachMigrationPage(record.pages, async (change) => {
-        const page = await repository.getPageById(change.before.id);
-        if (!page) {
-            return;
-        }
-        if (page.content !== change.before.content && page.content !== change.afterContent) {
-            unsafe(`Page changed after migration: ${change.before.path}`);
-        }
-    });
+    for await (const pages of migrationPageBatches(context.journal, record)) {
+        await forEachMigrationPage(pages, async (change) => {
+            const page = await context.repository.getPageById(change.before.id);
+            if (!page) {
+                return;
+            }
+            if (page.content !== change.before.content && page.content !== change.afterContent) {
+                unsafe(`Page changed after migration: ${change.before.path}`);
+            }
+        });
+    }
 }
 
 async function assertProspectivePagesValid(
-    repository: CmsRepository,
+    context: RollbackValidationContext,
     currentCollections: readonly { release: CollectionRelease }[],
     previousReleases: readonly CollectionRelease[],
     record: CollectionMigrationRecord,
@@ -102,7 +106,7 @@ async function assertProspectivePagesValid(
             .filter(({ release }) => targetIds.has(release.collectionId))
             .flatMap(({ release }) => release.blocs.map((bloc) => bloc.id)),
     );
-    const currentBlocs = await repository.getBlocsList({ includeInactive: true });
+    const currentBlocs = await context.repository.getBlocsList({ includeInactive: true });
     const previousBlocs = previousReleases.flatMap((release) =>
         release.blocs.map((bloc) => ({
             id: bloc.id,
@@ -126,10 +130,15 @@ async function assertProspectivePagesValid(
         finalReleases.map((release) => [release.collectionId, new Set((release.texts ?? []).map(({ id }) => id))]),
     );
 
-    const changes = new Map(record.pages.map((change) => [change.before.id, change]));
-    for await (const pages of collectionPageBatches(repository)) {
-        await forEachMigrationPage(pages, async (page) => {
-            const content = changes.get(page.id)?.before.content ?? page.content;
+    const changes = migrationPageIterator(context.journal, record);
+    let change = await changes.next();
+    for await (const pages of collectionPageBatches(context.repository)) {
+        for (const page of pages) {
+            while (!change.done && change.value.before.id.localeCompare(page.id) < 0) {
+                change = await changes.next();
+            }
+            const content =
+                !change.done && change.value.before.id === page.id ? change.value.before.content : page.content;
             try {
                 await assertContentRefsExist({ getBlocsList: async () => prospectiveBlocs }, content);
                 for (const tokenId of removedTokens) {
@@ -148,7 +157,7 @@ async function assertProspectivePagesValid(
                     `Rollback would invalidate page ${page.path}: ${error instanceof Error ? error.message : "unknown error"}`,
                 );
             }
-        });
+        }
     }
 }
 

@@ -21,9 +21,9 @@ export function migrationAudit(record: CollectionMigrationRecord): CollectionMig
         })),
         resources: structuredClone(record.resources),
         operationCount: record.operationGroups.reduce((count, group) => count + group.operations.length, 0),
-        totalPages: record.pages.length,
-        appliedPages: record.pages.filter(({ state }) => state === "applied").length,
-        rolledBackPages: record.pages.filter(({ state }) => state === "rolled-back").length,
+        totalPages: record.pageCount,
+        appliedPages: record.status === "completed" ? record.pageCount : 0,
+        rolledBackPages: record.status === "rolled-back" ? record.pageCount : 0,
     };
 }
 

@@ -72,6 +72,7 @@ export class CollectionMigrationService {
             targets,
             expectedRevision,
             this.participants,
+            { pagePreviewLimit: 500 },
         );
         return summarizeMigration(plan);
     }
@@ -82,37 +83,54 @@ export class CollectionMigrationService {
         expectedRevision?: number,
         expectedPlanDigest?: string,
     ): Promise<CollectionMigrationRecord> {
-        const prepared = await prepareCollectionMigration(
-            this.repository,
-            this.collections,
-            siteId,
-            targets,
-            expectedRevision,
-            this.participants,
-        );
-        if (expectedPlanDigest !== undefined && prepared.planDigest !== expectedPlanDigest) {
-            throw Object.assign(new Error("The migration plan changed; review the new plan before executing it"), {
-                status: 409,
-            });
-        }
-        if (prepared.blockedReasons.length) {
-            throw Object.assign(new Error(`Migration is blocked: ${prepared.blockedReasons.join(" ")}`), {
-                status: 409,
-            });
-        }
+        const id = randomUUIDv7();
         const now = new Date().toISOString();
-        const record: CollectionMigrationRecord = {
-            ...prepared,
-            id: randomUUIDv7(),
-            revision: 1,
-            status: "planning",
-            createdAt: now,
-            updatedAt: now,
-        };
-        if (!(await this.journal.create(record))) {
+        if (!(await this.journal.begin(siteId, id))) {
             throw Object.assign(new Error("Another collection migration already owns maintenance mode"), {
                 status: 423,
             });
+        }
+        let record: CollectionMigrationRecord;
+        try {
+            const prepared = await prepareCollectionMigration(
+                this.repository,
+                this.collections,
+                siteId,
+                targets,
+                expectedRevision,
+                this.participants,
+                {
+                    pagePreviewLimit: 0,
+                    onPageChanges: (pages, start) => this.journal.stagePages(id, start, pages),
+                },
+            );
+            if (expectedPlanDigest !== undefined && prepared.planDigest !== expectedPlanDigest) {
+                throw Object.assign(new Error("The migration plan changed; review the new plan before executing it"), {
+                    status: 409,
+                });
+            }
+            if (prepared.blockedReasons.length) {
+                throw Object.assign(new Error(`Migration is blocked: ${prepared.blockedReasons.join(" ")}`), {
+                    status: 409,
+                });
+            }
+            const { pages: _preview, ...plan } = prepared;
+            record = {
+                ...plan,
+                id,
+                revision: 1,
+                status: "planning",
+                createdAt: now,
+                updatedAt: now,
+            };
+            if (!(await this.journal.create(record))) {
+                throw Object.assign(new Error("Collection migration journal could not be activated"), {
+                    status: 409,
+                });
+            }
+        } catch (error) {
+            await this.journal.discard(siteId, id);
+            throw error;
         }
         return this.runExclusive(record.id, () => runCollectionMigration(this.context(), siteId, record.id));
     }

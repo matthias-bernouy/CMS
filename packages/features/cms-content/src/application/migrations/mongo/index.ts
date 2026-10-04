@@ -9,6 +9,7 @@ import type {
 } from "../interfaces";
 import {
     digestText,
+    fromMigrationDocument,
     fromMigrationPageDocument,
     type MigrationAuditDocument,
     type MigrationDocument,
@@ -51,6 +52,10 @@ export class MongoCollectionMigrationStorage implements CollectionMigrationStora
             ),
             this.pages.createIndex({ migrationId: 1, index: 1 }, { name: "collection_migration_pages_order" }),
             this.pages.createIndex({ migrationId: 1, state: 1 }, { name: "collection_migration_pages_state" }),
+            this.pages.createIndex(
+                { stagedAt: 1 },
+                { expireAfterSeconds: 86_400, name: "collection_migration_pages_staged_ttl" },
+            ),
             this.audits.createIndex({ siteId: 1, updatedAt: -1 }, { name: "collection_migration_audits_site" }),
             this.fence.init(),
         ]);
@@ -59,7 +64,8 @@ export class MongoCollectionMigrationStorage implements CollectionMigrationStora
     }
 
     async get(id: string): Promise<CollectionMigrationRecord | null> {
-        return this.hydrate(await this.records.findOne({ _id: id, ready: true, pruning: { $ne: true } }));
+        const document = await this.records.findOne({ _id: id, ready: true, pruning: { $ne: true } });
+        return document ? fromMigrationDocument(document) : null;
     }
 
     async getActive(siteId: string): Promise<CollectionMigrationActive | null> {
@@ -100,13 +106,33 @@ export class MongoCollectionMigrationStorage implements CollectionMigrationStora
         return this.fence.withWrite(siteId, operation);
     }
 
+    async stagePageBatch(id: string, start: number, changes: readonly CollectionMigrationPageChange[]): Promise<void> {
+        if (!changes.length) {
+            return;
+        }
+        const pages = changes.map((change, offset) => toMigrationPageDocument(id, start + offset, change, new Date()));
+        await this.pages.insertMany(pages, { ordered: true });
+    }
+
+    async discardPageStage(id: string): Promise<void> {
+        if (!(await this.records.findOne({ _id: id, ready: true }, { projection: { _id: 1 } }))) {
+            await this.pages.deleteMany({ migrationId: id, stagedAt: { $exists: true } });
+        }
+    }
+
     async create(record: CollectionMigrationRecord): Promise<boolean> {
-        const pages = record.pages.map((change, index) => toMigrationPageDocument(record.id, index, change));
+        if ((await count(this.pages, { migrationId: record.id })) !== record.pageCount) {
+            throw new Error("Collection migration page count is inconsistent");
+        }
         const { active: _active, ...staged } = toMigrationDocument(record);
         try {
             await this.records.insertOne({ ...staged, ready: false });
-            if (pages.length) {
-                await this.pages.insertMany(pages, { ordered: true });
+            const finalized = await this.pages.updateMany(
+                { migrationId: record.id, stagedAt: { $exists: true } },
+                { $set: {}, $unset: { stagedAt: "" } },
+            );
+            if (finalized.matchedCount !== record.pageCount) {
+                throw new Error("Collection migration staged page count changed during activation");
             }
             const activated = await this.records.updateOne(
                 { _id: record.id, ready: false },
@@ -134,6 +160,17 @@ export class MongoCollectionMigrationStorage implements CollectionMigrationStora
         return result.modifiedCount === 1;
     }
 
+    async getPageBatch(id: string, start: number, limit: number): Promise<readonly CollectionMigrationPageChange[]> {
+        if (!Number.isSafeInteger(start) || start < 0 || !Number.isSafeInteger(limit) || limit < 1 || limit > 1000) {
+            throw new TypeError("Invalid collection migration page range");
+        }
+        const documents = await this.pages
+            .find({ migrationId: id, index: { $gte: start, $lt: start + limit } })
+            .sort({ index: 1 })
+            .toArray();
+        return documents.map(fromMigrationPageDocument);
+    }
+
     async replacePage(
         id: string,
         pageId: string,
@@ -156,23 +193,11 @@ export class MongoCollectionMigrationStorage implements CollectionMigrationStora
         const audit = toMigrationAuditDocument(migrationAudit(record));
         await this.audits.replaceOne({ _id: audit._id }, audit, { upsert: true });
     }
+}
 
-    private async hydrate(document: MigrationDocument | null): Promise<CollectionMigrationRecord | null> {
-        if (!document) {
-            return null;
-        }
-        const pages = await this.pages.find({ migrationId: document._id }).sort({ index: 1 }).toArray();
-        if (pages.length !== document.pageCount) {
-            throw new Error(`Incomplete collection migration journal: ${document._id}`);
-        }
-        const {
-            _id,
-            active: _active,
-            ready: _ready,
-            pageCount: _pageCount,
-            pruning: _pruning,
-            ...record
-        } = structuredClone(document);
-        return { id: _id, ...record, pages: pages.map(fromMigrationPageDocument) };
+async function count<T extends { _id: string }>(collection: Collection<T>, filter: object): Promise<number> {
+    if (typeof collection.countDocuments === "function") {
+        return collection.countDocuments(filter);
     }
+    return (await collection.find(filter).toArray()).length;
 }

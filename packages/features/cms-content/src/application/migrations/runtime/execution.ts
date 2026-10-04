@@ -6,7 +6,7 @@ import type { CollectionMigrationParticipant } from "../interfaces";
 import { collectionSiteResourceDigest } from "../plan";
 import { collectionPageRevisionDigestFromRepository } from "../planning/pageScan";
 import { snapshotMigrationParticipants } from "../planning/participants";
-import { forEachMigrationPage } from "./concurrency";
+import { forEachMigrationPage, migrationPageBatches } from "./concurrency";
 import {
     installationsMatch,
     migrationTargetsMatch,
@@ -94,51 +94,55 @@ async function applySystemMigration(context: ExecutionContext, record: Collectio
 }
 
 async function migratePages(context: ExecutionContext, record: CollectionMigrationRecord): Promise<void> {
-    await forEachMigrationPage(record.pages, async (change) => {
+    for await (const pages of migrationPageBatches(context.journal, record)) {
         await context.journal.assertOwnership(record);
-        const current = await context.repository.getPageById(change.before.id);
-        if (!current) {
-            throw new Error(`Page disappeared during migration: ${change.before.id}`);
-        }
-        if (change.state === "applied") {
-            if (current.revision !== change.appliedRevision || current.content !== change.afterContent) {
-                throw new Error(`Migrated page changed unexpectedly: ${change.before.id}`);
+        await forEachMigrationPage(pages, async (change) => {
+            const current = await context.repository.getPageById(change.before.id);
+            if (!current) {
+                throw new Error(`Page disappeared during migration: ${change.before.id}`);
             }
-            return;
-        }
-        if (current.revision === change.before.revision + 1 && current.content === change.afterContent) {
-            await context.journal.persistPage(record, change, {
-                ...change,
-                state: "applied",
-                appliedRevision: current.revision,
-            });
-        } else if (current.revision === change.before.revision && current.content === change.before.content) {
-            const updated = await context.repository.updatePage(
-                { id: current.id, content: change.afterContent },
-                current.revision,
-            );
-            if (!updated) {
-                throw new Error(`Page disappeared during migration: ${current.id}`);
+            if (change.state === "applied") {
+                if (current.revision !== change.appliedRevision || current.content !== change.afterContent) {
+                    throw new Error(`Migrated page changed unexpectedly: ${change.before.id}`);
+                }
+                return;
             }
-            await context.journal.persistPage(record, change, {
-                ...change,
-                state: "applied",
-                appliedRevision: updated.revision,
-            });
-        } else {
-            throw new Error(`Page revision changed during migration: ${change.before.id}`);
-        }
-    });
+            if (current.revision === change.before.revision + 1 && current.content === change.afterContent) {
+                await context.journal.persistPage(record, change, {
+                    ...change,
+                    state: "applied",
+                    appliedRevision: current.revision,
+                });
+            } else if (current.revision === change.before.revision && current.content === change.before.content) {
+                const updated = await context.repository.updatePage(
+                    { id: current.id, content: change.afterContent },
+                    current.revision,
+                );
+                if (!updated) {
+                    throw new Error(`Page disappeared during migration: ${current.id}`);
+                }
+                await context.journal.persistPage(record, change, {
+                    ...change,
+                    state: "applied",
+                    appliedRevision: updated.revision,
+                });
+            } else {
+                throw new Error(`Page revision changed during migration: ${change.before.id}`);
+            }
+        });
+    }
 }
 
 async function assertPagesApplied(context: ExecutionContext, record: CollectionMigrationRecord): Promise<void> {
-    await forEachMigrationPage(record.pages, async (change) => {
+    for await (const pages of migrationPageBatches(context.journal, record)) {
         await context.journal.assertOwnership(record);
-        const page = await context.repository.getPageById(change.before.id);
-        if (!page || page.revision !== change.appliedRevision || page.content !== change.afterContent) {
-            throw new Error(`Migrated page failed validation: ${change.before.id}`);
-        }
-    });
+        await forEachMigrationPage(pages, async (change) => {
+            const page = await context.repository.getPageById(change.before.id);
+            if (!page || page.revision !== change.appliedRevision || page.content !== change.afterContent) {
+                throw new Error(`Migrated page failed validation: ${change.before.id}`);
+            }
+        });
+    }
 }
 
 async function assertSnapshotCurrent(context: ExecutionContext, record: CollectionMigrationRecord): Promise<void> {
@@ -169,7 +173,8 @@ async function cancelUnstarted(
     error: unknown,
 ): Promise<boolean> {
     const current = (await context.journal.current(record.id)) ?? record;
-    if (current.pages.some((page) => page.state !== "pending")) {
+    const progress = await context.journal.getProgress(current.siteId, current.id);
+    if (!progress || progress.appliedPages > 0 || progress.rolledBackPages > 0) {
         return false;
     }
     if (current.status === "planning") {
