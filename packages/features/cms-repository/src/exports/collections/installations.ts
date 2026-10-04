@@ -14,4 +14,5 @@ export type {
     CollectionInstallation,
     CollectionMigrationReplacement,
     StoredCollectionRelease,
+    StoredCollectionReleaseMetadata,
 } from "cms-repository/collections/installations/interfaces/store";

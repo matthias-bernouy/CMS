@@ -12,3 +12,5 @@ export interface AdmittedCollectionRelease {
     readonly canonicalJson: string;
     readonly assets: readonly VerifiedCollectionAsset[];
 }
+
+export type VerifiedCollectionReleaseMetadata = Omit<AdmittedCollectionRelease, "assets">;

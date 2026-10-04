@@ -14,7 +14,7 @@ export async function saveCollectionConfiguration(
     if (!installation) {
         throw Object.assign(new Error("Collection is not installed"), { status: 404 });
     }
-    const artifact = await storage.getRelease(installation.digest);
+    const artifact = await storage.getReleaseMetadata(installation.digest);
     if (!artifact) {
         throw new Error("Missing release");
     }
@@ -49,7 +49,7 @@ export async function uninstallCollection(
     }
     const releases = await Promise.all(
         state.installations.map(async (installation) => {
-            const artifact = await storage.getRelease(installation.digest);
+            const artifact = await storage.getReleaseMetadata(installation.digest);
             if (!artifact || artifact.release.collectionId !== installation.collectionId) {
                 throw new Error("Installed collection artifact is missing or inconsistent");
             }

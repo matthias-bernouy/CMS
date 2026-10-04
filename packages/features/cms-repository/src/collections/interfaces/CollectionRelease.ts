@@ -24,6 +24,7 @@ export type CollectionMigrationOperation =
           readonly values: Readonly<Record<string, string>>;
       }
     | { readonly kind: "rename-theme-token"; readonly from: string; readonly to: string }
+    | { readonly kind: "rename-asset"; readonly from: string; readonly to: string }
     | { readonly kind: "move-configuration-value"; readonly from: readonly string[]; readonly to: readonly string[] }
     | { readonly kind: "set-configuration-default"; readonly path: readonly string[]; readonly value: unknown }
     | { readonly kind: "remove-configuration-value"; readonly path: readonly string[] }
@@ -43,7 +44,7 @@ export interface CollectionDataMigration {
     readonly operations: readonly CollectionMigrationOperation[];
 }
 
-export type CollectionResourceKind = "bloc" | "theme-token" | "configuration" | "text" | "view" | "dashboard";
+export type CollectionResourceKind = "bloc" | "theme-token" | "configuration" | "text" | "asset" | "view" | "dashboard";
 
 export interface CollectionResourceDescriptor {
     readonly kind: CollectionResourceKind;
@@ -65,6 +66,10 @@ export interface CollectionResourceSelection {
     readonly blocs: readonly string[];
     /** Collection-local token IDs; their runtime namespace is derived from the owner. */
     readonly themeTokens: readonly string[];
+    /** Collection-local server text IDs. References remain qualified by their owner collection. */
+    readonly texts?: readonly string[];
+    /** Collection-local immutable asset IDs. References remain qualified by their owner collection. */
+    readonly assets?: readonly string[];
 }
 
 /** A selective dependency on another collection's public resource surface. */

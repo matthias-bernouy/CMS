@@ -1,4 +1,7 @@
-import { verifyStoredCollectionArtifact } from "../../../core/admission/collectionArtifact";
+import {
+    verifyStoredCollectionArtifact,
+    verifyStoredCollectionRelease,
+} from "../../../core/admission/collectionArtifact";
 import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../../../core/limits";
 import { parseCollectionSiteState } from "../../core/siteState";
 import type { CollectionStorage, CollectionSiteState, StoredCollectionRelease } from "../../interfaces/store";
@@ -40,6 +43,14 @@ export class MemoryCollectionStorage implements CollectionStorage {
     }
     async getRelease(digest: string) {
         return structuredClone(this.releases.get(digest) ?? null);
+    }
+    async getReleaseMetadata(digest: string) {
+        const artifact = this.releases.get(digest);
+        if (!artifact) {
+            return null;
+        }
+        const verified = await verifyStoredCollectionRelease(artifact.release, artifact.digest, this.limits);
+        return structuredClone({ digest: verified.digest, release: verified.release });
     }
     async getAsset(digest: string, assetId: string) {
         const asset = this.releases.get(digest)?.assets.find((item) => item.id === assetId);

@@ -18,6 +18,7 @@ import { parseCollectionTranslations } from "../texts/translationCatalogue";
 import { validateCollectionTranslationReferences } from "../texts/translationReferences";
 import { parseCollectionDependencies, parseCollectionExports, validateCollectionExports } from "./requirements";
 import { parseCollectionMigrations } from "../admission/releaseMigrations";
+import { validateCollectionAssetReferences } from "../validation/markup/assets";
 
 export function parseCollectionRelease(
     value: unknown,
@@ -85,7 +86,28 @@ export function parseCollectionRelease(
             limits,
             new Set(dependencies?.flatMap((dependency) => dependency.imports.blocs) ?? []),
         );
-        validateCollectionTextReferences(blocs, collectionId, new Set(texts?.map((text) => text.id) ?? []));
+        validateCollectionTextReferences(
+            blocs,
+            collectionId,
+            new Set(texts?.map((text) => text.id) ?? []),
+            new Map(
+                (dependencies ?? []).map((dependency) => [
+                    dependency.collectionId,
+                    new Set(dependency.imports.texts ?? []),
+                ]),
+            ),
+        );
+        validateCollectionAssetReferences(
+            blocs,
+            collectionId,
+            new Set(assets.map((asset) => asset.id)),
+            new Map(
+                (dependencies ?? []).map((dependency) => [
+                    dependency.collectionId,
+                    new Set(dependency.imports.assets ?? []),
+                ]),
+            ),
+        );
         const theme =
             source.theme === undefined
                 ? undefined
@@ -97,6 +119,8 @@ export function parseCollectionRelease(
                 exports,
                 new Set(blocs.map((bloc) => bloc.id)),
                 new Set(theme?.categories.flatMap((category) => category.tokens.map((token) => token.id)) ?? []),
+                new Set(texts?.map((text) => text.id) ?? []),
+                new Set(assets.map((asset) => asset.id)),
             );
         }
         const views =

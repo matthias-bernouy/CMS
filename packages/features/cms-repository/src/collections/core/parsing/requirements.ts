@@ -6,8 +6,9 @@ import type {
 } from "../../interfaces/CollectionRelease";
 import { invalid } from "../errors";
 import type { CollectionLimits } from "../limits";
-import { array, keys, ordinal, record, string, unique } from "../values";
+import { array, identifier, keys, ordinal, record, string, unique } from "../values";
 import { collectionThemeTokenId, parseCollectionBlocTag, parseCollectionNamespace } from "../namespace";
+import { textIdentifier, TEXT_LIMITS } from "../texts/validation";
 
 export function parseRequirements(
     value: unknown,
@@ -61,8 +62,13 @@ export function parseCollectionDependencies(
             invalid("must accept at least one collection version", `${path}.versionRange`);
         }
         const imports = parseResourceSelection(source.imports, collectionId, `${path}.imports`, limits);
-        if (imports.blocs.length === 0 && imports.themeTokens.length === 0) {
-            invalid("must import at least one bloc or theme token", `${path}.imports`);
+        if (
+            imports.blocs.length === 0 &&
+            imports.themeTokens.length === 0 &&
+            (imports.texts?.length ?? 0) === 0 &&
+            (imports.assets?.length ?? 0) === 0
+        ) {
+            invalid("must import at least one collection resource", `${path}.imports`);
         }
         return {
             collectionId,
@@ -90,6 +96,8 @@ export function validateCollectionExports(
     exports: CollectionResourceSelection,
     blocIds: ReadonlySet<string>,
     themeTokenIds: ReadonlySet<string>,
+    textIds: ReadonlySet<string>,
+    assetIds: ReadonlySet<string>,
 ): void {
     for (const bloc of exports.blocs) {
         if (!blocIds.has(bloc)) {
@@ -101,6 +109,16 @@ export function validateCollectionExports(
             invalid(`unknown exported theme token ${token}`, "$.exports.themeTokens");
         }
     }
+    for (const text of exports.texts ?? []) {
+        if (!textIds.has(text)) {
+            invalid(`unknown exported text ${text}`, "$.exports.texts");
+        }
+    }
+    for (const asset of exports.assets ?? []) {
+        if (!assetIds.has(asset)) {
+            invalid(`unknown exported asset ${asset}`, "$.exports.assets");
+        }
+    }
 }
 
 function parseResourceSelection(
@@ -110,7 +128,7 @@ function parseResourceSelection(
     limits: Readonly<CollectionLimits>,
 ): CollectionResourceSelection {
     const source = record(value, path);
-    keys(source, ["blocs", "themeTokens"], path);
+    keys(source, ["blocs", "themeTokens", "texts", "assets"], path);
     const blocs = array(source.blocs ?? [], limits.maxBlocs, `${path}.blocs`).map((entry, index) =>
         parseCollectionBlocTag(entry, collectionId, `${path}.blocs[${index}]`),
     );
@@ -123,12 +141,30 @@ function parseResourceSelection(
             return invalid("must be a lowercase kebab-case token ID", `${path}.themeTokens[${index}]`);
         }
     });
+    const texts = array(source.texts ?? [], TEXT_LIMITS.definitions, `${path}.texts`).map((entry, index) => {
+        try {
+            return textIdentifier(entry);
+        } catch {
+            return invalid("must be a lowercase kebab-case text ID", `${path}.texts[${index}]`);
+        }
+    });
+    const assets = array(source.assets ?? [], limits.maxAssets, `${path}.assets`).map((entry, index) =>
+        assetIdentifier(entry, `${path}.assets[${index}]`),
+    );
     unique(blocs, `${path}.blocs`);
     unique(themeTokens, `${path}.themeTokens`);
+    unique(texts, `${path}.texts`);
+    unique(assets, `${path}.assets`);
     return {
         blocs: blocs.sort(ordinal),
         themeTokens: themeTokens.sort(ordinal),
+        ...(texts.length ? { texts: texts.sort(ordinal) } : {}),
+        ...(assets.length ? { assets: assets.sort(ordinal) } : {}),
     };
+}
+
+function assetIdentifier(value: unknown, path: string): string {
+    return identifier(value, path);
 }
 
 function contractIdentifier(value: unknown, maximum: number, path: string): string {

@@ -85,6 +85,7 @@ describe("collection release parsing", () => {
             { protocol: "ulvia-provider/v1" },
             { assets: null },
             { blocs: null },
+            { exports: "*" },
             ...["v1.0.0", "1.0", "01.0.0", "1.0.0-01", "^1.0.0"].map((version) => ({ version })),
         ]) {
             expect(() => parseCollectionRelease({ ...collectionDocument(), ...patch })).toThrow();

@@ -1,5 +1,9 @@
 import { canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
-import type { AdmittedCollectionRelease, CollectionDigest } from "../../interfaces/CollectionAdmission";
+import type {
+    AdmittedCollectionRelease,
+    CollectionDigest,
+    VerifiedCollectionReleaseMetadata,
+} from "../../interfaces/CollectionAdmission";
 import type { CollectionBundleAsset, VerifiedCollectionAsset } from "../../interfaces/CollectionAssets";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { CollectionValidationError } from "../errors";
@@ -25,11 +29,26 @@ export async function verifyStoredCollectionArtifact(
     options: Readonly<CollectionLimits> = DEFAULT_COLLECTION_LIMITS,
 ): Promise<AdmittedCollectionRelease> {
     const limits = normalizeCollectionLimits(options);
-    const artifact = await createCollectionArtifact(parseCollectionRelease(value, limits), assets, limits);
+    const metadata = await verifyStoredCollectionRelease(value, expectedDigest, limits);
+    const snapshots = snapshotCollectionAssets(metadata.release.assets, assets, limits);
+    await verifyCollectionAssets(metadata.release.assets, snapshots);
+    return Object.freeze({ ...metadata, assets: snapshots });
+}
+
+/** Verifies immutable release metadata without loading potentially large asset bytes. */
+export async function verifyStoredCollectionRelease(
+    value: unknown,
+    expectedDigest: unknown,
+    options: Readonly<CollectionLimits> = DEFAULT_COLLECTION_LIMITS,
+): Promise<VerifiedCollectionReleaseMetadata> {
+    const limits = normalizeCollectionLimits(options);
+    const release = parseCollectionRelease(value, limits);
+    const artifact = await sealCollectionArtifact(release, [], limits);
     if (typeof expectedDigest !== "string" || artifact.digest !== expectedDigest) {
         throw new CollectionValidationError("asset_mismatch", "stored collection release digest mismatch", "$.digest");
     }
-    return artifact;
+    const { assets: _, ...metadata } = artifact;
+    return Object.freeze(metadata);
 }
 
 async function sealCollectionArtifact(

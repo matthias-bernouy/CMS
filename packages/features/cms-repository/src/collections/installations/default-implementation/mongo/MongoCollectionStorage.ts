@@ -1,5 +1,9 @@
 import { Binary, type Db } from "mongodb";
-import { verifyStoredCollectionArtifact } from "../../../core/admission/collectionArtifact";
+import {
+    verifyStoredCollectionArtifact,
+    verifyStoredCollectionRelease,
+} from "../../../core/admission/collectionArtifact";
+import { snapshotCollectionAssets, verifyCollectionAssets } from "../../../core/admission/assets";
 import { DEFAULT_COLLECTION_LIMITS, normalizeCollectionLimits, type CollectionLimits } from "../../../core/limits";
 import { parseCollectionSiteState } from "../../core/siteState";
 import type { CollectionStorage, CollectionSiteState, StoredCollectionRelease } from "../../interfaces/store";
@@ -98,10 +102,30 @@ export class MongoCollectionStorage implements CollectionStorage {
             ),
         };
     }
+    async getReleaseMetadata(digest: string) {
+        const value = await this.releases.findOne({ _id: digest });
+        if (!value) {
+            return null;
+        }
+        if (value._id !== digest || value.digest !== digest) {
+            throw new TypeError("Stored collection release identity is inconsistent");
+        }
+        const verified = await verifyStoredCollectionRelease(value.release, value.digest, this.limits);
+        return { digest: verified.digest, release: verified.release };
+    }
     async getAsset(digest: string, assetId: string) {
-        const artifact = await this.getRelease(digest);
-        const asset = artifact?.assets.find((item) => item.id === assetId);
-        return asset ? new Uint8Array(asset.bytes) : null;
+        const [artifact, document] = await Promise.all([
+            this.getReleaseMetadata(digest),
+            this.assets.findOne({ _id: `${digest}:${assetId}`, digest, id: assetId }),
+        ]);
+        const declaration = artifact?.release.assets.find((asset) => asset.id === assetId);
+        if (!artifact || !declaration || !document || !(document.bytes instanceof Binary)) {
+            return null;
+        }
+        const bytes = Uint8Array.from(document.bytes.buffer);
+        const snapshots = snapshotCollectionAssets([declaration], [{ id: assetId, bytes }], this.limits);
+        await verifyCollectionAssets([declaration], snapshots);
+        return bytes;
     }
     async readSite(siteId: string) {
         const value = await this.sites.findOne({ _id: siteId }, { projection: { _id: 0 } });

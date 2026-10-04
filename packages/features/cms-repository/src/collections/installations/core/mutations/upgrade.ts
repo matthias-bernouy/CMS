@@ -1,4 +1,5 @@
 import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
+import { describeCollectionResources } from "../../../core/admission/resourceDescriptors";
 import { parseCollectionTextOverrides } from "../../../core/texts/parseCollectionTexts";
 import type { CollectionStorage } from "../../interfaces/store";
 import { assertInstallableCollectionResources } from "../resourceIsolation";
@@ -12,7 +13,7 @@ export async function upgradeCollection(
     expectedRevision: number,
     repositoryId: string,
 ): Promise<void> {
-    const artifact = await storage.getRelease(digest);
+    const artifact = await storage.getReleaseMetadata(digest);
     if (!artifact) {
         throw Object.assign(new Error("Unknown collection release"), { status: 404 });
     }
@@ -21,7 +22,7 @@ export async function upgradeCollection(
     if (!previous) {
         throw Object.assign(new Error("Collection is not installed"), { status: 404 });
     }
-    const old = await storage.getRelease(previous.digest);
+    const old = await storage.getReleaseMetadata(previous.digest);
     if (
         !old ||
         old.release.publisherId !== artifact.release.publisherId ||
@@ -34,6 +35,7 @@ export async function upgradeCollection(
             status: 409,
         });
     }
+    await assertResourceGenerationsUnchanged(old.release, artifact.release);
     assertCompatibleCollectionUpgrade(old.release, artifact.release);
     await assertInstallableCollectionResources(
         storage,
@@ -52,4 +54,27 @@ export async function upgradeCollection(
         revision: expectedRevision + 1,
         installations: state.installations.map((item) => (item === previous ? replacement : item)),
     });
+}
+
+async function assertResourceGenerationsUnchanged(
+    previous: Parameters<typeof describeCollectionResources>[0],
+    next: Parameters<typeof describeCollectionResources>[0],
+): Promise<void> {
+    const [oldResources, nextResources] = await Promise.all([
+        describeCollectionResources(previous),
+        describeCollectionResources(next),
+    ]);
+    const nextByKey = new Map(nextResources.map((resource) => [`${resource.kind}:${resource.id}`, resource]));
+    const changed = oldResources.find((resource) => {
+        const replacement = nextByKey.get(`${resource.kind}:${resource.id}`);
+        return replacement && replacement.generation !== resource.generation;
+    });
+    if (changed) {
+        throw Object.assign(
+            new Error(
+                `Collection resource generation changed for ${changed.kind} ${changed.id}; use the migration workflow`,
+            ),
+            { status: 409 },
+        );
+    }
 }

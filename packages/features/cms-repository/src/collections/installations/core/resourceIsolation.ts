@@ -12,7 +12,7 @@ export async function assertInstallableCollectionResources(
 ): Promise<void> {
     const releases = await Promise.all(
         installations.map(async (installation) => {
-            const artifact = await storage.getRelease(installation.digest);
+            const artifact = await storage.getReleaseMetadata(installation.digest);
             if (!artifact || artifact.release.collectionId !== installation.collectionId) {
                 throw new Error("Installed collection artifact is missing or inconsistent");
             }
@@ -80,6 +80,20 @@ function validateDependencies(release: CollectionRelease, byId: ReadonlyMap<stri
                 reject(
                     `Collection ${release.collectionId} imports unavailable theme token ${target.collectionId}-${token}`,
                 );
+            }
+        }
+        const exportedTexts = new Set(target.exports?.texts ?? []);
+        const targetTexts = new Set((target.texts ?? []).map((text) => text.id));
+        for (const text of dependency.imports.texts ?? []) {
+            if (!exportedTexts.has(text) || !targetTexts.has(text)) {
+                reject(`Collection ${release.collectionId} imports unavailable text ${target.collectionId}.${text}`);
+            }
+        }
+        const exportedAssets = new Set(target.exports?.assets ?? []);
+        const targetAssets = new Set(target.assets.map((asset) => asset.id));
+        for (const asset of dependency.imports.assets ?? []) {
+            if (!exportedAssets.has(asset) || !targetAssets.has(asset)) {
+                reject(`Collection ${release.collectionId} imports unavailable asset ${target.collectionId}.${asset}`);
             }
         }
     }

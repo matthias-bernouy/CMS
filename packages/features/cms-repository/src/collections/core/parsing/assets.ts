@@ -20,8 +20,12 @@ export function parseAssets(value: unknown, limits: Readonly<CollectionLimits>):
     const assets = array(value, limits.maxAssets, "$.assets").map((item, index): CollectionAssetDefinition => {
         const path = `$.assets[${index}]`;
         const source = record(item, path);
-        keys(source, ["id", "mediaType", "byteLength", "digest"], path);
+        keys(source, ["id", "generation", "mediaType", "byteLength", "digest"], path);
         const id = identifier(source.id, `${path}.id`);
+        const generation =
+            source.generation === undefined
+                ? 1
+                : integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${path}.generation`);
         const mediaType = string(source.mediaType, 255, `${path}.mediaType`);
         if (!MEDIA_TYPE.test(mediaType)) {
             invalid("must be a concrete lowercase media type without parameters", `${path}.mediaType`);
@@ -35,7 +39,7 @@ export function parseAssets(value: unknown, limits: Readonly<CollectionLimits>):
         if (!SHA256.test(digest)) {
             invalid("must be a lowercase SHA-256 digest", `${path}.digest`);
         }
-        return Object.freeze({ id, mediaType, byteLength, digest: digest as `sha256:${string}` });
+        return Object.freeze({ id, generation, mediaType, byteLength, digest: digest as `sha256:${string}` });
     });
     unique(
         assets.map((asset) => asset.id),

@@ -15,7 +15,11 @@ const NEW_TAB_REL = new Set([
 export function nativeAttributeValueIssue(tag: string, attribute: string, value: string): string | null {
     const normalizedTag = tag.toLowerCase();
     const normalizedAttribute = attribute.toLowerCase();
-    if (DYNAMIC_TOKEN.test(value) || CONTROL_CHARACTER.test(value)) {
+    const collectionAssetUrl =
+        isCollectionAssetSource(value) &&
+        ((normalizedTag === "a" && normalizedAttribute === "href") ||
+            (normalizedTag === "img" && normalizedAttribute === "src"));
+    if ((DYNAMIC_TOKEN.test(value) && !collectionAssetUrl) || CONTROL_CHARACTER.test(value)) {
         return `attribute "${attribute}" must be a static value without control characters`;
     }
     if (normalizedAttribute === "slot") {
@@ -28,7 +32,9 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
         return value.trim() ? null : `attribute "${attribute}" must not be empty`;
     }
     if (normalizedTag === "a" && normalizedAttribute === "href") {
-        return isSafeNavigationalUrl(value) ? null : "native link destination uses a forbidden URL scheme";
+        return collectionAssetUrl || isSafeNavigationalUrl(value)
+            ? null
+            : "native link destination uses a forbidden URL scheme";
     }
     if (normalizedTag === "a" && normalizedAttribute === "target") {
         return value === "_blank" ? null : 'native link target must be "_blank" or omitted';
@@ -105,7 +111,9 @@ export function nativeAttributeSetIssue(tag: string, attributes: Readonly<Record
 
 function imageAttributeIssue(attribute: string, value: string): string | null {
     if (attribute === "src") {
-        return isCmsMediaSource(value) ? null : "native image source must reference a CMS media item";
+        return isCmsMediaSource(value) || isCollectionAssetSource(value)
+            ? null
+            : "native image source must reference a CMS media item";
     }
     if (attribute === "role") {
         return value === "presentation" ? null : 'native image role must be "presentation" or omitted';
@@ -145,4 +153,8 @@ export function isCmsMediaSource(value: string): boolean {
         !/[\u0000-\u0020\u007F]/.test(value) &&
         /\/\.cms\/files\/by-id\/[^/?#]+(?:[?#].*)?$/.test(value)
     );
+}
+
+export function isCollectionAssetSource(value: string): boolean {
+    return /^\{\{\s*cms\.asset\.[a-z][a-z0-9-]{0,95}\.[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*\s*\}\}$/u.test(value);
 }

@@ -46,6 +46,8 @@ export function dependencyIssues(
             }
             const blocs = new Set(target.exports?.blocs ?? []);
             const tokens = new Set(target.exports?.themeTokens ?? []);
+            const texts = new Set(target.exports?.texts ?? []);
+            const assets = new Set(target.exports?.assets ?? []);
             dependency.imports.blocs
                 .filter((id) => !blocs.has(id))
                 .forEach((id) => issues.push(`${release.collectionId} imports removed bloc ${id}.`));
@@ -55,6 +57,16 @@ export function dependencyIssues(
                     issues.push(
                         `${release.collectionId} imports removed token ${collectionThemeTokenId(target.collectionId, id)}.`,
                     ),
+                );
+            dependency.imports.texts
+                ?.filter((id) => !texts.has(id))
+                .forEach((id) =>
+                    issues.push(`${release.collectionId} imports removed text ${target.collectionId}.${id}.`),
+                );
+            dependency.imports.assets
+                ?.filter((id) => !assets.has(id))
+                .forEach((id) =>
+                    issues.push(`${release.collectionId} imports removed asset ${target.collectionId}.${id}.`),
                 );
         }
     }

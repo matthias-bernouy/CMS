@@ -12,6 +12,8 @@
 - Split collection texts between recursive `texts/definitions/` metadata and
   `texts/locales/<locale>/` content trees. Group Bloc folders recursively below
   `blocs/`; source paths never contribute to stable text or Bloc IDs.
+- Keep collection exports explicit. Do not publish wildcard exports: the admitted
+  release must show exactly which Blocs, tokens, texts and assets form its public API.
 - A managed native component declares `nativeElement.accepts`, has exactly one
   unnamed Shadow DOM slot, no named page slots or fixed Light DOM, and one
   accepted native root in `default.html`. Keep wrapper settings separate from

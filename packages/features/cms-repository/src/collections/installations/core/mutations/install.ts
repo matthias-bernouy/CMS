@@ -17,7 +17,7 @@ export async function installCollections(
     }
     const artifacts = await Promise.all(
         requests.map(async (request) => {
-            const artifact = await storage.getRelease(request.digest);
+            const artifact = await storage.getReleaseMetadata(request.digest);
             if (!artifact) {
                 throw Object.assign(new Error("Unknown collection release"), { status: 404 });
             }
@@ -36,7 +36,7 @@ export async function installCollections(
     }
     const installedReleases = await Promise.all(
         state.installations.map(async (installation) => {
-            const installed = await storage.getRelease(installation.digest);
+            const installed = await storage.getReleaseMetadata(installation.digest);
             if (!installed || installed.release.collectionId !== installation.collectionId) {
                 throw new Error("Installed collection artifact is missing or inconsistent");
             }

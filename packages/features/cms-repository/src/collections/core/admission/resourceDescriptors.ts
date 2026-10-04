@@ -91,6 +91,18 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
         });
     }
     resources.push(...(release.texts?.map((text) => projection(release, "text", text.id, text)) ?? []));
+    resources.push(
+        ...release.assets.map((asset) => ({
+            kind: "asset" as const,
+            id: asset.id,
+            generation: asset.generation ?? 1,
+            contract: { id: asset.id, generation: asset.generation ?? 1, mediaType: asset.mediaType },
+            implementation: {
+                byteLength: asset.byteLength,
+                digest: asset.digest,
+            },
+        })),
+    );
     resources.push(...(release.views?.map((view) => projection(release, "view", view.id, view)) ?? []));
     resources.push(
         ...(release.dashboards?.map((dashboard) => projection(release, "dashboard", dashboard.id, dashboard)) ?? []),

@@ -123,3 +123,58 @@ test("a release coordinate cannot be replaced with different content", async () 
         await rm(root, { recursive: true, force: true });
     }
 });
+
+test("collection source assets keep their verified bytes through the repository protocol", async () => {
+    const root = await mkdtemp(join(tmpdir(), "ulvia-collection-assets-"));
+    const sourceRoot = join(root, "asset-example");
+    const repositoryRoot = join(root, "repository");
+    const bytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+    try {
+        await mkdir(join(sourceRoot, "assets"), { recursive: true });
+        await mkdir(join(sourceRoot, "translations", "en"), { recursive: true });
+        await writeFile(
+            join(sourceRoot, "definition.json"),
+            JSON.stringify({
+                kind: "collection",
+                protocol: "ulvia-collection/v1",
+                schemaDialect: "ulvia-schema/v1",
+                collectionId: "asset-example",
+                publisherId: "ulvia.official",
+                version: "1.0.0",
+                name: "collection.name",
+                locale: "en",
+                exports: { blocs: [], themeTokens: [], assets: ["mark.svg"] },
+                assets: [{ id: "mark.svg", generation: 2, mediaType: "image/svg+xml" }],
+            }),
+        );
+        await writeFile(
+            join(sourceRoot, "translations", "en", "collection.json"),
+            JSON.stringify({ "collection.name": "Asset example" }),
+        );
+        await writeFile(join(sourceRoot, "assets", "mark.svg"), bytes);
+
+        const artifact = await prepareCollectionRelease(sourceRoot);
+        expect(artifact.release.assets[0]).toMatchObject({
+            id: "mark.svg",
+            generation: 2,
+            mediaType: "image/svg+xml",
+            byteLength: bytes.byteLength,
+        });
+        expect(new Uint8Array(await artifact.assets[0]!.bytes.arrayBuffer())).toEqual(bytes);
+
+        const repository = new LocalCollectionRepository(repositoryRoot);
+        await repository.store(artifact);
+        const server = startLocalRepository(0, repositoryRoot);
+        try {
+            const remote = new HttpCollectionRepository("local", server.url);
+            const bundle = await remote.get((await remote.list())[0]!);
+            expect(bundle.release.assets[0]).toEqual(artifact.release.assets[0]);
+            expect(bundle.assets).toEqual([{ id: "mark.svg", bytes }]);
+            expect((await admitCollectionRelease(bundle.release, bundle.assets)).digest).toBe(artifact.digest);
+        } finally {
+            server.stop();
+        }
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
+});

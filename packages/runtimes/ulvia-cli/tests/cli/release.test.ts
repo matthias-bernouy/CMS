@@ -11,7 +11,7 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
     const source = resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official");
     const definition = (await Bun.file(join(source, "definition.json")).json()) as {
         version: string;
-        exports: { blocs: string[] };
+        exports: { blocs: string[]; texts: string[] };
     };
     const output: string[] = [];
     const options = { environment: { ULVIA_DATA_DIR: data }, log: (line: string) => output.push(line) };
@@ -40,6 +40,7 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
         expect(definition.exports.blocs.every((id) => releaseBlocIds.includes(id))).toBe(true);
         expect(releaseBlocIds).toContain("ulvia-official-choice-copy");
         expect(releases[0]!.release.exports?.themeTokens).toHaveLength(119);
+        expect(releases[0]!.release.exports?.texts).toEqual(definition.exports.texts.slice().sort());
         await runCli(["release", source], options);
         expect(output.at(-1)).toStartWith(`= collection ulvia.official/ulvia-official@${definition.version}`);
         await runCli(["prune"], options);

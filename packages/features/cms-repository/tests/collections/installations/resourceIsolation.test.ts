@@ -76,7 +76,21 @@ test("installs only declared public resources from compatible collection depende
     const foundation = {
         ...release("ulvia-official", "1.0.0", "ulvia-official-button", "primary"),
         publisherId: "ulvia.official",
-        exports: { blocs: ["ulvia-official-button"], themeTokens: ["primary"] },
+        texts: [{ id: "submit", values: { en: "Submit" } }],
+        assets: [
+            {
+                id: "empty.svg",
+                mediaType: "image/svg+xml",
+                byteLength: 0,
+                digest: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            },
+        ],
+        exports: {
+            blocs: ["ulvia-official-button"],
+            themeTokens: ["primary"],
+            texts: ["submit"],
+            assets: ["empty.svg"],
+        },
     };
     const baseConsumer = release("shop", "1.0.0", "shop-hero");
     const consumer = {
@@ -84,7 +98,8 @@ test("installs only declared public resources from compatible collection depende
         blocs: [
             {
                 ...baseConsumer.blocs[0]!,
-                lightdom: "<ulvia-official-button></ulvia-official-button>",
+                lightdom:
+                    '<ulvia-official-button></ulvia-official-button><span>{{ cms.i18n.ulvia-official.submit }}</span><img src="{{ cms.asset.ulvia-official.empty.svg }}">',
                 uses: ["ulvia-official-button"],
             },
         ],
@@ -93,19 +108,26 @@ test("installs only declared public resources from compatible collection depende
                 collectionId: "ulvia-official",
                 publisherId: "ulvia.official",
                 versionRange: "^1.0.0",
-                imports: { blocs: ["ulvia-official-button"], themeTokens: ["primary"] },
+                imports: {
+                    blocs: ["ulvia-official-button"],
+                    themeTokens: ["primary"],
+                    texts: ["submit"],
+                    assets: ["empty.svg"],
+                },
             },
         ],
     };
 
-    const foundationArtifact = await store.importRelease(foundation);
+    const foundationArtifact = await store.importRelease(foundation, [{ id: "empty.svg", bytes: new Uint8Array() }]);
     const consumerArtifact = await store.importRelease(consumer);
     await expect(store.install("site", consumerArtifact.digest, 0)).rejects.toThrow("requires ulvia-official");
     await store.install("site", foundationArtifact.digest, 0);
     await expect(store.install("site", consumerArtifact.digest, 1)).resolves.toMatchObject({ revision: 2 });
 
     const breakingFoundation = { ...structuredClone(foundation), version: "2.0.0" };
-    const breakingArtifact = await store.importRelease(breakingFoundation);
+    const breakingArtifact = await store.importRelease(breakingFoundation, [
+        { id: "empty.svg", bytes: new Uint8Array() },
+    ]);
     await expect(store.upgrade("site", breakingArtifact.digest, 2, "local")).rejects.toThrow("requires");
 
     const wrongType = await store.importRelease({

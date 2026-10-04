@@ -14,6 +14,10 @@ export function migratePageContent(
             const migrated = renameTextReferences(migratedHtml, collectionId, operation.from, operation.to);
             migratedHtml = migrated.content;
             applied += migrated.applied;
+        } else if (operation.kind === "rename-asset") {
+            const migrated = renameAssetReferences(migratedHtml, collectionId, operation.from, operation.to);
+            migratedHtml = migrated.content;
+            applied += migrated.applied;
         }
     }
     const { document } = parseHTML(`<!doctype html><html><body>${migratedHtml}</body></html>`);
@@ -60,6 +64,26 @@ export function migratePageContent(
         content: markupApplied ? document.body.innerHTML : migratedHtml,
         applied: applied + markupApplied,
     };
+}
+
+function renameAssetReferences(
+    content: string,
+    collectionId: string,
+    from: string,
+    to: string,
+): { content: string; applied: number } {
+    let applied = 0;
+    const migrated = content.replace(
+        /\{\{\s*cms\.asset\.([a-z][a-z0-9-]{0,95})\.([a-z][a-z0-9]*(?:[.-][a-z0-9]+)*)\s*\}\}/gu,
+        (expression, owner: string, assetId: string) => {
+            if (owner !== collectionId || assetId !== from) {
+                return expression;
+            }
+            applied += 1;
+            return `{{ cms.asset.${collectionId}.${to} }}`;
+        },
+    );
+    return { content: migrated, applied };
 }
 
 function renameTextReferences(

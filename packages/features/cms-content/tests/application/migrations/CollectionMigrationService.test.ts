@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
+import { parseCollectionRelease } from "@bernouy/cms-repository/collections";
 import {
     InMemoryCmsRepository,
     ValidatingCmsRepository,
@@ -8,6 +10,7 @@ import {
 } from "@bernouy/cms-content";
 import { CollectionMigrationService, MemoryCollectionMigrationStorage } from "@bernouy/cms-content/migrations";
 import { MongoCollectionMigrationStorage } from "@bernouy/cms-content/mongo";
+import { dependencyIssues } from "cms-content/application/migrations/planning/evolution";
 import type { Db } from "mongodb";
 import { FakeContentDb } from "../mongo/contentMongoFixture";
 
@@ -40,6 +43,89 @@ test("migrates a renamed bloc under maintenance and rolls it back without rewind
         revision: 3,
         content: "<atlas-card></atlas-card>",
     });
+});
+
+test("migrates an installed collection asset reference and restores it on rollback", async () => {
+    const collections = new CollectionStore(new MemoryCollectionStorage());
+    const oldBytes = new TextEncoder().encode("old asset");
+    const newBytes = new TextEncoder().encode("new asset");
+    const previous = await collections.importRelease(
+        { ...release("1.0.0", "atlas-card"), assets: [asset("old.svg", oldBytes)] },
+        [{ id: "old.svg", bytes: oldBytes }],
+    );
+    const next = await collections.importRelease(
+        {
+            ...release("2.0.0", "atlas-card"),
+            dataGeneration: 2,
+            assets: [asset("new.svg", newBytes)],
+            migrations: [
+                {
+                    fromGeneration: 1,
+                    toGeneration: 2,
+                    operations: [{ kind: "rename-asset", from: "old.svg", to: "new.svg" }],
+                },
+            ],
+        },
+        [{ id: "new.svg", bytes: newBytes }],
+    );
+    await collections.install("site", previous.digest, 0, "local");
+    const repository = new ValidatingCmsRepository(
+        withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
+    );
+    await repository.insertPage("/asset", "Asset", '<img src="{{ cms.asset.atlas.old.svg }}" alt="Asset">');
+    const inserted = (await repository.getPage("/asset"))!;
+    const storage = new MemoryCollectionMigrationStorage();
+    const service = new CollectionMigrationService(repository, collections, storage);
+
+    const plan = await service.plan("site", [{ digest: next.digest, repositoryId: "local" }], 1);
+    expect(plan.blockedReasons).toEqual([]);
+    expect(plan.resources).toContainEqual(expect.objectContaining({ kind: "asset", id: "old.svg" }));
+    const completed = await service.execute("site", [{ digest: next.digest, repositoryId: "local" }], 1);
+    expect(await repository.getPageById(inserted.id)).toMatchObject({
+        content: '<img src="{{ cms.asset.atlas.new.svg }}" alt="Asset">',
+        revision: 2,
+    });
+    expect(await collections.getReleaseAsset(next.digest, "new.svg")).toEqual(newBytes);
+
+    await service.rollback("site", completed.id);
+    expect(await repository.getPageById(inserted.id)).toMatchObject({
+        content: '<img src="{{ cms.asset.atlas.old.svg }}" alt="Asset">',
+        revision: 3,
+    });
+    expect(await collections.getReleaseAsset(previous.digest, "old.svg")).toEqual(oldBytes);
+});
+
+test("reports removed imported texts and assets before a migration acquires maintenance", () => {
+    const bytes = new TextEncoder().encode("asset");
+    const provider = parseCollectionRelease({
+        ...release("1.0.0", "atlas-card"),
+        texts: [{ id: "title", values: { en: "Title" } }],
+        assets: [asset("logo.svg", bytes)],
+        exports: { blocs: [], themeTokens: [], texts: ["title"], assets: ["logo.svg"] },
+    });
+    const consumer = parseCollectionRelease({
+        ...release("1.0.0", "atlas-card"),
+        collectionId: "storefront",
+        publisherId: "storefront.official",
+        blocs: [],
+        dependencies: [
+            {
+                collectionId: "atlas",
+                publisherId: "atlas.official",
+                versionRange: "^2.0.0",
+                imports: { blocs: [], themeTokens: [], texts: ["title"], assets: ["logo.svg"] },
+            },
+        ],
+    });
+    const target = parseCollectionRelease({
+        ...release("2.0.0", "atlas-card"),
+        exports: { blocs: [], themeTokens: [] },
+    });
+
+    expect(dependencyIssues([{ release: provider }, { release: consumer }], [target])).toEqual([
+        "storefront imports removed text atlas.title.",
+        "storefront imports removed asset atlas.logo.svg.",
+    ]);
 });
 
 test("keeps maintenance active after a failed content write and can recover by rollback", async () => {
@@ -327,5 +413,14 @@ function release(version: string, id: string): Record<string, unknown> {
                 slots: {},
             },
         ],
+    };
+}
+
+function asset(id: string, bytes: Uint8Array) {
+    return {
+        id,
+        mediaType: "image/svg+xml",
+        byteLength: bytes.byteLength,
+        digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
     };
 }

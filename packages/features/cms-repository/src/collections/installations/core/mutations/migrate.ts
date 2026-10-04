@@ -25,8 +25,8 @@ export async function replaceCollectionsAfterMigration(
                 return installation;
             }
             const [previous, target] = await Promise.all([
-                storage.getRelease(installation.digest),
-                storage.getRelease(replacement.digest),
+                storage.getReleaseMetadata(installation.digest),
+                storage.getReleaseMetadata(replacement.digest),
             ]);
             if (!previous || !target || target.release.collectionId !== installation.collectionId) {
                 throw new Error("Migration release artifact is missing or inconsistent");
@@ -98,7 +98,7 @@ export async function restoreCollectionsAfterMigration(
 async function validateGraph(storage: CollectionStorage, installations: readonly CollectionInstallation[]) {
     const releases = await Promise.all(
         installations.map(async (installation) => {
-            const artifact = await storage.getRelease(installation.digest);
+            const artifact = await storage.getReleaseMetadata(installation.digest);
             if (!artifact || artifact.release.collectionId !== installation.collectionId) {
                 throw new Error("Installed collection artifact is missing or inconsistent");
             }

@@ -11,6 +11,7 @@ const OPERATION_KEYS = {
     "remove-setting": ["kind", "bloc", "setting"],
     "map-setting-value": ["kind", "bloc", "setting", "values"],
     "rename-theme-token": ["kind", "from", "to"],
+    "rename-asset": ["kind", "from", "to"],
     "move-configuration-value": ["kind", "from", "to"],
     "set-configuration-default": ["kind", "path", "value"],
     "remove-configuration-value": ["kind", "path"],
@@ -89,6 +90,8 @@ function parseOperation(value: unknown, collectionId: string, path: string): Col
             };
         case "rename-theme-token":
             return { kind, from: setting("from"), to: setting("to") };
+        case "rename-asset":
+            return { kind, from: asset(source.from, `${path}.from`), to: asset(source.to, `${path}.to`) };
         case "move-configuration-value":
             return { kind, from: pathParts(source.from, `${path}.from`), to: pathParts(source.to, `${path}.to`) };
         case "set-configuration-default":
@@ -112,6 +115,10 @@ function parseOperation(value: unknown, collectionId: string, path: string): Col
         default:
             return invalid("unsupported migration operation", `${path}.kind`);
     }
+}
+
+function asset(value: unknown, path: string): string {
+    return identifier(value, path);
 }
 
 function scalar(value: unknown, path: string): string {

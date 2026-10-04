@@ -7,6 +7,7 @@ export type StoredCollectionRelease = {
     release: CollectionRelease;
     assets: readonly StoredCollectionAsset[];
 };
+export type StoredCollectionReleaseMetadata = Omit<StoredCollectionRelease, "assets">;
 export type CollectionInstallation = {
     collectionId: string;
     digest: string;
@@ -27,6 +28,7 @@ export type InstalledCollection = CollectionInstallation & { release: Collection
 export interface CollectionStorage {
     putRelease(artifact: StoredCollectionRelease): Promise<void>;
     getRelease(digest: string): Promise<StoredCollectionRelease | null>;
+    getReleaseMetadata(digest: string): Promise<StoredCollectionReleaseMetadata | null>;
     getAsset(digest: string, assetId: string): Promise<Uint8Array | null>;
     readSite(siteId: string): Promise<CollectionSiteState>;
     compareAndSet(siteId: string, expected: number, next: CollectionSiteState): Promise<boolean>;

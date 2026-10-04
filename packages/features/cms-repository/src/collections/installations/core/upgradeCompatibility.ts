@@ -139,10 +139,21 @@ export function assertCompatibleCollectionUpgrade(previous: CollectionRelease, n
         reject("Upgrade narrows the collection configuration contract");
     }
     assertThemeCompatibility(previous, next);
+    assertAssetCompatibility(previous, next);
+}
+
+function assertAssetCompatibility(previous: CollectionRelease, next: CollectionRelease): void {
+    const nextAssets = new Map(next.assets.map((asset) => [asset.id, asset]));
+    for (const asset of previous.assets) {
+        const replacement = nextAssets.get(asset.id);
+        if (!replacement || replacement.mediaType !== asset.mediaType) {
+            reject(`Upgrade removes or changes existing asset ${asset.id}`);
+        }
+    }
 }
 
 export type CollectionBreakingResource = {
-    kind: "bloc" | "theme-token" | "configuration" | "text" | "view" | "dashboard";
+    kind: "bloc" | "theme-token" | "configuration" | "text" | "asset" | "view" | "dashboard";
     id: string;
     reason: string;
 };
@@ -182,6 +193,13 @@ export function collectionUpgradeBreakingResources(
             if (!nextIds.has(id)) {
                 changes.push({ kind, id, reason: `${kind} ${id} was removed` });
             }
+        }
+    }
+    const nextAssets = new Map(next.assets.map((asset) => [asset.id, asset]));
+    for (const asset of previous.assets) {
+        const replacement = nextAssets.get(asset.id);
+        if (!replacement || replacement.mediaType !== asset.mediaType) {
+            changes.push({ kind: "asset", id: asset.id, reason: `asset ${asset.id} was removed or changed` });
         }
     }
     if (previous.configuration && !next.configuration) {

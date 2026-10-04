@@ -31,6 +31,10 @@ test("Mongo collection storage reverifies release and asset bytes on every read"
         release: admitted.release,
         assets: [{ id: "payload.bin", bytes }],
     });
+    expect(await storage.getReleaseMetadata(admitted.digest)).toEqual({
+        digest: admitted.digest,
+        release: admitted.release,
+    });
     expect(await storage.getAsset(admitted.digest, "payload.bin")).toEqual(bytes);
 
     const assets = db.collection<Record<string, unknown>>("collection_assets");
@@ -58,6 +62,7 @@ test("Mongo collection storage rejects a release whose persisted identity was al
     translations["en-US"]!["collection.name"] = "Tampered";
     await releases.replaceOne({ _id: stored!._id }, stored!);
 
+    await expect(storage.getReleaseMetadata(admitted.digest)).rejects.toThrow("release digest mismatch");
     await expect(storage.getRelease(admitted.digest)).rejects.toThrow("release digest mismatch");
 });
 

@@ -58,6 +58,18 @@ test("upgrades preserve existing slot contracts and theme token types", async ()
     await expect(store.upgrade("site", admitted.digest, 1, "local")).resolves.toMatchObject({ revision: 2 });
 });
 
+test("simple upgrades cannot bypass a resource generation migration", async () => {
+    const store = new CollectionStore(new MemoryCollectionStorage());
+    const initial = await store.importRelease(release("1.0.0"));
+    await store.install("site", initial.digest, 0, "local");
+
+    const changed = release("1.1.0");
+    (changed.blocs as Record<string, unknown>[])[0]!.generation = 2;
+    const admitted = await store.importRelease(changed);
+
+    await expect(store.upgrade("site", admitted.digest, 1, "local")).rejects.toThrow("resource generation changed");
+});
+
 test("upgrades preserve managed native element choices", async () => {
     const managedRelease = (version: string, accepts: string[], root: string) => {
         const source = release(version);

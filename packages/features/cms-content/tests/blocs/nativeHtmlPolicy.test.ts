@@ -211,4 +211,41 @@ describe("platform native HTML policy", () => {
             ).structure,
         ).toHaveLength(4);
     });
+
+    test("accepts only exact qualified collection assets in native URL attributes", () => {
+        expect(() =>
+            validateSiteBlocSnapshot(
+                siteBlocSnapshot({
+                    structure: [
+                        {
+                            kind: "bloc",
+                            tag: "a",
+                            attributes: { href: "{{ cms.asset.atlas.guide.pdf }}" },
+                            children: [],
+                        },
+                        {
+                            kind: "bloc",
+                            tag: "img",
+                            attributes: { src: "{{ cms.asset.atlas.logo.svg }}", alt: "Atlas" },
+                            children: [],
+                        },
+                    ],
+                }),
+            ),
+        ).not.toThrow();
+
+        for (const src of [
+            "prefix {{ cms.asset.atlas.logo.svg }}",
+            "{{ cms.asset.atlas.logo.svg }}?variant=unsafe",
+            "{{ cms.i18n.atlas.logo }}",
+        ]) {
+            expect(() =>
+                validateSiteBlocSnapshot(
+                    siteBlocSnapshot({
+                        structure: [{ kind: "bloc", tag: "img", attributes: { src, alt: "Atlas" }, children: [] }],
+                    }),
+                ),
+            ).toThrow("static value");
+        }
+    });
 });

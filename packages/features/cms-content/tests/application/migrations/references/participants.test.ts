@@ -47,7 +47,7 @@ test("blocks every externally referenced collection resource kind", async () => 
     });
 
     const plan = await fixture.service.plan("site", [{ digest: next.digest }], 1);
-    for (const kind of ["bloc", "theme-token", "configuration", "text", "dashboard"]) {
+    for (const kind of ["bloc", "theme-token", "configuration", "text", "asset", "dashboard"]) {
         expect(plan.blockedReasons).toContainEqual(expect.stringContaining(`collection ${kind}`));
     }
 });
@@ -136,6 +136,7 @@ function externalReferences() {
         },
         { kind: "configuration" as const, collectionId: "atlas", id: "atlas", location: "External workflow" },
         { kind: "text" as const, collectionId: "atlas", id: "legacy-title", location: "External workflow" },
+        { kind: "asset" as const, collectionId: "atlas", id: "legacy.svg", location: "External workflow" },
         {
             kind: "dashboard" as const,
             collectionId: "atlas",

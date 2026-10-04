@@ -76,5 +76,6 @@ export {
     type CollectionAdmissionOptions,
 } from "cms-repository/collections/core/admission/admitCollectionRelease";
 export { describeCollectionResources } from "cms-repository/collections/core/admission/resourceDescriptors";
+export { replaceCollectionAssetExpressions } from "cms-repository/collections/core/texts/expressions";
 
 export * from "./texts";

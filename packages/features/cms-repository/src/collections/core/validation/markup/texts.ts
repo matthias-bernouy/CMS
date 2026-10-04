@@ -3,13 +3,17 @@ import { CollectionValidationError, invalid } from "../../errors";
 import { replaceCollectionTextExpressions } from "../../texts/expressions";
 import { isElement, markupTree, nodes } from "./tree";
 
-function validateValue(value: string, collectionId: string, textIds: ReadonlySet<string>, path: string): void {
+function validateValue(
+    value: string,
+    collectionId: string,
+    textIds: ReadonlySet<string>,
+    importedTexts: ReadonlyMap<string, ReadonlySet<string>>,
+    path: string,
+): void {
     try {
         replaceCollectionTextExpressions(value, (referencedCollection, textId) => {
-            if (referencedCollection !== collectionId) {
-                invalid(`collection text must use namespace ${collectionId}`, path);
-            }
-            if (!textIds.has(textId)) {
+            const available = referencedCollection === collectionId ? textIds : importedTexts.get(referencedCollection);
+            if (!available?.has(textId)) {
                 invalid(`unknown collection text ${textId}`, path);
             }
             return "";
@@ -26,6 +30,7 @@ export function validateCollectionTextReferences(
     blocs: readonly CollectionBloc[],
     collectionId: string,
     textIds: ReadonlySet<string>,
+    importedTexts: ReadonlyMap<string, ReadonlySet<string>> = new Map(),
 ): void {
     for (const bloc of blocs) {
         if (bloc.lightdom === undefined) {
@@ -34,10 +39,10 @@ export function validateCollectionTextReferences(
         const path = `$.blocs[${bloc.id}].lightdom`;
         for (const node of nodes(markupTree(bloc.lightdom))) {
             if (node.type === "text") {
-                validateValue(node.data, collectionId, textIds, path);
+                validateValue(node.data, collectionId, textIds, importedTexts, path);
             } else if (isElement(node)) {
                 for (const value of Object.values(node.attribs)) {
-                    validateValue(value, collectionId, textIds, path);
+                    validateValue(value, collectionId, textIds, importedTexts, path);
                 }
             }
         }

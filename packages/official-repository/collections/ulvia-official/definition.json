@@ -198,6 +198,32 @@
             "warning-border",
             "warning-hover",
             "warning-subtle"
+        ],
+        "texts": [
+            "callout-body",
+            "callout-title",
+            "description",
+            "empty-message",
+            "faq-answer",
+            "faq-question",
+            "faq-title",
+            "feature-card-note",
+            "feature-one-body",
+            "feature-one-title",
+            "feature-three-body",
+            "feature-three-title",
+            "feature-two-body",
+            "feature-two-title",
+            "footer-copy",
+            "hero-action",
+            "navigation-home",
+            "quote",
+            "quote-attribution",
+            "stat-one-label",
+            "stat-one-value",
+            "stat-two-label",
+            "stat-two-value",
+            "title"
         ]
     },
     "assets": []

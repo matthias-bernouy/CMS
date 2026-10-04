@@ -1,5 +1,6 @@
 import {
     collectionThemeTokenId,
+    replaceCollectionAssetExpressions,
     type CollectionRelease,
     type CollectionResourceKind,
 } from "@bernouy/cms-repository/collections";
@@ -45,6 +46,7 @@ export async function validateTargetSiteResources(
             try {
                 await assertContentRefsExist({ getBlocsList: async () => finalBlocs }, content);
                 assertTextReferences(content, texts);
+                assertAssetReferences(content, releases);
                 for (const tokenId of removedThemeTokens) {
                     if (referencesThemeToken(content, tokenId)) {
                         throw new Error(`references theme token ${tokenId}`);
@@ -89,6 +91,7 @@ function collectionResourceKeys(releases: readonly CollectionRelease[]): Set<str
         }
         for (const [kind, resources] of [
             ["text", release.texts ?? []],
+            ["asset", release.assets],
             ["view", release.views ?? []],
             ["dashboard", release.dashboards ?? []],
         ] as const) {
@@ -98,6 +101,18 @@ function collectionResourceKeys(releases: readonly CollectionRelease[]): Set<str
         }
     }
     return keys;
+}
+
+function assertAssetReferences(content: string, releases: readonly CollectionRelease[]): void {
+    const assets = new Map(
+        releases.map((release) => [release.collectionId, new Set(release.assets.map(({ id }) => id))]),
+    );
+    replaceCollectionAssetExpressions(content, (collectionId, assetId) => {
+        if (!assets.get(collectionId)?.has(assetId)) {
+            throw new Error(`references collection asset ${collectionId}.${assetId}`);
+        }
+        return "";
+    });
 }
 
 function resourceKey(kind: CollectionResourceKind, collectionId: string, id: string): string {

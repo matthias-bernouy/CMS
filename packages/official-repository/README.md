@@ -21,7 +21,8 @@ paths never become release identities.
 The Ulvia Official collection publishes a selective public surface: foundational
 layout and content components, reusable content items, composed page sections,
 and the theme tokens they consume. Compositions declare their exact local Bloc
-dependencies through `uses`; authored content remains page-owned through typed
+dependencies through `uses`; selective collection dependencies may import explicitly
+exported Blocs, theme tokens, server texts and immutable assets. Authored content remains page-owned through typed
 slots instead of being embedded in collection settings.
 
 Managed native components declare an accepted tag set in `nativeElement`, expose

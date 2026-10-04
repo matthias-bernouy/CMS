@@ -39,15 +39,31 @@ export class CollectionStore {
         return this.storage.getAsset(digest, assetId);
     }
 
+    /** Resolves one installed asset without hydrating every installed collection release. */
+    async getInstalledAssetMetadata(siteId: string, collectionId: string, assetId: string) {
+        const state = await this.storage.readSite(siteId);
+        const installation = state.installations.find((item) => item.collectionId === collectionId);
+        if (!installation) {
+            return null;
+        }
+        const artifact = await this.storage.getReleaseMetadata(installation.digest);
+        if (!artifact || artifact.release.collectionId !== collectionId) {
+            throw new Error("Installed collection artifact is missing or inconsistent");
+        }
+        validateStoredCollectionInstallation(installation, artifact.release);
+        const asset = artifact.release.assets.find((item) => item.id === assetId);
+        return asset ? structuredClone({ digest: installation.digest, asset }) : null;
+    }
+
     async getRelease(digest: string) {
-        return structuredClone(await this.storage.getRelease(digest));
+        return structuredClone(await this.storage.getReleaseMetadata(digest));
     }
 
     async snapshot(siteId: string): Promise<{ revision: number; collections: InstalledCollection[] }> {
         const state = await this.storage.readSite(siteId);
         const collections = await Promise.all(
             state.installations.map(async (installation) => {
-                const artifact = await this.storage.getRelease(installation.digest);
+                const artifact = await this.storage.getReleaseMetadata(installation.digest);
                 if (!artifact || artifact.release.collectionId !== installation.collectionId) {
                     throw new Error("Installed collection artifact is missing or inconsistent");
                 }
@@ -111,7 +127,7 @@ export class CollectionStore {
         if (!installation) {
             throw Object.assign(new Error("Collection is not installed"), { status: 404 });
         }
-        const artifact = await this.storage.getRelease(installation.digest);
+        const artifact = await this.storage.getReleaseMetadata(installation.digest);
         if (!artifact) {
             throw new Error("Missing release");
         }

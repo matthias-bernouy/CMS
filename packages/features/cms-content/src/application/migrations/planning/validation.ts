@@ -1,4 +1,4 @@
-import type { CollectionRelease } from "@bernouy/cms-repository/collections";
+import { replaceCollectionAssetExpressions, type CollectionRelease } from "@bernouy/cms-repository/collections";
 import {
     parseCollectionTextOverrides,
     replaceCollectionTextExpressions,
@@ -55,10 +55,23 @@ export async function validateTargetPages(
         try {
             await assertContentRefsExist({ getBlocsList: async () => finalBlocs }, content);
             assertTextReferences(content, texts);
+            assertAssetReferences(content, finalReleases(installed, targets));
         } catch (error) {
             blocked.push(migrationIssue(`Page ${page.path} is incompatible with the target collections`, error));
         }
     }
+}
+
+function assertAssetReferences(content: string, releases: readonly CollectionRelease[]): void {
+    const assets = new Map(
+        releases.map((release) => [release.collectionId, new Set(release.assets.map(({ id }) => id))]),
+    );
+    replaceCollectionAssetExpressions(content, (collectionId, assetId) => {
+        if (!assets.get(collectionId)?.has(assetId)) {
+            throw new Error(`references collection asset ${collectionId}.${assetId}`);
+        }
+        return "";
+    });
 }
 
 export function validateTargetTheme(

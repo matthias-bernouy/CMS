@@ -57,11 +57,12 @@ async function loadAssets(directory: string, value: unknown) {
             throw new Error(`Collection source asset ${index} must be an object`);
         }
         const source = value as Record<string, unknown>;
-        if (Object.keys(source).some((key) => !["id", "mediaType"].includes(key))) {
-            throw new Error(`Collection source asset ${index} accepts only id and mediaType`);
+        if (Object.keys(source).some((key) => !["id", "generation", "mediaType"].includes(key))) {
+            throw new Error(`Collection source asset ${index} accepts only id, generation and mediaType`);
         }
         if (
             typeof source.id !== "string" ||
+            source.id.length > 96 ||
             !/^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u.test(source.id) ||
             typeof source.mediaType !== "string" ||
             seen.has(source.id)
@@ -73,6 +74,7 @@ async function loadAssets(directory: string, value: unknown) {
         bundle.push({ id: source.id, bytes });
         definitions.push({
             id: source.id,
+            ...(source.generation === undefined ? {} : { generation: source.generation }),
             mediaType: source.mediaType,
             byteLength: bytes.byteLength,
             digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
