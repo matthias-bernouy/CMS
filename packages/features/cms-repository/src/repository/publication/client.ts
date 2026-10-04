@@ -1,10 +1,9 @@
 import { parseCollectionReleaseJson } from "cms-repository/exports/collections/index";
 import { parseContractReleaseJson } from "cms-repository/exports/contracts/index";
 import { parseProviderManifestJson } from "cms-repository/exports/providers/index";
-import { signRepositoryRequest } from "./auth";
-import { encodePublication, type PublicationEnvelope } from "./protocol";
 import { boundedResponseBytes, repositoryUrl } from "./transport";
-import type { RemoteCoordinate, RepositoryArtifactKind } from "./types";
+import type { PublicationEnvelope, RemoteCoordinate, RepositoryArtifactKind } from "./types";
+import { RemoteRepositoryWriter } from "./writer";
 
 export type { RemoteCoordinate } from "./types";
 
@@ -13,12 +12,11 @@ const FETCH_CONCURRENCY = 4;
 
 export class RemoteRepositoryClient {
     private readonly base: URL;
+    private readonly writer: RemoteRepositoryWriter;
 
-    constructor(
-        baseUrl: string,
-        private readonly token?: string,
-    ) {
+    constructor(baseUrl: string, token?: string) {
         this.base = repositoryUrl(baseUrl);
+        this.writer = new RemoteRepositoryWriter(this.base, token);
     }
 
     async pull(coordinate: RemoteCoordinate): Promise<PublicationEnvelope & { expectedDigest: string }> {
@@ -31,20 +29,11 @@ export class RemoteRepositoryClient {
     }
 
     async push(envelope: PublicationEnvelope): Promise<{ added: boolean; digest: string }> {
-        const value = await this.mutate("POST", "v1/publications", encodePublication(envelope));
-        if (!plainRecord(value) || typeof value.added !== "boolean" || !digest(value.digest)) {
-            throw new Error("Repository returned an invalid publication result");
-        }
-        return { added: value.added, digest: value.digest };
+        return this.writer.push(envelope);
     }
 
     async yank(coordinate: RemoteCoordinate, reason: string | null): Promise<void> {
-        const body = Buffer.from(JSON.stringify({ reason }));
-        await this.mutate(
-            "PUT",
-            `v1/yanks/${coordinate.kind}/${encodeURIComponent(coordinate.publisherId)}/${encodeURIComponent(coordinate.id)}/${encodeURIComponent(coordinate.version)}`,
-            body,
-        );
+        return this.writer.yank(coordinate, reason);
     }
 
     private async assets(coordinate: RemoteCoordinate, canonicalJson: string) {
@@ -87,34 +76,6 @@ export class RemoteRepositoryClient {
         }
         return { bytes, digest: digestHeader };
     }
-
-    private async mutate(method: string, path: string, body: Uint8Array): Promise<unknown> {
-        if (!this.token) {
-            throw new Error("ULVIA_REPOSITORY_TOKEN is required for repository mutations");
-        }
-        const url = new URL(path, this.base);
-        const signed = signRepositoryRequest(method, url, body, this.token);
-        const response = await fetch(url, {
-            method,
-            body: Buffer.from(body),
-            redirect: "error",
-            signal: AbortSignal.timeout(60_000),
-            headers: {
-                Accept: "application/json",
-                Authorization: signed.authorization,
-                "Content-Type": "application/json",
-                "X-Ulvia-Timestamp": signed.timestamp,
-                "X-Ulvia-Nonce": signed.nonce,
-                "X-Ulvia-Content-SHA256": signed.contentDigest,
-                "X-Ulvia-Signature": signed.signature,
-            },
-        });
-        const value = (await response.json().catch(() => null)) as unknown;
-        if (!response.ok) {
-            throw new Error(remoteError(value, response.status));
-        }
-        return value;
-    }
 }
 
 function assertCoordinate(coordinate: RemoteCoordinate, canonicalJson: string): void {
@@ -152,15 +113,4 @@ function releasePath(coordinate: RemoteCoordinate): string {
 
 function digest(value: unknown): value is string {
     return typeof value === "string" && /^sha256:[0-9a-f]{64}$/u.test(value);
-}
-
-function remoteError(value: unknown, status: number): string {
-    if (plainRecord(value) && plainRecord(value.error) && typeof value.error.message === "string") {
-        return `Repository rejected the request (${status}): ${value.error.message}`;
-    }
-    return `Repository rejected the request (${status})`;
-}
-
-function plainRecord(value: unknown): value is Record<string, unknown> {
-    return value !== null && typeof value === "object" && !Array.isArray(value);
 }

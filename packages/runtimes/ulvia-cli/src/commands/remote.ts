@@ -125,9 +125,7 @@ async function storeLocal(root: string, remote: PublicationEnvelope & { expected
 }
 
 async function collectionAssets(assets: readonly { id: string; bytes: Blob }[]): Promise<PublicationAsset[]> {
-    return Promise.all(
-        assets.map(async (asset) => ({ id: asset.id, bytes: new Uint8Array(await asset.bytes.arrayBuffer()) })),
-    );
+    return assets.map((asset) => ({ id: asset.id, bytes: asset.bytes }));
 }
 
 async function contractAssets(files: LocalArtifactFiles, canonicalJson: string): Promise<PublicationAsset[]> {

@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
-import { encodePublication, signRepositoryRequest } from "@bernouy/cms-repository/repository/publication";
+import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
 import { startLocalRepository } from "../../src/runtime/repository";
 
 test("remote publication is signed, immutable, atomic, and reversibly yankable", async () => {
@@ -28,34 +28,34 @@ test("remote publication is signed, immutable, atomic, and reversibly yankable",
             `${definition.version}.json`,
         );
         const canonicalJson = await readFile(path, "utf8");
-        const body = encodePublication({ kind: "contract", canonicalJson, assets: [] });
-        const publicationUrl = new URL("/v1/publications", server.url);
-
-        expect((await fetch(publicationUrl, { method: "POST", body })).status).toBe(401);
-        const publication = await signedRequest(publicationUrl, "POST", body, token);
-        expect(publication.status).toBe(200);
-        expect(await publication.json()).toMatchObject({ kind: "contract", added: true });
-        expect((await signedRequest(publicationUrl, "POST", body, token)).status).toBe(200);
+        const envelope = { kind: "contract" as const, canonicalJson, assets: [] };
+        await expect(new RemoteRepositoryClient(server.url).push(envelope)).rejects.toThrow("ULVIA_REPOSITORY_TOKEN");
+        const client = new RemoteRepositoryClient(server.url, token);
+        expect(await client.push(envelope)).toMatchObject({ added: true });
+        expect(await client.push(envelope)).toMatchObject({ added: false });
 
         const catalogueUrl = `${server.url}/v1/contracts`;
         expect(((await (await fetch(catalogueUrl)).json()) as { releases: unknown[] }).releases).toHaveLength(1);
         const coordinate = `${definition.publisherId}/${definition.contractId}/${definition.version}`;
-        const yankUrl = new URL(`/v1/yanks/contract/${coordinate}`, server.url);
-        const yankBody = Buffer.from(JSON.stringify({ reason: "Known protocol defect" }));
-        expect((await signedRequest(yankUrl, "PUT", yankBody, token)).status).toBe(200);
+        const remoteCoordinate = {
+            kind: "contract" as const,
+            publisherId: definition.publisherId,
+            id: definition.contractId,
+            version: definition.version,
+        };
+        await client.yank(remoteCoordinate, "Known protocol defect");
         expect(((await (await fetch(catalogueUrl)).json()) as { releases: unknown[] }).releases).toEqual([]);
         expect((await fetch(`${catalogueUrl}/${coordinate}`)).status).toBe(200);
 
-        const restoreBody = Buffer.from(JSON.stringify({ reason: null }));
-        expect((await signedRequest(yankUrl, "PUT", restoreBody, token)).status).toBe(200);
+        await client.yank(remoteCoordinate, null);
         expect(((await (await fetch(catalogueUrl)).json()) as { releases: unknown[] }).releases).toHaveLength(1);
 
-        const changedBody = encodePublication({
+        const changed = {
             kind: "contract",
             canonicalJson: canonicalJson.replace("Catalog items", "Changed catalog items"),
             assets: [],
-        });
-        expect((await signedRequest(publicationUrl, "POST", changedBody, token)).status).toBe(409);
+        } as const;
+        await expect(client.push(changed)).rejects.toThrow("already published");
         expect(
             await Bun.file(
                 join(
@@ -75,19 +75,3 @@ test("remote publication is signed, immutable, atomic, and reversibly yankable",
         ]);
     }
 });
-
-async function signedRequest(url: URL, method: string, body: Uint8Array, token: string): Promise<Response> {
-    const signed = signRepositoryRequest(method, url, body, token);
-    return fetch(url, {
-        method,
-        body,
-        headers: {
-            Authorization: signed.authorization,
-            "Content-Type": "application/json",
-            "X-Ulvia-Timestamp": signed.timestamp,
-            "X-Ulvia-Nonce": signed.nonce,
-            "X-Ulvia-Content-SHA256": signed.contentDigest,
-            "X-Ulvia-Signature": signed.signature,
-        },
-    });
-}

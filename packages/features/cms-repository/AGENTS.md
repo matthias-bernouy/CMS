@@ -44,6 +44,12 @@ models and validation for CMS-owned installations and site selections.
   provides durable release publication. Live transport and conformance execution
   remain outside this package. Mongo release publication currently rejects
   bundles with fixture assets until separate byte storage is implemented.
+- Remote publication is staged: sign bounded metadata first, stream each declared
+  asset as a separately signed raw body, then commit through the registry exactly
+  once. Upload stores must verify byte length and SHA-256 before exposing a Blob,
+  retain an idempotent commit receipt, expire abandoned sessions and keep the
+  immutable release invisible until registry publication succeeds. Never restore
+  the whole-bundle base64 request.
 - `src/collections/{interfaces,core}/` owns authored collection release parsing,
   asset verification and resource-level reference validation, exposed through
   `./collections`. `./collections/texts` exposes browser-safe text validation,

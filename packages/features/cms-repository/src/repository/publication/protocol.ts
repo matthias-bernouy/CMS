@@ -1,41 +1,44 @@
 import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
-import type { PublicationAsset, PublicationEnvelope, RepositoryArtifactKind } from "./types";
+import type { PublicationUploadManifest, RepositoryArtifactKind } from "./types";
 
-export type { PublicationAsset, PublicationEnvelope } from "./types";
+export type { PublicationUploadManifest } from "./types";
 
-// 100 MiB admitted binary bundles expand by 4/3 in canonical base64, plus JSON metadata.
-export const MAX_PUBLICATION_BYTES = 160 * 1024 * 1024;
+export const MAX_PUBLICATION_METADATA_BYTES = 3 * 1024 * 1024;
+export const MAX_PUBLICATION_ASSET_BYTES = 100 * 1024 * 1024;
+export const MAX_PUBLICATION_BUNDLE_BYTES = 100 * 1024 * 1024;
+const MAX_CANONICAL_JSON_BYTES = 2 * 1024 * 1024;
+const MAX_ASSETS = 256;
 
-export function encodePublication(envelope: PublicationEnvelope): Uint8Array {
+export function encodePublicationUpload(manifest: PublicationUploadManifest): Uint8Array {
     return Buffer.from(
         JSON.stringify({
-            protocol: "ulvia-repository-publication/v1",
-            kind: envelope.kind,
-            canonicalJson: envelope.canonicalJson,
-            assets: envelope.assets.map((asset) => ({
-                id: asset.id,
-                base64: Buffer.from(asset.bytes).toString("base64"),
-            })),
+            protocol: "ulvia-repository-upload/v1",
+            ...manifest,
         }),
     );
 }
 
-export function parsePublication(bytes: Uint8Array): PublicationEnvelope {
-    const value = parseStrictJson(bytes, MAX_PUBLICATION_BYTES, 8) as Record<string, unknown>;
+export function parsePublicationUpload(bytes: Uint8Array): PublicationUploadManifest {
+    const value = parseStrictJson(bytes, MAX_PUBLICATION_METADATA_BYTES, 8) as Record<string, unknown>;
     if (
         !plainRecord(value) ||
         Object.keys(value).some((key) => !["protocol", "kind", "canonicalJson", "assets"].includes(key)) ||
-        value.protocol !== "ulvia-repository-publication/v1" ||
+        value.protocol !== "ulvia-repository-upload/v1" ||
         !isKind(value.kind) ||
         typeof value.canonicalJson !== "string" ||
         !Array.isArray(value.assets) ||
-        value.assets.length > 256
+        value.assets.length > MAX_ASSETS ||
+        Buffer.byteLength(value.canonicalJson) > MAX_CANONICAL_JSON_BYTES
     ) {
-        throw new Error("Invalid publication envelope");
+        throw new Error("Invalid publication upload manifest");
     }
-    const assets = value.assets.map((asset) => parseAsset(asset));
+    const assets = value.assets.map(parseUploadAsset);
     if (new Set(assets.map((asset) => asset.id)).size !== assets.length) {
         throw new Error("Publication asset IDs must be unique");
+    }
+    const totalBytes = assets.reduce((total, asset) => total + asset.byteLength, 0);
+    if (totalBytes > MAX_PUBLICATION_BUNDLE_BYTES || (value.kind === "provider-manifest" && assets.length)) {
+        throw new Error("Publication asset bundle exceeds its limits");
     }
     return { kind: value.kind, canonicalJson: value.canonicalJson, assets };
 }
@@ -54,9 +57,12 @@ export function parseYank(bytes: Uint8Array): string | null {
     return value.reason.trim();
 }
 
-async function readBody(request: Request): Promise<Uint8Array> {
+export async function readRepositoryMutationBody(
+    request: Request,
+    maximum = MAX_PUBLICATION_METADATA_BYTES,
+): Promise<Uint8Array> {
     const declared = Number(request.headers.get("content-length"));
-    if (Number.isFinite(declared) && declared > MAX_PUBLICATION_BYTES) {
+    if (Number.isFinite(declared) && declared > maximum) {
         throw new Error("Repository mutation body is too large");
     }
     if (!request.body) {
@@ -72,7 +78,7 @@ async function readBody(request: Request): Promise<Uint8Array> {
                 break;
             }
             length += part.value.byteLength;
-            if (length > MAX_PUBLICATION_BYTES) {
+            if (length > maximum) {
                 await reader.cancel();
                 throw new Error("Repository mutation body is too large");
             }
@@ -90,24 +96,25 @@ async function readBody(request: Request): Promise<Uint8Array> {
     return bytes;
 }
 
-export { readBody as readRepositoryMutationBody };
-
-function parseAsset(value: unknown): PublicationAsset {
+function parseUploadAsset(value: unknown) {
     if (
         !plainRecord(value) ||
-        Object.keys(value).some((key) => key !== "id" && key !== "base64") ||
+        Object.keys(value).some((key) => !["id", "byteLength", "digest"].includes(key)) ||
         typeof value.id !== "string" ||
         !/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/u.test(value.id) ||
-        typeof value.base64 !== "string" ||
-        !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/u.test(value.base64)
+        !Number.isSafeInteger(value.byteLength) ||
+        (value.byteLength as number) < 0 ||
+        (value.byteLength as number) > MAX_PUBLICATION_ASSET_BYTES ||
+        typeof value.digest !== "string" ||
+        !/^sha256:[0-9a-f]{64}$/u.test(value.digest)
     ) {
-        throw new Error("Invalid publication asset");
+        throw new Error("Invalid publication upload asset");
     }
-    const bytes = Buffer.from(value.base64, "base64");
-    if (bytes.toString("base64") !== value.base64) {
-        throw new Error("Publication asset must use canonical base64");
-    }
-    return { id: value.id, bytes };
+    return {
+        id: value.id,
+        byteLength: value.byteLength as number,
+        digest: value.digest as `sha256:${string}`,
+    };
 }
 
 function isKind(value: unknown): value is RepositoryArtifactKind {

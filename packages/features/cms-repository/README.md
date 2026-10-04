@@ -83,8 +83,8 @@ compilation, site installation or execution authorization.
 | `@bernouy/cms-repository/providers/mongo` | Mongo manifest catalogue, installation and selection stores with revision-checked writes |
 | `@bernouy/cms-repository/collections` | Authored release parsing, Light DOM structure, asset and requirement verification, bundle digests |
 | `@bernouy/cms-repository/collections/installations` | Revisioned site installations, compatibility analysis, resource digests and atomic migration replacement/restoration |
-| `@bernouy/cms-repository/repository/publication` | Signed publication protocol, exact remote client, storage-independent mutation endpoint and replay-store port |
-| `@bernouy/cms-repository/repository/filesystem` | Reference immutable filesystem registry, local catalogues, yanks and read endpoint |
+| `@bernouy/cms-repository/repository/publication` | Signed staged-publication protocol, exact remote client, mutation endpoint, upload-store and replay-store ports |
+| `@bernouy/cms-repository/repository/filesystem` | Reference immutable registry, streamed upload staging, durable replay claims, local catalogues, yanks and read endpoint |
 
 Use explicit domain subpaths for executable APIs. There are no compatibility
 packages or wrappers under the former package names.
@@ -98,9 +98,13 @@ revisioned site installations and text overrides. The internal `repository-http/
 directory holds bounded HTTP reads shared by collection and provider sources;
 catalogue parsing remains in each domain. Mongo contract release publication
 rejects fixture assets until separate byte storage is available.
-The publication endpoint depends on a registry port. Its default replay store is
-process-local; a multi-node production server must inject a shared atomic replay
-store and a durable registry adapter. The Mongo catalogues expose revision tokens from publication metadata for
+The publication endpoint depends on registry, upload-store and replay-store
+ports. A writable composition must inject durable upload staging; the default
+replay store is process-local while the filesystem adapter persists replay
+claims for every process sharing one repository root. Multi-node deployments
+without a shared filesystem still need shared atomic implementations. Publication
+creates bounded metadata first, streams each asset separately and only exposes
+the immutable release after a final idempotent commit. The Mongo catalogues expose revision tokens from publication metadata for
 selection planning. Gateway freshness checks compare the selected site route's
 mutable records and do not rescan the global catalogues.
 Admission and graph planning validate

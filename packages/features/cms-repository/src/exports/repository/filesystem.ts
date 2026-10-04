@@ -9,7 +9,9 @@ export { LocalContractReleases } from "cms-repository/repository/filesystem/cont
 export { RepositoryReadEndpoint } from "cms-repository/repository/filesystem/http/readEndpoint";
 export { pruneRepository, withRepositoryWriteLock } from "cms-repository/repository/filesystem/lock";
 export { LocalProviderReleases } from "cms-repository/repository/filesystem/providers";
-export { FilesystemRepositoryPublicationRegistry } from "cms-repository/repository/filesystem/publicationRegistry";
+export { FilesystemRepositoryPublicationRegistry } from "cms-repository/repository/filesystem/mutations/publicationRegistry";
+export { FilesystemRepositoryReplayStore } from "cms-repository/repository/filesystem/mutations/replayStore";
+export { FilesystemRepositoryPublicationUploadStore } from "cms-repository/repository/filesystem/mutations/uploadStore";
 export {
     LocalRepositoryYanks,
     type RepositoryArtifactKind,

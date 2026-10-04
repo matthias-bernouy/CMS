@@ -7,7 +7,7 @@ export type RemoteCoordinate = Readonly<{
     version: string;
 }>;
 
-export type PublicationAsset = Readonly<{ id: string; bytes: Uint8Array }>;
+export type PublicationAsset = Readonly<{ id: string; bytes: Uint8Array | Blob }>;
 
 export type PublicationEnvelope = Readonly<{
     kind: RepositoryArtifactKind;
@@ -25,6 +25,23 @@ export type RepositoryPublicationResult = Readonly<{
 export type RepositoryYank = Readonly<{ reason: string; yankedAt: string }>;
 export type RepositoryYankResult = RemoteCoordinate & Readonly<{ yank: RepositoryYank | null }>;
 
+export type PublicationUploadAsset = Readonly<{
+    id: string;
+    byteLength: number;
+    digest: `sha256:${string}`;
+}>;
+
+export type PublicationUploadManifest = Readonly<{
+    kind: RepositoryArtifactKind;
+    canonicalJson: string;
+    assets: readonly PublicationUploadAsset[];
+}>;
+
+export type PublicationUploadReceipt = Readonly<{
+    uploadId: string;
+    expiresAt: string;
+}>;
+
 /** Storage-independent mutation boundary implemented by a repository server adapter. */
 export interface RepositoryPublicationRegistry {
     publish(envelope: PublicationEnvelope): Promise<RepositoryPublicationResult>;
@@ -34,4 +51,21 @@ export interface RepositoryPublicationRegistry {
 /** Atomic replay claim. Production multi-node servers should provide a shared durable implementation. */
 export interface RepositoryReplayStore {
     claim(signature: string, expiresAt: Date): Promise<boolean>;
+}
+
+/** Durable staging boundary. Assets stay invisible until the supplied publication callback succeeds. */
+export interface RepositoryPublicationUploadStore {
+    create(manifest: PublicationUploadManifest, expiresAt: Date): Promise<PublicationUploadReceipt>;
+    putAsset(
+        uploadId: string,
+        assetId: string,
+        body: ReadableStream<Uint8Array> | null,
+        contentDigest: `sha256:${string}`,
+        contentLength?: number,
+    ): Promise<void>;
+    commit(
+        uploadId: string,
+        publish: (envelope: PublicationEnvelope) => Promise<RepositoryPublicationResult>,
+    ): Promise<RepositoryPublicationResult>;
+    abort(uploadId: string): Promise<void>;
 }

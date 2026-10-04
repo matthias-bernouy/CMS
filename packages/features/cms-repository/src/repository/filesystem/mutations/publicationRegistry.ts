@@ -7,12 +7,12 @@ import type {
     RepositoryPublicationResult,
     RepositoryYankResult,
 } from "cms-repository/repository/publication/types";
-import { LocalArtifactFiles } from "./artifactFiles";
-import { LocalCollectionRepository } from "./collections";
-import { LocalContractReleases } from "./contracts";
-import { withRepositoryWriteLock } from "./lock";
-import { LocalProviderReleases } from "./providers";
-import { LocalRepositoryYanks } from "./yanks";
+import { LocalArtifactFiles } from "../artifactFiles";
+import { LocalCollectionRepository } from "../collections";
+import { LocalContractReleases } from "../contracts";
+import { withRepositoryWriteLock } from "../lock";
+import { LocalProviderReleases } from "../providers";
+import { LocalRepositoryYanks } from "../yanks";
 
 /** Reference filesystem adapter for the storage-independent publication endpoint. */
 export class FilesystemRepositoryPublicationRegistry implements RepositoryPublicationRegistry {

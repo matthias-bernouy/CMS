@@ -11,7 +11,7 @@ export type StoredArtifact = {
     bytes: Buffer;
     publishedAt: string;
 };
-export type LocalFixtureAsset = { id: string; bytes: Uint8Array };
+export type LocalFixtureAsset = { id: string; bytes: Uint8Array | Blob };
 
 /** Immutable files for locally published contract and provider artifacts. */
 export class LocalArtifactFiles {
@@ -92,22 +92,33 @@ export class LocalArtifactFiles {
     }
 }
 
-async function writeImmutable(path: string, bytes: Uint8Array): Promise<void> {
+async function writeImmutable(path: string, bytes: Uint8Array | Blob): Promise<void> {
     const temporary = join(dirname(path), `.${randomUUID()}.tmp`);
-    await writeFile(temporary, bytes, { flag: "wx", mode: 0o600 });
+    const snapshot = bytes instanceof Blob ? bytes : new Blob([bytes.slice()]);
+    await Bun.write(temporary, snapshot, { createPath: false });
     try {
         await link(temporary, path);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
             throw error;
         }
-        const winner = await readFile(path);
-        if (!winner.equals(bytes)) {
+        const winner = Bun.file(path);
+        if (winner.size !== snapshot.size || !(await sameBlobBytes(winner, snapshot))) {
             throw new Error(`Immutable artifact file already has different content: ${path}`);
         }
     } finally {
         await rm(temporary, { force: true });
     }
+}
+
+async function sameBlobBytes(left: Blob, right: Blob): Promise<boolean> {
+    const [leftDigest, rightDigest] = await Promise.all(
+        [left, right].map(async (value) => {
+            const digest = await crypto.subtle.digest("SHA-256", await value.arrayBuffer());
+            return Buffer.from(digest).toString("hex");
+        }),
+    );
+    return leftDigest === rightDigest;
 }
 
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;

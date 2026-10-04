@@ -41,8 +41,10 @@ Local Ulvia CMS development runtime.
   recomputing it.
 - Repository writes use a bearer token plus a timestamped, nonce-bound
   HMAC-SHA-256 request signature. Keep tokens in environment or private runtime
-  files, never command arguments. Keep write serialization, bounded streaming,
-  replay rejection and artifact-last atomic visibility intact.
+  files, never command arguments. Push metadata first, stream one separately
+  signed raw asset at a time, and finish with an idempotent commit. Keep write
+  serialization, durable replay rejection, abandoned-session cleanup and
+  artifact-last atomic visibility intact.
 - A yank is reversible repository metadata. It removes a release from new
   catalogue resolution without deleting immutable bytes or breaking historical
   exact-coordinate reads.

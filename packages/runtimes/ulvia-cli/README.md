@@ -47,15 +47,18 @@ Repository writes require `ULVIA_REPOSITORY_TOKEN`; the token is never accepted
 as a command-line argument. Every mutation carries a timestamp, one-time nonce,
 body digest, and HMAC-SHA-256 signature. The server rejects stale or replayed
 requests, serializes writes across processes, re-runs admission and evolution
-rules, and makes the immutable artifact visible only after all declared assets
-are stored. An exact republish is idempotent; different bytes at an existing
-coordinate reject.
+rules, and stages every declared asset as a separately signed raw stream. A final
+idempotent commit makes the immutable artifact visible only after all byte lengths
+and SHA-256 digests pass. Interrupted and rejected sessions never expose a partial
+release. An exact republish is idempotent; different bytes at an existing coordinate
+reject.
 
 The protocol, exact-coordinate client and mutation endpoint live in
 `@bernouy/cms-repository/repository/publication`; the CLI only composes them with
-the reference filesystem adapter and its loopback listener. A production
-repository can replace that adapter and the process-local replay store without
-depending on this executable package.
+the reference filesystem adapter and its loopback listener. The filesystem
+composition persists upload sessions and replay claims below the repository root.
+A production repository can replace those ports without depending on this
+executable package.
 
 `yank` is reversible catalogue metadata: it hides a release from new catalogue
 resolution without deleting its exact historical bytes. `restore` exposes it

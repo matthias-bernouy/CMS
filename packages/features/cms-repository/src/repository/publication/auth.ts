@@ -10,10 +10,29 @@ export type RepositorySignature = Readonly<{
     signature: string;
 }>;
 
+export type VerifiedRepositorySignature = Readonly<{
+    replayKey: string;
+    contentDigest: `sha256:${string}`;
+}>;
+
 export function signRepositoryRequest(method: string, url: URL, body: Uint8Array, token: string): RepositorySignature {
     const timestamp = String(Date.now());
     const nonce = randomUUID();
     const contentDigest = sha256(body);
+    return signRepositoryContentDigest(method, url, contentDigest, token, timestamp, nonce);
+}
+
+export function signRepositoryContentDigest(
+    method: string,
+    url: URL,
+    contentDigest: string,
+    token: string,
+    timestamp = String(Date.now()),
+    nonce = randomUUID(),
+): RepositorySignature {
+    if (!/^[0-9a-f]{64}$/u.test(contentDigest)) {
+        throw new TypeError("Repository content digest must be lowercase SHA-256 hex");
+    }
     return {
         authorization: `Bearer ${token}`,
         timestamp,
@@ -29,6 +48,15 @@ export function verifyRepositoryRequest(
     token: string,
     now = Date.now(),
 ): string | null {
+    const verified = verifyRepositoryRequestHeaders(request, token, now);
+    return verified && verified.contentDigest === `sha256:${sha256(body)}` ? verified.replayKey : null;
+}
+
+export function verifyRepositoryRequestHeaders(
+    request: Request,
+    token: string,
+    now = Date.now(),
+): VerifiedRepositorySignature | null {
     const authorization = request.headers.get("authorization");
     const timestamp = request.headers.get("x-ulvia-timestamp");
     const nonce = request.headers.get("x-ulvia-nonce");
@@ -48,12 +76,12 @@ export function verifyRepositoryRequest(
     if (
         !Number.isSafeInteger(instant) ||
         Math.abs(now - instant) > MAX_CLOCK_SKEW_MS ||
-        contentDigest !== sha256(body)
+        !/^[0-9a-f]{64}$/u.test(contentDigest)
     ) {
         return null;
     }
     const expected = `sha256=${signature(request.method, new URL(request.url), timestamp, nonce, contentDigest, token)}`;
-    return safeEqual(supplied, expected) ? expected : null;
+    return safeEqual(supplied, expected) ? { replayKey: expected, contentDigest: `sha256:${contentDigest}` } : null;
 }
 
 export function matchesRepositoryToken(request: Request, token: string): boolean {
