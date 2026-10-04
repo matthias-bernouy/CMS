@@ -8,6 +8,7 @@ export function previewDocument(input: {
     content: string;
     scripts: string[];
     style: string;
+    assetOrigins?: readonly string[];
 }): Response {
     const nonce = randomBytes(18).toString("base64");
     const script = [...input.scripts, previewLayoutScript()].join("\n").replace(/<\/script/gi, "<\\/script");
@@ -15,9 +16,9 @@ export function previewDocument(input: {
         "default-src 'none'",
         `script-src 'nonce-${nonce}'`,
         "style-src 'self' 'unsafe-inline'",
-        "img-src 'self' data: blob: https:",
-        "font-src 'self' data:",
-        "media-src 'self' blob:",
+        `img-src 'self' data: blob: https: ${input.assetOrigins?.join(" ") ?? ""}`.trim(),
+        `font-src 'self' data: ${input.assetOrigins?.join(" ") ?? ""}`.trim(),
+        `media-src 'self' blob: ${input.assetOrigins?.join(" ") ?? ""}`.trim(),
         "connect-src 'none'",
         "form-action 'none'",
         "base-uri 'none'",

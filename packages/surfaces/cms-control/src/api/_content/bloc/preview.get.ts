@@ -20,5 +20,6 @@ export default async function getBlocPreview(req: Request, cms: ControlCms): Pro
     return blocPreview(cms.repository, tag, basePath, {
         scripts: [component, bindings],
         style: new TextDecoder().decode(style.raw),
+        ...(cms.config.deliveryUrl ? { collectionAssetBaseUrl: cms.config.deliveryUrl } : {}),
     });
 }

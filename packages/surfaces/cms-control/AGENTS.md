@@ -86,6 +86,8 @@ modules.
 - Stable binding contracts live in `@bernouy/cms-content/bindings`.
 - The remaining preview assets provide the shared component and binding
   runtimes to isolated Bloc previews.
+- Read-only Bloc previews resolve installed collection asset expressions against the configured public Delivery
+  URL and allow only that origin through their asset CSP directives.
 - Keep authored bloc behavior independent from Control internals.
 
 ## Dependency Rules

@@ -16,13 +16,20 @@ import { networkInertHtml } from "./networkInertHtml";
 import { renderPreviewCollectionTexts } from "cms-control/core/content/installedCollections/renderTexts";
 import { installedBlocInitialMarkup } from "cms-control/core/content/installedCollections/settings";
 import { previewDocument } from "./document";
+import { previewAssetOrigin, resolvePreviewCollectionAssets } from "./assets";
+
+type PreviewAssets = {
+    scripts: string[];
+    style: string;
+    collectionAssetBaseUrl?: string;
+};
 
 export async function blocPreview(
     repository: Pick<CmsRepository, "getBlocRecords"> &
         Partial<Pick<CmsRepository, "getInstalledCollections" | "getSystem">>,
     tag: string,
     basePath: string,
-    assets: { scripts: string[]; style: string } = { scripts: [], style: "" },
+    assets: PreviewAssets = { scripts: [], style: "" },
 ): Promise<Response> {
     const records = await repository.getBlocRecords();
     const record = records.find((item) => item.tag === tag);
@@ -55,7 +62,7 @@ export async function blocPreview(
             needed.add(nested);
         }
     }
-    const scripts = blocs
+    let scripts = blocs
         .filter((bloc) => needed.has(bloc.id) && !(draft && bloc.id === tag))
         .map(
             (bloc) =>
@@ -69,12 +76,27 @@ export async function blocPreview(
             installed.collections.map((item) => ({ collection: item.release, overrides: item.textOverrides })),
         );
     }
+    let previewContent = document.body.innerHTML;
+    if (installed?.collections.length && assets.collectionAssetBaseUrl) {
+        const releases = installed.collections.map(({ release }) => release);
+        [previewContent, scripts] = await Promise.all([
+            resolvePreviewCollectionAssets(previewContent, releases, assets.collectionAssetBaseUrl),
+            Promise.all(
+                scripts.map((script) =>
+                    resolvePreviewCollectionAssets(script, releases, assets.collectionAssetBaseUrl!),
+                ),
+            ),
+        ]);
+    }
     return previewDocument({
         basePath,
         title: draft?.name ?? artifact?.name ?? tag,
-        content: networkInertHtml(hardenStoredHtml(document.body.innerHTML)),
+        content: networkInertHtml(hardenStoredHtml(previewContent)),
         scripts: [...assets.scripts, ...scripts],
         style: assets.style,
+        assetOrigins: [previewAssetOrigin(assets.collectionAssetBaseUrl)].filter(
+            (origin): origin is string => origin !== null,
+        ),
     });
 }
 
