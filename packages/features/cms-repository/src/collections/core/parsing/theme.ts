@@ -1,6 +1,7 @@
 import type { CollectionTheme, CollectionThemeToken, CollectionThemeTokenType } from "../../interfaces/CollectionTheme";
 import type { CollectionDependency } from "../../interfaces/CollectionRelease";
 import { invalid } from "../errors";
+import type { CollectionLimits } from "../limits";
 import { collectionThemeSourceId, collectionThemeTokenId } from "../namespace";
 import { array, identifier, integer, keys, record, string, unique } from "../values";
 
@@ -32,16 +33,18 @@ function css(value: unknown, path: string): string {
 export function parseCollectionTheme(
     input: unknown,
     collectionId: string,
+    limits: Readonly<CollectionLimits>,
     dependencies: readonly CollectionDependency[] = [],
 ): CollectionTheme {
     collectionThemeSourceId(collectionId);
     const source = record(input, "$.theme");
     keys(source, ["label", "categories"], "$.theme");
-    const categories = array(source.categories, 16, "$.theme.categories").map((entry, index) => {
+    let tokenCount = 0;
+    const categories = array(source.categories, limits.maxThemeCategories, "$.theme.categories").map((entry, index) => {
         const path = `$.theme.categories[${index}]`;
         const category = record(entry, path);
         keys(category, ["id", "label", "description", "tokens"], path);
-        const tokens = array(category.tokens, 64, `${path}.tokens`).map((item, offset) => {
+        const tokens = array(category.tokens, limits.maxThemeTokens, `${path}.tokens`).map((item, offset) => {
             const tokenPath = `${path}.tokens[${offset}]`;
             const token = record(item, tokenPath);
             keys(token, ["id", "generation", "label", "description", "type", "defaults"], tokenPath);
@@ -73,6 +76,10 @@ export function parseCollectionTheme(
             tokens.map((token) => token.id),
             `${path}.tokens`,
         );
+        tokenCount += tokens.length;
+        if (tokenCount > limits.maxThemeTokens) {
+            invalid(`theme must define at most ${limits.maxThemeTokens} tokens`, "$.theme.categories");
+        }
         return {
             id: name(category.id, `${path}.id`),
             label: label(category.label, `${path}.label`),

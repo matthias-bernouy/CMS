@@ -45,8 +45,8 @@ export function validateMarkup(
         const path = `$.blocs[${bloc.id}]`;
         const content = markup.get(bloc.id)!;
         validateManagedNativeDefinition(bloc, content, path);
-        if (content.shellSlots.size > limits.maxSlots || content.pageSlots.size > limits.maxSlots) {
-            invalid(`markup must offer at most ${limits.maxSlots} slots`, `${path}.slots`);
+        if (content.shellSlots.size > limits.maxSlotsPerBloc || content.pageSlots.size > limits.maxSlotsPerBloc) {
+            invalid(`markup must offer at most ${limits.maxSlotsPerBloc} slots`, `${path}.slots`);
         }
         validatePageSlots(bloc, content, path);
         if (content.shadow) {

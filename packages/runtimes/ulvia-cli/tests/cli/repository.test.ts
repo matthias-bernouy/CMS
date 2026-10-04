@@ -154,7 +154,7 @@ test("collection source assets keep their verified bytes through the repository 
             version: "1.0.0",
             name: "collection.name",
             locale: "en",
-            exports: { blocs: [], themeTokens: [], assets: ["brand-mark"] },
+            exports: "*",
             assets: [
                 {
                     id: "brand-mark",
@@ -166,9 +166,25 @@ test("collection source assets keep their verified bytes through the repository 
         };
         const definitionPath = join(sourceRoot, "definition.json");
         await writeFile(definitionPath, JSON.stringify(definition));
+        for (const [id, internal] of [
+            ["asset-example-card", false],
+            ["asset-example-card-frame", true],
+        ] as const) {
+            const root = join(sourceRoot, "blocs", id);
+            await mkdir(root, { recursive: true });
+            await writeFile(
+                join(root, "definition.json"),
+                JSON.stringify({ id, kind: "composition", label: `bloc.${id}.label`, internal, slots: {} }),
+            );
+            await writeFile(join(root, "lightdom.html"), "<p>Example</p>");
+        }
         await writeFile(
             join(sourceRoot, "translations", "en", "collection.json"),
-            JSON.stringify({ "collection.name": "Asset example" }),
+            JSON.stringify({
+                "collection.name": "Asset example",
+                "bloc.asset-example-card.label": "Card",
+                "bloc.asset-example-card-frame.label": "Card frame",
+            }),
         );
         await writeFile(join(sourceRoot, "assets", "icons", "brand", "mark.svg"), bytes);
 
@@ -180,6 +196,11 @@ test("collection source assets keep their verified bytes through the repository 
             byteLength: bytes.byteLength,
         });
         expect(artifact.release.assets[0]).not.toHaveProperty("source");
+        expect(artifact.release.exports).toEqual({
+            blocs: ["asset-example-card"],
+            themeTokens: [],
+            assets: ["brand-mark"],
+        });
         expect(new Uint8Array(await artifact.assets[0]!.bytes.arrayBuffer())).toEqual(bytes);
 
         const repository = new LocalCollectionRepository(repositoryRoot);

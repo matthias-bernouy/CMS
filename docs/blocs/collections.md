@@ -66,6 +66,44 @@ resolution without deleting historical bytes, and `restore` reverses it. The
 current release format does not install the `definitions/` directory. No direct
 collection JSON upload is available in Control.
 
+### Collection admission limits
+
+Limits are enforced when every collection release is admitted, whether it is
+created locally, pulled from a repository or received by the official
+repository server:
+
+| Resource | Maximum per release |
+| --- | ---: |
+| Canonical collection document | 8 MiB |
+| Blocs | 512 |
+| Assets | 1,024 |
+| Content texts | 4,096 |
+| Views | 256 |
+| Dashboards | 128 |
+| Collection dependencies | 128 |
+| Theme categories | 64 |
+| Theme tokens across all categories | 4,096 |
+
+Structural sub-resources remain bounded as well: 512 adjacent migration files
+with 512 operations each, 256 settings and 32 slots per Bloc, and 32 capability
+requirements per Bloc or View. Dashboard navigation accepts 64 items in total,
+with at most 16 at one level and three levels.
+
+One asset remains limited to 10 MiB and all asset bytes in one release remain
+limited to 50 MiB. These are hard collection limits: a release exceeding any
+one of them is rejected. The publication transport accepts larger generic
+repository artifacts, but that transport ceiling does not override collection
+admission. Collection assets are therefore intended for immutable resources
+shipped with the release, such as icons, fonts, images and small documents.
+Larger videos, audio files or documents belong in the CMS media/file system.
+
+Import and export lists use the limit of their resource kind rather than the
+Bloc limit. Authored sources may use `"*"` for an entire `exports` object or one
+of its `blocs`, `themeTokens`, `texts` or `assets` selections. The release
+command expands that shorthand before admission, excludes internal Blocs from
+a wildcard Bloc selection and stores an explicit sorted list in the immutable
+release. Dependency imports never accept wildcards.
+
 Components use `shadowdom.html`, optional fixed `lightdom.html`, optional
 `style.css`, and optional `bloc.ts`.
 Bloc folders may be grouped at any supported depth below `blocs/`. A directory

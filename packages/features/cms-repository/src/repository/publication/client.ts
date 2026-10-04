@@ -1,13 +1,13 @@
 import { parseCollectionReleaseJson } from "cms-repository/exports/collections/index";
 import { parseContractReleaseJson } from "cms-repository/exports/contracts/index";
 import { parseProviderManifestJson } from "cms-repository/exports/providers/index";
+import { MAX_REPOSITORY_RESPONSE_BYTES } from "cms-repository/repository-http/getBytes";
 import { boundedResponseBytes, repositoryUrl } from "./transport";
 import type { PublicationEnvelope, RemoteCoordinate, RepositoryArtifactKind } from "./types";
 import { RemoteRepositoryWriter } from "./writer";
 
 export type { RemoteCoordinate } from "./types";
 
-const MAX_RELEASE_BYTES = 2 * 1024 * 1024;
 const FETCH_CONCURRENCY = 4;
 
 export class RemoteRepositoryClient {
@@ -21,7 +21,7 @@ export class RemoteRepositoryClient {
 
     async pull(coordinate: RemoteCoordinate): Promise<PublicationEnvelope & { expectedDigest: string }> {
         const path = releasePath(coordinate);
-        const response = await this.get(path, MAX_RELEASE_BYTES, "application/json");
+        const response = await this.get(path, MAX_REPOSITORY_RESPONSE_BYTES, "application/json");
         const canonicalJson = new TextDecoder("utf-8", { fatal: true }).decode(response.bytes);
         assertCoordinate(coordinate, canonicalJson);
         const assets = await this.assets(coordinate, canonicalJson);

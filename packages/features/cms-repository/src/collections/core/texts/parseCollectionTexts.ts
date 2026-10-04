@@ -2,10 +2,14 @@ import type { CollectionText, CollectionTextOverrides } from "../../interfaces/C
 import { integer } from "../values";
 import { parseTextLocales, TEXT_LIMITS, textIdentifier, textKeys, textLocale, textRecord } from "./validation";
 
-export function parseCollectionTexts(value: unknown, defaultLocale: string): readonly CollectionText[] {
+export function parseCollectionTexts(
+    value: unknown,
+    defaultLocale: string,
+    maximum: number = TEXT_LIMITS.definitions,
+): readonly CollectionText[] {
     if (
         !Array.isArray(value) ||
-        value.length > TEXT_LIMITS.definitions ||
+        value.length > maximum ||
         Object.keys(value).length !== value.length ||
         Object.keys(value).some((key, i) => key !== String(i))
     ) {

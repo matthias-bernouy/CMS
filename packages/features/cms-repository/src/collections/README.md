@@ -165,9 +165,11 @@ also verify the exact byte set and capability witnesses, returning a digest,
 canonical JSON and immutable Blob snapshots. Every input buffer is snapshotted
 before the first asynchronous step; caller-owned objects are never frozen.
 
-`CollectionLimits` bounds JSON bytes/depth, resources, assets and their aggregate
-size, markup, slots and requirements. `limits.schema` explicitly carries the
-schema policy through configurations. Locale tags normalize using
+`CollectionLimits` gives documents, Blocs, assets, texts, Views, dashboards,
+dependencies, theme resources, migrations, markup, slots, settings and
+requirements independent bounds. Import and export lists use the bound of the
+resource kind they select. `limits.schema` explicitly carries the schema policy
+through configurations. Locale tags normalize using
 `Intl.getCanonicalLocales`; administration copy resolves through the immutable
 catalogue while content text overrides remain separate.
 

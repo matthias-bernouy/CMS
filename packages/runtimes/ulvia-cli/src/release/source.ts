@@ -4,7 +4,7 @@ import { sha256Digest } from "@bernouy/binary-media";
 import { admitCollectionRelease, isCollectionNamespace } from "@bernouy/cms-repository/collections";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { loadCollectionBlocs } from "./blocSources";
-import { loadCollectionTheme, loadCollectionTranslations } from "./metadataSources";
+import { expandCollectionSourceExports, loadCollectionTheme, loadCollectionTranslations } from "./metadataSources";
 import { loadCollectionTexts } from "./textSources";
 import { assertCollectionSourceQuality } from "./quality";
 import { loadCollectionMigrations } from "./migrationSources";
@@ -26,8 +26,15 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
     const theme = await loadCollectionTheme(join(collectionRoot, "theme"));
     const migrations = await loadCollectionMigrations(join(collectionRoot, "migrations"));
     const assets = await loadAssets(join(collectionRoot, "assets"), definition.assets);
+    const exports = expandCollectionSourceExports(definition.exports, {
+        blocs: ids(blocs, (bloc) => bloc.internal !== true),
+        themeTokens: themeTokenIds(theme),
+        texts: ids(texts),
+        assets: ids(assets.definitions),
+    });
     const candidate = {
         ...definition,
+        ...(exports === undefined ? {} : { exports }),
         translations,
         assets: assets.definitions,
         blocs,
@@ -43,6 +50,18 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         throw new Error(`Collection folder ${collectionId} does not match its definition`);
     }
     return artifact;
+}
+
+function ids(values: readonly unknown[], include: (value: Record<string, unknown>) => boolean = () => true): string[] {
+    return values.flatMap((value) => {
+        const record = value as Record<string, unknown>;
+        return typeof record?.id === "string" && include(record) ? [record.id] : [];
+    });
+}
+
+function themeTokenIds(value: unknown): string[] {
+    const categories = (value as { categories?: { tokens?: unknown[] }[] } | undefined)?.categories ?? [];
+    return categories.flatMap((category) => ids(category.tokens ?? []));
 }
 
 async function loadAssets(directory: string, value: unknown) {

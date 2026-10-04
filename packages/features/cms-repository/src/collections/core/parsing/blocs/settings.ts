@@ -14,7 +14,7 @@ export function parseComponentSettings(
     path: string,
     limits: Readonly<CollectionLimits>,
 ): CollectionComponentSettings {
-    const inputs = array(value, limits.schema.maxProperties, path);
+    const inputs = array(value, limits.maxSettingsPerBloc, path);
     if (inputs.length === 0) {
         invalid("must contain at least one setting", path);
     }

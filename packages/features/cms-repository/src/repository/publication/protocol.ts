@@ -1,13 +1,14 @@
 import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import { MAX_REPOSITORY_RESPONSE_BYTES } from "cms-repository/repository-http/getBytes";
 import type { PublicationUploadManifest, RepositoryArtifactKind } from "./types";
 
 export type { PublicationUploadManifest } from "./types";
 
-export const MAX_PUBLICATION_METADATA_BYTES = 3 * 1024 * 1024;
+export const MAX_PUBLICATION_METADATA_BYTES = 20 * 1024 * 1024;
 export const MAX_PUBLICATION_ASSET_BYTES = 100 * 1024 * 1024;
 export const MAX_PUBLICATION_BUNDLE_BYTES = 100 * 1024 * 1024;
-const MAX_CANONICAL_JSON_BYTES = 2 * 1024 * 1024;
-const MAX_ASSETS = 256;
+const MAX_CANONICAL_JSON_BYTES = MAX_REPOSITORY_RESPONSE_BYTES;
+const MAX_ASSETS = 1_024;
 
 export function encodePublicationUpload(manifest: PublicationUploadManifest): Uint8Array {
     return Buffer.from(

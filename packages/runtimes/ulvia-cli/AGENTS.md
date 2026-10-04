@@ -29,6 +29,9 @@ Local Ulvia CMS development runtime.
 - Collection assets may live recursively below `assets/`; their authored
   `source` path is compilation-only and remains independent from the stable
   public asset ID.
+- Authored collection exports may use `"*"` globally or for one resource kind.
+  Expand it to exact public resource IDs before admission, never place a wildcard
+  in the immutable release, and never accept wildcard dependency imports.
 - Collection migrations are recursive JSON files below `migrations/`, named
   `<from>-to-<to>.json`. Release admission enforces a cumulative adjacent chain.
 - Before storing a collection release, validate namespaced CSS variable

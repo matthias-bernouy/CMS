@@ -1,4 +1,4 @@
-export const TEXT_LIMITS = Object.freeze({ definitions: 256, locales: 32, length: 8192 });
+export const TEXT_LIMITS = Object.freeze({ definitions: 4_096, locales: 32, length: 8192 });
 
 export function textRecord(value: unknown): Record<string, unknown> {
     if (

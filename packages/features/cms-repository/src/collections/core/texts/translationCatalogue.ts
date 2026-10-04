@@ -4,7 +4,7 @@ import { record, string } from "../values";
 
 const KEY = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
 const MAX_LOCALES = 32;
-const MAX_MESSAGES = 1024;
+const MAX_MESSAGES = 16_384;
 const MAX_VALUE_LENGTH = 4096;
 
 export function parseCollectionTranslationKey(value: unknown, path: string): string {

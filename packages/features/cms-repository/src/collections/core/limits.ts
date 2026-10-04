@@ -5,24 +5,42 @@ export interface CollectionLimits {
     readonly maxJsonDepth: number;
     readonly maxBlocs: number;
     readonly maxAssets: number;
+    readonly maxTexts: number;
+    readonly maxViews: number;
+    readonly maxDashboards: number;
+    readonly maxDependencies: number;
+    readonly maxThemeCategories: number;
+    readonly maxThemeTokens: number;
+    readonly maxMigrations: number;
+    readonly maxMigrationOperations: number;
     readonly maxAssetBytes: number;
     readonly maxBundleBytes: number;
     readonly maxMarkupLength: number;
-    readonly maxSlots: number;
-    readonly maxRequirementsPerBloc: number;
+    readonly maxSlotsPerBloc: number;
+    readonly maxRequirementsPerResource: number;
+    readonly maxSettingsPerBloc: number;
     readonly schema: Readonly<ReleaseLimits>;
 }
 
 export const DEFAULT_COLLECTION_LIMITS: Readonly<CollectionLimits> = Object.freeze({
-    maxDocumentBytes: 2 * 1024 * 1024,
+    maxDocumentBytes: 8 * 1024 * 1024,
     maxJsonDepth: 64,
-    maxBlocs: 128,
-    maxAssets: 128,
+    maxBlocs: 512,
+    maxAssets: 1_024,
+    maxTexts: 4_096,
+    maxViews: 256,
+    maxDashboards: 128,
+    maxDependencies: 128,
+    maxThemeCategories: 64,
+    maxThemeTokens: 4_096,
+    maxMigrations: 512,
+    maxMigrationOperations: 512,
     maxAssetBytes: 10 * 1024 * 1024,
     maxBundleBytes: 50 * 1024 * 1024,
     maxMarkupLength: 64 * 1024,
-    maxSlots: 32,
-    maxRequirementsPerBloc: 32,
+    maxSlotsPerBloc: 32,
+    maxRequirementsPerResource: 32,
+    maxSettingsPerBloc: 256,
     schema: DEFAULT_RELEASE_LIMITS,
 });
 

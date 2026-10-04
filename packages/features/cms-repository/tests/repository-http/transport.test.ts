@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { repositoryBaseUrl } from "../../src/repository-http/baseUrl";
-import { getRepositoryBytes } from "../../src/repository-http/getBytes";
+import { getRepositoryBytes, MAX_REPOSITORY_RESPONSE_BYTES } from "../../src/repository-http/getBytes";
 
 test("repository transport rejects redirects and oversized responses", async () => {
     const server = Bun.serve({
@@ -11,7 +11,7 @@ test("repository transport rejects redirects and oversized responses", async () 
             if (path === "/redirect") {
                 return Response.redirect(new URL("/small", request.url));
             }
-            return new Response(new Uint8Array(path === "/large" ? 2 * 1024 * 1024 + 1 : 2));
+            return new Response(new Uint8Array(path === "/large" ? MAX_REPOSITORY_RESPONSE_BYTES + 1 : 2));
         },
     });
     try {

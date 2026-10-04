@@ -1,6 +1,7 @@
 import type { CollectionDataMigration, CollectionMigrationOperation } from "../../interfaces/CollectionRelease";
 import { canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
 import { invalid } from "../errors";
+import type { CollectionLimits } from "../limits";
 import { parseCollectionBlocTag } from "../namespace";
 import { array, identifier, integer, keys, record, string, unique } from "../values";
 
@@ -24,8 +25,9 @@ export function parseCollectionMigrations(
     value: unknown,
     collectionId: string,
     dataGeneration: number,
+    limits: Readonly<CollectionLimits>,
 ): readonly CollectionDataMigration[] {
-    const migrations = array(value, 128, "$.migrations").map((item, index) => {
+    const migrations = array(value, limits.maxMigrations, "$.migrations").map((item, index) => {
         const path = `$.migrations[${index}]`;
         const source = record(item, path);
         keys(source, ["fromGeneration", "toGeneration", "operations"], path);
@@ -37,8 +39,8 @@ export function parseCollectionMigrations(
         return {
             fromGeneration,
             toGeneration,
-            operations: array(source.operations, 512, `${path}.operations`).map((operation, offset) =>
-                parseOperation(operation, collectionId, `${path}.operations[${offset}]`),
+            operations: array(source.operations, limits.maxMigrationOperations, `${path}.operations`).map(
+                (operation, offset) => parseOperation(operation, collectionId, `${path}.operations[${offset}]`),
             ),
         };
     });

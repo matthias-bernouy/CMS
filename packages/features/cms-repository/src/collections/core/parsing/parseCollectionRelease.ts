@@ -70,10 +70,10 @@ export function parseCollectionRelease(
             source.dataGeneration === undefined
                 ? 1
                 : integer(source.dataGeneration, 1, Number.MAX_SAFE_INTEGER, "$.dataGeneration");
-        const migrations = parseCollectionMigrations(source.migrations ?? [], collectionId, dataGeneration);
+        const migrations = parseCollectionMigrations(source.migrations ?? [], collectionId, dataGeneration, limits);
         const locale = parseLocale(source.locale);
         const translations = parseCollectionTranslations(source.translations, locale);
-        const texts = source.texts === undefined ? undefined : parseTexts(source.texts, locale);
+        const texts = source.texts === undefined ? undefined : parseTexts(source.texts, locale, limits);
         const assets = parseAssets(source.assets === undefined ? [] : source.assets, limits);
         const dependencies =
             source.dependencies === undefined
@@ -125,7 +125,7 @@ export function parseCollectionRelease(
         const theme =
             source.theme === undefined
                 ? undefined
-                : parseCollectionTheme(source.theme, collectionId, dependencies ?? []);
+                : parseCollectionTheme(source.theme, collectionId, limits, dependencies ?? []);
         const exports =
             source.exports === undefined ? undefined : parseCollectionExports(source.exports, collectionId, limits);
         if (exports) {
@@ -168,6 +168,7 @@ export function parseCollectionRelease(
                       dashboards: parseCollectionDashboards(
                           source.dashboards,
                           new Set(views?.map((view) => view.id) ?? []),
+                          limits,
                       ),
                   }),
         };
@@ -218,9 +219,9 @@ function parseVersion(value: unknown): string {
     return invalid("must be an exact canonical SemVer", "$.version");
 }
 
-function parseTexts(value: unknown, locale: string) {
+function parseTexts(value: unknown, locale: string, limits: Readonly<CollectionLimits>) {
     try {
-        return parseCollectionTexts(value, locale);
+        return parseCollectionTexts(value, locale, limits.maxTexts);
     } catch (error) {
         throw new CollectionValidationError(
             "invalid_collection",

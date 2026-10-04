@@ -6,6 +6,7 @@ import { FilesystemRepositoryPublicationUploadStore } from "@bernouy/cms-reposit
 import {
     encodePublicationUpload,
     InMemoryRepositoryReplayStore,
+    parsePublicationUpload,
     RepositoryMutationEndpoint,
     signRepositoryContentDigest,
     signRepositoryRequest,
@@ -16,6 +17,20 @@ import {
 import { createHash } from "node:crypto";
 
 const directories: string[] = [];
+
+test("publication metadata carries expanded collection documents and asset indexes", () => {
+    const canonicalJson = JSON.stringify({ value: "x".repeat(3 * 1024 * 1024) });
+    const assets = Array.from({ length: 257 }, (_, index) => ({
+        id: `asset-${index}`,
+        byteLength: 0,
+        digest: `sha256:${"0".repeat(64)}` as const,
+    }));
+    expect(parsePublicationUpload(encodePublicationUpload({ kind: "collection", canonicalJson, assets }))).toEqual({
+        kind: "collection",
+        canonicalJson,
+        assets,
+    });
+});
 
 afterEach(async () => {
     await Promise.all(directories.splice(0).map((path) => rm(path, { recursive: true, force: true })));

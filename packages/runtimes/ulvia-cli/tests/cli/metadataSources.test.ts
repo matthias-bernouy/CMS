@@ -2,7 +2,11 @@ import { afterEach, expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { loadCollectionTheme, loadCollectionTranslations } from "../../src/release/metadataSources";
+import {
+    expandCollectionSourceExports,
+    loadCollectionTheme,
+    loadCollectionTranslations,
+} from "../../src/release/metadataSources";
 
 const temporaryDirectories: string[] = [];
 
@@ -61,6 +65,20 @@ test("theme discovery rejects orphan and ambiguously named category files", asyn
     await writeJson(join(misnamedRoot, "definition.json"), { label: "theme.label", categories: ["colors"] });
     await writeJson(join(misnamedRoot, "visual", "palette.json"), category("colors"));
     await expect(loadCollectionTheme(misnamedRoot)).rejects.toThrow("must be named after its string id");
+});
+
+test("source export wildcards expand into explicit immutable resource lists", () => {
+    const resources = {
+        blocs: ["atlas-card", "atlas-grid"],
+        themeTokens: ["accent", "surface"],
+        texts: ["welcome"],
+        assets: ["logo"],
+    };
+    expect(expandCollectionSourceExports("*", resources)).toEqual(resources);
+    expect(
+        expandCollectionSourceExports({ blocs: ["atlas-card"], themeTokens: "*", texts: [], assets: "*" }, resources),
+    ).toEqual({ blocs: ["atlas-card"], themeTokens: ["accent", "surface"], texts: [], assets: ["logo"] });
+    expect(expandCollectionSourceExports({ blocs: "invalid" }, resources)).toEqual({ blocs: "invalid" });
 });
 
 function category(id: string) {

@@ -1,4 +1,4 @@
-export const MAX_REPOSITORY_RESPONSE_BYTES = 2 * 1024 * 1024;
+export const MAX_REPOSITORY_RESPONSE_BYTES = 8 * 1024 * 1024;
 
 /** Read a bounded repository response without following redirects. */
 export async function getRepositoryBytes(

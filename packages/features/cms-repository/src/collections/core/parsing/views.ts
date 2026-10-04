@@ -58,7 +58,7 @@ export function parseCollectionViews(
     blocIds: ReadonlySet<string>,
     limits: Readonly<CollectionLimits>,
 ): readonly CollectionView[] {
-    const views = array(value, 32, "$.views").map((entry, index) => {
+    const views = array(value, limits.maxViews, "$.views").map((entry, index) => {
         const path = `$.views[${index}]`;
         const source = record(entry, path);
         keys(source, ["id", "generation", "name", "icon", "description", "requires", "uses", "html"], path);

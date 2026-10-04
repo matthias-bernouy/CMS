@@ -1,6 +1,38 @@
 import { basename, join } from "node:path";
 import { readSourceEntries, scanJsonSourceTree } from "./sourceTree";
 
+type ExportKind = "blocs" | "themeTokens" | "texts" | "assets";
+
+/** Expand authoring-only wildcards while keeping admitted releases explicit. */
+export function expandCollectionSourceExports(
+    value: unknown,
+    resources: Readonly<Record<ExportKind, readonly string[]>>,
+): unknown {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === "*") {
+        return explicitExports(resources);
+    }
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return value;
+    }
+    return Object.fromEntries(
+        Object.entries(value).map(([key, selection]) => [
+            key,
+            selection === "*" && isExportKind(key) ? [...resources[key]] : selection,
+        ]),
+    );
+}
+
+function explicitExports(resources: Readonly<Record<ExportKind, readonly string[]>>) {
+    return Object.fromEntries(Object.entries(resources).map(([key, ids]) => [key, [...ids]]));
+}
+
+function isExportKind(value: string): value is ExportKind {
+    return ["blocs", "themeTokens", "texts", "assets"].includes(value);
+}
+
 /** Merge recursively authored locale fragments into one immutable catalogue candidate. */
 export async function loadCollectionTranslations(directory: string): Promise<Record<string, unknown>> {
     const catalogues: [string, Record<string, unknown>][] = [];

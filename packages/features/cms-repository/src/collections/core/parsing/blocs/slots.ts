@@ -23,8 +23,8 @@ export function parseSlots(
 ): Readonly<Record<string, CollectionSlot>> {
     const source = record(value, path);
     const names = Object.keys(source).sort(ordinal);
-    if (names.length > limits.maxSlots) {
-        invalid(`must declare at most ${limits.maxSlots} slots`, path);
+    if (names.length > limits.maxSlotsPerBloc) {
+        invalid(`must declare at most ${limits.maxSlotsPerBloc} slots`, path);
     }
     return Object.fromEntries(
         names.map((name) => {

@@ -105,6 +105,52 @@ describe("collection release parsing", () => {
         }
     });
 
+    test("uses independent resource ceilings instead of the Bloc limit for every list", () => {
+        expect(DEFAULT_COLLECTION_LIMITS).toMatchObject({
+            maxDocumentBytes: 8 * 1024 * 1024,
+            maxBlocs: 512,
+            maxAssets: 1_024,
+            maxTexts: 4_096,
+            maxViews: 256,
+            maxDashboards: 128,
+            maxDependencies: 128,
+            maxThemeCategories: 64,
+            maxThemeTokens: 4_096,
+        });
+        const tokens = ["accent", "surface", "border"].map((id) => ({
+            id,
+            label: "theme.token.label",
+            type: "color",
+            defaults: { light: "#000000" },
+        }));
+        const source = collectionDocument({
+            "theme.label": "Theme",
+            "theme.category.label": "Colors",
+            "theme.token.label": "Color",
+        });
+        source.theme = {
+            label: "theme.label",
+            categories: [{ id: "colors", label: "theme.category.label", tokens }],
+        };
+        source.exports = { blocs: [], themeTokens: tokens.map(({ id }) => id) };
+        const release = parseCollectionRelease(source, {
+            ...DEFAULT_COLLECTION_LIMITS,
+            maxBlocs: 2,
+            maxThemeCategories: 1,
+            maxThemeTokens: 3,
+        });
+        expect(release.exports?.themeTokens).toEqual(["accent", "border", "surface"]);
+    });
+
+    test("admits collection documents beyond the former two MiB transport ceiling", () => {
+        const source = collectionDocument();
+        (source.blocs as Record<string, unknown>[])[0]!.runtime = {
+            viewJS: `export default ${JSON.stringify("x".repeat(2 * 1024 * 1024))}`,
+        };
+        expect(parseCollectionRelease(source).blocs[1]).toHaveProperty("runtime");
+        expect(parseCollectionReleaseJson(JSON.stringify(source)).blocs[1]).toHaveProperty("runtime");
+    });
+
     test("rejects invalid I-JSON before traversing resources", () => {
         const source = collectionDocument();
         expect(() => parseCollectionRelease({ ...source, blocs: Array(1) })).toThrow();

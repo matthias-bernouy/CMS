@@ -10,14 +10,14 @@ import { invalid } from "../errors";
 import type { CollectionLimits } from "../limits";
 import { array, identifier, integer, keys, ordinal, record, string, unique } from "../values";
 import { collectionThemeTokenId, parseCollectionBlocTag, parseCollectionNamespace } from "../namespace";
-import { textIdentifier, TEXT_LIMITS } from "../texts/validation";
+import { textIdentifier } from "../texts/validation";
 
 export function parseRequirements(
     value: unknown,
     path: string,
     limits: Readonly<CollectionLimits>,
 ): readonly CollectionCapabilityRequirement[] {
-    const requirements = array(value === undefined ? [] : value, limits.maxRequirementsPerBloc, path).map(
+    const requirements = array(value === undefined ? [] : value, limits.maxRequirementsPerResource, path).map(
         (entry, index) => {
             const at = `${path}[${index}]`;
             const source = record(entry, at);
@@ -48,7 +48,7 @@ export function parseCollectionDependencies(
     ownerCollectionId: string,
     limits: Readonly<CollectionLimits>,
 ): readonly CollectionDependency[] {
-    const dependencies = array(value, limits.maxBlocs, "$.dependencies").map((entry, index) => {
+    const dependencies = array(value, limits.maxDependencies, "$.dependencies").map((entry, index) => {
         const path = `$.dependencies[${index}]`;
         const source = record(entry, path);
         keys(source, ["collectionId", "publisherId", "versionRange", "imports"], path);
@@ -98,16 +98,21 @@ function parseResourceImports(
         blocs: importedResources(source.blocs, limits.maxBlocs, `${path}.blocs`, (entry, at) =>
             parseCollectionBlocTag(entry, collectionId, at),
         ),
-        themeTokens: importedResources(source.themeTokens, limits.maxBlocs, `${path}.themeTokens`, (entry, at) => {
-            const token = string(entry, 96, at);
-            try {
-                collectionThemeTokenId(collectionId, token);
-                return token;
-            } catch {
-                return invalid("must be a lowercase kebab-case token ID", at);
-            }
-        }),
-        ...optionalImports(source.texts, TEXT_LIMITS.definitions, `${path}.texts`, (entry) => textIdentifier(entry)),
+        themeTokens: importedResources(
+            source.themeTokens,
+            limits.maxThemeTokens,
+            `${path}.themeTokens`,
+            (entry, at) => {
+                const token = string(entry, 96, at);
+                try {
+                    collectionThemeTokenId(collectionId, token);
+                    return token;
+                } catch {
+                    return invalid("must be a lowercase kebab-case token ID", at);
+                }
+            },
+        ),
+        ...optionalImports(source.texts, limits.maxTexts, `${path}.texts`, (entry) => textIdentifier(entry)),
         ...optionalImports(source.assets, limits.maxAssets, `${path}.assets`, assetIdentifier),
     };
 }
@@ -193,16 +198,18 @@ function parseResourceSelection(
     const blocs = array(source.blocs ?? [], limits.maxBlocs, `${path}.blocs`).map((entry, index) =>
         parseCollectionBlocTag(entry, collectionId, `${path}.blocs[${index}]`),
     );
-    const themeTokens = array(source.themeTokens ?? [], limits.maxBlocs, `${path}.themeTokens`).map((entry, index) => {
-        const token = string(entry, 96, `${path}.themeTokens[${index}]`);
-        try {
-            collectionThemeTokenId(collectionId, token);
-            return token;
-        } catch {
-            return invalid("must be a lowercase kebab-case token ID", `${path}.themeTokens[${index}]`);
-        }
-    });
-    const texts = array(source.texts ?? [], TEXT_LIMITS.definitions, `${path}.texts`).map((entry, index) => {
+    const themeTokens = array(source.themeTokens ?? [], limits.maxThemeTokens, `${path}.themeTokens`).map(
+        (entry, index) => {
+            const token = string(entry, 96, `${path}.themeTokens[${index}]`);
+            try {
+                collectionThemeTokenId(collectionId, token);
+                return token;
+            } catch {
+                return invalid("must be a lowercase kebab-case token ID", `${path}.themeTokens[${index}]`);
+            }
+        },
+    );
+    const texts = array(source.texts ?? [], limits.maxTexts, `${path}.texts`).map((entry, index) => {
         try {
             return textIdentifier(entry);
         } catch {

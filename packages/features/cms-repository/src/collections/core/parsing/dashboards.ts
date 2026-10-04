@@ -1,13 +1,15 @@
 import { parseDashboardNavigation } from "@bernouy/cms-dashboards";
 import type { CollectionDashboard } from "../../interfaces/CollectionDashboard";
 import { invalid } from "../errors";
+import type { CollectionLimits } from "../limits";
 import { array, identifier, integer, keys, record, string, unique } from "../values";
 
 export function parseCollectionDashboards(
     value: unknown,
     viewIds: ReadonlySet<string>,
+    limits: Readonly<CollectionLimits>,
 ): readonly CollectionDashboard[] {
-    const dashboards = array(value, 32, "$.dashboards").map((entry, index) => {
+    const dashboards = array(value, limits.maxDashboards, "$.dashboards").map((entry, index) => {
         const path = `$.dashboards[${index}]`;
         const source = record(entry, path);
         keys(source, ["id", "generation", "name", "icon", "description", "navigation"], path);
