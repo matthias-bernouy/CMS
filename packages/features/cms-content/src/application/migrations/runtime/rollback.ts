@@ -44,6 +44,7 @@ export async function rollbackCollectionMigration(
     try {
         record = await restoreCollections(context, record);
         await restorePages(context, record);
+        await context.journal.assertOwnership(record);
         const system = await context.repository.getSystem();
         const restoredTheme = restoreThemeTokenValues(
             system.theme,
@@ -51,6 +52,7 @@ export async function rollbackCollectionMigration(
             migrationThemeTokenIds(record),
         );
         if (!isDeepStrictEqual(system.theme, restoredTheme)) {
+            await context.journal.assertOwnership(record);
             await context.repository.updateSystem({ theme: restoredTheme });
         }
         return context.journal.transition(record, "rolled-back");
@@ -64,8 +66,10 @@ async function restoreCollections(
     context: RollbackContext,
     record: CollectionMigrationRecord,
 ): Promise<CollectionMigrationRecord> {
+    await context.journal.assertOwnership(record);
     const state = await context.collections.snapshot(record.siteId);
     if (!migrationTargetInstallationsMatch(state.collections, record, "before")) {
+        await context.journal.assertOwnership(record);
         const restored = await context.collections.restoreMigration(
             record.siteId,
             record.installationsBefore,
@@ -82,6 +86,7 @@ async function restoreCollections(
 
 async function restorePages(context: RollbackContext, record: CollectionMigrationRecord): Promise<void> {
     await forEachMigrationPage([...record.pages].reverse(), async (change) => {
+        await context.journal.assertOwnership(record);
         const current = await context.repository.getPageById(change.before.id);
         if (!current) {
             if (change.state !== "rolled-back") {

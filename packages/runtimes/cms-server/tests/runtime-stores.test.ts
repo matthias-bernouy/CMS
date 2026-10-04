@@ -55,6 +55,7 @@ function passThroughFence(): CollectionMigrationWriteFence {
         async claimMaintenance() {
             return true;
         },
+        async assertMaintenance() {},
         async yieldMaintenance() {},
         async releaseMaintenance() {},
         async withWrite(_siteId, operation) {

@@ -11,10 +11,11 @@ type MaintenanceDocument = {
 type WritePermitDocument = { _id: string; siteId: string; expiresAt: Date };
 const LEASE_MS = 30_000;
 const HEARTBEAT_MS = 10_000;
+type LeaseOwner = { token: string; lost?: Error };
 
 export class MongoCollectionMigrationWriteFence implements CollectionMigrationWriteFence {
     private readonly heartbeats = new Map<string, ReturnType<typeof setInterval>>();
-    private readonly owners = new Map<string, string>();
+    private readonly owners = new Map<string, LeaseOwner>();
 
     constructor(
         private readonly records: Collection<MigrationDocument>,
@@ -43,7 +44,9 @@ export class MongoCollectionMigrationWriteFence implements CollectionMigrationWr
                 if (current.maintenance.id !== migrationId) {
                     return false;
                 }
-                if (this.owners.get(ownerKey) === current.maintenance.token) {
+                const owner = this.owners.get(ownerKey);
+                if (!owner?.lost && owner?.token === current.maintenance.token) {
+                    await this.assertMaintenance(siteId, migrationId);
                     return this.waitForWrites(siteId);
                 }
                 if (current.maintenance.expiresAt.getTime() > Date.now()) {
@@ -75,25 +78,43 @@ export class MongoCollectionMigrationWriteFence implements CollectionMigrationWr
             }
             throw error;
         }
-        this.owners.set(ownerKey, token);
         this.startHeartbeat(siteId, migrationId, token);
         return this.waitForWrites(siteId);
     }
 
+    async assertMaintenance(siteId: string, migrationId: string): Promise<void> {
+        const key = `${siteId}:${migrationId}`;
+        const owner = this.owners.get(key);
+        if (!owner || owner.lost) {
+            throw owner?.lost ?? leaseLostError();
+        }
+        const current = (await this.maintenance.findOne({ _id: siteId }))?.maintenance;
+        if (current?.id !== migrationId || current.token !== owner.token || current.expiresAt.getTime() <= Date.now()) {
+            this.markLeaseLost(key, leaseLostError());
+            throw leaseLostError();
+        }
+    }
+
     async yieldMaintenance(siteId: string, migrationId: string): Promise<void> {
+        const owner = this.owners.get(`${siteId}:${migrationId}`);
+        if (owner && !owner.lost) {
+            await this.maintenance.updateOne(
+                { _id: siteId, "maintenance.id": migrationId, "maintenance.token": owner.token },
+                { $set: { "maintenance.expiresAt": new Date(0) } },
+            );
+        }
         this.stopHeartbeat(siteId, migrationId);
-        await this.maintenance.updateOne(
-            { _id: siteId, "maintenance.id": migrationId },
-            { $set: { "maintenance.expiresAt": new Date(0) } },
-        );
     }
 
     async releaseMaintenance(siteId: string, migrationId: string): Promise<void> {
+        const owner = this.owners.get(`${siteId}:${migrationId}`);
+        if (owner && !owner.lost) {
+            await this.maintenance.updateOne(
+                { _id: siteId, "maintenance.id": migrationId, "maintenance.token": owner.token },
+                { $set: {}, $unset: { maintenance: "" } },
+            );
+        }
         this.stopHeartbeat(siteId, migrationId);
-        await this.maintenance.updateOne(
-            { _id: siteId, "maintenance.id": migrationId },
-            { $set: {}, $unset: { maintenance: "" } },
-        );
     }
 
     async withWrite<T>(siteId: string, operation: () => Promise<T>): Promise<T> {
@@ -124,11 +145,16 @@ export class MongoCollectionMigrationWriteFence implements CollectionMigrationWr
                     { _id: siteId, "maintenance.id": migrationId, "maintenance.token": token },
                     { $set: { "maintenance.expiresAt": new Date(Date.now() + LEASE_MS) } },
                 )
-                .catch(() => undefined);
+                .then((result) => {
+                    if (result.matchedCount !== 1) {
+                        this.markLeaseLost(key, leaseLostError());
+                    }
+                })
+                .catch((error) => this.markLeaseLost(key, leaseHeartbeatError(error)));
         }, HEARTBEAT_MS);
         heartbeat.unref?.();
         this.heartbeats.set(key, heartbeat);
-        this.owners.set(key, token);
+        this.owners.set(key, { token });
     }
 
     private stopHeartbeat(siteId: string, migrationId: string): void {
@@ -139,6 +165,18 @@ export class MongoCollectionMigrationWriteFence implements CollectionMigrationWr
             this.heartbeats.delete(key);
         }
         this.owners.delete(key);
+    }
+
+    private markLeaseLost(key: string, error: Error): void {
+        const owner = this.owners.get(key);
+        if (owner) {
+            owner.lost = error;
+        }
+        const heartbeat = this.heartbeats.get(key);
+        if (heartbeat) {
+            clearInterval(heartbeat);
+            this.heartbeats.delete(key);
+        }
     }
 
     private permitHeartbeat(permitId: string): ReturnType<typeof setInterval> {
@@ -174,6 +212,15 @@ export class MongoCollectionMigrationWriteFence implements CollectionMigrationWr
             );
         }
     }
+}
+
+function leaseLostError(): Error {
+    return Object.assign(new Error("Collection migration maintenance ownership was lost"), { status: 409 });
+}
+
+function leaseHeartbeatError(error: unknown): Error {
+    const detail = error instanceof Error ? `: ${error.message}` : "";
+    return Object.assign(new Error(`Collection migration maintenance heartbeat failed${detail}`), { status: 503 });
 }
 
 function maintenanceError(): Error {

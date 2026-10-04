@@ -149,6 +149,8 @@ export type CollectionMigrationAudit = Pick<
  */
 export interface CollectionMigrationWriteFence {
     claimMaintenance(siteId: string, migrationId: string): Promise<boolean>;
+    /** Rejects when this process no longer owns the exact renewable maintenance lease. */
+    assertMaintenance(siteId: string, migrationId: string): Promise<void>;
     /** Stops renewing ownership while keeping the site locked for an explicit resume or rollback. */
     yieldMaintenance(siteId: string, migrationId: string): Promise<void>;
     releaseMaintenance(siteId: string, migrationId: string): Promise<void>;

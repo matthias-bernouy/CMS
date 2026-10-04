@@ -42,6 +42,7 @@ export async function runCollectionMigration(
                 await migrationTargetSnapshot(context.collections, record, "after"),
             );
             record = await context.journal.transition(record, "committing");
+            await context.journal.assertOwnership(record);
             await context.collections.commitMigration(
                 record.siteId,
                 record.replacements,
@@ -67,8 +68,8 @@ export async function runCollectionMigration(
         record = await context.journal.transition(record, "migrating");
         await migratePages(context, record);
         record = await context.journal.transition(record, "validating");
-        await assertPagesApplied(context.repository, record);
-        await applySystemMigration(context.repository, record);
+        await assertPagesApplied(context, record);
+        await applySystemMigration(context, record);
         return context.journal.transition(record, "completed");
     } catch (error) {
         if (await cancelUnstarted(context, record, error)) {
@@ -79,19 +80,22 @@ export async function runCollectionMigration(
     }
 }
 
-async function applySystemMigration(repository: CmsRepository, record: CollectionMigrationRecord): Promise<void> {
-    const current = await repository.getSystem();
+async function applySystemMigration(context: ExecutionContext, record: CollectionMigrationRecord): Promise<void> {
+    await context.journal.assertOwnership(record);
+    const current = await context.repository.getSystem();
     if (isDeepStrictEqual(current.theme, record.systemAfter.theme)) {
         return;
     }
     if (!isDeepStrictEqual(current.theme, record.systemAfterCollectionCommit.theme)) {
         throw new Error("System settings changed during migration");
     }
-    await repository.updateSystem({ theme: record.systemAfter.theme });
+    await context.journal.assertOwnership(record);
+    await context.repository.updateSystem({ theme: record.systemAfter.theme });
 }
 
 async function migratePages(context: ExecutionContext, record: CollectionMigrationRecord): Promise<void> {
     await forEachMigrationPage(record.pages, async (change) => {
+        await context.journal.assertOwnership(record);
         const current = await context.repository.getPageById(change.before.id);
         if (!current) {
             throw new Error(`Page disappeared during migration: ${change.before.id}`);
@@ -127,9 +131,10 @@ async function migratePages(context: ExecutionContext, record: CollectionMigrati
     });
 }
 
-async function assertPagesApplied(repository: CmsRepository, record: CollectionMigrationRecord): Promise<void> {
+async function assertPagesApplied(context: ExecutionContext, record: CollectionMigrationRecord): Promise<void> {
     await forEachMigrationPage(record.pages, async (change) => {
-        const page = await repository.getPageById(change.before.id);
+        await context.journal.assertOwnership(record);
+        const page = await context.repository.getPageById(change.before.id);
         if (!page || page.revision !== change.appliedRevision || page.content !== change.afterContent) {
             throw new Error(`Migrated page failed validation: ${change.before.id}`);
         }
@@ -155,6 +160,7 @@ async function assertSnapshotCurrent(context: ExecutionContext, record: Collecti
             status: 409,
         });
     }
+    await context.journal.assertOwnership(record);
 }
 
 async function cancelUnstarted(

@@ -27,6 +27,12 @@ export class MemoryCollectionMigrationWriteFence implements CollectionMigrationW
         }
     }
 
+    async assertMaintenance(siteId: string, migrationId: string): Promise<void> {
+        if (this.maintenance.get(siteId) !== migrationId) {
+            throw leaseLostError();
+        }
+    }
+
     async yieldMaintenance(_siteId: string, _migrationId: string): Promise<void> {
         // The in-memory fence has no renewable lease; the journal remains authoritative.
     }
@@ -65,4 +71,8 @@ function maintenanceError(): Error {
     return Object.assign(new Error("The site is temporarily read-only during a collection migration"), {
         status: 423,
     });
+}
+
+function leaseLostError(): Error {
+    return Object.assign(new Error("Collection migration maintenance ownership was lost"), { status: 409 });
 }

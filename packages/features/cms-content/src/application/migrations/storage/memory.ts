@@ -54,6 +54,10 @@ export class MemoryCollectionMigrationStorage implements CollectionMigrationStor
         await this.fence.releaseMaintenance(siteId, migrationId);
     }
 
+    async assertMaintenance(siteId: string, migrationId: string): Promise<void> {
+        await this.fence.assertMaintenance(siteId, migrationId);
+    }
+
     async yieldMaintenance(siteId: string, migrationId: string): Promise<void> {
         await this.fence.yieldMaintenance(siteId, migrationId);
     }

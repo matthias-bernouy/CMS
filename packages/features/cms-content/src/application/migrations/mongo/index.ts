@@ -84,6 +84,10 @@ export class MongoCollectionMigrationStorage implements CollectionMigrationStora
         return this.fence.claimMaintenance(siteId, migrationId);
     }
 
+    assertMaintenance(siteId: string, migrationId: string): Promise<void> {
+        return this.fence.assertMaintenance(siteId, migrationId);
+    }
+
     yieldMaintenance(siteId: string, migrationId: string): Promise<void> {
         return this.fence.yieldMaintenance(siteId, migrationId);
     }

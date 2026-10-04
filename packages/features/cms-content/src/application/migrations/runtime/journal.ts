@@ -59,6 +59,7 @@ export class MigrationJournal {
             return false;
         }
         try {
+            await this.assertOwnership(record);
             if (await this.storage.create(record)) {
                 return true;
             }
@@ -74,6 +75,10 @@ export class MigrationJournal {
         return this.storage.claimMaintenance(record.siteId, record.id);
     }
 
+    assertOwnership(record: Pick<CollectionMigrationRecord, "id" | "siteId">): Promise<void> {
+        return this.storage.assertMaintenance(record.siteId, record.id);
+    }
+
     transition(
         record: CollectionMigrationRecord,
         status: CollectionMigrationStatus,
@@ -86,6 +91,7 @@ export class MigrationJournal {
         record: CollectionMigrationRecord,
         patch: Partial<CollectionMigrationRecord>,
     ): Promise<CollectionMigrationRecord> {
+        await this.assertOwnership(record);
         const next = {
             ...record,
             ...patch,
@@ -114,6 +120,7 @@ export class MigrationJournal {
         current: CollectionMigrationRecord["pages"][number],
         next: CollectionMigrationRecord["pages"][number],
     ): Promise<void> {
+        await this.assertOwnership(record);
         if (!(await this.storage.replacePage(record.id, current.before.id, current.state, next))) {
             throw Object.assign(new Error("Migration page journal changed concurrently"), { status: 409 });
         }
@@ -121,6 +128,11 @@ export class MigrationJournal {
     }
 
     async fail(record: CollectionMigrationRecord, error: unknown): Promise<void> {
+        try {
+            await this.assertOwnership(record);
+        } catch {
+            return;
+        }
         const current = (await this.storage.get(record.id)) ?? record;
         if (current.status === "completed" || current.status === "rolled-back") {
             return;
