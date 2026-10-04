@@ -1,92 +1,99 @@
-import {
-    type CollectionDashboardNavigationItem,
-    resolveCollectionTranslation,
-} from "cms-repository/exports/collections/index";
-import type { LocalContractReleases } from "../contracts";
-import type { LocalCollectionRepository } from "../artifacts/collections";
-import type { LocalProviderReleases } from "../providers";
-import type { LocalRepositoryYanks } from "../yanks";
+import type { RepositoryCatalogueEntry, RepositoryCatalogueReader, RepositoryCatalogueType } from "../catalogueIndex";
 
-export type ReadCatalogueDependencies = Readonly<{
-    collections: LocalCollectionRepository;
-    contracts: LocalContractReleases;
-    providers: LocalProviderReleases;
-    yanks: LocalRepositoryYanks;
-}>;
+const DEFAULT_PAGE_SIZE = 256;
+const MAX_PAGE_SIZE = 256;
+const CURSOR = /^[A-Za-z0-9_-]{1,1024}$/u;
 
 export async function readCatalogue(
+    request: Request,
     type: string | undefined,
-    dependencies: ReadCatalogueDependencies,
+    index: RepositoryCatalogueReader,
+    refresh = false,
 ): Promise<Response | null> {
-    if (type === "collections") {
-        const releases = [];
-        for (const { release, digest } of await dependencies.collections.list()) {
-            if (
-                await dependencies.yanks.get("collection", release.publisherId, release.collectionId, release.version)
-            ) {
-                continue;
-            }
-            releases.push({
-                publisherId: release.publisherId,
-                collectionId: release.collectionId,
-                version: release.version,
-                digest,
-                name: resolveCollectionTranslation(release, release.name),
-                description: release.description ? resolveCollectionTranslation(release, release.description) : "",
-                blocCount: release.blocs.length,
-                hasTheme: Boolean(release.theme),
-                dashboards: (release.dashboards ?? []).map((dashboard) => ({
-                    id: dashboard.id,
-                    name: resolveCollectionTranslation(release, dashboard.name),
-                    ...(dashboard.icon ? { icon: dashboard.icon } : {}),
-                    description: dashboard.description
-                        ? resolveCollectionTranslation(release, dashboard.description)
-                        : "",
-                    viewCount: countDashboardViews(dashboard.navigation),
-                })),
-            });
+    if (!catalogueType(type)) {
+        return null;
+    }
+    try {
+        const url = new URL(request.url);
+        if ([...url.searchParams.keys()].some((key) => key !== "cursor" && key !== "limit")) {
+            return invalidQuery("Unsupported catalogue query parameter");
         }
-        return listResponse(releases);
+        const limit = parseLimit(url.searchParams.get("limit"));
+        const after = decodeCursor(url.searchParams.get("cursor"), type);
+        const entries = await index.list(type, refresh);
+        const start = after === undefined ? 0 : firstAfter(entries, type, after);
+        const releases = entries.slice(start, start + limit);
+        const nextCursor = start + releases.length < entries.length ? encodeCursor(type, releases.at(-1)!) : undefined;
+        return Response.json(
+            { releases, ...(nextCursor ? { nextCursor } : {}) },
+            { headers: { "Cache-Control": "no-store" } },
+        );
+    } catch (error) {
+        return invalidQuery(error instanceof Error ? error.message : "Invalid catalogue query");
     }
-    if (type === "contracts") {
-        const releases = (await (await dependencies.contracts.catalogue()).list())
-            .filter((record) => !record.yank)
-            .map(({ admission, publishedAt }) => ({
-                publisherId: admission.release.publisherId,
-                contractId: admission.release.contractId,
-                version: admission.release.version,
-                digest: admission.digest,
-                name: admission.release.name,
-                description: admission.release.description ?? "",
-                icon: admission.release.catalogue?.icon,
-                categories: admission.release.catalogue?.categories,
-                publishedAt,
-            }));
-        return listResponse(releases);
-    }
-    if (type === "providers") {
-        const releases = (await (await dependencies.providers.catalogue()).list())
-            .filter((record) => !record.yank)
-            .map(({ admission }) => ({
-                publisherId: admission.manifest.provenance.publisherId,
-                providerId: admission.manifest.providerId,
-                version: admission.manifest.version,
-                digest: admission.digest,
-                name: admission.manifest.name,
-                links: admission.manifest.links,
-            }));
-        return listResponse(releases);
-    }
-    return null;
 }
 
-function countDashboardViews(items: readonly CollectionDashboardNavigationItem[]): number {
-    return items.reduce(
-        (count, item) => count + Number(Boolean(item.use)) + countDashboardViews(item.children ?? []),
-        0,
-    );
+function parseLimit(value: string | null): number {
+    if (value === null) {
+        return DEFAULT_PAGE_SIZE;
+    }
+    if (!/^\d{1,3}$/u.test(value)) {
+        throw new TypeError("Catalogue limit must be an integer");
+    }
+    const limit = Number(value);
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > MAX_PAGE_SIZE) {
+        throw new TypeError(`Catalogue limit must be between 1 and ${MAX_PAGE_SIZE}`);
+    }
+    return limit;
 }
 
-function listResponse(releases: unknown[]): Response {
-    return Response.json({ releases }, { headers: { "Cache-Control": "no-store" } });
+function encodeCursor(type: RepositoryCatalogueType, entry: RepositoryCatalogueEntry): string {
+    return Buffer.from(JSON.stringify([type, entryKey(type, entry)])).toString("base64url");
+}
+
+function decodeCursor(value: string | null, type: RepositoryCatalogueType): string | undefined {
+    if (value === null) {
+        return undefined;
+    }
+    if (!CURSOR.test(value)) {
+        throw new TypeError("Invalid catalogue cursor");
+    }
+    let decoded: unknown;
+    try {
+        decoded = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
+    } catch {
+        throw new TypeError("Invalid catalogue cursor");
+    }
+    if (
+        !Array.isArray(decoded) ||
+        decoded.length !== 2 ||
+        decoded[0] !== type ||
+        typeof decoded[1] !== "string" ||
+        decoded[1].length > 512
+    ) {
+        throw new TypeError("Invalid catalogue cursor");
+    }
+    return decoded[1];
+}
+
+function firstAfter(
+    entries: readonly RepositoryCatalogueEntry[],
+    type: RepositoryCatalogueType,
+    cursor: string,
+): number {
+    const index = entries.findIndex((entry) => entryKey(type, entry) > cursor);
+    return index < 0 ? entries.length : index;
+}
+
+function entryKey(type: RepositoryCatalogueType, entry: RepositoryCatalogueEntry): string {
+    const idKey = type === "collections" ? "collectionId" : type === "contracts" ? "contractId" : "providerId";
+    return `${entry.publisherId}\0${entry[idKey]}\0${entry.version}`;
+}
+
+function catalogueType(value: string | undefined): value is RepositoryCatalogueType {
+    return value === "collections" || value === "contracts" || value === "providers";
+}
+
+function invalidQuery(message: string): Response {
+    return Response.json({ error: { code: "invalid_catalogue_query", message } }, { status: 400 });
 }

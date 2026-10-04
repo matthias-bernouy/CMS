@@ -321,10 +321,12 @@ plan pins the collection digest, View generation, provider-selection revision,
 contract release digest and installation. Calls fail closed after an upgrade or
 selection change until the dashboard is activated against the new state. A source
 adapter exists for multiple repositories, while the dev runtime configures one local source.
-Repository catalogue responses are currently bounded to 256 releases and are not
-paginated. This is an explicit V1 limit: a production repository must add cursor
-pagination, and clients must consume it, before any one catalogue can exceed 256
-visible releases. Exact-coordinate reads are not affected by this catalogue limit.
+Repository catalogue responses use opaque cursor pagination with at most 256
+releases per page. Clients consume every page, reject cursor loops and duplicate
+coordinates across pages, and cap one listing at 262,144 releases. The official
+filesystem runtime builds a metadata-only in-process index at startup and
+invalidates it after every publication or yank. Exact-coordinate reads do not use
+the catalogue index and never load unrelated binary assets.
 The current first-party JavaScript trust decision and the intended sandbox
 boundary for future third-party collections are recorded in
 [deferred platform work](../TODO.md#collection-javascript-isolation).

@@ -46,10 +46,10 @@ authored folder and are validated before the local release is stored.
 Control's Mongo contract catalogue does not yet persist fixture assets, so
 the current import flow accepts only contracts without them.
 
-Each V1 repository catalogue response currently accepts at most 256 releases
-and has no cursor pagination. Exact-coordinate reads are independent of that
-limit. Before an official production catalogue can exceed 256 visible releases,
-the server and every catalogue client must adopt cursor pagination.
+Each V1 repository catalogue response contains at most 256 releases and may
+return an opaque `nextCursor`. Repository clients consume all pages with global
+duplicate, loop and memory bounds. Exact-coordinate reads are independent of
+the metadata-only catalogue index.
 
 The first official resources are `catalog.items`, `forms.submissions`,
 `media.assets` and the `ulvia.official` manifest under `packages/official-repository/`.

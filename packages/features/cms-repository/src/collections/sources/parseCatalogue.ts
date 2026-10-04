@@ -5,6 +5,12 @@ import { isCanonicalSemVer } from "cms-repository/exports/contracts/compatibilit
 
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
 const DIGEST = /^sha256:[0-9a-f]{64}$/;
+const CURSOR = /^[A-Za-z0-9_-]{1,1024}$/u;
+
+export type CollectionCataloguePage = Readonly<{
+    entries: CollectionRepositoryEntry[];
+    nextCursor?: string;
+}>;
 
 export function validCollectionReference(reference: {
     publisherId: string;
@@ -25,7 +31,16 @@ export function validCollectionRepositoryId(id: string): boolean {
 }
 
 export function parseCollectionCatalogue(data: unknown, repositoryId: string): CollectionRepositoryEntry[] {
-    if (!isPlainRecord(data) || Object.keys(data).some((key) => key !== "releases") || !Array.isArray(data.releases)) {
+    return parseCollectionCataloguePage(data, repositoryId).entries;
+}
+
+export function parseCollectionCataloguePage(data: unknown, repositoryId: string): CollectionCataloguePage {
+    if (
+        !isPlainRecord(data) ||
+        Object.keys(data).some((key) => key !== "releases" && key !== "nextCursor") ||
+        !Array.isArray(data.releases) ||
+        (data.nextCursor !== undefined && (typeof data.nextCursor !== "string" || !CURSOR.test(data.nextCursor)))
+    ) {
         throw new TypeError("Invalid repository catalogue");
     }
     const releases = data.releases;
@@ -122,7 +137,7 @@ export function parseCollectionCatalogue(data: unknown, repositoryId: string): C
     if (new Set(coordinates).size !== coordinates.length) {
         throw new TypeError("Duplicate collection repository release coordinates");
     }
-    return entries;
+    return { entries, ...(typeof data.nextCursor === "string" ? { nextCursor: data.nextCursor } : {}) };
 }
 
 function validIdentifier(value: string): boolean {

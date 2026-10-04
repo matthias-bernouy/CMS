@@ -3,6 +3,7 @@ import { LocalContractReleases } from "../contracts";
 import { LocalCollectionRepository } from "../artifacts/collections";
 import { LocalProviderReleases } from "../providers";
 import { LocalRepositoryYanks } from "../yanks";
+import { FilesystemRepositoryCatalogueIndex } from "../catalogueIndex";
 import { readCatalogue } from "./catalogue";
 
 export class RepositoryReadEndpoint {
@@ -10,13 +11,17 @@ export class RepositoryReadEndpoint {
     private readonly yanks: LocalRepositoryYanks;
     private readonly contracts: LocalContractReleases;
     private readonly providers: LocalProviderReleases;
+    private readonly index: FilesystemRepositoryCatalogueIndex;
+    private readonly refreshCatalogueReads: boolean;
 
-    constructor(root: string) {
+    constructor(root: string, index?: FilesystemRepositoryCatalogueIndex) {
         this.collections = new LocalCollectionRepository(root);
         const files = new LocalArtifactFiles(root);
         this.yanks = new LocalRepositoryYanks(root);
         this.contracts = new LocalContractReleases(files, this.yanks);
         this.providers = new LocalProviderReleases(files, this.contracts, this.yanks);
+        this.index = index ?? new FilesystemRepositoryCatalogueIndex(root);
+        this.refreshCatalogueReads = index === undefined;
     }
 
     async handle(request: Request): Promise<Response | null> {
@@ -29,14 +34,7 @@ export class RepositoryReadEndpoint {
         }
         const type = parts[2];
         if (parts.length === 3) {
-            return (
-                (await readCatalogue(type, {
-                    collections: this.collections,
-                    contracts: this.contracts,
-                    providers: this.providers,
-                    yanks: this.yanks,
-                })) ?? notFound()
-            );
+            return (await readCatalogue(request, type, this.index, this.refreshCatalogueReads)) ?? notFound();
         }
         if (parts.length === 8 && type === "contracts" && parts[6] === "fixtures") {
             return this.contractFixture(parts);

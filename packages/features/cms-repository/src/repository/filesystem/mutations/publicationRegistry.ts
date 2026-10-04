@@ -13,13 +13,17 @@ import { LocalContractReleases } from "../contracts";
 import { withRepositoryWriteLock } from "../lock";
 import { LocalProviderReleases } from "../providers";
 import { LocalRepositoryYanks } from "../yanks";
+import type { FilesystemRepositoryCatalogueIndex } from "../catalogueIndex";
 
 /** Reference filesystem adapter for the storage-independent publication endpoint. */
 export class FilesystemRepositoryPublicationRegistry implements RepositoryPublicationRegistry {
-    constructor(private readonly root: string) {}
+    constructor(
+        private readonly root: string,
+        private readonly index?: FilesystemRepositoryCatalogueIndex,
+    ) {}
 
     async publish(envelope: PublicationEnvelope): Promise<RepositoryPublicationResult> {
-        return withRepositoryWriteLock(this.root, async () => {
+        const published = await withRepositoryWriteLock(this.root, async () => {
             const files = new LocalArtifactFiles(this.root);
             const yanks = new LocalRepositoryYanks(this.root);
             const contracts = new LocalContractReleases(files, yanks);
@@ -42,10 +46,12 @@ export class FilesystemRepositoryPublicationRegistry implements RepositoryPublic
             );
             return result(envelope.kind, admission.manifest, admission.digest, added);
         });
+        this.index?.invalidate();
+        return published;
     }
 
     async setYank(coordinate: RemoteCoordinate, reason: string | null): Promise<RepositoryYankResult> {
-        return withRepositoryWriteLock(this.root, async () => {
+        const result = await withRepositoryWriteLock(this.root, async () => {
             await assertPublished(this.root, coordinate);
             const yank = await new LocalRepositoryYanks(this.root).set(
                 coordinate.kind,
@@ -56,6 +62,8 @@ export class FilesystemRepositoryPublicationRegistry implements RepositoryPublic
             );
             return { ...coordinate, yank };
         });
+        this.index?.invalidate();
+        return result;
     }
 }
 

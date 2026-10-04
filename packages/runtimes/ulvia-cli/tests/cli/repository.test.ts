@@ -89,6 +89,18 @@ test("local repository lists immutable metadata and serves matching release byte
             contracts,
         });
         await repository.store(build);
+        const firstPage = await fetch(`${server.url}/v1/collections?limit=1`);
+        expect(firstPage.status).toBe(200);
+        const firstPageBody = (await firstPage.json()) as { releases: unknown[]; nextCursor?: string };
+        expect(firstPageBody.releases).toHaveLength(1);
+        expect(firstPageBody.nextCursor).toBeString();
+        const secondPage = await fetch(
+            `${server.url}/v1/collections?limit=1&cursor=${encodeURIComponent(firstPageBody.nextCursor!)}`,
+        );
+        expect(secondPage.status).toBe(200);
+        expect(((await secondPage.json()) as { releases: unknown[] }).releases).toHaveLength(1);
+        expect((await fetch(`${server.url}/v1/collections?limit=0`)).status).toBe(400);
+        expect((await fetch(`${server.url}/v1/collections?unknown=true`)).status).toBe(400);
         const buildEntry = (await source.list()).find((entry) => entry.version === "1.3.3+build.1");
         expect(buildEntry).toBeDefined();
         const buildBundle = await source.get(buildEntry!);

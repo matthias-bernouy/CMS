@@ -5,6 +5,12 @@ const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/u;
 const DIGEST = /^sha256:[0-9a-f]{64}$/u;
 const CATALOGUE_TOKEN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
+const CURSOR = /^[A-Za-z0-9_-]{1,1024}$/u;
+
+export type ProviderCataloguePage = Readonly<{
+    entries: readonly RepositoryArtifactEntry[];
+    nextCursor?: string;
+}>;
 
 export function validProviderRepositoryId(id: string): boolean {
     return validIdentifier(id);
@@ -24,7 +30,19 @@ export function parseProviderCatalogue(
     repositoryId: string,
     kind: RepositoryArtifactKind,
 ): readonly RepositoryArtifactEntry[] {
-    if (!isPlainRecord(data) || Object.keys(data).some((key) => key !== "releases")) {
+    return parseProviderCataloguePage(data, repositoryId, kind).entries;
+}
+
+export function parseProviderCataloguePage(
+    data: unknown,
+    repositoryId: string,
+    kind: RepositoryArtifactKind,
+): ProviderCataloguePage {
+    if (
+        !isPlainRecord(data) ||
+        Object.keys(data).some((key) => key !== "releases" && key !== "nextCursor") ||
+        (data.nextCursor !== undefined && (typeof data.nextCursor !== "string" || !CURSOR.test(data.nextCursor)))
+    ) {
         throw new TypeError("Invalid provider repository catalogue");
     }
     const releases = data.releases;
@@ -91,7 +109,7 @@ export function parseProviderCatalogue(
     if (new Set(coordinates).size !== coordinates.length) {
         throw new TypeError("Duplicate provider repository release coordinates");
     }
-    return entries;
+    return { entries, ...(typeof data.nextCursor === "string" ? { nextCursor: data.nextCursor } : {}) };
 }
 
 function validIdentifier(value: string): boolean {

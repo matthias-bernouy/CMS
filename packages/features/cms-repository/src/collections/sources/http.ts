@@ -2,15 +2,17 @@ import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import { DEFAULT_COLLECTION_LIMITS } from "cms-repository/collections/core/limits";
 import { parseCollectionRelease } from "cms-repository/collections/core/parsing/parseCollectionRelease";
 import { repositoryBaseUrl } from "cms-repository/repository-http/baseUrl";
+import { readCataloguePages } from "cms-repository/repository-http/cataloguePages";
 import { getRepositoryBytes, MAX_REPOSITORY_RESPONSE_BYTES } from "cms-repository/repository-http/getBytes";
 import type {
     CollectionRepositoryEntry,
     CollectionRepositoryReference,
     CollectionRepositorySource,
 } from "./interfaces";
-import { parseCollectionCatalogue, validCollectionReference, validCollectionRepositoryId } from "./parseCatalogue";
+import { parseCollectionCataloguePage, validCollectionReference, validCollectionRepositoryId } from "./parseCatalogue";
 
 const ASSET_FETCH_CONCURRENCY = 4;
+const CATALOGUE_PAGE_SIZE = 256;
 
 export class HttpCollectionRepository implements CollectionRepositorySource {
     readonly id: string;
@@ -25,8 +27,17 @@ export class HttpCollectionRepository implements CollectionRepositorySource {
     }
 
     async list(): Promise<CollectionRepositoryEntry[]> {
-        const bytes = await getRepositoryBytes(this.base, "v1/collections", "Collection");
-        return parseCollectionCatalogue(parseStrictJson(bytes, MAX_REPOSITORY_RESPONSE_BYTES, 64), this.id);
+        return readCataloguePages(
+            async (cursor) => {
+                const query = cursor
+                    ? `?limit=${CATALOGUE_PAGE_SIZE}&cursor=${encodeURIComponent(cursor)}`
+                    : `?limit=${CATALOGUE_PAGE_SIZE}`;
+                const bytes = await getRepositoryBytes(this.base, `v1/collections${query}`, "Collection");
+                return parseCollectionCataloguePage(parseStrictJson(bytes, MAX_REPOSITORY_RESPONSE_BYTES, 64), this.id);
+            },
+            (entry) => `${entry.publisherId}\0${entry.collectionId}\0${entry.version}`,
+            "collection",
+        );
     }
 
     async get(reference: CollectionRepositoryReference) {

@@ -2,6 +2,7 @@ import {
     FilesystemRepositoryPublicationRegistry,
     FilesystemRepositoryPublicationUploadStore,
     FilesystemRepositoryReplayStore,
+    FilesystemRepositoryCatalogueIndex,
     RepositoryReadEndpoint,
 } from "@bernouy/cms-repository/repository/filesystem";
 import { RepositoryMutationEndpoint } from "@bernouy/cms-repository/repository/publication";
@@ -15,9 +16,10 @@ export async function createOfficialRepositoryApplication(
     root: string,
     token: string,
 ): Promise<OfficialRepositoryApplication> {
-    await validateOfficialRepositoryStorage(root);
-    const reads = new RepositoryReadEndpoint(root);
-    const mutations = new RepositoryMutationEndpoint(new FilesystemRepositoryPublicationRegistry(root), {
+    const index = new FilesystemRepositoryCatalogueIndex(root);
+    await validateOfficialRepositoryStorage(root, index);
+    const reads = new RepositoryReadEndpoint(root, index);
+    const mutations = new RepositoryMutationEndpoint(new FilesystemRepositoryPublicationRegistry(root, index), {
         token,
         uploads: new FilesystemRepositoryPublicationUploadStore(root),
         replays: new FilesystemRepositoryReplayStore(root),
