@@ -38,9 +38,10 @@ test("serves installed collection assets publicly through immutable digest URLs"
         collectionAssets: {
             siteId: "site",
             store: {
-                snapshot: (siteId) => store.snapshot(siteId),
                 getInstalledAssetMetadata: (siteId, collectionId, assetId) =>
                     store.getInstalledAssetMetadata(siteId, collectionId, assetId),
+                getInstalledAssetMetadataBatch: (siteId, references) =>
+                    store.getInstalledAssetMetadataBatch(siteId, references),
                 getReleaseAsset: (releaseDigest, assetId) => {
                     byteReads += 1;
                     return store.getReleaseAsset(releaseDigest, assetId);
@@ -63,6 +64,7 @@ test("serves installed collection assets publicly through immutable digest URLs"
     expect(response.headers.get("content-type")).toBe("image/svg+xml");
     expect(response.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(response.headers.get("accept-ranges")).toBe("bytes");
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(bytes);
     expect(byteReads).toBe(1);
 
@@ -76,7 +78,30 @@ test("serves installed collection assets publicly through immutable digest URLs"
     expect(notModified.status).toBe(304);
     expect(byteReads).toBe(1);
 
+    const partial = await get(new Request(url, { headers: { Range: "bytes=5-11" } }));
+    expect(partial.status).toBe(206);
+    expect(partial.headers.get("content-range")).toBe(`bytes 5-11/${bytes.byteLength}`);
+    expect(partial.headers.get("content-length")).toBe("7");
+    expect(new Uint8Array(await partial.arrayBuffer())).toEqual(bytes.slice(5, 12));
+    const suffix = await get(new Request(url, { headers: { Range: "bytes=-6" } }));
+    expect(suffix.status).toBe(206);
+    expect(suffix.headers.get("content-range")).toBe(
+        `bytes ${bytes.byteLength - 6}-${bytes.byteLength - 1}/${bytes.byteLength}`,
+    );
+    expect(new Uint8Array(await suffix.arrayBuffer())).toEqual(bytes.slice(-6));
+    const staleIfRange = await get(new Request(url, { headers: { Range: "bytes=0-1", "If-Range": '"stale"' } }));
+    expect(staleIfRange.status).toBe(200);
+    expect(new Uint8Array(await staleIfRange.arrayBuffer())).toEqual(bytes);
+    const readsBeforeInvalidRange = byteReads;
+    const unsatisfiable = await get(new Request(url, { headers: { Range: `bytes=${bytes.byteLength}-` } }));
+    expect(unsatisfiable.status).toBe(416);
+    expect(unsatisfiable.headers.get("content-range")).toBe(`bytes */${bytes.byteLength}`);
+    expect(byteReads).toBe(readsBeforeInvalidRange);
+    expect((await get(new Request(url, { headers: { Range: "bytes=0-1,3-4" } }))).status).toBe(416);
+    expect(byteReads).toBe(readsBeforeInvalidRange);
+
+    const readsBeforeUninstall = byteReads;
     await store.uninstall("site", "design-system", 1);
     expect((await get(new Request(url))).status).toBe(404);
-    expect(byteReads).toBe(1);
+    expect(byteReads).toBe(readsBeforeUninstall);
 });

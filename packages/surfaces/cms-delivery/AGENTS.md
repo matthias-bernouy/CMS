@@ -33,3 +33,5 @@ onto a provided `Runner`.
   `/.cms/sources` routes.
 - Gateway execution uses the selected contract and injected runtime transport.
 - Public routes should be careful with cache headers and CSP-related settings.
+- Installed collection assets use representation-versioned public URLs and support single HTTP byte ranges for
+  progressive media and document reads.

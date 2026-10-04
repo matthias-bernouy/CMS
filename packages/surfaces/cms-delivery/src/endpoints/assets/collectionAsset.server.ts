@@ -1,6 +1,7 @@
 import { securityHeaders } from "@bernouy/http-runner";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { COLLECTION_ASSETS_ROUTE, collectionAssetVersion } from "cms-delivery/core/assets/collectionAssets";
+import { ifRangeAllowsPartial, parseByteRange } from "./byteRange";
 
 const IMMUTABLE = "public, max-age=31536000, immutable";
 const REVALIDATE = "public, no-cache";
@@ -28,6 +29,7 @@ export default async function CollectionAssetServer(request: Request, delivery: 
     const headers = new Headers({
         ...securityHeaders(),
         "Cache-Control": reference.version ? IMMUTABLE : REVALIDATE,
+        "Accept-Ranges": "bytes",
         "Content-Disposition": inlineSafe(asset.mediaType) ? "inline" : "attachment",
         "Content-Length": String(asset.byteLength),
         "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
@@ -41,9 +43,23 @@ export default async function CollectionAssetServer(request: Request, delivery: 
     if (request.method === "HEAD") {
         return new Response(null, { headers });
     }
+    const range = ifRangeAllowsPartial(request.headers.get("if-range"), etag)
+        ? parseByteRange(request.headers.get("range"), asset.byteLength)
+        : null;
+    if (range === "unsatisfiable") {
+        headers.set("Content-Length", "0");
+        headers.set("Content-Range", `bytes */${asset.byteLength}`);
+        return new Response(null, { status: 416, headers });
+    }
     const bytes = await source.store.getReleaseAsset(installedAsset.digest, asset.id);
     if (!bytes) {
         return new Response(null, { status: 404 });
+    }
+    if (range) {
+        const body = bytes.slice(range.start, range.end + 1);
+        headers.set("Content-Length", String(body.byteLength));
+        headers.set("Content-Range", `bytes ${range.start}-${range.end}/${bytes.byteLength}`);
+        return new Response(body.slice().buffer as ArrayBuffer, { status: 206, headers });
     }
     return new Response(bytes.slice().buffer as ArrayBuffer, { headers });
 }

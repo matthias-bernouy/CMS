@@ -23,7 +23,10 @@ export type DeliveryCmsConfig = {
     /** Installed immutable collection assets exposed under Delivery's tenant-scoped public asset route. */
     collectionAssets?: {
         siteId: string;
-        store: Pick<CollectionStore, "snapshot" | "getInstalledAssetMetadata" | "getReleaseAsset">;
+        store: Pick<
+            CollectionStore,
+            "getInstalledAssetMetadata" | "getInstalledAssetMetadataBatch" | "getReleaseAsset"
+        >;
     };
     cache?: Cache;
     maintenance?: { siteId: string; migrations: Pick<CollectionMigrationService, "getActive"> };

@@ -1,4 +1,7 @@
-import { replaceCollectionAssetExpressions, type CollectionAssetDefinition } from "@bernouy/cms-repository/collections";
+import {
+    collectionAssetRepresentationVersion,
+    replaceCollectionAssetExpressions,
+} from "@bernouy/cms-repository/collections";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 
 export const COLLECTION_ASSETS_ROUTE = "/.cms/collections";
@@ -16,17 +19,22 @@ export async function resolveCollectionAssetExpressions(input: string, delivery:
     if (!assets) {
         throw new Error("Collection asset serving is not configured");
     }
-    const snapshot = await assets.store.snapshot(assets.siteId);
+    const installed = await assets.store.getInstalledAssetMetadataBatch(
+        assets.siteId,
+        [...references].map((key) => {
+            const [collectionId, assetId] = splitReferenceKey(key);
+            return { collectionId, assetId };
+        }),
+    );
     const urls = new Map<string, string>();
-    for (const key of references) {
-        const [collectionId, assetId] = splitReferenceKey(key);
-        const installation = snapshot.collections.find((item) => item.collectionId === collectionId);
-        const asset = installation?.release.assets.find((item) => item.id === assetId);
-        if (!installation || !asset) {
-            throw new Error(`Unknown installed collection asset: ${collectionId}.${assetId}`);
-        }
-        urls.set(key, collectionAssetUrl(delivery, collectionId, assetId, await collectionAssetVersion(asset)));
-    }
+    await Promise.all(
+        installed.map(async ({ collectionId, asset }) => {
+            urls.set(
+                referenceKey(collectionId, asset.id),
+                collectionAssetUrl(delivery, collectionId, asset.id, await collectionAssetVersion(asset)),
+            );
+        }),
+    );
     return replaceCollectionAssetExpressions(input, (collectionId, assetId) => {
         const url = urls.get(referenceKey(collectionId, assetId));
         if (!url) {
@@ -45,12 +53,7 @@ export function collectionAssetUrl(
     return `${delivery.basePath}${COLLECTION_ASSETS_ROUTE}/${encodeURIComponent(collectionId)}/assets/${encodeURIComponent(assetId)}?v=${version}`;
 }
 
-/** Commits every response-relevant immutable property, not only the raw bytes. */
-export async function collectionAssetVersion(asset: CollectionAssetDefinition): Promise<string> {
-    const identity = new TextEncoder().encode(`${asset.digest}\0${asset.byteLength}\0${asset.mediaType}`);
-    const hash = new Uint8Array(await crypto.subtle.digest("SHA-256", identity));
-    return Array.from(hash, (byte) => byte.toString(16).padStart(2, "0")).join("");
-}
+export const collectionAssetVersion = collectionAssetRepresentationVersion;
 
 function referenceKey(collectionId: string, assetId: string): string {
     return `${collectionId}\0${assetId}`;
