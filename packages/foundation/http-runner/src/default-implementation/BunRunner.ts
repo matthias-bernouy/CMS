@@ -5,6 +5,7 @@ import { stopServerGracefully } from "./gracefulServerStop";
 import { normalizePath, urlJoin } from "./runnerPaths";
 
 export type BunRunnerOptions = Readonly<{
+    hostname?: string;
     idleTimeoutSeconds?: number;
 }>;
 
@@ -137,12 +138,13 @@ export class BunRunner implements Runner {
 
         this.server = Bun.serve({
             port,
+            ...(this.options.hostname === undefined ? {} : { hostname: this.options.hostname }),
             ...(this.options.idleTimeoutSeconds === undefined ? {} : { idleTimeout: this.options.idleTimeoutSeconds }),
             fetch: (request, server) =>
                 dispatchBunRunnerRequest(request, server, self.routes, self.defaultEndpoints, self.globalMiddlewares),
         });
 
-        console.log(`🚀 Server started on http://localhost:${this.server.port}`);
+        console.log(`🚀 Server started on http://${this.options.hostname ?? "localhost"}:${this.server.port}`);
     }
 
     /** Stop the `Bun.serve` listener and free the port. Idempotent. */

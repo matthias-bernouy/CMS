@@ -4,6 +4,9 @@ This directory is the authored source of official immutable releases published
 to CMS repositories. It contains provider-neutral contracts, provider manifests
 and collections. Admission, canonicalization, storage and installation belong
 to `@bernouy/cms-repository`; this directory only owns the official publications.
+The separate `@bernouy/official-repository-server` runtime never scans this
+directory; the release pipeline pushes reviewed exact coordinates into its
+persistent store.
 
 The official Ulvia provider implementation lives separately in
 `packages/official-provider`. Generic protocol fixtures remain beside the

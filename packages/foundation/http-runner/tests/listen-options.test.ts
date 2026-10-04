@@ -48,6 +48,12 @@ describe("BunRunner listen options", () => {
         expect(options.idleTimeout).toBe(255);
     });
 
+    test("forwards an explicit hostname to Bun", () => {
+        const options = captureServeOptions((runner) => runner.start(4123), new BunRunner({ hostname: "127.0.0.1" }));
+
+        expect(options.hostname).toBe("127.0.0.1");
+    });
+
     test("graceful stop waits for an active request before closing", async () => {
         let release!: () => void;
         let markStarted!: () => void;

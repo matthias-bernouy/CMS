@@ -102,7 +102,10 @@ production databases or storage roots.
 
 `cms-server` reads environment configuration, wires concrete dependencies,
 mounts both surfaces and starts listeners. `ulvia-cli` manages the persistent
-local development stack. New environment reads belong in runtimes; a fixed
+local development stack. `official-repository-server` mounts the public immutable
+repository and its signed publication protocol over one persistent production
+volume; authored official releases remain separate publication inputs. New
+environment reads belong in runtimes; a fixed
 set of existing `process.env.MODE` reads elsewhere is recorded in the
 [architecture policy](../../quality/architecture/repository/repositoryPolicy.ts).
 

@@ -1,0 +1,17 @@
+{
+    "name": "@bernouy/official-repository-server",
+    "version": "0.1.0",
+    "description": "Production composition root for the official immutable Ulvia repository.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "scripts": {
+        "start": "bun run src/index.ts"
+    },
+    "architecture": {
+        "layer": "runtimes"
+    },
+    "dependencies": {
+        "@bernouy/cms-repository": "workspace:*",
+        "@bernouy/http-runner": "workspace:*"
+    }
+}

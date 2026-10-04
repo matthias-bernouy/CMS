@@ -145,7 +145,9 @@ clients. See [image delivery](../images/delivery.md).
 - Mongo contract publication rejects fixture assets until a byte store exists.
 - Collection releases can be installed and upgraded from configured repository
   sources. Exact remote `push`/`pull` and reversible yanking are implemented;
-  production hosting and multi-publisher authorization remain deployment work.
+  `@bernouy/official-repository-server` provides single-replica production hosting
+  with durable staged uploads and replay claims. Horizontal storage and
+  multi-publisher authorization remain separate work.
 - Provider image transforms run on demand; there is no durable derivative queue
   or public shared-cache policy.
 

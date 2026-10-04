@@ -57,6 +57,9 @@
         },
         {
             "path": "packages/runtimes/cms-server"
+        },
+        {
+            "path": "packages/runtimes/official-repository-server"
         }
     ]
 }

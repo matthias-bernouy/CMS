@@ -43,7 +43,9 @@ The `cms-source` HTML attribute remains the active binding API.
 
 `packages/official-repository` contains the authored official contract releases,
 the `ulvia.official` provider manifest and official collections. It has no
-runtime adapters or routes. `@bernouy/ulvia-official-provider` is the separate
+runtime adapters or routes. `@bernouy/official-repository-server` publishes and
+serves admitted copies from a separate persistent volume.
+`@bernouy/ulvia-official-provider` is the separate
 provider product; its root exports domain behavior, `./local-fs` exports the
 development adapter and `./server` is its executable entrypoint.
 
@@ -54,6 +56,7 @@ development adapter and `./server` is its executable entrypoint.
 | `@bernouy/cms-control` | Authenticated admin UI, REST API, author media and selected gateway capability access. |
 | `@bernouy/cms-delivery` | Public pages, Bloc assets, binding runtime, auth, media, gateway calls and SEO. |
 | `@bernouy/cms-server` | Production adapter composition and Control/Delivery startup. |
+| `@bernouy/official-repository-server` | Production official repository startup with persistent staged publication and immutable reads. |
 | `@bernouy/ulvia-cli` | Persistent local CMS development stack backed by MongoDB. |
 
 See [workspace architecture](README.md) for dependency direction and
