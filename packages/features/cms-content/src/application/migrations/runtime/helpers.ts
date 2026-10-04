@@ -1,6 +1,14 @@
-import type { CollectionInstallation, InstalledCollection } from "@bernouy/cms-repository/collections/installations";
+import type {
+    CollectionInstallation,
+    CollectionStore,
+    InstalledCollection,
+} from "@bernouy/cms-repository/collections/installations";
 import { isDeepStrictEqual } from "node:util";
-import type { CollectionMigrationRecord, CollectionMigrationSummary } from "../interfaces";
+import type {
+    CollectionMigrationParticipant,
+    CollectionMigrationRecord,
+    CollectionMigrationSummary,
+} from "../interfaces";
 import type { prepareCollectionMigration } from "../plan";
 
 export function pagePatch(page: CollectionMigrationRecord["pages"][number]["before"]) {
@@ -45,6 +53,36 @@ export function installationsMatch(
         collections.map(({ release: _release, ...installation }) => installation),
         installations,
     );
+}
+
+export async function migrationTargetSnapshot(
+    collections: CollectionStore,
+    record: CollectionMigrationRecord,
+    side: "before" | "after",
+): Promise<InstalledCollection[]> {
+    const replacements = new Map(record.replacements.map((replacement) => [replacement.collectionId, replacement]));
+    const installations = record.installationsBefore.map((installation) =>
+        side === "after" ? (replacements.get(installation.collectionId) ?? installation) : installation,
+    );
+    return Promise.all(
+        installations.map(async (installation) => {
+            const artifact = await collections.getRelease(installation.digest);
+            if (!artifact || artifact.release.collectionId !== installation.collectionId) {
+                throw new Error(`Collection release is unavailable for ${installation.collectionId}`);
+            }
+            return { ...structuredClone(installation), release: artifact.release };
+        }),
+    );
+}
+
+export async function prepareMigrationParticipants(
+    participants: readonly CollectionMigrationParticipant[],
+    siteId: string,
+    collections: readonly InstalledCollection[],
+): Promise<void> {
+    for (const participant of participants) {
+        await participant.prepareTarget?.({ siteId, collections });
+    }
 }
 
 export function summarizeMigration(

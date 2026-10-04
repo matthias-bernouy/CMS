@@ -29,7 +29,10 @@ export class MongoCollectionViewExecutionGrantStore implements CollectionViewExe
             grant.plan.consumer.siteId !== consumer.siteId ||
             grant.plan.consumer.publisherId !== consumer.publisherId ||
             grant.plan.consumer.collectionId !== consumer.collectionId ||
+            grant.plan.consumer.collectionVersion !== consumer.collectionVersion ||
+            grant.plan.consumer.collectionDigest !== consumer.collectionDigest ||
             grant.plan.consumer.viewId !== consumer.viewId ||
+            grant.plan.consumer.viewGeneration !== consumer.viewGeneration ||
             !/^sha256:[0-9a-f]{64}$/u.test(grant.planDigest)
         ) {
             throw new Error("Stored collection view execution grant is invalid");
@@ -56,7 +59,15 @@ export class MongoCollectionViewExecutionGrantStore implements CollectionViewExe
 }
 
 function key(consumer: CollectionViewExecutionConsumer): string {
-    return JSON.stringify([consumer.siteId, consumer.publisherId, consumer.collectionId, consumer.viewId]);
+    return JSON.stringify([
+        consumer.siteId,
+        consumer.publisherId,
+        consumer.collectionId,
+        consumer.collectionVersion,
+        consumer.collectionDigest,
+        consumer.viewId,
+        consumer.viewGeneration,
+    ]);
 }
 
 function isDuplicateKey(error: unknown): boolean {

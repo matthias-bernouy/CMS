@@ -4,7 +4,7 @@ import type { CmsRepository } from "cms-content/application/interfaces/CmsReposi
 import type { CollectionMigrationRecord } from "../interfaces";
 import type { CollectionMigrationParticipant } from "../interfaces";
 import { forEachMigrationPage } from "./concurrency";
-import { migrationTargetInstallationsMatch } from "./helpers";
+import { migrationTargetInstallationsMatch, migrationTargetSnapshot, prepareMigrationParticipants } from "./helpers";
 import type { MigrationJournal } from "./journal";
 import { assertRollbackSafe } from "./rollbackValidation";
 import { migrationThemeTokenIds, restoreThemeTokenValues } from "./theme";
@@ -27,6 +27,11 @@ export async function rollbackCollectionMigration(
     }
     try {
         await assertRollbackSafe(context, record);
+        await prepareMigrationParticipants(
+            context.participants,
+            record.siteId,
+            await migrationTargetSnapshot(context.collections, record, "before"),
+        );
     } catch (error) {
         if (claimed) {
             await context.journal.transition(record, previousStatus);

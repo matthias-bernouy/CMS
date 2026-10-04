@@ -7,7 +7,12 @@ import { collectionSiteResourceDigest } from "../plan";
 import { collectionPageRevisionDigestFromRepository } from "../planning/pageScan";
 import { snapshotMigrationParticipants } from "../planning/participants";
 import { forEachMigrationPage } from "./concurrency";
-import { installationsMatch, migrationTargetsMatch } from "./helpers";
+import {
+    installationsMatch,
+    migrationTargetsMatch,
+    migrationTargetSnapshot,
+    prepareMigrationParticipants,
+} from "./helpers";
 import type { MigrationJournal } from "./journal";
 
 type ExecutionContext = {
@@ -31,6 +36,11 @@ export async function runCollectionMigration(
         ) {
             record = await context.journal.transition(record, "snapshotting");
             await assertSnapshotCurrent(context, record);
+            await prepareMigrationParticipants(
+                context.participants,
+                record.siteId,
+                await migrationTargetSnapshot(context.collections, record, "after"),
+            );
             record = await context.journal.transition(record, "committing");
             await context.collections.commitMigration(
                 record.siteId,
@@ -46,6 +56,8 @@ export async function runCollectionMigration(
             throw Object.assign(new Error("The migration plan became stale before it acquired maintenance mode"), {
                 status: 409,
             });
+        } else {
+            await prepareMigrationParticipants(context.participants, record.siteId, state.collections);
         }
         if (record.collectionRevisionAfterCommit !== record.expectedCollectionRevision + 1) {
             record = await context.journal.replace(record, {

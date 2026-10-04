@@ -4,7 +4,7 @@ import { handleGatewayFileGet, handleGatewayImageGet } from "@bernouy/cms-gatewa
 import type { Middleware } from "@bernouy/http-runner";
 import { canReadDashboard } from "cms-control/core/admin/dashboards/access";
 import { dashboardFromCatalog } from "cms-control/core/admin/dashboards/catalog";
-import { collectionViewRequirements } from "cms-control/core/admin/dashboards/requirements";
+import { collectionViewRequirements } from "@bernouy/cms-repository/collections";
 import { dashboardNavigationViews } from "@bernouy/cms-dashboards";
 import type { ControlCms } from "cms-control/ControlCms";
 import type { ControlCmsState } from "../types";

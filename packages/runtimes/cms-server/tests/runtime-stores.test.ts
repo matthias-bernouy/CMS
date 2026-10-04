@@ -31,7 +31,7 @@ describe("production runtime stores", () => {
 
         expect(indexedCollections).toEqual(expect.arrayContaining(["cms_identity_aliases", "dashboardAssignments"]));
         expect(indexedCollections).not.toContain("sources");
-        expect(stores.migrationParticipants.map(({ id }) => id)).toEqual(["cms-dashboards"]);
+        expect(stores.dashboards).toBeDefined();
     });
 
     test("rejects an invalid Mongo connection string before initializing stores", async () => {

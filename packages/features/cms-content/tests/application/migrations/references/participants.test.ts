@@ -83,6 +83,26 @@ test("digests participant resource identities independently from diagnostic labe
     ).toThrow("Duplicate collection migration participant");
 });
 
+test("prepares feature state for the exact forward and rollback collection targets", async () => {
+    const fixture = await referenceFixture();
+    const next = await fixture.collections.importRelease(release("1.1.0", "atlas-card"));
+    const prepared: string[][] = [];
+    fixture.service.addParticipant({
+        id: "execution-grants",
+        async collectReferences() {
+            return [];
+        },
+        async prepareTarget({ collections }) {
+            prepared.push(collections.map(({ release: target }) => target.version));
+        },
+    });
+
+    const completed = await fixture.service.execute("site", [{ digest: next.digest }], 1);
+    await fixture.service.rollback("site", completed.id);
+
+    expect(prepared).toEqual([["1.1.0"], ["1.0.0"]]);
+});
+
 function previousResources(): Record<string, unknown> {
     return {
         configuration: { schema: { type: "object", properties: {}, required: [] }, defaults: {} },

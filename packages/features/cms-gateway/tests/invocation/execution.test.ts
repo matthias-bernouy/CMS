@@ -59,7 +59,7 @@ describe("collection view execution authority", () => {
         ).rejects.toMatchObject({ code: "stale_route" });
     });
 
-    test("rejects incompatible selections and changed collection consumers", async () => {
+    test("rejects incompatible selections and keeps grants for collection releases independent", async () => {
         const route = await gatewayRoute();
         const authority = new DefaultCollectionViewExecutionAuthority(
             { get: async () => selections(route) },
@@ -77,14 +77,25 @@ describe("collection view execution authority", () => {
             consumer,
             requirements: [{ contractId: "catalog", capabilityId: "item.list", versionRange: "^1.0.0" }],
         });
+        const target = {
+            ...consumer,
+            collectionVersion: "2.0.0",
+            collectionDigest: `sha256:${"d".repeat(64)}`,
+            viewGeneration: 2,
+        } as const;
         await expect(
-            authority.authorize({
-                ...consumer,
-                collectionDigest: `sha256:${"d".repeat(64)}`,
-                contractId: "catalog",
-                capabilityId: "item.list",
-            }),
-        ).rejects.toMatchObject({ code: "stale_route" });
+            authority.authorize({ ...target, contractId: "catalog", capabilityId: "item.list" }),
+        ).rejects.toMatchObject({ code: "not_authorized" });
+        await authority.activate({
+            consumer: target,
+            requirements: [{ contractId: "catalog", capabilityId: "item.list", versionRange: "^1.0.0" }],
+        });
+        await expect(
+            authority.authorize({ ...consumer, contractId: "catalog", capabilityId: "item.list" }),
+        ).resolves.toMatchObject({ version: "1.0.0" });
+        await expect(
+            authority.authorize({ ...target, contractId: "catalog", capabilityId: "item.list" }),
+        ).resolves.toMatchObject({ version: "1.0.0" });
     });
 });
 

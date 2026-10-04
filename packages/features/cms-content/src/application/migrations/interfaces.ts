@@ -1,6 +1,7 @@
 import type {
     CollectionInstallation,
     CollectionMigrationReplacement,
+    InstalledCollection,
 } from "@bernouy/cms-repository/collections/installations";
 import type {
     CollectionMigrationOperation,
@@ -40,9 +41,16 @@ export type CollectionMigrationParticipantSnapshot = {
     references: readonly CollectionMigrationResourceReference[];
 };
 
+export type CollectionMigrationTargetSnapshot = {
+    siteId: string;
+    collections: readonly InstalledCollection[];
+};
+
 export interface CollectionMigrationParticipant {
     readonly id: string;
     collectReferences(siteId: string): Promise<readonly CollectionMigrationResourceReference[]>;
+    /** Prepare idempotent feature state before this exact collection snapshot becomes visible. */
+    prepareTarget?(target: CollectionMigrationTargetSnapshot): Promise<void>;
 }
 
 export type CollectionMigrationResourceChange = {

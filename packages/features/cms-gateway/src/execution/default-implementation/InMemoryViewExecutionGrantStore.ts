@@ -21,5 +21,13 @@ export class InMemoryCollectionViewExecutionGrantStore implements CollectionView
 }
 
 function key(consumer: CollectionViewExecutionConsumer): string {
-    return JSON.stringify([consumer.siteId, consumer.publisherId, consumer.collectionId, consumer.viewId]);
+    return JSON.stringify([
+        consumer.siteId,
+        consumer.publisherId,
+        consumer.collectionId,
+        consumer.collectionVersion,
+        consumer.collectionDigest,
+        consumer.viewId,
+        consumer.viewGeneration,
+    ]);
 }

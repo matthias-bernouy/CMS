@@ -85,5 +85,9 @@ export {
 } from "cms-repository/collections/core/admission/collectionArtifact";
 export { collectionAssetRepresentationVersion } from "cms-repository/collections/core/admission/assets";
 export { replaceCollectionAssetExpressions } from "cms-repository/collections/core/texts/expressions";
+export {
+    collectionViewRequirements,
+    viewRequirements,
+} from "cms-repository/collections/core/admission/viewRequirements";
 
 export * from "./texts";

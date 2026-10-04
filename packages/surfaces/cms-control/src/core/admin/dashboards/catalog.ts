@@ -4,7 +4,7 @@ import type { CollectionDashboardNavigationItem } from "@bernouy/cms-repository/
 import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
 import type { ControlCms } from "cms-control/ControlCms";
 import { dashboardCollections } from "./access";
-import { collectionViewRequirements } from "./requirements";
+import { collectionViewRequirements } from "@bernouy/cms-repository/collections";
 
 /** Site dashboard plus capabilities derived from its selected collection views. */
 export type DashboardCatalogRecord = DashboardRecord & { readonly sourceContracts: readonly string[] };
