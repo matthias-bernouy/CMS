@@ -5,6 +5,7 @@ import type {
     AdmittedProviderManifest,
     ProviderManifestDigest,
 } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
+import { verifyStoredProviderManifestJson } from "cms-repository/providers/manifests/core/admission/admitProviderManifest";
 import { validateProviderManifestReferences } from "cms-repository/providers/manifests/core/admission/validateProviderManifest";
 import { verifyProviderManifestAdmission } from "cms-repository/providers/manifests/core/admission/verifyProviderManifestAdmission";
 import { ProviderManifestValidationError } from "cms-repository/providers/manifests/core/errors";
@@ -41,6 +42,20 @@ export class InMemoryProviderManifestCatalogue implements ProviderManifestCatalo
 
     async publish(admission: AdmittedProviderManifest): Promise<CatalogueProviderManifest> {
         const verified = await verifyProviderManifestAdmission(admission, this.#limits);
+        return this.#insert(verified, this.#clock().toISOString());
+    }
+
+    async restore(
+        canonicalJson: string,
+        digest: ProviderManifestDigest,
+        publishedAt: string,
+    ): Promise<CatalogueProviderManifest> {
+        const verified = await verifyStoredProviderManifestJson(canonicalJson, digest, this.#limits);
+        return this.#insert(verified, publishedAt);
+    }
+
+    async #insert(admission: AdmittedProviderManifest, publishedAt: string): Promise<CatalogueProviderManifest> {
+        const verified = admission;
         const historical = this.#existing(verified);
         if (historical) {
             return historical;
@@ -68,7 +83,7 @@ export class InMemoryProviderManifestCatalogue implements ProviderManifestCatalo
                 "$.digest",
             );
         }
-        const record = Object.freeze({ admission: verified, publishedAt: this.#clock().toISOString() });
+        const record = Object.freeze({ admission: verified, publishedAt });
         this.#byKey.set(key, record);
         this.#byDigest.set(verified.digest, record);
         this.#publishers.set(providerId, provenance.publisherId);

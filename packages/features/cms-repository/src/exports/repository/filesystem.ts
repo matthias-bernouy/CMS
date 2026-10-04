@@ -3,8 +3,8 @@ export {
     type ArtifactType,
     type LocalFixtureAsset,
     type StoredArtifact,
-} from "cms-repository/repository/filesystem/artifactFiles";
-export { LocalCollectionRepository } from "cms-repository/repository/filesystem/collections";
+} from "cms-repository/repository/filesystem/artifacts/files";
+export { LocalCollectionRepository } from "cms-repository/repository/filesystem/artifacts/collections";
 export { LocalContractReleases } from "cms-repository/repository/filesystem/contracts";
 export { RepositoryReadEndpoint } from "cms-repository/repository/filesystem/http/readEndpoint";
 export { pruneRepository, withRepositoryWriteLock } from "cms-repository/repository/filesystem/lock";

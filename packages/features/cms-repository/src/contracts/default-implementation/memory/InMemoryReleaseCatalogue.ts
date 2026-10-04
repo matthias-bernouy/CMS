@@ -11,6 +11,7 @@ import type {
     ReleaseCatalogue,
 } from "../../interfaces/ReleaseCatalogue";
 import { verifyAdmission } from "cms-repository/contracts/core/admission/verifyAdmission";
+import { verifyStoredContractReleaseJson } from "cms-repository/contracts/core/admission/admitContractRelease";
 import { normalizeReleaseDeprecation, normalizeReleaseYank } from "./normalizeReleaseMetadata";
 import { verifyRequirements } from "cms-repository/contracts/core/catalogue/verifyRequirements";
 import { verifyEvolution } from "cms-repository/contracts/core/catalogue/verifyEvolution";
@@ -28,6 +29,21 @@ export class InMemoryReleaseCatalogue implements ReleaseCatalogue {
 
     async publish(admission: AdmittedContractRelease): Promise<CatalogueContractRelease> {
         const verified = await verifyAdmission(admission, this.#limits);
+        return this.#insert(verified, this.#clock().toISOString());
+    }
+
+    /** Restore already-published immutable metadata without loading its separately verified fixture bytes. */
+    async restore(
+        canonicalJson: string,
+        digest: ReleaseDigest,
+        publishedAt: string,
+    ): Promise<CatalogueContractRelease> {
+        const verified = await verifyStoredContractReleaseJson(canonicalJson, digest, this.#limits);
+        return this.#insert(verified, publishedAt);
+    }
+
+    #insert(admission: AdmittedContractRelease, publishedAt: string): CatalogueContractRelease {
+        const verified = admission;
         const { contractId, version } = verified.release;
         const key = releaseKey(contractId, version);
         const existing = this.#byKey.get(key);
@@ -44,7 +60,7 @@ export class InMemoryReleaseCatalogue implements ReleaseCatalogue {
         this.#assertPublisher(contractId, verified.release.publisherId);
         verifyRequirements(verified.release, [...this.#byKey.values()]);
         verifyEvolution(verified.release, [...this.#byKey.values()], this.#limits);
-        const record = freezeRecord(verified, this.#clock().toISOString());
+        const record = freezeRecord(verified, publishedAt);
         this.#byKey.set(key, record);
         this.#byDigest.set(verified.digest, record);
         return record;

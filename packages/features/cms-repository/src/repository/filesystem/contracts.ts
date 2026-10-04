@@ -1,14 +1,18 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { createHash } from "node:crypto";
 import {
     admitContractBundleJson,
     admitContractReleaseJson,
     parseContractReleaseJson,
     type AdmittedContractRelease,
+    verifyStoredContractReleaseJson,
 } from "cms-repository/exports/contracts/index";
+import { verifyFixtureAssets } from "cms-repository/contracts/core/admission/verifyFixtureAssets";
+import type { ReleaseDigest } from "cms-repository/contracts/core/admission/digest";
 import { InMemoryReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
-import { LocalArtifactFiles, type LocalFixtureAsset } from "./artifactFiles";
+import { LocalArtifactFiles, type LocalFixtureAsset } from "./artifacts/files";
 import { LocalRepositoryYanks } from "./yanks";
 
 export class LocalContractReleases {
@@ -52,16 +56,7 @@ export class LocalContractReleases {
     async catalogue(options: { includeYanks?: boolean } = {}): Promise<InMemoryReleaseCatalogue> {
         const pending = await Promise.all(
             (await this.files.list("contracts")).map(async ({ publisherId, id, version, bytes, publishedAt }) => {
-                const definitions = parseContractReleaseJson(bytes).fixtureAssets ?? [];
-                const fixtures = await Promise.all(
-                    definitions.map(async (fixture) => ({
-                        id: fixture.id,
-                        bytes: await this.files.fixture(bytes.toString("utf8"), fixture.id),
-                    })),
-                );
-                const admission = definitions.length
-                    ? await admitContractBundleJson(bytes, fixtures)
-                    : await admitContractReleaseJson(bytes);
+                const admission = await verifyStoredContractReleaseJson(bytes, digest(bytes));
                 if (
                     admission.release.publisherId !== publisherId ||
                     admission.release.contractId !== id ||
@@ -78,15 +73,18 @@ export class LocalContractReleases {
                 left.admission.release.contractId.localeCompare(right.admission.release.contractId) ||
                 compareSemVer(left.admission.release.version, right.admission.release.version),
         );
-        let publicationTime = new Date(0);
-        const catalogue = new InMemoryReleaseCatalogue(undefined, () => publicationTime);
+        const catalogue = new InMemoryReleaseCatalogue();
         while (pending.length) {
             let published = false;
             let firstError: unknown;
             for (let index = 0; index < pending.length; ) {
                 try {
-                    publicationTime = new Date(pending[index]!.publishedAt);
-                    await catalogue.publish(pending[index]!.admission);
+                    const current = pending[index]!;
+                    await catalogue.restore(
+                        current.admission.canonicalJson,
+                        current.admission.digest,
+                        current.publishedAt,
+                    );
                     pending.splice(index, 1);
                     published = true;
                 } catch (error) {
@@ -110,4 +108,36 @@ export class LocalContractReleases {
         }
         return catalogue;
     }
+
+    async getMetadata(publisherId: string, contractId: string, version: string) {
+        const bytes = await this.files.get("contracts", publisherId, contractId, version);
+        if (!bytes) {
+            return null;
+        }
+        const admission = await verifyStoredContractReleaseJson(bytes, digest(bytes));
+        if (
+            admission.release.publisherId !== publisherId ||
+            admission.release.contractId !== contractId ||
+            admission.release.version !== version ||
+            admission.canonicalJson !== bytes.toString("utf8")
+        ) {
+            throw new Error(`Corrupt local contract release: ${publisherId}/${contractId}/${version}`);
+        }
+        return admission;
+    }
+
+    async getFixture(publisherId: string, contractId: string, version: string, assetId: string) {
+        const admission = await this.getMetadata(publisherId, contractId, version);
+        const definition = admission?.release.fixtureAssets?.find((asset) => asset.id === assetId);
+        if (!admission || !definition) {
+            return null;
+        }
+        const bytes = await this.files.fixture(admission.canonicalJson, assetId);
+        await verifyFixtureAssets([definition], [{ id: assetId, bytes }]);
+        return { definition, bytes };
+    }
+}
+
+function digest(bytes: Uint8Array): ReleaseDigest {
+    return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
 }

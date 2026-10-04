@@ -31,6 +31,19 @@ export async function admitProviderManifestJson(
     return admitParsedManifest(parseProviderManifestJson(input, limits), catalogue, limits);
 }
 
+/** Rebuild persisted immutable identity without re-resolving mutable contract availability. */
+export async function verifyStoredProviderManifestJson(
+    input: string | Uint8Array,
+    expectedDigest: unknown,
+    limits: Readonly<ProviderManifestLimits> = DEFAULT_PROVIDER_MANIFEST_LIMITS,
+): Promise<AdmittedProviderManifest> {
+    const admitted = await sealProviderManifest(parseProviderManifestJson(input, limits), limits);
+    if (typeof expectedDigest !== "string" || admitted.digest !== expectedDigest) {
+        throw new TypeError("Stored provider manifest digest mismatch");
+    }
+    return admitted;
+}
+
 export async function computeProviderManifestDigest(
     value: unknown,
     catalogue: ReleaseCatalogue,

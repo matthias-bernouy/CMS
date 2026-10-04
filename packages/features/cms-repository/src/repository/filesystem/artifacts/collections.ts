@@ -5,11 +5,16 @@ import {
     isCollectionNamespace,
     parseCollectionReleaseJson,
     type AdmittedCollectionRelease,
+    DEFAULT_COLLECTION_LIMITS,
     verifyCollectionPublicationEvolution,
     verifyStoredCollectionArtifact,
+    verifyStoredCollectionRelease,
 } from "cms-repository/exports/collections/index";
+import { snapshotCollectionAssets, verifyCollectionAssets } from "cms-repository/collections/core/admission/assets";
+import type { CollectionAssetDefinition } from "cms-repository/collections/interfaces/CollectionAssets";
+import type { VerifiedCollectionReleaseMetadata } from "cms-repository/collections/interfaces/CollectionAdmission";
 import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
-import { pruneRepository } from "./lock";
+import { pruneRepository } from "../lock";
 
 export class LocalCollectionRepository {
     constructor(private readonly root: string) {}
@@ -17,11 +22,11 @@ export class LocalCollectionRepository {
     async store(artifact: AdmittedCollectionRelease): Promise<boolean> {
         const { publisherId, collectionId, version } = artifact.release;
         const path = this.releasePath(publisherId, collectionId, version);
-        const existing = await this.get(publisherId, collectionId, version);
+        const existing = await this.getMetadata(publisherId, collectionId, version);
         if (existing) {
             return assertSameDigest(existing, artifact);
         }
-        const previous = (await this.list())
+        const previous = (await this.listMetadata())
             .filter((item) => item.release.publisherId === publisherId && item.release.collectionId === collectionId)
             .sort((left, right) => compareSemVer(right.release.version, left.release.version))[0];
         if (previous) {
@@ -45,7 +50,7 @@ export class LocalCollectionRepository {
             if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
                 throw error;
             }
-            const winner = await this.get(publisherId, collectionId, version);
+            const winner = await this.getMetadata(publisherId, collectionId, version);
             if (!winner) {
                 throw new Error("Concurrent release disappeared");
             }
@@ -56,7 +61,21 @@ export class LocalCollectionRepository {
     }
 
     async list(): Promise<AdmittedCollectionRelease[]> {
-        const releases: AdmittedCollectionRelease[] = [];
+        return Promise.all(
+            (await this.listMetadata()).map(async ({ release }) => {
+                const artifact = await this.get(release.publisherId, release.collectionId, release.version);
+                if (!artifact) {
+                    throw new Error(
+                        `Release disappeared: ${release.publisherId}/${release.collectionId}/${release.version}`,
+                    );
+                }
+                return artifact;
+            }),
+        );
+    }
+
+    async listMetadata(): Promise<VerifiedCollectionReleaseMetadata[]> {
+        const releases: VerifiedCollectionReleaseMetadata[] = [];
         for (const publisher of await directories(join(this.root, "releases"))) {
             for (const collection of await directories(join(this.root, "releases", publisher))) {
                 const folder = join(this.root, "releases", publisher, collection);
@@ -65,7 +84,7 @@ export class LocalCollectionRepository {
                         continue;
                     }
                     const version = entry.name.slice(0, -5);
-                    const artifact = await this.get(publisher, collection, version);
+                    const artifact = await this.getMetadata(publisher, collection, version);
                     if (!artifact) {
                         throw new Error(`Release disappeared: ${publisher}/${collection}/${version}`);
                     }
@@ -77,6 +96,24 @@ export class LocalCollectionRepository {
     }
 
     async get(publisherId: string, collectionId: string, version: string): Promise<AdmittedCollectionRelease | null> {
+        const metadata = await this.getMetadata(publisherId, collectionId, version);
+        if (!metadata) {
+            return null;
+        }
+        const assets = await Promise.all(
+            metadata.release.assets.map(async ({ id }) => ({
+                id,
+                bytes: await readFile(join(this.assetDirectory(metadata.canonicalJson), id)),
+            })),
+        );
+        return verifyStoredCollectionArtifact(metadata.release, assets, metadata.digest);
+    }
+
+    async getMetadata(
+        publisherId: string,
+        collectionId: string,
+        version: string,
+    ): Promise<VerifiedCollectionReleaseMetadata | null> {
         if (!IDENTIFIER.test(publisherId) || !isCollectionNamespace(collectionId) || !VERSION.test(version)) {
             return null;
         }
@@ -91,13 +128,7 @@ export class LocalCollectionRepository {
             return null;
         }
         const parsed = parseCollectionReleaseJson(bytes);
-        const assets = await Promise.all(
-            parsed.assets.map(async ({ id }) => ({
-                id,
-                bytes: await readFile(join(this.root, "assets", "collections", releaseHash(bytes), id)),
-            })),
-        );
-        const artifact = await verifyStoredCollectionArtifact(parsed, assets, `sha256:${releaseHash(bytes)}`);
+        const artifact = await verifyStoredCollectionRelease(parsed, `sha256:${releaseHash(bytes)}`);
         if (
             artifact.release.publisherId !== publisherId ||
             artifact.release.collectionId !== collectionId ||
@@ -109,12 +140,36 @@ export class LocalCollectionRepository {
         return artifact;
     }
 
+    async getAsset(
+        publisherId: string,
+        collectionId: string,
+        version: string,
+        assetId: string,
+    ): Promise<{ definition: CollectionAssetDefinition; bytes: Uint8Array } | null> {
+        const metadata = await this.getMetadata(publisherId, collectionId, version);
+        const definition = metadata?.release.assets.find((asset) => asset.id === assetId);
+        if (!metadata || !definition) {
+            return null;
+        }
+        const bytes = new Uint8Array(await readFile(join(this.assetDirectory(metadata.canonicalJson), assetId)));
+        const snapshots = snapshotCollectionAssets([definition], [{ id: assetId, bytes }], {
+            ...DEFAULT_COLLECTION_LIMITS,
+            maxBundleBytes: DEFAULT_COLLECTION_LIMITS.maxAssetBytes,
+        });
+        await verifyCollectionAssets([definition], snapshots);
+        return { definition, bytes };
+    }
+
     async prune(): Promise<void> {
         await pruneRepository(this.root);
     }
 
     private releasePath(publisherId: string, collectionId: string, version: string): string {
         return join(this.root, "releases", publisherId, collectionId, `${version}.json`);
+    }
+
+    private assetDirectory(canonicalJson: string): string {
+        return join(this.root, "assets", "collections", releaseHash(canonicalJson));
     }
 }
 
@@ -139,14 +194,16 @@ async function writeImmutable(path: string, bytes: Uint8Array): Promise<void> {
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
 const VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u;
 
-function assertSameDigest(existing: AdmittedCollectionRelease, candidate: AdmittedCollectionRelease): false {
+type CollectionIdentity = Pick<AdmittedCollectionRelease, "digest" | "release">;
+
+function assertSameDigest(existing: CollectionIdentity, candidate: CollectionIdentity): false {
     if (existing.digest !== candidate.digest) {
         throw new Error(`Release ${coordinate(candidate)} already exists with different content`);
     }
     return false;
 }
 
-function coordinate(artifact: AdmittedCollectionRelease): string {
+function coordinate(artifact: CollectionIdentity): string {
     const { publisherId, collectionId, version } = artifact.release;
     return `${publisherId}/${collectionId}/${version}`;
 }

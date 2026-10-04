@@ -1,6 +1,7 @@
 export {
     admitProviderManifest,
     admitProviderManifestJson,
+    verifyStoredProviderManifestJson,
     computeProviderManifestDigest,
     isProviderManifestDigest,
     type AdmittedProviderManifest,

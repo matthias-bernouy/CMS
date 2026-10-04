@@ -35,6 +35,19 @@ export async function admitContractReleaseJson(
     return admitPreparedRelease(prepared);
 }
 
+/** Rebuild persisted release identity without hydrating separately stored fixture bytes. */
+export async function verifyStoredContractReleaseJson(
+    input: string | Uint8Array,
+    expectedDigest: unknown,
+    limits: Readonly<ReleaseLimits> = DEFAULT_RELEASE_LIMITS,
+): Promise<AdmittedContractRelease> {
+    const admitted = await admitPreparedRelease(prepareContractReleaseJson(input, limits));
+    if (typeof expectedDigest !== "string" || admitted.digest !== expectedDigest) {
+        throw new ReleaseValidationError("invalid_contract", "stored contract release digest mismatch", "$.digest");
+    }
+    return admitted;
+}
+
 function requireNoFixtureAssets(prepared: PreparedContractRelease): void {
     if (prepared.release.fixtureAssets?.length) {
         throw new ReleaseValidationError(

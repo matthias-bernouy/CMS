@@ -1,6 +1,12 @@
-import { admitProviderManifestJson, type AdmittedProviderManifest } from "cms-repository/exports/providers/index";
+import { createHash } from "node:crypto";
+import {
+    admitProviderManifestJson,
+    type AdmittedProviderManifest,
+    type ProviderManifestDigest,
+    verifyStoredProviderManifestJson,
+} from "cms-repository/exports/providers/index";
 import { InMemoryProviderManifestCatalogue } from "cms-repository/exports/providers/catalogue";
-import { LocalArtifactFiles } from "./artifactFiles";
+import { LocalArtifactFiles } from "./artifacts/files";
 import { LocalContractReleases } from "./contracts";
 import { LocalRepositoryYanks } from "./yanks";
 
@@ -33,7 +39,7 @@ export class LocalProviderReleases {
         const contracts = await this.contracts.catalogue({ includeYanks: false });
         const catalogue = new InMemoryProviderManifestCatalogue(contracts);
         for (const artifact of await this.files.list("providers")) {
-            const previous = await admitProviderManifestJson(artifact.bytes, contracts);
+            const previous = await verifyStoredProviderManifestJson(artifact.bytes, digest(artifact.bytes));
             if (
                 previous.manifest.provenance.publisherId !== artifact.publisherId ||
                 previous.manifest.providerId !== artifact.id ||
@@ -44,7 +50,7 @@ export class LocalProviderReleases {
                     `Corrupt local provider release: ${artifact.publisherId}/${artifact.id}/${artifact.version}`,
                 );
             }
-            await catalogue.publish(previous);
+            await catalogue.restore(previous.canonicalJson, previous.digest, artifact.publishedAt);
         }
         for (const { coordinate, yank } of (await this.yanks?.entries("provider-manifest")) ?? []) {
             const [, publisherId, providerId, version] = coordinate.split("\0");
@@ -56,4 +62,25 @@ export class LocalProviderReleases {
         }
         return catalogue;
     }
+
+    async getMetadata(publisherId: string, providerId: string, version: string) {
+        const bytes = await this.files.get("providers", publisherId, providerId, version);
+        if (!bytes) {
+            return null;
+        }
+        const admission = await verifyStoredProviderManifestJson(bytes, digest(bytes));
+        if (
+            admission.manifest.provenance.publisherId !== publisherId ||
+            admission.manifest.providerId !== providerId ||
+            admission.manifest.version !== version ||
+            admission.canonicalJson !== bytes.toString("utf8")
+        ) {
+            throw new Error(`Corrupt local provider release: ${publisherId}/${providerId}/${version}`);
+        }
+        return admission;
+    }
+}
+
+function digest(bytes: Uint8Array): ProviderManifestDigest {
+    return `sha256:${createHash("sha256").update(bytes).digest("hex")}` as ProviderManifestDigest;
 }

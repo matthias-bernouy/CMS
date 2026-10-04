@@ -7,8 +7,8 @@ import type {
     RepositoryPublicationResult,
     RepositoryYankResult,
 } from "cms-repository/repository/publication/types";
-import { LocalArtifactFiles } from "../artifactFiles";
-import { LocalCollectionRepository } from "../collections";
+import { LocalArtifactFiles } from "../artifacts/files";
+import { LocalCollectionRepository } from "../artifacts/collections";
 import { LocalContractReleases } from "../contracts";
 import { withRepositoryWriteLock } from "../lock";
 import { LocalProviderReleases } from "../providers";
@@ -61,7 +61,7 @@ export class FilesystemRepositoryPublicationRegistry implements RepositoryPublic
 
 async function assertPublished(root: string, coordinate: RemoteCoordinate): Promise<void> {
     if (coordinate.kind === "collection") {
-        const release = await new LocalCollectionRepository(root).get(
+        const release = await new LocalCollectionRepository(root).getMetadata(
             coordinate.publisherId,
             coordinate.id,
             coordinate.version,

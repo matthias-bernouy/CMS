@@ -3,7 +3,7 @@ import {
     resolveCollectionTranslation,
 } from "cms-repository/exports/collections/index";
 import type { LocalContractReleases } from "../contracts";
-import type { LocalCollectionRepository } from "../collections";
+import type { LocalCollectionRepository } from "../artifacts/collections";
 import type { LocalProviderReleases } from "../providers";
 import type { LocalRepositoryYanks } from "../yanks";
 

@@ -9,6 +9,7 @@ export { canonicalReleaseBytes, canonicalizeRelease } from "cms-repository/contr
 export {
     admitContractRelease,
     admitContractReleaseJson,
+    verifyStoredContractReleaseJson,
     type AdmittedContractRelease,
     type VerifiedFixtureAsset,
 } from "cms-repository/contracts/core/admission/admitContractRelease";
