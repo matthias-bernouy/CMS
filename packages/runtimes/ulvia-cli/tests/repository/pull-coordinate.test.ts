@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
-import { RemoteRepositoryClient } from "../../src/repository/remote/client";
+import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
 
 test("pull rejects an admitted release served under another coordinate", async () => {
     const source = resolve(import.meta.dir, "../../../../official-repository/contracts/catalog.items/definition.json");

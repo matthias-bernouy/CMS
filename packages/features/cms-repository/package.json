@@ -27,7 +27,9 @@
         "./collections/mongo": "./src/exports/collections/mongo.ts",
         "./collections/texts": "./src/exports/collections/texts.ts",
         "./collections/sources": "./src/exports/collections/sources.ts",
-        "./collections/http": "./src/exports/collections/http.ts"
+        "./collections/http": "./src/exports/collections/http.ts",
+        "./repository/publication": "./src/exports/repository/publication.ts",
+        "./repository/filesystem": "./src/exports/repository/filesystem.ts"
     },
     "dependencies": {
         "@bernouy/binary-media": "workspace:*",

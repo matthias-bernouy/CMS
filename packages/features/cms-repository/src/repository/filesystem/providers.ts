@@ -1,5 +1,5 @@
-import { admitProviderManifestJson, type AdmittedProviderManifest } from "@bernouy/cms-repository/providers";
-import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
+import { admitProviderManifestJson, type AdmittedProviderManifest } from "cms-repository/exports/providers/index";
+import { InMemoryProviderManifestCatalogue } from "cms-repository/exports/providers/catalogue";
 import { LocalArtifactFiles } from "./artifactFiles";
 import { LocalContractReleases } from "./contracts";
 import { LocalRepositoryYanks } from "./yanks";

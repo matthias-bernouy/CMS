@@ -1,9 +1,9 @@
 import {
     type CollectionDashboardNavigationItem,
     resolveCollectionTranslation,
-} from "@bernouy/cms-repository/collections";
+} from "cms-repository/exports/collections/index";
 import type { LocalContractReleases } from "../contracts";
-import type { LocalCollectionRepository } from "../local";
+import type { LocalCollectionRepository } from "../collections";
 import type { LocalProviderReleases } from "../providers";
 import type { LocalRepositoryYanks } from "../yanks";
 

@@ -51,6 +51,12 @@ rules, and makes the immutable artifact visible only after all declared assets
 are stored. An exact republish is idempotent; different bytes at an existing
 coordinate reject.
 
+The protocol, exact-coordinate client and mutation endpoint live in
+`@bernouy/cms-repository/repository/publication`; the CLI only composes them with
+the reference filesystem adapter and its loopback listener. A production
+repository can replace that adapter and the process-local replay store without
+depending on this executable package.
+
 `yank` is reversible catalogue metadata: it hides a release from new catalogue
 resolution without deleting its exact historical bytes. `restore` exposes it
 again. Contract yanks block new dependent publications while previously

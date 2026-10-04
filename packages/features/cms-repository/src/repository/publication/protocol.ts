@@ -1,15 +1,10 @@
-import type { RepositoryArtifactKind } from "../yanks";
-import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
+import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
+import type { PublicationAsset, PublicationEnvelope, RepositoryArtifactKind } from "./types";
+
+export type { PublicationAsset, PublicationEnvelope } from "./types";
 
 // 100 MiB admitted binary bundles expand by 4/3 in canonical base64, plus JSON metadata.
 export const MAX_PUBLICATION_BYTES = 160 * 1024 * 1024;
-
-export type PublicationAsset = Readonly<{ id: string; bytes: Uint8Array }>;
-export type PublicationEnvelope = Readonly<{
-    kind: RepositoryArtifactKind;
-    canonicalJson: string;
-    assets: readonly PublicationAsset[];
-}>;
 
 export function encodePublication(envelope: PublicationEnvelope): Uint8Array {
     return Buffer.from(

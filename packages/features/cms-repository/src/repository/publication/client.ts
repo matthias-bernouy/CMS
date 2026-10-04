@@ -1,20 +1,15 @@
-import { parseCollectionReleaseJson } from "@bernouy/cms-repository/collections";
-import { parseContractReleaseJson } from "@bernouy/cms-repository/contracts";
-import { parseProviderManifestJson } from "@bernouy/cms-repository/providers";
-import type { RepositoryArtifactKind } from "../yanks";
+import { parseCollectionReleaseJson } from "cms-repository/exports/collections/index";
+import { parseContractReleaseJson } from "cms-repository/exports/contracts/index";
+import { parseProviderManifestJson } from "cms-repository/exports/providers/index";
 import { signRepositoryRequest } from "./auth";
 import { encodePublication, type PublicationEnvelope } from "./protocol";
 import { boundedResponseBytes, repositoryUrl } from "./transport";
+import type { RemoteCoordinate, RepositoryArtifactKind } from "./types";
+
+export type { RemoteCoordinate } from "./types";
 
 const MAX_RELEASE_BYTES = 2 * 1024 * 1024;
 const FETCH_CONCURRENCY = 4;
-
-export type RemoteCoordinate = Readonly<{
-    kind: RepositoryArtifactKind;
-    publisherId: string;
-    id: string;
-    version: string;
-}>;
 
 export class RemoteRepositoryClient {
     private readonly base: URL;

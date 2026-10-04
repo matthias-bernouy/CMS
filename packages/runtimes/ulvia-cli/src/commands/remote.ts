@@ -5,14 +5,20 @@ import {
 } from "@bernouy/cms-repository/contracts";
 import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
 import { admitCollectionReleaseJson } from "@bernouy/cms-repository/collections";
-import { LocalArtifactFiles } from "../repository/artifactFiles";
-import { LocalContractReleases } from "../repository/contracts";
-import { withRepositoryWriteLock } from "../repository/lock";
-import { LocalCollectionRepository } from "../repository/local";
-import { LocalProviderReleases } from "../repository/providers";
-import { RemoteRepositoryClient, type RemoteCoordinate } from "../repository/remote/client";
-import type { PublicationAsset, PublicationEnvelope } from "../repository/remote/protocol";
-import { LocalRepositoryYanks } from "../repository/yanks";
+import {
+    LocalArtifactFiles,
+    LocalCollectionRepository,
+    LocalContractReleases,
+    LocalProviderReleases,
+    LocalRepositoryYanks,
+    withRepositoryWriteLock,
+} from "@bernouy/cms-repository/repository/filesystem";
+import {
+    RemoteRepositoryClient,
+    type PublicationAsset,
+    type PublicationEnvelope,
+    type RemoteCoordinate,
+} from "@bernouy/cms-repository/repository/publication";
 import { formatCoordinate, parseRemoteArguments, type RemoteAction } from "./remoteArguments";
 
 export async function remoteCommand(

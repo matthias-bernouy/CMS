@@ -7,8 +7,7 @@ import { InMemoryProviderManifestCatalogue } from "@bernouy/cms-repository/provi
 import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
 import { importRepositoryArtifact } from "@bernouy/cms-repository/providers/sources";
 import { runCli } from "../../src/cli";
-import { LocalArtifactFiles } from "../../src/repository/artifactFiles";
-import { LocalContractReleases } from "../../src/repository/contracts";
+import { LocalArtifactFiles, LocalContractReleases } from "@bernouy/cms-repository/repository/filesystem";
 import { startLocalRepository } from "../../src/runtime/repository";
 
 test("contract and provider releases use explicit kinds and exact local contract references", async () => {

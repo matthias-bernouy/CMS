@@ -2,7 +2,7 @@ import { devCommand } from "./commands/dev";
 import { pruneCommand } from "./commands/prune";
 import { releaseCommand } from "./commands/release";
 import { remoteCommand } from "./commands/remote";
-import { LocalCollectionRepository } from "./repository/local";
+import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { ensureUlviaPaths, resolveUlviaPaths } from "./runtime/paths";
 
 const HELP = `Ulvia local CMS CLI

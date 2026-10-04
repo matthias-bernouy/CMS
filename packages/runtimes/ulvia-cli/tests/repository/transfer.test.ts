@@ -3,8 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
-import { LocalArtifactFiles } from "../../src/repository/artifactFiles";
-import { LocalCollectionRepository } from "../../src/repository/local";
+import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { startLocalRepository } from "../../src/runtime/repository";
 
 test("CLI push and pull preserve every official artifact kind through a remote repository", async () => {

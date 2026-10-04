@@ -3,8 +3,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
-import { signRepositoryRequest } from "../../src/repository/remote/auth";
-import { encodePublication } from "../../src/repository/remote/protocol";
+import { encodePublication, signRepositoryRequest } from "@bernouy/cms-repository/repository/publication";
 import { startLocalRepository } from "../../src/runtime/repository";
 
 test("remote publication is signed, immutable, atomic, and reversibly yankable", async () => {

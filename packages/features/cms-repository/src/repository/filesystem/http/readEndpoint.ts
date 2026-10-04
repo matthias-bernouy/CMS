@@ -1,6 +1,6 @@
 import { LocalArtifactFiles } from "../artifactFiles";
 import { LocalContractReleases } from "../contracts";
-import { LocalCollectionRepository } from "../local";
+import { LocalCollectionRepository } from "../collections";
 import { LocalProviderReleases } from "../providers";
 import { LocalRepositoryYanks } from "../yanks";
 import { readCatalogue } from "./catalogue";

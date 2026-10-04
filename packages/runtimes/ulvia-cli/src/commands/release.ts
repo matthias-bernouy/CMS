@@ -1,10 +1,12 @@
 import { basename, join, resolve } from "node:path";
-import { LocalArtifactFiles } from "../repository/artifactFiles";
-import { LocalContractReleases } from "../repository/contracts";
-import { LocalCollectionRepository } from "../repository/local";
-import { LocalProviderReleases } from "../repository/providers";
-import { withRepositoryWriteLock } from "../repository/lock";
-import { LocalRepositoryYanks } from "../repository/yanks";
+import {
+    LocalArtifactFiles,
+    LocalCollectionRepository,
+    LocalContractReleases,
+    LocalProviderReleases,
+    LocalRepositoryYanks,
+    withRepositoryWriteLock,
+} from "@bernouy/cms-repository/repository/filesystem";
 import { prepareCollectionRelease } from "../release/source";
 
 export async function releaseCommand(

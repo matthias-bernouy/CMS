@@ -1,4 +1,4 @@
-import type { LocalCollectionRepository } from "../repository/local";
+import type { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 
 export async function pruneCommand(
     args: readonly string[],

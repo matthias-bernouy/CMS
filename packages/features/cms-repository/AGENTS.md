@@ -33,10 +33,11 @@ models and validation for CMS-owned installations and site selections.
   `/contracts/catalogue` exposes an adapter-light port and deterministic memory
   implementation; `/contracts/protocol` exposes strict I-JSON parsing,
   canonicalization and freezing primitives.
-- HTTP catalogue sources and bounded immutable downloads are implemented here.
-  The CLI runtime owns the filesystem reference registry, authenticated signed
-  publication protocol and remote transfer commands because it owns paths,
-  credentials and listeners. Business
+- HTTP catalogue sources, bounded immutable downloads, the authenticated signed
+  publication protocol and its storage-independent mutation endpoint are
+  implemented here. `./repository/filesystem` is the reference local adapter;
+  runtimes choose it or a durable production adapter. The CLI owns commands,
+  environment-derived credentials and its loopback listener. Business
   HTTP execution and gateway routing remain outside this package; runtimes own
   environment access and production adapter selection. `./providers/mongo`
   provides durable manifest, installation and selection stores; `./contracts/mongo`
@@ -266,7 +267,7 @@ models and validation for CMS-owned installations and site selections.
   catalogue. Compatible upgrades preserve site overrides and stored setting
   value schemas, may only widen existing slot/native-element contracts, and
   preserve theme-token types. Validate the candidate installation before the
-  revisioned write; publication to a remote registry remains unsupported.
+  revisioned write; remote registry transfer is separate from site installation.
 - Collection releases carry cumulative adjacent data-generation migrations and
   per-resource generations. Migration operations are closed, declarative data;
   never accept executable migration code. Contract and implementation digests
@@ -288,8 +289,7 @@ models and validation for CMS-owned installations and site selections.
   exported Bloc tags, collection-local theme token IDs, server text IDs and immutable
   asset IDs from one publisher and bounded version range. Every import pins the
   exact resource contract generation understood by its dependent. Installation resolves the complete graph, rejects
-  cycles, and revalidates dependents during upgrades. Remote publication remains
-  a future slice. Reject unsupported fields until validated.
+  cycles, and revalidates dependents during upgrades. Reject unsupported fields until validated.
 - Theme defaults may reference local or selectively imported tokens. Reject
   dangling references and local cycles; exact token aliases must preserve types,
   including across the installed dependency graph.

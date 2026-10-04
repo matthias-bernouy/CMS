@@ -5,9 +5,9 @@ import {
     admitContractReleaseJson,
     parseContractReleaseJson,
     type AdmittedContractRelease,
-} from "@bernouy/cms-repository/contracts";
-import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
-import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
+} from "cms-repository/exports/contracts/index";
+import { InMemoryReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
+import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
 import { LocalArtifactFiles, type LocalFixtureAsset } from "./artifactFiles";
 import { LocalRepositoryYanks } from "./yanks";
 

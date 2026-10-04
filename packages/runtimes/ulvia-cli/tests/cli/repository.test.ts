@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
-import { LocalCollectionRepository } from "../../src/repository/local";
+import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { prepareCollectionRelease } from "../../src/release/source";
 import { startLocalRepository } from "../../src/runtime/repository";
 import { officialContractCatalogue } from "../officialContractCatalogue";

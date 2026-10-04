@@ -35,6 +35,9 @@ cms-repository/
 │   ├── repository-http/
 │   │   ├── baseUrl.ts
 │   │   └── getBytes.ts
+│   ├── repository/
+│   │   ├── publication/
+│   │   └── filesystem/
 │   └── exports/
 │       ├── index.ts
 │       ├── contracts/
@@ -80,6 +83,8 @@ compilation, site installation or execution authorization.
 | `@bernouy/cms-repository/providers/mongo` | Mongo manifest catalogue, installation and selection stores with revision-checked writes |
 | `@bernouy/cms-repository/collections` | Authored release parsing, Light DOM structure, asset and requirement verification, bundle digests |
 | `@bernouy/cms-repository/collections/installations` | Revisioned site installations, compatibility analysis, resource digests and atomic migration replacement/restoration |
+| `@bernouy/cms-repository/repository/publication` | Signed publication protocol, exact remote client, storage-independent mutation endpoint and replay-store port |
+| `@bernouy/cms-repository/repository/filesystem` | Reference immutable filesystem registry, local catalogues, yanks and read endpoint |
 
 Use explicit domain subpaths for executable APIs. There are no compatibility
 packages or wrappers under the former package names.
@@ -93,7 +98,9 @@ revisioned site installations and text overrides. The internal `repository-http/
 directory holds bounded HTTP reads shared by collection and provider sources;
 catalogue parsing remains in each domain. Mongo contract release publication
 rejects fixture assets until separate byte storage is available.
-The Mongo catalogues expose revision tokens from publication metadata for
+The publication endpoint depends on a registry port. Its default replay store is
+process-local; a multi-node production server must inject a shared atomic replay
+store and a durable registry adapter. The Mongo catalogues expose revision tokens from publication metadata for
 selection planning. Gateway freshness checks compare the selected site route's
 mutable records and do not rescan the global catalogues.
 Admission and graph planning validate
@@ -109,8 +116,9 @@ details implemented transitions, upgrade boundaries and remaining runtime work.
 The [collections guide](src/collections/README.md) documents admitted themes,
 texts, views, dashboards, assets and resource requirements. The installed
 collection path accepts verified assets and capability requirements. The CLI
-runtime provides an immutable filesystem registry, authenticated remote
-publication, exact `push`/`pull`, and reversible yanking. Collection Views and
+runtime composes the reference filesystem registry and loopback listener, while
+this package owns authenticated remote publication, exact `push`/`pull`, and
+reversible yanking. Collection Views and
 dashboards execute through pinned gateway plans; renderer compilation and
 third-party JavaScript isolation remain separate concerns.
 [AGENTS.md](AGENTS.md) defines the domain

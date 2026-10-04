@@ -3,7 +3,7 @@ import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
-import { LocalCollectionRepository } from "../../src/repository/local";
+import { LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
 
 test("release publishes a folder explicitly, survives CLI runs, and prune clears only the repository", async () => {

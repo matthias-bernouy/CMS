@@ -2,7 +2,9 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-export type RepositoryArtifactKind = "collection" | "contract" | "provider-manifest";
+import type { RepositoryArtifactKind } from "cms-repository/repository/publication/types";
+
+export type { RepositoryArtifactKind } from "cms-repository/repository/publication/types";
 export type RepositoryYank = Readonly<{ reason: string; yankedAt: string }>;
 
 type YankDocument = Readonly<{

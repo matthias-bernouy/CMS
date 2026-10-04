@@ -7,8 +7,8 @@ import {
     type AdmittedCollectionRelease,
     verifyCollectionPublicationEvolution,
     verifyStoredCollectionArtifact,
-} from "@bernouy/cms-repository/collections";
-import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
+} from "cms-repository/exports/collections/index";
+import { compareSemVer } from "cms-repository/exports/contracts/compatibility";
 import { pruneRepository } from "./lock";
 
 export class LocalCollectionRepository {
