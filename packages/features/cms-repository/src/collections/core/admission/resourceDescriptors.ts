@@ -103,7 +103,20 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
             },
         })),
     );
-    resources.push(...(release.views?.map((view) => projection(release, "view", view.id, view)) ?? []));
+    resources.push(
+        ...(release.views?.map((view) => ({
+            kind: "view" as const,
+            id: view.id,
+            generation: view.generation ?? 1,
+            contract: {
+                id: view.id,
+                generation: view.generation ?? 1,
+                uses: view.uses,
+                requires: view.requires,
+            },
+            implementation: { resource: view, translations: referencedTranslations(release, view) },
+        })) ?? []),
+    );
     resources.push(
         ...(release.dashboards?.map((dashboard) => projection(release, "dashboard", dashboard.id, dashboard)) ?? []),
     );

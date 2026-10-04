@@ -2,6 +2,7 @@ import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogu
 import { satisfiesVersionRange } from "cms-repository/exports/contracts/compatibility";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import type { CollectionBloc } from "../../interfaces/CollectionBloc";
+import type { CollectionCapabilityRequirement } from "../../interfaces/CollectionRelease";
 import { CollectionValidationError } from "../errors";
 
 /** Each resource and its used blocs need joint witnesses; unrelated resources stay independent. */
@@ -12,28 +13,47 @@ export async function verifyCollectionRequirements(
     const blocs = new Map(release.blocs.map((bloc) => [bloc.id, bloc]));
     for (const bloc of release.blocs) {
         const closure = usedBlocs(bloc, blocs).flatMap((item) => item.requires);
-        for (const contractId of new Set(closure.map((requirement) => requirement.contractId))) {
-            const requirements = closure.filter((requirement) => requirement.contractId === contractId);
-            const entries = catalogue ? await catalogue.list(contractId) : [];
-            const witness = entries.some((entry) => {
-                const contract = entry.admission.release;
-                return (
-                    !entry.yank &&
-                    contract.contractId === contractId &&
-                    requirements.every(
-                        (requirement) =>
-                            satisfiesVersionRange(contract.version, requirement.versionRange) &&
-                            contract.capabilities.some((capability) => capability.id === requirement.capabilityId),
-                    )
-                );
-            });
-            if (!witness) {
-                throw new CollectionValidationError(
-                    "resolution_failed",
-                    `no non-yanked ${contractId} release jointly satisfies this bloc and its used blocs`,
-                    `$.blocs.${bloc.id}.requires`,
-                );
-            }
+        await verifyRequirements(closure, `$.blocs.${bloc.id}.requires`, "this bloc and its used blocs", catalogue);
+    }
+    for (const view of release.views ?? []) {
+        const closure = [
+            ...view.requires,
+            ...view.uses.flatMap((id) => {
+                const bloc = blocs.get(id);
+                return bloc ? usedBlocs(bloc, blocs).flatMap((item) => item.requires) : [];
+            }),
+        ];
+        await verifyRequirements(closure, `$.views.${view.id}.requires`, "this view and its used blocs", catalogue);
+    }
+}
+
+async function verifyRequirements(
+    closure: readonly CollectionCapabilityRequirement[],
+    path: string,
+    owner: string,
+    catalogue?: ReleaseCatalogue,
+): Promise<void> {
+    for (const contractId of new Set(closure.map((requirement) => requirement.contractId))) {
+        const requirements = closure.filter((requirement) => requirement.contractId === contractId);
+        const entries = catalogue ? await catalogue.list(contractId) : [];
+        const witness = entries.some((entry) => {
+            const contract = entry.admission.release;
+            return (
+                !entry.yank &&
+                contract.contractId === contractId &&
+                requirements.every(
+                    (requirement) =>
+                        satisfiesVersionRange(contract.version, requirement.versionRange) &&
+                        contract.capabilities.some((capability) => capability.id === requirement.capabilityId),
+                )
+            );
+        });
+        if (!witness) {
+            throw new CollectionValidationError(
+                "resolution_failed",
+                `no non-yanked ${contractId} release jointly satisfies ${owner}`,
+                path,
+            );
         }
     }
 }

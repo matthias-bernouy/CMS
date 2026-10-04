@@ -9,6 +9,7 @@ export function libraryCollectionRows(
     selected: string | undefined,
     basePath: string,
     installed: InstalledCollection[] = [],
+    locale?: string,
 ): LibraryCollection[] {
     const rows: LibraryCollection[] = sites.map((site) =>
         row(
@@ -31,9 +32,9 @@ export function libraryCollectionRows(
                     key: `installed:${item.collectionId}`,
                     installedId: item.collectionId,
                     kind: "installed",
-                    name: resolveCollectionTranslation(item.release, item.release.name),
+                    name: resolveCollectionTranslation(item.release, item.release.name, locale),
                     description: item.release.description
-                        ? resolveCollectionTranslation(item.release, item.release.description)
+                        ? resolveCollectionTranslation(item.release, item.release.description, locale)
                         : "",
                     version: item.release.version,
                     digest: item.digest,

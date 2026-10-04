@@ -14,6 +14,8 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   browser boundaries.
 - [Development](development/README.md): local startup, builds and validation.
 - [Commit messages](development/commits.md): the recommended message convention.
+- [Deferred platform work](TODO.md): explicit trust assumptions and work that
+  must be completed before those assumptions change.
 
 ## Providers And Collections
 

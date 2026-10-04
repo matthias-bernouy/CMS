@@ -238,6 +238,32 @@ describe("collection release parsing", () => {
         ).toThrow("cyclic theme token");
     });
 
+    test("rejects every undeclared theme variable", () => {
+        const input = collectionDocument({
+            "theme.label": "Theme",
+            "theme.category.colors.label": "Colors",
+            "theme.token.surface.label": "Surface",
+        });
+        input.theme = {
+            label: "theme.label",
+            categories: [
+                {
+                    id: "colors",
+                    label: "theme.category.colors.label",
+                    tokens: [
+                        {
+                            id: "surface",
+                            label: "theme.token.surface.label",
+                            type: "color",
+                            defaults: { light: "var(--host-surface, white)" },
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(() => parseCollectionRelease(input)).toThrow("unknown or unimported theme token --host-surface");
+    });
+
     test("declares selective exports and cross-collection imports", () => {
         const source = collectionDocument({
             "theme.category.colors.label": "Colors",

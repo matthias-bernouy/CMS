@@ -18,15 +18,15 @@ export async function releaseCommand(
     const bytes = await Bun.file(join(directory, "definition.json")).text();
     const definition = JSON.parse(bytes) as Record<string, unknown>;
     const kind = definition.kind;
+    const files = new LocalArtifactFiles(repositoryRoot);
+    const contracts = new LocalContractReleases(files);
     if (kind === "collection") {
-        const artifact = await prepareCollectionRelease(directory);
+        const artifact = await prepareCollectionRelease(directory, await contracts.catalogue());
         const added = await new LocalCollectionRepository(repositoryRoot).store(artifact);
         const { publisherId, collectionId, version } = artifact.release;
         log(`${added ? "+" : "="} collection ${publisherId}/${collectionId}@${version} (${artifact.digest})`);
         return;
     }
-    const files = new LocalArtifactFiles(repositoryRoot);
-    const contracts = new LocalContractReleases(files);
     if (kind === "contract") {
         assertFolder(directory, definition.contractId);
         const { added, admission } = await contracts.release(bytes, directory);

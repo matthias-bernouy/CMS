@@ -3,9 +3,6 @@
     "name": "dashboard.starter.name",
     "icon": "layout",
     "description": "dashboard.starter.description",
-    "contracts": [
-        "catalog.items"
-    ],
     "navigation": [
         {
             "id": "workspace",

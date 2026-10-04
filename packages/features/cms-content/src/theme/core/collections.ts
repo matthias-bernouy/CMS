@@ -7,7 +7,7 @@ import {
 import type { ThemeSettings, ThemeSource } from "cms-content/theme/interfaces/theme";
 import { validateThemeSettings } from "cms-content/theme/core/validation";
 
-export function collectionThemeSource(release: CollectionRelease): ThemeSource | null {
+export function collectionThemeSource(release: CollectionRelease, locale?: string): ThemeSource | null {
     if (!release.theme) {
         return null;
     }
@@ -17,7 +17,7 @@ export function collectionThemeSource(release: CollectionRelease): ThemeSource |
         ) ?? [];
     return {
         id: collectionThemeSourceId(release.collectionId),
-        label: resolveCollectionTranslation(release, release.theme.label),
+        label: resolveCollectionTranslation(release, release.theme.label, locale),
         supportsModes: release.theme.categories.some((category) =>
             category.tokens.some((token) => token.defaults.dark !== undefined),
         ),
@@ -28,13 +28,15 @@ export function collectionThemeSource(release: CollectionRelease): ThemeSource |
         },
         categories: release.theme.categories.map((category) => ({
             id: category.id,
-            label: resolveCollectionTranslation(release, category.label),
-            description: category.description ? resolveCollectionTranslation(release, category.description) : "",
+            label: resolveCollectionTranslation(release, category.label, locale),
+            description: category.description
+                ? resolveCollectionTranslation(release, category.description, locale)
+                : "",
             tokens: category.tokens.map((token) => ({
                 id: collectionThemeTokenId(release.collectionId, token.id),
                 variable: collectionThemeTokenId(release.collectionId, token.id),
-                label: resolveCollectionTranslation(release, token.label),
-                description: token.description ? resolveCollectionTranslation(release, token.description) : "",
+                label: resolveCollectionTranslation(release, token.label, locale),
+                description: token.description ? resolveCollectionTranslation(release, token.description, locale) : "",
                 type: token.type,
                 defaults: { ...token.defaults },
             })),
@@ -43,8 +45,14 @@ export function collectionThemeSource(release: CollectionRelease): ThemeSource |
 }
 
 /** The admitted release owns the catalogue; site theme values remain overrides. */
-export function composeCollectionThemes(base: ThemeSettings, releases: readonly CollectionRelease[]): ThemeSettings {
-    const sources = releases.map(collectionThemeSource).filter((source): source is ThemeSource => source !== null);
+export function composeCollectionThemes(
+    base: ThemeSettings,
+    releases: readonly CollectionRelease[],
+    locale?: string,
+): ThemeSettings {
+    const sources = releases
+        .map((release) => collectionThemeSource(release, locale))
+        .filter((source): source is ThemeSource => source !== null);
     const next = structuredClone(base);
     const oldTokens = new Set(
         next.sources

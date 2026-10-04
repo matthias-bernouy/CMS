@@ -2,11 +2,13 @@ import { createHash, randomUUID } from "node:crypto";
 import { chmod, link, lstat, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
-    admitCollectionReleaseJson,
     isCollectionNamespace,
     parseCollectionReleaseJson,
     type AdmittedCollectionRelease,
+    verifyCollectionPublicationEvolution,
+    verifyStoredCollectionArtifact,
 } from "@bernouy/cms-repository/collections";
+import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
 
 export class LocalCollectionRepository {
     constructor(private readonly root: string) {}
@@ -17,6 +19,12 @@ export class LocalCollectionRepository {
         const existing = await this.get(publisherId, collectionId, version);
         if (existing) {
             return assertSameDigest(existing, artifact);
+        }
+        const previous = (await this.list())
+            .filter((item) => item.release.publisherId === publisherId && item.release.collectionId === collectionId)
+            .sort((left, right) => compareSemVer(right.release.version, left.release.version))[0];
+        if (previous) {
+            await verifyCollectionPublicationEvolution(previous.release, artifact.release);
         }
         const directory = join(this.root, "releases", publisherId, collectionId);
         await mkdir(directory, { recursive: true, mode: 0o700 });
@@ -88,7 +96,7 @@ export class LocalCollectionRepository {
                 bytes: await readFile(join(this.root, "assets", "collections", releaseHash(bytes), id)),
             })),
         );
-        const artifact = await admitCollectionReleaseJson(bytes, assets);
+        const artifact = await verifyStoredCollectionArtifact(parsed, assets, `sha256:${releaseHash(bytes)}`);
         if (
             artifact.release.publisherId !== publisherId ||
             artifact.release.collectionId !== collectionId ||

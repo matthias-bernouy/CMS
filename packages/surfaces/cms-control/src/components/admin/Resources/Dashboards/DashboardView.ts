@@ -31,6 +31,7 @@ class DashboardView extends HTMLElement {
             dashboard: string;
             label: string;
             html: string;
+            hasRuntime: boolean;
             navigation: NavigationItem[];
         };
         const back = document.createElement("a");
@@ -49,7 +50,7 @@ class DashboardView extends HTMLElement {
             `${getMetaBasePath()}/api/dashboard-context?dashboardId=${encodeURIComponent(dashboardId)} as dashboard`,
         );
         content.innerHTML = view.html;
-        rewriteDashboardCapabilitySources(content, dashboardId, getMetaBasePath());
+        rewriteDashboardCapabilitySources(content, dashboardId, viewId, getMetaBasePath());
         const section = document.createElement("cms-detail-section");
         section.slot = "main";
         section.setAttribute("heading", view.label);
@@ -64,10 +65,22 @@ class DashboardView extends HTMLElement {
         container.setAttribute("size", "xl");
         container.append(shell);
         this.replaceChildren(container);
+        ensureCollectionThemeStyle(getMetaBasePath());
+        if (view.hasRuntime) {
+            const runtime = document.createElement("script");
+            runtime.src = `${getMetaBasePath()}/api/dashboard-view?dashboardId=${encodeURIComponent(dashboardId)}&viewId=${encodeURIComponent(viewId)}&runtime=1`;
+            runtime.async = false;
+            this.append(runtime);
+        }
     }
 }
 
-export function rewriteDashboardCapabilitySources(root: ParentNode, dashboardId: string, basePath: string): void {
+export function rewriteDashboardCapabilitySources(
+    root: ParentNode,
+    dashboardId: string,
+    viewId: string,
+    basePath: string,
+): void {
     for (const source of root.querySelectorAll<HTMLElement>("[cms-source]")) {
         const value = source.getAttribute("cms-source") ?? "";
         const match = /^(\/\.cms\/call\/\S+?)(\s+as\s+[A-Za-z_$][\w$]*)?$/u.exec(value.trim());
@@ -78,9 +91,20 @@ export function rewriteDashboardCapabilitySources(root: ParentNode, dashboardId:
         const separator = endpoint.includes("?") ? "&" : "?";
         source.setAttribute(
             "cms-source",
-            `${basePath}/api/dashboard-call/${endpoint.slice("/.cms/call/".length)}${separator}dashboardId=${encodeURIComponent(dashboardId)}${match[2] ?? ""}`,
+            `${basePath}/api/dashboard-call/${endpoint.slice("/.cms/call/".length)}${separator}dashboardId=${encodeURIComponent(dashboardId)}&viewId=${encodeURIComponent(viewId)}${match[2] ?? ""}`,
         );
     }
+}
+
+function ensureCollectionThemeStyle(basePath: string): void {
+    if (document.head.querySelector("link[data-dashboard-collection-theme]")) {
+        return;
+    }
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = `${basePath}/.cms/style`;
+    link.dataset.dashboardCollectionTheme = "true";
+    document.head.append(link);
 }
 
 customElements.define("cms-dashboard-view", DashboardView);

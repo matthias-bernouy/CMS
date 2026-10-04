@@ -64,6 +64,23 @@ describe("collection authored bundle admission", () => {
         });
     });
 
+    test("requires a contract witness for capabilities called directly by a view", async () => {
+        const contracts = await releaseCatalogue(contractDocument("catalog.items", "item.list"));
+        const source = collectionDocument({ "view.catalog.name": "Catalog" });
+        source.views = [
+            {
+                id: "catalog",
+                name: "view.catalog.name",
+                requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
+                html: '<section cms-source="/.cms/call/catalog.items/item.list" cms-source-method="POST"></section>',
+            },
+        ];
+        await expect(admitCollectionRelease(source)).rejects.toMatchObject({ code: "resolution_failed" });
+        await expect(admitCollectionRelease(source, [], { contracts })).resolves.toMatchObject({
+            release: { views: [{ id: "catalog" }] },
+        });
+    });
+
     test("snapshots release and all asset bytes before any asynchronous work", async () => {
         const first = new Uint8Array([1, 2]);
         const second = new Uint8Array([3, 4]);

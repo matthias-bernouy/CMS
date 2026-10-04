@@ -86,6 +86,18 @@ export function parseCollectionRelease(
             limits,
             new Set(dependencies?.flatMap((dependency) => dependency.imports.blocs.map(({ id }) => id)) ?? []),
         );
+        const views =
+            source.views === undefined
+                ? undefined
+                : parseCollectionViews(
+                      source.views,
+                      new Set([
+                          ...blocs.map((bloc) => bloc.id),
+                          ...(dependencies?.flatMap((dependency) => dependency.imports.blocs.map(({ id }) => id)) ??
+                              []),
+                      ]),
+                      limits,
+                  );
         validateCollectionTextReferences(
             blocs,
             collectionId,
@@ -96,6 +108,7 @@ export function parseCollectionRelease(
                     new Set(dependency.imports.texts?.map(({ id }) => id) ?? []),
                 ]),
             ),
+            views,
         );
         validateCollectionAssetReferences(
             blocs,
@@ -107,6 +120,7 @@ export function parseCollectionRelease(
                     new Set(dependency.imports.assets?.map(({ id }) => id) ?? []),
                 ]),
             ),
+            views,
         );
         const theme =
             source.theme === undefined
@@ -123,10 +137,6 @@ export function parseCollectionRelease(
                 new Set(assets.map((asset) => asset.id)),
             );
         }
-        const views =
-            source.views === undefined
-                ? undefined
-                : parseCollectionViews(source.views, new Set(blocs.map((bloc) => bloc.id)));
         const release: CollectionRelease = {
             kind: "collection",
             protocol: "ulvia-collection/v1",

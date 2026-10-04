@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { parseCollectionRelease } from "@bernouy/cms-repository/collections";
 import { assertCollectionSourceQuality } from "../../src/release/quality";
 import { prepareCollectionRelease } from "../../src/release/source";
+import { officialContractCatalogue } from "../officialContractCatalogue";
 
 function release(style: string) {
     return parseCollectionRelease({
@@ -69,7 +70,7 @@ test("collection source quality accepts theme tokens and declared Bloc propertie
 
 test("the official collection passes its source quality contract", async () => {
     const source = resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official");
-    const artifact = await prepareCollectionRelease(source);
+    const artifact = await prepareCollectionRelease(source, await officialContractCatalogue());
     const visible = artifact.release.blocs.filter((bloc) => !bloc.internal);
     expect(visible.every((bloc) => bloc.category !== undefined && bloc.order !== undefined)).toBeTrue();
     expect(new Set(visible.map((bloc) => `${bloc.category}:${bloc.order}`)).size).toBe(visible.length);

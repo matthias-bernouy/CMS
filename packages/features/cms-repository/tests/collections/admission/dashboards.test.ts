@@ -60,10 +60,16 @@ test("collection dashboard navigation supports tabs directly below the primary l
     const release = parseCollectionRelease({
         ...document,
         views: [view],
-        dashboards: [{ id: "starter", name: "dashboard.starter.name", navigation, contracts: ["catalog.items"] }],
+        dashboards: [{ id: "starter", name: "dashboard.starter.name", navigation }],
     });
     expect(release.dashboards?.[0]?.navigation).toEqual(navigation);
-    expect(release.dashboards?.[0]?.contracts).toEqual(["catalog.items"]);
+    expect(() =>
+        parseCollectionRelease({
+            ...document,
+            views: [view],
+            dashboards: [{ ...dashboard, contracts: ["catalog.items"] }],
+        }),
+    ).toThrow(/unknown property/i);
     expect(() =>
         parseCollectionRelease({
             ...document,

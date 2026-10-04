@@ -7,16 +7,19 @@ import { admitCollectionRelease } from "@bernouy/cms-repository/collections";
 import { LocalCollectionRepository } from "../../src/repository/local";
 import { prepareCollectionRelease } from "../../src/release/source";
 import { startLocalRepository } from "../../src/runtime/repository";
+import { officialContractCatalogue } from "../officialContractCatalogue";
 
 test("local repository lists immutable metadata and serves matching release bytes", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-repository-"));
     const repository = new LocalCollectionRepository(root);
     const server = startLocalRepository(0, root);
     try {
+        const contracts = await officialContractCatalogue();
         const source = new HttpCollectionRepository("local", server.url);
         expect(await source.list()).toEqual([]);
         const artifact = await prepareCollectionRelease(
             resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official"),
+            contracts,
         );
         const version = artifact.release.version;
         expect(await repository.store(artifact)).toBe(true);
@@ -31,7 +34,9 @@ test("local repository lists immutable metadata and serves matching release byte
             hasTheme: true,
         });
         const bundle = await source.get(entries[0]!);
-        expect((await admitCollectionRelease(bundle.release, bundle.assets)).digest).toBe(entries[0]!.digest);
+        expect((await admitCollectionRelease(bundle.release, bundle.assets, { contracts })).digest).toBe(
+            entries[0]!.digest,
+        );
         expect(bundle.assets).toEqual([]);
         const release = bundle.release;
         expect(release.blocs).toHaveLength(74);
@@ -41,7 +46,9 @@ test("local repository lists immutable metadata and serves matching release byte
         expect(release.views?.find((view) => view.id === "catalog")?.html).toContain(
             "/.cms/call/catalog.items/item.list",
         );
-        expect(release.dashboards?.[0]?.contracts).toEqual(["catalog.items"]);
+        expect(release.views?.find((view) => view.id === "catalog")?.requires).toEqual([
+            { contractId: "catalog.items", capabilityId: "item.list", versionRange: "^0.1.0" },
+        ]);
         const action = release.blocs.find((bloc) => bloc.id === "ulvia-official-action");
         expect(action?.kind).toBe("component");
         if (action?.kind === "component") {
@@ -78,12 +85,16 @@ test("local repository lists immutable metadata and serves matching release byte
         }
         expect((await fetch(`${server.url}/v1/collections/missing/test/${version}`)).status).toBe(404);
         const assets = artifact.assets.map(({ id, bytes }) => ({ id, bytes }));
-        const build = await admitCollectionRelease({ ...artifact.release, version: "1.3.3+build.1" }, assets);
+        const build = await admitCollectionRelease({ ...artifact.release, version: "1.3.3+build.1" }, assets, {
+            contracts,
+        });
         await repository.store(build);
         const buildEntry = (await source.list()).find((entry) => entry.version === "1.3.3+build.1");
         expect(buildEntry).toBeDefined();
         const buildBundle = await source.get(buildEntry!);
-        expect((await admitCollectionRelease(buildBundle.release, buildBundle.assets)).digest).toBe(build.digest);
+        expect((await admitCollectionRelease(buildBundle.release, buildBundle.assets, { contracts })).digest).toBe(
+            build.digest,
+        );
         await writeFile(join(root, "legacy-file"), "obsolete");
         await mkdir(join(root, "legacy-packages", "sealed"), { recursive: true });
         await writeFile(join(root, "legacy-packages", "sealed", "package.json"), "{}");
@@ -103,6 +114,7 @@ test("a release coordinate cannot be replaced with different content", async () 
         const repository = new LocalCollectionRepository(root);
         const artifact = await prepareCollectionRelease(
             resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official"),
+            await officialContractCatalogue(),
         );
         await repository.store(artifact);
         const changed = await admitCollectionRelease(
@@ -114,6 +126,7 @@ test("a release coordinate cannot be replaced with different content", async () 
                 },
             },
             artifact.assets.map(({ id, bytes }) => ({ id, bytes })),
+            { contracts: await officialContractCatalogue() },
         );
         await expect(repository.store(changed)).rejects.toThrow("already exists with different content");
         expect((await repository.get("ulvia.official", "ulvia-official", artifact.release.version))?.digest).toBe(

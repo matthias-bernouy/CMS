@@ -190,9 +190,13 @@ customElements.define("cms-installed-texts", InstalledTexts);
 function localizeTextMetadata(item: InstalledCollection): CollectionText[] {
     return (item.release.texts ?? []).map((text) => ({
         ...text,
-        ...(text.label ? { label: resolveCollectionTranslation(item.release, text.label) } : {}),
-        ...(text.description ? { description: resolveCollectionTranslation(item.release, text.description) } : {}),
-        ...(text.category ? { category: resolveCollectionTranslation(item.release, text.category) } : {}),
-        ...(text.group ? { group: resolveCollectionTranslation(item.release, text.group) } : {}),
+        ...(text.label ? { label: resolveCollectionTranslation(item.release, text.label, navigator.language) } : {}),
+        ...(text.description
+            ? { description: resolveCollectionTranslation(item.release, text.description, navigator.language) }
+            : {}),
+        ...(text.category
+            ? { category: resolveCollectionTranslation(item.release, text.category, navigator.language) }
+            : {}),
+        ...(text.group ? { group: resolveCollectionTranslation(item.release, text.group, navigator.language) } : {}),
     }));
 }

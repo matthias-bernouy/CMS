@@ -78,6 +78,11 @@ export {
     type CollectionAdmissionOptions,
 } from "cms-repository/collections/core/admission/admitCollectionRelease";
 export { describeCollectionResources } from "cms-repository/collections/core/admission/resourceDescriptors";
+export { verifyCollectionPublicationEvolution } from "cms-repository/collections/core/admission/evolution";
+export {
+    verifyStoredCollectionArtifact,
+    verifyStoredCollectionRelease,
+} from "cms-repository/collections/core/admission/collectionArtifact";
 export { collectionAssetRepresentationVersion } from "cms-repository/collections/core/admission/assets";
 export { replaceCollectionAssetExpressions } from "cms-repository/collections/core/texts/expressions";
 

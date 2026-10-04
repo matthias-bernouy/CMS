@@ -9,8 +9,6 @@ export interface CollectionDashboard {
     readonly icon?: string;
     readonly description?: CollectionTranslationKey;
     readonly navigation: readonly CollectionDashboardNavigationItem[];
-    /** Contracts used by this dashboard, for source discovery. */
-    readonly contracts?: readonly string[];
 }
 
 export type CollectionDashboardNavigationItem = Omit<DashboardNavigationItem, "label" | "children"> & {

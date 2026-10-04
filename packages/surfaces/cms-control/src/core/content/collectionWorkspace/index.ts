@@ -1,4 +1,4 @@
-import { composeThemeSettings } from "@bernouy/cms-content";
+import { composeCollectionThemes, composeThemeSettings } from "@bernouy/cms-content";
 import type { ControlCms } from "cms-control/ControlCms";
 import { blocDefaultAttributes } from "cms-control/core/content/bloc/defaultAttributes";
 import { blocLibrary } from "cms-control/core/content/blocLibrary";
@@ -19,6 +19,7 @@ export async function collectionWorkspace(
     cms: ControlCms,
     query: CollectionWorkspaceQuery,
     basePath: string,
+    locale?: string,
 ): Promise<CollectionWorkspaceResponse> {
     const section = query.section ?? "overview";
     const [library, system] = await Promise.all([
@@ -29,6 +30,7 @@ export async function collectionWorkspace(
                 ...(section === "blocs" ? { bloc: query.bloc } : {}),
             },
             basePath,
+            locale,
         ),
         section === "theme" && query.collection ? cms.repository.getSystem() : Promise.resolve(undefined),
     ]);
@@ -46,10 +48,14 @@ export async function collectionWorkspace(
           })
         : [];
     const bloc = groups.flatMap((group) => group.blocs).find(({ current }) => current);
+    const installed = section === "theme" ? await cms.repository.getInstalledCollections?.() : undefined;
+    const localizedSystemTheme = system
+        ? composeCollectionThemes(system.theme, installed?.collections.map(({ release }) => release) ?? [], locale)
+        : undefined;
     const themeProjection = collection
         ? collectionThemeProjection(
               library.collection!,
-              system ? composeThemeSettings(system.theme, []) : undefined,
+              localizedSystemTheme ? composeThemeSettings(localizedSystemTheme, []) : undefined,
               query.token,
               query.theme,
               basePath,

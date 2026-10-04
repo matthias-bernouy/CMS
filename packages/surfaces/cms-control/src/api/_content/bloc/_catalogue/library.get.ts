@@ -1,5 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { blocLibrary } from "cms-control/core/content/blocLibrary";
+import { requestLocale } from "cms-control/core/admin/http/requestLocale";
 export type { BlocLibraryResponse } from "cms-control/core/content/blocLibrary/types";
 
 export default async function getBlocLibrary(req: Request, cms: ControlCms): Promise<Response> {
@@ -19,6 +20,7 @@ export default async function getBlocLibrary(req: Request, cms: ControlCms): Pro
                 bloc: text("bloc"),
             },
             basePath,
+            requestLocale(req),
         ),
     );
 }

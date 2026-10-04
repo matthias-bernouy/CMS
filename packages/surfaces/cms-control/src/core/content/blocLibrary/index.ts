@@ -3,16 +3,42 @@ import { siteBlocCatalogue } from "cms-control/core/content/siteBloc/catalogue";
 import { filterLibraryBlocs, libraryBlocs } from "./blocs";
 import { belongsToCollection, libraryCollectionRows, matchingCollections } from "./collections";
 import type { BlocLibraryQuery, BlocLibraryResponse } from "./types";
+import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
 
 export async function blocLibrary(
     cms: ControlCms,
     query: BlocLibraryQuery,
     basePath: string,
+    locale?: string,
 ): Promise<BlocLibraryResponse> {
     const [sites, items] = await Promise.all([cms.repository.getSiteBlocCollections(), siteBlocCatalogue(cms)]);
-    const allBlocs = libraryBlocs(items, basePath);
     const installed = await cms.repository.getInstalledCollections?.();
-    const collections = libraryCollectionRows(sites, allBlocs, query.collection, basePath, installed?.collections);
+    const allBlocs = libraryBlocs(items, basePath).map((bloc) => {
+        const collection = installed?.collections.find((item) => item.collectionId === bloc.installedCollectionId);
+        const definition = collection?.release.blocs.find((item) => item.id === bloc.tag);
+        return collection && definition
+            ? {
+                  ...bloc,
+                  name: resolveCollectionTranslation(collection.release, definition.label, locale),
+                  group: resolveCollectionTranslation(
+                      collection.release,
+                      definition.category ?? collection.release.name,
+                      locale,
+                  ),
+                  description: definition.description
+                      ? resolveCollectionTranslation(collection.release, definition.description, locale)
+                      : "",
+              }
+            : bloc;
+    });
+    const collections = libraryCollectionRows(
+        sites,
+        allBlocs,
+        query.collection,
+        basePath,
+        installed?.collections,
+        locale,
+    );
     const collection = collections.find(({ key }) => key === query.collection);
     if (query.collection && !collection) {
         throw Object.assign(new Error("Collection not found"), { status: 404 });

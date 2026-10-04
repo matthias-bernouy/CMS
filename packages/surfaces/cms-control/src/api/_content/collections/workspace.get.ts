@@ -1,6 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { collectionWorkspace } from "cms-control/core/content/collectionWorkspace";
 import { isCollectionWorkspaceSection } from "cms-control/core/content/collectionWorkspace/routes";
+import { requestLocale } from "cms-control/core/admin/http/requestLocale";
 export type { CollectionWorkspaceResponse } from "cms-control/core/content/collectionWorkspace/types";
 
 export default async function getCollectionWorkspace(req: Request, cms: ControlCms): Promise<Response> {
@@ -24,6 +25,7 @@ export default async function getCollectionWorkspace(req: Request, cms: ControlC
                 theme: text("theme"),
             },
             basePath,
+            requestLocale(req),
         ),
     );
 }

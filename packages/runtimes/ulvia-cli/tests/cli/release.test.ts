@@ -9,6 +9,7 @@ import { resolveCollectionTranslation } from "@bernouy/cms-repository/collection
 test("release publishes a folder explicitly, survives CLI runs, and prune clears only the repository", async () => {
     const data = await mkdtemp(join(tmpdir(), "ulvia-cli-release-"));
     const source = resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official");
+    const catalogContract = resolve(import.meta.dir, "../../../../official-repository/contracts/catalog.items");
     const definition = (await Bun.file(join(source, "definition.json")).json()) as {
         version: string;
         exports: { blocs: string[]; texts: string[] };
@@ -17,6 +18,7 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
     const options = { environment: { ULVIA_DATA_DIR: data }, log: (line: string) => output.push(line) };
     try {
         const repository = new LocalCollectionRepository(join(data, "repository"));
+        await runCli(["release", catalogContract], options);
         await runCli(["release", source], options);
         const releases = await repository.list();
         expect(releases.map((item) => item.release.collectionId)).toEqual(["ulvia-official"]);

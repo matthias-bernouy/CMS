@@ -25,6 +25,26 @@ test("an official collection dashboard keeps access and identity through an upgr
         dashboards,
         dashboardAssignments: assignments,
         users: { getBySub: async (id: string) => (id === "member" ? { sub: id } : null) },
+        repository: {
+            getBlocRecords: async () =>
+                (await store.snapshot("site")).collections.flatMap((item) =>
+                    item.release.blocs.map((bloc) => ({
+                        tag: bloc.id,
+                        artifact: {
+                            id: bloc.id,
+                            viewJS: bloc.kind === "component" ? (bloc.runtime?.viewJS ?? "") : "",
+                            ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
+                        },
+                    })),
+                ),
+            getBlocViewJS: async (tag: string) => {
+                const bloc = (await store.snapshot("site")).collections
+                    .flatMap((item) => item.release.blocs)
+                    .find((candidate) => candidate.id === tag);
+                return bloc?.kind === "component" ? (bloc.runtime?.viewJS ?? null) : null;
+            },
+            getSystem: async () => ({ site: { language: "en" } }),
+        },
     } as unknown as ControlCms;
 
     const first = await store.importRelease(release("1.0.0", "Initial"));
@@ -52,9 +72,21 @@ test("an official collection dashboard keeps access and identity through an upgr
 
     subject = "member";
     const activeView = await view(cms, initial!.id);
-    expect((await activeView.json()) as { html: string }).toMatchObject({
-        html: "<section><h2>Initial</h2></section>",
-    });
+    const activePayload = (await activeView.json()) as { html: string; hasRuntime: boolean };
+    expect(activePayload.html).toContain("<h2>Initial</h2>");
+    expect(activePayload.html).toContain("Welcome Initial");
+    expect(activePayload.html).toContain("<ulvia-official-helper>");
+    expect(activePayload.hasRuntime).toBeTrue();
+    const runtime = await readDashboardView(
+        new Request(
+            `http://localhost/api/dashboard-view?dashboardId=${initial!.id}&viewId=ulvia-official%3Aoverview&runtime=1`,
+        ),
+        cms,
+    );
+    expect(runtime.headers.get("content-type")).toContain("text/javascript");
+    expect(await runtime.text()).toContain("ulvia-official-helper");
+    const frenchView = await view(cms, initial!.id, "fr-FR,fr;q=0.9");
+    expect(((await frenchView.json()) as { html: string }).html).toContain("Bienvenue Initial");
     const context = await dashboardContext(
         new Request(`http://localhost/api/dashboard-context?dashboardId=${initial!.id}`),
         cms,
@@ -67,9 +99,7 @@ test("an official collection dashboard keeps access and identity through an upgr
     expect(upgraded).toMatchObject({ id: initial!.id, name: "Ulvia workspace Updated", enabled: true, revision: 1 });
     expect(await assignments.hasAssignment("member", upgraded!.id)).toBeTrue();
     const upgradedView = await view(cms, upgraded!.id);
-    expect((await upgradedView.json()) as { html: string }).toMatchObject({
-        html: "<section><h2>Updated</h2></section>",
-    });
+    expect(((await upgradedView.json()) as { html: string }).html).toContain("<h2>Updated</h2>");
 
     subject = "admin";
     await updateDashboard(jsonRequest("/api/dashboard", { id: upgraded!.id, revision: 1, enabled: false }), cms);
@@ -116,17 +146,19 @@ test("dashboard HTML routes declared capability sources through its scoped gatew
         <section cms-source="/api/dashboard-context as dashboard"></section>
     `;
 
-    rewriteDashboardCapabilitySources(root, "dashboard one", "/cms");
+    rewriteDashboardCapabilitySources(root, "dashboard one", "ulvia-official:catalog", "/cms");
 
     expect(root.children[0]!.getAttribute("cms-source")).toBe(
-        "/cms/api/dashboard-call/catalog.items/item.list?dashboardId=dashboard%20one as catalog",
+        "/cms/api/dashboard-call/catalog.items/item.list?dashboardId=dashboard%20one&viewId=ulvia-official%3Acatalog as catalog",
     );
     expect(root.children[1]!.getAttribute("cms-source")).toBe("/api/dashboard-context as dashboard");
 });
 
-function view(cms: ControlCms, dashboardId: string): Promise<Response> {
+function view(cms: ControlCms, dashboardId: string, language?: string): Promise<Response> {
     return readDashboardView(
-        new Request(`http://localhost/api/dashboard-view?dashboardId=${dashboardId}&viewId=ulvia-official%3Aoverview`),
+        new Request(`http://localhost/api/dashboard-view?dashboardId=${dashboardId}&viewId=ulvia-official%3Aoverview`, {
+            headers: language ? { "Accept-Language": language } : undefined,
+        }),
         cms,
     );
 }
@@ -152,6 +184,7 @@ function release(version: string, marker: string): Record<string, unknown> {
         translations: {
             en: {
                 "bloc.page.label": "Page",
+                "bloc.helper.label": "Helper",
                 "collection.name": "Ulvia Official",
                 "dashboard.starter.name": `Ulvia workspace ${marker}`,
                 "nav.blocs": "Blocs",
@@ -163,15 +196,48 @@ function release(version: string, marker: string): Record<string, unknown> {
                 "view.resources.name": "Blocs",
                 "view.theme.name": "Theme",
             },
+            fr: {
+                "bloc.page.label": "Page",
+                "bloc.helper.label": "Assistant",
+                "collection.name": "Ulvia Officiel",
+                "dashboard.starter.name": `Espace Ulvia ${marker}`,
+                "nav.blocs": "Blocs",
+                "nav.overview": "Vue d’ensemble",
+                "nav.resources": "Ressources",
+                "nav.theme": "Thème",
+                "nav.workspace": "Ulvia",
+                "view.overview.name": "Vue d’ensemble",
+                "view.resources.name": "Blocs",
+                "view.theme.name": "Thème",
+            },
         },
+        texts: [
+            {
+                id: "welcome",
+                values: { en: `Welcome ${marker}`, fr: `Bienvenue ${marker}` },
+            },
+        ],
         assets: [],
         blocs: [
+            {
+                kind: "component",
+                id: "ulvia-official-helper",
+                label: "bloc.helper.label",
+                internal: true,
+                shadowdom: "<span></span>",
+                uses: [],
+                requires: [],
+                slots: {},
+                runtime: {
+                    viewJS: 'if (!customElements.get("ulvia-official-helper")) customElements.define("ulvia-official-helper", class extends HTMLElement {});',
+                },
+            },
             {
                 kind: "composition",
                 id: "ulvia-official-page",
                 label: "bloc.page.label",
-                lightdom: "<section><p>Ulvia</p></section>",
-                uses: [],
+                lightdom: `<section><h2>${marker}</h2><ulvia-official-helper></ulvia-official-helper></section>`,
+                uses: ["ulvia-official-helper"],
                 requires: [],
                 slots: {},
             },
@@ -181,7 +247,7 @@ function release(version: string, marker: string): Record<string, unknown> {
                 id: "overview",
                 name: "view.overview.name",
                 icon: "layout",
-                html: `<section><h2>${marker}</h2></section>`,
+                html: "<section><p>{{ cms.i18n.ulvia-official.welcome }}</p><ulvia-official-page></ulvia-official-page></section>",
             },
             {
                 id: "resources",

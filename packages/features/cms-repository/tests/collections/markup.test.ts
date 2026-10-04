@@ -195,6 +195,13 @@ describe("collection markup admission", () => {
         }
     });
 
+    test("validates collection text references in editable defaults", () => {
+        const source = collectionDocument();
+        source.texts = [{ id: "title", values: { "en-US": "Title" } }];
+        (source.blocs as Record<string, unknown>[])[0]!.defaultContent = "<p>{{ cms.i18n.atlas.missing }}</p>";
+        expect(() => parseCollectionRelease(source)).toThrow("unknown collection text missing");
+    });
+
     test.each([
         ["text", "<div>Hidden headline</div>"],
         ["link", '<a href="/products"><slot name="body"></slot></a>'],

@@ -4,17 +4,17 @@ import { resolveCollectionTranslation } from "@bernouy/cms-repository/collection
 import type { ControlCms } from "cms-control/ControlCms";
 import { dashboardCollections } from "./access";
 
-export async function availableDashboardViews(cms: ControlCms) {
+export async function availableDashboardViews(cms: ControlCms, locale?: string) {
     const { store, siteId } = dashboardCollections(cms);
     const snapshot = await store.snapshot(siteId);
     return snapshot.collections.flatMap((item) =>
         (item.release.views ?? []).map((view) => ({
             collectionId: item.collectionId,
-            collectionName: resolveCollectionTranslation(item.release, item.release.name),
+            collectionName: resolveCollectionTranslation(item.release, item.release.name, locale),
             viewId: view.id,
-            name: resolveCollectionTranslation(item.release, view.name),
+            name: resolveCollectionTranslation(item.release, view.name, locale),
             icon: view.icon ?? "layout",
-            description: view.description ? resolveCollectionTranslation(item.release, view.description) : "",
+            description: view.description ? resolveCollectionTranslation(item.release, view.description, locale) : "",
         })),
     );
 }

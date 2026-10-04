@@ -1,5 +1,6 @@
 import type { CollectionBloc } from "cms-repository/collections/interfaces/CollectionBloc";
 import { invalid } from "../../errors";
+import { replaceCollectionAssetExpressions, replaceCollectionTextExpressions } from "../../texts/expressions";
 import { elements, isElement, type MarkupTree, nodes, significantRoots } from "./tree";
 
 function binding(value: string): boolean {
@@ -51,12 +52,27 @@ export function validateDeclarative(tree: MarkupTree, path: string, shadow = fal
 
 export function validateNoBindings(tree: MarkupTree, path: string): void {
     for (const node of nodes(tree)) {
-        if (node.type === "text" && binding(node.data)) {
-            invalid("bindings belong only in lightdom", path);
+        if (node.type === "text") {
+            validateInitialValue(node.data, path);
         }
-        if (isElement(node) && Object.values(node.attribs).some(binding)) {
-            invalid("bindings belong only in lightdom", path);
+        if (isElement(node)) {
+            for (const value of Object.values(node.attribs)) {
+                validateInitialValue(value, path);
+            }
         }
+    }
+}
+
+function validateInitialValue(value: string, path: string): void {
+    let withoutServerExpressions: string;
+    try {
+        const withoutTexts = replaceCollectionTextExpressions(value, () => "");
+        withoutServerExpressions = replaceCollectionAssetExpressions(withoutTexts, () => "");
+    } catch (error) {
+        invalid(error instanceof Error ? error.message : "invalid server collection expression", path);
+    }
+    if (binding(withoutServerExpressions)) {
+        invalid("dynamic bindings belong only in lightdom", path);
     }
 }
 

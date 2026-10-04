@@ -30,13 +30,14 @@ export default async function updateDashboard(request: Request, cms: ControlCms)
         if (Object.keys(body).some((key) => !["id", "revision", "enabled"].includes(key))) {
             throw new InvalidParam("body", "Collection dashboard content is managed by its collection");
         }
-        const next = { ...current, enabled: body.enabled, revision: revision + 1 };
+        const { sourceContracts, ...stored } = current;
+        const next = { ...stored, enabled: body.enabled, revision: revision + 1 };
         if (revision === 0) {
             await cms.dashboards.create(next);
         } else if (!(await cms.dashboards.replace(next, revision))) {
             throw Object.assign(new Error("Dashboard changed; reload before saving"), { status: 409 });
         }
-        return Response.json(next);
+        return Response.json({ ...next, sourceContracts });
     }
     let navigation;
     try {
@@ -50,8 +51,9 @@ export default async function updateDashboard(request: Request, cms: ControlCms)
     if (typeof body.icon !== "string" || !/^[a-z][a-z0-9-]{0,31}$/.test(body.icon)) {
         throw new InvalidParam("icon", "Choose a dashboard icon");
     }
+    const { sourceContracts, ...stored } = current;
     const next = {
-        ...current,
+        ...stored,
         name: dashboardName(body.name),
         icon: body.icon,
         enabled: body.enabled,
@@ -61,5 +63,5 @@ export default async function updateDashboard(request: Request, cms: ControlCms)
     if (!(await cms.dashboards.replace(next, revision))) {
         throw Object.assign(new Error("Dashboard changed; reload before saving"), { status: 409 });
     }
-    return Response.json(next);
+    return Response.json({ ...next, sourceContracts });
 }

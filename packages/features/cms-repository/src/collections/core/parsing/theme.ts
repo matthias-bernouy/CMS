@@ -107,9 +107,6 @@ function validateThemeReferences(
             dependency.imports.themeTokens.map(({ id }) => collectionThemeTokenId(dependency.collectionId, id)),
         ),
     );
-    const namespaces = [collectionId, ...dependencies.map((dependency) => dependency.collectionId)].sort(
-        (left, right) => right.length - left.length,
-    );
     const graph = new Map(tokens.map((token) => [token.id, new Set<string>()]));
     for (const [categoryIndex, category] of theme.categories.entries()) {
         for (const [tokenIndex, token] of category.tokens.entries()) {
@@ -129,9 +126,7 @@ function validateThemeReferences(
                     if (imported.has(variable)) {
                         continue;
                     }
-                    if (namespaces.some((namespace) => variable.startsWith(`${namespace}-`))) {
-                        invalid(`unknown or unimported theme token --${variable}`, path);
-                    }
+                    invalid(`unknown or unimported theme token --${variable}`, path);
                 }
             }
         }

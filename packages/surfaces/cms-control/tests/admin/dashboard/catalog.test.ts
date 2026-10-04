@@ -16,9 +16,25 @@ test("collection dashboards start inactive and follow collection updates without
                 "nav.overview": "Overview",
                 "view.overview.name": "Overview",
             },
+            fr: {
+                "collection.name": "Test FR",
+                "dashboard.starter.name": "Démarrage",
+                "nav.overview": "Vue d’ensemble",
+                "view.overview.name": "Vue d’ensemble",
+            },
         },
         name: "collection.name",
-        views: [{ id: "overview", name: "view.overview.name", icon: "star", html: "<section>Overview</section>" }],
+        blocs: [],
+        views: [
+            {
+                id: "overview",
+                name: "view.overview.name",
+                icon: "star",
+                uses: [],
+                requires: [],
+                html: "<section>Overview</section>",
+            },
+        ],
         dashboards: [
             {
                 id: "starter",
@@ -44,6 +60,9 @@ test("collection dashboards start inactive and follow collection updates without
     const [initial] = await dashboardCatalog(cms);
     expect(initial).toMatchObject({ icon: "database", enabled: false, revision: 0, origin: { collectionId: "test" } });
     expect(initial?.navigation?.[0]?.icon).toBe("star");
+    const [french] = await dashboardCatalog(cms, "fr-FR");
+    expect(french).toMatchObject({ name: "Démarrage", collectionName: "Test FR" });
+    expect(french?.navigation[0]?.label).toBe("Vue d’ensemble");
     await repository.create({ ...initial!, enabled: true, revision: 1 });
     release.translations.en["dashboard.starter.name"] = "Updated starter";
     release.translations.en["nav.overview"] = "Updated overview";

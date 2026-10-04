@@ -28,7 +28,6 @@ export interface DashboardRecord {
     readonly origin?: CollectionDashboardOrigin;
     readonly collectionName?: string;
     readonly description?: string;
-    readonly sourceContracts?: readonly string[];
 }
 
 export interface DashboardRepository {

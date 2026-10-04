@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test";
 import type { GatewayInvocation } from "@bernouy/cms-gateway";
 import { InMemoryDashboardAssignmentRepository, InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
-import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
 import type { ControlCms } from "cms-control/ControlCms";
 import {
     handleControlCapabilityCall,
@@ -154,19 +153,44 @@ test("Control mounts provider derivatives with its authenticated administrator",
     });
 });
 
-test("a dashboard member can call only contracts declared by that dashboard", async () => {
+test("a dashboard member can call only capabilities required by the selected view", async () => {
     const calls: GatewayInvocation[] = [];
     const dashboards = new InMemoryDashboardRepository();
     const assignments = new InMemoryDashboardAssignmentRepository();
-    const collections = new CollectionStore(new MemoryCollectionStorage());
+    const collections = {
+        snapshot: async () => ({
+            revision: 1,
+            collections: [
+                {
+                    collectionId: "test",
+                    release: {
+                        collectionId: "test",
+                        blocs: [],
+                        views: [
+                            {
+                                id: "catalog",
+                                uses: [],
+                                requires: [
+                                    {
+                                        contractId: "catalog.items",
+                                        capabilityId: "item.list",
+                                        versionRange: "^1.0.0",
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+        }),
+    };
     await dashboards.create({
         id: "workspace",
         siteId: "site-a",
         name: "Workspace",
         enabled: true,
         revision: 0,
-        navigation: [],
-        sourceContracts: ["catalog.items"],
+        navigation: [{ id: "catalog", label: "Catalog", use: "test:catalog" }],
     });
     await assignments.assign({ dashboardId: "workspace", subjectId: "member-1" });
     const state = {
@@ -194,11 +218,14 @@ test("a dashboard member can call only contracts declared by that dashboard", as
         dashboardAssignments: assignments,
     } as unknown as ControlCms;
     const request = (contract: string) =>
-        new Request(`http://control/api/dashboard-call/${contract}/item.list?dashboardId=workspace`, {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: "{}",
-        });
+        new Request(
+            `http://control/api/dashboard-call/${contract}/item.list?dashboardId=workspace&viewId=test%3Acatalog`,
+            {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: "{}",
+            },
+        );
 
     expect((await handleDashboardCapabilityCall(request("catalog.items"), cms, state)).status).toBe(200);
     expect(calls[0]).toMatchObject({

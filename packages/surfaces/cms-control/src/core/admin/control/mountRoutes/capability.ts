@@ -4,6 +4,8 @@ import { handleGatewayFileGet, handleGatewayImageGet } from "@bernouy/cms-gatewa
 import type { Middleware } from "@bernouy/http-runner";
 import { canReadDashboard } from "cms-control/core/admin/dashboards/access";
 import { dashboardFromCatalog } from "cms-control/core/admin/dashboards/catalog";
+import { collectionViewRequirements } from "cms-control/core/admin/dashboards/requirements";
+import { dashboardNavigationViews } from "@bernouy/cms-dashboards";
 import type { ControlCms } from "cms-control/ControlCms";
 import type { ControlCmsState } from "../types";
 
@@ -57,7 +59,8 @@ export async function handleDashboardCapabilityCall(
         return Response.json({ error: { code: "not_authorized" } }, { status: 401 });
     }
     const dashboardId = new URL(request.url).searchParams.get("dashboardId");
-    if (!dashboardId) {
+    const viewId = new URL(request.url).searchParams.get("viewId");
+    if (!dashboardId || !viewId) {
         return Response.json({ error: { code: "invalid_input" } }, { status: 400 });
     }
     const dashboard = await dashboardFromCatalog(cms, dashboardId);
@@ -76,9 +79,20 @@ export async function handleDashboardCapabilityCall(
         return Response.json({ error: { code: "not_authorized" } }, { status: 403 });
     }
     const prefix = `${state.runner.basePath === "/" ? "" : state.runner.basePath}/api/dashboard-call`;
-    const contractId = requestContractId(request, prefix);
-    if (!contractId || !dashboard.sourceContracts?.includes(contractId)) {
-        return Response.json({ error: { code: "contract_not_declared" } }, { status: 403 });
+    const capability = requestCapability(request, prefix);
+    const selected = dashboardNavigationViews(dashboard.navigation).find((item) => item.use === viewId);
+    const [collectionId, collectionViewId] = selected?.use.split(":") ?? [];
+    const collections = cms.config.collections;
+    if (!capability || !collectionId || !collectionViewId || !collections) {
+        return Response.json({ error: { code: "capability_not_declared" } }, { status: 403 });
+    }
+    const releases = (await collections.store.snapshot(collections.siteId)).collections.map(({ release }) => release);
+    const declared = collectionViewRequirements(releases, collectionId, collectionViewId).some(
+        (requirement) =>
+            requirement.contractId === capability.contractId && requirement.capabilityId === capability.capabilityId,
+    );
+    if (!declared) {
+        return Response.json({ error: { code: "capability_not_declared" } }, { status: 403 });
     }
     return handleGatewayHttpCall(request, {
         siteId: configured.siteId,
@@ -161,7 +175,7 @@ export async function handleControlCapabilityCall(request: Request, state: Contr
     });
 }
 
-function requestContractId(request: Request, prefix: string): string | null {
+function requestCapability(request: Request, prefix: string): { contractId: string; capabilityId: string } | null {
     const pathname = new URL(request.url).pathname;
     if (!pathname.startsWith(`${prefix}/`)) {
         return null;
@@ -171,7 +185,7 @@ function requestContractId(request: Request, prefix: string): string | null {
         return null;
     }
     try {
-        return decodeURIComponent(contract);
+        return { contractId: decodeURIComponent(contract), capabilityId: decodeURIComponent(capability) };
     } catch {
         return null;
     }

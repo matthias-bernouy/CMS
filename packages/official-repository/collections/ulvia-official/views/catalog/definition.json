@@ -2,5 +2,12 @@
     "id": "catalog",
     "name": "view.catalog.name",
     "icon": "catalog",
-    "description": "view.catalog.description"
+    "description": "view.catalog.description",
+    "requires": [
+        {
+            "contractId": "catalog.items",
+            "capabilityId": "item.list",
+            "versionRange": "^0.1.0"
+        }
+    ]
 }

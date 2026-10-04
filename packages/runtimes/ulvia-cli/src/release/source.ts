@@ -2,6 +2,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import { sha256Digest } from "@bernouy/binary-media";
 import { admitCollectionRelease, isCollectionNamespace } from "@bernouy/cms-repository/collections";
+import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { loadCollectionBlocs } from "./blocSources";
 import { loadCollectionTheme, loadCollectionTranslations } from "./metadataSources";
 import { loadCollectionTexts } from "./textSources";
@@ -10,7 +11,7 @@ import { loadCollectionMigrations } from "./migrationSources";
 import { readSourceEntries, scanFileSourceTree } from "./sourceTree";
 
 /** Compile one authored folder into an immutable, admitted release candidate. */
-export async function prepareCollectionRelease(directory: string) {
+export async function prepareCollectionRelease(directory: string, contracts?: ReleaseCatalogue) {
     const collectionRoot = resolve(directory);
     const collectionId = basename(collectionRoot);
     if (!isCollectionNamespace(collectionId)) {
@@ -36,7 +37,7 @@ export async function prepareCollectionRelease(directory: string) {
         ...(dashboards.length ? { dashboards } : {}),
         ...(theme === undefined ? {} : { theme }),
     };
-    const artifact = await admitCollectionRelease(candidate, assets.bundle);
+    const artifact = await admitCollectionRelease(candidate, assets.bundle, { contracts });
     assertCollectionSourceQuality(artifact.release);
     if (artifact.release.collectionId !== collectionId) {
         throw new Error(`Collection folder ${collectionId} does not match its definition`);

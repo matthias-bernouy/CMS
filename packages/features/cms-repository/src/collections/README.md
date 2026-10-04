@@ -175,17 +175,21 @@ catalogue while content text overrides remain separate.
 
 The local release command reads `views/<view-id>/definition.json` and
 `view.html` and places the HTML in the immutable release. Admission permits
-text, a small semantic HTML set and declared local bloc tags. It rejects
-scripts, links, inline handlers, inline styles and undeclared attributes.
-The current Control view runner supplies dashboard name and view count through
-its document binding core. Arbitrary provider calls and form actions in
-authored views are not admitted yet; they need compiled execution grants.
+text, a small semantic HTML set and declared local or explicitly imported Bloc
+tags. It derives the exact `uses` set from the HTML. Canonical
+`/.cms/call/<contract>/<capability>` sources require a matching versioned
+capability requirement; admission verifies those witnesses alongside transitive
+local Bloc requirements. Scripts, links, inline handlers and inline styles reject.
+Control expands compositions, resolves texts and public assets, applies the site
+theme and loads every transitively used component runtime, including internal
+Blocs that remain hidden from the author catalogue.
 The local release command also reads `dashboards/<dashboard-id>/definition.json`.
 Each dashboard declares a navigation tree of groups and local views. A primary
 item can open lateral navigation or tabs directly; a lateral item can open
 tabs. Admission rejects unknown or repeated view IDs and duplicate dashboard
-IDs. Optional contract IDs connect source discovery to dashboards that use
-those contracts. The definition is immutable collection content; its site
+IDs. Dashboards never declare capabilities: Control derives them from the
+selected Views and their transitive Blocs, and authorizes each runtime call
+against that exact View. The definition is immutable collection content; its site
 activation and membership are separate mutable state. Private site dashboards
 may navigate to views from several installed collections.
 
@@ -210,7 +214,9 @@ revision-checked store operation and the administrator-only Control API.
 Every independently consumable resource has a positive generation and derived
 contract/implementation SHA-256 digests. The collection SemVer and immutable
 release digest remain authoritative publication identities; resource digests
-provide precise impact reporting. Breaking site-owned data changes increment
+provide precise impact reporting. Local publication admits implementation-only
+patches, compatible minor extensions and major breaking changes only when every
+surviving broken resource increments its generation. Breaking site-owned data changes increment
 `dataGeneration`. A generation `N` release retains every adjacent transition
 from generation `1`; the runtime composes those steps for any older installed
 generation. Operations are a closed JSON vocabulary and never executable code.
@@ -227,10 +233,12 @@ before removal is safe.
 
 ## Next slices
 
-Presets remain absent from the public format: unsupported fields reject. Expanded
-view bindings, published execution plans and capability grants remain future work.
+Presets remain absent from the public format: unsupported fields reject.
+Published execution plans and provider capability grants remain future work.
 
 Remote publication, JavaScript trust scanning and component renderer trust
-hardening are not implemented yet.
+hardening are not implemented yet. The current first-party trust assumption and
+the required boundary before third-party collections are admitted are recorded
+in the repository [deferred-work documentation](../../../../../docs/TODO.md#collection-javascript-isolation).
 The [starter bundle](../../fixtures/collections/v1/README.md) exercises the
 implemented authoring/admission path without a provider or renderer.

@@ -26,7 +26,7 @@ packages/official-repository/collections/ulvia-official/
 ├── theme/definition.json    # ordered theme category IDs
 ├── theme/**/*.json          # recursively organized category/token defaults
 ├── definitions/             # reserved for later collection definitions
-├── views/<view>/definition.json  # view identity and label
+├── views/<view>/definition.json  # view identity, label and capability requirements
 ├── views/<view>/view.html   # Control HTML fragment
 └── dashboards/<dashboard>/definition.json  # navigation tree of local views
 ```
@@ -48,7 +48,8 @@ lives at `ULVIA_DATA_DIR/repository`, or below `$XDG_DATA_HOME/ulvia/repository`
 or `~/.local/share/ulvia/repository` by default. `bun run ulvia -- dev` serves
 only stored releases on loopback port 5102 (`ULVIA_DEV_REPOSITORY_PORT` can
 change it); it never scans authored folders. Run `release` again after editing
-the source and increment its version. `bun run ulvia -- prune` empties the
+the source and increment its version. Contracts required by Blocs or Views must
+already exist in the local repository. `bun run ulvia -- prune` empties the
 local repository without deleting the separate dev CMS data. Pull and push
 remain future commands. The current release format does not install the
 `definitions/` directory. No direct collection JSON upload is available in
@@ -159,6 +160,13 @@ implementation-only change leaves the contract digest stable. A compatible
 contract extension may change the contract digest without changing the resource
 generation; a breaking contract requires a generation increment.
 
+The local repository enforces that policy before storing a publication. A patch
+may change resource implementations only. A minor may add resources and make
+compatible contract extensions without changing existing resource generations.
+A major may break contracts or remove exports, but each changed surviving
+resource increments its generation and the collection advances its
+`dataGeneration`. One publication advances that data generation by at most one.
+
 `dataGeneration` describes the format of site-owned data. It increments only
 when pages, collection configuration, text overrides or site theme overrides
 need a transition. A release at generation `N` contains the complete adjacent
@@ -240,10 +248,17 @@ can remove a collection after checking installed dependants, but Control does no
 expose removal until it can also report affected pages, private Blocs, theme
 references and dashboards. Provider grants and registry publication remain
 future work. JavaScript trust scanning is also separate; migration files
-themselves are data-only. Basic HTML views, collection dashboard templates and private site
-dashboards are available; views currently receive only dashboard metadata through
-Control binding. Provider execution plans are not implemented. A source adapter
-exists for multiple repositories, while the dev runtime configures one local source.
+themselves are data-only. Collection Views can render local or explicitly
+imported Blocs; Control expands compositions, loads the transitive component
+runtime (including internal Blocs), resolves collection texts and public assets,
+and applies the site theme. Capability calls are authorized against the selected
+View and all of its transitive Bloc requirements. Dashboards only define
+navigation and activation: their source list is derived from those Views.
+Provider execution plans are not implemented. A source adapter exists for
+multiple repositories, while the dev runtime configures one local source.
+The current first-party JavaScript trust decision and the intended sandbox
+boundary for future third-party collections are recorded in
+[deferred platform work](../TODO.md#collection-javascript-isolation).
 
 See the [collection release format](../../packages/features/cms-repository/src/collections/README.md)
 for admission constraints.
