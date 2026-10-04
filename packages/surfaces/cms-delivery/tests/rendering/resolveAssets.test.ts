@@ -157,7 +157,10 @@ describe("resolveRuntimeAssets", () => {
         const repository = repositoryWith({
             pageContent: "<site-card></site-card>",
             blocTags: ["site-card"],
-            viewJS: { "site-card": 'const logo = "{{ cms.asset.design-system.mark.svg }}";' },
+            viewJS: {
+                "site-card":
+                    'style.textContent = `.card { background-image: url("{{ cms.asset.design-system.mark.svg }}"); }`;',
+            },
             collectionRevision: 1,
         });
         const delivery = deliveryWith(repository, { siteId: "site", store });
@@ -168,6 +171,7 @@ describe("resolveRuntimeAssets", () => {
 
         expect(assets.blocUrls[0]).toContain("r=1");
         expect(js).toContain("/.cms/collections/design-system/assets/mark.svg?v=");
+        expect(js).toContain("background-image");
         expect(js).not.toContain("cms.asset.design-system.mark.svg");
     });
 });

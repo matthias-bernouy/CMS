@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
 import { InMemoryCmsRepository, ValidatingCmsRepository, withInstalledCollections } from "../../../src/exports/index";
 import { createContentReader, expandCompositions, renderCollectionTexts } from "../../../src/exports/rendering";
@@ -145,29 +146,36 @@ test("installed collection theme contributes immutable tokens to editing and pub
 });
 
 test("installed shadow component is served as browser bloc JavaScript", async () => {
+    const bytes = new TextEncoder().encode("asset");
+    const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}` as const;
     const store = new CollectionStore(new MemoryCollectionStorage());
-    const artifact = await store.importRelease({
-        ...release,
-        blocs: [
-            ...release.blocs,
-            {
-                kind: "component",
-                id: "test-card",
-                label: "bloc.card.label",
-                shadowdom: '<article class="card"><slot name="body"></slot></article>',
-                style: ".card { color: var(--test-accent); }",
-                uses: [],
-                requires: [],
-                slots: { body: {} },
-            },
-        ],
-    });
+    const artifact = await store.importRelease(
+        {
+            ...release,
+            assets: [{ id: "mark.svg", mediaType: "image/svg+xml", byteLength: bytes.byteLength, digest }],
+            blocs: [
+                ...release.blocs,
+                {
+                    kind: "component",
+                    id: "test-card",
+                    label: "bloc.card.label",
+                    shadowdom: '<article class="card"><slot name="body"></slot></article>',
+                    style: '.card { color: var(--test-accent); background-image: url("{{ cms.asset.test.mark.svg }}"); }',
+                    uses: [],
+                    requires: [],
+                    slots: { body: {} },
+                },
+            ],
+        },
+        [{ id: "mark.svg", bytes }],
+    );
     await store.install("site", artifact.digest, 0);
     const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
     const reader = createContentReader(repository);
     const script = await reader.getBlocViewJS("test-card");
     expect(script).toContain("attachShadow");
     expect(script).toContain("var(--test-accent)");
+    expect(script).toContain("cms.asset.test.mark.svg");
     expect(
         (await reader.getRenderableBlocs()).find((bloc) => bloc.id === "test-card")?.compositionHTML,
     ).toBeUndefined();
