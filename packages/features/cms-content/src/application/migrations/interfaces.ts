@@ -50,7 +50,11 @@ export type PreparedCollectionMigration = {
     resources: readonly CollectionMigrationResourceChange[];
     pages: readonly CollectionMigrationPageChange[];
     systemBefore: TSystem;
+    /** System projected through the target collection catalogue, before site-owned token migrations are persisted. */
+    systemAfterCollectionCommit: TSystem;
     systemAfter: TSystem;
+    /** System projected back through the previous catalogue, before the original system snapshot is restored. */
+    systemAfterCollectionRollback: TSystem;
     blockedReasons: readonly string[];
 };
 

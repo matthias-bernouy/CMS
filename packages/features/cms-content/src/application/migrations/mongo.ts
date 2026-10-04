@@ -88,15 +88,12 @@ export class MongoCollectionMigrationStorage implements CollectionMigrationStora
         expectedState: CollectionMigrationPageChange["state"],
         next: CollectionMigrationPageChange,
     ): Promise<boolean> {
-        const current = await this.pages.findOne({ migrationId: id, pageId, state: expectedState });
-        if (!current) {
-            return false;
-        }
-        const result = await this.pages.replaceOne(
-            { _id: current._id, migrationId: id, pageId, state: expectedState },
-            toPageDocument(id, current.index, next),
+        const { afterContent, ...snapshot } = structuredClone(next);
+        const result = await this.pages.updateOne(
+            { _id: `${id}:${pageId}`, migrationId: id, pageId, state: expectedState },
+            { $set: { ...snapshot, afterContentDigest: digestText(afterContent) } },
         );
-        return result.modifiedCount === 1;
+        return result.matchedCount === 1;
     }
 
     private async hydrate(document: MigrationDocument | null): Promise<CollectionMigrationRecord | null> {

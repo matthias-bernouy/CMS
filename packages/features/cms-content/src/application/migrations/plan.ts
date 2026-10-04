@@ -4,6 +4,7 @@ import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
 import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
 import { createHash } from "node:crypto";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
+import { composeCollectionThemes } from "cms-content/theme/core/collections";
 import { analyzeResourceChanges } from "./impact";
 import type {
     CollectionMigrationTarget,
@@ -136,13 +137,35 @@ export async function prepareCollectionMigration(
             ? [{ before: structuredClone(page), afterContent: content, operations: applied, state: "pending" as const }]
             : [],
     );
-    let systemAfter = system;
+    let migratedSystem = system;
     try {
-        systemAfter = migrateThemeTokens(system, operationGroups);
+        migratedSystem = migrateThemeTokens(system, operationGroups);
     } catch (error) {
         blockedReasons.push(migrationIssue("Site theme migration failed", error));
     }
-    validateTargetTheme(systemAfter, finalReleases, resources, transformedPages, blockedReasons);
+    validateTargetTheme(migratedSystem, finalReleases, resources, transformedPages, blockedReasons);
+    let systemAfterCollectionCommit = system;
+    let systemAfter = migratedSystem;
+    let systemAfterCollectionRollback = migratedSystem;
+    try {
+        systemAfterCollectionCommit = {
+            ...system,
+            theme: composeCollectionThemes(system.theme, finalReleases),
+        };
+        systemAfter = {
+            ...migratedSystem,
+            theme: composeCollectionThemes(migratedSystem.theme, finalReleases),
+        };
+        systemAfterCollectionRollback = {
+            ...systemAfter,
+            theme: composeCollectionThemes(
+                systemAfter.theme,
+                snapshot.collections.map(({ release }) => release),
+            ),
+        };
+    } catch (error) {
+        blockedReasons.push(migrationIssue("Collection theme transition is invalid", error));
+    }
     return {
         siteId,
         expectedCollectionRevision: snapshot.revision,
@@ -153,7 +176,9 @@ export async function prepareCollectionMigration(
         resources,
         pages: pageChanges,
         systemBefore: system,
+        systemAfterCollectionCommit,
         systemAfter,
+        systemAfterCollectionRollback,
         blockedReasons: [...new Set(blockedReasons)],
     };
 }

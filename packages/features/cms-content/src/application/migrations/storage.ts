@@ -24,7 +24,12 @@ export class MemoryCollectionMigrationStorage implements CollectionMigrationStor
     }
 
     async create(record: CollectionMigrationRecord): Promise<boolean> {
-        if (this.records.has(record.id) || (await this.getActive(record.siteId))) {
+        if (
+            this.records.has(record.id) ||
+            [...this.records.values()].some(
+                (current) => current.siteId === record.siteId && !TERMINAL.has(current.status),
+            )
+        ) {
             return false;
         }
         this.records.set(record.id, structuredClone(record));

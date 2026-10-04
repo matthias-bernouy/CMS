@@ -85,12 +85,30 @@ export function migrateThemeTokens(
 }
 
 function takePath(root: Record<string, unknown>, path: readonly string[]): { found: boolean; value?: unknown } {
-    const current = readPath(root, path);
-    if (!current.found) {
+    const parents: Array<{ parent: Record<string, unknown>; key: string }> = [];
+    let parent = root;
+    for (const part of path.slice(0, -1)) {
+        const current = parent[part];
+        if (!current || typeof current !== "object" || Array.isArray(current)) {
+            return { found: false };
+        }
+        parents.push({ parent, key: part });
+        parent = current as Record<string, unknown>;
+    }
+    const key = path.at(-1)!;
+    if (!Object.hasOwn(parent, key)) {
         return { found: false };
     }
-    delete current.parent![current.key!];
-    return { found: true, value: current.value };
+    const value = parent[key];
+    delete parent[key];
+    for (const ancestor of parents.reverse()) {
+        const child = ancestor.parent[ancestor.key];
+        if (!child || typeof child !== "object" || Array.isArray(child) || Object.keys(child).length > 0) {
+            break;
+        }
+        delete ancestor.parent[ancestor.key];
+    }
+    return { found: true, value };
 }
 
 function putPath(root: Record<string, unknown>, path: readonly string[], value: unknown): void {

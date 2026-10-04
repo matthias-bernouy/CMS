@@ -3,6 +3,7 @@ import { isDeepStrictEqual } from "node:util";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { CollectionMigrationRecord } from "../interfaces";
 import { collectionPageRevisionDigest } from "../plan";
+import { forEachMigrationPage } from "./concurrency";
 import { installationsMatch, migrationTargetsMatch } from "./helpers";
 import type { MigrationJournal } from "./journal";
 
@@ -37,6 +38,10 @@ export async function runCollectionMigration(
             !migrationTargetsMatch(state.collections, record)
         ) {
             throw new Error("Collection state changed during migration");
+        } else if (record.status === "planning") {
+            throw Object.assign(new Error("The migration plan became stale before it acquired maintenance mode"), {
+                status: 409,
+            });
         }
         if (record.collectionRevisionAfterCommit !== record.expectedCollectionRevision + 1) {
             record = await context.journal.replace(record, {
@@ -63,14 +68,14 @@ async function applySystemMigration(repository: CmsRepository, record: Collectio
     if (isDeepStrictEqual(current, record.systemAfter)) {
         return;
     }
-    if (!isDeepStrictEqual(current, record.systemBefore)) {
+    if (!isDeepStrictEqual(current, record.systemAfterCollectionCommit)) {
         throw new Error("System settings changed during migration");
     }
     await repository.updateSystem(record.systemAfter);
 }
 
 async function migratePages(context: ExecutionContext, record: CollectionMigrationRecord): Promise<void> {
-    for (const change of record.pages) {
+    await forEachMigrationPage(record.pages, async (change) => {
         const current = await context.repository.getPageById(change.before.id);
         if (!current) {
             throw new Error(`Page disappeared during migration: ${change.before.id}`);
@@ -79,7 +84,7 @@ async function migratePages(context: ExecutionContext, record: CollectionMigrati
             if (current.revision !== change.appliedRevision || current.content !== change.afterContent) {
                 throw new Error(`Migrated page changed unexpectedly: ${change.before.id}`);
             }
-            continue;
+            return;
         }
         if (current.revision === change.before.revision + 1 && current.content === change.afterContent) {
             await context.journal.persistPage(record, change, {
@@ -103,16 +108,16 @@ async function migratePages(context: ExecutionContext, record: CollectionMigrati
         } else {
             throw new Error(`Page revision changed during migration: ${change.before.id}`);
         }
-    }
+    });
 }
 
 async function assertPagesApplied(repository: CmsRepository, record: CollectionMigrationRecord): Promise<void> {
-    for (const change of record.pages) {
+    await forEachMigrationPage(record.pages, async (change) => {
         const page = await repository.getPageById(change.before.id);
         if (!page || page.revision !== change.appliedRevision || page.content !== change.afterContent) {
             throw new Error(`Migrated page failed validation: ${change.before.id}`);
         }
-    }
+    });
 }
 
 async function assertSnapshotCurrent(context: ExecutionContext, record: CollectionMigrationRecord): Promise<void> {
@@ -141,6 +146,13 @@ async function cancelUnstarted(
     const current = (await context.journal.current(record.id)) ?? record;
     if (current.pages.some((page) => page.state !== "pending")) {
         return false;
+    }
+    if (current.status === "planning") {
+        await context.journal.replace(current, {
+            status: "rolled-back",
+            error: error instanceof Error ? error.message : "Migration plan became stale",
+        });
+        return true;
     }
     const state = await context.collections.snapshot(current.siteId);
     if (
