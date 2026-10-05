@@ -2,12 +2,17 @@
 // scripts. Keep this check so a reused or manually prepared volume cannot
 // silently grant the infrastructure identity a different role.
 
+// See provision-site-user.js: normalize mongosh's host environment object
+// before accessing variables by their dynamic names.
+const environment = { ...process.env };
+
 function requiredEnv(name) {
-    const raw = process.env[name];
-    if (typeof raw !== "string" || !raw.trim()) {
+    const raw = environment[name];
+    const value = typeof raw === "string" ? String(raw).trim() : "";
+    if (!value) {
         throw new Error(`${name} must be set`);
     }
-    return raw.trim();
+    return value;
 }
 
 const rootUsername = requiredEnv("MONGO_INITDB_ROOT_USERNAME");

@@ -113,6 +113,14 @@ describe("deployment definition safeguards", () => {
         expect(mongoPreflightSource).toContain('exec /usr/local/bin/docker-entrypoint.sh "$@"');
     });
 
+    test("normalizes the mongosh environment before dynamic variable access", () => {
+        expect(mongoBootstrapSource).toContain("const environment = { ...process.env }");
+        expect(mongoSiteProvisionSource).toContain("const environment = { ...process.env }");
+        expect(mongoBootstrapSource).toContain("String(raw).trim()");
+        expect(mongoSiteProvisionSource).toContain("String(raw).trim()");
+        expect(`${mongoBootstrapSource}\n${mongoSiteProvisionSource}`).not.toContain("process.env[name]");
+    });
+
     test("does not use a latest image tag", () => {
         const imageReferences = [
             ...extractMatches(instanceComposeSource, /^\s*image:\s+([^\s#]+)/gim),

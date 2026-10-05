@@ -1,8 +1,14 @@
 // Run explicitly for each CMS instance while authenticated as the root user.
 // The credential is created in, and can read/write, one site database only.
 
+// mongosh exposes process.env through a host object whose dynamically indexed
+// values do not always behave like ordinary JavaScript strings. Snapshot it
+// before validation so every supported mongosh release follows the same path.
+const environment = { ...process.env };
+
 function requiredEnv(name, expression, description) {
-    const value = process.env[name]?.trim();
+    const raw = environment[name];
+    const value = typeof raw === "string" ? String(raw).trim() : "";
     if (!value || !expression.test(value)) {
         throw new Error(`${name} must be ${description}`);
     }
