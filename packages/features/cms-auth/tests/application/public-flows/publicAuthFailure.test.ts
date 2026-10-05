@@ -10,7 +10,7 @@ import {
 } from "@bernouy/cms-auth";
 
 describe("public auth mutation failure boundaries", () => {
-    test.failing("allows email verification to retry after the credential write fails", async () => {
+    test("allows email verification to retry after the credential write fails", async () => {
         const credentials = new InMemoryLocalCredentialStore();
         const tokens = new InMemoryAuthTokenStore();
         const identity = await credentials.create({
@@ -40,7 +40,7 @@ describe("public auth mutation failure boundaries", () => {
         expect((await credentials.getByEmail("verify@example.com"))?.emailVerifiedAt).toBeInstanceOf(Date);
     });
 
-    test.failing("allows password reset to retry after the password write fails", async () => {
+    test("allows password reset to retry after the password write fails", async () => {
         const credentials = new InMemoryLocalCredentialStore();
         const tokens = new InMemoryAuthTokenStore();
         const identity = await credentials.create({
@@ -80,6 +80,41 @@ describe("public auth mutation failure boundaries", () => {
         expect(await credentials.verify("reset@example.com", "new-password")).toMatchObject({
             sub: identity.sub,
         });
+    });
+
+    test("a finalize failure can resume only the exact password mutation", async () => {
+        const credentials = new InMemoryLocalCredentialStore();
+        const tokens = new InMemoryAuthTokenStore();
+        const identity = await credentials.create({
+            email: "finalize@example.com",
+            password: "old-password",
+        });
+        const { token } = await tokens.create({
+            purpose: "password_reset",
+            sub: identity.sub,
+            expiresAt: futureDate(),
+        });
+        const finalize = tokens.finalize.bind(tokens);
+        let failFinalize = true;
+        tokens.finalize = async (reservationId) => {
+            if (failFinalize) {
+                return null;
+            }
+            return finalize(reservationId);
+        };
+        const cfg = await flowConfig(credentials, tokens, identity);
+
+        await expect(confirmPasswordReset(cfg, { token, password: "new-password" })).rejects.toThrow(
+            "reservation expired",
+        );
+        expect(await credentials.verify("finalize@example.com", "new-password")).toMatchObject({ sub: identity.sub });
+        await expect(confirmPasswordReset(cfg, { token, password: "different-password" })).rejects.toThrow(
+            "invalid or expired",
+        );
+
+        failFinalize = false;
+        await expect(confirmPasswordReset(cfg, { token, password: "new-password" })).resolves.toBeUndefined();
+        expect(await tokens.consume("password_reset", token)).toBeNull();
     });
 });
 

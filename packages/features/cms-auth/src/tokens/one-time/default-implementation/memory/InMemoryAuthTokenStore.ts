@@ -2,12 +2,18 @@ import { randomUUIDv7 } from "bun";
 import type {
     AuthToken,
     AuthTokenPurpose,
+    AuthTokenReservation,
     AuthTokenStore,
     NewAuthToken,
 } from "cms-auth/tokens/one-time/interfaces/AuthTokenStore";
-import { hashAuthToken, mintAuthToken } from "cms-auth/tokens/one-time/core/authToken";
+import { hashAuthToken, hashAuthTokenReservation, mintAuthToken } from "cms-auth/tokens/one-time/core/authToken";
 
-type Record = AuthToken & { hash: string };
+type Record = AuthToken & {
+    hash: string;
+    reservationDigest?: string;
+    reservation?: { id: string; expiresAt: Date };
+};
+const RESERVATION_MS = 5 * 60 * 1_000;
 
 /**
  * In-memory auth token store for dev and tests. Stores only token hashes and
@@ -42,6 +48,11 @@ export class InMemoryAuthTokenStore implements AuthTokenStore {
     }
 
     async consume(purpose: AuthTokenPurpose, token: string): Promise<AuthToken | null> {
+        const reservation = await this.reserve(purpose, token, "compatibility-consume");
+        return reservation ? this.finalize(reservation.id) : null;
+    }
+
+    async reserve(purpose: AuthTokenPurpose, token: string, operation: string): Promise<AuthTokenReservation | null> {
         const id = this._idByHash.get(hashAuthToken(token));
         const record = id ? this._byId.get(id) : undefined;
         if (!record || record.purpose !== purpose || record.consumedAt) {
@@ -50,8 +61,40 @@ export class InMemoryAuthTokenStore implements AuthTokenStore {
         if (record.expiresAt.getTime() <= Date.now()) {
             return null;
         }
+        if (record.reservation && record.reservation.expiresAt.getTime() > Date.now()) {
+            return null;
+        }
+        const reservationDigest = hashAuthTokenReservation(token, purpose, operation);
+        if (record.reservationDigest && record.reservationDigest !== reservationDigest) {
+            return null;
+        }
+        const reservation = { id: randomUUIDv7(), expiresAt: new Date(Date.now() + RESERVATION_MS) };
+        record.reservationDigest = reservationDigest;
+        record.reservation = reservation;
+        return { ...reservation, authToken: strip(record) };
+    }
+
+    async finalize(reservationId: string): Promise<AuthToken | null> {
+        const record = [...this._byId.values()].find(
+            (candidate) =>
+                candidate.reservation?.id === reservationId && candidate.reservation.expiresAt.getTime() > Date.now(),
+        );
+        if (!record || record.consumedAt) {
+            return null;
+        }
         record.consumedAt = new Date();
+        delete record.reservation;
+        delete record.reservationDigest;
         return strip(record);
+    }
+
+    async release(reservationId: string): Promise<boolean> {
+        const record = [...this._byId.values()].find((candidate) => candidate.reservation?.id === reservationId);
+        if (!record || record.consumedAt) {
+            return false;
+        }
+        delete record.reservation;
+        return true;
     }
 
     async deleteForSub(sub: string, purpose?: AuthTokenPurpose): Promise<number> {
@@ -69,6 +112,6 @@ export class InMemoryAuthTokenStore implements AuthTokenStore {
 }
 
 function strip(record: Record): AuthToken {
-    const { hash: _hash, ...token } = record;
+    const { hash: _hash, reservation: _reservation, reservationDigest: _reservationDigest, ...token } = record;
     return { ...token };
 }

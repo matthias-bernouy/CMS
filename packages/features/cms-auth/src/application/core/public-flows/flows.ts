@@ -63,19 +63,15 @@ export async function requestEmailVerification(
 }
 
 export async function confirmEmailVerification(cfg: PublicAuthFlowConfig, input: { token: string }): Promise<void> {
-    const authToken = await cfg.tokens.consume("email_verification", requireToken(input.token));
-    if (!authToken) {
-        throw new AuthValidationError("token", "invalid or expired");
-    }
-    if (!(await hasActivatedMembership(cfg, authToken.sub))) {
-        throw new AuthValidationError("token", "invalid or expired");
-    }
-
-    const marked = await cfg.credentials.markEmailVerified(authToken.sub);
-    if (!marked) {
-        throw new AuthValidationError("token", "credential not found");
-    }
-    await cfg.tokens.deleteForSub(authToken.sub, "email_verification");
+    await withReservedToken(cfg, "email_verification", requireToken(input.token), "verify-email", async (sub) => {
+        if (!(await hasActivatedMembership(cfg, sub))) {
+            throw new AuthValidationError("token", "invalid or expired");
+        }
+        const marked = await cfg.credentials.markEmailVerified(sub);
+        if (!marked) {
+            throw new AuthValidationError("token", "credential not found");
+        }
+    });
 }
 
 export async function requestPasswordReset(
@@ -97,20 +93,39 @@ export async function confirmPasswordReset(
 ): Promise<void> {
     const token = requireToken(input.token);
     validatePassword(input.password);
-    const authToken = await cfg.tokens.consume("password_reset", token);
-    if (!authToken) {
-        throw new AuthValidationError("token", "invalid or expired");
-    }
-    if (!(await hasActivatedMembership(cfg, authToken.sub))) {
-        throw new AuthValidationError("token", "invalid or expired");
-    }
+    await withReservedToken(cfg, "password_reset", token, `set-password:${input.password}`, async (sub) => {
+        if (!(await hasActivatedMembership(cfg, sub))) {
+            throw new AuthValidationError("token", "invalid or expired");
+        }
+        const changed = await cfg.credentials.setPassword(sub, input.password);
+        if (!changed) {
+            throw new AuthValidationError("token", "credential not found");
+        }
+        await cfg.credentials.markEmailVerified(sub);
+    });
+}
 
-    const changed = await cfg.credentials.setPassword(authToken.sub, input.password);
-    if (!changed) {
-        throw new AuthValidationError("token", "credential not found");
+async function withReservedToken(
+    cfg: PublicAuthFlowConfig,
+    purpose: "email_verification" | "password_reset",
+    token: string,
+    operation: string,
+    mutate: (sub: string) => Promise<void>,
+): Promise<void> {
+    const reservation = await cfg.tokens.reserve(purpose, token, operation);
+    if (!reservation) {
+        throw new AuthValidationError("token", "invalid or expired");
     }
-    await cfg.credentials.markEmailVerified(authToken.sub);
-    await cfg.tokens.deleteForSub(authToken.sub, "password_reset");
+    try {
+        await mutate(reservation.authToken.sub);
+        if (!(await cfg.tokens.finalize(reservation.id))) {
+            throw new AuthValidationError("token", "reservation expired");
+        }
+    } catch (error) {
+        await cfg.tokens.release(reservation.id).catch(() => false);
+        throw error;
+    }
+    await cfg.tokens.deleteForSub(reservation.authToken.sub, purpose).catch(() => 0);
 }
 
 async function hasActivatedMembership(cfg: PublicAuthFlowConfig, credentialSub: string): Promise<boolean> {

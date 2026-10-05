@@ -3,14 +3,23 @@ import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import type {
     AuthToken,
     AuthTokenPurpose,
+    AuthTokenReservation,
     AuthTokenStore,
     NewAuthToken,
 } from "cms-auth/tokens/one-time/interfaces/AuthTokenStore";
-import { hashAuthToken, mintAuthToken } from "cms-auth/tokens/one-time/core/authToken";
+import { hashAuthToken, hashAuthTokenReservation, mintAuthToken } from "cms-auth/tokens/one-time/core/authToken";
 
 export type MongoAuthTokenConfig = { collectionPrefix?: string };
 
-type AuthTokenDoc = Omit<AuthToken, "id"> & { _id: string; hash: string };
+type AuthTokenDoc = Omit<AuthToken, "id"> & {
+    _id: string;
+    hash: string;
+    reservationDigest?: string;
+    reservationId?: string;
+    reservationExpiresAt?: Date;
+};
+
+const RESERVATION_MS = 5 * 60 * 1_000;
 
 /**
  * MongoDB auth token store. Tokens are single-use and persisted as SHA-256
@@ -30,6 +39,7 @@ export class MongoAuthTokenStore implements AuthTokenStore {
         await this.col.createIndex({ hash: 1 }, { unique: true });
         await this.col.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
         await this.col.createIndex({ sub: 1, purpose: 1, consumedAt: 1 });
+        await this.col.createIndex({ reservationExpiresAt: 1 });
     }
 
     private get col(): Collection<AuthTokenDoc> {
@@ -60,13 +70,55 @@ export class MongoAuthTokenStore implements AuthTokenStore {
     }
 
     async consume(purpose: AuthTokenPurpose, token: string): Promise<AuthToken | null> {
+        const reservation = await this.reserve(purpose, token, "compatibility-consume");
+        return reservation ? this.finalize(reservation.id) : null;
+    }
+
+    async reserve(purpose: AuthTokenPurpose, token: string, operation: string): Promise<AuthTokenReservation | null> {
+        const now = new Date();
+        const reservationId = randomUUIDv7();
+        const reservationExpiresAt = new Date(now.getTime() + RESERVATION_MS);
+        const reservationDigest = hashAuthTokenReservation(token, purpose, operation);
+        const doc = await this.col.findOneAndUpdate(
+            {
+                hash: hashAuthToken(token),
+                purpose,
+                consumedAt: null,
+                expiresAt: { $gt: now },
+                $and: [
+                    {
+                        $or: [{ reservationDigest: { $exists: false } }, { reservationDigest }],
+                    },
+                    {
+                        $or: [{ reservationId: { $exists: false } }, { reservationExpiresAt: { $lte: now } }],
+                    },
+                ],
+            },
+            { $set: { reservationId, reservationExpiresAt, reservationDigest } },
+            { returnDocument: "after" },
+        );
+        return doc ? { id: reservationId, authToken: fromDoc(doc), expiresAt: reservationExpiresAt } : null;
+    }
+
+    async finalize(reservationId: string): Promise<AuthToken | null> {
         const now = new Date();
         const doc = await this.col.findOneAndUpdate(
-            { hash: hashAuthToken(token), purpose, consumedAt: null, expiresAt: { $gt: now } },
-            { $set: { consumedAt: now } },
+            { reservationId, reservationExpiresAt: { $gt: now }, consumedAt: null },
+            {
+                $set: { consumedAt: now },
+                $unset: { reservationId: "", reservationExpiresAt: "", reservationDigest: "" },
+            },
             { returnDocument: "after" },
         );
         return doc ? fromDoc(doc) : null;
+    }
+
+    async release(reservationId: string): Promise<boolean> {
+        const result = await this.col.updateOne(
+            { reservationId, consumedAt: null },
+            { $unset: { reservationId: "", reservationExpiresAt: "" } },
+        );
+        return result.modifiedCount === 1;
     }
 
     async deleteForSub(sub: string, purpose?: AuthTokenPurpose): Promise<number> {
@@ -80,6 +132,13 @@ export class MongoAuthTokenStore implements AuthTokenStore {
 }
 
 function fromDoc(doc: AuthTokenDoc): AuthToken {
-    const { _id, hash: _hash, ...token } = doc;
+    const {
+        _id,
+        hash: _hash,
+        reservationId: _reservationId,
+        reservationExpiresAt: _reservationExpiresAt,
+        reservationDigest: _reservationDigest,
+        ...token
+    } = doc;
     return { ...token, id: _id };
 }

@@ -42,6 +42,21 @@ describe("InMemoryAuthTokenStore", () => {
         expect(await s.consume("email_verification", token)).not.toBeNull();
     });
 
+    test("one reservation excludes concurrent use and release makes the token retryable", async () => {
+        const s = store();
+        const { token } = await s.create({ purpose: "password_reset", sub: "local:u1", expiresAt: future() });
+
+        const reservation = await s.reserve("password_reset", token, "set-password:first");
+        expect(reservation?.authToken.sub).toBe("local:u1");
+        expect(await s.reserve("password_reset", token, "set-password:first")).toBeNull();
+        expect(await s.release(reservation!.id)).toBeTrue();
+        expect(await s.reserve("password_reset", token, "set-password:second")).toBeNull();
+
+        const retry = await s.reserve("password_reset", token, "set-password:first");
+        expect(await s.finalize(retry!.id)).toMatchObject({ sub: "local:u1", consumedAt: expect.any(Date) });
+        expect(await s.reserve("password_reset", token, "set-password:first")).toBeNull();
+    });
+
     test("expired or unknown tokens do not consume", async () => {
         const s = store();
         const { token } = await s.create({ purpose: "password_reset", sub: "local:u1", expiresAt: past() });
