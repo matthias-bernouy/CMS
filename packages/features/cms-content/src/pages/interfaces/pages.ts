@@ -1,3 +1,5 @@
+import type { PageDocument, PageSurface } from "@bernouy/cms-repository/collections";
+
 export type PageIndexingConfiguration = {
     /** Whether search engines may index this page or its discovered entity URLs. */
     enabled: boolean;
@@ -35,6 +37,10 @@ export type TPage = {
     id: string;
     /** Monotonic persistence revision used for optimistic concurrency and migration rollback safety. */
     revision: number;
+    /** Immutable execution and routing boundary. */
+    surface: PageSurface;
+    /** Informational provenance for a site-owned copy; never live inheritance. */
+    origin?: SitePageOrigin;
     /** Primary public path used by delivery and route lookups. */
     path: string;
     /** Local path per site language. Absent until the site has a default language. */
@@ -49,6 +55,24 @@ export type TPage = {
     /** Absent means that indexing has not been configured yet. */
     indexing?: PageIndexingConfiguration;
 };
+
+export type SitePageOrigin = {
+    readonly publisherId: string;
+    readonly collectionId: string;
+    readonly collectionVersion: string;
+    readonly collectionDigest: string;
+    readonly pageId: string;
+    readonly pageGeneration: number;
+};
+
+export type PageCreateOptions = {
+    readonly surface?: PageSurface;
+    readonly origin?: SitePageOrigin;
+};
+
+export function pageDocument(page: Pick<TPage, "content">): PageDocument {
+    return { html: page.content };
+}
 
 export type PageRoute = {
     path: string;

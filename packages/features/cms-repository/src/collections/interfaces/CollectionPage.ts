@@ -1,10 +1,15 @@
 import type { CollectionCapabilityRequirement, CollectionTranslationKey } from "./CollectionRelease";
 
-export type CollectionPageSurface = "control" | "delivery";
+/** Rendering and authorization boundary shared by collection and site Pages. */
+export type PageSurface = "control" | "delivery";
 
-export interface CollectionPageDocument {
+/** Surface-neutral authored Page document. */
+export interface PageDocument {
     readonly html: string;
 }
+
+export type CollectionPageSurface = PageSurface;
+export type CollectionPageDocument = PageDocument;
 
 /** One collection-owned document for exactly one rendering surface. */
 export interface CollectionPage {

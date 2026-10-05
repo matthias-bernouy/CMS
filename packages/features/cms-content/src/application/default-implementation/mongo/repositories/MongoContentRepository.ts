@@ -1,6 +1,6 @@
 import { randomUUIDv7 } from "bun";
 import type { PageLink } from "cms-content/application/interfaces/CmsRepository";
-import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
+import type { PageCreateOptions, PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 import { pagePathsForSystem, planPagePaths } from "cms-content/pages/core/lifecycle/pagePaths";
 import { publicPagePath } from "cms-content/pages/core/paths/localizedPagePath";
@@ -42,6 +42,7 @@ export class MongoContentRepository extends MongoBlocRepository {
     override async init(): Promise<void> {
         await super.init();
         await this.pages.updateMany({ revision: { $exists: false } }, { $set: { revision: 1 } });
+        await this.pages.updateMany({ surface: { $exists: false } }, { $set: { surface: "delivery" } });
         for (let attempt = 0; attempt < 20; attempt++) {
             const stored = await readSystemDocument(this.system);
             let revision = stored.settingsRevision ?? 0;
@@ -165,10 +166,11 @@ export class MongoContentRepository extends MongoBlocRepository {
         return documents.map((document) => fromPageDoc(document)!);
     }
 
-    async insertPage(path: string, title: string, content = "<p></p>"): Promise<void> {
+    async insertPage(path: string, title: string, content = "<p></p>", options: PageCreateOptions = {}): Promise<void> {
         return withPageRouteWrite(this.system, async (system) => {
+            const surface = options.surface ?? "delivery";
             const language = system.site.language;
-            const publicPath = publicPagePath(language, path, language);
+            const publicPath = surface === "delivery" ? publicPagePath(language, path, language) : path;
             const id = randomUUIDv7();
             try {
                 await this.pageRoutes.insertOne({
@@ -176,7 +178,7 @@ export class MongoContentRepository extends MongoBlocRepository {
                     state: "current",
                     pageId: id,
                     ownerPageId: id,
-                    language,
+                    language: surface === "delivery" ? language : "",
                     pageInsertToken: id,
                 });
             } catch (error) {
@@ -186,8 +188,10 @@ export class MongoContentRepository extends MongoBlocRepository {
                 await this.pages.insertOne({
                     _id: id,
                     revision: 1,
+                    surface,
+                    ...(options.origin ? { origin: structuredClone(options.origin) } : {}),
                     path: publicPath,
-                    ...(language ? { paths: { [language]: path } } : {}),
+                    ...(surface === "delivery" && language ? { paths: { [language]: path } } : {}),
                     title,
                     content,
                     description: "",
@@ -228,6 +232,12 @@ export class MongoContentRepository extends MongoBlocRepository {
             throw new PagePathUpdateConflictError();
         }
         const existing = fromPageDoc(stored)!;
+        if (rest.surface !== undefined && rest.surface !== existing.surface) {
+            throw new ContentValidationError("surface", "cannot change after Page creation");
+        }
+        if (rest.origin !== undefined) {
+            throw new ContentValidationError("origin", "cannot change after Page creation");
+        }
         if (expectedRevision !== undefined && existing.revision !== expectedRevision) {
             throw new PageRevisionConflictError(expectedRevision, existing.revision);
         }

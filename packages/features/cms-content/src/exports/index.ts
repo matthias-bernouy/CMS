@@ -26,7 +26,15 @@ export {
     isPresentationImageBytes,
     blocThumbnailFromSource,
 } from "cms-content/blocs/core/presentationImage";
-export type { PageIndexingConfiguration, PageRoute, TPage, TPageRef } from "cms-content/pages/interfaces/pages";
+export type {
+    PageCreateOptions,
+    PageIndexingConfiguration,
+    PageRoute,
+    SitePageOrigin,
+    TPage,
+    TPageRef,
+} from "cms-content/pages/interfaces/pages";
+export { pageDocument } from "cms-content/pages/interfaces/pages";
 export { languagePrefix, localPagePath, publicPagePath } from "cms-content/pages/core/paths/localizedPagePath";
 export { pageSeoForLanguage } from "cms-content/pages/core/lifecycle/pageSeo";
 export type {

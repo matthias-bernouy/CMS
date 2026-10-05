@@ -82,6 +82,7 @@ export function fromPageDoc(document: PageDoc | null): TPage | null {
         id: _id,
         ...rest,
         revision: Number.isSafeInteger(document.revision) ? document.revision : 1,
+        surface: document.surface ?? "delivery",
         visible: document.visible === true && !document.deletionIntent,
     };
 }

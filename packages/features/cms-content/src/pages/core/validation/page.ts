@@ -1,4 +1,4 @@
-import type { TPage } from "cms-content/pages/interfaces/pages";
+import type { PageCreateOptions, SitePageOrigin, TPage } from "cms-content/pages/interfaces/pages";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { isValidPathFormat } from "cms-content/application/core/validation/predicates";
 import { validatePageIndexingConfiguration } from "cms-content/pages/core/validation/indexing";
@@ -22,6 +22,36 @@ export function validatePagePath(value: string): string {
 /** Page title: required, ≤70, no control chars. */
 export function validatePageTitle(value: string): string {
     return validateLabel("title", value, 70);
+}
+
+export function validatePageCreateOptions(options: PageCreateOptions | undefined): PageCreateOptions | undefined {
+    if (!options) {
+        return undefined;
+    }
+    if (options.surface !== undefined && options.surface !== "control" && options.surface !== "delivery") {
+        throw new ContentValidationError("surface", "must be control or delivery");
+    }
+    return {
+        ...(options.surface ? { surface: options.surface } : {}),
+        ...(options.origin ? { origin: validatePageOrigin(options.origin) } : {}),
+    };
+}
+
+function validatePageOrigin(origin: SitePageOrigin): SitePageOrigin {
+    const identifier = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
+    const version = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u;
+    if (
+        !identifier.test(origin.publisherId) ||
+        !identifier.test(origin.collectionId) ||
+        !identifier.test(origin.pageId) ||
+        !version.test(origin.collectionVersion) ||
+        !/^sha256:[0-9a-f]{64}$/u.test(origin.collectionDigest) ||
+        !Number.isSafeInteger(origin.pageGeneration) ||
+        origin.pageGeneration < 1
+    ) {
+        throw new ContentValidationError("origin", "must identify one exact admitted collection Page");
+    }
+    return structuredClone(origin);
 }
 
 /**
@@ -62,6 +92,12 @@ export function validatePagePatch(page: Partial<TPage>): Partial<TPage> {
     }
     if (page.indexing !== undefined) {
         out.indexing = validatePageIndexingConfiguration(page.indexing);
+    }
+    if (page.surface !== undefined && page.surface !== "control" && page.surface !== "delivery") {
+        throw new ContentValidationError("surface", "must be control or delivery");
+    }
+    if (page.origin !== undefined) {
+        throw new ContentValidationError("origin", "cannot change after Page creation");
     }
     return out;
 }

@@ -34,6 +34,7 @@ function makeRequest(body: Record<string, unknown>) {
 const existingPage: TPage = {
     id: "page-1",
     revision: 1,
+    surface: "delivery",
     path: "/draft",
     title: "Draft",
     description: "draft desc",

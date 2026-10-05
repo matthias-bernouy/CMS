@@ -9,6 +9,8 @@ export function projectPublishedPage(page: TPage | null): TPage | null {
     return structuredClone({
         id: page.id,
         revision: page.revision,
+        surface: page.surface,
+        ...(page.origin ? { origin: page.origin } : {}),
         path: page.path,
         ...(page.paths ? { paths: page.paths } : {}),
         title: page.title,

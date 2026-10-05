@@ -14,12 +14,17 @@ import type {
     TBloc,
     TBlocWrite,
 } from "cms-content/blocs/interfaces/blocs";
-import type { TPage } from "cms-content/pages/interfaces/pages";
+import type { PageCreateOptions, TPage } from "cms-content/pages/interfaces/pages";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { planPagePaths } from "cms-content/pages/core/lifecycle/pagePaths";
 import { validateSiteBlocCollectionInput } from "cms-content/blocs/core/catalogue/siteBlocCollections";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
-import { validatePagePath, validatePageTitle, validatePagePatch } from "cms-content/pages/core/validation/page";
+import {
+    validatePageCreateOptions,
+    validatePagePath,
+    validatePageTitle,
+    validatePagePatch,
+} from "cms-content/pages/core/validation/page";
 import { assertContentRefsExist } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
 import { validateSettingsPatch } from "cms-content/settings/core/validation";
 import {
@@ -52,15 +57,16 @@ export class ValidatingCmsRepository implements CmsRepository {
         return this.inner.updateSiteBlocCollection(id, validateSiteBlocCollectionInput(input));
     }
     // ── Validated authored-content writes ─────────────────────────────────
-    async insertPage(path: string, title: string, content?: string): Promise<void> {
+    async insertPage(path: string, title: string, content?: string, options?: PageCreateOptions): Promise<void> {
         const validPath = validatePagePath(path);
         const validTitle = validatePageTitle(title);
+        const validOptions = validatePageCreateOptions(options);
         if (content === undefined) {
-            return this.inner.insertPage(validPath, validTitle);
+            return this.inner.insertPage(validPath, validTitle, undefined, validOptions);
         }
         const validContent = validatePagePatch({ content }).content!;
         await assertContentRefsExist(this.inner, validContent);
-        return this.inner.insertPage(validPath, validTitle, validContent);
+        return this.inner.insertPage(validPath, validTitle, validContent, validOptions);
     }
 
     async updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<TPage | null> {

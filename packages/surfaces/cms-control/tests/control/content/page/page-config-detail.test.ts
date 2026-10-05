@@ -27,6 +27,7 @@ const binding = `<main cms-source="/.cms/call/commerce/product.get" cms-source-m
 const page: TPage = {
     id: "page-1",
     revision: 1,
+    surface: "delivery",
     path: "/pricing",
     title: "Pricing",
     description: "Pricing page",

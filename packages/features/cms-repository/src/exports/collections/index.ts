@@ -17,6 +17,8 @@ export type {
     CollectionPage,
     CollectionPageDocument,
     CollectionPageSurface,
+    PageDocument,
+    PageSurface,
 } from "cms-repository/collections/interfaces/CollectionPage";
 export type {
     CollectionTheme,

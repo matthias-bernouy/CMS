@@ -1,6 +1,6 @@
 import { randomUUIDv7 } from "bun";
 import type { PageLink, PageMeta, PagesQuery } from "cms-content/application/interfaces/CmsRepository";
-import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
+import type { PageCreateOptions, PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 import { defaultSystem } from "cms-content/settings/core/system";
 import { filterAndSortPages } from "cms-content/pages/core/queries/pagesQuery";
@@ -66,18 +66,21 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         return (await this.getAllPages()).filter(isPublishedPage).map((page) => structuredClone(page));
     }
 
-    async insertPage(path: string, title: string, content = "<p></p>"): Promise<void> {
+    async insertPage(path: string, title: string, content = "<p></p>", options: PageCreateOptions = {}): Promise<void> {
         this.assertPageRoutesReady();
+        const surface = options.surface ?? "delivery";
         const language = this.system.site.language;
-        const publicPath = publicPagePath(language, path, language);
+        const publicPath = surface === "delivery" ? publicPagePath(language, path, language) : path;
         if (this.pageRoutes.has(publicPath) || this.pages.has(publicPath)) {
             throw new DuplicatePagePathError(publicPath);
         }
         const page: TPage = {
             id: randomUUIDv7(),
             revision: 1,
+            surface,
+            ...(options.origin ? { origin: structuredClone(options.origin) } : {}),
             path: publicPath,
-            ...(language ? { paths: { [language]: path } } : {}),
+            ...(surface === "delivery" && language ? { paths: { [language]: path } } : {}),
             title,
             content,
             description: "",
@@ -91,7 +94,7 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
             state: "current",
             pageId: page.id,
             ownerPageId: page.id,
-            language,
+            language: surface === "delivery" ? language : "",
         });
     }
 
@@ -111,6 +114,12 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         let current = entry[1];
         if (expectedRevision !== undefined && current.revision !== expectedRevision) {
             throw new PageRevisionConflictError(expectedRevision, current.revision);
+        }
+        if (page.surface !== undefined && page.surface !== current.surface) {
+            throw new ContentValidationError("surface", "cannot change after Page creation");
+        }
+        if (page.origin !== undefined) {
+            throw new ContentValidationError("origin", "cannot change after Page creation");
         }
         if (page.path && page.path !== current.path) {
             const language = this.system.site.language;

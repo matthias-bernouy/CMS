@@ -7,7 +7,7 @@ import type {
     TBloc,
     TBlocWrite,
 } from "cms-content/blocs/interfaces/blocs";
-import type { PageRoute, TPage } from "cms-content/pages/interfaces/pages";
+import type { PageCreateOptions, PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 
 export type BlocListItemResponse = {
@@ -116,7 +116,7 @@ export interface CmsRepository {
     getPublishedPages(): Promise<TPage[]>;
     /** Editorial route record access. Public consumers use `resolvePublishedRoute`. */
     getPageRoute(path: string): Promise<PageRoute | null>;
-    insertPage(path: string, title: string, content?: string): Promise<void>;
+    insertPage(path: string, title: string, content?: string, options?: PageCreateOptions): Promise<void>;
     updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<TPage | null>;
     deletePage(id: string, expectedRevision?: number): Promise<void>;
     setPagePaths?(
