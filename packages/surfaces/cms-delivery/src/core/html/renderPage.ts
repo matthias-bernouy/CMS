@@ -1,12 +1,9 @@
-import { renderCollectionTexts } from "@bernouy/cms-content/rendering";
+import { pageDocument, renderPageDocument } from "@bernouy/cms-content/rendering";
 import { parseHTML } from "linkedom";
 import type { TPage } from "@bernouy/cms-content/rendering";
 import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
-import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/bindings";
-import { expandCompositions, sanitizeDomTree, wrapBindingCore } from "@bernouy/cms-content/rendering";
 import { injectMediaVersions } from "@bernouy/cms-content/files/serving";
-import { createBlocUsageResolver } from "@bernouy/cms-content/rendering";
 import { prepareNetworkInertBindings } from "@bernouy/components/binding-dom";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
 import { buildMetaCsp } from "cms-delivery/core/head/buildMetaCsp";
@@ -51,37 +48,18 @@ export async function renderPage(
         : storedSettings;
     const metadata = resolvePageMetadata(page, settings, runtimeMetadata);
 
-    const composed = wrapBindingCore(page.content);
-
-    document.body.innerHTML = composed;
-    // Authoritative stored-XSS guard at the actual innerHTML sink: strip
-    // scripts / on* handlers / dangerous URL schemes from the parsed tree
-    // before this HTML reaches a public visitor, whatever path stored it.
-    sanitizeDomTree(document.body);
-    const blocList = await ctx.repository.getRenderableBlocs();
-    expandCompositions(document.body, blocList);
-    renderCollectionTexts(
-        document.body,
-        settings.site.language || "en",
-        ctx.repository.getCollectionTexts ? await ctx.repository.getCollectionTexts() : (ctx.collectionTexts ?? []),
-    );
-    if (ctx.resolveCollectionAssets) {
-        document.body.innerHTML = await ctx.resolveCollectionAssets(document.body.innerHTML);
-    }
-    sanitizeDomTree(document.body);
-    // A browser may fetch an interpolated img src before the deferred binding
-    // runtime executes. Keep only dynamic network attributes inert; static
-    // media stays native and remains eligible for server-side optimization.
-    prepareNetworkInertBindings(document.body);
-
-    const renderedContent = document.body.innerHTML;
-    const resolvedTags = await createBlocUsageResolver(blocList, ctx.repository)(renderedContent);
-    const viewEntries = await Promise.all(
-        resolvedTags.map(async (tag) => ({ tag, viewJS: await ctx.repository.getBlocViewJS(tag) })),
-    );
-    const usedTags = viewEntries.filter((entry) => !!entry.viewJS).map((entry) => entry.tag);
+    const rendered = await renderPageDocument(document.body, pageDocument(page), {
+        repository: ctx.repository,
+        language: settings.site.language || "en",
+        collectionTexts: ctx.collectionTexts,
+        resolveCollectionAssets: ctx.resolveCollectionAssets,
+        // A browser may fetch an interpolated img src before the deferred
+        // binding runtime executes. Keep those network attributes inert.
+        prepareBody: prepareNetworkInertBindings,
+    });
+    const usedTags = [...rendered.usedTags];
     const assets = await ctx.resolveAssets(usedTags);
-    const hasBindingCore = document.querySelector(CMS_BINDING_CORE_TAG) !== null;
+    const hasBindingCore = rendered.hasBindingCore;
 
     // Whitelist asset hosts in CSP. When the build pipeline pre-uploads CSS
     // / JS to a public CDN whose host differs from the page's serving host
