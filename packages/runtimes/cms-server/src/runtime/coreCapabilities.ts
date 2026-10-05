@@ -1,5 +1,12 @@
 import { timingSafeEqual } from "node:crypto";
-import { listCmsPages, type CmsRepository } from "@bernouy/cms-content";
+import {
+    CmsPageNotFoundError,
+    ContentValidationError,
+    listCmsPages,
+    PageRevisionConflictError,
+    renameCmsPage,
+    type CmsRepository,
+} from "@bernouy/cms-content";
 import type { Runner } from "@bernouy/http-runner";
 import { readBoundedRequestBody, RequestBodyTooLargeError } from "@bernouy/http-runner";
 import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
@@ -21,17 +28,44 @@ export function mountLocalCoreCapabilities(runner: Runner, repository: CmsReposi
         try {
             const bytes = await readBoundedRequestBody(request, MAX_INPUT_BYTES);
             const call = parseCall(parseStrictJson(bytes, MAX_INPUT_BYTES, 8));
-            if (call.contractId !== "ulvia.cms.pages" || call.capabilityId !== "list") {
+            if (call.contractId !== "ulvia.cms.pages") {
                 return new Response(null, { status: 404 });
             }
-            return Response.json(await listCmsPages(repository, call.input), {
-                headers: { "Cache-Control": "no-store" },
-            });
+            if (call.capabilityId === "list") {
+                return noStoreJson(await listCmsPages(repository, call.input));
+            }
+            if (call.capabilityId === "rename") {
+                try {
+                    return noStoreJson(
+                        await renameCmsPage(repository, call.input as unknown as Parameters<typeof renameCmsPage>[1]),
+                    );
+                } catch (error) {
+                    if (error instanceof CmsPageNotFoundError) {
+                        return coreError("NOT_FOUND", 404);
+                    }
+                    if (error instanceof PageRevisionConflictError) {
+                        return coreError("REVISION_CONFLICT", 409);
+                    }
+                    if (error instanceof ContentValidationError) {
+                        return coreError("INVALID_TITLE", 422);
+                    }
+                    throw error;
+                }
+            }
+            return new Response(null, { status: 404 });
         } catch (error) {
             const status = error instanceof RequestBodyTooLargeError ? 413 : 400;
             return new Response(null, { status, headers: { "Cache-Control": "no-store" } });
         }
     });
+}
+
+function noStoreJson(value: unknown): Response {
+    return Response.json(value, { headers: { "Cache-Control": "no-store" } });
+}
+
+function coreError(code: string, status: number): Response {
+    return Response.json({ error: { code } }, { status, headers: { "Cache-Control": "no-store" } });
 }
 
 type CoreCapabilityCall = {

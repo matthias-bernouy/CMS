@@ -12,11 +12,14 @@ const TAGS = new Set([
     "button",
     "div",
     "em",
+    "form",
     "h1",
     "h2",
     "h3",
     "h4",
     "header",
+    "input",
+    "label",
     "li",
     "main",
     "nav",
@@ -34,17 +37,52 @@ const ATTRIBUTES = new Set([
     "role",
     "aria-label",
     "aria-live",
+    "autocomplete",
+    "disabled",
+    "for",
     "hidden",
+    "maxlength",
+    "name",
+    "placeholder",
+    "readonly",
+    "required",
     "type",
+    "value",
     "cms-condition",
+    "cms-form-empty",
+    "cms-form-value-type",
     "cms-repeat",
     "cms-source",
     "cms-source-body",
     "cms-source-id",
     "cms-source-method",
+    "cms-source-serialization",
+    "cms-source-success-reload",
+    "cms-source-success-reset",
+    "cms-source-trigger",
 ]);
 const IDENTIFIER = "[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*";
 const CUSTOM_ATTRIBUTE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
+const CONTROL_CHARACTER = /[\u0000-\u001F\u007F]/u;
+const FORM_NAME = /^[A-Za-z_][A-Za-z0-9_.:-]{0,127}$/u;
+const SOURCE_RELOAD = /^#[A-Za-z][A-Za-z0-9_.:-]{0,127}$/u;
+const INPUT_TYPES = new Set([
+    "checkbox",
+    "date",
+    "datetime-local",
+    "email",
+    "hidden",
+    "month",
+    "number",
+    "password",
+    "radio",
+    "search",
+    "tel",
+    "text",
+    "time",
+    "url",
+    "week",
+]);
 const SOURCE = new RegExp(
     `^/\\.cms/call/(?<contract>${IDENTIFIER})/(?<capability>${IDENTIFIER})(?: as [A-Za-z_$][\\w$]*)?$`,
     "u",
@@ -122,6 +160,9 @@ function validateAttributes(
     path: string,
 ): void {
     for (const [name, value] of Object.entries(attributes)) {
+        if (CONTROL_CHARACTER.test(value)) {
+            invalid(`Page attribute ${name} contains control characters`, path);
+        }
         const customBlocAttribute =
             blocIds.has(tag) &&
             CUSTOM_ATTRIBUTE.test(name) &&
@@ -130,8 +171,14 @@ function validateAttributes(
         if (!ATTRIBUTES.has(name) && !name.startsWith("aria-") && name !== "slot" && !customBlocAttribute) {
             invalid(`unsupported Page attribute ${name}`, path);
         }
-        if (name === "type" && tag === "button" && value !== "button") {
-            invalid("Page buttons must be inert", path);
+        if (name === "type" && tag === "button" && value !== "button" && value !== "submit") {
+            invalid("Page buttons must be buttons or controlled form submitters", path);
+        }
+        if (name === "type" && tag === "input" && !INPUT_TYPES.has(value)) {
+            invalid("Page input type is not controlled", path);
+        }
+        if (name === "name" && !FORM_NAME.test(value)) {
+            invalid("Page form control name is invalid", path);
         }
         if (name === "cms-source") {
             const match = SOURCE.exec(value);
@@ -146,9 +193,38 @@ function validateAttributes(
         if (name === "cms-source-body" && !isJsonObject(value)) {
             invalid("Page source body must be a JSON object", path);
         }
+        if (name === "cms-source-trigger" && !["auto", "submit", "change"].includes(value)) {
+            invalid("Page source trigger is not controlled", path);
+        }
+        if (name === "cms-source-serialization" && value !== "typed-json") {
+            invalid("Page source serialization must be typed-json", path);
+        }
+        if (name === "cms-source-success-reload" && !SOURCE_RELOAD.test(value)) {
+            invalid("Page source success reload must identify one source by #id", path);
+        }
+        if (name === "cms-source-success-reset" && value !== "true" && value !== "false") {
+            invalid("Page source reset behavior must be true or false", path);
+        }
+        if (name === "cms-form-value-type" && !["string", "number", "boolean"].includes(value)) {
+            invalid("Page form value type is not controlled", path);
+        }
+        if (name === "cms-form-empty" && value !== "null" && value !== "omit") {
+            invalid("Page form empty behavior is not controlled", path);
+        }
     }
     if (attributes["cms-source"] && attributes["cms-source-method"]?.toUpperCase() !== "POST") {
         invalid("Page capability sources must declare POST", path);
+    }
+    if (tag === "form" && attributes["cms-source"]) {
+        if (attributes["cms-source-trigger"] !== "submit" && attributes["cms-source-trigger"] !== "change") {
+            invalid("Page capability forms must declare a submit or change trigger", path);
+        }
+    }
+    if (tag !== "form" && attributes["cms-source-success-reload"] !== undefined) {
+        invalid("Page source success reload requires a form", path);
+    }
+    if (!attributes["cms-source"] && attributes["cms-source-trigger"] !== undefined) {
+        invalid("Page source trigger requires a capability source", path);
     }
 }
 

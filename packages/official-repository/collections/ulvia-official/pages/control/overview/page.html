@@ -11,7 +11,7 @@
     <ulvia-official-page-shell slot="content" width="xl">
         <div slot="title"><h1>Pages</h1></div>
         <div slot="description"><p>All site Pages, loaded through the selected local Core provider.</p></div>
-        <section slot="content" cms-source="/.cms/call/ulvia.cms.pages/list as pages" cms-source-method="POST" cms-source-body="{&quot;limit&quot;:100}">
+        <section id="pages-list" slot="content" cms-source="/.cms/call/ulvia.cms.pages/list as pages" cms-source-method="POST" cms-source-body="{&quot;limit&quot;:100}">
             <div role="status" aria-live="polite" cms-condition="$source.loading">
                 <h2>Loading Pages</h2>
                 <p>The collection is asking the provider for the current Page catalogue.</p>
@@ -27,9 +27,26 @@
                 </header>
                 <ul cms-condition="pages.items.length">
                     <li cms-repeat="pages.items as page">
-                        <strong>{{ page.title }}</strong>
-                        <span>{{ page.path }}</span>
-                        <small>{{ page.surface }}</small>
+                        <header>
+                            <strong>{{ page.title }}</strong>
+                            <span>{{ page.path }}</span>
+                            <small>{{ page.surface }}</small>
+                        </header>
+                        <form cms-source="/.cms/call/ulvia.cms.pages/rename" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#pages-list">
+                            <input type="hidden" name="id" value="{{ page.id }}">
+                            <input type="hidden" name="expectedRevision" value="{{ page.revision }}" cms-form-value-type="number">
+                            <ulvia-official-field label-position="top">
+                                <span slot="label">Page title</span>
+                                <ulvia-official-input slot="control">
+                                    <input type="text" name="title" value="{{ page.title }}" maxlength="70" autocomplete="off" aria-label="Page title" required>
+                                </ulvia-official-input>
+                            </ulvia-official-field>
+                            <ulvia-official-action variant="filled" tone="primary" size="sm">
+                                <button type="submit">Save title</button>
+                            </ulvia-official-action>
+                            <p role="status" aria-live="polite" cms-condition="$source.loading">Saving…</p>
+                            <p role="alert" cms-condition="$source.error">The title was not saved. Reload the catalogue and try again.</p>
+                        </form>
                     </li>
                 </ul>
                 <div cms-condition="pages.items.length == 0">

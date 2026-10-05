@@ -68,6 +68,25 @@ test("collection Pages derive capability and resource references from their docu
     ).toThrow(/unknown collection text/);
 });
 
+test("collection Pages admit typed capability forms without browser-owned actions", () => {
+    const source = collectionDocument({ "page.overview.name": "Overview" });
+    const mutation = {
+        ...page,
+        requires: [{ contractId: "catalog.items", capabilityId: "item.rename", versionRange: "^1.0.0" }],
+        document: {
+            html: '<form cms-source="/.cms/call/catalog.items/item.rename" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#catalog"><label for="title">Title</label><input id="title" type="text" name="title" required><input type="hidden" name="expectedRevision" value="1" cms-form-value-type="number"><button type="submit">Save</button></form>',
+        },
+    };
+    expect(() => parseCollectionRelease({ ...source, pages: [mutation] })).not.toThrow();
+    for (const html of [
+        mutation.document.html.replace('cms-source-trigger="submit"', 'action="https://example.com"'),
+        mutation.document.html.replace('cms-source-trigger="submit"', 'cms-source-trigger="auto"'),
+        mutation.document.html.replace('cms-form-value-type="number"', 'cms-form-value-type="object"'),
+    ]) {
+        expect(() => parseCollectionRelease({ ...source, pages: [{ ...mutation, document: { html } }] })).toThrow();
+    }
+});
+
 test("collection Pages reject executable or unbounded markup", () => {
     const source = collectionDocument({ "page.overview.name": "Overview" });
     for (const html of [

@@ -54,6 +54,15 @@ test("Control mounts a separate capability route with verified administrator ide
         siteId: "site-a",
         actor: { kind: "administrator", subjectId: "cms-admin-1" },
     });
+    const crossSite = await handler!(
+        new Request("http://control/.cms/call/catalog/item.list", {
+            method: "POST",
+            headers: { "content-type": "application/json", referer: "https://attacker.example/admin" },
+            body: "{}",
+        }),
+    );
+    expect(crossSite.status).toBe(403);
+    expect(calls).toHaveLength(1);
 });
 
 test("Control refuses unauthenticated capability calls before invocation", async () => {

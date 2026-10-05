@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { HttpOfficialCoreCapabilities } from "@bernouy/ulvia-official-provider";
+import { HttpOfficialCoreCapabilities, OfficialCoreCapabilityError } from "@bernouy/ulvia-official-provider";
 
 describe("HttpOfficialCoreCapabilities", () => {
     test("forwards only a bounded generic call to the selected loopback Core", async () => {
@@ -24,5 +24,17 @@ describe("HttpOfficialCoreCapabilities", () => {
         expect(
             () => new HttpOfficialCoreCapabilities("https://core.example.com/call", "core-provider-secret-token"),
         ).toThrow(/loopback/);
+    });
+
+    test("preserves bounded declared Core errors", async () => {
+        const client = new HttpOfficialCoreCapabilities(
+            "http://127.0.0.1:5100/.cms/internal/core-call",
+            "core-provider-secret-token",
+            (async () => Response.json({ error: { code: "REVISION_CONFLICT" } }, { status: 409 })) as typeof fetch,
+        );
+
+        await expect(client.invoke("ulvia.cms.pages", "rename", {})).rejects.toEqual(
+            new OfficialCoreCapabilityError("REVISION_CONFLICT", 409),
+        );
     });
 });

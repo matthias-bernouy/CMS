@@ -35,8 +35,11 @@ test("the CMS Pages Core contract and conformance suite are fully admitted", asy
     expect(release.release).toMatchObject({
         contractId: "ulvia.cms.pages",
         version: "1.0.0",
-        capabilities: [{ id: "list", access: "admin" }],
     });
+    expect(release.release.capabilities.map(({ id, access }) => ({ id, access }))).toEqual([
+        { id: "list", access: "admin" },
+        { id: "rename", access: "admin" },
+    ]);
     expect(coverage.capabilities.every((capability) => !capability.missingSuccessAssertion)).toBe(true);
     expect(coverage.capabilities.every((capability) => capability.missingErrorCodes.length === 0)).toBe(true);
 });

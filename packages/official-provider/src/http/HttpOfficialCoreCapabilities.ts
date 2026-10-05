@@ -1,5 +1,5 @@
 import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
-import type { OfficialCoreCapabilities } from "../core/coreCapabilities";
+import { OfficialCoreCapabilityError, type OfficialCoreCapabilities } from "../core/coreCapabilities";
 
 const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 
@@ -39,13 +39,33 @@ export class HttpOfficialCoreCapabilities implements OfficialCoreCapabilities {
             },
             body: JSON.stringify({ contractId, capabilityId, input }),
         });
-        if (response.status !== 200 || response.headers.get("content-type")?.split(";", 1)[0] !== "application/json") {
+        if (response.headers.get("content-type")?.split(";", 1)[0] !== "application/json") {
             await response.body?.cancel();
             throw new Error("The selected local Core rejected the capability call.");
         }
         const bytes = await readBoundedResponse(response, MAX_RESPONSE_BYTES);
-        return parseStrictJson(bytes, MAX_RESPONSE_BYTES, 32);
+        const output = parseStrictJson(bytes, MAX_RESPONSE_BYTES, 32);
+        if (response.status === 200) {
+            return output;
+        }
+        const code = coreErrorCode(output);
+        if (!code || ![400, 404, 409, 422, 503].includes(response.status)) {
+            throw new Error("The selected local Core returned an invalid capability error.");
+        }
+        throw new OfficialCoreCapabilityError(code, response.status);
     }
+}
+
+function coreErrorCode(value: unknown): string | null {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return null;
+    }
+    const error = (value as Record<string, unknown>).error;
+    if (!error || typeof error !== "object" || Array.isArray(error)) {
+        return null;
+    }
+    const code = (error as Record<string, unknown>).code;
+    return typeof code === "string" && /^[A-Z][A-Z0-9_]{1,63}$/u.test(code) ? code : null;
 }
 
 async function readBoundedResponse(response: Response, limit: number): Promise<Uint8Array> {

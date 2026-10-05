@@ -20,6 +20,18 @@ describe("local provider Core capability bridge", () => {
         });
         expect(response.status).toBe(200);
         expect(await response.json()).toMatchObject({ items: [{ title: "Home", surface: "delivery" }] });
+
+        const [page] = await repository.getAllPages();
+        const renamed = await request({
+            headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+            body: JSON.stringify({
+                contractId: "ulvia.cms.pages",
+                capabilityId: "rename",
+                input: { id: page!.id, title: "Renamed", expectedRevision: page!.revision },
+            }),
+        });
+        expect(renamed.status).toBe(200);
+        expect(await renamed.json()).toMatchObject({ id: page!.id, title: "Renamed", revision: page!.revision + 1 });
     });
 
     test("rejects unknown capabilities and oversized inputs", async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryCmsRepository, listCmsPages } from "@bernouy/cms-content";
+import { InMemoryCmsRepository, listCmsPages, PageRevisionConflictError, renameCmsPage } from "@bernouy/cms-content";
 
 describe("ulvia.cms.pages/list implementation", () => {
     test("projects bounded, cursor-based Page metadata across both surfaces", async () => {
@@ -20,5 +20,38 @@ describe("ulvia.cms.pages/list implementation", () => {
         const repository = new InMemoryCmsRepository();
         await expect(listCmsPages(repository, { limit: 101 })).rejects.toThrow(TypeError);
         await expect(listCmsPages(repository, { cursor: "", limit: 1 })).rejects.toThrow(TypeError);
+    });
+});
+
+describe("ulvia.cms.pages/rename implementation", () => {
+    test("renames with optimistic concurrency and makes an exact retry naturally idempotent", async () => {
+        const repository = new InMemoryCmsRepository();
+        await repository.insertPage("/public", "Before");
+        const [page] = await repository.getAllPages();
+
+        const renamed = await renameCmsPage(repository, {
+            id: page!.id,
+            title: "After",
+            expectedRevision: page!.revision,
+        });
+        const retried = await renameCmsPage(repository, {
+            id: page!.id,
+            title: "After",
+            expectedRevision: page!.revision,
+        });
+
+        expect(renamed).toEqual(retried);
+        expect(renamed).toMatchObject({ title: "After", revision: page!.revision + 1 });
+    });
+
+    test("rejects a stale revision that does not describe the completed command", async () => {
+        const repository = new InMemoryCmsRepository();
+        await repository.insertPage("/public", "Before");
+        const [page] = await repository.getAllPages();
+        await renameCmsPage(repository, { id: page!.id, title: "First", expectedRevision: page!.revision });
+
+        await expect(
+            renameCmsPage(repository, { id: page!.id, title: "Different", expectedRevision: page!.revision }),
+        ).rejects.toBeInstanceOf(PageRevisionConflictError);
     });
 });

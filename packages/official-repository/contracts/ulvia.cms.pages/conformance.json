@@ -3,7 +3,7 @@
     "protocol": "ulvia-conformance/v1",
     "contractId": "ulvia.cms.pages",
     "contractVersion": "1.0.0",
-    "contractDigest": "sha256:82094231c25bf53b871e63fb8f31a2c3fb6b08731a25c52e102212130f716f90",
+    "contractDigest": "sha256:c498f092b01677e493f81a49977e295d6894c8eb10f89aa9809b1202d1b6ef1e",
     "publisherId": "ulvia.official",
     "version": "1.0.0",
     "isolation": "disposable-tenant",
@@ -29,6 +29,30 @@
             "capabilityId": "list",
             "errorCode": "CORE_UNAVAILABLE",
             "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "rename",
+            "errorCode": "NOT_FOUND",
+            "reason": "The disposable suite cannot require a stable unknown Page identifier from every Core implementation."
+        },
+        {
+            "capabilityId": "rename",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The disposable suite does not prescribe concurrent mutation scheduling."
+        },
+        {
+            "capabilityId": "rename",
+            "errorCode": "INVALID_TITLE",
+            "reason": "Core title normalization is stricter than the provider-neutral string schema."
+        },
+        {
+            "capabilityId": "rename",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "rename",
+            "reason": "Mutation requires a suite-owned Page fixture and revision, which this read-only official smoke suite does not create yet."
         }
     ]
 }

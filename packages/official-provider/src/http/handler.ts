@@ -6,7 +6,7 @@ import type { UlviaScalarSchema } from "@bernouy/cms-repository/contracts/schema
 import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
 import type { OfficialCmsInstanceDiscovery } from "../core/InstanceDiscovery";
-import type { OfficialCoreCapabilities } from "../core/coreCapabilities";
+import { OfficialCoreCapabilityError, type OfficialCoreCapabilities } from "../core/coreCapabilities";
 import type { OfficialSubmissionStore } from "../core/submissions";
 
 const ITEMS = Object.freeze([
@@ -85,6 +85,37 @@ export function createOfficialProviderHandler(options: {
                 return error("CORE_UNAVAILABLE", 503);
             }
         }
+        if (request.method === "PATCH" && path.startsWith("/v1/cms/pages/")) {
+            const id = pathParameter(path, "/v1/cms/pages/", 200);
+            if (!id) {
+                return new Response(null, { status: 400 });
+            }
+            let input: Readonly<Record<string, unknown>>;
+            try {
+                const body = parseStrictJson(await readBody(request, 8192), 8192, 8);
+                if (!body || typeof body !== "object" || Array.isArray(body)) {
+                    return new Response(null, { status: 400 });
+                }
+                input = { ...(body as Record<string, unknown>), id };
+                validateSchemaValue(capabilities.pageRename.input, input);
+            } catch {
+                return new Response(null, { status: 400 });
+            }
+            try {
+                const output = await options.core.invoke("ulvia.cms.pages", "rename", input);
+                validateSchemaValue(capabilities.pageRename.output, output);
+                return Response.json(output, { headers: { "Cache-Control": "no-store" } });
+            } catch (coreError) {
+                if (
+                    coreError instanceof OfficialCoreCapabilityError &&
+                    ["NOT_FOUND", "REVISION_CONFLICT", "INVALID_TITLE"].includes(coreError.code) &&
+                    capabilities.pageRename.binding.response.errorStatuses[coreError.code] === coreError.status
+                ) {
+                    return error(coreError.code, coreError.status);
+                }
+                return error("CORE_UNAVAILABLE", 503);
+            }
+        }
         if (request.method === "GET" && path === "/v1/catalog/items") {
             const output = { items: ITEMS };
             validateSchemaValue(capabilities.itemList.output, output);
@@ -143,6 +174,7 @@ function resolveCapabilities(contracts: OfficialProviderContracts): {
     instanceCurrent: CapabilityDefinition;
     assetRead: CapabilityDefinition;
     pageList: CapabilityDefinition;
+    pageRename: CapabilityDefinition;
 } {
     assertContract(contracts.catalog, "catalog.items");
     assertContract(contracts.forms, "forms.submissions");
@@ -161,6 +193,7 @@ function resolveCapabilities(contracts: OfficialProviderContracts): {
         instanceList: requiredCapability(contracts.instances, "list"),
         instanceCurrent: requiredCapability(contracts.instances, "get-current"),
         pageList: requiredCapability(contracts.pages, "list"),
+        pageRename: requiredCapability(contracts.pages, "rename"),
         assetRead,
     };
 }

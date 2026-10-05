@@ -41,6 +41,11 @@ export {
     type CmsPagesListInput,
     type CmsPagesListOutput,
 } from "cms-content/pages/core/contracts/listPages";
+export {
+    CmsPageNotFoundError,
+    renameCmsPage,
+    type CmsPageRenameInput,
+} from "cms-content/pages/core/contracts/renamePage";
 export type {
     PageLinkTarget,
     PageReference,

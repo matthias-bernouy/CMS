@@ -4,7 +4,11 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
-import { createOfficialProviderHandler, OfficialCmsInstanceDiscovery } from "@bernouy/ulvia-official-provider";
+import {
+    createOfficialProviderHandler,
+    OfficialCmsInstanceDiscovery,
+    OfficialCoreCapabilityError,
+} from "@bernouy/ulvia-official-provider";
 import { FileInstanceRegistry, FileSubmissionStore } from "@bernouy/ulvia-official-provider/local-fs";
 
 async function contracts() {
@@ -58,6 +62,24 @@ test("the official provider accepts canonical gateway paths and declared error e
             contracts: await contracts(),
             core: {
                 async invoke(contractId, capabilityId, input) {
+                    if (capabilityId === "rename") {
+                        if (input.title === "Stale") {
+                            throw new OfficialCoreCapabilityError("REVISION_CONFLICT", 409);
+                        }
+                        expect({ contractId, capabilityId, input }).toEqual({
+                            contractId: "ulvia.cms.pages",
+                            capabilityId: "rename",
+                            input: { id: "page-1", title: "Renamed", expectedRevision: 1 },
+                        });
+                        return {
+                            id: "page-1",
+                            revision: 2,
+                            surface: "delivery",
+                            path: "/",
+                            title: "Renamed",
+                            visible: true,
+                        };
+                    }
                     expect({ contractId, capabilityId, input }).toEqual({
                         contractId: "ulvia.cms.pages",
                         capabilityId: "list",
@@ -108,6 +130,18 @@ test("the official provider accepts canonical gateway paths and declared error e
         const pages = await request("/v1/cms/pages?limit=1");
         expect(pages.status).toBe(200);
         expect((await pages.json()).items[0]).toMatchObject({ id: "page-1", surface: "delivery" });
+        const renamed = await request(`/v1/cms/pages/${encodeURIComponent(JSON.stringify("page-1"))}`, {
+            method: "PATCH",
+            body: JSON.stringify({ title: "Renamed", expectedRevision: 1 }),
+        });
+        expect(renamed.status).toBe(200);
+        expect(await renamed.json()).toMatchObject({ id: "page-1", title: "Renamed", revision: 2 });
+        const conflict = await request(`/v1/cms/pages/${encodeURIComponent(JSON.stringify("page-1"))}`, {
+            method: "PATCH",
+            body: JSON.stringify({ title: "Stale", expectedRevision: 1 }),
+        });
+        expect(conflict.status).toBe(409);
+        expect(await conflict.json()).toEqual({ error: { code: "REVISION_CONFLICT" } });
         const catalog = await request("/v1/catalog/items");
         expect(await catalog.json()).toEqual({
             items: [
