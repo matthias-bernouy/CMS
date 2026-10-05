@@ -100,6 +100,27 @@ test("the provider registry rejects corrupt state and Core advertisements of pro
     }
 });
 
+test("the provider registry accepts only credential-free numeric loopback probes", async () => {
+    const root = await mkdtemp(join(tmpdir(), "ulvia-provider-probe-"));
+    const discovery = new OfficialCmsInstanceDiscovery(
+        new FileInstanceRegistry(join(root, "registry.json")),
+        "default",
+        async () => true,
+    );
+    try {
+        for (const healthUrl of [
+            "http://localhost:5100/",
+            "http://user:secret@127.0.0.1:5100/",
+            "http://127.0.0.1:5100/?token=secret",
+            "http://127.0.0.1:5100/#private",
+        ]) {
+            expect(() => discovery.registerCurrent({ ...registration, healthUrl })).toThrow("loopback HTTP");
+        }
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
+});
+
 test("instance listing uses bounded opaque cursors without duplicates", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-provider-pages-"));
     const registry = new FileInstanceRegistry(join(root, "registry.json"));

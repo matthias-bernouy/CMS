@@ -60,7 +60,14 @@ export function validateRegistration(input: OfficialCmsInstanceRegistration): Of
         throw new TypeError("Core version must be a bounded semantic version");
     }
     const health = new URL(input.healthUrl);
-    if (health.protocol !== "http:" || !["127.0.0.1", "[::1]", "localhost"].includes(health.hostname)) {
+    if (
+        health.protocol !== "http:" ||
+        !["127.0.0.1", "[::1]"].includes(health.hostname) ||
+        health.username ||
+        health.password ||
+        health.search ||
+        health.hash
+    ) {
         throw new TypeError("Local Core health URL must use loopback HTTP");
     }
     if (!Array.isArray(input.contracts) || input.contracts.length > 256) {
