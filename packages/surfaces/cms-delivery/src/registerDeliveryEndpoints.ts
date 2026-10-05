@@ -28,6 +28,11 @@ import {
     servePublishedPageSnapshot,
 } from "@bernouy/cms-content/rendering";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
+import {
+    CMS_CAPABILITY_CALL_ROUTE,
+    CMS_CAPABILITY_IMAGE_ROUTE,
+    CMS_CAPABILITY_MEDIA_ROUTE,
+} from "@bernouy/cms-gateway/http/handlers";
 import { handlePageRequest } from "cms-delivery/core/pages/handlePageRequest";
 import { FAVICON_ROUTE } from "cms-delivery/core/assets/defaultFavicon";
 import { matchRootSitemapChunkPath } from "cms-delivery/core/seo/sitemap/manifest";
@@ -105,14 +110,14 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
     });
 
     if (delivery.capabilityGateway) {
-        runner.group("/.cms/call", (callRunner) => {
+        runner.group(CMS_CAPABILITY_CALL_ROUTE, (callRunner) => {
             callRunner.setDefaultEndpoint("POST", (request) => handleCapabilityCall(request, delivery));
         });
-        runner.group("/.cms/media", (mediaRunner) => {
+        runner.group(CMS_CAPABILITY_MEDIA_ROUTE, (mediaRunner) => {
             mediaRunner.setDefaultEndpoint("GET", (request) => handleCapabilityFile(request, delivery));
         });
         if (delivery.capabilityGateway.images) {
-            runner.group("/.cms/image", (imageRunner) => {
+            runner.group(CMS_CAPABILITY_IMAGE_ROUTE, (imageRunner) => {
                 imageRunner.setDefaultEndpoint("GET", (request) => handleCapabilityImage(request, delivery));
             });
         }

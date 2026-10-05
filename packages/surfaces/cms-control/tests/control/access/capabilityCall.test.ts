@@ -27,11 +27,11 @@ test("Control mounts a separate capability route with verified administrator ide
             },
         },
     } as unknown as ControlCmsState;
-    mountControlCapabilityRoutes(state, (_request, next) => next());
-    const handler = runner.handlers.get("POST /api/call");
+    mountControlCapabilityRoutes(state, [(_request, next) => next()]);
+    const handler = runner.handlers.get("POST /.cms/call");
     expect(handler).toBeDefined();
     const response = await handler!(
-        new Request("http://control/api/call/catalog/item.list", {
+        new Request("http://control/.cms/call/catalog/item.list", {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: "{}",
@@ -64,7 +64,7 @@ test("Control refuses unauthenticated capability calls before invocation", async
         },
     } as unknown as ControlCmsState;
     const response = await handleControlCapabilityCall(
-        new Request("http://control/api/call/catalog/item.list", {
+        new Request("http://control/.cms/call/catalog/item.list", {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: "{}",
@@ -100,10 +100,10 @@ test("Control mounts authenticated provider file reads", async () => {
             },
         },
     } as unknown as ControlCmsState;
-    mountControlCapabilityRoutes(state, (_request, next) => next());
-    const handler = runner.handlers.get("GET /api/media");
+    mountControlCapabilityRoutes(state, [(_request, next) => next()]);
+    const handler = runner.handlers.get("GET /.cms/media");
     expect(handler).toBeDefined();
-    const response = await handler!(new Request("http://control/api/media/files/file.read/photo-1"));
+    const response = await handler!(new Request("http://control/.cms/media/files/file.read/photo-1"));
     expect(response.status).toBe(200);
     expect(await response.arrayBuffer()).toEqual(new Uint8Array([7]).buffer);
     expect(calls[0]).toMatchObject({
@@ -112,7 +112,7 @@ test("Control mounts authenticated provider file reads", async () => {
     });
     state.auth.getSubject = async () => null;
     expect(
-        (await handleControlCapabilityFile(new Request("http://control/api/media/files/file.read/photo-1"), state))
+        (await handleControlCapabilityFile(new Request("http://control/.cms/media/files/file.read/photo-1"), state))
             .status,
     ).toBe(401);
 });
@@ -137,9 +137,9 @@ test("Control mounts provider derivatives with its authenticated administrator",
             },
         },
     } as unknown as ControlCmsState;
-    mountControlCapabilityRoutes(state, (_request, next) => next());
-    const response = await runner.handlers.get("GET /api/image")!(
-        new Request("http://control/api/image/files/file.read/photo-1/128.webp"),
+    mountControlCapabilityRoutes(state, [(_request, next) => next()]);
+    const response = await runner.handlers.get("GET /.cms/image")!(
+        new Request("http://control/.cms/image/files/file.read/photo-1/128.webp"),
     );
     expect(response.status).toBe(200);
     expect(calls[0]).toMatchObject({

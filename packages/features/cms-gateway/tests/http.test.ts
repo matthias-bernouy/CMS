@@ -1,10 +1,15 @@
 import { expect, test } from "bun:test";
 import { CapabilityGateway, GatewayError } from "@bernouy/cms-gateway";
-import { handleGatewayHttpCall } from "@bernouy/cms-gateway/http/handlers";
+import { gatewayRoutePrefix, handleGatewayHttpCall } from "@bernouy/cms-gateway/http/handlers";
 import { handleGatewayFileGet } from "@bernouy/cms-gateway/media/handlers";
 import { buildHttpInvocation, HttpGatewayTransport, type GatewayHttpExchange } from "@bernouy/cms-gateway/http";
 import { validateResponse } from "cms-gateway/invocation/core/validateResponse";
 import { gatewayRoute } from "./fixtures";
+
+test("shared gateway routes remain relative to each surface base path", () => {
+    expect(gatewayRoutePrefix("/", "/.cms/call")).toBe("/.cms/call");
+    expect(gatewayRoutePrefix("/tenant/control/", "/.cms/call")).toBe("/tenant/control/.cms/call");
+});
 
 test("compiled HTTP request preserves the json-percent wire profile", async () => {
     const route = await gatewayRoute();

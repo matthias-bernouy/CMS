@@ -92,8 +92,8 @@ or consumes them. The future Control Page flow must own that integration.
 
 | Surface | Routes relative to its base path |
 | --- | --- |
-| Control | `POST /api/call/<contract>/<capability>`, `GET /api/media/<contract>/<capability>/<fileId>`, `GET /api/image/<contract>/<capability>/<fileId>/<width>.webp` |
-| Delivery | `POST /.cms/call/<contract>/<capability>`, `GET /.cms/media/<contract>/<capability>/<fileId>`, `GET /.cms/image/<contract>/<capability>/<fileId>/<width>.webp` |
+| Control | `POST /.cms/call/<contract>/<capability>`, `GET /.cms/media/<contract>/<capability>/<fileId>`, `GET /.cms/image/<contract>/<capability>/<fileId>/<width>.webp` |
+| Delivery | Same `/.cms/*` transport, with Delivery access policy |
 
 Routes are mounted only when their dependencies are configured. Image routes
 also require the image service. These reads do not publish or select providers.

@@ -42,10 +42,10 @@ or invalid response produces `outcome_unknown` with the request ID. Callers must
 reconcile that request with the provider before retrying the command.
 Delivery exposes provider file reads
 at `/.cms/media/<contract>/<capability>/<fileId>`; Control exposes the same
-capability behind its authenticated `/api/media` route. Both recheck the
+capability behind its authenticated `/.cms/media` route. Both recheck the
 current selection and actor grant before returning bytes. Delivery also serves
 bounded WebP derivatives at `/.cms/image/<contract>/<capability>/<fileId>/<width>.webp`;
-Control uses `/api/image`. Each request reauthorizes the original file before
+Control uses the same `/.cms/image` route with its own actor policy. Each request reauthorizes the original file before
 looking up its byte-generation key in the local derivative store.
 `./media/browser` builds bounded `srcset` candidates for same-origin provider media
 URLs and activates resolved `data-cms-src` image bindings only for same-origin

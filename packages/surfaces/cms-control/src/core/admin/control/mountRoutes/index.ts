@@ -80,7 +80,7 @@ export function mountControlCmsRoutes(
         },
         [authGuard],
     );
-    mountControlCapabilityRoutes(state, authenticatedGuard);
+    mountControlCapabilityRoutes(state, [authenticatedGuard, maintenanceGuard]);
     runner.group(
         CMS_FILES_ROUTE,
         (filesRunner) => {
