@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
 
-const bundlePath = resolve(import.meta.dir, "../../../src/static/assets/control-components.js");
+const bundlePath = resolve(import.meta.dir, "../../../src/browser/control-components.js");
 
 test("page path and deletion panels work in a browser", async () => {
     const browser = await chromium.launch({ headless: true });

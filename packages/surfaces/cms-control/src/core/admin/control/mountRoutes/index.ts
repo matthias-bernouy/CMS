@@ -19,8 +19,9 @@ import {
     createControlApiAuthorizationGuard,
 } from "cms-control/core/admin/control/adminAccess";
 import type { ControlAuthBackends, ControlCmsState } from "cms-control/core/admin/control/types";
+import { mountControlBrowserAssets } from "cms-control/core/admin/control/mountRoutes/assets";
 import { mountControlCapabilityRoutes } from "cms-control/core/admin/control/mountRoutes/capability";
-import serveStaticFolder from "cms-control/core/admin/registerEndpoints/serveStaticFolder/serveStaticFolder";
+import { controlUnavailableResponse } from "cms-control/core/admin/control/mountRoutes/unavailable";
 import { serveApi } from "cms-control/core/admin/registerEndpoints/serveApiFolder";
 import type { ControlCms } from "cms-control/ControlCms";
 import { createControlMaintenanceGuard } from "cms-control/core/admin/control/maintenance";
@@ -36,6 +37,7 @@ export function mountControlCmsRoutes(
     const authenticatedGuard = createAuthenticatedControlGuard(cms.basePath, state.auth);
     const apiAuthorizationGuard = createControlApiAuthorizationGuard(cms.basePath, cms);
     const maintenanceGuard = createControlMaintenanceGuard(cms);
+    mountControlBrowserAssets(runner, state.cache);
     runner.addEndpoint("GET", "/login", (req) => renderLoginPage(req, cms.basePath));
 
     const controlPublicAuth = state.configuration.publicAuth
@@ -70,9 +72,14 @@ export function mountControlCmsRoutes(
         );
     });
 
-    const toPages = () => redirect(`${cms.basePath}/admin/pages`);
-    runner.addEndpoint("GET", "/", toPages, [authGuard]);
-    runner.addEndpoint("GET", "/admin", toPages, [authGuard]);
+    runner.addEndpoint("GET", "/", () => redirect(`${cms.basePath}/admin`), [authGuard]);
+    runner.group(
+        "/admin",
+        (adminRunner) => {
+            adminRunner.setDefaultEndpoint("GET", controlUnavailableResponse);
+        },
+        [authGuard],
+    );
     mountControlCapabilityRoutes(state, authenticatedGuard);
     runner.group(
         CMS_FILES_ROUTE,
@@ -97,17 +104,6 @@ export function mountControlCmsRoutes(
             ),
         [authenticatedGuard],
     );
-    let staticRoutesReady = Promise.resolve();
-    runner.group(
-        "/",
-        (staticRunner) => {
-            staticRoutesReady = serveStaticFolder(staticRunner, {
-                cache: state.cache,
-                cspExtras: () => cms.getCspExtras(),
-            });
-        },
-        [authGuard],
-    );
     let apiRoutesReady = Promise.resolve();
     runner.group(
         "/api",
@@ -116,5 +112,5 @@ export function mountControlCmsRoutes(
         },
         [authenticatedGuard, apiAuthorizationGuard, maintenanceGuard],
     );
-    return Promise.all([staticRoutesReady, apiRoutesReady]).then(() => undefined);
+    return apiRoutesReady;
 }

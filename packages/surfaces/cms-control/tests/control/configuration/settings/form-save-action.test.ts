@@ -1,8 +1,14 @@
 import { afterEach, expect, test } from "bun:test";
 import "cms-control/components";
-import { resetSettingsTest } from "../../../admin/resources/settings/settingsTestUtils";
 
-afterEach(resetSettingsTest);
+const realFetch = globalThis.fetch;
+
+afterEach(() => {
+    globalThis.fetch = realFetch;
+    document.head.replaceChildren();
+    document.body.replaceChildren();
+    window.history.replaceState(null, "", "/");
+});
 
 test("clears saved feedback without making an unchanged form editable", async () => {
     document.body.innerHTML = `

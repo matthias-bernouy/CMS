@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-control",
     "version": "0.1.0",
-    "description": "Admin layer of the CMS — REST API (file-routed under /api), server-rendered admin pages (under /admin), admin web components, and the `ControlCms` composition class. Consumes `@bernouy/cms-collection-build` for collection artifacts and `@bernouy/cms-auth` for the auth chain.",
+    "description": "Control kernel — authentication bootstrap, transitional REST API, capability/media routes, retained admin web components, and the ControlCms composition class.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./index.ts",

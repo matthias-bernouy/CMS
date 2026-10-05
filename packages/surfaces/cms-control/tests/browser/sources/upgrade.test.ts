@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { chromium } from "playwright";
 
 const root = resolve(import.meta.dir, "../../../src");
-const bundle = await Bun.file(`${root}/static/assets/control-components.js`).text();
+const bundle = await Bun.file(`${root}/browser/control-components.js`).text();
 const contract = (version: string, digest: string) => ({
     repositoryId: "local",
     kind: "contract",

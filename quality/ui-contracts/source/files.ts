@@ -21,7 +21,7 @@ export function isProductionSource(path: string): boolean {
     return (
         !path.split("/").some((part) => EXCLUDED_DIRECTORIES.has(part)) &&
         !/\.(?:d|test|spec|cases|fixture)\.[cm]?[jt]sx?$/.test(path) &&
-        !path.endsWith("/src/static/assets/control-components.js")
+        !path.endsWith("/src/browser/control-components.js")
     );
 }
 

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
 
-const bundlePath = resolve(import.meta.dir, "../../../src/static/assets/control-components.js");
+const bundlePath = resolve(import.meta.dir, "../../../src/browser/control-components.js");
 const stylePath = resolve(import.meta.dir, "../../../../../foundation/components/dist/style.css");
 
 test("SEO translations save without navigation and fit desktop and mobile panels", async () => {

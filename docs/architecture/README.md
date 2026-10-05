@@ -111,5 +111,5 @@ set of existing `process.env.MODE` reads elsewhere is recorded in the
 
 See [development](../development/README.md),
 [Control API routing](../surfaces/control-api.md),
-[Control static routing](../surfaces/control-static.md) and
+[Control kernel routing](../surfaces/control-kernel.md) and
 [responsive images](../images/README.md).

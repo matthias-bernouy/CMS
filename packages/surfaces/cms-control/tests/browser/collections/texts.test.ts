@@ -6,7 +6,7 @@ import installed from "cms-control/api/_content/collections/installed.get";
 import saveTexts from "cms-control/api/_content/collections/texts.put";
 
 const sourceRoot = resolve(import.meta.dir, "../../../src");
-const bundle = await Bun.file(`${sourceRoot}/static/assets/control-components.js`).text();
+const bundle = await Bun.file(`${sourceRoot}/browser/control-components.js`).text();
 const collectionRoot = resolve(import.meta.dir, "../../../../../official-repository/collections/ulvia-official");
 const { exports: _exports, ...definition } = await Bun.file(resolve(collectionRoot, "definition.json")).json();
 const release = {

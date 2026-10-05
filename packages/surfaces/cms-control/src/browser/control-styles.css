@@ -1,0 +1,90 @@
+:root {
+    --bg-base: #f6f7f7;
+    --bg-surface: #ffffff;
+    --bg-overlay: #ffffff;
+    --bg-sidebar: #fbfcfb;
+    --bg-subtle: #f9faf9;
+    --bg-hover: #f1f4f3;
+    --text-main: #151b19;
+    --text-body: #4f5d58;
+    --text-muted: #87948f;
+    --text-label: #4f5d58;
+    --border-default: #e2e6e4;
+    --border-light: #eef1f0;
+    --border-strong: #c9d1ce;
+    --primary-base: #165f4b;
+    --primary-muted: #e2f0ea;
+    --primary-contrasted: #145641;
+    --primary-foreground: #ffffff;
+    --secondary-base: #4f5d58;
+    --secondary-muted: #f1f4f3;
+    --secondary-contrasted: #151b19;
+    --secondary-foreground: #ffffff;
+    --danger-base: oklch(60% 0.2 25);
+    --danger-muted: oklch(96% 0.03 25);
+    --danger-contrasted: oklch(30% 0.12 25);
+    --danger-foreground: #ffffff;
+    --success-base: oklch(62% 0.15 150);
+    --success-muted: oklch(96% 0.03 150);
+    --success-contrasted: oklch(30% 0.1 150);
+    --success-foreground: #ffffff;
+    --info-base: oklch(65% 0.12 225);
+    --info-muted: oklch(96% 0.02 225);
+    --info-contrasted: oklch(30% 0.08 225);
+    --info-foreground: #ffffff;
+    --warning-base: oklch(72% 0.15 70);
+    --warning-muted: oklch(96% 0.03 70);
+    --warning-contrasted: oklch(35% 0.1 70);
+    --warning-foreground: #151b19;
+    --color-primary: var(--primary-base);
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    color: var(--text-main);
+    background: var(--bg-base);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+    margin: 0 0 0.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+}
+
+h1 {
+    font-size: 1.5rem;
+}
+
+h2 {
+    font-size: 1.15rem;
+}
+
+h3 {
+    font-size: 1rem;
+}
+
+a {
+    color: var(--primary-base);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+code {
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    background: var(--bg-base);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85em;
+}

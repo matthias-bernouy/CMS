@@ -50,7 +50,7 @@ export async function createProductionAuth(env: RuntimeEnv, stores: CoreStores) 
         rateLimit: stores.rateLimit,
         cookieName: "cms-session",
         cookieSecure: env.CONTROL_PUBLIC_URL.startsWith("https"),
-        defaultHome: "/admin/pages",
+        defaultHome: "/admin",
     });
     const publicAuthBase = {
         local: auth,

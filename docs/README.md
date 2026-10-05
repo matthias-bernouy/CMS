@@ -46,7 +46,7 @@ Use the guides here and the referenced source code to establish current behavior
 ## HTTP Surfaces
 
 - [Control API routing](surfaces/control-api.md).
-- [Control static routing](surfaces/control-static.md).
+- [Control kernel routing](surfaces/control-kernel.md).
 - [Page languages and routes](surfaces/page-routes.md): localized URLs,
   redirects, deletion and recovery.
 - [Dynamic page indexing](surfaces/page-indexing.md): metadata projection and

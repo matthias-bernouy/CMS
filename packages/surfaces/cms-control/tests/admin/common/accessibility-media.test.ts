@@ -96,16 +96,4 @@ describe("admin media accessibility", () => {
         expect(center.querySelector("#nf-input")).not.toBeNull();
         expect(center.querySelector("#btnClose")?.getAttribute("aria-label")).toBe("Close media center");
     });
-
-    test("keeps static admin form controls explicit and excludes free-form site CSS", async () => {
-        const general = await Bun.file(
-            new URL("../../../src/static/admin/_access/settings/_site/general.html", import.meta.url),
-        ).text();
-        const users = await Bun.file(new URL("../../../src/static/admin/_access/users.html", import.meta.url)).text();
-
-        expect(general).not.toContain('name="site.theme"');
-        expect(general).not.toContain('heading="Theme CSS"');
-        expect(users).not.toContain("cms-role-select");
-        expect(users).not.toContain("Manage roles");
-    });
 });

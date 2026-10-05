@@ -1,6 +1,8 @@
 # @bernouy/cms-control
 
-Admin layer of the CMS — REST API and server-rendered admin pages. Mounts on a
+Control kernel of the CMS — authentication bootstrap, capability/media routes,
+and a transitional REST API. Authored Control pages are collection resources;
+the former filesystem-backed admin application has been removed. Mounts on a
 runner you provide. Runs on **Bun** and ships
 as a Bun-first package — no transpile, consumers execute the TypeScript
 source directly.
@@ -66,7 +68,7 @@ runner.group("/cms", (sub) => {
         pats,
         rateLimit:     new InMemoryRateLimiter({ limit: 8, windowSeconds: 300 }),
         cookieName:    "cms-session",
-        defaultHome:   "/cms/admin/pages",
+        defaultHome:   "/cms/admin",
     });
 
     new ControlCms(sub,
@@ -118,9 +120,9 @@ silently disables the admin surface that needs it:
 | `secrets`            | Defaults to `InMemorySecretStore`             |
 | `filesMetadata`      | Files admin throws "not configured" on call   |
 | `filesBlob`          | Files admin throws "not configured" on call   |
-| `users`              | Users admin page throws "not configured"      |
-| `identityProviders`  | Settings → Identity tab throws                |
-| `pats`               | Profile → Tokens tab throws                   |
+| `users`              | Users API throws "not configured"             |
+| `identityProviders`  | Identity-provider API throws                   |
+| `pats`               | Profile-token API throws                       |
 | `authBackends.local` | Local login/logout routes are not mounted     |
 | `authBackends.oidc`  | OIDC login/callback routes are not mounted    |
 
@@ -152,11 +154,11 @@ through `ulvia dev credentials`.
 | `<basePath>/auth/login`                  | public    | POST credentials (local provider)         |
 | `<basePath>/auth/logout`                 | public    | Drops the session cookie                  |
 | `<basePath>/auth/:providerId/{login,callback}` | public | Dynamic OIDC flow                       |
-| `<basePath>/`                            | gated     | Redirects to `<basePath>/admin/pages`     |
-| `<basePath>/admin/*`                     | gated     | Static admin pages (Pages, Files, …)      |
+| `<basePath>/`                            | gated     | Redirects to `<basePath>/admin`           |
+| `<basePath>/admin/*`                     | gated     | Temporary 503 until Control Pages mount   |
 | `<basePath>/api/*`                       | gated     | File-routed REST endpoints                |
 | `<basePath>/assets/*`                    | public    | `control-components.js` + `control-styles.css` |
-| `<basePath>/resources/*`                 | public    | Fonts + theme CSS (`@bernouy/components`) |
+| `<basePath>/resources/*`                 | public    | Shared component and preview resources    |
 
 The auth guard (`createAuthGuard` from `@bernouy/cms-auth/http`) establishes an
 authenticated subject. It does not evaluate roles or view permissions. Control

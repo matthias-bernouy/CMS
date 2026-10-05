@@ -1,5 +1,5 @@
 /**
- * Reads the `<meta name="basePath">` set by `serveStaticFolder` and returns
+ * Reads the `<meta name="basePath">` supplied by the current Control document and returns
  * a *concat-ready* prefix:
  *   - root deployment           → `""`     so `+ "/admin/pages"` → `/admin/pages`
  *   - prefixed deployment       → `"/cms"` so `+ "/admin/pages"` → `/cms/admin/pages`

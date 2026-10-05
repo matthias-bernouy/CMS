@@ -38,9 +38,8 @@ The end state is:
 - `Dashboard` is removed. `View` and `Application` disappear unless a later concrete
   lifecycle or authorization requirement proves that a replacement concept is
   necessary;
-- the static Control application and visual Foundation components are removed
-  only after their collection-based replacements have reached functional and
-  recovery parity.
+- the static Control application is removed; retained Control and Foundation
+  components remain available while collection replacements are built.
 
 ## Non-Negotiable Invariants
 
@@ -74,8 +73,10 @@ Implementation proceeds through small vertical slices. Each slice must be:
 - committed separately when it changes a distinct responsibility;
 - free from hidden dependence on Ulvia Cloud.
 
-The existing static Control remains operational during the transition. New
-collection-based Control Pages run beside it until feature parity is proven.
+The legacy static Control application has intentionally been removed before
+parity. The authenticated kernel now returns a clear unavailable response until
+collection-based Control Pages are mounted. Existing backend APIs and retained
+components remain available as migration inputs, not as a second page system.
 
 ## Phase 0 — Stabilize The Current Foundation
 
@@ -107,8 +108,9 @@ invalidate migrations, updates or recovery:
 - interrupted writes have a deterministic recovery result;
 - the workspace validation baseline remains green.
 
-The Dashboard package, collection resource, routes, assignments and static pages
-were removed before Control Pages reached parity. Do not recreate that model.
+The Dashboard package, collection resource, routes, assignments and the entire
+static Control application were removed before Control Pages reached parity. Do
+not recreate either model.
 Collection Views remain transitional until Pages and layout Blocs replace them.
 
 ## Phase 1 — Separate Provider Lifecycle From Core Contracts
@@ -273,8 +275,8 @@ strings embedded as the canonical relation between Pages.
 
 ## Phase 6 — Deliver The First Collection-Based Control Page
 
-Create the first real side-by-side replacement for a static Control screen.
-The recommended slice is a read-only Pages catalogue.
+Create the first real collection-backed Control screen. The recommended slice
+is a read-only Pages catalogue.
 
 It should be composed from collection resources:
 
@@ -292,7 +294,7 @@ whether the collection uses a sidebar, tabs, a header or no navigation.
 - the new Page works through the local provider and Gateway with no private API
   shortcut;
 - keyboard, screen-reader, responsive and error-state flows are reviewed;
-- the old static page remains available as a fallback;
+- the kernel unavailable/recovery response remains available when resolution fails;
 - the collection Page is installable, upgradeable and removable without
   corrupting site state.
 
@@ -322,10 +324,10 @@ host panels may differ; the composition model must not fork.
 - a Control Page can edit a site-owned Page through declared capabilities;
 - editor output is valid for the target surface before persistence.
 
-## Phase 8 — Migrate Control By Functional Area
+## Phase 8 — Rebuild Control By Functional Area
 
-Move the remaining static Control features one domain at a time. Likely groups
-are:
+Rebuild Control one domain at a time from the retained APIs, components and
+documented behavior. Likely groups are:
 
 1. Pages and routing;
 2. collections and upgrades;
@@ -341,8 +343,8 @@ For each area:
 - implement them in the local provider;
 - add collection Blocs and Pages;
 - run parity, security, accessibility and recovery tests;
-- switch the route only after those tests pass;
-- remove the old screen in a separate commit.
+- mount the route only after those tests pass;
+- remove superseded transitional APIs and components in separate commits.
 
 This phase is where current Views and any required behavior from the former
 Dashboard flow are translated into Pages and
@@ -351,7 +353,7 @@ second permanent rendering system.
 
 ### Exit gate
 
-- no active Control feature depends on `cms-control/src/static/admin`;
+- no Control route depends on a filesystem page scanner;
 - navigation is entirely collection-authored;
 - Control Pages use only declared capabilities and kernel transports;
 - equivalent or intentionally changed product behavior is documented.
@@ -360,7 +362,6 @@ second permanent rendering system.
 
 After complete parity:
 
-- delete the static Control application;
 - delete visual Foundation components that have collection replacements;
 - remove the remaining View rendering and authoring model; Dashboard routing,
   persistence and authoring have already been removed;
@@ -548,10 +549,10 @@ Exit gate:
 4. Add one collection-owned Control Page composed from `ulvia-control` and
    selective `ulvia-official` dependencies.
 5. Derive and compile its exact capability plan from the Bloc composition.
-6. Render it through the minimal Control kernel beside the current static page.
+6. Render it through the minimal Control kernel.
 7. Test authorization, surface compatibility, empty/error/loading states,
    keyboard use, responsive behavior, provider failure and collection rollback.
-8. Keep the old route as a recovery comparison until the new flow has passed
+8. Keep the kernel recovery response available until the new flow has passed
    parity and restart checks.
 
 Exit gate:

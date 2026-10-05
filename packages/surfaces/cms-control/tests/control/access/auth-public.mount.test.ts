@@ -33,5 +33,11 @@ describe("Control public auth mount", () => {
         const cms = new ControlCms(runner, new InMemoryCmsRepository(), new InMemoryAuthentication());
         await cms.ready;
         expect(runner.handlers.has("POST /.cms/sources")).toBe(false);
+        expect(runner.handlers.has("GET /assets/control-components.js")).toBe(true);
+        expect(runner.handlers.has("GET /assets/control-styles.css")).toBe(true);
+        expect(runner.handlers.has("GET /admin")).toBe(true);
+        expect(await runner.handlers.get("GET /admin")!(new Request("http://control.test/admin"))).toMatchObject({
+            status: 503,
+        });
     });
 });

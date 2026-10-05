@@ -1,7 +1,7 @@
 import type { WorkspaceCheckOptions } from "../core/checkWorkspace";
 
 const CONTROL_COMPONENT_ENTRY = "packages/surfaces/cms-control/src/components/index.ts";
-const CONTROL_COMPONENT_ASSET = "packages/surfaces/cms-control/src/static/assets/control-components.js";
+const CONTROL_COMPONENT_ASSET = "packages/surfaces/cms-control/src/browser/control-components.js";
 
 /** Existing reads are frozen here until runtime configuration is injected into their owners. */
 export const ENVIRONMENT_READ_BASELINE = {

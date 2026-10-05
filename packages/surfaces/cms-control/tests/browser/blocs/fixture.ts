@@ -11,15 +11,12 @@ import { libraryHarness } from "../../control/bloc-library/fixtures";
 export const base = "/tenant/cms";
 export const origin = "http://cms.test";
 const sourceRoot = resolve(import.meta.dir, "../../../src");
-const bundle = await Bun.file(`${sourceRoot}/static/assets/control-components.js`).text();
+const bundle = await Bun.file(`${sourceRoot}/browser/control-components.js`).text();
 const styles = await Bun.file(resolve(import.meta.dir, "../../../../../foundation/components/dist/style.css")).text();
 
 export async function fixture() {
     const harness = await libraryHarness();
-    const html = (await Bun.file(`${sourceRoot}/static/admin/_content/collections.html`).text()).replaceAll(
-        "{{BASE_PATH}}",
-        base,
-    );
+    const html = "<cms-collection-workspace></cms-collection-workspace>";
     const browser = await chromium.launch();
     const page = await browser.newPage({ reducedMotion: "reduce", viewport: { width: 1440, height: 1000 } });
     page.setDefaultTimeout(6000);

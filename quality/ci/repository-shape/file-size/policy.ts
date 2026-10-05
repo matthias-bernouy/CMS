@@ -53,7 +53,7 @@ const governedExtensions = new Set([
 ]);
 
 const exactExceptions = new Map([
-    ["packages/surfaces/cms-control/src/static/assets/control-components.js", "generated Control browser bundle"],
+    ["packages/surfaces/cms-control/src/browser/control-components.js", "generated Control browser bundle"],
     ["quality/ci/coverage/baseline.json", "generated per-package coverage snapshot"],
 ]);
 

@@ -1,9 +1,9 @@
 /**
  * @bernouy/cms-control — public entry point.
  *
- * Mounts the admin layer of the CMS on the runner the consumer provides:
- *   - server-rendered admin pages under `<basePath>/admin/*`
- *   - REST API under `<basePath>/api/*`
+ * Mounts the Control kernel on the runner the consumer provides:
+ *   - authentication and collection-page bootstrap routes
+ *   - transitional REST API under `<basePath>/api/*`
  *   - admin web components bundled as `control-components.js`
  *
  * Persistence (content, files, secrets), the auth chain, and the public

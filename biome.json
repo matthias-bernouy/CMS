@@ -15,7 +15,7 @@
             "**/*.cjs",
             "**/*.mts",
             "**/*.cts",
-            "!!packages/surfaces/cms-control/src/static/assets/control-components.js"
+            "!!packages/surfaces/cms-control/src/browser/control-components.js"
         ]
     },
     "formatter": {

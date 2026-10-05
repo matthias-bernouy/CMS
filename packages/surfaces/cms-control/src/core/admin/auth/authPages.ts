@@ -1,6 +1,5 @@
 import { escapeHtml, htmlResponse } from "@bernouy/http-runner";
-import loginTemplate from "cms-control/static/login.html" with { type: "text" };
-import forbiddenTemplate from "cms-control/static/forbidden.html" with { type: "text" };
+import loginTemplate from "cms-control/core/admin/auth/templates/login.html" with { type: "text" };
 
 const ERROR_ALERTS: Record<string, { type: string; message: string }> = {
     rate_limited: { type: "warning", message: "Too many attempts. Please wait a few minutes and try again." },
@@ -24,17 +23,6 @@ export function renderLoginPage(req: Request, basePath: string): Response {
         RETURN_TO: escapeHtml(returnTo),
         ERROR: alert,
     });
-}
-
-export function renderForbiddenPage(basePath: string, logoutUrl: string): Response {
-    return renderPage(
-        forbiddenTemplate as unknown as string,
-        {
-            BASE_PATH: basePath,
-            LOGOUT_URL: escapeHtml(logoutUrl),
-        },
-        403,
-    );
 }
 
 function renderPage(template: string, subs: Record<string, string>, status = 200): Response {

@@ -1,6 +1,6 @@
 import { rmSync } from "node:fs";
 
-const controlComponentTargetDir = "src/static/assets/";
+const controlComponentTargetDir = "src/browser/";
 const controlComponentTargetNaming = "control-components.js";
 const controlComponentTargetFile = controlComponentTargetDir + controlComponentTargetNaming;
 const controlComponentOrigin = "src/components/index.ts";

@@ -4,17 +4,16 @@
 implemented; unified Pages, Core data-plane contracts and Control replacement
 remain planned.
 
-This note records the intended direction for replacing Control's static admin
-pages, visual Foundation components and transitional collection Views. The
-former Dashboard package, collection resource, persistence, routes and UI have
-already been removed; this document retains only the behavior that future
-Control Pages may need to recover.
+This note records the intended direction for replacing visual Foundation
+components and transitional collection Views. The former Dashboard system and
+the static Control application have already been removed; this document retains
+only the behavior that future Control Pages may need to recover.
 
 ## Objectives
 
 The target is to:
 
-- remove the authored admin application from `cms-control/src/static/admin`;
+- keep the removed filesystem-backed Control application from returning;
 - move visual components into collections rather than Foundation;
 - use the same page composition and future editor for public and
   administration pages;
@@ -725,8 +724,8 @@ capability payloads.
 
 ## Removing Static Admin And Foundation Components
 
-Deleting `cms-control/src/static/admin` and visual Foundation components is an
-outcome of the migration, not its first step.
+The filesystem-backed Control application has been deleted. Visual Foundation
+components remain until their collection replacements exist.
 
 Control retains a minimal non-visual kernel responsible for:
 
@@ -841,15 +840,15 @@ small, reversible vertical slices rather than a repository-wide replacement.
 Required working rules:
 
 - treat the contracts as experimental until one complete local flow is proven;
-- keep the current runtime and static Control operational during exploration;
+- keep the current runtime and minimal Control kernel operational during exploration;
 - begin with one provider, one explicit local instance and one read-only
   capability;
 - validate each domain boundary before adding distributed transport;
 - run old and new paths side by side where that makes comparison possible;
 - require a recovery and rollback path before introducing destructive commands;
-- do not remove View, static admin or Foundation component code merely because
-  the target document says they may disappear; Dashboard was intentionally
-  removed early because it had no production compatibility requirement;
+- do not remove Foundation component code merely because the target document
+  says it may disappear; Dashboard and static Control were intentionally
+  removed early because there is no production compatibility requirement;
 - delete an existing path only after its replacement covers behavior, access,
   persistence, failure and upgrade tests;
 - record decisions that survive the prototype as protocol/architecture rules,
@@ -890,8 +889,8 @@ Pages, provider-managed updates and removal of the existing administration.
     overrides.
 11. Derive capability requirements from Blocs and compile exact Page execution
     plans while keeping provider credentials and instance routing opaque.
-12. Convert one existing static Control read flow end to end while retaining the
-    old path for comparison and recovery.
+12. Rebuild one former Control read flow end to end while retaining the kernel
+    recovery response.
 13. Add local backup/restore, maintenance and destructive-command safeguards.
 14. Prove one adjacent local Core update and rollback using two exact artifacts.
 15. Add HTTP and provider-brokered transports only after the local semantics are
@@ -902,13 +901,12 @@ Pages, provider-managed updates and removal of the existing administration.
     access, editing, upgrade and recovery.
 18. Resolve different compatible `ulvia-control` releases for the old and
     current Core contract sets reported through provider contexts.
-19. Migrate the remaining static administration incrementally.
+19. Rebuild the remaining administration incrementally from retained behavior.
 20. Add access policies only if a concrete multi-Page member use case requires
     them; the old Dashboard assignments have been removed.
 21. Extract non-visual collection runtime primitives, then remove obsolete
-    Foundation visual components and static admin files.
+    Foundation visual components.
 
-The current implementation should remain operational during this sequence. Apart
-from the intentionally removed Dashboard package, no existing package should be
-removed until the corresponding collection Page, provider capability and
-recovery path have been proven together.
+The current backend implementation and kernel should remain operational during
+this sequence. No additional package should be removed until the corresponding
+collection Page, provider capability and recovery path have been proven together.

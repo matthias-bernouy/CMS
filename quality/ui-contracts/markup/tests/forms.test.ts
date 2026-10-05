@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { inspectMarkup } from "../index";
 
-const path = "packages/surfaces/cms-control/src/static/admin/example.html";
+const path = "packages/surfaces/cms-control/src/core/admin/auth/templates/example.html";
 const inspect = (content: string, file = path) => inspectMarkup({ path: file, content, kind: "html", browser: true });
 
 describe("declarative source form contracts", () => {
