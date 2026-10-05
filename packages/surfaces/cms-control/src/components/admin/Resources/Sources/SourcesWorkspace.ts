@@ -1,5 +1,4 @@
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
-import type { Dashboard } from "../Dashboards/domain/types";
 import { renderSourceCatalogue } from "./catalogue";
 import { SourceDialogController } from "./dialog";
 import type { SourceCatalogue, SourceInstallations } from "./model";
@@ -10,7 +9,6 @@ import css from "./style.css" with { type: "text" };
 class SourcesWorkspace extends HTMLElement {
     private catalogue: SourceCatalogue = { available: [], repositories: [] };
     private installations: SourceInstallations = { installations: [], selected: [] };
-    private dashboards: Dashboard[] = [];
     private dialog?: SourceDialogController;
 
     connectedCallback(): void {
@@ -49,14 +47,12 @@ class SourcesWorkspace extends HTMLElement {
             const responses = await Promise.all([
                 fetch(`${base}/api/provider-catalogue`, { cache: "no-store" }),
                 fetch(`${base}/api/provider-installations`, { cache: "no-store" }),
-                fetch(`${base}/api/dashboards`, { cache: "no-store" }),
             ]);
             if (responses.some((response) => !response.ok)) {
                 throw new Error("Sources could not be loaded");
             }
             this.catalogue = (await responses[0]!.json()) as SourceCatalogue;
             this.installations = (await responses[1]!.json()) as SourceInstallations;
-            this.dashboards = ((await responses[2]!.json()) as { dashboards: Dashboard[] }).dashboards;
             this.status("");
             this.render();
             this.showState("ready");
@@ -88,7 +84,7 @@ class SourcesWorkspace extends HTMLElement {
         this.querySelector("[data-detail]")!.toggleAttribute("hidden", !contractId);
         renderSourceNavigation(this.catalogue, this.installations, contractId);
         if (contractId) {
-            renderSourceDetail(this, contractId, this.catalogue, this.installations, this.dashboards);
+            renderSourceDetail(this, contractId, this.catalogue, this.installations);
         } else {
             this.renderCatalogue();
         }

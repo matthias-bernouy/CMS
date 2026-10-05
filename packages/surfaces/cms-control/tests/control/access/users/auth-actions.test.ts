@@ -12,7 +12,6 @@ import {
 } from "@bernouy/cms-auth";
 import { createLocalUser } from "@bernouy/cms-auth/management";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
-import { InMemoryDashboardAssignmentRepository } from "@bernouy/cms-dashboards";
 import type { ControlCms } from "cms-control/ControlCms";
 import markVerified from "cms-control/api/_access/users/email-verified.post";
 import resendVerification from "cms-control/api/_access/users/email-verification.post";
@@ -26,7 +25,6 @@ function setup() {
     const pats = new InMemoryPatRepository();
     const tokens = new InMemoryAuthTokenStore();
     const emailer = new InMemoryEmailer();
-    const dashboardAssignments = new InMemoryDashboardAssignmentRepository();
     const local = new LocalAuthentication({
         providerId: "local",
         loginPagePath: "/login",
@@ -51,11 +49,10 @@ function setup() {
         credentials,
         pats,
         publicAuth,
-        dashboardAssignments,
         auth: { getSubject: async () => ({ identifier: "local:admin" }) },
         config: { administrator: async () => true },
     } as unknown as ControlCms;
-    return { cms, users, credentials, emailer, dashboardAssignments };
+    return { cms, users, credentials, emailer };
 }
 
 const req = (body: Record<string, unknown>) =>
@@ -137,18 +134,15 @@ describe("admin user auth actions", () => {
     });
 
     test("deletes a member and its dependent records", async () => {
-        const { cms, credentials, users, dashboardAssignments } = setup();
+        const { cms, credentials, users } = setup();
         const user = await createLocalUser(
             { credentials, users },
             { email: "member@example.com", password: "password-1" },
         );
-        await dashboardAssignments.assign({ subjectId: user.sub, dashboardId: "support" });
-
         const response = await deleteUser(new Request(`http://control/api/users?sub=${user.sub}`), cms);
 
         expect(response.status).toBe(200);
         expect(await users.getBySub(user.sub)).toBeNull();
         expect(await credentials.getByEmail("member@example.com")).toBeNull();
-        expect(await dashboardAssignments.getDashboardIdsForSubject(user.sub)).toEqual([]);
     });
 });

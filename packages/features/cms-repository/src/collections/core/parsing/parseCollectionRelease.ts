@@ -12,7 +12,6 @@ import { parseBlocs } from "./blocs/parseBlocs";
 import { validateBlocs } from "./blocs/validateBlocs";
 import { parseConfiguration } from "./configuration";
 import { parseCollectionViews } from "./views";
-import { parseCollectionDashboards } from "./dashboards";
 import { validateCollectionTextReferences } from "../validation/markup/texts";
 import { parseCollectionTranslations } from "../texts/translationCatalogue";
 import { validateCollectionTranslationReferences } from "../texts/translationReferences";
@@ -51,7 +50,6 @@ export function parseCollectionRelease(
                 "assets",
                 "blocs",
                 "views",
-                "dashboards",
             ],
             "$",
         );
@@ -162,15 +160,6 @@ export function parseCollectionRelease(
             assets,
             blocs,
             ...(views === undefined ? {} : { views }),
-            ...(source.dashboards === undefined
-                ? {}
-                : {
-                      dashboards: parseCollectionDashboards(
-                          source.dashboards,
-                          new Set(views?.map((view) => view.id) ?? []),
-                          limits,
-                      ),
-                  }),
         };
         validateCollectionTranslationReferences(release);
         assertSize(release, limits);

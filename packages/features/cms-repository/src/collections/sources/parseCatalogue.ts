@@ -61,7 +61,6 @@ export function parseCollectionCataloguePage(data: unknown, repositoryId: string
                         "description",
                         "blocCount",
                         "hasTheme",
-                        "dashboards",
                     ].includes(key),
             )
         ) {
@@ -94,32 +93,6 @@ export function parseCollectionCataloguePage(data: unknown, repositoryId: string
         ) {
             throw new TypeError("Invalid repository entry metadata");
         }
-        if (
-            entry.dashboards !== undefined &&
-            (!Array.isArray(entry.dashboards) ||
-                entry.dashboards.length > DEFAULT_COLLECTION_LIMITS.maxDashboards ||
-                entry.dashboards.some(
-                    (dashboard: unknown) =>
-                        !isPlainRecord(dashboard) ||
-                        Object.keys(dashboard).some(
-                            (key) => !["id", "name", "icon", "description", "viewCount"].includes(key),
-                        ) ||
-                        typeof (dashboard as Record<string, unknown>).id !== "string" ||
-                        !validIdentifier((dashboard as { id: string }).id) ||
-                        typeof (dashboard as Record<string, unknown>).name !== "string" ||
-                        (dashboard as { name: string }).name.length === 0 ||
-                        (dashboard as { name: string }).name.length > 128 ||
-                        ((dashboard as Record<string, unknown>).icon !== undefined &&
-                            (typeof (dashboard as Record<string, unknown>).icon !== "string" ||
-                                !validIdentifier((dashboard as { icon: string }).icon))) ||
-                        typeof (dashboard as Record<string, unknown>).description !== "string" ||
-                        (dashboard as { description: string }).description.length > 4096 ||
-                        !Number.isSafeInteger((dashboard as Record<string, unknown>).viewCount) ||
-                        ((dashboard as Record<string, unknown>).viewCount as number) < 1,
-                ))
-        ) {
-            throw new TypeError("Invalid repository dashboard summaries");
-        }
         return {
             repositoryId,
             publisherId: entry.publisherId,
@@ -130,7 +103,6 @@ export function parseCollectionCataloguePage(data: unknown, repositoryId: string
             description: entry.description,
             blocCount: entry.blocCount,
             hasTheme: entry.hasTheme,
-            ...(entry.dashboards === undefined ? {} : { dashboards: entry.dashboards }),
         } as CollectionRepositoryEntry;
     });
     const coordinates = entries.map((entry) => `${entry.publisherId}\0${entry.collectionId}\0${entry.version}`);

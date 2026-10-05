@@ -5,10 +5,10 @@ implemented; unified Pages, Core data-plane contracts and Control replacement
 remain planned.
 
 This note records the intended direction for replacing Control's static admin
-pages, visual Foundation components, collection Views and the current Dashboard
-navigation model. It deliberately distinguishes the target architecture from
-the behavior documented in the current Dashboard, Control and collection
-guides.
+pages, visual Foundation components and transitional collection Views. The
+former Dashboard package, collection resource, persistence, routes and UI have
+already been removed; this document retains only the behavior that future
+Control Pages may need to recover.
 
 ## Objectives
 
@@ -55,7 +55,7 @@ CMS instance exact Core runtime, data and supported contract set
 Collection   immutable distribution and dependency unit
 ```
 
-`View`, `Dashboard` and `Application` are not required in the initial target
+`Dashboard` has been removed. `View` and `Application` are not required in the initial target
 model. A future grouping primitive should only be introduced for a demonstrated
 access or lifecycle requirement, not to own rendering or navigation.
 
@@ -784,11 +784,11 @@ Capability metadata should distinguish queries, commands and destructive
 commands so the editor can prevent accidental mutations without maintaining a
 hard-coded list of CMS endpoints.
 
-## Current Dashboard Migration Direction
+## Removed Dashboard Responsibilities
 
-The current Dashboard model combines navigation, layout placement, View
-reachability, activation, assignments and grants. Those responsibilities move
-as follows:
+The removed Dashboard model combined navigation, layout placement, View
+reachability, activation, assignments and grants. If still required, those
+responsibilities move as follows:
 
 | Current responsibility | Target owner |
 | --- | --- |
@@ -802,7 +802,7 @@ as follows:
 | Administrator access | Page and capability policies |
 | Member assignments | Future reusable access policy/group if required |
 
-`cms-dashboards` may therefore disappear. If multiple Pages later need one
+`cms-dashboards` has therefore been removed. If multiple Pages later need one
 shared member assignment, add a small access-policy/group concept rather than a
 rendering or navigation Application.
 
@@ -828,8 +828,8 @@ The following details must be decided before changing the collection protocol:
 13. how a generic Control host selects the compatible `ulvia-control` release;
 14. the minimal bootstrap and recovery UI retained outside collections.
 
-These are design decisions, not reasons to preserve the current Dashboard or
-static admin model.
+These are design decisions, not reasons to restore the former Dashboard model
+or preserve the static admin model indefinitely.
 
 ## Delivery Discipline
 
@@ -847,8 +847,9 @@ Required working rules:
 - validate each domain boundary before adding distributed transport;
 - run old and new paths side by side where that makes comparison possible;
 - require a recovery and rollback path before introducing destructive commands;
-- do not remove Dashboard, View, static admin or Foundation component code
-  merely because the target document says they may disappear;
+- do not remove View, static admin or Foundation component code merely because
+  the target document says they may disappear; Dashboard was intentionally
+  removed early because it had no production compatibility requirement;
 - delete an existing path only after its replacement covers behavior, access,
   persistence, failure and upgrade tests;
 - record decisions that survive the prototype as protocol/architecture rules,
@@ -902,11 +903,12 @@ Pages, provider-managed updates and removal of the existing administration.
 18. Resolve different compatible `ulvia-control` releases for the old and
     current Core contract sets reported through provider contexts.
 19. Migrate the remaining static administration incrementally.
-20. Replace Dashboard assignments with access policies if the existing member
-    use case still requires them.
+20. Add access policies only if a concrete multi-Page member use case requires
+    them; the old Dashboard assignments have been removed.
 21. Extract non-visual collection runtime primitives, then remove obsolete
     Foundation visual components and static admin files.
 
-The current implementation should remain operational during this sequence. No
-existing package should be removed until the corresponding collection Page,
-provider capability and recovery path have been proven together.
+The current implementation should remain operational during this sequence. Apart
+from the intentionally removed Dashboard package, no existing package should be
+removed until the corresponding collection Page, provider capability and
+recovery path have been proven together.

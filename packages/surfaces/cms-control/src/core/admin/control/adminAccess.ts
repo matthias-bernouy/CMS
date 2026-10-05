@@ -4,9 +4,6 @@ import type { Middleware } from "@bernouy/http-runner";
 import type { ControlCms } from "cms-control/ControlCms";
 
 const MEMBER_API_ROUTES = new Set([
-    "GET /dashboard-context",
-    "GET /dashboard-view",
-    "GET /my-dashboards",
     "GET /pats",
     "POST /pats",
     "DELETE /pats",
@@ -30,7 +27,7 @@ export function createAuthenticatedControlGuard(basePath: string, auth: Authenti
     });
 }
 
-/** Keeps member self-service and assigned dashboard reads open; every other file-routed API requires an admin. */
+/** Keeps member self-service open; every other file-routed API requires an administrator. */
 export function createControlApiAuthorizationGuard(basePath: string, cms: ControlCms): Middleware {
     return async (request, next) => {
         const pathname = new URL(request.url).pathname;

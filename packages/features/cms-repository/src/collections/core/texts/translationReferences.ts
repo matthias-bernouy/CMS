@@ -1,5 +1,4 @@
 import type { CollectionSettingControl } from "../../interfaces/CollectionBloc";
-import type { CollectionDashboardNavigationItem } from "../../interfaces/CollectionDashboard";
 import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import { invalid } from "../errors";
 import { parseCollectionTranslationKey } from "./translationCatalogue";
@@ -67,12 +66,6 @@ function collectReferences(release: CollectionRelease): Reference[] {
         references.push(reference(view.name, `${path}.name`, 128));
         optional(references, view.description, `${path}.description`, 4096);
     }
-    for (const [index, dashboard] of (release.dashboards ?? []).entries()) {
-        const path = `$.dashboards[${index}]`;
-        references.push(reference(dashboard.name, `${path}.name`, 128));
-        optional(references, dashboard.description, `${path}.description`, 4096);
-        navigationReferences(references, dashboard.navigation, `${path}.navigation`);
-    }
     return references;
 }
 
@@ -92,18 +85,6 @@ function controlReferences(references: Reference[], control: CollectionSettingCo
         for (const [index, option] of (control.tokens ?? []).entries()) {
             references.push(reference(option.label, `${path}.tokens[${index}].label`, 120));
         }
-    }
-}
-
-function navigationReferences(
-    references: Reference[],
-    items: readonly CollectionDashboardNavigationItem[],
-    path: string,
-): void {
-    for (const [index, item] of items.entries()) {
-        const itemPath = `${path}[${index}]`;
-        references.push(reference(item.label, `${itemPath}.label`, 32));
-        navigationReferences(references, item.children ?? [], `${itemPath}.children`);
     }
 }
 

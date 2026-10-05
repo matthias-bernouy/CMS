@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { referenceFixture, release } from "./fixture";
 
-test("blocks removal of a collection view used by a site dashboard", async () => {
+test("blocks removal of a collection view used by an external feature", async () => {
     const fixture = await referenceFixture({
         translations: {
             en: { "collection.name": "Atlas", "bloc.label": "Card", "view.name": "Legacy view" },
@@ -14,16 +14,14 @@ test("blocks removal of a collection view used by a site dashboard", async () =>
         migrations: [{ fromGeneration: 1, toGeneration: 2, operations: [] }],
     });
     fixture.service.addParticipant({
-        id: "dashboards",
+        id: "external-pages",
         async collectReferences() {
-            return [{ kind: "view", collectionId: "atlas", id: "legacy", location: "Dashboard Operations" }];
+            return [{ kind: "view", collectionId: "atlas", id: "legacy", location: "Control page" }];
         },
     });
 
     const plan = await fixture.service.plan("site", [{ digest: next.digest }], 1);
-    expect(plan.blockedReasons).toContain(
-        "Dashboard Operations still references removed collection view atlas:legacy.",
-    );
+    expect(plan.blockedReasons).toContain("Control page still references removed collection view atlas:legacy.");
 });
 
 test("blocks every externally referenced collection resource kind", async () => {
@@ -47,7 +45,7 @@ test("blocks every externally referenced collection resource kind", async () => 
     });
 
     const plan = await fixture.service.plan("site", [{ digest: next.digest }], 1);
-    for (const kind of ["bloc", "theme-token", "configuration", "text", "asset", "dashboard"]) {
+    for (const kind of ["bloc", "theme-token", "configuration", "text", "asset"]) {
         expect(plan.blockedReasons).toContainEqual(expect.stringContaining(`collection ${kind}`));
     }
 });
@@ -61,21 +59,21 @@ test("digests participant resource identities independently from diagnostic labe
     };
     const fixture = await referenceFixture(patch);
     const next = await fixture.collections.importRelease({ ...release("1.1.0", "atlas-card"), ...patch });
-    let location = "Dashboard One";
+    let location = "Control page one";
     fixture.service.addParticipant({
-        id: "dashboards",
+        id: "control-pages",
         async collectReferences() {
             return [{ kind: "view", collectionId: "atlas", id: "overview", location }];
         },
     });
     const first = await fixture.service.plan("site", [{ digest: next.digest }], 1);
-    location = "Renamed dashboard";
+    location = "Renamed Control page";
     const second = await fixture.service.plan("site", [{ digest: next.digest }], 1);
 
     expect(first.planDigest).toBe(second.planDigest);
     expect(() =>
         fixture.service.addParticipant({
-            id: "dashboards",
+            id: "control-pages",
             async collectReferences() {
                 return [];
             },
@@ -128,20 +126,11 @@ function previousResources(): Record<string, unknown> {
             en: {
                 "collection.name": "Atlas",
                 "bloc.label": "Card",
-                "dashboard.name": "Legacy dashboard",
-                "nav.legacy": "Legacy",
                 "token.accent": "Accent",
                 "view.name": "Legacy view",
             },
         },
         views: [{ id: "legacy", name: "view.name", html: "<p>Legacy</p>" }],
-        dashboards: [
-            {
-                id: "legacy-dashboard",
-                name: "dashboard.name",
-                navigation: [{ id: "legacy", label: "nav.legacy", use: "legacy" }],
-            },
-        ],
     };
 }
 
@@ -157,11 +146,5 @@ function externalReferences() {
         { kind: "configuration" as const, collectionId: "atlas", id: "atlas", location: "External workflow" },
         { kind: "text" as const, collectionId: "atlas", id: "legacy-title", location: "External workflow" },
         { kind: "asset" as const, collectionId: "atlas", id: "legacy.svg", location: "External workflow" },
-        {
-            kind: "dashboard" as const,
-            collectionId: "atlas",
-            id: "legacy-dashboard",
-            location: "External workflow",
-        },
     ];
 }

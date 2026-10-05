@@ -288,10 +288,8 @@ models and validation for CMS-owned installations and site selections.
   excludes platform-owned roots, prefixes every custom-element tag and derives
   global theme token IDs and CSS variables. Validate derived identities during
   collection admission rather than waiting for installation or compilation.
-- Collection theme categories and tokens, HTML views, and dashboard templates
-  are admitted and included in the release digest. Dashboard templates reference
-  only local declared views; site activation and membership live outside the
-  immutable release. Cross-collection dependencies import only explicitly
+- Collection theme categories, tokens and transitional HTML views are admitted
+  and included in the release digest. Cross-collection dependencies import only explicitly
   exported Bloc tags, collection-local theme token IDs, server text IDs and immutable
   asset IDs from one publisher and bounded version range. Every import pins the
   exact resource contract generation understood by its dependent. Installation resolves the complete graph, rejects
@@ -304,7 +302,7 @@ models and validation for CMS-owned installations and site selections.
   metadata can be resolved in batches without hydrating unrelated releases or binary payloads.
   Export controls dependency authority, while Delivery may serve any installed immutable
   asset needed by its owning collection. Public URLs include the verified content digest.
-- Collection, Bloc, setting, text, theme, View and dashboard administration
+- Collection, Bloc, setting, text, theme and View administration
   metadata always stores translation keys, never inline display copy. The
   immutable collection translation catalogue is keyed first by canonical BCP
   47 locale, then by reusable collection-local key. Require every reference in

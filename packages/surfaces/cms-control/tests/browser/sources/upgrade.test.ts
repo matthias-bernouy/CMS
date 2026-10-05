@@ -91,10 +91,6 @@ test("Explore sources finds ready upgrades and pins the selected provider releas
                 });
                 return;
             }
-            if (pathname === "/cms/api/dashboards") {
-                await route.fulfill({ json: { dashboards: [] } });
-                return;
-            }
             if (pathname === "/cms/api/source-select") {
                 writes.push(request.postDataJSON());
                 await route.fulfill({ status: 201, json: { selected: [] } });

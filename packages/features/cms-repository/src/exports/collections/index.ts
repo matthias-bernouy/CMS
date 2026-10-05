@@ -15,10 +15,6 @@ export type {
 } from "cms-repository/collections/interfaces/CollectionRelease";
 export type { CollectionView } from "cms-repository/collections/interfaces/CollectionView";
 export type {
-    CollectionDashboard,
-    CollectionDashboardNavigationItem,
-} from "cms-repository/collections/interfaces/CollectionDashboard";
-export type {
     CollectionTheme,
     CollectionThemeCategory,
     CollectionThemeToken,

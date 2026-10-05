@@ -7,7 +7,6 @@ import type {
 } from "@bernouy/cms-auth";
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { BlobStore } from "@bernouy/blob-store";
-import { InMemoryDashboardAssignmentRepository, InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import { InMemoryIdentityService } from "@bernouy/cms-gateway/identity";
 import {
     InMemoryCmsFileMutationJournal,
@@ -53,8 +52,6 @@ export function createControlCmsState(input: ControlCmsConstructorInput): Contro
         identityProviders: input.identityProviders ?? null,
         pats: input.pats ?? null,
         credentials: input.credentials ?? null,
-        dashboardAssignments: configuration.dashboardAssignments ?? new InMemoryDashboardAssignmentRepository(),
-        dashboards: configuration.dashboards ?? new InMemoryDashboardRepository(),
         identities: configuration.identities ?? new InMemoryIdentityService(),
     };
 }

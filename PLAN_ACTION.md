@@ -35,7 +35,7 @@ The end state is:
 - Control eventually becomes a generic client that renders Control Pages from
   collections and calls Core contracts through the provider installation
   selected by its pinned execution plans;
-- `View`, `Dashboard` and `Application` disappear unless a later concrete
+- `Dashboard` is removed. `View` and `Application` disappear unless a later concrete
   lifecycle or authorization requirement proves that a replacement concept is
   necessary;
 - the static Control application and visual Foundation components are removed
@@ -107,9 +107,9 @@ invalidate migrations, updates or recovery:
 - interrupted writes have a deterministic recovery result;
 - the workspace validation baseline remains green.
 
-The current Dashboard model is maintenance-only during this roadmap. Do not add
-new navigation, capability or rendering abstractions to it: Phase 9 removes it
-after Control Pages and layout Blocs have reached parity.
+The Dashboard package, collection resource, routes, assignments and static pages
+were removed before Control Pages reached parity. Do not recreate that model.
+Collection Views remain transitional until Pages and layout Blocs replace them.
 
 ## Phase 1 — Separate Provider Lifecycle From Core Contracts
 
@@ -344,7 +344,8 @@ For each area:
 - switch the route only after those tests pass;
 - remove the old screen in a separate commit.
 
-This phase is where current Views and Dashboards are translated into Pages and
+This phase is where current Views and any required behavior from the former
+Dashboard flow are translated into Pages and
 composition Blocs. They must not receive a compatibility layer that becomes a
 second permanent rendering system.
 
@@ -361,7 +362,8 @@ After complete parity:
 
 - delete the static Control application;
 - delete visual Foundation components that have collection replacements;
-- remove View and Dashboard rendering, routing and authoring models;
+- remove the remaining View rendering and authoring model; Dashboard routing,
+  persistence and authoring have already been removed;
 - remove Application if it has no remaining independent lifecycle purpose;
 - delete adapters and migrations that only supported those retired concepts;
 - update package boundaries, documentation and architecture checks.
@@ -603,8 +605,8 @@ The redesign is complete when all of the following are true:
 - every collection capability is derived, planned and authorized transitively;
 - the shared editor can author both Page surfaces without two document models;
 - migration maintenance, backup, restore and adjacent update flows are tested;
-- static Control UI, superseded visual Foundation components, Views,
-  Dashboards and unnecessary Application code are gone;
+- static Control UI, superseded visual Foundation components, Views, the former
+  Dashboard model and unnecessary Application code are gone;
 - no Cloud service is required for the official local deployment;
 - the entire workspace validation suite passes with no new blocking
   architecture, security or repository-shape finding.

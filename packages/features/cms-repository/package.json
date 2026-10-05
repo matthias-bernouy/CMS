@@ -34,7 +34,6 @@
     "dependencies": {
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/blob-store": "workspace:*",
-        "@bernouy/cms-dashboards": "workspace:*",
         "canonicalize": "^3.0.0",
         "htmlparser2": "^10.1.0",
         "jsonc-parser": "^3.3.1"

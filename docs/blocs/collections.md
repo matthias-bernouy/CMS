@@ -27,8 +27,7 @@ packages/official-repository/collections/ulvia-official/
 ├── theme/**/*.json          # recursively organized category/token defaults
 ├── definitions/             # reserved for later collection definitions
 ├── views/<view>/definition.json  # view identity, label and capability requirements
-├── views/<view>/view.html   # Control HTML fragment
-└── dashboards/<dashboard>/definition.json  # navigation tree of local views
+└── views/<view>/view.html   # transitional Control HTML fragment
 ```
 
 `definition.json` may publish a selective `exports` surface containing Bloc
@@ -79,15 +78,13 @@ repository server:
 | Assets | 1,024 |
 | Content texts | 4,096 |
 | Views | 256 |
-| Dashboards | 128 |
 | Collection dependencies | 128 |
 | Theme categories | 64 |
 | Theme tokens across all categories | 4,096 |
 
 Structural sub-resources remain bounded as well: 512 adjacent migration files
 with 512 operations each, 256 settings and 32 slots per Bloc, and 32 capability
-requirements per Bloc or View. Dashboard navigation accepts 64 items in total,
-with at most 16 at one level and three levels.
+requirements per Bloc or View.
 
 One asset remains limited to 10 MiB and all asset bytes in one release remain
 limited to 50 MiB. These are hard collection limits: a release exceeding any
@@ -203,7 +200,7 @@ retains site text overrides and checks revision and compatible resource IDs.
 ## Release evolution and migrations
 
 The collection SemVer remains the publication version. Each Bloc, theme token,
-configuration, text, View and dashboard also has a positive `generation`
+configuration, text and View also has a positive `generation`
 (default `1`) and deterministic contract and implementation digests. An
 implementation-only change leaves the contract digest stable. A compatible
 contract extension may change the contract digest without changing the resource
@@ -306,21 +303,18 @@ including fixed Light DOM, named slots and initial page content. Verified asset
 bytes and revision-checked collection configuration are implemented. The store
 can remove a collection after checking installed dependants, but Control does not
 expose removal until it can also report affected pages, private Blocs, theme
-references and dashboards. Remote registry transfer and authenticated
+references and transitional Views. Remote registry transfer and authenticated
 publication are implemented by the CLI and filesystem reference registry.
 Production hosting, key rotation and multi-publisher authorization remain
 deployment work. JavaScript trust scanning is also separate; migration files
-themselves are data-only. Collection Views can render local or explicitly
-imported Blocs; Control expands compositions, loads the transitive component
-runtime (including internal Blocs), resolves collection texts and public assets,
-and applies the site theme. Capability calls are authorized against the selected
-View and all of its transitive Bloc requirements. Dashboards only define
-navigation and activation: their source list is derived from those Views.
-Activating a dashboard compiles CMS-owned execution grants for its Views. Each
-plan pins the collection digest, View generation, provider-selection revision,
-contract release digest and installation. Calls fail closed after an upgrade or
-selection change until the dashboard is activated against the new state. A source
-adapter exists for multiple repositories, while the dev runtime configures one local source.
+themselves are data-only. Collection Views can contain local or explicitly
+imported Blocs, and the renderer can expand compositions, load transitive
+component runtimes, resolve collection texts and public assets, and apply the
+site theme. There is currently no Control navigation or activation flow for
+these transitional Views. The retained execution-plan API can pin the collection
+digest, View generation, provider-selection revision, contract release digest
+and installation for the future Control Page integration. A source adapter exists
+for multiple repositories, while the dev runtime configures one local source.
 Repository catalogue responses use opaque cursor pagination with at most 256
 releases per page. Clients consume every page, reject cursor loops and duplicate
 coordinates across pages, and cap one listing at 262,144 releases. The official

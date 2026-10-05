@@ -3,7 +3,6 @@ import type { Db } from "mongodb";
 import { createCoreStores } from "../src/runtime/stores/core";
 import { createFeatureStores } from "../src/runtime/stores/features";
 import { readRuntimeEnv } from "../src/runtimeEnv";
-import type { CollectionMigrationWriteFence } from "@bernouy/cms-content/migrations";
 
 describe("production runtime stores", () => {
     test("initializes feature stores without a Source repository", async () => {
@@ -27,11 +26,11 @@ describe("production runtime stores", () => {
                 };
             },
         } as unknown as Db;
-        const stores = await createFeatureStores(db, passThroughFence());
+        const stores = await createFeatureStores(db);
 
-        expect(indexedCollections).toEqual(expect.arrayContaining(["cms_identity_aliases", "dashboardAssignments"]));
+        expect(indexedCollections).toContain("cms_identity_aliases");
         expect(indexedCollections).not.toContain("sources");
-        expect(stores.dashboards).toBeDefined();
+        expect(stores.identities).toBeDefined();
     });
 
     test("rejects an invalid Mongo connection string before initializing stores", async () => {
@@ -49,17 +48,3 @@ describe("production runtime stores", () => {
         await expect(createCoreStores(env)).rejects.toThrow(/Invalid scheme/);
     });
 });
-
-function passThroughFence(): CollectionMigrationWriteFence {
-    return {
-        async claimMaintenance() {
-            return true;
-        },
-        async assertMaintenance() {},
-        async yieldMaintenance() {},
-        async releaseMaintenance() {},
-        async withWrite(_siteId, operation) {
-            return operation();
-        },
-    };
-}

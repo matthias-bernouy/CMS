@@ -1,6 +1,6 @@
 cms-health-workspace { display: block; color: var(--text-main); }
 cms-health-workspace p9r-container { display: block; padding-block: 24px; }
-cms-health-workspace [data-provider-list], cms-health-workspace [data-source-list], cms-health-workspace [data-collection-list], cms-health-workspace [data-dashboard-list] { display: grid; margin-bottom: 16px; }
+cms-health-workspace [data-provider-list], cms-health-workspace [data-source-list], cms-health-workspace [data-collection-list] { display: grid; margin-bottom: 16px; }
 cms-health-workspace .health-row { align-items: center; border-bottom: 1px solid var(--border-default); color: inherit; display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) auto auto; padding: 11px 0; text-decoration: none; }
 cms-health-workspace .health-row:first-child { padding-top: 0; }
 cms-health-workspace .health-row:last-child { padding-bottom: 0; border-bottom: 0; }

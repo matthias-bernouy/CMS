@@ -2,7 +2,6 @@ import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 import {
     type Catalogue,
     type Collections,
-    type Dashboards,
     type HealthReport,
     type HealthRow,
     healthReport,
@@ -23,7 +22,6 @@ class HealthWorkspace extends HTMLElement {
             ["[data-providers-link]", "/admin/settings/providers"],
             ["[data-sources-link]", "/admin/sources"],
             ["[data-collections-link]", "/admin/collections"],
-            ["[data-dashboards-link]", "/admin/dashboards"],
         ] as const) {
             this.querySelector(selector)!.setAttribute("href", `${base}${path}`);
         }
@@ -33,7 +31,7 @@ class HealthWorkspace extends HTMLElement {
     private async load(): Promise<void> {
         this.showState("loading");
         const base = getMetaBasePath();
-        const paths = ["provider-installations", "provider-catalogue", "collections/available", "dashboards"];
+        const paths = ["provider-installations", "provider-catalogue", "collections/available"];
         const results = await Promise.allSettled(
             paths.map(async (path) => {
                 const response = await fetch(`${base}/api/${path}`, { cache: "no-store" });
@@ -47,11 +45,11 @@ class HealthWorkspace extends HTMLElement {
             this.showState("error");
             return;
         }
-        const [providers, catalogue, collections, dashboards] = results.map((result) =>
+        const [providers, catalogue, collections] = results.map((result) =>
             result.status === "fulfilled" ? result.value : null,
-        ) as [Providers | null, Catalogue | null, Collections | null, Dashboards | null];
-        const report = healthReport(base, providers, catalogue, collections, dashboards);
-        this.renderReport(report, providers, collections, dashboards);
+        ) as [Providers | null, Catalogue | null, Collections | null];
+        const report = healthReport(base, providers, catalogue, collections);
+        this.renderReport(report, providers, collections);
         const unavailable = paths.filter((_, index) => results[index]!.status === "rejected");
         const status = this.querySelector<HTMLElement>("[data-health-status]")!;
         status.textContent = unavailable.length
@@ -62,17 +60,11 @@ class HealthWorkspace extends HTMLElement {
         this.showState("ready");
     }
 
-    private renderReport(
-        report: HealthReport,
-        providers: Providers | null,
-        collections: Collections | null,
-        dashboards: Dashboards | null,
-    ): void {
+    private renderReport(report: HealthReport, providers: Providers | null, collections: Collections | null): void {
         this.renderRows("[data-provider-list]", report.providers, "No provider is connected.");
         this.renderRows("[data-source-list]", report.sources, "No sources are connected.");
         this.renderRows("[data-collection-list]", report.collections, "No collections are installed.");
-        this.renderRows("[data-dashboard-list]", report.dashboards, "No dashboards are configured.");
-        const counts = `${providers?.installations.length ?? 0} provider${providers?.installations.length === 1 ? "" : "s"} · ${providers?.selected.length ?? 0} source${providers?.selected.length === 1 ? "" : "s"} · ${collections?.installed.length ?? 0} collection${collections?.installed.length === 1 ? "" : "s"} · ${dashboards?.dashboards.length ?? 0} dashboard${dashboards?.dashboards.length === 1 ? "" : "s"}`;
+        const counts = `${providers?.installations.length ?? 0} provider${providers?.installations.length === 1 ? "" : "s"} · ${providers?.selected.length ?? 0} source${providers?.selected.length === 1 ? "" : "s"} · ${collections?.installed.length ?? 0} collection${collections?.installed.length === 1 ? "" : "s"}`;
         this.querySelector("[data-health-summary]")!.textContent = report.issues
             ? `${report.issues} issue${report.issues === 1 ? "" : "s"} need attention · ${counts}`
             : `All monitored areas look healthy · ${counts}`;

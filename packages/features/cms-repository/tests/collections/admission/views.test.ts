@@ -8,7 +8,7 @@ test("collection views keep Control HTML while rejecting executable markup", () 
         id: "overview",
         name: "view.overview.name",
         icon: "star",
-        html: "<section><h2>{{ dashboard.name }}</h2><atlas-panel></atlas-panel></section>",
+        html: "<section><h2>Overview</h2><atlas-panel></atlas-panel></section>",
     };
     const release = parseCollectionRelease({ ...document, views: [view] });
     expect(release.views?.[0]?.html).toBe(view.html);

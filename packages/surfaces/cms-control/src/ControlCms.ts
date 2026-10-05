@@ -77,12 +77,6 @@ export class ControlCms {
     get secrets() {
         return controlCmsAccessors.secrets(this.state);
     }
-    get dashboardAssignments() {
-        return controlCmsAccessors.dashboardAssignments(this.state);
-    }
-    get dashboards() {
-        return controlCmsAccessors.dashboards(this.state);
-    }
     get identities() {
         return controlCmsAccessors.identities(this.state);
     }

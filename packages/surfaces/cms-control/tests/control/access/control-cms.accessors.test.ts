@@ -13,7 +13,6 @@ describe("ControlCms accessor delegation", () => {
             runner: dependency,
             cache: dependency,
             secrets: dependency,
-            dashboardAssignments: dependency,
             identities: dependency,
         } as unknown as ControlCmsState;
 
@@ -24,7 +23,6 @@ describe("ControlCms accessor delegation", () => {
             ["runner", dependency],
             ["cache", dependency],
             ["secrets", dependency],
-            ["dashboardAssignments", dependency],
             ["identities", dependency],
         ] as const;
 

@@ -1,11 +1,8 @@
 import { expect, test } from "bun:test";
 import type { GatewayInvocation } from "@bernouy/cms-gateway";
-import { InMemoryDashboardAssignmentRepository, InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
-import type { ControlCms } from "cms-control/ControlCms";
 import {
     handleControlCapabilityCall,
     handleControlCapabilityFile,
-    handleDashboardCapabilityCall,
     mountControlCapabilityRoutes,
 } from "cms-control/core/admin/control/mountRoutes/capability";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
@@ -30,7 +27,7 @@ test("Control mounts a separate capability route with verified administrator ide
             },
         },
     } as unknown as ControlCmsState;
-    mountControlCapabilityRoutes({} as ControlCms, state, (_request, next) => next());
+    mountControlCapabilityRoutes(state, (_request, next) => next());
     const handler = runner.handlers.get("POST /api/call");
     expect(handler).toBeDefined();
     const response = await handler!(
@@ -103,7 +100,7 @@ test("Control mounts authenticated provider file reads", async () => {
             },
         },
     } as unknown as ControlCmsState;
-    mountControlCapabilityRoutes({} as ControlCms, state, (_request, next) => next());
+    mountControlCapabilityRoutes(state, (_request, next) => next());
     const handler = runner.handlers.get("GET /api/media");
     expect(handler).toBeDefined();
     const response = await handler!(new Request("http://control/api/media/files/file.read/photo-1"));
@@ -140,7 +137,7 @@ test("Control mounts provider derivatives with its authenticated administrator",
             },
         },
     } as unknown as ControlCmsState;
-    mountControlCapabilityRoutes({} as ControlCms, state, (_request, next) => next());
+    mountControlCapabilityRoutes(state, (_request, next) => next());
     const response = await runner.handlers.get("GET /api/image")!(
         new Request("http://control/api/image/files/file.read/photo-1/128.webp"),
     );
@@ -151,103 +148,4 @@ test("Control mounts provider derivatives with its authenticated administrator",
         actor: { kind: "administrator", subjectId: "cms-admin-1" },
         input: { fileId: "photo-1" },
     });
-});
-
-test("a dashboard member can call only capabilities required by the selected view", async () => {
-    const calls: GatewayInvocation[] = [];
-    const dashboards = new InMemoryDashboardRepository();
-    const assignments = new InMemoryDashboardAssignmentRepository();
-    const collections = {
-        snapshot: async () => ({
-            revision: 1,
-            collections: [
-                {
-                    collectionId: "test",
-                    digest: `sha256:${"c".repeat(64)}`,
-                    release: {
-                        collectionId: "test",
-                        publisherId: "ulvia.official",
-                        version: "1.0.0",
-                        blocs: [],
-                        views: [
-                            {
-                                id: "catalog",
-                                uses: [],
-                                requires: [
-                                    {
-                                        contractId: "catalog.items",
-                                        capabilityId: "item.list",
-                                        versionRange: "^1.0.0",
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                },
-            ],
-        }),
-    };
-    await dashboards.create({
-        id: "workspace",
-        siteId: "site-a",
-        name: "Workspace",
-        enabled: true,
-        revision: 0,
-        navigation: [{ id: "catalog", label: "Catalog", use: "test:catalog" }],
-    });
-    await assignments.assign({ dashboardId: "workspace", subjectId: "member-1" });
-    const state = {
-        runner: { basePath: "/" },
-        auth: { getSubject: async () => ({ identifier: "member-1" }) },
-        dashboardAssignments: assignments,
-        configuration: {
-            collections: { siteId: "site-a", store: collections },
-            capabilityGateway: {
-                siteId: "site-a",
-                isAdministrator: async () => false,
-                invoker: {
-                    invoke: async (invocation: GatewayInvocation) => {
-                        calls.push(invocation);
-                        return { kind: "success", requestId: "request-1", status: 200, output: { items: [] } };
-                    },
-                },
-                viewExecutions: {
-                    activate: async () => {
-                        throw new Error("not used");
-                    },
-                    authorize: async () => ({
-                        planDigest: `sha256:${"a".repeat(64)}`,
-                        version: "1.0.0",
-                        digest: `sha256:${"b".repeat(64)}`,
-                        installationId: "install-a",
-                    }),
-                },
-            },
-        },
-    } as unknown as ControlCmsState;
-    const cms = {
-        auth: state.auth,
-        config: state.configuration,
-        dashboards,
-        dashboardAssignments: assignments,
-    } as unknown as ControlCms;
-    const request = (contract: string) =>
-        new Request(
-            `http://control/api/dashboard-call/${contract}/item.list?dashboardId=workspace&viewId=test%3Acatalog`,
-            {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: "{}",
-            },
-        );
-
-    expect((await handleDashboardCapabilityCall(request("catalog.items"), cms, state)).status).toBe(200);
-    expect(calls[0]).toMatchObject({
-        origin: "view",
-        actor: { kind: "user", subjectId: "member-1" },
-        contractId: "catalog.items",
-        execution: { installationId: "install-a" },
-    });
-    expect((await handleDashboardCapabilityCall(request("forms.submissions"), cms, state)).status).toBe(403);
-    expect(calls).toHaveLength(1);
 });

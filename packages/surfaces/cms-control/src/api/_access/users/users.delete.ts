@@ -4,8 +4,7 @@ import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 import { deleteUserCompletely } from "@bernouy/cms-auth/management";
 import { requireControlAdministrator } from "cms-control/core/admin/control/adminAccess";
 
-/** DELETE /api/users?sub= — removes a member across the membership,
- * local-credential, PAT, and dashboard-assignment stores. */
+/** DELETE /api/users?sub= — removes a member across the membership, local-credential, and PAT stores. */
 export default async function deleteUser(req: Request, cms: ControlCms) {
     const actor = await requireControlAdministrator(req, cms);
     const sub = new URL(req.url).searchParams.get("sub");
@@ -23,16 +22,6 @@ export default async function deleteUser(req: Request, cms: ControlCms) {
     if ((await cms.config?.administrators?.list())?.includes(sub)) {
         await cms.config.administrators!.set(sub, false);
     }
-    await deleteUserCompletely(
-        {
-            users: cms.users,
-            credentials: cms.credentials,
-            pats: cms.pats,
-            beforeMembershipDelete: async ({ sub: subjectId }) => {
-                await cms.dashboardAssignments.deleteForSubject(subjectId);
-            },
-        },
-        user,
-    );
+    await deleteUserCompletely({ users: cms.users, credentials: cms.credentials, pats: cms.pats }, user);
     return Response.json({ ok: true });
 }

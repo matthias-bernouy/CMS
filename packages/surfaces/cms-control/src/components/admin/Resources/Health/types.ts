@@ -24,21 +24,9 @@ export type Collections = {
     installed: { collectionId: string; version: string }[];
     releases: { collectionId: string; version: string }[];
 };
-export type Dashboards = {
-    dashboards: {
-        id: string;
-        name: string;
-        enabled: boolean;
-        members: string[];
-        sourceContracts?: string[];
-        origin?: unknown;
-    }[];
-};
-
 export type HealthReport = {
     providers: HealthRow[];
     sources: HealthRow[];
     collections: HealthRow[];
-    dashboards: HealthRow[];
     issues: number;
 };

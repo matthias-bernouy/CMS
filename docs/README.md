@@ -19,9 +19,9 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 - [Deferred platform work](TODO.md): explicit trust assumptions and work that
   must be completed before those assumptions change.
 - [Control Pages and provider-managed CMS instances](todo/control-pages-and-provider-managed-cms-instances.md):
-  proposed replacement for static admin pages, collection Views and Dashboard
-  navigation, with local, cloud or third-party instance providers; provider-owned
-  local discovery is implemented, while unified Pages remain planned.
+  design for replacing static admin pages and transitional collection Views with
+  surface-specific Pages, with local, cloud or third-party instance providers;
+  provider-owned local discovery is implemented, while unified Pages remain planned.
 - [Local provider and CMS initialization](todo/local-provider-initialization.md):
   proposed offline first-run, bootstrap collection, Control Page, restart and
   recovery flow for the official local provider; durable discovery of the
@@ -36,10 +36,8 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   compositions, editor contracts, bindings and themes.
 - [Collection API and admission](blocs/collections.md): the current Control
   workspace and the separate `ulvia-collection/v1` authored bundle format.
-- [Dashboards and views](dashboards/README.md): site dashboards, collection HTML
-  views, member access and current binding limits.
 - [Site health](providers/README.md): provider observations, selected sources,
-  collection versions and dashboard activation in the admin Health page.
+  and collection versions in the admin Health page.
 
 The root [transition document](../TRANSITION_SOURCES.md) and
 [execution plan](../PLAN_ACTION.md) track direction and implementation phases.

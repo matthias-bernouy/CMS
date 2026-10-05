@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { healthReport } from "cms-control/components/admin/Resources/Health/model";
 
-test("health report flags stale provider observations and dashboards without members", () => {
+test("health report flags stale provider observations", () => {
     const now = Date.parse("2026-10-01T15:00:00.000Z");
     const providers = {
         installations: [
@@ -30,19 +30,11 @@ test("health report flags stale provider observations and dashboards without mem
             },
         ],
     };
-    const report = healthReport(
-        "/cms",
-        providers,
-        { available: [] },
-        { installed: [], releases: [] },
-        { dashboards: [{ id: "dashboard-1", name: "Sales", enabled: true, members: [] }] },
-        now,
-    );
+    const report = healthReport("/cms", providers, { available: [] }, { installed: [], releases: [] }, now);
 
     expect(report.providers[0]).toMatchObject({ state: "Check overdue", tone: "warning" });
     expect(report.sources[0]).toMatchObject({ state: "Check overdue", tone: "warning" });
-    expect(report.dashboards[0]).toMatchObject({ state: "No members", tone: "warning" });
-    expect(report.issues).toBe(3);
+    expect(report.issues).toBe(2);
 });
 
 test("health report marks fresh ready resources as healthy", () => {
@@ -64,39 +56,10 @@ test("health report marks fresh ready resources as healthy", () => {
         },
         { available: [] },
         { installed: [{ collectionId: "test", version: "1.0.0" }], releases: [] },
-        { dashboards: [{ id: "dashboard-1", name: "Sales", enabled: true, members: ["member"] }] },
         now,
     );
 
     expect(report.providers[0]!.state).toBe("Healthy");
     expect(report.collections[0]!.state).toBe("Up to date");
-    expect(report.dashboards[0]!.state).toBe("Active");
     expect(report.issues).toBe(0);
-});
-
-test("health report links an active dashboard to its missing source", () => {
-    const report = healthReport(
-        "/cms",
-        { installations: [], selected: [] },
-        { available: [] },
-        { installed: [], releases: [] },
-        {
-            dashboards: [
-                {
-                    id: "catalog",
-                    name: "Catalog workspace",
-                    enabled: true,
-                    members: ["member"],
-                    sourceContracts: ["catalog.items"],
-                },
-            ],
-        },
-    );
-
-    expect(report.dashboards[0]).toMatchObject({
-        state: "Source missing",
-        tone: "danger",
-        detail: "Connect catalog.items in Sources",
-    });
-    expect(report.issues).toBe(1);
 });

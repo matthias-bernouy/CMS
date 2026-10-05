@@ -119,7 +119,6 @@ export function assertCompatibleCollectionUpgrade(previous: CollectionRelease, n
     for (const resource of [
         ["text", previous.texts ?? [], next.texts ?? []],
         ["view", previous.views ?? [], next.views ?? []],
-        ["dashboard", previous.dashboards ?? [], next.dashboards ?? []],
     ] as const) {
         const nextIds = new Set(resource[2].map(({ id }) => id));
         for (const { id } of resource[1]) {
@@ -153,7 +152,7 @@ function assertAssetCompatibility(previous: CollectionRelease, next: CollectionR
 }
 
 export type CollectionBreakingResource = {
-    kind: "bloc" | "theme-token" | "configuration" | "text" | "asset" | "view" | "dashboard";
+    kind: "bloc" | "theme-token" | "configuration" | "text" | "asset" | "view";
     id: string;
     reason: string;
 };
@@ -186,7 +185,6 @@ export function collectionUpgradeBreakingResources(
     for (const [kind, oldItems, newItems] of [
         ["text", previous.texts ?? [], next.texts ?? []],
         ["view", previous.views ?? [], next.views ?? []],
-        ["dashboard", previous.dashboards ?? [], next.dashboards ?? []],
     ] as const) {
         const nextIds = new Set(newItems.map(({ id }) => id));
         for (const { id } of oldItems) {

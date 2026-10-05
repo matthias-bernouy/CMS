@@ -4,7 +4,6 @@ import type { CollectionTheme } from "./CollectionTheme";
 import type { CollectionBloc } from "./CollectionBloc";
 import type { CollectionAssetDefinition } from "./CollectionAssets";
 import type { CollectionView } from "./CollectionView";
-import type { CollectionDashboard } from "./CollectionDashboard";
 
 export interface CollectionConfiguration {
     readonly generation?: number;
@@ -44,7 +43,7 @@ export interface CollectionDataMigration {
     readonly operations: readonly CollectionMigrationOperation[];
 }
 
-export type CollectionResourceKind = "bloc" | "theme-token" | "configuration" | "text" | "asset" | "view" | "dashboard";
+export type CollectionResourceKind = "bloc" | "theme-token" | "configuration" | "text" | "asset" | "view";
 
 export interface CollectionResourceDescriptor {
     readonly kind: CollectionResourceKind;
@@ -125,5 +124,4 @@ export interface CollectionRelease {
     readonly assets: readonly CollectionAssetDefinition[];
     readonly blocs: readonly CollectionBloc[];
     readonly views?: readonly CollectionView[];
-    readonly dashboards?: readonly CollectionDashboard[];
 }

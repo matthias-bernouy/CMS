@@ -1,7 +1,7 @@
 <p9r-container size="xl">
     <cms-view-state state="loading" data-view-loading>
         <p slot="title">Checking site health</p>
-        <p slot="hint">Reading the latest provider, source, collection and dashboard state.</p>
+        <p slot="hint">Reading the latest provider, source and collection state.</p>
     </cms-view-state>
     <cms-view-state state="error" retry data-view-error hidden>
         <p slot="title">Site health could not be checked</p>
@@ -9,7 +9,7 @@
     </cms-view-state>
     <cms-shell-detail size="xl" data-view-content hidden>
         <span slot="title">Site health</span>
-        <span slot="description" data-health-summary>Checking providers, sources, collections and dashboards…</span>
+        <span slot="description" data-health-summary>Checking providers, sources and collections…</span>
         <cms-shell-detail-body slot="body">
             <cms-detail-section slot="main" heading="Providers">
                 <div data-provider-list></div>
@@ -22,10 +22,6 @@
             <cms-detail-section slot="aside" heading="Collections">
                 <div data-collection-list></div>
                 <a data-collections-link>Explore collections</a>
-            </cms-detail-section>
-            <cms-detail-section slot="aside" heading="Dashboards">
-                <div data-dashboard-list></div>
-                <a data-dashboards-link>Manage dashboards</a>
             </cms-detail-section>
         </cms-shell-detail-body>
     </cms-shell-detail>

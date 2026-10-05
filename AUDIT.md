@@ -15,7 +15,7 @@ There is no production deployment or production data to preserve. Historical imp
 | `cms-auth` | Completed | Token lifecycle, provider identity rules, and dormant OIDC flow need attention. |
 | `cms-collection-build` | Renamed after audit | Collection build isolation still needs hardening; the editor artifact channel was removed. |
 | `cms-content` | Completed | Public export boundary is too broad; a few adapters and validators appear unused. |
-| `cms-dashboards` | Cleaned up after audit | One navigation grammar now lives in the feature and is shared by site and collection dashboards. |
+| `cms-dashboards` | Removed after audit | The disposable Dashboard aggregate, assignments, collection resource, routes and UI were deleted before the Control Page rebuild. |
 | `cms-editor-system-v2` | Removed after audit | The retired editor package and its Control shell were deleted before the planned rewrite. |
 | `cms-gateway` | Completed | Media is coupled to generic invocation by an implicit `fileId` convention; HTTP handling is duplicated. |
 | `ulvia-official-provider` | Relocated after audit | The official provider is now a direct product package with explicit media identity and a declared server entrypoint. |
@@ -52,13 +52,15 @@ There is no production deployment or production data to preserve. Historical imp
 - Resolved after audit: generic memory, local-filesystem and S3 blob contracts/adapters now live in `@bernouy/blob-store`; `cms-content` retains only CMS metadata and lifecycle responsibilities. The server composes `LocalFsBlobStore` directly. [`blob-store`](packages/foundation/blob-store/package.json), [`authorFiles.ts`](packages/runtimes/cms-server/src/runtime/stores/authorFiles.ts#L1)
 - `validateCategory` and `isValidCategoryFolder` have no known workspace caller. The latter reaches the public API through a wildcard export. [`fields.ts`](packages/features/cms-content/src/application/core/validation/fields.ts#L38), [`predicates.ts`](packages/features/cms-content/src/application/core/validation/predicates.ts#L54)
 
-### `cms-dashboards`
+### Removed `cms-dashboards`
 
-- The feature mostly provides contracts and storage. Dashboard validation, catalogue merge, creation, and access rules live in `cms-control`, so another surface could apply different invariants. [`DashboardRepository.ts`](packages/features/cms-dashboards/src/interfaces/DashboardRepository.ts#L1), [`navigation.ts`](packages/surfaces/cms-control/src/core/admin/dashboards/navigation.ts#L8)
-- `DashboardRecord` still combines private dashboard data, collection activation state, and UI projection fields. Collection activation persists a derived record even though the collection release owns much of that data. This remaining split should be addressed when activation becomes its own aggregate.
-- Resolved after audit: collection templates and site dashboards use the same parser and identifier/depth/placement rules from `cms-dashboards`.
-- Resolved after audit: memory and Mongo both require `revision === expectedRevision + 1` on replacement.
-- Resolved after audit: the flat collection `views` form and persisted/API `mounts` representation were removed. Navigation is the only dashboard shape.
+- The audit found a disposable aggregate mixing navigation, layout placement,
+  collection activation, member assignments and View grants. With no production
+  compatibility requirement, the package, persistence adapters, collection
+  resource, routes, UI and tests were removed rather than strengthened.
+- Collection Views remain transitional inputs. Future navigation and shells are
+  ordinary Blocs inside surface-specific Pages; access policy will be added only
+  for a concrete use case.
 
 ### `cms-editor-system-v2`
 
@@ -83,7 +85,7 @@ There is no production deployment or production data to preserve. Historical imp
 
 - Resolved after audit: collection publication, HTTP transport, import and installation share one bundle contract carrying the release and exact asset bytes; contract catalogues are available during requirement admission.
 - Resolved after audit: upgrades revalidate saved text overrides and preserve the existing Bloc settings contract.
-- Resolved after audit: collection dashboards require the shared navigation tree; the historical flat `views` form and its conversion branches were deleted.
+- Resolved after audit: the collection Dashboard resource and its parsing, limits, catalogue summaries and compatibility branches were deleted.
 - At audit time, `HttpCollectionRepository` and `HttpProviderRepository` duplicated base-URL policy, fetch timeout/redirect handling and bounded stream reads. Their transport has since moved to [`repository-http/`](packages/features/cms-repository/src/repository-http/getBytes.ts); catalogue parsing remains domain-specific in [`collections/sources/parseCatalogue.ts`](packages/features/cms-repository/src/collections/sources/parseCatalogue.ts) and [`providers/sources/parseCatalogue.ts`](packages/features/cms-repository/src/providers/sources/parseCatalogue.ts). The separate identifier and SemVer regexes are still looser than the contract/manifest parsers: a catalogue entry can be displayed then fail admission. [`identifiers.ts`](packages/features/cms-repository/src/contracts/core/parsing/identifiers.ts#L4)
 - Conformance suite parsing/admission is a substantial implemented domain (17 source files in `contracts/core/conformance/`) with no caller in the current surfaces or runtimes. The runtime explicitly says live conformance is not implemented. This is unmounted future work, not proof of dead code. Keep or remove it based on product scope, not on a blind unused-symbol pass. [`index.ts`](packages/features/cms-repository/src/exports/contracts/index.ts#L38), [`ProviderConnectionWorkflow.ts`](packages/runtimes/cms-server/src/runtime/gateway/ProviderConnectionWorkflow.ts#L229)
 - The package's internal boundaries are comparatively strong: type-only root export, dedicated domain subpaths, architecture tests, immutable artifact admission and revisioned stores. No blocking source-directory fanout was found. The focused repository suite passed: **570 tests, 0 failures across 95 files**.
@@ -97,7 +99,7 @@ Package dependencies generally follow the repository's layer direction. Mongo, f
 1. **Completed: make the collection release scope coherent.** V1 now carries assets and capability requirements through publication, transport, import, installation and upgrade. Persisted text overrides are revalidated.
 2. **Make authored Bloc compilation safe and deterministic.** Constrain the resolved import graph to the supplied bundle and remove the historical self-registration form rather than preserving two registration contracts. Public Bloc ID validation and the obsolete editor artifact have already been resolved.
 3. **Completed: normalize the provider media contract.** `fileId` and explicit media capability declarations are canonical across contracts, Gateway and the official provider.
-4. **Mostly completed: give dashboards one domain model.** Navigation validation and revision rules now live in `cms-dashboards`, and the flat `views`/`mounts` forms are gone. Separating collection activation state from the derived dashboard catalogue record remains useful follow-up work.
+4. **Completed: remove the Dashboard model.** Its package, persistence, collection resource, routes, assignments and Control UI are gone. Do not recreate it during the Page rebuild.
 5. **Fix auth state transitions.** Make verification/reset token consumption retry-safe and bind the built-in provider invariant to a stable identity. Remove token-bearing console output. Decide whether OIDC is in the current product; either compose and test it or remove its incomplete public flow for now.
 6. **Build the new editor on canonical contracts.** Reuse `cms-content` binding types and URL helpers; inject page/file access; represent tree actions as a discriminated union. Avoid carrying over mechanical CSS fragments or direct Control route constants.
 7. **Tighten package surfaces.** Share only genuinely common HTTP read/validation primitives, reduce duplicate root exports, remove unused exports and old aliases. With no production deployment, remove historical compatibility branches directly. Keep SemVer and release upgrade checks that support current versioned artifacts.
@@ -116,4 +118,6 @@ The follow-up editor cleanup removed `@bernouy/cms-editor-system-v2`, the V2 pag
 
 Provider follow-up added explicit media declarations, exact-release startup validation for the official provider, administrator enable/disable/revoke actions, credential cleanup on revocation, and collection requirement readiness derived from selected provider grants. Live conformance execution remains intentionally unimplemented rather than being inferred from provider self-reporting.
 
-Dashboard follow-up centralized the navigation grammar in `cms-dashboards`, aligned Mongo revision semantics with memory, and removed the historical collection `views` and site/API `mounts` shapes.
+Dashboard follow-up ultimately removed the package, Mongo and memory storage,
+collection format, activation/assignment routes, static pages and Control UI.
+The generic gateway execution-plan primitives remain for the future Control Page flow.

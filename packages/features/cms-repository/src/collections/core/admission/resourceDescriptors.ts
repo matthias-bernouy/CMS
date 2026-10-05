@@ -117,15 +117,12 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
             implementation: { resource: view, translations: referencedTranslations(release, view) },
         })) ?? []),
     );
-    resources.push(
-        ...(release.dashboards?.map((dashboard) => projection(release, "dashboard", dashboard.id, dashboard)) ?? []),
-    );
     return resources;
 }
 
 function projection(
     release: CollectionRelease,
-    kind: Extract<CollectionResourceKind, "text" | "view" | "dashboard">,
+    kind: Extract<CollectionResourceKind, "text" | "view">,
     id: string,
     resource: { readonly generation?: number },
 ): ResourceProjection {

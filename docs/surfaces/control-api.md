@@ -54,8 +54,7 @@ Keep endpoint files thin:
 
 - The global Control guard establishes authentication only. Administrative
   routes are administrator-only by default. The API boundary allows members
-  only their profile, personal tokens, assigned dashboard catalogue, dashboard
-  views and dashboard binding context. High-impact handlers also call
+  only their profile and personal tokens. High-impact handlers also call
   `requireControlAdministrator(req, cms)` before parsing input or accessing
   administrative state.
 - Parse the request with shared helpers such as `readJsonBody`.

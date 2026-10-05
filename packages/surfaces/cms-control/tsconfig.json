@@ -25,7 +25,6 @@
         { "path": "../../features/cms-collection-build" },
         { "path": "../../features/cms-content" },
         { "path": "../../features/cms-gateway" },
-        { "path": "../../foundation/secret-store" },
-        { "path": "../../features/cms-dashboards" }
+        { "path": "../../foundation/secret-store" }
     ]
 }

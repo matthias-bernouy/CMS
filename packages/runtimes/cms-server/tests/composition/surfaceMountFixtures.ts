@@ -29,7 +29,6 @@ export function surfaceMountFixtures() {
             db: { databaseName: "cms-test" },
         },
         features: {
-            dashboardAssignments: token("dashboard-assignments"),
             identities: token("identities"),
         },
         authentication: {

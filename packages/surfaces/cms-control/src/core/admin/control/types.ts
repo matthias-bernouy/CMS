@@ -16,7 +16,6 @@ import type { PublicAuthRoutesConfig, OidcAuthHandlers } from "@bernouy/cms-auth
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { BlobStore } from "@bernouy/blob-store";
 import type { CollectionMigrationService } from "@bernouy/cms-content/migrations";
-import type { DashboardAssignmentRepository, DashboardRepository } from "@bernouy/cms-dashboards";
 import type { CmsFileMutationJournal, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
@@ -79,8 +78,6 @@ export type ControlCmsOptions = Configuration & {
             }): Promise<unknown>;
         };
     };
-    dashboardAssignments?: DashboardAssignmentRepository;
-    dashboards?: DashboardRepository;
     identities?: IdentityService;
     capabilityGateway?: {
         readonly siteId: string;
@@ -112,7 +109,5 @@ export type ControlCmsState = {
     identityProviders: IdentityProviderRepository | null;
     pats: PatRepository | null;
     credentials: LocalCredentialStore | null;
-    dashboardAssignments: DashboardAssignmentRepository;
-    dashboards: DashboardRepository;
     identities: IdentityService;
 };

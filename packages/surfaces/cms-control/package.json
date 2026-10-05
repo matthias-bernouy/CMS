@@ -50,7 +50,6 @@
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-collection-build": "workspace:*",
-        "@bernouy/cms-dashboards": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "@bernouy/components": "workspace:*",
         "linkedom": "^0.18.13",

@@ -112,7 +112,6 @@ describe("collection release parsing", () => {
             maxAssets: 1_024,
             maxTexts: 4_096,
             maxViews: 256,
-            maxDashboards: 128,
             maxDependencies: 128,
             maxThemeCategories: 64,
             maxThemeTokens: 4_096,

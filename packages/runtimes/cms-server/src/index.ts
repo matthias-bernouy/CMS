@@ -4,7 +4,6 @@ import { createCoreStores } from "./runtime/stores/core";
 import { createFeatureStores } from "./runtime/stores/features";
 import { createProductionGateway } from "./runtime/gateway/createProductionGateway";
 import { validateCmsStorageRoots } from "./runtime/stores/storageRoots";
-import { createDashboardMigrationParticipant } from "./runtime/stores/dashboardMigrationParticipant";
 import { readRuntimeEnv } from "./runtimeEnv";
 import { dirname, join } from "node:path";
 
@@ -12,7 +11,7 @@ const env = readRuntimeEnv(process.env);
 await validateCmsStorageRoots(env.CMS_FILES_DIR);
 
 const core = await createCoreStores(env);
-const features = await createFeatureStores(core.db, core.migrationStorage);
+const features = await createFeatureStores(core.db);
 const authentication = await createProductionAuth(env, core);
 const gateway = env.CMS_GATEWAY_SITE_ID
     ? await createProductionGateway(
@@ -25,10 +24,6 @@ const gateway = env.CMS_GATEWAY_SITE_ID
           env.CMS_PROVIDER_MEDIA_DIR ?? join(dirname(env.CMS_FILES_DIR), "cms-provider-media"),
       )
     : undefined;
-core.collectionMigrations.addParticipant(
-    createDashboardMigrationParticipant(features.dashboards, gateway?.viewExecutions),
-);
-
 const surfaces = await mountProductionSurfaces({
     env,
     core,

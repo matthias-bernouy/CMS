@@ -4,7 +4,7 @@ import type { CapabilityGatewayOptions } from "@bernouy/cms-gateway";
 import type { Db } from "mongodb";
 import { createProductionGatewayAccess } from "../../src/runtime/gateway/access";
 
-test("production gateway grants Delivery, scoped dashboard views and bootstrap-admin Control calls", async () => {
+test("production gateway grants Delivery, scoped collection views and bootstrap-admin Control calls", async () => {
     const credentials = {
         getByEmail: async () => ({ sub: "bootstrap-1" }),
     } as unknown as LocalCredentialStore;

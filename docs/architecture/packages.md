@@ -25,14 +25,11 @@ files explain implementation invariants.
 | `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues and authored collections with Control HTML views. |
 | `@bernouy/cms-gateway` | Authorized capability invocation, provider identity aliases, file reads and image derivatives. |
 | `@bernouy/cms-auth` | Accounts, local/OIDC providers, PATs, signed sessions, public auth operations and email composition. |
-| `@bernouy/cms-dashboards` | Site dashboard records, collection view mounts and direct subject assignments. |
 | `@bernouy/cms-collection-build` | Collection Bloc validation, browser artifact builds and source-bundle generation. |
 
-`cms-dashboards` owns site activation, private dashboard records and member
-assignments over collection-owned views, not view content or the removed widget
-runtime. Collection dashboard templates live in collection releases.
-Provider-backed view execution remains future work. `cms-collection-build` remains
-a separate feature package.
+Collection Views remain a transitional authored resource while Control Pages are
+designed. There is no separate Dashboard package, persistence model or runtime.
+`cms-collection-build` remains a separate feature package.
 
 The old `cms-sources`, `cms-source-images`, `cms-identities` and `cms-secrets`
 packages are absent. Provider invocation, identities and media belong to

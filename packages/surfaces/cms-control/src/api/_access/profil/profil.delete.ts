@@ -17,16 +17,6 @@ export default async function deleteOwnAccount(req: Request, cms: ControlCms) {
     if (!user) {
         throw new InvalidParam("session", "unknown user");
     }
-    await deleteUserCompletely(
-        {
-            users: cms.users,
-            credentials: cms.credentials,
-            pats: cms.pats,
-            beforeMembershipDelete: async ({ sub: subjectId }) => {
-                await cms.dashboardAssignments.deleteForSubject(subjectId);
-            },
-        },
-        user,
-    );
+    await deleteUserCompletely({ users: cms.users, credentials: cms.credentials, pats: cms.pats }, user);
     return Response.json({ ok: true });
 }

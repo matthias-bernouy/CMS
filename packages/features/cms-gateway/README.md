@@ -26,14 +26,13 @@ No layer in that path parses account or instance semantics from the reference
 or credential. The provider remains responsible for authenticating it and
 routing the call to its privately managed CMS instance.
 
-`./execution` compiles one immutable plan for each capability-bearing installed
-collection View when a dashboard is activated. The plan pins the collection
-digest and View generation together with the current selection revision and
-each exact contract release, digest and provider installation. Control requires
-that grant for every View call. Collection upgrades and provider-selection
-changes make the old plan stale; execution remains closed until an administrator
-activates the current dashboard state again. `./execution/mongo` persists these
-revisioned grants in production.
+`./execution` can compile an immutable plan for a capability-bearing installed
+collection View. The plan pins the collection digest and View generation
+together with the current selection revision and each exact contract release,
+digest and provider installation. Collection upgrades and provider-selection
+changes make an old plan stale. `./execution/mongo` persists these revisioned
+grants. No Control route activates or consumes View plans after removal of the
+Dashboard model; this machinery is retained for the future Control Page flow.
 
 `CapabilityGateway` activates synchronous JSON queries, synchronous natural or
 non-idempotent commands, and bounded binary file reads through an injected

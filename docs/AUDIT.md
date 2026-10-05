@@ -288,7 +288,7 @@ an accidental compatibility path.
 Page revisions, route recovery, authoring validation, read projections and
 collection migration mechanics are strong. Migrations use bounded batches,
 maintenance mode, resumable journals, rollback retention, stale-worker fencing
-and external participants such as dashboards.
+and explicit external participants.
 
 #### File Lifecycle Atomicity
 
@@ -328,17 +328,14 @@ materialized reference graph and cursor-based projections.
 The root package export remains broad and exposes both authoring and rendering
 concepts. It can be narrowed when the new editor boundary is designed.
 
-### `@bernouy/cms-dashboards` (Transitional)
+### Removed `@bernouy/cms-dashboards`
 
-Navigation has explicit bounds, storage uses optimistic revisions, and member
-assignments and view grants are separated. Dashboard capabilities are correctly
-derived from their views; dashboards do not need a duplicate capability list.
-
-The package is not a target architecture to strengthen. The active redesign
-replaces Views and Dashboards with surface-specific Pages composed from ordinary
-Blocs, including navigation and shell Blocs. Until that replacement reaches
-parity, Dashboard receives compatibility and defect fixes only; adding a new
-command layer or splitting its persistence model would create disposable work.
+The package, Mongo and memory persistence, assignments, collection Dashboard
+resource, activation routes, static pages and Control components have been
+removed. This deliberately creates a temporary product gap before unified
+Control Pages exist, but eliminates a second navigation/rendering model with no
+production data to preserve. Collection Views and gateway execution-plan
+primitives remain transitional; neither currently has a mounted member flow.
 
 ### `@bernouy/cms-gateway`
 
@@ -425,7 +422,7 @@ The current collection format supports:
 - server texts and recursively organized metadata translations;
 - recursively organized themes and tokens;
 - public collection assets;
-- HTML views and dashboards;
+- transitional HTML views;
 - transitive capabilities;
 - selective imports of blocs, tokens, texts and assets;
 - per-resource digests and generations;
@@ -439,7 +436,7 @@ imported token. This is the correct strict policy.
 
 The current `1.0.0` source includes approximately 67 exported public blocs, 71
 component/style roots including internal helpers, 119 exported theme tokens, 24
-exported server texts, four views and one dashboard. Forms, layouts, navigation
+exported server texts and four transitional views. Forms, layouts, navigation
 and content/marketing elements already provide a credible base collection.
 
 It is not yet a universal component catalogue. Data tables, pagination,
@@ -490,7 +487,6 @@ The main limits are:
   incrementally decoded;
 - a large UI package with concentrated state/effect files;
 - 53 UI contract diagnostics, mostly imperative fetch usage;
-- dashboard lifecycle invariants still partially owned by the surface;
 - a constructor with many positional dependencies;
 - incomplete user-locale persistence and hard-coded interface labels;
 - no editor, which is a deliberate current product state.
@@ -642,7 +638,8 @@ The most important missing test is a real black-box production journey:
 1. sign and publish an official collection release;
 2. pull, admit and install it in a CMS;
 3. create and render cross-collection blocs, tokens, texts and assets;
-4. activate a dashboard/view and execute an authorized provider capability;
+4. execute an authorized provider capability from Control and later repeat it
+   through the future Control Page execution plan;
 5. perform a major collection migration under maintenance;
 6. interrupt and resume or roll back the migration;
 7. restart every process;
@@ -659,7 +656,6 @@ Correlation IDs and `Server-Timing` provide a useful baseline. The platform
 still needs structured logs, metrics and durable audit events for:
 
 - collection install, upgrade, migration, rollback and retention cleanup;
-- dashboard activation and assignment;
 - secret and provider changes;
 - repository publication and yank;
 - provider invocation failures and latency;
@@ -672,7 +668,7 @@ product feature.
 
 ## Documentation And Repository Hygiene
 
-The focused collection, provider and dashboard documentation is generally
+The focused collection and provider documentation is generally
 source-backed and current. Higher-level documents have drifted:
 
 - the root `README.md` does not list all current packages/products;

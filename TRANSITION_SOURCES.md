@@ -22,8 +22,7 @@ The design reference currently lives outside this repository at:
 `UlviaInterfaces` is a design sandbox, not code to copy blindly. It contains
 the beginning of the new model: published contracts, capabilities, HTTP
 bindings, provider implementations, a CMS gateway, executable conformance
-scenarios, mocks, health reports, collections, text variables, blocs, views,
-and dashboards.
+scenarios, mocks, health reports, collections, text variables, blocs and views.
 
 At the original investigation, the sandbox contained 12 domain contracts and 282
 capabilities, with roughly 460 mocks and 82 conformance scenarios. Its 217
@@ -92,7 +91,7 @@ admission has started, but their full product flows remain open:
 
 - collection replacement;
 - the new bloc format and editors;
-- views and dashboards;
+- transitional views and their future Control Page replacement;
 - text variables and their authoring UI;
 - JSON-LD and other structured SEO projections;
 - push subscriptions that listen to capability calls.
@@ -213,7 +212,7 @@ The preferred Protocol v1 design is one SemVer per contract release:
 - breaking any capability requires a new contract major;
 - provably compatible schema changes and new capabilities require a minor;
 - descriptions and mocks may change in a patch;
-- installed releases and dashboard plans pin the contract digest.
+- installed releases and compiled execution plans pin the contract digest.
 
 An installed site's selected release keeps its own gateway validation and
 binding plan after a provider deployment. Widening an input limit from 100 to
@@ -515,17 +514,17 @@ and the old runtime is no longer part of the composition root.
 
 ### Phase 5 — Collections, views, and text variables
 
-Status: first collection authored-bundle admission slice exists. Publication,
-site installation, rendering, new bloc configuration, views, dashboard grants
-and localized collection texts remain open. The former dashboard widget runtime
-is gone; `cms-dashboards` retains assignment persistence only.
+Status: collection publication, installation, rendering, Bloc configuration and
+localized texts exist. The former Dashboard runtime, assignments and collection
+resource are gone. Collection Views remain transitional while unified Control
+Pages are planned.
 
 Complete the following product flows after the provider protocol is stable;
 initial bundle admission has already started:
 
 - port the new collection and bloc model;
 - integrate site and admin text variables;
-- compile views and dashboard grants against contract releases;
+- integrate retained execution-plan primitives with future Control Pages;
 - add JSON-LD projections;
 - add push event delivery if polling change feeds is insufficient.
 
@@ -571,8 +570,8 @@ collection definitions and validation belong to one feature package,
 The current `./contracts` and `./providers` entrypoints expose pure logic and
 models; the package root exports types only. `./collections` now exposes the
 first authored-bundle slice: assets, component shells and Light DOM compositions.
-Theme/i18n, imports, views, dashboards, compilation and installation remain
-planned. Immutable releases and manifests remain distinct from
+Theme/i18n, imports, views, compilation and installation were planned at this
+stage and are now implemented to varying degrees. Immutable releases and manifests remain distinct from
 site installation state, and pure installation/report validators do not perform
 live connections or gateway execution.
 

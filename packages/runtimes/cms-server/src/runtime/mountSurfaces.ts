@@ -56,8 +56,6 @@ export async function mountProductionSurfaces(
                       },
                   }
                 : {}),
-            dashboardAssignments: features.dashboardAssignments,
-            dashboards: features.dashboards,
             ...(gateway
                 ? {
                       capabilityGateway: {

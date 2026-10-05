@@ -1,5 +1,4 @@
 import { resolveCollectionTranslation } from "cms-repository/exports/collections/index";
-import type { CollectionDashboardNavigationItem } from "cms-repository/exports/collections/index";
 import { LocalCollectionRepository } from "./artifacts/collections";
 import { LocalArtifactFiles } from "./artifacts/files";
 import { LocalContractReleases } from "./contracts";
@@ -94,15 +93,6 @@ export class FilesystemRepositoryCatalogueIndex implements RepositoryCatalogueRe
                 description: release.description ? resolveCollectionTranslation(release, release.description) : "",
                 blocCount: release.blocs.length,
                 hasTheme: Boolean(release.theme),
-                dashboards: (release.dashboards ?? []).map((dashboard) => ({
-                    id: dashboard.id,
-                    name: resolveCollectionTranslation(release, dashboard.name),
-                    ...(dashboard.icon ? { icon: dashboard.icon } : {}),
-                    description: dashboard.description
-                        ? resolveCollectionTranslation(release, dashboard.description)
-                        : "",
-                    viewCount: countDashboardViews(dashboard.navigation),
-                })),
             });
         }
         return sorted(entries, "collectionId");
@@ -150,11 +140,4 @@ function key(entry: RepositoryCatalogueEntry, idKey: string): string {
 
 function compareOrdinal(left: string, right: string): number {
     return left < right ? -1 : left > right ? 1 : 0;
-}
-
-function countDashboardViews(items: readonly CollectionDashboardNavigationItem[]): number {
-    return items.reduce(
-        (count, item) => count + Number(Boolean(item.use)) + countDashboardViews(item.children ?? []),
-        0,
-    );
 }

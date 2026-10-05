@@ -61,7 +61,7 @@ Editorial preview belongs to Control. Author files are publicly
 readable by ID/path, including files used only by drafts or no page at all.
 The shared runtime does not provide confidential author-file enforcement.
 
-Installed collection Blocs, themes, texts, views and dashboards are projected
+Installed collection Blocs, themes, texts and transitional views are projected
 from immutable releases. Breaking stored-data upgrades use the maintenance-mode
 workflow documented in [collections](../blocs/collections.md).
 

@@ -163,8 +163,7 @@ authenticated subject. It does not evaluate roles or view permissions. Control
 chooses the unauthenticated response for each route group: a login redirect or
 an explicit unauthorized response. File-routed APIs are administrator-only by
 default. The boundary allows members only their self-service profile and token
-routes plus assigned dashboard reads; those dashboard reads then apply their
-assignment-specific checks. High-impact administrative handlers also fail
+routes. High-impact administrative handlers also fail
 closed through `requireControlAdministrator` before parsing input or accessing
 their stores.
 

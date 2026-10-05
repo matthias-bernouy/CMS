@@ -1,7 +1,7 @@
 import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
-import type { Catalogue, Collections, Dashboards, HealthReport, HealthRow, Provider, Providers } from "./types";
+import type { Catalogue, Collections, HealthReport, HealthRow, Provider, Providers } from "./types";
 
-export type { Catalogue, Collections, Dashboards, HealthReport, HealthRow, Providers } from "./types";
+export type { Catalogue, Collections, HealthReport, HealthRow, Providers } from "./types";
 
 export const PROVIDER_STALE_AFTER_MS = 120_000;
 
@@ -10,14 +10,12 @@ export function healthReport(
     providers: Providers | null,
     catalogue: Catalogue | null,
     collections: Collections | null,
-    dashboards: Dashboards | null,
     now = Date.now(),
 ): HealthReport {
     const report = {
         providers: providerRows(base, providers, now),
         sources: sourceRows(base, providers, catalogue, now),
         collections: collectionRows(base, collections),
-        dashboards: dashboardRows(base, dashboards, providers),
     };
     return {
         ...report,
@@ -107,39 +105,6 @@ function collectionRows(base: string, data: Collections | null): HealthRow[] {
             state: newer ? "Update available" : "Up to date",
             tone: newer ? "warning" : "good",
             href: `${base}/admin/collections/${encodeURIComponent(`installed:${installed.collectionId}`)}/overview`,
-        };
-    });
-}
-
-function dashboardRows(base: string, data: Dashboards | null, providers: Providers | null): HealthRow[] {
-    if (!data) {
-        return [unavailable("Dashboard state", `${base}/admin/dashboards`)];
-    }
-    const selected = new Set(providers?.selected.map((selection) => selection.contractId) ?? []);
-    return data.dashboards.map((dashboard) => {
-        const missing = (dashboard.sourceContracts ?? []).filter((contractId) => !selected.has(contractId));
-        return {
-            name: dashboard.name,
-            detail: !dashboard.enabled
-                ? "Hidden from members"
-                : missing.length
-                  ? `Connect ${missing.join(", ")} in Sources`
-                  : `${dashboard.members.length} member${dashboard.members.length === 1 ? "" : "s"} assigned`,
-            state: !dashboard.enabled
-                ? "Inactive"
-                : missing.length
-                  ? "Source missing"
-                  : dashboard.members.length
-                    ? "Active"
-                    : "No members",
-            tone: !dashboard.enabled
-                ? "neutral"
-                : missing.length
-                  ? "danger"
-                  : dashboard.members.length
-                    ? "good"
-                    : "warning",
-            href: `${base}/admin/dashboards?dashboardId=${encodeURIComponent(dashboard.id)}`,
         };
     });
 }

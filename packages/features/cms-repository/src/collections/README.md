@@ -16,7 +16,7 @@ configuration schemas.
 This slice supports:
 
 - A reusable administration translation catalogue shared by collection, Bloc,
-  setting, text, theme, View and dashboard metadata. Every metadata field stores
+  setting, text, theme and transitional View metadata. Every metadata field stores
   a key, every key must exist in the default locale and additional locales may
   be partial. Resolution tries the requested locale, its regional parents and
   finally the collection locale.
@@ -126,8 +126,8 @@ Upgrades revalidate all installed dependents.
 Theme token IDs remain local in release JSON and are projected as both the
 global token ID and CSS variable name `<collectionId>-<tokenId>`. Texts and
 Views similarly retain local IDs: text expressions use
-`cms.i18n.<collectionId>.<textId>`, while dashboard navigation identifies Views
-as `<collectionId>:<viewId>`. Assets remain scoped by the immutable release
+`cms.i18n.<collectionId>.<textId>`, while a View is identified as
+`<collectionId>:<viewId>`. Assets remain scoped by the immutable release
 digest. Installation and upgrade reject exact Bloc-tag or projected theme-token
 collisions between collections.
 
@@ -165,7 +165,7 @@ also verify the exact byte set and capability witnesses, returning a digest,
 canonical JSON and immutable Blob snapshots. Every input buffer is snapshotted
 before the first asynchronous step; caller-owned objects are never frozen.
 
-`CollectionLimits` gives documents, Blocs, assets, texts, Views, dashboards,
+`CollectionLimits` gives documents, Blocs, assets, texts, Views,
 dependencies, theme resources, migrations, markup, slots, settings and
 requirements independent bounds. Import and export lists use the bound of the
 resource kind they select. `limits.schema` explicitly carries the schema policy
@@ -173,7 +173,7 @@ through configurations. Locale tags normalize using
 `Intl.getCanonicalLocales`; administration copy resolves through the immutable
 catalogue while content text overrides remain separate.
 
-## Views and dashboards
+## Transitional Views
 
 The local release command reads `views/<view-id>/definition.json` and
 `view.html` and places the HTML in the immutable release. Admission permits
@@ -182,18 +182,10 @@ tags. It derives the exact `uses` set from the HTML. Canonical
 `/.cms/call/<contract>/<capability>` sources require a matching versioned
 capability requirement; admission verifies those witnesses alongside transitive
 local Bloc requirements. Scripts, links, inline handlers and inline styles reject.
-Control expands compositions, resolves texts and public assets, applies the site
-theme and loads every transitively used component runtime, including internal
-Blocs that remain hidden from the author catalogue.
-The local release command also reads `dashboards/<dashboard-id>/definition.json`.
-Each dashboard declares a navigation tree of groups and local views. A primary
-item can open lateral navigation or tabs directly; a lateral item can open
-tabs. Admission rejects unknown or repeated view IDs and duplicate dashboard
-IDs. Dashboards never declare capabilities: Control derives them from the
-selected Views and their transitive Blocs, and authorizes each runtime call
-against that exact View. The definition is immutable collection content; its site
-activation and membership are separate mutable state. Private site dashboards
-may navigate to views from several installed collections.
+The renderer can expand compositions, resolve texts and public assets, apply the
+site theme and load every transitively used component runtime, including internal
+Blocs. No standalone Control navigation or access model currently exposes these
+Views. They remain transitional input for the future surface-specific Page model.
 
 ## Publication and installation
 
@@ -230,7 +222,7 @@ the affected pages and site-owned values.
 
 The store can remove a collection only when no installed collection depends on
 it. This is deliberately not exposed as a Control HTTP action yet: pages, private
-Blocs, theme overrides and dashboards still need affected-resource analysis
+Blocs, theme overrides and transitional Views still need affected-resource analysis
 before removal is safe.
 
 ## Next slices

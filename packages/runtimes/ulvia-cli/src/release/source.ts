@@ -22,7 +22,6 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
     const blocs = await loadCollectionBlocs(join(collectionRoot, "blocs"), String(definition.name ?? collectionId));
     const texts = await loadCollectionTexts(join(collectionRoot, "texts"));
     const views = await loadViews(join(collectionRoot, "views"));
-    const dashboards = await loadDashboards(join(collectionRoot, "dashboards"));
     const theme = await loadCollectionTheme(join(collectionRoot, "theme"));
     const migrations = await loadCollectionMigrations(join(collectionRoot, "migrations"));
     const assets = await loadAssets(join(collectionRoot, "assets"), definition.assets);
@@ -41,7 +40,6 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         migrations,
         ...(texts.length ? { texts } : {}),
         ...(views.length ? { views } : {}),
-        ...(dashboards.length ? { dashboards } : {}),
         ...(theme === undefined ? {} : { theme }),
     };
     const artifact = await admitCollectionRelease(candidate, assets.bundle, { contracts });
@@ -129,29 +127,6 @@ function collectionAssetSourcePath(value: unknown, fallback: string, index: numb
         throw new Error(`Collection source asset ${index} has an invalid source path`);
     }
     return source;
-}
-
-async function loadDashboards(directory: string): Promise<unknown[]> {
-    const entries = (await readEntries(directory)).filter((entry) => entry.name !== ".gitkeep");
-    if (entries.some((entry) => !entry.isDirectory())) {
-        throw new Error("Dashboard source root may contain only dashboard directories");
-    }
-    const folders = entries;
-    return Promise.all(
-        folders
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map(async (folder) => {
-                await assertExactEntries(join(directory, folder.name), ["definition.json"]);
-                const definition = (await Bun.file(join(directory, folder.name, "definition.json")).json()) as Record<
-                    string,
-                    unknown
-                >;
-                if (definition.id !== folder.name) {
-                    throw new Error(`Dashboard folder ${folder.name} must match its definition`);
-                }
-                return definition;
-            }),
-    );
 }
 
 async function loadViews(directory: string): Promise<unknown[]> {

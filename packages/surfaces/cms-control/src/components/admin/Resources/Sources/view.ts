@@ -1,6 +1,4 @@
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
-import { dashboardNavigationViews } from "@bernouy/cms-dashboards";
-import type { Dashboard } from "../Dashboards/domain/types";
 import {
     contractReleases,
     type SourceCatalogue,
@@ -40,7 +38,6 @@ export function renderSourceDetail(
     contractId: string,
     catalogue: SourceCatalogue,
     state: SourceInstallations,
-    allDashboards: Dashboard[],
 ): void {
     const selection = state.selected.find((item) => item.contractId === contractId)!;
     const installation = state.installations.find((item) => item.id === selection.installationId);
@@ -92,35 +89,6 @@ export function renderSourceDetail(
     upgradeButton.toggleAttribute("disabled", !upgrade.readyRelease);
     upgradeButton.textContent = upgrade.readyRelease ? `Upgrade to v${upgrade.readyRelease.version}` : "Upgrade source";
     text(host, "[data-upgrade-note]", sourceUpgradeNote(selection, upgrade));
-    renderDashboards(host, contractId, allDashboards);
-}
-
-function renderDashboards(host: HTMLElement, contractId: string, allDashboards: Dashboard[]): void {
-    const dashboards = allDashboards.filter(
-        (item) =>
-            item.enabled &&
-            dashboardNavigationViews(item.navigation).length > 0 &&
-            item.sourceContracts?.includes(contractId),
-    );
-    host.querySelector("[data-source-dashboards]")!.replaceChildren(
-        ...dashboards.flatMap((dashboard) => {
-            const first = dashboardNavigationViews(dashboard.navigation)[0];
-            if (!first) {
-                return [];
-            }
-            const card = document.createElement("p9r-card");
-            const title = document.createElement("h2");
-            title.slot = "title";
-            title.textContent = dashboard.name;
-            const link = document.createElement("a");
-            link.slot = "actions";
-            link.href = `${getMetaBasePath()}/admin/dashboards/view?dashboardId=${encodeURIComponent(dashboard.id)}&viewId=${encodeURIComponent(first.use)}`;
-            link.textContent = "Open dashboard";
-            card.append(title, link);
-            return [card];
-        }),
-    );
-    host.querySelector("[data-no-dashboards]")!.toggleAttribute("hidden", dashboards.length > 0);
 }
 
 function sourceHref(contractId: string): string {

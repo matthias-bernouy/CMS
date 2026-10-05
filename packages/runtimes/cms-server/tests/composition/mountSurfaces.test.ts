@@ -103,7 +103,6 @@ describe("production surface mounting", () => {
         expect(controlArguments[2]).toBe(options.authentication.auth);
         expect(controlConfig).toMatchObject({
             deliveryUrl: options.env.DELIVERY_PUBLIC_URL,
-            dashboardAssignments: options.features.dashboardAssignments,
             capabilityGateway: {
                 siteId: gateway.siteId,
                 invoker: expect.objectContaining({ invoke: expect.any(Function) }),

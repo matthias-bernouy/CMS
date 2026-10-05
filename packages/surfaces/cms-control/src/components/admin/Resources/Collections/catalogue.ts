@@ -100,11 +100,6 @@ function collectionCard(
     if (item.release.hasTheme) {
         capabilities.append(chip("Theme"));
     }
-    if (item.release.dashboards?.length) {
-        capabilities.append(
-            chip(`${item.release.dashboards.length} dashboard${item.release.dashboards.length === 1 ? "" : "s"}`),
-        );
-    }
     const footer = document.createElement("div");
     footer.className = "collection-footer";
     const version = document.createElement("span");

@@ -24,15 +24,11 @@ describe("Control API authorization", () => {
         expect(await apiStatus("GET", "/cms/api/identity/providers", false)).toBe(403);
     });
 
-    test("allows only member self-service and assigned dashboard reads", async () => {
-        expect(await apiStatus("GET", "/cms/api/my-dashboards", false)).toBe(200);
-        expect(await apiStatus("GET", "/cms/api/dashboard-view?dashboardId=one", false)).toBe(200);
-        expect(await apiStatus("GET", "/cms/api/dashboard-context?dashboardId=one", false)).toBe(200);
+    test("allows only member self-service routes", async () => {
         expect(await apiStatus("GET", "/cms/api/profil", false)).toBe(200);
         expect(await apiStatus("POST", "/cms/api/profil/password", false)).toBe(200);
         expect(await apiStatus("GET", "/cms/api/pats", false)).toBe(200);
-        expect(await apiStatus("POST", "/cms/api/my-dashboards", false)).toBe(403);
-        expect(await apiStatus("GET", "/cms/api/dashboard-viewer", false)).toBe(403);
+        expect(await apiStatus("GET", "/cms/api/users", false)).toBe(403);
     });
 
     test("allows administrators through every Control API route", async () => {

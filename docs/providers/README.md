@@ -14,7 +14,7 @@ entry points.
 | Provider manifest | Immutable provider claims and exact contract references; memory/Mongo catalogue. |
 | Installation | Site-owned configuration, exact approved manifest, administrative lifecycle and runtime observations; revisioned memory/Mongo store. |
 | Selection | Site-owned exact contract/provider choices, validated together as a bounded dependency graph; revisioned memory/Mongo store. |
-| Collection release | Immutable component, composition, view and dashboard bundle; local repository catalogue and site installation/upgrade. |
+| Collection release | Immutable component, composition and transitional view bundle; local repository catalogue and site installation/upgrade. |
 
 Contract admission validates and canonicalizes a release. Provider admission
 validates a manifest against releases. Site preparation and approval establish
@@ -86,9 +86,9 @@ manifest, installation and selection stores, a selected catalogue, network and
 secret adapters, image storage and observation refresh. The current host policy
 allows public/authenticated access on Delivery as declared by the capability;
 Control's generic invocation route requires the configured local administrator.
-Dashboard View calls use a separate CMS-owned plan and grant: dashboard access
-selects the View, then its active grant restricts the call to declared capabilities
-and exact provider routes.
+View execution-plan primitives still restrict a compiled View to declared
+capabilities and exact provider routes, but no Control route currently activates
+or consumes them. The future Control Page flow must own that integration.
 
 | Surface | Routes relative to its base path |
 | --- | --- |
@@ -115,9 +115,8 @@ detail instead of the discovery card. A card connects or upgrades an exact
 ready release through a selected provider. Installed-source navigation uses the contract title. Its source detail
 separates the latest repository release from the latest release reported ready
 by a connected provider; the upgrade action remains disabled until the latter
-exists. It also shows the observed provider state and links to active dashboards
-that declare the contract. `/admin/health` summarizes these
-connections, selections, collection versions and dashboard activation. It
+exists. It also shows the observed provider state. `/admin/health` summarizes
+these connections, selections and collection versions. It
 reports configuration and the last provider observation, not a fresh live
 probe of every capability.
 The selected API origin and token belong to installation state. Manifests list
