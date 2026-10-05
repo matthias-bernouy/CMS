@@ -88,6 +88,19 @@ test("expiry pruning cannot remove staging owned by an in-flight commit", async 
     await expect(commit).resolves.toMatchObject({ added: true });
 });
 
+test("expiry pruning surfaces corrupt upload metadata instead of silently retaining it", async () => {
+    const root = await temporaryRoot();
+    const uploads = new FilesystemRepositoryPublicationUploadStore(root);
+    const receipt = await uploads.create(
+        { kind: "provider-manifest", canonicalJson: "{}", assets: [] },
+        new Date(Date.now() - 1),
+    );
+    await writeFile(join(root, ".publication-uploads", receipt.uploadId, "upload.json"), "not-json");
+
+    await expect(uploads.recover()).rejects.toBeInstanceOf(SyntaxError);
+    expect(await exists(join(root, ".publication-uploads", receipt.uploadId))).toBeTrue();
+});
+
 test("startup recovery removes only unreferenced hash-addressed assets", async () => {
     const root = await temporaryRoot();
     const release = Buffer.from('{"kind":"collection"}');

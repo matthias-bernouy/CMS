@@ -9,6 +9,7 @@ export { LocalContractReleases } from "cms-repository/repository/filesystem/cont
 export { RepositoryReadEndpoint } from "cms-repository/repository/filesystem/http/readEndpoint";
 export {
     acquireFilesystemLease,
+    FilesystemLeaseBusyError,
     type FilesystemLease,
     withRepositoryWriteLock,
 } from "cms-repository/repository/filesystem/core/lock";

@@ -20,6 +20,13 @@ export type FilesystemLease = Readonly<{
     release(): Promise<void>;
 }>;
 
+export class FilesystemLeaseBusyError extends Error {
+    constructor() {
+        super("Filesystem lease is already held");
+        this.name = "FilesystemLeaseBusyError";
+    }
+}
+
 type FilesystemLeaseOptions = Readonly<{ createParent?: boolean }>;
 
 /** Serialize repository metadata and publication mutations across local processes. */
@@ -77,7 +84,7 @@ async function acquire(path: string, owner: string): Promise<FileHandle> {
                 throw error;
             }
             if (!(await recoverStale(path))) {
-                throw new Error("Filesystem lease is already held");
+                throw new FilesystemLeaseBusyError();
             }
             continue;
         }
@@ -98,7 +105,7 @@ async function acquire(path: string, owner: string): Promise<FileHandle> {
             throw error;
         }
     }
-    throw new Error("Filesystem lease is already held");
+    throw new FilesystemLeaseBusyError();
 }
 
 async function recoverStale(path: string): Promise<boolean> {

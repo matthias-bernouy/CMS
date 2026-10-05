@@ -10,7 +10,7 @@ import type {
 } from "cms-repository/repository/publication/types";
 import { digestUploadFile, readUploadResult, writeUploadResult, writeUploadStream } from "./uploadFiles";
 import { durableWriteFile, ensureDurableDirectory, syncDirectory } from "../core/durable";
-import { acquireFilesystemLease } from "../core/lock";
+import { acquireFilesystemLease, FilesystemLeaseBusyError } from "../core/lock";
 
 const SCHEMA = "ulvia.repository-upload.v1";
 const UPLOAD_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
@@ -205,15 +205,15 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
             if (metadata.isSymbolicLink()) {
                 continue;
             }
-            const document = await this.readDocument(entry.name).catch(() => null);
+            const document = await this.readDocumentIfPresent(entry.name);
             if (document && Date.parse(document.expiresAt) <= Date.now()) {
-                const lock = await this.acquireCommitLock(entry.name).catch(() => null);
+                const lock = await this.acquirePruneLock(entry.name);
                 if (!lock) {
                     continue;
                 }
                 let tombstone: string | null = null;
                 try {
-                    const current = await this.readDocument(entry.name).catch(() => null);
+                    const current = await this.readDocumentIfPresent(entry.name);
                     if (
                         current &&
                         Date.parse(current.expiresAt) <= Date.now() &&
@@ -230,6 +230,28 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
         }
         if (changed) {
             await syncDirectory(this.uploadRoot);
+        }
+    }
+
+    private async acquirePruneLock(uploadId: string) {
+        try {
+            return await this.acquireCommitLock(uploadId);
+        } catch (error) {
+            if (error instanceof FilesystemLeaseBusyError || (error as NodeJS.ErrnoException).code === "ENOENT") {
+                return null;
+            }
+            throw error;
+        }
+    }
+
+    private async readDocumentIfPresent(uploadId: string): Promise<UploadDocument | null> {
+        try {
+            return await this.readDocument(uploadId);
+        } catch (error) {
+            if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+                return null;
+            }
+            throw error;
         }
     }
 
