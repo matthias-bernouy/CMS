@@ -25,7 +25,7 @@ Managed CMS Core
 └── renders Control and Delivery Pages
 ```
 
-Instance lifecycle belongs only to the provider contract, whose working ID is
+Instance lifecycle belongs only to the provider contract, whose published ID is
 `ulvia.provider.cms-instances`. Core contracts such as `ulvia.cms.pages` never
 list, create, start, stop, back up or update CMS instances.
 

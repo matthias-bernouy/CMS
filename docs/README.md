@@ -20,12 +20,13 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   must be completed before those assumptions change.
 - [Control Pages and provider-managed CMS instances](todo/control-pages-and-provider-managed-cms-instances.md):
   proposed replacement for static admin pages, collection Views and Dashboard
-  navigation, with local, cloud or third-party instance providers; this design
-  is not implemented yet.
+  navigation, with local, cloud or third-party instance providers; provider-owned
+  local discovery is implemented, while unified Pages remain planned.
 - [Local provider and CMS initialization](todo/local-provider-initialization.md):
   proposed offline first-run, bootstrap collection, Control Page, restart and
-  recovery flow for the official local provider; this flow is not implemented
-  yet.
+  recovery flow for the official local provider; durable discovery of the
+  existing local instance is implemented, while autonomous provisioning remains
+  planned.
 
 ## Providers And Collections
 

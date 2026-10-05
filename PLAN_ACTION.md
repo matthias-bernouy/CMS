@@ -163,12 +163,12 @@ The initial local deployment may run the provider control plane and its single
 CMS instance in the same image or Docker stack. The domain boundary must still
 be explicit.
 
-Implement the smallest provider control-plane surface first:
+The smallest provider control-plane surface now consists of:
 
-- `ulvia.provider.cms-instances/get` or an equivalent provider-defined current
-  instance projection;
-- `ulvia.provider.cms-instances/list` when the provider credential represents
-  an account allowed to enumerate instances;
+- `ulvia.provider.cms-instances/get-current`, selected entirely by the opaque
+  provider credential;
+- bounded `ulvia.provider.cms-instances/list` for credentials allowed to
+  enumerate instances;
 - instance health and exact Core/contract manifest discovery.
 
 The local provider must:
@@ -497,10 +497,22 @@ failed or stale probe unavailable and keeps its last successful observation.
 Lot 2 must replace this with driver-owned process/readiness reconciliation
 before any lifecycle mutation is enabled.
 
+Three boundaries also remain explicit after Lot 1:
+
+- the filesystem registry is safe for the current single provider process, but
+  it is not a multi-process database; the Lot 2 driver must remain its sole
+  writer or add an inter-process lease before lifecycle mutations exist;
+- the conformance suite is independently versioned, parsed and admitted, but
+  suite artifacts do not yet have remote repository coordinates or a live
+  runner;
+- the discovered Core contract list stays empty until the first `ulvia.cms.*`
+  data-plane contracts are introduced in Lot 3.
+
 ### Lot 2 — Real Autonomous Local Initialization
 
-1. Introduce a provider-private local runtime driver at the composition root;
-   keep `official-provider` independent from the CMS runtime package.
+1. Introduce a provider-private, single-writer local runtime driver at the
+   composition root; keep `official-provider` independent from the CMS runtime
+   package and add a lease before allowing another writer.
 2. Let the provider automatically create `default` on fresh local durable
    volumes and idempotently reuse it on restart.
 3. Provision bounded database, blob and encrypted-secret adapters for the Core.

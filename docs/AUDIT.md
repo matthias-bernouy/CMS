@@ -32,6 +32,12 @@ through `ulvia.provider.cms-instances@1.0.0`. The existing Gateway path still
 pins only installation, exact release, capability and consumer authority;
 provider credentials and instance routing remain opaque.
 
+That discovery is intentionally not a lifecycle manager yet. Its file registry
+assumes one official-provider writer, its health probe proves only bounded
+loopback reachability, and the independently admitted conformance suite has no
+remote repository coordinate or live runner. These are explicit gates for the
+autonomous local provider, not capabilities inferred from the read-only API.
+
 ## Evidence And Scope
 
 The audit covered the 20 workspace packages, the declarative official
@@ -41,7 +47,7 @@ documentation.
 The following checks succeeded:
 
 - `bun run check:all`: all seven workspace checks passed;
-- `bun test`: 2,651 tests passed with no unexpected failure after Lot 0;
+- `bun test`: 2,666 tests passed with no failure after Lot 1;
 - dependency audit: no vulnerability was reported across 107 packages;
 - `git diff --check`: no whitespace error was present;
 - architecture checks: no reversed layer dependency, workspace cycle,
