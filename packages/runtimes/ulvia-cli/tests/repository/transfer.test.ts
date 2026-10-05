@@ -13,7 +13,11 @@ test("CLI push and pull preserve every official artifact kind through a remote r
     const token = "b".repeat(43);
     const server = startLocalRepository(0, remoteRoot, token);
     const repositoryRoot = resolve(import.meta.dir, "../../../../official-repository");
-    const contractIds = ["catalog.items", "forms.submissions", "media.assets"];
+    const providerDirectory = join(repositoryRoot, "providers", "ulvia.official");
+    const providerDefinition = (await Bun.file(join(providerDirectory, "definition.json")).json()) as {
+        implementations: Array<{ contractId: string }>;
+    };
+    const contractIds = providerDefinition.implementations.map(({ contractId }) => contractId);
     const environment = (data: string, writable: boolean) => ({
         ULVIA_DATA_DIR: data,
         ULVIA_REPOSITORY_URL: server.url,
@@ -35,7 +39,6 @@ test("CLI push and pull preserve every official artifact kind through a remote r
             });
         }
 
-        const providerDirectory = join(repositoryRoot, "providers", "ulvia.official");
         const providerVersion = await definitionVersion(providerDirectory);
         const providerCoordinate = `ulvia.official/ulvia.official@${providerVersion}`;
         await runCli(["release", providerDirectory], {
@@ -83,7 +86,9 @@ test("CLI push and pull preserve every official artifact kind through a remote r
             log: () => undefined,
         });
 
-        expect(await new LocalArtifactFiles(join(targetData, "repository")).list("contracts")).toHaveLength(3);
+        expect(await new LocalArtifactFiles(join(targetData, "repository")).list("contracts")).toHaveLength(
+            contractIds.length,
+        );
         expect(await new LocalArtifactFiles(join(targetData, "repository")).list("providers")).toHaveLength(1);
         expect(await new LocalCollectionRepository(join(targetData, "repository")).list()).toHaveLength(1);
 
