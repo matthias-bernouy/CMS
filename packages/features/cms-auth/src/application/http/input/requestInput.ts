@@ -1,11 +1,23 @@
 import { AuthValidationError } from "cms-auth/application/core/validation";
+import { readBoundedRequestBody } from "@bernouy/http-runner";
+
+export const MAX_AUTH_REQUEST_BYTES = 64 * 1024;
 
 export async function readJsonObject(req: Request): Promise<Record<string, unknown>> {
-    const body = await req.json().catch(() => null);
+    const bytes = await readBoundedRequestBody(req, MAX_AUTH_REQUEST_BYTES);
+    const body = parseJson(bytes);
     if (!body || typeof body !== "object" || Array.isArray(body)) {
         throw new AuthValidationError("body", "object expected");
     }
     return body as Record<string, unknown>;
+}
+
+function parseJson(bytes: Uint8Array): unknown {
+    try {
+        return JSON.parse(new TextDecoder().decode(bytes));
+    } catch {
+        return null;
+    }
 }
 
 export function requiredString(body: Record<string, unknown>, field: string): string {

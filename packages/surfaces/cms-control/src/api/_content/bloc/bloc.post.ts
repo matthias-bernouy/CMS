@@ -1,8 +1,11 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { BlocImportError, importBlocArtifact, parseSourceMap } from "cms-control/core/content/bloc/importBlocArtifact";
+import { readBoundedFormData } from "@bernouy/http-runner";
+
+const MAX_BLOC_IMPORT_BYTES = 8 * 1024 * 1024;
 
 export default async function importBloc(req: Request, cms: ControlCms) {
-    const formData = await req.formData();
+    const formData = await readBoundedFormData(req, MAX_BLOC_IMPORT_BYTES);
 
     const name = formData.get("name") as string;
     const group = formData.get("group") as string;

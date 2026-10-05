@@ -10,7 +10,8 @@ export async function readCredentials(req: Request): Promise<CredentialsInput> {
     const contentType = req.headers.get("content-type") ?? "";
 
     if (contentType.includes("application/json")) {
-        const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+        const bytes = await readBoundedRequestBody(req, MAX_AUTH_REQUEST_BYTES);
+        const body = parseObject(bytes);
         return {
             email: typeof body.email === "string" ? body.email : undefined,
             password: typeof body.password === "string" ? body.password : undefined,
@@ -18,7 +19,12 @@ export async function readCredentials(req: Request): Promise<CredentialsInput> {
         };
     }
 
-    const form = await req.formData().catch(() => null);
+    const form = await readBoundedFormData(req, MAX_AUTH_REQUEST_BYTES).catch((error) => {
+        if ((error as { status?: unknown })?.status === 413) {
+            throw error;
+        }
+        return null;
+    });
     if (!form) {
         return { returnTo };
     }
@@ -32,6 +38,17 @@ export async function readCredentials(req: Request): Promise<CredentialsInput> {
     };
 }
 
+function parseObject(bytes: Uint8Array): Record<string, unknown> {
+    try {
+        const value = JSON.parse(new TextDecoder().decode(bytes));
+        return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+    } catch {
+        return {};
+    }
+}
+
 function formString(value: FormDataEntryValue | null): string | undefined {
     return typeof value === "string" && value ? value : undefined;
 }
+import { readBoundedFormData, readBoundedRequestBody } from "@bernouy/http-runner";
+import { MAX_AUTH_REQUEST_BYTES } from "cms-auth/application/http/input/requestInput";
