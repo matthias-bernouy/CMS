@@ -35,6 +35,23 @@ export type {
     TPageRef,
 } from "cms-content/pages/interfaces/pages";
 export { pageDocument } from "cms-content/pages/interfaces/pages";
+export type {
+    PageLinkTarget,
+    PageReference,
+    ResolvedPageLink,
+    SurfacePageRoute,
+    SurfacePageRouteRegistration,
+    SurfacePageRouteRegistry,
+} from "cms-content/pages/interfaces/routing";
+export { resolvePageLinkTarget } from "cms-content/pages/core/routing/links";
+export {
+    PageLinkSurfaceError,
+    PageRouteAlreadyRegisteredError,
+    PageRouteCollisionError,
+    PageRouteNotFoundError,
+    PageRouteRevisionConflictError,
+} from "cms-content/pages/core/routing/errors";
+export { InMemorySurfacePageRouteRegistry } from "cms-content/pages/default-implementation/memory/InMemorySurfacePageRouteRegistry";
 export { languagePrefix, localPagePath, publicPagePath } from "cms-content/pages/core/paths/localizedPagePath";
 export { pageSeoForLanguage } from "cms-content/pages/core/lifecycle/pageSeo";
 export type {

@@ -37,6 +37,8 @@ library, declarative bindings, validation, and read models.
 
 - `pages/`, `blocs/`, `bindings/`, `files/`, `settings/` and `theme/` are sibling
   domains. Theme owns tokens, modes, values and CSS independently of settings.
+- `pages/` owns the surface route registry and the single internal Page-link
+  model. Control and Delivery routes share identities but never a path namespace.
 - Each domain contains only its needed `interfaces/`, `core/`, `http/` or
   `default-implementation/` layers. Interfaces contain no executable helpers.
 - `application/` owns cross-domain contracts, reader composition, aggregate
