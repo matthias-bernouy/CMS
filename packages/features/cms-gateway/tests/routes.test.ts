@@ -6,6 +6,7 @@ import {
     type CatalogueGatewayRouteResolverOptions,
 } from "@bernouy/cms-gateway";
 import { gatewayRoute, NOW } from "./fixtures";
+import { InMemoryGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
 
 test("catalogue resolver fences selected policy changes without scanning unrelated catalogues", async () => {
     const fixture = await gatewayRoute();
@@ -97,6 +98,7 @@ test("fresh observation renewal does not make a completed command uncertain", as
             },
         },
         authorize: async () => true,
+        commandAudit: new InMemoryGatewayCommandAuditStore(),
         now: () => NOW,
     });
     await expect(

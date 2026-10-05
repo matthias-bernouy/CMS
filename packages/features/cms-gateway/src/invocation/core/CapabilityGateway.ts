@@ -17,6 +17,11 @@ import { resolveRoute } from "cms-gateway/invocation/core/resolveRoute";
 import { snapshotInvocation } from "cms-gateway/invocation/core/snapshotInvocation";
 import { validateResponse } from "cms-gateway/invocation/core/validateResponse";
 import { providerByteGeneration } from "cms-gateway/media/core/derivativeKey";
+import type {
+    GatewayCommandAuditEvent,
+    GatewayCommandAuditStage,
+    GatewayCommandAuditStore,
+} from "cms-gateway/audit/interfaces/GatewayAudit";
 
 export interface CapabilityGatewayOptions {
     readonly routes: GatewayRouteResolver;
@@ -29,6 +34,8 @@ export interface CapabilityGatewayOptions {
         origin: GatewayOrigin,
     ) => Promise<boolean>;
     readonly identities?: ProviderIdentityService;
+    /** Required for command capabilities. Commands fail closed before dispatch when audit is unavailable. */
+    readonly commandAudit?: GatewayCommandAuditStore;
     readonly now?: () => string;
     readonly maxObservationAgeMs?: number;
 }
@@ -61,6 +68,14 @@ export class CapabilityGateway implements GatewayAccessProbe {
             throw new GatewayError("stale_route", "installation changed while resolving actor identity");
         }
         const requestId = crypto.randomUUID();
+        const isCommand = capability.behavior.effect === "command";
+        if (isCommand) {
+            await this.#auditCommand(
+                commandAuditEvent(invocation, route, requestId, this.#now(), "started"),
+                requestId,
+                false,
+            );
+        }
         let result: GatewayResult;
         try {
             const response = await this.#options.transport.send({
@@ -81,8 +96,24 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 throw new GatewayError("stale_route", "selection or installation changed during invocation");
             }
             result = validateResponse(capability, binding, response, requestId);
+            if (isCommand) {
+                await this.#auditCommand(
+                    commandAuditEvent(
+                        invocation,
+                        route,
+                        requestId,
+                        this.#now(),
+                        result.kind === "declared-error" ? "declared-error" : "completed",
+                        result.status,
+                        result.kind === "declared-error" ? result.errorCode : undefined,
+                    ),
+                    requestId,
+                    true,
+                );
+            }
         } catch (error) {
-            if (capability.behavior.effect === "command") {
+            if (isCommand) {
+                await this.#auditOutcomeUnknown(invocation, route, requestId);
                 throw new GatewayError(
                     "outcome_unknown",
                     "provider command may have completed; reconcile using the request ID before retrying",
@@ -110,6 +141,43 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 generation: await providerByteGeneration(result.bytes),
             },
         };
+    }
+
+    #now(): string {
+        return (this.#options.now ?? (() => new Date().toISOString()))();
+    }
+
+    async #auditCommand(event: GatewayCommandAuditEvent, requestId: string, dispatched: boolean): Promise<void> {
+        if (!this.#options.commandAudit) {
+            throw new GatewayError(
+                dispatched ? "outcome_unknown" : "transport_failure",
+                dispatched
+                    ? "provider command completed but its audit outcome could not be recorded"
+                    : "provider command audit is unavailable; command was not dispatched",
+                requestId,
+            );
+        }
+        try {
+            await this.#options.commandAudit.append(event);
+        } catch {
+            throw new GatewayError(
+                dispatched ? "outcome_unknown" : "transport_failure",
+                dispatched
+                    ? "provider command completed but its audit outcome could not be recorded"
+                    : "provider command audit is unavailable; command was not dispatched",
+                requestId,
+            );
+        }
+    }
+
+    async #auditOutcomeUnknown(invocation: GatewayInvocation, route: GatewayRoute, requestId: string): Promise<void> {
+        try {
+            await this.#options.commandAudit?.append(
+                commandAuditEvent(invocation, route, requestId, this.#now(), "outcome-unknown"),
+            );
+        } catch {
+            // Preserve the original unknown outcome. Audit recovery can reconcile the durable start event by request ID.
+        }
     }
 
     async #authorizedRoute(value: Omit<GatewayInvocation, "input">): Promise<AuthorizedRoute> {
@@ -205,4 +273,32 @@ function snapshotInput(value: unknown, capability: CapabilityDefinition): Readon
     } catch {
         throw new GatewayError("invalid_input", "input violates the selected capability schema");
     }
+}
+
+function commandAuditEvent(
+    invocation: GatewayInvocation,
+    route: GatewayRoute,
+    requestId: string,
+    occurredAt: string,
+    stage: GatewayCommandAuditStage,
+    status?: number,
+    errorCode?: string,
+): GatewayCommandAuditEvent {
+    return Object.freeze({
+        id: crypto.randomUUID(),
+        requestId,
+        occurredAt,
+        siteId: invocation.siteId,
+        installationId: route.installation.installation.id,
+        contractId: invocation.contractId,
+        capabilityId: invocation.capabilityId,
+        origin: invocation.origin,
+        actorKind: invocation.actor.kind,
+        ...(invocation.actor.kind === "user" || invocation.actor.kind === "administrator"
+            ? { actorSubjectId: invocation.actor.subjectId }
+            : {}),
+        stage,
+        ...(status === undefined ? {} : { status }),
+        ...(errorCode === undefined ? {} : { errorCode }),
+    });
 }

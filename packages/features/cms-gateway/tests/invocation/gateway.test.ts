@@ -8,6 +8,7 @@ import {
     type GatewayTransportResponse,
 } from "@bernouy/cms-gateway";
 import { InMemoryIdentityService, ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
+import { InMemoryGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
 import { gatewayRoute, NOW } from "../fixtures";
 
 function harness(route: GatewayRoute, identities = new ProviderIdentityAliases(new InMemoryIdentityService())) {
@@ -18,6 +19,7 @@ function harness(route: GatewayRoute, identities = new ProviderIdentityAliases(n
         contentType: "application/json",
         output: { items: ["one"] },
     };
+    const commandAudit = new InMemoryGatewayCommandAuditStore();
     const gateway = new CapabilityGateway({
         routes: {
             resolve: async () => route,
@@ -31,10 +33,12 @@ function harness(route: GatewayRoute, identities = new ProviderIdentityAliases(n
         },
         authorize: async () => true,
         identities,
+        commandAudit,
         now: () => NOW,
     });
     return {
         gateway,
+        commandAudit,
         sent,
         identities,
         setCurrent: (value: boolean) => {
@@ -194,7 +198,29 @@ describe("capability gateway", () => {
             });
             expect(scope.sent).toHaveLength(1);
             expect(scope.sent[0]?.binding.method).toBe("POST");
+            expect(scope.commandAudit.list().map((event) => event.stage)).toEqual(["started", "completed"]);
         }
+    });
+
+    test("fails closed before dispatch when command audit is unavailable", async () => {
+        const route = await gatewayRoute({
+            behavior: { effect: "command", execution: "sync", idempotency: "natural" },
+        });
+        let sent = 0;
+        const gateway = new CapabilityGateway({
+            routes: { resolve: async () => route, isCurrent: async () => true },
+            transport: {
+                send: async () => {
+                    sent += 1;
+                    return { status: 200, contentType: "application/json", output: { items: ["saved"] } };
+                },
+            },
+            authorize: async () => true,
+            now: () => NOW,
+        });
+
+        await expect(gateway.invoke(invocation())).rejects.toMatchObject({ code: "transport_failure" });
+        expect(sent).toBe(0);
     });
 
     test("marks a dispatched command outcome unknown when its route changes or response fails", async () => {
@@ -211,6 +237,7 @@ describe("capability gateway", () => {
                 },
             },
             authorize: async () => true,
+            commandAudit: new InMemoryGatewayCommandAuditStore(),
             now: () => NOW,
         });
         await expect(gateway.invoke(invocation())).rejects.toMatchObject({
@@ -228,6 +255,7 @@ describe("capability gateway", () => {
                 },
             },
             authorize: async () => true,
+            commandAudit: new InMemoryGatewayCommandAuditStore(),
             now: () => NOW,
         });
         await expect(failing.invoke(invocation())).rejects.toMatchObject({ code: "outcome_unknown" });
@@ -238,6 +266,7 @@ describe("capability gateway", () => {
                 send: async () => ({ status: 200, contentType: "application/json", output: { items: [42] } }),
             },
             authorize: async () => true,
+            commandAudit: new InMemoryGatewayCommandAuditStore(),
             now: () => NOW,
         });
         await expect(malformed.invoke(invocation())).rejects.toMatchObject({ code: "outcome_unknown" });

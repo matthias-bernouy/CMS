@@ -1,5 +1,6 @@
 import type { LocalCredentialStore } from "@bernouy/cms-auth";
 import { CapabilityGateway, CatalogueGatewayRouteResolver, SelectedGatewayCatalogue } from "@bernouy/cms-gateway";
+import { MongoGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit/mongo";
 import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
@@ -56,11 +57,14 @@ export async function createProductionGateway(
     });
     const observations = new ProviderObservationRefresher(siteId, selections, installations, network);
     const access = createProductionGatewayAccess(credentials, administratorEmail, db);
+    const commandAudit = new MongoGatewayCommandAuditStore(db);
+    await commandAudit.init();
     const invoker = new CapabilityGateway({
         routes,
         identities: new ProviderIdentityAliases(legacyIdentities),
         transport: new HttpGatewayTransport({ network }),
         authorize: access.authorize,
+        commandAudit,
     });
     const imageStore = new LocalProviderImageStore(mediaDirectory);
     await imageStore.initialize();
@@ -76,6 +80,7 @@ export async function createProductionGateway(
         images,
         catalogue,
         pageExecutions,
+        commandAudit,
         observations,
         isAdministrator: access.isAdministrator,
         administrators: access.administrators,

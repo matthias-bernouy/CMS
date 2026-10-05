@@ -5,6 +5,7 @@ import { handleGatewayFileGet } from "@bernouy/cms-gateway/media/handlers";
 import { buildHttpInvocation, HttpGatewayTransport, type GatewayHttpExchange } from "@bernouy/cms-gateway/http";
 import { validateResponse } from "cms-gateway/invocation/core/validateResponse";
 import { gatewayRoute } from "./fixtures";
+import { InMemoryGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
 
 test("shared gateway routes remain relative to each surface base path", () => {
     expect(gatewayRoutePrefix("/", "/.cms/call")).toBe("/.cms/call");
@@ -51,6 +52,7 @@ test("synchronous command sends validated JSON through its admitted POST binding
             },
         }),
         authorize: async () => true,
+        commandAudit: new InMemoryGatewayCommandAuditStore(),
         now: () => "2026-09-29T08:00:00.000Z",
     });
     const response = await handleGatewayHttpCall(
