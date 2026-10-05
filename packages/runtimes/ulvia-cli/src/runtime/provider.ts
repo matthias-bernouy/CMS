@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { DevPorts } from "./cms";
 import type { UlviaPaths } from "./paths";
@@ -31,6 +31,13 @@ export async function loadOrCreateProviderToken(devRoot: string): Promise<string
 export async function startLocalProvider(paths: UlviaPaths, ports: DevPorts) {
     const token = await loadOrCreateProviderToken(paths.dev);
     const entrypoint = fileURLToPath(import.meta.resolve("@bernouy/ulvia-official-provider/server"));
+    const cmsEntrypoint = fileURLToPath(import.meta.resolve("@bernouy/cms-server"));
+    const cmsPackage = (await Bun.file(resolve(dirname(cmsEntrypoint), "../package.json")).json()) as {
+        version?: unknown;
+    };
+    if (typeof cmsPackage.version !== "string") {
+        throw new Error("Local CMS package version is unavailable");
+    }
     const resourceRoot = resolve(import.meta.dir, "../../../../official-repository");
     const provider = spawnCommand([process.execPath, entrypoint], {
         inherit: true,
@@ -40,6 +47,8 @@ export async function startLocalProvider(paths: UlviaPaths, ports: DevPorts) {
             ULVIA_OFFICIAL_DATA_DIR: join(paths.dev, "official-provider"),
             ULVIA_OFFICIAL_TOKEN: token,
             ULVIA_OFFICIAL_PORT: String(ports.provider),
+            ULVIA_OFFICIAL_CORE_VERSION: cmsPackage.version,
+            ULVIA_OFFICIAL_CORE_HEALTH_URL: `http://127.0.0.1:${ports.control}`,
         },
     });
     const url = `http://127.0.0.1:${ports.provider}`;

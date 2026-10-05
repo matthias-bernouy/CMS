@@ -2,8 +2,10 @@ import { timingSafeEqual } from "node:crypto";
 import { decodeHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
 import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
+import type { UlviaScalarSchema } from "@bernouy/cms-repository/contracts/schema";
 import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
+import type { OfficialCmsInstanceDiscovery } from "../core/InstanceDiscovery";
 import type { OfficialSubmissionStore } from "../core/submissions";
 
 const ITEMS = Object.freeze([
@@ -18,6 +20,7 @@ const MEDIA_BYTES = new TextEncoder().encode(MEDIA);
 export interface OfficialProviderContracts {
     readonly catalog: ContractRelease;
     readonly forms: ContractRelease;
+    readonly instances: ContractRelease;
     readonly media: ContractRelease;
 }
 
@@ -25,6 +28,7 @@ export function createOfficialProviderHandler(options: {
     token: string;
     report: ProviderRuntimeReport;
     contracts: OfficialProviderContracts;
+    instances: OfficialCmsInstanceDiscovery;
     submissions: OfficialSubmissionStore;
 }): (request: Request) => Promise<Response> {
     if (!options.token.trim()) {
@@ -38,6 +42,30 @@ export function createOfficialProviderHandler(options: {
         const path = new URL(request.url).pathname;
         if (request.method === "GET" && path === "/ulvia/report") {
             return Response.json(options.report, { headers: { "Cache-Control": "no-store" } });
+        }
+        if (request.method === "GET" && path === "/v1/cms-instances/current") {
+            const current = await options.instances.current();
+            if (!current) {
+                return error("INSTANCE_UNAVAILABLE", 503);
+            }
+            validateSchemaValue(capabilities.instanceCurrent.output, current);
+            return Response.json(current, { headers: { "Cache-Control": "no-store" } });
+        }
+        if (request.method === "GET" && path === "/v1/cms-instances") {
+            try {
+                const input = decodeQuery(new URL(request.url), capabilities.instanceList);
+                const output = await options.instances.list(
+                    typeof input.cursor === "string" ? input.cursor : undefined,
+                    typeof input.limit === "number" ? input.limit : 25,
+                );
+                validateSchemaValue(capabilities.instanceList.output, output);
+                return Response.json(output, { headers: { "Cache-Control": "no-store" } });
+            } catch (error) {
+                if (error instanceof TypeError) {
+                    return new Response(null, { status: 400 });
+                }
+                throw error;
+            }
         }
         if (request.method === "GET" && path === "/v1/catalog/items") {
             const output = { items: ITEMS };
@@ -93,10 +121,13 @@ function resolveCapabilities(contracts: OfficialProviderContracts): {
     itemGet: CapabilityDefinition;
     submissionCreate: CapabilityDefinition;
     submissionGet: CapabilityDefinition;
+    instanceList: CapabilityDefinition;
+    instanceCurrent: CapabilityDefinition;
     assetRead: CapabilityDefinition;
 } {
     assertContract(contracts.catalog, "catalog.items");
     assertContract(contracts.forms, "forms.submissions");
+    assertContract(contracts.instances, "ulvia.provider.cms-instances");
     assertContract(contracts.media, "media.assets");
     const assetRead = requiredCapability(contracts.media, "asset.read");
     if (assetRead.media?.idInput !== "fileId") {
@@ -107,8 +138,22 @@ function resolveCapabilities(contracts: OfficialProviderContracts): {
         itemGet: requiredCapability(contracts.catalog, "item.get"),
         submissionCreate: requiredCapability(contracts.forms, "submission.create"),
         submissionGet: requiredCapability(contracts.forms, "submission.get"),
+        instanceList: requiredCapability(contracts.instances, "list"),
+        instanceCurrent: requiredCapability(contracts.instances, "get-current"),
         assetRead,
     };
+}
+
+function decodeQuery(url: URL, capability: CapabilityDefinition): Readonly<Record<string, unknown>> {
+    const input: Record<string, unknown> = {};
+    for (const [name, schema] of Object.entries(capability.input.properties)) {
+        const raw = url.searchParams.get(name);
+        if (raw !== null) {
+            input[name] = decodeHttpParameter(schema as UlviaScalarSchema, raw);
+        }
+    }
+    validateSchemaValue(capability.input, input);
+    return input;
 }
 
 function assertContract(release: ContractRelease, contractId: string): void {
