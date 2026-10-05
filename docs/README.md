@@ -6,6 +6,8 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 
 ## Architecture And Development
 
+- [Repository audit](AUDIT.md): verified strengths, production risks, current
+  limits and the recommended delivery sequence as of 2026-10-05.
 - [Workspace architecture](architecture/README.md): layers, dependency rules,
   domain boundaries and runtime composition.
 - [Package map](architecture/packages.md): every current workspace package and
@@ -16,6 +18,14 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 - [Commit messages](development/commits.md): the recommended message convention.
 - [Deferred platform work](TODO.md): explicit trust assumptions and work that
   must be completed before those assumptions change.
+- [Control Pages and provider-managed CMS instances](todo/control-pages-and-provider-managed-cms-instances.md):
+  proposed replacement for static admin pages, collection Views and Dashboard
+  navigation, with local, cloud or third-party instance providers; this design
+  is not implemented yet.
+- [Local provider and CMS initialization](todo/local-provider-initialization.md):
+  proposed offline first-run, bootstrap collection, Control Page, restart and
+  recovery flow for the official local provider; this flow is not implemented
+  yet.
 
 ## Providers And Collections
 
