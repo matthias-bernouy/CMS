@@ -20,6 +20,8 @@ export type FilesystemLease = Readonly<{
     release(): Promise<void>;
 }>;
 
+type FilesystemLeaseOptions = Readonly<{ createParent?: boolean }>;
+
 /** Serialize repository metadata and publication mutations across local processes. */
 export async function withRepositoryWriteLock<T>(root: string, operation: () => Promise<T>): Promise<T> {
     await mkdir(root, { recursive: true, mode: 0o700 });
@@ -32,8 +34,13 @@ export async function withRepositoryWriteLock<T>(root: string, operation: () => 
 }
 
 /** Acquire a renewable, owner-checked lease on one filesystem path. */
-export async function acquireFilesystemLease(path: string): Promise<FilesystemLease> {
-    await mkdir(dirname(path), { recursive: true, mode: 0o700 });
+export async function acquireFilesystemLease(
+    path: string,
+    options: FilesystemLeaseOptions = {},
+): Promise<FilesystemLease> {
+    if (options.createParent !== false) {
+        await mkdir(dirname(path), { recursive: true, mode: 0o700 });
+    }
     const owner = randomUUID();
     const handle = await acquire(path, owner);
     let released = false;

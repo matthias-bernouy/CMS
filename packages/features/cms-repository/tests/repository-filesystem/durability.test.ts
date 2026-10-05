@@ -53,6 +53,41 @@ test("a crashed upload commit lease is recoverable and expired staging is pruned
     expect(await exists(join(root, ".publication-uploads", expired.uploadId))).toBeFalse();
 });
 
+test("expiry pruning cannot remove staging owned by an in-flight commit", async () => {
+    const root = await temporaryRoot();
+    const uploads = new FilesystemRepositoryPublicationUploadStore(root);
+    const receipt = await uploads.create(
+        { kind: "provider-manifest", canonicalJson: "{}", assets: [] },
+        new Date(Date.now() + 50),
+    );
+    let publishStarted!: () => void;
+    let finishPublish!: () => void;
+    const started = new Promise<void>((resolve) => {
+        publishStarted = resolve;
+    });
+    const finish = new Promise<void>((resolve) => {
+        finishPublish = resolve;
+    });
+    const commit = uploads.commit(receipt.uploadId, async () => {
+        publishStarted();
+        await finish;
+        return {
+            kind: "provider-manifest",
+            added: true,
+            digest: `sha256:${"1".repeat(64)}` as const,
+            release: {},
+        };
+    });
+    await started;
+    await Bun.sleep(60);
+
+    await uploads.recover();
+    expect(await exists(join(root, ".publication-uploads", receipt.uploadId))).toBeTrue();
+
+    finishPublish();
+    await expect(commit).resolves.toMatchObject({ added: true });
+});
+
 test("startup recovery removes only unreferenced hash-addressed assets", async () => {
     const root = await temporaryRoot();
     const release = Buffer.from('{"kind":"collection"}');
