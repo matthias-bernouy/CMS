@@ -49,6 +49,44 @@ test("node transport pins the target and injects trusted context", async () => {
     ]);
 });
 
+test("provider credentials remain opaque while their secret value is forwarded byte-for-byte", async () => {
+    const resolvedReferences: string[] = [];
+    const sentAuthorizations: string[] = [];
+    const opaqueReference = "provider-secret/account-a/installation-private-ref";
+    const opaqueCredential = "account=a;cms-instance=private-42;route=provider-owned";
+    const fixture = await gatewayRoute();
+    const transport = new HttpGatewayTransport({
+        network: new NodeGatewayHttpNetwork({
+            resolveAddresses: async () => [{ address: "8.8.8.8", family: 4 }],
+            resolveToken: async (reference) => {
+                resolvedReferences.push(reference);
+                return opaqueCredential;
+            },
+            sendPinned: async (request) => {
+                sentAuthorizations.push(request.headers.authorization ?? "");
+                return Response.json({ items: [] });
+            },
+        }),
+    });
+
+    await transport.send({
+        requestId: "request-opaque",
+        siteId: "site-a",
+        installationId: "install-a",
+        endpoint: "https://provider.example.com",
+        providerTokenRef: opaqueReference,
+        release: fixture.release.admission.release,
+        capability: fixture.release.admission.release.capabilities[0]!,
+        binding: fixture.release.admission.bindings[0]!.binding,
+        input: { term: "opaque" },
+        invocationOrigin: "control",
+        actorKind: "user",
+    });
+
+    expect(resolvedReferences).toEqual([opaqueReference]);
+    expect(sentAuthorizations).toEqual([`Bearer ${opaqueCredential}`]);
+});
+
 test("node transport rejects mixed public and private DNS answers before reading secrets", async () => {
     let secretsRead = 0;
     const network = new NodeGatewayHttpNetwork({

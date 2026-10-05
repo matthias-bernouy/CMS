@@ -6,6 +6,26 @@ manifest claim, current installation state, fresh runtime observation, actor
 access, trusted invocation origin, host grants, input and output schema, and
 compiled binding pin.
 
+## Provider credential path
+
+Provider credentials deliberately remain opaque to CmsCore. The current path
+is:
+
+1. `ProviderConnectionWorkflow` admits an exact manifest and endpoint, probes
+   the provider with the submitted credential, then stores the credential in
+   `SecretStore` under a generated reference.
+2. `ProviderInstallation` persists only that secret reference. Contract
+   selection and compiled execution plans pin the installation and exact
+   release; they do not copy account, CMS-instance or Bearer-token claims.
+3. `CapabilityGateway` resolves the selected route and passes the unchanged
+   `providerTokenRef` to `HttpGatewayTransport`.
+4. The server-only `NodeGatewayHttpNetwork` resolves the secret at the final
+   network boundary and writes its exact value to `Authorization: Bearer ...`.
+
+No layer in that path parses account or instance semantics from the reference
+or credential. The provider remains responsible for authenticating it and
+routing the call to its privately managed CMS instance.
+
 `./execution` compiles one immutable plan for each capability-bearing installed
 collection View when a dashboard is activated. The plan pins the collection
 digest and View generation together with the current selection revision and
