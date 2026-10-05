@@ -424,6 +424,12 @@ Keep the previous image locally and confirm that the older release is compatible
 with any data written by the newer release. Take a backup before releases that
 change persistent data.
 
+File content published by current releases is addressed through an immutable
+`blobKey` stored in MongoDB. Releases from before that field existed read only
+the legacy file ID and therefore cannot safely consume files replaced by a
+newer release. Do not roll back to such a release in place: restore the matching
+MongoDB and files backup together, or deploy a forward-compatible fix instead.
+
 ### Shared infrastructure
 
 Back up MongoDB first, transfer the allow-listed new `infra` payload, then run

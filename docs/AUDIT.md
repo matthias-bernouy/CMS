@@ -15,12 +15,13 @@ code, the test suite is broad, and the runtime composition generally respects
 dependency injection.
 
 The repository should not yet be treated as ready for a critical production
-deployment, but the six original P0 weaknesses were closed in Lot 0 on
-2026-10-05. File mutations now have a durable recovery journal, one-time auth
-tokens use operation-bound reservation/finalization, migration permits surface
-ownership loss, repository upload deletion is tombstoned under its commit lock,
-MongoDB application credentials are site-scoped, and public/admin request
-bodies are bounded before parsing.
+deployment, but the six original P0 weaknesses were closed in Lot 0 and its
+stabilization follow-up on 2026-10-05. File mutations now have a durable recovery
+journal and a cross-runtime metadata-tree lease, one-time auth tokens use
+operation-bound reservation/finalization in both memory and MongoDB, migration
+permits surface ownership loss, repository upload deletion is tombstoned under
+its commit lock, MongoDB application credentials are site-scoped, and
+public/admin request bodies are bounded before parsing.
 
 The remaining production work is concentrated in the P1 operational and
 long-lived compatibility items below rather than these original failure paths.
@@ -54,10 +55,12 @@ interpreted as an exhaustive security certification.
 
 ## Priority Map
 
-### P0: Closed By Lot 0
+### P0: Closed By Lot 0 And Stabilization
 
 1. CMS file replacement, update and deletion use immutable blob pointers and a
-   durable, restart-replayed mutation journal in production.
+   durable, restart-replayed mutation journal in production. Metadata tree
+   commits share a renewable MongoDB lease across runtimes so delete, move and
+   late-child publication cannot create an orphaned tree.
 2. Authentication tokens are reserved before mutation and finalized after it;
    retries are bound to the exact operation so a finalize crash cannot authorize
    a different password.
@@ -67,7 +70,9 @@ interpreted as an exhaustive security certification.
 4. Repository abort and expiry pruning atomically move staging to a tombstone
    while holding the same commit lease.
 5. The deployment provisions one `readWrite` MongoDB user per site database;
-   the root credential remains infrastructure-only.
+   the root credential remains infrastructure-only. The migration from an
+   existing unauthenticated volume, cross-site denial and rollback were exercised
+   against MongoDB 8, including the actual `mongosh` provisioning scripts.
 6. JSON, form, multipart and import endpoints use bounded readers that do not
    trust `Content-Length`.
 
@@ -283,6 +288,13 @@ bytes by size and hash, then deterministically commits or discards the target.
 The combined local-filesystem development adapter retains its direct path
 because its metadata and bytes are the same filesystem object.
 
+Metadata-tree critical sections are intentionally short: byte streaming happens
+outside the lease, while parent validation and compare-and-swap publication run
+inside it. The in-memory adapter serializes the same sections locally and the
+MongoDB adapter does so across runtime processes. Direct low-level metadata
+adapter calls do not receive this protection; production mutation entry points
+must continue to use the file core helpers.
+
 #### Migration Write Fence
 
 Normal write permits now track renewal failures and missing ownership, verify
@@ -304,20 +316,17 @@ materialized reference graph and cursor-based projections.
 The root package export remains broad and exposes both authoring and rendering
 concepts. It can be narrowed when the new editor boundary is designed.
 
-### `@bernouy/cms-dashboards`
+### `@bernouy/cms-dashboards` (Transitional)
 
 Navigation has explicit bounds, storage uses optimistic revisions, and member
 assignments and view grants are separated. Dashboard capabilities are correctly
 derived from their views; dashboards do not need a duplicate capability list.
 
-The Mongo repository primarily validates navigation, while creation,
-activation, collection-origin and view-availability invariants still live in
-Control. A feature-level command service should own these invariants before a
-second surface mutates dashboards.
-
-`DashboardRecord` also combines collection definition, site activation state
-and display projection. Separating those models will simplify migrations and
-reduce accidental persistence of presentation-only fields.
+The package is not a target architecture to strengthen. The active redesign
+replaces Views and Dashboards with surface-specific Pages composed from ordinary
+Blocs, including navigation and shell Blocs. Until that replacement reaches
+parity, Dashboard receives compatibility and defect fixes only; adding a new
+command layer or splitting its persistence model would create disposable work.
 
 ### `@bernouy/cms-gateway`
 
@@ -677,7 +686,7 @@ repository worse.
 
 ## Recommended Delivery Sequence
 
-### Phase 1: Correctness And Security — Completed In Lot 0
+### Phase 1: Correctness And Security — Completed In Lot 0 And Stabilization
 
 Immutable file transitions, operation-bound auth reservations, migration permit
 loss handling, repository upload tombstones, bounded request readers and

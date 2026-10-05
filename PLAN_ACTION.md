@@ -79,10 +79,13 @@ collection-based Control Pages run beside it until feature parity is proven.
 
 ## Phase 0 — Stabilize The Current Foundation
 
-**Status (2026-10-05): completed by Lot 0.** The six P0 paths below now have
-focused failure/concurrency tests and the production adapters have deterministic
-restart behavior. Future high-availability and multi-runtime fencing remain
-separate work rather than hidden assumptions of this gate.
+**Status (2026-10-05): completed by Lot 0 and its stabilization follow-up.** The
+six P0 paths below now have focused failure/concurrency tests and the production
+adapters have deterministic restart behavior. File-tree metadata mutations are
+serialized across runtimes through a renewable MongoDB lease; migration-wide
+write fencing remains scoped to the current single-runtime topology. Future
+high-availability migration fencing remains separate work rather than a hidden
+assumption of this gate.
 
 Before building the new product model, fix the repository risks that could
 invalidate migrations, updates or recovery:
@@ -103,6 +106,10 @@ invalidate migrations, updates or recovery:
 - every P0 item above has an implementation test;
 - interrupted writes have a deterministic recovery result;
 - the workspace validation baseline remains green.
+
+The current Dashboard model is maintenance-only during this roadmap. Do not add
+new navigation, capability or rendering abstractions to it: Phase 9 removes it
+after Control Pages and layout Blocs have reached parity.
 
 ## Phase 1 — Separate Provider Lifecycle From Core Contracts
 
