@@ -13,7 +13,11 @@ export type {
     CollectionResourceDescriptor,
     CollectionResourceKind,
 } from "cms-repository/collections/interfaces/CollectionRelease";
-export type { CollectionView } from "cms-repository/collections/interfaces/CollectionView";
+export type {
+    CollectionPage,
+    CollectionPageDocument,
+    CollectionPageSurface,
+} from "cms-repository/collections/interfaces/CollectionPage";
 export type {
     CollectionTheme,
     CollectionThemeCategory,
@@ -82,8 +86,8 @@ export {
 export { collectionAssetRepresentationVersion } from "cms-repository/collections/core/admission/assets";
 export { replaceCollectionAssetExpressions } from "cms-repository/collections/core/texts/expressions";
 export {
-    collectionViewRequirements,
-    viewRequirements,
-} from "cms-repository/collections/core/admission/viewRequirements";
+    collectionPageRequirements,
+    pageRequirements,
+} from "cms-repository/collections/core/admission/pageRequirements";
 
 export * from "./texts";

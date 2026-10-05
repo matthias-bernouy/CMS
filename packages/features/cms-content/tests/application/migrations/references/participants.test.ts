@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test";
 import { referenceFixture, release } from "./fixture";
 
-test("blocks removal of a collection view used by an external feature", async () => {
+test("blocks removal of a collection Page used by an external feature", async () => {
     const fixture = await referenceFixture({
         translations: {
             en: { "collection.name": "Atlas", "bloc.label": "Card", "view.name": "Legacy view" },
         },
-        views: [{ id: "legacy", name: "view.name", html: "<p>Legacy</p>" }],
+        pages: [controlPage("legacy", "<p>Legacy</p>")],
     });
     const next = await fixture.collections.importRelease({
         ...release("2.0.0", "atlas-card"),
@@ -16,12 +16,12 @@ test("blocks removal of a collection view used by an external feature", async ()
     fixture.service.addParticipant({
         id: "external-pages",
         async collectReferences() {
-            return [{ kind: "view", collectionId: "atlas", id: "legacy", location: "Control page" }];
+            return [{ kind: "page", collectionId: "atlas", id: "legacy", location: "Control page" }];
         },
     });
 
     const plan = await fixture.service.plan("site", [{ digest: next.digest }], 1);
-    expect(plan.blockedReasons).toContain("Control page still references removed collection view atlas:legacy.");
+    expect(plan.blockedReasons).toContain("Control page still references removed collection page atlas:legacy.");
 });
 
 test("blocks every externally referenced collection resource kind", async () => {
@@ -55,7 +55,7 @@ test("digests participant resource identities independently from diagnostic labe
         translations: {
             en: { "collection.name": "Atlas", "bloc.label": "Card", "view.name": "Overview" },
         },
-        views: [{ id: "overview", name: "view.name", html: "<p>Overview</p>" }],
+        pages: [controlPage("overview", "<p>Overview</p>")],
     };
     const fixture = await referenceFixture(patch);
     const next = await fixture.collections.importRelease({ ...release("1.1.0", "atlas-card"), ...patch });
@@ -63,7 +63,7 @@ test("digests participant resource identities independently from diagnostic labe
     fixture.service.addParticipant({
         id: "control-pages",
         async collectReferences() {
-            return [{ kind: "view", collectionId: "atlas", id: "overview", location }];
+            return [{ kind: "page", collectionId: "atlas", id: "overview", location }];
         },
     });
     const first = await fixture.service.plan("site", [{ digest: next.digest }], 1);
@@ -130,7 +130,7 @@ function previousResources(): Record<string, unknown> {
                 "view.name": "Legacy view",
             },
         },
-        views: [{ id: "legacy", name: "view.name", html: "<p>Legacy</p>" }],
+        pages: [controlPage("legacy", "<p>Legacy</p>")],
     };
 }
 
@@ -147,4 +147,14 @@ function externalReferences() {
         { kind: "text" as const, collectionId: "atlas", id: "legacy-title", location: "External workflow" },
         { kind: "asset" as const, collectionId: "atlas", id: "legacy.svg", location: "External workflow" },
     ];
+}
+
+function controlPage(id: string, html: string) {
+    return {
+        id,
+        surface: "control",
+        defaultPath: id === "overview" ? "/admin" : `/admin/${id}`,
+        name: "view.name",
+        document: { html },
+    };
 }

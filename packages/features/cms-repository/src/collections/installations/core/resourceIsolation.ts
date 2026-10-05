@@ -34,6 +34,7 @@ export function assertCollectionResourceIsolation(releases: readonly CollectionR
         }
     }
     assertCollectionDependencies(releases);
+    validatePageBlocSurfaces(releases);
     validateMarkup(
         releases.flatMap((release) => release.blocs),
         DEFAULT_COLLECTION_LIMITS,
@@ -104,8 +105,44 @@ function validateDependencies(release: CollectionRelease, byId: ReadonlyMap<stri
                 );
             }
         }
+        const exportedPages = new Set(target.exports?.pages ?? []);
+        const targetPages = new Map((target.pages ?? []).map((page) => [page.id, page.generation ?? 1]));
+        for (const page of dependency.imports.pages ?? []) {
+            if (!exportedPages.has(page.id) || targetPages.get(page.id) !== page.generation) {
+                reject(
+                    `Collection ${release.collectionId} imports unavailable page ${target.collectionId}.${page.id} generation ${page.generation}`,
+                );
+            }
+        }
     }
     validateImportedThemeTypes(release, byId);
+}
+
+function validatePageBlocSurfaces(releases: readonly CollectionRelease[]): void {
+    const blocs = new Map(releases.flatMap((release) => release.blocs.map((bloc) => [bloc.id, bloc] as const)));
+    for (const release of releases) {
+        for (const page of release.pages ?? []) {
+            const pending = [...page.uses];
+            const seen = new Set<string>();
+            while (pending.length > 0) {
+                const id = pending.pop()!;
+                if (seen.has(id)) {
+                    continue;
+                }
+                seen.add(id);
+                const bloc = blocs.get(id);
+                if (!bloc) {
+                    reject(`Collection page ${release.collectionId}.${page.id} references unavailable bloc ${id}`);
+                }
+                if (!bloc.surfaces.includes(page.surface)) {
+                    reject(
+                        `Collection page ${release.collectionId}.${page.id} cannot use ${id} on the ${page.surface} surface`,
+                    );
+                }
+                pending.push(...bloc.uses);
+            }
+        }
+    }
 }
 
 function validateImportedThemeTypes(release: CollectionRelease, byId: ReadonlyMap<string, CollectionRelease>): void {

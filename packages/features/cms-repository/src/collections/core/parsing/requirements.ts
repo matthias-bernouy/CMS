@@ -68,7 +68,8 @@ export function parseCollectionDependencies(
             imports.blocs.length === 0 &&
             imports.themeTokens.length === 0 &&
             (imports.texts?.length ?? 0) === 0 &&
-            (imports.assets?.length ?? 0) === 0
+            (imports.assets?.length ?? 0) === 0 &&
+            (imports.pages?.length ?? 0) === 0
         ) {
             invalid("must import at least one collection resource", `${path}.imports`);
         }
@@ -93,7 +94,7 @@ function parseResourceImports(
     limits: Readonly<CollectionLimits>,
 ): CollectionResourceImportSelection {
     const source = record(value, path);
-    keys(source, ["blocs", "themeTokens", "texts", "assets"], path);
+    keys(source, ["blocs", "themeTokens", "texts", "assets", "pages"], path);
     return {
         blocs: importedResources(source.blocs, limits.maxBlocs, `${path}.blocs`, (entry, at) =>
             parseCollectionBlocTag(entry, collectionId, at),
@@ -114,6 +115,7 @@ function parseResourceImports(
         ),
         ...optionalImports(source.texts, limits.maxTexts, `${path}.texts`, (entry) => textIdentifier(entry)),
         ...optionalImports(source.assets, limits.maxAssets, `${path}.assets`, assetIdentifier),
+        ...optionalImports(source.pages, limits.maxPages, `${path}.pages`, (entry, at) => identifier(entry, at)),
     };
 }
 
@@ -122,9 +124,9 @@ function optionalImports(
     maximum: number,
     path: string,
     parseId: (value: unknown, path: string) => string,
-): { texts?: readonly CollectionResourceImport[]; assets?: readonly CollectionResourceImport[] } {
+): Partial<Record<"texts" | "assets" | "pages", readonly CollectionResourceImport[]>> {
     const resources = importedResources(value, maximum, path, parseId);
-    const property = path.endsWith(".texts") ? "texts" : "assets";
+    const property = path.endsWith(".texts") ? "texts" : path.endsWith(".assets") ? "assets" : "pages";
     return resources.length ? { [property]: resources } : {};
 }
 
@@ -164,6 +166,7 @@ export function validateCollectionExports(
     themeTokenIds: ReadonlySet<string>,
     textIds: ReadonlySet<string>,
     assetIds: ReadonlySet<string>,
+    pageIds: ReadonlySet<string>,
 ): void {
     for (const bloc of exports.blocs) {
         if (!blocIds.has(bloc)) {
@@ -185,6 +188,11 @@ export function validateCollectionExports(
             invalid(`unknown exported asset ${asset}`, "$.exports.assets");
         }
     }
+    for (const page of exports.pages ?? []) {
+        if (!pageIds.has(page)) {
+            invalid(`unknown exported page ${page}`, "$.exports.pages");
+        }
+    }
 }
 
 function parseResourceSelection(
@@ -194,7 +202,7 @@ function parseResourceSelection(
     limits: Readonly<CollectionLimits>,
 ): CollectionResourceSelection {
     const source = record(value, path);
-    keys(source, ["blocs", "themeTokens", "texts", "assets"], path);
+    keys(source, ["blocs", "themeTokens", "texts", "assets", "pages"], path);
     const blocs = array(source.blocs ?? [], limits.maxBlocs, `${path}.blocs`).map((entry, index) =>
         parseCollectionBlocTag(entry, collectionId, `${path}.blocs[${index}]`),
     );
@@ -219,15 +227,20 @@ function parseResourceSelection(
     const assets = array(source.assets ?? [], limits.maxAssets, `${path}.assets`).map((entry, index) =>
         assetIdentifier(entry, `${path}.assets[${index}]`),
     );
+    const pages = array(source.pages ?? [], limits.maxPages, `${path}.pages`).map((entry, index) =>
+        identifier(entry, `${path}.pages[${index}]`),
+    );
     unique(blocs, `${path}.blocs`);
     unique(themeTokens, `${path}.themeTokens`);
     unique(texts, `${path}.texts`);
     unique(assets, `${path}.assets`);
+    unique(pages, `${path}.pages`);
     return {
         blocs: blocs.sort(ordinal),
         themeTokens: themeTokens.sort(ordinal),
         ...(texts.length ? { texts: texts.sort(ordinal) } : {}),
         ...(assets.length ? { assets: assets.sort(ordinal) } : {}),
+        ...(pages.length ? { pages: pages.sort(ordinal) } : {}),
     };
 }
 

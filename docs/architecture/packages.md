@@ -22,13 +22,13 @@ files explain implementation invariants.
 | Package | Responsibility |
 | --- | --- |
 | `@bernouy/cms-content` | Pages, routes, Blocs, settings, themes, authoring contracts, collection migration execution and the author file library. |
-| `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues and authored collections with Control HTML views. |
+| `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues and authored collections with surface-specific Pages. |
 | `@bernouy/cms-gateway` | Authorized capability invocation, provider identity aliases, file reads and image derivatives. |
 | `@bernouy/cms-auth` | Accounts, local/OIDC providers, PATs, signed sessions, public auth operations and email composition. |
 | `@bernouy/cms-collection-build` | Collection Bloc validation, browser artifact builds and source-bundle generation. |
 
-Collection Views remain a transitional authored resource while Control Pages are
-designed. There is no separate Dashboard package, persistence model or runtime.
+Collection Pages are admitted resources, but their route registry and rendering
+flow are not mounted yet. There is no separate Dashboard package, persistence model or runtime.
 `cms-collection-build` remains a separate feature package.
 
 The old `cms-sources`, `cms-source-images`, `cms-identities` and `cms-secrets`

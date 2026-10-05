@@ -1,26 +1,26 @@
 import type { CollectionCapabilityRequirement, CollectionRelease } from "../../interfaces/CollectionRelease";
-import type { CollectionView } from "../../interfaces/CollectionView";
+import type { CollectionPage } from "../../interfaces/CollectionPage";
 
-/** Resolve one installed view's direct and transitive bloc requirements. */
-export function collectionViewRequirements(
+/** Resolve one installed Page's direct and transitive Bloc requirements. */
+export function collectionPageRequirements(
     releases: readonly CollectionRelease[],
     collectionId: string,
-    viewId: string,
+    pageId: string,
 ): readonly CollectionCapabilityRequirement[] {
-    const view = releases
+    const page = releases
         .find((release) => release.collectionId === collectionId)
-        ?.views?.find(({ id }) => id === viewId);
-    return view ? viewRequirements(releases, view) : [];
+        ?.pages?.find(({ id }) => id === pageId);
+    return page ? pageRequirements(releases, page) : [];
 }
 
-export function viewRequirements(
+export function pageRequirements(
     releases: readonly CollectionRelease[],
-    view: Pick<CollectionView, "uses" | "requires">,
+    page: Pick<CollectionPage, "uses" | "requires">,
 ): readonly CollectionCapabilityRequirement[] {
     const blocs = new Map(releases.flatMap((release) => release.blocs.map((bloc) => [bloc.id, bloc] as const)));
-    const requirements = [...view.requires];
+    const requirements = [...page.requires];
     const seen = new Set<string>();
-    const pending = [...view.uses];
+    const pending = [...page.uses];
     while (pending.length) {
         const id = pending.pop()!;
         if (seen.has(id)) {

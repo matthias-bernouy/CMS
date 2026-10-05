@@ -1,7 +1,7 @@
 import { basename, join } from "node:path";
 import { readSourceEntries, scanJsonSourceTree } from "./sourceTree";
 
-type ExportKind = "blocs" | "themeTokens" | "texts" | "assets";
+type ExportKind = "blocs" | "themeTokens" | "texts" | "assets" | "pages";
 
 /** Expand authoring-only wildcards while keeping admitted releases explicit. */
 export function expandCollectionSourceExports(
@@ -30,7 +30,7 @@ function explicitExports(resources: Readonly<Record<ExportKind, readonly string[
 }
 
 function isExportKind(value: string): value is ExportKind {
-    return ["blocs", "themeTokens", "texts", "assets"].includes(value);
+    return ["blocs", "themeTokens", "texts", "assets", "pages"].includes(value);
 }
 
 /** Merge recursively authored locale fragments into one immutable catalogue candidate. */

@@ -224,6 +224,12 @@
             "stat-two-label",
             "stat-two-value",
             "title"
+        ],
+        "pages": [
+            "catalog",
+            "overview",
+            "resources",
+            "theme"
         ]
     },
     "assets": []

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
-    DefaultCollectionViewExecutionAuthority,
-    InMemoryCollectionViewExecutionGrantStore,
+    DefaultCollectionPageExecutionAuthority,
+    InMemoryCollectionPageExecutionGrantStore,
 } from "@bernouy/cms-gateway/execution";
 import type { ContractSelectionStore, StoredContractSelections } from "@bernouy/cms-repository/providers/selections";
 import { gatewayRoute } from "../fixtures";
@@ -12,18 +12,18 @@ const consumer = {
     collectionId: "ulvia.official",
     collectionVersion: "1.0.0",
     collectionDigest: `sha256:${"c".repeat(64)}`,
-    viewId: "catalog",
-    viewGeneration: 1,
+    pageId: "catalog",
+    pageGeneration: 1,
 } as const;
 
-describe("collection view execution authority", () => {
+describe("collection Page execution authority", () => {
     test("pins one immutable provider target and authorizes only declared capabilities", async () => {
         const route = await gatewayRoute();
         let stored = selections(route);
-        const authority = new DefaultCollectionViewExecutionAuthority(
+        const authority = new DefaultCollectionPageExecutionAuthority(
             { get: async () => stored } as Pick<ContractSelectionStore, "get">,
             { resolve: async () => route, isCurrent: async () => true },
-            new InMemoryCollectionViewExecutionGrantStore(),
+            new InMemoryCollectionPageExecutionGrantStore(),
         );
         const grant = await authority.activate({
             consumer,
@@ -61,10 +61,10 @@ describe("collection view execution authority", () => {
 
     test("rejects incompatible selections and keeps grants for collection releases independent", async () => {
         const route = await gatewayRoute();
-        const authority = new DefaultCollectionViewExecutionAuthority(
+        const authority = new DefaultCollectionPageExecutionAuthority(
             { get: async () => selections(route) },
             { resolve: async () => route, isCurrent: async () => true },
-            new InMemoryCollectionViewExecutionGrantStore(),
+            new InMemoryCollectionPageExecutionGrantStore(),
         );
         await expect(
             authority.activate({
@@ -81,7 +81,7 @@ describe("collection view execution authority", () => {
             ...consumer,
             collectionVersion: "2.0.0",
             collectionDigest: `sha256:${"d".repeat(64)}`,
-            viewGeneration: 2,
+            pageGeneration: 2,
         } as const;
         await expect(
             authority.authorize({ ...target, contractId: "catalog", capabilityId: "item.list" }),

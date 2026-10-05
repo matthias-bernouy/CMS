@@ -78,7 +78,22 @@ test("installs only declared public resources from compatible collection depende
     const foundation = {
         ...release("ulvia-official", "1.0.0", "ulvia-official-button", "primary"),
         publisherId: "ulvia.official",
+        translations: {
+            en: {
+                ...release("ulvia-official", "1.0.0", "ulvia-official-button", "primary").translations.en,
+                "page.home.name": "Home",
+            },
+        },
         texts: [{ id: "submit", values: { en: "Submit" } }],
+        pages: [
+            {
+                id: "home",
+                surface: "delivery",
+                defaultPath: "/",
+                name: "page.home.name",
+                document: { html: "<section><ulvia-official-button></ulvia-official-button></section>" },
+            },
+        ],
         assets: [
             {
                 id: "empty.svg",
@@ -92,6 +107,7 @@ test("installs only declared public resources from compatible collection depende
             themeTokens: ["primary"],
             texts: ["submit"],
             assets: ["empty.svg"],
+            pages: ["home"],
         },
     };
     const baseConsumer = release("shop", "1.0.0", "shop-hero");
@@ -115,6 +131,7 @@ test("installs only declared public resources from compatible collection depende
                     themeTokens: [{ id: "primary", generation: 1 }],
                     texts: [{ id: "submit", generation: 1 }],
                     assets: [{ id: "empty.svg", generation: 1 }],
+                    pages: [{ id: "home", generation: 1 }],
                 },
             },
         ],
@@ -168,6 +185,47 @@ test("installs only declared public resources from compatible collection depende
     });
     await store.install("types", foundationArtifact.digest, 0);
     await expect(store.install("types", wrongType.digest, 1)).rejects.toThrow("cannot use color token");
+});
+
+test("rejects imported Blocs that do not support a Page surface", async () => {
+    const store = new CollectionStore(new MemoryCollectionStorage());
+    const foundationBase = release("ulvia-official", "1.0.0", "ulvia-official-admin-card");
+    const foundationSource = {
+        ...foundationBase,
+        publisherId: "ulvia.official",
+        exports: { blocs: ["ulvia-official-admin-card"], themeTokens: [] },
+        blocs: foundationBase.blocs.map((bloc) => ({ ...bloc, surfaces: ["control"] })),
+    };
+    const consumerBase = release("shop", "1.0.0", "shop-shell");
+    const consumerSource = {
+        ...consumerBase,
+        translations: { en: { ...consumerBase.translations.en, "page.home.name": "Home" } },
+        dependencies: [
+            {
+                collectionId: "ulvia-official",
+                publisherId: "ulvia.official",
+                versionRange: "^1.0.0",
+                imports: {
+                    blocs: [{ id: "ulvia-official-admin-card", generation: 1 }],
+                    themeTokens: [],
+                },
+            },
+        ],
+        pages: [
+            {
+                id: "home",
+                surface: "delivery",
+                defaultPath: "/",
+                name: "page.home.name",
+                document: { html: "<section><ulvia-official-admin-card></ulvia-official-admin-card></section>" },
+            },
+        ],
+    };
+
+    const foundation = await store.importRelease(foundationSource);
+    const consumer = await store.importRelease(consumerSource);
+    await store.install("site", foundation.digest, 0);
+    await expect(store.install("site", consumer.digest, 1)).rejects.toThrow("cannot use");
 });
 
 test("rejects imports that the dependency does not export", async () => {

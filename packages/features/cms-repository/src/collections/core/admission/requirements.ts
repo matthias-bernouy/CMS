@@ -15,15 +15,15 @@ export async function verifyCollectionRequirements(
         const closure = usedBlocs(bloc, blocs).flatMap((item) => item.requires);
         await verifyRequirements(closure, `$.blocs.${bloc.id}.requires`, "this bloc and its used blocs", catalogue);
     }
-    for (const view of release.views ?? []) {
+    for (const page of release.pages ?? []) {
         const closure = [
-            ...view.requires,
-            ...view.uses.flatMap((id) => {
+            ...page.requires,
+            ...page.uses.flatMap((id) => {
                 const bloc = blocs.get(id);
                 return bloc ? usedBlocs(bloc, blocs).flatMap((item) => item.requires) : [];
             }),
         ];
-        await verifyRequirements(closure, `$.views.${view.id}.requires`, "this view and its used blocs", catalogue);
+        await verifyRequirements(closure, `$.pages.${page.id}.requires`, "this page and its used blocs", catalogue);
     }
 }
 

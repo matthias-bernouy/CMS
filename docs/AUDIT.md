@@ -334,8 +334,8 @@ The package, Mongo and memory persistence, assignments, collection Dashboard
 resource, activation routes, static pages and Control components have been
 removed. This deliberately creates a temporary product gap before unified
 Control Pages exist, but eliminates a second navigation/rendering model with no
-production data to preserve. Collection Views and gateway execution-plan
-primitives remain transitional; neither currently has a mounted member flow.
+production data to preserve. Immutable collection Pages and Page execution-plan
+primitives now replace Views, but neither currently has a mounted member flow.
 
 ### `@bernouy/cms-gateway`
 
@@ -344,7 +344,7 @@ The gateway has strong security and correctness properties:
 - exact selected releases and immutable plan digests;
 - input validation, output validation and output projection;
 - credentials kept server-side;
-- exact view execution grants;
+- exact Page execution grants;
 - HTTPS enforcement outside literal loopback development;
 - validation of every resolved DNS address;
 - rejection of private/non-public destinations;
@@ -408,7 +408,7 @@ is required.
 - Official repository asset reads do not support HTTP Range yet.
 - CLI upload receipts are not persisted across process restarts and assets are
   uploaded sequentially.
-- Old exact-version view execution grants have no pruning lifecycle.
+- Old exact-version Page execution grants have no pruning lifecycle.
 
 ## Collections And Official Resources
 
@@ -422,13 +422,13 @@ The current collection format supports:
 - server texts and recursively organized metadata translations;
 - recursively organized themes and tokens;
 - public collection assets;
-- transitional HTML views;
+- immutable surface-specific Pages;
 - transitive capabilities;
-- selective imports of blocs, tokens, texts and assets;
+- selective imports of blocs, tokens, texts, assets and Pages;
 - per-resource digests and generations;
 - declarative data migrations.
 
-Markup, default content and views validate referenced blocs, texts and assets.
+Markup, default content and Page documents validate referenced blocs, texts and assets.
 External CSS variables are rejected unless they are backed by an explicitly
 imported token. This is the correct strict policy.
 
@@ -436,13 +436,13 @@ imported token. This is the correct strict policy.
 
 The current `1.0.0` source includes approximately 67 exported public blocs, 71
 component/style roots including internal helpers, 119 exported theme tokens, 24
-exported server texts and four transitional views. Forms, layouts, navigation
+exported server texts and four Control Pages. Forms, layouts, navigation
 and content/marketing elements already provide a credible base collection.
 
 It is not yet a universal component catalogue. Data tables, pagination,
 advanced breadcrumbs, dialogs, alerts, progress/status and empty states still
 mostly exist in Foundation/Admin. They should become official product blocs
-when a real site or view needs them; Foundation components should not be moved
+when a real site or Page needs them; Foundation components should not be moved
 mechanically.
 
 Some complex official form blocs are large. Extract shared state machines and

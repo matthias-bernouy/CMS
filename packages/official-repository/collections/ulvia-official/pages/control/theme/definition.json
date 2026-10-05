@@ -1,0 +1,8 @@
+{
+    "id": "theme",
+    "surface": "control",
+    "defaultPath": "/admin/theme",
+    "name": "page.theme.name",
+    "icon": "settings",
+    "description": "page.theme.description"
+}

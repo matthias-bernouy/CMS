@@ -26,14 +26,14 @@ packages/official-repository/collections/ulvia-official/
 ├── theme/definition.json    # ordered theme category IDs
 ├── theme/**/*.json          # recursively organized category/token defaults
 ├── definitions/             # reserved for later collection definitions
-├── views/<view>/definition.json  # view identity, label and capability requirements
-└── views/<view>/view.html   # transitional Control HTML fragment
+├── pages/**/<page>/definition.json  # Page identity, surface, default route and requirements
+└── pages/**/<page>/page.html   # immutable collection Page document
 ```
 
 `definition.json` may publish a selective `exports` surface containing Bloc
 tags and collection-local theme token IDs. Its `dependencies` entries identify
 one collection and publisher, constrain its version, and list only the exported
-Blocs and tokens this release imports. External Bloc references in `uses`, slot
+Blocs, tokens, texts, assets and Pages this release imports. External Bloc references in `uses`, slot
 acceptance or authored markup must be present in that import list. The site
 single-release installer requires dependencies first and revalidates the complete
 acyclic graph on install and upgrade. The core installation store can also commit
@@ -47,7 +47,7 @@ lives at `ULVIA_DATA_DIR/repository`, or below `$XDG_DATA_HOME/ulvia/repository`
 or `~/.local/share/ulvia/repository` by default. `bun run ulvia -- dev` serves
 only stored releases on loopback port 5102 (`ULVIA_DEV_REPOSITORY_PORT` can
 change it); it never scans authored folders. Run `release` again after editing
-the source and increment its version. Contracts required by Blocs or Views must
+the source and increment its version. Contracts required by Blocs or Pages must
 already exist in the local repository. `bun run ulvia -- prune` empties the
 local repository without deleting the separate dev CMS data. Pull and push
 transfer one exact release between the local store and an HTTPS repository:
@@ -77,14 +77,14 @@ repository server:
 | Blocs | 512 |
 | Assets | 1,024 |
 | Content texts | 4,096 |
-| Views | 256 |
+| Pages | 256 |
 | Collection dependencies | 128 |
 | Theme categories | 64 |
 | Theme tokens across all categories | 4,096 |
 
 Structural sub-resources remain bounded as well: 512 adjacent migration files
 with 512 operations each, 256 settings and 32 slots per Bloc, and 32 capability
-requirements per Bloc or View.
+requirements per Bloc or Page.
 
 One asset remains limited to 10 MiB and all asset bytes in one release remain
 limited to 50 MiB. These are hard collection limits: a release exceeding any
@@ -96,7 +96,7 @@ Larger videos, audio files or documents belong in the CMS media/file system.
 
 Import and export lists use the limit of their resource kind rather than the
 Bloc limit. Authored sources may use `"*"` for an entire `exports` object or one
-of its `blocs`, `themeTokens`, `texts` or `assets` selections. The release
+of its `blocs`, `themeTokens`, `texts`, `assets` or `pages` selections. The release
 command expands that shorthand before admission, excludes internal Blocs from
 a wildcard Bloc selection and stores an explicit sorted list in the immutable
 release. Dependency imports never accept wildcards.
@@ -200,7 +200,7 @@ retains site text overrides and checks revision and compatible resource IDs.
 ## Release evolution and migrations
 
 The collection SemVer remains the publication version. Each Bloc, theme token,
-configuration, text and View also has a positive `generation`
+configuration, text and Page also has a positive `generation`
 (default `1`) and deterministic contract and implementation digests. An
 implementation-only change leaves the contract digest stable. A compatible
 contract extension may change the contract digest without changing the resource
@@ -303,16 +303,16 @@ including fixed Light DOM, named slots and initial page content. Verified asset
 bytes and revision-checked collection configuration are implemented. The store
 can remove a collection after checking installed dependants, but Control does not
 expose removal until it can also report affected pages, private Blocs, theme
-references and transitional Views. Remote registry transfer and authenticated
+references and collection Pages. Remote registry transfer and authenticated
 publication are implemented by the CLI and filesystem reference registry.
 Production hosting, key rotation and multi-publisher authorization remain
 deployment work. JavaScript trust scanning is also separate; migration files
-themselves are data-only. Collection Views can contain local or explicitly
+themselves are data-only. Collection Pages can contain local or explicitly
 imported Blocs, and the renderer can expand compositions, load transitive
 component runtimes, resolve collection texts and public assets, and apply the
 site theme. There is currently no Control navigation or activation flow for
-these transitional Views. The retained execution-plan API can pin the collection
-digest, View generation, provider-selection revision, contract release digest
+these Pages. The retained execution-plan API can pin the collection
+digest, Page generation, provider-selection revision, contract release digest
 and installation for the future Control Page integration. A source adapter exists
 for multiple repositories, while the dev runtime configures one local source.
 Repository catalogue responses use opaque cursor pagination with at most 256

@@ -1,0 +1,8 @@
+{
+    "id": "overview",
+    "surface": "control",
+    "defaultPath": "/admin",
+    "name": "page.overview.name",
+    "icon": "layout",
+    "description": "page.overview.description"
+}

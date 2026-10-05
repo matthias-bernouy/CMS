@@ -79,7 +79,7 @@ describe("collection release parsing", () => {
         for (const patch of [
             { providerId: "provider" },
             { imports: [] },
-            { views: null },
+            { pages: null },
             { locale: "en_US" },
             { kind: "contract" },
             { protocol: "ulvia-provider/v1" },
@@ -111,7 +111,7 @@ describe("collection release parsing", () => {
             maxBlocs: 512,
             maxAssets: 1_024,
             maxTexts: 4_096,
-            maxViews: 256,
+            maxPages: 256,
             maxDependencies: 128,
             maxThemeCategories: 64,
             maxThemeTokens: 4_096,
@@ -311,6 +311,7 @@ describe("collection release parsing", () => {
 
     test("declares selective exports and cross-collection imports", () => {
         const source = collectionDocument({
+            "page.overview.name": "Overview",
             "theme.category.colors.label": "Colors",
             "theme.label": "Atlas theme",
             "theme.token.accent.label": "Accent",
@@ -332,7 +333,16 @@ describe("collection release parsing", () => {
                 },
             ],
         };
-        source.exports = { blocs: ["atlas-panel"], themeTokens: ["accent"] };
+        source.pages = [
+            {
+                id: "overview",
+                surface: "control",
+                defaultPath: "/admin",
+                name: "page.overview.name",
+                document: { html: "<section>Overview</section>" },
+            },
+        ];
+        source.exports = { blocs: ["atlas-panel"], themeTokens: ["accent"], pages: ["overview"] };
         source.dependencies = [
             {
                 collectionId: "ulvia-official",
@@ -341,6 +351,7 @@ describe("collection release parsing", () => {
                 imports: {
                     blocs: [{ id: "ulvia-official-button", generation: 1 }],
                     themeTokens: [{ id: "primary", generation: 1 }],
+                    pages: [{ id: "home", generation: 2 }],
                 },
             },
         ];
@@ -349,7 +360,7 @@ describe("collection release parsing", () => {
             '<atlas-panel><slot name="main" slot="body"></slot><ulvia-official-button slot="body"></ulvia-official-button></atlas-panel>';
 
         const parsed = parseCollectionRelease(source);
-        expect(parsed.exports).toEqual({ blocs: ["atlas-panel"], themeTokens: ["accent"] });
+        expect(parsed.exports).toEqual({ blocs: ["atlas-panel"], themeTokens: ["accent"], pages: ["overview"] });
         expect(parsed.dependencies?.[0]).toEqual({
             collectionId: "ulvia-official",
             publisherId: "ulvia.official",
@@ -357,6 +368,7 @@ describe("collection release parsing", () => {
             imports: {
                 blocs: [{ id: "ulvia-official-button", generation: 1 }],
                 themeTokens: [{ id: "primary", generation: 1 }],
+                pages: [{ id: "home", generation: 2 }],
             },
         });
 

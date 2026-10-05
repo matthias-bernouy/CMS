@@ -64,20 +64,24 @@ describe("collection authored bundle admission", () => {
         });
     });
 
-    test("requires a contract witness for capabilities called directly by a view", async () => {
+    test("requires a contract witness for capabilities called directly by a Page", async () => {
         const contracts = await releaseCatalogue(contractDocument("catalog.items", "item.list"));
-        const source = collectionDocument({ "view.catalog.name": "Catalog" });
-        source.views = [
+        const source = collectionDocument({ "page.catalog.name": "Catalog" });
+        source.pages = [
             {
                 id: "catalog",
-                name: "view.catalog.name",
+                surface: "control",
+                defaultPath: "/admin/catalog",
+                name: "page.catalog.name",
                 requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
-                html: '<section cms-source="/.cms/call/catalog.items/item.list" cms-source-method="POST"></section>',
+                document: {
+                    html: '<section cms-source="/.cms/call/catalog.items/item.list" cms-source-method="POST"></section>',
+                },
             },
         ];
         await expect(admitCollectionRelease(source)).rejects.toMatchObject({ code: "resolution_failed" });
         await expect(admitCollectionRelease(source, [], { contracts })).resolves.toMatchObject({
-            release: { views: [{ id: "catalog" }] },
+            release: { pages: [{ id: "catalog" }] },
         });
     });
 

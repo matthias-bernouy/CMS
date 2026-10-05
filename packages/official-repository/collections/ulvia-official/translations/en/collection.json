@@ -1,12 +1,12 @@
 {
     "collection.description": "Official foundation blocs, translated texts, semantic theme tokens and reusable Control view prototypes.",
     "collection.name": "Ulvia Official",
-    "view.catalog.description": "Live catalog items provided through the selected catalog.items source.",
-    "view.catalog.name": "Catalog",
-    "view.overview.description": "An official overview for the Ulvia workspace.",
-    "view.overview.name": "Overview",
-    "view.resources.description": "Official reusable blocs available to this workspace.",
-    "view.resources.name": "Blocs",
-    "view.theme.description": "Official theme tokens available to this workspace.",
-    "view.theme.name": "Theme"
+    "page.catalog.description": "Live catalog items provided through the selected catalog.items source.",
+    "page.catalog.name": "Catalog",
+    "page.overview.description": "An official overview for the Ulvia workspace.",
+    "page.overview.name": "Overview",
+    "page.resources.description": "Official reusable blocs available to this workspace.",
+    "page.resources.name": "Blocs",
+    "page.theme.description": "Official theme tokens available to this workspace.",
+    "page.theme.name": "Theme"
 }

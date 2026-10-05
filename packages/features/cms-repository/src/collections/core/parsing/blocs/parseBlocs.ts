@@ -13,6 +13,7 @@ const common = [
     "id",
     "generation",
     "label",
+    "surfaces",
     "description",
     "category",
     "order",
@@ -62,6 +63,7 @@ function parseBloc(
                 ? 1
                 : integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${path}.generation`),
         label: string(source.label, 120, `${path}.label`),
+        surfaces: parseSurfaces(source.surfaces, `${path}.surfaces`),
         ...(source.description === undefined
             ? {}
             : { description: string(source.description, 4096, `${path}.description`) }),
@@ -120,6 +122,23 @@ function parseBloc(
                   },
               }),
     };
+}
+
+function parseSurfaces(value: unknown, path: string): readonly ("control" | "delivery")[] {
+    const surfaces = array(value ?? ["control", "delivery"], 2, path).map((surface, index) => {
+        if (surface !== "control" && surface !== "delivery") {
+            invalid("must contain only control or delivery", `${path}[${index}]`);
+        }
+        return surface;
+    });
+    if (surfaces.length === 0) {
+        invalid("must contain at least one surface", path);
+    }
+    unique(surfaces, path);
+    return ["control", "delivery"].filter((surface) => surfaces.includes(surface as "control" | "delivery")) as (
+        | "control"
+        | "delivery"
+    )[];
 }
 
 export function parseBlocs(

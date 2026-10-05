@@ -1,7 +1,7 @@
 # Collection authored bundles
 
 `@bernouy/cms-repository/collections` exposes strict release parsing, bundle
-admission, repository transport and site installation state. It is not a view
+admission, repository transport and site installation state. It is not a Page
 authorization engine or a general-purpose executable package format.
 
 ## Release contents
@@ -16,7 +16,7 @@ configuration schemas.
 This slice supports:
 
 - A reusable administration translation catalogue shared by collection, Bloc,
-  setting, text, theme and transitional View metadata. Every metadata field stores
+  setting, text, theme and Page metadata. Every metadata field stores
   a key, every key must exist in the default locale and additional locales may
   be partial. Resolution tries the requested locale, its regional parents and
   finally the collection locale.
@@ -25,7 +25,8 @@ This slice supports:
   exposes validation and fallback resolution; see
   [collection texts](../../../../../docs/blocs/texts.md).
 - Optional theme categories with typed light/dark token defaults.
-- Optional Control HTML views: bounded collection-owned fragments.
+- Optional Pages: bounded collection-owned documents, each fixed to the
+  `control` or `delivery` surface and carrying a collection default path.
 - Assets declared by stable ID, concrete MIME type, byte length and SHA-256.
 - Component blocs with a static `shadowdom` shell and optional fixed `lightdom`,
   `style` source and declarative setting items. Optional translated `category`
@@ -36,7 +37,7 @@ This slice supports:
 - Explicit local `uses`, named slots for components, media, plain text or bounded
   rich-text profiles, optional thumbnail asset, initial editable `defaultContent`
   and resource-level capability requirements.
-- Selective public Bloc/theme-token/text/asset exports and bounded cross-collection imports.
+- Selective public Bloc/theme-token/text/asset/Page exports and bounded cross-collection imports.
   Every imported resource pins the exact contract generation understood by the
   dependent collection.
 - Cumulative adjacent, declarative migration steps for site-owned data.
@@ -123,11 +124,10 @@ verify every requested resource against its target release's explicit `exports`,
 validate cross-release slot targets and reject collection dependency cycles.
 Upgrades revalidate all installed dependents.
 
-Theme token IDs remain local in release JSON and are projected as both the
-global token ID and CSS variable name `<collectionId>-<tokenId>`. Texts and
-Views similarly retain local IDs: text expressions use
-`cms.i18n.<collectionId>.<textId>`, while a View is identified as
-`<collectionId>:<viewId>`. Assets remain scoped by the immutable release
+Theme token and Page IDs remain local in release JSON. Tokens are projected as both the
+global token ID and CSS variable name `<collectionId>-<tokenId>`. Text
+expressions use `cms.i18n.<collectionId>.<textId>`, while a Page is identified
+by its collection and Page IDs independently from its route. Assets remain scoped by the immutable release
 digest. Installation and upgrade reject exact Bloc-tag or projected theme-token
 collisions between collections.
 
@@ -165,7 +165,7 @@ also verify the exact byte set and capability witnesses, returning a digest,
 canonical JSON and immutable Blob snapshots. Every input buffer is snapshotted
 before the first asynchronous step; caller-owned objects are never frozen.
 
-`CollectionLimits` gives documents, Blocs, assets, texts, Views,
+`CollectionLimits` gives documents, Blocs, assets, texts, Pages,
 dependencies, theme resources, migrations, markup, slots, settings and
 requirements independent bounds. Import and export lists use the bound of the
 resource kind they select. `limits.schema` explicitly carries the schema policy
@@ -173,19 +173,20 @@ through configurations. Locale tags normalize using
 `Intl.getCanonicalLocales`; administration copy resolves through the immutable
 catalogue while content text overrides remain separate.
 
-## Transitional Views
+## Collection Pages
 
-The local release command reads `views/<view-id>/definition.json` and
-`view.html` and places the HTML in the immutable release. Admission permits
+The local release command recursively reads
+`pages/**/<page-id>/definition.json` and `page.html`, then places the document
+in the immutable release. Admission permits
 text, a small semantic HTML set and declared local or explicitly imported Bloc
 tags. It derives the exact `uses` set from the HTML. Canonical
 `/.cms/call/<contract>/<capability>` sources require a matching versioned
 capability requirement; admission verifies those witnesses alongside transitive
 local Bloc requirements. Scripts, links, inline handlers and inline styles reject.
-The renderer can expand compositions, resolve texts and public assets, apply the
-site theme and load every transitively used component runtime, including internal
-Blocs. No standalone Control navigation or access model currently exposes these
-Views. They remain transitional input for the future surface-specific Page model.
+Every Page declares exactly one surface; every local and imported Bloc in its
+transitive closure must support that surface. Page exports and imports pin exact
+resource generations. No route registry or Control mounting flow exposes these
+Pages yet; admission and installation are implemented ahead of rendering.
 
 ## Publication and installation
 
@@ -221,8 +222,8 @@ multi-collection replacement or restoration after the content layer has planned
 the affected pages and site-owned values.
 
 The store can remove a collection only when no installed collection depends on
-it. This is deliberately not exposed as a Control HTTP action yet: pages, private
-Blocs, theme overrides and transitional Views still need affected-resource analysis
+it. This is deliberately not exposed as a Control HTTP action yet: site Pages,
+private Blocs, theme overrides and collection Pages still need affected-resource analysis
 before removal is safe.
 
 ## Next slices

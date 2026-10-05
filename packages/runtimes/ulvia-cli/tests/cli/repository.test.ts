@@ -43,10 +43,10 @@ test("local repository lists immutable metadata and serves matching release byte
         expect(release.exports?.blocs).toHaveLength(67);
         expect(release.exports?.themeTokens).toHaveLength(119);
         expect(release.theme?.categories.flatMap((category) => category.tokens)).toHaveLength(119);
-        expect(release.views?.find((view) => view.id === "catalog")?.html).toContain(
+        expect(release.pages?.find((page) => page.id === "catalog")?.document.html).toContain(
             "/.cms/call/catalog.items/item.list",
         );
-        expect(release.views?.find((view) => view.id === "catalog")?.requires).toEqual([
+        expect(release.pages?.find((page) => page.id === "catalog")?.requires).toEqual([
             { contractId: "catalog.items", capabilityId: "item.list", versionRange: "^0.1.0" },
         ]);
         const action = release.blocs.find((bloc) => bloc.id === "ulvia-official-action");
@@ -237,11 +237,11 @@ test("collection source assets keep their verified bytes through the repository 
         await expect(prepareCollectionRelease(sourceRoot)).rejects.toThrow("exactly match");
         await unlink(join(sourceRoot, "assets", "icons", "unused.svg"));
 
-        const viewRoot = join(sourceRoot, "views", "overview");
-        await mkdir(viewRoot, { recursive: true });
-        await writeFile(join(viewRoot, "definition.json"), JSON.stringify({ id: "overview" }));
-        await writeFile(join(viewRoot, "view.html"), "<p>Overview</p>");
-        await writeFile(join(viewRoot, "unexpected.txt"), "not part of the view source contract");
+        const pageRoot = join(sourceRoot, "pages", "control", "overview");
+        await mkdir(pageRoot, { recursive: true });
+        await writeFile(join(pageRoot, "definition.json"), JSON.stringify({ id: "overview" }));
+        await writeFile(join(pageRoot, "page.html"), "<p>Overview</p>");
+        await writeFile(join(pageRoot, "unexpected.txt"), "not part of the Page source contract");
         await expect(prepareCollectionRelease(sourceRoot)).rejects.toThrow("must contain exactly");
     } finally {
         await rm(root, { recursive: true, force: true });

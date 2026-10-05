@@ -1,13 +1,13 @@
-export { DefaultCollectionViewExecutionAuthority } from "cms-gateway/execution/core/ViewExecutionAuthority";
-export { InMemoryCollectionViewExecutionGrantStore } from "cms-gateway/execution/default-implementation/InMemoryViewExecutionGrantStore";
+export { DefaultCollectionPageExecutionAuthority } from "cms-gateway/execution/core/PageExecutionAuthority";
+export { InMemoryCollectionPageExecutionGrantStore } from "cms-gateway/execution/default-implementation/InMemoryPageExecutionGrantStore";
 export type {
-    CollectionViewExecutionActivation,
-    CollectionViewExecutionAuthority,
-    CollectionViewExecutionConsumer,
-    CollectionViewExecutionPlan,
-    CollectionViewExecutionRequest,
-    CollectionViewExecutionTarget,
+    CollectionPageExecutionActivation,
+    CollectionPageExecutionAuthority,
+    CollectionPageExecutionConsumer,
+    CollectionPageExecutionPlan,
+    CollectionPageExecutionRequest,
+    CollectionPageExecutionTarget,
     GatewayExecutionPin,
-    StoredCollectionViewExecutionGrant,
-} from "cms-gateway/execution/interfaces/ViewExecution";
-export type { CollectionViewExecutionGrantStore } from "cms-gateway/execution/interfaces/ViewExecutionGrantStore";
+    StoredCollectionPageExecutionGrant,
+} from "cms-gateway/execution/interfaces/PageExecution";
+export type { CollectionPageExecutionGrantStore } from "cms-gateway/execution/interfaces/PageExecutionGrantStore";

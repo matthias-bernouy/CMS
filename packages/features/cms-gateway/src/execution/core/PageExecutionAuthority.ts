@@ -4,14 +4,14 @@ import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/s
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type { GatewayRouteResolver } from "cms-gateway/invocation/interfaces/Invocation";
 import type {
-    CollectionViewExecutionActivation,
-    CollectionViewExecutionAuthority,
-    CollectionViewExecutionPlan,
-    CollectionViewExecutionRequest,
+    CollectionPageExecutionActivation,
+    CollectionPageExecutionAuthority,
+    CollectionPageExecutionPlan,
+    CollectionPageExecutionRequest,
     GatewayExecutionPin,
-    StoredCollectionViewExecutionGrant,
-} from "../interfaces/ViewExecution";
-import type { CollectionViewExecutionGrantStore } from "../interfaces/ViewExecutionGrantStore";
+    StoredCollectionPageExecutionGrant,
+} from "../interfaces/PageExecution";
+import type { CollectionPageExecutionGrantStore } from "../interfaces/PageExecutionGrantStore";
 import {
     digestPlan,
     requireExecutionIdentifier,
@@ -21,14 +21,14 @@ import {
 } from "./executionValues";
 
 /** Compiles and enforces site-owned grants without selecting or upgrading providers. */
-export class DefaultCollectionViewExecutionAuthority implements CollectionViewExecutionAuthority {
+export class DefaultCollectionPageExecutionAuthority implements CollectionPageExecutionAuthority {
     constructor(
         private readonly selections: Pick<ContractSelectionStore, "get">,
         private readonly routes: GatewayRouteResolver,
-        private readonly grants: CollectionViewExecutionGrantStore,
+        private readonly grants: CollectionPageExecutionGrantStore,
     ) {}
 
-    async activate(input: CollectionViewExecutionActivation): Promise<StoredCollectionViewExecutionGrant> {
+    async activate(input: CollectionPageExecutionActivation): Promise<StoredCollectionPageExecutionGrant> {
         const activation = snapshotActivation(input);
         const plan = await this.#compile(activation);
         const planDigest = await digestPlan(plan);
@@ -42,10 +42,10 @@ export class DefaultCollectionViewExecutionAuthority implements CollectionViewEx
                 return deepFreeze(structuredClone(grant));
             }
         }
-        throw new GatewayError("stale_route", "view execution grant changed during activation");
+        throw new GatewayError("stale_route", "page execution grant changed during activation");
     }
 
-    async authorize(input: CollectionViewExecutionRequest): Promise<GatewayExecutionPin> {
+    async authorize(input: CollectionPageExecutionRequest): Promise<GatewayExecutionPin> {
         const consumer = snapshotConsumer(input);
         requireExecutionIdentifier(input.contractId, "contract");
         requireExecutionIdentifier(input.capabilityId, "capability");
@@ -54,12 +54,12 @@ export class DefaultCollectionViewExecutionAuthority implements CollectionViewEx
             this.selections.get(consumer.siteId),
         ]);
         if (!grant) {
-            throw new GatewayError("not_authorized", "this collection view has no active execution grant");
+            throw new GatewayError("not_authorized", "this collection Page has no active execution grant");
         }
         if (canonicalizeIJson(grant.plan.consumer) !== canonicalizeIJson(consumer)) {
             throw new GatewayError(
                 "stale_route",
-                "the collection view changed after its execution grant was activated",
+                "the collection Page changed after its execution grant was activated",
             );
         }
         if (
@@ -67,11 +67,11 @@ export class DefaultCollectionViewExecutionAuthority implements CollectionViewEx
             selections.revision !== grant.plan.selectionRevision ||
             selections.dependencyRevision !== grant.plan.dependencyRevision
         ) {
-            throw new GatewayError("stale_route", "provider selections changed after the view was activated");
+            throw new GatewayError("stale_route", "provider selections changed after the Page was activated");
         }
         const target = grant.plan.targets.find((item) => item.contractId === input.contractId);
         if (!target?.capabilityIds.includes(input.capabilityId)) {
-            throw new GatewayError("not_authorized", "capability is outside the collection view execution grant");
+            throw new GatewayError("not_authorized", "capability is outside the collection Page execution grant");
         }
         return {
             planDigest: grant.planDigest,
@@ -81,10 +81,10 @@ export class DefaultCollectionViewExecutionAuthority implements CollectionViewEx
         };
     }
 
-    async #compile(input: CollectionViewExecutionActivation): Promise<CollectionViewExecutionPlan> {
+    async #compile(input: CollectionPageExecutionActivation): Promise<CollectionPageExecutionPlan> {
         const stored = await this.selections.get(input.consumer.siteId);
         if (!stored) {
-            throw new GatewayError("not_selected", "site has no provider selections for this view");
+            throw new GatewayError("not_selected", "site has no provider selections for this Page");
         }
         const grouped = new Map<string, typeof input.requirements>();
         for (const requirement of input.requirements) {
@@ -105,7 +105,7 @@ export class DefaultCollectionViewExecutionAuthority implements CollectionViewEx
                         !release.capabilities.some((capability) => capability.id === requirement.capabilityId),
                 )
             ) {
-                throw new GatewayError("not_selected", `selected ${contractId} release does not satisfy this view`);
+                throw new GatewayError("not_selected", `selected ${contractId} release does not satisfy this Page`);
             }
             targets.push({
                 contractId,
@@ -121,10 +121,10 @@ export class DefaultCollectionViewExecutionAuthority implements CollectionViewEx
             current.revision !== stored.revision ||
             current.dependencyRevision !== stored.dependencyRevision
         ) {
-            throw new GatewayError("stale_route", "provider selections changed during view planning");
+            throw new GatewayError("stale_route", "provider selections changed during Page planning");
         }
         return deepFreeze({
-            protocol: "ulvia-view-execution/v1",
+            protocol: "ulvia-page-execution/v1",
             consumer: input.consumer,
             selectionRevision: stored.revision,
             dependencyRevision: stored.dependencyRevision,

@@ -1,8 +1,10 @@
 {
     "id": "catalog",
-    "name": "view.catalog.name",
+    "surface": "control",
+    "defaultPath": "/admin/catalog",
+    "name": "page.catalog.name",
     "icon": "catalog",
-    "description": "view.catalog.description",
+    "description": "page.catalog.description",
     "requires": [
         {
             "contractId": "catalog.items",

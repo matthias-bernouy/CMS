@@ -1,23 +1,23 @@
 import type { Db } from "mongodb";
 import { deepFreeze } from "@bernouy/cms-repository/contracts/protocol";
-import type { CollectionViewExecutionGrantStore } from "../../interfaces/ViewExecutionGrantStore";
+import type { CollectionPageExecutionGrantStore } from "../../interfaces/PageExecutionGrantStore";
 import type {
-    CollectionViewExecutionConsumer,
-    StoredCollectionViewExecutionGrant,
-} from "../../interfaces/ViewExecution";
+    CollectionPageExecutionConsumer,
+    StoredCollectionPageExecutionGrant,
+} from "../../interfaces/PageExecution";
 
-interface GrantDocument extends StoredCollectionViewExecutionGrant {
+interface GrantDocument extends StoredCollectionPageExecutionGrant {
     readonly _id: string;
 }
 
-export class MongoCollectionViewExecutionGrantStore implements CollectionViewExecutionGrantStore {
+export class MongoCollectionPageExecutionGrantStore implements CollectionPageExecutionGrantStore {
     readonly #collection;
 
     constructor(db: Db) {
-        this.#collection = db.collection<GrantDocument>("cms_collection_view_execution_grants");
+        this.#collection = db.collection<GrantDocument>("cms_collection_page_execution_grants");
     }
 
-    async get(consumer: CollectionViewExecutionConsumer): Promise<StoredCollectionViewExecutionGrant | null> {
+    async get(consumer: CollectionPageExecutionConsumer): Promise<StoredCollectionPageExecutionGrant | null> {
         const document = await this.#collection.findOne({ _id: key(consumer) });
         if (!document) {
             return null;
@@ -31,16 +31,16 @@ export class MongoCollectionViewExecutionGrantStore implements CollectionViewExe
             grant.plan.consumer.collectionId !== consumer.collectionId ||
             grant.plan.consumer.collectionVersion !== consumer.collectionVersion ||
             grant.plan.consumer.collectionDigest !== consumer.collectionDigest ||
-            grant.plan.consumer.viewId !== consumer.viewId ||
-            grant.plan.consumer.viewGeneration !== consumer.viewGeneration ||
+            grant.plan.consumer.pageId !== consumer.pageId ||
+            grant.plan.consumer.pageGeneration !== consumer.pageGeneration ||
             !/^sha256:[0-9a-f]{64}$/u.test(grant.planDigest)
         ) {
-            throw new Error("Stored collection view execution grant is invalid");
+            throw new Error("Stored collection Page execution grant is invalid");
         }
         return deepFreeze(structuredClone(grant));
     }
 
-    async replace(grant: StoredCollectionViewExecutionGrant, expectedRevision: number): Promise<boolean> {
+    async replace(grant: StoredCollectionPageExecutionGrant, expectedRevision: number): Promise<boolean> {
         const document = { _id: key(grant.plan.consumer), ...structuredClone(grant) };
         if (expectedRevision === 0) {
             try {
@@ -58,15 +58,15 @@ export class MongoCollectionViewExecutionGrantStore implements CollectionViewExe
     }
 }
 
-function key(consumer: CollectionViewExecutionConsumer): string {
+function key(consumer: CollectionPageExecutionConsumer): string {
     return JSON.stringify([
         consumer.siteId,
         consumer.publisherId,
         consumer.collectionId,
         consumer.collectionVersion,
         consumer.collectionDigest,
-        consumer.viewId,
-        consumer.viewGeneration,
+        consumer.pageId,
+        consumer.pageGeneration,
     ]);
 }
 

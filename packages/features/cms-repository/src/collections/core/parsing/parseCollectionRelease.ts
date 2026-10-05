@@ -11,7 +11,7 @@ import { parseAssets } from "./assets";
 import { parseBlocs } from "./blocs/parseBlocs";
 import { validateBlocs } from "./blocs/validateBlocs";
 import { parseConfiguration } from "./configuration";
-import { parseCollectionViews } from "./views";
+import { parseCollectionPages, validateLocalPageSurfaces } from "./pages";
 import { validateCollectionTextReferences } from "../validation/markup/texts";
 import { parseCollectionTranslations } from "../texts/translationCatalogue";
 import { validateCollectionTranslationReferences } from "../texts/translationReferences";
@@ -49,7 +49,7 @@ export function parseCollectionRelease(
                 "theme",
                 "assets",
                 "blocs",
-                "views",
+                "pages",
             ],
             "$",
         );
@@ -84,18 +84,14 @@ export function parseCollectionRelease(
             limits,
             new Set(dependencies?.flatMap((dependency) => dependency.imports.blocs.map(({ id }) => id)) ?? []),
         );
-        const views =
-            source.views === undefined
-                ? undefined
-                : parseCollectionViews(
-                      source.views,
-                      new Set([
-                          ...blocs.map((bloc) => bloc.id),
-                          ...(dependencies?.flatMap((dependency) => dependency.imports.blocs.map(({ id }) => id)) ??
-                              []),
-                      ]),
-                      limits,
-                  );
+        const blocSurfaces = new Map([
+            ...blocs.map((bloc) => [bloc.id, bloc.surfaces] as const),
+            ...(dependencies?.flatMap((dependency) =>
+                dependency.imports.blocs.map(({ id }) => [id, ["control", "delivery"] as const] as const),
+            ) ?? []),
+        ]);
+        const pages = source.pages === undefined ? undefined : parseCollectionPages(source.pages, blocSurfaces, limits);
+        validateLocalPageSurfaces(pages ?? [], blocs);
         validateCollectionTextReferences(
             blocs,
             collectionId,
@@ -106,7 +102,7 @@ export function parseCollectionRelease(
                     new Set(dependency.imports.texts?.map(({ id }) => id) ?? []),
                 ]),
             ),
-            views,
+            pages,
         );
         validateCollectionAssetReferences(
             blocs,
@@ -118,7 +114,7 @@ export function parseCollectionRelease(
                     new Set(dependency.imports.assets?.map(({ id }) => id) ?? []),
                 ]),
             ),
-            views,
+            pages,
         );
         const theme =
             source.theme === undefined
@@ -133,6 +129,7 @@ export function parseCollectionRelease(
                 new Set(theme?.categories.flatMap((category) => category.tokens.map((token) => token.id)) ?? []),
                 new Set(texts?.map((text) => text.id) ?? []),
                 new Set(assets.map((asset) => asset.id)),
+                new Set(pages?.map((page) => page.id) ?? []),
             );
         }
         const release: CollectionRelease = {
@@ -159,7 +156,7 @@ export function parseCollectionRelease(
                 : { configuration: parseConfiguration(source.configuration, "$.configuration", limits) }),
             assets,
             blocs,
-            ...(views === undefined ? {} : { views }),
+            ...(pages === undefined ? {} : { pages }),
         };
         validateCollectionTranslationReferences(release);
         assertSize(release, limits);

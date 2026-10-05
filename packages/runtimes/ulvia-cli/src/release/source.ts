@@ -1,5 +1,5 @@
-import { readFile, readdir } from "node:fs/promises";
-import { basename, join, resolve } from "node:path";
+import { readFile } from "node:fs/promises";
+import { basename, dirname, join, resolve } from "node:path";
 import { sha256Digest } from "@bernouy/binary-media";
 import { admitCollectionRelease, isCollectionNamespace } from "@bernouy/cms-repository/collections";
 import type { ReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
@@ -8,7 +8,7 @@ import { expandCollectionSourceExports, loadCollectionTheme, loadCollectionTrans
 import { loadCollectionTexts } from "./textSources";
 import { assertCollectionSourceQuality } from "./quality";
 import { loadCollectionMigrations } from "./migrationSources";
-import { readSourceEntries, scanFileSourceTree } from "./sourceTree";
+import { scanFileSourceTree } from "./sourceTree";
 
 /** Compile one authored folder into an immutable, admitted release candidate. */
 export async function prepareCollectionRelease(directory: string, contracts?: ReleaseCatalogue) {
@@ -21,7 +21,7 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
     const translations = await loadCollectionTranslations(join(collectionRoot, "translations"));
     const blocs = await loadCollectionBlocs(join(collectionRoot, "blocs"), String(definition.name ?? collectionId));
     const texts = await loadCollectionTexts(join(collectionRoot, "texts"));
-    const views = await loadViews(join(collectionRoot, "views"));
+    const pages = await loadPages(join(collectionRoot, "pages"));
     const theme = await loadCollectionTheme(join(collectionRoot, "theme"));
     const migrations = await loadCollectionMigrations(join(collectionRoot, "migrations"));
     const assets = await loadAssets(join(collectionRoot, "assets"), definition.assets);
@@ -30,6 +30,7 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         themeTokens: themeTokenIds(theme),
         texts: ids(texts),
         assets: ids(assets.definitions),
+        pages: ids(pages),
     });
     const candidate = {
         ...definition,
@@ -39,7 +40,7 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
         blocs,
         migrations,
         ...(texts.length ? { texts } : {}),
-        ...(views.length ? { views } : {}),
+        ...(pages.length ? { pages } : {}),
         ...(theme === undefined ? {} : { theme }),
     };
     const artifact = await admitCollectionRelease(candidate, assets.bundle, { contracts });
@@ -129,42 +130,33 @@ function collectionAssetSourcePath(value: unknown, fallback: string, index: numb
     return source;
 }
 
-async function loadViews(directory: string): Promise<unknown[]> {
-    const entries = (await readEntries(directory)).filter((entry) => entry.name !== ".gitkeep");
-    if (entries.some((entry) => !entry.isDirectory())) {
-        throw new Error("View source root may contain only view directories");
-    }
-    const folders = entries;
-    return Promise.all(
-        folders
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map(async (folder) => {
-                const root = join(directory, folder.name);
-                await assertExactEntries(root, ["definition.json", "view.html"]);
-                const definition = (await Bun.file(join(root, "definition.json")).json()) as Record<string, unknown>;
-                if (definition.id !== folder.name || Object.hasOwn(definition, "html")) {
-                    throw new Error(`View folder ${folder.name} must match its definition and keep HTML separate`);
-                }
-                return { ...definition, html: (await Bun.file(join(root, "view.html")).text()).trim() };
-            }),
-    );
-}
-
-async function assertExactEntries(directory: string, expected: readonly string[]): Promise<void> {
-    const entries = (await readSourceEntries(directory)).filter((entry) => entry.name !== ".gitkeep");
-    if (
-        entries.length !== expected.length ||
-        entries.some((entry) => !entry.isFile() || !expected.includes(entry.name))
-    ) {
-        throw new Error(`${directory} must contain exactly ${expected.join(" and ")}`);
-    }
-}
-
-async function readEntries(directory: string) {
-    return readdir(directory, { withFileTypes: true }).catch((error: NodeJS.ErrnoException) => {
-        if (error.code === "ENOENT") {
-            return [];
+async function loadPages(directory: string): Promise<unknown[]> {
+    const groups = new Map<string, Map<string, string>>();
+    for (const file of await scanFileSourceTree(directory)) {
+        const folder = dirname(file.relativePath);
+        if (folder === ".") {
+            throw new Error("Page source root may contain only page directories");
         }
-        throw error;
-    });
+        const files = groups.get(folder) ?? new Map<string, string>();
+        files.set(basename(file.relativePath), file.absolutePath);
+        groups.set(folder, files);
+    }
+    const seen = new Set<string>();
+    return Promise.all(
+        [...groups.entries()].map(async ([folder, files]) => {
+            if (files.size !== 2 || !files.has("definition.json") || !files.has("page.html")) {
+                throw new Error(`Page folder ${folder} must contain exactly definition.json and page.html`);
+            }
+            const id = basename(folder);
+            const definition = (await Bun.file(files.get("definition.json")!).json()) as Record<string, unknown>;
+            if (definition.id !== id || Object.hasOwn(definition, "document") || seen.has(id)) {
+                throw new Error(`Page folder ${folder} must have a unique matching id and keep its document separate`);
+            }
+            seen.add(id);
+            return {
+                ...definition,
+                document: { html: (await Bun.file(files.get("page.html")!).text()).trim() },
+            };
+        }),
+    );
 }

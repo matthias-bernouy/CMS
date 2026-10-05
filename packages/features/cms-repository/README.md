@@ -118,12 +118,12 @@ and transport profiles, and conformance dependencies. The
 and the proposed connection protocol. [Provider workflows](src/providers/workflows.md)
 details implemented transitions, upgrade boundaries and remaining runtime work.
 The [collections guide](src/collections/README.md) documents admitted themes,
-texts, transitional views, assets and resource requirements. The installed
+texts, surface-specific Pages, assets and resource requirements. The installed
 collection path accepts verified assets and capability requirements. The CLI
 runtime composes the reference filesystem registry and loopback listener, while
 this package owns authenticated remote publication, exact `push`/`pull`, and
 reversible yanking. Gateway execution-plan primitives remain available, but no
-Control runtime currently activates collection Views. Renderer compilation and
+Control runtime currently activates collection Pages. Renderer compilation and
 third-party JavaScript isolation remain separate concerns.
 [AGENTS.md](AGENTS.md) defines the domain
 boundaries and implementation invariants.

@@ -20,7 +20,7 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
             throw new GatewayError("invalid_input", "contract or capability identifier is invalid");
         }
     }
-    if (!["delivery", "view", "control", "provider", "system", "conformance"].includes(value.origin)) {
+    if (!["delivery", "page", "control", "provider", "system", "conformance"].includes(value.origin)) {
         throw new GatewayError("invalid_input", "invocation origin is invalid");
     }
     const actor = snapshotActor(value.actor);

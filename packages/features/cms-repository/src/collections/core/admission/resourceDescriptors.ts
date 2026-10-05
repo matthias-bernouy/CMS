@@ -42,6 +42,7 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
             generation: bloc.generation ?? 1,
             kind: bloc.kind,
             internal: bloc.internal ?? false,
+            surfaces: bloc.surfaces,
             uses: bloc.uses,
             requires: bloc.requires,
             slots: bloc.slots,
@@ -104,17 +105,18 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
         })),
     );
     resources.push(
-        ...(release.views?.map((view) => ({
-            kind: "view" as const,
-            id: view.id,
-            generation: view.generation ?? 1,
+        ...(release.pages?.map((page) => ({
+            kind: "page" as const,
+            id: page.id,
+            generation: page.generation ?? 1,
             contract: {
-                id: view.id,
-                generation: view.generation ?? 1,
-                uses: view.uses,
-                requires: view.requires,
+                id: page.id,
+                generation: page.generation ?? 1,
+                surface: page.surface,
+                uses: page.uses,
+                requires: page.requires,
             },
-            implementation: { resource: view, translations: referencedTranslations(release, view) },
+            implementation: { resource: page, translations: referencedTranslations(release, page) },
         })) ?? []),
     );
     return resources;
@@ -122,7 +124,7 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
 
 function projection(
     release: CollectionRelease,
-    kind: Extract<CollectionResourceKind, "text" | "view">,
+    kind: Extract<CollectionResourceKind, "text" | "page">,
     id: string,
     resource: { readonly generation?: number },
 ): ResourceProjection {

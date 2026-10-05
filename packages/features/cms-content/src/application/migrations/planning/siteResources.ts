@@ -92,7 +92,7 @@ function collectionResourceKeys(releases: readonly CollectionRelease[]): Set<str
         for (const [kind, resources] of [
             ["text", release.texts ?? []],
             ["asset", release.assets],
-            ["view", release.views ?? []],
+            ["page", release.pages ?? []],
         ] as const) {
             for (const resource of resources) {
                 keys.add(resourceKey(kind, release.collectionId, resource.id));

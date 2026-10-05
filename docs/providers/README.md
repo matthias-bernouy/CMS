@@ -14,7 +14,7 @@ entry points.
 | Provider manifest | Immutable provider claims and exact contract references; memory/Mongo catalogue. |
 | Installation | Site-owned configuration, exact approved manifest, administrative lifecycle and runtime observations; revisioned memory/Mongo store. |
 | Selection | Site-owned exact contract/provider choices, validated together as a bounded dependency graph; revisioned memory/Mongo store. |
-| Collection release | Immutable component, composition and transitional view bundle; local repository catalogue and site installation/upgrade. |
+| Collection release | Immutable Bloc, Page, theme, text and asset bundle; local repository catalogue and site installation/upgrade. |
 
 Contract admission validates and canonicalizes a release. Provider admission
 validates a manifest against releases. Site preparation and approval establish
@@ -86,7 +86,7 @@ manifest, installation and selection stores, a selected catalogue, network and
 secret adapters, image storage and observation refresh. The current host policy
 allows public/authenticated access on Delivery as declared by the capability;
 Control's generic invocation route requires the configured local administrator.
-View execution-plan primitives still restrict a compiled View to declared
+Page execution-plan primitives restrict a compiled Control Page to declared
 capabilities and exact provider routes, but no Control route currently activates
 or consumes them. The future Control Page flow must own that integration.
 

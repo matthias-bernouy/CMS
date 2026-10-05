@@ -1,5 +1,6 @@
 import type { CollectionCapabilityRequirement, CollectionTranslationKey } from "./CollectionRelease";
 import type { CollectionThemeTokenType } from "./CollectionTheme";
+import type { CollectionPageSurface } from "./CollectionPage";
 
 export interface CollectionSlot {
     readonly accepts?: readonly CollectionSlotAccept[];
@@ -127,6 +128,8 @@ interface CollectionBlocBase {
     /** Independent public-contract generation for selective consumers. */
     readonly generation?: number;
     readonly label: CollectionTranslationKey;
+    /** Omission in authored sources is normalized to both surfaces. */
+    readonly surfaces: readonly CollectionPageSurface[];
     readonly description?: CollectionTranslationKey;
     /** Author-facing library category translation key. */
     readonly category?: CollectionTranslationKey;

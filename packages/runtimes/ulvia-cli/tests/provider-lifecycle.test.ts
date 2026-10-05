@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { CapabilityGateway, type GatewayRoute } from "@bernouy/cms-gateway";
 import {
-    DefaultCollectionViewExecutionAuthority,
-    InMemoryCollectionViewExecutionGrantStore,
+    DefaultCollectionPageExecutionAuthority,
+    InMemoryCollectionPageExecutionGrantStore,
 } from "@bernouy/cms-gateway/execution";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
@@ -77,10 +77,10 @@ test("provider instance discovery follows the admitted plan and opaque credentia
         const route = gatewayRoute(lifecycle, manifestAdmission, report);
         const stored = storedSelections(route);
         const routes = { resolve: async () => route, isCurrent: async () => true };
-        const authority = new DefaultCollectionViewExecutionAuthority(
+        const authority = new DefaultCollectionPageExecutionAuthority(
             { get: async () => stored },
             routes,
-            new InMemoryCollectionViewExecutionGrantStore(),
+            new InMemoryCollectionPageExecutionGrantStore(),
         );
         const consumer = {
             siteId: "default",
@@ -88,8 +88,8 @@ test("provider instance discovery follows the admitted plan and opaque credentia
             collectionId: "ulvia.control",
             collectionVersion: "1.0.0",
             collectionDigest: `sha256:${"c".repeat(64)}`,
-            viewId: "instances",
-            viewGeneration: 1,
+            pageId: "instances",
+            pageGeneration: 1,
         } as const;
         const grant = await authority.activate({
             consumer,
@@ -127,7 +127,7 @@ test("provider instance discovery follows the admitted plan and opaque credentia
             contractId: CONTRACT_ID,
             capabilityId: "get-current",
             input: {},
-            origin: "view",
+            origin: "page",
             actor: { kind: "administrator", subjectId: "admin" },
             execution,
         });

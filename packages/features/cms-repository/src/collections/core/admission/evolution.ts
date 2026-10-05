@@ -100,12 +100,14 @@ function dependencyContractRestricted(previous: CollectionRelease, next: Collect
             ...prior.imports.themeTokens.map((item) => [`theme-token:${item.id}`, item.generation] as const),
             ...(prior.imports.texts ?? []).map((item) => [`text:${item.id}`, item.generation] as const),
             ...(prior.imports.assets ?? []).map((item) => [`asset:${item.id}`, item.generation] as const),
+            ...(prior.imports.pages ?? []).map((item) => [`page:${item.id}`, item.generation] as const),
         ]);
         return [
             ...dependency.imports.blocs.map((item) => [`bloc:${item.id}`, item.generation] as const),
             ...dependency.imports.themeTokens.map((item) => [`theme-token:${item.id}`, item.generation] as const),
             ...(dependency.imports.texts ?? []).map((item) => [`text:${item.id}`, item.generation] as const),
             ...(dependency.imports.assets ?? []).map((item) => [`asset:${item.id}`, item.generation] as const),
+            ...(dependency.imports.pages ?? []).map((item) => [`page:${item.id}`, item.generation] as const),
         ].some(([key, generation]) => {
             const oldGeneration = previousImports.get(key);
             return oldGeneration !== undefined && oldGeneration !== generation;
@@ -140,11 +142,11 @@ function requirementBreaks(previous: CollectionRelease, next: CollectionRelease)
             }
         }
     }
-    const nextViews = new Map((next.views ?? []).map((view) => [view.id, view]));
-    for (const view of previous.views ?? []) {
-        const replacement = nextViews.get(view.id);
+    const nextPages = new Map((next.pages ?? []).map((page) => [page.id, page]));
+    for (const page of previous.pages ?? []) {
+        const replacement = nextPages.get(page.id);
         if (replacement) {
-            compare(`view:${view.id}`, view.requires, replacement.requires);
+            compare(`page:${page.id}`, page.requires, replacement.requires);
         }
     }
     return breaks;
@@ -155,7 +157,7 @@ function removedCollectionExports(
     next: CollectionResourceSelection | undefined,
 ): string[] {
     const removed: string[] = [];
-    for (const key of ["blocs", "themeTokens", "texts", "assets"] as const) {
+    for (const key of ["blocs", "themeTokens", "texts", "assets", "pages"] as const) {
         const available = new Set(next?.[key] ?? []);
         for (const id of previous?.[key] ?? []) {
             if (!available.has(id)) {

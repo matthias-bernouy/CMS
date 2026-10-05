@@ -19,9 +19,10 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 - [Deferred platform work](TODO.md): explicit trust assumptions and work that
   must be completed before those assumptions change.
 - [Control Pages and provider-managed CMS instances](todo/control-pages-and-provider-managed-cms-instances.md):
-  design for replacing static admin pages and transitional collection Views with
+  design for replacing the removed static admin and collection View models with
   surface-specific Pages, with local, cloud or third-party instance providers;
-  provider-owned local discovery is implemented, while unified Pages remain planned.
+  provider-owned local discovery and immutable collection Pages are implemented,
+  while site-owned unification and mounted rendering remain planned.
 - [Local provider and CMS initialization](todo/local-provider-initialization.md):
   proposed offline first-run, bootstrap collection, Control Page, restart and
   recovery flow for the official local provider; durable discovery of the

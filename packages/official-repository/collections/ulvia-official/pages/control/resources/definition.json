@@ -1,0 +1,8 @@
+{
+    "id": "resources",
+    "surface": "control",
+    "defaultPath": "/admin/resources",
+    "name": "page.resources.name",
+    "icon": "grid",
+    "description": "page.resources.description"
+}

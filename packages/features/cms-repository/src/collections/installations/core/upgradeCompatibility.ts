@@ -21,6 +21,9 @@ function assertBlocCompatibility(previous: CollectionBloc, next: CollectionBloc 
     if (!next || next.kind !== previous.kind) {
         reject(`Upgrade removes or changes existing bloc ${previous.id}`);
     }
+    if (!previous.surfaces.every((surface) => next.surfaces.includes(surface))) {
+        reject(`Upgrade narrows existing Bloc surfaces ${previous.id}`);
+    }
     for (const [slotId, slot] of Object.entries(previous.slots)) {
         if (!slotAcceptsPrevious(slot, next.slots[slotId])) {
             reject(`Upgrade removes or changes existing slot contract ${previous.id}.${slotId}`);
@@ -116,15 +119,17 @@ export function assertCompatibleCollectionUpgrade(previous: CollectionRelease, n
     for (const bloc of previous.blocs) {
         assertBlocCompatibility(bloc, nextBlocs.get(bloc.id));
     }
-    for (const resource of [
-        ["text", previous.texts ?? [], next.texts ?? []],
-        ["view", previous.views ?? [], next.views ?? []],
-    ] as const) {
-        const nextIds = new Set(resource[2].map(({ id }) => id));
-        for (const { id } of resource[1]) {
-            if (!nextIds.has(id)) {
-                reject(`Upgrade removes existing ${resource[0]} ${id}`);
-            }
+    const nextTexts = new Set((next.texts ?? []).map(({ id }) => id));
+    for (const { id } of previous.texts ?? []) {
+        if (!nextTexts.has(id)) {
+            reject(`Upgrade removes existing text ${id}`);
+        }
+    }
+    const nextPages = new Map((next.pages ?? []).map((page) => [page.id, page]));
+    for (const page of previous.pages ?? []) {
+        const replacement = nextPages.get(page.id);
+        if (!replacement || replacement.surface !== page.surface) {
+            reject(`Upgrade removes or changes existing Page ${page.id}`);
         }
     }
     if (previous.configuration && !next.configuration) {
@@ -152,7 +157,7 @@ function assertAssetCompatibility(previous: CollectionRelease, next: CollectionR
 }
 
 export type CollectionBreakingResource = {
-    kind: "bloc" | "theme-token" | "configuration" | "text" | "asset" | "view";
+    kind: "bloc" | "theme-token" | "configuration" | "text" | "asset" | "page";
     id: string;
     reason: string;
 };
@@ -182,15 +187,17 @@ export function collectionUpgradeBreakingResources(
             });
         }
     }
-    for (const [kind, oldItems, newItems] of [
-        ["text", previous.texts ?? [], next.texts ?? []],
-        ["view", previous.views ?? [], next.views ?? []],
-    ] as const) {
-        const nextIds = new Set(newItems.map(({ id }) => id));
-        for (const { id } of oldItems) {
-            if (!nextIds.has(id)) {
-                changes.push({ kind, id, reason: `${kind} ${id} was removed` });
-            }
+    const nextTexts = new Set((next.texts ?? []).map(({ id }) => id));
+    for (const { id } of previous.texts ?? []) {
+        if (!nextTexts.has(id)) {
+            changes.push({ kind: "text", id, reason: `text ${id} was removed` });
+        }
+    }
+    const nextPages = new Map((next.pages ?? []).map((page) => [page.id, page]));
+    for (const page of previous.pages ?? []) {
+        const replacement = nextPages.get(page.id);
+        if (!replacement || replacement.surface !== page.surface) {
+            changes.push({ kind: "page", id: page.id, reason: `Page ${page.id} was removed or changed surface` });
         }
     }
     const nextAssets = new Map(next.assets.map((asset) => [asset.id, asset]));

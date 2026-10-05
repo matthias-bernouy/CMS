@@ -5,7 +5,7 @@ import type {
     GatewayOrigin,
     GatewayResult,
 } from "cms-gateway/invocation/interfaces/Invocation";
-import type { GatewayExecutionPin } from "cms-gateway/execution/interfaces/ViewExecution";
+import type { GatewayExecutionPin } from "cms-gateway/execution/interfaces/PageExecution";
 import { readGatewayHttpInput } from "cms-gateway/invocation/http/readHttpInput";
 
 export interface GatewayHttpCallOptions {

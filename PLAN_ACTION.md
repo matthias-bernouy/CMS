@@ -35,7 +35,7 @@ The end state is:
 - Control eventually becomes a generic client that renders Control Pages from
   collections and calls Core contracts through the provider installation
   selected by its pinned execution plans;
-- `Dashboard` is removed. `View` and `Application` disappear unless a later concrete
+- `Dashboard` and the collection `View` resource are removed. `Application` stays absent unless a later concrete
   lifecycle or authorization requirement proves that a replacement concept is
   necessary;
 - the static Control application is removed; retained Control and Foundation
@@ -59,8 +59,9 @@ These rules apply throughout the transition:
    access to arbitrary Control HTTP routes.
 9. Session, CSRF, login, health, bootstrap, static assets and binary streaming
    remain kernel or transport concerns rather than artificial capabilities.
-10. No current UI or persistence path is deleted before its replacement has an
-    end-to-end test and a documented recovery path.
+10. Any further early removal of current UI or persistence must be an explicit,
+    documented clean break; otherwise its replacement needs an end-to-end test
+    and a recovery path first.
 
 ## Delivery Strategy
 
@@ -111,7 +112,8 @@ invalidate migrations, updates or recovery:
 The Dashboard package, collection resource, routes, assignments and the entire
 static Control application were removed before Control Pages reached parity. Do
 not recreate either model.
-Collection Views remain transitional until Pages and layout Blocs replace them.
+Collection Views have been replaced by immutable collection Pages. Mounting and
+editing those Pages remain later phases.
 
 ## Phase 1 — Separate Provider Lifecycle From Core Contracts
 
@@ -221,6 +223,12 @@ For each capability:
   Bloc.
 
 ## Phase 4 — Establish The Unified Page Model
+
+**Status:** partially implemented. Collection releases now admit immutable
+surface-specific Pages with default paths, per-resource generations/digests,
+selective imports/exports and transitive Bloc surface validation. Gateway grants
+are Page execution grants. Site-owned Page unification, rendering, copying and
+migration of Page documents remain open.
 
 Generalize the current page aggregate so the same document model can represent
 Control and Delivery Pages while each Page retains exactly one surface.
@@ -346,10 +354,9 @@ For each area:
 - mount the route only after those tests pass;
 - remove superseded transitional APIs and components in separate commits.
 
-This phase is where current Views and any required behavior from the former
-Dashboard flow are translated into Pages and
-composition Blocs. They must not receive a compatibility layer that becomes a
-second permanent rendering system.
+This phase recovers any required product behavior from the deleted View and
+Dashboard flows as Pages and composition Blocs. It must not receive a
+compatibility layer that becomes a second permanent rendering system.
 
 ### Exit gate
 
@@ -363,8 +370,9 @@ second permanent rendering system.
 After complete parity:
 
 - delete visual Foundation components that have collection replacements;
-- remove the remaining View rendering and authoring model; Dashboard routing,
-  persistence and authoring have already been removed;
+- remove renderer and authoring adapters superseded by the unified Page flow;
+  the collection View model and Dashboard routing, persistence and authoring
+  have already been removed;
 - remove Application if it has no remaining independent lifecycle purpose;
 - delete adapters and migrations that only supported those retired concepts;
 - update package boundaries, documentation and architecture checks.

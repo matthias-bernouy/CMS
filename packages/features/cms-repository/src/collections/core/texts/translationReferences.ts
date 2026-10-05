@@ -61,10 +61,10 @@ function collectReferences(release: CollectionRelease): Reference[] {
             controlReferences(references, setting.control, `${settingPath}.control`);
         }
     }
-    for (const [index, view] of (release.views ?? []).entries()) {
-        const path = `$.views[${index}]`;
-        references.push(reference(view.name, `${path}.name`, 128));
-        optional(references, view.description, `${path}.description`, 4096);
+    for (const [index, page] of (release.pages ?? []).entries()) {
+        const path = `$.pages[${index}]`;
+        references.push(reference(page.name, `${path}.name`, 128));
+        optional(references, page.description, `${path}.description`, 4096);
     }
     return references;
 }

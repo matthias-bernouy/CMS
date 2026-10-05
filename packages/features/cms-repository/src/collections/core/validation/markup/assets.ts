@@ -1,5 +1,5 @@
 import type { CollectionBloc } from "../../../interfaces/CollectionBloc";
-import type { CollectionView } from "../../../interfaces/CollectionView";
+import type { CollectionPage } from "../../../interfaces/CollectionPage";
 import { replaceCollectionAssetExpressions } from "../../texts/expressions";
 import { CollectionValidationError, invalid } from "../../errors";
 
@@ -8,7 +8,7 @@ export function validateCollectionAssetReferences(
     collectionId: string,
     assetIds: ReadonlySet<string>,
     importedAssets: ReadonlyMap<string, ReadonlySet<string>> = new Map(),
-    views: readonly CollectionView[] = [],
+    pages: readonly CollectionPage[] = [],
 ): void {
     for (const bloc of blocs) {
         const values = [bloc.lightdom, bloc.defaultContent];
@@ -21,8 +21,8 @@ export function validateCollectionAssetReferences(
             }
         }
     }
-    for (const view of views) {
-        validateValue(view.html, collectionId, assetIds, importedAssets, `$.views[${view.id}].html`);
+    for (const page of pages) {
+        validateValue(page.document.html, collectionId, assetIds, importedAssets, `$.pages[${page.id}].document.html`);
     }
 }
 

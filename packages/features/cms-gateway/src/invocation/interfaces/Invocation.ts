@@ -5,7 +5,7 @@ import type { CatalogueProviderManifest } from "@bernouy/cms-repository/provider
 import type { StoredProviderInstallation } from "@bernouy/cms-repository/providers/installations";
 import type { ContractSelection } from "@bernouy/cms-repository/providers/selections";
 import type { ProviderMediaIdentity } from "cms-gateway/media/core/derivativeKey";
-import type { GatewayExecutionPin } from "cms-gateway/execution/interfaces/ViewExecution";
+import type { GatewayExecutionPin } from "cms-gateway/execution/interfaces/PageExecution";
 
 export type GatewayActor =
     | { readonly kind: "anonymous" }
@@ -13,7 +13,7 @@ export type GatewayActor =
     | { readonly kind: "provider"; readonly installationId: string }
     | { readonly kind: "system"; readonly serviceId: string };
 
-export type GatewayOrigin = "delivery" | "view" | "control" | "provider" | "system" | "conformance";
+export type GatewayOrigin = "delivery" | "page" | "control" | "provider" | "system" | "conformance";
 
 export interface GatewayInvocation {
     readonly siteId: string;
@@ -24,7 +24,7 @@ export interface GatewayInvocation {
     readonly origin: GatewayOrigin;
     /** Constructed by a trusted surface from verified authentication. */
     readonly actor: GatewayActor;
-    /** Required for view calls; constructed from a current CMS-owned execution grant. */
+    /** Required for collection Page calls; constructed from a current CMS-owned execution grant. */
     readonly execution?: GatewayExecutionPin;
 }
 

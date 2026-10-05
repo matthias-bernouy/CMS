@@ -280,16 +280,16 @@ describe("capability gateway", () => {
         expect(scope.sent).toHaveLength(0);
     });
 
-    test("requires an exact execution pin for view calls", async () => {
+    test("requires an exact execution pin for Page calls", async () => {
         const route = await gatewayRoute();
         const scope = harness(route);
-        await expect(scope.gateway.invoke({ ...invocation(), origin: "view" })).rejects.toMatchObject({
+        await expect(scope.gateway.invoke({ ...invocation(), origin: "page" })).rejects.toMatchObject({
             code: "not_authorized",
         });
         await expect(
             scope.gateway.invoke({
                 ...invocation(),
-                origin: "view",
+                origin: "page",
                 execution: {
                     planDigest: `sha256:${"a".repeat(64)}`,
                     version: route.selection.version,
@@ -301,7 +301,7 @@ describe("capability gateway", () => {
         await expect(
             scope.gateway.invoke({
                 ...invocation(),
-                origin: "view",
+                origin: "page",
                 execution: {
                     planDigest: `sha256:${"a".repeat(64)}`,
                     version: route.selection.version,

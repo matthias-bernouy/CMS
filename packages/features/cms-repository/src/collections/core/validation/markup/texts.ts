@@ -1,5 +1,5 @@
 import type { CollectionBloc } from "../../../interfaces/CollectionBloc";
-import type { CollectionView } from "../../../interfaces/CollectionView";
+import type { CollectionPage } from "../../../interfaces/CollectionPage";
 import { CollectionValidationError, invalid } from "../../errors";
 import { replaceCollectionTextExpressions } from "../../texts/expressions";
 import { isElement, markupTree, nodes } from "./tree";
@@ -32,7 +32,7 @@ export function validateCollectionTextReferences(
     collectionId: string,
     textIds: ReadonlySet<string>,
     importedTexts: ReadonlyMap<string, ReadonlySet<string>> = new Map(),
-    views: readonly CollectionView[] = [],
+    pages: readonly CollectionPage[] = [],
 ): void {
     for (const bloc of blocs) {
         for (const [field, markup] of [
@@ -54,9 +54,9 @@ export function validateCollectionTextReferences(
             }
         }
     }
-    for (const view of views) {
-        const path = `$.views[${view.id}].html`;
-        for (const node of nodes(markupTree(view.html))) {
+    for (const page of pages) {
+        const path = `$.pages[${page.id}].document.html`;
+        for (const node of nodes(markupTree(page.document.html))) {
             if (node.type === "text") {
                 validateValue(node.data, collectionId, textIds, importedTexts, path);
             } else if (isElement(node)) {

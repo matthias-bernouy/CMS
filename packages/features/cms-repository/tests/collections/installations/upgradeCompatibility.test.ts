@@ -70,6 +70,36 @@ test("simple upgrades cannot bypass a resource generation migration", async () =
     await expect(store.upgrade("site", admitted.digest, 1, "local")).rejects.toThrow("resource generation changed");
 });
 
+test("upgrades preserve Page and Bloc surface contracts", async () => {
+    const initialSource = release("1.0.0");
+    initialSource.translations["en-US"]!["page.overview.name"] = "Overview";
+    initialSource.pages = [
+        {
+            id: "overview",
+            surface: "control",
+            defaultPath: "/admin",
+            name: "page.overview.name",
+            document: { html: "<section>Overview</section>" },
+        },
+    ];
+    const store = new CollectionStore(new MemoryCollectionStorage());
+    const initial = await store.importRelease(initialSource);
+    await store.install("site", initial.digest, 0, "local");
+
+    const changedPage = structuredClone(initialSource);
+    changedPage.version = "1.1.0";
+    changedPage.pages[0]!.surface = "delivery";
+    changedPage.pages[0]!.defaultPath = "/";
+    const pageArtifact = await store.importRelease(changedPage);
+    await expect(store.upgrade("site", pageArtifact.digest, 1, "local")).rejects.toThrow("existing Page");
+
+    const narrowedBloc = structuredClone(initialSource);
+    narrowedBloc.version = "1.2.0";
+    (narrowedBloc.blocs as Record<string, unknown>[])[0]!.surfaces = ["delivery"];
+    const blocArtifact = await store.importRelease(narrowedBloc);
+    await expect(store.upgrade("site", blocArtifact.digest, 1, "local")).rejects.toThrow("Bloc surfaces");
+});
+
 test("upgrades preserve managed native element choices", async () => {
     const managedRelease = (version: string, accepts: string[], root: string) => {
         const source = release(version);

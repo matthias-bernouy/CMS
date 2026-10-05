@@ -1,1 +1,1 @@
-export { MongoCollectionViewExecutionGrantStore } from "cms-gateway/execution/default-implementation/mongo/MongoViewExecutionGrantStore";
+export { MongoCollectionPageExecutionGrantStore } from "cms-gateway/execution/default-implementation/mongo/MongoPageExecutionGrantStore";

@@ -117,8 +117,8 @@ export class CapabilityGateway implements GatewayAccessProbe {
         if (!route) {
             throw new GatewayError("not_selected", "site has no selected release for this contract");
         }
-        if (value.origin === "view" && !value.execution) {
-            throw new GatewayError("not_authorized", "view invocation requires an active execution plan");
+        if (value.origin === "page" && !value.execution) {
+            throw new GatewayError("not_authorized", "Page invocation requires an active execution plan");
         }
         if (
             value.execution &&
@@ -126,7 +126,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 value.execution.digest !== route.selection.digest ||
                 value.execution.installationId !== route.selection.installationId)
         ) {
-            throw new GatewayError("stale_route", "view execution plan no longer matches the selected provider route");
+            throw new GatewayError("stale_route", "Page execution plan no longer matches the selected provider route");
         }
         const release = resolveRoute(
             route,
