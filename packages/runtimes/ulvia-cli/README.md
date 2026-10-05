@@ -105,14 +105,18 @@ and open `/admin/settings/providers` on the Control port:
 bun run ulvia -- release packages/official-repository/contracts/catalog.items
 bun run ulvia -- release packages/official-repository/contracts/forms.submissions
 bun run ulvia -- release packages/official-repository/contracts/media.assets
+bun run ulvia -- release packages/official-repository/contracts/ulvia.provider.cms-instances
 bun run ulvia -- release packages/official-repository/providers/ulvia.official
 bun run ulvia -- dev
 ```
 
 Import the provider manifest from Explore providers. Connect the provider at
 `http://127.0.0.1:5103` with the bearer token from `dev credentials`. Review
-and approve the connection, then connect the three contract releases separately
+and approve the connection, then connect the contract releases separately
 from Explore sources.
-The connection review validates the runtime report and exact manifest claims;
+The provider privately persists one `default` instance and reports its bounded
+discovery state through `ulvia.provider.cms-instances`; its health URL and
+provider routing never enter the CMS execution plan. The connection review
+validates the runtime report and exact manifest claims;
 it does not yet execute a live conformance suite. This provider is a local
 development fixture with one account and a static catalogue and SVG asset.

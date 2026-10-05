@@ -113,6 +113,11 @@ after Control Pages and layout Blocs have reached parity.
 
 ## Phase 1 — Separate Provider Lifecycle From Core Contracts
 
+**Status (2026-10-05): completed.** The provider-only namespace is fixed, Core
+contract advertisements reject provider lifecycle IDs, credentials remain
+opaque references, and the end-to-end plan contains no provider-private instance
+target.
+
 Keep instance lifecycle in a provider-only contract and keep Core operations in
 their own data-plane contracts:
 
@@ -121,9 +126,8 @@ ulvia.provider.cms-instances   create, list, start, backup, update and delete
 ulvia.cms.*                    pages, files, collections, users and settings
 ```
 
-`ulvia.provider.cms-instances` is the current working ID. Confirm it before the
-first publication; the architectural boundary does not depend on that exact
-name.
+`ulvia.provider.cms-instances` is the published ID. The architectural boundary
+does not rely on parsing token claims or sharing a provider instance model.
 
 Before adding behavior:
 
@@ -147,6 +151,10 @@ Before adding behavior:
   authentication model.
 
 ## Phase 2 — Make The Official Local Provider The Reference
+
+**Status:** in progress. Lot 1 implements read-only discovery of the existing
+local `default` instance; autonomous provisioning and lifecycle operations are
+Lot 2 work.
 
 Turn the current local composition into a real provider implementation without
 prematurely splitting it into several deployable processes.
@@ -449,6 +457,15 @@ Exit gate:
 
 ### Lot 1 — Provider-Owned Local Instance Discovery
 
+**Status (2026-10-05): completed.** `ulvia.provider.cms-instances@1.0.0`
+publishes bounded `list` and credential-selected `get-current` queries with an
+independently versioned conformance suite. The official provider owns the
+durable registry, registers `default` from CLI-supplied Core metadata, probes
+its loopback reachability and advertises the contract through its manifest. A
+cross-package test proves admission, selection, plan compilation, opaque secret
+forwarding, Gateway validation and provider response end to end. No mutation
+capability is open yet.
+
 1. Confirm the final ID for the provider-only lifecycle contract currently
    called `ulvia.provider.cms-instances`.
 2. Publish its smallest read-only release: bounded `list` plus either `get` or
@@ -473,6 +490,12 @@ Exit gate:
 - no Core contract exposes instance lifecycle;
 - CmsCore still treats credentials and instance routing as opaque;
 - Control and Delivery behavior is unchanged.
+
+The V1 local probe establishes bounded reachability, not deep Core readiness:
+the current Core has no dedicated readiness endpoint. The provider marks a
+failed or stale probe unavailable and keeps its last successful observation.
+Lot 2 must replace this with driver-owned process/readiness reconciliation
+before any lifecycle mutation is enabled.
 
 ### Lot 2 — Real Autonomous Local Initialization
 

@@ -1,6 +1,8 @@
 # Local Provider And CMS Initialization
 
-**Status:** target flow, not implemented.
+**Status:** target flow. Provider-owned discovery and durable registration of
+the existing local `default` Core are implemented; autonomous provisioning and
+lifecycle mutations start in Lot 2.
 
 This note defines the intended first-run, restart, Control bootstrap and
 recovery flows for the official local CMS provider. It refines the broader
@@ -54,6 +56,11 @@ Autonomous local deployment
 ```
 
 The process boundary may change later without changing the contracts.
+
+The current CLI starts these as separate local processes. It gives the provider
+only the Core version and loopback reachability URL; the provider does not import
+`cms-server`. The durable provider record deliberately excludes CMS secrets and
+the published discovery response excludes its private health URL.
 
 ## Fresh Installation Flow
 

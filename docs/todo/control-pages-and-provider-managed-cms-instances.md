@@ -1,6 +1,8 @@
 # Control Pages And Provider-Managed CMS Instances
 
-**Status:** design proposal, not implemented.
+**Status:** target design. Lot 1 provider-owned local instance discovery is
+implemented; unified Pages, Core data-plane contracts and Control replacement
+remain planned.
 
 This note records the intended direction for replacing Control's static admin
 pages, visual Foundation components, collection Views and the current Dashboard
@@ -305,9 +307,9 @@ CMS product.
 
 ### Provider Control Plane
 
-A CMS provider implements a provider lifecycle contract. This proposal uses
-`ulvia.provider.cms-instances` as an explicit working ID so it cannot be
-confused with a Core contract; its final published ID remains to be confirmed.
+A CMS provider implements a provider lifecycle contract. It is published as
+`ulvia.provider.cms-instances`; its provider namespace prevents confusion with
+the `ulvia.cms.*` Core data-plane contracts.
 Its capabilities include:
 
 ```text

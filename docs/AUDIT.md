@@ -26,6 +26,12 @@ public/admin request bodies are bounded before parsing.
 The remaining production work is concentrated in the P1 operational and
 long-lived compatibility items below rather than these original failure paths.
 
+Lot 1 of the provider-managed redesign is also complete. The official provider
+now owns a durable private local instance registry and exposes bounded discovery
+through `ulvia.provider.cms-instances@1.0.0`. The existing Gateway path still
+pins only installation, exact release, capability and consumer authority;
+provider credentials and instance routing remain opaque.
+
 ## Evidence And Scope
 
 The audit covered the 20 workspace packages, the declarative official

@@ -9,7 +9,8 @@ entry points.
 
 | Object | Owner and current implementation |
 | --- | --- |
-| Contract release | Immutable schemas, capabilities, bindings, mocks and conformance suite definitions; memory/Mongo catalogue. |
+| Contract release | Immutable schemas, capabilities, bindings and mocks; memory/Mongo catalogue. |
+| Conformance suite | Independently versioned scenarios pinned to one exact contract digest; admission exists, repository catalogue and live runner remain planned. |
 | Provider manifest | Immutable provider claims and exact contract references; memory/Mongo catalogue. |
 | Installation | Site-owned configuration, exact approved manifest, administrative lifecycle and runtime observations; revisioned memory/Mongo store. |
 | Selection | Site-owned exact contract/provider choices, validated together as a bounded dependency graph; revisioned memory/Mongo store. |
@@ -52,9 +53,12 @@ duplicate, loop and memory bounds. Exact-coordinate reads are independent of
 the metadata-only catalogue index.
 
 The first official resources are `catalog.items`, `forms.submissions`,
-`media.assets` and the `ulvia.official` manifest under `packages/official-repository/`.
+`media.assets`, the provider-only `ulvia.provider.cms-instances` lifecycle
+contract and the `ulvia.official` manifest under `packages/official-repository/`.
 The `@bernouy/ulvia-official-provider/server` entrypoint serves one authenticated account,
-a starter catalogue item, provider-owned form receipts and one SVG asset.
+a durable private `default` CMS record, a starter catalogue item,
+provider-owned form receipts and one SVG asset. Instance discovery returns only
+safe public fields and keeps routing, health URLs and credentials private.
 The [CLI guide](../../packages/runtimes/ulvia-cli/README.md) gives the local
 release and connection steps.
 
@@ -141,7 +145,10 @@ clients. See [image delivery](../images/delivery.md).
   contracts. The CLI can publish and retrieve exact contract and provider
   coordinates through an authenticated immutable repository; automated provider
   upgrade policy remains open.
-- Conformance suite validation exists; a live conformance runner is not wired.
+- Conformance suite validation exists, and the provider lifecycle contract has
+  an admitted independently versioned authored suite. The repository does not
+  yet catalogue suite artifacts separately and a live conformance runner is not
+  wired.
 - Mongo contract publication rejects fixture assets until a byte store exists.
 - Collection releases can be installed and upgraded from configured repository
   sources. Exact remote `push`/`pull` and reversible yanking are implemented;

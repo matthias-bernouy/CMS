@@ -12,6 +12,12 @@ The official Ulvia provider implementation lives separately in
 `packages/official-provider`. Generic protocol fixtures remain beside the
 `cms-repository` tests and must not be moved here.
 
+A contract may carry an independently versioned `conformance.json` companion.
+It is admitted against the exact contract digest in tests and contains only
+runner-neutral capability scenarios. Conformance-suite repository coordinates
+and live execution are not implemented yet; the companion must not contain an
+endpoint, credential format or deployment assumption.
+
 Official collections keep reusable administration copy in recursively scanned
 `translations/<locale>/**/*.json` fragments. Resource definitions contain only
 translation keys; duplicate keys across locale fragments reject, and page-owned,
