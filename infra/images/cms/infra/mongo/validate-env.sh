@@ -39,15 +39,7 @@ validate_hex_secret() {
 
 root_username="${MONGO_INITDB_ROOT_USERNAME:-}"
 root_password="${MONGO_INITDB_ROOT_PASSWORD:-}"
-app_username="${MONGO_APP_USERNAME:-}"
-app_password="${MONGO_APP_PASSWORD:-}"
-
 validate_username MONGO_INITDB_ROOT_USERNAME "$root_username"
 validate_hex_secret MONGO_INITDB_ROOT_PASSWORD "$root_password"
-validate_username MONGO_APP_USERNAME "$app_username"
-validate_hex_secret MONGO_APP_PASSWORD "$app_password"
-
-[ "$root_username" != "$app_username" ] \
-    || fail "MONGO_APP_USERNAME must differ from MONGO_INITDB_ROOT_USERNAME"
 
 exec /usr/local/bin/docker-entrypoint.sh "$@"

@@ -11,8 +11,8 @@
 #                      change. Email comes from `DEFAULT_EMAIL` (set via
 #                      `.env`).
 #   - mongo:           one authenticated MongoDB server shared by all CMS
-#                      instances. A root administrator and one application
-#                      account are created when a fresh data volume starts.
+#                      instances. Each CMS uses a separately provisioned user
+#                      restricted to its own database.
 #
 # Usage:
 #   cd infra/images/cms/infra
@@ -20,8 +20,6 @@
 #   LETSENCRYPT_EMAIL=ops@yourdomain.com
 #   MONGO_ROOT_USERNAME=cms_root
 #   MONGO_ROOT_PASSWORD=<64-character-hex-secret>
-#   MONGO_APP_USERNAME=cms_runtime
-#   MONGO_APP_PASSWORD=<64-character-hex-secret>
 #   EOF
 #   docker compose up -d
 #
@@ -79,12 +77,11 @@ services:
         environment:
             MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:?MONGO_ROOT_USERNAME must be set}
             MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?MONGO_ROOT_PASSWORD must be a 64-character hexadecimal secret}
-            MONGO_APP_USERNAME: ${MONGO_APP_USERNAME:?MONGO_APP_USERNAME must be set}
-            MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?MONGO_APP_PASSWORD must be a 64-character hexadecimal secret}
         volumes:
             - mongo_data:/data/db
             - ./mongo/validate-env.sh:/opt/cms-mongo/validate-env.sh:ro
-            - ./mongo/01-bootstrap-shared-users.js:/docker-entrypoint-initdb.d/01-bootstrap-shared-users.js:ro
+            - ./mongo/01-validate-root-user.js:/docker-entrypoint-initdb.d/01-validate-root-user.js:ro
+            - ./mongo/provision-site-user.js:/opt/cms-mongo/provision-site-user.js:ro
         networks:
             cms_mongo:
                 aliases:

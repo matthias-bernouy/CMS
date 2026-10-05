@@ -4,9 +4,8 @@
 # infrastructure must already be running — see `infra/compose.yml`.
 #
 # MongoDB runs once per server (or as an external managed cluster). Each CMS
-# instance uses its own database, selected by the path in `MONGO_URL`. Instances
-# share the MongoDB server process, `cms_mongo` network, and application account,
-# while their collections remain separated by database.
+# instance uses its own database and a database-scoped account selected by
+# `MONGO_URL`. Instances share only the MongoDB process and `cms_mongo` network.
 #
 # nginx-proxy detects the CMS container via `VIRTUAL_HOST_MULTIPORTS` and
 # routes:
@@ -16,7 +15,7 @@
 # Required `.env` values (never commit that file):
 #   DOMAIN=client.example.com
 #   CMS_IMAGE=bernouy/cms:<immutable-version>
-#   MONGO_URL=mongodb://cms_runtime:<shared-password>@mongo:27017/cms_client?authSource=admin
+#   MONGO_URL=mongodb://cms_client:<site-password>@mongo:27017/cms_client?authSource=cms_client
 #   CMS_SESSION_SECRET=$(openssl rand -hex 32)
 #   CMS_KEK_HEX=$(openssl rand -hex 32)
 #   CMS_ADMIN_PASSWORD=$(openssl rand -base64 18)
@@ -46,8 +45,8 @@ services:
             CMS_ADMIN_PASSWORD:   ${CMS_ADMIN_PASSWORD:?CMS_ADMIN_PASSWORD must be set}
             CMS_GATEWAY_SITE_ID:   ${CMS_GATEWAY_SITE_ID:-}
             # Required for both the server-wide MongoDB service and an external
-            # cluster. The database path is dedicated to this instance; the
-            # application credential may be shared, but must never be root.
+            # cluster. Both the database path and credential are dedicated to
+            # this instance; the runtime must never receive the root account.
             MONGO_URL: ${MONGO_URL:?MONGO_URL must be set to this instance's authenticated MongoDB database}
 
             # Public authentication links and throttling.
@@ -97,8 +96,8 @@ services:
             # network.
             cms_proxy:
                 gw_priority: 1
-            # The server process, network, and application credential are
-            # shared; the database selected in `MONGO_URL` is instance-specific.
+            # The server process and network are shared; database credentials
+            # remain instance-specific.
             cms_mongo: {}
         healthcheck:
             test:

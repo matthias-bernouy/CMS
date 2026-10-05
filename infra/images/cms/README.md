@@ -19,18 +19,12 @@ Run the root `compose.yml` once per CMS instance. Each instance has:
 - one local `./files` directory for original files and generated variants;
 - one MongoDB database named by convention `cms_<instance>`.
 
-All local CMS instances connect to MongoDB with the same application account.
-The bootstrap script grants that account `readWriteAnyDatabase` on `admin`, so
-the database name in each `MONGO_URL` selects the instance's collections. The
-root account is kept in the infrastructure environment and is never passed to
-CMS containers.
-
-> **Security boundary:** separate MongoDB databases are an operational
-> namespace, not a tenant-security boundary in this deployment. The shared
-> application credential can read and write every CMS database. Compromise of
-> one CMS container or that credential can therefore expose every site on the
-> same MongoDB server. Use a managed cluster with per-database users, or separate
-> MongoDB deployments, when tenants require a hard isolation boundary.
+Each local CMS instance connects with a distinct user created inside its own
+database and granted only `readWrite` on that database. The root account stays
+in the infrastructure environment and is never passed to CMS containers. A
+compromised CMS credential therefore cannot authenticate to another site's
+database, although every site still shares the MongoDB process and its
+availability boundary.
 
 Two stable Docker networks connect the stacks:
 
@@ -143,7 +137,8 @@ test -f /opt/cms-deploy/.env.example
 test -f /opt/cms-deploy/infra/compose.yml
 test -f /opt/cms-deploy/infra/.env.example
 test -f /opt/cms-deploy/infra/nginx-conf.d/client_max_body.conf
-test -f /opt/cms-deploy/infra/mongo/01-bootstrap-shared-users.js
+test -f /opt/cms-deploy/infra/mongo/01-validate-root-user.js
+test -f /opt/cms-deploy/infra/mongo/provision-site-user.js
 test -f /opt/cms-deploy/infra/mongo/validate-env.sh
 
 cd /tmp
@@ -151,9 +146,9 @@ sha256sum --check "cms-${VERSION}.tar.gz.sha256"
 docker load < "cms-${VERSION}.tar.gz"
 ```
 
-`client_max_body.conf` sets a server-wide 100 MB request-body limit. Omitting
-it makes the nginx container fail to start because the file is a required bind
-mount.
+`client_max_body.conf` sets a server-wide 101 MiB request-body limit: 100 MiB
+for the file plus bounded multipart framing. Omitting it makes the nginx
+container fail to start because the file is a required bind mount.
 
 ## Start fresh shared infrastructure
 
@@ -166,18 +161,15 @@ cd /opt/cms-deploy/infra
 
 umask 077
 MONGO_ROOT_PASSWORD="$(openssl rand -hex 32)"
-MONGO_APP_PASSWORD="$(openssl rand -hex 32)"
 
 {
     printf 'LETSENCRYPT_EMAIL=%s\n' 'ops@example.com'
     printf 'MONGO_ROOT_USERNAME=%s\n' 'cms_root'
     printf 'MONGO_ROOT_PASSWORD=%s\n' "${MONGO_ROOT_PASSWORD}"
-    printf 'MONGO_APP_USERNAME=%s\n' 'cms_runtime'
-    printf 'MONGO_APP_PASSWORD=%s\n' "${MONGO_APP_PASSWORD}"
 } > .env
 
 chmod 600 .env
-unset MONGO_ROOT_PASSWORD MONGO_APP_PASSWORD
+unset MONGO_ROOT_PASSWORD
 
 docker compose config --quiet
 docker compose pull
@@ -186,15 +178,13 @@ docker compose ps
 ```
 
 Store `/opt/cms-deploy/infra/.env` in an encrypted backup or secret manager.
-The two passwords are 64-character hexadecimal values, which satisfy the
-bootstrap validation and are URL-safe. Restrict the infrastructure directory
-and `.env` to trusted operators.
+The password is a 64-character hexadecimal value. Restrict the infrastructure
+directory and `.env` to trusted operators.
 
 On the first start of a fresh volume, the official MongoDB entrypoint creates
-the root account and executes `mongo/01-bootstrap-shared-users.js`. Before that
-happens, `mongo/validate-env.sh` validates both usernames and both hex secrets,
-so invalid input cannot leave a partially initialized volume. The bootstrap
-script creates the shared `readWriteAnyDatabase` application account in
+the root account. `mongo/validate-env.sh` validates its username and secret
+before initialization, and `mongo/01-validate-root-user.js` verifies the exact
+`root@admin` role. Site users are provisioned separately and never live in
 `admin`.
 
 The infrastructure health checks should be healthy before any CMS instance is
@@ -222,18 +212,33 @@ DOMAIN=client.example.com
 INSTANCE=client
 DATABASE="cms_${INSTANCE}"
 CMS_IMAGE=bernouy/cms:2026.07.15-1
-MONGO_APP_USERNAME=cms_runtime
+MONGO_SITE_USERNAME=cms_client
+MONGO_SITE_PASSWORD="$(openssl rand -hex 32)"
 
-read -r -s -p 'Shared MongoDB application password: ' MONGO_APP_PASSWORD
-printf '\n'
+# Provision or validate the bounded account while authenticating as root. The
+# password is passed through the exec environment, not interpolated into JS.
+(
+    set -a
+    . /opt/cms-deploy/infra/.env
+    set +a
+    export MONGO_SITE_DATABASE="${DATABASE}" MONGO_SITE_USERNAME MONGO_SITE_PASSWORD
+    cd /opt/cms-deploy/infra
+    docker compose exec -T \
+        -e MONGO_SITE_DATABASE -e MONGO_SITE_USERNAME -e MONGO_SITE_PASSWORD \
+        mongo mongosh --quiet \
+        --username "${MONGO_ROOT_USERNAME}" \
+        --password "${MONGO_ROOT_PASSWORD}" \
+        --authenticationDatabase admin \
+        /opt/cms-mongo/provision-site-user.js
+)
 
 umask 077
 CMS_ADMIN_PASSWORD="$(openssl rand -hex 24)"
 {
     printf 'DOMAIN=%s\n' "${DOMAIN}"
     printf 'CMS_IMAGE=%s\n' "${CMS_IMAGE}"
-    printf 'MONGO_URL=mongodb://%s:%s@mongo:27017/%s?authSource=admin\n' \
-        "${MONGO_APP_USERNAME}" "${MONGO_APP_PASSWORD}" "${DATABASE}"
+    printf 'MONGO_URL=mongodb://%s:%s@mongo:27017/%s?authSource=%s\n' \
+        "${MONGO_SITE_USERNAME}" "${MONGO_SITE_PASSWORD}" "${DATABASE}" "${DATABASE}"
     printf 'CMS_SESSION_SECRET=%s\n' "$(openssl rand -hex 32)"
     printf 'CMS_KEK_HEX=%s\n' "$(openssl rand -hex 32)"
     printf 'CMS_ADMIN_EMAIL=%s\n' "admin@${DOMAIN}"
@@ -241,7 +246,7 @@ CMS_ADMIN_PASSWORD="$(openssl rand -hex 24)"
 } > .env
 
 chmod 600 .env
-unset MONGO_APP_PASSWORD CMS_ADMIN_PASSWORD
+unset MONGO_SITE_PASSWORD CMS_ADMIN_PASSWORD
 
 sudo install -d -o 1000 -g 1000 -m 0750 files
 
@@ -429,11 +434,11 @@ accidentally.
 
 ## Secret rotation
 
-The MongoDB entrypoint and `01-bootstrap-shared-users.js` run automatically only
-when `mongo_data` is empty. Editing `infra/.env` on an existing volume does not
-change either MongoDB user's password.
+The MongoDB entrypoint and `01-validate-root-user.js` run automatically only
+when `mongo_data` is empty. Editing an `.env` file on an existing volume does
+not change a MongoDB user's password.
 
-Rotate the root and application accounts separately:
+Rotate the root and site accounts separately:
 
 - For root, authenticate with the current root credential and update that
   user's password in `admin` first. Immediately put the same new value in
@@ -441,14 +446,11 @@ Rotate the root and application accounts separately:
   `docker compose up -d --wait --force-recreate mongo`. Until recreation, the
   health check still carries the old password. The MongoDB restart briefly
   interrupts every local CMS, but no instance `MONGO_URL` changes.
-- For the shared application credential, avoid changing one password in place.
-  Create a second `readWriteAnyDatabase@admin` account with a new hex secret,
-  update one instance `MONGO_URL`, run `docker compose up -d --wait`, and verify
-  it before moving the remaining instances. Then make the new username and
-  password the canonical `MONGO_APP_*` values in `infra/.env`, recreate MongoDB
-  so its container environment matches, and only then remove the old account.
-  Before removal, rollback consists of restoring the old URLs and recreating
-  each affected CMS container.
+- For a site credential, create a second user in that site's database with
+  `readWrite` on that database only, update only that instance's `MONGO_URL`,
+  recreate and verify the CMS container, then remove the old site user. Other
+  instances are unaffected. Keep the old URL until the canary succeeds so the
+  rotation remains reversible.
 
 Never pass the root credential to a CMS container. Editing an `.env` file alone
 does not update a database user or an already-running container.
@@ -467,9 +469,9 @@ Other instance secrets have different semantics:
 This section applies to the previous single-server layout: one shared MongoDB
 container named `mongo`, no database authentication, and one database named
 `cms_<INSTANCE_ID>` per site. It keeps the same MongoDB data volume. The root
-and shared application users **must be created while the old unauthenticated
-MongoDB process is still running**, before the new Compose configuration starts
-MongoDB with authentication enabled.
+and every database-scoped site user **must be created while the old
+unauthenticated MongoDB process is still running**, before the new Compose
+configuration starts MongoDB with authentication enabled.
 
 Plan a maintenance window. Keep the old Compose files, every instance `.env`,
 the image versions, and the original MongoDB volume until the migration and its
@@ -533,51 +535,53 @@ Prepare the new infrastructure `.env` with fresh hexadecimal passwords and
 mode 0600 as shown in the fresh-install section. Do not start the new Compose
 stack yet.
 
-Copy that environment file and the new bootstrap script temporarily into the
-still-running legacy `mongo` container. The command validates the exact roles
-and authenticates with both generated passwords before returning success. Its
-exit trap removes the temporary secrets even if validation fails.
+Copy the root-validation and site-provisioning scripts temporarily into the
+still-running legacy `mongo` container. Create the root user first, then run the
+site provisioning script once per database with a unique username and password.
+Record each generated site credential directly in that instance's protected
+`.env`.
 
 ```bash
 docker cp /opt/cms-deploy/infra/.env mongo:/tmp/cms-auth-migration.env
-docker cp /opt/cms-deploy/infra/mongo/01-bootstrap-shared-users.js \
-    mongo:/tmp/01-bootstrap-shared-users.js
+docker cp /opt/cms-deploy/infra/mongo/01-validate-root-user.js \
+    mongo:/tmp/01-validate-root-user.js
+docker cp /opt/cms-deploy/infra/mongo/provision-site-user.js \
+    mongo:/tmp/provision-site-user.js
 
 docker exec mongo sh -ec '
-    trap "rm -f /tmp/cms-auth-migration.env /tmp/01-bootstrap-shared-users.js" EXIT
+    trap "rm -f /tmp/cms-auth-migration.env /tmp/01-validate-root-user.js" EXIT
     set -a
     . /tmp/cms-auth-migration.env
     set +a
     export MONGO_INITDB_ROOT_USERNAME="$MONGO_ROOT_USERNAME"
     export MONGO_INITDB_ROOT_PASSWORD="$MONGO_ROOT_PASSWORD"
-    mongosh --quiet /tmp/01-bootstrap-shared-users.js
-
-    mongosh --quiet \
-        --username "$MONGO_ROOT_USERNAME" \
-        --password "$MONGO_ROOT_PASSWORD" \
-        --authenticationDatabase admin \
-        --eval "
-            const admin = db.getSiblingDB(\"admin\");
-            const root = admin.getUser(\"$MONGO_ROOT_USERNAME\");
-            const app = admin.getUser(\"$MONGO_APP_USERNAME\");
-            const exact = (user, role) => user && user.roles.length === 1
-                && user.roles[0].role === role && user.roles[0].db === \"admin\";
-            if (!exact(root, \"root\") || !exact(app, \"readWriteAnyDatabase\")) quit(1);
-            printjson({ rootRoles: root.roles, appRoles: app.roles });
-        "
-
-    mongosh --quiet \
-        --username "$MONGO_APP_USERNAME" \
-        --password "$MONGO_APP_PASSWORD" \
-        --authenticationDatabase admin \
-        --eval "quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)"
+    mongosh --quiet --eval "
+        const admin = db.getSiblingDB(\"admin\");
+        admin.createUser({
+            user: \"$MONGO_ROOT_USERNAME\",
+            pwd: \"$MONGO_ROOT_PASSWORD\",
+            roles: [{ role: \"root\", db: \"admin\" }]
+        });
+    "
+    mongosh --quiet /tmp/01-validate-root-user.js
 '
 ```
 
-The script validates both usernames and both 64-character hexadecimal secrets,
-creates the root user and the shared `readWriteAnyDatabase` user in `admin`, and
-rejects existing users whose roles do not match. If the host-side command is
-forcibly interrupted, remove the two temporary files manually before retrying.
+For each recorded `cms_<instance>` database, run `provision-site-user.js` while
+the legacy server is still unauthenticated:
+
+```bash
+MONGO_SITE_DATABASE=cms_client
+MONGO_SITE_USERNAME=cms_client
+MONGO_SITE_PASSWORD="$(openssl rand -hex 32)"
+docker exec \
+    -e MONGO_SITE_DATABASE -e MONGO_SITE_USERNAME -e MONGO_SITE_PASSWORD \
+    mongo mongosh --quiet /tmp/provision-site-user.js
+```
+
+Store that password in the matching instance `.env`, then unset it. Repeat with
+a distinct username and password for every site. Remove the temporary scripts
+from the container after every account has been verified.
 
 ### 4. Activate the new authenticated infrastructure on the same volume
 
@@ -599,7 +603,7 @@ docker compose --project-name RECORDED_PROJECT ps
 ```
 
 The initialization script will not run automatically because the volume is
-non-empty; that is why both users were created in step 3. Confirm that MongoDB
+non-empty; that is why the root and site users were created in step 3. Confirm that MongoDB
 is healthy with authentication enabled and that the mounted `/data/db` volume
 name is still the one recorded in step 1.
 
@@ -618,7 +622,7 @@ For every instance:
 For an old `INSTANCE_ID=client`, the URL becomes:
 
 ```dotenv
-MONGO_URL=mongodb://cms_runtime:SHARED_HEX_PASSWORD@mongo:27017/cms_client?authSource=admin
+MONGO_URL=mongodb://cms_client:SITE_HEX_PASSWORD@mongo:27017/cms_client?authSource=cms_client
 ```
 
 Do not change `cms_client` to a new name: the migration reuses the existing
@@ -646,13 +650,15 @@ rollback window remains open.
 ## Security and operational limits
 
 - MongoDB is authenticated, not published on a host port, and connected through
-  an internal network. Those controls reduce exposure but do not offset the
-  shared application's cross-database privileges.
+  an internal network. Every CMS credential is additionally restricted to one
+  database; the root credential remains infrastructure-only.
 - CMS containers run as UID/GID 1000 with a read-only root filesystem, all
   Linux capabilities dropped, `no-new-privileges`, and a bounded `/tmp` tmpfs.
 - `nginx-proxy` and `acme-companion` can access the Docker socket. Treat the
   infrastructure stack and host as a privileged trust boundary.
-- The proxy accepts request bodies up to 100 MB for every virtual host.
+- The proxy accepts request bodies up to 101 MiB for every virtual host. The
+  application still caps an uploaded file at 100 MiB and bounds other body
+  types independently.
 - There is one MongoDB process and one MongoDB volume per server, without a
   replica set or automatic failover. It is a single failure and maintenance
   domain for all local CMS instances.

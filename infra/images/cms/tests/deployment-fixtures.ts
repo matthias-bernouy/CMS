@@ -31,8 +31,9 @@ export const instanceComposeSource = readFileSync(instanceComposeFile, "utf8");
 export const infrastructureComposeSource = readFileSync(infrastructureComposeFile, "utf8");
 export const instanceEnvExampleSource = readFileSync(resolve(cmsDirectory, ".env.example"), "utf8");
 export const dockerfileSource = readFileSync(resolve(cmsDirectory, "Dockerfile"), "utf8");
-export const mongoBootstrapSource = readFileSync(
-    resolve(cmsDirectory, "infra/mongo/01-bootstrap-shared-users.js"),
+export const mongoBootstrapSource = readFileSync(resolve(cmsDirectory, "infra/mongo/01-validate-root-user.js"), "utf8");
+export const mongoSiteProvisionSource = readFileSync(
+    resolve(cmsDirectory, "infra/mongo/provision-site-user.js"),
     "utf8",
 );
 export const mongoPreflightSource = readFileSync(resolve(cmsDirectory, "infra/mongo/validate-env.sh"), "utf8");
