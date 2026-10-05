@@ -2,7 +2,7 @@ import type { BlobStore } from "@bernouy/blob-store";
 import { sha256Hex } from "@bernouy/binary-media";
 import { InMemoryCmsFileMutationJournal } from "cms-content/files/default-implementation/memory/InMemoryCmsFileMutationJournal";
 import type { CmsFileMutation, CmsFileMutationJournal } from "cms-content/files/interfaces/CmsFileMutationJournal";
-import type { CmsFilesMetadataRepository } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
+import type { CmsFilesMetadataRepository, FileItem } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
 
 const fallbackJournals = new WeakMap<object, CmsFileMutationJournal>();
 
@@ -38,7 +38,7 @@ export async function recoverFileMutation(
     operation: CmsFileMutation,
 ): Promise<void> {
     if (operation.kind === "delete") {
-        await metadata.deleteItems(operation.itemIds);
+        await journal.withTreeWrite(() => metadata.deleteItems(operation.itemIds));
         for (const blobKey of operation.blobKeys) {
             await blob.delete(blobKey);
         }
@@ -57,7 +57,7 @@ export async function recoverFileMutation(
         await discardWrite(blob, journal, operation);
         return;
     }
-    const committed = await metadata.commitFile(operation.target, operation.previousBlobKey);
+    const committed = await commitFileMutation(metadata, journal, operation);
     if (!committed) {
         await discardWrite(blob, journal, operation);
         return;
@@ -66,6 +66,35 @@ export async function recoverFileMutation(
         await blob.delete(operation.previousBlobKey);
     }
     await journal.complete(operation.id);
+}
+
+export async function commitFileMutation(
+    metadata: CmsFilesMetadataRepository,
+    journal: CmsFileMutationJournal,
+    operation: Extract<CmsFileMutation, { kind: "write" }>,
+): Promise<FileItem | null> {
+    return journal.withTreeWrite(async () => {
+        const current = await metadata.getItem(operation.resourceId);
+        if (current?.type === "file" && (current.blobKey ?? current.id) === operation.target.blobKey) {
+            return current;
+        }
+        if (!operation.preserveLocation) {
+            if (operation.target.parentId !== null) {
+                const parent = await metadata.getItem(operation.target.parentId);
+                if (parent?.type !== "folder") {
+                    return null;
+                }
+            }
+            return metadata.commitFile(operation.target, operation.previousBlobKey);
+        }
+        if (current?.type !== "file" || (current.blobKey ?? current.id) !== operation.previousBlobKey) {
+            return null;
+        }
+        return metadata.commitFile(
+            { ...operation.target, name: current.name, parentId: current.parentId },
+            operation.previousBlobKey,
+        );
+    });
 }
 
 async function discardWrite(

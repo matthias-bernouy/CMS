@@ -108,7 +108,7 @@ export class MongoCmsFilesMetadata implements CmsFilesMetadataRepository {
                 return fromDocument(document) as FileItem;
             } catch (error) {
                 const winner = await this.col.findOne({ _id: input.id });
-                if (winner?.type === "file" && fileDocumentMatches(winner, input)) {
+                if (winner?.type === "file" && (winner.blobKey ?? winner._id) === input.blobKey) {
                     return fromDocument(winner) as FileItem;
                 }
                 throw fileNameClashOr(error);
@@ -117,7 +117,7 @@ export class MongoCmsFilesMetadata implements CmsFilesMetadataRepository {
         if (existing.type !== "file") {
             return null;
         }
-        if (fileDocumentMatches(existing, input)) {
+        if ((existing.blobKey ?? existing._id) === input.blobKey) {
             return fromDocument(existing) as FileItem;
         }
         if ((existing.blobKey ?? existing._id) !== expectedBlobKey) {
@@ -217,18 +217,4 @@ export class MongoCmsFilesMetadata implements CmsFilesMetadataRepository {
             await this.col.deleteMany({ _id: { $in: [...ids] } });
         }
     }
-}
-
-function fileDocumentMatches(
-    document: FilesItemDocument & { type: "file" },
-    input: NewFile & { id: string; contentHash: string; blobKey: string },
-): boolean {
-    return (
-        document.name === input.name &&
-        document.parentId === input.parentId &&
-        document.size === input.size &&
-        document.mimeType === input.mimeType &&
-        document.contentHash === input.contentHash &&
-        document.blobKey === input.blobKey
-    );
 }

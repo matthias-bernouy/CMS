@@ -44,3 +44,4 @@ export { uploadFile } from "cms-content/files/core/lifecycle/uploadFile";
 export { updateFileContent } from "cms-content/files/core/lifecycle/updateFileContent";
 export { deleteFileTree } from "cms-content/files/core/lifecycle/deleteFileTree";
 export { recoverFileMutations } from "cms-content/files/core/lifecycle/fileMutationRecovery";
+export { createFileFolder, updateFileItem } from "cms-content/files/core/lifecycle/fileTreeMutations";

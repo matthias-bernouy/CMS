@@ -2,7 +2,11 @@ import { randomUUIDv7 } from "bun";
 import type { BlobStore } from "@bernouy/blob-store";
 import { sha256Hex } from "@bernouy/binary-media";
 import { assertFileMediaType } from "cms-content/files/core/media/fileIntegrity";
-import { fileMutationJournal, recoverFileMutation } from "cms-content/files/core/lifecycle/fileMutationRecovery";
+import {
+    commitFileMutation,
+    fileMutationJournal,
+    recoverFileMutation,
+} from "cms-content/files/core/lifecycle/fileMutationRecovery";
 import { validateUploadSize } from "cms-content/files/core/validation/validation";
 import type { CmsFileMutationJournal } from "cms-content/files/interfaces/CmsFileMutationJournal";
 import type { CmsFilesMetadataRepository, FileItem } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
@@ -16,7 +20,7 @@ export async function uploadFile(
     journal: CmsFileMutationJournal = fileMutationJournal(metadata),
 ): Promise<FileItem> {
     if ((metadata as unknown) === blob) {
-        return legacyUpload(metadata, blob, file, parentId, id);
+        return journal.withTreeWrite(() => legacyUpload(metadata, blob, file, parentId, id));
     }
     validateUploadSize(file.size);
     const bytes = new Uint8Array(await file.arrayBuffer());
@@ -44,16 +48,15 @@ export async function uploadFile(
         contentHash,
         blobKey,
     };
-    if (
-        !(await journal.begin({
-            id: operationId,
-            kind: "write",
-            resourceId,
-            previousBlobKey,
-            target,
-            createdAt: new Date().toISOString(),
-        }))
-    ) {
+    const operation = {
+        id: operationId,
+        kind: "write" as const,
+        resourceId,
+        previousBlobKey,
+        target,
+        createdAt: new Date().toISOString(),
+    };
+    if (!(await journal.begin(operation))) {
         throw new Error("Another file mutation is already in progress");
     }
 
@@ -63,7 +66,7 @@ export async function uploadFile(
         await discardUnpublishedBlob(blob, journal, operationId, blobKey);
         throw error;
     }
-    const item = await metadata.commitFile(target, previousBlobKey);
+    const item = await commitFileMutation(metadata, journal, operation);
     if (!item) {
         await blob.delete(blobKey);
         await journal.complete(operationId);

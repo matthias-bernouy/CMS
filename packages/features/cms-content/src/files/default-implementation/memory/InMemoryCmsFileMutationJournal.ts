@@ -2,6 +2,21 @@ import type { CmsFileMutation, CmsFileMutationJournal } from "cms-content/files/
 
 export class InMemoryCmsFileMutationJournal implements CmsFileMutationJournal {
     private readonly operations = new Map<string, CmsFileMutation>();
+    private treeWriteTail: Promise<void> = Promise.resolve();
+
+    async withTreeWrite<T>(operation: () => Promise<T>): Promise<T> {
+        const previous = this.treeWriteTail;
+        let release!: () => void;
+        this.treeWriteTail = new Promise<void>((resolve) => {
+            release = resolve;
+        });
+        await previous;
+        try {
+            return await operation();
+        } finally {
+            release();
+        }
+    }
 
     async begin(operation: CmsFileMutation): Promise<boolean> {
         if ([...this.operations.values()].some(({ resourceId }) => resourceId === operation.resourceId)) {

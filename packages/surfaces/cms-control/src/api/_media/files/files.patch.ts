@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import type { ItemPatch } from "@bernouy/cms-content/files";
+import { type ItemPatch, updateFileItem } from "@bernouy/cms-content/files";
 import { readJsonBody } from "cms-control/core/admin/http/readJsonBody";
 import MissingParam from "cms-control/core/admin/http/errors/MissingParam";
 
@@ -19,7 +19,7 @@ export default async function updateFile(req: Request, cms: ControlCms) {
         patch.parentId = body.parentId as string | null;
     }
 
-    const item = await cms.filesMetadata.updateItem(id, patch);
+    const item = await updateFileItem(cms.filesMetadata, cms.fileMutations, id, patch);
     if (!item) {
         return new Response("Not found", { status: 404 });
     }

@@ -95,8 +95,11 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
                 return null;
             }
             const currentBlobKey = existing.blobKey ?? existing.id;
+            if (currentBlobKey === input.blobKey) {
+                return cloneFileItem(existing) as FileItem;
+            }
             if (currentBlobKey !== expectedBlobKey) {
-                return fileMatches(existing, input) ? (cloneFileItem(existing) as FileItem) : null;
+                return null;
             }
         } else if (expectedBlobKey !== null) {
             return null;
@@ -215,15 +218,4 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
             cur = this._items.get(cur)?.parentId ?? null;
         }
     }
-}
-
-function fileMatches(item: FileItem, input: NewFile & { id: string; contentHash: string; blobKey: string }): boolean {
-    return (
-        item.name === input.name &&
-        item.parentId === input.parentId &&
-        item.size === input.size &&
-        item.mimeType === input.mimeType &&
-        item.contentHash === input.contentHash &&
-        item.blobKey === input.blobKey
-    );
 }
