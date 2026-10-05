@@ -88,4 +88,12 @@ describe("runtime env validation", () => {
         );
         expect(() => readRuntimeEnv({ ...validEnv(), CMS_GATEWAY_SITE_ID: "bad site" })).toThrow();
     });
+
+    test("keeps the local provider bridge credential optional and opaque", () => {
+        expect(readRuntimeEnv(validEnv()).CMS_LOCAL_PROVIDER_TOKEN).toBeUndefined();
+        expect(
+            readRuntimeEnv({ ...validEnv(), CMS_LOCAL_PROVIDER_TOKEN: "opaque-local-provider-core-secret" })
+                .CMS_LOCAL_PROVIDER_TOKEN,
+        ).toBe("opaque-local-provider-core-secret");
+    });
 });

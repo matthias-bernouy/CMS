@@ -21,6 +21,7 @@ export type RuntimeEnv = {
     CMS_ADMIN_EMAIL: string;
     CMS_ADMIN_PASSWORD: string;
     CMS_GATEWAY_SITE_ID?: string;
+    CMS_LOCAL_PROVIDER_TOKEN?: string;
     CMS_PROVIDER_MEDIA_DIR?: string;
     CMS_REPOSITORY_URL?: string;
     CMS_FILES_DIR: string;
@@ -67,6 +68,9 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         ...(!source.CMS_GATEWAY_SITE_ID?.trim()
             ? {}
             : { CMS_GATEWAY_SITE_ID: parseSelectionSiteId(source.CMS_GATEWAY_SITE_ID.trim()) }),
+        ...(!source.CMS_LOCAL_PROVIDER_TOKEN?.trim()
+            ? {}
+            : { CMS_LOCAL_PROVIDER_TOKEN: source.CMS_LOCAL_PROVIDER_TOKEN.trim() }),
         ...(!source.CMS_PROVIDER_MEDIA_DIR?.trim()
             ? {}
             : { CMS_PROVIDER_MEDIA_DIR: source.CMS_PROVIDER_MEDIA_DIR.trim() }),

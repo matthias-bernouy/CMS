@@ -1,0 +1,69 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "ulvia.cms.pages",
+    "name": "CMS Pages",
+    "description": "Read and manage the Pages owned by one provider-selected CMS instance without exposing provider-private instance routing.",
+    "version": "1.0.0",
+    "publisherId": "ulvia.official",
+    "catalogue": {
+        "icon": "pages",
+        "categories": ["administration", "content"]
+    },
+    "capabilities": [
+        {
+            "id": "list",
+            "description": "List a bounded, stable Page batch for administration interfaces.",
+            "access": "admin",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "cursor": { "type": "string", "maxLength": 256 },
+                    "limit": { "type": "integer", "minimum": 1, "maximum": 100 }
+                },
+                "required": []
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "maxItems": 100,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": { "type": "string", "maxLength": 200 },
+                                "revision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+                                "surface": {
+                                    "type": "string",
+                                    "enum": ["control", "delivery"],
+                                    "maxLength": 8
+                                },
+                                "path": { "type": "string", "maxLength": 2048 },
+                                "title": { "type": "string", "maxLength": 160 },
+                                "visible": { "type": "boolean" }
+                            },
+                            "required": ["id", "revision", "surface", "path", "title", "visible"]
+                        }
+                    },
+                    "nextCursor": { "type": "string", "maxLength": 256 }
+                },
+                "required": ["items"]
+            },
+            "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
+            "binding": {
+                "transport": "http",
+                "method": "GET",
+                "path": "/v1/cms/pages",
+                "input": { "query": { "cursor": "cursor", "limit": "limit" } },
+                "response": {
+                    "successStatuses": [200],
+                    "contentTypes": ["application/json"],
+                    "errorStatuses": { "CORE_UNAVAILABLE": 503 }
+                }
+            }
+        }
+    ]
+}

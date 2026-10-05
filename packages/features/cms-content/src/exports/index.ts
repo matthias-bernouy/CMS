@@ -35,6 +35,12 @@ export type {
     TPageRef,
 } from "cms-content/pages/interfaces/pages";
 export { pageDocument } from "cms-content/pages/interfaces/pages";
+export {
+    listCmsPages,
+    type CmsPageListItem,
+    type CmsPagesListInput,
+    type CmsPagesListOutput,
+} from "cms-content/pages/core/contracts/listPages";
 export type {
     PageLinkTarget,
     PageReference,

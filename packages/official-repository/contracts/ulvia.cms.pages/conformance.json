@@ -1,0 +1,34 @@
+{
+    "kind": "contract-conformance-suite",
+    "protocol": "ulvia-conformance/v1",
+    "contractId": "ulvia.cms.pages",
+    "contractVersion": "1.0.0",
+    "contractDigest": "sha256:82094231c25bf53b871e63fb8f31a2c3fb6b08731a25c52e102212130f716f90",
+    "publisherId": "ulvia.official",
+    "version": "1.0.0",
+    "isolation": "disposable-tenant",
+    "scenarios": [
+        {
+            "id": "list-pages",
+            "calls": [
+                {
+                    "id": "first-page",
+                    "capabilityId": "list",
+                    "actor": { "kind": "admin" },
+                    "input": { "limit": 25 },
+                    "expect": {
+                        "kind": "success",
+                        "checks": [{ "path": "/items", "present": true }]
+                    }
+                }
+            ]
+        }
+    ],
+    "coverageExemptions": [
+        {
+            "capabilityId": "list",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        }
+    ]
+}

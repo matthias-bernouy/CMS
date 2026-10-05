@@ -6,6 +6,7 @@ import type { UlviaScalarSchema } from "@bernouy/cms-repository/contracts/schema
 import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
 import type { OfficialCmsInstanceDiscovery } from "../core/InstanceDiscovery";
+import type { OfficialCoreCapabilities } from "../core/coreCapabilities";
 import type { OfficialSubmissionStore } from "../core/submissions";
 
 const ITEMS = Object.freeze([
@@ -22,12 +23,14 @@ export interface OfficialProviderContracts {
     readonly forms: ContractRelease;
     readonly instances: ContractRelease;
     readonly media: ContractRelease;
+    readonly pages: ContractRelease;
 }
 
 export function createOfficialProviderHandler(options: {
     token: string;
     report: ProviderRuntimeReport;
     contracts: OfficialProviderContracts;
+    core: OfficialCoreCapabilities;
     instances: OfficialCmsInstanceDiscovery;
     submissions: OfficialSubmissionStore;
 }): (request: Request) => Promise<Response> {
@@ -65,6 +68,21 @@ export function createOfficialProviderHandler(options: {
                     return new Response(null, { status: 400 });
                 }
                 throw error;
+            }
+        }
+        if (request.method === "GET" && path === "/v1/cms/pages") {
+            let input: Readonly<Record<string, unknown>>;
+            try {
+                input = decodeQuery(new URL(request.url), capabilities.pageList);
+            } catch {
+                return new Response(null, { status: 400 });
+            }
+            try {
+                const output = await options.core.invoke("ulvia.cms.pages", "list", input);
+                validateSchemaValue(capabilities.pageList.output, output);
+                return Response.json(output, { headers: { "Cache-Control": "no-store" } });
+            } catch {
+                return error("CORE_UNAVAILABLE", 503);
             }
         }
         if (request.method === "GET" && path === "/v1/catalog/items") {
@@ -124,11 +142,13 @@ function resolveCapabilities(contracts: OfficialProviderContracts): {
     instanceList: CapabilityDefinition;
     instanceCurrent: CapabilityDefinition;
     assetRead: CapabilityDefinition;
+    pageList: CapabilityDefinition;
 } {
     assertContract(contracts.catalog, "catalog.items");
     assertContract(contracts.forms, "forms.submissions");
     assertContract(contracts.instances, "ulvia.provider.cms-instances");
     assertContract(contracts.media, "media.assets");
+    assertContract(contracts.pages, "ulvia.cms.pages");
     const assetRead = requiredCapability(contracts.media, "asset.read");
     if (assetRead.media?.idInput !== "fileId") {
         throw new Error("Official media contract must expose asset.read through fileId media identity");
@@ -140,6 +160,7 @@ function resolveCapabilities(contracts: OfficialProviderContracts): {
         submissionGet: requiredCapability(contracts.forms, "submission.get"),
         instanceList: requiredCapability(contracts.instances, "list"),
         instanceCurrent: requiredCapability(contracts.instances, "get-current"),
+        pageList: requiredCapability(contracts.pages, "list"),
         assetRead,
     };
 }

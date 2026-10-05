@@ -62,7 +62,7 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
     });
     let cms: Awaited<ReturnType<typeof startLocalCms>>;
     try {
-        cms = await startLocalCms(paths, config, mongo, ports);
+        cms = await startLocalCms(paths, config, mongo, ports, { localProviderToken: provider.coreCallToken });
     } catch (error) {
         await stopLocalProvider(provider.process);
         repository.stop();

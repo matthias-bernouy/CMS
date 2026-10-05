@@ -1,4 +1,6 @@
 export { createOfficialProviderHandler } from "./http/handler";
+export { HttpOfficialCoreCapabilities } from "./http/HttpOfficialCoreCapabilities";
+export type { OfficialCoreCapabilities } from "./core/coreCapabilities";
 export { OfficialCmsInstanceDiscovery } from "./core/InstanceDiscovery";
 export type {
     OfficialCmsInstanceContract,

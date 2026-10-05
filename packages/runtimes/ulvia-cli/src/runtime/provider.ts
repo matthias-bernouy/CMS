@@ -7,7 +7,14 @@ import type { UlviaPaths } from "./paths";
 import { spawnCommand } from "./process";
 
 export async function loadOrCreateProviderToken(devRoot: string): Promise<string> {
-    const path = join(devRoot, "provider-token");
+    return loadOrCreateToken(join(devRoot, "provider-token"));
+}
+
+export async function loadOrCreateCoreCallToken(devRoot: string): Promise<string> {
+    return loadOrCreateToken(join(devRoot, "core-call-token"));
+}
+
+async function loadOrCreateToken(path: string): Promise<string> {
     const existing = await readToken(path);
     if (existing) {
         return existing;
@@ -30,6 +37,7 @@ export async function loadOrCreateProviderToken(devRoot: string): Promise<string
 
 export async function startLocalProvider(paths: UlviaPaths, ports: DevPorts) {
     const token = await loadOrCreateProviderToken(paths.dev);
+    const coreCallToken = await loadOrCreateCoreCallToken(paths.dev);
     const entrypoint = fileURLToPath(import.meta.resolve("@bernouy/ulvia-official-provider/server"));
     const cmsEntrypoint = fileURLToPath(import.meta.resolve("@bernouy/cms-server"));
     const cmsPackage = (await Bun.file(resolve(dirname(cmsEntrypoint), "../package.json")).json()) as {
@@ -49,6 +57,8 @@ export async function startLocalProvider(paths: UlviaPaths, ports: DevPorts) {
             ULVIA_OFFICIAL_PORT: String(ports.provider),
             ULVIA_OFFICIAL_CORE_VERSION: cmsPackage.version,
             ULVIA_OFFICIAL_CORE_HEALTH_URL: `http://127.0.0.1:${ports.control}`,
+            ULVIA_OFFICIAL_CORE_CALL_URL: `http://127.0.0.1:${ports.control}/.cms/internal/core-call`,
+            ULVIA_OFFICIAL_CORE_CALL_TOKEN: coreCallToken,
         },
     });
     const url = `http://127.0.0.1:${ports.provider}`;
@@ -65,7 +75,7 @@ export async function startLocalProvider(paths: UlviaPaths, ports: DevPorts) {
                 () => false,
             );
             if (ready) {
-                return { process: provider, url, token };
+                return { process: provider, url, token, coreCallToken };
             }
             await Bun.sleep(250);
         }

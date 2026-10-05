@@ -8,19 +8,28 @@ import { OfficialCmsInstanceDiscovery } from "./core/InstanceDiscovery";
 import { createOfficialProviderHandler } from "./http/handler";
 import { FileInstanceRegistry } from "./local-fs/FileInstanceRegistry";
 import { FileSubmissionStore } from "./local-fs/FileSubmissionStore";
+import { HttpOfficialCoreCapabilities } from "./http/HttpOfficialCoreCapabilities";
 
 const resourceRoot = required("ULVIA_OFFICIAL_RESOURCE_ROOT");
 const dataRoot = required("ULVIA_OFFICIAL_DATA_DIR");
 const token = required("ULVIA_OFFICIAL_TOKEN");
 const coreVersion = required("ULVIA_OFFICIAL_CORE_VERSION");
 const coreHealthUrl = required("ULVIA_OFFICIAL_CORE_HEALTH_URL");
+const coreCallUrl = required("ULVIA_OFFICIAL_CORE_CALL_URL");
+const coreCallToken = required("ULVIA_OFFICIAL_CORE_CALL_TOKEN");
 const port = Number(required("ULVIA_OFFICIAL_PORT"));
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error("ULVIA_OFFICIAL_PORT must be a valid port");
 }
 
 const contracts = new InMemoryReleaseCatalogue();
-for (const id of ["catalog.items", "forms.submissions", "media.assets", "ulvia.provider.cms-instances"]) {
+for (const id of [
+    "catalog.items",
+    "forms.submissions",
+    "media.assets",
+    "ulvia.cms.pages",
+    "ulvia.provider.cms-instances",
+]) {
     const bytes = await readFile(join(resourceRoot, "contracts", id, "definition.json"));
     await contracts.publish(await admitContractReleaseJson(bytes));
 }
@@ -55,7 +64,7 @@ await instances.registerCurrent({
     label: "Local CMS",
     lifecycleState: "running",
     coreVersion,
-    contracts: [],
+    contracts: [implementedContract("ulvia.cms.pages")],
     healthUrl: coreHealthUrl,
 });
 const handler = createOfficialProviderHandler({
@@ -66,7 +75,9 @@ const handler = createOfficialProviderHandler({
         forms: await implementedRelease("forms.submissions"),
         instances: await implementedRelease("ulvia.provider.cms-instances"),
         media: await implementedRelease("media.assets"),
+        pages: await implementedRelease("ulvia.cms.pages"),
     },
+    core: new HttpOfficialCoreCapabilities(coreCallUrl, coreCallToken),
     instances,
     submissions: new FileSubmissionStore(join(dataRoot, "submissions")),
 });
@@ -91,4 +102,16 @@ async function implementedRelease(contractId: string) {
         throw new Error(`Official provider contract ${contractId}@${implementation.version} is unavailable`);
     }
     return published.admission.release;
+}
+
+function implementedContract(contractId: string) {
+    const implementation = admission.manifest.implementations.find((item) => item.contractId === contractId);
+    if (!implementation) {
+        throw new Error(`Official provider manifest lacks ${contractId}`);
+    }
+    return {
+        contractId: implementation.contractId,
+        version: implementation.version,
+        digest: implementation.digest,
+    };
 }

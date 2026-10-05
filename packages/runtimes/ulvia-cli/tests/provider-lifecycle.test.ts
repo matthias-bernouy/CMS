@@ -24,7 +24,7 @@ test("provider instance discovery follows the admitted plan and opaque credentia
     const root = await mkdtemp(join(tmpdir(), "ulvia-provider-lifecycle-"));
     try {
         const releases = new InMemoryReleaseCatalogue();
-        for (const id of ["catalog.items", "forms.submissions", "media.assets", CONTRACT_ID]) {
+        for (const id of ["catalog.items", "forms.submissions", "media.assets", "ulvia.cms.pages", CONTRACT_ID]) {
             await releases.publish(
                 await admitContractReleaseJson(await readFile(join(resourceRoot, "contracts", id, "definition.json"))),
             );
@@ -70,7 +70,9 @@ test("provider instance discovery follows the admitted plan and opaque credentia
                 forms: (await releases.get("forms.submissions", "0.1.1"))!.admission.release,
                 instances: lifecycle.admission.release,
                 media: (await releases.get("media.assets", "0.2.0"))!.admission.release,
+                pages: (await releases.get("ulvia.cms.pages", "1.0.0"))!.admission.release,
             },
+            core: { invoke: async () => ({ items: [] }) },
             instances,
             submissions: new FileSubmissionStore(join(root, "submissions")),
         });

@@ -19,6 +19,7 @@ async function contracts() {
         forms: await load("forms.submissions"),
         instances: await load("ulvia.provider.cms-instances"),
         media: await load("media.assets"),
+        pages: await load("ulvia.cms.pages"),
     };
 }
 
@@ -55,6 +56,27 @@ test("the official provider accepts canonical gateway paths and declared error e
             token: "test-token",
             report,
             contracts: await contracts(),
+            core: {
+                async invoke(contractId, capabilityId, input) {
+                    expect({ contractId, capabilityId, input }).toEqual({
+                        contractId: "ulvia.cms.pages",
+                        capabilityId: "list",
+                        input: { limit: 1 },
+                    });
+                    return {
+                        items: [
+                            {
+                                id: "page-1",
+                                revision: 1,
+                                surface: "delivery",
+                                path: "/",
+                                title: "Home",
+                                visible: true,
+                            },
+                        ],
+                    };
+                },
+            },
             instances: await instanceDiscovery(root),
             submissions: new FileSubmissionStore(root),
         });
@@ -83,6 +105,9 @@ test("the official provider accepts canonical gateway paths and declared error e
         expect((await current.json()).id).toBe("default");
         expect((await request("/v1/cms-instances/private-instance")).status).toBe(404);
         expect((await request("/v1/cms-instances?limit=51")).status).toBe(400);
+        const pages = await request("/v1/cms/pages?limit=1");
+        expect(pages.status).toBe(200);
+        expect((await pages.json()).items[0]).toMatchObject({ id: "page-1", surface: "delivery" });
         const catalog = await request("/v1/catalog/items");
         expect(await catalog.json()).toEqual({
             items: [
@@ -126,13 +151,21 @@ test("the official provider rejects blank credentials and incompatible contract 
     const submissions = new FileSubmissionStore(join(tmpdir(), "unused-ulvia-submissions"));
     const instances = await instanceDiscovery(join(tmpdir(), `unused-ulvia-instances-${crypto.randomUUID()}`));
     expect(() =>
-        createOfficialProviderHandler({ token: " ", report, contracts: releases, instances, submissions }),
+        createOfficialProviderHandler({
+            token: " ",
+            report,
+            contracts: releases,
+            core: { invoke: async () => ({}) },
+            instances,
+            submissions,
+        }),
     ).toThrow("must not be blank");
     expect(() =>
         createOfficialProviderHandler({
             token: "test-token",
             report,
             contracts: { ...releases, catalog: releases.forms },
+            core: { invoke: async () => ({}) },
             instances,
             submissions,
         }),
