@@ -100,6 +100,9 @@ test("provider instance discovery follows the admitted plan and opaque credentia
             contractId: CONTRACT_ID,
             capabilityId: "get-current",
         });
+        await expect(
+            authority.authorize({ ...consumer, contractId: CONTRACT_ID, capabilityId: "list" }),
+        ).rejects.toMatchObject({ code: "not_authorized" });
         const invoker = new CapabilityGateway({
             routes,
             now: () => NOW,

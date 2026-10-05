@@ -99,3 +99,27 @@ test("the provider registry rejects corrupt state and Core advertisements of pro
         await rm(root, { recursive: true, force: true });
     }
 });
+
+test("instance listing uses bounded opaque cursors without duplicates", async () => {
+    const root = await mkdtemp(join(tmpdir(), "ulvia-provider-pages-"));
+    const registry = new FileInstanceRegistry(join(root, "registry.json"));
+    try {
+        await registry.register({ ...registration, id: "alpha" }, "2026-10-05T10:00:00.000Z");
+        await registry.register({ ...registration, id: "beta" }, "2026-10-05T10:00:00.000Z");
+        const discovery = new OfficialCmsInstanceDiscovery(
+            registry,
+            "alpha",
+            async () => false,
+            () => new Date("2026-10-05T10:00:00.000Z"),
+        );
+        const first = await discovery.list(undefined, 1);
+        const second = await discovery.list(first.nextCursor, 1);
+
+        expect(first.items.map(({ id }) => id)).toEqual(["alpha"]);
+        expect(second.items.map(({ id }) => id)).toEqual(["beta"]);
+        expect(second.nextCursor).toBeUndefined();
+        await expect(discovery.list("not/a/cursor", 1)).rejects.toThrow("Invalid instance cursor");
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
+});
