@@ -1,10 +1,10 @@
-import type { CollectionBloc } from "../../interfaces/CollectionBloc";
-import type { CollectionPage, CollectionPageSurface } from "../../interfaces/CollectionPage";
-import { invalid } from "../errors";
-import type { CollectionLimits } from "../limits";
-import { array, identifier, integer, keys, record, string, unique } from "../values";
-import { parseRequirements } from "./requirements";
-import { parseDefaultPath, parseSurface, validatePageHtml } from "./pageDocument";
+import type { CollectionBloc } from "../../../interfaces/CollectionBloc";
+import type { CollectionPage, CollectionPageSurface } from "../../../interfaces/CollectionPage";
+import { invalid } from "../../errors";
+import type { CollectionLimits } from "../../limits";
+import { array, identifier, integer, keys, record, string, unique } from "../../values";
+import { parseRequirements } from "../requirements";
+import { parseDefaultPath, parseSurface, validatePageHtml } from "./document";
 
 /** Parses a bounded Page document for exactly one rendering surface. */
 export function parseCollectionPages(

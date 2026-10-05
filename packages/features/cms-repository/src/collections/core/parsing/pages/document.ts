@@ -1,88 +1,14 @@
 import { parseStrictJson } from "cms-repository/exports/contracts/protocol";
 import { DomUtils, parseDocument } from "htmlparser2";
-import type { CollectionPageSurface } from "../../interfaces/CollectionPage";
-import { invalid } from "../errors";
-import { string } from "../values";
-
-const TAGS = new Set([
-    "article",
-    "aside",
-    "b",
-    "br",
-    "button",
-    "div",
-    "em",
-    "form",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "header",
-    "input",
-    "label",
-    "li",
-    "main",
-    "nav",
-    "ol",
-    "p",
-    "section",
-    "small",
-    "span",
-    "strong",
-    "ul",
-]);
-const ATTRIBUTES = new Set([
-    "id",
-    "title",
-    "role",
-    "aria-label",
-    "aria-live",
-    "autocomplete",
-    "disabled",
-    "for",
-    "hidden",
-    "maxlength",
-    "name",
-    "placeholder",
-    "readonly",
-    "required",
-    "type",
-    "value",
-    "cms-condition",
-    "cms-form-empty",
-    "cms-form-value-type",
-    "cms-repeat",
-    "cms-source",
-    "cms-source-body",
-    "cms-source-id",
-    "cms-source-method",
-    "cms-source-serialization",
-    "cms-source-success-reload",
-    "cms-source-success-reset",
-    "cms-source-trigger",
-]);
+import type { CollectionPageSurface } from "../../../interfaces/CollectionPage";
+import { invalid } from "../../errors";
+import { string } from "../../values";
+import { PAGE_ATTRIBUTES, PAGE_INPUT_TYPES, PAGE_TAGS } from "./elements";
 const IDENTIFIER = "[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*";
 const CUSTOM_ATTRIBUTE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const CONTROL_CHARACTER = /[\u0000-\u001F\u007F]/u;
 const FORM_NAME = /^[A-Za-z_][A-Za-z0-9_.:-]{0,127}$/u;
 const SOURCE_RELOAD = /^#[A-Za-z][A-Za-z0-9_.:-]{0,127}$/u;
-const INPUT_TYPES = new Set([
-    "checkbox",
-    "date",
-    "datetime-local",
-    "email",
-    "hidden",
-    "month",
-    "number",
-    "password",
-    "radio",
-    "search",
-    "tel",
-    "text",
-    "time",
-    "url",
-    "week",
-]);
 const SOURCE = new RegExp(
     `^/\\.cms/call/(?<contract>${IDENTIFIER})/(?<capability>${IDENTIFIER})(?: as [A-Za-z_$][\\w$]*)?$`,
     "u",
@@ -100,7 +26,7 @@ export function validatePageHtml(
     while (pending.length > 0) {
         const node = pending.pop()!;
         if (DomUtils.isTag(node)) {
-            if (!TAGS.has(node.name) && !blocIds.has(node.name)) {
+            if (!PAGE_TAGS.has(node.name) && !blocIds.has(node.name)) {
                 invalid(`unsupported Page element ${node.name}`, path);
             }
             if (blocIds.has(node.name)) {
@@ -168,13 +94,13 @@ function validateAttributes(
             CUSTOM_ATTRIBUTE.test(name) &&
             !name.startsWith("on") &&
             !["is", "style"].includes(name);
-        if (!ATTRIBUTES.has(name) && !name.startsWith("aria-") && name !== "slot" && !customBlocAttribute) {
+        if (!PAGE_ATTRIBUTES.has(name) && !name.startsWith("aria-") && name !== "slot" && !customBlocAttribute) {
             invalid(`unsupported Page attribute ${name}`, path);
         }
         if (name === "type" && tag === "button" && value !== "button" && value !== "submit") {
             invalid("Page buttons must be buttons or controlled form submitters", path);
         }
-        if (name === "type" && tag === "input" && !INPUT_TYPES.has(value)) {
+        if (name === "type" && tag === "input" && !PAGE_INPUT_TYPES.has(value)) {
             invalid("Page input type is not controlled", path);
         }
         if (name === "name" && !FORM_NAME.test(value)) {

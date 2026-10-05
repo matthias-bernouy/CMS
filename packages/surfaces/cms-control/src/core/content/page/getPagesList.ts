@@ -9,6 +9,7 @@ export type PageListItem = {
     visibleLabel: string;
     visibleColor: string;
 };
+export type PageListResponse = PageListItem[];
 
 /** Filter + sort options, owned by the repository (`CmsRepository.PagesQuery`).
  *  Re-exported under the name the API layer already imports. */

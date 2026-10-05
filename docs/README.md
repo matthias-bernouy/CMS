@@ -7,7 +7,7 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 ## Architecture And Development
 
 - [Repository audit](AUDIT.md): verified strengths, production risks, current
-  limits and the recommended delivery sequence as of 2026-10-05.
+  limits and the recommended delivery sequence.
 - [Workspace architecture](architecture/README.md): layers, dependency rules,
   domain boundaries and runtime composition.
 - [Package map](architecture/packages.md): every current workspace package and
@@ -21,8 +21,9 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 - [Control Pages and provider-managed CMS instances](todo/control-pages-and-provider-managed-cms-instances.md):
   design for replacing the removed static admin and collection View models with
   surface-specific Pages, with local, cloud or third-party instance providers;
-  provider-owned local discovery and immutable collection Pages are implemented,
-  while site-owned unification and mounted rendering remain planned.
+  provider-owned local discovery, immutable collection Pages, site-owned
+  surface routes and mounted shared rendering are implemented. Autonomous
+  provisioning and complete Control parity remain planned.
 - [Local provider and CMS initialization](todo/local-provider-initialization.md):
   proposed offline first-run, bootstrap collection, Control Page, restart and
   recovery flow for the official local provider; durable discovery of the

@@ -1,5 +1,11 @@
 # Control API Routing
 
+> Transitional boundary: new collection-owned Control Pages call versioned
+> contracts through `/.cms/call/<contract>/<capability>`. Add or retain an
+> `/api/*` endpoint only for an administration area that has not reached
+> contract parity. Remove each endpoint after its replacement has parity,
+> security, accessibility and recovery coverage.
+
 `@bernouy/cms-control` routes `src/api/` through
 `src/core/admin/registerEndpoints/serveApiFolder.ts`. This is a file router for the
 admin REST API mounted under `<basePath>/api`.
@@ -76,3 +82,8 @@ import { readJsonBody } from "cms-control/core/admin/http/readJsonBody";
 ```
 
 Do not use long relative paths from endpoint files.
+
+Endpoint modules are transport adapters, not shared type modules. Retained
+components must import domain response types from `src/core/` or the owning
+feature package so deleting a superseded endpoint does not break browser code
+at compile time.

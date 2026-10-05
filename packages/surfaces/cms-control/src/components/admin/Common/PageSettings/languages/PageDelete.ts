@@ -1,6 +1,6 @@
 import css from "./delete.css" with { type: "text" };
 import type { P9rSelect } from "@bernouy/components";
-import type { PageListResponse } from "cms-control/api/_content/page/list.get";
+import type { PageListResponse } from "cms-control/core/content/page/getPagesList";
 
 type AlternativePage = Pick<PageListResponse[number], "id" | "title" | "path">;
 

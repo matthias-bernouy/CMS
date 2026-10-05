@@ -12,15 +12,20 @@ Page can render:
   retained legacy components are still available;
 - capability calls, provider media and author-file delivery;
 - the transitional `/api/*` endpoints;
-- `/admin/*`, which returns `503` until the collection Page resolver is mounted.
+- `/admin/*`, resolved from the installed collection Control Page registry; it
+  returns the kernel `503` recovery document when no matching Page is usable;
+- authenticated `/.cms/call/*`, `/.cms/media/*`, `/.cms/image/*` and
+  `/.cms/blocset`, which are the shared capability and rendering transports.
 
 The two browser assets are mounted explicitly. Adding a file below
 `src/browser/` never creates a route. Authentication documents live below
 `src/core/admin/auth/templates/` because they belong to the bootstrap kernel,
 not to the authored Control application.
 
-Future administration screens must be declared as collection Pages with
+New administration screens must be declared as collection Pages with
 `surface: "control"`. Navigation, shells and layouts are ordinary Control-only
-Blocs composed by those Pages. The Control surface will resolve the selected
-Page and its transitive Bloc/capability plan; it must not reintroduce a parallel
-filesystem page model.
+Blocs composed by those Pages. The Control surface resolves the selected Page,
+its transitive Blocs and its exact capability execution plan. Calls without a
+same-origin referring Control Page fail closed. The transitional `/api/*`
+surface remains only for functional areas that have not reached collection and
+contract parity; it must not become a second Page model.

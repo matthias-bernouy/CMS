@@ -192,6 +192,12 @@ The local provider must:
 
 ## Phase 3 — Prove Read-Only CMS Data-Plane Capabilities
 
+**Status (2026-10-06): first vertical slice completed.**
+`ulvia.cms.pages/list` is published by the official repository, implemented by
+the local Core, relayed by the official provider and invoked from an exact
+collection Page execution plan through `/.cms/call`. Further Core domains remain
+Phase 8 work.
+
 Do not convert the whole Control API at once. Introduce one official contract
 family and prove the complete authorization chain.
 
@@ -224,7 +230,7 @@ For each capability:
 
 ## Phase 4 — Establish The Unified Page Model
 
-**Status:** partially implemented. Collection releases now admit immutable
+**Status (2026-10-06): partially implemented.** Collection releases now admit immutable
 surface-specific Pages with default paths, per-resource generations/digests,
 selective imports/exports and transitive Bloc surface validation. Gateway grants
 are Page execution grants. Site-owned Page unification, rendering, copying and
@@ -257,6 +263,11 @@ phase.
 
 ## Phase 5 — Unify Routes And Links
 
+**Status (2026-10-06): route foundation implemented, authoring integration
+open.** Surface-owned route registries, stable Page references and route
+overrides exist. Collection upgrades preserve overrides. Editors and navigation
+Blocs do not yet expose the complete Page-reference flow.
+
 Give Pages stable qualified identities and keep routing as site-owned state.
 
 Implement:
@@ -283,6 +294,11 @@ strings embedded as the canonical relation between Pages.
 
 ## Phase 6 — Deliver The First Collection-Based Control Page
 
+**Status (2026-10-06): first technical slice completed.** The official
+collection owns `/admin`, its layout and its Pages catalogue. Control resolves,
+authorizes and renders the Page with the shared Page document pipeline. Broader
+product parity and a complete UX/accessibility review remain Phase 8 work.
+
 Create the first real collection-backed Control screen. The recommended slice
 is a read-only Pages catalogue.
 
@@ -307,6 +323,11 @@ whether the collection uses a sidebar, tabs, a header or no navigation.
   corrupting site state.
 
 ## Phase 7 — Add Mutations And The Shared Editor Carefully
+
+**Status (2026-10-06): first mutation completed; editor deferred.**
+`ulvia.cms.pages/rename` uses optimistic revisions, naturally idempotent retries,
+same-origin Page authorization, declared provider errors and durable Gateway
+command audit events. The shared Page editor has deliberately not been rebuilt.
 
 Only after the read path is proven, introduce a small write capability, such as
 creating or renaming a Page.
@@ -333,6 +354,13 @@ host panels may differ; the composition model must not fork.
 - editor output is valid for the target surface before persistence.
 
 ## Phase 8 — Rebuild Control By Functional Area
+
+**Status (2026-10-06): started with Pages.** The new Pages catalogue and title
+mutation are collection-owned. The transitional `/api/page/*` endpoints and
+retained components are not deleted yet: creation, deletion, paths,
+localization, SEO, content editing, filtering and replacement redirects have
+not reached contract parity. Deleting them now would remove behavior instead
+of completing a clean migration.
 
 Rebuild Control one domain at a time from the retained APIs, components and
 documented behavior. Likely groups are:
