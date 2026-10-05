@@ -1,10 +1,42 @@
-<section>
-    <header>
-        <h2>Ulvia workspace</h2>
-        <p>This is an official Ulvia Control Page.</p>
-    </header>
-    <article>
-        <h3>Collection resources</h3>
-        <p>Its resources and document remain versioned with the collection.</p>
-    </article>
-</section>
+<ulvia-official-app-shell layout="sidebar" sticky-header>
+    <strong slot="brand">Ulvia</strong>
+    <div slot="secondary-navigation">
+        <nav aria-label="Workspace">
+            <strong>Content</strong>
+            <p>Pages</p>
+            <strong>Design</strong>
+            <p>Blocs and theme</p>
+        </nav>
+    </div>
+    <ulvia-official-page-shell slot="content" width="xl">
+        <div slot="title"><h1>Pages</h1></div>
+        <div slot="description"><p>All site Pages, loaded through the selected local Core provider.</p></div>
+        <section slot="content" cms-source="/.cms/call/ulvia.cms.pages/list as pages" cms-source-method="POST" cms-source-body="{&quot;limit&quot;:100}">
+            <div role="status" aria-live="polite" cms-condition="$source.loading">
+                <h2>Loading Pages</h2>
+                <p>The collection is asking the provider for the current Page catalogue.</p>
+            </div>
+            <div role="alert" cms-condition="$source.error">
+                <h2>Pages unavailable</h2>
+                <p>The provider could not read the Core Page catalogue. Check the provider selection and try again.</p>
+            </div>
+            <div cms-condition="$source.loaded">
+                <header>
+                    <h2>Page catalogue</h2>
+                    <p>{{ pages.items.length }} Pages in this batch.</p>
+                </header>
+                <ul cms-condition="pages.items.length">
+                    <li cms-repeat="pages.items as page">
+                        <strong>{{ page.title }}</strong>
+                        <span>{{ page.path }}</span>
+                        <small>{{ page.surface }}</small>
+                    </li>
+                </ul>
+                <div cms-condition="pages.items.length == 0">
+                    <h3>No Pages yet</h3>
+                    <p>Create the first Delivery Page to start building the site.</p>
+                </div>
+            </div>
+        </section>
+    </ulvia-official-page-shell>
+</ulvia-official-app-shell>

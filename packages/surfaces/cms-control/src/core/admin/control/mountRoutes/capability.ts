@@ -8,7 +8,9 @@ import {
 } from "@bernouy/cms-gateway/http/handlers";
 import { handleGatewayFileGet, handleGatewayImageGet } from "@bernouy/cms-gateway/media/handlers";
 import type { Middleware } from "@bernouy/http-runner";
+import { GatewayError } from "@bernouy/cms-gateway";
 import type { ControlCmsState } from "../types";
+import { authorizeControlPageCall } from "./pages/execution";
 
 export function mountControlCapabilityRoutes(state: ControlCmsState, guards: Middleware[]): void {
     if (!state.configuration.capabilityGateway) {
@@ -102,11 +104,42 @@ export async function handleControlCapabilityCall(request: Request, state: Contr
     } catch {
         return Response.json({ error: { code: "grant_unavailable" } }, { status: 503 });
     }
+    const identifiers = capabilityIdentifiers(request, state.runner.basePath);
+    if (!identifiers) {
+        return Response.json({ error: { code: "invalid_input" } }, { status: 400 });
+    }
+    let execution;
+    try {
+        execution = await authorizeControlPageCall(request, state, identifiers.contractId, identifiers.capabilityId);
+    } catch (error) {
+        const code = error instanceof GatewayError ? error.code : "internal_error";
+        const status = code === "not_authorized" ? 403 : code === "not_selected" ? 404 : 503;
+        return Response.json({ error: { code } }, { status, headers: { "cache-control": "private, no-store" } });
+    }
     return handleGatewayHttpCall(request, {
         siteId: configured.siteId,
         invoker: configured.invoker,
-        origin: "control",
+        origin: "page",
         actor: { kind: administrator ? "administrator" : "user", subjectId: subject.identifier },
+        execution,
         prefix: gatewayRoutePrefix(state.runner.basePath, CMS_CAPABILITY_CALL_ROUTE),
     });
+}
+
+function capabilityIdentifiers(
+    request: Request,
+    basePath: string,
+): { contractId: string; capabilityId: string } | null {
+    const prefix = gatewayRoutePrefix(basePath, CMS_CAPABILITY_CALL_ROUTE);
+    const pathname = new URL(request.url).pathname;
+    if (!pathname.startsWith(`${prefix}/`)) {
+        return null;
+    }
+    const parts = pathname.slice(prefix.length + 1).split("/");
+    try {
+        const [contractId, capabilityId] = parts.map(decodeURIComponent);
+        return parts.length === 2 && contractId && capabilityId ? { contractId, capabilityId } : null;
+    } catch {
+        return null;
+    }
 }

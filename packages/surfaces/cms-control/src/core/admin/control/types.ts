@@ -13,7 +13,7 @@ import type {
     Subject,
 } from "@bernouy/cms-auth";
 import type { PublicAuthRoutesConfig, OidcAuthHandlers } from "@bernouy/cms-auth/http";
-import type { CmsRepository } from "@bernouy/cms-content";
+import type { CmsRepository, SurfacePageRouteRegistry } from "@bernouy/cms-content";
 import type { BlobStore } from "@bernouy/blob-store";
 import type { CollectionMigrationService } from "@bernouy/cms-content/migrations";
 import type { CmsFileMutationJournal, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
@@ -42,6 +42,7 @@ export type ControlCmsOptions = Configuration & {
     collections?: {
         store: CollectionStore;
         siteId: string;
+        routes?: SurfacePageRouteRegistry;
         sources?: readonly CollectionRepositorySource[];
         migrations?: CollectionMigrationService;
     };

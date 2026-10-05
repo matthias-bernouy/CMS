@@ -7,6 +7,7 @@ import {
 } from "cms-control/core/admin/control/mountRoutes/capability";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
 import { CaptureRunner } from "./authPublicSupport";
+import { controlPageCollections } from "./security/collectionPageFixture";
 
 test("Control mounts a separate capability route with verified administrator identity", async () => {
     const calls: GatewayInvocation[] = [];
@@ -15,9 +16,19 @@ test("Control mounts a separate capability route with verified administrator ide
         runner,
         auth: { getSubject: async () => ({ identifier: "cms-admin-1" }) },
         configuration: {
+            collections: controlPageCollections(),
             capabilityGateway: {
                 siteId: "site-a",
                 isAdministrator: async () => true,
+                pageExecutions: {
+                    activate: async () => ({}),
+                    authorize: async () => ({
+                        planDigest: `sha256:${"a".repeat(64)}`,
+                        version: "1.0.0",
+                        digest: `sha256:${"b".repeat(64)}`,
+                        installationId: "provider-1",
+                    }),
+                },
                 invoker: {
                     invoke: async (invocation: GatewayInvocation) => {
                         calls.push(invocation);
@@ -33,13 +44,13 @@ test("Control mounts a separate capability route with verified administrator ide
     const response = await handler!(
         new Request("http://control/.cms/call/catalog/item.list", {
             method: "POST",
-            headers: { "content-type": "application/json" },
+            headers: { "content-type": "application/json", referer: "http://control/admin" },
             body: "{}",
         }),
     );
     expect(response.status).toBe(200);
     expect(calls[0]).toMatchObject({
-        origin: "control",
+        origin: "page",
         siteId: "site-a",
         actor: { kind: "administrator", subjectId: "cms-admin-1" },
     });

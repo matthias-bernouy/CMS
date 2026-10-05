@@ -21,7 +21,7 @@ import {
 import type { ControlAuthBackends, ControlCmsState } from "cms-control/core/admin/control/types";
 import { mountControlBrowserAssets } from "cms-control/core/admin/control/mountRoutes/assets";
 import { mountControlCapabilityRoutes } from "cms-control/core/admin/control/mountRoutes/capability";
-import { controlUnavailableResponse } from "cms-control/core/admin/control/mountRoutes/unavailable";
+import { mountCollectionControlPages } from "cms-control/core/admin/control/mountRoutes/pages";
 import { serveApi } from "cms-control/core/admin/registerEndpoints/serveApiFolder";
 import type { ControlCms } from "cms-control/ControlCms";
 import { createControlMaintenanceGuard } from "cms-control/core/admin/control/maintenance";
@@ -73,13 +73,7 @@ export function mountControlCmsRoutes(
     });
 
     runner.addEndpoint("GET", "/", () => redirect(`${cms.basePath}/admin`), [authGuard]);
-    runner.group(
-        "/admin",
-        (adminRunner) => {
-            adminRunner.setDefaultEndpoint("GET", controlUnavailableResponse);
-        },
-        [authGuard],
-    );
+    mountCollectionControlPages(state, [authGuard]);
     mountControlCapabilityRoutes(state, [authenticatedGuard, maintenanceGuard]);
     runner.group(
         CMS_FILES_ROUTE,

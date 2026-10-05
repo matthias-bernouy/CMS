@@ -3,6 +3,13 @@
     "surface": "control",
     "defaultPath": "/admin",
     "name": "page.overview.name",
-    "icon": "layout",
-    "description": "page.overview.description"
+    "icon": "pages",
+    "description": "page.overview.description",
+    "requires": [
+        {
+            "contractId": "ulvia.cms.pages",
+            "capabilityId": "list",
+            "versionRange": "^1.0.0"
+        }
+    ]
 }

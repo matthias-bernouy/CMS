@@ -11,7 +11,11 @@ import {
     MongoUsersRepository,
 } from "@bernouy/cms-auth/mongo";
 import { ValidatingCmsRepository } from "@bernouy/cms-content";
-import { MongoCmsRepository, MongoCollectionMigrationStorage } from "@bernouy/cms-content/mongo";
+import {
+    MongoCmsRepository,
+    MongoCollectionMigrationStorage,
+    MongoSurfacePageRouteRegistry,
+} from "@bernouy/cms-content/mongo";
 import { recoverFileMutations, ValidatingCmsFilesMetadata } from "@bernouy/cms-content/files";
 import { createLocalAuthorFileStores } from "./authorFiles";
 import { MongoCmsFileMutationJournal, MongoCmsFilesMetadata } from "@bernouy/cms-content/files/mongo";
@@ -63,6 +67,7 @@ export async function createCoreStores(env: RuntimeEnv) {
         (_method, args) => String(args[0]),
         COLLECTION_STORE_FENCED_MUTATIONS,
     );
+    const pageRoutes = new MongoSurfacePageRouteRegistry(db);
 
     const mongoFilesMetadata = new MongoCmsFilesMetadata(db);
     await mongoFilesMetadata.init();
@@ -93,6 +98,7 @@ export async function createCoreStores(env: RuntimeEnv) {
 
     return {
         collections,
+        pageRoutes,
         collectionMigrations,
         migrationStorage,
         mongo,

@@ -46,6 +46,7 @@ export async function mountProductionSurfaces(
             collections: {
                 store: core.collections,
                 siteId: "default",
+                routes: core.pageRoutes,
                 migrations: core.collectionMigrations,
                 sources: env.CMS_REPOSITORY_URL ? [new HttpCollectionRepository("local", env.CMS_REPOSITORY_URL)] : [],
             },

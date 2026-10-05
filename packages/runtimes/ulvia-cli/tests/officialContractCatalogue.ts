@@ -4,7 +4,9 @@ import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/cata
 
 export async function officialContractCatalogue(): Promise<InMemoryReleaseCatalogue> {
     const catalogue = new InMemoryReleaseCatalogue();
-    const path = resolve(import.meta.dir, "../../../official-repository/contracts/catalog.items/definition.json");
-    await catalogue.publish(await admitContractReleaseJson(await Bun.file(path).text()));
+    for (const contractId of ["catalog.items", "ulvia.cms.pages"]) {
+        const path = resolve(import.meta.dir, `../../../official-repository/contracts/${contractId}/definition.json`);
+        await catalogue.publish(await admitContractReleaseJson(await Bun.file(path).text()));
+    }
     return catalogue;
 }
