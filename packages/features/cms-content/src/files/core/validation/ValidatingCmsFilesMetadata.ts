@@ -34,6 +34,17 @@ export class ValidatingCmsFilesMetadata implements CmsFilesMetadataRepository {
         });
     }
 
+    commitFile(input: NewFile & { id: string; contentHash: string; blobKey: string }, expectedBlobKey: string | null) {
+        return this.inner.commitFile(
+            {
+                ...input,
+                name: validateItemName(input.name),
+                contentHash: validateContentHash(input.contentHash),
+            },
+            expectedBlobKey,
+        );
+    }
+
     async updateItem(id: string, patch: ItemPatch): Promise<FilesItem | null> {
         const next = patch.name !== undefined ? { ...patch, name: validateItemName(patch.name) } : patch;
         return this.inner.updateItem(id, next);
@@ -56,5 +67,8 @@ export class ValidatingCmsFilesMetadata implements CmsFilesMetadataRepository {
     }
     deleteItem(id: string, opts?: { recursive?: boolean }) {
         return this.inner.deleteItem(id, opts);
+    }
+    deleteItems(ids: readonly string[]) {
+        return this.inner.deleteItems(ids);
     }
 }

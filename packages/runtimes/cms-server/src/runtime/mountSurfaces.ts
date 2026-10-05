@@ -89,6 +89,7 @@ export async function mountProductionSurfaces(
         core.pats,
         core.credentials,
         { local: authentication.auth },
+        core.fileMutations,
     );
     await controlCms.ready;
 

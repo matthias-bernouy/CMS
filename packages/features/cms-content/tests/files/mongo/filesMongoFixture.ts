@@ -11,6 +11,7 @@ type FileDocument = {
     size?: number;
     mimeType?: string;
     contentHash?: string;
+    blobKey?: string;
 };
 type Filter = Record<string, unknown>;
 type Update = { $set?: Partial<FileDocument>; $setOnInsert?: Partial<FileDocument> };
@@ -158,6 +159,9 @@ function matches(document: FileDocument, filter: Filter): boolean {
         }
         if (expected && typeof expected === "object" && "$regex" in expected) {
             return new RegExp(String(expected.$regex), String(expected.$options ?? "")).test(String(actual));
+        }
+        if (expected && typeof expected === "object" && "$exists" in expected) {
+            return (actual !== undefined) === Boolean(expected.$exists);
         }
         return actual === expected;
     });

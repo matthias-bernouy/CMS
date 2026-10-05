@@ -76,11 +76,48 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
             size: input.size,
             mimeType: input.mimeType,
             contentHash: input.contentHash,
+            blobKey: input.blobKey,
             representationVersion: fileRepresentationVersion(input) ?? undefined,
             createdAt: existing?.createdAt ?? now,
             updatedAt: now,
         };
         this._items.set(id, item);
+        return cloneFileItem(item) as FileItem;
+    }
+
+    async commitFile(
+        input: NewFile & { id: string; contentHash: string; blobKey: string },
+        expectedBlobKey: string | null,
+    ): Promise<FileItem | null> {
+        const existing = this._items.get(input.id);
+        if (existing) {
+            if (existing.type !== "file") {
+                return null;
+            }
+            const currentBlobKey = existing.blobKey ?? existing.id;
+            if (currentBlobKey !== expectedBlobKey) {
+                return fileMatches(existing, input) ? (cloneFileItem(existing) as FileItem) : null;
+            }
+        } else if (expectedBlobKey !== null) {
+            return null;
+        }
+        this._assertParent(input.parentId);
+        this._assertNoClash(input.parentId, input.name, input.id);
+        const now = new Date();
+        const item: FileItem = {
+            id: input.id,
+            type: "file",
+            name: input.name,
+            parentId: input.parentId,
+            size: input.size,
+            mimeType: input.mimeType,
+            contentHash: input.contentHash,
+            blobKey: input.blobKey,
+            representationVersion: fileRepresentationVersion(input) ?? undefined,
+            createdAt: existing?.createdAt ?? now,
+            updatedAt: now,
+        };
+        this._items.set(item.id, item);
         return cloneFileItem(item) as FileItem;
     }
 
@@ -145,6 +182,12 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
         return { deletedFileIds: subtree.filter((s) => s.type === "file").map((s) => s.id) };
     }
 
+    async deleteItems(ids: readonly string[]): Promise<void> {
+        for (const id of ids) {
+            this._items.delete(id);
+        }
+    }
+
     private _assertParent(parentId: string | null): void {
         if (parentId === null) {
             return;
@@ -172,4 +215,15 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
             cur = this._items.get(cur)?.parentId ?? null;
         }
     }
+}
+
+function fileMatches(item: FileItem, input: NewFile & { id: string; contentHash: string; blobKey: string }): boolean {
+    return (
+        item.name === input.name &&
+        item.parentId === input.parentId &&
+        item.size === input.size &&
+        item.mimeType === input.mimeType &&
+        item.contentHash === input.contentHash &&
+        item.blobKey === input.blobKey
+    );
 }

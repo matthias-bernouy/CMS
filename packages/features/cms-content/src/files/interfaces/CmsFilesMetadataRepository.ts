@@ -7,10 +7,9 @@
  * parents; it is never stored. So renaming or moving an item is a single-row
  * update and never touches the bytes.
  *
- * Metadata-only. The bytes live in a separate blob layer (wired later); they
- * are keyed by the item's `id` — `id` IS the blob key, so this repo stores no
- * blob pointer. `createFile` is what the (future) upload flow calls once it has
- * stored the bytes under the new id.
+ * Metadata-only. Bytes live in a separate blob layer. Legacy records use the
+ * item id as their blob key; current writes publish an immutable `blobKey`
+ * pointer through the recoverable lifecycle journal.
  *
  * Names are unique among the direct children of a folder (filesystem-like):
  * `createFolder` / `createFile` / `updateItem` reject a clash in the
@@ -20,7 +19,7 @@
 export type FilesItemType = "folder" | "file";
 
 type BaseItem = {
-    id: string; // opaque, stable; also the blob key for files
+    id: string; // opaque and stable; legacy files also use it as their blob key
     name: string;
     parentId: string | null; // null = tree root
     createdAt: Date;
@@ -37,6 +36,8 @@ export type FileItem = BaseItem & {
     contentHash?: string;
     /** Fingerprint of bytes, size and MIME used by immutable HTTP URLs. */
     representationVersion?: string;
+    /** Immutable/generation-qualified key of the currently published bytes. Legacy records fall back to `id`. */
+    blobKey?: string;
 };
 
 export type FilesItem = FolderItem | FileItem;
@@ -75,6 +76,7 @@ export type NewFile = {
     /** sha256-hex of the bytes, supplied by the upload flow (which sees them).
      *  `localFs` ignores it — it derives the hash from disk via its registry. */
     contentHash?: string;
+    blobKey?: string;
 };
 export type ItemPatch = { name?: string; parentId?: string | null };
 
@@ -94,9 +96,16 @@ export interface CmsFilesMetadataRepository extends PublicFileMetadataLookup {
 
     // WRITE
     createFolder(input: NewFolder): Promise<FolderItem>;
-    /** Persist a file record. The upload flow calls this AFTER storing the bytes
-     *  under the returned `id`. */
+    /** Persist a file record for direct adapters and legacy callers. Recoverable
+     * lifecycle writes use `commitFile` instead. */
     createFile(input: NewFile): Promise<FileItem>;
+    /** Atomically create or replace the complete file pointer when the current
+     * blob key still matches `expectedBlobKey`. `null` means the id must not
+     * exist. Repeating an already committed target is idempotent. */
+    commitFile(
+        input: NewFile & { id: string; contentHash: string; blobKey: string },
+        expectedBlobKey: string | null,
+    ): Promise<FileItem | null>;
     /** Rename and/or move. Rejects a name clash in the destination, or moving a
      *  folder into its own subtree. Returns `null` when `id` is unknown. */
     updateItem(id: string, patch: ItemPatch): Promise<FilesItem | null>;
@@ -110,4 +119,6 @@ export interface CmsFilesMetadataRepository extends PublicFileMetadataLookup {
     /** Delete an item. `recursive` is required to delete a non-empty folder.
      *  Returns the ids of the deleted FILES so the caller can purge their bytes. */
     deleteItem(id: string, opts?: { recursive?: boolean }): Promise<{ deletedFileIds: string[] }>;
+    /** Idempotent internal deletion used by the durable file mutation journal. */
+    deleteItems(ids: readonly string[]): Promise<void>;
 }

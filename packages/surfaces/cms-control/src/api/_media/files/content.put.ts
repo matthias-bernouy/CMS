@@ -2,6 +2,9 @@ import type { ControlCms } from "cms-control/ControlCms";
 import { updateFileContent, MAX_UPLOAD_BYTES } from "@bernouy/cms-content/files";
 import { invalidatePagesReferencingFile } from "cms-control/core/admin/server/cache/invalidation";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
+import { readBoundedFormData } from "@bernouy/http-runner";
+
+const MAX_MULTIPART_OVERHEAD_BYTES = 1024 * 1024;
 
 /** Hard cap on a single uploaded file, enforced server-side (mirrors upload). */
 
@@ -12,11 +15,7 @@ import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
  * new `?v=` token. 404 when the id is unknown or not a file.
  */
 export default async function updateFileContentEndpoint(req: Request, cms: ControlCms) {
-    const declaredLength = Number(req.headers.get("content-length"));
-    if (Number.isFinite(declaredLength) && declaredLength > MAX_UPLOAD_BYTES) {
-        throw new InvalidParam("file", `Body exceeds the ${MAX_UPLOAD_BYTES}-byte limit.`);
-    }
-    const form = await req.formData();
+    const form = await readBoundedFormData(req, MAX_UPLOAD_BYTES + MAX_MULTIPART_OVERHEAD_BYTES);
     const file = form.get("file");
     if (!(file instanceof File)) {
         throw new InvalidParam("file", "multipart `file` expected.");
@@ -27,7 +26,7 @@ export default async function updateFileContentEndpoint(req: Request, cms: Contr
         throw new InvalidParam("id", "`id` of the file to update is required.");
     }
 
-    const item = await updateFileContent(cms.filesMetadata, cms.filesBlob, id, file);
+    const item = await updateFileContent(cms.filesMetadata, cms.filesBlob, id, file, cms.fileMutations);
     if (!item) {
         return new Response("Not found", { status: 404 });
     }

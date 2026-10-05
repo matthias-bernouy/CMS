@@ -34,7 +34,7 @@ export async function optimizePageImages(
                 continue;
             }
 
-            const stream = await deps.sourceBlob.get(item.id);
+            const stream = await deps.sourceBlob.get(item.blobKey ?? item.id);
             if (!stream) {
                 continue;
             }

@@ -86,7 +86,7 @@ describe("LocalFsCmsFiles (filesystem-native, uuid id + registry)", () => {
         );
     });
 
-    test("updateFileContent swaps bytes in place: same id + name, refreshed hash (memory store)", async () => {
+    test("updateFileContent atomically swaps the immutable byte pointer (memory store)", async () => {
         const meta = new InMemoryCmsFilesMetadata();
         const blob = new MemoryBlobStore();
         const f = await uploadFile(meta, blob, file("logo.png", "V1"), null);
@@ -96,7 +96,8 @@ describe("LocalFsCmsFiles (filesystem-native, uuid id + registry)", () => {
         expect(updated?.size).toBe("V2-longer".length);
         expect(updated?.contentHash).toBe(await sha256Hex(new TextEncoder().encode("V2-longer")));
         expect(updated?.contentHash).not.toBe(f.contentHash);
-        expect(await read(await blob.get(f.id))).toBe("V2-longer"); // bytes replaced
+        expect(await read(await blob.get(updated!.blobKey!))).toBe("V2-longer");
+        expect(await blob.get(f.id)).toBeNull();
     });
 
     test("updateFileContent on localFs re-derives the hash from disk; null for unknown id", async () => {

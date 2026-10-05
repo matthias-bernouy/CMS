@@ -19,8 +19,15 @@ export type {
     NewFile,
     ItemPatch,
 } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
+export type {
+    CmsFileMutation,
+    CmsFileMutationJournal,
+    FileDeleteMutation,
+    FileWriteMutation,
+} from "cms-content/files/interfaces/CmsFileMutationJournal";
 // ── In-memory implementations and validation ──────────────────────────
 export { InMemoryCmsFilesMetadata } from "cms-content/files/default-implementation/memory/InMemoryCmsFilesMetadata";
+export { InMemoryCmsFileMutationJournal } from "cms-content/files/default-implementation/memory/InMemoryCmsFileMutationJournal";
 export { ValidatingCmsFilesMetadata } from "cms-content/files/core/validation/ValidatingCmsFilesMetadata";
 
 // ── Core ───────────────────────────────────────────────────────────────
@@ -32,7 +39,8 @@ export {
     FileValidationError,
 } from "cms-content/files/core/validation/validation";
 
-// ── File lifecycle (domain rules — create w/ rollback, in-place update, tree delete) ─
+// ── Recoverable file lifecycle and durable pointer transitions ─────────
 export { uploadFile } from "cms-content/files/core/lifecycle/uploadFile";
 export { updateFileContent } from "cms-content/files/core/lifecycle/updateFileContent";
 export { deleteFileTree } from "cms-content/files/core/lifecycle/deleteFileTree";
+export { recoverFileMutations } from "cms-content/files/core/lifecycle/fileMutationRecovery";

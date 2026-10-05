@@ -11,6 +11,6 @@ export default async function deleteFile(req: Request, cms: ControlCms) {
         throw new MissingParam("id");
     }
     const recursive = url.searchParams.get("recursive") === "true";
-    await deleteFileTree(cms.filesMetadata, cms.filesBlob, id, recursive);
+    await deleteFileTree(cms.filesMetadata, cms.filesBlob, id, recursive, cms.fileMutations);
     return new Response(null, { status: 204 });
 }

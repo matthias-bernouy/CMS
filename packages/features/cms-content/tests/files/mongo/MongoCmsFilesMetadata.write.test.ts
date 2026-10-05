@@ -47,6 +47,31 @@ describe("MongoCmsFilesMetadata mutations", () => {
         expect(await repository.updateFileContent("missing", { size: 1, mimeType: "x", contentHash: "x" })).toBeNull();
     });
 
+    test("commits an immutable blob pointer only from the expected previous pointer", async () => {
+        const { repository } = createMongoFilesRepository();
+        await repository.createFile({
+            id: "stable-id",
+            name: "hero.png",
+            parentId: null,
+            size: 1,
+            mimeType: "image/png",
+            contentHash: "hash-1",
+        });
+        const target = {
+            id: "stable-id",
+            name: "hero.png",
+            parentId: null,
+            size: 2,
+            mimeType: "image/webp",
+            contentHash: "hash-2",
+            blobKey: "stable-id/versions/two",
+        };
+
+        expect(await repository.commitFile(target, "stable-id")).toMatchObject(target);
+        expect(await repository.commitFile({ ...target, blobKey: "unexpected" }, "stable-id")).toBeNull();
+        expect(await repository.commitFile(target, "stable-id")).toMatchObject(target);
+    });
+
     test("moves folders only outside their own subtree", async () => {
         const { repository } = createMongoFilesRepository();
         const images = await repository.createFolder({ name: "images", parentId: null });

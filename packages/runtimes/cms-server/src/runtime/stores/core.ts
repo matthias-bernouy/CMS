@@ -12,9 +12,9 @@ import {
 } from "@bernouy/cms-auth/mongo";
 import { ValidatingCmsRepository } from "@bernouy/cms-content";
 import { MongoCmsRepository, MongoCollectionMigrationStorage } from "@bernouy/cms-content/mongo";
-import { ValidatingCmsFilesMetadata } from "@bernouy/cms-content/files";
+import { recoverFileMutations, ValidatingCmsFilesMetadata } from "@bernouy/cms-content/files";
 import { createLocalAuthorFileStores } from "./authorFiles";
-import { MongoCmsFilesMetadata } from "@bernouy/cms-content/files/mongo";
+import { MongoCmsFileMutationJournal, MongoCmsFilesMetadata } from "@bernouy/cms-content/files/mongo";
 import { EnvelopeSecretCrypto, LocalKekProvider } from "@bernouy/envelope-crypto";
 import { createFieldCrypto, MongoDekRepository } from "@bernouy/envelope-crypto/mongo";
 import { InMemoryCache } from "@bernouy/http-runner";
@@ -23,6 +23,7 @@ import { ValidatingSecretStore } from "@bernouy/secret-store";
 import { EncryptedMongoSecretStore } from "@bernouy/secret-store/mongo";
 import { MongoClient } from "mongodb";
 import type { RuntimeEnv } from "../../runtimeEnv";
+import { CMS_REPOSITORY_FENCED_MUTATIONS, COLLECTION_STORE_FENCED_MUTATIONS } from "./migrationWritePolicy";
 
 const SCOPE_ID = "default";
 
@@ -50,43 +51,26 @@ export async function createCoreStores(env: RuntimeEnv) {
         rollbackRetentionCount: env.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION,
         onRetentionError: (error) => console.error("Collection migration retention cleanup failed", error),
     });
-    const repo = withCollectionMigrationWriteFence(migrationRepo, migrationStorage, SCOPE_ID, [
-        "updateSiteBlocCollection",
-        "createSiteBlocCollection",
-        "createBloc",
-        "replaceBloc",
-        "createSiteBloc",
-        "saveSiteBlocDraft",
-        "publishSiteBloc",
-        "archiveSiteBloc",
-        "restoreSiteBloc",
-        "insertPage",
-        "updatePage",
-        "deletePage",
-        "setPagePaths",
-        "deletePageWithAlternative",
-        "updateSystem",
-    ]);
+    const repo = withCollectionMigrationWriteFence(
+        migrationRepo,
+        migrationStorage,
+        SCOPE_ID,
+        CMS_REPOSITORY_FENCED_MUTATIONS,
+    );
     const collections = withCollectionMigrationWriteFence(
         migrationCollections,
         migrationStorage,
         (_method, args) => String(args[0]),
-        [
-            "install",
-            "installMany",
-            "upgrade",
-            "commitMigration",
-            "restoreMigration",
-            "saveConfiguration",
-            "uninstall",
-            "saveTexts",
-        ],
+        COLLECTION_STORE_FENCED_MUTATIONS,
     );
 
     const mongoFilesMetadata = new MongoCmsFilesMetadata(db);
     await mongoFilesMetadata.init();
     const filesMetadata = new ValidatingCmsFilesMetadata(mongoFilesMetadata);
     const { filesBlob, variantStore, sitemapStore } = createLocalAuthorFileStores(env.CMS_FILES_DIR);
+    const fileMutations = new MongoCmsFileMutationJournal(db);
+    await fileMutations.init();
+    await recoverFileMutations(filesMetadata, filesBlob, fileMutations);
 
     const users = new MongoUsersRepository(db, fieldCrypto);
     const identityProviders = new MongoIdentityProviderRepository(db);
@@ -116,6 +100,7 @@ export async function createCoreStores(env: RuntimeEnv) {
         repo,
         filesMetadata,
         filesBlob,
+        fileMutations,
         variantStore,
         sitemapStore,
         users,

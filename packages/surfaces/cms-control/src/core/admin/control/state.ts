@@ -9,7 +9,11 @@ import type { CmsRepository } from "@bernouy/cms-content";
 import type { BlobStore } from "@bernouy/blob-store";
 import { InMemoryDashboardAssignmentRepository, InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import { InMemoryIdentityService } from "@bernouy/cms-gateway/identity";
-import type { CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
+import {
+    InMemoryCmsFileMutationJournal,
+    type CmsFileMutationJournal,
+    type CmsFilesMetadataRepository,
+} from "@bernouy/cms-content/files";
 import { InMemoryCache, type Cache, type Runner } from "@bernouy/http-runner";
 import { InMemorySecretStore, type SecretStore, ValidatingSecretStore } from "@bernouy/secret-store";
 import type { ControlAuthBackends, ControlCmsOptions, ControlCmsState } from "cms-control/core/admin/control/types";
@@ -23,6 +27,7 @@ export type ControlCmsConstructorInput = {
     secrets?: SecretStore;
     filesMetadata?: CmsFilesMetadataRepository;
     filesBlob?: BlobStore;
+    fileMutations?: CmsFileMutationJournal;
     users?: UsersRepository;
     identityProviders?: IdentityProviderRepository;
     pats?: PatRepository;
@@ -41,6 +46,9 @@ export function createControlCmsState(input: ControlCmsConstructorInput): Contro
         secrets: input.secrets || new ValidatingSecretStore(new InMemorySecretStore()),
         filesMetadata: input.filesMetadata ?? null,
         filesBlob: input.filesBlob ?? null,
+        fileMutations:
+            input.fileMutations ??
+            (input.filesMetadata && input.filesBlob ? new InMemoryCmsFileMutationJournal() : null),
         users: input.users ?? null,
         identityProviders: input.identityProviders ?? null,
         pats: input.pats ?? null,

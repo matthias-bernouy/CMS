@@ -63,6 +63,17 @@ export class LocalFsCmsFiles implements CmsFilesMetadataRepository, BlobStore {
         return this.withRegistry(() => createFile(this.registry, input));
     }
 
+    async commitFile(
+        input: NewFile & { id: string; contentHash: string; blobKey: string },
+        expectedBlobKey: string | null,
+    ): Promise<FileItem | null> {
+        const current = await this.getItem(input.id);
+        if ((current?.type === "file" ? current.id : null) !== expectedBlobKey) {
+            return null;
+        }
+        return this.createFile(input);
+    }
+
     updateItem(id: string, patch: ItemPatch): Promise<FilesItem | null> {
         return this.withRegistry(() => updateItem(this.registry, id, patch));
     }
@@ -74,6 +85,12 @@ export class LocalFsCmsFiles implements CmsFilesMetadataRepository, BlobStore {
 
     deleteItem(id: string, options: { recursive?: boolean } = {}): Promise<{ deletedFileIds: string[] }> {
         return this.withRegistry(() => deleteItem(this.registry, id, options));
+    }
+
+    async deleteItems(ids: readonly string[]): Promise<void> {
+        for (const id of ids) {
+            await this.deleteItem(id, { recursive: true });
+        }
     }
 
     put(key: string, data: BlobInput): Promise<{ size: number }> {

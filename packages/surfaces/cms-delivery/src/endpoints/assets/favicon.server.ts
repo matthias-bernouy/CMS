@@ -37,7 +37,7 @@ async function configuredFavicon(req: Request, delivery: DeliveryCms): Promise<R
     if (!item || item.type !== "file" || !item.mimeType.startsWith("image/") || !isInlineSafeFileType(item.mimeType)) {
         return null;
     }
-    const stream = await blob.get(item.id);
+    const stream = await blob.get(item.blobKey ?? item.id);
     if (!stream) {
         return null;
     }

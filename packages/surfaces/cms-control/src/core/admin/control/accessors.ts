@@ -12,6 +12,7 @@ export const controlCmsAccessors = {
     identities: (state: ControlCmsState) => state.identities,
     filesMetadata: (state: ControlCmsState) => required(state.filesMetadata, "files metadata backend not configured"),
     filesBlob: (state: ControlCmsState) => required(state.filesBlob, "files blob backend not configured"),
+    fileMutations: (state: ControlCmsState) => required(state.fileMutations, "file mutation journal not configured"),
     users: (state: ControlCmsState) => required(state.users, "users repository not configured"),
     identityProviders: (state: ControlCmsState) =>
         required(state.identityProviders, "identity providers repository not configured"),

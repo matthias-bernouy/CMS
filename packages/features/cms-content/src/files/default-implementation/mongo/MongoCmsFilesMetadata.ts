@@ -80,6 +80,76 @@ export class MongoCmsFilesMetadata implements CmsFilesMetadataRepository {
         return createMongoFile(this.col, input);
     }
 
+    async commitFile(
+        input: NewFile & { id: string; contentHash: string; blobKey: string },
+        expectedBlobKey: string | null,
+    ): Promise<FileItem | null> {
+        const existing = await this.col.findOne({ _id: input.id });
+        if (!existing) {
+            if (expectedBlobKey !== null) {
+                return null;
+            }
+            await assertMongoParent(this.col, input.parentId);
+            const now = new Date();
+            const document: FilesItemDocument = {
+                _id: input.id,
+                type: "file",
+                name: input.name,
+                parentId: input.parentId,
+                size: input.size,
+                mimeType: input.mimeType,
+                contentHash: input.contentHash,
+                blobKey: input.blobKey,
+                createdAt: now,
+                updatedAt: now,
+            };
+            try {
+                await this.col.insertOne(document);
+                return fromDocument(document) as FileItem;
+            } catch (error) {
+                const winner = await this.col.findOne({ _id: input.id });
+                if (winner?.type === "file" && fileDocumentMatches(winner, input)) {
+                    return fromDocument(winner) as FileItem;
+                }
+                throw fileNameClashOr(error);
+            }
+        }
+        if (existing.type !== "file") {
+            return null;
+        }
+        if (fileDocumentMatches(existing, input)) {
+            return fromDocument(existing) as FileItem;
+        }
+        if ((existing.blobKey ?? existing._id) !== expectedBlobKey) {
+            return null;
+        }
+        await assertMongoParent(this.col, input.parentId);
+        const blobFilter = existing.blobKey
+            ? { _id: input.id, blobKey: expectedBlobKey }
+            : { _id: input.id, blobKey: { $exists: false } };
+        try {
+            const document = await this.col.findOneAndUpdate(
+                blobFilter,
+                {
+                    $set: {
+                        type: "file",
+                        name: input.name,
+                        parentId: input.parentId,
+                        size: input.size,
+                        mimeType: input.mimeType,
+                        contentHash: input.contentHash,
+                        blobKey: input.blobKey,
+                        updatedAt: new Date(),
+                    },
+                },
+                { returnDocument: "after" },
+            );
+            return document ? (fromDocument(document) as FileItem) : null;
+        } catch (error) {
+            throw fileNameClashOr(error);
+        }
+    }
+
     async updateItem(id: string, patch: ItemPatch): Promise<FilesItem | null> {
         const cur = await this.col.findOne({ _id: id });
         if (!cur) {
@@ -141,4 +211,24 @@ export class MongoCmsFilesMetadata implements CmsFilesMetadataRepository {
         await this.col.deleteMany({ _id: { $in: [id, ...subtree.map((s) => s.id)] } });
         return { deletedFileIds: subtree.filter((s) => s.type === "file").map((s) => s.id) };
     }
+
+    async deleteItems(ids: readonly string[]): Promise<void> {
+        if (ids.length > 0) {
+            await this.col.deleteMany({ _id: { $in: [...ids] } });
+        }
+    }
+}
+
+function fileDocumentMatches(
+    document: FilesItemDocument & { type: "file" },
+    input: NewFile & { id: string; contentHash: string; blobKey: string },
+): boolean {
+    return (
+        document.name === input.name &&
+        document.parentId === input.parentId &&
+        document.size === input.size &&
+        document.mimeType === input.mimeType &&
+        document.contentHash === input.contentHash &&
+        document.blobKey === input.blobKey
+    );
 }

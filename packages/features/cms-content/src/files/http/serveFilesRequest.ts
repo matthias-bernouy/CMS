@@ -139,13 +139,13 @@ async function serveFile(blob: BlobReader, item: FileItem, req: Request, cacheCo
         return new Response(null, { status: 416, headers });
     }
     if (req.method === "HEAD") {
-        const stored = await blob.head(item.id);
+        const stored = await blob.head(item.blobKey ?? item.id);
         if (!stored || stored.size !== item.size) {
             return notFound();
         }
         return new Response(null, { headers });
     }
-    const stream = await blob.get(item.id, range ? { range } : undefined);
+    const stream = await blob.get(item.blobKey ?? item.id, range ? { range } : undefined);
     if (!stream) {
         return notFound();
     }

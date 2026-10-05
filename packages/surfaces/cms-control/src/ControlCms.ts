@@ -8,7 +8,7 @@ import type {
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import type { BlobStore } from "@bernouy/blob-store";
 import type { CmsRepository } from "@bernouy/cms-content";
-import type { CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
+import type { CmsFileMutationJournal, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { SecretStore } from "@bernouy/secret-store";
 import { join } from "node:path";
@@ -37,6 +37,7 @@ export class ControlCms {
         pats?: PatRepository,
         credentials?: LocalCredentialStore,
         authBackends: ControlAuthBackends = {},
+        fileMutations?: CmsFileMutationJournal,
     ) {
         const state = createControlCmsState({
             configuration,
@@ -52,6 +53,7 @@ export class ControlCms {
             pats,
             credentials,
             authBackends,
+            fileMutations,
         });
         this.state = state;
         this.ready = mountControlCmsRoutes(this, state, authBackends, join(__dirname, "./api"));
@@ -89,6 +91,9 @@ export class ControlCms {
     }
     get filesBlob() {
         return controlCmsAccessors.filesBlob(this.state);
+    }
+    get fileMutations() {
+        return controlCmsAccessors.fileMutations(this.state);
     }
     get users() {
         return controlCmsAccessors.users(this.state);

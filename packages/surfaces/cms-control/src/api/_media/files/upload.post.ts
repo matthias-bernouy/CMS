@@ -1,6 +1,9 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { uploadFile, MAX_UPLOAD_BYTES } from "@bernouy/cms-content/files";
 import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
+import { readBoundedFormData } from "@bernouy/http-runner";
+
+const MAX_MULTIPART_OVERHEAD_BYTES = 1024 * 1024;
 
 /** POST /api/files/upload (multipart: `file` + optional `parentId` + optional
  *  `id`) — store a file's bytes and create its metadata record. The CLI push
@@ -9,12 +12,8 @@ import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 export default async function uploadFileEndpoint(req: Request, cms: ControlCms) {
     // Reject an oversized body via Content-Length BEFORE formData() buffers the
     // whole multipart envelope into memory — a perf guard. The authoritative
-    // The size rule lives in `uploadFile` (cms-content/files) and is enforced on the actual bytes.
-    const declaredLength = Number(req.headers.get("content-length"));
-    if (Number.isFinite(declaredLength) && declaredLength > MAX_UPLOAD_BYTES) {
-        throw new InvalidParam("file", `Body exceeds the ${MAX_UPLOAD_BYTES}-byte limit.`);
-    }
-    const form = await req.formData();
+    // size rule lives in `uploadFile` and is enforced on the actual file bytes.
+    const form = await readBoundedFormData(req, MAX_UPLOAD_BYTES + MAX_MULTIPART_OVERHEAD_BYTES);
     const file = form.get("file");
     if (!(file instanceof File)) {
         throw new InvalidParam("file", "multipart `file` expected.");
@@ -23,6 +22,6 @@ export default async function uploadFileEndpoint(req: Request, cms: ControlCms) 
     const parentId = typeof parentRaw === "string" && parentRaw && parentRaw !== "null" ? parentRaw : null;
     const idRaw = form.get("id");
     const id = typeof idRaw === "string" && idRaw ? idRaw : undefined;
-    const item = await uploadFile(cms.filesMetadata, cms.filesBlob, file, parentId, id);
+    const item = await uploadFile(cms.filesMetadata, cms.filesBlob, file, parentId, id, cms.fileMutations);
     return Response.json(item, { status: 201 });
 }

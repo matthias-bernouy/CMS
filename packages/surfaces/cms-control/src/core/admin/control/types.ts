@@ -17,7 +17,7 @@ import type { CmsRepository } from "@bernouy/cms-content";
 import type { BlobStore } from "@bernouy/blob-store";
 import type { CollectionMigrationService } from "@bernouy/cms-content/migrations";
 import type { DashboardAssignmentRepository, DashboardRepository } from "@bernouy/cms-dashboards";
-import type { CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
+import type { CmsFileMutationJournal, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { GatewayCapabilityCatalogue } from "@bernouy/cms-gateway";
@@ -107,6 +107,7 @@ export type ControlCmsState = {
     secrets: SecretStore;
     filesMetadata: CmsFilesMetadataRepository | null;
     filesBlob: BlobStore | null;
+    fileMutations: CmsFileMutationJournal | null;
     users: UsersRepository | null;
     identityProviders: IdentityProviderRepository | null;
     pats: PatRepository | null;

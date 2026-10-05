@@ -84,7 +84,7 @@ export async function serveVariantRequest(
     if (!RASTER_FALLBACK_TYPES.has(item.mimeType)) {
         return notFound();
     }
-    const original = await deps.sourceBlob.get(item.id);
+    const original = await deps.sourceBlob.get(item.blobKey ?? item.id);
     if (!original) {
         return notFound();
     }

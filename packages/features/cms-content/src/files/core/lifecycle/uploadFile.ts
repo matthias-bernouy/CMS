@@ -1,28 +1,106 @@
-import type { CmsFilesMetadataRepository, FileItem } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
+import { randomUUIDv7 } from "bun";
 import type { BlobStore } from "@bernouy/blob-store";
 import { sha256Hex } from "@bernouy/binary-media";
 import { assertFileMediaType } from "cms-content/files/core/media/fileIntegrity";
+import { fileMutationJournal, recoverFileMutation } from "cms-content/files/core/lifecycle/fileMutationRecovery";
 import { validateUploadSize } from "cms-content/files/core/validation/validation";
+import type { CmsFileMutationJournal } from "cms-content/files/interfaces/CmsFileMutationJournal";
+import type { CmsFilesMetadataRepository, FileItem } from "cms-content/files/interfaces/CmsFilesMetadataRepository";
 
-/**
- * Upload a file: create its metadata record (which mints the id, or adopts the
- * supplied `id`), then store the bytes under that id (`id` IS the blob key).
- * Metadata-first so we have the key; on a blob failure the record is rolled back,
- * so we never leave a file record without its bytes.
- *
- * `id` is optional: UI uploads omit it (a fresh id is minted); the CLI push
- * passes the dev registry uuid so the remote `_id` matches dev — keeping
- * `by-id` URLs stable across the push.
- */
 export async function uploadFile(
     metadata: CmsFilesMetadataRepository,
     blob: BlobStore,
     file: File,
     parentId: string | null,
     id?: string,
+    journal: CmsFileMutationJournal = fileMutationJournal(metadata),
 ): Promise<FileItem> {
-    // Read the bytes once: hash them for `contentHash` AND store them, so we
-    // never re-read and the hash always matches what `put` writes.
+    if ((metadata as unknown) === blob) {
+        return legacyUpload(metadata, blob, file, parentId, id);
+    }
+    validateUploadSize(file.size);
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const mimeType = file.type || "application/octet-stream";
+    assertFileMediaType(mimeType, bytes);
+    const contentHash = await sha256Hex(bytes);
+    const resourceId = id ?? randomUUIDv7();
+    const pending = await journal.find(resourceId);
+    if (pending) {
+        await recoverFileMutation(metadata, blob, journal, pending);
+    }
+    const existing = await metadata.getItem(resourceId);
+    if (existing?.type === "folder") {
+        throw new Error("A folder already uses the requested file id");
+    }
+    const operationId = randomUUIDv7();
+    const previousBlobKey = existing ? (existing.blobKey ?? existing.id) : null;
+    const blobKey = existing ? `${resourceId}/versions/${operationId}` : resourceId;
+    const target = {
+        id: resourceId,
+        name: file.name,
+        parentId,
+        size: file.size,
+        mimeType,
+        contentHash,
+        blobKey,
+    };
+    if (
+        !(await journal.begin({
+            id: operationId,
+            kind: "write",
+            resourceId,
+            previousBlobKey,
+            target,
+            createdAt: new Date().toISOString(),
+        }))
+    ) {
+        throw new Error("Another file mutation is already in progress");
+    }
+
+    try {
+        await blob.put(blobKey, bytes);
+    } catch (error) {
+        await discardUnpublishedBlob(blob, journal, operationId, blobKey);
+        throw error;
+    }
+    const item = await metadata.commitFile(target, previousBlobKey);
+    if (!item) {
+        await blob.delete(blobKey);
+        await journal.complete(operationId);
+        throw new Error("The file changed while its bytes were being stored");
+    }
+    if (previousBlobKey && previousBlobKey !== blobKey) {
+        try {
+            await blob.delete(previousBlobKey);
+        } catch {
+            return item;
+        }
+    }
+    await journal.complete(operationId);
+    return item;
+}
+
+async function discardUnpublishedBlob(
+    blob: BlobStore,
+    journal: CmsFileMutationJournal,
+    operationId: string,
+    blobKey: string,
+): Promise<void> {
+    try {
+        await blob.delete(blobKey);
+        await journal.complete(operationId);
+    } catch {
+        // Recovery keeps the durable intent until the blob backend is available.
+    }
+}
+
+async function legacyUpload(
+    metadata: CmsFilesMetadataRepository,
+    blob: BlobStore,
+    file: File,
+    parentId: string | null,
+    id?: string,
+): Promise<FileItem> {
     validateUploadSize(file.size);
     const bytes = new Uint8Array(await file.arrayBuffer());
     const mimeType = file.type || "application/octet-stream";
@@ -37,9 +115,9 @@ export async function uploadFile(
     });
     try {
         await blob.put(item.id, bytes);
-    } catch (err) {
-        await metadata.deleteItem(item.id).catch(() => {}); // rollback, best-effort
-        throw err;
+    } catch (error) {
+        await metadata.deleteItem(item.id).catch(() => undefined);
+        throw error;
     }
     return item;
 }
