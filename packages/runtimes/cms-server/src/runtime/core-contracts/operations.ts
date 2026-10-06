@@ -1,4 +1,4 @@
-import type { CoreCapabilityRegistry } from "@bernouy/cms-content";
+import { CoreCapabilityDispatchError, type CoreCapabilityRegistry } from "@bernouy/cms-content";
 import type { CoreStores } from "../stores/core";
 import type { CoreOperationExecutor } from "../core-operations/CoreOperationExecutor";
 
@@ -7,11 +7,11 @@ export function registerOperationCapabilities(
     core: CoreStores,
     operations?: CoreOperationExecutor,
 ): void {
-    dispatcher.register("ulvia.cms.operations", "status", async (input) => {
+    dispatcher.register("ulvia.cms.operations", "status", async (input, context) => {
         const limit = Number.isSafeInteger(input.limit) ? Number(input.limit) : 20;
         const [active, audits] = await Promise.all([
-            core.collectionMigrations.getActive("default"),
-            core.collectionMigrations.listAudits("default", limit),
+            core.collectionMigrations.getActive(context.siteId),
+            core.collectionMigrations.listAudits(context.siteId, limit),
         ]);
         return {
             core: "ready",
@@ -31,7 +31,7 @@ export function registerOperationCapabilities(
     });
     dispatcher.register("ulvia.cms.operations", "list", async (input, context) => {
         if (!operations) {
-            throw new Error("Core operation store is unavailable");
+            throw new CoreCapabilityDispatchError("CORE_UNAVAILABLE", 503);
         }
         const limit = Number.isSafeInteger(input.limit) ? Number(input.limit) : 20;
         const page = await operations.store.list(
@@ -46,11 +46,11 @@ export function registerOperationCapabilities(
     });
     dispatcher.register("ulvia.cms.operations", "get", async (input, context) => {
         if (!operations || typeof input.operationId !== "string") {
-            throw new Error("Core operation store is unavailable");
+            throw new CoreCapabilityDispatchError("INVALID_INPUT", 422);
         }
         const operation = await operations.store.get(context.siteId, input.operationId);
         if (!operation) {
-            throw new Error("Core operation is unavailable");
+            throw new CoreCapabilityDispatchError("NOT_FOUND", 404);
         }
         return projectOperation(operation);
     });
@@ -65,7 +65,6 @@ function projectOperation(operation: Awaited<ReturnType<CoreOperationExecutor["s
         revision: operation.revision,
         createdAt: operation.createdAt,
         updatedAt: operation.updatedAt,
-        ...(operation.status === "succeeded" ? { result: operation.result ?? null } : {}),
         ...(operation.errorCode ? { errorCode: operation.errorCode } : {}),
     };
 }

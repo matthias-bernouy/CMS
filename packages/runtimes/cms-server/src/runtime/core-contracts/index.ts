@@ -16,7 +16,7 @@ export function registerOfficialCoreCapabilities(
     operations?: CoreOperationExecutor,
 ): void {
     registerCmsPageCoreCapabilities(dispatcher, core.repo);
-    registerCollectionCapabilities(dispatcher, core);
+    registerCollectionCapabilities(dispatcher, core, operations);
     registerFileCapabilities(dispatcher, core);
     registerDesignCapabilities(dispatcher, core);
     registerProviderCapabilities(dispatcher, gateway);

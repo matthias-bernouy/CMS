@@ -32,10 +32,10 @@ test("the Core relay preserves declared bodyless success responses", async () =>
     const release = {
         contractId: "ulvia.cms.health",
         capabilities: [
-                {
-                    id: "probe",
-                    behavior: { effect: "query", execution: "sync" },
-                    input: { type: "object", properties: {}, required: [], additionalProperties: false },
+            {
+                id: "probe",
+                behavior: { effect: "query", execution: "sync" },
+                input: { type: "object", properties: {}, required: [], additionalProperties: false },
                 output: { type: "null" },
                 binding: {
                     transport: "http",

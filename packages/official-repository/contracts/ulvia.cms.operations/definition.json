@@ -4,14 +4,13 @@
     "schemaDialect": "ulvia-schema/v1",
     "contractId": "ulvia.cms.operations",
     "name": "CMS Operations",
-    "description": "Inspect maintenance state, collection migration history and local Core diagnostics.",
+    "description": "Inspect maintenance, migration history and durable Core capability operations.",
     "version": "1.0.0",
     "publisherId": "ulvia.official",
     "catalogue": { "icon": "health", "categories": ["administration", "operations"] },
     "capabilities": [
         {
             "id": "status",
-            "description": "Return current maintenance state and recent terminal migration summaries.",
             "access": "admin",
             "behavior": { "effect": "query", "execution": "sync" },
             "input": { "type": "object", "properties": { "limit": { "type": "integer", "minimum": 1, "maximum": 100 } }, "required": [] },
@@ -20,42 +19,70 @@
                 "properties": {
                     "core": { "type": "string", "enum": ["ready"], "maxLength": 5 },
                     "maintenance": { "type": "boolean" },
-                    "activeMigration": {
-                        "type": "object",
-                        "properties": {
-                            "id": { "type": "string", "maxLength": 96 },
-                            "status": { "type": "string", "maxLength": 32 },
-                            "updatedAt": { "type": "string", "format": "date-time", "maxLength": 40 }
-                        },
-                        "required": ["id", "status", "updatedAt"]
-                    },
+                    "activeMigration": { "type": "object", "properties": { "id": { "type": "string", "maxLength": 96 }, "status": { "type": "string", "maxLength": 32 }, "updatedAt": { "type": "string", "format": "date-time", "maxLength": 40 } }, "required": ["id", "status", "updatedAt"] },
                     "migrations": {
-                        "type": "array",
-                        "maxItems": 100,
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "id": { "type": "string", "maxLength": 96 },
-                                "status": { "type": "string", "enum": ["completed", "rolled-back"], "maxLength": 11 },
-                                "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 },
-                                "updatedAt": { "type": "string", "format": "date-time", "maxLength": 40 },
-                                "totalPages": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
-                                "operationCount": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
-                            },
-                            "required": ["id", "status", "createdAt", "updatedAt", "totalPages", "operationCount"]
-                        }
+                        "type": "array", "maxItems": 100,
+                        "items": { "type": "object", "properties": { "id": { "type": "string", "maxLength": 96 }, "status": { "type": "string", "enum": ["completed", "rolled-back"], "maxLength": 11 }, "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 }, "updatedAt": { "type": "string", "format": "date-time", "maxLength": 40 }, "totalPages": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }, "operationCount": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 } }, "required": ["id", "status", "createdAt", "updatedAt", "totalPages", "operationCount"] }
                     }
                 },
                 "required": ["core", "maintenance", "migrations"]
             },
             "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
-            "binding": {
-                "transport": "http",
-                "method": "GET",
-                "path": "/v1/cms/operations",
-                "input": { "query": { "limit": "limit" } },
-                "response": { "successStatuses": [200], "contentTypes": ["application/json"], "errorStatuses": { "CORE_UNAVAILABLE": 503 } }
-            }
+            "binding": { "transport": "http", "method": "GET", "path": "/v1/cms/operations/overview", "input": { "query": { "limit": "limit" } }, "response": { "successStatuses": [200], "contentTypes": ["application/json"], "errorStatuses": { "CORE_UNAVAILABLE": 503 } } }
+        },
+        {
+            "id": "list",
+            "access": "admin",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": { "type": "object", "properties": { "cursor": { "type": "string", "maxLength": 256 }, "limit": { "type": "integer", "minimum": 1, "maximum": 100 } }, "required": [] },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array", "maxItems": 100,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": { "type": "string", "format": "uuid", "maxLength": 36 },
+                                "contractId": { "type": "string", "maxLength": 128 },
+                                "capabilityId": { "type": "string", "maxLength": 128 },
+                                "status": { "type": "string", "enum": ["queued", "running", "succeeded", "failed"], "maxLength": 9 },
+                                "revision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+                                "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 },
+                                "updatedAt": { "type": "string", "format": "date-time", "maxLength": 40 },
+                                "errorCode": { "type": "string", "maxLength": 64 }
+                            },
+                            "required": ["id", "contractId", "capabilityId", "status", "revision", "createdAt", "updatedAt"]
+                        }
+                    },
+                    "nextCursor": { "type": "string", "maxLength": 256 }
+                },
+                "required": ["items"]
+            },
+            "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
+            "binding": { "transport": "http", "method": "GET", "path": "/v1/cms/operations/history", "input": { "query": { "cursor": "cursor", "limit": "limit" } }, "response": { "successStatuses": [200], "contentTypes": ["application/json"], "errorStatuses": { "CORE_UNAVAILABLE": 503 } } }
+        },
+        {
+            "id": "get",
+            "access": "admin",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": { "type": "object", "properties": { "operationId": { "type": "string", "format": "uuid", "maxLength": 36 } }, "required": ["operationId"] },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string", "format": "uuid", "maxLength": 36 },
+                    "contractId": { "type": "string", "maxLength": 128 },
+                    "capabilityId": { "type": "string", "maxLength": 128 },
+                    "status": { "type": "string", "enum": ["queued", "running", "succeeded", "failed"], "maxLength": 9 },
+                    "revision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+                    "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 },
+                    "updatedAt": { "type": "string", "format": "date-time", "maxLength": 40 },
+                    "errorCode": { "type": "string", "maxLength": 64 }
+                },
+                "required": ["id", "contractId", "capabilityId", "status", "revision", "createdAt", "updatedAt"]
+            },
+            "errors": [{ "code": "NOT_FOUND", "retryable": false }, { "code": "INVALID_INPUT", "retryable": false }, { "code": "CORE_UNAVAILABLE", "retryable": true }],
+            "binding": { "transport": "http", "method": "GET", "path": "/v1/cms/operations/history/{operationId}", "input": { "path": { "operationId": "operationId" } }, "response": { "successStatuses": [200], "contentTypes": ["application/json"], "errorStatuses": { "NOT_FOUND": 404, "INVALID_INPUT": 422, "CORE_UNAVAILABLE": 503 } } }
         }
     ]
 }
