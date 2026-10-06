@@ -87,6 +87,39 @@ test("collection Pages admit typed capability forms without browser-owned action
     }
 });
 
+test("Control Pages admit only named multipart kernel transports", () => {
+    const source = collectionDocument({ "page.overview.name": "Overview" });
+    const html = `<section>
+        <form cms-source="/.cms/files/upload" cms-source-method="POST" cms-source-trigger="submit">
+            <input type="file" name="file" required><button type="submit">Upload</button>
+        </form>
+        <form cms-source="/.cms/files/content" cms-source-method="PUT" cms-source-trigger="submit">
+            <input type="hidden" name="id" value="{{ item.id }}">
+            <input type="file" name="file" required><button type="submit">Replace</button>
+        </form>
+        <a href="/.cms/files/by-id/{{ item.id }}" target="_blank" rel="noopener">Open</a>
+    </section>`;
+    expect(() => parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }] })).not.toThrow();
+
+    for (const invalid of [
+        html.replace('cms-source-method="PUT"', 'cms-source-method="POST"'),
+        html.replace('cms-source="/.cms/files/upload"', 'cms-source="/.cms/files/delete-everything"'),
+        html.replace('rel="noopener"', 'rel="external"'),
+        html.replace('cms-source-method="POST"', 'cms-source-method="POST" cms-source-serialization="typed-json"'),
+    ]) {
+        expect(() =>
+            parseCollectionRelease({ ...source, pages: [{ ...page, document: { html: invalid } }] }),
+        ).toThrow();
+    }
+
+    expect(() =>
+        parseCollectionRelease({
+            ...source,
+            pages: [{ ...page, surface: "delivery", defaultPath: "/files", document: { html } }],
+        }),
+    ).toThrow();
+});
+
 test("collection Pages admit stable Page links without authored routes", () => {
     const source = collectionDocument({
         "page.overview.name": "Overview",

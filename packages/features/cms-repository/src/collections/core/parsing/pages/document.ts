@@ -14,10 +14,16 @@ const SOURCE = new RegExp(
     `^/\\.cms/call/(?<contract>${IDENTIFIER})/(?<capability>${IDENTIFIER})(?: as [A-Za-z_$][\\w$]*)?$`,
     "u",
 );
+const KERNEL_FORM_TRANSPORTS = new Map<string, "POST" | "PUT">([
+    ["/.cms/files/upload", "POST"],
+    ["/.cms/files/content", "PUT"],
+]);
+const FILE_RESOURCE = /^\/\.cms\/files\/by-id\/(?:[A-Za-z0-9._:-]{1,200}|\{\{\s*[A-Za-z_$][\w$.]*\s*\}\})$/u;
 
 export function validatePageHtml(
     html: string,
     blocIds: ReadonlySet<string>,
+    surface: CollectionPageSurface,
     path: string,
 ): { blocs: ReadonlySet<string>; calls: ReadonlySet<string> } {
     const document = parseDocument(html, { decodeEntities: true, lowerCaseTags: true, lowerCaseAttributeNames: true });
@@ -33,7 +39,7 @@ export function validatePageHtml(
             if (blocIds.has(node.name)) {
                 blocs.add(node.name);
             }
-            validateAttributes(node.name, node.attribs, blocIds, calls, path);
+            validateAttributes(node.name, node.attribs, blocIds, calls, surface, path);
             pending.push(...node.children);
         } else if (node.type !== "text") {
             invalid("unsupported Page node", path);
@@ -84,6 +90,7 @@ function validateAttributes(
     attributes: Readonly<Record<string, string>>,
     blocIds: ReadonlySet<string>,
     calls: Set<string>,
+    surface: CollectionPageSurface,
     path: string,
 ): void {
     for (const [name, value] of Object.entries(attributes)) {
@@ -109,13 +116,11 @@ function validateAttributes(
         }
         if (name === "cms-source") {
             const match = SOURCE.exec(value);
-            if (!match?.groups) {
-                invalid("Page sources must use a canonical CMS capability", path);
+            if (match?.groups) {
+                calls.add(`${match.groups.contract}/${match.groups.capability}`);
+            } else if (surface !== "control" || !KERNEL_FORM_TRANSPORTS.has(value)) {
+                invalid("Page sources must use a canonical CMS capability or controlled kernel transport", path);
             }
-            calls.add(`${match.groups.contract}/${match.groups.capability}`);
-        }
-        if (name === "cms-source-method" && value.toUpperCase() !== "POST") {
-            invalid("Page capability sources must use POST", path);
         }
         if (name === "cms-source-body" && !isJsonObject(value)) {
             invalid("Page source body must be a JSON object", path);
@@ -132,6 +137,9 @@ function validateAttributes(
         if (name === "cms-source-success-reset" && value !== "true" && value !== "false") {
             invalid("Page source reset behavior must be true or false", path);
         }
+        if (name === "cms-source-inherit-query" && value !== "true" && value !== "false") {
+            invalid("Page source query inheritance must be true or false", path);
+        }
         if (name === "cms-form-value-type" && !["string", "number", "boolean"].includes(value)) {
             invalid("Page form value type is not controlled", path);
         }
@@ -140,8 +148,21 @@ function validateAttributes(
         }
     }
     validateStablePageLink(tag, attributes, path);
-    if (attributes["cms-source"] && attributes["cms-source-method"]?.toUpperCase() !== "POST") {
-        invalid("Page capability sources must declare POST", path);
+    validateResourceLink(tag, attributes, surface, path);
+    const source = attributes["cms-source"];
+    if (source) {
+        const method = attributes["cms-source-method"]?.toUpperCase();
+        const kernelMethod = KERNEL_FORM_TRANSPORTS.get(source);
+        if (kernelMethod) {
+            if (surface !== "control" || tag !== "form" || method !== kernelMethod) {
+                invalid(`Page kernel transport ${source} requires a Control form using ${kernelMethod}`, path);
+            }
+            if (attributes["cms-source-serialization"] !== undefined || attributes["cms-source-body"] !== undefined) {
+                invalid("Page kernel file transports use native multipart form serialization", path);
+            }
+        } else if (method !== "POST") {
+            invalid("Page capability sources must declare POST", path);
+        }
     }
     if (tag === "form" && attributes["cms-source"]) {
         if (attributes["cms-source-trigger"] !== "submit" && attributes["cms-source-trigger"] !== "change") {
@@ -153,6 +174,35 @@ function validateAttributes(
     }
     if (!attributes["cms-source"] && attributes["cms-source-trigger"] !== undefined) {
         invalid("Page source trigger requires a capability source", path);
+    }
+}
+
+function validateResourceLink(
+    tag: string,
+    attributes: Readonly<Record<string, string>>,
+    surface: CollectionPageSurface,
+    path: string,
+): void {
+    const href = attributes.href;
+    const target = attributes.target;
+    const rel = attributes.rel;
+    if (href === undefined) {
+        if (target !== undefined || rel !== undefined) {
+            invalid("Page link target and relation require a resource href", path);
+        }
+        return;
+    }
+    if (tag !== "a" || surface !== "control" || !FILE_RESOURCE.test(href)) {
+        invalid("Page resource links must target a controlled Control file URL", path);
+    }
+    if (attributes["data-cms-page-ref"] !== undefined) {
+        invalid("Page links cannot combine a Page reference and resource href", path);
+    }
+    if (target !== undefined && target !== "_blank") {
+        invalid("Page resource links may only open in a new browsing context", path);
+    }
+    if (target === "_blank" && !new Set((rel ?? "").split(/\s+/u)).has("noopener")) {
+        invalid("Page resource links opened in a new context require noopener", path);
     }
 }
 

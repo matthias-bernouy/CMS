@@ -37,7 +37,7 @@ export function parseCollectionPages(
         const document = record(source.document, `${path}.document`);
         keys(document, ["html"], `${path}.document`);
         const html = string(document.html, limits.maxMarkupLength, `${path}.document.html`);
-        const structure = validatePageHtml(html, new Set(blocSurfaces.keys()), `${path}.document.html`);
+        const structure = validatePageHtml(html, new Set(blocSurfaces.keys()), surface, `${path}.document.html`);
         const uses = [...structure.blocs].sort();
         if (source.uses !== undefined) {
             const declared = array(source.uses, limits.maxBlocs, `${path}.uses`).map((item, itemIndex) =>
