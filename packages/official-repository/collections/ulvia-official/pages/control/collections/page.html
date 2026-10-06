@@ -9,26 +9,10 @@
         <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"design"}'>Design &amp; languages</a>
         <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"providers"}'>Providers</a>
         <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"access"}'>Access &amp; settings</a>
-        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"operations"}'>Operations</a>
     </nav>
     <ulvia-official-page-shell slot="content" width="xl">
         <div slot="title"><h1>Collections</h1></div>
-        <div slot="description"><p>Exact immutable releases currently installed on this site.</p></div>
-        <section slot="content" cms-source="/.cms/call/ulvia.cms.collections/list as collections" cms-source-method="POST" cms-source-body="{}">
-            <p role="status" aria-live="polite" cms-condition="$source.loading">Loading installed collections…</p>
-            <div role="alert" cms-condition="$source.error"><h2>Collections unavailable</h2><p>The selected Core provider could not return the installation graph.</p></div>
-            <div cms-condition="$source.loaded">
-                <p><strong>{{ collections.items.length }}</strong> installed collections · site revision {{ collections.revision }}</p>
-                <ul cms-condition="collections.items.length">
-                    <li cms-repeat="collections.items as collection">
-                        <strong>{{ collection.collectionId }}</strong>
-                        <span>{{ collection.publisherId }} · {{ collection.version }}</span>
-                        <small>{{ collection.blocCount }} blocs · {{ collection.pageCount }} pages · {{ collection.assetCount }} assets · {{ collection.textCount }} texts · {{ collection.themeTokenCount }} theme tokens</small>
-                        <code>{{ collection.digest }}</code>
-                    </li>
-                </ul>
-                <p cms-condition="collections.items.length == 0">No collection is installed.</p>
-            </div>
-        </section>
+        <div slot="description"><p>Install immutable releases, configure collections and preview migrations before applying them.</p></div>
+        <ulvia-official-collection-manager slot="content"></ulvia-official-collection-manager>
     </ulvia-official-page-shell>
 </ulvia-official-app-shell>

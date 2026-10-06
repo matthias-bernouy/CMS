@@ -9,32 +9,84 @@
         <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"design"}'>Design &amp; languages</a>
         <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"providers"}'>Providers</a>
         <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"access"}'>Access &amp; settings</a>
-        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"operations"}'>Operations</a>
     </nav>
     <ulvia-official-page-shell slot="content" width="xl">
         <div slot="title"><h1>Files</h1></div>
-        <div slot="description"><p>Browse the author library. Binary transfer remains on the dedicated CMS file transport.</p></div>
-        <ulvia-official-surface slot="content" elevation="sm" padding="lg">
-            <h2>Create a root folder</h2>
-            <form cms-source="/.cms/call/ulvia.cms.files/create-folder" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#files-list">
-                <ulvia-official-field label-position="inline">
-                    <label slot="label" for="folder-name">Folder name</label>
-                    <ulvia-official-input slot="control"><input id="folder-name" name="name" maxlength="255" required></ulvia-official-input>
-                </ulvia-official-field>
-                <ulvia-official-action variant="filled" tone="primary"><button type="submit">Create folder</button></ulvia-official-action>
-                <p role="status" aria-live="polite" cms-condition="$source.loading">Creating folder…</p>
-                <p role="alert" cms-condition="$source.error">The folder could not be created. Its name may already be used.</p>
-            </form>
-        </ulvia-official-surface>
-        <section id="files-list" slot="content" cms-source="/.cms/call/ulvia.cms.files/list as files" cms-source-method="POST" cms-source-body='{"limit":100}'>
+        <div slot="description"><p>Upload, replace and organise author files through stable CMS identities.</p></div>
+        <ulvia-official-grid slot="content" min-item-width="20rem" gap="lg">
+            <ulvia-official-surface elevation="sm" padding="lg">
+                <h2>Upload a file</h2>
+                <form cms-source="/.cms/files/upload" cms-source-method="POST" cms-source-trigger="submit" cms-source-success-reload="#files-list">
+                    <ulvia-official-field label-position="top">
+                        <label slot="label" for="file-upload">Choose a file</label>
+                        <span slot="help">Files are validated and limited by the server upload policy.</span>
+                        <ulvia-official-file-input slot="control" variant="card"><input id="file-upload" type="file" name="file" required></ulvia-official-file-input>
+                    </ulvia-official-field>
+                    <ulvia-official-form-actions align="end">
+                        <p role="status" aria-live="polite" cms-condition="$source.loading">Uploading…</p>
+                        <p role="alert" cms-condition="$source.error">The file could not be uploaded.</p>
+                        <ulvia-official-action variant="filled" tone="primary"><button type="submit">Upload file</button></ulvia-official-action>
+                    </ulvia-official-form-actions>
+                </form>
+            </ulvia-official-surface>
+            <ulvia-official-surface elevation="sm" padding="lg">
+                <h2>Create a folder</h2>
+                <form cms-source="/.cms/call/ulvia.cms.files/create-folder" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-body='{"parentId":{"from":"queryParam","name":"parentId"}}' cms-source-inherit-query="false" cms-source-success-reload="#files-list">
+                    <ulvia-official-field label-position="top">
+                        <label slot="label" for="folder-name">Folder name</label>
+                        <ulvia-official-input slot="control"><input id="folder-name" name="name" maxlength="255" autocomplete="off" required></ulvia-official-input>
+                    </ulvia-official-field>
+                    <ulvia-official-form-actions align="end">
+                        <p role="status" aria-live="polite" cms-condition="$source.loading">Creating…</p>
+                        <p role="alert" cms-condition="$source.error">The folder could not be created. Its name may already be used.</p>
+                        <ulvia-official-action variant="outlined" tone="secondary"><button type="submit">Create folder</button></ulvia-official-action>
+                    </ulvia-official-form-actions>
+                </form>
+            </ulvia-official-surface>
+        </ulvia-official-grid>
+        <section id="files-list" slot="content" cms-source="/.cms/call/ulvia.cms.files/list as files" cms-source-method="POST" cms-source-body='{"parentId":{"from":"queryParam","name":"parentId"},"limit":{"from":"raw","value":100}}'>
             <p role="status" aria-live="polite" cms-condition="$source.loading">Loading files…</p>
             <div role="alert" cms-condition="$source.error"><h2>Files unavailable</h2><p>The author library could not be read.</p></div>
             <div cms-condition="$source.loaded">
-                <p><strong>{{ files.total }}</strong> root items</p>
+                <ulvia-official-cluster align="center" justify="between">
+                    <div><h2>Library</h2><p><strong>{{ files.total }}</strong> items in this folder.</p></div>
+                    <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"files"}'>Back to root</a>
+                </ulvia-official-cluster>
                 <ul cms-condition="files.items.length">
-                    <li cms-repeat="files.items as item"><strong>{{ item.name }}</strong><span>{{ item.type }}</span><small>Updated {{ item.updatedAt }}</small></li>
+                    <li cms-repeat="files.items as item">
+                        <header>
+                            <strong>{{ item.name }}</strong>
+                            <span>{{ item.type }}</span>
+                            <small>Revision {{ item.revision }} · updated {{ item.updatedAt }}</small>
+                        </header>
+                        <a cms-condition="item.type == 'folder'" data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"files"}' data-cms-page-suffix="?parentId={{ item.id }}">Open folder</a>
+                        <a cms-condition="item.type == 'file'" href="/.cms/files/by-id/{{ item.id }}" target="_blank" rel="noopener">Open file</a>
+                        <form cms-source="/.cms/call/ulvia.cms.files/update" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-inherit-query="false" cms-source-success-reload="#files-list">
+                            <input type="hidden" name="fileId" value="{{ item.id }}">
+                            <input type="hidden" name="expectedRevision" value="{{ item.revision }}" cms-form-value-type="number">
+                            <ulvia-official-field label-position="inline">
+                                <span slot="label">Name</span>
+                                <ulvia-official-input slot="control"><input name="name" value="{{ item.name }}" maxlength="255" aria-label="File or folder name" required></ulvia-official-input>
+                            </ulvia-official-field>
+                            <ulvia-official-action variant="outlined" tone="secondary" size="sm"><button type="submit">Rename</button></ulvia-official-action>
+                            <p role="alert" cms-condition="$source.error">Reload this folder before retrying.</p>
+                        </form>
+                        <form cms-condition="item.type == 'file'" cms-source="/.cms/files/content" cms-source-method="PUT" cms-source-trigger="submit" cms-source-success-reload="#files-list">
+                            <input type="hidden" name="id" value="{{ item.id }}">
+                            <input type="file" name="file" aria-label="Replacement file for {{ item.name }}" required>
+                            <ulvia-official-action variant="outlined" tone="secondary" size="sm"><button type="submit">Replace content</button></ulvia-official-action>
+                            <p role="alert" cms-condition="$source.error">The replacement could not be stored.</p>
+                        </form>
+                        <form cms-source="/.cms/call/ulvia.cms.files/delete" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-inherit-query="false" cms-source-success-reload="#files-list">
+                            <input type="hidden" name="fileId" value="{{ item.id }}">
+                            <input type="hidden" name="expectedRevision" value="{{ item.revision }}" cms-form-value-type="number">
+                            <input type="hidden" name="recursive" value="false" cms-form-value-type="boolean">
+                            <ulvia-official-action variant="ghost" tone="danger" size="sm"><button type="submit">Delete</button></ulvia-official-action>
+                            <p role="alert" cms-condition="$source.error">Folders must be empty before deletion.</p>
+                        </form>
+                    </li>
                 </ul>
-                <p cms-condition="files.items.length == 0">The root folder is empty.</p>
+                <p cms-condition="files.items.length == 0">This folder is empty.</p>
             </div>
         </section>
     </ulvia-official-page-shell>

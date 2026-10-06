@@ -13,8 +13,6 @@
     "page.details.name": "Page details",
     "page.files.description": "Browse and organize the author file library.",
     "page.files.name": "Files",
-    "page.operations.description": "Inspect maintenance, migrations and Core readiness.",
-    "page.operations.name": "Operations",
     "page.overview.description": "Manage site Pages through the selected local Core provider.",
     "page.overview.name": "Pages",
     "page.providers.description": "Inspect approved providers and exact selected contracts.",

@@ -1,0 +1,33 @@
+[
+    {
+        "id": "tone",
+        "label": "setting.tone.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "neutral",
+        "control": {
+            "kind": "select",
+            "options": [
+                { "value": "neutral", "label": "setting.option.neutral" },
+                { "value": "info", "label": "setting.option.info" },
+                { "value": "success", "label": "setting.option.success" },
+                { "value": "warning", "label": "setting.option.warning" },
+                { "value": "danger", "label": "setting.option.danger" }
+            ]
+        }
+    },
+    {
+        "id": "size",
+        "label": "setting.size.label",
+        "group": "setting.group.appearance",
+        "type": "string",
+        "default": "md",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "sm", "label": "setting.option.small" },
+                { "value": "md", "label": "setting.option.medium" }
+            ]
+        }
+    }
+]

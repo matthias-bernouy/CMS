@@ -5,7 +5,5 @@
     "name": "page.collections.name",
     "icon": "collections",
     "description": "page.collections.description",
-    "requires": [
-        { "contractId": "ulvia.cms.collections", "capabilityId": "list", "versionRange": "^1.0.0" }
-    ]
+    "requires": []
 }

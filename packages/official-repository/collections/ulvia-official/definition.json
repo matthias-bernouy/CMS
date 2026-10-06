@@ -12,6 +12,7 @@
         "blocs": [
             "ulvia-official-action",
             "ulvia-official-app-shell",
+            "ulvia-official-badge",
             "ulvia-official-card",
             "ulvia-official-center",
             "ulvia-official-checkbox",
@@ -232,7 +233,6 @@
             "design",
             "details",
             "files",
-            "operations",
             "overview",
             "providers",
             "resources",

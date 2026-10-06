@@ -1,0 +1,64 @@
+:host {
+    display: block;
+    min-width: 0;
+    color: var(--ulvia-official-text-primary, #17211d);
+    font-family: var(--ulvia-official-font-family-main, system-ui, sans-serif);
+    container-type: inline-size;
+}
+
+* { box-sizing: border-box; }
+button, input, textarea { color: inherit; font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: wait; opacity: .58; }
+h2, h3, h4, p { margin: 0; }
+
+[part="workspace"] { display: grid; gap: var(--ulvia-official-spacing-lg, 1.5rem); }
+[part="header"], [part="toolbar"], [part="actions"], dialog header, dialog footer { display: flex; align-items: center; justify-content: space-between; gap: var(--ulvia-official-spacing-md, 1rem); }
+[part="header"] { align-items: flex-start; }
+[part="header"] > div { display: grid; gap: var(--ulvia-official-spacing-xs, .5rem); max-width: 46rem; }
+[part="eyebrow"] { color: var(--ulvia-official-primary, #176b4d); font-size: var(--ulvia-official-font-size-sm, .875rem); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+[part="intro"], small, [part="empty"] { color: var(--ulvia-official-text-secondary, #53645d); }
+
+button, input, textarea {
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c9d5d0);
+    border-radius: var(--ulvia-official-radius-md, .5rem);
+    background: var(--ulvia-official-background-base, #fff);
+}
+button { min-height: var(--ulvia-official-control-height-sm, 2.25rem); padding: .45rem .8rem; font-weight: 650; }
+button:hover:not(:disabled) { border-color: var(--ulvia-official-primary, #176b4d); background: var(--ulvia-official-background-subtle, #f3f7f5); }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid var(--ulvia-official-focus-ring, #6bbf9f); outline-offset: 2px; }
+button[data-emphasis="primary"], [data-action="save-configuration"], [data-action="apply-migration"] { border-color: var(--ulvia-official-primary, #176b4d); color: var(--ulvia-official-text-inverse, #fff); background: var(--ulvia-official-primary, #176b4d); }
+input { min-height: var(--ulvia-official-control-height-md, 2.875rem); width: min(100%, 22rem); padding: .65rem .85rem; }
+textarea { width: 100%; padding: .75rem; resize: vertical; font-family: var(--ulvia-official-font-family-monospace, ui-monospace, monospace); }
+
+[part="notice"]:not(:empty) { padding: .75rem 1rem; border-inline-start: .25rem solid var(--ulvia-official-info, #2367a6); border-radius: var(--ulvia-official-radius-sm, .25rem); background: var(--ulvia-official-background-subtle, #f3f7f5); }
+[part="notice"][data-error] { border-color: var(--ulvia-official-danger, #b42318); color: var(--ulvia-official-danger, #8a1c13); }
+[part="summary"] { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ulvia-official-spacing-md, 1rem); }
+[part="metric"] { display: grid; gap: .2rem; padding: 1rem; border: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); border-radius: var(--ulvia-official-radius-lg, .75rem); background: var(--ulvia-official-background-raised, #fff); }
+
+[part="tabs"] { display: flex; gap: .25rem; border-bottom: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); }
+[part="tabs"] button { margin-bottom: -1px; border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: transparent; }
+[part="tabs"] button[aria-selected="true"] { border-bottom-color: var(--ulvia-official-primary, #176b4d); color: var(--ulvia-official-primary, #176b4d); }
+[part="panel"] { display: grid; gap: var(--ulvia-official-spacing-md, 1rem); }
+[part="cards"] { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: var(--ulvia-official-spacing-md, 1rem); }
+[part="cards"] ulvia-official-card code { display: block; overflow: hidden; color: var(--ulvia-official-text-muted, #687a72); font-size: .75rem; text-overflow: ellipsis; white-space: nowrap; }
+[part="actions"] { justify-content: flex-start; flex-wrap: wrap; margin-top: auto; }
+[part="cards"] ulvia-official-badge { margin-block-start: .75rem; text-transform: capitalize; }
+[part="activity"] { display: grid; border: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); border-radius: var(--ulvia-official-radius-lg, .75rem); overflow: clip; }
+[part="activity-row"] { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 1rem; background: var(--ulvia-official-background-raised, #fff); }
+[part="activity-row"] + [part="activity-row"] { border-top: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); }
+
+dialog { width: min(42rem, calc(100% - 2rem)); max-height: calc(100% - 2rem); padding: 0; border: 1px solid var(--ulvia-official-border-default, #c9d5d0); border-radius: var(--ulvia-official-radius-xl, 1rem); color: inherit; background: var(--ulvia-official-background-raised, #fff); box-shadow: var(--ulvia-official-shadow-lg, 0 20px 50px rgb(20 40 32 / 18%)); }
+dialog::backdrop { background: rgb(11 24 19 / 54%); backdrop-filter: blur(2px); }
+[part="dialog-shell"] { display: grid; gap: 1rem; padding: 1.25rem; }
+[part="dialog-shell"] header { align-items: flex-start; }
+[part="dialog-shell"] label { display: grid; gap: .5rem; font-weight: 700; }
+[part="dialog-shell"] footer { justify-content: flex-end; }
+[data-dialog-error]:not(:empty), [data-migration-error]:not(:empty) { color: var(--ulvia-official-danger, #8a1c13); font-weight: 700; }
+
+@container (max-width: 42rem) {
+    [part="header"], [part="toolbar"] { align-items: stretch; flex-direction: column; }
+    [part="summary"] { grid-template-columns: 1fr; }
+    [part="tabs"] { overflow-x: auto; }
+    input { width: 100%; }
+}

@@ -1,0 +1,24 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-collection-manager",
+    "label": "bloc.collection-manager.label",
+    "description": "bloc.collection-manager.description",
+    "category": "bloc.category.administration",
+    "order": 10,
+    "internal": true,
+    "surfaces": ["control"],
+    "uses": ["ulvia-official-action", "ulvia-official-badge", "ulvia-official-card"],
+    "requires": [
+        { "contractId": "ulvia.cms.collections", "capabilityId": "catalogue", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.collections", "capabilityId": "get", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.collections", "capabilityId": "install", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.collections", "capabilityId": "upgrade", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.collections", "capabilityId": "update-configuration", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.collections", "capabilityId": "plan-migration", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.collections", "capabilityId": "apply-migration", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.operations", "capabilityId": "status", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.operations", "capabilityId": "list", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.operations", "capabilityId": "get", "versionRange": "^1.0.0" }
+    ],
+    "slots": {}
+}

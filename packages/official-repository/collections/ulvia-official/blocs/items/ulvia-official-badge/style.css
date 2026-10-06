@@ -1,0 +1,49 @@
+:host {
+    display: inline-flex;
+    width: fit-content;
+    color: var(--ulvia-official-text-secondary, #53645d);
+    font-family: var(--ulvia-official-font-family-main, system-ui, sans-serif);
+}
+
+[part="badge"] {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.75rem;
+    padding: 0.25rem 0.625rem;
+    border: 1px solid var(--ulvia-official-border-subtle, #e2e9e6);
+    border-radius: 999px;
+    background: var(--ulvia-official-background-subtle, #eef3f1);
+    font-size: var(--ulvia-official-font-size-sm, 0.875rem);
+    font-weight: 700;
+    line-height: 1;
+}
+
+:host([tone="info"]) [part="badge"] {
+    border-color: var(--ulvia-official-info-border, #a7c9e8);
+    color: var(--ulvia-official-on-info-subtle, #235f94);
+    background: var(--ulvia-official-info-subtle, #eef7ff);
+}
+
+:host([tone="success"]) [part="badge"] {
+    border-color: var(--ulvia-official-success-border, #9cd4bd);
+    color: var(--ulvia-official-on-success-subtle, #176b4d);
+    background: var(--ulvia-official-success-subtle, #effaf5);
+}
+
+:host([tone="warning"]) [part="badge"] {
+    border-color: var(--ulvia-official-warning-border, #e6c56a);
+    color: var(--ulvia-official-on-warning-subtle, #765600);
+    background: var(--ulvia-official-warning-subtle, #fff8df);
+}
+
+:host([tone="danger"]) [part="badge"] {
+    border-color: var(--ulvia-official-danger-border, #efb0aa);
+    color: var(--ulvia-official-on-danger-subtle, #8a1c13);
+    background: var(--ulvia-official-danger-subtle, #fff1f0);
+}
+
+:host([size="sm"]) [part="badge"] {
+    min-height: 1.5rem;
+    padding-inline: 0.5rem;
+    font-size: var(--ulvia-official-font-size-xs, 0.75rem);
+}
