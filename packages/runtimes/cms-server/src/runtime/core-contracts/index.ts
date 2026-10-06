@@ -7,11 +7,13 @@ import { registerDesignCapabilities } from "./design";
 import { registerFileCapabilities } from "./files";
 import { registerOperationCapabilities } from "./operations";
 import { registerProviderCapabilities } from "./providers";
+import type { CoreOperationExecutor } from "../core-operations/CoreOperationExecutor";
 
 export function registerOfficialCoreCapabilities(
     dispatcher: CoreCapabilityRegistry,
     core: CoreStores,
     gateway: ProductionGateway | undefined,
+    operations?: CoreOperationExecutor,
 ): void {
     registerCmsPageCoreCapabilities(dispatcher, core.repo);
     registerCollectionCapabilities(dispatcher, core);
@@ -19,5 +21,5 @@ export function registerOfficialCoreCapabilities(
     registerDesignCapabilities(dispatcher, core);
     registerProviderCapabilities(dispatcher, gateway);
     registerAccessCapabilities(dispatcher, core, gateway);
-    registerOperationCapabilities(dispatcher, core);
+    registerOperationCapabilities(dispatcher, core, operations);
 }

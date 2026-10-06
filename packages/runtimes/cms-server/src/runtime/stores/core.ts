@@ -34,6 +34,7 @@ import { ValidatingSecretStore } from "@bernouy/secret-store";
 import { EncryptedMongoSecretStore } from "@bernouy/secret-store/mongo";
 import { MongoClient } from "mongodb";
 import type { RuntimeEnv } from "../../runtimeEnv";
+import { MongoCoreOperationStore } from "../core-operations/MongoCoreOperationStore";
 import { CMS_REPOSITORY_FENCED_MUTATIONS, COLLECTION_STORE_FENCED_MUTATIONS } from "./migrationWritePolicy";
 
 const SCOPE_ID = "default";
@@ -72,6 +73,8 @@ export async function createCoreStores(env: RuntimeEnv) {
     const migrationRepo = withSitePageRoutes(validatedRepo, pageRoutes, SCOPE_ID, pageRouteMutations);
     const migrationStorage = new MongoCollectionMigrationStorage(db);
     await migrationStorage.init();
+    const coreOperations = new MongoCoreOperationStore(db);
+    await coreOperations.init();
     const collectionMigrations = new CollectionMigrationService(migrationRepo, migrationCollections, migrationStorage, {
         rollbackRetentionCount: env.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION,
         onRetentionError: (error) => console.error("Collection migration retention cleanup failed", error),
@@ -119,6 +122,7 @@ export async function createCoreStores(env: RuntimeEnv) {
         collections,
         pageRoutes,
         collectionMigrations,
+        coreOperations,
         migrationStorage,
         mongo,
         db,
