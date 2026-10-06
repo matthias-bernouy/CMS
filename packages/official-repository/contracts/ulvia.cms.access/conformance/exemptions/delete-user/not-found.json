@@ -1,0 +1,5 @@
+{
+    "capabilityId": "delete-user",
+    "errorCode": "NOT_FOUND",
+    "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+}

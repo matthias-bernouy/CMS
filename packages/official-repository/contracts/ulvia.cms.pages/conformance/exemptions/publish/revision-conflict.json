@@ -1,0 +1,5 @@
+{
+    "capabilityId": "publish",
+    "errorCode": "REVISION_CONFLICT",
+    "reason": "The smoke suite does not prescribe concurrent mutation scheduling."
+}

@@ -1,0 +1,5 @@
+{
+    "capabilityId": "install",
+    "errorCode": "INVALID_STATE",
+    "reason": "The portable smoke suite does not mutate an existing collection installation."
+}

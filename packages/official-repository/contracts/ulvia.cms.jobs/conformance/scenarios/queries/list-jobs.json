@@ -1,0 +1,25 @@
+{
+    "id": "list-jobs",
+    "description": "Verify that a fresh CMS tenant exposes its bounded durable job history.",
+    "calls": [
+        {
+            "id": "list",
+            "capabilityId": "list",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {
+                "limit": 25
+            },
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/items",
+                        "present": true
+                    }
+                ]
+            }
+        }
+    ]
+}

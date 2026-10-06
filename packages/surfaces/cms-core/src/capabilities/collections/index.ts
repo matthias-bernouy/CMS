@@ -111,6 +111,27 @@ export function registerCollectionCapabilities(
             ),
         ),
     );
+    dispatcher.register("ulvia.cms.collections", "migration-status", async (input, context) => {
+        const limit = Number.isSafeInteger(input.limit) ? Number(input.limit) : 20;
+        const [active, audits] = await Promise.all([
+            core.collectionMigrations.getActive(context.siteId),
+            core.collectionMigrations.listAudits(context.siteId, limit),
+        ]);
+        return {
+            maintenance: active !== null,
+            ...(active
+                ? { activeMigration: { id: active.id, status: active.status, updatedAt: active.updatedAt } }
+                : {}),
+            migrations: audits.map(({ id, status, createdAt, updatedAt, totalPages, operationCount }) => ({
+                id,
+                status,
+                createdAt,
+                updatedAt,
+                totalPages,
+                operationCount,
+            })),
+        };
+    });
     dispatcher.register("ulvia.cms.collections", "get-migration", async (input, context) => {
         const progress = await core.collectionMigrations.getProgress(context.siteId, requiredText(input.migrationId));
         if (!progress) {

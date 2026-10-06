@@ -1,0 +1,49 @@
+{
+    "id": "discover-current-instance",
+    "calls": [
+        {
+            "id": "list",
+            "capabilityId": "list",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {
+                "limit": 10
+            },
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/items",
+                        "present": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": "current",
+            "capabilityId": "get-current",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {},
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/id",
+                        "present": true
+                    },
+                    {
+                        "path": "/coreVersion",
+                        "present": true
+                    },
+                    {
+                        "path": "/contracts",
+                        "present": true
+                    }
+                ]
+            }
+        }
+    ]
+}

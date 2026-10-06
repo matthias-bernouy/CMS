@@ -1,0 +1,4 @@
+{
+    "capabilityId": "set-status",
+    "reason": "This state-changing capability requires dedicated suite-owned fixtures and cleanup that the portable read smoke suite does not yet prescribe."
+}

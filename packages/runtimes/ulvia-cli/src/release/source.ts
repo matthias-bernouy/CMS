@@ -8,7 +8,7 @@ import { expandCollectionSourceExports, loadCollectionTheme, loadCollectionTrans
 import { loadCollectionTexts } from "./textSources";
 import { assertCollectionSourceQuality } from "./quality";
 import { loadCollectionMigrations } from "./migrationSources";
-import { scanFileSourceTree } from "./sourceTree";
+import { scanFileSourceTree } from "./authored/sourceTree";
 
 /** Compile one authored folder into an immutable, admitted release candidate. */
 export async function prepareCollectionRelease(directory: string, contracts?: ReleaseCatalogue) {

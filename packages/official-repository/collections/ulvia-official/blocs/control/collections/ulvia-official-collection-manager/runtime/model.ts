@@ -60,7 +60,7 @@ export type MigrationPlan = {
     blockedReasons: string[];
 };
 
-export type OperationItem = {
+export type JobItem = {
     id: string;
     contractId: string;
     capabilityId: string;
@@ -70,12 +70,11 @@ export type OperationItem = {
     errorCode?: string;
 };
 
-export type Operations = {
-    items: OperationItem[];
+export type Jobs = {
+    items: JobItem[];
 };
 
 export type OperationalStatus = {
-    core: "ready";
     maintenance: boolean;
     activeMigration?: { id: string; status: string; updatedAt: string };
 };

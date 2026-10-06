@@ -1,0 +1,170 @@
+{
+    "id": "update-configuration",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "collectionId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "expectedRevision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "configurationJson": {
+                "type": "string",
+                "maxLength": 1048576
+            }
+        },
+        "required": [
+            "collectionId",
+            "expectedRevision",
+            "configurationJson"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "items": {
+                "type": "array",
+                "maxItems": 256,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "collectionId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "publisherId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "version": {
+                            "type": "string",
+                            "maxLength": 64
+                        },
+                        "digest": {
+                            "type": "string",
+                            "maxLength": 71
+                        },
+                        "repositoryId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "dataGeneration": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                        },
+                        "blocCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1024
+                        },
+                        "pageCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1024
+                        },
+                        "assetCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1024
+                        },
+                        "textCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 4096
+                        },
+                        "themeTokenCount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 4096
+                        },
+                        "configurable": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "collectionId",
+                        "publisherId",
+                        "version",
+                        "digest",
+                        "dataGeneration",
+                        "blocCount",
+                        "pageCount",
+                        "assetCount",
+                        "textCount",
+                        "themeTokenCount",
+                        "configurable"
+                    ]
+                }
+            }
+        },
+        "required": [
+            "revision",
+            "items"
+        ]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": true
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "PUT",
+        "path": "/v1/cms/collections/installed/{collectionId}/configuration",
+        "input": {
+            "path": {
+                "collectionId": "collectionId"
+            },
+            "body": {
+                "properties": [
+                    "expectedRevision",
+                    "configurationJson"
+                ]
+            }
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NOT_FOUND": 404,
+                "REVISION_CONFLICT": 409,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

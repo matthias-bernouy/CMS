@@ -1,0 +1,5 @@
+{
+    "capabilityId": "get",
+    "errorCode": "INVALID_INPUT",
+    "reason": "The portable smoke suite does not prescribe an invalid job identity."
+}

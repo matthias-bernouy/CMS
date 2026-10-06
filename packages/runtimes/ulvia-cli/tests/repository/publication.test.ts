@@ -11,7 +11,7 @@ test("remote publication is signed, immutable, atomic, and reversibly yankable",
     const remoteRoot = await mkdtemp(join(tmpdir(), "ulvia-publication-target-"));
     const token = "a".repeat(43);
     const server = startLocalRepository(0, remoteRoot, token);
-    const source = resolve(import.meta.dir, "../../../../official-repository/contracts/ulvia.cms.operations");
+    const source = resolve(import.meta.dir, "../../../../official-repository/contracts/ulvia.cms.jobs");
     try {
         await runCli(["release", source], { environment: { ULVIA_DATA_DIR: data }, log: () => undefined });
         const definition = JSON.parse(await readFile(join(source, "definition.json"), "utf8")) as {
@@ -52,7 +52,7 @@ test("remote publication is signed, immutable, atomic, and reversibly yankable",
 
         const changed = {
             kind: "contract",
-            canonicalJson: canonicalJson.replace("CMS Operations", "Changed CMS Operations"),
+            canonicalJson: canonicalJson.replace("CMS Jobs", "Changed CMS Jobs"),
             assets: [],
         } as const;
         await expect(client.push(changed)).rejects.toThrow("already published");

@@ -1,0 +1,4 @@
+{
+    "capabilityId": "resume-migration",
+    "reason": "This capability requires a suite-owned migration lifecycle; the portable smoke suite does not prescribe collection release fixtures."
+}

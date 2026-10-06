@@ -1,0 +1,5 @@
+{
+    "capabilityId": "rename",
+    "errorCode": "NOT_FOUND",
+    "reason": "The disposable suite cannot require a stable unknown Page identifier from every Core implementation."
+}

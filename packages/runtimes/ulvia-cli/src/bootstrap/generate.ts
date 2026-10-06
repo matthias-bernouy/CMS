@@ -1,8 +1,11 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
+import type { AdmittedContractRelease } from "@bernouy/cms-repository/contracts";
 import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
 import { admitProviderManifestJson } from "@bernouy/cms-repository/providers";
+import { compileConformanceSource, prepareConformanceSource } from "../release/authored/conformance";
+import { resolveConformanceDependencies } from "../release/authored/conformanceDependencies";
+import { prepareContractSource } from "../release/authored/contract";
 import { prepareCollectionRelease } from "../release/source";
 
 export type OfficialBootstrapArtifacts = Readonly<{
@@ -15,12 +18,29 @@ export async function buildOfficialBootstrapArtifacts(): Promise<OfficialBootstr
     const root = resolve(import.meta.dir, "../../../../official-repository");
     const catalogue = new InMemoryReleaseCatalogue();
     const contracts: Record<string, string> = {};
-    for (const id of await directories(join(root, "contracts"))) {
-        const admission = await admitContractReleaseJson(
-            await readFile(join(root, "contracts", id, "definition.json"), "utf8"),
-        );
+    const admissions = new Map<string, AdmittedContractRelease>();
+    const contractIds = await directories(join(root, "contracts"));
+    for (const id of contractIds) {
+        const directory = join(root, "contracts", id);
+        const { admission } = await prepareContractSource(directory);
         await catalogue.publish(admission);
         contracts[id] = admission.canonicalJson;
+        admissions.set(`${admission.release.contractId}@${admission.release.version}`, admission);
+    }
+    for (const id of contractIds) {
+        const directory = join(root, "contracts", id);
+        const conformance = await compileConformanceSource(directory);
+        if (conformance) {
+            const definition = JSON.parse(conformance) as { contractId?: unknown; contractVersion?: unknown };
+            const release = admissions.get(`${definition.contractId}@${definition.contractVersion}`);
+            if (!release) {
+                throw new Error(`Conformance source ${id} does not identify an official contract release`);
+            }
+            const dependencies = await resolveConformanceDependencies(conformance, async (contractId, version) => {
+                return admissions.get(`${contractId}@${version}`) ?? null;
+            });
+            await prepareConformanceSource(directory, release, dependencies, conformance);
+        }
     }
     const provider = await admitProviderManifestJson(
         await readFile(join(root, "providers", "ulvia.official", "definition.json"), "utf8"),

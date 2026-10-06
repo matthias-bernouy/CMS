@@ -1,0 +1,60 @@
+{
+    "id": "get",
+    "description": "Read the complete structured site theme and its revision.",
+    "access": "admin",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "activeThemeId": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "themeJson": {
+                "type": "string",
+                "maxLength": 1048576
+            }
+        },
+        "required": [
+            "revision",
+            "activeThemeId",
+            "themeJson"
+        ]
+    },
+    "errors": [
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "GET",
+        "path": "/v1/cms/theme",
+        "input": {},
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

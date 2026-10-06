@@ -2,12 +2,16 @@ import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { defaultSystem } from "@bernouy/cms-content";
-import { DefaultCoreCapabilityDispatcher } from "@bernouy/cms-core";
-import { registerOfficialCoreCapabilities } from "@bernouy/cms-core";
+import {
+    CoreOperationExecutor,
+    DefaultCoreCapabilityDispatcher,
+    MemoryCoreOperationStore,
+    registerOfficialCoreCapabilities,
+} from "@bernouy/cms-core";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 
-test("all six Control domains dispatch outputs matching their official contracts", async () => {
+test("all eight Control domains dispatch outputs matching their official contracts", async () => {
     const dispatcher = new DefaultCoreCapabilityDispatcher();
     const now = new Date("2026-10-06T12:00:00.000Z");
     const system = defaultSystem();
@@ -91,15 +95,22 @@ test("all six Control domains dispatch outputs matching their official contracts
             list: async () => ["local:user-1"],
         },
     };
-    registerOfficialCoreCapabilities(dispatcher, core as never, gateway as never);
+    registerOfficialCoreCapabilities(
+        dispatcher,
+        core as never,
+        gateway as never,
+        new CoreOperationExecutor(new MemoryCoreOperationStore()),
+    );
 
     const calls = [
         ["ulvia.cms.collections", "list", {}],
+        ["ulvia.cms.collections", "migration-status", {}],
         ["ulvia.cms.files", "list", {}],
-        ["ulvia.cms.design", "overview", {}],
+        ["ulvia.cms.jobs", "list", {}],
+        ["ulvia.cms.localization", "overview", {}],
+        ["ulvia.cms.theme", "get", {}],
         ["ulvia.cms.providers", "list", {}],
         ["ulvia.cms.access", "overview", {}],
-        ["ulvia.cms.operations", "status", {}],
     ] as const;
     for (const [contractId, capabilityId, input] of calls) {
         const release = await load(contractId);
@@ -120,6 +131,9 @@ test("all six Control domains dispatch outputs matching their official contracts
 });
 
 async function load(contractId: string) {
-    const root = resolve(import.meta.dir, `../../../../official-repository/contracts/${contractId}/definition.json`);
+    const root = resolve(
+        import.meta.dir,
+        `../../../ulvia-cli/src/bootstrap/resources/contracts/cms/${contractId}/definition.json`,
+    );
     return (await admitContractReleaseJson(await readFile(root))).release;
 }

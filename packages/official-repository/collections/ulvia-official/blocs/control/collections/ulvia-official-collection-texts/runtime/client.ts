@@ -1,5 +1,5 @@
-export async function designCapability<T>(capabilityId: string, input: unknown): Promise<T> {
-    const response = await fetch(`/.cms/call/ulvia.cms.design/${capabilityId}`, {
+export async function localizationCapability<T>(capabilityId: string, input: unknown): Promise<T> {
+    const response = await fetch(`/.cms/call/ulvia.cms.localization/${capabilityId}`, {
         method: "POST",
         headers: { Accept: "application/json", "Content-Type": "application/json" },
         body: JSON.stringify(input),

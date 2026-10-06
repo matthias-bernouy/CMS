@@ -1,4 +1,4 @@
-import type { Catalogue, CatalogueRelease, InstalledCollection, Operations, OperationalStatus } from "./model";
+import type { Catalogue, CatalogueRelease, InstalledCollection, Jobs, OperationalStatus } from "./model";
 import { releaseAction } from "./model";
 
 export function renderSummary(target: Element, catalogue: Catalogue, status: OperationalStatus): void {
@@ -61,21 +61,21 @@ export function renderReleases(target: Element, catalogue: Catalogue, query: str
     empty(target, visible.length, message);
 }
 
-export function renderActivity(target: Element, operations: Operations): void {
+export function renderActivity(target: Element, jobs: Jobs): void {
     target.replaceChildren(
-        ...operations.items.map((operation) => {
+        ...jobs.items.map((job) => {
             const row = document.createElement("article");
             row.setAttribute("part", "activity-row");
             const content = document.createElement("div");
             content.append(
-                title(`${operation.contractId} / ${operation.capabilityId}`, 4),
-                meta(`${formatDate(operation.updatedAt)}${operation.errorCode ? ` · ${operation.errorCode}` : ""}`),
+                title(`${job.contractId} / ${job.capabilityId}`, 4),
+                meta(`${formatDate(job.updatedAt)}${job.errorCode ? ` · ${job.errorCode}` : ""}`),
             );
-            row.append(content, badge(operation.status));
+            row.append(content, badge(job.status));
             return row;
         }),
     );
-    empty(target, operations.items.length, "No durable operation has been recorded yet.");
+    empty(target, jobs.items.length, "No durable job has been recorded yet.");
 }
 
 export function setBusy(root: ShadowRoot, busy: boolean): void {

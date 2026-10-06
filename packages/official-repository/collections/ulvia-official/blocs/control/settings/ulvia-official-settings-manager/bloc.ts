@@ -2,12 +2,12 @@ import { Component } from "@bernouy/cms-content/browser";
 import template from "./shadowdom.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 import { callCapability, CapabilityError } from "./runtime/client";
-import type { AccessOverview, DesignOverview, LanguageSettings, SiteSettings } from "./runtime/model";
+import type { AccessOverview, LanguageSettings, LocalizationOverview, SiteSettings } from "./runtime/model";
 import { initializeSettingsWorkspace } from "./runtime/workspace";
 
 export class Bloc extends Component {
     private site: SiteSettings | null = null;
-    private languages: DesignOverview | null = null;
+    private languages: LocalizationOverview | null = null;
     private busy = false;
 
     constructor() {
@@ -29,12 +29,12 @@ export class Bloc extends Component {
 
     private load(): Promise<void> {
         return this.run(async () => {
-            const [access, design] = await Promise.all([
+            const [access, localization] = await Promise.all([
                 callCapability<AccessOverview>("ulvia.cms.access", "overview", { limit: 1 }),
-                callCapability<DesignOverview>("ulvia.cms.design", "overview", {}),
+                callCapability<LocalizationOverview>("ulvia.cms.localization", "overview", {}),
             ]);
             this.site = access.site;
-            this.languages = design;
+            this.languages = localization;
             this.populate();
         });
     }
@@ -78,7 +78,7 @@ export class Bloc extends Component {
             if (!this.languages) {
                 return;
             }
-            const next = await callCapability<LanguageSettings>("ulvia.cms.design", "update-languages", {
+            const next = await callCapability<LanguageSettings>("ulvia.cms.localization", "update-languages", {
                 expectedRevision: this.languages.revision,
                 language: this.required<HTMLInputElement>("[data-language]").value.trim(),
                 additionalLanguages: tags(this.required<HTMLInputElement>("[data-additional]").value),

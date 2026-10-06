@@ -1,15 +1,15 @@
 import { Component } from "@bernouy/cms-content/browser";
 import template from "./shadowdom.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
-import { callCapability, CapabilityError, waitForOperation } from "./runtime/client";
+import { callCapability, CapabilityError, waitForJob } from "./runtime/client";
 import { renderCollectionDetail } from "./runtime/detail";
 import type {
     Catalogue,
     CollectionDetail,
+    Jobs,
     CatalogueRelease,
     MigrationPlan,
     OperationalStatus,
-    Operations,
 } from "./runtime/model";
 import { renderActivity, renderInstalled, renderReleases, renderSummary, setBusy } from "./runtime/render";
 import { initializeWorkspace } from "./runtime/workspace";
@@ -17,8 +17,8 @@ import { initializeWorkspace } from "./runtime/workspace";
 export class Bloc extends Component {
     private lifecycle = new AbortController();
     private catalogue: Catalogue = { revision: 0, repositories: [], releases: [], installed: [] };
-    private status: OperationalStatus = { core: "ready", maintenance: false };
-    private operations: Operations = { items: [] };
+    private status: OperationalStatus = { maintenance: false };
+    private jobs: Jobs = { items: [] };
     private configuration: CollectionDetail | null = null;
     private migration: { plan: MigrationPlan; release: CatalogueRelease } | null = null;
 
@@ -44,10 +44,10 @@ export class Bloc extends Component {
 
     private load = async (): Promise<void> => {
         await this.run(async () => {
-            [this.catalogue, this.status, this.operations] = await Promise.all([
+            [this.catalogue, this.status, this.jobs] = await Promise.all([
                 callCapability<Catalogue>("ulvia.cms.collections", "catalogue", {}),
-                callCapability<OperationalStatus>("ulvia.cms.operations", "status", { limit: 20 }),
-                callCapability<Operations>("ulvia.cms.operations", "list", { limit: 50 }),
+                callCapability<OperationalStatus>("ulvia.cms.collections", "migration-status", { limit: 20 }),
+                callCapability<Jobs>("ulvia.cms.jobs", "list", { limit: 50 }),
             ]);
             this.render();
         }, "Collection workspace refreshed.");
@@ -198,7 +198,7 @@ export class Bloc extends Component {
                 },
                 crypto.randomUUID(),
             );
-            await waitForOperation(queued.operationId, this.lifecycle.signal);
+            await waitForJob(queued.operationId, this.lifecycle.signal);
             this.required<HTMLDialogElement>("[data-migration]").close();
             await this.refreshData();
         }, "Migration completed.");
@@ -212,10 +212,10 @@ export class Bloc extends Component {
     }
 
     private async refreshData(): Promise<void> {
-        [this.catalogue, this.status, this.operations] = await Promise.all([
+        [this.catalogue, this.status, this.jobs] = await Promise.all([
             callCapability<Catalogue>("ulvia.cms.collections", "catalogue", {}),
-            callCapability<OperationalStatus>("ulvia.cms.operations", "status", { limit: 20 }),
-            callCapability<Operations>("ulvia.cms.operations", "list", { limit: 50 }),
+            callCapability<OperationalStatus>("ulvia.cms.collections", "migration-status", { limit: 20 }),
+            callCapability<Jobs>("ulvia.cms.jobs", "list", { limit: 50 }),
         ]);
         this.render();
     }
@@ -239,7 +239,7 @@ export class Bloc extends Component {
         renderSummary(this.required("[data-summary]"), this.catalogue, this.status);
         renderInstalled(this.required("[data-installed]"), this.catalogue.installed, "");
         renderReleases(this.required("[data-releases]"), this.catalogue, "");
-        renderActivity(this.required("[data-activity]"), this.operations);
+        renderActivity(this.required("[data-activity]"), this.jobs);
         this.required("[data-maintenance]").textContent = this.status.maintenance ? "Maintenance active" : "Core ready";
     }
 

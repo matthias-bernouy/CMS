@@ -15,6 +15,4 @@ export type LanguageSettings = {
     activeLanguages: string[];
 };
 
-export type DesignOverview = LanguageSettings & {
-    collectionRevision: number;
-};
+export type LocalizationOverview = LanguageSettings;

@@ -1,0 +1,17 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "ulvia.cms.jobs",
+    "name": "CMS Jobs",
+    "description": "Inspect durable asynchronous jobs started by CMS capabilities.",
+    "version": "1.0.0",
+    "publisherId": "ulvia.official",
+    "catalogue": {
+        "icon": "activity",
+        "categories": [
+            "administration",
+            "jobs"
+        ]
+    }
+}

@@ -1,0 +1,5 @@
+{
+    "capabilityId": "upgrade",
+    "errorCode": "INVALID_STATE",
+    "reason": "The portable smoke suite does not prescribe an incompatible release fixture."
+}

@@ -1,0 +1,4 @@
+{
+    "capabilityId": "get",
+    "reason": "This capability requires a stable resource identity that a portable fresh-tenant suite cannot assume."
+}

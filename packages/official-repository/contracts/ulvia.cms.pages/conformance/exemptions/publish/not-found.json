@@ -1,0 +1,5 @@
+{
+    "capabilityId": "publish",
+    "errorCode": "NOT_FOUND",
+    "reason": "The smoke suite does not prescribe provider fixture identities."
+}

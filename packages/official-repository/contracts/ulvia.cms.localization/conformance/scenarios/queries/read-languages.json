@@ -1,0 +1,35 @@
+{
+    "id": "read-languages",
+    "description": "Verify that a fresh CMS tenant exposes its language configuration.",
+    "calls": [
+        {
+            "id": "overview",
+            "capabilityId": "overview",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {},
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/revision",
+                        "present": true
+                    },
+                    {
+                        "path": "/language",
+                        "present": true
+                    },
+                    {
+                        "path": "/activeLanguages",
+                        "present": true
+                    },
+                    {
+                        "path": "/additionalLanguages",
+                        "present": true
+                    }
+                ]
+            }
+        }
+    ]
+}

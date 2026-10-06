@@ -1,0 +1,4 @@
+{
+    "capabilityId": "save-texts",
+    "reason": "This state-changing capability requires a stable installed collection identity and dedicated cleanup that the portable read smoke suite does not yet prescribe."
+}

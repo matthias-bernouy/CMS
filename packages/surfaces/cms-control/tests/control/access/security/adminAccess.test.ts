@@ -67,6 +67,15 @@ describe("Control collection maintenance", () => {
                 )
             ).status,
         ).toBe(200);
+        for (const capability of [
+            "ulvia.cms.collections/migration-status",
+            "ulvia.cms.jobs/get",
+            "ulvia.cms.jobs/list",
+        ]) {
+            expect(
+                (await guard(new Request(`http://localhost/.cms/call/${capability}`, { method: "POST" }), next)).status,
+            ).toBe(200);
+        }
     });
 });
 

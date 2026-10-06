@@ -1,0 +1,4 @@
+{
+    "capabilityId": "rename",
+    "reason": "Mutation requires a suite-owned Page fixture and revision, which this read-only official smoke suite does not create yet."
+}

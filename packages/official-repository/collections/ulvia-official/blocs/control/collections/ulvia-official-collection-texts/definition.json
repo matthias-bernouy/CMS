@@ -9,9 +9,9 @@
     "surfaces": ["control"],
     "uses": ["ulvia-official-action", "ulvia-official-select"],
     "requires": [
-        { "contractId": "ulvia.cms.design", "capabilityId": "overview", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.design", "capabilityId": "get-texts", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.design", "capabilityId": "save-texts", "versionRange": "^1.0.0" }
+        { "contractId": "ulvia.cms.localization", "capabilityId": "overview", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.localization", "capabilityId": "get-texts", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.localization", "capabilityId": "save-texts", "versionRange": "^1.0.0" }
     ],
     "slots": {}
 }

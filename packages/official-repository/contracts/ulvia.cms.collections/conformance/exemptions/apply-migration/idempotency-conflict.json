@@ -1,0 +1,5 @@
+{
+    "capabilityId": "apply-migration",
+    "errorCode": "IDEMPOTENCY_CONFLICT",
+    "reason": "A conflicting replay requires a suite-owned invocation key and a deliberately different payload."
+}

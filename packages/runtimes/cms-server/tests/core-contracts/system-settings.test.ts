@@ -1,7 +1,11 @@
 import { expect, test } from "bun:test";
 import { defaultSystem } from "@bernouy/cms-content";
 import { DefaultCoreCapabilityDispatcher } from "@bernouy/cms-core";
-import { registerAccessCapabilities, registerDesignCapabilities } from "@bernouy/cms-core/capabilities";
+import {
+    registerAccessCapabilities,
+    registerLocalizationCapabilities,
+    registerThemeCapabilities,
+} from "@bernouy/cms-core/capabilities";
 
 const context = {
     requestId: "00000000-0000-4000-8000-000000000001",
@@ -59,7 +63,7 @@ test("settings commands return the revision committed by their own compare-and-s
     };
     const core = { repo } as never;
     registerAccessCapabilities(dispatcher, core, undefined);
-    registerDesignCapabilities(dispatcher, core);
+    registerLocalizationCapabilities(dispatcher, core);
 
     const site = await dispatcher.invoke(
         "ulvia.cms.access",
@@ -70,7 +74,7 @@ test("settings commands return the revision committed by their own compare-and-s
     expect(site).toMatchObject({ revision: 5, name: "Renamed" });
 
     const languages = await dispatcher.invoke(
-        "ulvia.cms.design",
+        "ulvia.cms.localization",
         "update-languages",
         { expectedRevision: 5, language: "fr", additionalLanguages: ["en"], activeLanguages: ["fr", "en"] },
         context,
@@ -78,11 +82,11 @@ test("settings commands return the revision committed by their own compare-and-s
     expect(languages).toMatchObject({ revision: 6, language: "fr", activeLanguages: ["fr", "en"] });
 });
 
-test("design overview uses the collection locale before a fresh site selects its language", async () => {
+test("localization overview uses the collection locale before a fresh site selects its language", async () => {
     const dispatcher = new DefaultCoreCapabilityDispatcher();
     const system = defaultSystem();
     system.site.language = "";
-    registerDesignCapabilities(dispatcher, {
+    registerLocalizationCapabilities(dispatcher, {
         repo: {
             getSystemRevision: async () => 1,
             getSystem: async () => structuredClone(system),
@@ -116,16 +120,15 @@ test("design overview uses the collection locale before a fresh site selects its
         },
     } as never);
 
-    const output = await dispatcher.invoke("ulvia.cms.design", "overview", {}, context);
+    const output = await dispatcher.invoke("ulvia.cms.localization", "overview", {}, context);
     expect(output.language).toBe("en");
-    expect(output.sources).toContainEqual(expect.objectContaining({ label: "Example theme" }));
 });
 
 test("theme reads compose the authoritative token catalogues from installed collections", async () => {
     const dispatcher = new DefaultCoreCapabilityDispatcher();
     const system = defaultSystem();
     system.site.language = "fr";
-    registerDesignCapabilities(dispatcher, {
+    registerThemeCapabilities(dispatcher, {
         repo: {
             getSystemRevision: async () => 3,
             getSystem: async () => structuredClone(system),
@@ -175,7 +178,7 @@ test("theme reads compose the authoritative token catalogues from installed coll
         },
     } as never);
 
-    const output = await dispatcher.invoke("ulvia.cms.design", "get-theme", {}, context);
+    const output = await dispatcher.invoke("ulvia.cms.theme", "get", {}, context);
     const theme = JSON.parse(output.themeJson as string);
     expect(output.revision).toBe(3);
     expect(theme.sources).toContainEqual(

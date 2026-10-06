@@ -1,0 +1,85 @@
+{
+    "id": "delete",
+    "description": "Delete one Page with optimistic revision control.",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+            },
+            "expectedRevision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+            }
+        },
+        "required": [
+            "id",
+            "expectedRevision"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string",
+                "maxLength": 200
+            },
+            "deleted": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "id",
+            "deleted"
+        ]
+    },
+    "errors": [
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": true
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "DELETE",
+        "path": "/v1/cms/pages/{id}",
+        "input": {
+            "path": {
+                "id": "id"
+            },
+            "query": {
+                "expectedRevision": "expectedRevision"
+            }
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "NOT_FOUND": 404,
+                "REVISION_CONFLICT": 409,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

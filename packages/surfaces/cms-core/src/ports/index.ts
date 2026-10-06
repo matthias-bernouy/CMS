@@ -25,7 +25,12 @@ export interface CmsCollectionDependencies {
     readonly collectionMigrations: CollectionMigrationService;
 }
 
-export interface CmsDesignDependencies {
+export interface CmsThemeDependencies {
+    readonly repo: CmsRepository;
+    readonly collections: CollectionStore;
+}
+
+export interface CmsLocalizationDependencies {
     readonly repo: CmsRepository;
     readonly collections: CollectionStore;
 }
@@ -46,7 +51,8 @@ export interface CmsAccessDependencies {
 
 export type CmsCoreDependencies = CmsPageDependencies &
     CmsCollectionDependencies &
-    CmsDesignDependencies &
+    CmsThemeDependencies &
+    CmsLocalizationDependencies &
     CmsFileDependencies &
     CmsAccessDependencies;
 

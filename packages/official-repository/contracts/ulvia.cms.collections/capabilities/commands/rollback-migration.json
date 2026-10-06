@@ -1,0 +1,77 @@
+{
+    "id": "rollback-migration",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "keyed",
+        "execution": "operation"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "migrationId": {
+                "type": "string",
+                "format": "uuid",
+                "maxLength": 36
+            }
+        },
+        "required": [
+            "migrationId"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "operationId": {
+                "type": "string",
+                "format": "uuid",
+                "maxLength": 36
+            }
+        },
+        "required": [
+            "operationId"
+        ]
+    },
+    "errors": [
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "MIGRATION_IN_PROGRESS",
+            "retryable": true
+        },
+        {
+            "code": "IDEMPOTENCY_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "POST",
+        "path": "/v1/cms/collections/migration-runs/{migrationId}/rollback",
+        "input": {
+            "path": {
+                "migrationId": "migrationId"
+            }
+        },
+        "response": {
+            "successStatuses": [
+                202
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "NOT_FOUND": 404,
+                "MIGRATION_IN_PROGRESS": 423,
+                "IDEMPOTENCY_CONFLICT": 409,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

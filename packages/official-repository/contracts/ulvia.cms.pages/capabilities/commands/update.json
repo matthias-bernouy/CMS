@@ -1,0 +1,162 @@
+{
+    "id": "update",
+    "description": "Update Page content and metadata with optimistic revision control.",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+            },
+            "expectedRevision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+            },
+            "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 70
+            },
+            "description": {
+                "type": "string",
+                "maxLength": 200
+            },
+            "content": {
+                "type": "string",
+                "maxLength": 1048576
+            },
+            "tags": {
+                "type": "array",
+                "maxItems": 64,
+                "items": {
+                    "type": "string",
+                    "maxLength": 64
+                }
+            }
+        },
+        "required": [
+            "id",
+            "expectedRevision"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string",
+                "maxLength": 200
+            },
+            "revision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+            },
+            "surface": {
+                "type": "string",
+                "enum": [
+                    "control",
+                    "delivery"
+                ],
+                "maxLength": 8
+            },
+            "path": {
+                "type": "string",
+                "maxLength": 2048
+            },
+            "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 70
+            },
+            "description": {
+                "type": "string",
+                "maxLength": 200
+            },
+            "content": {
+                "type": "string",
+                "maxLength": 1048576
+            },
+            "tags": {
+                "type": "array",
+                "maxItems": 64,
+                "items": {
+                    "type": "string",
+                    "maxLength": 64
+                }
+            },
+            "visible": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "id",
+            "revision",
+            "surface",
+            "path",
+            "title",
+            "description",
+            "content",
+            "tags",
+            "visible"
+        ]
+    },
+    "errors": [
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": true
+        },
+        {
+            "code": "INVALID_PAGE",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "PUT",
+        "path": "/v1/cms/pages/{id}",
+        "input": {
+            "path": {
+                "id": "id"
+            },
+            "body": {
+                "properties": [
+                    "expectedRevision",
+                    "title",
+                    "description",
+                    "content",
+                    "tags"
+                ]
+            }
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "NOT_FOUND": 404,
+                "REVISION_CONFLICT": 409,
+                "INVALID_PAGE": 422,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

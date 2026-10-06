@@ -1,0 +1,217 @@
+{
+    "id": "update-login-provider",
+    "description": "Update non-secret login-provider configuration with revision control.",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "providerId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "expectedRevision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+            },
+            "displayName": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+            },
+            "enabled": {
+                "type": "boolean"
+            },
+            "icon": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+            },
+            "issuer": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+            },
+            "authorizationEndpoint": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+            },
+            "tokenEndpoint": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+            },
+            "jwksUri": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+            },
+            "clientId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+            },
+            "scopes": {
+                "type": "array",
+                "maxItems": 32,
+                "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                }
+            }
+        },
+        "required": [
+            "providerId",
+            "expectedRevision"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "revision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+            },
+            "kind": {
+                "type": "string",
+                "enum": [
+                    "local",
+                    "oidc"
+                ],
+                "maxLength": 5
+            },
+            "displayName": {
+                "type": "string",
+                "maxLength": 160
+            },
+            "enabled": {
+                "type": "boolean"
+            },
+            "icon": {
+                "type": "string",
+                "maxLength": 2048
+            },
+            "issuer": {
+                "type": "string",
+                "maxLength": 2048
+            },
+            "authorizationEndpoint": {
+                "type": "string",
+                "maxLength": 2048
+            },
+            "tokenEndpoint": {
+                "type": "string",
+                "maxLength": 2048
+            },
+            "jwksUri": {
+                "type": "string",
+                "maxLength": 2048
+            },
+            "clientId": {
+                "type": "string",
+                "maxLength": 512
+            },
+            "scopes": {
+                "type": "array",
+                "maxItems": 32,
+                "items": {
+                    "type": "string",
+                    "maxLength": 160
+                }
+            },
+            "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "maxLength": 40
+            },
+            "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "maxLength": 40
+            }
+        },
+        "required": [
+            "id",
+            "revision",
+            "kind",
+            "displayName",
+            "enabled",
+            "createdAt",
+            "updatedAt"
+        ]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "INVALID_STATE",
+            "retryable": false
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "PATCH",
+        "path": "/v1/cms/access/login-providers/{providerId}",
+        "input": {
+            "path": {
+                "providerId": "providerId"
+            },
+            "body": {
+                "properties": [
+                    "expectedRevision",
+                    "displayName",
+                    "enabled",
+                    "icon",
+                    "issuer",
+                    "authorizationEndpoint",
+                    "tokenEndpoint",
+                    "jwksUri",
+                    "clientId",
+                    "scopes"
+                ]
+            }
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NOT_FOUND": 404,
+                "INVALID_STATE": 409,
+                "REVISION_CONFLICT": 409,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

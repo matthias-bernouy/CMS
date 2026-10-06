@@ -4,11 +4,12 @@ import { bootstrapLocalOfficialResources } from "../../src/runtime/gateway/boots
 const coreContractIds = [
     "ulvia.cms.access",
     "ulvia.cms.collections",
-    "ulvia.cms.design",
     "ulvia.cms.files",
-    "ulvia.cms.operations",
+    "ulvia.cms.jobs",
+    "ulvia.cms.localization",
     "ulvia.cms.pages",
     "ulvia.cms.providers",
+    "ulvia.cms.theme",
 ];
 const collectionDigest = `sha256:${"c".repeat(64)}`;
 

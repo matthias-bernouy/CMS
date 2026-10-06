@@ -1,0 +1,10 @@
+{
+    "kind": "contract-conformance-suite",
+    "protocol": "ulvia-conformance/v1",
+    "contractId": "ulvia.cms.pages",
+    "contractVersion": "1.0.0",
+    "contractDigest": "sha256:8c19d6ed81bdaa6013e575c874fe80b78bfec173c7e62d9ab141e783190c8eb8",
+    "publisherId": "ulvia.official",
+    "version": "1.0.0",
+    "isolation": "disposable-tenant"
+}

@@ -1,0 +1,124 @@
+{
+    "id": "set-status",
+    "description": "Enable, disable or terminally revoke one provider installation with revision control.",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "installationId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "expectedRevision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+            },
+            "action": {
+                "type": "string",
+                "enum": [
+                    "enable",
+                    "disable",
+                    "revoke"
+                ],
+                "maxLength": 7
+            }
+        },
+        "required": [
+            "installationId",
+            "expectedRevision",
+            "action"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "installationId": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "status": {
+                "type": "string",
+                "enum": [
+                    "enabled",
+                    "disabled",
+                    "revoked"
+                ],
+                "maxLength": 8
+            },
+            "revision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+            },
+            "credentialsDeleted": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "installationId",
+            "status",
+            "revision",
+            "credentialsDeleted"
+        ]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "INVALID_STATE",
+            "retryable": false
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "PUT",
+        "path": "/v1/cms/providers/{installationId}/status",
+        "input": {
+            "path": {
+                "installationId": "installationId"
+            },
+            "body": {
+                "properties": [
+                    "expectedRevision",
+                    "action"
+                ]
+            }
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NOT_FOUND": 404,
+                "INVALID_STATE": 409,
+                "REVISION_CONFLICT": 409,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

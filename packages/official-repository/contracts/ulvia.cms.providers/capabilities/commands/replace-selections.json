@@ -1,0 +1,144 @@
+{
+    "id": "replace-selections",
+    "description": "Atomically validate and replace the complete site contract selection graph.",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "expectedRevision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "selections": {
+                "type": "array",
+                "maxItems": 256,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "contractId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 96
+                        },
+                        "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 64
+                        },
+                        "digest": {
+                            "type": "string",
+                            "minLength": 71,
+                            "maxLength": 71
+                        },
+                        "installationId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 96
+                        }
+                    },
+                    "required": [
+                        "contractId",
+                        "version",
+                        "digest",
+                        "installationId"
+                    ]
+                }
+            }
+        },
+        "required": [
+            "expectedRevision",
+            "selections"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "revision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+            },
+            "selections": {
+                "type": "array",
+                "maxItems": 256,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "contractId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "version": {
+                            "type": "string",
+                            "maxLength": 64
+                        },
+                        "digest": {
+                            "type": "string",
+                            "maxLength": 71
+                        },
+                        "installationId": {
+                            "type": "string",
+                            "maxLength": 96
+                        }
+                    },
+                    "required": [
+                        "contractId",
+                        "version",
+                        "digest",
+                        "installationId"
+                    ]
+                }
+            }
+        },
+        "required": [
+            "revision",
+            "selections"
+        ]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "INVALID_SELECTION",
+            "retryable": false
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "PUT",
+        "path": "/v1/cms/providers/selections",
+        "input": {
+            "body": true
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "INVALID_SELECTION": 422,
+                "REVISION_CONFLICT": 409,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

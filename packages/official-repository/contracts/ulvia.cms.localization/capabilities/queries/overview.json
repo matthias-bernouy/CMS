@@ -1,0 +1,73 @@
+{
+    "id": "overview",
+    "description": "Return the default, available and active site languages.",
+    "access": "admin",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "language": {
+                "type": "string",
+                "maxLength": 64
+            },
+            "additionalLanguages": {
+                "type": "array",
+                "maxItems": 32,
+                "items": {
+                    "type": "string",
+                    "maxLength": 64
+                }
+            },
+            "activeLanguages": {
+                "type": "array",
+                "maxItems": 32,
+                "items": {
+                    "type": "string",
+                    "maxLength": 64
+                }
+            }
+        },
+        "required": [
+            "revision",
+            "language",
+            "additionalLanguages",
+            "activeLanguages"
+        ]
+    },
+    "errors": [
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "GET",
+        "path": "/v1/cms/localization",
+        "input": {},
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

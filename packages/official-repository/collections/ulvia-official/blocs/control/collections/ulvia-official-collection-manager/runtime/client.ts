@@ -43,25 +43,19 @@ export async function callCapability<T>(
     return body as T;
 }
 
-export async function waitForOperation(operationId: string, signal?: AbortSignal): Promise<Record<string, unknown>> {
+export async function waitForJob(jobId: string, signal?: AbortSignal): Promise<Record<string, unknown>> {
     for (let attempt = 0; attempt < 240; attempt += 1) {
         signal?.throwIfAborted();
-        const operation = await callCapability<Operation>(
-            "ulvia.cms.operations",
-            "get",
-            { operationId },
-            undefined,
-            signal,
-        );
-        if (operation.status === "failed") {
-            throw new CapabilityError("The operation failed.", operation.errorCode ?? "OPERATION_FAILED", 409);
+        const job = await callCapability<Job>("ulvia.cms.jobs", "get", { jobId }, undefined, signal);
+        if (job.status === "failed") {
+            throw new CapabilityError("The job failed.", job.errorCode ?? "JOB_FAILED", 409);
         }
-        if (operation.status === "succeeded") {
-            return operation.resultJson ? (JSON.parse(operation.resultJson) as Record<string, unknown>) : {};
+        if (job.status === "succeeded") {
+            return job.resultJson ? (JSON.parse(job.resultJson) as Record<string, unknown>) : {};
         }
         await delay(500, signal);
     }
-    throw new CapabilityError("The operation is still running. Check Activity for its status.", "TIMEOUT", 408);
+    throw new CapabilityError("The job is still running. Check Activity for its status.", "TIMEOUT", 408);
 }
 
 function delay(milliseconds: number, signal?: AbortSignal): Promise<void> {
@@ -79,5 +73,5 @@ function delay(milliseconds: number, signal?: AbortSignal): Promise<void> {
     });
 }
 
-type Operation = { status: "queued" | "running" | "succeeded" | "failed"; errorCode?: string; resultJson?: string };
+type Job = { status: "queued" | "running" | "succeeded" | "failed"; errorCode?: string; resultJson?: string };
 const isRecord = (value: unknown): value is Record<string, unknown> => Boolean(value && typeof value === "object");

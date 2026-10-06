@@ -1,0 +1,4 @@
+{
+    "capabilityId": "upgrade",
+    "reason": "This state-changing capability requires a suite-owned installed collection and repository release fixture."
+}

@@ -10,7 +10,7 @@ bun run ulvia -- dev stop
 bun run ulvia -- release packages/official-repository/collections/test
 bun run ulvia -- release /path/to/contract-directory
 bun run ulvia -- release /path/to/provider-directory
-bun run ulvia -- push contract ulvia.official/ulvia.cms.operations@1.0.0 --repository https://repository.example
+bun run ulvia -- push contract ulvia.official/ulvia.cms.jobs@1.0.0 --repository https://repository.example
 bun run ulvia -- pull collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
 bun run ulvia -- yank collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example --reason "Superseded"
 bun run ulvia -- restore collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
@@ -38,6 +38,22 @@ repository endpoints. Control explores manifests in Settings → Provider
 connections, connects an account, then selects exact contract releases in
 Explore sources for gateway calls. `prune` empties all local repository content without
 deleting `dev/` data.
+
+Contract authors may keep only release metadata in `definition.json` and split
+capabilities recursively below `capabilities/`. Each capability is one JSON
+object. Optional `mocks/**/*.json` fragments contain one mock plus its explicit
+`capabilityId`; mocks embedded in capability fragments reject. The compiler
+sorts capabilities and mocks by their declared IDs, so paths never affect the
+immutable digest. A legacy monolithic `capabilities` array remains accepted when
+the `capabilities/` directory is absent.
+
+An optional conformance companion uses `conformance/definition.json`, recursive
+`conformance/scenarios/**/*.json` scenario objects and recursive
+`conformance/exemptions/**/*.json` coverage-exemption objects. Optional suite
+fixture bytes live below `conformance/fixtures/<asset-id>`. The release command
+assembles and admits a present suite, including exact locally released
+dependencies, before storing the contract. Conformance publication and live
+execution remain separate future work.
 
 `push` publishes one exact local coordinate, and `pull` downloads and re-admits
 one exact remote coordinate before storing it locally. Both support
@@ -105,9 +121,10 @@ resources manually, release the Core contracts before the manifest:
 ```bash
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.access
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.collections
-bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.design
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.files
-bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.operations
+bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.localization
+bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.jobs
+bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.theme
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.pages
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.providers
 bun run ulvia -- release packages/official-repository/providers/ulvia.official

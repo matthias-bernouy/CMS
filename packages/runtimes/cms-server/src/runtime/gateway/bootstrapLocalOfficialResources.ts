@@ -14,11 +14,12 @@ const BOOTSTRAP_ACTOR = "system:local-bootstrap";
 const CORE_CONTRACT_IDS = [
     "ulvia.cms.access",
     "ulvia.cms.collections",
-    "ulvia.cms.design",
     "ulvia.cms.files",
-    "ulvia.cms.operations",
+    "ulvia.cms.jobs",
+    "ulvia.cms.localization",
     "ulvia.cms.pages",
     "ulvia.cms.providers",
+    "ulvia.cms.theme",
 ] as const;
 
 type Management = Pick<ProviderManagement, "importManifest" | "list" | "preview" | "approve" | "selectContract">;

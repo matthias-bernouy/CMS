@@ -2,11 +2,12 @@
     "contracts": [
         "contracts/cms/ulvia.cms.access/definition.json",
         "contracts/cms/ulvia.cms.collections/definition.json",
-        "contracts/cms/ulvia.cms.design/definition.json",
         "contracts/cms/ulvia.cms.files/definition.json",
-        "contracts/cms/ulvia.cms.operations/definition.json",
+        "contracts/cms/ulvia.cms.jobs/definition.json",
+        "contracts/cms/ulvia.cms.localization/definition.json",
         "contracts/cms/ulvia.cms.pages/definition.json",
         "contracts/cms/ulvia.cms.providers/definition.json",
+        "contracts/cms/ulvia.cms.theme/definition.json",
         "contracts/ulvia.provider.cms-instances/definition.json"
     ],
     "provider": "providers/ulvia.official/definition.json",

@@ -378,7 +378,7 @@ host panels may differ; the composition model must not fork.
 
 ## Phase 8 — Rebuild Control By Functional Area
 
-**Status (2026-10-06): all seven domains have an end-to-end V1.** The Pages catalogue,
+**Status (2026-10-06): all eight domains have an end-to-end V1.** The Pages catalogue,
 creation, detail/source editing, publication, deletion and rename flows are
 collection-owned. Six additional official contracts and Pages now cover
 installed collections, author files, design/languages, providers/contracts,
@@ -419,10 +419,11 @@ Current official V1 mapping:
 | Pages and routing | `ulvia.cms.pages@1.0.0` | Complete first lifecycle slice |
 | Collections | `ulvia.cms.collections@1.0.0` | Catalogue, installation, configuration and migration lifecycle |
 | Files | `ulvia.cms.files@1.0.0` | Bounded metadata listing, folders, rename/move and deletion |
-| Design | `ulvia.cms.design@1.0.0` | Languages, theme state and per-collection text overrides |
+| Theme | `ulvia.cms.theme@1.0.0` | Theme state and per-collection theme overrides |
+| Localization | `ulvia.cms.localization@1.0.0` | Languages and per-collection text overrides |
 | Providers | `ulvia.cms.providers@1.0.0` | Installations, exact selections and lifecycle status |
 | Access | `ulvia.cms.access@1.0.0` | Members, administrator grants, login methods and site identity |
-| Operations | `ulvia.cms.operations@1.0.0` | Readiness, maintenance and durable operation history integrated into Collections |
+| Jobs | `ulvia.cms.jobs@1.0.0` | Durable asynchronous job history; migration state remains owned by Collections |
 
 Every official Core release has an independently versioned declarative
 conformance suite. Safe projections are exercised without mutation; fixture-

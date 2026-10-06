@@ -225,9 +225,9 @@ a configuration value, and rename or remove a text override. Arbitrary
 JavaScript migration code is not accepted.
 
 Control exposes administrator-only `plan-migration`, `apply-migration`,
-`get-migration`, `resume-migration` and `rollback-migration` capabilities through
-`ulvia.cms.collections`. Generic operation status and listing use
-`ulvia.cms.operations`. Planning validates the complete target collection graph,
+`get-migration`, `migration-status`, `resume-migration` and `rollback-migration`
+capabilities through `ulvia.cms.collections`. Durable asynchronous work is
+listed and inspected through `ulvia.cms.jobs`. Planning validates the complete target collection graph,
 transformed pages, configuration, text overrides and theme references without
 changing the installed site state. Page
 planning and snapshot verification use stable ID cursors in batches of at most
@@ -279,10 +279,11 @@ after expanding installed compositions. Catalogue values are static; dynamic
 parameters and plural forms are not collection text features.
 
 `ulvia.cms.collections/list` and `get` provide installed release and site state.
-`ulvia.cms.design/overview` supplies design metadata; `get-texts`, `save-texts`,
-`get-theme` and `save-theme` read or save revision-checked overrides. All calls
-use `POST <basePath>/.cms/call/<contract>/<capability>` from an activated Control
-Page execution plan.
+`ulvia.cms.localization/overview`, `get-texts` and `save-texts` expose languages
+and revision-checked collection text overrides. `ulvia.cms.theme/get` and `save`
+expose the composed site theme and its revision-checked values. All calls use
+`POST <basePath>/.cms/call/<contract>/<capability>` from an activated Control Page
+execution plan.
 
 ## Private and code blocs
 

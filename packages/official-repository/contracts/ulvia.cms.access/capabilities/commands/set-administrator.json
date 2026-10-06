@@ -1,0 +1,109 @@
+{
+    "id": "set-administrator",
+    "description": "Grant or revoke administrator access with revision control and self-lockout protection.",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "sub": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+            },
+            "enabled": {
+                "type": "boolean"
+            },
+            "expectedRevision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            }
+        },
+        "required": [
+            "sub",
+            "enabled",
+            "expectedRevision"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "sub": {
+                "type": "string",
+                "maxLength": 200
+            },
+            "administrator": {
+                "type": "boolean"
+            },
+            "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "bootstrap": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "sub",
+            "administrator",
+            "revision",
+            "bootstrap"
+        ]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CANNOT_REMOVE_SELF",
+            "retryable": false
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "ACTOR_UNAVAILABLE",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "PUT",
+        "path": "/v1/cms/access/administrator",
+        "input": {
+            "body": true
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NOT_FOUND": 404,
+                "CANNOT_REMOVE_SELF": 409,
+                "REVISION_CONFLICT": 409,
+                "ACTOR_UNAVAILABLE": 403,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

@@ -1,0 +1,112 @@
+{
+    "id": "create-folder",
+    "description": "Create one folder in the author file library.",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+            },
+            "parentId": {
+                "type": "string",
+                "nullable": true,
+                "maxLength": 96
+            }
+        },
+        "required": [
+            "name"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "revision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+            },
+            "type": {
+                "type": "string",
+                "enum": [
+                    "folder"
+                ],
+                "maxLength": 6
+            },
+            "name": {
+                "type": "string",
+                "maxLength": 255
+            },
+            "parentId": {
+                "type": "string",
+                "nullable": true,
+                "maxLength": 96
+            },
+            "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "maxLength": 40
+            },
+            "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "maxLength": 40
+            }
+        },
+        "required": [
+            "id",
+            "revision",
+            "type",
+            "name",
+            "parentId",
+            "createdAt",
+            "updatedAt"
+        ]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NAME_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "POST",
+        "path": "/v1/cms/files/folders",
+        "input": {
+            "body": true
+        },
+        "response": {
+            "successStatuses": [
+                201
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NAME_CONFLICT": 409,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

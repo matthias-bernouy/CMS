@@ -4,10 +4,11 @@ import type { ControlCmsOptions } from "cms-control/core/admin/control/types";
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const RECOVERY_CAPABILITIES = [
     "/.cms/call/ulvia.cms.collections/get-migration",
+    "/.cms/call/ulvia.cms.collections/migration-status",
     "/.cms/call/ulvia.cms.collections/resume-migration",
     "/.cms/call/ulvia.cms.collections/rollback-migration",
-    "/.cms/call/ulvia.cms.operations/get",
-    "/.cms/call/ulvia.cms.operations/list",
+    "/.cms/call/ulvia.cms.jobs/get",
+    "/.cms/call/ulvia.cms.jobs/list",
 ];
 
 export function createControlMaintenanceGuard(service: ControlCmsOptions["collections"]): Middleware {

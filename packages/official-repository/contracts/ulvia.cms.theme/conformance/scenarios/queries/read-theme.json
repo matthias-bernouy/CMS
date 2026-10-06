@@ -1,0 +1,31 @@
+{
+    "id": "read-theme",
+    "description": "Verify that a fresh CMS tenant exposes a structured site theme.",
+    "calls": [
+        {
+            "id": "get",
+            "capabilityId": "get",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {},
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/revision",
+                        "present": true
+                    },
+                    {
+                        "path": "/activeThemeId",
+                        "present": true
+                    },
+                    {
+                        "path": "/themeJson",
+                        "present": true
+                    }
+                ]
+            }
+        }
+    ]
+}

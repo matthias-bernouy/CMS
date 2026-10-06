@@ -1,0 +1,4 @@
+{
+    "capabilityId": "delete",
+    "reason": "The read-only smoke suite must not delete provider data."
+}

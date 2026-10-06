@@ -116,9 +116,10 @@ store and records an observation. These workflows are not a second protocol and
 do not give collection JavaScript direct access to credentials.
 
 `/admin/collections` exposes repository discovery, installation, configuration
-and migration through `ulvia.cms.collections`; collection theme and text
-editing use `ulvia.cms.design`. `/admin/settings` and `/admin/access` cover site
-and administrator settings. Provider health remains the last validated runtime
+and migration through `ulvia.cms.collections`; collection theme editing uses
+`ulvia.cms.theme` and language/text editing uses `ulvia.cms.localization`.
+`/admin/settings` and `/admin/access` cover site and administrator settings.
+Provider health remains the last validated runtime
 observation shown by these Pages, not an implicit live probe of every
 capability. Every collection request uses the common
 `POST /.cms/call/<contract>/<capability>` transport and its Page execution pin.

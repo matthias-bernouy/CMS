@@ -1,0 +1,118 @@
+{
+    "id": "get",
+    "access": "admin",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "jobId": {
+                "type": "string",
+                "format": "uuid",
+                "maxLength": 36
+            }
+        },
+        "required": [
+            "jobId"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string",
+                "format": "uuid",
+                "maxLength": 36
+            },
+            "contractId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "capabilityId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "status": {
+                "type": "string",
+                "enum": [
+                    "queued",
+                    "running",
+                    "succeeded",
+                    "failed"
+                ],
+                "maxLength": 9
+            },
+            "revision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+            },
+            "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "maxLength": 40
+            },
+            "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "maxLength": 40
+            },
+            "errorCode": {
+                "type": "string",
+                "maxLength": 64
+            },
+            "resultJson": {
+                "type": "string",
+                "maxLength": 1048576
+            }
+        },
+        "required": [
+            "id",
+            "contractId",
+            "capabilityId",
+            "status",
+            "revision",
+            "createdAt",
+            "updatedAt"
+        ]
+    },
+    "errors": [
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "GET",
+        "path": "/v1/cms/jobs/{jobId}",
+        "input": {
+            "path": {
+                "jobId": "jobId"
+            }
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "NOT_FOUND": 404,
+                "INVALID_INPUT": 422,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

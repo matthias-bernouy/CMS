@@ -2,11 +2,12 @@ import type { CoreCapabilityRegistry } from "../dispatch/registry";
 import type { CmsCoreDependencies, CmsCoreGateway, CmsCoreProviderManagement } from "../ports";
 import { registerAccessCapabilities } from "./access";
 import { registerCollectionCapabilities } from "./collections";
-import { registerDesignCapabilities } from "./design";
 import { registerFileCapabilities } from "./files";
-import { registerOperationCapabilities } from "./operations";
+import { registerJobCapabilities } from "./jobs";
 import { registerPageCapabilities } from "./pages";
 import { registerProviderCapabilities } from "./providers";
+import { registerLocalizationCapabilities } from "./site-configuration/localization";
+import { registerThemeCapabilities } from "./site-configuration/theme";
 import type { CollectionSources } from "./collections/sources";
 import type { CoreOperationExecutor } from "../operations/CoreOperationExecutor";
 
@@ -21,20 +22,22 @@ export function registerOfficialCoreCapabilities(
     registerPageCapabilities(dispatcher, core);
     registerCollectionCapabilities(dispatcher, core, operations, collectionSources);
     registerFileCapabilities(dispatcher, core);
-    registerDesignCapabilities(dispatcher, core);
+    registerThemeCapabilities(dispatcher, core);
+    registerLocalizationCapabilities(dispatcher, core);
     registerProviderCapabilities(dispatcher, gateway, providerManagement);
     registerAccessCapabilities(dispatcher, core, gateway);
-    registerOperationCapabilities(dispatcher, core, operations);
+    registerJobCapabilities(dispatcher, operations);
 }
 
 export {
     registerAccessCapabilities,
     registerCollectionCapabilities,
-    registerDesignCapabilities,
     registerFileCapabilities,
-    registerOperationCapabilities,
+    registerJobCapabilities,
+    registerLocalizationCapabilities,
     registerPageCapabilities,
     registerProviderCapabilities,
+    registerThemeCapabilities,
 };
 export { CollectionSources } from "./collections/sources";
 export type { CmsCoreDependencies, CmsCoreGateway, CmsCoreProviderManagement } from "../ports";

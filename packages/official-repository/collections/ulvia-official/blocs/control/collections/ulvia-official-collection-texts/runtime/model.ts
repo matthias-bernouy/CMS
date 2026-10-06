@@ -16,7 +16,7 @@ export type TextCatalogue = {
     overridesJson: string;
     items: TextItem[];
 };
-export type DesignOverview = {
+export type LocalizationOverview = {
     language: string;
     additionalLanguages: string[];
     activeLanguages: string[];

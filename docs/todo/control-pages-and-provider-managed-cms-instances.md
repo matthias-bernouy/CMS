@@ -1,6 +1,6 @@
 # Control Pages And Provider-Managed CMS Instances
 
-**Status (2026-10-06): target design with all seven Control domains represented
+**Status (2026-10-06): target design with all eight Control domains represented
 by provider-backed V1 Pages.** Provider-owned local instance discovery, local
 and production-image official-resource bootstrap, site-owned Control Page
 routing and the official Core contract catalogue are implemented. The seven
@@ -344,10 +344,11 @@ Core release:
 ulvia.cms.pages
 ulvia.cms.files
 ulvia.cms.collections
-ulvia.cms.design
+ulvia.cms.localization
 ulvia.cms.providers
 ulvia.cms.access
-ulvia.cms.operations
+ulvia.cms.jobs
+ulvia.cms.theme
 ```
 
 These contracts operate inside the already authenticated instance context.

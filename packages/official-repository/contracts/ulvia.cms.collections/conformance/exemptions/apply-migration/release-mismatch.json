@@ -1,0 +1,5 @@
+{
+    "capabilityId": "apply-migration",
+    "errorCode": "RELEASE_MISMATCH",
+    "reason": "A repository integrity failure requires a deliberately inconsistent immutable fixture."
+}

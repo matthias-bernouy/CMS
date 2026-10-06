@@ -5,9 +5,10 @@ export type {
     CmsAccessDependencies,
     CmsCollectionDependencies,
     CmsCoreDependencies,
-    CmsDesignDependencies,
     CmsFileDependencies,
+    CmsLocalizationDependencies,
     CmsPageDependencies,
+    CmsThemeDependencies,
     CmsCoreGateway,
     CmsCoreProviderManagement,
 } from "./ports";

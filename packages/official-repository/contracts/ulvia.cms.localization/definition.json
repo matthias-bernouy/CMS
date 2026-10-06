@@ -1,0 +1,17 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "ulvia.cms.localization",
+    "name": "CMS Localization",
+    "description": "Manage site languages and collection-owned text overrides.",
+    "version": "1.0.0",
+    "publisherId": "ulvia.official",
+    "catalogue": {
+        "icon": "language",
+        "categories": [
+            "administration",
+            "localization"
+        ]
+    }
+}

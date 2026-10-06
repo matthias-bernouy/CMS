@@ -1,0 +1,5 @@
+{
+    "capabilityId": "create",
+    "errorCode": "PATH_CONFLICT",
+    "reason": "A portable suite cannot assume a conflicting site path."
+}

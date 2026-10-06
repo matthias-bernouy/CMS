@@ -7,6 +7,9 @@ import {
     LocalRepositoryYanks,
     withRepositoryWriteLock,
 } from "@bernouy/cms-repository/repository/filesystem";
+import { compileConformanceSource, prepareConformanceSource } from "../release/authored/conformance";
+import { resolveConformanceDependencies } from "../release/authored/conformanceDependencies";
+import { prepareContractSource } from "../release/authored/contract";
 import { prepareCollectionRelease } from "../release/source";
 
 export async function releaseCommand(
@@ -38,7 +41,17 @@ async function release(directory: string, repositoryRoot: string, log: (message:
     }
     if (kind === "contract") {
         assertFolder(directory, definition.contractId);
-        const { added, admission } = await contracts.release(bytes, directory);
+        const prepared = await prepareContractSource(directory);
+        const conformance = await compileConformanceSource(directory);
+        if (conformance) {
+            const catalogue = await contracts.catalogue();
+            const dependencies = await resolveConformanceDependencies(conformance, async (contractId, version) => {
+                const dependency = await catalogue.get(contractId, version);
+                return dependency?.admission ?? null;
+            });
+            await prepareConformanceSource(directory, prepared.admission, dependencies, conformance);
+        }
+        const { added, admission } = await contracts.release(prepared.sourceJson, directory);
         const { publisherId, contractId, version } = admission.release;
         log(`${added ? "+" : "="} contract ${publisherId}/${contractId}@${version} (${admission.digest})`);
         return;

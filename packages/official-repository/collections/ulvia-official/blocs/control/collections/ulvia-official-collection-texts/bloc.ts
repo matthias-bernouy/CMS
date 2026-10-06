@@ -1,15 +1,15 @@
 import { Component } from "@bernouy/cms-content/browser";
 import template from "./shadowdom.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
-import { designCapability } from "./runtime/client";
-import { itemGroup, type DesignOverview, type TextCatalogue } from "./runtime/model";
+import { localizationCapability } from "./runtime/client";
+import { itemGroup, type LocalizationOverview, type TextCatalogue } from "./runtime/model";
 import { renderGroups, renderItems, renderLocales } from "./runtime/render";
 import { initializeTextsWorkspace } from "./runtime/workspace";
 
 export class Bloc extends Component {
     static observedAttributes = ["collection-id"];
     private catalogue: TextCatalogue | null = null;
-    private overview: DesignOverview | null = null;
+    private overview: LocalizationOverview | null = null;
     private group = "";
     private query = "";
     private busy = false;
@@ -42,8 +42,13 @@ export class Bloc extends Component {
         return this.run(async () => {
             const collectionId = this.getAttribute("collection-id") ?? "";
             const [overview, catalogue] = await Promise.all([
-                this.overview ? Promise.resolve(this.overview) : designCapability<DesignOverview>("overview", {}),
-                designCapability<TextCatalogue>("get-texts", { collectionId, ...(locale ? { locale } : {}) }),
+                this.overview
+                    ? Promise.resolve(this.overview)
+                    : localizationCapability<LocalizationOverview>("overview", {}),
+                localizationCapability<TextCatalogue>("get-texts", {
+                    collectionId,
+                    ...(locale ? { locale } : {}),
+                }),
             ]);
             this.overview = overview;
             this.catalogue = catalogue;
@@ -95,7 +100,7 @@ export class Bloc extends Component {
             } else {
                 delete overrides[locale];
             }
-            this.catalogue = await designCapability<TextCatalogue>("save-texts", {
+            this.catalogue = await localizationCapability<TextCatalogue>("save-texts", {
                 collectionId: this.catalogue.collectionId,
                 expectedRevision: this.catalogue.revision,
                 locale,

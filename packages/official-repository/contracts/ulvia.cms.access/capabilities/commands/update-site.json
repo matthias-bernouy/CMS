@@ -1,0 +1,102 @@
+{
+    "id": "update-site",
+    "description": "Update safe site identity and availability settings with revision control.",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "expectedRevision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+            },
+            "host": {
+                "type": "string",
+                "maxLength": 2048
+            },
+            "visible": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "expectedRevision"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "name": {
+                "type": "string",
+                "maxLength": 160
+            },
+            "host": {
+                "type": "string",
+                "maxLength": 2048
+            },
+            "language": {
+                "type": "string",
+                "maxLength": 64
+            },
+            "visible": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "revision",
+            "name",
+            "host",
+            "language",
+            "visible"
+        ]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "PATCH",
+        "path": "/v1/cms/access/site",
+        "input": {
+            "body": true
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "REVISION_CONFLICT": 409,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

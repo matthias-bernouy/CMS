@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { DefaultCoreCapabilityDispatcher, type CoreCapabilityInvocationContext } from "@bernouy/cms-core";
 import { CoreOperationExecutor, MemoryCoreOperationStore } from "@bernouy/cms-core";
-import { registerOperationCapabilities } from "@bernouy/cms-core/capabilities";
+import { registerJobCapabilities } from "@bernouy/cms-core/capabilities";
 
 const context: CoreCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
@@ -92,22 +92,18 @@ test("Core operations abort cooperative work when lease renewal is lost", async 
     expect((await store.get("default", queued.operationId))?.status).toBe("running");
 });
 
-test("the operations contract exposes a completed result only from its detail query", async () => {
+test("the jobs contract exposes a completed result only from its detail query", async () => {
     const store = new MemoryCoreOperationStore();
     const executor = new CoreOperationExecutor(store);
     executor.register("ulvia.cms.collections", "apply", async () => ({ migrationId: "migration-1" }));
     const queued = await executor.enqueue("ulvia.cms.collections", "apply", {}, context);
     await expectTerminal(store, queued.operationId, "succeeded");
     const dispatcher = new DefaultCoreCapabilityDispatcher();
-    registerOperationCapabilities(
-        dispatcher,
-        { collectionMigrations: { getActive: async () => null, listAudits: async () => [] } } as never,
-        executor,
-    );
+    registerJobCapabilities(dispatcher, executor);
 
-    const detail = await dispatcher.invoke("ulvia.cms.operations", "get", { operationId: queued.operationId }, context);
+    const detail = await dispatcher.invoke("ulvia.cms.jobs", "get", { jobId: queued.operationId }, context);
     expect(JSON.parse(String(detail.resultJson))).toEqual({ migrationId: "migration-1" });
-    const listed = await dispatcher.invoke("ulvia.cms.operations", "list", {}, context);
+    const listed = await dispatcher.invoke("ulvia.cms.jobs", "list", {}, context);
     expect(listed.items[0]).not.toHaveProperty("resultJson");
 });
 

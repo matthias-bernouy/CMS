@@ -1,0 +1,5 @@
+{
+    "capabilityId": "update-languages",
+    "errorCode": "MIGRATION_IN_PROGRESS",
+    "reason": "The portable smoke suite does not prescribe an active collection migration."
+}

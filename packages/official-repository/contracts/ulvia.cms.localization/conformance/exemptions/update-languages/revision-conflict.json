@@ -1,0 +1,5 @@
+{
+    "capabilityId": "update-languages",
+    "errorCode": "REVISION_CONFLICT",
+    "reason": "The portable smoke suite does not prescribe the concurrent write needed to produce this domain error."
+}

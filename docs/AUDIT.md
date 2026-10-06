@@ -394,10 +394,10 @@ site-owned Control Pages.
 
 ### Collection-Owned Control Domain V1
 
-The official collection now supplies Control Pages for all seven planned
+The official collection now supplies Control Pages for all eight planned
 administration areas. `ulvia.cms.pages` retains the first complete mutation
-slice. Six new immutable contracts cover collections, files, design, providers,
-access and operations. Their thin handlers live in the CMS Core surface, which
+slice. The immutable contracts cover collections, files, localization, theme,
+providers, access and durable jobs. Their thin handlers live in the CMS Core surface, which
 derives transport routes from admitted HTTP bindings, and the Pages call them
 only through exact execution plans and `/.cms/call`.
 
@@ -407,8 +407,8 @@ Authenticated file upload and replacement deliberately stay on the bounded
 kernel multipart transport; collection Blocs receive no arbitrary private
 Control endpoint access. Provider credentials remain inaccessible to
 collections, while backup and Core process updates remain provider lifecycle
-operations. Operational state is part of the Collections workspace rather than
-a standalone Operations Page.
+operations. Migration state is part of the Collections workspace, while the
+shared jobs contract exposes durable asynchronous execution without a standalone Page.
 
 Generic child controls remain public, reusable collection Blocs. Only the
 domain managers that orchestrate complete administration workspaces are
@@ -516,7 +516,7 @@ imported token. This is the correct strict policy.
 ### `ulvia-official` State
 
 The current `1.0.0` source includes more than one hundred Bloc definitions,
-119 theme tokens, recursively organized translations/texts and seven Control
+119 theme tokens, recursively organized translations/texts and eight Control
 Pages. Forms, layouts, navigation and content/marketing elements provide a
 credible base collection. Public child controls can be reused inside other
 Pages and compositions; internal managers exist only to assemble complete

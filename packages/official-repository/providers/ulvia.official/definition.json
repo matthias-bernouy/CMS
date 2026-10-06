@@ -11,54 +11,71 @@
     },
     "buildVersionRange": ">=0.1.0 <1.0.0",
     "endpoint": {
-        "allowedOrigins": ["http://127.0.0.1:5103"],
+        "allowedOrigins": [
+            "http://127.0.0.1:5103"
+        ],
         "defaultOrigin": "http://127.0.0.1:5103"
     },
-    "configuration": { "type": "object", "properties": {}, "required": [] },
+    "configuration": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    },
     "credentialSlots": [
-        { "id": "provider-token", "label": "Provider token", "required": true, "secretType": "token" }
+        {
+            "id": "provider-token",
+            "label": "Provider token",
+            "required": true,
+            "secretType": "token"
+        }
     ],
     "implementations": [
         {
             "contractId": "ulvia.cms.access",
             "version": "1.0.0",
-            "digest": "sha256:adbf023ca93b5fba28924fe410c1cff193320a3513f9ee447f11291be9e2d8f7",
+            "digest": "sha256:041ccc5b296663df29909ad0b4b9ef25769a44a2f6594e81a421540737a52e3a",
             "requires": []
         },
         {
             "contractId": "ulvia.cms.collections",
             "version": "1.0.0",
-            "digest": "sha256:41710f2b12d99cfafca9a1eda895bc871b7ba108e618922be9d971518de5f086",
+            "digest": "sha256:f74c36028520d1b9ed466d85c77c7785548fc826065468c85cbf23c13ede32f1",
             "requires": []
         },
         {
-            "contractId": "ulvia.cms.design",
+            "contractId": "ulvia.cms.localization",
             "version": "1.0.0",
-            "digest": "sha256:e61da73fb3fe91f592fc85d6cbfa4b51a6033eb8fb5737777d2138414f4a503a",
+            "digest": "sha256:4d835c33f99b9630a981387fcf5f41db4658d749c1b8b8005a7f5139dff818a8",
             "requires": []
         },
         {
             "contractId": "ulvia.cms.files",
             "version": "1.0.0",
-            "digest": "sha256:5bfa54c3d5de59bebcbda1e0403efc93a529390520cca2c5281a030726a269fe",
+            "digest": "sha256:716cc2f4b96e40ccd6fd833f23c49d27c0ce7aff79a7c266805e5e4bb0b13a92",
             "requires": []
         },
         {
-            "contractId": "ulvia.cms.operations",
+            "contractId": "ulvia.cms.jobs",
             "version": "1.0.0",
-            "digest": "sha256:386f1b58017287dd5bdde6f72110da128c19334f09a809e1cf16c3e99ee1d214",
+            "digest": "sha256:6234b7308da6bdacc2309bb1df51c57aa4ce1ed98f773370c98d657a02e45101",
             "requires": []
         },
         {
             "contractId": "ulvia.cms.pages",
             "version": "1.0.0",
-            "digest": "sha256:72c8caa333976b20ff18daaae8626e8f9b648731739644b2e357d5fc5be4cdc1",
+            "digest": "sha256:8c19d6ed81bdaa6013e575c874fe80b78bfec173c7e62d9ab141e783190c8eb8",
             "requires": []
         },
         {
             "contractId": "ulvia.cms.providers",
             "version": "1.0.0",
-            "digest": "sha256:f48e63ac505ba3d103b1996f3e4e50fc4824faa23e190e63f1195b6ee8cc8a80",
+            "digest": "sha256:71a86fad8d3542ceaca1c893011ce7fd8b0147dbcd67505c3dce26487e86962b",
+            "requires": []
+        },
+        {
+            "contractId": "ulvia.cms.theme",
+            "version": "1.0.0",
+            "digest": "sha256:8a7841e5a354f2efb9b8e1ae62b20d19dabee6ed4e9097c3b1ef57c9d544145e",
             "requires": []
         }
     ]

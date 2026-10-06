@@ -1,0 +1,5 @@
+{
+    "capabilityId": "resume-migration",
+    "errorCode": "IDEMPOTENCY_CONFLICT",
+    "reason": "A conflicting replay requires a suite-owned migration and invocation key."
+}

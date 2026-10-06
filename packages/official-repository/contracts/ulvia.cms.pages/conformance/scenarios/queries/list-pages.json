@@ -1,0 +1,24 @@
+{
+    "id": "list-pages",
+    "calls": [
+        {
+            "id": "first-page",
+            "capabilityId": "list",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {
+                "limit": 25
+            },
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/items",
+                        "present": true
+                    }
+                ]
+            }
+        }
+    ]
+}

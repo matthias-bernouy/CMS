@@ -1,0 +1,5 @@
+{
+    "capabilityId": "catalogue",
+    "errorCode": "CATALOGUE_TOO_LARGE",
+    "reason": "The portable suite does not prescribe an oversized repository fixture."
+}

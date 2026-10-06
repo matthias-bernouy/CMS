@@ -9,8 +9,8 @@
     "surfaces": ["control"],
     "uses": ["ulvia-official-action", "ulvia-official-select"],
     "requires": [
-        { "contractId": "ulvia.cms.design", "capabilityId": "get-theme", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.design", "capabilityId": "save-theme", "versionRange": "^1.0.0" }
+        { "contractId": "ulvia.cms.theme", "capabilityId": "get", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.theme", "capabilityId": "save", "versionRange": "^1.0.0" }
     ],
     "slots": {}
 }

@@ -2,7 +2,7 @@ import { stat } from "node:fs/promises";
 import { join } from "node:path";
 import { buildCollectionBloc } from "@bernouy/cms-repository/collections/build";
 import { discoverCollectionBlocSources, type BlocSource } from "./blocDiscovery";
-import { readSourceEntries, scanFileSourceTree } from "./sourceTree";
+import { readSourceEntries, scanFileSourceTree } from "./authored/sourceTree";
 
 const DEFAULT_BLOC_SOURCE = `
 import { Component } from "@bernouy/cms-content/browser";

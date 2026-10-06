@@ -1,0 +1,141 @@
+{
+    "id": "list",
+    "description": "List approved provider installations and selected contract releases.",
+    "access": "admin",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "selectionRevision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "installations": {
+                "type": "array",
+                "maxItems": 128,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "providerId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "accountId": {
+                            "type": "string",
+                            "maxLength": 160
+                        },
+                        "endpoint": {
+                            "type": "string",
+                            "format": "uri",
+                            "maxLength": 2048
+                        },
+                        "status": {
+                            "type": "string",
+                            "enum": [
+                                "enabled",
+                                "disabled",
+                                "revoked"
+                            ],
+                            "maxLength": 8
+                        },
+                        "manifestVersion": {
+                            "type": "string",
+                            "maxLength": 64
+                        },
+                        "revision": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                        },
+                        "observedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "maxLength": 40
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "providerId",
+                        "accountId",
+                        "endpoint",
+                        "status",
+                        "manifestVersion",
+                        "revision"
+                    ]
+                }
+            },
+            "selections": {
+                "type": "array",
+                "maxItems": 256,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "contractId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "version": {
+                            "type": "string",
+                            "maxLength": 64
+                        },
+                        "digest": {
+                            "type": "string",
+                            "maxLength": 71
+                        },
+                        "installationId": {
+                            "type": "string",
+                            "maxLength": 96
+                        }
+                    },
+                    "required": [
+                        "contractId",
+                        "version",
+                        "digest",
+                        "installationId"
+                    ]
+                }
+            }
+        },
+        "required": [
+            "selectionRevision",
+            "installations",
+            "selections"
+        ]
+    },
+    "errors": [
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "GET",
+        "path": "/v1/cms/providers",
+        "input": {},
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

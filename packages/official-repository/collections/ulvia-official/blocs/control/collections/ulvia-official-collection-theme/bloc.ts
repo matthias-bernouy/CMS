@@ -42,7 +42,7 @@ export class Bloc extends Component {
     private async load(): Promise<void> {
         await this.run(async () => {
             this.selection.collectionId = this.getAttribute("collection-id") ?? "";
-            this.document = await themeCapability("get-theme", {});
+            this.document = await themeCapability("get", {});
             this.settings = JSON.parse(this.document.themeJson) as ThemeSettings;
             this.selection.profileId = this.settings.activeThemeId || this.settings.themes[0]?.id || "";
             this.selection.tokenId =
@@ -118,7 +118,7 @@ export class Bloc extends Component {
             if (!this.document || !this.settings) {
                 return;
             }
-            this.document = await themeCapability("save-theme", {
+            this.document = await themeCapability("save", {
                 expectedRevision: this.document.revision,
                 themeJson: JSON.stringify(this.settings),
             });

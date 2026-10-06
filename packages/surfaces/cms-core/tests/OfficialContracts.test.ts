@@ -19,11 +19,12 @@ const TOKEN = "official-contract-matrix-token";
 const ROUTES = [
     ["ulvia.cms.access", "overview", "/v1/cms/access"],
     ["ulvia.cms.collections", "list", "/v1/cms/collections/installed"],
-    ["ulvia.cms.design", "overview", "/v1/cms/design"],
     ["ulvia.cms.files", "list", "/v1/cms/files"],
-    ["ulvia.cms.operations", "status", "/v1/cms/operations/overview"],
+    ["ulvia.cms.jobs", "list", "/v1/cms/jobs"],
+    ["ulvia.cms.localization", "overview", "/v1/cms/localization"],
     ["ulvia.cms.pages", "list", "/v1/cms/pages"],
     ["ulvia.cms.providers", "list", "/v1/cms/providers"],
+    ["ulvia.cms.theme", "get", "/v1/cms/theme"],
 ] as const;
 
 test("mounts and dispatches every official CMS contract release", async () => {
@@ -89,7 +90,10 @@ function report(contracts: Awaited<ReturnType<typeof loadOfficialContract>>[]) {
 }
 
 async function loadOfficialContract(contractId: string) {
-    const path = resolve(import.meta.dir, `../../../official-repository/contracts/${contractId}/definition.json`);
+    const path = resolve(
+        import.meta.dir,
+        `../../../runtimes/ulvia-cli/src/bootstrap/resources/contracts/cms/${contractId}/definition.json`,
+    );
     return admitContractReleaseJson(await readFile(path));
 }
 

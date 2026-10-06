@@ -1,5 +1,5 @@
 import { basename, join } from "node:path";
-import { readSourceEntries, scanJsonSourceTree } from "./sourceTree";
+import { readSourceEntries, scanJsonSourceTree } from "./authored/sourceTree";
 
 type ExportKind = "blocs" | "themeTokens" | "texts" | "assets" | "pages";
 

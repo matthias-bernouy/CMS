@@ -1,0 +1,204 @@
+{
+    "id": "save-texts",
+    "description": "Validate and replace one installed collection's site-owned text overrides.",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "collectionId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 96
+            },
+            "expectedRevision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "locale": {
+                "type": "string",
+                "maxLength": 64
+            },
+            "overridesJson": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 1048576
+            }
+        },
+        "required": [
+            "collectionId",
+            "expectedRevision",
+            "overridesJson"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "revision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "collectionId": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "locale": {
+                "type": "string",
+                "maxLength": 64
+            },
+            "overridesJson": {
+                "type": "string",
+                "maxLength": 1048576
+            },
+            "items": {
+                "type": "array",
+                "maxItems": 4096,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "generation": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                        },
+                        "label": {
+                            "type": "string",
+                            "maxLength": 300
+                        },
+                        "description": {
+                            "type": "string",
+                            "maxLength": 2000
+                        },
+                        "category": {
+                            "type": "string",
+                            "maxLength": 300
+                        },
+                        "group": {
+                            "type": "string",
+                            "maxLength": 300
+                        },
+                        "values": {
+                            "type": "array",
+                            "maxItems": 64,
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "locale": {
+                                        "type": "string",
+                                        "maxLength": 64
+                                    },
+                                    "value": {
+                                        "type": "string",
+                                        "maxLength": 65536
+                                    }
+                                },
+                                "required": [
+                                    "locale",
+                                    "value"
+                                ]
+                            }
+                        },
+                        "overrides": {
+                            "type": "array",
+                            "maxItems": 64,
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "locale": {
+                                        "type": "string",
+                                        "maxLength": 64
+                                    },
+                                    "value": {
+                                        "type": "string",
+                                        "maxLength": 65536
+                                    }
+                                },
+                                "required": [
+                                    "locale",
+                                    "value"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "generation",
+                        "values",
+                        "overrides"
+                    ]
+                }
+            }
+        },
+        "required": [
+            "revision",
+            "collectionId",
+            "locale",
+            "overridesJson",
+            "items"
+        ]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "MIGRATION_IN_PROGRESS",
+            "retryable": true
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "PUT",
+        "path": "/v1/cms/localization/texts/{collectionId}",
+        "input": {
+            "path": {
+                "collectionId": "collectionId"
+            },
+            "body": {
+                "properties": [
+                    "expectedRevision",
+                    "locale",
+                    "overridesJson"
+                ]
+            }
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NOT_FOUND": 404,
+                "REVISION_CONFLICT": 409,
+                "MIGRATION_IN_PROGRESS": 423,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

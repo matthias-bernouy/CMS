@@ -1,0 +1,5 @@
+{
+    "capabilityId": "upgrade",
+    "errorCode": "MIGRATION_REQUIRED",
+    "reason": "A generation-changing release requires a suite-owned migration fixture."
+}

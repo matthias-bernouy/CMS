@@ -1,0 +1,75 @@
+{
+    "id": "read-core-state",
+    "description": "Verify the portable, non-destructive administration projections exposed by a fresh CMS tenant.",
+    "calls": [
+        {
+            "id": "list",
+            "capabilityId": "list",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {},
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/revision",
+                        "present": true
+                    },
+                    {
+                        "path": "/items",
+                        "present": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": "catalogue",
+            "capabilityId": "catalogue",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {},
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/revision",
+                        "present": true
+                    },
+                    {
+                        "path": "/releases",
+                        "present": true
+                    },
+                    {
+                        "path": "/installed",
+                        "present": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": "migration-status",
+            "capabilityId": "migration-status",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {
+                "limit": 25
+            },
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/maintenance",
+                        "present": true
+                    },
+                    {
+                        "path": "/migrations",
+                        "present": true
+                    }
+                ]
+            }
+        }
+    ]
+}

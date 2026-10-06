@@ -1,0 +1,86 @@
+{
+    "id": "delete-user",
+    "description": "Delete one member, its local credential and personal access tokens.",
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "sub": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+            }
+        },
+        "required": [
+            "sub"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "sub": {
+                "type": "string",
+                "maxLength": 200
+            },
+            "deleted": {
+                "type": "boolean"
+            }
+        },
+        "required": [
+            "sub",
+            "deleted"
+        ]
+    },
+    "errors": [
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CANNOT_REMOVE_SELF",
+            "retryable": false
+        },
+        {
+            "code": "PROTECTED_USER",
+            "retryable": false
+        },
+        {
+            "code": "ACTOR_UNAVAILABLE",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "DELETE",
+        "path": "/v1/cms/access/user",
+        "input": {
+            "query": {
+                "sub": "sub"
+            }
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "NOT_FOUND": 404,
+                "CANNOT_REMOVE_SELF": 409,
+                "PROTECTED_USER": 409,
+                "ACTOR_UNAVAILABLE": 403,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

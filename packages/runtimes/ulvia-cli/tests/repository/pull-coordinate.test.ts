@@ -1,15 +1,12 @@
 import { expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { RemoteRepositoryClient } from "@bernouy/cms-repository/repository/publication";
+import { compileContractSource } from "../../src/release/authored/contract";
 
 test("pull rejects an admitted release served under another coordinate", async () => {
-    const source = resolve(
-        import.meta.dir,
-        "../../../../official-repository/contracts/ulvia.cms.operations/definition.json",
-    );
-    const admission = await admitContractReleaseJson(await readFile(source, "utf8"));
+    const source = resolve(import.meta.dir, "../../../../official-repository/contracts/ulvia.cms.jobs");
+    const admission = await admitContractReleaseJson(await compileContractSource(source));
     const server = Bun.serve({
         hostname: "127.0.0.1",
         port: 0,

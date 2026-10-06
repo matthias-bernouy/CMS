@@ -1,0 +1,17 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "ulvia.cms.theme",
+    "name": "CMS Theme",
+    "description": "Read and manage the site theme composed from installed collection tokens.",
+    "version": "1.0.0",
+    "publisherId": "ulvia.official",
+    "catalogue": {
+        "icon": "theme",
+        "categories": [
+            "administration",
+            "theme"
+        ]
+    }
+}

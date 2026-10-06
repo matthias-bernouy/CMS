@@ -1,7 +1,7 @@
 import type { ThemeDocument } from "./model";
 
 export async function themeCapability(capabilityId: string, input: unknown): Promise<ThemeDocument> {
-    const response = await fetch(`/.cms/call/ulvia.cms.design/${capabilityId}`, {
+    const response = await fetch(`/.cms/call/ulvia.cms.theme/${capabilityId}`, {
         method: "POST",
         headers: { Accept: "application/json", "Content-Type": "application/json" },
         body: JSON.stringify(input),

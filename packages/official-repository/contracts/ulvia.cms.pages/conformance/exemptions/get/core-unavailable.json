@@ -1,0 +1,5 @@
+{
+    "capabilityId": "get",
+    "errorCode": "CORE_UNAVAILABLE",
+    "reason": "The suite does not prescribe how a provider disconnects its selected Core."
+}

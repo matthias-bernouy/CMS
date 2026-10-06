@@ -1,0 +1,5 @@
+{
+    "capabilityId": "get-current",
+    "errorCode": "INSTANCE_UNAVAILABLE",
+    "reason": "The runner-independent suite must not prescribe how a provider makes its managed Core unavailable."
+}

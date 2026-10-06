@@ -1,0 +1,97 @@
+{
+    "id": "get-user",
+    "description": "Read one CMS member and its administrator state.",
+    "access": "admin",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {
+            "sub": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+            }
+        },
+        "required": [
+            "sub"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "sub": {
+                "type": "string",
+                "maxLength": 200
+            },
+            "email": {
+                "type": "string",
+                "format": "email",
+                "maxLength": 320
+            },
+            "provider": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "administrator": {
+                "type": "boolean"
+            },
+            "administratorRevision": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+            },
+            "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "maxLength": 40
+            },
+            "lastSeenAt": {
+                "type": "string",
+                "format": "date-time",
+                "maxLength": 40
+            }
+        },
+        "required": [
+            "sub",
+            "administrator",
+            "administratorRevision",
+            "createdAt",
+            "lastSeenAt"
+        ]
+    },
+    "errors": [
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "GET",
+        "path": "/v1/cms/access/user",
+        "input": {
+            "query": {
+                "sub": "sub"
+            }
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "NOT_FOUND": 404,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

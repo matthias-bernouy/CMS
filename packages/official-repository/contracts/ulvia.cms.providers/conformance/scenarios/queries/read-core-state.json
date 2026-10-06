@@ -1,0 +1,31 @@
+{
+    "id": "read-core-state",
+    "description": "Verify the portable, non-destructive administration projections exposed by a fresh CMS tenant.",
+    "calls": [
+        {
+            "id": "list",
+            "capabilityId": "list",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {},
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/selectionRevision",
+                        "present": true
+                    },
+                    {
+                        "path": "/installations",
+                        "present": true
+                    },
+                    {
+                        "path": "/selections",
+                        "present": true
+                    }
+                ]
+            }
+        }
+    ]
+}

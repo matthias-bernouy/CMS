@@ -1,0 +1,5 @@
+{
+    "capabilityId": "update",
+    "errorCode": "INVALID_PAGE",
+    "reason": "Page document admission belongs to the selected Core."
+}

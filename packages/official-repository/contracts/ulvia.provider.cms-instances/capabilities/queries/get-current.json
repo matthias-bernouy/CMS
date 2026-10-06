@@ -1,0 +1,110 @@
+{
+    "id": "get-current",
+    "description": "Return the CMS instance selected by the authenticated provider context without accepting a caller-supplied instance identifier.",
+    "access": "admin",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "input": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string",
+                "maxLength": 96
+            },
+            "label": {
+                "type": "string",
+                "maxLength": 160
+            },
+            "lifecycleState": {
+                "type": "string",
+                "enum": [
+                    "running",
+                    "maintenance",
+                    "stopped"
+                ],
+                "maxLength": 16
+            },
+            "availability": {
+                "type": "string",
+                "enum": [
+                    "ready",
+                    "unavailable"
+                ],
+                "maxLength": 16
+            },
+            "coreVersion": {
+                "type": "string",
+                "maxLength": 64
+            },
+            "observedAt": {
+                "type": "string",
+                "format": "date-time",
+                "maxLength": 40
+            },
+            "contracts": {
+                "type": "array",
+                "maxItems": 256,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "contractId": {
+                            "type": "string",
+                            "maxLength": 96
+                        },
+                        "version": {
+                            "type": "string",
+                            "maxLength": 64
+                        },
+                        "digest": {
+                            "type": "string",
+                            "maxLength": 71
+                        }
+                    },
+                    "required": [
+                        "contractId",
+                        "version",
+                        "digest"
+                    ]
+                }
+            }
+        },
+        "required": [
+            "id",
+            "label",
+            "lifecycleState",
+            "availability",
+            "coreVersion",
+            "contracts"
+        ]
+    },
+    "errors": [
+        {
+            "code": "INSTANCE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "GET",
+        "path": "/v1/cms-instances/current",
+        "input": {},
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "INSTANCE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

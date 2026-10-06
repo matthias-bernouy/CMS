@@ -13,11 +13,19 @@ surface after admission. Generic protocol fixtures remain beside the
 `cms-repository` tests and must not be moved here. `catalog.items`,
 `forms.submissions` and `media.assets` are no longer published demo contracts.
 
-A contract may carry an independently versioned `conformance.json` companion.
-It is admitted against the exact contract digest in tests and contains only
-runner-neutral capability scenarios. Conformance-suite repository coordinates
-and live execution are not implemented yet; the companion must not contain an
-endpoint, credential format or deployment assumption.
+Contract source metadata lives in `definition.json`. Capabilities are individual
+recursive `capabilities/**/*.json` fragments. Optional mocks are individual
+`mocks/**/*.json` fragments carrying an explicit `capabilityId`. Conformance
+metadata lives in `conformance/definition.json`, with individual scenarios and
+coverage exemptions below recursive `conformance/scenarios/` and
+`conformance/exemptions/` trees. Source paths organize review only: assembly is
+sorted by declared identities, so moving a fragment does not change the release.
+
+The independently versioned conformance companion is admitted against the exact
+compiled contract digest and contains only runner-neutral capability scenarios.
+Conformance-suite repository coordinates and live execution are not implemented
+yet; the companion must not contain an endpoint, credential format or deployment
+assumption.
 
 Official collections keep reusable administration copy in recursively scanned
 `translations/<locale>/**/*.json` fragments. Resource definitions contain only

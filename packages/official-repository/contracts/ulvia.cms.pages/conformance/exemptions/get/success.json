@@ -1,0 +1,4 @@
+{
+    "capabilityId": "get",
+    "reason": "The smoke suite does not assume a stable pre-existing Page identity."
+}
