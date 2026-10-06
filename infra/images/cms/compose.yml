@@ -24,6 +24,37 @@
 # local shared-Mongo and managed-cluster deployments follow the same contract.
 
 services:
+    repository:
+        image: ${CMS_IMAGE:?CMS_IMAGE must be an immutable version tag or digest}
+        restart: unless-stopped
+        init: true
+        command: ["bun", "run", "packages/runtimes/official-repository-server/src/index.ts"]
+        environment:
+            NODE_ENV:                    production
+            ULVIA_REPOSITORY_DIR:         /var/lib/ulvia-repository/current
+            ULVIA_REPOSITORY_SEED_DIR:    /opt/ulvia-repository-seed
+            ULVIA_REPOSITORY_TOKEN:       ${ULVIA_REPOSITORY_TOKEN:?ULVIA_REPOSITORY_TOKEN must be set}
+            REPOSITORY_HOST:              0.0.0.0
+            REPOSITORY_PORT:              "3100"
+        volumes:
+            - repository_data:/var/lib/ulvia-repository
+        read_only: true
+        tmpfs:
+            - /tmp:rw,nosuid,nodev,noexec,size=64m
+        cap_drop:
+            - ALL
+        security_opt:
+            - no-new-privileges:true
+        networks:
+            - cms_internal
+        healthcheck:
+            test: ["CMD", "bun", "-e", "const response = await fetch('http://127.0.0.1:3100/readyz'); if (!response.ok) process.exit(1); await response.body?.cancel()"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
+        stop_grace_period: 15s
+
     cms:
         image: ${CMS_IMAGE:?CMS_IMAGE must be an immutable version tag or digest}
         restart: unless-stopped
@@ -36,6 +67,10 @@ services:
             CONTROL_PUBLIC_URL:   "https://admin.${DOMAIN:?DOMAIN must be set}"
             DELIVERY_PUBLIC_URL:  "https://${DOMAIN}"
             CMS_FILES_DIR:        /var/lib/cms/files
+            CMS_GATEWAY_SITE_ID:  ${CMS_GATEWAY_SITE_ID:-default}
+            CMS_REPOSITORY_URL:   http://repository:3100
+            CORE_PORT:            "5103"
+            CORE_PUBLIC_URL:      http://127.0.0.1:5103
 
             # Application secrets are injected from `.env`; no secret value is
             # stored in this file or included in the image.
@@ -43,7 +78,7 @@ services:
             CMS_KEK_HEX:          ${CMS_KEK_HEX:?CMS_KEK_HEX must be set (32 bytes hex = 64 chars; openssl rand -hex 32)}
             CMS_ADMIN_EMAIL:      ${CMS_ADMIN_EMAIL:-admin@${DOMAIN}}
             CMS_ADMIN_PASSWORD:   ${CMS_ADMIN_PASSWORD:?CMS_ADMIN_PASSWORD must be set}
-            CMS_GATEWAY_SITE_ID:   ${CMS_GATEWAY_SITE_ID:-}
+            CMS_CORE_PROVIDER_TOKEN: ${CMS_CORE_PROVIDER_TOKEN:?CMS_CORE_PROVIDER_TOKEN must be set}
             # Required for both the server-wide MongoDB service and an external
             # cluster. Both the database path and credential are dedicated to
             # this instance; the runtime must never receive the root account.
@@ -80,6 +115,9 @@ services:
             LETSENCRYPT_HOST: "${DOMAIN},admin.${DOMAIN}"
         volumes:
             - ./files:/var/lib/cms/files
+        depends_on:
+            repository:
+                condition: service_healthy
         read_only: true
         tmpfs:
             - /tmp:rw,nosuid,nodev,noexec,size=256m
@@ -99,6 +137,7 @@ services:
             # The server process and network are shared; database credentials
             # remain instance-specific.
             cms_mongo: {}
+            cms_internal: {}
         healthcheck:
             test:
                 - CMD
@@ -121,3 +160,8 @@ networks:
         external: true
     cms_mongo:
         external: true
+    cms_internal:
+        internal: true
+
+volumes:
+    repository_data: {}

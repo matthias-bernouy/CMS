@@ -1,8 +1,10 @@
 import { createOfficialRepositoryApplication } from "./application";
 import { readOfficialRepositoryEnv } from "./env";
 import { startOfficialRepositoryServer } from "./server";
+import { seedOfficialRepository } from "./seed";
 
 const env = readOfficialRepositoryEnv(process.env);
+await seedOfficialRepository(env.root, env.seedRoot);
 const application = await createOfficialRepositoryApplication(env.root, env.token);
 const server = startOfficialRepositoryServer(application, env);
 

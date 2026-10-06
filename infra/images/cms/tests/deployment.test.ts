@@ -26,14 +26,15 @@ describe("per-instance Compose rendering", () => {
             MONGO_URL: mongoUrl,
         });
 
-        expect(Object.keys(config.services)).toEqual(["cms"]);
+        expect(Object.keys(config.services).sort()).toEqual(["cms", "repository"]);
 
         const cms = config.services.cms;
         expect(cms.environment?.MONGO_URL).toBe(mongoUrl);
-        expect(Object.keys(cms.networks ?? {}).sort()).toEqual(["cms_mongo", "cms_proxy"]);
+        expect(Object.keys(cms.networks ?? {}).sort()).toEqual(["cms_internal", "cms_mongo", "cms_proxy"]);
         expect(cms.networks?.cms_proxy).toMatchObject({ gw_priority: 1 });
         expect(config.networks?.cms_mongo).toMatchObject({ name: "cms_mongo", external: true });
         expect(config.networks?.cms_proxy).toMatchObject({ name: "cms_proxy", external: true });
+        expect(config.networks?.cms_internal).toMatchObject({ internal: true });
 
         expect(cms.init).toBe(true);
         expect(cms.read_only).toBe(true);
@@ -41,9 +42,24 @@ describe("per-instance Compose rendering", () => {
         expect(cms.security_opt).toContain("no-new-privileges:true");
         expect(cms.tmpfs).toContain("/tmp:rw,nosuid,nodev,noexec,size=256m");
         expect(cms.ports).toBeUndefined();
-        expect(cms.environment).toMatchObject({ CMS_FILES_DIR: "/var/lib/cms/files" });
+        expect(cms.environment).toMatchObject({
+            CMS_FILES_DIR: "/var/lib/cms/files",
+            CMS_GATEWAY_SITE_ID: "default",
+            CMS_REPOSITORY_URL: "http://repository:3100",
+            CORE_PUBLIC_URL: "http://127.0.0.1:5103",
+        });
         expect(cms.volumes?.map(({ target }) => target)).toEqual(["/var/lib/cms/files"]);
         expect(cms.volumes?.map(({ source }) => source)).toEqual([`${cmsDirectory}/files`]);
+
+        const repository = config.services.repository;
+        expect(Object.keys(repository.networks ?? {})).toEqual(["cms_internal"]);
+        expect(repository.environment).toMatchObject({
+            ULVIA_REPOSITORY_DIR: "/var/lib/ulvia-repository/current",
+            ULVIA_REPOSITORY_SEED_DIR: "/opt/ulvia-repository-seed",
+            REPOSITORY_PORT: "3100",
+        });
+        expect(repository.volumes?.map(({ target }) => target)).toEqual(["/var/lib/ulvia-repository"]);
+        expect(repository.read_only).toBe(true);
     });
 
     composeTest("preserves an external cluster URL without requiring INSTANCE_ID", () => {
@@ -54,7 +70,7 @@ describe("per-instance Compose rendering", () => {
             MONGO_URL: mongoUrl,
         });
 
-        expect(Object.keys(config.services)).toEqual(["cms"]);
+        expect(Object.keys(config.services).sort()).toEqual(["cms", "repository"]);
         expect(config.services.cms.environment?.MONGO_URL).toBe(mongoUrl);
     });
 

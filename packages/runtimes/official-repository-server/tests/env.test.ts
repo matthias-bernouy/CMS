@@ -15,6 +15,9 @@ describe("official repository environment", () => {
             token: valid.ULVIA_REPOSITORY_TOKEN,
             shutdownTimeoutMs: 10_000,
         });
+        expect(
+            readOfficialRepositoryEnv({ ...valid, ULVIA_REPOSITORY_SEED_DIR: "/opt/ulvia-repository-seed" }).seedRoot,
+        ).toBe("/opt/ulvia-repository-seed");
     });
 
     test("rejects relative storage, weak tokens and invalid listen values", () => {
@@ -28,6 +31,9 @@ describe("official repository environment", () => {
         );
         expect(() => readOfficialRepositoryEnv({ ...valid, REPOSITORY_HOST: "999.999.999.999" })).toThrow(
             "hostname or IP",
+        );
+        expect(() => readOfficialRepositoryEnv({ ...valid, ULVIA_REPOSITORY_SEED_DIR: "seed" })).toThrow(
+            "absolute path",
         );
     });
 });

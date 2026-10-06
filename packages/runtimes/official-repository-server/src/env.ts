@@ -5,6 +5,7 @@ export type OfficialRepositoryEnv = Readonly<{
     host: string;
     port: number;
     root: string;
+    seedRoot?: string;
     token: string;
     shutdownTimeoutMs: number;
 }>;
@@ -22,10 +23,15 @@ export function readOfficialRepositoryEnv(source: Record<string, string | undefi
     if (!validHost(host)) {
         throw new Error("REPOSITORY_HOST must be a hostname or IP address without a scheme or port");
     }
+    const seedRoot = source.ULVIA_REPOSITORY_SEED_DIR?.trim();
+    if (seedRoot && !isAbsolute(seedRoot)) {
+        throw new Error("ULVIA_REPOSITORY_SEED_DIR must be an absolute path");
+    }
     return {
         host,
         port: integer(source.REPOSITORY_PORT, "REPOSITORY_PORT", 3000, 1, 65_535),
         root,
+        ...(seedRoot ? { seedRoot } : {}),
         token,
         shutdownTimeoutMs: integer(
             source.REPOSITORY_SHUTDOWN_TIMEOUT_MS,

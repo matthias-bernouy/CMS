@@ -11,6 +11,7 @@ COPY packages/ ./packages/
 
 RUN bun install --frozen-lockfile
 RUN bun run build
+RUN bun -e 'import { bootstrapOfficialRepository } from "./packages/runtimes/ulvia-cli/src/commands/bootstrap.ts"; await bootstrapOfficialRepository("/opt/ulvia-repository-seed")'
 
 # Remove build-only installs before copying the generated workspace into the
 # runtime stage. The production install below recreates the workspace links.
@@ -30,8 +31,9 @@ LABEL org.opencontainers.image.title="@bernouy/cms-server" \
 WORKDIR /app
 COPY --chown=bun:bun --from=runtime-source /app/package.json /app/bun.lock /app/tsconfig.base.json /app/tsconfig.json ./
 COPY --chown=bun:bun --from=runtime-source /app/packages/ ./packages/
+COPY --chown=bun:bun --from=runtime-source /opt/ulvia-repository-seed/ /opt/ulvia-repository-seed/
 
-RUN install -d -o bun -g bun /var/lib/cms/files && chown bun:bun /app
+RUN install -d -o bun -g bun /var/lib/cms/files /var/lib/ulvia-repository && chown bun:bun /app
 USER bun
 
 # TypeScript is transpiled by Bun at runtime; peer-only type tooling is not
