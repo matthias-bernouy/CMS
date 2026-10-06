@@ -99,6 +99,48 @@ test("Mongo collection storage hides and resumes an interrupted release publicat
     expect(await storage.getAsset(admitted.digest, "payload.bin")).toEqual(bytes);
 });
 
+test("Mongo collection storage promotes a complete pending release during initialization", async () => {
+    const db = fakeCatalogueDb();
+    const storage = new MongoCollectionStorage(db);
+    const { admitted, bytes } = await artifact();
+    await storage.putRelease({
+        digest: admitted.digest,
+        release: admitted.release,
+        assets: [{ id: "payload.bin", bytes }],
+    });
+    await db.collection("collection_releases").updateOne({ _id: admitted.digest }, { $set: { state: "pending" } });
+
+    await storage.init();
+
+    expect(await storage.getRelease(admitted.digest)).toMatchObject({ digest: admitted.digest });
+});
+
+test("Mongo collection storage removes incomplete pending releases and their chunks", async () => {
+    const db = fakeCatalogueDb();
+    const storage = new MongoCollectionStorage(db);
+    const { admitted } = await artifact(new Uint8Array([1, 2, 3, 4]));
+    await db.collection("collection_releases").insertOne({
+        _id: admitted.digest,
+        digest: admitted.digest,
+        release: admitted.release,
+        state: "pending",
+    });
+    await db.collection("collection_asset_chunks").insertOne({
+        _id: `${admitted.digest}:payload.bin:0`,
+        digest: admitted.digest,
+        id: "payload.bin",
+        index: 0,
+        byteLength: 1,
+        chunkDigest: `sha256:${"0".repeat(64)}`,
+        bytes: new Binary(new Uint8Array([9])),
+    });
+
+    await storage.init();
+
+    expect(await db.collection("collection_releases").findOne({ _id: admitted.digest })).toBeNull();
+    expect(await db.collection("collection_asset_chunks").findOne({ digest: admitted.digest })).toBeNull();
+});
+
 test("Mongo collection ranges load and verify only the chunks they cover", async () => {
     const db = fakeCatalogueDb();
     const storage = new MongoCollectionStorage(db);

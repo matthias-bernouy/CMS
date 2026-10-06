@@ -29,6 +29,7 @@ export class MongoCollectionStorage implements CollectionStorage {
             { unique: true },
         );
         await this.assets.createIndex({ digest: 1, id: 1, index: 1 }, { unique: true });
+        await this.reconcilePendingReleases();
     }
     private get releases() {
         return this.db.collection<ReleaseDocument>("collection_releases");
@@ -166,6 +167,40 @@ export class MongoCollectionStorage implements CollectionStorage {
                 return false;
             }
             throw error;
+        }
+    }
+
+    private async reconcilePendingReleases(): Promise<void> {
+        const pending = await this.releases.find({ state: "pending" }).toArray();
+        for (const document of pending) {
+            const digest = typeof document.digest === "string" ? document.digest : document._id;
+            try {
+                const metadata = await verifyStoredCollectionRelease(document.release, digest, this.limits);
+                const assets: { id: string; bytes: Uint8Array }[] = [];
+                let complete = true;
+                for (const declaration of metadata.release.assets) {
+                    const bytes = await readAssetChunks(this.assets, digest, declaration);
+                    if (!bytes) {
+                        complete = false;
+                        break;
+                    }
+                    assets.push({ id: declaration.id, bytes });
+                }
+                if (complete) {
+                    await verifyStoredCollectionArtifact(metadata.release, assets, digest, this.limits);
+                    await this.releases.updateOne(
+                        { _id: document._id, state: "pending" },
+                        { $set: { state: "ready" } },
+                    );
+                    continue;
+                }
+            } catch (error) {
+                if (!(error instanceof TypeError)) {
+                    throw error;
+                }
+            }
+            await this.assets.deleteMany({ digest });
+            await this.releases.deleteOne({ _id: document._id, state: "pending" });
         }
     }
 }

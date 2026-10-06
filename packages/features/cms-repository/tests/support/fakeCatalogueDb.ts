@@ -58,6 +58,23 @@ class Collection {
         return { matchedCount: 0, modifiedCount: 0, upsertedCount: 1 };
     }
 
+    async deleteOne(filter: Filter) {
+        const current = [...this.documents.values()].find((document) => matches(document, filter));
+        if (!current) {
+            return { deletedCount: 0 };
+        }
+        this.documents.delete(current._id);
+        return { deletedCount: 1 };
+    }
+
+    async deleteMany(filter: Filter) {
+        const matchesFilter = [...this.documents.values()].filter((document) => matches(document, filter));
+        for (const document of matchesFilter) {
+            this.documents.delete(document._id);
+        }
+        return { deletedCount: matchesFilter.length };
+    }
+
     async replaceOne(filter: Filter, document: Omit<Document, "_id"> & Partial<Pick<Document, "_id">>, options = {}) {
         const current = [...this.documents.values()].find((candidate) => matches(candidate, filter));
         if (current) {
