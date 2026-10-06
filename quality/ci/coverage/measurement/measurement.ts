@@ -42,32 +42,40 @@ async function collectSourceFiles(root: string, packagePath: string): Promise<Se
 
 export async function discoverPackages(): Promise<CoveragePackage[]> {
     const packages: CoveragePackage[] = [];
-    for (const layer of await readdir(join(REPOSITORY_ROOT, "packages"), { withFileTypes: true })) {
-        if (!layer.isDirectory()) {
+    for (const group of await readdir(join(REPOSITORY_ROOT, "packages"), { withFileTypes: true })) {
+        if (!group.isDirectory()) {
             continue;
         }
-        const layerPath = join(REPOSITORY_ROOT, "packages", layer.name);
-        for (const entry of await readdir(layerPath, { withFileTypes: true })) {
+        const groupPath = join(REPOSITORY_ROOT, "packages", group.name);
+        if (await pathExists(join(groupPath, "package.json"))) {
+            await addPackage(packages, groupPath);
+            continue;
+        }
+        for (const entry of await readdir(groupPath, { withFileTypes: true })) {
             if (!entry.isDirectory()) {
                 continue;
             }
-            const packageRoot = join(layerPath, entry.name);
-            const manifest = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8")) as {
-                name?: unknown;
-            };
-            if (typeof manifest.name !== "string") {
-                throw new Error(`Package at ${relative(REPOSITORY_ROOT, packageRoot)} has no name`);
+            const packageRoot = join(groupPath, entry.name);
+            if (await pathExists(join(packageRoot, "package.json"))) {
+                await addPackage(packages, packageRoot);
             }
-            packages.push({
-                name: manifest.name,
-                path: normalizePath(relative(REPOSITORY_ROOT, packageRoot)),
-                hasTests: await pathExists(join(packageRoot, "tests")),
-            });
         }
     }
     const sortedPackages = packages.sort((left, right) => left.name.localeCompare(right.name));
     assertEveryPackageHasTests(sortedPackages);
     return sortedPackages;
+}
+
+async function addPackage(packages: CoveragePackage[], packageRoot: string): Promise<void> {
+    const manifest = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8")) as { name?: unknown };
+    if (typeof manifest.name !== "string") {
+        throw new Error(`Package at ${relative(REPOSITORY_ROOT, packageRoot)} has no name`);
+    }
+    packages.push({
+        name: manifest.name,
+        path: normalizePath(relative(REPOSITORY_ROOT, packageRoot)),
+        hasTests: await pathExists(join(packageRoot, "tests")),
+    });
 }
 
 export async function measurePackage(packageInfo: CoveragePackage, temporaryRoot: string): Promise<PackageCoverage> {

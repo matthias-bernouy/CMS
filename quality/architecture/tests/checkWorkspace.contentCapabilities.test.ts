@@ -7,7 +7,7 @@ import { createWorkspaceFixture, manifest, ofKind } from "./checkWorkspace.fixtu
 
 const { createWorkspace } = createWorkspaceFixture();
 const REPOSITORY_ROOT = resolve(import.meta.dir, "../../..");
-const CONTROL_COLLECTION = resolve(REPOSITORY_ROOT, "packages/official-repository/collections/ulvia-official");
+const OFFICIAL_COLLECTIONS = resolve(REPOSITORY_ROOT, "packages/official-repository/collections");
 const BINARY_FILE_TRANSPORTS = new Set(["/.cms/files/upload", "/.cms/files/content"]);
 
 test("Delivery imports only public content capabilities, including type and dynamic imports", async () => {
@@ -52,16 +52,17 @@ test("browser graphs reject even lazy Sharp imports", async () => {
     expect(ofKind(await checkWorkspaceArchitecture({ rootDir: root }), "browser-runtime-adapter")).toHaveLength(1);
 });
 
-test("official Control management flows use capability calls", async () => {
-    const browserSources = await controlFiles("blocs/control/**/*.ts");
+test("official collection scripts use only the common capability transport", async () => {
+    const browserSources = await officialCollectionFiles("*/blocs/**/*.ts");
     for (const path of browserSources) {
         const source = await readFile(path, "utf8");
-        for (const match of source.matchAll(/fetch\s*\(\s*[`'"]([^`'"]+)/gu)) {
-            expect(match[1], path).toStartWith("/.cms/call/");
+        for (const match of source.matchAll(/\bfetch\s*\(\s*([^,\n)]+)/gu)) {
+            const expression = match[1]!.trim();
+            expect(expression, `${path}: dynamic or non-CMS fetch`).toMatch(/^[`'"]\/\.cms\/call\//u);
         }
     }
 
-    const pages = await controlFiles("pages/control/**/*.html");
+    const pages = await officialCollectionFiles("*/pages/control/**/*.html");
     for (const path of pages) {
         const source = await readFile(path, "utf8");
         for (const match of source.matchAll(/\bcms-source="([^"]+)"/gu)) {
@@ -74,9 +75,9 @@ test("official Control management flows use capability calls", async () => {
     }
 });
 
-async function controlFiles(pattern: string): Promise<string[]> {
+async function officialCollectionFiles(pattern: string): Promise<string[]> {
     const paths: string[] = [];
-    for await (const path of new Bun.Glob(pattern).scan({ cwd: CONTROL_COLLECTION, absolute: true })) {
+    for await (const path of new Bun.Glob(pattern).scan({ cwd: OFFICIAL_COLLECTIONS, absolute: true })) {
         paths.push(path);
     }
     return paths.sort();
