@@ -59,6 +59,7 @@ export async function statItem(registry: LocalFilesRegistry, path: string): Prom
     const parentId = parentPath ? await resolveId(registry, parentPath, true) : null;
     const base = {
         id,
+        revision: registry.data!.byId[id]?.revision ?? 1,
         name: path.split("/").pop()!,
         parentId,
         createdAt: details.birthtime,

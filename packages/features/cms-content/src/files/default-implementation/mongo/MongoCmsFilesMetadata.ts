@@ -93,6 +93,7 @@ export class MongoCmsFilesMetadata implements CmsFilesMetadataRepository {
             const now = new Date();
             const document: FilesItemDocument = {
                 _id: input.id,
+                revision: 1,
                 type: "file",
                 name: input.name,
                 parentId: input.parentId,
@@ -139,6 +140,7 @@ export class MongoCmsFilesMetadata implements CmsFilesMetadataRepository {
                         mimeType: input.mimeType,
                         contentHash: input.contentHash,
                         blobKey: input.blobKey,
+                        revision: (existing.revision ?? 1) + 1,
                         updatedAt: new Date(),
                     },
                 },
@@ -150,18 +152,19 @@ export class MongoCmsFilesMetadata implements CmsFilesMetadataRepository {
         }
     }
 
-    async updateItem(id: string, patch: ItemPatch): Promise<FilesItem | null> {
+    async updateItem(id: string, patch: ItemPatch, expectedRevision?: number): Promise<FilesItem | null> {
         const cur = await this.col.findOne({ _id: id });
         if (!cur) {
             return null;
         }
+        assertExpectedRevision(cur.revision ?? 1, expectedRevision);
         if (patch.parentId !== undefined && patch.parentId !== cur.parentId) {
             await assertMongoParent(this.col, patch.parentId);
             if (cur.type === "folder" && patch.parentId !== null) {
                 await assertMongoMoveOutsideSubtree(this.col, id, patch.parentId);
             }
         }
-        const $set: Partial<FilesItemDocument> = { updatedAt: new Date() };
+        const $set: Partial<FilesItemDocument> = { updatedAt: new Date(), revision: (cur.revision ?? 1) + 1 };
         if (patch.name !== undefined) {
             $set.name = patch.name;
         }
@@ -169,7 +172,14 @@ export class MongoCmsFilesMetadata implements CmsFilesMetadataRepository {
             $set.parentId = patch.parentId;
         }
         try {
-            const d = await this.col.findOneAndUpdate({ _id: id }, { $set }, { returnDocument: "after" });
+            const d = await this.col.findOneAndUpdate(
+                expectedRevision === undefined ? { _id: id } : { _id: id, revision: expectedRevision },
+                { $set },
+                { returnDocument: "after" },
+            );
+            if (!d && expectedRevision !== undefined) {
+                throw revisionConflict();
+            }
             return d ? fromDocument(d) : null;
         } catch (e) {
             throw fileNameClashOr(e);
@@ -179,29 +189,50 @@ export class MongoCmsFilesMetadata implements CmsFilesMetadataRepository {
     async updateFileContent(
         id: string,
         fields: { size: number; mimeType: string; contentHash: string },
+        expectedRevision?: number,
     ): Promise<FileItem | null> {
+        const current = await this.col.findOne({ _id: id, type: "file" });
+        if (!current) {
+            return null;
+        }
+        assertExpectedRevision(current.revision ?? 1, expectedRevision);
         const d = await this.col.findOneAndUpdate(
-            { _id: id, type: "file" },
+            expectedRevision === undefined
+                ? { _id: id, type: "file" }
+                : { _id: id, type: "file", revision: expectedRevision },
             {
                 $set: {
                     size: fields.size,
                     mimeType: fields.mimeType,
                     contentHash: fields.contentHash,
+                    revision: (current.revision ?? 1) + 1,
                     updatedAt: new Date(),
                 },
             },
             { returnDocument: "after" },
         );
+        if (!d && expectedRevision !== undefined) {
+            throw revisionConflict();
+        }
         return d ? (fromDocument(d) as FileItem) : null;
     }
 
-    async deleteItem(id: string, opts: { recursive?: boolean } = {}): Promise<{ deletedFileIds: string[] }> {
+    async deleteItem(
+        id: string,
+        opts: { recursive?: boolean; expectedRevision?: number } = {},
+    ): Promise<{ deletedFileIds: string[] }> {
         const item = await this.col.findOne({ _id: id });
         if (!item) {
             return { deletedFileIds: [] };
         }
+        assertExpectedRevision(item.revision ?? 1, opts.expectedRevision);
         if (item.type === "file") {
-            await this.col.deleteOne({ _id: id });
+            const result = await this.col.deleteOne(
+                opts.expectedRevision === undefined ? { _id: id } : { _id: id, revision: opts.expectedRevision },
+            );
+            if (result.deletedCount === 0 && opts.expectedRevision !== undefined) {
+                throw revisionConflict();
+            }
             return { deletedFileIds: [id] };
         }
         const subtree = await this.listSubtree(id);
@@ -217,4 +248,14 @@ export class MongoCmsFilesMetadata implements CmsFilesMetadataRepository {
             await this.col.deleteMany({ _id: { $in: [...ids] } });
         }
     }
+}
+
+function assertExpectedRevision(actual: number, expected: number | undefined): void {
+    if (expected !== undefined && actual !== expected) {
+        throw revisionConflict();
+    }
+}
+
+function revisionConflict(): Error & { status: number } {
+    return Object.assign(new Error("file revision conflict"), { status: 409 });
 }

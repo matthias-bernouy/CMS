@@ -20,6 +20,7 @@ test("all six Control domains dispatch outputs matching their official contracts
                 items: [
                     {
                         id: "file-1",
+                        revision: 1,
                         type: "file",
                         name: "hero.png",
                         parentId: null,

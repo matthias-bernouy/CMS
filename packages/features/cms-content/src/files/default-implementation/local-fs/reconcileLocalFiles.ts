@@ -29,7 +29,7 @@ export async function reconcileLocalFiles(
         if (uuid !== existing) {
             result.minted.push({ uuid, path });
         }
-        byId[uuid] = { path, hash: null };
+        byId[uuid] = { path, hash: null, revision: previous.byId[uuid]?.revision ?? 1 };
         byPath[path] = uuid;
     }
 
@@ -43,7 +43,14 @@ export async function reconcileLocalFiles(
         }
         const known = previous.byPath[path];
         if (known && previous.byId[known]?.hash !== null) {
-            byId[known] = { path, hash };
+            byId[known] = {
+                path,
+                hash,
+                revision:
+                    hash === previous.byId[known]?.hash
+                        ? (previous.byId[known]?.revision ?? 1)
+                        : (previous.byId[known]?.revision ?? 1) + 1,
+            };
             byPath[path] = known;
             continue;
         }
@@ -51,12 +58,12 @@ export async function reconcileLocalFiles(
         if (candidate) {
             consumed.add(candidate);
             result.healed.push({ uuid: candidate, from: previous.byId[candidate]!.path, to: path });
-            byId[candidate] = { path, hash };
+            byId[candidate] = { path, hash, revision: previous.byId[candidate]?.revision ?? 1 };
             byPath[path] = candidate;
         } else {
             const uuid = randomUUIDv7();
             result.minted.push({ uuid, path });
-            byId[uuid] = { path, hash };
+            byId[uuid] = { path, hash, revision: 1 };
             byPath[path] = uuid;
         }
     }

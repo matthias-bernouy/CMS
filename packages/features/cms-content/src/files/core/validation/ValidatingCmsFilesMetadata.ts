@@ -45,9 +45,9 @@ export class ValidatingCmsFilesMetadata implements CmsFilesMetadataRepository {
         );
     }
 
-    async updateItem(id: string, patch: ItemPatch): Promise<FilesItem | null> {
+    async updateItem(id: string, patch: ItemPatch, expectedRevision?: number): Promise<FilesItem | null> {
         const next = patch.name !== undefined ? { ...patch, name: validateItemName(patch.name) } : patch;
-        return this.inner.updateItem(id, next);
+        return this.inner.updateItem(id, next, expectedRevision);
     }
 
     listChildren(parentId: string | null, opts?: FilesListOptions) {
@@ -62,10 +62,18 @@ export class ValidatingCmsFilesMetadata implements CmsFilesMetadataRepository {
     listSubtree(folderId: string) {
         return this.inner.listSubtree(folderId);
     }
-    updateFileContent(id: string, fields: { size: number; mimeType: string; contentHash: string }) {
-        return this.inner.updateFileContent(id, { ...fields, contentHash: validateContentHash(fields.contentHash) });
+    updateFileContent(
+        id: string,
+        fields: { size: number; mimeType: string; contentHash: string },
+        expectedRevision?: number,
+    ) {
+        return this.inner.updateFileContent(
+            id,
+            { ...fields, contentHash: validateContentHash(fields.contentHash) },
+            expectedRevision,
+        );
     }
-    deleteItem(id: string, opts?: { recursive?: boolean }) {
+    deleteItem(id: string, opts?: { recursive?: boolean; expectedRevision?: number }) {
         return this.inner.deleteItem(id, opts);
     }
     deleteItems(ids: readonly string[]) {

@@ -25,7 +25,7 @@ export async function resolveId(registry: LocalFilesRegistry, path: string, isDi
     }
     const hash = isDirectory ? null : await sha256Hex(await Bun.file(registry.abs(path)).bytes());
     const uuid = randomUUIDv7();
-    data.byId[uuid] = { path, hash };
+    data.byId[uuid] = { path, hash, revision: 1 };
     data.byPath[path] = uuid;
     registry.dirty = true;
     return uuid;

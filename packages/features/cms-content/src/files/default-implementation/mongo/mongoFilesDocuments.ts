@@ -8,14 +8,16 @@ export type FilesItemDocument = ToDocument<FilesItem>;
 
 export function fromDocument(document: FilesItemDocument): FilesItem {
     const { _id, ...item } = document;
+    const revision = Number.isSafeInteger(item.revision) ? item.revision : 1;
     if (item.type === "file") {
         return {
             id: _id,
             ...item,
+            revision,
             representationVersion: fileRepresentationVersion(item) ?? undefined,
         };
     }
-    return { id: _id, ...item };
+    return { id: _id, ...item, revision };
 }
 
 export function fileNameClashOr(error: unknown): unknown {

@@ -74,16 +74,26 @@ export class LocalFsCmsFiles implements CmsFilesMetadataRepository, BlobStore {
         return this.createFile(input);
     }
 
-    updateItem(id: string, patch: ItemPatch): Promise<FilesItem | null> {
-        return this.withRegistry(() => updateItem(this.registry, id, patch));
+    updateItem(id: string, patch: ItemPatch, expectedRevision?: number): Promise<FilesItem | null> {
+        return this.withRegistry(() => updateItem(this.registry, id, patch, expectedRevision));
     }
 
-    async updateFileContent(id: string): Promise<FileItem | null> {
+    async updateFileContent(
+        id: string,
+        _fields: { size: number; mimeType: string; contentHash: string },
+        expectedRevision?: number,
+    ): Promise<FileItem | null> {
         const item = await this.getItem(id);
+        if (item?.type === "file" && expectedRevision !== undefined && item.revision !== expectedRevision) {
+            throw Object.assign(new Error("file revision conflict"), { status: 409 });
+        }
         return item?.type === "file" ? item : null;
     }
 
-    deleteItem(id: string, options: { recursive?: boolean } = {}): Promise<{ deletedFileIds: string[] }> {
+    deleteItem(
+        id: string,
+        options: { recursive?: boolean; expectedRevision?: number } = {},
+    ): Promise<{ deletedFileIds: string[] }> {
         return this.withRegistry(() => deleteItem(this.registry, id, options));
     }
 
@@ -103,6 +113,7 @@ export class LocalFsCmsFiles implements CmsFilesMetadataRepository, BlobStore {
             await mkdir(this.registry.abs(parentOf(path) ?? ""), { recursive: true });
             const size = await Bun.write(absolutePath, new Response(data as BodyInit));
             this.registry.data!.byId[key]!.hash = await sha256Hex(await Bun.file(absolutePath).bytes());
+            this.registry.data!.byId[key]!.revision = (this.registry.data!.byId[key]!.revision ?? 1) + 1;
             this.registry.dirty = true;
             return { size };
         });

@@ -10,10 +10,11 @@ export async function deleteFileTree(
     id: string,
     recursive: boolean,
     journal: CmsFileMutationJournal = fileMutationJournal(metadata),
+    expectedRevision?: number,
 ): Promise<{ deletedFileIds: string[] }> {
     if ((metadata as unknown) === blob) {
         return journal.withTreeWrite(async () => {
-            const result = await metadata.deleteItem(id, { recursive });
+            const result = await metadata.deleteItem(id, { recursive, expectedRevision });
             await Promise.all(result.deletedFileIds.map((fileId) => blob.delete(fileId)));
             return result;
         });
@@ -29,6 +30,9 @@ export async function deleteFileTree(
         const item = await metadata.getItem(id);
         if (!item) {
             return null;
+        }
+        if (expectedRevision !== undefined && item.revision !== expectedRevision) {
+            throw Object.assign(new Error("file revision conflict"), { status: 409 });
         }
         const descendants = item.type === "folder" ? await metadata.listSubtree(id) : [];
         if (item.type === "folder" && descendants.length > 0 && !recursive) {

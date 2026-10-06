@@ -20,6 +20,8 @@ export type FilesItemType = "folder" | "file";
 
 type BaseItem = {
     id: string; // opaque and stable; legacy files also use it as their blob key
+    /** Monotonic concurrency token for metadata and published-byte changes. */
+    revision: number;
     name: string;
     parentId: string | null; // null = tree root
     createdAt: Date;
@@ -108,17 +110,21 @@ export interface CmsFilesMetadataRepository extends PublicFileMetadataLookup {
     ): Promise<FileItem | null>;
     /** Rename and/or move. Rejects a name clash in the destination, or moving a
      *  folder into its own subtree. Returns `null` when `id` is unknown. */
-    updateItem(id: string, patch: ItemPatch): Promise<FilesItem | null>;
+    updateItem(id: string, patch: ItemPatch, expectedRevision?: number): Promise<FilesItem | null>;
     /** After a file's bytes change IN PLACE (same id), refresh the
      *  content-derived fields (`size`, `mimeType`, `contentHash`) + `updatedAt`,
      *  keeping `name`/`parentId`. Returns `null` if `id` is unknown or a folder. */
     updateFileContent(
         id: string,
         fields: { size: number; mimeType: string; contentHash: string },
+        expectedRevision?: number,
     ): Promise<FileItem | null>;
     /** Delete an item. `recursive` is required to delete a non-empty folder.
      *  Returns the ids of the deleted FILES so the caller can purge their bytes. */
-    deleteItem(id: string, opts?: { recursive?: boolean }): Promise<{ deletedFileIds: string[] }>;
+    deleteItem(
+        id: string,
+        opts?: { recursive?: boolean; expectedRevision?: number },
+    ): Promise<{ deletedFileIds: string[] }>;
     /** Idempotent internal deletion used by the durable file mutation journal. */
     deleteItems(ids: readonly string[]): Promise<void>;
 }

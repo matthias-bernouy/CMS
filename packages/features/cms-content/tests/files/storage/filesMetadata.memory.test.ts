@@ -115,6 +115,20 @@ describe("InMemoryCmsFilesMetadata", () => {
         await expect(repo.updateItem(images.id, { parentId: sub.id })).rejects.toThrow(/own subtree/);
     });
 
+    test("rejects stale metadata revisions", async () => {
+        const repo = new InMemoryCmsFilesMetadata();
+        const folder = await repo.createFolder({ name: "images", parentId: null });
+
+        const updated = await repo.updateItem(folder.id, { name: "archive" }, folder.revision);
+        expect(updated?.revision).toBe(folder.revision + 1);
+        await expect(repo.updateItem(folder.id, { name: "stale" }, folder.revision)).rejects.toMatchObject({
+            status: 409,
+        });
+        await expect(repo.deleteItem(folder.id, { expectedRevision: folder.revision })).rejects.toMatchObject({
+            status: 409,
+        });
+    });
+
     test("recursive delete removes the subtree and returns the deleted file ids", async () => {
         const repo = new InMemoryCmsFilesMetadata();
         const images = await repo.createFolder({ name: "images", parentId: null });

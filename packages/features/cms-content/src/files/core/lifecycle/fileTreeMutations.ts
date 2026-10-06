@@ -20,6 +20,7 @@ export function updateFileItem(
     journal: CmsFileMutationJournal,
     id: string,
     patch: ItemPatch,
+    expectedRevision?: number,
 ): Promise<FilesItem | null> {
-    return journal.withTreeWrite(() => metadata.updateItem(id, patch));
+    return journal.withTreeWrite(() => metadata.updateItem(id, patch, expectedRevision));
 }

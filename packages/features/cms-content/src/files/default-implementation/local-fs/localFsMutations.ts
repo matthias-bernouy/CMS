@@ -25,7 +25,7 @@ export async function createFile(registry: LocalFilesRegistry, input: NewFile): 
     await mkdir(registry.abs(parentOf(path) ?? ""), { recursive: true });
     await writeFile(registry.abs(path), "");
     if (input.id) {
-        registry.data!.byId[input.id] = { path, hash: await sha256Hex(new Uint8Array()) };
+        registry.data!.byId[input.id] = { path, hash: await sha256Hex(new Uint8Array()), revision: 1 };
         registry.data!.byPath[path] = input.id;
         registry.dirty = true;
     }
@@ -36,6 +36,7 @@ export async function updateItem(
     registry: LocalFilesRegistry,
     id: string,
     patch: ItemPatch,
+    expectedRevision?: number,
 ): Promise<FilesItem | null> {
     const currentPath = registry.data!.byId[id]?.path;
     if (currentPath === undefined) {
@@ -45,6 +46,7 @@ export async function updateItem(
     if (!current) {
         return null;
     }
+    assertExpectedRevision(current.revision, expectedRevision);
     const nextParent = patch.parentId !== undefined ? patch.parentId : current.parentId;
     const nextName = patch.name ?? current.name;
     const nextParentPath = nextParent === null ? "" : registry.data!.byId[nextParent]?.path;
@@ -64,13 +66,18 @@ export async function updateItem(
         await rename(registry.abs(currentPath), registry.abs(nextPath));
         rewritePrefix(registry, currentPath, nextPath);
     }
+    const entry = registry.data!.byId[id];
+    if (entry) {
+        entry.revision = (entry.revision ?? 1) + 1;
+        registry.dirty = true;
+    }
     return statItem(registry, nextPath);
 }
 
 export async function deleteItem(
     registry: LocalFilesRegistry,
     id: string,
-    options: { recursive?: boolean } = {},
+    options: { recursive?: boolean; expectedRevision?: number } = {},
 ): Promise<{ deletedFileIds: string[] }> {
     const path = registry.data!.byId[id]?.path;
     if (path === undefined) {
@@ -80,11 +87,18 @@ export async function deleteItem(
     if (!item) {
         return { deletedFileIds: [] };
     }
+    assertExpectedRevision(item.revision, options.expectedRevision);
     if (item.type === "folder" && !options.recursive && (await listChildren(registry, item.id)).total > 0) {
         throw new Error("folder not empty");
     }
     await rm(registry.abs(path), { recursive: true, force: true });
     return { deletedFileIds: removeSubtree(registry, path) };
+}
+
+function assertExpectedRevision(actual: number, expected: number | undefined): void {
+    if (expected !== undefined && actual !== expected) {
+        throw Object.assign(new Error("file revision conflict"), { status: 409 });
+    }
 }
 
 export async function collectSubtree(registry: LocalFilesRegistry, folderId: string): Promise<FilesItem[]> {

@@ -50,6 +50,7 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
         const now = new Date();
         const item: FolderItem = {
             id: randomUUIDv7(),
+            revision: 1,
             type: "folder",
             name: input.name,
             parentId: input.parentId,
@@ -70,6 +71,7 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
         const existing = input.id ? this._items.get(id) : undefined;
         const item: FileItem = {
             id,
+            revision: existing ? existing.revision + 1 : 1,
             type: "file",
             name: input.name,
             parentId: input.parentId,
@@ -109,6 +111,7 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
         const now = new Date();
         const item: FileItem = {
             id: input.id,
+            revision: existing ? existing.revision + 1 : 1,
             type: "file",
             name: input.name,
             parentId: input.parentId,
@@ -124,11 +127,12 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
         return cloneFileItem(item) as FileItem;
     }
 
-    async updateItem(id: string, patch: ItemPatch): Promise<FilesItem | null> {
+    async updateItem(id: string, patch: ItemPatch, expectedRevision?: number): Promise<FilesItem | null> {
         const item = this._items.get(id);
         if (!item) {
             return null;
         }
+        assertExpectedRevision(item.revision, expectedRevision);
         const nextParent = patch.parentId !== undefined ? patch.parentId : item.parentId;
         const nextName = patch.name ?? item.name;
         if (patch.parentId !== undefined && patch.parentId !== item.parentId) {
@@ -140,7 +144,13 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
         if (nextParent !== item.parentId || nextName !== item.name) {
             this._assertNoClash(nextParent, nextName, id);
         }
-        const updated = { ...item, name: nextName, parentId: nextParent, updatedAt: new Date() } as FilesItem;
+        const updated = {
+            ...item,
+            name: nextName,
+            parentId: nextParent,
+            revision: item.revision + 1,
+            updatedAt: new Date(),
+        } as FilesItem;
         this._items.set(id, updated);
         return cloneFileItem(updated);
     }
@@ -148,13 +158,16 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
     async updateFileContent(
         id: string,
         fields: { size: number; mimeType: string; contentHash: string },
+        expectedRevision?: number,
     ): Promise<FileItem | null> {
         const item = this._items.get(id);
         if (!item || item.type !== "file") {
             return null;
         }
+        assertExpectedRevision(item.revision, expectedRevision);
         const updated: FileItem = {
             ...item,
+            revision: item.revision + 1,
             size: fields.size,
             mimeType: fields.mimeType,
             contentHash: fields.contentHash,
@@ -165,11 +178,15 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
         return cloneFileItem(updated) as FileItem;
     }
 
-    async deleteItem(id: string, opts: { recursive?: boolean } = {}): Promise<{ deletedFileIds: string[] }> {
+    async deleteItem(
+        id: string,
+        opts: { recursive?: boolean; expectedRevision?: number } = {},
+    ): Promise<{ deletedFileIds: string[] }> {
         const item = this._items.get(id);
         if (!item) {
             return { deletedFileIds: [] };
         }
+        assertExpectedRevision(item.revision, opts.expectedRevision);
         if (item.type === "file") {
             this._items.delete(id);
             return { deletedFileIds: [id] };
@@ -217,5 +234,11 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
             }
             cur = this._items.get(cur)?.parentId ?? null;
         }
+    }
+}
+
+function assertExpectedRevision(actual: number, expected: number | undefined): void {
+    if (expected !== undefined && actual !== expected) {
+        throw Object.assign(new Error("file revision conflict"), { status: 409 });
     }
 }

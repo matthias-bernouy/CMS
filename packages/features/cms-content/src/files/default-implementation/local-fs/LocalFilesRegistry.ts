@@ -1,7 +1,7 @@
 import { mkdir, rename, rm } from "node:fs/promises";
 import { join } from "node:path";
 
-export type RegistryEntry = { path: string; hash: string | null };
+export type RegistryEntry = { path: string; hash: string | null; revision?: number };
 export type FilesRegistry = {
     version: 1;
     byId: Record<string, RegistryEntry>;

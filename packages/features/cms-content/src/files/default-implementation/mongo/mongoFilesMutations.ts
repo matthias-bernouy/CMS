@@ -11,6 +11,7 @@ export async function createMongoFolder(
     const now = new Date();
     const document: FilesItemDocument = {
         _id: randomUUIDv7(),
+        revision: 1,
         type: "folder",
         name: input.name,
         parentId: input.parentId,
@@ -25,6 +26,7 @@ export async function createMongoFile(collection: Collection<FilesItemDocument>,
     await assertMongoParent(collection, input.parentId);
     const now = new Date();
     if (input.id) {
+        const current = await collection.findOne({ _id: input.id });
         try {
             const document = await collection.findOneAndUpdate(
                 { _id: input.id },
@@ -37,6 +39,7 @@ export async function createMongoFile(collection: Collection<FilesItemDocument>,
                         mimeType: input.mimeType,
                         contentHash: input.contentHash,
                         blobKey: input.blobKey,
+                        revision: current ? (current.revision ?? 1) + 1 : 1,
                         updatedAt: now,
                     },
                     $setOnInsert: { createdAt: now },
@@ -50,6 +53,7 @@ export async function createMongoFile(collection: Collection<FilesItemDocument>,
     }
     const document: FilesItemDocument = {
         _id: randomUUIDv7(),
+        revision: 1,
         type: "file",
         name: input.name,
         parentId: input.parentId,
