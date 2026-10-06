@@ -1,4 +1,4 @@
-import type { CoreCapabilityInvocationContext } from "@bernouy/cms-content";
+import type { CoreCapabilityInvocationContext } from "../dispatch/registry";
 
 export function coreInvocationContext(request: Request): CoreCapabilityInvocationContext {
     const requestId = requiredHeader(request, "x-ulvia-request-id", /^[0-9a-f-]{36}$/u);

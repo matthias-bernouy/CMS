@@ -1,5 +1,10 @@
-import { DefaultCoreCapabilityDispatcher } from "@bernouy/cms-content";
-import { CmsCore, CollectionSources, CoreOperationExecutor, registerOfficialCoreCapabilities } from "@bernouy/cms-core";
+import {
+    CmsCore,
+    CollectionSources,
+    CoreOperationExecutor,
+    DefaultCoreCapabilityDispatcher,
+    registerOfficialCoreCapabilities,
+} from "@bernouy/cms-core";
 import { BunRunner } from "@bernouy/http-runner";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";

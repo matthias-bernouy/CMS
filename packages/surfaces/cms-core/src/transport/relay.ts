@@ -1,12 +1,12 @@
-import {
-    CoreCapabilityDispatchError,
-    type CoreCapabilityDispatcher,
-    type CoreCapabilityInvocationContext,
-} from "@bernouy/cms-content";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import { parseCapabilityOperationHandle } from "@bernouy/cms-repository/contracts/protocol";
 import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
 import { RequestBodyTooLargeError } from "@bernouy/http-runner";
+import {
+    CoreCapabilityDispatchError,
+    type CoreCapabilityDispatcher,
+    type CoreCapabilityInvocationContext,
+} from "../dispatch/registry";
 import { coreInvocationContext } from "./context";
 import { decodeCoreContractInput } from "./input";
 import type { CoreRoute } from "./routes";

@@ -1,6 +1,6 @@
 import type { CollectionRepositorySource } from "@bernouy/cms-repository/collections/sources";
-import { CoreCapabilityDispatchError } from "@bernouy/cms-content";
-import type { CmsCoreCapabilityStores } from "../dependencies";
+import { CoreCapabilityDispatchError } from "../../dispatch/registry";
+import type { CmsCollectionDependencies } from "../../ports";
 import { requiredText } from "./support";
 
 const MAX_CATALOGUE_RELEASES = 1024;
@@ -17,7 +17,7 @@ export class CollectionSources {
     private readonly byId: ReadonlyMap<string, CollectionRepositorySource>;
 
     constructor(
-        private readonly store: CmsCoreCapabilityStores["collections"],
+        private readonly store: CmsCollectionDependencies["collections"],
         sources: readonly CollectionRepositorySource[],
     ) {
         this.byId = new Map(sources.map((source) => [source.id, source]));

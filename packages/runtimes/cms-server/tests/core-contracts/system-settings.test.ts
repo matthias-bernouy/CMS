@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
-import { DefaultCoreCapabilityDispatcher, defaultSystem } from "@bernouy/cms-content";
+import { defaultSystem } from "@bernouy/cms-content";
+import { DefaultCoreCapabilityDispatcher } from "@bernouy/cms-core";
 import { registerAccessCapabilities, registerDesignCapabilities } from "@bernouy/cms-core/capabilities";
 
 const context = {

@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { DefaultCoreCapabilityDispatcher, defaultSystem } from "@bernouy/cms-content";
+import { defaultSystem } from "@bernouy/cms-content";
+import { DefaultCoreCapabilityDispatcher } from "@bernouy/cms-core";
 import { registerOfficialCoreCapabilities } from "@bernouy/cms-core";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";

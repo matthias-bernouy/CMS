@@ -1,7 +1,7 @@
-import { CoreCapabilityDispatchError, type CoreCapabilityRegistry } from "@bernouy/cms-content";
 import { readSystemSnapshot } from "@bernouy/cms-content";
 import { deleteUserCompletely } from "@bernouy/cms-auth/management";
-import type { CmsCoreCapabilityStores, CmsCoreGateway } from "../dependencies";
+import { CoreCapabilityDispatchError, type CoreCapabilityRegistry } from "../../dispatch/registry";
+import type { CmsAccessDependencies, CmsCoreGateway } from "../../ports";
 import { registerAccessConfigurationCapabilities } from "./configuration";
 import {
     accessCommand,
@@ -17,7 +17,7 @@ import {
 
 export function registerAccessCapabilities(
     dispatcher: CoreCapabilityRegistry,
-    core: CmsCoreCapabilityStores,
+    core: CmsAccessDependencies,
     gateway: CmsCoreGateway | undefined,
 ): void {
     dispatcher.register("ulvia.cms.access", "overview", async (input) => {

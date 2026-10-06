@@ -1,6 +1,5 @@
 import type { BlobStore } from "@bernouy/blob-store";
 import type {
-    AuthTokenStore,
     IdentityProviderRepository,
     LocalCredentialStore,
     PatRepository,
@@ -17,19 +16,39 @@ import type {
 } from "@bernouy/cms-repository/providers/installations";
 import type { ContractSelection, ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
 
-export interface CmsCoreCapabilityStores {
+export interface CmsPageDependencies {
     readonly repo: CmsRepository;
+}
+
+export interface CmsCollectionDependencies {
     readonly collections: CollectionStore;
     readonly collectionMigrations: CollectionMigrationService;
+}
+
+export interface CmsDesignDependencies {
+    readonly repo: CmsRepository;
+    readonly collections: CollectionStore;
+}
+
+export interface CmsFileDependencies {
     readonly filesMetadata: CmsFilesMetadataRepository;
     readonly filesBlob: BlobStore;
     readonly fileMutations: CmsFileMutationJournal;
+}
+
+export interface CmsAccessDependencies {
+    readonly repo: CmsRepository;
     readonly users: UsersRepository;
     readonly identityProviders: IdentityProviderRepository;
     readonly credentials: LocalCredentialStore;
     readonly pats: PatRepository;
-    readonly authTokens: AuthTokenStore;
 }
+
+export type CmsCoreDependencies = CmsPageDependencies &
+    CmsCollectionDependencies &
+    CmsDesignDependencies &
+    CmsFileDependencies &
+    CmsAccessDependencies;
 
 export type CmsCoreAdministratorState = Readonly<{
     sub: string;

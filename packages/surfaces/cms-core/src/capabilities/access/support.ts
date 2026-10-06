@@ -1,7 +1,7 @@
-import { CoreCapabilityDispatchError, type TSystem } from "@bernouy/cms-content";
+import type { TSystem } from "@bernouy/cms-content";
 import type { IdentityProvider, TUser } from "@bernouy/cms-auth";
-import type { CoreCapabilityInvocationContext } from "@bernouy/cms-content";
-import type { CmsCoreGateway } from "../dependencies";
+import { CoreCapabilityDispatchError, type CoreCapabilityInvocationContext } from "../../dispatch/registry";
+import type { CmsCoreGateway } from "../../ports";
 
 export function projectSite(system: TSystem, revision: number) {
     return {

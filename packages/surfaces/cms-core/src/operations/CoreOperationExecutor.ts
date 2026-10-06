@@ -1,11 +1,21 @@
 import { createHash, randomUUID } from "node:crypto";
 import { randomUUIDv7 } from "bun";
-import { CoreCapabilityDispatchError, type CoreCapabilityInvocationContext } from "@bernouy/cms-content";
 import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
-import type { CoreOperationHandler, CoreOperationRecord, CoreOperationStore } from "./types";
+import { CoreCapabilityDispatchError, type CoreCapabilityInvocationContext } from "../dispatch/registry";
+import type {
+    CoreOperationExecutionContext,
+    CoreOperationHandler,
+    CoreOperationRecord,
+    CoreOperationStore,
+} from "./types";
 
-const LEASE_MS = 30_000;
-const RECOVERY_LIMIT = 100;
+const DEFAULT_LEASE_MS = 30_000;
+const DEFAULT_RECOVERY_LIMIT = 100;
+
+export type CoreOperationExecutorOptions = Readonly<{
+    leaseMs?: number;
+    recoveryLimit?: number;
+}>;
 
 export class CoreOperationExecutor {
     readonly #handlers = new Map<string, CoreOperationHandler>();
@@ -14,7 +24,16 @@ export class CoreOperationExecutor {
     constructor(
         readonly store: CoreOperationStore,
         private readonly now: () => Date = () => new Date(),
-    ) {}
+        private readonly options: CoreOperationExecutorOptions = {},
+    ) {
+        if (this.leaseMs < 3) {
+            throw new TypeError("Core operation lease duration must be at least 3 milliseconds.");
+        }
+    }
+
+    private get leaseMs(): number {
+        return this.options.leaseMs ?? DEFAULT_LEASE_MS;
+    }
 
     register(contractId: string, capabilityId: string, handler: CoreOperationHandler): void {
         const key = operationKey(contractId, capabilityId);
@@ -57,7 +76,10 @@ export class CoreOperationExecutor {
     }
 
     async recover(): Promise<void> {
-        const records = await this.store.listRecoverable(this.now().toISOString(), RECOVERY_LIMIT);
+        const records = await this.store.listRecoverable(
+            this.now().toISOString(),
+            this.options.recoveryLimit ?? DEFAULT_RECOVERY_LIMIT,
+        );
         for (const record of records) {
             this.#schedule(record);
         }
@@ -78,24 +100,72 @@ export class CoreOperationExecutor {
         }
         const token = randomUUID();
         const now = this.now();
-        if (!(await this.store.claim(record.id, record.revision, token, expiresAt(now), now.toISOString()))) {
+        if (
+            !(await this.store.claim(
+                record.id,
+                record.revision,
+                token,
+                expiresAt(now, this.leaseMs),
+                now.toISOString(),
+            ))
+        ) {
             return;
         }
-        const heartbeat = setInterval(() => {
-            const current = this.now();
-            void this.store.renew(record.id, token, expiresAt(current), current.toISOString());
-        }, LEASE_MS / 3);
+        const executionAbort = new AbortController();
+        const heartbeatAbort = new AbortController();
+        const execution = operationExecution(token, executionAbort.signal);
+        const heartbeat = this.#maintainLease(record.id, token, executionAbort, heartbeatAbort.signal);
         try {
-            const result = await handler(record.input, record.context);
+            execution.throwIfLeaseLost();
+            const result = await handler(record.input, record.context, execution);
+            execution.throwIfLeaseLost();
             if (!(await this.store.succeed(record.id, token, result, this.now().toISOString()))) {
-                throw new Error("Core operation lease was lost before completion");
+                executionAbort.abort(new CoreOperationLeaseLostError());
+                return;
             }
         } catch (error) {
+            if (executionAbort.signal.aborted) {
+                return;
+            }
             const code = error instanceof CoreCapabilityDispatchError ? error.code : "OPERATION_FAILED";
             await this.store.fail(record.id, token, code, this.now().toISOString());
         } finally {
-            clearInterval(heartbeat);
+            heartbeatAbort.abort();
+            await heartbeat;
         }
+    }
+
+    async #maintainLease(
+        operationId: string,
+        token: string,
+        executionAbort: AbortController,
+        signal: AbortSignal,
+    ): Promise<void> {
+        while (!(await wait(this.leaseMs / 3, signal))) {
+            const current = this.now();
+            try {
+                const renewed = await this.store.renew(
+                    operationId,
+                    token,
+                    expiresAt(current, this.leaseMs),
+                    current.toISOString(),
+                );
+                if (!renewed) {
+                    executionAbort.abort(new CoreOperationLeaseLostError());
+                    return;
+                }
+            } catch (error) {
+                executionAbort.abort(error);
+                return;
+            }
+        }
+    }
+}
+
+class CoreOperationLeaseLostError extends Error {
+    constructor() {
+        super("Core operation lease was lost.");
+        this.name = "CoreOperationLeaseLostError";
     }
 }
 
@@ -107,6 +177,35 @@ function digest(input: Readonly<Record<string, unknown>>): string {
     return `sha256:${createHash("sha256").update(canonicalizeIJson(input)).digest("hex")}`;
 }
 
-function expiresAt(now: Date): string {
-    return new Date(now.getTime() + LEASE_MS).toISOString();
+function expiresAt(now: Date, leaseMs: number): string {
+    return new Date(now.getTime() + leaseMs).toISOString();
+}
+
+function operationExecution(token: string, signal: AbortSignal): CoreOperationExecutionContext {
+    return {
+        signal,
+        leaseToken: token,
+        throwIfLeaseLost() {
+            if (signal.aborted) {
+                throw signal.reason instanceof Error ? signal.reason : new CoreOperationLeaseLostError();
+            }
+        },
+    };
+}
+
+async function wait(milliseconds: number, signal: AbortSignal): Promise<boolean> {
+    if (signal.aborted) {
+        return true;
+    }
+    return new Promise((resolve) => {
+        const timeout = setTimeout(() => {
+            signal.removeEventListener("abort", aborted);
+            resolve(false);
+        }, milliseconds);
+        const aborted = () => {
+            clearTimeout(timeout);
+            resolve(true);
+        };
+        signal.addEventListener("abort", aborted, { once: true });
+    });
 }

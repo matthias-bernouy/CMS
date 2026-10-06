@@ -1,7 +1,7 @@
-import type { CoreCapabilityDispatcher } from "@bernouy/cms-content";
 import type { Runner } from "@bernouy/http-runner";
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
+import type { CoreCapabilityRegistry } from "./dispatch/registry";
 import { assertProviderToken, providerAuthorized } from "./transport/authentication";
 import { createCoreContractRelay } from "./transport/relay";
 import { compileCoreRoutes } from "./transport/routes";
@@ -10,13 +10,14 @@ export type CmsCoreOptions = Readonly<{
     token: string;
     report: ProviderRuntimeReport;
     contracts: readonly ContractRelease[];
-    dispatcher: CoreCapabilityDispatcher;
+    dispatcher: CoreCapabilityRegistry;
 }>;
 
 /** Mounts the provider-facing official CMS contract surface on a dedicated runner. */
 export class CmsCore {
     constructor(runner: Runner, options: CmsCoreOptions) {
         assertProviderToken(options.token);
+        options.dispatcher.seal(options.contracts);
         const routes = compileCoreRoutes(options.contracts);
         const relay = createCoreContractRelay(routes, options.dispatcher);
         const authorized =

@@ -1,9 +1,6 @@
 import { expect, test } from "bun:test";
-import {
-    DefaultCoreCapabilityDispatcher,
-    InMemoryCmsRepository,
-    type CoreCapabilityInvocationContext,
-} from "@bernouy/cms-content";
+import { DefaultCoreCapabilityDispatcher, type CoreCapabilityInvocationContext } from "@bernouy/cms-core";
+import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { registerAccessCapabilities } from "@bernouy/cms-core/capabilities";
 import { InMemoryIdentityProviderRepository, InMemoryUsersRepository } from "@bernouy/cms-auth";
 

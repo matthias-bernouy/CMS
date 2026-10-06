@@ -1,4 +1,4 @@
-import type { CoreCapabilityInvocationContext } from "@bernouy/cms-content";
+import type { CoreCapabilityInvocationContext } from "../dispatch/registry";
 
 export type CoreOperationStatus = "queued" | "running" | "succeeded" | "failed";
 
@@ -36,7 +36,14 @@ export interface CoreOperationStore {
     fail(id: string, token: string, errorCode: string, now: string): Promise<boolean>;
 }
 
+export interface CoreOperationExecutionContext {
+    readonly signal: AbortSignal;
+    readonly leaseToken: string;
+    throwIfLeaseLost(): void;
+}
+
 export type CoreOperationHandler = (
     input: Readonly<Record<string, unknown>>,
     context: CoreCapabilityInvocationContext,
+    execution: CoreOperationExecutionContext,
 ) => Promise<unknown>;

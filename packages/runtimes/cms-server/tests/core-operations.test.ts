@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { DefaultCoreCapabilityDispatcher, type CoreCapabilityInvocationContext } from "@bernouy/cms-content";
+import { DefaultCoreCapabilityDispatcher, type CoreCapabilityInvocationContext } from "@bernouy/cms-core";
 import { CoreOperationExecutor, MemoryCoreOperationStore } from "@bernouy/cms-core";
 import { registerOperationCapabilities } from "@bernouy/cms-core/capabilities";
 
@@ -58,6 +58,38 @@ test("Core operation recovery reclaims an expired lease and records failures", a
     await executor.recover();
     const record = await expectTerminal(store, "00000000-0000-7000-8000-000000000010", "failed");
     expect(record.errorCode).toBe("OPERATION_FAILED");
+});
+
+test("Core operations abort cooperative work when lease renewal is lost", async () => {
+    class LostLeaseStore extends MemoryCoreOperationStore {
+        override async renew(): Promise<boolean> {
+            return false;
+        }
+    }
+    const store = new LostLeaseStore();
+    const executor = new CoreOperationExecutor(store, () => new Date(), { leaseMs: 9 });
+    let aborted = false;
+    executor.register("ulvia.cms.collections", "apply", async (_input, _context, execution) => {
+        await new Promise<void>((resolve) => {
+            execution.signal.addEventListener(
+                "abort",
+                () => {
+                    aborted = true;
+                    resolve();
+                },
+                { once: true },
+            );
+        });
+        execution.throwIfLeaseLost();
+    });
+
+    const queued = await executor.enqueue("ulvia.cms.collections", "apply", {}, context);
+    for (let attempt = 0; attempt < 50 && !aborted; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1));
+    }
+
+    expect(aborted).toBe(true);
+    expect((await store.get("default", queued.operationId))?.status).toBe("running");
 });
 
 test("the operations contract exposes a completed result only from its detail query", async () => {

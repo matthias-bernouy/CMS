@@ -1,5 +1,5 @@
-import { CoreCapabilityDispatchError, type CoreCapabilityRegistry } from "@bernouy/cms-content";
-import type { CmsCoreGateway, CmsCoreProviderManagement } from "./dependencies";
+import { CoreCapabilityDispatchError, type CoreCapabilityRegistry } from "../dispatch/registry";
+import type { CmsCoreGateway, CmsCoreProviderManagement } from "../ports";
 
 export function registerProviderCapabilities(
     dispatcher: CoreCapabilityRegistry,

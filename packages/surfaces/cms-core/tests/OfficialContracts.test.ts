@@ -1,7 +1,14 @@
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { CoreCapabilityDispatchError, DefaultCoreCapabilityDispatcher } from "@bernouy/cms-content";
+import {
+    CoreCapabilityDispatchError,
+    CoreOperationExecutor,
+    DefaultCoreCapabilityDispatcher,
+    MemoryCoreOperationStore,
+    registerOfficialCoreCapabilities,
+    type CmsCoreDependencies,
+} from "@bernouy/cms-core";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import type { ProviderManifestDigest } from "@bernouy/cms-repository/providers";
 import { BunRunner } from "@bernouy/http-runner";
@@ -22,29 +29,20 @@ const ROUTES = [
 test("mounts and dispatches every official CMS contract release", async () => {
     const contracts = await Promise.all(ROUTES.map(([contractId]) => loadOfficialContract(contractId)));
     const dispatcher = new DefaultCoreCapabilityDispatcher();
-    for (const [contractId, capabilityId] of ROUTES) {
-        dispatcher.register(contractId, capabilityId, async () => {
-            throw new CoreCapabilityDispatchError("CORE_UNAVAILABLE", 503);
-        });
+    for (const { release } of contracts) {
+        for (const capability of release.capabilities) {
+            dispatcher.register(release.contractId, capability.id, async () => {
+                throw new CoreCapabilityDispatchError("CORE_UNAVAILABLE", 503);
+            });
+        }
     }
+    expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(43);
     const runner = new BunRunner();
     new CmsCore(runner, {
         token: TOKEN,
         contracts: contracts.map(({ release }) => release),
         dispatcher,
-        report: {
-            protocol: "ulvia-provider/v1",
-            providerId: "ulvia.official",
-            account: { id: "contract-matrix", label: "Official contract matrix" },
-            buildVersion: "0.1.0",
-            manifest: { version: "0.1.0", digest: digest("a") },
-            implementations: contracts.map(({ release, digest }) => ({
-                contractId: release.contractId,
-                version: release.version,
-                digest,
-                status: "ready",
-            })),
-        },
+        report: report(contracts),
     });
     const server = serveForTest(runner);
     try {
@@ -57,6 +55,38 @@ test("mounts and dispatches every official CMS contract release", async () => {
         server.stop();
     }
 });
+
+test("the official adapters implement the complete declared capability matrix", async () => {
+    const contracts = await Promise.all(ROUTES.map(([contractId]) => loadOfficialContract(contractId)));
+    const dispatcher = new DefaultCoreCapabilityDispatcher();
+    const operations = new CoreOperationExecutor(new MemoryCoreOperationStore());
+    registerOfficialCoreCapabilities(
+        dispatcher,
+        {} as CmsCoreDependencies,
+        undefined,
+        operations,
+        undefined,
+        undefined,
+    );
+
+    expect(() => dispatcher.seal(contracts.map(({ release }) => release))).not.toThrow();
+});
+
+function report(contracts: Awaited<ReturnType<typeof loadOfficialContract>>[]) {
+    return {
+        protocol: "ulvia-provider/v1" as const,
+        providerId: "ulvia.official",
+        account: { id: "contract-matrix", label: "Official contract matrix" },
+        buildVersion: "0.1.0",
+        manifest: { version: "0.1.0", digest: digest("a") },
+        implementations: contracts.map(({ release, digest }) => ({
+            contractId: release.contractId,
+            version: release.version,
+            digest,
+            status: "ready" as const,
+        })),
+    };
+}
 
 async function loadOfficialContract(contractId: string) {
     const path = resolve(import.meta.dir, `../../../official-repository/contracts/${contractId}/definition.json`);

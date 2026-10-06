@@ -36,15 +36,6 @@ export type {
 } from "cms-content/pages/interfaces/pages";
 export { pageDocument } from "cms-content/pages/interfaces/pages";
 export { MAX_PAGE_CONTENT_LENGTH } from "cms-content/application/core/validation/fields";
-export {
-    CoreCapabilityDispatchError,
-    DefaultCoreCapabilityDispatcher,
-    registerCmsPageCoreCapabilities,
-    type CoreCapabilityDispatcher,
-    type CoreCapabilityInvocationContext,
-    type CoreCapabilityHandler,
-    type CoreCapabilityRegistry,
-} from "cms-content/application/core/CoreCapabilityDispatcher";
 export { readSystemSnapshot } from "cms-content/settings/core/readSystemSnapshot";
 export {
     listCmsPages,

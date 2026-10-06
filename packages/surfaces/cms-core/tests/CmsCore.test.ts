@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { DefaultCoreCapabilityDispatcher } from "@bernouy/cms-content";
+import { DefaultCoreCapabilityDispatcher } from "@bernouy/cms-core";
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
@@ -60,11 +60,10 @@ describe("CmsCore", () => {
     });
 
     test("does not expose undeclared routes", async () => {
-        const contract = await contractRelease();
         const runner = new BunRunner();
         new CmsCore(runner, {
             token,
-            contracts: [contract.release],
+            contracts: [],
             dispatcher: new DefaultCoreCapabilityDispatcher(),
             report: {
                 protocol: "ulvia-provider/v1",

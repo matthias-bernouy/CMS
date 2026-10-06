@@ -1,10 +1,10 @@
 import { composeCollectionThemes, type readSystemSnapshot } from "@bernouy/cms-content";
 import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
-import type { CmsCoreCapabilityStores } from "../dependencies";
+import type { CmsDesignDependencies } from "../../ports";
 
 export function projectDesignOverview(
     snapshot: Awaited<ReturnType<typeof readSystemSnapshot>>,
-    collections: Awaited<ReturnType<CmsCoreCapabilityStores["collections"]["snapshot"]>>,
+    collections: Awaited<ReturnType<CmsDesignDependencies["collections"]["snapshot"]>>,
 ) {
     const { system, revision } = snapshot;
     const locale = system.site.language.trim() || collections.collections[0]?.release.locale || "en";
@@ -39,7 +39,7 @@ export function projectDesignOverview(
 
 export function projectTextCatalogue(
     revision: number,
-    installation: Awaited<ReturnType<CmsCoreCapabilityStores["collections"]["snapshot"]>>["collections"][number],
+    installation: Awaited<ReturnType<CmsDesignDependencies["collections"]["snapshot"]>>["collections"][number],
     requestedLocale?: string,
 ) {
     const { collectionId, release, textOverrides } = installation;
