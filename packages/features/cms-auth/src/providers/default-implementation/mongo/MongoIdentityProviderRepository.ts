@@ -14,7 +14,7 @@ import type {
  */
 export type MongoIdentityProviderConfig = { collectionPrefix?: string };
 
-type ProviderDoc = Omit<IdentityProvider, "id"> & { _id: string };
+type ProviderDoc = Omit<IdentityProvider, "id" | "revision"> & { _id: string; revision?: number };
 
 export class MongoIdentityProviderRepository implements IdentityProviderRepository {
     private readonly _prefix: string;
@@ -43,7 +43,7 @@ export class MongoIdentityProviderRepository implements IdentityProviderReposito
     async create(input: NewIdentityProvider): Promise<IdentityProvider> {
         const now = new Date();
         const { id, ...rest } = input;
-        const doc: ProviderDoc = { _id: id, ...rest, createdAt: now, updatedAt: now };
+        const doc: ProviderDoc = { _id: id, ...rest, revision: 1, createdAt: now, updatedAt: now };
         try {
             await this.col.insertOne(doc as OptionalUnlessRequiredId<ProviderDoc>);
         } catch (e) {
@@ -52,21 +52,48 @@ export class MongoIdentityProviderRepository implements IdentityProviderReposito
         return fromDoc(doc);
     }
 
-    async update(id: string, patch: IdentityProviderPatch): Promise<IdentityProvider | null> {
-        const $set = { ...patch, updatedAt: new Date() } as Partial<ProviderDoc>;
-        const d = await this.col.findOneAndUpdate({ _id: id }, { $set }, { returnDocument: "after" });
+    async update(
+        id: string,
+        patch: IdentityProviderPatch,
+        expectedRevision?: number,
+    ): Promise<IdentityProvider | null> {
+        const current = await this.col.findOne({ _id: id });
+        if (!current) {
+            return null;
+        }
+        const revision = current.revision ?? 1;
+        assertRevision(revision, expectedRevision);
+        const $set = { ...patch, revision: revision + 1, updatedAt: new Date() } as Partial<ProviderDoc>;
+        const d = await this.col.findOneAndUpdate(
+            expectedRevision === undefined ? { _id: id } : revisionFilter(id, expectedRevision),
+            { $set },
+            { returnDocument: "after" },
+        );
+        if (!d && expectedRevision !== undefined) {
+            throw revisionConflict();
+        }
         return d ? fromDoc(d) : null;
     }
 
-    async delete(id: string): Promise<boolean> {
-        const r = await this.col.deleteOne({ _id: id });
+    async delete(id: string, expectedRevision?: number): Promise<boolean> {
+        const current = await this.col.findOne({ _id: id });
+        if (!current) {
+            return false;
+        }
+        assertRevision(current.revision ?? 1, expectedRevision);
+        const r = await this.col.deleteOne(
+            expectedRevision === undefined ? { _id: id } : revisionFilter(id, expectedRevision),
+        );
+        if (r.deletedCount === 0 && expectedRevision !== undefined) {
+            throw revisionConflict();
+        }
         return r.deletedCount === 1;
     }
 }
 
 function fromDoc(d: ProviderDoc): IdentityProvider {
     const { _id, ...rest } = d;
-    return { id: _id, ...rest };
+    return { id: _id, ...rest, revision: d.revision ?? 1 };
 }
 
 function clashOr(e: unknown, id: string): unknown {
@@ -74,4 +101,20 @@ function clashOr(e: unknown, id: string): unknown {
         return new Error(`identity provider "${id}" already exists`);
     }
     return e;
+}
+
+function revisionFilter(id: string, revision: number) {
+    return revision === 1
+        ? { _id: id, $or: [{ revision: 1 }, { revision: { $exists: false } }] }
+        : { _id: id, revision };
+}
+
+function assertRevision(actual: number, expected: number | undefined): void {
+    if (expected !== undefined && actual !== expected) {
+        throw revisionConflict();
+    }
+}
+
+function revisionConflict(): Error & { status: number } {
+    return Object.assign(new Error("identity provider revision conflict"), { status: 409 });
 }

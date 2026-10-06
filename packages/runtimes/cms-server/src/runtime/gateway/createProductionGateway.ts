@@ -55,9 +55,10 @@ export async function createProductionGateway(
     const access = createProductionGatewayAccess(credentials, administratorEmail, db);
     const commandAudit = new MongoGatewayCommandAuditStore(db);
     await commandAudit.init();
+    const identities = new ProviderIdentityAliases(legacyIdentities);
     const invoker = new CapabilityGateway({
         routes,
-        identities: new ProviderIdentityAliases(legacyIdentities),
+        identities,
         transport: new HttpGatewayTransport({ network }),
         authorize: access.authorize,
         commandAudit,
@@ -78,6 +79,7 @@ export async function createProductionGateway(
         pageExecutions,
         commandAudit,
         observations,
+        identities,
         isAdministrator: access.isAdministrator,
         administrators: access.administrators,
     };

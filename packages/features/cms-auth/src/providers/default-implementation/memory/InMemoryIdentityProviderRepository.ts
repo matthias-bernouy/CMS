@@ -27,20 +27,26 @@ export class InMemoryIdentityProviderRepository implements IdentityProviderRepos
             throw new Error(`identity provider "${input.id}" already exists`);
         }
         const now = new Date();
-        const provider: IdentityProvider = { ...input, createdAt: now, updatedAt: now };
+        const provider: IdentityProvider = { ...input, revision: 1, createdAt: now, updatedAt: now };
         this._byId.set(provider.id, provider);
         return clone(provider);
     }
 
-    async update(id: string, patch: IdentityProviderPatch): Promise<IdentityProvider | null> {
+    async update(
+        id: string,
+        patch: IdentityProviderPatch,
+        expectedRevision?: number,
+    ): Promise<IdentityProvider | null> {
         const cur = this._byId.get(id);
         if (!cur) {
             return null;
         }
+        assertRevision(cur.revision, expectedRevision);
         const next: IdentityProvider = {
             ...cur,
             ...patch,
             id: cur.id,
+            revision: cur.revision + 1,
             createdAt: cur.createdAt,
             updatedAt: new Date(),
         };
@@ -48,9 +54,20 @@ export class InMemoryIdentityProviderRepository implements IdentityProviderRepos
         return clone(next);
     }
 
-    async delete(id: string): Promise<boolean> {
+    async delete(id: string, expectedRevision?: number): Promise<boolean> {
+        const current = this._byId.get(id);
+        if (!current) {
+            return false;
+        }
+        assertRevision(current.revision, expectedRevision);
         return this._byId.delete(id);
     }
 }
 
 const clone = (p: IdentityProvider): IdentityProvider => ({ ...p });
+
+function assertRevision(actual: number, expected: number | undefined): void {
+    if (expected !== undefined && actual !== expected) {
+        throw Object.assign(new Error("identity provider revision conflict"), { status: 409 });
+    }
+}

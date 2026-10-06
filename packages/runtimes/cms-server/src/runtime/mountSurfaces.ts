@@ -50,7 +50,17 @@ export async function mountProductionSurfaces(
         {
             deliveryUrl: env.DELIVERY_PUBLIC_URL,
             ...(gateway ? { administrator: gateway.isAdministrator } : {}),
-            ...(gateway ? { administrators: gateway.administrators } : {}),
+            ...(gateway
+                ? {
+                      administrators: {
+                          canRevoke: gateway.administrators.canRevoke,
+                          list: gateway.administrators.list,
+                          set: async (sub: string, enabled: boolean) => {
+                              await gateway.administrators.set(sub, enabled);
+                          },
+                      },
+                  }
+                : {}),
             collections: {
                 store: core.collections,
                 siteId: "default",

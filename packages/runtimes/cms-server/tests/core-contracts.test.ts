@@ -50,7 +50,17 @@ test("all six Control domains dispatch outputs matching their official contracts
             }),
         },
         identityProviders: {
-            list: async () => [{ id: "local", kind: "local", displayName: "Email", enabled: true }],
+            list: async () => [
+                {
+                    id: "local",
+                    revision: 1,
+                    kind: "local",
+                    displayName: "Email",
+                    enabled: true,
+                    createdAt: now,
+                    updatedAt: now,
+                },
+            ],
         },
         collectionMigrations: {
             getActive: async () => null,

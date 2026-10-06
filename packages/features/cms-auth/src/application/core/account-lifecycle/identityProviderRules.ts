@@ -24,7 +24,11 @@ async function isMemberReachableAfterRemoving(stores: IdentityProviderStores, pr
     return members.users.some((u) => u.provider && enabledAfter.has(u.provider));
 }
 
-export async function deleteIdentityProvider(stores: IdentityProviderStores, id: string): Promise<boolean> {
+export async function deleteIdentityProvider(
+    stores: IdentityProviderStores,
+    id: string,
+    expectedRevision?: number,
+): Promise<boolean> {
     const provider = await stores.identityProviders.get(id);
     if (!provider) {
         return false;
@@ -37,10 +41,15 @@ export async function deleteIdentityProvider(stores: IdentityProviderStores, id:
         throw new AuthValidationError("id", "cannot remove: no member could sign in afterwards");
     }
 
-    return stores.identityProviders.delete(id);
+    return stores.identityProviders.delete(id, expectedRevision);
 }
 
-export async function updateIdentityProvider(stores: IdentityProviderStores, id: string, patch: IdentityProviderPatch) {
+export async function updateIdentityProvider(
+    stores: IdentityProviderStores,
+    id: string,
+    patch: IdentityProviderPatch,
+    expectedRevision?: number,
+) {
     const existing = await stores.identityProviders.get(id);
     if (!existing) {
         throw new AuthValidationError("id", "unknown provider");
@@ -54,7 +63,7 @@ export async function updateIdentityProvider(stores: IdentityProviderStores, id:
         throw new AuthValidationError("enabled", "cannot disable: no member could sign in afterwards");
     }
 
-    const updated = await stores.identityProviders.update(id, patch);
+    const updated = await stores.identityProviders.update(id, patch, expectedRevision);
     if (!updated) {
         throw new AuthValidationError("id", "unknown provider");
     }

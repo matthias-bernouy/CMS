@@ -16,6 +16,7 @@ describe("InMemoryIdentityProviderRepository", () => {
     test("create stamps timestamps and is readable by id", async () => {
         const r = repo();
         const p = await r.create(oidc("keycloak"));
+        expect(p.revision).toBe(1);
         expect(p.createdAt).toBeInstanceOf(Date);
         expect((await r.get("keycloak"))?.displayName).toBe("keycloak");
     });
@@ -33,8 +34,20 @@ describe("InMemoryIdentityProviderRepository", () => {
         const updated = await r.update("keycloak", { enabled: false, displayName: "KC" });
         expect(updated?.enabled).toBe(false);
         expect(updated?.displayName).toBe("KC");
+        expect(updated?.revision).toBe(created.revision + 1);
         expect(updated!.updatedAt.getTime()).toBeGreaterThanOrEqual(created.updatedAt.getTime());
         expect(await r.update("ghost", { enabled: false })).toBeNull();
+    });
+
+    test("rejects stale update and delete revisions", async () => {
+        const r = repo();
+        const created = await r.create(oidc("keycloak"));
+        await r.update("keycloak", { enabled: false }, created.revision);
+
+        await expect(r.update("keycloak", { enabled: true }, created.revision)).rejects.toMatchObject({
+            status: 409,
+        });
+        await expect(r.delete("keycloak", created.revision)).rejects.toMatchObject({ status: 409 });
     });
 
     test("delete removes the provider", async () => {

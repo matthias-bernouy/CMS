@@ -13,6 +13,8 @@ export type IdentityProviderKind = "local" | "oidc";
 
 export type IdentityProvider = {
     id: string; // unique per tenant
+    /** Monotonic concurrency token for non-secret configuration changes. */
+    revision: number;
     kind: IdentityProviderKind;
     displayName: string;
     enabled: boolean; // the builtin `local` is disable-able, not deletable
@@ -43,13 +45,13 @@ export type LoginMethod = {
     fields?: ("email" | "password")[];
 };
 
-export type NewIdentityProvider = Omit<IdentityProvider, "createdAt" | "updatedAt">;
-export type IdentityProviderPatch = Partial<Omit<IdentityProvider, "id" | "createdAt" | "updatedAt">>;
+export type NewIdentityProvider = Omit<IdentityProvider, "revision" | "createdAt" | "updatedAt">;
+export type IdentityProviderPatch = Partial<Omit<IdentityProvider, "id" | "revision" | "createdAt" | "updatedAt">>;
 
 export interface IdentityProviderRepository {
     list(): Promise<IdentityProvider[]>;
     get(id: string): Promise<IdentityProvider | null>;
     create(input: NewIdentityProvider): Promise<IdentityProvider>;
-    update(id: string, patch: IdentityProviderPatch): Promise<IdentityProvider | null>;
-    delete(id: string): Promise<boolean>;
+    update(id: string, patch: IdentityProviderPatch, expectedRevision?: number): Promise<IdentityProvider | null>;
+    delete(id: string, expectedRevision?: number): Promise<boolean>;
 }
