@@ -182,3 +182,15 @@ test("root paths survive configuring the first site language", async () => {
     expect((await repo.getAllPages()).map((page) => page.paths)).toEqual([{ fr: "/about" }, { fr: "/fr/about" }]);
     expect((await repo.getSystem()).site.language).toBe("fr");
 });
+
+test("system settings reject a stale revision", async () => {
+    const repo = new InMemoryCmsRepository();
+    expect(await repo.getSystemRevision()).toBe(0);
+
+    await repo.updateSystem({ site: { favicon: "/first.ico" } as never }, 0);
+    expect(await repo.getSystemRevision()).toBe(1);
+    await expect(repo.updateSystem({ site: { favicon: "/stale.ico" } as never }, 0)).rejects.toMatchObject({
+        status: 409,
+    });
+    expect((await repo.getSystem()).site.favicon).toBe("/first.ico");
+});

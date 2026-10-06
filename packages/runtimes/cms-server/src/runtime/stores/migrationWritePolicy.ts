@@ -41,6 +41,7 @@ const CMS_REPOSITORY_NON_MUTATIONS = [
     "getPagesMetadata",
     "getTagCounts",
     "getSystem",
+    "getSystemRevision",
 ] as const satisfies readonly (keyof CmsRepository)[];
 
 export const COLLECTION_STORE_FENCED_MUTATIONS = [

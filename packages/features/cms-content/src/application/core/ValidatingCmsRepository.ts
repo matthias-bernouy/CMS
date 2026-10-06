@@ -221,7 +221,10 @@ export class ValidatingCmsRepository implements CmsRepository {
     getSystem(): Promise<TSystem> {
         return this.inner.getSystem();
     }
-    updateSystem(system: Partial<TSystem>): Promise<TSystem> {
-        return this.inner.updateSystem(validateSettingsPatch(system));
+    getSystemRevision(): Promise<number> {
+        return this.inner.getSystemRevision();
+    }
+    updateSystem(system: Partial<TSystem>, expectedRevision?: number): Promise<TSystem> {
+        return this.inner.updateSystem(validateSettingsPatch(system), expectedRevision);
     }
 }

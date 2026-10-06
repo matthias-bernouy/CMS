@@ -94,7 +94,11 @@ export class MongoCmsRepository extends MongoContentRepository implements CmsRep
         return systemFromDocument(await readSystemDocument(this.system));
     }
 
-    async updateSystem(update: Partial<TSystem>): Promise<TSystem> {
+    async getSystemRevision(): Promise<number> {
+        return (await readSystemDocument(this.system)).settingsRevision ?? 0;
+    }
+
+    async updateSystem(update: Partial<TSystem>, expectedRevision?: number): Promise<TSystem> {
         for (let attempt = 0; attempt < 20; attempt++) {
             const stored = await readSystemDocument(this.system);
             if (stored.routeMigration) {
@@ -104,6 +108,9 @@ export class MongoCmsRepository extends MongoContentRepository implements CmsRep
             const merged = mergeSystemUpdate(current, update);
             delete merged.pageRoutesUpdating;
             const revision = stored.settingsRevision ?? 0;
+            if (expectedRevision !== undefined && revision !== expectedRevision) {
+                throw Object.assign(new Error("system settings revision conflict"), { status: 409 });
+            }
             if (!languageRoutesChanged(current, merged)) {
                 const saved = await this.system.updateOne(
                     { _id: SYSTEM_ID, settingsRevision: revision, routeMigration: { $exists: false } },
@@ -111,6 +118,9 @@ export class MongoCmsRepository extends MongoContentRepository implements CmsRep
                 );
                 if (saved.matchedCount) {
                     return merged;
+                }
+                if (expectedRevision !== undefined) {
+                    throw Object.assign(new Error("system settings revision conflict"), { status: 409 });
                 }
                 continue;
             }
@@ -123,6 +133,9 @@ export class MongoCmsRepository extends MongoContentRepository implements CmsRep
                 requestedAt: new Date(),
             });
             if (!claimed) {
+                if (expectedRevision !== undefined) {
+                    throw Object.assign(new Error("system settings revision conflict"), { status: 409 });
+                }
                 continue;
             }
             try {

@@ -4,7 +4,7 @@
     "schemaDialect": "ulvia-schema/v1",
     "contractId": "ulvia.cms.design",
     "name": "CMS Design And Localization",
-    "description": "Inspect site languages, theme sources and collection-owned text and token catalogues.",
+    "description": "Manage site languages, structured themes and collection-owned text overrides.",
     "version": "1.0.0",
     "publisherId": "ulvia.official",
     "catalogue": { "icon": "theme", "categories": ["administration", "design"] },
@@ -18,6 +18,8 @@
             "output": {
                 "type": "object",
                 "properties": {
+                    "revision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+                    "collectionRevision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
                     "language": { "type": "string", "maxLength": 64 },
                     "additionalLanguages": { "type": "array", "maxItems": 32, "items": { "type": "string", "maxLength": 64 } },
                     "activeLanguages": { "type": "array", "maxItems": 32, "items": { "type": "string", "maxLength": 64 } },
@@ -40,7 +42,7 @@
                                 "id": { "type": "string", "maxLength": 160 },
                                 "label": { "type": "string", "maxLength": 200 },
                                 "supportsModes": { "type": "boolean" },
-                                "tokenCount": { "type": "integer", "minimum": 0, "maximum": 1024 }
+                                "tokenCount": { "type": "integer", "minimum": 0, "maximum": 4096 }
                             },
                             "required": ["id", "label", "supportsModes", "tokenCount"]
                         }
@@ -60,7 +62,7 @@
                         }
                     }
                 },
-                "required": ["language", "additionalLanguages", "activeLanguages", "activeThemeId", "themes", "sources", "collections"]
+                "required": ["revision", "collectionRevision", "language", "additionalLanguages", "activeLanguages", "activeThemeId", "themes", "sources", "collections"]
             },
             "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
             "binding": {
@@ -69,6 +71,229 @@
                 "path": "/v1/cms/design",
                 "input": {},
                 "response": { "successStatuses": [200], "contentTypes": ["application/json"], "errorStatuses": { "CORE_UNAVAILABLE": 503 } }
+            }
+        },
+        {
+            "id": "update-languages",
+            "description": "Update the default, available and active site languages with revision control.",
+            "access": "admin",
+            "behavior": { "effect": "command", "idempotency": "none", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "expectedRevision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+                    "language": { "type": "string", "minLength": 1, "maxLength": 64 },
+                    "additionalLanguages": { "type": "array", "maxItems": 32, "items": { "type": "string", "minLength": 1, "maxLength": 64 } },
+                    "activeLanguages": { "type": "array", "maxItems": 32, "items": { "type": "string", "minLength": 1, "maxLength": 64 } }
+                },
+                "required": ["expectedRevision", "language", "additionalLanguages", "activeLanguages"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "revision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+                    "language": { "type": "string", "maxLength": 64 },
+                    "additionalLanguages": { "type": "array", "maxItems": 32, "items": { "type": "string", "maxLength": 64 } },
+                    "activeLanguages": { "type": "array", "maxItems": 32, "items": { "type": "string", "maxLength": 64 } }
+                },
+                "required": ["revision", "language", "additionalLanguages", "activeLanguages"]
+            },
+            "errors": [{ "code": "INVALID_INPUT", "retryable": false }, { "code": "REVISION_CONFLICT", "retryable": false }, { "code": "MIGRATION_IN_PROGRESS", "retryable": true }, { "code": "CORE_UNAVAILABLE", "retryable": true }],
+            "binding": {
+                "transport": "http",
+                "method": "PUT",
+                "path": "/v1/cms/design/languages",
+                "input": { "body": true },
+                "response": { "successStatuses": [200], "contentTypes": ["application/json"], "errorStatuses": { "INVALID_INPUT": 422, "REVISION_CONFLICT": 409, "MIGRATION_IN_PROGRESS": 423, "CORE_UNAVAILABLE": 503 } }
+            }
+        },
+        {
+            "id": "get-theme",
+            "description": "Read the complete structured site theme and its revision.",
+            "access": "admin",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": { "type": "object", "properties": {}, "required": [] },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "revision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+                    "activeThemeId": { "type": "string", "maxLength": 96 },
+                    "themeJson": { "type": "string", "maxLength": 1048576 }
+                },
+                "required": ["revision", "activeThemeId", "themeJson"]
+            },
+            "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
+            "binding": {
+                "transport": "http",
+                "method": "GET",
+                "path": "/v1/cms/design/theme",
+                "input": {},
+                "response": { "successStatuses": [200], "contentTypes": ["application/json"], "errorStatuses": { "CORE_UNAVAILABLE": 503 } }
+            }
+        },
+        {
+            "id": "save-theme",
+            "description": "Validate and save the complete structured site theme with revision control.",
+            "access": "admin",
+            "behavior": { "effect": "command", "idempotency": "none", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "expectedRevision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+                    "themeJson": { "type": "string", "minLength": 2, "maxLength": 1048576 }
+                },
+                "required": ["expectedRevision", "themeJson"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "revision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+                    "activeThemeId": { "type": "string", "maxLength": 96 },
+                    "themeJson": { "type": "string", "maxLength": 1048576 }
+                },
+                "required": ["revision", "activeThemeId", "themeJson"]
+            },
+            "errors": [{ "code": "INVALID_INPUT", "retryable": false }, { "code": "REVISION_CONFLICT", "retryable": false }, { "code": "CORE_UNAVAILABLE", "retryable": true }],
+            "binding": {
+                "transport": "http",
+                "method": "PUT",
+                "path": "/v1/cms/design/theme",
+                "input": { "body": true },
+                "response": { "successStatuses": [200], "contentTypes": ["application/json"], "errorStatuses": { "INVALID_INPUT": 422, "REVISION_CONFLICT": 409, "CORE_UNAVAILABLE": 503 } }
+            }
+        },
+        {
+            "id": "get-texts",
+            "description": "Read one installed collection text catalogue and its site-owned overrides.",
+            "access": "admin",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "collectionId": { "type": "string", "minLength": 1, "maxLength": 96 },
+                    "locale": { "type": "string", "maxLength": 64 }
+                },
+                "required": ["collectionId"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "revision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+                    "collectionId": { "type": "string", "maxLength": 96 },
+                    "locale": { "type": "string", "maxLength": 64 },
+                    "overridesJson": { "type": "string", "maxLength": 1048576 },
+                    "items": {
+                        "type": "array",
+                        "maxItems": 4096,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": { "type": "string", "maxLength": 96 },
+                                "generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+                                "label": { "type": "string", "maxLength": 300 },
+                                "description": { "type": "string", "maxLength": 2000 },
+                                "category": { "type": "string", "maxLength": 300 },
+                                "group": { "type": "string", "maxLength": 300 },
+                                "values": {
+                                    "type": "array",
+                                    "maxItems": 64,
+                                    "items": {
+                                        "type": "object",
+                                        "properties": { "locale": { "type": "string", "maxLength": 64 }, "value": { "type": "string", "maxLength": 65536 } },
+                                        "required": ["locale", "value"]
+                                    }
+                                },
+                                "overrides": {
+                                    "type": "array",
+                                    "maxItems": 64,
+                                    "items": {
+                                        "type": "object",
+                                        "properties": { "locale": { "type": "string", "maxLength": 64 }, "value": { "type": "string", "maxLength": 65536 } },
+                                        "required": ["locale", "value"]
+                                    }
+                                }
+                            },
+                            "required": ["id", "generation", "values", "overrides"]
+                        }
+                    }
+                },
+                "required": ["revision", "collectionId", "locale", "overridesJson", "items"]
+            },
+            "errors": [{ "code": "NOT_FOUND", "retryable": false }, { "code": "CORE_UNAVAILABLE", "retryable": true }],
+            "binding": {
+                "transport": "http",
+                "method": "GET",
+                "path": "/v1/cms/design/texts/{collectionId}",
+                "input": { "path": { "collectionId": "collectionId" }, "query": { "locale": "locale" } },
+                "response": { "successStatuses": [200], "contentTypes": ["application/json"], "errorStatuses": { "NOT_FOUND": 404, "CORE_UNAVAILABLE": 503 } }
+            }
+        },
+        {
+            "id": "save-texts",
+            "description": "Validate and replace one installed collection's site-owned text overrides.",
+            "access": "admin",
+            "behavior": { "effect": "command", "idempotency": "none", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "collectionId": { "type": "string", "minLength": 1, "maxLength": 96 },
+                    "expectedRevision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+                    "locale": { "type": "string", "maxLength": 64 },
+                    "overridesJson": { "type": "string", "minLength": 2, "maxLength": 1048576 }
+                },
+                "required": ["collectionId", "expectedRevision", "overridesJson"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "revision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+                    "collectionId": { "type": "string", "maxLength": 96 },
+                    "locale": { "type": "string", "maxLength": 64 },
+                    "overridesJson": { "type": "string", "maxLength": 1048576 },
+                    "items": {
+                        "type": "array",
+                        "maxItems": 4096,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": { "type": "string", "maxLength": 96 },
+                                "generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+                                "label": { "type": "string", "maxLength": 300 },
+                                "description": { "type": "string", "maxLength": 2000 },
+                                "category": { "type": "string", "maxLength": 300 },
+                                "group": { "type": "string", "maxLength": 300 },
+                                "values": {
+                                    "type": "array",
+                                    "maxItems": 64,
+                                    "items": {
+                                        "type": "object",
+                                        "properties": { "locale": { "type": "string", "maxLength": 64 }, "value": { "type": "string", "maxLength": 65536 } },
+                                        "required": ["locale", "value"]
+                                    }
+                                },
+                                "overrides": {
+                                    "type": "array",
+                                    "maxItems": 64,
+                                    "items": {
+                                        "type": "object",
+                                        "properties": { "locale": { "type": "string", "maxLength": 64 }, "value": { "type": "string", "maxLength": 65536 } },
+                                        "required": ["locale", "value"]
+                                    }
+                                }
+                            },
+                            "required": ["id", "generation", "values", "overrides"]
+                        }
+                    }
+                },
+                "required": ["revision", "collectionId", "locale", "overridesJson", "items"]
+            },
+            "errors": [{ "code": "INVALID_INPUT", "retryable": false }, { "code": "NOT_FOUND", "retryable": false }, { "code": "REVISION_CONFLICT", "retryable": false }, { "code": "MIGRATION_IN_PROGRESS", "retryable": true }, { "code": "CORE_UNAVAILABLE", "retryable": true }],
+            "binding": {
+                "transport": "http",
+                "method": "PUT",
+                "path": "/v1/cms/design/texts/{collectionId}",
+                "input": { "path": { "collectionId": "collectionId" }, "body": { "properties": ["expectedRevision", "locale", "overridesJson"] } },
+                "response": { "successStatuses": [200], "contentTypes": ["application/json"], "errorStatuses": { "INVALID_INPUT": 422, "NOT_FOUND": 404, "REVISION_CONFLICT": 409, "MIGRATION_IN_PROGRESS": 423, "CORE_UNAVAILABLE": 503 } }
             }
         }
     ]

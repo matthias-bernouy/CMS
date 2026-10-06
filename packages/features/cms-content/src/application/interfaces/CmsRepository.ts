@@ -139,5 +139,6 @@ export interface CmsRepository {
 
     // SYSTEM
     getSystem(): Promise<TSystem>;
-    updateSystem(system: Partial<TSystem>): Promise<TSystem>;
+    getSystemRevision(): Promise<number>;
+    updateSystem(system: Partial<TSystem>, expectedRevision?: number): Promise<TSystem>;
 }

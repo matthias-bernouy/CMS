@@ -128,9 +128,10 @@ export function withInstalledCollections(
             const system = await repository.getSystem();
             return { ...system, theme: composeCollectionThemes(system.theme, await releases()) };
         },
-        updateSystem: async (patch) =>
+        updateSystem: async (patch, expectedRevision) =>
             repository.updateSystem(
                 patch.theme ? { ...patch, theme: composeCollectionThemes(patch.theme, await releases()) } : patch,
+                expectedRevision,
             ),
         getInstalledCollections: async () => structuredClone(await installedSnapshot()),
         getInstalledCollectionRevision: async () => (await installedSnapshot()).revision,

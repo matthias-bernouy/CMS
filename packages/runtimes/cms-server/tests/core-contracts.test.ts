@@ -13,7 +13,7 @@ test("all six Control domains dispatch outputs matching their official contracts
     system.site.name = "Example";
     system.site.language = "en";
     const core = {
-        repo: { getSystem: async () => system },
+        repo: { getSystem: async () => system, getSystemRevision: async () => 0 },
         collections: { snapshot: async () => ({ revision: 0, collections: [] }) },
         filesMetadata: {
             listChildren: async () => ({

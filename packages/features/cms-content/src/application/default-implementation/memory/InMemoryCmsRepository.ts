@@ -17,6 +17,7 @@ import { InMemoryContentRepository } from "cms-content/application/default-imple
 export class InMemoryCmsRepository extends InMemoryContentRepository implements CmsRepository {
     private readonly collections = new Map<string, SiteBlocCollection>();
     private pendingSystem: TSystem | null = null;
+    private systemRevision = 0;
     private systemUpdateTail: Promise<void> = Promise.resolve();
 
     async updateSiteBlocCollection(id: string, input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection> {
@@ -48,7 +49,11 @@ export class InMemoryCmsRepository extends InMemoryContentRepository implements 
         return structuredClone(this.system);
     }
 
-    async updateSystem(update: Partial<TSystem>): Promise<TSystem> {
+    async getSystemRevision(): Promise<number> {
+        return this.systemRevision;
+    }
+
+    async updateSystem(update: Partial<TSystem>, expectedRevision?: number): Promise<TSystem> {
         const previous = this.systemUpdateTail;
         let release!: () => void;
         this.systemUpdateTail = new Promise<void>((resolve) => {
@@ -56,6 +61,9 @@ export class InMemoryCmsRepository extends InMemoryContentRepository implements 
         });
         await previous;
         try {
+            if (expectedRevision !== undefined && expectedRevision !== this.systemRevision) {
+                throw Object.assign(new Error("system settings revision conflict"), { status: 409 });
+            }
             return await this.applySystemUpdate(update);
         } finally {
             release();
@@ -79,6 +87,7 @@ export class InMemoryCmsRepository extends InMemoryContentRepository implements 
         }
         this.system = merged;
         this.pendingSystem = null;
+        this.systemRevision += 1;
         return this.getSystem();
     }
 }
