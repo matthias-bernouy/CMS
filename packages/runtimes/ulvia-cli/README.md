@@ -10,7 +10,7 @@ bun run ulvia -- dev stop
 bun run ulvia -- release packages/official-repository/collections/test
 bun run ulvia -- release /path/to/contract-directory
 bun run ulvia -- release /path/to/provider-directory
-bun run ulvia -- push contract ulvia.official/catalog.items@0.1.1 --repository https://repository.example
+bun run ulvia -- push contract ulvia.official/catalog.items@0.1.0 --repository https://repository.example
 bun run ulvia -- pull collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
 bun run ulvia -- yank collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example --reason "Superseded"
 bun run ulvia -- restore collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example

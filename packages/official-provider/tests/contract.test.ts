@@ -34,7 +34,7 @@ test("the CMS Pages Core contract and conformance suite are fully admitted", asy
 
     expect(release.release).toMatchObject({
         contractId: "ulvia.cms.pages",
-        version: "1.1.0",
+        version: "1.0.0",
     });
     expect(release.release.capabilities.map(({ id, access }) => ({ id, access }))).toEqual([
         { id: "list", access: "admin" },

@@ -8,7 +8,7 @@ import type { ProviderManagement } from "./ProviderManagement";
 
 const PROVIDER_ID = "ulvia.official";
 const CONTROL_COLLECTION_ID = "ulvia-official";
-const CONTROL_COLLECTION_VERSION = "1.2.0";
+const CONTROL_COLLECTION_VERSION = "1.0.0";
 const BOOTSTRAP_ACTOR = "system:local-bootstrap";
 const CORE_CONTRACT_IDS = [
     "ulvia.cms.access",

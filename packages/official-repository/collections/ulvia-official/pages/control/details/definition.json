@@ -9,22 +9,22 @@
         {
             "contractId": "ulvia.cms.pages",
             "capabilityId": "get",
-            "versionRange": "^1.1.0"
+            "versionRange": "^1.0.0"
         },
         {
             "contractId": "ulvia.cms.pages",
             "capabilityId": "update",
-            "versionRange": "^1.1.0"
+            "versionRange": "^1.0.0"
         },
         {
             "contractId": "ulvia.cms.pages",
             "capabilityId": "publish",
-            "versionRange": "^1.1.0"
+            "versionRange": "^1.0.0"
         },
         {
             "contractId": "ulvia.cms.pages",
             "capabilityId": "delete",
-            "versionRange": "^1.1.0"
+            "versionRange": "^1.0.0"
         }
     ]
 }

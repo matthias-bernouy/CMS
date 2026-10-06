@@ -1,6 +1,6 @@
 {
   "name": "@bernouy/components",
-  "version": "0.1.2",
+  "version": "0.1.0",
   "description": "CMS blocs and admin custom elements built with Bun and TypeScript, with Shadow DOM components and transparent Light DOM compositions.",
   "type": "module",
   "main": "./dist/index.js",

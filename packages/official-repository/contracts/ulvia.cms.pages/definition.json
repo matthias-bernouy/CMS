@@ -5,7 +5,7 @@
     "contractId": "ulvia.cms.pages",
     "name": "CMS Pages",
     "description": "Read and manage the Pages owned by one provider-selected CMS instance without exposing provider-private instance routing.",
-    "version": "1.1.0",
+    "version": "1.0.0",
     "publisherId": "ulvia.official",
     "catalogue": {
         "icon": "pages",

@@ -5,7 +5,7 @@
     "contractId": "media.assets",
     "name": "Media assets",
     "description": "Serve provider-owned public media through the CMS gateway so pages, blocs, and dashboards can reuse external assets. Access checks and CMS image delivery remain in the normal gateway flow.",
-    "version": "0.2.0",
+    "version": "0.1.0",
     "publisherId": "ulvia.official",
     "catalogue": {
         "icon": "media",

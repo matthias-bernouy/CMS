@@ -198,7 +198,7 @@ The local provider must:
 ## Phase 3 — Prove Read-Only CMS Data-Plane Capabilities
 
 **Status (2026-10-06): official Control data-plane catalogue completed.**
-`ulvia.cms.pages@1.1.0` publishes bounded `list`, `get`, `create`, `update`,
+`ulvia.cms.pages@1.0.0` publishes bounded `list`, `get`, `create`, `update`,
 `publish`, `delete` and `rename` capabilities. They are implemented by the local
 Core, relayed by the official provider and invoked from exact collection Page
 execution plans through `/.cms/call`. The six remaining Phase 8 domains now
@@ -410,7 +410,7 @@ Current official V1 mapping:
 
 | Area | Contract | Implemented capability |
 | --- | --- | --- |
-| Pages and routing | `ulvia.cms.pages@1.1.0` | Complete first lifecycle slice |
+| Pages and routing | `ulvia.cms.pages@1.0.0` | Complete first lifecycle slice |
 | Collections | `ulvia.cms.collections@1.0.0` | Installed release catalogue |
 | Files | `ulvia.cms.files@1.0.0` | Bounded listing and folder creation |
 | Design | `ulvia.cms.design@1.0.0` | Effective locale/theme/text overview |

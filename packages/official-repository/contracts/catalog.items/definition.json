@@ -5,7 +5,7 @@
     "contractId": "catalog.items",
     "name": "Catalog items",
     "description": "Connect a provider-owned catalog to list public items and retrieve the complete record for a selected item. Use it to power catalog pages, search experiences, and editorial dashboards without copying the provider's data into the CMS.",
-    "version": "0.1.1",
+    "version": "0.1.0",
     "publisherId": "ulvia.official",
     "catalogue": {
         "icon": "catalog",
