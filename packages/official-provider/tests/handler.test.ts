@@ -183,7 +183,7 @@ test("the official provider accepts canonical gateway paths and declared error e
         const pages = await request("/v1/cms/pages?limit=1");
         expect(pages.status).toBe(200);
         expect((await pages.json()).items[0]).toMatchObject({ id: "page-1", surface: "delivery" });
-        const collections = await request("/v1/cms/collections");
+        const collections = await request("/v1/cms/collections/installed");
         expect(collections.status).toBe(200);
         expect(await collections.json()).toEqual({ revision: 0, items: [] });
         const pagePath = `/v1/cms/pages/${encodeURIComponent(JSON.stringify("page-1"))}`;
