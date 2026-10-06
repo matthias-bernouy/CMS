@@ -37,6 +37,8 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
         ignoredPaths: [CONTROL_RUNTIME_ASSET],
         browserEntryPaths: [
             CONTROL_COMPONENT_ENTRY,
+            "packages/features/cms-content/src/browser/index.ts",
+            "packages/features/cms-content/src/browser/dom.ts",
             "packages/features/cms-content/src/exports/bindings.ts",
             "packages/features/cms-content/src/exports/theme.ts",
             "packages/features/cms-content/src/exports/page-path.ts",
@@ -47,6 +49,8 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
                 "@bernouy/cms-content": [
                     "./rendering",
                     "./bindings",
+                    "./browser",
+                    "./browser/dom",
                     "./theme",
                     "./page-path",
                     "./files/serving",

@@ -594,8 +594,8 @@ bun test
 bun run clean
 ```
 
-`bun run build` builds `@bernouy/components`, then TypeScript project
-references, then `@bernouy/cms-control`.
+`bun run build` emits TypeScript project references, then builds the
+`@bernouy/cms-control` host runtime from `@bernouy/cms-content/browser`.
 
 Repository documentation starts at [`docs/README.md`](./docs/README.md).
 Deployment documentation lives at

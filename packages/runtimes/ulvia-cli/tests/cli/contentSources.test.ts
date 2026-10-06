@@ -90,7 +90,7 @@ test("component runtime modules stay inside the Bloc source boundary", async () 
     await Bun.write(join(componentRoot, "runtime", "message.ts"), 'export const message = "modular-runtime";');
     await Bun.write(
         join(componentRoot, "bloc.ts"),
-        `import { Component } from "@bernouy/components/base";
+        `import { Component } from "@bernouy/cms-content/browser";
          import template from "./shadowdom.html" with { type: "text" };
          import css from "./style.css" with { type: "text" };
          import { message } from "./runtime/message";

@@ -15,7 +15,7 @@ async function readPackageManifest(path: string): Promise<Record<string, unknown
 test("the Bun runtime, types, CI, and container pins stay aligned", async () => {
     const version = (await readRepositoryFile(".bun-version")).trim();
     const rootPackage = await readPackageManifest("package.json");
-    const componentsPackage = await readPackageManifest("packages/foundation/components/package.json");
+    const contentPackage = await readPackageManifest("packages/features/cms-content/package.json");
     const controlPackage = await readPackageManifest("packages/surfaces/cms-control/package.json");
     const qualityWorkflow = await readRepositoryFile(".github/workflows/quality.yml");
     const integrationWorkflow = await readRepositoryFile(".github/workflows/quality-integration-contracts.yml");
@@ -27,11 +27,11 @@ test("the Bun runtime, types, CI, and container pins stay aligned", async () => 
     expect(rootPackage.engines).toEqual({ bun: version });
 
     const rootDevDependencies = rootPackage.devDependencies as Record<string, string>;
-    const componentsDevDependencies = componentsPackage.devDependencies as Record<string, string>;
+    const contentDevDependencies = contentPackage.devDependencies as Record<string, string>;
     const controlDevDependencies = controlPackage.devDependencies as Record<string, string>;
     expect(rootDevDependencies["@types/bun"]).toBe(version);
     expect(rootDevDependencies["bun-types"]).toBe(version);
-    expect(componentsDevDependencies["@types/bun"]).toBe(version);
+    expect(contentDevDependencies["@types/bun"]).toBe(version);
     expect(controlDevDependencies["@types/bun"]).toBe(version);
 
     expect(setupAction).toContain("bun-version-file: .bun-version");

@@ -154,8 +154,8 @@ keep the ordinary loading/error behavior. Unchanged JSON branches retain their
 references; repeated entries retain nodes when unchanged at the same index.
 Changed or moved entries can remount; this is not keyed reconciliation.
 
-`reloadSource(element)` from `@bernouy/components/binding` (also the package
-root) awaits one read and returns whether it succeeded. A bubbling
+`reloadSource(element)` from `@bernouy/cms-content/browser` awaits one read and
+returns whether it succeeded. A bubbling
 `cms-source:reload` dispatched on the source retries only that source. A
 legacy document-dispatched event still refreshes automatic sources globally.
 
@@ -180,9 +180,9 @@ their existing serialization.
 ## Applying an action result to a source
 
 Control may already have the complete resource returned by a successful action.
-`setSourceData(sourceElement, value)` from `@bernouy/components` (also exported
-by `@bernouy/components/binding`) supplies that value to the existing source
-renderer. It cancels an older pending read and applies normal interpolation,
+`setSourceData(sourceElement, value)` from `@bernouy/cms-content/browser`
+supplies that value to the existing source renderer. It cancels an older
+pending read and applies normal interpolation,
 conditions and repetition to the source's authored template. It does not call a
 widget renderer or serialize the value into an attribute.
 
@@ -214,8 +214,8 @@ It does not start requests, introduce a nested core, serialize data into attribu
 or replace declarative rendering of resource values. Unsubscribe on disconnect.
 
 `setSourceContext(element, project)` and `refreshSourceContext(element)` are
-exported by `@bernouy/components` and `@bernouy/components/binding`. They let a
-source's authored conditions and interpolations depend on local editing state.
+exported by `@bernouy/cms-content/browser`. They let a source's authored
+conditions and interpolations depend on local editing state.
 Register the projection before source activation, or replace it while active.
 It returns additional scope variables; the source alias, `$source` and `$sources`
 keep their normal values and cannot be replaced by this context.

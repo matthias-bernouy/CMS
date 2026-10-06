@@ -15,7 +15,7 @@ export function inspectNetwork(source: UiSource): UiFinding[] {
 
 function inspectScript(source: UiSource, { content, offset }: ScriptExcerpt): UiFinding[] {
     if (
-        !/\b(?:requestBindingData|fetch|XMLHttpRequest|WebSocket|EventSource|axios|ky|ofetch|undici|cross-fetch|node-fetch)\b/.test(
+        !/\b(?:sourceFormRequest|fetch|XMLHttpRequest|WebSocket|EventSource|axios|ky|ofetch|undici|cross-fetch|node-fetch)\b/.test(
             content,
         )
     ) {

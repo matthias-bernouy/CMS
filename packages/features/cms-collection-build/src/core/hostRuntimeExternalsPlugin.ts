@@ -2,7 +2,7 @@ import type { BunPlugin } from "bun";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 
 /**
- * Bloc bundles must not re-bundle shared component and binding runtimes. Each
+ * Bloc bundles must not re-bundle the shared browser and media runtimes. Each
  * bundle keeps only its own view behavior and reads shared APIs from the host.
  */
 export const hostRuntimeExternalsPlugin: BunPlugin = {
@@ -10,7 +10,7 @@ export const hostRuntimeExternalsPlugin: BunPlugin = {
     setup(build) {
         build.onResolve(
             {
-                filter: /^@bernouy\/(?:components\/(?:base|binding)|cms(?:-control)?\/component|cms-gateway\/media\/browser)$/,
+                filter: /^@bernouy\/(?:cms-content\/browser|cms-gateway\/media\/browser)$/,
             },
             (args) => ({ path: args.path, namespace: "cms-host-runtime" }),
         );
@@ -26,9 +26,10 @@ export const hostRuntimeExternalsPlugin: BunPlugin = {
                     loader: "js",
                 };
             }
-            if (args.path === "@bernouy/components/binding") {
+            if (args.path === "@bernouy/cms-content/browser") {
                 return {
                     contents: [
+                        "export const Component = window.cmsRuntime.Component;",
                         "export const observeSource = window.cmsRuntime.observeSource;",
                         "export const readSourceData = window.cmsRuntime.readSourceData;",
                         "export const refreshSourceContext = window.cmsRuntime.refreshSourceContext;",
@@ -36,16 +37,6 @@ export const hostRuntimeExternalsPlugin: BunPlugin = {
                         "export const sourceFormRequest = window.cmsRuntime.sourceFormRequest;",
                         "export const SourceFormError = window.cmsRuntime.SourceFormError;",
                     ].join("\n"),
-                    loader: "js",
-                };
-            }
-            if (
-                args.path === "@bernouy/components/base" ||
-                args.path === "@bernouy/cms/component" ||
-                args.path === "@bernouy/cms-control/component"
-            ) {
-                return {
-                    contents: "export const Component = window.cmsRuntime.Component;",
                     loader: "js",
                 };
             }

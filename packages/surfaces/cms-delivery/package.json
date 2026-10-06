@@ -10,7 +10,6 @@
     },
     "dependencies": {
         "@bernouy/blob-store": "workspace:*",
-        "@bernouy/components": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "linkedom": "^0.18.13",
         "@bernouy/http-runner": "workspace:*",

@@ -763,11 +763,9 @@ Control retains a minimal non-visual kernel responsible for:
 The kernel must remain usable when the administration collection is missing or
 incompatible. It does not need a design system.
 
-The current `@bernouy/components` package mixes visual components with generic
-component, binding and source runtime primitives. Visual components can move to
-the official collection. Required non-visual runtime behavior must first move
-to a focused runtime package or the surface kernel before the package can be
-deleted.
+The former `@bernouy/components` package has been deleted. Visual components
+live in the official collection, while the required non-visual `Component` and
+binding primitives live in `@bernouy/cms-content/browser`.
 
 A likely collection split is:
 

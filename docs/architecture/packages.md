@@ -8,7 +8,6 @@ files explain implementation invariants.
 
 | Package | Responsibility |
 | --- | --- |
-| `@bernouy/components` | Public custom elements, base components and declarative data binding. |
 | `@bernouy/binary-media` | Immutable binary snapshots, SHA-256 identities, representation fingerprints and bounded media signature inspection. |
 | `@bernouy/blob-store` | Stream-first opaque blob contracts with memory, local-filesystem and S3-compatible adapters. |
 | `@bernouy/http-runner` | Runner abstractions, Bun HTTP serving, cache, compression, CSP and test helpers. |
@@ -21,7 +20,7 @@ files explain implementation invariants.
 
 | Package | Responsibility |
 | --- | --- |
-| `@bernouy/cms-content` | Pages, routes, Blocs, settings, themes, authoring contracts, collection migration execution and the author file library. |
+| `@bernouy/cms-content` | Pages, routes, Blocs, settings, themes, browser Component/binding runtime, authoring contracts, collection migration execution and the author file library. |
 | `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues and authored collections with surface-specific Pages. |
 | `@bernouy/cms-gateway` | Authorized capability invocation, provider identity aliases, file reads and image derivatives. |
 | `@bernouy/cms-auth` | Accounts, local/OIDC providers, PATs, signed sessions, public auth operations and email composition. |

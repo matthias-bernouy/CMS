@@ -127,7 +127,7 @@ describe("buildCollectionBloc output", () => {
     test("exposes the Component base to view bundles", async () => {
         const view = new File(
             [
-                `import { Component } from "@bernouy/components/base";`,
+                `import { Component } from "@bernouy/cms-content/browser";`,
                 `export class DemoComponent extends Component {`,
                 `  constructor() { super({ template: "<slot></slot>" }); }`,
                 `}`,

@@ -8,6 +8,8 @@
     "exports": {
         ".": "./src/exports/index.ts",
         "./bindings": "./src/exports/bindings.ts",
+        "./browser": "./src/browser/index.ts",
+        "./browser/dom": "./src/browser/dom.ts",
         "./rendering": "./src/exports/rendering.ts",
         "./theme": "./src/exports/theme.ts",
         "./page-path": "./src/exports/page-path.ts",
@@ -18,6 +20,11 @@
         "./files/local-fs": "./src/exports/files/local-fs.ts",
         "./files/urls": "./src/exports/files/urls.ts",
         "./files/mongo": "./src/exports/files/mongo.ts"
+    },
+    "devDependencies": {
+        "@happy-dom/global-registrator": "^20.14.5",
+        "@types/bun": "1.4.2",
+        "happy-dom": "^20.14.5"
     },
     "dependencies": {
         "@bernouy/binary-media": "workspace:*",

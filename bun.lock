@@ -14,7 +14,6 @@
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/components": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/image-processing": "workspace:*",
@@ -72,6 +71,11 @@
         "linkedom": "^0.18.13",
         "sharp": "^0.35.4",
       },
+      "devDependencies": {
+        "@happy-dom/global-registrator": "^20.14.5",
+        "@types/bun": "1.4.2",
+        "happy-dom": "^20.14.5",
+      },
       "peerDependencies": {
         "mongodb": "^7.2.0",
         "typescript": "^7.0.2",
@@ -116,18 +120,6 @@
     "packages/foundation/blob-store": {
       "name": "@bernouy/blob-store",
       "version": "0.1.0",
-      "peerDependencies": {
-        "typescript": "^7.0.2",
-      },
-    },
-    "packages/foundation/components": {
-      "name": "@bernouy/components",
-      "version": "0.1.0",
-      "devDependencies": {
-        "@happy-dom/global-registrator": "^20.14.5",
-        "@types/bun": "1.4.2",
-        "happy-dom": "^20.14.5",
-      },
       "peerDependencies": {
         "typescript": "^7.0.2",
       },
@@ -239,7 +231,6 @@
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/components": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "linkedom": "^0.18.13",
       },
@@ -261,7 +252,6 @@
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/components": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "linkedom": "^0.18.13",
       },
@@ -294,8 +284,6 @@
     "@bernouy/cms-repository": ["@bernouy/cms-repository@workspace:packages/features/cms-repository"],
 
     "@bernouy/cms-server": ["@bernouy/cms-server@workspace:packages/runtimes/cms-server"],
-
-    "@bernouy/components": ["@bernouy/components@workspace:packages/foundation/components"],
 
     "@bernouy/envelope-crypto": ["@bernouy/envelope-crypto@workspace:packages/foundation/envelope-crypto"],
 

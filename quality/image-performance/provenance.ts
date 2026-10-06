@@ -14,8 +14,8 @@ import {
 export const IMAGE_PERFORMANCE_CODE_INPUTS = [
     "bun.lock",
     "quality/image-performance",
-    "packages/foundation/components/package.json",
-    "packages/foundation/components/src",
+    "packages/features/cms-content/package.json",
+    "packages/features/cms-content/src/browser",
     "packages/features/cms-gateway/package.json",
     "packages/features/cms-gateway/src",
     "packages/foundation/image-processing/src",

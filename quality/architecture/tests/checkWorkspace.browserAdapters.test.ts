@@ -154,11 +154,11 @@ describe("browser adapter boundaries", () => {
 
     test("treats a components root as browser code for generated targets", async () => {
         const root = await createWorkspace({
-            "packages/foundation/components/package.json": manifest("@fixture/components", {
+            "packages/foundation/browser-components/package.json": manifest("@fixture/components", {
                 exports: { ".": "./dist/index.js" },
             }),
-            "packages/foundation/components/src/index.ts": "export { unsafe } from './unsafe';\n",
-            "packages/foundation/components/src/unsafe.ts": [
+            "packages/foundation/browser-components/src/index.ts": "export { unsafe } from './unsafe';\n",
+            "packages/foundation/browser-components/src/unsafe.ts": [
                 "import { readFile } from 'fs/promises';",
                 "export const unsafe = readFile;",
                 "",
@@ -166,6 +166,6 @@ describe("browser adapter boundaries", () => {
         });
         const violations = await checkWorkspaceArchitecture({ rootDir: root });
         expect(ofKind(violations, "browser-runtime-adapter")).toHaveLength(1);
-        expect(ofKind(violations, "browser-runtime-adapter")[0]!.file).toMatch(/components\/src\/unsafe\.ts$/);
+        expect(ofKind(violations, "browser-runtime-adapter")[0]!.file).toMatch(/browser-components\/src\/unsafe\.ts$/);
     });
 });

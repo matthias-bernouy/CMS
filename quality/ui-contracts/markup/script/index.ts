@@ -90,11 +90,9 @@ function staticBindings(file: ts.SourceFile): StaticBindings {
     const visit = (node: ts.Node): void => {
         if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
             const imports = node.importClause?.namedBindings;
-            const trustedPackage = [
-                "@bernouy/cms-content/bindings",
-                "@bernouy/components",
-                "@bernouy/components/binding",
-            ].includes(node.moduleSpecifier.text);
+            const trustedPackage = ["@bernouy/cms-content/bindings", "@bernouy/cms-content/browser"].includes(
+                node.moduleSpecifier.text,
+            );
             if (trustedPackage && imports && ts.isNamedImports(imports)) {
                 for (const entry of imports.elements) {
                     if (CORE_CONSTANTS.has(entry.propertyName?.text ?? entry.name.text)) {

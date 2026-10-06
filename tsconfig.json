@@ -41,9 +41,6 @@
             "path": "packages/features/cms-gateway"
         },
         {
-            "path": "packages/foundation/components"
-        },
-        {
             "path": "packages/surfaces/cms-delivery"
         },
         {

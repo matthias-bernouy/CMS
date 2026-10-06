@@ -4,9 +4,8 @@
         "outDir":   "dist",
         "rootDir":  ".",
         "paths": {
-            "@bernouy/cms-control":           ["./index.ts"],
-            "@bernouy/cms-control/component": ["./src/exports/component.ts"],
-            "cms-control/*":                  ["./src/*"]
+            "@bernouy/cms-control": ["./index.ts"],
+            "cms-control/*": ["./src/*"]
         }
     },
     "include": [

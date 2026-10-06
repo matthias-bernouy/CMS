@@ -28,8 +28,7 @@ CmsCore/
 |   |   |-- envelope-crypto/   @bernouy/envelope-crypto
 |   |   |-- rate-limiter/      @bernouy/rate-limiter
 |   |   |-- image-processing/  @bernouy/image-processing
-|   |   |-- secret-store/      @bernouy/secret-store
-|   |   `-- components/        @bernouy/components
+|   |   `-- secret-store/      @bernouy/secret-store
 |   |-- features/
 |   |   |-- cms-content/       @bernouy/cms-content (pages, blocs, settings, files)
 |   |   |-- cms-auth/          @bernouy/cms-auth
@@ -75,24 +74,18 @@ CmsCore/
 
 ```bash
 bun install                 # links every workspace package + installs externals
-bun run build               # orchestrated: components bundle -> tsc --build -> cms-control bundle
+bun run build               # orchestrated: tsc --build -> cms-control browser bundle
 bun run typecheck           # tsc --build only (project references)
 bun run clean               # tsc --build --clean (drops per-package dist + tsbuildinfo)
 bun test                    # workspace test runner
 ```
 
-`build.ts` is sequenced because downstream packages need upstream artefacts
-at type-check time:
+`build.ts` first runs `tsc --build`, then builds the Control host asset from the
+live `@bernouy/cms-content/browser` entry. There is no separate visual-component
+package or generated component distribution.
 
-1. `packages/foundation/components` -> `dist/{index.js, style.css, index.d.ts, blocs/*.mjs, blocs/*.d.ts}`.
-   `@bernouy/components` ships generated bundles and declarations; consumers
-   need those artifacts before the workspace type-check runs.
-2. `tsc --build` → emits `.d.ts` for every other package via project refs.
-3. `packages/surfaces/cms-control` -> control-side prebuild
-   (`control-runtime.js` bundle, depends on `@bernouy/components/dist`) + own `.d.ts` emit.
-
-Every other package ships **source** through its `exports` field — no bundle
-step, consumers resolve straight to `src/`.
+Packages ship **source** through their `exports` fields; consumers resolve
+straight to `src/` outside the explicit Control browser bundle.
 
 ## Deployment
 

@@ -124,8 +124,8 @@ bun test
 bun run clean
 ```
 
-`bun run build` is intentionally sequenced: `@bernouy/components` builds first,
-then TypeScript project references, then `@bernouy/cms-control`.
+`bun run build` emits TypeScript project references, then builds the
+`@bernouy/cms-control` browser host runtime from `@bernouy/cms-content/browser`.
 
 ## Agent Validation Loop
 

@@ -34,7 +34,7 @@ describe("validateBloc — source patterns", () => {
     test("accepts source without customElements.define", () => {
         const r = validateBloc({
             tag: "my-bloc",
-            viewSource: `import { Component } from "@bernouy/components/base";
+            viewSource: `import { Component } from "@bernouy/cms-content/browser";
                          export class MyBloc extends Component {}`,
         });
         expect(r.errors).toHaveLength(0);

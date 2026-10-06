@@ -5,7 +5,7 @@ import { discoverCollectionBlocSources, type BlocSource } from "./blocDiscovery"
 import { readSourceEntries, scanFileSourceTree } from "./sourceTree";
 
 const DEFAULT_BLOC_SOURCE = `
-import { Component } from "@bernouy/components/base";
+import { Component } from "@bernouy/cms-content/browser";
 import template from "./shadowdom.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 

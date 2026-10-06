@@ -73,7 +73,7 @@ Files named `template.html` and `style.css` are conventions, not implicit
 inputs. Import them from `Bloc.ts`:
 
 ```ts
-import { Component } from "@bernouy/components/base";
+import { Component } from "@bernouy/cms-content/browser";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 
@@ -123,7 +123,7 @@ direct `location.href`, `location.assign`, `location.replace`, and equivalent
 transitions handled by the site's router.
 
 View code is a browser bundle. Import public browser authoring entries such as
-`@bernouy/components/base`; never import editor internals, Node or Bun APIs,
+`@bernouy/cms-content/browser`; never import editor internals, Node or Bun APIs,
 database adapters, secrets, or server-only feature modules.
 
 ## Native Elements

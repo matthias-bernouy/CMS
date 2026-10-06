@@ -3,9 +3,9 @@ import type { NetworkTarget } from "./clients";
 
 /** Exact runtime boundaries; directories and generic helpers are never exempted. */
 const INFRASTRUCTURE: Readonly<Record<string, string>> = {
-    "packages/foundation/components/src/binding/source/fetcher.ts":
+    "packages/features/cms-content/src/browser/binding/source/fetcher.ts":
         "The declarative cms-source transport executes binding requests.",
-    "packages/foundation/components/src/binding/submit/submitRequest.ts":
+    "packages/features/cms-content/src/browser/binding/submit/submitRequest.ts":
         "The declarative form transport submits serialized binding state.",
 };
 

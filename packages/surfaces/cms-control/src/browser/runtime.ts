@@ -5,7 +5,7 @@ import {
     installProviderMediaImageRuntime,
     syncProviderMediaImage,
 } from "@bernouy/cms-gateway/media/browser";
-import { Component } from "@bernouy/components/base";
+import { Component } from "@bernouy/cms-content/browser";
 import {
     BindingCore,
     observeSource,
@@ -15,7 +15,7 @@ import {
     setSourceContext,
     sourceFormRequest,
     SourceFormError,
-} from "@bernouy/components/binding";
+} from "@bernouy/cms-content/browser";
 
 setBindingFilters({
     json: (value) => (value === undefined ? undefined : JSON.stringify(value)),

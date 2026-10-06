@@ -62,12 +62,13 @@ describe("resolveRuntimeAssets", () => {
         const js = new TextDecoder().decode(entry.raw);
 
         expect(entry.contentType).toBe("text/javascript");
-        expect(js).toMatch(/window\.cmsRuntime\s*=\s*\{[\s\S]*Component\s*:/);
+        expect(js).toMatch(/window\.cmsRuntime\s*=\s*\{[\s\S]*\bComponent\b/);
         expect(js).toContain("syncProviderMediaImage");
         expect(js).not.toContain("syncResponsiveSourceImageElement");
 
         (window as any).cmsRuntime = {};
         window.eval(js);
+        expect(typeof (window as any).cmsRuntime.Component).toBe("function");
         expect((window as any).cmsRuntime.Composition).toBeUndefined();
         expect((window as any).cmsRuntime.PROVIDER_IMAGE_WIDTHS).toEqual([
             64, 128, 256, 384, 512, 768, 1_024, 1_280, 1_600, 1_920, 2_560,

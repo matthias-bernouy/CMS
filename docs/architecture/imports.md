@@ -60,7 +60,7 @@ Browser-facing code must not import Node, Bun server APIs, Mongo adapters, S3
 adapters, or surface internals. Use browser-safe subpaths such as:
 
 ```ts
-import { Component } from "@bernouy/cms-control/component";
+import { Component } from "@bernouy/cms-content/browser";
 ```
 
 Collection authoring metadata is JSON and does not create a second browser

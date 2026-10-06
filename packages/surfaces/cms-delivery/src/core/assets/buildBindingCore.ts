@@ -11,12 +11,8 @@ import { compress } from "@bernouy/http-runner";
 const SOURCE = join(import.meta.dir, "../../endpoints/assets/bindingCore.client.ts");
 
 export async function generateBindingCoreJsEntry(): Promise<CacheEntry> {
-    // `conditions: ["bun"]` forces the `@bernouy/components/binding` import to
-    // resolve via the package's `bun`→source export (as the Bun runtime does)
-    // instead of falling back to `import`→`dist/index.js`. That keeps the
-    // bundle to just the binding engine (~18KB, tree-shaken — vs ~60KB pulling
-    // the bundled dist) AND reads LIVE source, so editing the engine reflects
-    // without a cms-blocs rebuild.
+    // Resolve the browser entry directly from cms-content source so editing the
+    // binding engine is reflected without rebuilding a separate UI package.
     const result = await Bun.build({
         entrypoints: [SOURCE],
         format: "iife",

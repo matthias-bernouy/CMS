@@ -95,7 +95,7 @@ describe("browser network contracts", () => {
     });
 
     test("uses exact infrastructure paths and preserves browser helper findings", () => {
-        const path = "packages/foundation/components/src/binding/source/fetcher.ts";
+        const path = "packages/features/cms-content/src/browser/binding/source/fetcher.ts";
         expect(inspect("fetch(url)", { path })[0]).toMatchObject({
             severity: "INFO",
             message: expect.stringContaining("declarative cms-source"),
@@ -133,7 +133,7 @@ describe("browser network contracts", () => {
 
 test("programmatic binding requests remain visible for declarative-UI review", () => {
     const findings = inspect(
-        'import { requestBindingData as request, Button } from "@bernouy/components"; request("/data"); new Button();',
+        'import { sourceFormRequest as request, Component } from "@bernouy/cms-content/browser"; request(form); new Component();',
     );
     expect(findings).toHaveLength(1);
     expect(findings[0]).toMatchObject({ rule: "ui.network.http", severity: "WARNING" });

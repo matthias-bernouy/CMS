@@ -41,7 +41,6 @@
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
-        "@bernouy/components": "workspace:*",
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",

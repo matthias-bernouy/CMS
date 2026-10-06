@@ -196,18 +196,13 @@ does not by itself guarantee that file and directory entries were flushed to
 stable storage. S3 key-prefix normalization should also remain part of the
 public adapter contract.
 
-### `@bernouy/components`
+### Browser content runtime
 
-The design system and binding runtime are mature and well tested. The `p9r-*`
-namespace is the current component namespace, not a surviving EditorJS or old
-provider subsystem. Renaming it would be a deliberate web-component breaking
-change, not routine cleanup.
-
-The package currently contains both the visual component library and generic
-source/binding coordination. A split is only justified if their publication,
-trust or consumer boundaries diverge. The `innerHTML` binding remains a trusted
-sink and must continue to rely on explicit sanitation guarantees at content
-admission.
+The former `@bernouy/components` package has been removed. Its visual `p9r-*`
+library was obsolete; the shared `Component` base and declarative binding
+runtime now belong to `@bernouy/cms-content/browser`, with their browser tests.
+The `innerHTML` binding remains a trusted sink and must continue to rely on
+explicit sanitation guarantees at content admission.
 
 ### `@bernouy/envelope-crypto`
 
@@ -528,9 +523,8 @@ The main limits are:
 
 - bounded bodies are currently buffered after streaming admission rather than
   incrementally decoded;
-- the browser runtime still imports the generic component base and binding
-  primitives from `@bernouy/components`, so that Foundation package cannot yet
-  be removed completely;
+- the browser runtime is now owned by `@bernouy/cms-content/browser`; no visual
+  Foundation component package remains;
 - author-file routes require injected metadata and blob stores and fail on use
   when a deliberately minimal embedding omits them;
 - incomplete user-locale persistence and hard-coded interface labels;

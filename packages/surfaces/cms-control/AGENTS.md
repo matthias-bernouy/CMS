@@ -7,11 +7,11 @@ minimal browser runtime in `src/browser/control-runtime.js`.
 ## Export Boundaries
 
 - `@bernouy/cms-control`: server-side `ControlCms`.
-- `@bernouy/cms-control/component`: view-side component authoring, only
-  `Component` from `@bernouy/components/base`. Compositions are server-rendered
+- `@bernouy/cms-content/browser`: view-side `Component` and declarative binding
+  runtime shared by Control and Delivery. Compositions are server-rendered
   resources without a view class.
 
-Do not let the view authoring subpath import Control internals or server-only
+Do not let the shared browser entry import Control internals or server-only
 modules.
 
 ## Package Layout

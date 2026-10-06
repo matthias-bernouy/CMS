@@ -139,10 +139,10 @@ Re-run the scanner for the current inventory and counts.
 ## Known Method Diagnostic Drift
 
 The current engine in
-[`Source.ts`](../../packages/foundation/components/src/binding/source/Source.ts)
+[`Source.ts`](../../packages/features/cms-content/src/browser/binding/source/Source.ts)
 honors automatic `cms-source-method`, including POST JSON reads used by gateway
 queries. The behavior is covered by
-[request parity tests](../../packages/foundation/components/tests/binding/source/parity/requests.test.ts).
+[request parity tests](../../packages/features/cms-content/tests/browser/source/parity/requests.test.ts).
 Only native forms use form serialization; other sources use the ordinary read
 branch with their declared method and body mappings.
 

@@ -168,13 +168,14 @@ not credential, user or recovery-token stores. Control can additionally receive
 
 ---
 
-## Browser sub-entry for Bloc compilation
+## Shared browser entry for Bloc compilation
 
 Bloc files compiled from collection integrations use one browser-safe entry
 point. The visitor bundle (`Bloc.ts`) must never reach server code:
 
-- `@bernouy/cms-control/component` — `export { Component }` only.
-  Imported by `Bloc.ts`, bundled into the view JS shipped to visitors.
+- `@bernouy/cms-content/browser` — shared `Component` and declarative binding
+  APIs. The collection compiler maps these imports to the host-owned
+  `window.cmsRuntime`, so a Bloc does not rebundle the runtime.
 Collection settings and slot metadata live in admitted collection JSON; no
 compiled editor bundle or editor authoring sub-entry exists.
 

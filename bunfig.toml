@@ -1,8 +1,8 @@
-# Workspace-wide test setup. The generic DOM simulator is owned by the
-# Foundation component package and is harmless for server-side tests.
+# Workspace-wide test setup. The DOM simulator supports the cms-content browser
+# runtime tests and is harmless for server-side tests.
 # (they just leave the DOM globals untouched).
 #
 # Each package can still ship its own `bunfig.toml` and override this.
 
 [test]
-preload = ["./packages/foundation/components/tests/setup.ts"]
+preload = ["./packages/features/cms-content/tests/browser/support/setup.ts"]

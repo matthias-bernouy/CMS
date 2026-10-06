@@ -11,10 +11,6 @@
             "types": "./dist/index.d.ts",
             "bun": "./index.ts",
             "default": "./index.ts"
-        },
-        "./component": {
-            "bun": "./src/exports/component.ts",
-            "default": "./src/exports/component.ts"
         }
     },
     "files": [
@@ -46,7 +42,6 @@
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/components": "workspace:*",
         "linkedom": "^0.18.13",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*"

@@ -1,6 +1,6 @@
 import { createContentReader, pageDocument } from "@bernouy/cms-content";
 import { renderPageDocument } from "@bernouy/cms-content/rendering";
-import { prepareNetworkInertBindings } from "@bernouy/components/binding-dom";
+import { prepareNetworkInertBindings } from "@bernouy/cms-content/browser/dom";
 import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
 import { compress, sendCompressed } from "@bernouy/http-runner";
 import { parseHTML } from "linkedom";

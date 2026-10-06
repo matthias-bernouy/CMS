@@ -7,7 +7,7 @@ import {
     setSourceContext,
     sourceFormRequest,
     SourceFormError,
-} from "@bernouy/components/binding";
+} from "@bernouy/cms-content/browser";
 
 Object.assign(((window as any).cmsRuntime ??= {}), {
     observeSource,

@@ -6,7 +6,15 @@ export type NetworkTarget = {
 };
 
 export const HTTP_METHODS = new Set(["get", "post", "put", "patch", "delete", "head", "options", "request"]);
-const CLIENT_MODULES = new Set(["axios", "ky", "ofetch", "undici", "node-fetch", "cross-fetch", "@bernouy/components"]);
+const CLIENT_MODULES = new Set([
+    "axios",
+    "ky",
+    "ofetch",
+    "undici",
+    "node-fetch",
+    "cross-fetch",
+    "@bernouy/cms-content/browser",
+]);
 
 export function importedTarget(declaration: ts.Declaration): NetworkTarget | undefined {
     let node: ts.Node = declaration;
@@ -31,8 +39,8 @@ export function importedTarget(declaration: ts.Declaration): NetworkTarget | und
 }
 
 export function clientExport(module: string, name: string): NetworkTarget | undefined {
-    if (module === "@bernouy/components" && name === "requestBindingData") {
-        return { kind: "fetch", name: "requestBindingData" };
+    if (module === "@bernouy/cms-content/browser" && name === "sourceFormRequest") {
+        return { kind: "fetch", name: "sourceFormRequest" };
     }
     if ((module === "axios" || module === "ky") && name === "default") {
         return { kind: "client", name: module };

@@ -9,9 +9,10 @@ onto a provided `Runner`.
 - Root export exposes `DeliveryCms`, `DeliveryCmsConfig`, `ContentReader`, and
   `HeadInjector` types.
 - Delivery consumes content through `@bernouy/cms-content/rendering` and
-  `@bernouy/cms-content/files/serving`, plus browser-safe `/editor`, `/theme`,
-  `/page-path` and `/files/urls` helpers. Do not import the authoring root,
-  `/files`, Mongo, S3, filesystem implementations or runtime composition code.
+  `@bernouy/cms-content/files/serving`, plus the browser-safe `/browser`,
+  `/browser/dom`, `/bindings`, `/theme`, `/page-path` and `/files/urls`
+  capabilities. Do not import the authoring root, `/files`, Mongo, S3,
+  filesystem implementations or runtime composition code.
 - Persistence, auth, files, cache and gateway are injected through config.
 
 ## Rules

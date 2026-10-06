@@ -4,7 +4,7 @@ import type { TPage } from "@bernouy/cms-content/rendering";
 import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
 import { injectMediaVersions } from "@bernouy/cms-content/files/serving";
-import { prepareNetworkInertBindings } from "@bernouy/components/binding-dom";
+import { prepareNetworkInertBindings } from "@bernouy/cms-content/browser/dom";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
 import { buildMetaCsp } from "cms-delivery/core/head/buildMetaCsp";
 import {

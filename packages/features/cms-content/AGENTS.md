@@ -12,6 +12,10 @@ library, declarative bindings, validation, and read models.
   rendering settings and renderable bloc artifacts, never editorial queries.
 - `@bernouy/cms-content/bindings` exposes browser-safe declarative binding
   syntax and runtime metadata.
+- `@bernouy/cms-content/browser` exposes the browser-only `Component` base and
+  live declarative binding runtime used by rendered Pages and collection Blocs.
+- `@bernouy/cms-content/browser/dom` exposes inert network-binding preparation
+  for Control and Delivery renderers.
 - `@bernouy/cms-content/theme` exposes browser-safe theme value resolution.
 - `@bernouy/cms-content/mongo` exposes `MongoCmsRepository` for composition
   roots.

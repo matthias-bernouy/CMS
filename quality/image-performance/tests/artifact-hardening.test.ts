@@ -22,8 +22,8 @@ describe("image performance artifact hardening", () => {
     });
 
     test("fingerprints the production browser runtime dependency closure", () => {
-        expect(IMAGE_PERFORMANCE_CODE_INPUTS).toContain("packages/foundation/components/package.json");
-        expect(IMAGE_PERFORMANCE_CODE_INPUTS).toContain("packages/foundation/components/src");
+        expect(IMAGE_PERFORMANCE_CODE_INPUTS).toContain("packages/features/cms-content/package.json");
+        expect(IMAGE_PERFORMANCE_CODE_INPUTS).toContain("packages/features/cms-content/src/browser");
     });
 
     test("rejects a raw listing mutation hidden behind an unchanged summary", () => {

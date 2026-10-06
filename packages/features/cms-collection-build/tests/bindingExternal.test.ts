@@ -5,7 +5,7 @@ describe("binding Bloc external", () => {
     test("maps the public source coordination helpers to window.cmsRuntime", async () => {
         const view = new File(
             [
-                `import { observeSource, readSourceData, refreshSourceContext, setSourceContext, sourceFormRequest, SourceFormError } from "@bernouy/components/binding";`,
+                `import { observeSource, readSourceData, refreshSourceContext, setSourceContext, sourceFormRequest, SourceFormError } from "@bernouy/cms-content/browser";`,
                 `customElements.define("demo-binding", class extends HTMLElement {`,
                 `  static bindingApi = { observeSource, readSourceData, refreshSourceContext, setSourceContext, sourceFormRequest, SourceFormError };`,
                 `});`,
@@ -26,6 +26,6 @@ describe("binding Bloc external", () => {
         ]) {
             expect(bloc.viewJS).toContain(`window.cmsRuntime.${name}`);
         }
-        expect(bloc.viewJS).not.toContain("@bernouy/components/binding");
+        expect(bloc.viewJS).not.toContain("@bernouy/cms-content/browser");
     });
 });

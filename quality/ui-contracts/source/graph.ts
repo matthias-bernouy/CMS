@@ -8,8 +8,7 @@ export function isBrowserEntrypoint(path: string): boolean {
     return (
         path === "packages/surfaces/cms-control/src/browser/runtime.ts" ||
         path.startsWith("packages/surfaces/cms-control/src/components/") ||
-        path.startsWith("packages/foundation/components/src/ui/") ||
-        path.startsWith("packages/foundation/components/src/binding/") ||
+        path.startsWith("packages/features/cms-content/src/browser/") ||
         /\.client\.[cm]?[jt]sx?$/.test(path) ||
         /^packages\/resources\/[^/]+\/.*\/blocs\/.+\/Bloc\.ts$/.test(path)
     );

@@ -1,4 +1,4 @@
-import { Component } from "@bernouy/components/base";
+import { Component } from "@bernouy/cms-content/browser";
 import {
     PROVIDER_IMAGE_WIDTHS,
     buildProviderImageAttributes,
