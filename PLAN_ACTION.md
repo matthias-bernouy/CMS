@@ -1,7 +1,7 @@
 # CmsCore Total Action Plan
 
 **Status:** active roadmap, last reconciled with the repository and the target
-architecture on 2026-10-05.
+architecture on 2026-10-06.
 
 This document defines the implementation order for the next CmsCore redesign.
 It is intentionally shorter than the design notes: it says what to build, in
@@ -156,9 +156,14 @@ Before adding behavior:
 
 ## Phase 2 — Make The Official Local Provider The Reference
 
-**Status:** in progress. Lot 1 implements read-only discovery of the existing
-local `default` instance; autonomous provisioning and lifecycle operations are
-Lot 2 work.
+**Status (2026-10-06): local development bootstrap operational, lifecycle still
+in progress.** Lot 1 implements read-only discovery of the existing local
+`default` instance. The CLI now admits its bundled official contracts, provider
+manifest and `ulvia-official` collection into the persistent local repository;
+Core then connects and selects the exact official provider contracts and
+installs or upgrades the Control collection. Fresh startup and restart on the
+same volumes have been exercised end to end. Provider-owned provisioning,
+backup, restore and Core process updates remain Lot 2 work.
 
 Turn the current local composition into a real provider implementation without
 prematurely splitting it into several deployable processes.
@@ -192,11 +197,11 @@ The local provider must:
 
 ## Phase 3 — Prove Read-Only CMS Data-Plane Capabilities
 
-**Status (2026-10-06): first vertical slice completed.**
-`ulvia.cms.pages/list` is published by the official repository, implemented by
-the local Core, relayed by the official provider and invoked from an exact
-collection Page execution plan through `/.cms/call`. Further Core domains remain
-Phase 8 work.
+**Status (2026-10-06): Pages vertical slice completed.**
+`ulvia.cms.pages@1.1.0` publishes bounded `list`, `get`, `create`, `update`,
+`publish`, `delete` and `rename` capabilities. They are implemented by the local
+Core, relayed by the official provider and invoked from exact collection Page
+execution plans through `/.cms/call`. Further Core domains remain Phase 8 work.
 
 Do not convert the whole Control API at once. Introduce one official contract
 family and prove the complete authorization chain.
@@ -230,11 +235,13 @@ For each capability:
 
 ## Phase 4 — Establish The Unified Page Model
 
-**Status (2026-10-06): partially implemented.** Collection releases now admit immutable
-surface-specific Pages with default paths, per-resource generations/digests,
-selective imports/exports and transitive Bloc surface validation. Gateway grants
-are Page execution grants. Site-owned Page unification, rendering, copying and
-migration of Page documents remain open.
+**Status (2026-10-06): partially implemented.** Collection releases now admit
+immutable surface-specific Pages with default paths, per-resource
+generations/digests, selective imports/exports and transitive Bloc surface
+validation. Site Pages have one immutable surface, expose the same
+`PageDocument` shape and can retain immutable collection-copy provenance.
+Gateway grants are Page execution grants. Control routing for site-owned Pages,
+the visual document editor and complete Page migration coverage remain open.
 
 Generalize the current page aggregate so the same document model can represent
 Control and Delivery Pages while each Page retains exactly one surface.
@@ -263,10 +270,13 @@ phase.
 
 ## Phase 5 — Unify Routes And Links
 
-**Status (2026-10-06): route foundation implemented, authoring integration
-open.** Surface-owned route registries, stable Page references and route
-overrides exist. Collection upgrades preserve overrides. Editors and navigation
-Blocs do not yet expose the complete Page-reference flow.
+**Status (2026-10-06): route foundation and first authored links implemented.**
+Surface-owned route registries, stable Page references and route overrides
+exist. Collection upgrades preserve overrides. Collection Control Pages can
+author bounded qualified Page references for anchors and successful form
+redirects; Control resolves them after the site route snapshot is known and
+preserves query/fragment suffixes. The visual editor and general link-setting
+control do not yet expose this flow.
 
 Give Pages stable qualified identities and keep routing as site-owned state.
 
@@ -294,9 +304,11 @@ strings embedded as the canonical relation between Pages.
 
 ## Phase 6 — Deliver The First Collection-Based Control Page
 
-**Status (2026-10-06): first technical slice completed.** The official
-collection owns `/admin`, its layout and its Pages catalogue. Control resolves,
-authorizes and renders the Page with the shared Page document pipeline. Broader
+**Status (2026-10-06): first functional slice completed.** The official
+collection owns `/admin`, `/admin/pages`, its layout and its Pages management
+flow. Control resolves, authorizes and renders those Pages with the shared Page
+document pipeline. The flow creates, reads, updates, publishes, unpublishes,
+renames and deletes site Pages through provider-backed capabilities. Broader
 product parity and a complete UX/accessibility review remain Phase 8 work.
 
 Create the first real collection-backed Control screen. The recommended slice
@@ -324,10 +336,12 @@ whether the collection uses a sidebar, tabs, a header or no navigation.
 
 ## Phase 7 — Add Mutations And The Shared Editor Carefully
 
-**Status (2026-10-06): first mutation completed; editor deferred.**
-`ulvia.cms.pages/rename` uses optimistic revisions, naturally idempotent retries,
-same-origin Page authorization, declared provider errors and durable Gateway
-command audit events. The shared Page editor has deliberately not been rebuilt.
+**Status (2026-10-06): Page lifecycle mutations and source editor completed;
+visual editor deferred.** Page writes use optimistic revisions, same-origin Page
+authorization, declared provider errors and durable Gateway command audit
+events. The first collection-owned editor can update Page title, description and
+HTML document, publish or unpublish, and delete. It is intentionally a bounded
+source editor, not the future shared visual Bloc editor.
 
 Only after the read path is proven, introduce a small write capability, such as
 creating or renaming a Page.
@@ -355,12 +369,13 @@ host panels may differ; the composition model must not fork.
 
 ## Phase 8 — Rebuild Control By Functional Area
 
-**Status (2026-10-06): started with Pages.** The new Pages catalogue and title
-mutation are collection-owned. The transitional `/api/page/*` endpoints and
-retained components are not deleted yet: creation, deletion, paths,
-localization, SEO, content editing, filtering and replacement redirects have
-not reached contract parity. Deleting them now would remove behavior instead
-of completing a clean migration.
+**Status (2026-10-06): Pages lifecycle V1 implemented.** The new catalogue,
+creation, detail/source editing, publication, deletion and rename flows are
+collection-owned. The transitional `/api/page/*` endpoints and retained
+components are not deleted yet: path editing, localization, SEO, visual Bloc
+editing, filtering, pagination UX and replacement redirects have not reached
+contract parity. Deleting them now would remove behavior instead of completing
+a clean migration.
 
 Rebuild Control one domain at a time from the retained APIs, components and
 documented behavior. Likely groups are:
@@ -549,6 +564,15 @@ Three boundaries also remain explicit after Lot 1:
 
 ### Lot 2 — Real Autonomous Local Initialization
 
+**Status (2026-10-06): bootstrap slice completed, provider lifecycle slice
+open.** The development CLI seeds immutable official releases from the bundled
+source tree before starting its local repository. Core then idempotently
+connects the official provider, selects its ready `ulvia.cms.*` releases and
+installs or upgrades `ulvia-official`. A fresh-stack CRUD/publication flow and a
+same-volume restart have passed. The current CLI remains the process
+orchestrator; the provider does not yet provision, back up, restore or update a
+Core instance itself.
+
 1. Introduce a provider-private, single-writer local runtime driver at the
    composition root; keep `official-provider` independent from the CMS runtime
    package and add a lease before allowing another writer.
@@ -558,7 +582,8 @@ Three boundaries also remain explicit after Lot 1:
 4. Start the exact Core artifact in maintenance and let the Core run its own
    persistence migrations.
 5. Build and admit an offline, digest-pinned bootstrap bundle containing the
-   required official contracts, `ulvia-official` and `ulvia-control`.
+   required official contracts and `ulvia-official`; a later `ulvia-control`
+   split is optional.
 6. Add a one-time CMS administrator bootstrap secret distinct from provider
    administration.
 7. Commit provider readiness only after migrations, stores, releases, Control
@@ -576,20 +601,22 @@ Exit gate:
 
 ### Lot 3 — First Collection-Owned Control Page
 
-1. Publish bounded read-only `ulvia.cms.pages/list` and, only if needed,
-   `ulvia.cms.pages/get` Core capabilities with their conformance suites.
-2. Implement those capabilities in the managed Core and route them through the
-   local provider using the existing opaque credential flow.
-3. Add the first `ulvia-control` read-only Bloc requiring
-   `ulvia.cms.pages/list`.
-4. Add one collection-owned Control Page composed from `ulvia-control` and
-   selective `ulvia-official` dependencies.
-5. Derive and compile its exact capability plan from the Bloc composition.
-6. Render it through the minimal Control kernel.
-7. Test authorization, surface compatibility, empty/error/loading states,
-   keyboard use, responsive behavior, provider failure and collection rollback.
-8. Keep the kernel recovery response available until the new flow has passed
-   parity and restart checks.
+**Status (2026-10-06): implemented in `ulvia-official` as the initial vertical
+slice.** The eventual split into a dedicated `ulvia-control` collection remains
+an organizational option, not a runtime requirement.
+
+1. Publish bounded `ulvia.cms.pages` capabilities with their conformance suite.
+2. Implement them in the managed Core and route them through the local provider
+   using the existing opaque credential flow.
+3. Author the first Control Pages from reusable `ulvia-official` Blocs and
+   canonical `/.cms/call` bindings.
+4. Derive and validate the exact Page requirements from those bindings.
+5. Compile exact provider execution plans for the referring Page.
+6. Render the Pages through the minimal Control kernel.
+7. Test authorization, surface compatibility, loading/error states, revision
+   conflicts, publication, deletion and restart behavior.
+8. Keep the kernel recovery response and transitional APIs available until the
+   remaining Page behavior reaches parity.
 
 Exit gate:
 

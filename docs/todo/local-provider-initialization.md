@@ -1,8 +1,11 @@
 # Local Provider And CMS Initialization
 
-**Status:** target flow. Provider-owned discovery and durable registration of
-the existing local `default` Core are implemented; autonomous provisioning and
-lifecycle mutations start in Lot 2.
+**Status (2026-10-06): target flow with local bootstrap operational.**
+Provider-owned discovery and durable registration of the existing local
+`default` Core are implemented. The development CLI now seeds the persistent
+repository with official resources, and Core idempotently connects the official
+provider and installs or upgrades the Control collection. Autonomous
+provider-owned provisioning and lifecycle mutations remain Lot 2 work.
 
 This note defines the intended first-run, restart, Control bootstrap and
 recovery flows for the official local CMS provider. It refines the broader
@@ -62,6 +65,12 @@ only the Core version and loopback reachability URL; the provider does not impor
 `cms-server`. The durable provider record deliberately excludes CMS secrets and
 the published discovery response excludes its private health URL.
 
+For the current development stack, the CLI admits the official contract,
+provider and collection sources into its immutable local repository before
+starting the HTTP repository. This makes a clean startup independent from a
+remote service. A production image should carry pre-admitted digest-pinned
+artifacts instead of compiling authored source during startup.
+
 ## Fresh Installation Flow
 
 ### 1. Start The Provider
@@ -118,9 +127,11 @@ ulvia-official collection
 ulvia-control collection
 ```
 
-`ulvia-official` provides the reusable theme, layouts, forms, navigation and
-visual Blocs. `ulvia-control` provides Control-only Blocs and complete Control
-Pages, with explicit selective dependencies on `ulvia-official`.
+`ulvia-official` currently provides the reusable theme, layouts, forms,
+navigation, visual Blocs and the first Control Pages. A future
+`ulvia-control` split may move Control-only Blocs and Pages behind explicit
+selective dependencies on `ulvia-official`; no such split is required by the
+runtime model.
 
 The authored source directory is not mounted as a runtime repository. The
 bootstrap bundle contains admitted immutable release artifacts.
@@ -167,7 +178,7 @@ non-visual Control kernel remains responsible for:
 
 It is not a second administration application or design system.
 
-For a normal request such as `/control/pages`, the kernel:
+For a normal request such as `/admin/pages`, the kernel:
 
 1. validates the CMS session;
 2. resolves the stable Control Page reference from the Control route registry;

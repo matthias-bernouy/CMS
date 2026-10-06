@@ -1,9 +1,10 @@
 # Control Pages And Provider-Managed CMS Instances
 
-**Status:** target design with the immutable collection Page slice implemented.
-Lot 1 provider-owned local instance discovery is implemented; site-owned Page
-unification, rendering, Core data-plane contracts and Control replacement remain
-planned.
+**Status (2026-10-06): target design with the first provider-backed Control Page
+lifecycle implemented.** Lot 1 provider-owned local instance discovery and the
+local official-resource bootstrap are implemented; site-owned Page
+Control routing, additional Core data-plane domains and full Control replacement
+remain planned.
 
 This note records the intended direction for replacing visual Foundation
 components and the removed collection View model. The former Dashboard system and

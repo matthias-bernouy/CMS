@@ -29,3 +29,18 @@ its transitive Blocs and its exact capability execution plan. Calls without a
 same-origin referring Control Page fail closed. The transitional `/api/*`
 surface remains only for functional areas that have not reached collection and
 contract parity; it must not become a second Page model.
+
+Collection Pages link by stable identity rather than by authored Control URL:
+
+```html
+<a
+    data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"details"}'
+    data-cms-page-suffix="?id={{ page.id }}"
+>Open Page</a>
+```
+
+Successful capability forms use `data-cms-success-page-ref` with the same
+reference shape. Admission accepts only bounded, exact references and optional
+query/fragment suffixes. The kernel resolves the current site route override,
+writes the final `href` or `cms-source-success-redirect`, and removes the source
+metadata before returning HTML.
