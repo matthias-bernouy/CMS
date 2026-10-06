@@ -6,8 +6,9 @@ import type { UlviaScalarSchema } from "@bernouy/cms-repository/contracts/schema
 import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
 import type { OfficialCmsInstanceDiscovery } from "../core/InstanceDiscovery";
-import { OfficialCoreCapabilityError, type OfficialCoreCapabilities } from "../core/coreCapabilities";
+import type { OfficialCoreCapabilities } from "../core/coreCapabilities";
 import type { OfficialSubmissionStore } from "../core/submissions";
+import { handleOfficialPages, type OfficialPageCapabilities } from "./pages";
 
 const ITEMS = Object.freeze([
     Object.freeze({ id: "starter", name: "Starter item" }),
@@ -70,51 +71,9 @@ export function createOfficialProviderHandler(options: {
                 throw error;
             }
         }
-        if (request.method === "GET" && path === "/v1/cms/pages") {
-            let input: Readonly<Record<string, unknown>>;
-            try {
-                input = decodeQuery(new URL(request.url), capabilities.pageList);
-            } catch {
-                return new Response(null, { status: 400 });
-            }
-            try {
-                const output = await options.core.invoke("ulvia.cms.pages", "list", input);
-                validateSchemaValue(capabilities.pageList.output, output);
-                return Response.json(output, { headers: { "Cache-Control": "no-store" } });
-            } catch {
-                return error("CORE_UNAVAILABLE", 503);
-            }
-        }
-        if (request.method === "PATCH" && path.startsWith("/v1/cms/pages/")) {
-            const id = pathParameter(path, "/v1/cms/pages/", 200);
-            if (!id) {
-                return new Response(null, { status: 400 });
-            }
-            let input: Readonly<Record<string, unknown>>;
-            try {
-                const body = parseStrictJson(await readBody(request, 8192), 8192, 8);
-                if (!body || typeof body !== "object" || Array.isArray(body)) {
-                    return new Response(null, { status: 400 });
-                }
-                input = { ...(body as Record<string, unknown>), id };
-                validateSchemaValue(capabilities.pageRename.input, input);
-            } catch {
-                return new Response(null, { status: 400 });
-            }
-            try {
-                const output = await options.core.invoke("ulvia.cms.pages", "rename", input);
-                validateSchemaValue(capabilities.pageRename.output, output);
-                return Response.json(output, { headers: { "Cache-Control": "no-store" } });
-            } catch (coreError) {
-                if (
-                    coreError instanceof OfficialCoreCapabilityError &&
-                    ["NOT_FOUND", "REVISION_CONFLICT", "INVALID_TITLE"].includes(coreError.code) &&
-                    capabilities.pageRename.binding.response.errorStatuses[coreError.code] === coreError.status
-                ) {
-                    return error(coreError.code, coreError.status);
-                }
-                return error("CORE_UNAVAILABLE", 503);
-            }
+        const pages = await handleOfficialPages(request, capabilities.pages, options.core);
+        if (pages) {
+            return pages;
         }
         if (request.method === "GET" && path === "/v1/catalog/items") {
             const output = { items: ITEMS };
@@ -173,8 +132,7 @@ function resolveCapabilities(contracts: OfficialProviderContracts): {
     instanceList: CapabilityDefinition;
     instanceCurrent: CapabilityDefinition;
     assetRead: CapabilityDefinition;
-    pageList: CapabilityDefinition;
-    pageRename: CapabilityDefinition;
+    pages: OfficialPageCapabilities;
 } {
     assertContract(contracts.catalog, "catalog.items");
     assertContract(contracts.forms, "forms.submissions");
@@ -192,8 +150,15 @@ function resolveCapabilities(contracts: OfficialProviderContracts): {
         submissionGet: requiredCapability(contracts.forms, "submission.get"),
         instanceList: requiredCapability(contracts.instances, "list"),
         instanceCurrent: requiredCapability(contracts.instances, "get-current"),
-        pageList: requiredCapability(contracts.pages, "list"),
-        pageRename: requiredCapability(contracts.pages, "rename"),
+        pages: {
+            list: requiredCapability(contracts.pages, "list"),
+            get: requiredCapability(contracts.pages, "get"),
+            create: requiredCapability(contracts.pages, "create"),
+            update: requiredCapability(contracts.pages, "update"),
+            publish: requiredCapability(contracts.pages, "publish"),
+            delete: requiredCapability(contracts.pages, "delete"),
+            rename: requiredCapability(contracts.pages, "rename"),
+        },
         assetRead,
     };
 }

@@ -62,6 +62,33 @@ test("the official provider accepts canonical gateway paths and declared error e
             contracts: await contracts(),
             core: {
                 async invoke(contractId, capabilityId, input) {
+                    expect(contractId).toBe("ulvia.cms.pages");
+                    if (capabilityId === "get") {
+                        expect(input).toEqual({ id: "page-1" });
+                        return pageDetails({});
+                    }
+                    if (capabilityId === "create") {
+                        expect(input).toEqual({ path: "/admin/new", title: "New", surface: "control" });
+                        return pageDetails({
+                            id: "page-2",
+                            path: "/admin/new",
+                            title: "New",
+                            surface: "control",
+                            visible: false,
+                        });
+                    }
+                    if (capabilityId === "update") {
+                        expect(input).toEqual({ id: "page-1", expectedRevision: 1, description: "Updated" });
+                        return pageDetails({ revision: 2, description: "Updated" });
+                    }
+                    if (capabilityId === "publish") {
+                        expect(input).toEqual({ id: "page-1", expectedRevision: 2, visible: false });
+                        return pageDetails({ revision: 3, visible: false });
+                    }
+                    if (capabilityId === "delete") {
+                        expect(input).toEqual({ id: "page-1", expectedRevision: 3 });
+                        return { id: "page-1", deleted: true };
+                    }
                     if (capabilityId === "rename") {
                         if (input.title === "Stale") {
                             throw new OfficialCoreCapabilityError("REVISION_CONFLICT", 409);
@@ -130,6 +157,29 @@ test("the official provider accepts canonical gateway paths and declared error e
         const pages = await request("/v1/cms/pages?limit=1");
         expect(pages.status).toBe(200);
         expect((await pages.json()).items[0]).toMatchObject({ id: "page-1", surface: "delivery" });
+        const pagePath = `/v1/cms/pages/${encodeURIComponent(JSON.stringify("page-1"))}`;
+        const page = await request(pagePath);
+        expect(page.status).toBe(200);
+        expect(await page.json()).toMatchObject({ id: "page-1", content: "<p>Home</p>" });
+        const newPage = await request("/v1/cms/pages", {
+            method: "POST",
+            body: JSON.stringify({ path: "/admin/new", title: "New", surface: "control" }),
+        });
+        expect(newPage.status).toBe(201);
+        expect(await newPage.json()).toMatchObject({ id: "page-2", surface: "control" });
+        const updated = await request(pagePath, {
+            method: "PUT",
+            body: JSON.stringify({ expectedRevision: 1, description: "Updated" }),
+        });
+        expect(updated.status).toBe(200);
+        expect(await updated.json()).toMatchObject({ revision: 2, description: "Updated" });
+        const unpublished = await request(`${pagePath}/publication`, {
+            method: "POST",
+            body: JSON.stringify({ expectedRevision: 2, visible: false }),
+        });
+        expect(await unpublished.json()).toMatchObject({ revision: 3, visible: false });
+        const deleted = await request(`${pagePath}?expectedRevision=3`, { method: "DELETE" });
+        expect(await deleted.json()).toEqual({ id: "page-1", deleted: true });
         const renamed = await request(`/v1/cms/pages/${encodeURIComponent(JSON.stringify("page-1"))}`, {
             method: "PATCH",
             body: JSON.stringify({ title: "Renamed", expectedRevision: 1 }),
@@ -171,6 +221,33 @@ test("the official provider accepts canonical gateway paths and declared error e
         await rm(root, { recursive: true, force: true });
     }
 });
+
+function pageDetails(
+    patch: Partial<{
+        id: string;
+        revision: number;
+        surface: "control" | "delivery";
+        path: string;
+        title: string;
+        description: string;
+        content: string;
+        tags: string[];
+        visible: boolean;
+    }>,
+) {
+    return {
+        id: "page-1",
+        revision: 1,
+        surface: "delivery" as const,
+        path: "/",
+        title: "Home",
+        description: "",
+        content: "<p>Home</p>",
+        tags: [],
+        visible: true,
+        ...patch,
+    };
+}
 
 test("the official provider rejects blank credentials and incompatible contract sets at startup", async () => {
     const releases = await contracts();

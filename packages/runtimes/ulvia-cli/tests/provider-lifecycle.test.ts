@@ -70,7 +70,7 @@ test("provider instance discovery follows the admitted plan and opaque credentia
                 forms: (await releases.get("forms.submissions", "0.1.1"))!.admission.release,
                 instances: lifecycle.admission.release,
                 media: (await releases.get("media.assets", "0.2.0"))!.admission.release,
-                pages: (await releases.get("ulvia.cms.pages", "1.0.0"))!.admission.release,
+                pages: (await releases.get("ulvia.cms.pages", "1.1.0"))!.admission.release,
             },
             core: { invoke: async () => ({ items: [] }) },
             instances,

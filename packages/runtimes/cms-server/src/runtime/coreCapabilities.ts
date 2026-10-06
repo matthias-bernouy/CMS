@@ -2,9 +2,15 @@ import { timingSafeEqual } from "node:crypto";
 import {
     CmsPageNotFoundError,
     ContentValidationError,
+    createCmsPage,
+    deleteCmsPage,
+    DuplicatePagePathError,
+    getCmsPage,
     listCmsPages,
     PageRevisionConflictError,
+    publishCmsPage,
     renameCmsPage,
+    updateCmsPage,
     type CmsRepository,
 } from "@bernouy/cms-content";
 import type { Runner } from "@bernouy/http-runner";
@@ -12,7 +18,7 @@ import { readBoundedRequestBody, RequestBodyTooLargeError } from "@bernouy/http-
 import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
 
 export const LOCAL_CORE_CAPABILITY_ROUTE = "/.cms/internal/core-call";
-const MAX_INPUT_BYTES = 8 * 1024;
+const MAX_INPUT_BYTES = 1024 * 1024 + 16 * 1024;
 
 export function mountLocalCoreCapabilities(runner: Runner, repository: CmsRepository, token: string): void {
     if (token.length < 24 || token.length > 256) {
@@ -33,6 +39,21 @@ export function mountLocalCoreCapabilities(runner: Runner, repository: CmsReposi
             }
             if (call.capabilityId === "list") {
                 return noStoreJson(await listCmsPages(repository, call.input));
+            }
+            if (call.capabilityId === "get") {
+                return pageCommand(() => getCmsPage(repository, call.input as never));
+            }
+            if (call.capabilityId === "create") {
+                return pageCommand(() => createCmsPage(repository, call.input as never));
+            }
+            if (call.capabilityId === "update") {
+                return pageCommand(() => updateCmsPage(repository, call.input as never));
+            }
+            if (call.capabilityId === "publish") {
+                return pageCommand(() => publishCmsPage(repository, call.input as never));
+            }
+            if (call.capabilityId === "delete") {
+                return pageCommand(() => deleteCmsPage(repository, call.input as never));
             }
             if (call.capabilityId === "rename") {
                 try {
@@ -58,6 +79,26 @@ export function mountLocalCoreCapabilities(runner: Runner, repository: CmsReposi
             return new Response(null, { status, headers: { "Cache-Control": "no-store" } });
         }
     });
+}
+
+async function pageCommand(operation: () => Promise<unknown>): Promise<Response> {
+    try {
+        return noStoreJson(await operation());
+    } catch (error) {
+        if (error instanceof CmsPageNotFoundError) {
+            return coreError("NOT_FOUND", 404);
+        }
+        if (error instanceof PageRevisionConflictError) {
+            return coreError("REVISION_CONFLICT", 409);
+        }
+        if (error instanceof DuplicatePagePathError) {
+            return coreError("PATH_CONFLICT", 409);
+        }
+        if (error instanceof ContentValidationError || error instanceof TypeError) {
+            return coreError("INVALID_PAGE", 422);
+        }
+        throw error;
+    }
 }
 
 function noStoreJson(value: unknown): Response {

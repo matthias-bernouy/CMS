@@ -2,10 +2,10 @@
     "kind": "contract-conformance-suite",
     "protocol": "ulvia-conformance/v1",
     "contractId": "ulvia.cms.pages",
-    "contractVersion": "1.0.0",
-    "contractDigest": "sha256:c498f092b01677e493f81a49977e295d6894c8eb10f89aa9809b1202d1b6ef1e",
+    "contractVersion": "1.1.0",
+    "contractDigest": "sha256:53d54b515828a7e51be30d80905c802636df30947b4dc857c3e77ae81557b236",
     "publisherId": "ulvia.official",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "isolation": "disposable-tenant",
     "scenarios": [
         {
@@ -29,6 +29,101 @@
             "capabilityId": "list",
             "errorCode": "CORE_UNAVAILABLE",
             "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "get",
+            "reason": "The smoke suite does not assume a stable pre-existing Page identity."
+        },
+        {
+            "capabilityId": "get",
+            "errorCode": "NOT_FOUND",
+            "reason": "The smoke suite does not prescribe provider fixture identities."
+        },
+        {
+            "capabilityId": "get",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "The suite does not prescribe how a provider disconnects its selected Core."
+        },
+        {
+            "capabilityId": "create",
+            "reason": "The official smoke suite remains read-only across provider implementations."
+        },
+        {
+            "capabilityId": "create",
+            "errorCode": "PATH_CONFLICT",
+            "reason": "A portable suite cannot assume a conflicting site path."
+        },
+        {
+            "capabilityId": "create",
+            "errorCode": "INVALID_PAGE",
+            "reason": "Page document admission belongs to the selected Core."
+        },
+        {
+            "capabilityId": "create",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "The suite does not prescribe how a provider disconnects its selected Core."
+        },
+        {
+            "capabilityId": "update",
+            "reason": "Mutation requires a suite-owned Page fixture and revision."
+        },
+        {
+            "capabilityId": "update",
+            "errorCode": "NOT_FOUND",
+            "reason": "The smoke suite does not prescribe provider fixture identities."
+        },
+        {
+            "capabilityId": "update",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The smoke suite does not prescribe concurrent mutation scheduling."
+        },
+        {
+            "capabilityId": "update",
+            "errorCode": "INVALID_PAGE",
+            "reason": "Page document admission belongs to the selected Core."
+        },
+        {
+            "capabilityId": "update",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "The suite does not prescribe how a provider disconnects its selected Core."
+        },
+        {
+            "capabilityId": "publish",
+            "reason": "Mutation requires a suite-owned Page fixture and revision."
+        },
+        {
+            "capabilityId": "publish",
+            "errorCode": "NOT_FOUND",
+            "reason": "The smoke suite does not prescribe provider fixture identities."
+        },
+        {
+            "capabilityId": "publish",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The smoke suite does not prescribe concurrent mutation scheduling."
+        },
+        {
+            "capabilityId": "publish",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "The suite does not prescribe how a provider disconnects its selected Core."
+        },
+        {
+            "capabilityId": "delete",
+            "reason": "The read-only smoke suite must not delete provider data."
+        },
+        {
+            "capabilityId": "delete",
+            "errorCode": "NOT_FOUND",
+            "reason": "The smoke suite does not prescribe provider fixture identities."
+        },
+        {
+            "capabilityId": "delete",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The smoke suite does not prescribe concurrent mutation scheduling."
+        },
+        {
+            "capabilityId": "delete",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "The suite does not prescribe how a provider disconnects its selected Core."
         },
         {
             "capabilityId": "rename",

@@ -5,7 +5,7 @@
     "contractId": "ulvia.cms.pages",
     "name": "CMS Pages",
     "description": "Read and manage the Pages owned by one provider-selected CMS instance without exposing provider-private instance routing.",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "publisherId": "ulvia.official",
     "catalogue": {
         "icon": "pages",
@@ -62,6 +62,239 @@
                     "successStatuses": [200],
                     "contentTypes": ["application/json"],
                     "errorStatuses": { "CORE_UNAVAILABLE": 503 }
+                }
+            }
+        },
+        {
+            "id": "get",
+            "description": "Read one complete editable Page by stable identity.",
+            "access": "admin",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": { "id": { "type": "string", "minLength": 1, "maxLength": 200 } },
+                "required": ["id"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string", "maxLength": 200 },
+                    "revision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+                    "surface": { "type": "string", "enum": ["control", "delivery"], "maxLength": 8 },
+                    "path": { "type": "string", "maxLength": 2048 },
+                    "title": { "type": "string", "minLength": 1, "maxLength": 70 },
+                    "description": { "type": "string", "maxLength": 200 },
+                    "content": { "type": "string", "maxLength": 1048576 },
+                    "tags": { "type": "array", "maxItems": 64, "items": { "type": "string", "maxLength": 64 } },
+                    "visible": { "type": "boolean" }
+                },
+                "required": ["id", "revision", "surface", "path", "title", "description", "content", "tags", "visible"]
+            },
+            "errors": [
+                { "code": "NOT_FOUND", "retryable": false },
+                { "code": "CORE_UNAVAILABLE", "retryable": true }
+            ],
+            "binding": {
+                "transport": "http",
+                "method": "GET",
+                "path": "/v1/cms/pages/{id}",
+                "input": { "path": { "id": "id" } },
+                "response": {
+                    "successStatuses": [200],
+                    "contentTypes": ["application/json"],
+                    "errorStatuses": { "NOT_FOUND": 404, "CORE_UNAVAILABLE": 503 }
+                }
+            }
+        },
+        {
+            "id": "create",
+            "description": "Create one Page on exactly one rendering surface.",
+            "access": "admin",
+            "behavior": { "effect": "command", "idempotency": "none", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "path": { "type": "string", "minLength": 1, "maxLength": 2048 },
+                    "title": { "type": "string", "minLength": 1, "maxLength": 70 },
+                    "content": { "type": "string", "maxLength": 1048576 },
+                    "surface": { "type": "string", "enum": ["control", "delivery"], "maxLength": 8 }
+                },
+                "required": ["path", "title", "surface"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string", "maxLength": 200 },
+                    "revision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+                    "surface": { "type": "string", "enum": ["control", "delivery"], "maxLength": 8 },
+                    "path": { "type": "string", "maxLength": 2048 },
+                    "title": { "type": "string", "minLength": 1, "maxLength": 70 },
+                    "description": { "type": "string", "maxLength": 200 },
+                    "content": { "type": "string", "maxLength": 1048576 },
+                    "tags": { "type": "array", "maxItems": 64, "items": { "type": "string", "maxLength": 64 } },
+                    "visible": { "type": "boolean" }
+                },
+                "required": ["id", "revision", "surface", "path", "title", "description", "content", "tags", "visible"]
+            },
+            "errors": [
+                { "code": "PATH_CONFLICT", "retryable": false },
+                { "code": "INVALID_PAGE", "retryable": false },
+                { "code": "CORE_UNAVAILABLE", "retryable": true }
+            ],
+            "binding": {
+                "transport": "http",
+                "method": "POST",
+                "path": "/v1/cms/pages",
+                "input": { "body": { "properties": ["path", "title", "content", "surface"] } },
+                "response": {
+                    "successStatuses": [201],
+                    "contentTypes": ["application/json"],
+                    "errorStatuses": { "PATH_CONFLICT": 409, "INVALID_PAGE": 422, "CORE_UNAVAILABLE": 503 }
+                }
+            }
+        },
+        {
+            "id": "update",
+            "description": "Update Page content and metadata with optimistic revision control.",
+            "access": "admin",
+            "behavior": { "effect": "command", "idempotency": "none", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+                    "expectedRevision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+                    "title": { "type": "string", "minLength": 1, "maxLength": 70 },
+                    "description": { "type": "string", "maxLength": 200 },
+                    "content": { "type": "string", "maxLength": 1048576 },
+                    "tags": { "type": "array", "maxItems": 64, "items": { "type": "string", "maxLength": 64 } }
+                },
+                "required": ["id", "expectedRevision"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string", "maxLength": 200 },
+                    "revision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+                    "surface": { "type": "string", "enum": ["control", "delivery"], "maxLength": 8 },
+                    "path": { "type": "string", "maxLength": 2048 },
+                    "title": { "type": "string", "minLength": 1, "maxLength": 70 },
+                    "description": { "type": "string", "maxLength": 200 },
+                    "content": { "type": "string", "maxLength": 1048576 },
+                    "tags": { "type": "array", "maxItems": 64, "items": { "type": "string", "maxLength": 64 } },
+                    "visible": { "type": "boolean" }
+                },
+                "required": ["id", "revision", "surface", "path", "title", "description", "content", "tags", "visible"]
+            },
+            "errors": [
+                { "code": "NOT_FOUND", "retryable": false },
+                { "code": "REVISION_CONFLICT", "retryable": true },
+                { "code": "INVALID_PAGE", "retryable": false },
+                { "code": "CORE_UNAVAILABLE", "retryable": true }
+            ],
+            "binding": {
+                "transport": "http",
+                "method": "PUT",
+                "path": "/v1/cms/pages/{id}",
+                "input": {
+                    "path": { "id": "id" },
+                    "body": { "properties": ["expectedRevision", "title", "description", "content", "tags"] }
+                },
+                "response": {
+                    "successStatuses": [200],
+                    "contentTypes": ["application/json"],
+                    "errorStatuses": {
+                        "NOT_FOUND": 404,
+                        "REVISION_CONFLICT": 409,
+                        "INVALID_PAGE": 422,
+                        "CORE_UNAVAILABLE": 503
+                    }
+                }
+            }
+        },
+        {
+            "id": "publish",
+            "description": "Publish or unpublish one Page with optimistic revision control.",
+            "access": "admin",
+            "behavior": { "effect": "command", "idempotency": "none", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+                    "visible": { "type": "boolean" },
+                    "expectedRevision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+                },
+                "required": ["id", "visible", "expectedRevision"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string", "maxLength": 200 },
+                    "revision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+                    "surface": { "type": "string", "enum": ["control", "delivery"], "maxLength": 8 },
+                    "path": { "type": "string", "maxLength": 2048 },
+                    "title": { "type": "string", "minLength": 1, "maxLength": 70 },
+                    "description": { "type": "string", "maxLength": 200 },
+                    "content": { "type": "string", "maxLength": 1048576 },
+                    "tags": { "type": "array", "maxItems": 64, "items": { "type": "string", "maxLength": 64 } },
+                    "visible": { "type": "boolean" }
+                },
+                "required": ["id", "revision", "surface", "path", "title", "description", "content", "tags", "visible"]
+            },
+            "errors": [
+                { "code": "NOT_FOUND", "retryable": false },
+                { "code": "REVISION_CONFLICT", "retryable": true },
+                { "code": "CORE_UNAVAILABLE", "retryable": true }
+            ],
+            "binding": {
+                "transport": "http",
+                "method": "POST",
+                "path": "/v1/cms/pages/{id}/publication",
+                "input": {
+                    "path": { "id": "id" },
+                    "body": { "properties": ["visible", "expectedRevision"] }
+                },
+                "response": {
+                    "successStatuses": [200],
+                    "contentTypes": ["application/json"],
+                    "errorStatuses": { "NOT_FOUND": 404, "REVISION_CONFLICT": 409, "CORE_UNAVAILABLE": 503 }
+                }
+            }
+        },
+        {
+            "id": "delete",
+            "description": "Delete one Page with optimistic revision control.",
+            "access": "admin",
+            "behavior": { "effect": "command", "idempotency": "none", "execution": "sync" },
+            "input": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+                    "expectedRevision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+                },
+                "required": ["id", "expectedRevision"]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string", "maxLength": 200 },
+                    "deleted": { "type": "boolean" }
+                },
+                "required": ["id", "deleted"]
+            },
+            "errors": [
+                { "code": "NOT_FOUND", "retryable": false },
+                { "code": "REVISION_CONFLICT", "retryable": true },
+                { "code": "CORE_UNAVAILABLE", "retryable": true }
+            ],
+            "binding": {
+                "transport": "http",
+                "method": "DELETE",
+                "path": "/v1/cms/pages/{id}",
+                "input": { "path": { "id": "id" }, "query": { "expectedRevision": "expectedRevision" } },
+                "response": {
+                    "successStatuses": [200],
+                    "contentTypes": ["application/json"],
+                    "errorStatuses": { "NOT_FOUND": 404, "REVISION_CONFLICT": 409, "CORE_UNAVAILABLE": 503 }
                 }
             }
         },

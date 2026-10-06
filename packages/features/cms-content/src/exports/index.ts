@@ -46,6 +46,14 @@ export {
     renameCmsPage,
     type CmsPageRenameInput,
 } from "cms-content/pages/core/contracts/renamePage";
+export { getCmsPage, type CmsPageDetails } from "cms-content/pages/core/contracts/pageDetails";
+export { createCmsPage, type CmsPageCreateInput } from "cms-content/pages/core/contracts/createPage";
+export {
+    deleteCmsPage,
+    publishCmsPage,
+    updateCmsPage,
+    type CmsPageUpdateInput,
+} from "cms-content/pages/core/contracts/mutatePage";
 export type {
     PageLinkTarget,
     PageReference,
