@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
 import { runCli } from "../../src/cli";
+import { bootstrapOfficialRepository } from "../../src/commands/bootstrap";
 import { resolveDevPorts } from "../../src/commands/dev";
 import { localMongoUrl } from "../../src/runtime/mongo";
 
@@ -31,6 +36,22 @@ describe("Ulvia CLI", () => {
 
     test("disables retryable writes for the standalone local MongoDB", () => {
         expect(localMongoUrl(27_019)).toBe("mongodb://127.0.0.1:27019/ulvia_dev?retryWrites=false");
+    });
+
+    test("admits all bundled resources needed by a fresh local stack", async () => {
+        const root = await mkdtemp(join(tmpdir(), "ulvia-bootstrap-"));
+        try {
+            await bootstrapOfficialRepository(root);
+            const artifacts = new LocalArtifactFiles(root);
+            expect((await artifacts.list("contracts")).map(({ id }) => id)).toContain("ulvia.cms.pages");
+            expect((await artifacts.list("providers")).map(({ id }) => id)).toEqual(["ulvia.official"]);
+            expect(
+                (await new LocalCollectionRepository(root).list()).map(({ release }) => release.collectionId),
+            ).toEqual(["ulvia-official"]);
+            await bootstrapOfficialRepository(root);
+        } finally {
+            await rm(root, { recursive: true, force: true });
+        }
     });
 
     test("rejects obsolete integration-shaped pull arguments", async () => {

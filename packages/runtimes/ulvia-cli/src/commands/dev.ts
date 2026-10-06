@@ -4,6 +4,7 @@ import { startLocalCms, stopLocalCms, type DevPorts } from "../runtime/cms";
 import { localMongoStatus, startLocalMongo, stopLocalMongo } from "../runtime/mongo";
 import { loadOrCreateProviderToken, startLocalProvider, stopLocalProvider } from "../runtime/provider";
 import type { UlviaPaths } from "../runtime/paths";
+import { bootstrapOfficialRepository } from "./bootstrap";
 
 const DEFAULT_PORTS: DevPorts = Object.freeze({
     control: 5100,
@@ -48,6 +49,8 @@ export async function devCommand(
 }
 
 async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: DevPorts): Promise<void> {
+    log("Preparing bundled official resources...");
+    await bootstrapOfficialRepository(paths.repository);
     log("Starting persistent local MongoDB...");
     const mongo = await startLocalMongo(paths.mongo, ports.mongo);
     const config = await loadOrCreateDevRuntimeConfig(paths.dev);
