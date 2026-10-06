@@ -75,7 +75,7 @@
                             <input type="hidden" name="id" value="{{ selected.id }}">
                             <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
                             <input type="hidden" name="visible" value="false" cms-form-value-type="boolean">
-                            <ulvia-official-action variant="outlined" tone="secondary"><button type="submit">Return to draft</button></ulvia-official-action>
+                            <ulvia-official-action variant="outline" tone="secondary"><button type="submit">Return to draft</button></ulvia-official-action>
                         </form>
                     </ulvia-official-cluster>
                 </ulvia-official-surface>
@@ -85,7 +85,7 @@
                     <form cms-source="/.cms/call/ulvia.cms.pages/delete as deletion" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" data-cms-success-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'>
                         <input type="hidden" name="id" value="{{ selected.id }}">
                         <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
-                        <ulvia-official-action variant="outlined" tone="danger"><button type="submit">Delete Page</button></ulvia-official-action>
+                        <ulvia-official-action variant="outline" tone="danger"><button type="submit">Delete Page</button></ulvia-official-action>
                     </form>
                 </ulvia-official-surface>
             </div>

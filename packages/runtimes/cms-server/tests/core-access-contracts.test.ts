@@ -53,6 +53,13 @@ test("access capabilities protect the caller and cleanly remove another member",
     };
     registerAccessCapabilities(dispatcher, core as never, gateway as never);
 
+    expect(await dispatcher.invoke("ulvia.cms.access", "overview", {}, context)).toMatchObject({
+        users: [
+            { sub: "local:admin", administrator: true, administratorRevision: 1 },
+            { sub: "oidc:member", administrator: false, administratorRevision: 0 },
+        ],
+    });
+
     await expect(
         dispatcher.invoke(
             "ulvia.cms.access",

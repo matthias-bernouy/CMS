@@ -13,12 +13,13 @@ export function projectSite(system: TSystem, revision: number) {
     };
 }
 
-export function projectUser(user: TUser, administrator: boolean) {
+export function projectUser(user: TUser, administrator: { enabled: boolean; revision: number }) {
     return {
         sub: user.sub,
         ...(user.email ? { email: user.email } : {}),
         ...(user.provider ? { provider: user.provider } : {}),
-        administrator,
+        administrator: administrator.enabled,
+        administratorRevision: administrator.revision,
         createdAt: user.createdAt.toISOString(),
         lastSeenAt: user.lastSeenAt.toISOString(),
     };

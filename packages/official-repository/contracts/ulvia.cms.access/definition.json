@@ -39,10 +39,11 @@
                                 "email": { "type": "string", "format": "email", "maxLength": 320 },
                                 "provider": { "type": "string", "maxLength": 96 },
                                 "administrator": { "type": "boolean" },
+                                "administratorRevision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
                                 "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 },
                                 "lastSeenAt": { "type": "string", "format": "date-time", "maxLength": 40 }
                             },
-                            "required": ["sub", "administrator", "createdAt", "lastSeenAt"]
+                            "required": ["sub", "administrator", "administratorRevision", "createdAt", "lastSeenAt"]
                         }
                     },
                     "totalUsers": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
@@ -109,10 +110,11 @@
                                 "email": { "type": "string", "format": "email", "maxLength": 320 },
                                 "provider": { "type": "string", "maxLength": 96 },
                                 "administrator": { "type": "boolean" },
+                                "administratorRevision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
                                 "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 },
                                 "lastSeenAt": { "type": "string", "format": "date-time", "maxLength": 40 }
                             },
-                            "required": ["sub", "administrator", "createdAt", "lastSeenAt"]
+                            "required": ["sub", "administrator", "administratorRevision", "createdAt", "lastSeenAt"]
                         }
                     },
                     "total": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
@@ -148,10 +150,11 @@
                     "email": { "type": "string", "format": "email", "maxLength": 320 },
                     "provider": { "type": "string", "maxLength": 96 },
                     "administrator": { "type": "boolean" },
+                    "administratorRevision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
                     "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 },
                     "lastSeenAt": { "type": "string", "format": "date-time", "maxLength": 40 }
                 },
-                "required": ["sub", "administrator", "createdAt", "lastSeenAt"]
+                "required": ["sub", "administrator", "administratorRevision", "createdAt", "lastSeenAt"]
             },
             "errors": [{ "code": "NOT_FOUND", "retryable": false }, { "code": "CORE_UNAVAILABLE", "retryable": true }],
             "binding": {

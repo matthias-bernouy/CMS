@@ -23,16 +23,15 @@ export function registerAccessCapabilities(
 ): void {
     dispatcher.register("ulvia.cms.access", "overview", async (input) => {
         const limit = Number.isSafeInteger(input.limit) ? Number(input.limit) : 50;
-        const [site, page, loginProviders, administratorIds] = await Promise.all([
+        const [site, page, loginProviders] = await Promise.all([
             readSystemSnapshot(core.repo),
             core.users.list({ pagination: { page: 1, limit } }),
             core.identityProviders.list(),
-            gateway?.administrators.list() ?? Promise.resolve([]),
         ]);
-        const administrators = new Set(administratorIds);
+        const administrators = await Promise.all(page.users.map((user) => administratorState(gateway, user.sub)));
         return {
             site: projectSite(site.system, site.revision),
-            users: page.users.map((user) => projectUser(user, administrators.has(user.sub))),
+            users: page.users.map((user, index) => projectUser(user, administrators[index]!)),
             totalUsers: page.total,
             loginProviders: loginProviders.map(projectIdentityProvider),
         };
@@ -45,8 +44,8 @@ export function registerAccessCapabilities(
                 limit: Number.isSafeInteger(input.limit) ? Number(input.limit) : 50,
             },
         });
-        const administrators = new Set(await (gateway?.administrators.list() ?? Promise.resolve([])));
-        return { ...page, users: page.users.map((user) => projectUser(user, administrators.has(user.sub))) };
+        const administrators = await Promise.all(page.users.map((user) => administratorState(gateway, user.sub)));
+        return { ...page, users: page.users.map((user, index) => projectUser(user, administrators[index]!)) };
     });
     dispatcher.register("ulvia.cms.access", "get-user", async (input) => {
         const sub = requiredText(input.sub);
@@ -54,7 +53,7 @@ export function registerAccessCapabilities(
         if (!user) {
             throw new CoreCapabilityDispatchError("NOT_FOUND", 404);
         }
-        return projectUser(user, (await administratorState(gateway, sub)).enabled);
+        return projectUser(user, await administratorState(gateway, sub));
     });
     dispatcher.register("ulvia.cms.access", "set-administrator", async (input, context) =>
         accessCommand(async () => {

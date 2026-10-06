@@ -1,10 +1,18 @@
 export function initializeWorkspace(root: ShadowRoot): void {
-    replace(root, "[data-heading]", `
+    replace(
+        root,
+        "[data-heading]",
+        `
         <p part="eyebrow">Collection workspace</p>
         <h2 id="collection-manager-title">Installed foundations and releases</h2>
         <p part="intro">Review immutable versions, install repository releases and preview every migration before applying it.</p>
-    `);
-    replace(root, "[data-header-action]", '<button part="refresh" type="button" data-action="refresh">Refresh</button>');
+    `,
+    );
+    replace(
+        root,
+        "[data-header-action]",
+        '<button part="refresh" type="button" data-action="refresh">Refresh</button>',
+    );
     replace(
         root,
         "[data-tabs]",
@@ -12,9 +20,13 @@ export function initializeWorkspace(root: ShadowRoot): void {
          <button type="button" data-tab="repository" aria-selected="false">Repository</button>
          <button type="button" data-tab="activity" aria-selected="false">Activity</button>`,
     );
-    replace(root, "[data-installed-toolbar]", toolbar("Installed collections", "installed", "Filter installed collections"));
+    replace(
+        root,
+        "[data-installed-toolbar]",
+        toolbar("Installed collections", "installed", "Filter installed collections"),
+    );
     replace(root, "[data-repository-toolbar]", toolbar("Repository releases", "repository", "Search releases"));
-    replace(root, "[data-activity-toolbar]", '<h3>Recent activity</h3><span data-maintenance></span>');
+    replace(root, "[data-activity-toolbar]", "<h3>Recent activity</h3><span data-maintenance></span>");
     replace(root, "[data-dialogs]", `${configurationDialog()}${migrationDialog()}`);
 }
 
