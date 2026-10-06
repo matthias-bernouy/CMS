@@ -1,0 +1,11 @@
+{
+    "id": "design",
+    "surface": "control",
+    "defaultPath": "/admin/design",
+    "name": "page.design.name",
+    "icon": "theme",
+    "description": "page.design.description",
+    "requires": [
+        { "contractId": "ulvia.cms.design", "capabilityId": "overview", "versionRange": "^1.0.0" }
+    ]
+}

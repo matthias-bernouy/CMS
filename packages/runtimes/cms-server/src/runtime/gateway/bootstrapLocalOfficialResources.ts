@@ -8,8 +8,17 @@ import type { ProviderManagement } from "./ProviderManagement";
 
 const PROVIDER_ID = "ulvia.official";
 const CONTROL_COLLECTION_ID = "ulvia-official";
-const CONTROL_COLLECTION_VERSION = "1.1.0";
+const CONTROL_COLLECTION_VERSION = "1.2.0";
 const BOOTSTRAP_ACTOR = "system:local-bootstrap";
+const CORE_CONTRACT_IDS = [
+    "ulvia.cms.access",
+    "ulvia.cms.collections",
+    "ulvia.cms.design",
+    "ulvia.cms.files",
+    "ulvia.cms.operations",
+    "ulvia.cms.pages",
+    "ulvia.cms.providers",
+] as const;
 
 type Management = Pick<ProviderManagement, "importManifest" | "list" | "preview" | "approve" | "selectContract">;
 type Collections = Pick<CollectionStore, "importRelease" | "snapshot" | "install" | "upgrade">;
@@ -45,8 +54,11 @@ export async function bootstrapLocalOfficialResources(options: {
         !installation ||
         installation.endpoint !== options.providerEndpoint ||
         installation.manifestVersion !== manifestEntry.version ||
-        !installation.contracts.some(
-            (contract) => contract.contractId === "ulvia.cms.pages" && contract.status === "ready",
+        CORE_CONTRACT_IDS.some(
+            (contractId) =>
+                !installation?.contracts.some(
+                    (contract) => contract.contractId === contractId && contract.status === "ready",
+                ),
         );
     if (requiresConnection) {
         const preview = await options.management.preview(

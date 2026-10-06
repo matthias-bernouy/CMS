@@ -10,7 +10,15 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
     const data = await mkdtemp(join(tmpdir(), "ulvia-cli-release-"));
     const source = resolve(import.meta.dir, "../../../../official-repository/collections/ulvia-official");
     const catalogContract = resolve(import.meta.dir, "../../../../official-repository/contracts/catalog.items");
-    const pagesContract = resolve(import.meta.dir, "../../../../official-repository/contracts/ulvia.cms.pages");
+    const coreContracts = [
+        "ulvia.cms.access",
+        "ulvia.cms.collections",
+        "ulvia.cms.design",
+        "ulvia.cms.files",
+        "ulvia.cms.operations",
+        "ulvia.cms.pages",
+        "ulvia.cms.providers",
+    ].map((id) => resolve(import.meta.dir, `../../../../official-repository/contracts/${id}`));
     const definition = (await Bun.file(join(source, "definition.json")).json()) as {
         version: string;
         exports: { blocs: string[]; texts: string[] };
@@ -20,7 +28,9 @@ test("release publishes a folder explicitly, survives CLI runs, and prune clears
     try {
         const repository = new LocalCollectionRepository(join(data, "repository"));
         await runCli(["release", catalogContract], options);
-        await runCli(["release", pagesContract], options);
+        for (const contract of coreContracts) {
+            await runCli(["release", contract], options);
+        }
         await runCli(["release", source], options);
         const releases = await repository.list();
         expect(releases.map((item) => item.release.collectionId)).toEqual(["ulvia-official"]);

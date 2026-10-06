@@ -1,0 +1,41 @@
+<ulvia-official-app-shell layout="sidebar" sticky-header>
+    <strong slot="brand">Ulvia</strong>
+    <nav slot="secondary-navigation" aria-label="Administration">
+        <strong>Content</strong>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'>Pages</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"collections"}'>Collections</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"files"}'>Files</a>
+        <strong>Configuration</strong>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"design"}'>Design &amp; languages</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"providers"}'>Providers</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"access"}'>Access &amp; settings</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"operations"}'>Operations</a>
+    </nav>
+    <ulvia-official-page-shell slot="content" width="xl">
+        <div slot="title"><h1>Files</h1></div>
+        <div slot="description"><p>Browse the author library. Binary transfer remains on the dedicated CMS file transport.</p></div>
+        <ulvia-official-surface slot="content" elevation="sm" padding="lg">
+            <h2>Create a root folder</h2>
+            <form cms-source="/.cms/call/ulvia.cms.files/create-folder" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#files-list">
+                <ulvia-official-field label-position="inline">
+                    <label slot="label" for="folder-name">Folder name</label>
+                    <ulvia-official-input slot="control"><input id="folder-name" name="name" maxlength="255" required></ulvia-official-input>
+                </ulvia-official-field>
+                <ulvia-official-action variant="filled" tone="primary"><button type="submit">Create folder</button></ulvia-official-action>
+                <p role="status" aria-live="polite" cms-condition="$source.loading">Creating folder…</p>
+                <p role="alert" cms-condition="$source.error">The folder could not be created. Its name may already be used.</p>
+            </form>
+        </ulvia-official-surface>
+        <section id="files-list" slot="content" cms-source="/.cms/call/ulvia.cms.files/list as files" cms-source-method="POST" cms-source-body='{"limit":100}'>
+            <p role="status" aria-live="polite" cms-condition="$source.loading">Loading files…</p>
+            <div role="alert" cms-condition="$source.error"><h2>Files unavailable</h2><p>The author library could not be read.</p></div>
+            <div cms-condition="$source.loaded">
+                <p><strong>{{ files.total }}</strong> root items</p>
+                <ul cms-condition="files.items.length">
+                    <li cms-repeat="files.items as item"><strong>{{ item.name }}</strong><span>{{ item.type }}</span><small>Updated {{ item.updatedAt }}</small></li>
+                </ul>
+                <p cms-condition="files.items.length == 0">The root folder is empty.</p>
+            </div>
+        </section>
+    </ulvia-official-page-shell>
+</ulvia-official-app-shell>

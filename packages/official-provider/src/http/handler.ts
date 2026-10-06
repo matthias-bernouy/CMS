@@ -21,10 +21,10 @@ const MEDIA_BYTES = new TextEncoder().encode(MEDIA);
 
 export interface OfficialProviderContracts {
     readonly catalog: ContractRelease;
+    readonly core: readonly ContractRelease[];
     readonly forms: ContractRelease;
     readonly instances: ContractRelease;
     readonly media: ContractRelease;
-    readonly pages: ContractRelease;
 }
 
 export function createOfficialProviderHandler(options: {
@@ -39,7 +39,7 @@ export function createOfficialProviderHandler(options: {
         throw new Error("Official provider token must not be blank");
     }
     const capabilities = resolveCapabilities(options.contracts);
-    const relayCoreContract = createCoreContractRelay([options.contracts.pages], options.core);
+    const relayCoreContract = createCoreContractRelay(options.contracts.core, options.core);
     return async (request) => {
         if (!authorized(request.headers.get("authorization"), options.token)) {
             return new Response(null, { status: 401, headers: { "WWW-Authenticate": "Bearer" } });
@@ -138,7 +138,9 @@ function resolveCapabilities(contracts: OfficialProviderContracts): {
     assertContract(contracts.forms, "forms.submissions");
     assertContract(contracts.instances, "ulvia.provider.cms-instances");
     assertContract(contracts.media, "media.assets");
-    assertContract(contracts.pages, "ulvia.cms.pages");
+    if (contracts.core.length === 0 || contracts.core.some((release) => !release.contractId.startsWith("ulvia.cms."))) {
+        throw new Error("Official Core contracts must use the ulvia.cms namespace");
+    }
     const assetRead = requiredCapability(contracts.media, "asset.read");
     if (assetRead.media?.idInput !== "fileId") {
         throw new Error("Official media contract must expose asset.read through fileId media identity");

@@ -4,7 +4,7 @@
     "schemaDialect": "ulvia-schema/v1",
     "collectionId": "ulvia-official",
     "publisherId": "ulvia.official",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "name": "collection.name",
     "description": "collection.description",
     "locale": "en",
@@ -226,9 +226,15 @@
             "title"
         ],
         "pages": [
+            "access",
             "catalog",
+            "collections",
+            "design",
             "details",
+            "files",
+            "operations",
             "overview",
+            "providers",
             "resources",
             "theme"
         ]

@@ -1,0 +1,56 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "ulvia.cms.collections",
+    "name": "CMS Collections",
+    "description": "Inspect the immutable collection releases installed on one provider-selected CMS instance.",
+    "version": "1.0.0",
+    "publisherId": "ulvia.official",
+    "catalogue": { "icon": "collections", "categories": ["administration", "content"] },
+    "capabilities": [
+        {
+            "id": "list",
+            "description": "List installed collections and their bounded resource counts.",
+            "access": "admin",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": { "type": "object", "properties": {}, "required": [] },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "revision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+                    "items": {
+                        "type": "array",
+                        "maxItems": 256,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "collectionId": { "type": "string", "maxLength": 96 },
+                                "publisherId": { "type": "string", "maxLength": 96 },
+                                "version": { "type": "string", "maxLength": 64 },
+                                "digest": { "type": "string", "maxLength": 71 },
+                                "repositoryId": { "type": "string", "maxLength": 96 },
+                                "dataGeneration": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+                                "blocCount": { "type": "integer", "minimum": 0, "maximum": 1024 },
+                                "pageCount": { "type": "integer", "minimum": 0, "maximum": 1024 },
+                                "assetCount": { "type": "integer", "minimum": 0, "maximum": 1024 },
+                                "textCount": { "type": "integer", "minimum": 0, "maximum": 4096 },
+                                "themeTokenCount": { "type": "integer", "minimum": 0, "maximum": 4096 }
+                            },
+                            "required": ["collectionId", "publisherId", "version", "digest", "dataGeneration", "blocCount", "pageCount", "assetCount", "textCount", "themeTokenCount"]
+                        }
+                    }
+                },
+                "required": ["revision", "items"]
+            },
+            "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
+            "binding": {
+                "transport": "http",
+                "method": "GET",
+                "path": "/v1/cms/collections",
+                "input": {},
+                "response": { "successStatuses": [200], "contentTypes": ["application/json"], "errorStatuses": { "CORE_UNAVAILABLE": 503 } }
+            }
+        }
+    ]
+}

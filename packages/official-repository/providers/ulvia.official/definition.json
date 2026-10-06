@@ -4,7 +4,7 @@
     "schemaDialect": "ulvia-schema/v1",
     "providerId": "ulvia.official",
     "name": "Ulvia Official Provider",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "provenance": {
         "publisherId": "ulvia.official",
         "publishedAt": "2026-10-01T00:00:00Z"
@@ -38,9 +38,45 @@
             "requires": []
         },
         {
+            "contractId": "ulvia.cms.access",
+            "version": "1.0.0",
+            "digest": "sha256:df78b01d581d51536c11dec5a019c213727521cd62dcfb29440f33b17807e892",
+            "requires": []
+        },
+        {
+            "contractId": "ulvia.cms.collections",
+            "version": "1.0.0",
+            "digest": "sha256:119fd75c322e30fec076ea90c1041916a7238a438d1377de0c76b8ebad83f28b",
+            "requires": []
+        },
+        {
+            "contractId": "ulvia.cms.design",
+            "version": "1.0.0",
+            "digest": "sha256:a6fb34581099670a8621df8cacddecb694ee9e5ca3ae703090964515da25a819",
+            "requires": []
+        },
+        {
+            "contractId": "ulvia.cms.files",
+            "version": "1.0.0",
+            "digest": "sha256:df8afe3992f2d264d0a8439649c4060bdce8cd4f4beb43dd1cabf99acd991463",
+            "requires": []
+        },
+        {
+            "contractId": "ulvia.cms.operations",
+            "version": "1.0.0",
+            "digest": "sha256:3f2e9c8aa06aaa9b15ec564901c6e6dd72f22693e80f9bc1ad1fcd631efed915",
+            "requires": []
+        },
+        {
             "contractId": "ulvia.cms.pages",
             "version": "1.1.0",
             "digest": "sha256:53d54b515828a7e51be30d80905c802636df30947b4dc857c3e77ae81557b236",
+            "requires": []
+        },
+        {
+            "contractId": "ulvia.cms.providers",
+            "version": "1.0.0",
+            "digest": "sha256:870e53ebad882414cfdd123a7cf5545911b858269122dc5f174e36cf051e1381",
             "requires": []
         },
         {

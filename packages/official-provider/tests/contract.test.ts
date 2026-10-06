@@ -48,3 +48,22 @@ test("the CMS Pages Core contract and conformance suite are fully admitted", asy
     expect(coverage.capabilities.every((capability) => !capability.missingSuccessAssertion)).toBe(true);
     expect(coverage.capabilities.every((capability) => capability.missingErrorCodes.length === 0)).toBe(true);
 });
+
+test("the remaining official CMS domain contracts are admitted as bounded admin APIs", async () => {
+    const ids = [
+        "ulvia.cms.access",
+        "ulvia.cms.collections",
+        "ulvia.cms.design",
+        "ulvia.cms.files",
+        "ulvia.cms.operations",
+        "ulvia.cms.providers",
+    ];
+    for (const id of ids) {
+        const release = await admitContractReleaseJson(
+            await readFile(resolve(import.meta.dir, `../../official-repository/contracts/${id}/definition.json`)),
+        );
+        expect(release.release.contractId).toBe(id);
+        expect(release.release.version).toBe("1.0.0");
+        expect(release.release.capabilities.every(({ access }) => access === "admin")).toBe(true);
+    }
+});

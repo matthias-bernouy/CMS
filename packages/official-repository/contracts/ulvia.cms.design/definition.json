@@ -1,0 +1,75 @@
+{
+    "kind": "contract",
+    "protocol": "ulvia-provider/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "contractId": "ulvia.cms.design",
+    "name": "CMS Design And Localization",
+    "description": "Inspect site languages, theme sources and collection-owned text and token catalogues.",
+    "version": "1.0.0",
+    "publisherId": "ulvia.official",
+    "catalogue": { "icon": "theme", "categories": ["administration", "design"] },
+    "capabilities": [
+        {
+            "id": "overview",
+            "description": "Return a bounded overview of languages, themes, token sources and collection texts.",
+            "access": "admin",
+            "behavior": { "effect": "query", "execution": "sync" },
+            "input": { "type": "object", "properties": {}, "required": [] },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "language": { "type": "string", "maxLength": 64 },
+                    "additionalLanguages": { "type": "array", "maxItems": 32, "items": { "type": "string", "maxLength": 64 } },
+                    "activeLanguages": { "type": "array", "maxItems": 32, "items": { "type": "string", "maxLength": 64 } },
+                    "activeThemeId": { "type": "string", "maxLength": 96 },
+                    "themes": {
+                        "type": "array",
+                        "maxItems": 64,
+                        "items": {
+                            "type": "object",
+                            "properties": { "id": { "type": "string", "maxLength": 96 }, "name": { "type": "string", "maxLength": 160 } },
+                            "required": ["id", "name"]
+                        }
+                    },
+                    "sources": {
+                        "type": "array",
+                        "maxItems": 256,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": { "type": "string", "maxLength": 160 },
+                                "label": { "type": "string", "maxLength": 200 },
+                                "supportsModes": { "type": "boolean" },
+                                "tokenCount": { "type": "integer", "minimum": 0, "maximum": 1024 }
+                            },
+                            "required": ["id", "label", "supportsModes", "tokenCount"]
+                        }
+                    },
+                    "collections": {
+                        "type": "array",
+                        "maxItems": 256,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "collectionId": { "type": "string", "maxLength": 96 },
+                                "textCount": { "type": "integer", "minimum": 0, "maximum": 4096 },
+                                "overriddenLocaleCount": { "type": "integer", "minimum": 0, "maximum": 64 },
+                                "themeTokenCount": { "type": "integer", "minimum": 0, "maximum": 4096 }
+                            },
+                            "required": ["collectionId", "textCount", "overriddenLocaleCount", "themeTokenCount"]
+                        }
+                    }
+                },
+                "required": ["language", "additionalLanguages", "activeLanguages", "activeThemeId", "themes", "sources", "collections"]
+            },
+            "errors": [{ "code": "CORE_UNAVAILABLE", "retryable": true }],
+            "binding": {
+                "transport": "http",
+                "method": "GET",
+                "path": "/v1/cms/design",
+                "input": {},
+                "response": { "successStatuses": [200], "contentTypes": ["application/json"], "errorStatuses": { "CORE_UNAVAILABLE": 503 } }
+            }
+        }
+    ]
+}

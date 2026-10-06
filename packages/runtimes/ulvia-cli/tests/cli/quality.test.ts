@@ -90,7 +90,8 @@ test("the pre-built local bootstrap bundle matches official authored releases", 
     const artifacts = await buildOfficialBootstrapArtifacts();
     const root = resolve(import.meta.dir, "../../src/bootstrap/resources");
     for (const [id, bytes] of Object.entries(artifacts.contracts)) {
-        expect((await readFile(join(root, "contracts", id, "definition.json"), "utf8")).trim()).toBe(bytes);
+        const segments = id.startsWith("ulvia.cms.") ? ["contracts", "cms", id] : ["contracts", id];
+        expect((await readFile(join(root, ...segments, "definition.json"), "utf8")).trim()).toBe(bytes);
     }
     expect((await readFile(join(root, "providers", "ulvia.official", "definition.json"), "utf8")).trim()).toBe(
         artifacts.provider,

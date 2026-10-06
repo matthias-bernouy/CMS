@@ -22,15 +22,24 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error("ULVIA_OFFICIAL_PORT must be a valid port");
 }
 
+const coreContractIds = [
+    "ulvia.cms.access",
+    "ulvia.cms.collections",
+    "ulvia.cms.design",
+    "ulvia.cms.files",
+    "ulvia.cms.operations",
+    "ulvia.cms.pages",
+    "ulvia.cms.providers",
+] as const;
 const contracts = new InMemoryReleaseCatalogue();
 for (const id of [
     "catalog.items",
     "forms.submissions",
     "media.assets",
-    "ulvia.cms.pages",
     "ulvia.provider.cms-instances",
+    ...coreContractIds,
 ]) {
-    const bytes = await readFile(join(resourceRoot, "contracts", id, "definition.json"));
+    const bytes = await readFile(contractPath(id));
     await contracts.publish(await admitContractReleaseJson(bytes));
 }
 const manifestBytes = await readFile(join(resourceRoot, "providers", "ulvia.official", "definition.json"));
@@ -64,7 +73,7 @@ await instances.registerCurrent({
     label: "Local CMS",
     lifecycleState: "running",
     coreVersion,
-    contracts: [implementedContract("ulvia.cms.pages")],
+    contracts: coreContractIds.map(implementedContract),
     healthUrl: coreHealthUrl,
 });
 const handler = createOfficialProviderHandler({
@@ -72,10 +81,10 @@ const handler = createOfficialProviderHandler({
     report,
     contracts: {
         catalog: await implementedRelease("catalog.items"),
+        core: await Promise.all(coreContractIds.map(implementedRelease)),
         forms: await implementedRelease("forms.submissions"),
         instances: await implementedRelease("ulvia.provider.cms-instances"),
         media: await implementedRelease("media.assets"),
-        pages: await implementedRelease("ulvia.cms.pages"),
     },
     core: new HttpOfficialCoreCapabilities(coreCallUrl, coreCallToken),
     instances,
@@ -83,6 +92,10 @@ const handler = createOfficialProviderHandler({
 });
 const server = Bun.serve({ hostname: "127.0.0.1", port, fetch: handler });
 console.log(`Official local provider: http://127.0.0.1:${server.port}`);
+
+function contractPath(id: string): string {
+    return join(resourceRoot, "contracts", ...(id.startsWith("ulvia.cms.") ? ["cms"] : []), id, "definition.json");
+}
 
 function required(name: string): string {
     const value = process.env[name]?.trim();

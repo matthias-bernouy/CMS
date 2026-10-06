@@ -1,0 +1,12 @@
+{
+    "id": "files",
+    "surface": "control",
+    "defaultPath": "/admin/files",
+    "name": "page.files.name",
+    "icon": "media",
+    "description": "page.files.description",
+    "requires": [
+        { "contractId": "ulvia.cms.files", "capabilityId": "list", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.files", "capabilityId": "create-folder", "versionRange": "^1.0.0" }
+    ]
+}

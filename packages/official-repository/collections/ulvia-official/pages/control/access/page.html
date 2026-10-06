@@ -1,0 +1,31 @@
+<ulvia-official-app-shell layout="sidebar" sticky-header>
+    <strong slot="brand">Ulvia</strong>
+    <nav slot="secondary-navigation" aria-label="Administration">
+        <strong>Content</strong>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'>Pages</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"collections"}'>Collections</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"files"}'>Files</a>
+        <strong>Configuration</strong>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"design"}'>Design &amp; languages</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"providers"}'>Providers</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"access"}'>Access &amp; settings</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"operations"}'>Operations</a>
+    </nav>
+    <ulvia-official-page-shell slot="content" width="xl">
+        <div slot="title"><h1>Access &amp; site settings</h1></div>
+        <div slot="description"><p>CMS membership, authentication methods and safe site identity fields.</p></div>
+        <section slot="content" cms-source="/.cms/call/ulvia.cms.access/overview as access" cms-source-method="POST" cms-source-body='{"limit":100}'>
+            <p role="status" aria-live="polite" cms-condition="$source.loading">Loading access configuration…</p>
+            <div role="alert" cms-condition="$source.error"><h2>Access unavailable</h2><p>Users and settings could not be read.</p></div>
+            <div cms-condition="$source.loaded">
+                <ulvia-official-grid min-item-width="18rem" gap="lg">
+                    <ulvia-official-surface padding="lg"><h2>{{ access.site.name }}</h2><p>{{ access.site.host }}</p><p>Language {{ access.site.language }} · public visibility {{ access.site.visible }}</p></ulvia-official-surface>
+                    <ulvia-official-surface padding="lg"><h2>Authentication</h2><p>{{ access.loginProviders.length }} configured login providers.</p><ul><li cms-repeat="access.loginProviders as provider">{{ provider.displayName }} · {{ provider.kind }} · enabled {{ provider.enabled }}</li></ul></ulvia-official-surface>
+                </ulvia-official-grid>
+                <h2>Members</h2>
+                <p>{{ access.totalUsers }} total users.</p>
+                <ul><li cms-repeat="access.users as user"><strong>{{ user.email }}</strong><span>{{ user.provider }}</span><small>Administrator: {{ user.administrator }} · last seen {{ user.lastSeenAt }}</small></li></ul>
+            </div>
+        </section>
+    </ulvia-official-page-shell>
+</ulvia-official-app-shell>

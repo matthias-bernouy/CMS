@@ -1,0 +1,33 @@
+<ulvia-official-app-shell layout="sidebar" sticky-header>
+    <strong slot="brand">Ulvia</strong>
+    <nav slot="secondary-navigation" aria-label="Administration">
+        <strong>Content</strong>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'>Pages</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"collections"}'>Collections</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"files"}'>Files</a>
+        <strong>Configuration</strong>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"design"}'>Design &amp; languages</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"providers"}'>Providers</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"access"}'>Access &amp; settings</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"operations"}'>Operations</a>
+    </nav>
+    <ulvia-official-page-shell slot="content" width="xl">
+        <div slot="title"><h1>Operations</h1></div>
+        <div slot="description"><p>Core readiness, maintenance ownership and collection migration history.</p></div>
+        <section slot="content" cms-source="/.cms/call/ulvia.cms.operations/status as operations" cms-source-method="POST" cms-source-body='{"limit":50}'>
+            <p role="status" aria-live="polite" cms-condition="$source.loading">Loading operational state…</p>
+            <div role="alert" cms-condition="$source.error"><h2>Diagnostics unavailable</h2><p>The Core did not return its operational state.</p></div>
+            <div cms-condition="$source.loaded">
+                <ulvia-official-grid min-item-width="18rem" gap="lg">
+                    <ulvia-official-surface padding="lg"><h2>Core</h2><p>Status: <strong>{{ operations.core }}</strong></p></ulvia-official-surface>
+                    <ulvia-official-surface padding="lg"><h2>Maintenance</h2><p>Active: <strong>{{ operations.maintenance }}</strong></p></ulvia-official-surface>
+                </ulvia-official-grid>
+                <div cms-condition="operations.activeMigration"><h2>Active migration</h2><p>{{ operations.activeMigration.id }} · {{ operations.activeMigration.status }} · {{ operations.activeMigration.updatedAt }}</p></div>
+                <h2>Recent migrations</h2>
+                <ul cms-condition="operations.migrations.length"><li cms-repeat="operations.migrations as migration"><strong>{{ migration.status }}</strong><span>{{ migration.totalPages }} pages · {{ migration.operationCount }} operations</span><small>{{ migration.updatedAt }}</small></li></ul>
+                <p cms-condition="operations.migrations.length == 0">No completed collection migration is retained.</p>
+                <p>Backups and Core process upgrades remain provider lifecycle operations; they are not fabricated as local Core capabilities.</p>
+            </div>
+        </section>
+    </ulvia-official-page-shell>
+</ulvia-official-app-shell>

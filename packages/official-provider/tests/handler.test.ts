@@ -20,10 +20,20 @@ async function contracts() {
         ).release;
     return {
         catalog: await load("catalog.items"),
+        core: await Promise.all(
+            [
+                "ulvia.cms.pages",
+                "ulvia.cms.collections",
+                "ulvia.cms.files",
+                "ulvia.cms.design",
+                "ulvia.cms.providers",
+                "ulvia.cms.access",
+                "ulvia.cms.operations",
+            ].map(load),
+        ),
         forms: await load("forms.submissions"),
         instances: await load("ulvia.provider.cms-instances"),
         media: await load("media.assets"),
-        pages: await load("ulvia.cms.pages"),
     };
 }
 
@@ -62,6 +72,10 @@ test("the official provider accepts canonical gateway paths and declared error e
             contracts: await contracts(),
             core: {
                 async invoke(contractId, capabilityId, input) {
+                    if (contractId === "ulvia.cms.collections") {
+                        expect({ capabilityId, input }).toEqual({ capabilityId: "list", input: {} });
+                        return { revision: 0, items: [] };
+                    }
                     expect(contractId).toBe("ulvia.cms.pages");
                     if (capabilityId === "get") {
                         expect(input).toEqual({ id: "page-1" });
@@ -163,6 +177,9 @@ test("the official provider accepts canonical gateway paths and declared error e
         const pages = await request("/v1/cms/pages?limit=1");
         expect(pages.status).toBe(200);
         expect((await pages.json()).items[0]).toMatchObject({ id: "page-1", surface: "delivery" });
+        const collections = await request("/v1/cms/collections");
+        expect(collections.status).toBe(200);
+        expect(await collections.json()).toEqual({ revision: 0, items: [] });
         const pagePath = `/v1/cms/pages/${encodeURIComponent(JSON.stringify("page-1"))}`;
         const page = await request(pagePath);
         expect(page.status).toBe(200);

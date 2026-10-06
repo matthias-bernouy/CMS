@@ -37,7 +37,9 @@ async function writeBootstrapArtifacts(): Promise<void> {
     for (const [id, bytes] of Object.entries(artifacts.contracts).sort(([left], [right]) =>
         left.localeCompare(right),
     )) {
-        const path = `contracts/${id}/definition.json`;
+        const path = id.startsWith("ulvia.cms.")
+            ? `contracts/cms/${id}/definition.json`
+            : `contracts/${id}/definition.json`;
         contractPaths.push(path);
         await writeArtifact(root, path, bytes);
     }

@@ -1,0 +1,11 @@
+{
+    "id": "providers",
+    "surface": "control",
+    "defaultPath": "/admin/providers",
+    "name": "page.providers.name",
+    "icon": "providers",
+    "description": "page.providers.description",
+    "requires": [
+        { "contractId": "ulvia.cms.providers", "capabilityId": "list", "versionRange": "^1.0.0" }
+    ]
+}

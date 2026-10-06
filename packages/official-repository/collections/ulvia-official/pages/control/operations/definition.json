@@ -1,0 +1,11 @@
+{
+    "id": "operations",
+    "surface": "control",
+    "defaultPath": "/admin/operations",
+    "name": "page.operations.name",
+    "icon": "health",
+    "description": "page.operations.description",
+    "requires": [
+        { "contractId": "ulvia.cms.operations", "capabilityId": "status", "versionRange": "^1.0.0" }
+    ]
+}

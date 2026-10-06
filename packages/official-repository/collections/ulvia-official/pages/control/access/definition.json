@@ -1,0 +1,11 @@
+{
+    "id": "access",
+    "surface": "control",
+    "defaultPath": "/admin/access",
+    "name": "page.access.name",
+    "icon": "users",
+    "description": "page.access.description",
+    "requires": [
+        { "contractId": "ulvia.cms.access", "capabilityId": "overview", "versionRange": "^1.0.0" }
+    ]
+}

@@ -49,7 +49,7 @@ function parseBootstrapIndex(value: unknown): BootstrapIndex {
         contracts.length === 0 ||
         contracts.length > 128 ||
         contracts.some(
-            (path) => typeof path !== "string" || !/^contracts\/[a-z0-9.-]+\/definition\.json$/u.test(path),
+            (path) => typeof path !== "string" || !/^contracts\/(?:cms\/)?[a-z0-9.-]+\/definition\.json$/u.test(path),
         ) ||
         new Set(contracts).size !== contracts.length ||
         index.provider !== "providers/ulvia.official/definition.json" ||
