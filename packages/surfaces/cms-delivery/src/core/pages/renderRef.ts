@@ -37,8 +37,7 @@ export async function renderRef(
         const settings = await delivery.repository.getRenderingSettings();
         const ref = settings.site?.[field] ?? null;
         if (ref) {
-            const byId = ref.id ? await delivery.repository.getPublishedPageById(ref.id) : null;
-            const page = byId ?? (await delivery.repository.getPublishedPage(ref.path));
+            const page = await delivery.repository.getPublishedPageById(ref.pageId);
             if (page) {
                 if (status === 410) {
                     return sendCompressed(

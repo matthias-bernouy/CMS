@@ -74,7 +74,14 @@ describe("MongoCmsRepository content persistence", () => {
         expect(await repository.getPageById(draft!.id)).toMatchObject({ visible: true, tags: ["news"], revision: 2 });
         expect(await repository.getPublishedPageById(draft!.id)).toMatchObject({ visible: true, tags: ["news"] });
         expect((await repository.getPublishedPages()).map((page) => page.id)).toEqual([draft!.id]);
-        expect(await repository.getLinks()).toEqual([{ path: "/draft", title: "Draft" }]);
+        expect(await repository.getLinks()).toEqual([
+            {
+                page: { kind: "site", pageId: draft!.id },
+                path: "/draft",
+                title: "Draft",
+                surface: "delivery",
+            },
+        ]);
         await expect(repository.deletePage(draft!.id, draft!.revision)).rejects.toBeInstanceOf(
             PageRevisionConflictError,
         );

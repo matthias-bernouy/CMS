@@ -79,8 +79,8 @@ async function accessDenied(request: Request, delivery: DeliveryCms, status: 401
         const returnTo = `${url.pathname}${url.search}`;
         const settings = await delivery.repository.getRenderingSettings().catch(() => null);
         const loginRef = settings?.site.login;
-        const loginPage = loginRef?.id ? await delivery.repository.getPublishedPageById(loginRef.id) : null;
-        const loginPath = loginPage?.path ?? loginRef?.path;
+        const loginPage = loginRef ? await delivery.repository.getPublishedPageById(loginRef.pageId) : null;
+        const loginPath = loginPage?.path;
         if (loginPath === url.pathname) {
             return new Response("Unauthorized", { status });
         }

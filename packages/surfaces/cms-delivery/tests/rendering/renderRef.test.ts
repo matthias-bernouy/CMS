@@ -14,14 +14,14 @@ function deliveryWithDraftFallback(field: "notFound" | "forbidden" | "serverErro
                     host: "",
                     language: "",
                     theme: "",
-                    notFound: field === "notFound" ? { path: "/404" } : null,
-                    forbidden: field === "forbidden" ? { path: "/forbidden" } : null,
-                    serverError: field === "serverError" ? { path: "/500" } : null,
+                    notFound: field === "notFound" ? { kind: "site", pageId: "404" } : null,
+                    forbidden: field === "forbidden" ? { kind: "site", pageId: "forbidden" } : null,
+                    serverError: field === "serverError" ? { kind: "site", pageId: "500" } : null,
                     login: null,
                 },
             }),
-            getPublishedPage: async (path: string) => {
-                calls.push(path);
+            getPublishedPageById: async (id: string) => {
+                calls.push(id);
                 return null;
             },
             getPage: async () => {
@@ -38,7 +38,7 @@ describe("renderRef", () => {
 
         expect(res.status).toBe(404);
         expect(await res.text()).toBe("Page not found");
-        expect(delivery.calls).toEqual(["/404"]);
+        expect(delivery.calls).toEqual(["404"]);
     });
 
     test("does not render a draft 500 fallback page publicly", async () => {
@@ -53,7 +53,7 @@ describe("renderRef", () => {
 
         expect(res.status).toBe(500);
         expect(await res.text()).toBe("Internal server error");
-        expect(delivery.calls).toEqual(["/500"]);
+        expect(delivery.calls).toEqual(["500"]);
     });
 
     test("does not render a draft forbidden fallback page publicly", async () => {
@@ -62,6 +62,6 @@ describe("renderRef", () => {
 
         expect(res.status).toBe(403);
         expect(await res.text()).toBe("Forbidden");
-        expect(delivery.calls).toEqual(["/forbidden"]);
+        expect(delivery.calls).toEqual(["forbidden"]);
     });
 });

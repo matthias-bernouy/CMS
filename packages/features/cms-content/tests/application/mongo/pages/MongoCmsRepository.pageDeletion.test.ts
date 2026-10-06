@@ -35,9 +35,11 @@ test("Mongo redirects inherited URLs through replacement pages and makes them go
     const third = (await repository.getPage("/third"))!;
     await repository.setPagePaths(first.id, { fr: "/first", en: "/first" });
     await repository.setPagePaths(first.id, { fr: "/first" });
+    await repository.updateSystem({ site: { notFound: { kind: "site", pageId: first.id } } as never });
     expect(await repository.getPageRoute("/en/first")).toMatchObject({ state: "redirect", language: "en" });
 
     await repository.deletePageWithAlternative(first.id, second.id);
+    expect((await repository.getSystem()).site.notFound).toEqual({ kind: "site", pageId: second.id });
     expect(await repository.getPageRoute("/en/first")).toMatchObject({
         state: "redirect",
         pageId: second.id,
@@ -45,6 +47,7 @@ test("Mongo redirects inherited URLs through replacement pages and makes them go
         language: "en",
     });
     await repository.deletePageWithAlternative(second.id, third.id);
+    expect((await repository.getSystem()).site.notFound).toEqual({ kind: "site", pageId: third.id });
     expect(await repository.getPageRoute("/first")).toMatchObject({ state: "redirect", pageId: third.id });
     expect(await repository.getPageRoute("/en/first")).toMatchObject({ state: "redirect", pageId: third.id });
 

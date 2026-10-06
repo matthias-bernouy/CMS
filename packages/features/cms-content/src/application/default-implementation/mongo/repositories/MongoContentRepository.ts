@@ -331,14 +331,19 @@ export class MongoContentRepository extends MongoBlocRepository {
     ): Promise<void> {
         await withPageRouteWrite(this.system, async (_system, permitToken) =>
             withPageDeletionLock(this.system, permitToken, () =>
-                deleteMongoPage(this.pages, this.pageRoutes, id, alternativeId, expectedRevision),
+                deleteMongoPage(this.pages, this.pageRoutes, this.system, id, alternativeId, expectedRevision),
             ),
         );
     }
 
     async getLinks(): Promise<PageLink[]> {
-        const documents = await this.pages.find({}, { projection: { path: 1, title: 1 } }).toArray();
-        return documents.map((document) => ({ path: document.path, title: document.title }));
+        const documents = await this.pages.find({}, { projection: { path: 1, title: 1, surface: 1 } }).toArray();
+        return documents.map((document) => ({
+            page: { kind: "site", pageId: document._id },
+            path: document.path,
+            title: document.title,
+            surface: document.surface ?? "delivery",
+        }));
     }
 
     protected async reconfigurePageRoutes(
@@ -415,7 +420,7 @@ export class MongoContentRepository extends MongoBlocRepository {
     private async recoverPendingPageWrites(system: TSystem): Promise<void> {
         await recoverMongoPageInserts(this.pages, this.pageRoutes);
         await recoverMongoPagePathUpdates(this.pages, this.pageRoutes, system);
-        await recoverMongoPageDeletions(this.pages, this.pageRoutes);
+        await recoverMongoPageDeletions(this.pages, this.pageRoutes, this.system);
     }
 
     private async ensureCurrentRoute(path: string, pageId: string, language: string): Promise<void> {

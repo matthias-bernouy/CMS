@@ -20,7 +20,7 @@ test("a gone URL renders the configured 404 page with status 410 and no search i
     await repository.updatePage({ id: fallback.id, visible: true });
     await repository.updatePage({ id: old.id, visible: true });
     await repository.setPagePaths(old.id, { fr: "/old", en: "/old" });
-    await repository.updateSystem({ site: { notFound: { id: fallback.id, path: fallback.path } } as never });
+    await repository.updateSystem({ site: { notFound: { kind: "site", pageId: fallback.id } } as never });
     await repository.deletePage(old.id);
     const mounted = mountPublicPages({ repository });
 

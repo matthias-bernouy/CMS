@@ -17,7 +17,7 @@ describe("Delivery page capability access preflight", () => {
         const { handler } = await mountPage({
             content: `<section cms-source="/.cms/call/shop/myProducts as products" cms-source-method="post"></section>`,
             auth: authSubject(null),
-            systemPages: { login: { path: "/sign-in" } },
+            systemPages: { login: { kind: "site", pageId: "sign-in" } },
         });
 
         const response = await handler(new Request("http://site/products"));

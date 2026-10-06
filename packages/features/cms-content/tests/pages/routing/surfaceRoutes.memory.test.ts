@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
+    createPageRouteReader,
+    InMemoryCmsRepository,
     InMemorySurfacePageRouteRegistry,
     PageLinkSurfaceError,
     PageRouteCollisionError,
@@ -68,14 +70,17 @@ describe("surface Page route registry", () => {
     test("resolves one link model and blocks Delivery links into Control", async () => {
         const routes = new InMemorySurfacePageRouteRegistry();
         await routes.register({ page: overview, surface: "control", defaultPath: "/pages" });
-        const delivery = { kind: "site", pageId: "home" } as const;
-        await routes.register({ page: delivery, surface: "delivery", defaultPath: "/" });
+        const repository = new InMemoryCmsRepository();
+        await repository.insertPage("/", "Home");
+        const home = await repository.getPage("/");
+        const delivery = { kind: "site", pageId: home!.id } as const;
+        const reader = createPageRouteReader(repository, routes);
 
-        expect(await resolvePageLinkTarget(routes, "control", { kind: "page", page: delivery })).toEqual({
+        expect(await resolvePageLinkTarget(reader, "control", { kind: "page", page: delivery })).toEqual({
             href: "/",
             surface: "delivery",
         });
-        await expect(resolvePageLinkTarget(routes, "delivery", { kind: "page", page: overview })).rejects.toThrow(
+        await expect(resolvePageLinkTarget(reader, "delivery", { kind: "page", page: overview })).rejects.toThrow(
             PageLinkSurfaceError,
         );
         await expect(

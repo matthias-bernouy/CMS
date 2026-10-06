@@ -4,15 +4,19 @@ import type {
     PageDeletionIntent,
     PageDoc,
     PageRouteDoc,
+    SystemDoc,
 } from "cms-content/application/default-implementation/mongo/repositories/documents";
+import { SYSTEM_ID } from "cms-content/application/default-implementation/mongo/repositories/documents";
 
 type Routes = Collection<PageRouteDoc>;
 type Pages = Collection<PageDoc>;
+type Systems = Collection<SystemDoc>;
 
 /** Persist the decision before changing any route so startup can finish an interrupted deletion. */
 export async function deleteMongoPage(
     pages: Pages,
     routes: Routes,
+    systems: Systems,
     id: string,
     alternativeId: string | null,
     expectedRevision?: number,
@@ -28,7 +32,7 @@ export async function deleteMongoPage(
     if (original.deletionIntent && original.deletionIntent.alternativeId !== alternativeId) {
         throw new Error("Page deletion is already in progress with another alternative.");
     }
-    await recoverMongoPageDeletions(pages, routes);
+    await recoverMongoPageDeletions(pages, routes, systems);
     const page = await pages.findOne({ _id: id });
     if (!page) {
         return;
@@ -64,10 +68,10 @@ export async function deleteMongoPage(
         if (concurrent.deletionIntent?.alternativeId !== alternativeId) {
             throw new Error("Page deletion is already in progress with another alternative.");
         }
-        await recoverMongoPageDeletions(pages, routes);
+        await recoverMongoPageDeletions(pages, routes, systems);
         return;
     }
-    await finishPageDeletion(pages, routes, { ...page, deletionIntent: intent });
+    await finishPageDeletion(pages, routes, systems, { ...page, deletionIntent: intent });
 }
 
 function assertRevision(page: PageDoc, expectedRevision?: number): void {
@@ -78,7 +82,7 @@ function assertRevision(page: PageDoc, expectedRevision?: number): void {
 }
 
 /** Run before page-path migration or new deletions; only the indexed pending pages are scanned. */
-export async function recoverMongoPageDeletions(pages: Pages, routes: Routes): Promise<void> {
+export async function recoverMongoPageDeletions(pages: Pages, routes: Routes, systems: Systems): Promise<void> {
     const pending = await pages.find({ "deletionIntent.requestedAt": { $exists: true } }).toArray();
     const byId = new Map(pending.map((page) => [page._id, page]));
     const incoming = new Map(pending.map((page) => [page._id, 0]));
@@ -92,7 +96,7 @@ export async function recoverMongoPageDeletions(pages: Pages, routes: Routes): P
     let completed = 0;
     for (let index = 0; index < ready.length; index++) {
         const page = ready[index]!;
-        await finishPageDeletion(pages, routes, page);
+        await finishPageDeletion(pages, routes, systems, page);
         completed++;
         const target = page.deletionIntent?.alternativeId;
         if (target && byId.has(target)) {
@@ -108,17 +112,32 @@ export async function recoverMongoPageDeletions(pages: Pages, routes: Routes): P
     }
 }
 
-async function finishPageDeletion(pages: Pages, routes: Routes, page: PageDoc): Promise<void> {
+async function finishPageDeletion(pages: Pages, routes: Routes, systems: Systems, page: PageDoc): Promise<void> {
     const intent = page.deletionIntent;
     if (!intent) {
         throw new Error("Missing page deletion intent.");
     }
     const targetId = await resolveReplacement(pages, routes, page._id, intent);
+    if (targetId) {
+        await retargetSystemPageReferences(systems, page._id, targetId);
+    }
     await routes.updateMany(
         { pageId: page._id },
         { $set: { state: targetId ? "redirect" : "gone", pageId: targetId ?? page._id } },
     );
     await pages.deleteOne({ _id: page._id, "deletionIntent.requestedAt": intent.requestedAt });
+}
+
+async function retargetSystemPageReferences(systems: Systems, sourceId: string, targetId: string): Promise<void> {
+    for (const field of ["notFound", "forbidden", "serverError", "login"] as const) {
+        await systems.updateOne(
+            { _id: SYSTEM_ID, [`site.${field}.kind`]: "site", [`site.${field}.pageId`]: sourceId },
+            {
+                $set: { [`site.${field}`]: { kind: "site", pageId: targetId } },
+                $inc: { settingsRevision: 1 },
+            },
+        );
+    }
 }
 
 async function resolveReplacement(

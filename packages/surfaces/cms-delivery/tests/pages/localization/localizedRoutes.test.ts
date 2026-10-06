@@ -198,7 +198,7 @@ test("a system fallback follows a chosen replacement after its page is deleted",
     const replacement = (await repository.getPage("/replacement"))!;
     await repository.updatePage({ id: old.id, visible: true });
     await repository.updatePage({ id: replacement.id, visible: true });
-    await repository.updateSystem({ site: { notFound: { id: old.id, path: old.path } } as never });
+    await repository.updateSystem({ site: { notFound: { kind: "site", pageId: old.id } } as never });
     await repository.deletePageWithAlternative(old.id, replacement.id);
     const mounted = mountPublicPages({ repository });
 

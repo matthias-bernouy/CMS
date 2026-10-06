@@ -7,7 +7,14 @@ import { updateSettings } from "cms-control/core/management/settings/updateSetti
 describe("settings runtime", () => {
     test("combines system settings with page choices", async () => {
         const system = defaultSystem();
-        const pages = [{ path: "/about", title: "About" }];
+        const pages = [
+            {
+                page: { kind: "site" as const, pageId: "about" },
+                path: "/about",
+                title: "About",
+                surface: "delivery" as const,
+            },
+        ];
         const getSystem = mock(async () => system);
         const getLinks = mock(async () => pages);
         const cms = {

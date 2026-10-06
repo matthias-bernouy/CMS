@@ -1,7 +1,9 @@
 import type { PageSurface } from "@bernouy/cms-repository/collections";
 
+export type SitePageReference = { readonly kind: "site"; readonly pageId: string };
+
 export type PageReference =
-    | { readonly kind: "site"; readonly pageId: string }
+    | SitePageReference
     | {
           readonly kind: "collection";
           readonly publisherId: string;
@@ -36,6 +38,10 @@ export interface SurfacePageRouteRegistry {
     updateDefault(page: PageReference, defaultPath: string, expectedRevision: number): Promise<SurfacePageRoute>;
     setOverride(page: PageReference, overridePath: string | null, expectedRevision: number): Promise<SurfacePageRoute>;
     remove(page: PageReference, expectedRevision: number): Promise<void>;
+}
+
+export interface PageRouteReader {
+    get(page: PageReference): Promise<SurfacePageRoute | null>;
 }
 
 export interface ResolvedPageLink {

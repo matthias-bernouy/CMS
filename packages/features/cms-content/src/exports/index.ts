@@ -57,12 +57,14 @@ export {
 export type {
     PageLinkTarget,
     PageReference,
+    PageRouteReader,
+    SitePageReference,
     ResolvedPageLink,
     SurfacePageRoute,
     SurfacePageRouteRegistration,
     SurfacePageRouteRegistry,
 } from "cms-content/pages/interfaces/routing";
-export { resolvePageLinkTarget } from "cms-content/pages/core/routing/links";
+export { createPageRouteReader, resolvePageLinkTarget } from "cms-content/pages/core/routing/links";
 export {
     synchronizeCollectionPageRoutes,
     withCollectionPageRoutes,

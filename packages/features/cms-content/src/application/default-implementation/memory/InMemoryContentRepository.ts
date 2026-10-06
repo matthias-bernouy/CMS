@@ -219,6 +219,13 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         if (alternativeId && (!alternative || alternative.id === id || !alternative.visible)) {
             throw new Error("Alternative must be another published page.");
         }
+        if (alternative) {
+            for (const field of ["notFound", "forbidden", "serverError", "login"] as const) {
+                if (this.system.site[field]?.pageId === id) {
+                    this.system.site[field] = { kind: "site", pageId: alternative.id };
+                }
+            }
+        }
         for (const route of this.pageRoutes.values()) {
             if (route.pageId !== id) {
                 continue;
@@ -269,7 +276,12 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
     }
 
     async getLinks(): Promise<PageLink[]> {
-        return Array.from(this.pages.values()).map((page) => ({ path: page.path, title: page.title }));
+        return Array.from(this.pages.values()).map((page) => ({
+            page: { kind: "site", pageId: page.id },
+            path: page.path,
+            title: page.title,
+            surface: page.surface,
+        }));
     }
 
     async getPagesMetadata(options: PagesQuery = {}): Promise<PageMeta[]> {

@@ -17,7 +17,7 @@ export type SettingsUpdateDto = Partial<TSystem>;
  * Validates a flat dotted body (as emitted by the admin settings forms) against the
  * settings-update contract and produces a nested `Partial<TSystem>`.
  * System-page references are coerced from `string` to
- * `TPageRef` (`""` → `null`, `"/path"` → `{ path }`).
+ * stable site Page references (`""` → `null`, `"page-id"` → `{ kind: "site", pageId: "page-id" }`).
  */
 export function parseSettingsUpdateDto(body: Record<string, unknown>): SettingsUpdateDto {
     if ("site.theme" in body) {

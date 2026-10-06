@@ -8,6 +8,7 @@ import type {
     TBlocWrite,
 } from "cms-content/blocs/interfaces/blocs";
 import type { PageCreateOptions, PageRoute, TPage } from "cms-content/pages/interfaces/pages";
+import type { PageReference } from "cms-content/pages/interfaces/routing";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 
 export type BlocListItemResponse = {
@@ -32,8 +33,10 @@ export type BlocListOptions = {
 };
 
 export type PageLink = {
+    page: Extract<PageReference, { kind: "site" }>;
     path: string;
     title: string;
+    surface: TPage["surface"];
 };
 
 export type PageMeta = {

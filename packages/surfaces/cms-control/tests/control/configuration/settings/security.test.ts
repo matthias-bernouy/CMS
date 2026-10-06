@@ -4,18 +4,18 @@ import InvalidParam from "cms-control/core/admin/http/errors/InvalidParam";
 import { defaultSystem } from "@bernouy/cms-content";
 
 describe("parseSettingsUpdateDto — system pages", () => {
-    test("coerces all system page paths to page references", () => {
+    test("coerces all system Page IDs to stable references", () => {
         const dto = parseSettingsUpdateDto({
-            "site.notFound": "/not-found",
-            "site.forbidden": "/forbidden",
-            "site.serverError": "/error",
-            "site.login": "/sign-in",
+            "site.notFound": "not-found",
+            "site.forbidden": "forbidden",
+            "site.serverError": "error",
+            "site.login": "sign-in",
         });
 
-        expect(dto.site?.notFound).toEqual({ path: "/not-found" });
-        expect(dto.site?.forbidden).toEqual({ path: "/forbidden" });
-        expect(dto.site?.serverError).toEqual({ path: "/error" });
-        expect(dto.site?.login).toEqual({ path: "/sign-in" });
+        expect(dto.site?.notFound).toEqual({ kind: "site", pageId: "not-found" });
+        expect(dto.site?.forbidden).toEqual({ kind: "site", pageId: "forbidden" });
+        expect(dto.site?.serverError).toEqual({ kind: "site", pageId: "error" });
+        expect(dto.site?.login).toEqual({ kind: "site", pageId: "sign-in" });
     });
 
     test("coerces empty system page paths to null", () => {

@@ -123,7 +123,7 @@ function pageRepository(
     const page: TPage = { path: "/products", title: "Products", description: "", content, visible: true, tags: [] };
     return {
         getPublishedPage: async () => page,
-        getPublishedPageById: async () => page,
+        getPublishedPageById: async (id) => (id === "sign-in" ? { ...page, path: "/sign-in" } : page),
         getPublishedPages: async () => [page],
         resolvePublishedRoute: async () => null,
         getRenderableBlocs: async () => [],

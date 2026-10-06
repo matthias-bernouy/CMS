@@ -1,4 +1,5 @@
 import type { PageDocument, PageSurface } from "@bernouy/cms-repository/collections";
+import type { SitePageReference } from "cms-content/pages/interfaces/routing";
 
 export type PageIndexingConfiguration = {
     /** Whether search engines may index this page or its discovered entity URLs. */
@@ -84,7 +85,5 @@ export type PageRoute = {
     language: string;
 };
 
-/**
- * Reference to a specific page by its primary key. `null` means "not set".
- */
-export type TPageRef = { path: string; id?: string } | null;
+/** Reference to a site Page by stable primary key. `null` means "not set". */
+export type TPageRef = SitePageReference | null;
