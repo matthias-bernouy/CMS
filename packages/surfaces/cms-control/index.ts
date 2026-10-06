@@ -4,7 +4,7 @@
  * Mounts the Control kernel on the runner the consumer provides:
  *   - authentication and collection-page bootstrap routes
  *   - the shared `/.cms/*` Control transports
- *   - the binding and Bloc host runtime bundled as `control-components.js`
+ *   - the binding and Bloc host runtime bundled as `control-runtime.js`
  *
  * Persistence (content, files, secrets), the auth chain, and the public
  * Delivery layer live in separate packages — pick the impls that fit your

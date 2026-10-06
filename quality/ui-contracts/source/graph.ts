@@ -6,6 +6,7 @@ import type { UiSource } from "../contracts/types";
 
 export function isBrowserEntrypoint(path: string): boolean {
     return (
+        path === "packages/surfaces/cms-control/src/browser/runtime.ts" ||
         path.startsWith("packages/surfaces/cms-control/src/components/") ||
         path.startsWith("packages/foundation/components/src/ui/") ||
         path.startsWith("packages/foundation/components/src/binding/") ||

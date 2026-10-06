@@ -2,7 +2,7 @@ import { createContentReader } from "@bernouy/cms-content";
 import { generateBlocSetEntry } from "@bernouy/cms-content/rendering";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
-import { resolvePreviewCollectionAssets } from "cms-control/core/content/bloc/preview/assets";
+import { resolveCollectionAssets } from "./collectionAssets";
 
 const CUSTOM_ELEMENT = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/u;
 const MAX_TAGS = 128;
@@ -37,7 +37,7 @@ export async function serveControlBlocset(request: Request, state: ControlCmsSta
                 getBlocViewJS: async (tag) => {
                     const source = await reader.getBlocViewJS(tag);
                     return source && state.configuration.deliveryUrl && releases
-                        ? resolvePreviewCollectionAssets(source, releases, state.configuration.deliveryUrl)
+                        ? resolveCollectionAssets(source, releases, state.configuration.deliveryUrl)
                         : source;
                 },
             }),

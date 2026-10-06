@@ -1,7 +1,7 @@
 import type { WorkspaceCheckOptions } from "../core/checkWorkspace";
 
-const CONTROL_COMPONENT_ENTRY = "packages/surfaces/cms-control/src/components/index.ts";
-const CONTROL_COMPONENT_ASSET = "packages/surfaces/cms-control/src/browser/control-components.js";
+const CONTROL_COMPONENT_ENTRY = "packages/surfaces/cms-control/src/browser/runtime.ts";
+const CONTROL_RUNTIME_ASSET = "packages/surfaces/cms-control/src/browser/control-runtime.js";
 
 /** Existing reads are frozen here until runtime configuration is injected into their owners. */
 export const ENVIRONMENT_READ_BASELINE = {
@@ -34,7 +34,7 @@ export const ENVIRONMENT_READ_BASELINE = {
 export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOptions {
     return {
         rootDir,
-        ignoredPaths: [CONTROL_COMPONENT_ASSET],
+        ignoredPaths: [CONTROL_RUNTIME_ASSET],
         browserEntryPaths: [
             CONTROL_COMPONENT_ENTRY,
             "packages/features/cms-content/src/exports/bindings.ts",

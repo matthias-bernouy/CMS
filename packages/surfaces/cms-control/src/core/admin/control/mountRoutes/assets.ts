@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 const BROWSER_ROOT = resolve(import.meta.dir, "../../../../browser");
 
 const ASSETS = [
-    ["/assets/control-components.js", "control-components.js", "text/javascript; charset=utf-8"],
+    ["/assets/control-runtime.js", "control-runtime.js", "text/javascript; charset=utf-8"],
     ["/assets/control-styles.css", "control-styles.css", "text/css; charset=utf-8"],
 ] as const;
 

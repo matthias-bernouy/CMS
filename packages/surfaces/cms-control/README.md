@@ -10,8 +10,8 @@ source directly.
 Pair it with:
 
 - **`@bernouy/cms-delivery`** for the public-facing rendering layer.
-- **`@bernouy/cms-content`**, its **`./files`** subpath, and
-  **`@bernouy/secret-store`** for persistence contracts and default stores.
+- **`@bernouy/cms-content`** and its **`./files`** subpath for persistence
+  contracts and default stores.
 - **`@bernouy/cms-auth`** for the auth chain (login + signed cookie +
   PATs).
 
@@ -37,7 +37,6 @@ import { BunRunner } from "@bernouy/http-runner";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { ControlCms } from "@bernouy/cms-control";
 import {
-    InMemoryAuthentication,        // dev / harness only
     LocalAuthentication, SubjectResolver,
     InMemoryUsersRepository, InMemoryIdentityProviderRepository,
     InMemoryLocalCredentialStore, InMemoryPatRepository,
@@ -47,7 +46,6 @@ import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
-import { InMemorySecretStore } from "@bernouy/secret-store";
 
 const runner = new BunRunner();
 
@@ -71,20 +69,17 @@ runner.group("/cms", (sub) => {
         defaultHome:   "/cms/admin",
     });
 
-    new ControlCms(sub,
+    new ControlCms(
+        sub,
         new InMemoryCmsRepository(),
         auth,
-        {},
-        new InMemoryCache(),
-        new InMemorySecretStore(),
-        new InMemoryCmsFilesMetadata(),
-        new MemoryBlobStore(),
-        users,
-        new InMemoryIdentityProviderRepository(),
-        pats,
-        undefined,
-        undefined,
-        { local: auth },
+        {
+            cache: new InMemoryCache(),
+            filesMetadata: new InMemoryCmsFilesMetadata(),
+            filesBlob: new MemoryBlobStore(),
+            identityProviders: new InMemoryIdentityProviderRepository(),
+            authBackends: { local: auth },
+        },
     );
 });
 
@@ -95,34 +90,31 @@ runner.start(3000);
 
 ```ts
 new ControlCms(
-    runner:              Runner,
-    repository:          CmsRepository,
-    auth:                Authentication,
-    options:             { publicAuth?: PublicAuthRoutesConfig } = {},
-    cache?:              Cache,
-    secrets?:            SecretStore,
-    filesMetadata?:      CmsFilesMetadataRepository,
-    filesBlob?:          BlobStore,
-    users?:              UsersRepository,
-    identityProviders?:  IdentityProviderRepository,
-    pats?:               PatRepository,
-    credentials?:        LocalCredentialStore,
-    authBackends?:       { local?: LocalAuthenticationActions; oidc?: OidcAuthHandlers },
+    runner: Runner,
+    repository: CmsRepository,
+    auth: Authentication,
+    dependencies: {
+        configuration?: ControlCmsOptions;
+        cache?: Cache;
+        filesMetadata?: CmsFilesMetadataRepository;
+        filesBlob?: BlobStore;
+        fileMutations?: CmsFileMutationJournal;
+        identityProviders?: IdentityProviderRepository;
+        authBackends?: { local?: LocalAuthenticationActions; oidc?: OidcAuthHandlers };
+    } = {},
 )
 ```
 
-The first three args are required. Each missing optional repo / store
-silently disables the admin surface that needs it:
+The first three arguments are required. Optional dependencies are grouped by
+name so adding or removing a backend cannot shift positional arguments:
 
 | Optional dep         | Disabling effect                              |
 |----------------------|-----------------------------------------------|
 | `cache`              | Defaults to `InMemoryCache`                   |
-| `secrets`            | Defaults to `InMemorySecretStore`             |
-| `filesMetadata`      | Files admin throws "not configured" on call   |
-| `filesBlob`          | Files admin throws "not configured" on call   |
-| `users`              | Users API throws "not configured"             |
-| `identityProviders`  | Identity-provider API throws                   |
-| `pats`               | Profile-token API throws                       |
+| `filesMetadata`      | File transports throw "not configured" on call |
+| `filesBlob`          | File transports throw "not configured" on call |
+| `fileMutations`      | Defaults to an in-memory journal when both file stores exist |
+| `identityProviders`  | The login page cannot list configured OIDC methods |
 | `authBackends.local` | Local login/logout routes are not mounted     |
 | `authBackends.oidc`  | OIDC login/callback routes are not mounted    |
 
@@ -137,7 +129,7 @@ production. Import it from `@bernouy/cms-auth`.
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
 
 const auth = new InMemoryAuthentication({ identifier: "ulvia-local-development" });
-new ControlCms(sub, repo, auth, {}, …);
+new ControlCms(sub, repo, auth);
 ```
 
 `ulvia dev` wires the complete local stack and exposes development credentials
@@ -151,9 +143,10 @@ through `ulvia dev credentials`.
 |------------------------------------------|-----------|-------------------------------------------|
 | `<basePath>/login`                       | public    | Standalone login page (form + OIDC list)  |
 | `<basePath>/auth/methods`                | public    | JSON discovery of enabled providers       |
-| `<basePath>/auth/login`                  | public    | POST credentials (local provider)         |
-| `<basePath>/auth/logout`                 | public    | Drops the session cookie                  |
-| `<basePath>/auth/:providerId/{login,callback}` | public | Dynamic OIDC flow                       |
+| `<basePath>/auth/login`                  | public    | Bootstrap local-provider login            |
+| `<basePath>/auth/logout`                 | public    | Drops the bootstrap session cookie        |
+| `<basePath>/auth/:providerId/{login,callback}` | public | Dynamic OIDC bootstrap flow             |
+| `<basePath>/.cms/auth/*`                 | public    | Bounded account authentication actions    |
 | `<basePath>/`                            | gated     | Redirects to `<basePath>/admin`           |
 | `<basePath>/admin/*`                     | gated     | Installed collection and site Control Pages |
 | `<basePath>/.cms/call/*`                 | gated     | Versioned contract capability calls       |

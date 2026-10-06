@@ -4,25 +4,14 @@ import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { ControlCms } from "cms-control/ControlCms";
 import { CaptureRunner } from "./authPublicSupport";
 
-describe("ControlCms public prototype contract", () => {
-    test("keeps public accessors directly on ControlCms.prototype", () => {
-        expect(Object.getOwnPropertyDescriptor(ControlCms.prototype, "sources")).toBeUndefined();
-        expect(typeof Object.getOwnPropertyDescriptor(ControlCms.prototype, "filesMetadata")?.get).toBe("function");
+describe("ControlCms public surface", () => {
+    test("exposes only the asynchronous mount result", () => {
+        expect(Object.getOwnPropertyDescriptor(ControlCms.prototype, "filesMetadata")).toBeUndefined();
         expect(Object.getPrototypeOf(ControlCms.prototype)).toBe(Object.prototype);
     });
 
-    test("rejects falsy optional backends with the original error", async () => {
-        const cms = new ControlCms(
-            CaptureRunner.withoutFileApi(),
-            new InMemoryCmsRepository(),
-            new InMemoryAuthentication(),
-            {},
-            undefined,
-            undefined,
-            false as never,
-        );
-        await cms.ready;
-
-        expect(() => cms.filesMetadata).toThrow("files metadata backend not configured");
+    test("allows omitted file backends while mounting the kernel", async () => {
+        const cms = new ControlCms(new CaptureRunner(), new InMemoryCmsRepository(), new InMemoryAuthentication());
+        await expect(cms.ready).resolves.toBeUndefined();
     });
 });

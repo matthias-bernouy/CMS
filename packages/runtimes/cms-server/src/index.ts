@@ -41,7 +41,6 @@ if (gateway && env.CMS_REPOSITORY_URL && env.CMS_LOCAL_PROVIDER_ENDPOINT && env.
 const surfaces = await mountProductionSurfaces({
     env,
     core,
-    features,
     authentication,
     ...(gateway ? { gateway } : {}),
 });

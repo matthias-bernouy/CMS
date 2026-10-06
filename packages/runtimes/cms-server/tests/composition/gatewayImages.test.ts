@@ -48,9 +48,10 @@ test("production composition supplies one gateway image service to Control and D
 
     const mounted = await mountProductionSurfaces({ ...surfaceMountFixtures(), gateway } as never, runtime);
     try {
-        expect((captured.control?.capabilityGateway as { images: unknown }).images).toBe(gateway.images);
+        const controlConfiguration = captured.control?.configuration as Record<string, unknown>;
+        expect((controlConfiguration.capabilityGateway as { images: unknown }).images).toBe(gateway.images);
         expect((captured.delivery?.capabilityGateway as { images: unknown }).images).toBe(gateway.images);
-        expect(captured.control).not.toHaveProperty("sourceImageInterceptor");
+        expect(controlConfiguration).not.toHaveProperty("sourceImageInterceptor");
         expect(captured.delivery).not.toHaveProperty("sourceImageInterceptor");
     } finally {
         await mounted.stop();

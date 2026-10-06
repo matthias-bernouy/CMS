@@ -228,13 +228,11 @@
         ],
         "pages": [
             "access",
-            "catalog",
             "collections",
             "details",
             "files",
             "overview",
             "providers",
-            "resources",
             "settings"
         ]
     },

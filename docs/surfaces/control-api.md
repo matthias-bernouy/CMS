@@ -8,11 +8,10 @@ surface:
 - `/.cms/files/*` for bounded author-file operations;
 - `/.cms/style` and `/.cms/blocset` for the exact Page presentation runtime.
 
-`packages/surfaces/cms-control/src/api/` remains temporarily as unmounted source
-while useful implementation logic and tests are moved to owning feature
-packages or deleted. It is not a compatibility surface and must not receive new
-endpoints. Likewise, retained legacy component sources are no longer registered
-in the production browser bundle.
+The former `packages/surfaces/cms-control/src/api/` handlers and surface-owned
+administration components have been deleted. There is no dormant compatibility
+tree: new administration operations must be versioned capabilities, while
+binary transfers and authentication stay explicit kernel transports.
 
 New Control behavior belongs in a versioned contract implementation, with its
 UI delivered by a Control Page and collection Blocs. Authentication bootstrap

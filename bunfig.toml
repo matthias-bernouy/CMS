@@ -1,9 +1,8 @@
-# Workspace-wide test setup. happy-dom + p9r globals are required by the
-# DOM-based tests in `packages/surfaces/cms-control` and harmless for the
-# server-side tests in `packages/features + surfaces`
+# Workspace-wide test setup. The generic DOM simulator is owned by the
+# Foundation component package and is harmless for server-side tests.
 # (they just leave the DOM globals untouched).
 #
 # Each package can still ship its own `bunfig.toml` and override this.
 
 [test]
-preload = ["./packages/surfaces/cms-control/tests/setup.ts"]
+preload = ["./packages/foundation/components/tests/setup.ts"]

@@ -3,8 +3,6 @@
     "collection.name": "Ulvia Official",
     "page.access.description": "Manage CMS members, administrator access and sign-in methods.",
     "page.access.name": "Users",
-    "page.catalog.description": "Live catalog items provided through the selected catalog.items source.",
-    "page.catalog.name": "Catalog",
     "page.collections.description": "Inspect exact installed collection releases and their resource footprint.",
     "page.collections.name": "Collections",
     "page.details.description": "Edit one site Page through revision-checked Core capabilities.",
@@ -15,8 +13,6 @@
     "page.overview.name": "Pages",
     "page.providers.description": "Inspect approved providers and exact selected contracts.",
     "page.providers.name": "Providers",
-    "page.resources.description": "Official reusable blocs available to this workspace.",
-    "page.resources.name": "Blocs",
     "page.settings.description": "Configure the site identity, availability and languages.",
     "page.settings.name": "Settings"
 }

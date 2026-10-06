@@ -8,10 +8,9 @@ The surface currently owns only the routes that must exist before a Control
 Page can render:
 
 - `/login` and the configured authentication routes;
-- `/assets/control-components.js` and `/assets/control-styles.css` while the
-  retained legacy components are still available;
+- `/assets/control-runtime.js` and `/assets/control-styles.css` for the
+  presentation-free binding and Bloc host runtime;
 - capability calls, provider media and author-file delivery;
-- the transitional `/api/*` endpoints;
 - `/admin/*`, resolved from the installed collection Control Page registry; it
   returns the kernel `503` recovery document when no matching Page is usable;
 - authenticated `/.cms/call/*`, `/.cms/media/*`, `/.cms/image/*` and
@@ -26,9 +25,8 @@ New administration screens must be declared as collection Pages with
 `surface: "control"`. Navigation, shells and layouts are ordinary Control-only
 Blocs composed by those Pages. The Control surface resolves the selected Page,
 its transitive Blocs and its exact capability execution plan. Calls without a
-same-origin referring Control Page fail closed. The transitional `/api/*`
-surface remains only for functional areas that have not reached collection and
-contract parity; it must not become a second Page model.
+same-origin referring Control Page fail closed. No second administration
+transport exists alongside the capability model.
 
 Collection Pages link by stable identity rather than by authored Control URL:
 

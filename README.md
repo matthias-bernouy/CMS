@@ -89,7 +89,7 @@ at type-check time:
    need those artifacts before the workspace type-check runs.
 2. `tsc --build` → emits `.d.ts` for every other package via project refs.
 3. `packages/surfaces/cms-control` -> control-side prebuild
-   (`control-components.js` bundle, depends on `@bernouy/components/dist`) + own `.d.ts` emit.
+   (`control-runtime.js` bundle, depends on `@bernouy/components/dist`) + own `.d.ts` emit.
 
 Every other package ships **source** through its `exports` field — no bundle
 step, consumers resolve straight to `src/`.

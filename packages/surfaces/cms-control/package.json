@@ -30,14 +30,11 @@
     "scripts": {
         "build": "bun run src/tooling/build.ts",
         "typecheck": "bun x tsc --noEmit",
-        "test": "bun test --preload ./tests/setup.ts",
+        "test": "bun test",
         "prepublishOnly": "bun run build"
     },
     "devDependencies": {
-        "@bernouy/binary-media": "workspace:*",
-        "@happy-dom/global-registrator": "^20.14.5",
         "@types/bun": "1.4.2",
-        "happy-dom": "^20.14.5",
         "typescript": "^7.0.2"
     },
     "peerDependencies": {
@@ -49,8 +46,6 @@
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-collection-build": "workspace:*",
-        "@bernouy/secret-store": "workspace:*",
         "@bernouy/components": "workspace:*",
         "linkedom": "^0.18.13",
         "@bernouy/cms-content": "workspace:*",

@@ -27,7 +27,7 @@ build/
 
 # Generated files
 coverage/
-packages/surfaces/cms-control/src/browser/control-components.js
+packages/surfaces/cms-control/src/browser/control-runtime.js
 
 # .p9r files
 .p9r/

@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test";
 import type { Db } from "mongodb";
-import { ContentValidationError } from "@bernouy/cms-content";
 import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
 import { createMongoContentRepository } from "../contentMongoFixture";
 
@@ -18,14 +17,15 @@ test("Mongo preserves a literal language-looking path when the default changes",
     expect((await repository.getPageById(page.id))?.path).toBe("/en/about");
 });
 
-test("Mongo refuses URL edits without a configured language", async () => {
+test("Mongo applies the default French language to URL edits on a fresh repository", async () => {
     const { repository } = createMongoContentRepository();
     await repository.init();
     await repository.insertPage("/before", "Before");
     const page = (await repository.getPage("/before"))!;
 
-    await expect(repository.updatePage({ id: page.id, path: "/after" })).rejects.toBeInstanceOf(ContentValidationError);
-    expect(await repository.getPageRoute("/after")).toBeNull();
+    await repository.updatePage({ id: page.id, path: "/after" });
+    expect(await repository.getPageById(page.id)).toMatchObject({ path: "/after", paths: { fr: "/after" } });
+    expect(await repository.getPageRoute("/after")).toMatchObject({ state: "current", pageId: page.id });
 });
 
 test("Mongo skips page route migration for unrelated settings changes", async () => {

@@ -1,7 +1,7 @@
 import { rmSync } from "node:fs";
 import prebuildControl from "cms-control/prebuildControl";
 
-// Pre-build: bundle the admin control-components IIFE
+// Pre-build: bundle the minimal binding and collection Bloc host runtime.
 await prebuildControl();
 
 // Build to dist/: emit type declarations via tsc

@@ -373,8 +373,9 @@ Generic child controls remain public, reusable collection Blocs. Only the
 domain managers that orchestrate complete administration workspaces are
 internal and absent from the author catalogue. The production Control
 composition no longer mounts the legacy `/api/*` route tree or registers the
-legacy administration component set. Those source files are retained only as
-temporary migration reference until product parity decisions are complete.
+legacy administration component set. Those source files and their obsolete
+tests have now been deleted; future product parity work goes through contracts,
+collection Blocs and Control Pages.
 
 ### `@bernouy/cms-gateway`
 
@@ -527,11 +528,11 @@ The main limits are:
 
 - bounded bodies are currently buffered after streaming admission rather than
   incrementally decoded;
-- a large retained legacy source package with concentrated state/effect files,
-  although those components are no longer registered in the production host;
-- UI contract diagnostics in those retained sources, mostly imperative fetch
-  usage, which disappear only when the corresponding source is deleted;
-- a constructor with many positional dependencies;
+- the browser runtime still imports the generic component base and binding
+  primitives from `@bernouy/components`, so that Foundation package cannot yet
+  be removed completely;
+- author-file routes require injected metadata and blob stores and fail on use
+  when a deliberately minimal embedding omits them;
 - incomplete user-locale persistence and hard-coded interface labels;
 - no editor, which is a deliberate current product state.
 

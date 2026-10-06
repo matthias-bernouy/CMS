@@ -36,7 +36,7 @@ test("file-size guidance covers handwritten repository files", () => {
 });
 
 test("file-size guidance ignores known generated and atomic files", () => {
-    const generated = "packages/surfaces/cms-control/src/browser/control-components.js";
+    const generated = "packages/surfaces/cms-control/src/browser/control-runtime.js";
     expect(isGovernedFile(generated)).toBeFalse();
     expect(fileSizeException(generated)).toContain("generated");
     expect(isGovernedFile("quality/ci/coverage/baseline.json")).toBeFalse();

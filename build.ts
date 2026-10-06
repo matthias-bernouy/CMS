@@ -4,7 +4,7 @@
 //      style.css, index.d.ts, blocs/*.mjs, blocs/*.d.ts, ...}. Must run first
 //      because cms-control consumes those generated artifacts.
 //   2. tsc --build emits .d.ts for every package (project references).
-//   3. cms-control `bun run build` runs prebuildControl (control-components.js
+//   3. cms-control `bun run build` runs prebuildControl (control-runtime.js
 //      bundle, depends on @bernouy/components/dist) + emits its own d.ts.
 //
 // Other packages ship sources directly via their `exports` field; no bundle

@@ -15,7 +15,7 @@ export type BuildManifest = {
     files: BuildManifestEntry[];
 };
 
-const CONTROL_ASSET = "packages/surfaces/cms-control/src/browser/control-components.js";
+const CONTROL_ASSET = "packages/surfaces/cms-control/src/browser/control-runtime.js";
 const SKIPPED_DIRECTORIES = new Set([".git", "node_modules"]);
 
 function normalizePath(path: string): string {

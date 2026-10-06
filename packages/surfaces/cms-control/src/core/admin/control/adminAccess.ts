@@ -1,16 +1,7 @@
 import { resolveRequestSubject, type Authentication, type Subject } from "@bernouy/cms-auth";
 import { createAuthGuard } from "@bernouy/cms-auth/http";
 import type { Middleware } from "@bernouy/http-runner";
-import type { ControlCms } from "cms-control/ControlCms";
-
-const MEMBER_API_ROUTES = new Set([
-    "GET /pats",
-    "POST /pats",
-    "DELETE /pats",
-    "GET /profil",
-    "DELETE /profil",
-    "POST /profil/password",
-]);
+import type { ControlCmsOptions } from "cms-control/core/admin/control/types";
 
 export function createControlAccessGuard(basePath: string, auth: Authentication): Middleware {
     return createAuthGuard({ basePath, auth });
@@ -28,29 +19,31 @@ export function createAuthenticatedControlGuard(basePath: string, auth: Authenti
 }
 
 function isMachineRoute(pathname: string, basePath: string): boolean {
-    return pathname.startsWith(`${basePath}/api/`) || pathname.startsWith(`${basePath}/.cms/`);
+    return pathname.startsWith(`${basePath}/.cms/`);
 }
 
-/** Keeps member self-service open; every other file-routed API requires an administrator. */
-export function createControlApiAuthorizationGuard(basePath: string, cms: ControlCms): Middleware {
+/** Protects kernel-owned binary mutations that do not pass through a capability plan. */
+export function createControlAdministratorGuard(
+    auth: Authentication,
+    administrator: ControlCmsOptions["administrator"],
+): Middleware {
     return async (request, next) => {
-        const pathname = new URL(request.url).pathname;
-        const prefix = `${basePath}/api`;
-        const route = pathname.startsWith(prefix) ? pathname.slice(prefix.length) || "/" : pathname;
-        if (!MEMBER_API_ROUTES.has(`${request.method.toUpperCase()} ${route}`)) {
-            await requireControlAdministrator(request, cms);
-        }
+        await requireControlAdministrator(request, auth, administrator);
         return next();
     };
 }
 
 /** Resolves the verified request subject and fails closed unless Control grants administrator access. */
-export async function requireControlAdministrator(request: Request, cms: ControlCms): Promise<Subject> {
-    const subject = await resolveRequestSubject(cms.auth, request).catch(() => null);
+export async function requireControlAdministrator(
+    request: Request,
+    auth: Authentication,
+    administrator: ControlCmsOptions["administrator"],
+): Promise<Subject> {
+    const subject = await resolveRequestSubject(auth, request).catch(() => null);
     if (!subject) {
         throw Object.assign(new Error("Authentication required"), { status: 401 });
     }
-    if (!cms.config.administrator || !(await cms.config.administrator(subject))) {
+    if (!administrator || !(await administrator(subject))) {
         throw Object.assign(new Error("Administrator access required"), { status: 403 });
     }
     return subject;

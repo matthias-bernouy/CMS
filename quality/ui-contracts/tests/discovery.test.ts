@@ -22,7 +22,7 @@ test("discovery follows browser helpers but excludes server-only code, tests and
         );
         await file(`${pkg}/src/core/admin/auth/templates/example.html`, '<div cms-source="/api/data"></div>');
         await file(`${pkg}/tests/example.test.ts`, 'fetch("/api/test");');
-        await file(`${pkg}/src/browser/control-components.js`, 'fetch("/compiled");');
+        await file(`${pkg}/src/browser/control-runtime.js`, 'fetch("/compiled");');
         await file(`${pkg}/dist/index.js`, 'fetch("/generated");');
         const sources = await discoverUiSources(root);
         expect(sources.map((source) => source.path)).toHaveLength(4);

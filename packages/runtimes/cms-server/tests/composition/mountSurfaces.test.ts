@@ -107,19 +107,22 @@ describe("production surface mounting", () => {
         expect(controlArguments[1]).toBe(options.core.repo);
         expect(controlArguments[2]).toBe(options.authentication.auth);
         expect(controlConfig).toMatchObject({
-            deliveryUrl: options.env.DELIVERY_PUBLIC_URL,
-            capabilityGateway: {
-                siteId: gateway.siteId,
-                invoker: expect.objectContaining({ invoke: expect.any(Function) }),
+            configuration: {
+                deliveryUrl: options.env.DELIVERY_PUBLIC_URL,
+                capabilityGateway: {
+                    siteId: gateway.siteId,
+                    invoker: expect.objectContaining({ invoke: expect.any(Function) }),
+                },
+                publicAuth: {
+                    marker: "public-auth",
+                    emailVerificationUrl: options.env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
+                    passwordResetUrl: options.env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
+                    allowSignup: false,
+                },
             },
-            publicAuth: {
-                marker: "public-auth",
-                emailVerificationUrl: options.env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
-                passwordResetUrl: options.env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
-                allowSignup: false,
-            },
+            authBackends: { local: options.authentication.auth },
         });
-        expect(controlArguments[12]).toEqual({ local: options.authentication.auth });
+        expect(controlArguments).toHaveLength(4);
 
         expect(deliveryConfig).toMatchObject({
             runner: runners[1],

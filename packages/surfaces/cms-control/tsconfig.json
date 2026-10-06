@@ -17,14 +17,11 @@
         "tests/**/*.ts"
     ],
     "references": [
-        { "path": "../../foundation/binary-media" },
         { "path": "../../foundation/blob-store" },
         { "path": "../../features/cms-repository" },
         { "path": "../../foundation/http-runner" },
         { "path": "../../features/cms-auth" },
-        { "path": "../../features/cms-collection-build" },
         { "path": "../../features/cms-content" },
-        { "path": "../../features/cms-gateway" },
-        { "path": "../../foundation/secret-store" }
+        { "path": "../../features/cms-gateway" }
     ]
 }

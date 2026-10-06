@@ -1,57 +1,31 @@
-import type {
-    Authentication,
-    IdentityProviderRepository,
-    LocalCredentialStore,
-    PatRepository,
-    UsersRepository,
-} from "@bernouy/cms-auth";
+import type { Authentication } from "@bernouy/cms-auth";
 import type { CmsRepository } from "@bernouy/cms-content";
-import type { BlobStore } from "@bernouy/blob-store";
-import { InMemoryIdentityService } from "@bernouy/cms-gateway/identity";
-import {
-    InMemoryCmsFileMutationJournal,
-    type CmsFileMutationJournal,
-    type CmsFilesMetadataRepository,
-} from "@bernouy/cms-content/files";
-import { InMemoryCache, type Cache, type Runner } from "@bernouy/http-runner";
-import { InMemorySecretStore, type SecretStore, ValidatingSecretStore } from "@bernouy/secret-store";
-import type { ControlAuthBackends, ControlCmsOptions, ControlCmsState } from "cms-control/core/admin/control/types";
+import { InMemoryCmsFileMutationJournal } from "@bernouy/cms-content/files";
+import { InMemoryCache, type Runner } from "@bernouy/http-runner";
+import type { ControlCmsDependencies, ControlCmsState } from "cms-control/core/admin/control/types";
 
 export type ControlCmsConstructorInput = {
     runner: Runner;
     repository: CmsRepository;
     auth: Authentication;
-    configuration: ControlCmsOptions;
-    cache?: Cache;
-    secrets?: SecretStore;
-    filesMetadata?: CmsFilesMetadataRepository;
-    filesBlob?: BlobStore;
-    fileMutations?: CmsFileMutationJournal;
-    users?: UsersRepository;
-    identityProviders?: IdentityProviderRepository;
-    pats?: PatRepository;
-    credentials?: LocalCredentialStore;
-    authBackends: ControlAuthBackends;
+    dependencies: ControlCmsDependencies;
 };
 
 export function createControlCmsState(input: ControlCmsConstructorInput): ControlCmsState {
-    const configuration = input.configuration;
+    const configuration = input.dependencies.configuration ?? {};
     return {
         configuration,
         runner: input.runner,
         repository: input.repository,
         auth: input.auth,
-        cache: input.cache || new InMemoryCache(),
-        secrets: input.secrets || new ValidatingSecretStore(new InMemorySecretStore()),
-        filesMetadata: input.filesMetadata ?? null,
-        filesBlob: input.filesBlob ?? null,
+        cache: input.dependencies.cache || new InMemoryCache(),
+        filesMetadata: input.dependencies.filesMetadata ?? null,
+        filesBlob: input.dependencies.filesBlob ?? null,
         fileMutations:
-            input.fileMutations ??
-            (input.filesMetadata && input.filesBlob ? new InMemoryCmsFileMutationJournal() : null),
-        users: input.users ?? null,
-        identityProviders: input.identityProviders ?? null,
-        pats: input.pats ?? null,
-        credentials: input.credentials ?? null,
-        identities: configuration.identities ?? new InMemoryIdentityService(),
+            input.dependencies.fileMutations ??
+            (input.dependencies.filesMetadata && input.dependencies.filesBlob
+                ? new InMemoryCmsFileMutationJournal()
+                : null),
+        identityProviders: input.dependencies.identityProviders ?? null,
     };
 }

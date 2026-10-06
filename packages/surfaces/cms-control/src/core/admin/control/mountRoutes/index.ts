@@ -19,25 +19,21 @@ import { invalidatePagesReferencingFile } from "cms-control/core/admin/server/ca
 import {
     createAuthenticatedControlGuard,
     createControlAccessGuard,
-    createControlApiAuthorizationGuard,
+    createControlAdministratorGuard,
 } from "cms-control/core/admin/control/adminAccess";
 import type { ControlAuthBackends, ControlCmsState } from "cms-control/core/admin/control/types";
 import { mountControlBrowserAssets } from "cms-control/core/admin/control/mountRoutes/assets";
 import { mountControlCapabilityRoutes } from "cms-control/core/admin/control/mountRoutes/capability";
 import { mountCollectionControlPages } from "cms-control/core/admin/control/mountRoutes/pages";
-import type { ControlCms } from "cms-control/ControlCms";
 import { createControlMaintenanceGuard } from "cms-control/core/admin/control/maintenance";
 
-export function mountControlCmsRoutes(
-    cms: ControlCms,
-    state: ControlCmsState,
-    authBackends: ControlAuthBackends,
-): Promise<void> {
+export function mountControlCmsRoutes(state: ControlCmsState, authBackends: ControlAuthBackends): Promise<void> {
     const runner = state.runner;
-    const authGuard = createControlAccessGuard(cms.basePath, state.auth);
-    const authenticatedGuard = createAuthenticatedControlGuard(cms.basePath, state.auth);
-    const apiAuthorizationGuard = createControlApiAuthorizationGuard(cms.basePath, cms);
-    const maintenanceGuard = createControlMaintenanceGuard(cms);
+    const basePath = runner.basePath === "/" ? "" : runner.basePath;
+    const authGuard = createControlAccessGuard(basePath, state.auth);
+    const authenticatedGuard = createAuthenticatedControlGuard(basePath, state.auth);
+    const administratorGuard = createControlAdministratorGuard(state.auth, state.configuration.administrator);
+    const maintenanceGuard = createControlMaintenanceGuard(state.configuration.collections);
     mountControlBrowserAssets(runner, state.cache);
     runner.addEndpoint("GET", "/login", async (req) => {
         const supportedKinds: ("local" | "oidc")[] = [];
@@ -48,11 +44,11 @@ export function mountControlCmsRoutes(
             supportedKinds.push("oidc");
         }
         const methods = await resolveLoginMethods({
-            publicBasePath: `${cms.basePath}${AUTH_ROUTES.base}`,
+            publicBasePath: `${basePath}${AUTH_ROUTES.base}`,
             identityProviders: state.identityProviders,
             supportedKinds,
         });
-        return renderLoginPage(req, cms.basePath, methods);
+        return renderLoginPage(req, basePath, methods);
     });
 
     const controlPublicAuth = state.configuration.publicAuth
@@ -80,25 +76,25 @@ export function mountControlCmsRoutes(
         }
         authRunner.addEndpoint("GET", AUTH_ROUTES.methods, () =>
             authMethodsHandler({
-                publicBasePath: `${cms.basePath}${AUTH_ROUTES.base}`,
+                publicBasePath: `${basePath}${AUTH_ROUTES.base}`,
                 identityProviders: state.identityProviders,
                 supportedKinds,
             }),
         );
     });
 
-    runner.addEndpoint("GET", "/", () => redirect(`${cms.basePath}/admin`), [authGuard]);
+    runner.addEndpoint("GET", "/", () => redirect(`${basePath}/admin`), [authGuard]);
     mountCollectionControlPages(state, [authGuard]);
     mountControlCapabilityRoutes(state, [authenticatedGuard, maintenanceGuard]);
-    const fileMutationGuards = [authenticatedGuard, apiAuthorizationGuard, maintenanceGuard];
+    const fileMutationGuards = [authenticatedGuard, administratorGuard, maintenanceGuard];
     runner.addEndpoint(
         "POST",
         `${CMS_FILES_ROUTE}/upload`,
         (request) =>
             uploadAuthorFileRequest(request, {
-                metadata: cms.filesMetadata,
-                blob: cms.filesBlob,
-                mutations: cms.fileMutations,
+                metadata: required(state.filesMetadata, "files metadata backend not configured"),
+                blob: required(state.filesBlob, "files blob backend not configured"),
+                mutations: required(state.fileMutations, "file mutation journal not configured"),
             }),
         fileMutationGuards,
     );
@@ -107,10 +103,10 @@ export function mountControlCmsRoutes(
         `${CMS_FILES_ROUTE}/content`,
         (request) =>
             replaceAuthorFileRequest(request, {
-                metadata: cms.filesMetadata,
-                blob: cms.filesBlob,
-                mutations: cms.fileMutations,
-                afterContentUpdated: async ({ id }) => invalidatePagesReferencingFile(cms, id),
+                metadata: required(state.filesMetadata, "files metadata backend not configured"),
+                blob: required(state.filesBlob, "files blob backend not configured"),
+                mutations: required(state.fileMutations, "file mutation journal not configured"),
+                afterContentUpdated: async ({ id }) => invalidatePagesReferencingFile(state, id),
             }),
         fileMutationGuards,
     );
@@ -119,7 +115,14 @@ export function mountControlCmsRoutes(
         (filesRunner) => {
             const prefix = filesPrefix(runner.basePath);
             filesRunner.setDefaultEndpoint("GET", (req) =>
-                serveFilesRequest({ metadata: cms.filesMetadata, blob: cms.filesBlob }, req, { prefix }),
+                serveFilesRequest(
+                    {
+                        metadata: required(state.filesMetadata, "files metadata backend not configured"),
+                        blob: required(state.filesBlob, "files blob backend not configured"),
+                    },
+                    req,
+                    { prefix },
+                ),
             );
         },
         [authGuard],
@@ -138,4 +141,11 @@ export function mountControlCmsRoutes(
         [authenticatedGuard],
     );
     return Promise.resolve();
+}
+
+function required<T>(value: T, message: string): NonNullable<T> {
+    if (!value) {
+        throw new Error(message);
+    }
+    return value;
 }

@@ -139,14 +139,14 @@ test("updating a default-language path keeps a literal language-looking segment"
     expect(await repo.getPageRoute("/about")).toBeNull();
 });
 
-test("a page URL cannot be renamed until a default language is configured", async () => {
+test("the default French language makes URL edits available on a fresh repository", async () => {
     const repo = new InMemoryCmsRepository();
     await repo.insertPage("/before", "Before");
     const page = (await repo.getPage("/before"))!;
 
-    await expect(repo.updatePage({ id: page.id, path: "/after" })).rejects.toBeInstanceOf(ContentValidationError);
-    expect((await repo.getPageById(page.id))?.path).toBe("/before");
-    expect(await repo.getPageRoute("/after")).toBeNull();
+    await repo.updatePage({ id: page.id, path: "/after" });
+    expect(await repo.getPageById(page.id)).toMatchObject({ path: "/after", paths: { fr: "/after" } });
+    expect(await repo.getPageRoute("/after")).toMatchObject({ state: "current", pageId: page.id });
 });
 
 test("a literal language-looking path survives a default language change in memory", async () => {

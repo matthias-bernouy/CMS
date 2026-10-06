@@ -121,6 +121,7 @@ describe("Site structured data", () => {
                     "@type": "WebSite",
                     "@id": "https://example.com/#website",
                     url: "https://example.com/",
+                    inLanguage: "fr",
                     publisher: { "@id": "https://example.com/#organization" },
                 },
                 {
@@ -130,6 +131,7 @@ describe("Site structured data", () => {
                     isPartOf: { "@id": "https://example.com/#website" },
                     name: "Home",
                     description: "Homepage",
+                    inLanguage: "fr",
                 },
             ],
         });

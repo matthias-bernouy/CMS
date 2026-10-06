@@ -4,7 +4,6 @@ import type { RuntimeEnv } from "../runtimeEnv";
 import type { ProductionAuthentication } from "./auth";
 import type { CoreStores } from "./stores/core";
 import { createPublicFileStores } from "./stores/authorFiles";
-import type { FeatureStores } from "./stores/features";
 import type { ProductionGateway } from "./gateway/createProductionGateway";
 import { ProviderManagement } from "./gateway/ProviderManagement";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
@@ -24,7 +23,6 @@ export type ProductionSurfaceHandle = {
 type MountOptions = {
     env: RuntimeEnv;
     core: CoreStores;
-    features: FeatureStores;
     authentication: ProductionAuthentication;
     gateway?: ProductionGateway;
 };
@@ -33,7 +31,7 @@ export async function mountProductionSurfaces(
     options: MountOptions,
     runtime: ProductionSurfaceRuntime = PRODUCTION_SURFACE_RUNTIME,
 ): Promise<ProductionSurfaceHandle> {
-    const { env, core, features, authentication, gateway } = options;
+    const { env, core, authentication, gateway } = options;
     const controlRunner = new runtime.Runner();
     const collectionRepositorySources = env.CMS_REPOSITORY_URL
         ? [new HttpCollectionRepository("local", env.CMS_REPOSITORY_URL)]
@@ -54,42 +52,16 @@ export async function mountProductionSurfaces(
         await operations.recover();
         mountLocalCoreCapabilities(controlRunner, dispatcher, env.CMS_LOCAL_PROVIDER_TOKEN);
     }
-    const controlCms = new runtime.Control(
-        controlRunner,
-        core.repo,
-        authentication.auth,
-        {
+    const controlCms = new runtime.Control(controlRunner, core.repo, authentication.auth, {
+        configuration: {
             deliveryUrl: env.DELIVERY_PUBLIC_URL,
             ...(gateway ? { administrator: gateway.isAdministrator } : {}),
-            ...(gateway
-                ? {
-                      administrators: {
-                          canRevoke: gateway.administrators.canRevoke,
-                          list: gateway.administrators.list,
-                          set: async (sub: string, enabled: boolean) => {
-                              await gateway.administrators.set(sub, enabled);
-                          },
-                      },
-                  }
-                : {}),
             collections: {
                 store: core.collections,
                 siteId: "default",
                 routes: core.pageRoutes,
                 migrations: core.collectionMigrations,
-                sources: collectionRepositorySources,
             },
-            ...(gateway
-                ? {
-                      providerResources: {
-                          sources: providerSources,
-                          contracts: gateway.releases,
-                          manifests: gateway.manifests,
-                          isAdministrator: gateway.isAdministrator,
-                          management: providerManagement!,
-                      },
-                  }
-                : {}),
             ...(gateway
                 ? {
                       capabilityGateway: {
@@ -102,7 +74,6 @@ export async function mountProductionSurfaces(
                       },
                   }
                 : {}),
-            identities: features.identities,
             publicAuth: {
                 ...authentication.createPublicAuth({
                     emailVerificationUrl: env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
@@ -112,17 +83,13 @@ export async function mountProductionSurfaces(
                 emailTest: authentication.createControlEmailTest(),
             },
         },
-        core.cache,
-        core.secrets,
-        core.filesMetadata,
-        core.filesBlob,
-        core.users,
-        core.identityProviders,
-        core.pats,
-        core.credentials,
-        { local: authentication.auth },
-        core.fileMutations,
-    );
+        cache: core.cache,
+        filesMetadata: core.filesMetadata,
+        filesBlob: core.filesBlob,
+        fileMutations: core.fileMutations,
+        identityProviders: core.identityProviders,
+        authBackends: { local: authentication.auth },
+    });
     await controlCms.ready;
 
     const deliveryRunner = new runtime.Runner();

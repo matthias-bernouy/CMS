@@ -6,7 +6,7 @@ import { compress, sendCompressed } from "@bernouy/http-runner";
 import { parseHTML } from "linkedom";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
 import { requestLocale } from "cms-control/core/admin/http/requestLocale";
-import { resolvePreviewCollectionAssets } from "cms-control/core/content/bloc/preview/assets";
+import { resolveCollectionAssets } from "./collectionAssets";
 import { controlAssetPath } from "./paths";
 import type { ControlPageSnapshot, InstalledControlPage } from "./registry";
 import { resolveControlPageLinks } from "./pageLinks";
@@ -35,7 +35,7 @@ export async function renderControlPage(
         ...(state.configuration.deliveryUrl
             ? {
                   resolveCollectionAssets: (input: string) =>
-                      resolvePreviewCollectionAssets(input, releases, state.configuration.deliveryUrl!),
+                      resolveCollectionAssets(input, releases, state.configuration.deliveryUrl!),
               }
             : {}),
         prepareBody: prepareNetworkInertBindings,
@@ -49,7 +49,7 @@ export async function renderControlPage(
     appendMeta(document, "name", "basePath", "content", state.runner.basePath);
     appendStylesheet(document, controlAssetPath(state.runner.basePath, "/assets/control-styles.css"));
     appendStylesheet(document, controlAssetPath(state.runner.basePath, "/.cms/style"));
-    appendScript(document, controlAssetPath(state.runner.basePath, "/assets/control-components.js"));
+    appendScript(document, controlAssetPath(state.runner.basePath, "/assets/control-runtime.js"));
     if (rendered.usedTags.length > 0) {
         const tags = [...new Set(rendered.usedTags)].sort().join(",");
         const query = new URLSearchParams({ tags, r: String(snapshot.revision) });

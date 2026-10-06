@@ -16,15 +16,9 @@ export class CaptureRunner implements Runner {
     readonly handlers = new Map<string, RouteHandler>();
     readonly middlewareChains = new Map<string, Middleware[]>();
 
-    /** For tests that only assert the synchronously mounted route groups. */
-    static withoutFileApi(): CaptureRunner {
-        return new CaptureRunner("/", null, false);
-    }
-
     constructor(
         readonly basePath: string = "/",
         private readonly root: CaptureRunner | null = null,
-        protected readonly mountFileApi = true,
     ) {}
 
     addEndpoint(
@@ -61,9 +55,7 @@ export class CaptureRunner implements Runner {
     stop() {}
 
     group(prefix: string, callback: (runner: Runner) => void, middlewares: Middleware[] = []): void {
-        if (this.mountFileApi || prefix !== "/api") {
-            callback(new GroupRunner(joinPath(this.basePath, prefix), this.target, middlewares, this.mountFileApi));
-        }
+        callback(new GroupRunner(joinPath(this.basePath, prefix), this.target, middlewares));
     }
 
     setDefaultEndpoint(
@@ -86,9 +78,8 @@ class GroupRunner extends CaptureRunner {
         basePath: string,
         root: CaptureRunner,
         private readonly groupMiddlewares: Middleware[],
-        mountFileApi: boolean,
     ) {
-        super(basePath, root, mountFileApi);
+        super(basePath, root);
     }
 
     override addEndpoint(
@@ -111,7 +102,7 @@ class GroupRunner extends CaptureRunner {
     override group(prefix: string, callback: (runner: Runner) => void, middlewares: Middleware[] = []): void {
         const basePath = joinPath(this.basePath, prefix);
         const groupedMiddlewares = [...this.groupMiddlewares, ...middlewares];
-        callback(new GroupRunner(basePath, this, groupedMiddlewares, this.mountFileApi));
+        callback(new GroupRunner(basePath, this, groupedMiddlewares));
     }
 }
 

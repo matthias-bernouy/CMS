@@ -1,53 +1,23 @@
-import type { ControlCms } from "cms-control/ControlCms";
-import {
-    createBlocUsageResolver,
-    findPagesReferencingText,
-    CMS_CACHE_KEYS,
-    publicPagePath,
-    type TPage,
-} from "@bernouy/cms-content";
+import { findPagesReferencingText, CMS_CACHE_KEYS, publicPagePath, type TPage } from "@bernouy/cms-content";
 import { cmsFilesByIdRef } from "@bernouy/cms-content/files/urls";
+import type { ControlCmsState } from "cms-control/core/admin/control/types";
 
-/**
- * Invalidate every cached rendered page that uses a bloc directly or through
- * another bloc's compiled template. The HTML carries immutable blocset hashes,
- * so a nested dependency update must regenerate every affected page.
- *
- * Pages that don't use the bloc are left untouched so they keep serving
- * from cache, and their existing image-optimization work is preserved.
- */
-export async function invalidatePagesReferencingBloc(cms: ControlCms, blocTag: string): Promise<void> {
-    const pages = await cms.repository.getAllPages();
-    if (pages.length === 0) {
-        return;
-    }
+type PageCacheDependencies = Pick<ControlCmsState, "repository" | "cache">;
 
-    const blocList = await cms.repository.getBlocsList({ includeInactive: true });
-    const resolveUsage = createBlocUsageResolver(blocList, cms.repository);
-    const usages = await Promise.all(pages.map((page) => resolveUsage(page.content)));
-    const affected = pages.filter((_, index) => usages[index]?.includes(blocTag));
-    if (affected.length === 0) {
-        return;
-    }
-    const language = (await cms.repository.getSystem()).site.language;
-    await Promise.all(affected.map((page) => invalidateUpdatedPage(cms, page, language)));
-}
-
-export function invalidateBlocAssets(cms: ControlCms, blocTag: string): void {
-    cms.cache.delete(CMS_CACHE_KEYS.bloc(blocTag));
-    cms.cache.deleteMatching((key) => key.startsWith(CMS_CACHE_KEYS.BLOCSET_PREFIX));
-}
-
-export async function invalidateUpdatedPage(cms: ControlCms, page: TPage, defaultLanguage?: string): Promise<void> {
-    const language = defaultLanguage ?? (await cms.repository.getSystem()).site.language;
+async function invalidateUpdatedPage(
+    dependencies: PageCacheDependencies,
+    page: TPage,
+    defaultLanguage?: string,
+): Promise<void> {
+    const language = defaultLanguage ?? (await dependencies.repository.getSystem()).site.language;
     const paths = new Set([page.path]);
     for (const [code, local] of Object.entries(page.paths ?? {})) {
         paths.add(publicPagePath(code, local, language));
     }
     for (const path of paths) {
         const key = CMS_CACHE_KEYS.page(path);
-        cms.cache.delete(key);
-        cms.cache.deleteMatching((candidate) => candidate.startsWith(`${key}:`));
+        dependencies.cache.delete(key);
+        dependencies.cache.deleteMatching((candidate) => candidate.startsWith(`${key}:`));
     }
 }
 
@@ -60,22 +30,25 @@ export async function invalidateUpdatedPage(cms: ControlCms, page: TPage, defaul
  *
  * Pages that don't reference the file keep serving from cache.
  */
-export async function invalidatePagesReferencingFile(cms: ControlCms, fileId: string): Promise<void> {
+export async function invalidatePagesReferencingFile(
+    dependencies: PageCacheDependencies,
+    fileId: string,
+): Promise<void> {
     const ref = cmsFilesByIdRef(fileId); // precise: ids are unique, so a substring match is safe
 
     // The favicon lives in site settings, not page content — if it points at
     // this file, its `?v` changes on every page.
-    const settings = await cms.repository.getSystem();
+    const settings = await dependencies.repository.getSystem();
     if (settings.site?.favicon?.includes(ref)) {
-        invalidateAllPages(cms);
+        invalidateAllPages(dependencies);
         return;
     }
-    const pages = await findPagesReferencingText(cms.repository, ref);
+    const pages = await findPagesReferencingText(dependencies.repository, ref);
     if (pages.length === 0) {
         return;
     }
     const language = settings.site.language;
-    await Promise.all(pages.map((page) => invalidateUpdatedPage(cms, page, language)));
+    await Promise.all(pages.map((page) => invalidateUpdatedPage(dependencies, page, language)));
 }
 
 /**
@@ -83,12 +56,6 @@ export async function invalidatePagesReferencingFile(cms: ControlCms, fileId: st
  * CSS, site settings) changes — the new hash affects every page's `<link>`
  * / `<script>` tags, so they all must be re-rendered.
  */
-export function invalidateAllPages(cms: ControlCms): void {
-    cms.cache.deleteMatching((key) => key.startsWith("page:"));
-}
-
-/** Invalidate a global stylesheet and every page carrying its content hash. */
-export function invalidateGlobalStyleAndPages(cms: ControlCms): void {
-    cms.cache.delete(CMS_CACHE_KEYS.STYLE);
-    invalidateAllPages(cms);
+function invalidateAllPages(dependencies: PageCacheDependencies): void {
+    dependencies.cache.deleteMatching((key) => key.startsWith("page:"));
 }

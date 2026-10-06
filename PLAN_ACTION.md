@@ -391,10 +391,9 @@ optimistic revisions. Binary file transfer remains a kernel transport, and
 backup or Core process lifecycle remains provider control-plane behavior.
 
 This is functional coverage, not legacy-product parity. The file-routed
-`/api/*` Control tree is no longer mounted, and the production browser host no
-longer registers the retained legacy administration/Foundation components.
-Their source remains temporarily available as migration reference, but it is
-not part of the active administration runtime. Collection-owned Pages now
+`/api/*` Control tree and the surface-owned legacy administration components
+have been deleted. The production browser host contains only the binding and
+Bloc host runtime required by collection-authored Pages. Collection-owned Pages now
 expose the bounded collection, file, design, provider and access mutations;
 file bytes use the authenticated kernel upload/replace transport. Provider
 credential creation remains a kernel/provider workflow, while backup/restore
@@ -402,8 +401,8 @@ and Core process lifecycle remain provider control-plane responsibilities.
 Path editing, localization, SEO, visual Bloc editing, filtering, pagination UX
 and replacement redirects still lack complete product parity.
 
-Rebuild Control one domain at a time from the retained APIs, components and
-documented behavior. Likely groups are:
+Rebuild Control one domain at a time from the contracts and documented product
+behavior. The functional groups are:
 
 1. Pages and routing;
 2. collections and upgrades;
@@ -454,12 +453,11 @@ compatibility layer that becomes a second permanent rendering system.
 
 ## Phase 9 — Remove Superseded UI Concepts
 
-**Status (2026-10-06): active runtime removal completed; source removal is
-pending parity.** The legacy `/api/*` route tree and legacy component
-registration have been removed from the production Control composition. The
-old component and handler sources remain temporarily for behavior recovery and
-will be deleted by functional area once their last useful behavior has either
-been rebuilt or deliberately dropped.
+**Status (2026-10-06): Control source removal completed.** The legacy `/api/*`
+route tree, surface-owned administration components and their obsolete tests
+have been deleted. Product behavior that is still missing must now be rebuilt
+through contracts, collection Blocs and Control Pages rather than recovered by
+reactivating the old implementation.
 
 After complete parity:
 
