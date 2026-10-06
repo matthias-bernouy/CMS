@@ -21,10 +21,14 @@ export function createAuthenticatedControlGuard(basePath: string, auth: Authenti
         basePath,
         auth,
         onUnauthenticated: (req, context) =>
-            new URL(req.url).pathname.startsWith(`${basePath}/api/`)
+            isMachineRoute(new URL(req.url).pathname, basePath)
                 ? new Response("Unauthorized", { status: 401 })
                 : new Response(null, { status: 302, headers: { Location: context.loginUrl } }),
     });
+}
+
+function isMachineRoute(pathname: string, basePath: string): boolean {
+    return pathname.startsWith(`${basePath}/api/`) || pathname.startsWith(`${basePath}/.cms/`);
 }
 
 /** Keeps member self-service open; every other file-routed API requires an administrator. */

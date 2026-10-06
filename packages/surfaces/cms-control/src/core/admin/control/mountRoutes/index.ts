@@ -11,8 +11,10 @@ import {
 import { CMS_CACHE_KEYS, createContentReader, generateStyleEntry } from "@bernouy/cms-content";
 import { CMS_FILES_ROUTE, filesPrefix } from "@bernouy/cms-content/files/urls";
 import { serveFilesRequest } from "@bernouy/cms-content/files/serving";
+import { replaceAuthorFileRequest, uploadAuthorFileRequest } from "@bernouy/cms-content/files";
 import { cachedResponseAsync, publicAssetCacheControl, redirect } from "@bernouy/http-runner";
 import { renderLoginPage } from "cms-control/core/admin/auth/authPages";
+import { invalidatePagesReferencingFile } from "cms-control/core/admin/server/cache/invalidation";
 import {
     createAuthenticatedControlGuard,
     createControlAccessGuard,
@@ -75,6 +77,30 @@ export function mountControlCmsRoutes(
     runner.addEndpoint("GET", "/", () => redirect(`${cms.basePath}/admin`), [authGuard]);
     mountCollectionControlPages(state, [authGuard]);
     mountControlCapabilityRoutes(state, [authenticatedGuard, maintenanceGuard]);
+    const fileMutationGuards = [authenticatedGuard, apiAuthorizationGuard, maintenanceGuard];
+    runner.addEndpoint(
+        "POST",
+        `${CMS_FILES_ROUTE}/upload`,
+        (request) =>
+            uploadAuthorFileRequest(request, {
+                metadata: cms.filesMetadata,
+                blob: cms.filesBlob,
+                mutations: cms.fileMutations,
+            }),
+        fileMutationGuards,
+    );
+    runner.addEndpoint(
+        "PUT",
+        `${CMS_FILES_ROUTE}/content`,
+        (request) =>
+            replaceAuthorFileRequest(request, {
+                metadata: cms.filesMetadata,
+                blob: cms.filesBlob,
+                mutations: cms.fileMutations,
+                afterContentUpdated: async ({ id }) => invalidatePagesReferencingFile(cms, id),
+            }),
+        fileMutationGuards,
+    );
     runner.group(
         CMS_FILES_ROUTE,
         (filesRunner) => {

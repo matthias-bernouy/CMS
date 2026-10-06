@@ -45,3 +45,8 @@ export { updateFileContent } from "cms-content/files/core/lifecycle/updateFileCo
 export { deleteFileTree } from "cms-content/files/core/lifecycle/deleteFileTree";
 export { recoverFileMutations } from "cms-content/files/core/lifecycle/fileMutationRecovery";
 export { createFileFolder, updateFileItem } from "cms-content/files/core/lifecycle/fileTreeMutations";
+export {
+    replaceAuthorFileRequest,
+    uploadAuthorFileRequest,
+    type AuthorFileMutationDeps,
+} from "cms-content/files/http/authoringRequests";

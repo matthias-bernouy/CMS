@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryAuthentication } from "@bernouy/cms-auth";
+import { InMemoryAuthentication, type Authentication } from "@bernouy/cms-auth";
 import type { ControlCms } from "cms-control/ControlCms";
 import {
+    createAuthenticatedControlGuard,
     createControlAccessGuard,
     createControlApiAuthorizationGuard,
 } from "cms-control/core/admin/control/adminAccess";
@@ -14,6 +15,29 @@ describe("Control authenticated access", () => {
         expect(await status("GET", "/cms/admin/settings/secrets")).toBe(200);
     });
 });
+
+describe("Control machine route authentication", () => {
+    test("returns an API response instead of a login redirect for CMS transports", async () => {
+        const guard = createAuthenticatedControlGuard("/cms", unauthenticated());
+        const response = await guard(
+            new Request("http://localhost/cms/.cms/files/upload", { method: "POST" }),
+            async () => new Response("ok"),
+        );
+        expect(response.status).toBe(401);
+        expect(response.headers.get("location")).toBeNull();
+    });
+});
+
+function unauthenticated(): Authentication {
+    return {
+        loginUrl: "/login",
+        logoutUrl: "/logout",
+        profileUrl: "/profile",
+        buildLoginUrl: (returnTo) => `/login?returnTo=${encodeURIComponent(returnTo)}`,
+        buildLogoutUrl: (returnTo) => `/logout?returnTo=${encodeURIComponent(returnTo)}`,
+        getSubject: async () => null,
+    };
+}
 
 describe("Control API authorization", () => {
     test("rejects administrative APIs for authenticated members", async () => {
