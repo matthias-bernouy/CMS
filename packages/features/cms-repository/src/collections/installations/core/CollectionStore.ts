@@ -85,6 +85,10 @@ export class CollectionStore {
         return structuredClone(await this.storage.getReleaseMetadata(digest));
     }
 
+    async revision(siteId: string): Promise<number> {
+        return (await this.storage.readSite(siteId)).revision;
+    }
+
     async snapshot(siteId: string): Promise<{ revision: number; collections: InstalledCollection[] }> {
         const state = await this.storage.readSite(siteId);
         const collections = await Promise.all(

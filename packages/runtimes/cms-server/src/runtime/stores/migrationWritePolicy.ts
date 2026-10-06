@@ -59,6 +59,7 @@ const COLLECTION_STORE_NON_SITE_MUTATIONS_OR_READS = [
     "getInstalledAssetMetadata",
     "getInstalledAssetMetadataBatch",
     "getRelease",
+    "revision",
     "snapshot",
 ] as const satisfies readonly (keyof CollectionStore)[];
 

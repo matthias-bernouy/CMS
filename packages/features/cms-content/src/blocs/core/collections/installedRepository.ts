@@ -18,7 +18,34 @@ export function withInstalledCollections(
     store: CollectionStore,
     siteId: string,
 ): CmsRepository {
-    const installed = async (): Promise<BlocRecord[]> => {
+    type InstalledState = {
+        revision: number;
+        collections: Awaited<ReturnType<CollectionStore["snapshot"]>>["collections"];
+        records: BlocRecord[];
+        byTag: Map<string, BlocRecord>;
+    };
+    let cache: InstalledState | undefined;
+    let pending: Promise<InstalledState> | undefined;
+    const installedState = async (): Promise<InstalledState> => {
+        const revision = await store.revision(siteId);
+        if (cache?.revision === revision) {
+            return cache;
+        }
+        if (pending) {
+            const loaded = await pending;
+            if (loaded.revision === revision) {
+                return loaded;
+            }
+        }
+        pending = loadInstalledState();
+        try {
+            cache = await pending;
+            return cache;
+        } finally {
+            pending = undefined;
+        }
+    };
+    const loadInstalledState = async (): Promise<InstalledState> => {
         const snapshot = await store.snapshot(siteId);
         const collections = await Promise.all(
             snapshot.collections.map(async ({ collectionId, digest, release }) =>
@@ -74,17 +101,26 @@ export function withInstalledCollections(
                 ),
             ),
         );
-        return collections.flat();
+        const records = collections.flat();
+        return {
+            revision: snapshot.revision,
+            collections: snapshot.collections,
+            records,
+            byTag: new Map(records.map((record) => [record.tag, record])),
+        };
     };
     const records = async () => {
-        const [local, resources] = await Promise.all([repository.getBlocRecords(), installed()]);
-        if (resources.some(({ tag }) => local.some((record) => record.tag === tag))) {
+        const [local, resources] = await Promise.all([repository.getBlocRecords(), installedState()]);
+        if (resources.records.some(({ tag }) => local.some((record) => record.tag === tag))) {
             throw new Error("Installed collection collides with a local bloc tag");
         }
-        return [...local, ...resources];
+        return [...local, ...structuredClone(resources.records)];
     };
-    const read = async (tag: string) => (await records()).find((record) => record.tag === tag) ?? null;
-    const releases = async () => (await store.snapshot(siteId)).collections.map((item) => item.release);
+    const read = async (tag: string) => {
+        const resource = (await installedState()).byTag.get(tag);
+        return resource ? structuredClone(resource) : repository.getBlocRecord(tag);
+    };
+    const releases = async () => (await installedState()).collections.map((item) => item.release);
     const overrides: Partial<CmsRepository> = {
         getSystem: async () => {
             const system = await repository.getSystem();
@@ -99,16 +135,14 @@ export function withInstalledCollections(
         getBlocRecord: read,
         getBlocsList: async (options) => {
             const local = await repository.getBlocsList(options);
-            const resources = (await records())
-                .filter((record) => record.collectionId)
-                .map((record) => record.artifact!);
+            const resources = (await installedState()).records.map((record) => structuredClone(record.artifact!));
             return [...local, ...resources.filter((bloc) => options?.includeInactive || !bloc.internal)];
         },
         getBlocViewJS: async (tag) => {
-            const record = await read(tag);
-            return record?.collectionId ? (record.artifact?.viewJS ?? null) : repository.getBlocViewJS(tag);
+            const record = (await installedState()).byTag.get(tag);
+            return record ? (record.artifact?.viewJS ?? null) : repository.getBlocViewJS(tag);
         },
-        getBlocSource: async (tag) => ((await read(tag))?.collectionId ? null : repository.getBlocSource(tag)),
+        getBlocSource: async (tag) => ((await installedState()).byTag.has(tag) ? null : repository.getBlocSource(tag)),
     };
     // Bind original methods to their adapter; prevent all tag-writing paths from claiming installed resources.
     const guarded = new Set([
@@ -135,7 +169,7 @@ export function withInstalledCollections(
             return async (...args: unknown[]) => {
                 const first = args[0] as { id?: string; tag?: string } | string;
                 const tag = typeof first === "string" ? first : (first.tag ?? first.id);
-                if ((await installed()).some((record) => record.tag === tag)) {
+                if (tag && (await installedState()).byTag.has(tag)) {
                     throw Object.assign(new Error("Installed collection blocs are immutable"), { status: 409 });
                 }
                 return value.apply(target, args);
