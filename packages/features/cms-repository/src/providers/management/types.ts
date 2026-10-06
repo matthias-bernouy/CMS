@@ -1,4 +1,4 @@
-import type { ReleaseCatalogue } from "cms-repository/contracts/interfaces/ReleaseCatalogue";
+import type { ReleaseCatalogue } from "cms-repository/exports/contracts/catalogue";
 import type { ProviderInstallationStore } from "cms-repository/providers/installations/interfaces/ProviderInstallationStore";
 import type { ProviderManifestCatalogue } from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
 import type { ContractSelectionStore } from "cms-repository/providers/selections/interfaces/ContractSelectionStore";

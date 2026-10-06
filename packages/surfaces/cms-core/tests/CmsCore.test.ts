@@ -60,18 +60,28 @@ describe("CmsCore", () => {
     });
 
     test("does not expose undeclared routes", async () => {
+        const contract = await contractRelease();
+        const dispatcher = new DefaultCoreCapabilityDispatcher();
+        dispatcher.register("ulvia.cms.fixture", "echo", async (input) => input);
         const runner = new BunRunner();
         new CmsCore(runner, {
             token,
-            contracts: [],
-            dispatcher: new DefaultCoreCapabilityDispatcher(),
+            contracts: [contract.release],
+            dispatcher,
             report: {
                 protocol: "ulvia-provider/v1",
                 providerId: "ulvia.official",
                 account: { id: "local", label: "Local CMS Core" },
                 buildVersion: "0.1.0",
                 manifest: { version: "0.1.0", digest: digest("a") },
-                implementations: [],
+                implementations: [
+                    {
+                        contractId: contract.release.contractId,
+                        version: contract.release.version,
+                        digest: contract.digest,
+                        status: "ready",
+                    },
+                ],
             },
         });
         const server = serveForTest(runner);

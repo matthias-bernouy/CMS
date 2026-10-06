@@ -1,59 +1,23 @@
 import { randomUUID } from "node:crypto";
 import { ProviderInstallationLifecycle } from "cms-repository/providers/installations/core/lifecycle/ProviderInstallationLifecycle";
 import type { ProviderInstallationPreparation } from "cms-repository/providers/installations/interfaces/ProviderInstallationPreparation";
-import type { ProviderRuntimeReport } from "cms-repository/providers/installations/interfaces/ProviderRuntimeReport";
 import type { ProviderManagementGateway } from "./types";
-import { secretKeyToRef, secretRefToKey, type SecretStore } from "@bernouy/secret-store";
-
-export type ProviderConnectionPreviewInput = {
-    providerId: string;
-    version: string;
-    endpoint: string;
-    token: string;
-    installationId?: string;
-    revision?: number;
-};
-
-export type ProviderConnectionPreview = {
-    ticket: string;
-    operation: "connect" | "reconnect";
-    providerId: string;
-    providerName: string;
-    accountId: string;
-    accountLabel: string;
-    endpoint: string;
-    manifestVersion: string;
-    manifestDigest: string;
-    contracts: { contractId: string; version: string; status: string }[];
-    check: string;
-};
-
-type Lifecycle = Pick<
-    ProviderInstallationLifecycle,
-    "prepare" | "prepareModification" | "approve" | "modify" | "observe"
->;
-type Pending = {
-    preparation: ProviderInstallationPreparation;
-    token: string;
-    actorId: string;
-    createdAt: number;
-    previousTokenKey?: string;
-};
-type Dependencies = {
-    lifecycle?: Lifecycle;
-    readReport: ProviderReportReader;
-    createId?: () => string;
-    now?: () => number;
-};
-
-export type ProviderReportReader = (endpoint: string, token: string) => Promise<ProviderRuntimeReport>;
+import { secretKeyToRef, type SecretStore } from "@bernouy/secret-store";
+import {
+    type ProviderConnectionDependencies,
+    type ProviderConnectionLifecycle,
+    type ProviderConnectionPreview,
+    type ProviderConnectionPreviewInput,
+    type PendingProviderConnection,
+} from "./connectionTypes";
+import { previewResult, requiredSecretKey, validatePreviewInput } from "./connectionSupport";
 
 const PREVIEW_LIFETIME_MS = 5 * 60_000;
 
 /** Keeps provider probes, approval tickets and credential rotation outside the HTTP surface. */
 export class ProviderConnectionWorkflow {
-    private readonly pending = new Map<string, Pending>();
-    private readonly lifecycle: Lifecycle;
+    private readonly pending = new Map<string, PendingProviderConnection>();
+    private readonly lifecycle: ProviderConnectionLifecycle;
     private readonly reportReader;
     private readonly createId;
     private readonly now;
@@ -61,7 +25,7 @@ export class ProviderConnectionWorkflow {
     constructor(
         private readonly gateway: ProviderManagementGateway,
         private readonly secrets: SecretStore,
-        dependencies: Dependencies,
+        dependencies: ProviderConnectionDependencies,
     ) {
         this.lifecycle =
             dependencies.lifecycle ??
@@ -190,42 +154,8 @@ export class ProviderConnectionWorkflow {
     }
 }
 
-function validatePreviewInput(input: ProviderConnectionPreviewInput): void {
-    if (!input.token || input.token.length > 512 || /[\r\n]/u.test(input.token)) {
-        throw new TypeError("Invalid provider token");
-    }
-    if (Boolean(input.installationId) !== (input.revision !== undefined)) {
-        throw new TypeError("Installation ID and revision must be provided together");
-    }
-}
-
-function requiredSecretKey(reference: string): string {
-    const key = secretRefToKey(reference);
-    if (!key) {
-        throw new Error("Provider credential reference is invalid");
-    }
-    return key;
-}
-
-function previewResult(
-    ticket: string,
-    operation: ProviderInstallationPreparation["operation"],
-    providerName: string,
-    endpoint: string,
-    manifestDigest: string,
-    report: ProviderRuntimeReport,
-): ProviderConnectionPreview {
-    return {
-        ticket,
-        operation: operation === "modify" ? "reconnect" : "connect",
-        providerId: report.providerId,
-        providerName,
-        accountId: report.account.id,
-        accountLabel: report.account.label,
-        endpoint,
-        manifestVersion: report.manifest.version,
-        manifestDigest,
-        contracts: report.implementations.map(({ contractId, version, status }) => ({ contractId, version, status })),
-        check: "Manifest and runtime report validated; live conformance is not yet implemented.",
-    };
-}
+export type {
+    ProviderConnectionPreview,
+    ProviderConnectionPreviewInput,
+    ProviderReportReader,
+} from "./connectionTypes";

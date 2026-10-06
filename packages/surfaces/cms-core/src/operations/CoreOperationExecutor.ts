@@ -2,12 +2,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { randomUUIDv7 } from "bun";
 import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
 import { CoreCapabilityDispatchError, type CoreCapabilityInvocationContext } from "../dispatch/registry";
-import type {
-    CoreOperationExecutionContext,
-    CoreOperationHandler,
-    CoreOperationRecord,
-    CoreOperationStore,
-} from "./types";
+import type { CoreOperationHandler, CoreOperationRecord, CoreOperationStore } from "./types";
+import { CoreOperationLeaseLostError, expiresAt, operationExecution, waitForLeaseRenewal } from "./lease";
 
 const DEFAULT_LEASE_MS = 30_000;
 const DEFAULT_RECOVERY_LIMIT = 100;
@@ -141,7 +137,7 @@ export class CoreOperationExecutor {
         executionAbort: AbortController,
         signal: AbortSignal,
     ): Promise<void> {
-        while (!(await wait(this.leaseMs / 3, signal))) {
+        while (!(await waitForLeaseRenewal(this.leaseMs / 3, signal))) {
             const current = this.now();
             try {
                 const renewed = await this.store.renew(
@@ -162,50 +158,10 @@ export class CoreOperationExecutor {
     }
 }
 
-class CoreOperationLeaseLostError extends Error {
-    constructor() {
-        super("Core operation lease was lost.");
-        this.name = "CoreOperationLeaseLostError";
-    }
-}
-
 function operationKey(contractId: string, capabilityId: string): string {
     return `${contractId}\0${capabilityId}`;
 }
 
 function digest(input: Readonly<Record<string, unknown>>): string {
     return `sha256:${createHash("sha256").update(canonicalizeIJson(input)).digest("hex")}`;
-}
-
-function expiresAt(now: Date, leaseMs: number): string {
-    return new Date(now.getTime() + leaseMs).toISOString();
-}
-
-function operationExecution(token: string, signal: AbortSignal): CoreOperationExecutionContext {
-    return {
-        signal,
-        leaseToken: token,
-        throwIfLeaseLost() {
-            if (signal.aborted) {
-                throw signal.reason instanceof Error ? signal.reason : new CoreOperationLeaseLostError();
-            }
-        },
-    };
-}
-
-async function wait(milliseconds: number, signal: AbortSignal): Promise<boolean> {
-    if (signal.aborted) {
-        return true;
-    }
-    return new Promise((resolve) => {
-        const timeout = setTimeout(() => {
-            signal.removeEventListener("abort", aborted);
-            resolve(false);
-        }, milliseconds);
-        const aborted = () => {
-            clearTimeout(timeout);
-            resolve(true);
-        };
-        signal.addEventListener("abort", aborted, { once: true });
-    });
 }
