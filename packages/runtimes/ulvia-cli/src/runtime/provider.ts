@@ -46,7 +46,7 @@ export async function startLocalProvider(paths: UlviaPaths, ports: DevPorts) {
     if (typeof cmsPackage.version !== "string") {
         throw new Error("Local CMS package version is unavailable");
     }
-    const resourceRoot = resolve(import.meta.dir, "../../../../official-repository");
+    const resourceRoot = resolve(import.meta.dir, "../bootstrap/resources");
     const provider = spawnCommand([process.execPath, entrypoint], {
         inherit: true,
         env: {

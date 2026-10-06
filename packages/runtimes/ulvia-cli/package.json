@@ -15,6 +15,9 @@
         "tsconfig.json",
         "README.md"
     ],
+    "scripts": {
+        "generate:bootstrap": "bun run src/bootstrap/generate.ts"
+    },
     "dependencies": {
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/cms-server": "workspace:*",

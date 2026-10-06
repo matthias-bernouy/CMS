@@ -1,0 +1,11 @@
+{
+    "contracts": [
+        "contracts/catalog.items/definition.json",
+        "contracts/forms.submissions/definition.json",
+        "contracts/media.assets/definition.json",
+        "contracts/ulvia.cms.pages/definition.json",
+        "contracts/ulvia.provider.cms-instances/definition.json"
+    ],
+    "provider": "providers/ulvia.official/definition.json",
+    "collection": "collections/ulvia-official/release.json"
+}

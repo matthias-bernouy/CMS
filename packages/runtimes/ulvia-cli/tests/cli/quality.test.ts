@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test";
-import { resolve } from "node:path";
+import { readFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import { parseCollectionRelease } from "@bernouy/cms-repository/collections";
+import { buildOfficialBootstrapArtifacts } from "../../src/bootstrap/generate";
 import { assertCollectionSourceQuality } from "../../src/release/quality";
 import { prepareCollectionRelease } from "../../src/release/source";
 import { officialContractCatalogue } from "../officialContractCatalogue";
@@ -82,4 +84,18 @@ test("the official collection passes its source quality contract", async () => {
     ).toBeTrue();
     expect(visible.filter((bloc) => bloc.kind === "composition").every((bloc) => bloc.uses.length > 0)).toBeTrue();
     expect(artifact.release.exports?.blocs).toEqual(visible.map((bloc) => bloc.id).toSorted());
+});
+
+test("the pre-built local bootstrap bundle matches official authored releases", async () => {
+    const artifacts = await buildOfficialBootstrapArtifacts();
+    const root = resolve(import.meta.dir, "../../src/bootstrap/resources");
+    for (const [id, bytes] of Object.entries(artifacts.contracts)) {
+        expect((await readFile(join(root, "contracts", id, "definition.json"), "utf8")).trim()).toBe(bytes);
+    }
+    expect((await readFile(join(root, "providers", "ulvia.official", "definition.json"), "utf8")).trim()).toBe(
+        artifacts.provider,
+    );
+    expect((await readFile(join(root, "collections", "ulvia-official", "release.json"), "utf8")).trim()).toBe(
+        artifacts.collection,
+    );
 });

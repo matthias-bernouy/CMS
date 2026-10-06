@@ -65,11 +65,11 @@ only the Core version and loopback reachability URL; the provider does not impor
 `cms-server`. The durable provider record deliberately excludes CMS secrets and
 the published discovery response excludes its private health URL.
 
-For the current development stack, the CLI admits the official contract,
-provider and collection sources into its immutable local repository before
-starting the HTTP repository. This makes a clean startup independent from a
-remote service. A production image should carry pre-admitted digest-pinned
-artifacts instead of compiling authored source during startup.
+For the current development stack, the CLI admits a checked bundle of canonical
+official contract, provider and collection releases into its immutable local
+repository before starting the HTTP repository. Runtime startup never reads the
+authored source folders. A generation check keeps the bundle aligned with those
+sources, and the same digest-pinned shape can be carried by a production image.
 
 ## Fresh Installation Flow
 

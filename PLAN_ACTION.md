@@ -565,8 +565,8 @@ Three boundaries also remain explicit after Lot 1:
 ### Lot 2 — Real Autonomous Local Initialization
 
 **Status (2026-10-06): bootstrap slice completed, provider lifecycle slice
-open.** The development CLI seeds immutable official releases from the bundled
-source tree before starting its local repository. Core then idempotently
+open.** The development CLI seeds immutable official releases from a checked,
+pre-admitted bundle before starting its local repository. Core then idempotently
 connects the official provider, selects its ready `ulvia.cms.*` releases and
 installs or upgrades `ulvia-official`. A fresh-stack CRUD/publication flow and a
 same-volume restart have passed. The current CLI remains the process
