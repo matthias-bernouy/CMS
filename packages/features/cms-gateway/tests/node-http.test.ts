@@ -42,6 +42,8 @@ test("node transport pins the target and injects trusted context", async () => {
                 accept: "application/json",
                 authorization: "Bearer secret-token",
                 "x-ulvia-request-id": "request-1",
+                "x-ulvia-site-id": "site-a",
+                "x-ulvia-installation-id": "install-a",
                 "x-ulvia-origin": "delivery",
                 "x-ulvia-actor-kind": "anonymous",
             },

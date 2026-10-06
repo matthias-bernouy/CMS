@@ -39,6 +39,11 @@ test("production composition supplies one gateway image service to Control and D
         images: { get: async () => ({ status: 404 }) },
         catalogue: {},
         isAdministrator: async () => true,
+        administrators: {
+            canRevoke: async () => true,
+            list: async () => [],
+            set: async () => ({ enabled: true, revision: 1, bootstrap: false }),
+        },
     };
 
     const mounted = await mountProductionSurfaces({ ...surfaceMountFixtures(), gateway } as never, runtime);

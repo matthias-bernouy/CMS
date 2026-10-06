@@ -79,6 +79,11 @@ describe("production surface mounting", () => {
             siteId: "site:main",
             invoker: { invoke: async () => ({ requestId: "request", status: 200, kind: "success" as const }) },
             isAdministrator: async () => true,
+            administrators: {
+                canRevoke: async () => true,
+                list: async () => [],
+                set: async () => ({ enabled: true, revision: 1, bootstrap: false }),
+            },
             observations: {
                 start: () => {
                     observationStarted = true;

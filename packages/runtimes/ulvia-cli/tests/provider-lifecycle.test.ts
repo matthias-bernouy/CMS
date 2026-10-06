@@ -119,6 +119,9 @@ test("provider instance discovery follows the admitted plan and opaque credentia
             routes,
             now: () => NOW,
             authorize: async () => true,
+            identities: {
+                getOrCreate: async (_provider, subjectId) => subjectId,
+            },
             transport: new HttpGatewayTransport({
                 network: {
                     exchange: async (request) => {
