@@ -96,4 +96,29 @@ describe("runtime env validation", () => {
                 .CMS_LOCAL_PROVIDER_TOKEN,
         ).toBe("opaque-local-provider-core-secret");
     });
+
+    test("requires a complete local provider bootstrap tuple", () => {
+        expect(() => readRuntimeEnv({ ...validEnv(), CMS_LOCAL_PROVIDER_ENDPOINT: "http://127.0.0.1:5103" })).toThrow(
+            /configured together/,
+        );
+        expect(() =>
+            readRuntimeEnv({
+                ...validEnv(),
+                CMS_LOCAL_PROVIDER_ENDPOINT: "http://127.0.0.1:5103",
+                CMS_LOCAL_PROVIDER_ACCESS_TOKEN: "opaque-token",
+            }),
+        ).toThrow(/requires CMS_REPOSITORY_URL/);
+        expect(
+            readRuntimeEnv({
+                ...validEnv(),
+                CMS_GATEWAY_SITE_ID: "default",
+                CMS_REPOSITORY_URL: "http://127.0.0.1:5102",
+                CMS_LOCAL_PROVIDER_ENDPOINT: "http://127.0.0.1:5103",
+                CMS_LOCAL_PROVIDER_ACCESS_TOKEN: "opaque-token",
+            }),
+        ).toMatchObject({
+            CMS_LOCAL_PROVIDER_ENDPOINT: "http://127.0.0.1:5103",
+            CMS_LOCAL_PROVIDER_ACCESS_TOKEN: "opaque-token",
+        });
+    });
 });

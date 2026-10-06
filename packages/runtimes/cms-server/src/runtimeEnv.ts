@@ -22,6 +22,8 @@ export type RuntimeEnv = {
     CMS_ADMIN_PASSWORD: string;
     CMS_GATEWAY_SITE_ID?: string;
     CMS_LOCAL_PROVIDER_TOKEN?: string;
+    CMS_LOCAL_PROVIDER_ENDPOINT?: string;
+    CMS_LOCAL_PROVIDER_ACCESS_TOKEN?: string;
     CMS_PROVIDER_MEDIA_DIR?: string;
     CMS_REPOSITORY_URL?: string;
     CMS_FILES_DIR: string;
@@ -55,6 +57,20 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     if (migrationRetention > 10_000) {
         throw new Error("CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION must be at most 10000");
     }
+    const localProviderEndpoint = source.CMS_LOCAL_PROVIDER_ENDPOINT?.trim();
+    const localProviderAccessToken = source.CMS_LOCAL_PROVIDER_ACCESS_TOKEN?.trim();
+    if (Boolean(localProviderEndpoint) !== Boolean(localProviderAccessToken)) {
+        throw new Error("CMS local provider endpoint and access token must be configured together");
+    }
+    if (
+        localProviderAccessToken &&
+        (localProviderAccessToken.length > 512 || /[\r\n]/u.test(localProviderAccessToken))
+    ) {
+        throw new Error("CMS_LOCAL_PROVIDER_ACCESS_TOKEN is invalid");
+    }
+    if (localProviderEndpoint && (!source.CMS_REPOSITORY_URL?.trim() || !source.CMS_GATEWAY_SITE_ID?.trim())) {
+        throw new Error("CMS local provider bootstrap requires CMS_REPOSITORY_URL and CMS_GATEWAY_SITE_ID");
+    }
 
     return {
         CONTROL_PORT,
@@ -71,6 +87,12 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         ...(!source.CMS_LOCAL_PROVIDER_TOKEN?.trim()
             ? {}
             : { CMS_LOCAL_PROVIDER_TOKEN: source.CMS_LOCAL_PROVIDER_TOKEN.trim() }),
+        ...(!localProviderEndpoint
+            ? {}
+            : {
+                  CMS_LOCAL_PROVIDER_ENDPOINT: parseHttpUrl(localProviderEndpoint, "CMS_LOCAL_PROVIDER_ENDPOINT"),
+              }),
+        ...(!localProviderAccessToken ? {} : { CMS_LOCAL_PROVIDER_ACCESS_TOKEN: localProviderAccessToken }),
         ...(!source.CMS_PROVIDER_MEDIA_DIR?.trim()
             ? {}
             : { CMS_PROVIDER_MEDIA_DIR: source.CMS_PROVIDER_MEDIA_DIR.trim() }),

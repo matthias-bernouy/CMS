@@ -21,7 +21,7 @@ export class ProviderManagement {
         );
     }
 
-    async importManifest(manifest: string): Promise<unknown> {
+    async importManifest(manifest: string | Uint8Array): Promise<unknown> {
         return importProviderManifest(manifest, this.sources, this.gateway.releases, this.gateway.manifests);
     }
 

@@ -19,7 +19,12 @@ export async function startLocalCms(
     config: DevRuntimeConfig,
     mongo: LocalMongo,
     ports: DevPorts,
-    options: Readonly<{ inheritOutput?: boolean; localProviderToken?: string }> = {},
+    options: Readonly<{
+        inheritOutput?: boolean;
+        localProviderToken?: string;
+        localProviderEndpoint?: string;
+        localProviderAccessToken?: string;
+    }> = {},
 ): Promise<CmsProcess> {
     const entrypoint = fileURLToPath(import.meta.resolve("@bernouy/cms-server"));
     const controlUrl = `http://127.0.0.1:${ports.control}`;
@@ -44,6 +49,10 @@ export async function startLocalCms(
             CMS_REPOSITORY_URL: `http://127.0.0.1:${ports.repository}`,
             CMS_GATEWAY_SITE_ID: "default",
             ...(options.localProviderToken ? { CMS_LOCAL_PROVIDER_TOKEN: options.localProviderToken } : {}),
+            ...(options.localProviderEndpoint ? { CMS_LOCAL_PROVIDER_ENDPOINT: options.localProviderEndpoint } : {}),
+            ...(options.localProviderAccessToken
+                ? { CMS_LOCAL_PROVIDER_ACCESS_TOKEN: options.localProviderAccessToken }
+                : {}),
             CMS_AUTH_SITE_NAME: "Ulvia local CMS",
             CMS_AUTH_EMAIL_COOLDOWN_SECONDS: "0",
             CMS_HTTP_CLIENT_ADDRESS_MODE: "disabled",
