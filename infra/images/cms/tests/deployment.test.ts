@@ -163,4 +163,10 @@ describe("deployment definition safeguards", () => {
         expect(dockerfileSource).toContain("/var/lib/cms/files");
         expect(instanceComposeSource).toContain("- ./files:/var/lib/cms/files");
     });
+
+    test("installs both runtime entrypoint dependency closures", () => {
+        expect(dockerfileSource).toContain("--filter=@bernouy/cms-server");
+        expect(dockerfileSource).toContain("--filter=@bernouy/official-repository-server");
+        expect(dockerfileSource).not.toContain("--omit=peer");
+    });
 });

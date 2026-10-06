@@ -36,9 +36,12 @@ COPY --chown=bun:bun --from=runtime-source /opt/ulvia-repository-seed/ /opt/ulvi
 RUN install -d -o bun -g bun /var/lib/cms/files /var/lib/ulvia-repository && chown bun:bun /app
 USER bun
 
-# TypeScript is transpiled by Bun at runtime; peer-only type tooling is not
-# needed in production. The filter retains cms-server's full workspace closure.
-RUN bun install --frozen-lockfile --production --omit=peer --filter=@bernouy/cms-server
+# Keep peer dependencies because workspace adapters import them from their own
+# package location at runtime (not from the composition root's nested modules).
+# The same image runs the CMS and its private official repository sidecar.
+RUN bun install --frozen-lockfile --production \
+    --filter=@bernouy/cms-server \
+    --filter=@bernouy/official-repository-server
 
 ENV NODE_ENV=production \
     MODE=PROD

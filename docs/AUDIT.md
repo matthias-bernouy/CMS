@@ -60,7 +60,8 @@ was captured:
   runtime injects the network report reader and authorization context;
 - the production image contains a pre-admitted official repository snapshot.
   Compose starts a private repository service and atomically seeds only an empty
-  persistent volume before Core/Control bootstrap;
+  persistent volume before Core/Control bootstrap. Its production dependency
+  install retains both runtime entrypoint closures and their adapter peers;
 - architecture checks now inspect every official collection Bloc and Control
   Page. Collection JavaScript may call CMS capabilities only through literal
   same-origin `/.cms/call/...` URLs; dynamic and arbitrary fetch targets fail
@@ -68,6 +69,9 @@ was captured:
 - obsolete ignored build artifacts from removed packages and the former View
   tree were deleted, and active architecture/deployment documentation was
   reconciled with the current package and route model.
+- the coverage ratchet now discovers package manifests instead of treating every
+  direct product as a package layer. Its regenerated baseline covers all 17
+  current packages and no removed package.
 
 The most important remaining limits are live provider conformance, durable audit
 and metrics, internal Mongo schema migrations, browser-host ABI versioning,
@@ -78,14 +82,15 @@ lifecycle is still a future product rather than part of `cms-core`.
 
 ## Evidence And Scope
 
-The audit covered the 20 workspace packages, the declarative official
+The original audit covered the workspace packages, the declarative official
 repository, runtime infrastructure, quality tooling, tests and current
 documentation.
 
 The following checks succeeded in the original audit run:
 
 - `bun run check:all`: all seven workspace checks passed;
-- `bun test`: 2,666 tests passed with no failure after Lot 1;
+- `bun test`: the reconciled 2026-10-06 run passed 2,290 tests, skipped the
+  opt-in browser smoke test and had no failure;
 - dependency audit: no vulnerability was reported across 107 packages;
 - `git diff --check`: no whitespace error was present;
 - architecture checks: no reversed layer dependency, workspace cycle,
