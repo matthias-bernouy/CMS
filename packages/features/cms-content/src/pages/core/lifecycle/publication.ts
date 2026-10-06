@@ -2,8 +2,8 @@ import type { TPage } from "cms-content/pages/interfaces/pages";
 
 export type PublishedPageSnapshot = Pick<TPage, "id" | "path" | "title" | "description" | "content">;
 
-export function isPublishedPage(page: Pick<TPage, "visible"> | null | undefined): page is TPage {
-    return page?.visible === true;
+export function isPublishedPage(page: Pick<TPage, "surface" | "visible"> | null | undefined): page is TPage {
+    return page?.surface === "delivery" && page.visible === true;
 }
 
 export function publishedPageSnapshot(page: TPage): PublishedPageSnapshot {

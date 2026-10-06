@@ -148,7 +148,7 @@ export class MongoContentRepository extends MongoBlocRepository {
             return null;
         }
         const direct = fromPageDoc(
-            await this.pages.findOne({ path, visible: true, deletionIntent: { $exists: false } }),
+            await this.pages.findOne({ path, surface: "delivery", visible: true, deletionIntent: { $exists: false } }),
         );
         if (direct) {
             return direct;
@@ -158,11 +158,20 @@ export class MongoContentRepository extends MongoBlocRepository {
     }
 
     async getPublishedPageById(id: string): Promise<TPage | null> {
-        return fromPageDoc(await this.pages.findOne({ _id: id, visible: true, deletionIntent: { $exists: false } }));
+        return fromPageDoc(
+            await this.pages.findOne({
+                _id: id,
+                surface: "delivery",
+                visible: true,
+                deletionIntent: { $exists: false },
+            }),
+        );
     }
 
     async getPublishedPages(): Promise<TPage[]> {
-        const documents = await this.pages.find({ visible: true, deletionIntent: { $exists: false } }).toArray();
+        const documents = await this.pages
+            .find({ surface: "delivery", visible: true, deletionIntent: { $exists: false } })
+            .toArray();
         return documents.map((document) => fromPageDoc(document)!);
     }
 

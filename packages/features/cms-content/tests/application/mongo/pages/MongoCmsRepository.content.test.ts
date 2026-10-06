@@ -83,6 +83,17 @@ describe("MongoCmsRepository content persistence", () => {
         await expect(repository.updatePage({ title: "Missing id" })).rejects.toThrow(/requires `id`/);
     });
 
+    test("never publishes Control pages even when their visibility flag is set", async () => {
+        const { repository } = createMongoContentRepository();
+        await repository.insertPage("/admin/private", "Private", "<main>secret</main>", { surface: "control" });
+        const controlPage = (await repository.getPage("/admin/private"))!;
+        await repository.updatePage({ id: controlPage.id, visible: true });
+
+        expect(await repository.getPublishedPage("/admin/private")).toBeNull();
+        expect(await repository.getPublishedPageById(controlPage.id)).toBeNull();
+        expect(await repository.getPublishedPages()).toEqual([]);
+    });
+
     test("translates page path duplicate-key errors on insert and update", async () => {
         const { db, repository } = createMongoContentRepository();
         const pages = db.get("pages");
