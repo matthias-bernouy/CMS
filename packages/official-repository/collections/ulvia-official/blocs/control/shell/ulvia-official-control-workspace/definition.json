@@ -1,0 +1,26 @@
+{
+    "kind": "composition",
+    "id": "ulvia-official-control-workspace",
+    "label": "bloc.control-workspace.label",
+    "description": "bloc.control-workspace.description",
+    "category": "bloc.category.administration",
+    "order": 10,
+    "internal": true,
+    "surfaces": ["control"],
+    "uses": [
+        "ulvia-official-app-shell",
+        "ulvia-official-icon",
+        "ulvia-official-navigation-item",
+        "ulvia-official-navigation-menu",
+        "ulvia-official-navigation-section",
+        "ulvia-official-page-shell"
+    ],
+    "requires": [],
+    "slots": {
+        "title": { "accepts": [{ "kind": "rich-text", "profile": "prose" }, { "kind": "any-component" }], "min": 1 },
+        "description": { "accepts": [{ "kind": "rich-text", "profile": "prose" }, { "kind": "any-component" }], "max": 1 },
+        "actions": { "accepts": [{ "kind": "any-component" }] },
+        "content": { "accepts": [{ "kind": "any-component" }, { "kind": "media" }, { "kind": "rich-text", "profile": "prose" }] },
+        "footer": { "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }] }
+    }
+}

@@ -1,18 +1,5 @@
-<ulvia-official-app-shell layout="sidebar" sticky-header>
-    <strong slot="brand">Ulvia</strong>
-    <nav slot="secondary-navigation" aria-label="Administration">
-        <strong>Content</strong>
-        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'>Pages</a>
-        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"collections"}'>Collections</a>
-        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"files"}'>Files</a>
-        <strong>Configuration</strong>
-        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"design"}'>Design &amp; languages</a>
-        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"providers"}'>Providers</a>
-        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"access"}'>Access &amp; settings</a>
-    </nav>
-    <ulvia-official-page-shell slot="content" width="xl">
-        <div slot="title"><h1>Providers &amp; contracts</h1></div>
-        <div slot="description"><p>Approved provider accounts and exact contract releases selected by this CMS.</p></div>
-        <ulvia-official-provider-manager slot="content"></ulvia-official-provider-manager>
-    </ulvia-official-page-shell>
-</ulvia-official-app-shell>
+<ulvia-official-control-workspace>
+    <h1 slot="title">Providers &amp; contracts</h1>
+    <p slot="description">Approved provider accounts and exact contract releases selected by this CMS.</p>
+    <ulvia-official-provider-manager slot="content"></ulvia-official-provider-manager>
+</ulvia-official-control-workspace>

@@ -21,7 +21,7 @@ export async function decodeCoreContractInput(
     for (const [property, wireName] of Object.entries(binding?.query ?? {})) {
         const raw = url.searchParams.get(wireName);
         if (raw !== null) {
-            input[property] = decodeScalar(capability, property, raw);
+            input[property] = decodeScalar(capability, property, encodeURIComponent(raw));
         }
     }
     for (const [property, wireName] of Object.entries(binding?.headers ?? {})) {

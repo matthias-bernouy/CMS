@@ -20,6 +20,24 @@ export function initializeWorkspace(root: ShadowRoot): void {
          <button type="button" data-tab="repository" aria-selected="false">Repository</button>
          <button type="button" data-tab="activity" aria-selected="false">Activity</button>`,
     );
+    root.querySelector("[data-tabs]")?.setAttribute("aria-label", "Collection workspace sections");
+    replace(
+        root,
+        "[data-detail-tabs]",
+        `<button type="button" data-detail-tab="overview" aria-selected="true">Overview</button>
+         <button type="button" data-detail-tab="theme" aria-selected="false">Theme <span data-theme-count></span></button>
+         <button type="button" data-detail-tab="blocs" aria-selected="false">Blocs <span data-bloc-count></span></button>
+         <button type="button" data-detail-tab="texts" aria-selected="false">Texts <span data-text-count></span></button>`,
+    );
+    root.querySelector("[data-detail-tabs]")?.setAttribute("aria-label", "Collection sections");
+    replace(root, "[data-detail-back]", '<button type="button" data-action="back" part="back">← Collections</button>');
+    replace(
+        root,
+        "[data-detail-heading]",
+        `<p part="eyebrow">Installed collection</p>
+         <h2 id="collection-detail-title" data-detail-title></h2>
+         <p data-detail-description></p>`,
+    );
     replace(
         root,
         "[data-installed-toolbar]",

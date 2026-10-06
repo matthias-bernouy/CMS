@@ -12,7 +12,8 @@ button { cursor: pointer; }
 button:disabled { cursor: wait; opacity: .58; }
 h2, h3, h4, p { margin: 0; }
 
-[part="workspace"] { display: grid; gap: var(--ulvia-official-spacing-lg, 1.5rem); }
+[part="workspace"], [data-catalogue-view], [data-detail-view] { display: grid; gap: var(--ulvia-official-spacing-lg, 1.5rem); }
+[data-catalogue-view][hidden], [data-detail-view][hidden] { display: none; }
 [part="header"], [part="toolbar"], [part="actions"], dialog header, dialog footer { display: flex; align-items: center; justify-content: space-between; gap: var(--ulvia-official-spacing-md, 1rem); }
 [part="header"] { align-items: flex-start; }
 [part="header"] > div { display: grid; gap: var(--ulvia-official-spacing-xs, .5rem); max-width: 46rem; }
@@ -36,10 +37,11 @@ textarea { width: 100%; padding: .75rem; resize: vertical; font-family: var(--ul
 [part="summary"] { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ulvia-official-spacing-md, 1rem); }
 [part="metric"] { display: grid; gap: .2rem; padding: 1rem; border: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); border-radius: var(--ulvia-official-radius-lg, .75rem); background: var(--ulvia-official-background-raised, #fff); }
 
-[part="tabs"] { display: flex; gap: .25rem; border-bottom: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); }
+[part="tabs"] { display: flex; gap: .25rem; overflow-x: auto; overflow-y: hidden; border-bottom: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); }
 [part="tabs"] button { margin-bottom: -1px; border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: transparent; }
 [part="tabs"] button[aria-selected="true"] { border-bottom-color: var(--ulvia-official-primary, #176b4d); color: var(--ulvia-official-primary, #176b4d); }
 [part="panel"] { display: grid; gap: var(--ulvia-official-spacing-md, 1rem); }
+[part="panel"][hidden] { display: none; }
 [part="cards"] { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: var(--ulvia-official-spacing-md, 1rem); }
 [part="cards"] ulvia-official-card code { display: block; overflow: hidden; color: var(--ulvia-official-text-muted, #687a72); font-size: .75rem; text-overflow: ellipsis; white-space: nowrap; }
 [part="actions"] { justify-content: flex-start; flex-wrap: wrap; margin-top: auto; }
@@ -47,6 +49,35 @@ textarea { width: 100%; padding: .75rem; resize: vertical; font-family: var(--ul
 [part="activity"] { display: grid; border: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); border-radius: var(--ulvia-official-radius-lg, .75rem); overflow: clip; }
 [part="activity-row"] { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 1rem; background: var(--ulvia-official-background-raised, #fff); }
 [part="activity-row"] + [part="activity-row"] { border-top: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); }
+
+[part="detail-header"] { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 1rem; }
+[data-detail-heading] { display: grid; gap: .35rem; }
+[part="detail-header"] [data-detail-title] { font-size: 1.5rem; font-weight: 750; line-height: 1.2; }
+[part="detail-header"] [data-detail-description] { max-width: 50rem; color: var(--ulvia-official-text-secondary, #53645d); }
+[part="back"], [part="detail-actions"] button { min-height: 2.4rem; border-color: var(--ulvia-official-border-default, #c9d5d0); background: var(--ulvia-official-background-raised, #fff); }
+[part="detail-tabs"] { display: flex; gap: .25rem; overflow-x: auto; border-bottom: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); }
+[part="detail-tabs"] button { display: inline-flex; align-items: center; gap: .45rem; margin-bottom: -1px; border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: transparent; white-space: nowrap; }
+[part="detail-tabs"] button[aria-selected="true"] { border-bottom-color: var(--ulvia-official-primary, #176b4d); color: var(--ulvia-official-primary, #176b4d); }
+[part="detail-tabs"] span { display: inline-grid; min-width: 1.45rem; min-height: 1.45rem; place-items: center; border-radius: 999px; background: var(--ulvia-official-background-subtle, #f3f7f5); color: var(--ulvia-official-text-secondary, #53645d); font-size: .72rem; }
+[part="detail-panel"][hidden] { display: none; }
+[part="resource-metrics"] { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); gap: .75rem; }
+[part="resource-metrics"] > div { display: grid; gap: .2rem; padding: 1rem; border: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); border-radius: .75rem; background: var(--ulvia-official-background-raised, #fff); }
+[part="resource-metrics"] strong { font-size: 1.45rem; }
+[part="resource-metrics"] span { color: var(--ulvia-official-text-secondary, #53645d); }
+[part="collection-information"] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 1rem 0 0; border: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); border-radius: .75rem; overflow: clip; }
+[part="collection-information"] > div { min-width: 0; padding: .9rem 1rem; background: var(--ulvia-official-background-raised, #fff); }
+[part="collection-information"] > div:nth-child(odd) { border-inline-end: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); }
+[part="collection-information"] > div:nth-child(n+3) { border-block-start: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); }
+[part="collection-information"] dt { color: var(--ulvia-official-text-muted, #687a72); font-size: .75rem; font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
+[part="collection-information"] dd { min-width: 0; margin: .3rem 0 0; }
+[part="collection-information"] code { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-detail-blocs] { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: .75rem; }
+[part="bloc-card"] { display: grid; align-content: start; gap: .75rem; padding: 1rem; border: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); border-radius: .75rem; background: var(--ulvia-official-background-raised, #fff); }
+[part="bloc-card"] > div { display: grid; gap: .25rem; }
+[part="bloc-card"] h3 { margin: 0; }
+[part="bloc-card"] code { overflow-wrap: anywhere; color: var(--ulvia-official-text-muted, #687a72); font-size: .75rem; }
+[part="bloc-card"] p { color: var(--ulvia-official-text-secondary, #53645d); line-height: 1.45; }
+[part="bloc-card"] small { margin-top: auto; }
 
 dialog { width: min(42rem, calc(100% - 2rem)); max-height: calc(100% - 2rem); padding: 0; border: 1px solid var(--ulvia-official-border-default, #c9d5d0); border-radius: var(--ulvia-official-radius-xl, 1rem); color: inherit; background: var(--ulvia-official-background-raised, #fff); box-shadow: var(--ulvia-official-shadow-lg, 0 20px 50px rgb(20 40 32 / 18%)); }
 dialog::backdrop { background: rgb(11 24 19 / 54%); backdrop-filter: blur(2px); }
@@ -61,4 +92,8 @@ dialog::backdrop { background: rgb(11 24 19 / 54%); backdrop-filter: blur(2px); 
     [part="summary"] { grid-template-columns: 1fr; }
     [part="tabs"] { overflow-x: auto; }
     input { width: 100%; }
+    [part="detail-header"] { grid-template-columns: 1fr; }
+    [part="collection-information"] { grid-template-columns: 1fr; }
+    [part="collection-information"] > div:nth-child(odd) { border-inline-end: 0; }
+    [part="collection-information"] > div + div { border-block-start: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); }
 }

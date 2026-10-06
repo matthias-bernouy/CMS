@@ -5,6 +5,7 @@ export {
     oidcLoginHandler,
     oidcCallbackHandler,
     authMethodsHandler,
+    resolveLoginMethods,
     type AuthMethodsRoutesConfig,
     type OidcAuthHandlers,
 } from "cms-auth/application/http/handlers/authHandlers";

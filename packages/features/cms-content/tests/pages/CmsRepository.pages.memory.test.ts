@@ -108,6 +108,7 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
                         group: "",
                         description: "",
                         compositionHTML: "<main><slot></slot></main>",
+                        uses: ["shared-card"],
                         nativeElement: { accepts: ["a"] },
                         ownership: { kind: "code-managed" as const },
                     },
@@ -119,6 +120,7 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
             {
                 id: "archived-layout",
                 compositionHTML: "<main><slot></slot></main>",
+                uses: ["shared-card"],
                 nativeElement: { accepts: ["a"] },
             },
         ]);

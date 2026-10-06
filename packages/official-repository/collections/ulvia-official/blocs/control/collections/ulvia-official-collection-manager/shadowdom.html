@@ -1,19 +1,34 @@
 <section part="workspace" aria-labelledby="collection-manager-title">
-    <header part="header"><div data-heading></div><div data-header-action></div></header>
-    <div part="notice" data-notice role="status" aria-live="polite"></div>
-    <div part="summary" data-summary></div>
-    <nav part="tabs" data-tabs></nav>
-    <section part="panel" data-panel="installed">
-        <div part="toolbar" data-installed-toolbar></div>
-        <div part="cards" data-installed></div>
-    </section>
-    <section part="panel" data-panel="repository" hidden>
-        <div part="toolbar" data-repository-toolbar></div>
-        <div part="cards" data-releases></div>
-    </section>
-    <section part="panel" data-panel="activity" hidden>
-        <div part="toolbar" data-activity-toolbar></div>
-        <div part="activity" data-activity></div>
+    <div data-catalogue-view>
+        <header part="header"><div data-heading></div><div data-header-action></div></header>
+        <div part="notice" data-notice role="status" aria-live="polite"></div>
+        <div part="summary" data-summary></div>
+        <nav part="tabs" data-tabs></nav>
+        <section part="panel" data-panel="installed">
+            <div part="toolbar" data-installed-toolbar></div>
+            <div part="cards" data-installed></div>
+        </section>
+        <section part="panel" data-panel="repository" hidden>
+            <div part="toolbar" data-repository-toolbar></div>
+            <div part="cards" data-releases></div>
+        </section>
+        <section part="panel" data-panel="activity" hidden>
+            <div part="toolbar" data-activity-toolbar></div>
+            <div part="activity" data-activity></div>
+        </section>
+    </div>
+    <section data-detail-view aria-labelledby="collection-detail-title" hidden>
+        <header part="detail-header">
+            <span data-detail-back></span>
+            <div data-detail-heading></div>
+            <div part="detail-actions" data-detail-actions></div>
+        </header>
+        <div part="notice" data-detail-notice role="status" aria-live="polite"></div>
+        <nav part="detail-tabs" data-detail-tabs></nav>
+        <section part="detail-panel" data-detail-panel="overview"><div data-detail-overview></div></section>
+        <section part="detail-panel" data-detail-panel="theme" hidden><div data-detail-theme></div></section>
+        <section part="detail-panel" data-detail-panel="blocs" hidden><div data-detail-blocs></div></section>
+        <section part="detail-panel" data-detail-panel="texts" hidden><div data-detail-texts></div></section>
     </section>
 </section>
 <div data-dialogs></div>

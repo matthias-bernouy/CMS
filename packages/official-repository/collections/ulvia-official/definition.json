@@ -230,13 +230,12 @@
             "access",
             "catalog",
             "collections",
-            "design",
             "details",
             "files",
             "overview",
             "providers",
             "resources",
-            "theme"
+            "settings"
         ]
     },
     "assets": []

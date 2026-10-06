@@ -53,6 +53,44 @@ test("the Core relay preserves declared bodyless success responses", async () =>
     expect(await response?.text()).toBe("");
 });
 
+test("the Core relay decodes percent-encoded string query parameters exactly once", async () => {
+    const release = {
+        contractId: "ulvia.cms.files",
+        capabilities: [
+            {
+                id: "list",
+                behavior: { effect: "query", execution: "sync" },
+                input: {
+                    type: "object",
+                    properties: { parentId: { type: "string", maxLength: 96 } },
+                    required: [],
+                },
+                output: { type: "null" },
+                binding: {
+                    transport: "http",
+                    method: "GET",
+                    path: "/v1/files",
+                    input: { query: { parentId: "parentId" } },
+                    response: { successStatuses: [204], contentTypes: [], errorStatuses: {} },
+                },
+            },
+        ],
+    } as never;
+    const relay = createCoreContractRelay([release], {
+        invoke: async (_contractId, _capabilityId, input) => {
+            expect(input).toEqual({ parentId: "" });
+            return null;
+        },
+    });
+    const parentId = encodeURIComponent(JSON.stringify(""));
+
+    const response = await relay(
+        new Request(`http://provider.test/v1/files?parentId=${parentId}`, { headers: trustedHeaders() }),
+    );
+
+    expect(response?.status).toBe(204);
+});
+
 test("the Core relay returns the protocol operation handle without validating it as terminal output", async () => {
     const release = {
         contractId: "ulvia.cms.jobs",

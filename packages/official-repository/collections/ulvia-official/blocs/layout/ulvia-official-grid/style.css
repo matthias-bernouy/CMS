@@ -1,20 +1,23 @@
 :host {
-    --ulvia-official-grid-columns: 3;
     --ulvia-official-grid-gap: var(--ulvia-official-spacing-lg, 1.5rem);
     display: block;
     container-type: inline-size;
 }
 
-[part="grid"] { display: grid; grid-template-columns: repeat(var(--ulvia-official-grid-columns), minmax(0, 1fr)); gap: var(--ulvia-official-grid-gap); align-items: stretch; }
-:host([columns="1"]) { --ulvia-official-grid-columns: 1; }
-:host([columns="2"]) { --ulvia-official-grid-columns: 2; }
-:host([columns="4"]) { --ulvia-official-grid-columns: 4; }
-:host([columns="5"]) { --ulvia-official-grid-columns: 5; }
-:host([columns="6"]) { --ulvia-official-grid-columns: 6; }
+[part="grid"] { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: var(--ulvia-official-grid-gap); align-items: stretch; }
+:host([columns="1"]) [part="grid"] { grid-template-columns: minmax(0, 1fr); }
+:host([columns="2"]) [part="grid"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+:host([columns="3"]) [part="grid"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+:host([columns="4"]) [part="grid"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+:host([columns="5"]) [part="grid"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+:host([columns="6"]) [part="grid"] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+:host([align="start"]) [part="grid"] { align-items: start; }
+:host([align="center"]) [part="grid"] { align-items: center; }
+:host([align="end"]) [part="grid"] { align-items: end; }
 :host([gap="none"]) { --ulvia-official-grid-gap: 0rem; }
 :host([gap="sm"]) { --ulvia-official-grid-gap: var(--ulvia-official-spacing-sm, .75rem); }
 :host([gap="md"]) { --ulvia-official-grid-gap: var(--ulvia-official-spacing-md, 1rem); }
 :host([gap="xl"]) { --ulvia-official-grid-gap: var(--ulvia-official-spacing-xl, 2rem); }
 
-@container (max-width: 48rem) { [part="grid"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } :host([columns="1"]) [part="grid"] { grid-template-columns: minmax(0, 1fr); } }
-@container (max-width: 30rem) { [part="grid"] { grid-template-columns: minmax(0, 1fr); } }
+@container (max-width: 48rem) { :host([columns]:not([columns="1"])) [part="grid"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (max-width: 30rem) { :host([columns]) [part="grid"] { grid-template-columns: minmax(0, 1fr); } }

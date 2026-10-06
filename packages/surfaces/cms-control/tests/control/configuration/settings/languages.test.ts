@@ -3,6 +3,10 @@ import { ContentValidationError, defaultSystem, mergeSystemUpdate, validateSetti
 import { parseSettingsUpdateDto } from "cms-control/core/validation/settings/parseUpdateDto";
 
 describe("site language settings", () => {
+    test("starts new sites in French", () => {
+        expect(defaultSystem().site.language).toBe("fr");
+    });
+
     test("keeps an older site's default language without a migration", () => {
         const system = mergeSystemUpdate(defaultSystem(), { site: { language: "fr-FR" } as never });
 

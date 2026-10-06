@@ -43,6 +43,7 @@ export class CollectionSources {
                 publisherId: release.publisherId,
                 version: release.version,
                 digest,
+                configurable: release.configuration !== undefined,
                 ...(repositoryId ? { repositoryId } : {}),
             })),
         };

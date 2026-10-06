@@ -48,6 +48,105 @@ test("collection catalogue stages only the exact repository release", async () =
     });
 });
 
+test("collection catalogue identifies only releases with site configuration", async () => {
+    const store = {
+        snapshot: async () => ({
+            revision: 2,
+            collections: [
+                {
+                    collectionId: "plain",
+                    digest,
+                    release: { publisherId: "ulvia.official", version: "1.0.0" },
+                },
+                {
+                    collectionId: "configured",
+                    digest: `sha256:${"b".repeat(64)}`,
+                    release: {
+                        publisherId: "ulvia.official",
+                        version: "1.0.0",
+                        configuration: { schema: {}, defaults: {} },
+                    },
+                },
+            ],
+        }),
+    };
+    const sources = new CollectionSources(store as never, []);
+
+    expect(await sources.catalogue("default")).toMatchObject({
+        installed: [
+            { collectionId: "plain", configurable: false },
+            { collectionId: "configured", configurable: true },
+        ],
+    });
+});
+
+test("collection details expose translated metadata and the installed bloc catalogue", async () => {
+    const dispatcher = new DefaultCoreCapabilityDispatcher();
+    registerCollectionCapabilities(dispatcher, {
+        collections: {
+            snapshot: async () => ({
+                revision: 7,
+                collections: [
+                    {
+                        collectionId: "sample",
+                        digest,
+                        configuration: {},
+                        textOverrides: {},
+                        release: {
+                            publisherId: "ulvia.official",
+                            collectionId: "sample",
+                            version: "1.0.0",
+                            dataGeneration: 1,
+                            locale: "en",
+                            name: "collection.name",
+                            description: "collection.description",
+                            translations: {
+                                en: {
+                                    "collection.name": "Sample collection",
+                                    "collection.description": "Useful building blocks.",
+                                    "bloc.card.label": "Card",
+                                    "bloc.card.description": "A reusable card.",
+                                },
+                            },
+                            assets: [],
+                            pages: [],
+                            texts: [],
+                            blocs: [
+                                {
+                                    id: "sample-card",
+                                    label: "bloc.card.label",
+                                    description: "bloc.card.description",
+                                    generation: 2,
+                                    internal: false,
+                                    surfaces: ["control", "delivery"],
+                                },
+                            ],
+                        },
+                    },
+                ],
+            }),
+        },
+    } as never);
+
+    await expect(
+        dispatcher.invoke("ulvia.cms.collections", "get", { collectionId: "sample" }, context),
+    ).resolves.toMatchObject({
+        revision: 7,
+        name: "Sample collection",
+        description: "Useful building blocks.",
+        blocs: [
+            {
+                id: "sample-card",
+                label: "Card",
+                description: "A reusable card.",
+                generation: 2,
+                internal: false,
+                surfaces: ["control", "delivery"],
+            },
+        ],
+    });
+});
+
 test("collection commands stage installs and require migrations for generation changes", async () => {
     const installedRelease = {
         publisherId: "ulvia.official",

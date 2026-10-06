@@ -7,7 +7,13 @@
     "order": 10,
     "internal": true,
     "surfaces": ["control"],
-    "uses": ["ulvia-official-action", "ulvia-official-badge", "ulvia-official-card"],
+    "uses": [
+        "ulvia-official-action",
+        "ulvia-official-badge",
+        "ulvia-official-card",
+        "ulvia-official-collection-texts",
+        "ulvia-official-collection-theme"
+    ],
     "requires": [
         { "contractId": "ulvia.cms.collections", "capabilityId": "catalogue", "versionRange": "^1.0.0" },
         { "contractId": "ulvia.cms.collections", "capabilityId": "get", "versionRange": "^1.0.0" },
@@ -18,7 +24,12 @@
         { "contractId": "ulvia.cms.collections", "capabilityId": "apply-migration", "versionRange": "^1.0.0" },
         { "contractId": "ulvia.cms.operations", "capabilityId": "status", "versionRange": "^1.0.0" },
         { "contractId": "ulvia.cms.operations", "capabilityId": "list", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.operations", "capabilityId": "get", "versionRange": "^1.0.0" }
+        { "contractId": "ulvia.cms.operations", "capabilityId": "get", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.design", "capabilityId": "get-theme", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.design", "capabilityId": "save-theme", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.design", "capabilityId": "overview", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.design", "capabilityId": "get-texts", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.design", "capabilityId": "save-texts", "versionRange": "^1.0.0" }
     ],
     "slots": {}
 }

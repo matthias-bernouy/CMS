@@ -29,6 +29,7 @@
         "typecheck": "tsc --build",
         "clean": "tsc --build --clean",
         "test": "bun test",
+        "test:control-smoke": "ULVIA_RUN_CONTROL_SMOKE=1 bun test packages/runtimes/ulvia-cli/tests/dev/control-smoke.browser.test.ts",
         "check:ui-contracts": "bun run quality/ui-contracts/check.ts"
     },
     "devDependencies": {

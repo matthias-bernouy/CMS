@@ -9,7 +9,7 @@ export function defaultSystem(): TSystem {
             favicon: "",
             visible: true,
             host: "",
-            language: "",
+            language: "fr",
             additionalLanguages: [],
             activeLanguages: [],
             organization: emptySiteOrganization(),

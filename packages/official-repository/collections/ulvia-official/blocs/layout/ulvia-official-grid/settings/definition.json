@@ -25,5 +25,21 @@
                 { "value": "xl", "label": "setting.option.extra-large" }
             ]
         }
+    },
+    {
+        "id": "align",
+        "label": "setting.alignment.label",
+        "group": "setting.group.layout",
+        "type": "string",
+        "default": "stretch",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "stretch", "label": "setting.option.stretch" },
+                { "value": "start", "label": "setting.option.start" },
+                { "value": "center", "label": "setting.option.center" },
+                { "value": "end", "label": "setting.option.end" }
+            ]
+        }
     }
 ]

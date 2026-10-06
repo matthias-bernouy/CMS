@@ -1,4 +1,5 @@
 import type { CoreStores } from "../../stores/core";
+import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
 
 export function projectMigrationPlan(plan: Awaited<ReturnType<CoreStores["collectionMigrations"]["plan"]>>) {
     return {
@@ -46,11 +47,26 @@ export function projectInstalled(
         assetCount: release.assets.length,
         textCount: release.texts?.length ?? 0,
         themeTokenCount: release.theme?.categories.reduce((total, category) => total + category.tokens.length, 0) ?? 0,
+        configurable: release.configuration !== undefined,
         ...(detailed
             ? {
+                  name: resolveCollectionTranslation(release, release.name, release.locale),
+                  description: release.description
+                      ? resolveCollectionTranslation(release, release.description, release.locale)
+                      : "",
                   revision,
                   configurationJson: JSON.stringify(installation.configuration),
                   overriddenLocaleCount: Object.keys(installation.textOverrides).length,
+                  blocs: release.blocs.map((bloc) => ({
+                      id: bloc.id,
+                      label: resolveCollectionTranslation(release, bloc.label, release.locale),
+                      description: bloc.description
+                          ? resolveCollectionTranslation(release, bloc.description, release.locale)
+                          : "",
+                      generation: bloc.generation ?? 1,
+                      internal: bloc.internal ?? false,
+                      surfaces: bloc.surfaces ?? ["control", "delivery"],
+                  })),
               }
             : {}),
     };

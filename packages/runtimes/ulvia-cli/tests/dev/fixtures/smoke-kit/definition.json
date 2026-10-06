@@ -1,0 +1,12 @@
+{
+    "kind": "collection",
+    "protocol": "ulvia-collection/v1",
+    "schemaDialect": "ulvia-schema/v1",
+    "collectionId": "smoke-kit",
+    "publisherId": "ulvia.test",
+    "version": "1.0.0",
+    "name": "collection.name",
+    "description": "collection.description",
+    "locale": "en",
+    "exports": "*"
+}

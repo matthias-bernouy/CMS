@@ -1,14 +1,12 @@
 {
     "collection.description": "Official foundation blocs, translated texts, semantic theme tokens and reusable Control Pages.",
     "collection.name": "Ulvia Official",
-    "page.access.description": "Inspect CMS members, login providers and safe site settings.",
-    "page.access.name": "Access & settings",
+    "page.access.description": "Manage CMS members, administrator access and sign-in methods.",
+    "page.access.name": "Users",
     "page.catalog.description": "Live catalog items provided through the selected catalog.items source.",
     "page.catalog.name": "Catalog",
     "page.collections.description": "Inspect exact installed collection releases and their resource footprint.",
     "page.collections.name": "Collections",
-    "page.design.description": "Inspect effective languages, themes, token sources and collection texts.",
-    "page.design.name": "Design & languages",
     "page.details.description": "Edit one site Page through revision-checked Core capabilities.",
     "page.details.name": "Page details",
     "page.files.description": "Browse and organize the author file library.",
@@ -19,6 +17,6 @@
     "page.providers.name": "Providers",
     "page.resources.description": "Official reusable blocs available to this workspace.",
     "page.resources.name": "Blocs",
-    "page.theme.description": "Official theme tokens available to this workspace.",
-    "page.theme.name": "Theme"
+    "page.settings.description": "Configure the site identity, availability and languages.",
+    "page.settings.name": "Settings"
 }

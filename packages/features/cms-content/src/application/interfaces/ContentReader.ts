@@ -7,6 +7,7 @@ export type RenderableBloc = {
     id: string;
     compositionHTML?: string;
     componentHTML?: string;
+    uses?: readonly string[];
     nativeElement?: TBloc["nativeElement"];
 };
 

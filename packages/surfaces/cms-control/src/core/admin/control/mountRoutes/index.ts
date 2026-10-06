@@ -7,6 +7,7 @@ import {
     oidcCallbackHandler,
     oidcLoginHandler,
     registerPublicAuthRoutes,
+    resolveLoginMethods,
 } from "@bernouy/cms-auth/http";
 import { CMS_CACHE_KEYS, createContentReader, generateStyleEntry } from "@bernouy/cms-content";
 import { CMS_FILES_ROUTE, filesPrefix } from "@bernouy/cms-content/files/urls";
@@ -38,7 +39,21 @@ export function mountControlCmsRoutes(
     const apiAuthorizationGuard = createControlApiAuthorizationGuard(cms.basePath, cms);
     const maintenanceGuard = createControlMaintenanceGuard(cms);
     mountControlBrowserAssets(runner, state.cache);
-    runner.addEndpoint("GET", "/login", (req) => renderLoginPage(req, cms.basePath));
+    runner.addEndpoint("GET", "/login", async (req) => {
+        const supportedKinds: ("local" | "oidc")[] = [];
+        if (authBackends.local) {
+            supportedKinds.push("local");
+        }
+        if (authBackends.oidc) {
+            supportedKinds.push("oidc");
+        }
+        const methods = await resolveLoginMethods({
+            publicBasePath: `${cms.basePath}${AUTH_ROUTES.base}`,
+            identityProviders: state.identityProviders,
+            supportedKinds,
+        });
+        return renderLoginPage(req, cms.basePath, methods);
+    });
 
     const controlPublicAuth = state.configuration.publicAuth
         ? { ...state.configuration.publicAuth, allowSignup: false }

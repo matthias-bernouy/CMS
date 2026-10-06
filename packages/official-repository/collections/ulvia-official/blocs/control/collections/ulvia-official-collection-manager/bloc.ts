@@ -2,6 +2,7 @@ import { Component } from "@bernouy/components/base";
 import template from "./shadowdom.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 import { callCapability, CapabilityError, waitForOperation } from "./runtime/client";
+import { renderCollectionDetail } from "./runtime/detail";
 import type {
     Catalogue,
     CollectionDetail,
@@ -30,6 +31,7 @@ export class Bloc extends Component {
         this.lifecycle = new AbortController();
         this.shadowRoot?.addEventListener("click", this.handleClick);
         this.shadowRoot?.addEventListener("input", this.handleInput);
+        window.addEventListener("popstate", this.restoreRoute);
         void this.load();
     }
 
@@ -37,6 +39,7 @@ export class Bloc extends Component {
         this.lifecycle.abort();
         this.shadowRoot?.removeEventListener("click", this.handleClick);
         this.shadowRoot?.removeEventListener("input", this.handleInput);
+        window.removeEventListener("popstate", this.restoreRoute);
     }
 
     private load = async (): Promise<void> => {
@@ -48,6 +51,7 @@ export class Bloc extends Component {
             ]);
             this.render();
         }, "Collection workspace refreshed.");
+        await this.restoreRoute();
     };
 
     private handleClick = (event: Event): void => {
@@ -57,6 +61,10 @@ export class Bloc extends Component {
         }
         if (control.dataset.tab) {
             this.selectTab(control.dataset.tab);
+            return;
+        }
+        if (control.dataset.detailTab) {
+            this.selectDetailTab(control.dataset.detailTab, true);
             return;
         }
         const action = control.dataset.action;
@@ -69,6 +77,10 @@ export class Bloc extends Component {
         const release = this.catalogue.releases.find(({ digest }) => digest === control.dataset.key);
         if (action === "refresh") {
             void this.load();
+        } else if (action === "manage" && control.dataset.key) {
+            void this.openDetail(control.dataset.key, "overview", true);
+        } else if (action === "back") {
+            this.closeDetail(true);
         } else if (action === "configure" && control.dataset.key) {
             void this.openConfiguration(control.dataset.key);
         } else if (action === "save-configuration") {
@@ -118,6 +130,21 @@ export class Bloc extends Component {
             this.required<HTMLTextAreaElement>("[data-configuration-json]").value =
                 this.configuration.configurationJson;
             this.required<HTMLDialogElement>("[data-configuration]").showModal();
+        });
+    }
+
+    private async openDetail(collectionId: string, section = "overview", navigate = false): Promise<void> {
+        await this.run(async () => {
+            this.configuration = await callCapability<CollectionDetail>("ulvia.cms.collections", "get", {
+                collectionId,
+            });
+            renderCollectionDetail(this.shadowRoot!, this.configuration);
+            this.required<HTMLElement>("[data-catalogue-view]").hidden = true;
+            this.required<HTMLElement>("[data-detail-view]").hidden = false;
+            this.selectDetailTab(section, false);
+            if (navigate) {
+                this.updateDetailUrl(collectionId, section, true);
+            }
         });
     }
 
@@ -239,8 +266,58 @@ export class Bloc extends Component {
         }
     }
 
+    private selectDetailTab(section: string, navigate: boolean): void {
+        const selected = ["overview", "theme", "blocs", "texts"].includes(section) ? section : "overview";
+        for (const button of this.shadowRoot!.querySelectorAll<HTMLButtonElement>("[data-detail-tab]")) {
+            button.setAttribute("aria-selected", String(button.dataset.detailTab === selected));
+        }
+        for (const panel of this.shadowRoot!.querySelectorAll<HTMLElement>("[data-detail-panel]")) {
+            panel.hidden = panel.dataset.detailPanel !== selected;
+        }
+        if (navigate && this.configuration) {
+            this.updateDetailUrl(this.configuration.collectionId, selected, true);
+        }
+    }
+
+    private closeDetail(navigate: boolean): void {
+        this.required<HTMLElement>("[data-detail-view]").hidden = true;
+        this.required<HTMLElement>("[data-catalogue-view]").hidden = false;
+        if (navigate) {
+            const url = new URL(location.href);
+            url.searchParams.delete("collection");
+            url.searchParams.delete("section");
+            history.pushState(null, "", url);
+        }
+    }
+
+    private readonly restoreRoute = async (): Promise<void> => {
+        const url = new URL(location.href);
+        const collectionId = url.searchParams.get("collection");
+        if (!collectionId) {
+            this.closeDetail(false);
+            return;
+        }
+        if (!this.catalogue.installed.some((item) => item.collectionId === collectionId)) {
+            this.closeDetail(false);
+            return;
+        }
+        if (this.configuration?.collectionId === collectionId) {
+            this.selectDetailTab(url.searchParams.get("section") ?? "overview", false);
+            return;
+        }
+        await this.openDetail(collectionId, url.searchParams.get("section") ?? "overview", false);
+    };
+
+    private updateDetailUrl(collectionId: string, section: string, push: boolean): void {
+        const url = new URL(location.href);
+        url.searchParams.set("collection", collectionId);
+        url.searchParams.set("section", section);
+        history[push ? "pushState" : "replaceState"](null, "", url);
+    }
+
     private notice(message: string, error = false): void {
-        const notice = this.required("[data-notice]");
+        const detailVisible = !this.required<HTMLElement>("[data-detail-view]").hidden;
+        const notice = this.required(detailVisible ? "[data-detail-notice]" : "[data-notice]");
         notice.textContent = message;
         notice.toggleAttribute("data-error", error);
     }

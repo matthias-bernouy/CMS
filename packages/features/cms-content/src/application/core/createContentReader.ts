@@ -40,6 +40,7 @@ export function createContentReader(repository: CmsRepository): ContentReader {
                 id: bloc.id,
                 ...(bloc.compositionHTML ? { compositionHTML: bloc.compositionHTML } : {}),
                 ...(bloc.componentHTML ? { componentHTML: bloc.componentHTML } : {}),
+                ...(bloc.uses?.length ? { uses: [...bloc.uses] } : {}),
                 ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
             })),
         getBlocViewJS: (tag) => repository.getBlocViewJS(tag),

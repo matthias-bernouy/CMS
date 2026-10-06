@@ -1,0 +1,23 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-settings-manager",
+    "label": "bloc.settings-manager.label",
+    "description": "bloc.settings-manager.description",
+    "category": "bloc.category.administration",
+    "order": 20,
+    "internal": true,
+    "surfaces": ["control"],
+    "uses": [
+        "ulvia-official-action",
+        "ulvia-official-input",
+        "ulvia-official-select",
+        "ulvia-official-tag-input"
+    ],
+    "requires": [
+        { "contractId": "ulvia.cms.access", "capabilityId": "overview", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.access", "capabilityId": "update-site", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.design", "capabilityId": "overview", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.design", "capabilityId": "update-languages", "versionRange": "^1.0.0" }
+    ],
+    "slots": {}
+}

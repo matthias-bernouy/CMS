@@ -1,0 +1,50 @@
+:host { display: block; min-width: 0; color: var(--ulvia-official-text-primary, #17211d); font-family: var(--ulvia-official-font-family-main, system-ui, sans-serif); container-type: inline-size; }
+* { box-sizing: border-box; }
+button, input, select { color: inherit; font: inherit; }
+button { cursor: pointer; }
+h3, p { margin: 0; }
+[part="workspace"] { display: grid; gap: 1rem; }
+[part="toolbar"] { display: grid; grid-template-columns: minmax(12rem, 18rem) auto minmax(0, 1fr); align-items: end; gap: 1rem; }
+[part="profile"] { display: grid; gap: .4rem; font-weight: 700; }
+[part="mode"] { display: inline-flex; width: max-content; padding: .2rem; border-radius: .6rem; background: var(--ulvia-official-background-subtle, #f3f7f5); }
+[part="mode"] button { min-height: 2.4rem; padding: .45rem .85rem; border: 0; border-radius: .45rem; background: transparent; font-weight: 700; }
+[part="mode"] button[aria-pressed="true"] { color: var(--ulvia-official-on-primary, #fff); background: var(--ulvia-official-primary, #176b4d); box-shadow: var(--ulvia-official-shadow-sm, 0 1px 2px rgb(0 0 0 / 10%)); }
+[part="actions"] { display: flex; justify-content: flex-end; align-items: center; gap: .75rem; }
+[part="actions"] > span { color: var(--ulvia-official-text-secondary, #53645d); font-size: .85rem; font-weight: 650; }
+[part="editor"] { display: grid; min-height: 34rem; grid-template-columns: minmax(11rem, 14rem) minmax(18rem, 1fr) minmax(16rem, 20rem); border: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); border-radius: var(--ulvia-official-radius-xl, 1rem); overflow: clip; background: var(--ulvia-official-background-raised, #fff); }
+[part="editor"][hidden], [part="empty"][hidden] { display: none; }
+[part="token-navigation"], [part="inspector"] { min-width: 0; padding: 1rem; background: var(--ulvia-official-background-subtle, #f3f7f5); }
+[part="token-navigation"] { border-inline-end: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); }
+[part="token-navigation"] > label { display: block; margin-bottom: .4rem; font-weight: 700; }
+[part="token-navigation"] > input { width: 100%; min-height: 2.55rem; padding: .55rem .7rem; border: 1px solid var(--ulvia-official-border-default, #c9d5d0); border-radius: .5rem; background: var(--ulvia-official-background-raised, #fff); }
+[data-categories] { display: grid; gap: 1rem; margin-top: 1rem; }
+[data-categories] section, [data-categories] section > div { display: grid; gap: .25rem; }
+[data-categories] section > strong { padding: .35rem .5rem; color: var(--ulvia-official-text-muted, #687a72); font-size: .74rem; letter-spacing: .05em; text-transform: uppercase; }
+[data-categories] button { min-height: 2.35rem; padding: .5rem .6rem; border: 0; border-radius: .45rem; background: transparent; text-align: start; }
+[data-categories] button:hover { background: var(--ulvia-official-background-raised, #fff); }
+[data-categories] button[aria-current] { color: var(--ulvia-official-primary, #176b4d); background: var(--ulvia-official-primary-subtle, #e4f3ed); font-weight: 700; }
+[part="preview"] { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); align-content: start; gap: .75rem; padding: 1rem; }
+[part="preview"] button { display: grid; min-width: 0; min-height: 8rem; align-content: end; padding: .8rem; border: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); border-radius: .75rem; gap: .35rem; background: var(--ulvia-official-background-raised, #fff); text-align: start; }
+[part="preview"] button:hover, [part="preview"] button[aria-current] { border-color: var(--ulvia-official-primary, #176b4d); }
+[part="preview"] button[aria-current] { box-shadow: 0 0 0 2px var(--ulvia-official-primary-subtle, #e4f3ed); }
+[part="preview"] span { display: block; width: 100%; min-height: 2.5rem; border-radius: .45rem; background: var(--token-value, transparent); }
+[part="preview"] span[data-type="length"] { width: min(100%, var(--token-value)); min-width: .25rem; min-height: 1rem; background: var(--ulvia-official-primary, #176b4d); }
+[part="preview"] span[data-type="shadow"] { background: var(--ulvia-official-background-raised, #fff); box-shadow: var(--token-value); }
+[part="preview"] span[data-type="font-family"]::before { content: "Aa"; font: 700 2rem/1 var(--token-value); }
+[part="preview"] code { overflow: hidden; color: var(--ulvia-official-text-muted, #687a72); font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
+[part="inspector"] { display: grid; align-content: start; border-inline-start: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); gap: .75rem; }
+[part="inspector"] > p { color: var(--ulvia-official-text-secondary, #53645d); line-height: 1.45; }
+[part="inspector"] > code { overflow-wrap: anywhere; font-size: .78rem; }
+[part="inspector"] form, [part="inspector"] label { display: grid; gap: .55rem; }
+[part="inspector"] label { font-weight: 700; }
+[part="inspector"] input { width: 100%; min-height: 2.75rem; padding: .6rem .7rem; border: 1px solid var(--ulvia-official-border-default, #c9d5d0); border-radius: .5rem; background: var(--ulvia-official-background-raised, #fff); }
+[part="inspector-actions"] { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .5rem; }
+[part="inspector-actions"] button { min-height: 2.4rem; padding: .45rem .75rem; border: 1px solid var(--ulvia-official-border-default, #c9d5d0); border-radius: .5rem; background: var(--ulvia-official-background-raised, #fff); font-weight: 700; }
+[part="inspector-actions"] button[type="submit"] { border-color: var(--ulvia-official-primary, #176b4d); color: var(--ulvia-official-on-primary, #fff); background: var(--ulvia-official-primary, #176b4d); }
+[part="notice"]:empty { display: none; }
+[part="notice"] { padding: .75rem 1rem; border-inline-start: .25rem solid var(--ulvia-official-info, #2367a6); background: var(--ulvia-official-background-subtle, #f3f7f5); }
+[part="notice"][data-error] { border-color: var(--ulvia-official-danger, #b42318); color: var(--ulvia-official-danger, #8a1c13); font-weight: 700; }
+[part="empty"] { padding: 3rem 1rem; border: 1px dashed var(--ulvia-official-border-default, #c9d5d0); border-radius: .75rem; text-align: center; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--ulvia-official-focus-ring, #6bbf9f); outline-offset: 2px; }
+@container (max-width: 68rem) { [part="editor"] { grid-template-columns: minmax(11rem, 14rem) minmax(0, 1fr); } [part="inspector"] { grid-column: 1 / -1; border-block-start: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); border-inline-start: 0; } }
+@container (max-width: 44rem) { [part="toolbar"], [part="editor"] { grid-template-columns: 1fr; } [part="actions"] { justify-content: flex-start; } [part="token-navigation"] { border-inline-end: 0; border-block-end: 1px solid var(--ulvia-official-border-subtle, #e2e9e6); } [part="inspector"] { grid-column: auto; } }

@@ -12,10 +12,19 @@ describe("renderPageDocument", () => {
                 language: "en",
                 repository: {
                     async getRenderableBlocs() {
-                        return [{ id: "atlas-card", componentHTML: "<article><slot></slot></article>" }];
+                        return [
+                            {
+                                id: "atlas-card",
+                                componentHTML: "<article><slot></slot></article>",
+                                uses: ["atlas-action"],
+                            },
+                            { id: "atlas-action" },
+                        ];
                     },
                     async getBlocViewJS(tag) {
-                        return tag === "atlas-card" ? "customElements.define('atlas-card', class {})" : null;
+                        return ["atlas-action", "atlas-card"].includes(tag)
+                            ? `customElements.define('${tag}', class {})`
+                            : null;
                     },
                 },
                 prepareBody(body) {
@@ -27,7 +36,7 @@ describe("renderPageDocument", () => {
         expect(rendered.html).toContain("<atlas-card><article>Hello</article></atlas-card>");
         expect(rendered.html).not.toContain("script");
         expect(rendered.html).not.toContain("onclick");
-        expect(rendered.usedTags).toEqual(["atlas-card"]);
+        expect(rendered.usedTags).toEqual(["atlas-action", "atlas-card"]);
         expect(rendered.hasBindingCore).toBe(true);
         expect(document.body.hasAttribute("data-prepared")).toBe(true);
     });

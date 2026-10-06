@@ -15,7 +15,12 @@ export function renderInstalled(target: Element, items: InstalledCollection[], q
         ...visible.map((item) => {
             const itemCard = card(item.collectionId, `${item.publisherId} · ${item.version}`);
             itemCard.body.append(code(item.digest));
-            itemCard.element.append(action("Configure", "configure", item.collectionId));
+            itemCard.element.append(action("Manage", "manage", item.collectionId, "primary"));
+            if (item.configurable) {
+                itemCard.element.append(action("Configure", "configure", item.collectionId));
+            } else {
+                itemCard.body.append(meta("No site settings"));
+            }
             return itemCard.element;
         }),
     );

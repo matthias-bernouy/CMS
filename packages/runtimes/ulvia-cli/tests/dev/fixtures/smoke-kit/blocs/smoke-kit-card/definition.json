@@ -1,0 +1,16 @@
+{
+    "kind": "component",
+    "id": "smoke-kit-card",
+    "label": "bloc.card.label",
+    "description": "bloc.card.description",
+    "category": "bloc.category.components",
+    "order": 10,
+    "uses": [],
+    "requires": [],
+    "slots": {
+        "content": {
+            "accepts": [{ "kind": "rich-text", "profile": "prose" }],
+            "max": 1
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-collection-texts",
+    "label": "bloc.collection-texts.label",
+    "description": "bloc.collection-texts.description",
+    "category": "bloc.category.administration",
+    "order": 40,
+    "internal": true,
+    "surfaces": ["control"],
+    "uses": ["ulvia-official-action", "ulvia-official-select"],
+    "requires": [
+        { "contractId": "ulvia.cms.design", "capabilityId": "overview", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.design", "capabilityId": "get-texts", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.design", "capabilityId": "save-texts", "versionRange": "^1.0.0" }
+    ],
+    "slots": {}
+}

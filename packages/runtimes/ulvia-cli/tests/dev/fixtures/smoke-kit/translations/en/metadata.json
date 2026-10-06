@@ -1,0 +1,7 @@
+{
+    "bloc.card.description": "A minimal component used to verify collection detail resources.",
+    "bloc.card.label": "Smoke card",
+    "bloc.category.components": "Components",
+    "collection.description": "A minimal immutable release used to verify installation through Control.",
+    "collection.name": "Smoke Kit"
+}

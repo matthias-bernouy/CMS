@@ -1,42 +1,30 @@
-<ulvia-official-app-shell layout="sidebar" sticky-header>
-    <strong slot="brand">Ulvia</strong>
-    <nav slot="secondary-navigation" aria-label="Workspace">
-        <strong>Content</strong>
-        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'>Pages</a>
-        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"collections"}'>Collections</a>
-        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"files"}'>Files</a>
-        <strong>Configuration</strong>
-        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"design"}'>Design &amp; languages</a>
-        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"providers"}'>Providers</a>
-        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"access"}'>Access &amp; settings</a>
-    </nav>
-    <ulvia-official-page-shell slot="content" width="xl">
-        <div slot="title"><h1>Pages</h1></div>
-        <div slot="description"><p>Create and manage site Pages through the selected local Core provider.</p></div>
-        <ulvia-official-surface slot="content" elevation="sm" padding="lg">
-            <h2>Create a Delivery Page</h2>
-            <p>The Page is created as a draft. Open it afterwards to edit its document and publish it.</p>
-            <form cms-source="/.cms/call/ulvia.cms.pages/create as created" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" data-cms-success-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"details"}' data-cms-page-suffix="?id={{ created.body.id }}">
+<ulvia-official-control-workspace>
+    <h1 slot="title">Pages</h1>
+    <p slot="description">Create and manage site Pages through the selected local Core provider.</p>
+        <ulvia-official-surface slot="content" appearance="elevated" padding="lg">
+            <h2 slot="content">Create a Delivery Page</h2>
+            <p slot="content">The Page is created as a draft. Open it afterwards to edit its document and publish it.</p>
+            <form slot="content" cms-source="/.cms/call/ulvia.cms.pages/create as created" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" data-cms-success-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"details"}' data-cms-page-suffix="?id={{ created.body.id }}">
                 <input type="hidden" name="surface" value="delivery">
-                <ulvia-official-grid min-item-width="16rem" gap="md">
-                    <ulvia-official-field label-position="top">
+                <ulvia-official-grid gap="md">
+                    <ulvia-official-field slot="items" label-position="top">
                         <label slot="label" for="new-page-title">Title</label>
                         <ulvia-official-input slot="control">
                             <input id="new-page-title" type="text" name="title" maxlength="70" autocomplete="off" placeholder="About us" required>
                         </ulvia-official-input>
                     </ulvia-official-field>
-                    <ulvia-official-field label-position="top">
+                    <ulvia-official-field slot="items" label-position="top">
                         <label slot="label" for="new-page-path">Public path</label>
-                        <span slot="help">Use a path such as /about. Reserved CMS and Control paths are rejected.</span>
+                        <span slot="description">Use a path such as /about. Reserved CMS and Control paths are rejected.</span>
                         <ulvia-official-input slot="control">
                             <input id="new-page-path" type="text" name="path" maxlength="2048" autocomplete="off" placeholder="/about" required>
                         </ulvia-official-input>
                     </ulvia-official-field>
                 </ulvia-official-grid>
                 <ulvia-official-form-actions align="end">
-                    <p role="status" aria-live="polite" cms-condition="$source.loading">Creating…</p>
-                    <p role="alert" cms-condition="$source.error">The Page could not be created. Check that its path is unique and valid.</p>
-                    <ulvia-official-action variant="filled" tone="primary"><button type="submit">Create Page</button></ulvia-official-action>
+                    <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loading">Creating…</p>
+                    <p slot="actions" role="alert" cms-condition="$source.error">The Page could not be created. Check that its path is unique and valid.</p>
+                    <ulvia-official-action slot="actions" variant="filled" tone="primary"><button type="submit">Create Page</button></ulvia-official-action>
                 </ulvia-official-form-actions>
             </form>
         </ulvia-official-surface>
@@ -54,20 +42,23 @@
                     <h2>Page catalogue</h2>
                     <p>{{ pages.items.length }} Pages in this batch.</p>
                 </header>
-                <ul cms-condition="pages.items.length">
-                    <li cms-repeat="pages.items as page">
-                        <header>
-                            <strong>{{ page.title }}</strong>
-                            <span>{{ page.path }}</span>
-                            <small>{{ page.surface }} · revision {{ page.revision }}</small>
-                        </header>
-                        <ulvia-official-cluster align="center" justify="between">
-                            <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"details"}' data-cms-page-suffix="?id={{ page.id }}">Open Page</a>
-                            <form cms-source="/.cms/call/ulvia.cms.pages/rename" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#pages-list">
+                <ulvia-official-grid cms-condition="pages.items.length" gap="md" role="list">
+                    <ulvia-official-surface slot="items" cms-repeat="pages.items as page" appearance="outlined" padding="lg" role="listitem">
+                        <ulvia-official-stack slot="content" gap="md">
+                            <header slot="items">
+                                <ulvia-official-cluster align="center" justify="between">
+                                    <h3 slot="items">{{ page.title }}</h3>
+                                    <ulvia-official-badge slot="items" tone="neutral"><span slot="label">{{ page.surface }}</span></ulvia-official-badge>
+                                </ulvia-official-cluster>
+                                <p><code>{{ page.path }}</code></p>
+                                <small>Revision {{ page.revision }}</small>
+                            </header>
+                            <ulvia-official-action slot="items" variant="filled" tone="secondary" size="sm"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"details"}' data-cms-page-suffix="?id={{ page.id }}">Open Page</a></ulvia-official-action>
+                            <form slot="items" cms-source="/.cms/call/ulvia.cms.pages/rename" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#pages-list">
                                 <input type="hidden" name="id" value="{{ page.id }}">
                                 <input type="hidden" name="expectedRevision" value="{{ page.revision }}" cms-form-value-type="number">
-                                <ulvia-official-field label-position="inline">
-                                    <span slot="label">Title</span>
+                                <ulvia-official-field label-position="top">
+                                    <span slot="label">Rename Page</span>
                                     <ulvia-official-input slot="control">
                                         <input type="text" name="title" value="{{ page.title }}" maxlength="70" autocomplete="off" aria-label="Page title" required>
                                     </ulvia-official-input>
@@ -78,14 +69,13 @@
                                 <p role="status" aria-live="polite" cms-condition="$source.loading">Saving…</p>
                                 <p role="alert" cms-condition="$source.error">Reload this catalogue before retrying.</p>
                             </form>
-                        </ulvia-official-cluster>
-                    </li>
-                </ul>
-                <div cms-condition="pages.items.length == 0">
-                    <h3>No Pages yet</h3>
-                    <p>Create the first Delivery Page to start building the site.</p>
-                </div>
+                        </ulvia-official-stack>
+                    </ulvia-official-surface>
+                </ulvia-official-grid>
+                <ulvia-official-surface cms-condition="pages.items.length == 0" appearance="subtle" padding="lg">
+                    <h3 slot="content">No Pages yet</h3>
+                    <p slot="content">Create the first Delivery Page to start building the site.</p>
+                </ulvia-official-surface>
             </div>
         </section>
-    </ulvia-official-page-shell>
-</ulvia-official-app-shell>
+</ulvia-official-control-workspace>

@@ -1,4 +1,9 @@
-import { CoreCapabilityDispatchError, type CoreCapabilityRegistry, type ThemeSettings } from "@bernouy/cms-content";
+import {
+    composeCollectionThemes,
+    CoreCapabilityDispatchError,
+    type CoreCapabilityRegistry,
+    type ThemeSettings,
+} from "@bernouy/cms-content";
 import {
     MAX_CAPABILITY_JSON_BYTES,
     MAX_CAPABILITY_JSON_DEPTH,
@@ -37,18 +42,34 @@ export function registerDesignCapabilities(dispatcher: CoreCapabilityRegistry, c
             };
         }),
     );
-    dispatcher.register("ulvia.cms.design", "get-theme", async () => {
-        const snapshot = await readSystemSnapshot(core.repo);
+    dispatcher.register("ulvia.cms.design", "get-theme", async (_input, context) => {
+        const [snapshot, collections] = await Promise.all([
+            readSystemSnapshot(core.repo),
+            core.collections.snapshot(context.siteId),
+        ]);
+        const theme = composeCollectionThemes(
+            snapshot.system.theme,
+            collections.collections.map(({ release }) => release),
+            snapshot.system.site.language,
+        );
         return {
             revision: snapshot.revision,
-            activeThemeId: snapshot.system.theme.activeThemeId,
-            themeJson: JSON.stringify(snapshot.system.theme),
+            activeThemeId: theme.activeThemeId,
+            themeJson: JSON.stringify(theme),
         };
     });
-    dispatcher.register("ulvia.cms.design", "save-theme", async (input) =>
+    dispatcher.register("ulvia.cms.design", "save-theme", async (input, context) =>
         designCommand(async () => {
-            const theme = parseJson(input.themeJson) as ThemeSettings;
             const expectedRevision = revision(input.expectedRevision);
+            const [snapshot, collections] = await Promise.all([
+                readSystemSnapshot(core.repo),
+                core.collections.snapshot(context.siteId),
+            ]);
+            const theme = composeCollectionThemes(
+                parseJson(input.themeJson) as ThemeSettings,
+                collections.collections.map(({ release }) => release),
+                snapshot.system.site.language,
+            );
             const system = await core.repo.updateSystem({ theme }, expectedRevision);
             return {
                 revision: expectedRevision + 1,

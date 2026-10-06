@@ -15,19 +15,20 @@ export function installationCard(item: ProviderInstallation): HTMLElement {
         text("small", `Manifest ${item.manifestVersion} · revision ${item.revision}`),
     );
     const status = badge(item.status);
-    status.slot = "footer";
-    const actions = document.createElement("div");
-    actions.slot = "actions";
-    actions.setAttribute("part", "card-actions");
+    body.append(status);
+    const actions: HTMLElement[] = [];
     if (item.status === "enabled") {
-        actions.append(action("Disable", "disable", item, "secondary"));
+        actions.push(action("Disable", "disable", item, "secondary"));
     } else if (item.status === "disabled") {
-        actions.append(action("Enable", "enable", item, "primary"));
+        actions.push(action("Enable", "enable", item, "primary"));
     }
     if (item.status !== "revoked") {
-        actions.append(action("Revoke", "revoke", item, "danger"));
+        actions.push(action("Revoke", "revoke", item, "danger"));
     }
-    card.append(eyebrow, title, body, status, actions);
+    for (const control of actions) {
+        control.slot = "actions";
+    }
+    card.append(eyebrow, title, body, ...actions);
     return card;
 }
 

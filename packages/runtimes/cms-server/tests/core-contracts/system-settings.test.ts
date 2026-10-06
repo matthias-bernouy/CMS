@@ -77,3 +77,117 @@ test("settings commands return the revision committed by their own compare-and-s
     );
     expect(languages).toMatchObject({ revision: 6, language: "fr", activeLanguages: ["fr", "en"] });
 });
+
+test("design overview uses the collection locale before a fresh site selects its language", async () => {
+    const dispatcher = new DefaultCoreCapabilityDispatcher();
+    const system = defaultSystem();
+    system.site.language = "";
+    registerDesignCapabilities(dispatcher, {
+        repo: {
+            getSystemRevision: async () => 1,
+            getSystem: async () => structuredClone(system),
+        },
+        collections: {
+            snapshot: async () => ({
+                revision: 1,
+                collections: [
+                    {
+                        collectionId: "example",
+                        textOverrides: {},
+                        release: {
+                            kind: "collection",
+                            protocol: "ulvia-collection/v1",
+                            schemaDialect: "ulvia-schema/v1",
+                            collectionId: "example",
+                            publisherId: "example.publisher",
+                            version: "1.0.0",
+                            dataGeneration: 1,
+                            migrations: [],
+                            name: "collection.name",
+                            locale: "en",
+                            translations: { en: { "collection.name": "Example", "theme.label": "Example theme" } },
+                            assets: [],
+                            blocs: [],
+                            theme: { label: "theme.label", categories: [] },
+                        },
+                    },
+                ],
+            }),
+        },
+    } as never);
+
+    const output = await dispatcher.invoke("ulvia.cms.design", "overview", {}, context);
+    expect(output.language).toBe("en");
+    expect(output.sources).toContainEqual(expect.objectContaining({ label: "Example theme" }));
+});
+
+test("theme reads compose the authoritative token catalogues from installed collections", async () => {
+    const dispatcher = new DefaultCoreCapabilityDispatcher();
+    const system = defaultSystem();
+    system.site.language = "fr";
+    registerDesignCapabilities(dispatcher, {
+        repo: {
+            getSystemRevision: async () => 3,
+            getSystem: async () => structuredClone(system),
+        },
+        collections: {
+            snapshot: async () => ({
+                revision: 5,
+                collections: [
+                    {
+                        collectionId: "example",
+                        textOverrides: {},
+                        release: {
+                            collectionId: "example",
+                            publisherId: "example.publisher",
+                            version: "1.0.0",
+                            locale: "fr",
+                            translations: {
+                                fr: {
+                                    "theme.label": "Thème exemple",
+                                    "category.colors": "Couleurs",
+                                    "token.primary": "Primaire",
+                                },
+                            },
+                            assets: [],
+                            blocs: [],
+                            theme: {
+                                label: "theme.label",
+                                categories: [
+                                    {
+                                        id: "colors",
+                                        label: "category.colors",
+                                        tokens: [
+                                            {
+                                                id: "primary",
+                                                label: "token.primary",
+                                                type: "color",
+                                                defaults: { light: "#3b5ccc", dark: "#9bb1ff" },
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                ],
+            }),
+        },
+    } as never);
+
+    const output = await dispatcher.invoke("ulvia.cms.design", "get-theme", {}, context);
+    const theme = JSON.parse(output.themeJson as string);
+    expect(output.revision).toBe(3);
+    expect(theme.sources).toContainEqual(
+        expect.objectContaining({
+            label: "Thème exemple",
+            owner: { kind: "collection", collectionId: "example" },
+            categories: [
+                expect.objectContaining({
+                    label: "Couleurs",
+                    tokens: [expect.objectContaining({ id: "example-primary", label: "Primaire" })],
+                }),
+            ],
+        }),
+    );
+});

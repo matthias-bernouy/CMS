@@ -19,6 +19,7 @@ export type InstalledCollection = {
     version: string;
     digest: string;
     repositoryId?: string;
+    configurable: boolean;
 };
 
 export type Catalogue = {
@@ -29,6 +30,8 @@ export type Catalogue = {
 };
 
 export type CollectionDetail = InstalledCollection & {
+    name: string;
+    description: string;
     revision: number;
     configurationJson: string;
     dataGeneration: number;
@@ -37,6 +40,15 @@ export type CollectionDetail = InstalledCollection & {
     assetCount: number;
     textCount: number;
     themeTokenCount: number;
+    overriddenLocaleCount: number;
+    blocs: {
+        id: string;
+        label: string;
+        description: string;
+        generation: number;
+        internal: boolean;
+        surfaces: ("control" | "delivery")[];
+    }[];
 };
 
 export type MigrationPlan = {

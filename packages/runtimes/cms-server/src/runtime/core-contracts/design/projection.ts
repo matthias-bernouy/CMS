@@ -8,15 +8,16 @@ export function projectDesignOverview(
     collections: Awaited<ReturnType<CoreStores["collections"]["snapshot"]>>,
 ) {
     const { system, revision } = snapshot;
+    const locale = system.site.language.trim() || collections.collections[0]?.release.locale || "en";
     const theme = composeCollectionThemes(
         system.theme,
         collections.collections.map(({ release }) => release),
-        system.site.language,
+        locale,
     );
     return {
         revision,
         collectionRevision: collections.revision,
-        language: system.site.language,
+        language: locale,
         additionalLanguages: system.site.additionalLanguages ?? [],
         activeLanguages: system.site.activeLanguages ?? [],
         activeThemeId: theme.activeThemeId,

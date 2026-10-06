@@ -161,7 +161,7 @@ function decodeQuery(url: URL, capability: CapabilityDefinition): Readonly<Recor
     for (const [name, schema] of Object.entries(capability.input.properties)) {
         const raw = url.searchParams.get(name);
         if (raw !== null) {
-            input[name] = decodeHttpParameter(schema as UlviaScalarSchema, raw);
+            input[name] = decodeHttpParameter(schema as UlviaScalarSchema, encodeURIComponent(raw));
         }
     }
     validateSchemaValue(capability.input, input);

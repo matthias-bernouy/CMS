@@ -1,9 +1,0 @@
-{
-    "id": "design",
-    "surface": "control",
-    "defaultPath": "/admin/design",
-    "name": "page.design.name",
-    "icon": "theme",
-    "description": "page.design.description",
-    "requires": []
-}
