@@ -19,7 +19,7 @@ export type AuthorFileMutationDeps = Readonly<{
 export async function uploadAuthorFileRequest(request: Request, deps: AuthorFileMutationDeps): Promise<Response> {
     const form = await boundedFileForm(request);
     const file = requiredFile(form);
-    const parentId = nullableText(form.get("parentId"));
+    const parentId = nullableText(form.get("parentId") ?? new URL(request.url).searchParams.get("parentId"));
     const id = optionalText(form.get("id"));
     const item = await uploadFile(deps.metadata, deps.blob, file, parentId, id, deps.mutations);
     return Response.json(item, { status: 201, headers: noStoreHeaders() });

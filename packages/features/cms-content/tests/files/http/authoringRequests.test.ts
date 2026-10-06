@@ -24,6 +24,21 @@ describe("author file mutation transports", () => {
         expect(await blob.exists(item.id)).toBe(true);
     });
 
+    test("accepts the current folder from the page query", async () => {
+        const metadata = new InMemoryCmsFilesMetadata();
+        const blob = new MemoryBlobStore();
+        const parent = await metadata.createFolder({ name: "Images", parentId: null });
+        const form = new FormData();
+        form.set("file", new File(["image"], "caption.txt", { type: "text/plain" }));
+
+        const response = await uploadAuthorFileRequest(
+            new Request(`http://localhost/.cms/files/upload?parentId=${parent.id}`, { method: "POST", body: form }),
+            { metadata, blob },
+        );
+
+        expect(await response.json()).toMatchObject({ parentId: parent.id });
+    });
+
     test("replaces bytes in place and invokes the invalidation hook", async () => {
         const metadata = new InMemoryCmsFilesMetadata();
         const blob = new MemoryBlobStore();
