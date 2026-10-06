@@ -1,7 +1,9 @@
-import type { CoreStores } from "../../stores/core";
 import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
+import type { CmsCoreCapabilityStores } from "../dependencies";
 
-export function projectMigrationPlan(plan: Awaited<ReturnType<CoreStores["collectionMigrations"]["plan"]>>) {
+export function projectMigrationPlan(
+    plan: Awaited<ReturnType<CmsCoreCapabilityStores["collectionMigrations"]["plan"]>>,
+) {
     return {
         expectedRevision: plan.expectedCollectionRevision,
         planDigest: plan.planDigest,
@@ -12,7 +14,9 @@ export function projectMigrationPlan(plan: Awaited<ReturnType<CoreStores["collec
     };
 }
 
-export function projectMigrationResult(record: Awaited<ReturnType<CoreStores["collectionMigrations"]["execute"]>>) {
+export function projectMigrationResult(
+    record: Awaited<ReturnType<CmsCoreCapabilityStores["collectionMigrations"]["execute"]>>,
+) {
     return {
         migrationId: record.id,
         status: record.status,
@@ -22,7 +26,7 @@ export function projectMigrationResult(record: Awaited<ReturnType<CoreStores["co
     };
 }
 
-export function projectSnapshot(snapshot: Awaited<ReturnType<CoreStores["collections"]["snapshot"]>>) {
+export function projectSnapshot(snapshot: Awaited<ReturnType<CmsCoreCapabilityStores["collections"]["snapshot"]>>) {
     return {
         revision: snapshot.revision,
         items: snapshot.collections.map((collection) => projectInstalled(collection, snapshot.revision, false)),
@@ -30,7 +34,7 @@ export function projectSnapshot(snapshot: Awaited<ReturnType<CoreStores["collect
 }
 
 export function projectInstalled(
-    collection: Awaited<ReturnType<CoreStores["collections"]["snapshot"]>>["collections"][number],
+    collection: Awaited<ReturnType<CmsCoreCapabilityStores["collections"]["snapshot"]>>["collections"][number],
     revision: number,
     detailed: boolean,
 ) {

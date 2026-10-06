@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test";
 import { DefaultCoreCapabilityDispatcher, defaultSystem } from "@bernouy/cms-content";
-import { registerAccessCapabilities } from "../../src/runtime/core-contracts/access";
-import { registerDesignCapabilities } from "../../src/runtime/core-contracts/design";
+import { registerAccessCapabilities, registerDesignCapabilities } from "@bernouy/cms-core/capabilities";
 
 const context = {
     requestId: "00000000-0000-4000-8000-000000000001",

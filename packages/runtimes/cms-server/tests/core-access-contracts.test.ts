@@ -4,8 +4,8 @@ import {
     InMemoryCmsRepository,
     type CoreCapabilityInvocationContext,
 } from "@bernouy/cms-content";
+import { registerAccessCapabilities } from "@bernouy/cms-core/capabilities";
 import { InMemoryIdentityProviderRepository, InMemoryUsersRepository } from "@bernouy/cms-auth";
-import { registerAccessCapabilities } from "../src/runtime/core-contracts/access";
 
 const context: CoreCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",

@@ -1,5 +1,5 @@
 import type { Collection, Db } from "mongodb";
-import type { CoreOperationPage, CoreOperationRecord, CoreOperationStore } from "./types";
+import type { CoreOperationPage, CoreOperationRecord, CoreOperationStore } from "@bernouy/cms-core";
 
 type OperationDocument = Omit<CoreOperationRecord, "id"> & { _id: string };
 

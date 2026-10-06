@@ -1,8 +1,7 @@
 import { expect, test } from "bun:test";
 import { DefaultCoreCapabilityDispatcher, type CoreCapabilityInvocationContext } from "@bernouy/cms-content";
-import { CoreOperationExecutor } from "../src/runtime/core-operations/CoreOperationExecutor";
-import { MemoryCoreOperationStore } from "../src/runtime/core-operations/MemoryCoreOperationStore";
-import { registerOperationCapabilities } from "../src/runtime/core-contracts/operations";
+import { CoreOperationExecutor, MemoryCoreOperationStore } from "@bernouy/cms-core";
+import { registerOperationCapabilities } from "@bernouy/cms-core/capabilities";
 
 const context: CoreCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",

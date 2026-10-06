@@ -1,7 +1,6 @@
 import { expect, mock, test } from "bun:test";
 import { DefaultCoreCapabilityDispatcher } from "@bernouy/cms-content";
-import { registerCollectionCapabilities } from "../../src/runtime/core-contracts/collections";
-import { CollectionSources } from "../../src/runtime/core-contracts/collections/sources";
+import { CollectionSources, registerCollectionCapabilities } from "@bernouy/cms-core/capabilities";
 
 const digest = `sha256:${"a".repeat(64)}`;
 const reference = {

@@ -153,7 +153,10 @@ now a declarative non-workspace tree. This should become an explicit rule:
 
 `@bernouy/cms-core` is now an ordinary surface package, so the former product
 classification exception no longer exists. It consumes public feature contracts
-and receives runtime dependencies through its constructor.
+and receives runtime dependencies through its constructor. Official capability
+adapters and durable operation execution now live with that surface rather than
+inside `cms-server`; the runtime retains only concrete composition and the Mongo
+operation-store adapter.
 
 The runtime still uses several literal `"default"` site/scope identifiers while
 the gateway can use `CMS_GATEWAY_SITE_ID`. One database per site makes this

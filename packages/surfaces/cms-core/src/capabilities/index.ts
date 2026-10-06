@@ -1,22 +1,20 @@
 import { registerCmsPageCoreCapabilities, type CoreCapabilityRegistry } from "@bernouy/cms-content";
-import type { ProductionGateway } from "../gateway/createProductionGateway";
-import type { CoreStores } from "../stores/core";
 import { registerAccessCapabilities } from "./access";
 import { registerCollectionCapabilities } from "./collections";
 import { registerDesignCapabilities } from "./design";
 import { registerFileCapabilities } from "./files";
 import { registerOperationCapabilities } from "./operations";
 import { registerProviderCapabilities } from "./providers";
-import type { CoreOperationExecutor } from "../core-operations/CoreOperationExecutor";
-import type { ProviderManagement } from "../gateway/ProviderManagement";
 import type { CollectionSources } from "./collections/sources";
+import type { CmsCoreCapabilityStores, CmsCoreGateway, CmsCoreProviderManagement } from "./dependencies";
+import type { CoreOperationExecutor } from "../operations/CoreOperationExecutor";
 
 export function registerOfficialCoreCapabilities(
     dispatcher: CoreCapabilityRegistry,
-    core: CoreStores,
-    gateway: ProductionGateway | undefined,
+    core: CmsCoreCapabilityStores,
+    gateway: CmsCoreGateway | undefined,
     operations?: CoreOperationExecutor,
-    providerManagement?: ProviderManagement,
+    providerManagement?: CmsCoreProviderManagement,
     collectionSources?: CollectionSources,
 ): void {
     registerCmsPageCoreCapabilities(dispatcher, core.repo);
@@ -27,3 +25,18 @@ export function registerOfficialCoreCapabilities(
     registerAccessCapabilities(dispatcher, core, gateway);
     registerOperationCapabilities(dispatcher, core, operations);
 }
+
+export {
+    registerAccessCapabilities,
+    registerCollectionCapabilities,
+    registerDesignCapabilities,
+    registerFileCapabilities,
+    registerOperationCapabilities,
+    registerProviderCapabilities,
+};
+export { CollectionSources } from "./collections/sources";
+export type {
+    CmsCoreCapabilityStores,
+    CmsCoreGateway,
+    CmsCoreProviderManagement,
+} from "./dependencies";

@@ -90,9 +90,10 @@ the capabilities required by their exact document and transitive Blocs. Control
 activates the revisioned plan from the same-origin referring Page before each
 call and sends only its immutable execution pin to the gateway.
 
-The local CMS Core provider surface is contract-neutral. CMS features register
-capability handlers in a closed dispatcher, while `@bernouy/cms-core` derives
-its HTTP routes from admitted contract bindings. Control and Delivery still use
+The local CMS Core transport is contract-neutral: `@bernouy/cms-core` derives
+its HTTP routes from admitted contract bindings. The same package contains thin
+official capability adapters that coordinate injected feature ports; it does
+not select stores or persistence adapters. Control and Delivery still use
 their normal `/.cms/call` gateway transport; there is no direct Core shortcut or
 internal relay hop. The shared bounded JSON budget applies at the gateway and
 Core surface.

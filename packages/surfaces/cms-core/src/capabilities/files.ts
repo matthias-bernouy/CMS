@@ -1,8 +1,8 @@
 import { CoreCapabilityDispatchError, type CoreCapabilityRegistry } from "@bernouy/cms-content";
 import { createFileFolder, deleteFileTree, type FilesItem, updateFileItem } from "@bernouy/cms-content/files";
-import type { CoreStores } from "../stores/core";
+import type { CmsCoreCapabilityStores } from "./dependencies";
 
-export function registerFileCapabilities(dispatcher: CoreCapabilityRegistry, core: CoreStores): void {
+export function registerFileCapabilities(dispatcher: CoreCapabilityRegistry, core: CmsCoreCapabilityStores): void {
     dispatcher.register("ulvia.cms.files", "list", async (input) => {
         const page = integer(input.page, 1);
         const limit = integer(input.limit, 50);

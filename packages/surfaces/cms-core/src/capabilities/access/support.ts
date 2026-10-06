@@ -1,7 +1,7 @@
 import { CoreCapabilityDispatchError, type TSystem } from "@bernouy/cms-content";
 import type { IdentityProvider, TUser } from "@bernouy/cms-auth";
 import type { CoreCapabilityInvocationContext } from "@bernouy/cms-content";
-import type { ProductionGateway } from "../../gateway/createProductionGateway";
+import type { CmsCoreGateway } from "../dependencies";
 
 export function projectSite(system: TSystem, revision: number) {
     return {
@@ -44,14 +44,11 @@ export function projectIdentityProvider(provider: IdentityProvider) {
     };
 }
 
-export async function administratorState(gateway: ProductionGateway | undefined, sub: string) {
+export async function administratorState(gateway: CmsCoreGateway | undefined, sub: string) {
     return gateway ? gateway.administrators.get(sub) : { sub, enabled: false, revision: 0, bootstrap: false };
 }
 
-export async function actorSubject(
-    gateway: ProductionGateway,
-    context: CoreCapabilityInvocationContext,
-): Promise<string> {
+export async function actorSubject(gateway: CmsCoreGateway, context: CoreCapabilityInvocationContext): Promise<string> {
     if (!context.providerSubjectId) {
         throw new CoreCapabilityDispatchError("ACTOR_UNAVAILABLE", 403);
     }
@@ -116,7 +113,7 @@ export function positiveRevision(value: unknown): number {
     return valueRevision;
 }
 
-export function requiredGateway(gateway: ProductionGateway | undefined): ProductionGateway {
+export function requiredGateway(gateway: CmsCoreGateway | undefined): CmsCoreGateway {
     if (!gateway) {
         throw new CoreCapabilityDispatchError("CORE_UNAVAILABLE", 503);
     }

@@ -1,12 +1,9 @@
 import { DefaultCoreCapabilityDispatcher } from "@bernouy/cms-content";
-import { CmsCore } from "@bernouy/cms-core";
+import { CmsCore, CollectionSources, CoreOperationExecutor, registerOfficialCoreCapabilities } from "@bernouy/cms-core";
 import { BunRunner } from "@bernouy/http-runner";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
 import type { RuntimeEnv } from "../runtimeEnv";
-import { registerOfficialCoreCapabilities } from "./core-contracts";
-import { CollectionSources } from "./core-contracts/collections/sources";
-import { CoreOperationExecutor } from "./core-operations/CoreOperationExecutor";
 import type { ProductionGateway } from "./gateway/createProductionGateway";
 import type { ProviderManagement } from "./gateway/ProviderManagement";
 import type { CoreStores } from "./stores/core";

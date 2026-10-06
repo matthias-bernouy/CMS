@@ -48,10 +48,10 @@ and serves admitted copies from a separate persistent volume.
 
 | Package | Responsibility |
 | --- | --- |
-| `@bernouy/cms-core` | Authenticated provider report and binding-derived HTTP surface for admitted `ulvia.cms.*` contracts. |
+| `@bernouy/cms-core` | Authenticated provider report, binding-derived HTTP transport, cross-domain official capability adapters and durable operation execution for admitted `ulvia.cms.*` contracts. |
 | `@bernouy/cms-control` | Authenticated admin UI, REST API, author media and selected gateway capability access. |
 | `@bernouy/cms-delivery` | Public pages, Bloc assets, binding runtime, auth, media, gateway calls and SEO. |
-| `@bernouy/cms-server` | Production adapter composition and CMS Core/Control/Delivery startup. |
+| `@bernouy/cms-server` | Production adapter composition, Mongo Core-operation persistence and CMS Core/Control/Delivery startup. |
 | `@bernouy/official-repository-server` | Production official repository startup with persistent staged publication and immutable reads. |
 | `@bernouy/ulvia-cli` | Persistent local CMS development stack backed by MongoDB. |
 

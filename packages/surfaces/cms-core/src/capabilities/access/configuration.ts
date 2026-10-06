@@ -1,6 +1,6 @@
 import { CoreCapabilityDispatchError, type CoreCapabilityRegistry } from "@bernouy/cms-content";
 import { updateIdentityProvider, type IdentityProviderPatch } from "@bernouy/cms-auth/management";
-import type { CoreStores } from "../../stores/core";
+import type { CmsCoreCapabilityStores } from "../dependencies";
 import {
     accessCommand,
     positiveRevision,
@@ -10,7 +10,10 @@ import {
     revision,
 } from "./support";
 
-export function registerAccessConfigurationCapabilities(dispatcher: CoreCapabilityRegistry, core: CoreStores): void {
+export function registerAccessConfigurationCapabilities(
+    dispatcher: CoreCapabilityRegistry,
+    core: CmsCoreCapabilityStores,
+): void {
     dispatcher.register("ulvia.cms.access", "update-login-provider", async (input) =>
         accessCommand(async () => {
             const patch = identityProviderPatch(input);

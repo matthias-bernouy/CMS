@@ -1,6 +1,7 @@
 import {
     composeCollectionThemes,
     CoreCapabilityDispatchError,
+    readSystemSnapshot,
     type CoreCapabilityRegistry,
     type ThemeSettings,
 } from "@bernouy/cms-content";
@@ -9,11 +10,10 @@ import {
     MAX_CAPABILITY_JSON_DEPTH,
     parseStrictJson,
 } from "@bernouy/cms-repository/contracts/protocol";
-import type { CoreStores } from "../../stores/core";
-import { readSystemSnapshot } from "../../stores/readSystemSnapshot";
+import type { CmsCoreCapabilityStores } from "../dependencies";
 import { projectDesignOverview, projectTextCatalogue } from "./projection";
 
-export function registerDesignCapabilities(dispatcher: CoreCapabilityRegistry, core: CoreStores): void {
+export function registerDesignCapabilities(dispatcher: CoreCapabilityRegistry, core: CmsCoreCapabilityStores): void {
     dispatcher.register("ulvia.cms.design", "overview", async (_input, context) => {
         const [system, collections] = await Promise.all([
             readSystemSnapshot(core.repo),

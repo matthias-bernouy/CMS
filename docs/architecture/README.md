@@ -98,6 +98,12 @@ sitemaps and robots on its supplied runner. CMS Core mounts the provider report
 and the declared HTTP bindings of `ulvia.cms.*`. No surface chooses
 production databases or storage roots.
 
+The CMS Core surface also owns the thin cross-domain adapters that register the
+official capabilities, project their wire responses and map feature failures.
+Actual page, file, collection, migration, authentication, provider and theme
+operations remain in their feature packages. `cms-server` injects those ports
+and retains only concrete adapters such as Mongo operation persistence.
+
 `cms-server` reads environment configuration, wires concrete dependencies,
 mounts all three surfaces and starts listeners. `ulvia-cli` manages the persistent
 local development stack. `official-repository-server` mounts the public immutable

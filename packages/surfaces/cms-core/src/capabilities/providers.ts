@@ -1,11 +1,10 @@
 import { CoreCapabilityDispatchError, type CoreCapabilityRegistry } from "@bernouy/cms-content";
-import type { ProductionGateway } from "../gateway/createProductionGateway";
-import type { ProviderManagement } from "../gateway/ProviderManagement";
+import type { CmsCoreGateway, CmsCoreProviderManagement } from "./dependencies";
 
 export function registerProviderCapabilities(
     dispatcher: CoreCapabilityRegistry,
-    gateway: ProductionGateway | undefined,
-    management?: ProviderManagement,
+    gateway: CmsCoreGateway | undefined,
+    management?: CmsCoreProviderManagement,
 ): void {
     dispatcher.register("ulvia.cms.providers", "list", async () => {
         const active = requiredGateway(gateway);
@@ -63,7 +62,7 @@ export function registerProviderCapabilities(
     );
 }
 
-function projectInstallation(stored: Awaited<ReturnType<ProductionGateway["installations"]["get"]>> & object) {
+function projectInstallation(stored: Awaited<ReturnType<CmsCoreGateway["installations"]["get"]>> & object) {
     const { installation, observation, revision } = stored;
     return {
         id: installation.id,
@@ -158,14 +157,14 @@ function requiredText(value: unknown): string {
     return value;
 }
 
-function requiredGateway(gateway: ProductionGateway | undefined): ProductionGateway {
+function requiredGateway(gateway: CmsCoreGateway | undefined): CmsCoreGateway {
     if (!gateway) {
         throw new CoreCapabilityDispatchError("CORE_UNAVAILABLE", 503);
     }
     return gateway;
 }
 
-function requiredManagement(management: ProviderManagement | undefined): ProviderManagement {
+function requiredManagement(management: CmsCoreProviderManagement | undefined): CmsCoreProviderManagement {
     if (!management) {
         throw new CoreCapabilityDispatchError("CORE_UNAVAILABLE", 503);
     }

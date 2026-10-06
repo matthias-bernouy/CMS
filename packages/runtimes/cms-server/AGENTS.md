@@ -8,8 +8,9 @@ Production runtime composition root.
 - Connect MongoDB.
 - Instantiate crypto, repositories, stores, auth, rate limiting, gateway,
   cache, files, Control, and Delivery.
-- Start the provider-facing CMS Core runner before local provider bootstrap,
-  then start one Control runner and one Delivery runner.
+- Inject feature stores into the provider-facing CMS Core surface, start its
+  runner before local provider bootstrap, then start one Control runner and one
+  Delivery runner.
 
 ## Rules
 

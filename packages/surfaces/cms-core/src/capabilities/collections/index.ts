@@ -1,13 +1,13 @@
 import { CoreCapabilityDispatchError, type CoreCapabilityRegistry } from "@bernouy/cms-content";
-import type { CoreOperationExecutor } from "../../core-operations/CoreOperationExecutor";
-import type { CoreStores } from "../../stores/core";
+import type { CoreOperationExecutor } from "../../operations/CoreOperationExecutor";
+import type { CmsCoreCapabilityStores } from "../dependencies";
 import { projectMigrationPlan, projectMigrationResult, projectSnapshot, projectInstalled } from "./projection";
 import { collectionCommand, integer, parseConfiguration, requiredText, targets } from "./support";
 import type { CollectionSources } from "./sources";
 
 export function registerCollectionCapabilities(
     dispatcher: CoreCapabilityRegistry,
-    core: CoreStores,
+    core: CmsCoreCapabilityStores,
     operations?: CoreOperationExecutor,
     sources?: CollectionSources,
 ): void {
@@ -156,7 +156,7 @@ function assertRevision(actual: number, expected: number): void {
     }
 }
 
-async function revisionChanged(core: CoreStores, siteId: string, expected: number): Promise<boolean> {
+async function revisionChanged(core: CmsCoreCapabilityStores, siteId: string, expected: number): Promise<boolean> {
     return (await core.collections.revision(siteId)) !== expected;
 }
 

@@ -1,10 +1,10 @@
 import { CoreCapabilityDispatchError, type CoreCapabilityRegistry } from "@bernouy/cms-content";
-import type { CoreStores } from "../stores/core";
-import type { CoreOperationExecutor } from "../core-operations/CoreOperationExecutor";
+import type { CmsCoreCapabilityStores } from "./dependencies";
+import type { CoreOperationExecutor } from "../operations/CoreOperationExecutor";
 
 export function registerOperationCapabilities(
     dispatcher: CoreCapabilityRegistry,
-    core: CoreStores,
+    core: CmsCoreCapabilityStores,
     operations?: CoreOperationExecutor,
 ): void {
     dispatcher.register("ulvia.cms.operations", "status", async (input, context) => {

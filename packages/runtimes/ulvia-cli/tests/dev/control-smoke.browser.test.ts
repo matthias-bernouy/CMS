@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
 import { runCli } from "../../src/cli";
-import { runControlSmoke } from "./controlSmokeFlows";
+import { runControlSmoke, verifyControlStateAfterRestart } from "./controlSmokeFlows";
 
 const smoke = process.env.ULVIA_RUN_CONTROL_SMOKE === "1" ? test : test.skip;
 const PORTS = { control: 15_100, delivery: 15_101, mongo: 27_029, repository: 15_102 } as const;
@@ -53,6 +53,32 @@ smoke(
             await runControlSmoke(page, credentials, `http://127.0.0.1:${PORTS.control}`);
 
             expect(browserErrors).toEqual([]);
+            await browser.close();
+            browser = undefined;
+            runtime.kill("SIGTERM");
+            await runtime.exited;
+            await capture;
+
+            output += "\n--- persisted-state restart ---\n";
+            runtime = Bun.spawn([process.execPath, cli, "dev"], {
+                cwd: resolve(import.meta.dir, "../../../../.."),
+                env: environment,
+                stdout: "pipe",
+                stderr: "pipe",
+            });
+            capture = Promise.all([
+                captureOutput(runtime.stdout, (value) => (output += value)),
+                captureOutput(runtime.stderr, (value) => (output += value)),
+            ]);
+            await waitForHttp(`http://127.0.0.1:${PORTS.control}/login`, runtime);
+            browser = await chromium.launch({ headless: true });
+            const restartedPage = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+            restartedPage.setDefaultTimeout(15_000);
+            const restartErrors: string[] = [];
+            restartedPage.on("pageerror", (error) => restartErrors.push(error.message));
+
+            await verifyControlStateAfterRestart(restartedPage, credentials, `http://127.0.0.1:${PORTS.control}`);
+            expect(restartErrors).toEqual([]);
         } catch (error) {
             throw new Error(`${error instanceof Error ? error.message : String(error)}\n\nRuntime output:\n${output}`);
         } finally {

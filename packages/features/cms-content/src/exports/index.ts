@@ -45,6 +45,7 @@ export {
     type CoreCapabilityHandler,
     type CoreCapabilityRegistry,
 } from "cms-content/application/core/CoreCapabilityDispatcher";
+export { readSystemSnapshot } from "cms-content/settings/core/readSystemSnapshot";
 export {
     listCmsPages,
     type CmsPageListItem,

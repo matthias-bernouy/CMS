@@ -14,6 +14,34 @@ export async function runControlSmoke(
     await mutateAccess(page);
 }
 
+export async function verifyControlStateAfterRestart(
+    page: Page,
+    credentials: { adminEmail: string; adminPassword: string },
+    controlOrigin: string,
+): Promise<void> {
+    await signIn(page, credentials, controlOrigin);
+    await page.getByText("Smoke Page", { exact: true }).waitFor();
+
+    await page.getByRole("link", { name: "Collections", exact: true }).click();
+    await page.getByRole("heading", { name: "smoke-kit", exact: true }).waitFor();
+
+    await page.getByRole("link", { name: "Files", exact: true }).click();
+    await page.getByRole("heading", { name: "Smoke folder", exact: true }).waitFor();
+
+    await page.getByRole("link", { name: "Settings", exact: true }).click();
+    await expectControlValue(page, "Site name", "Smoke CMS");
+    await page.getByRole("button", { name: "Languages", exact: true }).click();
+    await expectControlValue(page, "Default language", "fr-FR");
+
+    await page.getByRole("link", { name: "Providers", exact: true }).click();
+    await page.getByRole("heading", { name: "Installations and contract routing" }).waitFor();
+    await page.getByRole("button", { name: "Contract routing" }).click();
+    await page.getByText("Contract implementations loaded.", { exact: true }).waitFor();
+
+    await page.getByRole("link", { name: "Users", exact: true }).click();
+    await page.getByText("1 total users.", { exact: true }).waitFor();
+}
+
 async function signIn(
     page: Page,
     credentials: { adminEmail: string; adminPassword: string },
@@ -101,5 +129,12 @@ async function mutateAccess(page: Page): Promise<void> {
     ]);
     if (!response.ok()) {
         throw new Error(`Login provider flow failed (${response.status()}).`);
+    }
+}
+
+async function expectControlValue(page: Page, label: string, expected: string): Promise<void> {
+    const actual = await page.getByLabel(label).inputValue();
+    if (actual !== expected) {
+        throw new Error(`${label} did not survive restart (expected ${expected}, received ${actual}).`);
     }
 }

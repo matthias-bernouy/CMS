@@ -2,9 +2,9 @@ import type { CoreCapabilityDispatcher } from "@bernouy/cms-content";
 import type { Runner } from "@bernouy/http-runner";
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
-import { assertProviderToken, providerAuthorized } from "./authentication";
-import { createCoreContractRelay } from "./relay";
-import { compileCoreRoutes } from "./routes";
+import { assertProviderToken, providerAuthorized } from "./transport/authentication";
+import { createCoreContractRelay } from "./transport/relay";
+import { compileCoreRoutes } from "./transport/routes";
 
 export type CmsCoreOptions = Readonly<{
     token: string;

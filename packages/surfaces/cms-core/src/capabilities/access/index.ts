@@ -1,8 +1,7 @@
 import { CoreCapabilityDispatchError, type CoreCapabilityRegistry } from "@bernouy/cms-content";
+import { readSystemSnapshot } from "@bernouy/cms-content";
 import { deleteUserCompletely } from "@bernouy/cms-auth/management";
-import type { CoreStores } from "../../stores/core";
-import type { ProductionGateway } from "../../gateway/createProductionGateway";
-import { readSystemSnapshot } from "../../stores/readSystemSnapshot";
+import type { CmsCoreCapabilityStores, CmsCoreGateway } from "../dependencies";
 import { registerAccessConfigurationCapabilities } from "./configuration";
 import {
     accessCommand,
@@ -18,8 +17,8 @@ import {
 
 export function registerAccessCapabilities(
     dispatcher: CoreCapabilityRegistry,
-    core: CoreStores,
-    gateway: ProductionGateway | undefined,
+    core: CmsCoreCapabilityStores,
+    gateway: CmsCoreGateway | undefined,
 ): void {
     dispatcher.register("ulvia.cms.access", "overview", async (input) => {
         const limit = Number.isSafeInteger(input.limit) ? Number(input.limit) : 50;
