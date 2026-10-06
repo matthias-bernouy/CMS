@@ -26,6 +26,30 @@ HTTPS repository; `yank` and `restore` manage reversible catalogue availability.
 `dev credentials` prints the local repository write token. Site installation is
 performed through Control rather than the CLI.
 
+## Local KEK Rotation
+
+`CMS_KEK_HEX` remains the backward-compatible key named `legacy`. A versioned
+deployment may additionally set `CMS_KEK_ACTIVE_ID` and a
+`CMS_KEK_RING_JSON` object whose values are 64-character hexadecimal AES-256
+keys. At startup, the server scans every persisted DEK and refuses readiness if
+one references a key absent from the configured ring.
+
+A supported rotation is an explicit maintenance operation:
+
+1. stop all CMS replicas and verify a restorable backup;
+2. keep the old keys configured, add the new key to `CMS_KEK_RING_JSON`, select
+   it with `CMS_KEK_ACTIVE_ID`, and set `CMS_KEK_ROTATE_ON_START=true`;
+3. start one CMS process and wait for the `cms_kek_rotation_audits` record to
+   reach `completed`; listeners are not opened while the rotation runs;
+4. set `CMS_KEK_ROTATE_ON_START=false` and restart the normal replica set with
+   both the active and historical keys still configured;
+5. remove a historical key only after a later backup and startup verification
+   prove that no `cms_deks` row references it.
+
+The operation rewraps DEKs in bounded batches; it does not re-encrypt stored
+secret values. Replaying it is idempotent. Historical keys are never deleted
+automatically.
+
 ## Checks And Build
 
 | Command | Purpose |

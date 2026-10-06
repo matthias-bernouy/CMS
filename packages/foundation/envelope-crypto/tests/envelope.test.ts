@@ -60,9 +60,11 @@ describe("EnvelopeSecretCrypto", () => {
 
     test("losing the cross-process create race adopts the winner's DEK", async () => {
         const kek = new LocalKekProvider(KEY);
+        const generated = await kek.generateDek();
         const winnerRecord: DekRecord = {
             scopeId: "tenant-a",
-            wrapped: (await kek.generateDek()).wrapped,
+            wrapped: generated.wrapped,
+            keyId: generated.keyId,
             createdAt: new Date(),
             rotatedAt: null,
         };
@@ -72,6 +74,12 @@ describe("EnvelopeSecretCrypto", () => {
             },
             async create() {
                 return winnerRecord;
+            },
+            async list() {
+                return { items: [winnerRecord], nextCursor: null };
+            },
+            async rewrap() {
+                return false;
             },
             async delete() {},
         };

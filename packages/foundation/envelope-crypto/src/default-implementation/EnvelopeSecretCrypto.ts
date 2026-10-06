@@ -85,7 +85,7 @@ export class EnvelopeSecretCrypto implements SecretCrypto {
         if (!row) {
             return null;
         }
-        const dek = await this._kekProvider.unwrap(row.wrapped);
+        const dek = await this._kekProvider.unwrap(row.wrapped, row.keyId);
         this._remember(scopeId, dek);
         return dek;
     }
@@ -93,14 +93,15 @@ export class EnvelopeSecretCrypto implements SecretCrypto {
     private async _fetchOrCreate(scopeId: string): Promise<Buffer> {
         const row = await this._dekRepo.get(scopeId);
         if (row) {
-            const dek = await this._kekProvider.unwrap(row.wrapped);
+            const dek = await this._kekProvider.unwrap(row.wrapped, row.keyId);
             this._remember(scopeId, dek);
             return dek;
         }
-        const { wrapped, plaintext } = await this._kekProvider.generateDek();
+        const { wrapped, plaintext, keyId } = await this._kekProvider.generateDek();
         const winner = await this._dekRepo.create({
             scopeId,
             wrapped,
+            keyId,
             createdAt: new Date(),
             rotatedAt: null,
         });
@@ -108,7 +109,8 @@ export class EnvelopeSecretCrypto implements SecretCrypto {
         // and `create` — the in-flight map only serializes within one process.
         // The repository arbitrates; encrypting with the loser's DEK would
         // produce ciphertexts no one can ever read back.
-        const dek = winner.wrapped === wrapped ? plaintext : await this._kekProvider.unwrap(winner.wrapped);
+        const dek =
+            winner.wrapped === wrapped ? plaintext : await this._kekProvider.unwrap(winner.wrapped, winner.keyId);
         this._remember(scopeId, dek);
         return dek;
     }

@@ -11,6 +11,8 @@ import type { DekRepository, DekRecord } from "envelope-crypto/interfaces/DekRep
 export type CmsDekDocument = {
     _id: string;
     wrapped: string;
+    /** Missing only on legacy rows created before KEK versioning. */
+    keyId?: string;
     createdAt: Date;
     rotatedAt: Date | null;
 };
@@ -38,7 +40,10 @@ export class MongoDekRepository implements DekRepository {
     }
 
     private async _ensureIndexes(): Promise<void> {
-        const indexes: IndexDescription[] = [{ key: { createdAt: -1 }, name: "createdAt" }];
+        const indexes: IndexDescription[] = [
+            { key: { createdAt: -1 }, name: "createdAt" },
+            { key: { keyId: 1, _id: 1 }, name: "keyId_scope" },
+        ];
         await this._collection.createIndexes(indexes);
     }
 
@@ -57,6 +62,7 @@ export class MongoDekRepository implements DekRepository {
         return {
             scopeId: doc._id,
             wrapped: doc.wrapped,
+            keyId: doc.keyId ?? "legacy",
             createdAt: doc.createdAt,
             rotatedAt: doc.rotatedAt,
         };
@@ -71,6 +77,7 @@ export class MongoDekRepository implements DekRepository {
             {
                 $setOnInsert: {
                     wrapped: record.wrapped,
+                    keyId: record.keyId,
                     createdAt: record.createdAt,
                     rotatedAt: record.rotatedAt,
                 },
@@ -83,9 +90,48 @@ export class MongoDekRepository implements DekRepository {
         return {
             scopeId: winner._id,
             wrapped: winner.wrapped,
+            keyId: winner.keyId ?? "legacy",
             createdAt: winner.createdAt,
             rotatedAt: winner.rotatedAt,
         };
+    }
+
+    async list(cursor: string | null, limit: number) {
+        await this._ready();
+        if (!Number.isSafeInteger(limit) || limit < 1 || limit > 1_000) {
+            throw new Error("MongoDekRepository: list limit must be between 1 and 1000.");
+        }
+        const documents = await this._collection
+            .find(cursor ? { _id: { $gt: cursor } } : {})
+            .sort({ _id: 1 })
+            .limit(limit + 1)
+            .toArray();
+        const hasMore = documents.length > limit;
+        const items = documents.slice(0, limit).map((document) => ({
+            scopeId: document._id,
+            wrapped: document.wrapped,
+            keyId: document.keyId ?? "legacy",
+            createdAt: document.createdAt,
+            rotatedAt: document.rotatedAt,
+        }));
+        return { items, nextCursor: hasMore ? items.at(-1)!.scopeId : null };
+    }
+
+    async rewrap(
+        scopeId: string,
+        expected: { wrapped: string; keyId: string },
+        replacement: { wrapped: string; keyId: string; rotatedAt: Date },
+    ): Promise<boolean> {
+        await this._ready();
+        const keyFilter =
+            expected.keyId === "legacy"
+                ? { $or: [{ keyId: "legacy" }, { keyId: { $exists: false } }] }
+                : { keyId: expected.keyId };
+        const result = await this._collection.updateOne(
+            { _id: scopeId, wrapped: expected.wrapped, ...keyFilter } as never,
+            { $set: replacement },
+        );
+        return result.modifiedCount === 1;
     }
 
     async delete(scopeId: string): Promise<void> {

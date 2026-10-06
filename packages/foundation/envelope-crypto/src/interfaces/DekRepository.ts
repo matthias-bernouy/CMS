@@ -7,8 +7,14 @@
 export type DekRecord = {
     scopeId: string;
     wrapped: string;
+    keyId: string;
     createdAt: Date;
     rotatedAt: Date | null;
+};
+
+export type DekPage = {
+    items: DekRecord[];
+    nextCursor: string | null;
 };
 
 /**
@@ -27,5 +33,12 @@ export interface DekRepository {
      * with the returned record, never with the one they submitted.
      */
     create(record: DekRecord): Promise<DekRecord>;
+    list(cursor: string | null, limit: number): Promise<DekPage>;
+    /** Compare-and-swap rewrap. A false result means another operator changed the record. */
+    rewrap(
+        scopeId: string,
+        expected: { wrapped: string; keyId: string },
+        replacement: { wrapped: string; keyId: string; rotatedAt: Date },
+    ): Promise<boolean>;
     delete(scopeId: string): Promise<void>;
 }

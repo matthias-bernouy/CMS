@@ -8,6 +8,7 @@ import {
     type RuntimeEnvSource,
 } from "./runtimeEnvParsing";
 import { parseSelectionSiteId } from "@bernouy/cms-repository/providers/selections";
+import { parseRuntimeKekConfig, type RuntimeKekConfig } from "./runtimeEnvKek";
 
 export { parsePort } from "./runtimeEnvParsing";
 
@@ -17,7 +18,8 @@ export type RuntimeEnv = {
     CONTROL_PUBLIC_URL: string;
     DELIVERY_PUBLIC_URL: string;
     CMS_SESSION_SECRET: string;
-    CMS_KEK_HEX: string;
+    CMS_KEK_HEX?: string;
+    CMS_KEK: RuntimeKekConfig;
     CMS_ADMIN_EMAIL: string;
     CMS_ADMIN_PASSWORD: string;
     CMS_GATEWAY_SITE_ID?: string;
@@ -49,6 +51,7 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     const CONTROL_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "CONTROL_PUBLIC_URL"), "CONTROL_PUBLIC_URL");
     const DELIVERY_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "DELIVERY_PUBLIC_URL"), "DELIVERY_PUBLIC_URL");
     const clientAddress = parseClientAddressConfig(source);
+    const kek = parseRuntimeKekConfig(source);
     const migrationRetention = parseNonNegativeInteger(
         source.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION,
         "CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION",
@@ -78,7 +81,8 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         CONTROL_PUBLIC_URL,
         DELIVERY_PUBLIC_URL,
         CMS_SESSION_SECRET: requiredEnv(source, "CMS_SESSION_SECRET"),
-        CMS_KEK_HEX: requiredEnv(source, "CMS_KEK_HEX"),
+        ...(kek.keysHex.legacy ? { CMS_KEK_HEX: kek.keysHex.legacy } : {}),
+        CMS_KEK: kek,
         CMS_ADMIN_EMAIL: requiredEnv(source, "CMS_ADMIN_EMAIL"),
         CMS_ADMIN_PASSWORD: requiredEnv(source, "CMS_ADMIN_PASSWORD"),
         ...(!source.CMS_GATEWAY_SITE_ID?.trim()

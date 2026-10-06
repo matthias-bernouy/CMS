@@ -93,7 +93,8 @@ interpreted as an exhaustive security certification.
 1. Version and freeze the collection browser host ABI currently exposed through
    `window.cmsRuntime`.
 2. Add a general migration mechanism for internal MongoDB document schemas.
-3. Add KEK versioning and a supported secret rewrap procedure.
+3. Exercise the implemented KEK key-ring and DEK rewrap procedure in the full
+   backup/restore production journey.
 4. Prevent collection builds from resolving imports outside their submitted
    source bundle.
 5. Reconcile pending Mongo collection releases and orphaned chunks after a
@@ -210,16 +211,16 @@ admission.
 ### `@bernouy/envelope-crypto`
 
 AES-GCM envelopes, per-scope DEKs and concurrent key creation are good
-foundations. The missing production feature is KEK rotation. Replacing
-`CMS_KEK_HEX` currently makes existing wrapped keys unreadable.
+foundations. Persisted DEKs now carry a KEK identifier, legacy rows map safely
+to `legacy`, and the runtime accepts one active key plus retained historical
+unwrap keys. Explicit startup maintenance performs cursor-based, compare-and-
+swap DEK rewrap, verifies key availability before and after mutation, and
+writes a durable completion/failure audit without recording key material.
 
-Required evolution:
-
-- identify KEKs by version;
-- permit dual-key unwrap during a rotation window;
-- provide a rewrap operation;
-- audit rotation completion;
-- test key backup, loss and recovery procedures.
+Operators must still exercise external key backup, loss and recovery. Rotation
+is deliberately single-operator maintenance: all other CMS replicas must be
+stopped. Historical keys are removed manually only after every DEK references
+the active key and a later startup readiness scan succeeds.
 
 ### `@bernouy/secret-store`
 
@@ -629,7 +630,8 @@ official provider.
 
 ### Security Work Ordered By Importance
 
-1. Support KEK rotation and recovery.
+1. Exercise KEK backup, rotation and recovery in the black-box production
+   journey.
 2. Version and freeze the collection browser ABI.
 3. Contain collection build imports.
 4. Add durable audit records for administrative and publication changes.
@@ -740,7 +742,8 @@ site-scoped MongoDB users are implemented and covered by focused tests.
 
 1. Version the browser host ABI.
 2. Add internal MongoDB schema migrations.
-3. Implement KEK rotation and rewrap.
+3. Exercise the implemented KEK rotation and rewrap runbook against restored
+   production-like data.
 4. Contain collection compiler imports.
 5. Reconcile pending releases and orphaned chunks.
 6. Add explicit installation-state limits.

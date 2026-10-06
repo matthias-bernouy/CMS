@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { randomBytes } from "node:crypto";
-import { decryptAesGcm, encryptAesGcm, LocalKekProvider, parseBlob, serializeBlob } from "@bernouy/envelope-crypto";
+import {
+    decryptAesGcm,
+    encryptAesGcm,
+    LocalKekProvider,
+    LocalKekRingProvider,
+    parseBlob,
+    serializeBlob,
+} from "@bernouy/envelope-crypto";
 
 const KEY = randomBytes(32);
 
@@ -44,6 +51,24 @@ describe("LocalKekProvider", () => {
     test("unwrap fails under a different KEK", async () => {
         const { wrapped } = await new LocalKekProvider(KEY).generateDek();
         await expect(new LocalKekProvider(randomBytes(32)).unwrap(wrapped)).rejects.toThrow();
+    });
+
+    test("a key ring wraps with the active key and retains historical unwrap keys", async () => {
+        const oldKey = randomBytes(32);
+        const activeKey = randomBytes(32);
+        const oldRing = new LocalKekRingProvider("old", { old: oldKey });
+        const generated = await oldRing.generateDek();
+        const ring = new LocalKekRingProvider("active", { old: oldKey, active: activeKey });
+
+        expect(ring.hasKey("old")).toBe(true);
+        expect(ring.hasKey("active")).toBe(true);
+        expect((await ring.unwrap(generated.wrapped, generated.keyId)).equals(generated.plaintext)).toBe(true);
+        expect((await ring.wrap(generated.plaintext)).keyId).toBe("active");
+    });
+
+    test("a key ring refuses an unavailable historical key", async () => {
+        const ring = new LocalKekRingProvider("active", { active: randomBytes(32) });
+        await expect(ring.unwrap("ignored", "removed")).rejects.toThrow('referenced KEK "removed" is unavailable');
     });
 
     test("serializeBlob/parseBlob round-trip; malformed string is rejected", () => {

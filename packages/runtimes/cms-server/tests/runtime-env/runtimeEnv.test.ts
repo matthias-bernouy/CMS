@@ -21,6 +21,54 @@ describe("runtime env validation", () => {
         expect(env.CMS_AUTH_EMAIL_VERIFICATION_URL).toBe("https://www.example.com/auth/confirm-email");
         expect(env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL).toBe("https://admin.example.com/auth/reset-password");
         expect(env.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION).toBe(100);
+        expect(env.CMS_KEK).toEqual({
+            activeKeyId: "legacy",
+            keysHex: { legacy: "00".repeat(32) },
+            rotateOnStart: false,
+        });
+    });
+
+    test("parses a versioned KEK ring without losing the legacy recovery key", () => {
+        const env = readRuntimeEnv({
+            ...validEnv(),
+            CMS_KEK_ACTIVE_ID: "2026-10",
+            CMS_KEK_RING_JSON: JSON.stringify({ "2026-10": "11".repeat(32) }),
+            CMS_KEK_ROTATE_ON_START: "true",
+        });
+
+        expect(env.CMS_KEK).toEqual({
+            activeKeyId: "2026-10",
+            keysHex: { legacy: "00".repeat(32), "2026-10": "11".repeat(32) },
+            rotateOnStart: true,
+        });
+    });
+
+    test("allows operators to remove a historical key after every DEK has been rewrapped", () => {
+        const env = readRuntimeEnv({
+            ...validEnv(),
+            CMS_KEK_HEX: undefined,
+            CMS_KEK_ACTIVE_ID: "2026-10",
+            CMS_KEK_RING_JSON: JSON.stringify({ "2026-10": "11".repeat(32) }),
+        });
+
+        expect(env.CMS_KEK_HEX).toBeUndefined();
+        expect(env.CMS_KEK.keysHex).toEqual({ "2026-10": "11".repeat(32) });
+    });
+
+    test("rejects malformed, incomplete, or conflicting KEK rings", () => {
+        expect(() => readRuntimeEnv({ ...validEnv(), CMS_KEK_HEX: "not-a-key" })).toThrow(/64 hexadecimal/);
+        expect(() => readRuntimeEnv({ ...validEnv(), CMS_KEK_ACTIVE_ID: "missing", CMS_KEK_RING_JSON: "{}" })).toThrow(
+            /references missing key/,
+        );
+        expect(() =>
+            readRuntimeEnv({
+                ...validEnv(),
+                CMS_KEK_RING_JSON: JSON.stringify({ legacy: "22".repeat(32) }),
+            }),
+        ).toThrow(/must match CMS_KEK_HEX/);
+        expect(() => readRuntimeEnv({ ...validEnv(), CMS_KEK_RING_JSON: "[]" })).toThrow(/JSON object/);
+        expect(() => readRuntimeEnv({ ...validEnv(), CMS_KEK_ROTATE_ON_START: "yes" })).toThrow(/true or false/);
+        expect(() => readRuntimeEnv({ ...validEnv(), CMS_KEK_HEX: undefined })).toThrow(/ACTIVE_ID is required/);
     });
 
     test("validates collection migration rollback retention", () => {

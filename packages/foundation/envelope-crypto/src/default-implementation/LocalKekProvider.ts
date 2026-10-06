@@ -10,23 +10,81 @@ const DEK_BYTES = 32;
  * so the storage layer carries a single string field.
  */
 export class LocalKekProvider implements KekProvider {
-    private readonly _kek: Buffer;
+    readonly activeKeyId = "legacy";
+    private readonly _ring: LocalKekRingProvider;
 
     constructor(kek: Buffer) {
         if (kek.length !== DEK_BYTES) {
             throw new Error(`LocalKekProvider: KEK must be ${DEK_BYTES} bytes, got ${kek.length}.`);
         }
-        this._kek = kek;
+        this._ring = new LocalKekRingProvider(this.activeKeyId, { [this.activeKeyId]: kek });
     }
 
-    async generateDek(): Promise<{ wrapped: string; plaintext: Buffer }> {
+    generateDek(): Promise<{ wrapped: string; plaintext: Buffer; keyId: string }> {
+        return this._ring.generateDek();
+    }
+
+    wrap(plaintext: Buffer): Promise<{ wrapped: string; keyId: string }> {
+        return this._ring.wrap(plaintext);
+    }
+
+    unwrap(wrapped: string, keyId = this.activeKeyId): Promise<Buffer> {
+        return this._ring.unwrap(wrapped, keyId);
+    }
+
+    hasKey(keyId: string): boolean {
+        return this._ring.hasKey(keyId);
+    }
+}
+
+/** Local key ring with one active key and retained historical unwrap keys. */
+export class LocalKekRingProvider implements KekProvider {
+    readonly activeKeyId: string;
+    private readonly _keys: ReadonlyMap<string, Buffer>;
+
+    constructor(activeKeyId: string, keys: Readonly<Record<string, Buffer>>) {
+        if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u.test(activeKeyId)) {
+            throw new Error("LocalKekRingProvider: active key ID is invalid.");
+        }
+        const entries = Object.entries(keys);
+        if (!entries.some(([keyId]) => keyId === activeKeyId)) {
+            throw new Error(`LocalKekRingProvider: active key "${activeKeyId}" is missing from the key ring.`);
+        }
+        for (const [keyId, key] of entries) {
+            if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u.test(keyId)) {
+                throw new Error(`LocalKekRingProvider: key ID "${keyId}" is invalid.`);
+            }
+            if (key.length !== DEK_BYTES) {
+                throw new Error(`LocalKekRingProvider: KEK ${keyId} must be ${DEK_BYTES} bytes, got ${key.length}.`);
+            }
+        }
+        this.activeKeyId = activeKeyId;
+        this._keys = new Map(entries.map(([keyId, key]) => [keyId, Buffer.from(key)]));
+    }
+
+    async generateDek(): Promise<{ wrapped: string; plaintext: Buffer; keyId: string }> {
         const dek = randomBytes(DEK_BYTES);
-        const wrapped = encryptAesGcm(dek, this._kek);
-        return { wrapped: serializeBlob(wrapped), plaintext: dek };
+        return { ...(await this.wrap(dek)), plaintext: dek };
     }
 
-    async unwrap(wrapped: string): Promise<Buffer> {
-        return decryptAesGcm(parseBlob(wrapped), this._kek);
+    async wrap(plaintext: Buffer): Promise<{ wrapped: string; keyId: string }> {
+        if (plaintext.length !== DEK_BYTES) {
+            throw new Error(`LocalKekRingProvider: DEK must be ${DEK_BYTES} bytes, got ${plaintext.length}.`);
+        }
+        const key = this._keys.get(this.activeKeyId)!;
+        return { wrapped: serializeBlob(encryptAesGcm(plaintext, key)), keyId: this.activeKeyId };
+    }
+
+    async unwrap(wrapped: string, keyId: string): Promise<Buffer> {
+        const key = this._keys.get(keyId);
+        if (!key) {
+            throw new Error(`LocalKekRingProvider: referenced KEK "${keyId}" is unavailable.`);
+        }
+        return decryptAesGcm(parseBlob(wrapped), key);
+    }
+
+    hasKey(keyId: string): boolean {
+        return this._keys.has(keyId);
     }
 }
 

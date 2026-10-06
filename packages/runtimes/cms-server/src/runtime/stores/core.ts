@@ -26,8 +26,7 @@ import {
 import { recoverFileMutations, ValidatingCmsFilesMetadata } from "@bernouy/cms-content/files";
 import { createLocalAuthorFileStores } from "./authorFiles";
 import { MongoCmsFileMutationJournal, MongoCmsFilesMetadata } from "@bernouy/cms-content/files/mongo";
-import { EnvelopeSecretCrypto, LocalKekProvider } from "@bernouy/envelope-crypto";
-import { createFieldCrypto, MongoDekRepository } from "@bernouy/envelope-crypto/mongo";
+import { createFieldCrypto } from "@bernouy/envelope-crypto/mongo";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { MongoRateLimiter } from "@bernouy/rate-limiter/mongo";
 import { ValidatingSecretStore } from "@bernouy/secret-store";
@@ -36,6 +35,7 @@ import { MongoClient } from "mongodb";
 import type { RuntimeEnv } from "../../runtimeEnv";
 import { MongoCoreOperationStore } from "../core-operations/MongoCoreOperationStore";
 import { CMS_REPOSITORY_FENCED_MUTATIONS, COLLECTION_STORE_FENCED_MUTATIONS } from "./migrationWritePolicy";
+import { createEnvelopeSecretCrypto } from "./envelopeCrypto";
 
 const SCOPE_ID = "default";
 
@@ -44,9 +44,10 @@ export async function createCoreStores(env: RuntimeEnv) {
     await mongo.connect();
     const db = mongo.db();
 
-    const kekProvider = new LocalKekProvider(Buffer.from(env.CMS_KEK_HEX, "hex"));
-    const dekRepository = new MongoDekRepository(db.collection("cms_deks"));
-    const secretCrypto = new EnvelopeSecretCrypto(kekProvider, dekRepository);
+    const secretCrypto = await createEnvelopeSecretCrypto(db, env.CMS_KEK).catch(async (error) => {
+        await mongo.close();
+        throw error;
+    });
     const fieldCrypto = await createFieldCrypto(SCOPE_ID, secretCrypto, db);
 
     const innerRepo = new MongoCmsRepository(db);

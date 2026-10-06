@@ -11,9 +11,19 @@
 export { encryptAesGcm, decryptAesGcm, type EncryptedBlob } from "envelope-crypto/core/aesGcm";
 export { asBuffer } from "envelope-crypto/core/buffer";
 export { loadKek } from "envelope-crypto/core/loadKek";
+export {
+    rotateDekWrapping,
+    verifyDekKeyAvailability,
+    type KekRotationReport,
+} from "envelope-crypto/core/rotateKek";
 export type { KekProvider } from "envelope-crypto/interfaces/KekProvider";
 export type { SecretCrypto } from "envelope-crypto/interfaces/SecretCrypto";
-export type { DekRepository, DekRecord } from "envelope-crypto/interfaces/DekRepository";
-export { LocalKekProvider, serializeBlob, parseBlob } from "envelope-crypto/default-implementation/LocalKekProvider";
+export type { DekRepository, DekRecord, DekPage } from "envelope-crypto/interfaces/DekRepository";
+export {
+    LocalKekProvider,
+    LocalKekRingProvider,
+    serializeBlob,
+    parseBlob,
+} from "envelope-crypto/default-implementation/LocalKekProvider";
 export { EnvelopeSecretCrypto } from "envelope-crypto/default-implementation/EnvelopeSecretCrypto";
 export { FieldCrypto } from "envelope-crypto/core/FieldCrypto";
