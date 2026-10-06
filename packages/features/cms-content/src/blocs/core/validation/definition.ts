@@ -20,6 +20,15 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     if (bloc.catalogue !== undefined && bloc.catalogue !== "active" && bloc.catalogue !== "inactive") {
         throw new ContentValidationError("catalogue", "expected active or inactive");
     }
+    if (
+        bloc.surfaces !== undefined &&
+        (!Array.isArray(bloc.surfaces) ||
+            bloc.surfaces.length === 0 ||
+            new Set(bloc.surfaces).size !== bloc.surfaces.length ||
+            bloc.surfaces.some((surface) => surface !== "control" && surface !== "delivery"))
+    ) {
+        throw new ContentValidationError("surfaces", "non-empty unique control/delivery list expected");
+    }
     if (!isValidCustomElementTag(bloc.id)) {
         throw new ContentValidationError("id", "valid lower-case custom-element tag expected");
     }

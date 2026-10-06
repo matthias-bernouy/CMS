@@ -20,6 +20,8 @@ export type BlocListItemResponse = {
     componentHTML?: string;
     collectionSettings?: TBloc["collectionSettings"];
     internal?: boolean;
+    surfaces?: TBloc["surfaces"];
+    uses?: TBloc["uses"];
     nativeElement?: TBloc["nativeElement"];
     ownership: TBloc["ownership"];
 };

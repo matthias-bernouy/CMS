@@ -241,6 +241,10 @@ export {
     type ContentRefsReader,
 } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
 export {
+    assertContentSupportsSurface,
+    type ContentSurfaceReader,
+} from "cms-content/blocs/core/markup/validation/assertContentSurface";
+export {
     managedNativeElementIssue,
     type ManagedNativeElementContract,
 } from "cms-content/blocs/core/markup/validation/managedNativeElements";

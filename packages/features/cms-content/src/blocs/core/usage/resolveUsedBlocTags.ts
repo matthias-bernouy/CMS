@@ -1,7 +1,7 @@
 import type { ContentReader } from "cms-content/application/interfaces/ContentReader";
 import { findUsedBlocTags } from "cms-content/blocs/core/usage/findUsedBlocTags";
 
-type BlocListItem = { id: string; compositionHTML?: string; componentHTML?: string };
+type BlocListItem = { id: string; compositionHTML?: string; componentHTML?: string; uses?: readonly string[] };
 
 /**
  * Resolves page blocs and the blocs referenced by server composition templates
@@ -14,6 +14,7 @@ export function createBlocUsageResolver(
 ): (content: string) => Promise<string[]> {
     const viewCache = new Map<string, Promise<string | null>>();
     const compositionByTag = new Map(blocList.map((bloc) => [bloc.id, bloc.compositionHTML ?? bloc.componentHTML]));
+    const dependenciesByTag = new Map(blocList.map((bloc) => [bloc.id, bloc.uses ?? []]));
 
     const viewFor = (tag: string): Promise<string | null> => {
         const cached = viewCache.get(tag);
@@ -43,7 +44,12 @@ export function createBlocUsageResolver(
                 }),
             );
             const next = new Set<string>();
-            for (const sourcesForTag of sources) {
+            for (const [index, sourcesForTag] of sources.entries()) {
+                for (const tag of dependenciesByTag.get(frontier[index]!) ?? []) {
+                    if (!used.has(tag)) {
+                        next.add(tag);
+                    }
+                }
                 for (const source of sourcesForTag) {
                     if (!source) {
                         continue;

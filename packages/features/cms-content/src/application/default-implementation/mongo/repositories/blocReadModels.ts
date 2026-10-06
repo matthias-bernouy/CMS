@@ -33,6 +33,8 @@ export function projectBlocList(records: BlocRecord[], options: BlocListOptions 
                           ? { collectionSettings: structuredClone(bloc.collectionSettings) }
                           : {}),
                       ...(bloc.internal ? { internal: true } : {}),
+                      ...(bloc.surfaces ? { surfaces: [...bloc.surfaces] } : {}),
+                      ...(bloc.uses ? { uses: [...bloc.uses] } : {}),
                       ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
                       ...(bloc.thumbnail ? { thumbnail: structuredClone(bloc.thumbnail) } : {}),
                       ownership: structuredClone(record.ownership),

@@ -45,6 +45,8 @@ export function withInstalledCollections(
                                     ? resolveCollectionTranslation(release, bloc.description)
                                     : "",
                                 ownership: { kind: "code-managed" },
+                                surfaces: bloc.surfaces,
+                                uses: bloc.uses,
                                 viewJS:
                                     bloc.kind === "component"
                                         ? (bloc.runtime?.viewJS ?? compileCollectionComponent(bloc))

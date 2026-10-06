@@ -3,6 +3,7 @@ import type {
     CollectionManagedNativeElement,
     CollectionSlot,
     CollectionSlotAccept,
+    PageSurface,
 } from "@bernouy/cms-repository/collections";
 
 export type BlocOwnership = { kind: "site-builder"; definitionId: string } | { kind: "code-managed" };
@@ -20,6 +21,10 @@ export type TBloc = {
     catalogue?: "active" | "inactive";
     /** Internal behavior component omitted from the authoring catalogue. */
     internal?: boolean;
+    /** Omission for legacy/local Blocs means both rendering surfaces. */
+    surfaces?: readonly PageSurface[];
+    /** Explicit dependency closure seed for immutable collection Blocs. */
+    uses?: readonly string[];
     /** Allowed tags for the single required native Light DOM child. */
     nativeElement?: CollectionManagedNativeElement;
     viewJS: string;

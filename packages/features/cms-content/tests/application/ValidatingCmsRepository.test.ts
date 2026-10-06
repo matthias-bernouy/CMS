@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { ValidatingCmsRepository, ContentValidationError } from "@bernouy/cms-content";
+import { ValidatingCmsRepository, ContentValidationError, InMemoryCmsRepository } from "@bernouy/cms-content";
 import type { CmsRepository } from "@bernouy/cms-content";
 
 /** Capturing inner repo: records what the decorator forwards after validation
@@ -34,6 +34,35 @@ describe("ValidatingCmsRepository — pages", () => {
         await repo.insertPage("/copy", "Copy", "<fixture-card></fixture-card>");
         expect(calls.insertPage[0][2]).toContain("fixture-card");
         await expect(repo.insertPage("/bad-copy", "Bad copy", "<fixture-ghost></fixture-ghost>")).rejects.toThrow();
+    });
+
+    test("enforces direct and transitive Bloc surfaces and keeps Page surfaces immutable", async () => {
+        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const bloc = (id: string, surfaces: readonly ("control" | "delivery")[], uses: readonly string[] = []) => ({
+            id,
+            name: id,
+            group: "",
+            description: "",
+            viewJS: "customElements.define('fixture-unused', class extends HTMLElement {})",
+            ownership: { kind: "code-managed" as const },
+            surfaces,
+            uses,
+        });
+        await repo.createBloc(bloc("fixture-control-card", ["control"]));
+        await repo.createBloc(bloc("fixture-shell", ["control", "delivery"], ["fixture-control-card"]));
+
+        await expect(
+            repo.insertPage("/public", "Public", "<fixture-control-card></fixture-control-card>"),
+        ).rejects.toThrow("does not support the delivery surface");
+        await expect(repo.insertPage("/public", "Public", "<fixture-shell></fixture-shell>")).rejects.toThrow(
+            "does not support the delivery surface",
+        );
+        await repo.insertPage("/admin", "Admin", "<fixture-shell></fixture-shell>", { surface: "control" });
+        const controlPage = (await repo.getPage("/admin"))!;
+
+        await expect(repo.updatePage({ id: controlPage.id, surface: "delivery" })).rejects.toThrow(
+            "cannot change after Page creation",
+        );
     });
 
     test("updatePage trims the title and forwards it", async () => {

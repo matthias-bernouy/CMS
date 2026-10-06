@@ -3,6 +3,7 @@ import type { CollectionStore } from "@bernouy/cms-repository/collections/instal
 import { replaceCollectionTextExpressions } from "@bernouy/cms-repository/collections/texts";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import { assertContentRefsExist } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
+import { assertContentSupportsSurface } from "cms-content/blocs/core/markup/validation/assertContentSurface";
 import type { CollectionMigrationParticipant, CollectionMigrationRecord } from "../interfaces";
 import { snapshotMigrationParticipants } from "../planning/participants";
 import { referencesThemeToken } from "../transforms/themeTokenReferences";
@@ -110,6 +111,10 @@ async function assertProspectivePagesValid(
     const previousBlocs = previousReleases.flatMap((release) =>
         release.blocs.map((bloc) => ({
             id: bloc.id,
+            surfaces: bloc.surfaces,
+            uses: bloc.uses,
+            ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
+            ...(bloc.kind === "component" && bloc.lightdom ? { componentHTML: bloc.lightdom } : {}),
             ...(bloc.kind === "component" && bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
             ...(bloc.kind === "component" && bloc.settings ? { collectionSettings: bloc.settings } : {}),
         })),
@@ -140,7 +145,12 @@ async function assertProspectivePagesValid(
             const content =
                 !change.done && change.value.before.id === page.id ? change.value.before.content : page.content;
             try {
-                await assertContentRefsExist({ getBlocsList: async () => prospectiveBlocs }, content);
+                const prospectiveRepository = {
+                    getBlocsList: async () => prospectiveBlocs,
+                    getBlocViewJS: (tag: string) => context.repository.getBlocViewJS(tag),
+                };
+                await assertContentRefsExist(prospectiveRepository, content);
+                await assertContentSupportsSurface(prospectiveRepository, content, page.surface);
                 for (const tokenId of removedTokens) {
                     if (referencesThemeToken(content, tokenId)) {
                         throw new Error(`references theme token ${tokenId}`);
