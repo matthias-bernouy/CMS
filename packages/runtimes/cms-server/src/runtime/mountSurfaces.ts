@@ -13,6 +13,7 @@ import { mountLocalCoreCapabilities } from "./coreCapabilities";
 import { DefaultCoreCapabilityDispatcher } from "@bernouy/cms-content";
 import { registerOfficialCoreCapabilities } from "./core-contracts";
 import { CoreOperationExecutor } from "./core-operations/CoreOperationExecutor";
+import { CollectionSources } from "./core-contracts/collections/sources";
 
 export type { ProductionSurfaceRuntime } from "./surfaceRuntime";
 
@@ -34,12 +35,22 @@ export async function mountProductionSurfaces(
 ): Promise<ProductionSurfaceHandle> {
     const { env, core, features, authentication, gateway } = options;
     const controlRunner = new runtime.Runner();
+    const collectionRepositorySources = env.CMS_REPOSITORY_URL
+        ? [new HttpCollectionRepository("local", env.CMS_REPOSITORY_URL)]
+        : [];
     const providerSources = env.CMS_REPOSITORY_URL ? [new HttpProviderRepository("local", env.CMS_REPOSITORY_URL)] : [];
     const providerManagement = gateway ? new ProviderManagement(gateway, core.secrets, providerSources) : undefined;
     if (env.CMS_LOCAL_PROVIDER_TOKEN) {
         const dispatcher = new DefaultCoreCapabilityDispatcher();
         const operations = new CoreOperationExecutor(core.coreOperations);
-        registerOfficialCoreCapabilities(dispatcher, core, gateway, operations, providerManagement);
+        registerOfficialCoreCapabilities(
+            dispatcher,
+            core,
+            gateway,
+            operations,
+            providerManagement,
+            new CollectionSources(core.collections, collectionRepositorySources),
+        );
         await operations.recover();
         mountLocalCoreCapabilities(controlRunner, dispatcher, env.CMS_LOCAL_PROVIDER_TOKEN);
     }
@@ -66,7 +77,7 @@ export async function mountProductionSurfaces(
                 siteId: "default",
                 routes: core.pageRoutes,
                 migrations: core.collectionMigrations,
-                sources: env.CMS_REPOSITORY_URL ? [new HttpCollectionRepository("local", env.CMS_REPOSITORY_URL)] : [],
+                sources: collectionRepositorySources,
             },
             ...(gateway
                 ? {

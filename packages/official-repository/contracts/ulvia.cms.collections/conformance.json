@@ -3,7 +3,7 @@
     "protocol": "ulvia-conformance/v1",
     "contractId": "ulvia.cms.collections",
     "contractVersion": "1.0.0",
-    "contractDigest": "sha256:6dd42bb9ec25b504cb6a47ae2142d6ae25204d63ccd6444acf8974c36a871285",
+    "contractDigest": "sha256:1adcf1f12fe927a34e3a791cf4c04b38cb9bb8e4809a52f05ef200bffd8d6b54",
     "publisherId": "ulvia.official",
     "version": "1.0.0",
     "isolation": "disposable-tenant",
@@ -32,6 +32,31 @@
                             }
                         ]
                     }
+                },
+                {
+                    "id": "catalogue",
+                    "capabilityId": "catalogue",
+                    "actor": {
+                        "kind": "admin"
+                    },
+                    "input": {},
+                    "expect": {
+                        "kind": "success",
+                        "checks": [
+                            {
+                                "path": "/revision",
+                                "present": true
+                            },
+                            {
+                                "path": "/releases",
+                                "present": true
+                            },
+                            {
+                                "path": "/installed",
+                                "present": true
+                            }
+                        ]
+                    }
                 }
             ]
         }
@@ -44,6 +69,10 @@
         {
             "capabilityId": "install",
             "reason": "This state-changing capability requires dedicated suite-owned fixtures and cleanup that the portable read smoke suite does not yet prescribe."
+        },
+        {
+            "capabilityId": "upgrade",
+            "reason": "This state-changing capability requires a suite-owned installed collection and repository release fixture."
         },
         {
             "capabilityId": "update-configuration",
@@ -85,6 +114,16 @@
             "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
         },
         {
+            "capabilityId": "catalogue",
+            "errorCode": "CATALOGUE_TOO_LARGE",
+            "reason": "The portable suite does not prescribe an oversized repository fixture."
+        },
+        {
+            "capabilityId": "catalogue",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its repository or managed Core."
+        },
+        {
             "capabilityId": "install",
             "errorCode": "INVALID_INPUT",
             "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
@@ -96,6 +135,16 @@
         },
         {
             "capabilityId": "install",
+            "errorCode": "RELEASE_MISMATCH",
+            "reason": "A repository integrity failure requires a deliberately inconsistent immutable fixture."
+        },
+        {
+            "capabilityId": "install",
+            "errorCode": "INVALID_STATE",
+            "reason": "The portable smoke suite does not mutate an existing collection installation."
+        },
+        {
+            "capabilityId": "install",
             "errorCode": "REVISION_CONFLICT",
             "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
         },
@@ -103,6 +152,41 @@
             "capabilityId": "install",
             "errorCode": "CORE_UNAVAILABLE",
             "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "upgrade",
+            "errorCode": "INVALID_INPUT",
+            "reason": "The portable smoke suite does not prescribe a mutable repository fixture."
+        },
+        {
+            "capabilityId": "upgrade",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe an installed collection fixture."
+        },
+        {
+            "capabilityId": "upgrade",
+            "errorCode": "RELEASE_MISMATCH",
+            "reason": "A repository integrity failure requires a deliberately inconsistent immutable fixture."
+        },
+        {
+            "capabilityId": "upgrade",
+            "errorCode": "INVALID_STATE",
+            "reason": "The portable smoke suite does not prescribe an incompatible release fixture."
+        },
+        {
+            "capabilityId": "upgrade",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The portable smoke suite does not orchestrate concurrent collection mutations."
+        },
+        {
+            "capabilityId": "upgrade",
+            "errorCode": "MIGRATION_REQUIRED",
+            "reason": "A generation-changing release requires a suite-owned migration fixture."
+        },
+        {
+            "capabilityId": "upgrade",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its repository or managed Core."
         },
         {
             "capabilityId": "update-configuration",
@@ -133,6 +217,11 @@
             "capabilityId": "plan-migration",
             "errorCode": "NOT_FOUND",
             "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "plan-migration",
+            "errorCode": "RELEASE_MISMATCH",
+            "reason": "A repository integrity failure requires a deliberately inconsistent immutable fixture."
         },
         {
             "capabilityId": "plan-migration",
@@ -153,6 +242,11 @@
             "capabilityId": "apply-migration",
             "errorCode": "NOT_FOUND",
             "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "apply-migration",
+            "errorCode": "RELEASE_MISMATCH",
+            "reason": "A repository integrity failure requires a deliberately inconsistent immutable fixture."
         },
         {
             "capabilityId": "apply-migration",

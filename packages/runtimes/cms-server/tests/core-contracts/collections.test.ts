@@ -1,0 +1,111 @@
+import { expect, mock, test } from "bun:test";
+import { DefaultCoreCapabilityDispatcher } from "@bernouy/cms-content";
+import { registerCollectionCapabilities } from "../../src/runtime/core-contracts/collections";
+import { CollectionSources } from "../../src/runtime/core-contracts/collections/sources";
+
+const digest = `sha256:${"a".repeat(64)}`;
+const reference = {
+    repositoryId: "official",
+    publisherId: "ulvia.official",
+    collectionId: "sample",
+    version: "1.0.0",
+    digest,
+};
+const entry = { ...reference, name: "Sample", description: "Fixture", blocCount: 1, hasTheme: false };
+const context = {
+    requestId: "00000000-0000-4000-8000-000000000001",
+    siteId: "default",
+    installationId: "official",
+    origin: "control" as const,
+    actorKind: "administrator" as const,
+};
+
+test("collection catalogue stages only the exact repository release", async () => {
+    const importRelease = mock(async () => ({
+        digest,
+        release: {
+            publisherId: reference.publisherId,
+            collectionId: reference.collectionId,
+            version: reference.version,
+        },
+    }));
+    const store = {
+        snapshot: async () => ({ revision: 4, collections: [] }),
+        importRelease,
+    };
+    const source = {
+        id: "official",
+        list: async () => [entry],
+        get: async () => ({ release: { collectionId: "sample" }, assets: [] }),
+    };
+    const sources = new CollectionSources(store as never, [source]);
+
+    expect(await sources.catalogue("default")).toMatchObject({ revision: 4, releases: [entry] });
+    expect(await sources.stage([reference])).toEqual([{ digest, repositoryId: "official" }]);
+    expect(importRelease).toHaveBeenCalledTimes(1);
+    await expect(sources.stage([{ ...reference, digest: `sha256:${"b".repeat(64)}` }])).rejects.toMatchObject({
+        code: "NOT_FOUND",
+    });
+});
+
+test("collection commands stage installs and require migrations for generation changes", async () => {
+    const installedRelease = {
+        publisherId: "ulvia.official",
+        collectionId: "sample",
+        version: "0.9.0",
+        dataGeneration: 1,
+        blocs: [],
+        pages: [],
+        assets: [],
+        texts: [],
+    };
+    const targetRelease = { ...installedRelease, version: "1.0.0", dataGeneration: 2 };
+    let installed = false;
+    const core = {
+        collections: {
+            snapshot: async () => ({
+                revision: installed ? 1 : 0,
+                collections: installed
+                    ? [{ collectionId: "sample", digest: `sha256:${"0".repeat(64)}`, release: installedRelease }]
+                    : [],
+            }),
+            revision: async () => (installed ? 1 : 0),
+            importRelease: async () => ({ digest, release: targetRelease }),
+            getRelease: async () => ({ digest, release: targetRelease }),
+            installMany: async () => {
+                installed = true;
+                return {
+                    revision: 1,
+                    collections: [
+                        {
+                            collectionId: "sample",
+                            digest,
+                            configuration: {},
+                            textOverrides: {},
+                            release: targetRelease,
+                        },
+                    ],
+                };
+            },
+        },
+    };
+    const source = {
+        id: "official",
+        list: async () => [entry],
+        get: async () => ({ release: targetRelease, assets: [] }),
+    };
+    const dispatcher = new DefaultCoreCapabilityDispatcher();
+    registerCollectionCapabilities(
+        dispatcher,
+        core as never,
+        undefined,
+        new CollectionSources(core.collections as never, [source]),
+    );
+
+    await expect(
+        dispatcher.invoke("ulvia.cms.collections", "install", { expectedRevision: 0, targets: [reference] }, context),
+    ).resolves.toMatchObject({ revision: 1 });
+    await expect(
+        dispatcher.invoke("ulvia.cms.collections", "upgrade", { expectedRevision: 1, target: reference }, context),
+    ).rejects.toMatchObject({ code: "MIGRATION_REQUIRED", status: 409 });
+});
