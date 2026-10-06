@@ -1,6 +1,7 @@
 import { decodeHttpParameter } from "@bernouy/cms-repository/contracts/bindings";
 import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
+import { MAX_GATEWAY_JSON_BYTES } from "cms-gateway/invocation/core/snapshotInvocation";
 import type {
     GatewayTransport,
     GatewayTransportRequest,
@@ -41,7 +42,7 @@ export class HttpGatewayTransport implements GatewayTransport {
 
     constructor(options: HttpGatewayTransportOptions) {
         this.#network = options.network;
-        this.#maxResponseBytes = positiveBound(options.maxResponseBytes ?? 1024 * 1024, "maxResponseBytes");
+        this.#maxResponseBytes = positiveBound(options.maxResponseBytes ?? MAX_GATEWAY_JSON_BYTES, "maxResponseBytes");
         this.#maxBinaryResponseBytes = positiveBound(
             options.maxBinaryResponseBytes ?? 10 * 1024 * 1024,
             "maxBinaryResponseBytes",

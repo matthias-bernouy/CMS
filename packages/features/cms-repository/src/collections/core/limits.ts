@@ -1,5 +1,10 @@
 import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "cms-repository/exports/contracts/index";
 
+const DEFAULT_COLLECTION_SCHEMA_LIMITS: Readonly<ReleaseLimits> = Object.freeze({
+    ...DEFAULT_RELEASE_LIMITS,
+    maxStringLength: 8192,
+});
+
 export interface CollectionLimits {
     readonly maxDocumentBytes: number;
     readonly maxJsonDepth: number;
@@ -39,7 +44,7 @@ export const DEFAULT_COLLECTION_LIMITS: Readonly<CollectionLimits> = Object.free
     maxSlotsPerBloc: 32,
     maxRequirementsPerResource: 32,
     maxSettingsPerBloc: 256,
-    schema: DEFAULT_RELEASE_LIMITS,
+    schema: DEFAULT_COLLECTION_SCHEMA_LIMITS,
 });
 
 export function normalizeCollectionLimits(limits: Readonly<CollectionLimits>): Readonly<CollectionLimits> {

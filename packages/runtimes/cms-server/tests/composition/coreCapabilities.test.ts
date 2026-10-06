@@ -77,7 +77,7 @@ describe("local provider Core capability bridge", () => {
                     body: JSON.stringify({
                         contractId: "ulvia.cms.pages",
                         capabilityId: "list",
-                        input: { x: "a".repeat(1024 * 1024 + 20_000) },
+                        input: { x: "a".repeat(2 * 1024 * 1024 + 20_000) },
                     }),
                 })
             ).status,

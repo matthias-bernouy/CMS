@@ -18,7 +18,7 @@ import { readBoundedRequestBody, RequestBodyTooLargeError } from "@bernouy/http-
 import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
 
 export const LOCAL_CORE_CAPABILITY_ROUTE = "/.cms/internal/core-call";
-const MAX_INPUT_BYTES = 1024 * 1024 + 16 * 1024;
+const MAX_INPUT_BYTES = 2 * 1024 * 1024 + 16 * 1024;
 
 export function mountLocalCoreCapabilities(runner: Runner, repository: CmsRepository, token: string): void {
     if (token.length < 24 || token.length > 256) {

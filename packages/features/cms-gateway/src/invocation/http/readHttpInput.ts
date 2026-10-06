@@ -1,7 +1,6 @@
 import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
-
-const MAX_INPUT_BYTES = 1024 * 1024;
+import { MAX_GATEWAY_JSON_BYTES } from "cms-gateway/invocation/core/snapshotInvocation";
 
 /** Reads the caller's input envelope without trusting content length or JSON.parse defaults. */
 export async function readGatewayHttpInput(request: Request): Promise<unknown> {
@@ -22,7 +21,7 @@ export async function readGatewayHttpInput(request: Request): Promise<unknown> {
                 break;
             }
             length += value.byteLength;
-            if (length > MAX_INPUT_BYTES) {
+            if (length > MAX_GATEWAY_JSON_BYTES) {
                 await reader.cancel().catch(() => undefined);
                 throw new TypeError("input exceeds gateway limit");
             }
@@ -34,7 +33,7 @@ export async function readGatewayHttpInput(request: Request): Promise<unknown> {
             bytes.set(chunk, offset);
             offset += chunk.byteLength;
         }
-        return parseStrictJson(bytes, MAX_INPUT_BYTES, 64);
+        return parseStrictJson(bytes, MAX_GATEWAY_JSON_BYTES, 64);
     } catch {
         throw new GatewayError("invalid_input", "capability input is not bounded interoperable JSON");
     }

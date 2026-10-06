@@ -2,6 +2,9 @@ import { canonicalIJsonBytes, parseStrictJson } from "@bernouy/cms-repository/co
 import type { GatewayActor, GatewayInvocation } from "cms-gateway/invocation/interfaces/Invocation";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 
+/** Bounded JSON envelope budget, including escaping and metadata around a 1 MiB contract string. */
+export const MAX_GATEWAY_JSON_BYTES = 2 * 1024 * 1024 + 16 * 1024;
+
 /** Snapshot caller input before the first asynchronous route or grant lookup. */
 export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation {
     if (!value || typeof value !== "object") {
@@ -26,7 +29,7 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
     const actor = snapshotActor(value.actor);
     try {
         const bytes = canonicalIJsonBytes(value.input, 64);
-        if (bytes.byteLength > 1024 * 1024) {
+        if (bytes.byteLength > MAX_GATEWAY_JSON_BYTES) {
             throw new TypeError("input exceeds gateway limit");
         }
         return {
@@ -36,7 +39,7 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
             origin: value.origin,
             actor,
             ...(value.execution ? { execution: snapshotExecution(value.execution) } : {}),
-            input: parseStrictJson(bytes, 1024 * 1024, 64),
+            input: parseStrictJson(bytes, MAX_GATEWAY_JSON_BYTES, 64),
         };
     } catch {
         throw new GatewayError("invalid_input", "input must be bounded interoperable JSON");

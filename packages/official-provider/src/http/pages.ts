@@ -14,6 +14,8 @@ export interface OfficialPageCapabilities {
     readonly rename: CapabilityDefinition;
 }
 
+const MAX_PAGE_CALL_BYTES = 2 * 1024 * 1024 + 16 * 1024;
+
 export async function handleOfficialPages(
     request: Request,
     capabilities: OfficialPageCapabilities,
@@ -90,7 +92,7 @@ async function capabilityInput(
         input.id = decodeHttpParameter(capability.input.properties.id as never, suffix);
     }
     if (!["list", "get", "delete"].includes(capabilityId)) {
-        const bytes = await readBody(request, 1024 * 1024 + 16 * 1024);
+        const bytes = await readBody(request, MAX_PAGE_CALL_BYTES);
         const body = parseStrictJson(bytes, bytes.byteLength, 32);
         if (!body || typeof body !== "object" || Array.isArray(body)) {
             throw new TypeError("Page capability body must be an object.");
