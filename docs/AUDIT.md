@@ -349,6 +349,30 @@ production data to preserve. Immutable collection Pages and Page execution-plan
 primitives now replace Views, and the same mounted flow also renders editable
 site-owned Control Pages.
 
+### Collection-Owned Control Domain V1
+
+The official collection now supplies Control Pages for all seven planned
+administration areas. `ulvia.cms.pages` retains the first complete mutation
+slice. Six new immutable contracts cover collections, files, design, providers,
+access and operations. Their handlers live in the Core runtime, the official
+provider relays them generically from admitted HTTP bindings, and the Pages call
+them only through exact execution plans and `/.cms/call`.
+
+The first release is intentionally conservative. It exposes bounded read models
+and one safe file-folder command rather than moving actor-sensitive or
+specialized transports into an underspecified generic API. Binary uploads stay
+on the kernel file transport. Provider credentials remain inaccessible to
+collections. Backup and Core process updates remain provider lifecycle
+operations. User deletion/administrator changes wait for actor identity to be
+propagated to Core commands, and collection migrations keep their existing
+revision, plan-digest and maintenance guarantees until equivalent contract
+commands are implemented.
+
+This provides real navigation and operational visibility without claiming
+legacy parity. The remaining Phase 8 work is to migrate the missing mutations,
+run their recovery and accessibility flows, then remove each superseded Control
+API separately.
+
 ### `@bernouy/cms-gateway`
 
 The gateway has strong security and correctness properties:

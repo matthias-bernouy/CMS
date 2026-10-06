@@ -197,11 +197,15 @@ The local provider must:
 
 ## Phase 3 — Prove Read-Only CMS Data-Plane Capabilities
 
-**Status (2026-10-06): Pages vertical slice completed.**
+**Status (2026-10-06): official Control data-plane catalogue completed.**
 `ulvia.cms.pages@1.1.0` publishes bounded `list`, `get`, `create`, `update`,
 `publish`, `delete` and `rename` capabilities. They are implemented by the local
 Core, relayed by the official provider and invoked from exact collection Page
-execution plans through `/.cms/call`. Further Core domains remain Phase 8 work.
+execution plans through `/.cms/call`. The six remaining Phase 8 domains now
+also have bounded official V1 contracts, local Core handlers, provider relays
+and collection-owned Control Pages. Their first release is intentionally
+read-oriented except for revision-safe Page mutations and file-folder creation;
+the parity mutations listed in Phase 8 remain follow-up work.
 
 Do not convert the whole Control API at once. Introduce one official contract
 family and prove the complete authorization chain.
@@ -372,13 +376,24 @@ host panels may differ; the composition model must not fork.
 
 ## Phase 8 — Rebuild Control By Functional Area
 
-**Status (2026-10-06): Pages lifecycle V1 implemented.** The new catalogue,
+**Status (2026-10-06): all seven domains have an end-to-end V1.** The Pages catalogue,
 creation, detail/source editing, publication, deletion and rename flows are
-collection-owned. The transitional `/api/page/*` endpoints and retained
-components are not deleted yet: path editing, localization, SEO, visual Bloc
-editing, filtering, pagination UX and replacement redirects have not reached
-contract parity. Deleting them now would remove behavior instead of completing
-a clean migration.
+collection-owned. Six additional official contracts and Pages now cover
+installed collections, author files, design/languages, providers/contracts,
+access/site identity and operational migration state. Every Page executes via
+an exact Page plan and `/.cms/call`; the official provider uses one generic Core
+relay for all `ulvia.cms.*` contracts. File-folder creation is the first
+non-Page command. Binary file transfer remains a kernel transport, and backup
+or Core process lifecycle remains provider control-plane behavior.
+
+This is functional coverage, not legacy-product parity. The transitional APIs
+and retained components are not deleted yet: collection installation and
+upgrade controls, file upload/rename/delete, text/theme/settings writes,
+provider connection and selection, user administration, migration commands,
+backup/restore, path editing, localization, SEO, visual Bloc editing,
+filtering, pagination UX and replacement redirects have not all reached
+contract parity. Deleting those routes now would remove behavior instead of
+completing a clean migration.
 
 Rebuild Control one domain at a time from the retained APIs, components and
 documented behavior. Likely groups are:
@@ -390,6 +405,18 @@ documented behavior. Likely groups are:
 5. providers, instances and contracts;
 6. users, authentication and site settings;
 7. migrations, maintenance, backups and diagnostics.
+
+Current official V1 mapping:
+
+| Area | Contract | Implemented capability |
+| --- | --- | --- |
+| Pages and routing | `ulvia.cms.pages@1.1.0` | Complete first lifecycle slice |
+| Collections | `ulvia.cms.collections@1.0.0` | Installed release catalogue |
+| Files | `ulvia.cms.files@1.0.0` | Bounded listing and folder creation |
+| Design | `ulvia.cms.design@1.0.0` | Effective locale/theme/text overview |
+| Providers | `ulvia.cms.providers@1.0.0` | Installations and exact selections |
+| Access | `ulvia.cms.access@1.0.0` | Members, login methods and safe site identity |
+| Operations | `ulvia.cms.operations@1.0.0` | Readiness, maintenance and migration history |
 
 For each area:
 

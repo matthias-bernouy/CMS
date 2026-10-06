@@ -1,10 +1,10 @@
 # Control Pages And Provider-Managed CMS Instances
 
-**Status (2026-10-06): target design with the first provider-backed Control Page
-lifecycle implemented.** Lot 1 provider-owned local instance discovery and the
-local official-resource bootstrap are implemented; site-owned Page
-Control routing, additional Core data-plane domains and full Control replacement
-remain planned.
+**Status (2026-10-06): target design with all seven Control domains represented
+by provider-backed V1 Pages.** Provider-owned local instance discovery, local
+official-resource bootstrap, site-owned Control Page routing and the official
+Core contract catalogue are implemented. Most non-Page administrative mutations
+and full legacy-product parity remain planned.
 
 This note records the intended direction for replacing visual Foundation
 components and the removed collection View model. The former Dashboard system and
@@ -342,10 +342,10 @@ Core release:
 ulvia.cms.pages
 ulvia.cms.files
 ulvia.cms.collections
-ulvia.cms.users
-ulvia.cms.secrets
+ulvia.cms.design
 ulvia.cms.providers
-ulvia.cms.settings
+ulvia.cms.access
+ulvia.cms.operations
 ```
 
 These contracts operate inside the already authenticated instance context.
@@ -364,8 +364,18 @@ ulvia.cms.pages/delete
 ulvia.cms.pages/publish
 ```
 
-List operations must be cursor-paginated from their first version. A generic
-`get-all` operation must not expose unbounded persistence reads.
+The other official V1 contracts deliberately start with bounded projections:
+installed collection releases, the author file tree, effective design and
+language state, selected providers/contracts, members and safe site identity,
+and maintenance/migration history. File-folder creation is also exposed as a
+command. Upload streaming stays on the CMS kernel transport; instance backup,
+restore and Core updates stay on `ulvia.provider.cms-instances`.
+
+Potentially unbounded list operations must be paginated from their first
+version. A generic `get-all` operation must not expose unbounded persistence
+reads. A complete projection is acceptable only when the persisted domain has
+a lower enforced ceiling and the response schema repeats that ceiling, as the
+256-entry collection installation graph does.
 
 The provider may route these operations to a logical tenant, dedicated runtime,
 container or cluster. Consumers must not depend on that physical choice.
