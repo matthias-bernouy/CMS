@@ -155,7 +155,7 @@ through `ulvia dev credentials`.
 | `<basePath>/assets/*`                    | public    | Minimal binding/host runtime and base CSS |
 
 The auth guard (`createAuthGuard` from `@bernouy/cms-auth/http`) establishes an
-authenticated subject. It does not evaluate roles or view permissions. Control
+authenticated subject. It does not evaluate capability grants or Page execution plans. Control
 chooses the unauthenticated response for each route group: a login redirect or
 an explicit unauthorized response. Contract capabilities carry their own
 declared access class and the Control dispatcher verifies the caller before

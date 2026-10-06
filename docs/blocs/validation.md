@@ -52,5 +52,6 @@ exact admitted coordinate. Do not restore the removed package repository or
 integration manifests. The receiving repository re-runs collection,
 contract/provider and release-evolution validation before making bytes visible.
 Installation remains a separate Control action, and a live provider conformance
-runner remains open. The authenticated `/api/bloc` import described in
-[authoring](authoring.md) still supports private compiled Blocs.
+runner remains open. There is no mounted private Bloc import route; authored
+collection Blocs use the explicit release pipeline described in
+[authoring](authoring.md).

@@ -105,8 +105,9 @@ cardinalities, rich-text profile conformance, general CSS or render expansion. S
 component settings are validated separately by `cms-content`. The HTML parser applies
 its parsing rules; acceptance does not certify author syntax as conforming HTML.
 Never render or execute an admitted bundle directly as trusted code. Renderer
-compilation, content policies and execution authorization are separate future
-gates. An optional `runtime` field carries a compiled browser view bundle for
+compilation, content policies and execution authorization are separate gates
+owned by the authoring toolchain, Content and Gateway. An optional `runtime`
+field carries a compiled browser view bundle for
 components. Admission hashes and bounds those bytes but does not audit the
 executable behavior; installation therefore trusts the configured repository.
 
@@ -188,8 +189,10 @@ capability requirement; admission verifies those witnesses alongside transitive
 local Bloc requirements. Scripts, links, inline handlers and inline styles reject.
 Every Page declares exactly one surface; every local and imported Bloc in its
 transitive closure must support that surface. Page exports and imports pin exact
-resource generations. No route registry or Control mounting flow exposes these
-Pages yet; admission and installation are implemented ahead of rendering.
+resource generations. Control and Delivery project installed Pages into the
+site-scoped surface route registry and render them through the shared Page
+document pipeline. Stable Page references resolve independently from route
+overrides.
 
 ## Publication and installation
 
@@ -207,7 +210,8 @@ stable and revalidate saved configuration and text overrides before changing the
 digest. Setting presentation metadata and order may evolve; slot cardinalities
 and accepted native tags may widen but cannot invalidate existing content.
 Collection configuration is mutable per site through a schema-validated,
-revision-checked store operation and the administrator-only Control API.
+revision-checked store operation exposed by the administrator-only
+`ulvia.cms.collections/update-configuration` capability.
 
 Every independently consumable resource has a positive generation and derived
 contract/implementation SHA-256 digests. The collection SemVer and immutable
@@ -232,11 +236,12 @@ before removal is safe.
 ## Next slices
 
 Presets remain absent from the public format: unsupported fields reject.
-Published execution plans and provider capability grants remain future work.
-
-Remote publication, JavaScript trust scanning and component renderer trust
-hardening are not implemented yet. The current first-party trust assumption and
-the required boundary before third-party collections are admitted are recorded
-in the repository [deferred-work documentation](../../../../../docs/TODO.md#collection-javascript-isolation).
+Exact Page execution plans and revisioned provider grants are implemented.
+Remote signed publication is implemented by the CLI and official repository
+server. Live conformance execution, resumable publication transfers and
+third-party JavaScript isolation remain open. The current first-party trust
+assumption and the required boundary before third-party collections are
+recorded in the repository
+[deferred-work documentation](../../../../../docs/TODO.md#collection-javascript-isolation).
 The [starter bundle](../../fixtures/collections/v1/README.md) exercises the
-implemented authoring/admission path without a provider or renderer.
+authoring and admission path without requiring a running provider.

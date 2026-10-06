@@ -45,3 +45,40 @@ Exit conditions:
   queries continue to work in the real document;
 - a crashed or non-responsive collection runtime can be terminated without
   making the rest of the page unusable.
+
+## Browser Host ABI
+
+**Status:** trusted official collections currently use the mutable
+`window.cmsRuntime` host object. This is an implementation seam, not yet a
+versioned compatibility contract.
+
+Before independently updating the host and installed collection releases,
+publish an explicit browser ABI version, reject unsupported ABI requirements at
+admission or activation, and retain compatibility fixtures for every supported
+version. Collections must not probe arbitrary globals as a fallback.
+
+## Internal Persistence Migrations
+
+**Status:** collection-owned content migrations are implemented, but internal
+MongoDB documents do not share one ordered schema-migration registry.
+
+Add feature-owned, idempotent migrations with a durable applied-version ledger,
+single-writer fencing, restart recovery and backup/restore tests before internal
+schemas become long-lived production contracts.
+
+## OIDC Activation Gate
+
+**Status:** OIDC support is dormant in the current official local bootstrap.
+Before enabling it in production, give discovery, token and JWKS requests the
+same bounded networking posture as the Gateway: explicit allowlists, DNS/IP
+policy, redirect policy, timeouts, response-size limits and rotation tests.
+
+## High Availability
+
+**Status:** the current deployment assumes one active CMS runtime and one active
+official-repository writer. Leases protect implemented critical sections, but
+the complete system has not been proven under multi-replica failover.
+
+Treat horizontal replicas as unsupported until migration fencing, background
+jobs, repository publication, cache invalidation and recovery have black-box
+split-brain and ownership-loss tests.

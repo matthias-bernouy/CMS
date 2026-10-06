@@ -40,7 +40,7 @@ site overrides and repository transport do not depend on the source layout.
 resolution. `@bernouy/cms-content/rendering` provides the shared
 server DOM pass `renderCollectionTexts(root, locale, sources)`. Delivery runs
 this pass after composition expansion, before serializing and caching HTML.
-The same helper is available to Control for future workspace views.
+The same helper renders installed Control Pages.
 
 Templates reserve the `cms` root for server-owned expressions:
 
@@ -99,7 +99,7 @@ invalidates cached pages after saving translations. The static
 `DeliveryCmsConfig.collectionTexts` option remains available for readers without
 an installed-catalogue implementation.
 
-Installed collections have a working Texts editor: category sections contain
+The official Settings Control Page includes a working Texts editor: category sections contain
 groups, each displaying a table with Key, Label, immutable default-language value
 and editable selected-language value. Optional `category`, `group`, `label` and
 `description` metadata are keys in the collection's immutable administration

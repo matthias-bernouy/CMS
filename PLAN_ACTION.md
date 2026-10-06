@@ -75,10 +75,10 @@ Implementation proceeds through small vertical slices. Each slice must be:
 - committed separately when it changes a distinct responsibility;
 - free from hidden dependence on Ulvia Cloud.
 
-The legacy static Control application has intentionally been removed before
-parity. The authenticated kernel now returns a clear unavailable response until
-collection-based Control Pages are mounted. Existing backend APIs and retained
-components remain available as migration inputs, not as a second page system.
+The legacy static Control application was intentionally removed before parity.
+Collection-based Control Pages are now mounted; the kernel still owns login,
+bootstrap, recovery and unavailable responses. Existing domain services remain
+implementation inputs, not a second page system.
 
 ## Phase 0 — Stabilize The Current Foundation
 
@@ -113,8 +113,8 @@ invalidate migrations, updates or recovery:
 The Dashboard package, collection resource, routes, assignments and the entire
 static Control application were removed before Control Pages reached parity. Do
 not recreate either model.
-Collection Views have been replaced by immutable collection Pages. Mounting and
-editing those Pages remain later phases.
+Collection Views have been replaced by immutable collection Pages. Those Pages
+are mounted in Control; a shared visual Page editor remains later work.
 
 ## Phase 1 — Separate Provider Lifecycle From Core Contracts
 
@@ -201,11 +201,11 @@ The local provider must:
 `ulvia.cms.pages@1.0.0` publishes bounded `list`, `get`, `create`, `update`,
 `publish`, `delete` and `rename` capabilities. They are implemented by the local
 Core surface and invoked from exact collection Page execution plans through
-`/.cms/call`. The six remaining Phase 8 domains now
+`/.cms/call`. The seven remaining Phase 8 domains now
 also have bounded official V1 contracts and local Core handlers
 and collection-owned Control Pages. Their Core releases now include the bounded
 revision-safe mutations required for collection lifecycle, file metadata,
-design, provider selection, access and migration administration. The current
+theme, localization, provider selection, access and job administration. The current
 collection Pages expose only the flows already authored in their UI; contract
 coverage must not be confused with Control product parity.
 
@@ -381,7 +381,7 @@ host panels may differ; the composition model must not fork.
 **Status (2026-10-06): all eight domains have an end-to-end V1.** The Pages catalogue,
 creation, detail/source editing, publication, deletion and rename flows are
 collection-owned. Six additional official contracts and Pages now cover
-installed collections, author files, design/languages, providers/contracts,
+installed collections, author files, theme/localization, providers/contracts,
 access/site identity and operational migration state. Every Page executes via
 an exact Page plan and `/.cms/call`; the CMS Core surface derives one generic
 transport from admitted bindings for all `ulvia.cms.*` contracts. File-folder creation is the first
@@ -394,7 +394,7 @@ This is functional coverage, not legacy-product parity. The file-routed
 `/api/*` Control tree and the surface-owned legacy administration components
 have been deleted. The production browser host contains only the binding and
 Bloc host runtime required by collection-authored Pages. Collection-owned Pages now
-expose the bounded collection, file, design, provider and access mutations;
+expose the bounded collection, file, theme, localization, provider and access mutations;
 file bytes use the authenticated kernel upload/replace transport. Provider
 credential creation remains a kernel/provider workflow, while backup/restore
 and Core process lifecycle remain provider control-plane responsibilities.

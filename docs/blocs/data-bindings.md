@@ -235,10 +235,10 @@ element through a weak reference for subsequent activation.
 
 ## Forms
 
-The form container is native HTML owned by the CMS editor. A collection may
-provide visual controls, but it must not publish a form renderer or replace the
-native `form` editor. Bind the native element to a selected capability and
-delay the mutation until submission:
+The form container is native HTML owned by the CMS authoring model. A collection
+may provide visual controls, but it must not publish a competing form renderer.
+Bind the native element to a selected capability and delay the mutation until
+submission:
 
 ```html
 <form
@@ -257,8 +257,8 @@ delay the mutation until submission:
 
 `auto` is the default trigger; `submit` and `change` bind to the owning form.
 Supported binding methods are `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and
-`HEAD`; gateway capability calls use `POST`. Let the contract and editor picker produce advanced
-body mappings instead of hand-authoring opaque JSON where possible.
+`HEAD`; gateway capability calls use `POST`. Future authoring tools should
+derive advanced body mappings from the contract rather than require opaque JSON.
 
 Form submissions include the current page's query parameters by default.
 Set `cms-source-inherit-query="false"` on the form to send only the parameters
@@ -271,10 +271,11 @@ The global `cms-source:reload` event refreshes automatic bindings only; it does
 not submit forms. `cms-reload-on="event-name"` opts a Source into an explicit
 reload channel, including when its trigger is `submit` or `change`.
 
-The native form editor offers a required endpoint picker, `GET`, `POST`, `PUT`,
-`PATCH`, and `DELETE`, page-query inheritance, an internal-page redirect,
-reset-on-success, and autocomplete. It never exposes `action`, `onsubmit`, or arbitrary attributes.
-Its default content already carries `cms-source-trigger="submit"`.
+The native form authoring contract supports `GET`, `POST`, `PUT`, `PATCH`, and
+`DELETE`, page-query inheritance, an internal-page redirect, reset-on-success,
+and autocomplete. A future editor may expose those bounded choices, but must not
+expose `action`, `onsubmit`, or arbitrary attributes. Default authored content
+already carries `cms-source-trigger="submit"`.
 
 Normal named controls serialize to query parameters for `GET`/`HEAD` and JSON
 for other methods. Bracket names create nested objects, so a control named

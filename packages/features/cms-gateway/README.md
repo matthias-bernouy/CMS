@@ -31,12 +31,15 @@ collection Page. The plan pins the collection digest and Page generation
 together with the current selection revision and each exact contract release,
 digest and provider installation. Collection upgrades and provider-selection
 changes make an old plan stale. `./execution/mongo` persists these revisioned
-grants. No Control route activates or consumes Page plans yet; this machinery
-is retained for the future mounted Control Page flow.
+grants. Control activates a plan for the same-origin referring Page before each
+collection capability call; Delivery uses the same plan model for declared
+bindings.
 
 `CapabilityGateway` activates synchronous JSON queries, synchronous natural or
 non-idempotent commands, and bounded binary file reads through an injected
-transport. Keyed commands remain closed until a durable idempotency store exists.
+transport. Generic provider keyed commands remain closed until their durable
+idempotency protocol is implemented; CMS Core's own durable jobs are a separate
+surface concern.
 Once a synchronous command has been dispatched, a transport error, route change,
 or invalid response produces `outcome_unknown` with the request ID. Callers must
 reconcile that request with the provider before retrying the command.
@@ -97,25 +100,23 @@ byte fingerprint invalidates a derivative when a provider changes the file.
 `@bernouy/image-processing/sharp` adapter.
 
 The source tree follows these responsibilities: `invocation/` contains routing,
-authorization, HTTP handlers, and transport; `identity/` contains provider-wide
-aliases and their stores; `execution/` contains View plans and grants; `media/` contains authorized derivatives and browser
-helpers. `exports/` contains the corresponding public entrypoints. The package
+authorization, HTTP handlers and transport; `identity/` contains provider-wide
+aliases and their stores; `execution/` contains Page plans and grants; `media/`
+contains authorized derivatives and browser helpers. `exports/` contains the corresponding public entrypoints. The package
 root remains the invocation API; optional adapters use domain-specific subpaths.
 
 Control and Delivery invoke selected capabilities for authoring, rendering,
 metadata resolution, and sitemap discovery. Page-owned indexing definitions
 declare the response fields projected into metadata and canonical URLs.
 
-## Remaining migration gates
+## Current Operational Limits
 
-1. Add authorized publication, installation and selection management flows so
-   sites can populate the durable catalogues without direct database writes.
-   Add separate fixture-asset byte storage for Mongo release publication.
-2. Exercise the production network composition against real custom and official
-   provider fixtures, harden cross-catalogue snapshot consistency, and benchmark
-   selected-route reads and observation refresh capacity before large deployments.
-3. Add durable idempotency, rate policy, audit, telemetry, and separate host
-   entrypoints before activating keyed commands or provider/system calls.
-4. Replace remaining Source image authoring vocabulary with provider file URLs,
-   move expensive derivative work to durable jobs, and add cache recovery,
-   garbage collection and benchmarks.
+1. Live provider conformance evidence and remote conformance-suite publication
+   are not part of Gateway execution yet.
+2. Production network composition still needs black-box custom-provider tests,
+   cross-catalogue snapshot stress tests and selected-route/observation
+   benchmarks before large deployments.
+3. Invocation audit exists for current command paths, but rate policy, metrics,
+   traces and operator diagnostics are not yet systematic across every domain.
+4. Expensive derivative work remains in-process; durable jobs, cache recovery,
+   garbage collection and volume benchmarks are future scale work.

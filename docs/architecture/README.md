@@ -52,7 +52,7 @@ and separate sitemap storage. Runtimes construct these facades and adapters.
 
 Every page has a monotonic concurrency revision used by authoring and collection
 migrations. This is not user-facing page history. Page publication is
-`visible === true`; separate publication versions are not implemented.
+`visible === true`; user-facing Page history is not implemented.
 Editorial preview belongs to Control. Author files are publicly
 readable by ID/path, including files used only by drafts or no page at all.
 The shared runtime does not provide confidential author-file enforcement.
@@ -105,7 +105,7 @@ The CMS Core surface also owns the thin cross-domain adapters that register the
 official capabilities, project their wire responses and map feature failures.
 Actual page, file, collection, migration, authentication, provider and theme
 operations remain in their feature packages. `cms-server` injects those ports
-and retains only concrete adapters such as Mongo operation persistence.
+and retains only concrete adapters such as Mongo durable-job persistence.
 
 `cms-server` reads environment configuration, wires concrete dependencies,
 mounts all three surfaces and starts listeners. `ulvia-cli` manages the persistent

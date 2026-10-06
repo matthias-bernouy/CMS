@@ -35,8 +35,8 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 
 - [Repository and gateway flows](providers/README.md): artifact admission, site
   state, live invocation, identities and remaining integration gaps.
-- [Bloc authoring](blocs/README.md): existing compiled Blocs, editable site
-  compositions, editor contracts, bindings and themes.
+- [Bloc authoring](blocs/README.md): collection Blocs, site-owned content
+  contracts, bindings and themes.
 - [Collection API and admission](blocs/collections.md): the current Control
   workspace and the separate `ulvia-collection/v1` authored bundle format.
 - [Site health](providers/README.md): provider observations, selected sources,

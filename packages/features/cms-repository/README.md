@@ -126,8 +126,9 @@ collection path accepts verified assets and capability requirements. The CLI
 runtime composes the reference filesystem registry and loopback listener, while
 this package owns authenticated remote publication, exact `push`/`pull`, and
 reversible yanking. Gateway execution-plan primitives remain available, but no
-Control runtime currently activates collection Pages. Collection Bloc runtime
-compilation is implemented for trusted CLI sources; third-party JavaScript
-isolation remains a separate concern.
+provider invocation occurs inside this package. Control activates collection
+Page plans through `cms-gateway`. Collection Bloc runtime compilation is
+implemented for trusted CLI sources; third-party JavaScript isolation remains a
+separate concern.
 [AGENTS.md](AGENTS.md) defines the domain
 boundaries and implementation invariants.

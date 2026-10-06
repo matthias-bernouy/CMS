@@ -15,9 +15,10 @@ signed session cookies, public auth flows, and membership stores.
   request snapshots and HTTP handlers. It receives runtime-selected stores.
 - `exports/`: curated package entrypoints. Tests follow the same domain grouping.
 
-This structural refactor preserves existing email-disabled verification policy
-and recovery-token consumption order. The two expected-failure recovery tests
-remain tracked limitations, not successful recovery guarantees.
+Email-disabled verification policy and operation-bound recovery-token
+reservation/finalization are covered by ordinary passing tests. A failed
+protected mutation releases its reservation; a finalize retry can resume only
+the exact same operation.
 
 ## Boundaries
 
@@ -41,7 +42,8 @@ remain tracked limitations, not successful recovery guarantees.
 - Public auth routes are mounted under `PUBLIC_AUTH_ROUTES.base` by a surface.
   Control disables signup for its guarded admin context.
 - Membership records contain identity and activity metadata only. Authorization
-  belongs to views and must not be added to authentication subjects.
+  belongs to CMS policies, capability grants and Page execution plans; it must
+  not be added to authentication subjects.
 - Do not add browser components to this package.
 - Keep local password proof in `providers`, cookie protocol in `sessions`, and
   request subject resolution plus HTTP parsing/response construction in

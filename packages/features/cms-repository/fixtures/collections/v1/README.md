@@ -18,5 +18,6 @@ const admitted = await admitCollectionReleaseJson(documentJson, [
 
 `tests/collections/fixture.test.ts` loads these exact files. No provider,
 credentials, network request, renderer or browser execution is involved.
-The sample's literal English text is author markup for this first slice;
-collection i18n and theme tokens are not implemented in this format yet.
+The sample deliberately keeps literal English author markup and omits optional
+collection translations and theme tokens. The full admitted collection format
+supports both resources; this small fixture is not its feature inventory.

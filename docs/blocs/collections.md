@@ -285,29 +285,23 @@ expose the composed site theme and its revision-checked values. All calls use
 `POST <basePath>/.cms/call/<contract>/<capability>` from an activated Control Page
 execution plan.
 
-## Private and code blocs
+## Site-Owned Blocs
 
-`GET <basePath>/api/bloc/collections` returns private collections, including the
-virtual default **Site** collection. `POST` accepts
-`{ name, description?, icon? }`; `PUT ?id=<id>` updates metadata. `POST
-<basePath>/api/site-bloc` creates a private composition and accepts
-`{ name, description?, group?, collectionId?, tag? }`. Omitting the collection
-ID uses **Site**.
-
-`GET <basePath>/api/bloc/library` supports collection, search, category,
-visibility and bloc filters. The response groups blocs and includes selected
-bloc metadata. Private compositions are editable; compiled code blocs are
-read-only.
+`cms-content` retains revisioned site-owned Bloc and Bloc-collection domain
+APIs because a future editor will need them. Control does not currently mount a
+private Bloc catalogue, import or editing transport. They must not be treated as
+an alternative collection publication path: installable reusable Blocs come
+from exact immutable collection releases.
 
 ## Current limits
 
-The installed-collection bridge accepts compositions and Shadow components,
+The installed-collection bridge renders compositions and Shadow components,
 including fixed Light DOM, named slots and initial page content. Verified asset
 bytes and revision-checked collection configuration are implemented. The store
 can remove a collection after checking installed dependants, but Control does not
 expose removal until it can also report affected pages, private Blocs, theme
-references and collection Pages. Remote registry transfer and authenticated
-publication are implemented by the CLI and filesystem reference registry.
+references and collection Pages. Remote repository transfer and authenticated
+publication are implemented by the CLI and filesystem reference repository.
 The production repository is currently a single-active-replica filesystem
 service; key rotation and multi-publisher authorization remain deployment work.
 JavaScript trust scanning is also separate; migration files

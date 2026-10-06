@@ -1,225 +1,127 @@
-# Create A Bloc
+# Create A Collection Bloc
 
-This guide covers the compiled Bloc format currently consumed by Control and
-Delivery. It uses an `example-card` custom element. The separate
-`ulvia-collection/v1` admission format is described in [collections](collections.md);
-it does not yet compile these TypeScript modules.
+Blocs are authored inside an immutable collection release. The current Control
+surface does not mount a private `/api/bloc` importer and no visual editor is
+present. `ulvia release` is the supported compilation path; site-owned Bloc
+persistence remains a feature API for a future editor, not a second public
+authoring format.
 
-## Source Bundle And Import
+## Source Tree
 
-A descriptive local directory can contain:
+Bloc folders are discovered recursively below a collection's `blocs/` tree.
+Grouping folders contain directories only and never contribute to stable IDs.
+A folder becomes a Bloc when it contains `definition.json`; its basename must
+equal the definition's `id`, and discovery stops at that folder.
 
 ```text
-example-card/
-├── manifest.json
-├── Bloc.ts
-├── template.html
-├── style.css
-└── default.html
+blocs/
+└── content/
+    └── example-card/
+        ├── definition.json
+        ├── shadowdom.html
+        ├── style.css
+        ├── bloc.ts
+        ├── default.html
+        ├── lightdom.html
+        ├── settings/
+        │   └── definition.json
+        └── runtime/
+            └── helpers.ts
 ```
 
-`ulvia release` scans the declarative `ulvia-collection/v1` folder format
-documented in [collections](collections.md). The multipart endpoint below is a
-separate path for private compiled Blocs, not collection publication.
-Control's authenticated `POST <basePath>/api/bloc` accepts multipart fields:
-`tag`, `name`, optional `group`/`description`, a `viewJS` file (view source) or
-`compositionHTML`, and an optional `source` JSON map of relative filenames to
-Base64 contents. `force=true` replaces an existing tag;
-otherwise a duplicate returns 409. The import compiles and stores the artifact.
+Only files that serve the Bloc contract are accepted. `runtime/` is recursive
+and TypeScript-only. `settings/` contains exactly one `definition.json`.
+Markup, CSS, settings and runtime code stay out of the root definition so each
+responsibility can be reviewed independently.
 
-The import fields determine the tag, labels and entry sources. A source bundle's
-`manifest.json` currently supplies default content and optional thumbnail metadata:
+## Components And Compositions
 
-```json
-{
-  "defaultContent": "./default.html",
-  "thumbnail": { "path": "assets/card.webp", "alt": "Card overview" }
-}
-```
-
-Both referenced files must be included in the source map. Omit the thumbnail
-when no image exists. `defaultContent` is optional and resolves inside the
-source bundle. The tag must be a valid, unreserved custom-element name; native
-HTML roots cannot be imported.
-Do not assume that old `default-tag`, `bloc`, `editor` or `meta` manifest fields
-configure the current multipart endpoint.
-
-## View Structure
-
-`template.html` is the private Shadow DOM structure:
-
-```html
-<article part="card">
-  <header part="header"><slot name="title"></slot></header>
-  <div part="body"><slot></slot></div>
-  <footer part="actions"><slot name="actions"></slot></footer>
-</article>
-```
-
-Slots stay empty. Initial authored children belong in `default.html`:
-
-```html
-<example-card appearance="outlined">
-  <h2 slot="title">Card title</h2>
-  <p>Replace this text with the card content.</p>
-  <a slot="actions" href="/contact">Contact us</a>
-</example-card>
-```
-
-`default.html` is inserted when an author adds a new Bloc. Changing it does not
-rewrite instances already saved in pages.
-
-Files named `template.html` and `style.css` are conventions, not implicit
-inputs. Import them from `Bloc.ts`:
+A `component` requires `shadowdom.html`. `style.css`, `lightdom.html`,
+`default.html`, `bloc.ts`, settings and runtime helpers are optional unless a
+more specific rule requires them. When `bloc.ts` is absent, the CLI supplies a
+minimal `Component` subclass that imports the Shadow DOM and stylesheet.
 
 ```ts
 import { Component } from "@bernouy/cms-content/browser";
 import css from "./style.css" with { type: "text" };
-import template from "./template.html" with { type: "text" };
+import template from "./shadowdom.html" with { type: "text" };
 
-export class ExampleCard extends Component {
+export class Bloc extends Component {
     constructor() {
         super({ css, template });
     }
 }
 ```
 
-`Component` creates an open Shadow Root, inserts the stylesheet, and clones the
-template. It deliberately provides no reactive framework. Use standard custom
-element callbacks and DOM APIs when the Bloc needs behavior.
+Export one component class. The build wrapper owns `customElements.define()`
+for the declared tag. The emitted `runtime.viewJS` field is the immutable
+browser artifact name; it is unrelated to the removed collection View model.
 
-Export one runtime class and do not call `customElements.define()`. The
-build wrapper selects the exported class and owns registration with the
-imported tag. Authoring settings and slot rules belong to collection JSON, not
-to a second compiled TypeScript entry.
+A `composition` has only `definition.json`, `lightdom.html` and optional
+`default.html`. It has no Shadow DOM, stylesheet, settings or JavaScript. The
+server expands it before rendering and loads the transitive component runtimes
+used by its markup.
 
-## Runtime Behavior
+`default.html` supplies initial editable Page content. `lightdom.html` is a
+fixed reusable assembly. Changing either in a later release does not silently
+rewrite arbitrary site-owned Page content; collection migrations describe
+breaking stored-data changes.
 
-Keep behavior independent from the editor and clean up listeners when an
-element disconnects:
+## Runtime Rules
 
-```ts
-export class ExampleDisclosure extends HTMLElement {
-    #listeners: AbortController | undefined;
+Bloc code is a browser bundle shared by Control and Delivery according to its
+declared `surfaces`. It imports browser-safe public entries such as
+`@bernouy/cms-content/browser`; it must not import Node, Bun, databases,
+secrets, runtimes or surface internals.
 
-    connectedCallback(): void {
-        this.#listeners?.abort();
-        this.#listeners = new AbortController();
-        this.querySelector("button")?.addEventListener("click", () => this.toggleAttribute("open"), {
-            signal: this.#listeners.signal,
-        });
-    }
+Keep element lifecycle explicit and release listeners when disconnected.
+Prefer semantic HTML and Page references over direct browser navigation. The
+quality checks reject arbitrary browser HTTP calls in official collection code;
+CMS data access uses literal same-origin `/.cms/call/...` bindings backed by
+declared capability requirements.
 
-    disconnectedCallback(): void {
-        this.#listeners?.abort();
-        this.#listeners = undefined;
-    }
+The current browser host is `window.cmsRuntime`. Its public methods still need
+a versioned ABI before immutable third-party releases can be supported. Until
+collection JavaScript isolation exists, installable executable code is limited
+to reviewed official collections.
+
+## Managed Native Elements
+
+A component can own one editable native Light DOM child through:
+
+```json
+{
+    "nativeElement": { "accepts": ["button", "a"] }
 }
 ```
 
-Prefer semantic HTML over JavaScript. Use `<a href="/path">` for navigation;
-direct `location.href`, `location.assign`, `location.replace`, and equivalent
-`window.location` mutations are rejected. `history.pushState` is reserved for
-transitions handled by the site's router.
+Such a component has exactly one unnamed Shadow DOM slot, no fixed
+`lightdom.html`, and one direct accepted native child in `default.html`. The
+real child tag remains the source of truth. Wrapper settings and native-child
+attributes are separate targets even when their names coincide.
 
-View code is a browser bundle. Import public browser authoring entries such as
-`@bernouy/cms-content/browser`; never import editor internals, Node or Bun APIs,
-database adapters, secrets, or server-only feature modules.
+The admitted vocabulary is deliberately bounded. Links, buttons, headings,
+paragraphs, images and SVGs use typed platform policies; arbitrary `class`,
+`style`, event handlers, free-form `data-*` and unvalidated navigation are not
+author settings. Rich text remains Page-owned HTML in a declared slot rather
+than an HTML string setting.
 
-## Native Elements
+## Build And Validation
 
-Native HTML is a platform capability, not a collection resource. The CMS editor
-owns its constructors, editor definitions, catalogue placement rules, media
-pickers, and attribute policy. The compiler rejects every collection artifact
-whose root tag is native HTML, including a legacy artifact marked `native`.
-Collections may still use semantic native elements inside a custom element's
-template.
+`@bernouy/cms-repository/collections/build` validates the source bundle,
+constrains imports and emits the runtime artifact. The CLI then assembles the
+collection, admits every Bloc and resource reference, verifies capability
+witnesses and computes the immutable release digest.
 
-A custom Bloc may instead own one editable native Light DOM child through a
-polymorphic `nativeElement` contract. The low-level multipart import accepts one
-or more `nativeElement` entries:
+From the repository root:
 
-```text
-POST <basePath>/api/bloc
-  tag=example-action
-  name=Action
-  nativeElement=button
-  nativeElement=a
-  viewJS=<view source file>
-  source=<Base64 source map containing manifest.json and default.html>
+```bash
+bun run ulvia -- release packages/official-repository/collections/ulvia-official
+bun run check:all
+bun run build
+bun test
 ```
 
-The default content must then contain exactly one direct, un-slotted child whose
-tag appears in the accepted list, for example
-`<example-action><a href="/">Link</a></example-action>`. Stored page HTML keeps
-that real native tag as its only structural source of truth. There is no `as`
-attribute to synchronize. Page writes and direct API calls validate the same
-structure server-side.
-
-The current editor has been removed. A future editor can derive a structural
-select from the accepted tags, replace the child while preserving compatible
-content, and show tag-specific native attributes separately from wrapper
-settings. This contract and validation exist independently of that future UI.
-
-This V1 supports `h1` through `h6`, `p`, `a`, `button`, `img`, `svg`, and
-`span`. Container elements with their own content-slot semantics are excluded.
-Collection sources add stricter authored-bundle rules: the component declares
-no named page slots, its Shadow DOM contains exactly one unnamed slot,
-`default.html` supplies one accepted native root, and fixed `lightdom.html` is
-forbidden. See [Collection API](./collections.md).
-
-The platform authoring set is intentionally narrow:
-
-- `h1` through `h6`, `p`, `a`, `button`, `form`, `img`, `svg`, `section`, `ul`,
-  and `ol` are authorable; media enters through the CMS picker, not a manifest;
-- `span` is contextual and can only fill an explicit component slot;
-- `li` is contextual and can only be placed directly in `ul` or `ol`;
-- `strong`, `em`, and `code` are rich-text operations, not catalogue blocs;
-- `article`, `nav`, `header`, `footer`, `main`, and `aside` are available for
-  semantic template structure but are not global catalogue entries;
-- `div`, `small`, `blockquote`, and `pre` have no native catalogue entry;
-- `table`, `thead`, `tbody`, `tr`, `th`, and `td` have no standalone native
-  catalogue entry; a custom Bloc must own that authoring structure.
-
-Placement is catalogued data. It applies consistently when the editor offers,
-inserts, replaces, moves, or pastes content; do not reproduce parent-tag or
-slot checks ad hoc in UI components.
-
-Native settings follow a deny-by-default policy. They never expose arbitrary
-`class`, `style`, `slot`, `id`, `data-*`, `aria-*`, event (`on*`), or other
-attributes. Required CMS binding and accessibility attributes may be generated
-through typed controls:
-
-- links use a CMS page, media, or external-URL picker, a controlled target, and
-  derived safe `rel` values;
-- `img` elements use same-site URLs ending in
-  `/.cms/files/by-id/<opaque-id>`, require alternative text unless decorative,
-  derive dimensions after loading, and expose only controlled loading behavior;
-- SVGs must come from that CMS media namespace with matching MIME metadata;
-  their fetched markup is sanitized before insertion, and the result requires
-  either a decorative state or an accessible label;
-- buttons expose static or dynamic text, `button`/`submit`, and `disabled`;
-- forms bind to a declared endpoint and use the shared success redirect/reset
-  controls; authors cannot enter a free `action` or `onsubmit`;
-- headings and paragraphs expose static or dynamic rich text with links,
-  strong emphasis, emphasis, and inline code, without visual attributes.
-
-Visual form controls can be supplied by custom Blocs or the platform component
-library. They participate in native forms; provider calls use gateway capabilities.
-See [Collection API](./collections.md) for declarative settings and slot metadata.
-
-## Optional presentation images
-
-A bloc `manifest.json` may declare `"thumbnail": { "path": "assets/card.webp", "alt": "Card overview" }`.
-References use PNG, JPEG, WebP or SVG files below `assets/` in the persisted
-source map. The new collection format uses logical asset IDs and byte digests;
-there is no automatic conversion between these thumbnail contracts.
-
-A standalone persisted Bloc uses `/api/bloc/thumbnail?id=<tag>`. Control
-authenticates the request, validates image paths and MIME signatures, and sends
-`nosniff` with a sandbox CSP. Responses are private and are not cached.
-
-Images are optional. Missing files return 404 and do not prevent loading a
-collection; cards should fall back to the official icon or a plain card.
-Unsupported paths and mismatched image bytes are rejected.
-These references do not generate screenshots or synthetic example content.
+See [collection admission](collections.md), [bindings](data-bindings.md),
+[theming](theming.md) and [validation](validation.md) for the surrounding
+contracts.

@@ -47,7 +47,7 @@ installation/selection state, collection admission/build tooling and provider
 management workflows.
 `@bernouy/cms-gateway` owns selected synchronous invocation, provider-wide
 identity aliases and bounded provider media. `@bernouy/cms-core` implements the
-seven official `ulvia.cms.*` contracts with an exact, sealed handler matrix and
+eight official `ulvia.cms.*` contracts with an exact, sealed handler matrix and
 durable asynchronous operation records. The production runtime uses Mongo
 catalogues and site state, while the official Docker stack bootstraps a private
 repository from a pre-admitted snapshot. Live conformance, provider grants,
@@ -478,13 +478,14 @@ rate/retry/audit/telemetry and provider/system invocation are still open.
 Exit condition: a custom provider cannot escape its approved capabilities or
 override gateway identity.
 
-### Phase 3 — Operations and synchronization
+### Phase 3 — Jobs and synchronization
 
-Status: open. The gateway can read bounded provider files and serve on-demand
-derivatives, but keyed commands, durable operations, snapshots, change feeds
-and outbox recovery are not active.
+Status: partial. CMS Core has durable jobs and current command paths have
+idempotency/audit controls. General business-provider snapshots, change feeds
+and outbox recovery remain deferred until those provider domains return.
 
-- implement operation polling and cancellation;
+- extend job polling and cancellation when a real long-running provider flow
+  requires them;
 - implement snapshots, watermarks, and change feeds;
 - convert payment, forms, and newsletter first because they exercise money,
   files, imports, exports, and external state;
@@ -498,7 +499,7 @@ duplicating effects or silently losing changes.
 
 Status: the former standalone official-provider product was superseded by the
 `@bernouy/cms-core` surface. `cms-sources` and `cms-source-images` were removed,
-the seven official CMS contracts are admitted and fully registered, and no
+the eight official CMS contracts are admitted and fully registered, and no
 Supabase dependency remains. General business-domain providers are separate
 future products.
 

@@ -11,29 +11,26 @@ languages add a lowercase prefix: `en: "/about"` becomes `/en/about`. The
 primary `path` field is the default language's public URL used by delivery and
 route lookups. Content is shared across languages in this version.
 
-The page title and description provide default SEO copy. The **Manage languages**
-panel edits optional `seo[language].title` and
-`seo[language].description` overrides for every configured language, including
-the default. Each empty field inherits its page fallback independently. The
-`GET` and `PUT /api/page/seo?id=<page-id>` admin routes read and write these
-overrides on the same page record. Changing SEO copy, page settings, page
-content, or a referenced bloc/file invalidates the rendered cache entries for
-all of that page's language URLs.
+The page title and description provide default SEO copy. Optional
+`seo[language].title` and `seo[language].description` values override it per
+language; each omitted value inherits independently. Changing SEO copy, Page
+settings, content or a referenced Bloc/file invalidates every rendered language
+variant.
 
-The page settings view shows the primary path as readonly. **Manage languages**
-edits the URL matrix and expands each language row to show its SEO fields. One
-save action applies changed URLs and SEO overrides in that order; if the SEO
-request fails after the URL request succeeds, the panel keeps the unsaved SEO
-draft and offers a retry. Reopening the panel reloads current paths after a
-concurrent edit. The default language requires a path; other configured
-languages may have none. Only the default language and active additional
-languages are publicly served. Activating a language with a path makes its URL
-available without creating another page. Changing the default language moves
-the primary URL to that language; a missing local path is copied from the
-former primary language. The change is rejected before route reconfiguration if any new
-URL collides with another current or historical page route.
-Before a default language is configured, pages can be created at root paths,
-but their URLs cannot be renamed.
+The underlying repository supports revision-checked path matrices and localized
+SEO. The former `/api/page/seo` route and its static panel have been removed.
+The current `ulvia.cms.pages@1.0.0` Control slice creates a Page with one path
+and manages title, description, content, tags and publication; it does not yet
+expose per-Page route or localized-SEO editing. That future UI must call a
+versioned capability rather than revive a private `/api/*` transport.
+
+The default language requires a path; other configured languages may have none.
+Only the default language and active additional languages are publicly served.
+Changing the default language moves the primary URL to that language; a missing
+local path is copied from the former primary language. The change is rejected
+before route reconfiguration if any new URL collides with another current or
+historical page route. Before a default language is configured, Pages can be
+created at root paths, but their URLs cannot be renamed.
 
 Each public path has one permanent route record with state `current`,
 `redirect`, or `gone`. A current route points to the page ID and language.

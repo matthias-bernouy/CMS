@@ -76,7 +76,8 @@ library, declarative bindings, validation, and read models.
 - Features persisting references to collection resources must register a
   `CollectionMigrationParticipant`; every mutation of that persisted state must
   use the shared site migration write fence.
-- Editor contracts must remain stable; authored blocs depend on them.
+- Stored Page/Bloc documents, settings and binding contracts must remain stable;
+  authored Blocs depend on them even while no visual editor is mounted.
 - When changing repository behavior, update both in-memory and Mongo behavior
   or document why only one implementation changes.
 - File metadata and blob mutations must stay consistent. Upload/update/delete

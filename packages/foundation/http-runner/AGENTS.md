@@ -16,6 +16,8 @@ utilities.
 
 - `BunRunner` matches routes lazily per request. Routes added after `start()`
   are honored.
+- `start()` accepts either a backward-compatible numeric port or explicit
+  `{ port, hostname }` listener options. Composition roots own listener hosts.
 - Exact and `:param` path segments are supported. No regex or catch-all routing.
 - Route lookup is linear by method/path registration order. First match wins.
 - Default endpoints run only when no route matches. The deepest matching prefix
