@@ -9,6 +9,14 @@ export async function validateOfficialRepositoryStorage(
     index = new FilesystemRepositoryCatalogueIndex(root),
 ): Promise<void> {
     await mkdir(root, { recursive: true, mode: 0o700 });
+    await probeOfficialRepositoryStorage(root, index);
+}
+
+/** Verify that persisted repository state remains writable and indexable. */
+export async function probeOfficialRepositoryStorage(
+    root: string,
+    index = new FilesystemRepositoryCatalogueIndex(root),
+): Promise<void> {
     const metadata = await lstat(root);
     if (!metadata.isDirectory() || metadata.isSymbolicLink()) {
         throw new Error("ULVIA_REPOSITORY_DIR must be a real directory, not a symbolic link");

@@ -7,7 +7,7 @@ import {
     RepositoryReadEndpoint,
 } from "@bernouy/cms-repository/repository/filesystem";
 import { RepositoryMutationEndpoint } from "@bernouy/cms-repository/repository/publication";
-import { validateOfficialRepositoryStorage } from "./storage";
+import { probeOfficialRepositoryStorage, validateOfficialRepositoryStorage } from "./storage";
 
 export type OfficialRepositoryApplication = Readonly<{
     handle(request: Request): Promise<Response>;
@@ -34,15 +34,34 @@ export async function createOfficialRepositoryApplication(
             if ((request.method === "GET" || request.method === "HEAD") && url.pathname === "/healthz") {
                 return harden(request, healthResponse(request.method));
             }
+            if ((request.method === "GET" || request.method === "HEAD") && url.pathname === "/readyz") {
+                return harden(
+                    request,
+                    await readinessResponse(request.method, () => probeOfficialRepositoryStorage(root, index)),
+                );
+            }
             const response = (await mutations.handle(request)) ?? (await reads.handle(request));
             return harden(request, response ?? methodOrNotFound(request.method));
         },
     };
 }
 
+async function readinessResponse(method: string, check: () => Promise<void>): Promise<Response> {
+    try {
+        await check();
+        return jsonStatus(method, 200, "ready");
+    } catch {
+        return jsonStatus(method, 503, "unavailable");
+    }
+}
+
 function healthResponse(method: string): Response {
+    return jsonStatus(method, 200, "ok");
+}
+
+function jsonStatus(method: string, status: number, value: string): Response {
     const headers = { "Cache-Control": "no-store", "Content-Type": "application/json; charset=utf-8" };
-    return new Response(method === "HEAD" ? null : JSON.stringify({ status: "ok" }), { headers });
+    return new Response(method === "HEAD" ? null : JSON.stringify({ status: value }), { status, headers });
 }
 
 function methodOrNotFound(method: string): Response {

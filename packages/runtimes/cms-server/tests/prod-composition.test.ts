@@ -28,4 +28,14 @@ describe("production CMS composition", () => {
         expect(gateway).toMatch(/const\s+resolveSecret\s*=\s*createSecretResolver\s*\(\s*secrets\s*\)\s*;/);
         expect(gateway).toMatch(/resolveToken:\s*async\s*\(reference\)/);
     });
+
+    test("closes MongoDB only after the HTTP surfaces have drained", async () => {
+        const source = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
+        const stop = source.search(/await\s+surfaces\.stop\s*\(\s*\)/);
+        const close = source.search(/await\s+core\.close\s*\(\s*\)/);
+
+        expect(stop).toBeGreaterThan(-1);
+        expect(close).toBeGreaterThan(stop);
+        expect(source).not.toContain("process.exit(0)");
+    });
 });

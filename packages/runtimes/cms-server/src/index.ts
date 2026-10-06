@@ -53,8 +53,17 @@ const shutdown = async (signal: string) => {
     }
     stopping = true;
     console.log(`\n→ Stopping (${signal})...`);
-    await surfaces.stop();
-    process.exit(0);
+    try {
+        await surfaces.stop();
+    } finally {
+        await core.close();
+    }
 };
-process.on("SIGINT", () => void shutdown("SIGINT"));
-process.on("SIGTERM", () => void shutdown("SIGTERM"));
+const handleSignal = (signal: string): void => {
+    void shutdown(signal).catch((error) => {
+        console.error("CMS shutdown failed", error);
+        process.exitCode = 1;
+    });
+};
+process.on("SIGINT", () => handleSignal("SIGINT"));
+process.on("SIGTERM", () => handleSignal("SIGTERM"));

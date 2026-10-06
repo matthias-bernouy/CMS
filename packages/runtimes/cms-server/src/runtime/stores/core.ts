@@ -140,6 +140,7 @@ export async function createCoreStores(env: RuntimeEnv) {
         rateLimit,
         secrets,
         cache: new InMemoryCache(),
+        close: () => mongo.close(),
     };
 }
 

@@ -19,6 +19,10 @@ test("mounts public health and catalogue reads while protecting mutations", asyn
     expect(await health.json()).toEqual({ status: "ok" });
     expect(health.headers.get("cache-control")).toBe("no-store");
 
+    const readiness = await application.handle(new Request("http://repository.test/readyz"));
+    expect(readiness.status).toBe(200);
+    expect(await readiness.json()).toEqual({ status: "ready" });
+
     const catalogue = await application.handle(new Request("http://repository.test/v1/collections"));
     expect(catalogue.status).toBe(200);
     expect(await catalogue.json()).toEqual({ releases: [] });
@@ -31,6 +35,17 @@ test("mounts public health and catalogue reads while protecting mutations", asyn
     expect(mutation.status).toBe(401);
     expect(mutation.headers.get("access-control-allow-origin")).toBeNull();
     expect(mutation.headers.get("cache-control")).toBe("no-store");
+});
+
+test("keeps liveness up while readiness reports unavailable storage", async () => {
+    const root = await temporaryRoot();
+    const application = await createOfficialRepositoryApplication(root, "c".repeat(32));
+    await rm(root, { recursive: true });
+
+    expect((await application.handle(new Request("http://repository.test/healthz"))).status).toBe(200);
+    const readiness = await application.handle(new Request("http://repository.test/readyz"));
+    expect(readiness.status).toBe(503);
+    expect(await readiness.json()).toEqual({ status: "unavailable" });
 });
 
 test("fails startup when persisted repository artifacts are corrupt", async () => {
