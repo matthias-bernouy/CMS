@@ -1,29 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { buildCollectionBloc, generateSiteBlocSourceBundle } from "@bernouy/cms-collection-build";
+import { generateSiteBlocSourceBundle } from "@bernouy/cms-content";
 import { definition } from "./fixtures";
 
-describe("generated site bloc compilation", () => {
-    test("builds a composition artifact through buildCollectionBloc", async () => {
+describe("generated site Bloc source", () => {
+    test("represents a composition without an unnecessary browser runtime", () => {
         const source = generateSiteBlocSourceBundle(definition());
-        const encoded = Object.fromEntries(
-            Object.entries(source).map(([path, content]) => [path, Buffer.from(content).toString("base64")]),
-        );
-        const bloc = await buildCollectionBloc(
-            null,
-            "Hero",
-            "Layout",
-            "Reusable hero",
-            "site-hero",
-            encoded,
-            source["default.html"],
-            { compositionHTML: source["template.html"] },
-        );
-
-        expect(() => new Function(bloc.viewJS)).not.toThrow();
-        expect(bloc.viewJS).toBe("");
-        expect(bloc.compositionHTML).toContain('<slot name="title" slot="title"></slot>');
-        expect(bloc.defaultContent).toBe('<site-hero><h1 slot="title">Hello</h1><p>Body</p></site-hero>\n');
-        expect(bloc.source).toEqual(encoded);
+        expect(source["template.html"]).toContain('<slot name="title" slot="title"></slot>');
+        expect(source["default.html"]).toBe('<site-hero><h1 slot="title">Hello</h1><p>Body</p></site-hero>\n');
+        expect(Object.keys(source)).not.toContain("runtime.js");
     });
 
     test("accepts declarative bindings and rejects unsafe site bloc behavior", () => {

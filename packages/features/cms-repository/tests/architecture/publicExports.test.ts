@@ -15,6 +15,7 @@ describe("repository public entry points", () => {
         ["providers/selections", "planContractSelections"],
         ["providers/mongo", "MongoProviderInstallationStore"],
         ["collections", "admitCollectionRelease"],
+        ["collections/build", "buildCollectionBloc"],
     ])("loads %s independently through its declared package export", async (subpath, entryPoint) => {
         const module = await import(`@bernouy/cms-repository/${subpath}`);
         expect(typeof module[entryPoint]).toBe("function");
@@ -28,6 +29,7 @@ describe("repository public entry points", () => {
         const manifest = await Bun.file(new URL("../../package.json", import.meta.url)).json();
         expect(Object.keys(manifest.exports).filter((entry) => entry.startsWith("./collections"))).toEqual([
             "./collections",
+            "./collections/build",
             "./collections/installations",
             "./collections/mongo",
             "./collections/texts",

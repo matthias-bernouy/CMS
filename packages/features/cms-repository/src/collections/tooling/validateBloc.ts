@@ -1,6 +1,4 @@
-import { isValidCustomElementTag } from "@bernouy/cms-content";
-import { RESERVED_PREFIXES } from "@bernouy/cms-content";
-import { isNativeBlocTag, nativeBlocOwnershipError } from "cms-collection-build/core/nativeBlocTags";
+import { collectionBlocTagIssue } from "cms-repository/collections/core/namespace";
 
 /**
  * Inputs passed to `validateBloc`. The view source is optional —
@@ -26,15 +24,8 @@ export type ValidateBlocResult = {
  * error string otherwise.
  */
 export function validateBlocTag(tag: string): string | null {
-    if (!isValidCustomElementTag(tag)) {
-        return `Invalid tag "${tag}" — must be a lowercase custom-element name (e.g. "my-card").`;
-    }
-    for (const prefix of RESERVED_PREFIXES) {
-        if (tag.startsWith(prefix)) {
-            return `Tag "${tag}" uses reserved prefix "${prefix}*" — pick another name.`;
-        }
-    }
-    return null;
+    const issue = collectionBlocTagIssue(tag);
+    return issue ? `Invalid collection Bloc tag "${tag}": ${issue}.` : null;
 }
 
 /**
@@ -45,8 +36,9 @@ export function validateBlocTag(tag: string): string | null {
 export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
     const errors: string[] = [];
 
-    const tagError =
-        input.native || isNativeBlocTag(input.tag) ? nativeBlocOwnershipError(input.tag) : validateBlocTag(input.tag);
+    const tagError = input.native
+        ? `Collection Bloc "${input.tag}" cannot use the retired native artifact mode.`
+        : validateBlocTag(input.tag);
     if (tagError) {
         errors.push(tagError);
     }

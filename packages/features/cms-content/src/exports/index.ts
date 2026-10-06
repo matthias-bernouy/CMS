@@ -203,6 +203,11 @@ export {
 } from "cms-content/blocs/core/catalogue/siteBlocCollections";
 export { nextSiteBlocUpdatedAt } from "cms-content/blocs/core/catalogue/timestamps";
 export { SiteBlocPublicationQueue } from "cms-content/blocs/core/publication/SiteBlocPublicationQueue";
+export { generateSiteBlocSourceBundle } from "cms-content/blocs/core/publication/source/generateSiteBlocSourceBundle";
+export {
+    serializeSiteBlocDefault,
+    serializeSiteBlocTemplate,
+} from "cms-content/blocs/core/publication/source/siteBlocHtml";
 export {
     validateBlocWrite,
     validateNativeSiteBlocNode,

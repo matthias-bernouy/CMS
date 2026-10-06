@@ -33,8 +33,7 @@ CmsCore/
 |   |   |-- cms-content/       @bernouy/cms-content (pages, blocs, settings, files)
 |   |   |-- cms-auth/          @bernouy/cms-auth
 |   |   |-- cms-gateway/       @bernouy/cms-gateway
-|   |   |-- cms-repository/    @bernouy/cms-repository
-|   |   `-- cms-collection-build/  @bernouy/cms-collection-build
+|   |   `-- cms-repository/    @bernouy/cms-repository (including collection build tooling)
 |   |-- resources/
 |   |   `-- sites/             Declarative CMS site references
 |   |-- surfaces/

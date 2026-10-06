@@ -20,9 +20,6 @@
             "path": "../cms-server"
         },
         {
-            "path": "../../features/cms-collection-build"
-        },
-        {
             "path": "../../features/cms-repository"
         },
         {

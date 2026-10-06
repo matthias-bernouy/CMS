@@ -1,9 +1,7 @@
-import { validateSiteBlocSnapshot, type SiteBlocDefinition, type SiteBlocSnapshot } from "@bernouy/cms-content";
-import {
-    canonicalSiteBlocDefinition,
-    normalizeSiteBlocSnapshot,
-} from "cms-collection-build/core/site-bloc/canonicalSiteBloc";
-import { serializeSiteBlocDefault, serializeSiteBlocTemplate } from "cms-collection-build/core/site-bloc/siteBlocHtml";
+import type { SiteBlocDefinition, SiteBlocSnapshot } from "cms-content/blocs/interfaces/blocs";
+import { validateSiteBlocSnapshot } from "cms-content/blocs/core/validation";
+import { canonicalSiteBlocDefinition, normalizeSiteBlocSnapshot } from "./canonicalSiteBloc";
+import { serializeSiteBlocDefault, serializeSiteBlocTemplate } from "./siteBlocHtml";
 
 export function generateSiteBlocSourceBundle(
     definition: SiteBlocDefinition,

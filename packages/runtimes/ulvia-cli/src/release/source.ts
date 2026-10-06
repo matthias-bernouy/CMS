@@ -19,7 +19,7 @@ export async function prepareCollectionRelease(directory: string, contracts?: Re
     }
     const definition = (await Bun.file(join(collectionRoot, "definition.json")).json()) as Record<string, unknown>;
     const translations = await loadCollectionTranslations(join(collectionRoot, "translations"));
-    const blocs = await loadCollectionBlocs(join(collectionRoot, "blocs"), String(definition.name ?? collectionId));
+    const blocs = await loadCollectionBlocs(join(collectionRoot, "blocs"));
     const texts = await loadCollectionTexts(join(collectionRoot, "texts"));
     const pages = await loadPages(join(collectionRoot, "pages"));
     const theme = await loadCollectionTheme(join(collectionRoot, "theme"));

@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-repository",
     "version": "0.1.0",
-    "description": "Versioned CMS contracts, providers, authored collections, and installation models.",
+    "description": "Versioned CMS contracts, providers, authored collections, collection build tooling, and installation models.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./src/exports/index.ts",
@@ -23,6 +23,7 @@
         "./providers/http": "./src/exports/providers/http.ts",
         "./providers/mongo": "./src/exports/providers/mongo.ts",
         "./collections": "./src/exports/collections/index.ts",
+        "./collections/build": "./src/exports/collections/build.ts",
         "./collections/installations": "./src/exports/collections/installations.ts",
         "./collections/mongo": "./src/exports/collections/mongo.ts",
         "./collections/texts": "./src/exports/collections/texts.ts",

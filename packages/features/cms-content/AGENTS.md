@@ -41,6 +41,9 @@ library, declarative bindings, validation, and read models.
 
 - `pages/`, `blocs/`, `bindings/`, `files/`, `settings/` and `theme/` are sibling
   domains. Theme owns tokens, modes, values and CSS independently of settings.
+- Site-owned Bloc source serialization belongs to Bloc publication in this
+  package. Collection Bloc compilation belongs to
+  `@bernouy/cms-repository/collections/build`.
 - `pages/` owns the surface route registry and the single internal Page-link
   model. Control and Delivery routes share identities but never a path namespace.
 - Each domain contains only its needed `interfaces/`, `core/`, `http/` or

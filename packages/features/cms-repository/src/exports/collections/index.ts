@@ -61,8 +61,10 @@ export type {
 export { CollectionValidationError, type CollectionValidationCode } from "cms-repository/collections/core/errors";
 export { DEFAULT_COLLECTION_LIMITS, type CollectionLimits } from "cms-repository/collections/core/limits";
 export {
+    collectionBlocTagIssue,
     collectionThemeSourceId,
     collectionThemeTokenId,
+    isCollectionBlocTag,
     isCollectionNamespace,
 } from "cms-repository/collections/core/namespace";
 export {

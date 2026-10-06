@@ -1,4 +1,9 @@
-import type { SiteBlocDefinition, SiteBlocNode, SiteBlocSlot, SiteBlocSnapshot } from "@bernouy/cms-content";
+import type {
+    SiteBlocDefinition,
+    SiteBlocNode,
+    SiteBlocSlot,
+    SiteBlocSnapshot,
+} from "cms-content/blocs/interfaces/blocs";
 
 type SlotAccept = SiteBlocSlot["accepts"][number];
 

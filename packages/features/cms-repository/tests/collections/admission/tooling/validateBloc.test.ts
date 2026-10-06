@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { isNativeBlocTag, validateBloc, validateBlocTag } from "@bernouy/cms-collection-build";
+import { validateBloc, validateBlocTag } from "@bernouy/cms-repository/collections/build";
 
 describe("validateBlocTag", () => {
     test.each([["my-card"], ["a-b"], ["app-v2"], ["base-card"], ["super-cool-bloc"]])("accepts %p", (tag) => {
@@ -26,7 +26,7 @@ describe("validateBlocTag", () => {
         ["cms-foo"],
         ["cms-anything"],
     ])("rejects reserved prefix %p", (tag) => {
-        expect(validateBlocTag(tag)).toMatch(/reserved prefix/);
+        expect(validateBlocTag(tag)).toMatch(/reserved .* namespace/);
     });
 });
 
@@ -127,15 +127,12 @@ describe("validateBloc — graceful degradation", () => {
         expect(r.errors.length).toBeGreaterThan(0);
     });
 
-    test("rejects platform-owned native roots", () => {
+    test("rejects native roots because collection Blocs require custom-element tags", () => {
         const tags = ["a", "article", "aside", "div", "footer", "h1", "header", "main", "nav", "p", "section", "svg"];
         for (const tag of tags) {
-            expect(isNativeBlocTag(tag)).toBe(true);
-            expect(validateBloc({ tag }).errors).toEqual([
-                expect.stringContaining(`Native HTML tag "${tag}" is platform-owned`),
-            ]);
+            expect(validateBloc({ tag }).errors).toEqual([expect.stringContaining("custom-element tag")]);
         }
-        expect(validateBloc({ tag: "my-bloc", native: true }).errors[0]).toContain("platform-owned");
+        expect(validateBloc({ tag: "my-bloc", native: true }).errors[0]).toContain("retired native artifact mode");
     });
 
     test("rejects legacy form-control artifacts now owned by the platform", () => {
@@ -153,7 +150,7 @@ describe("validateBloc — graceful degradation", () => {
             "img",
         ];
         for (const tag of tags) {
-            expect(validateBloc({ tag }).errors[0]).toContain("platform-owned");
+            expect(validateBloc({ tag }).errors[0]).toContain("custom-element tag");
         }
     });
 });

@@ -267,13 +267,14 @@ Additional concerns:
 - OIDC metadata and JWKS fetches need timeout, body limits and a gateway-like
   network policy before the dormant OIDC flow is mounted in production.
 
-### `@bernouy/cms-collection-build`
+### `@bernouy/cms-repository/collections/build`
 
-The package has a clear responsibility: compile collection bloc code during
-release preparation. Source paths are constrained, but Bun import resolution
-can still resolve outside the submitted source bundle. The current callers are
-trusted CLI or authenticated Control flows, so the risk is limited today. It is
-a blocker before server-side builds accept untrusted authors.
+The explicit Repository tooling subpath has a clear responsibility: compile
+collection Bloc code during release preparation. Materialized paths and Bun
+import resolution are constrained to the submitted source bundle. Compilation
+still runs in the CLI process and therefore assumes trusted local authors; a
+separate process or stronger sandbox remains necessary before a server accepts
+untrusted source builds.
 
 The repository rules also say authored source should not self-register custom
 elements, while an existing test preserves legacy `customElements.define`
@@ -716,8 +717,8 @@ source-backed and current. Higher-level documents have drifted:
   work as future work;
 - `PLAN_ACTION.md` mixes historical implementation phases with current state;
 - a few documentation-only EditorJS references remain;
-- `cms-bloc-compile` survives only in historical audit material; the active
-  package is `cms-collection-build`.
+- `cms-bloc-compile` survives only in historical audit material; active build
+  tooling is `@bernouy/cms-repository/collections/build`.
 
 Historical documents should be clearly labelled rather than silently treated as
 current architecture. `docs/TODO.md` should eventually include the operational

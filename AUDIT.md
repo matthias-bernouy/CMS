@@ -13,7 +13,7 @@ There is no production deployment or production data to preserve. Historical imp
 | Package | Review status | Main result |
 | --- | --- | --- |
 | `cms-auth` | Completed | Token lifecycle, provider identity rules, and dormant OIDC flow need attention. |
-| `cms-collection-build` | Renamed after audit | Collection build isolation still needs hardening; the editor artifact channel was removed. |
+| `cms-collection-build` | Merged after audit | Collection build tooling now lives behind the explicit `cms-repository/collections/build` subpath. |
 | `cms-content` | Completed | Public export boundary is too broad; a few adapters and validators appear unused. |
 | `cms-dashboards` | Removed after audit | The disposable Dashboard aggregate, assignments, collection resource, routes and UI were deleted before the Control Page rebuild. |
 | `cms-editor-system-v2` | Removed after audit | The retired editor package and its Control shell were deleted before the planned rewrite. |
@@ -23,7 +23,7 @@ There is no production deployment or production data to preserve. Historical imp
 
 ## Highest-priority verified findings
 
-1. **Bloc source imports can escape the temporary build directory.** `buildCollectionBloc` passes its entrypoint to `Bun.build` without constraining resolved imports. A [`test.failing`](packages/features/cms-collection-build/tests/buildCollectionBloc.test.ts) demonstrates an absolute import outside the uploaded bundle. See [`buildCollectionBloc.ts`](packages/features/cms-collection-build/src/core/buildCollectionBloc.ts). This matters if untrusted Bloc source is compiled on the server.
+1. **Resolved after audit: Bloc source imports are constrained to the supplied source bundle.** The regression coverage now lives beside the Repository build toolchain. See [`buildCollectionBloc.test.ts`](packages/features/cms-repository/tests/collections/admission/tooling/buildCollectionBloc.test.ts) and [`hostRuntimeExternalsPlugin.ts`](packages/features/cms-repository/src/collections/tooling/hostRuntimeExternalsPlugin.ts).
 2. **Resolved after audit: the compiled Bloc editor channel was removed.** Collection settings and placement now live in declarative collection JSON; collection builds produce only the browser runtime artifact.
 3. **Resolved after audit: provider media identity is explicit and consistent.** Contracts opt into media URLs through `media.idInput: "fileId"`; Gateway no longer infers media intent from arbitrary binary inputs, and the official media contract and handler use `fileId`.
 4. **Email verification and password reset consume their token before the durable credential change.** A transient failure in `markEmailVerified` or `setPassword` makes the token unusable for retry. This is already documented locally and captured by failing recovery tests. See [`flows.ts`](packages/features/cms-auth/src/application/core/public-flows/flows.ts#L65) and [`publicAuthFailure.test.ts`](packages/features/cms-auth/tests/application/public-flows/publicAuthFailure.test.ts#L13).
@@ -39,12 +39,12 @@ There is no production deployment or production data to preserve. Historical imp
 - OIDC implementation and routes exist, but the current server runtime composes only local authentication. Treat OIDC as implemented code without a mounted production flow. [`OidcAuthentication.ts`](packages/features/cms-auth/src/application/core/authentication/OidcAuthentication.ts#L32), [`mountSurfaces.ts`](packages/runtimes/cms-server/src/runtime/mountSurfaces.ts#L84)
 - SMTP and auth email configuration types are repeated between `cms-auth` and `cms-content`. They are structurally connected only in the runtime. [`ConfiguredEmailer.ts`](packages/features/cms-auth/src/email/default-implementation/ConfiguredEmailer.ts#L7), [`settings.ts`](packages/features/cms-content/src/settings/interfaces/settings.ts#L88)
 
-### `cms-collection-build`
+### `cms-repository/collections/build`
 
-- Resolved after audit: `buildCollectionBloc` now validates `blocId` at its public boundary before creating a temporary path. [`buildCollectionBloc.ts`](packages/features/cms-collection-build/src/core/buildCollectionBloc.ts)
-- Package instructions prohibit authored `customElements.define()`, while validation and tests still allow the historical self-registering form. The policy and implementation need one explicit answer. [`AGENTS.md`](packages/features/cms-collection-build/AGENTS.md), [`validateBloc.ts`](packages/features/cms-collection-build/src/core/validateBloc.ts)
+- Resolved after audit: `buildCollectionBloc` now validates the Bloc tag at its public boundary before creating a temporary path. [`buildCollectionBloc.ts`](packages/features/cms-repository/src/collections/tooling/buildCollectionBloc.ts)
+- Repository instructions prohibit authored `customElements.define()`, while validation and tests still allow the historical self-registering form. The policy and implementation need one explicit answer. [`AGENTS.md`](packages/features/cms-repository/AGENTS.md), [`validateBloc.ts`](packages/features/cms-repository/src/collections/tooling/validateBloc.ts)
 - Resolved after audit: the duplicated editor binding metadata disappeared with the compiled editor artifact; browser bindings now come from the public `@bernouy/cms-content/bindings` contract.
-- Resolved after audit: the repository-wide `.env` test now documents its actual `cms-collection-build` location. [`env-secret-committed.test.ts`](packages/features/cms-collection-build/tests/server/security/env-secret-committed.test.ts)
+- Resolved after audit: the repository-wide `.env` test is owned by CI rather than a feature package. [`env-secret-committed.test.ts`](quality/ci/tests/env-secret-committed.test.ts)
 
 ### `cms-content`
 
@@ -114,7 +114,7 @@ Upgrade checks now reject changed settings contracts and invalid saved text over
 
 The follow-up `cms-repository` structure cleanup aligned collection installation adapter folders, extracted the shared repository HTTP transport, separated catalogue parsing and refreshed the package documentation. Later implementation completed the collection release lifecycle described above.
 
-The follow-up editor cleanup removed `@bernouy/cms-editor-system-v2`, the V2 page/composition editor integration from Control and the compiled Bloc editor artifact. Admin page settings, composition CRUD, generic Bloc previews and content persistence remain. Bloc settings and placement are declarative collection JSON, and build ownership now lives in `@bernouy/cms-collection-build`.
+The follow-up editor cleanup removed `@bernouy/cms-editor-system-v2`, the V2 page/composition editor integration from Control and the compiled Bloc editor artifact. Admin page settings, composition CRUD, generic Bloc previews and content persistence remain. Bloc settings and placement are declarative collection JSON, and collection build ownership now lives behind `@bernouy/cms-repository/collections/build`.
 
 Provider follow-up added explicit media declarations, exact-release startup validation for the official provider, administrator enable/disable/revoke actions, credential cleanup on revocation, and collection requirement readiness derived from selected provider grants. Live conformance execution remains intentionally unimplemented rather than being inferred from provider self-reporting.
 

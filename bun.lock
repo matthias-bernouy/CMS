@@ -8,7 +8,6 @@
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-collection-build": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
@@ -46,16 +45,6 @@
       },
       "peerDependencies": {
         "mongodb": "^7.2.0",
-        "typescript": "^7.0.2",
-      },
-    },
-    "packages/features/cms-collection-build": {
-      "name": "@bernouy/cms-collection-build",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cms-content": "workspace:*",
-      },
-      "peerDependencies": {
         "typescript": "^7.0.2",
       },
     },
@@ -210,7 +199,6 @@
       },
       "dependencies": {
         "@bernouy/binary-media": "workspace:*",
-        "@bernouy/cms-collection-build": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-server": "workspace:*",
         "@bernouy/ulvia-official-provider": "workspace:*",
@@ -270,8 +258,6 @@
     "@bernouy/blob-store": ["@bernouy/blob-store@workspace:packages/foundation/blob-store"],
 
     "@bernouy/cms-auth": ["@bernouy/cms-auth@workspace:packages/features/cms-auth"],
-
-    "@bernouy/cms-collection-build": ["@bernouy/cms-collection-build@workspace:packages/features/cms-collection-build"],
 
     "@bernouy/cms-content": ["@bernouy/cms-content@workspace:packages/features/cms-content"],
 

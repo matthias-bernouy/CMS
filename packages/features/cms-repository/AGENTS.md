@@ -57,6 +57,10 @@ models and validation for CMS-owned installations and site selections.
   immutable release texts and mutable site overrides remain separate.
   Collections consume the contracts facade, not providers or
   contracts internals. Do not merge immutable releases with per-site state.
+- `./collections/build` is the explicit Bun-based authoring toolchain for
+  validating Bloc source and producing immutable browser runtime bundles. Keep
+  compiler and filesystem dependencies behind this subpath; the package root and
+  normal collection admission must never import the build pipeline.
 - `src/repository-http/` contains only bounded HTTP transport shared by the
   collection and provider repository sources. It must not import any domain.
   Keep catalogue parsing, references and admission in their respective domains.

@@ -1,17 +1,14 @@
-import { CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES } from "@bernouy/cms-content/bindings";
+import { CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES } from "cms-content/blocs/core/markup/bindings/types";
+import { validateSiteBlocDefaultContent } from "cms-content/blocs/core/markup/validation/nativeContent";
+import { COMPOSITION_CONTROLLER_ATTRIBUTE } from "cms-content/blocs/core/composition/expandCompositions";
+import { isCmsBindingAttribute, nativeBindingAttributeIssue } from "cms-content/blocs/core/validation/nativeBindings";
 import {
-    COMPOSITION_CONTROLLER_ATTRIBUTE,
-    isCmsBindingAttribute,
     isSiteBlocNativeAttributeAllowed,
     isSiteBlocNativeStructureTag,
-    isValidCustomElementTag,
-    nativeBindingAttributeIssue,
-    validateNativeSiteBlocNode,
-    validateSiteBlocDefaultContent,
-    type SiteBlocNode,
-    type SiteBlocSlot,
-    type SiteBlocSnapshot,
-} from "@bernouy/cms-content";
+} from "cms-content/blocs/core/validation/nativeHtml";
+import { validateNativeSiteBlocNode } from "cms-content/blocs/core/validation";
+import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
+import type { SiteBlocNode, SiteBlocSlot, SiteBlocSnapshot } from "cms-content/blocs/interfaces/blocs";
 
 const TAG = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const ATTRIBUTE = /^[A-Za-z_:][A-Za-z0-9_.:-]*$/;

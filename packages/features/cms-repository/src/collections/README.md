@@ -96,7 +96,10 @@ Theme defaults do validate local and selectively imported token references.
 Exact local aliases must preserve token types, and local reference cycles reject.
 Installation repeats type checks for exact aliases to imported tokens.
 
-**Admission is not an HTML/CSS sanitizer or template compiler.** It does not
+**Admission is not an HTML/CSS sanitizer or template compiler.** The separate
+`@bernouy/cms-repository/collections/build` authoring toolchain compiles a
+component's browser runtime before admission, but it does not weaken these
+admission boundaries. Admission itself does not
 type-check expressions, capability calls embedded in markup, slot content
 cardinalities, rich-text profile conformance, general CSS or render expansion. Stored
 component settings are validated separately by `cms-content`. The HTML parser applies

@@ -1,6 +1,6 @@
 import { stat } from "node:fs/promises";
 import { join } from "node:path";
-import { buildCollectionBloc } from "@bernouy/cms-collection-build";
+import { buildCollectionBloc } from "@bernouy/cms-repository/collections/build";
 import { discoverCollectionBlocSources, type BlocSource } from "./blocDiscovery";
 import { readSourceEntries, scanFileSourceTree } from "./sourceTree";
 
@@ -17,7 +17,7 @@ export class Bloc extends Component {
 `;
 
 /** Discover recursively grouped Bloc folders and compile them without path-derived identity. */
-export async function loadCollectionBlocs(directory: string, group: string): Promise<unknown[]> {
+export async function loadCollectionBlocs(directory: string): Promise<unknown[]> {
     const sources = await discoverCollectionBlocSources(directory);
     const byId = new Map<string, string>();
     for (const source of sources) {
@@ -31,12 +31,12 @@ export async function loadCollectionBlocs(directory: string, group: string): Pro
     }
     const blocs = [];
     for (const source of sources.sort((left, right) => left.id.localeCompare(right.id))) {
-        blocs.push(await compileBlocSource(source, group));
+        blocs.push(await compileBlocSource(source));
     }
     return blocs;
 }
 
-async function compileBlocSource(source: BlocSource, group: string): Promise<unknown> {
+async function compileBlocSource(source: BlocSource): Promise<unknown> {
     const { definition, id, root } = source;
     if (["shadowdom", "lightdom", "style", "runtime", "defaultContent"].some((key) => Object.hasOwn(definition, key))) {
         throw new Error(`Bloc ${id} must keep markup, CSS and JavaScript in separate files`);
@@ -86,22 +86,16 @@ async function compileBlocSource(source: BlocSource, group: string): Promise<unk
     const shadowdom = (await shadow.text()).trim();
     const lightdom = (await light.exists()) ? (await light.text()).trim() : undefined;
     const css = (await style.exists()) ? (await style.text()).trim() : undefined;
-    const compiled = await buildCollectionBloc(
-        new File([(await script.exists()) ? await script.text() : DEFAULT_BLOC_SOURCE], "bloc.ts", {
-            type: "text/typescript",
-        }),
-        String(definition.label),
-        group,
-        String(definition.description ?? ""),
-        id,
-        {
+    const compiled = await buildCollectionBloc({
+        tag: id,
+        viewSource: (await script.exists()) ? await script.text() : DEFAULT_BLOC_SOURCE,
+        source: {
             "shadowdom.html": Buffer.from(shadowdom).toString("base64"),
             "style.css": Buffer.from(css ?? "").toString("base64"),
             ...runtimeSources,
         },
-        defaultContent,
-        { viewPath: "bloc.ts" },
-    );
+        viewPath: "bloc.ts",
+    });
     return {
         ...definition,
         ...(hasSettingsDirectory ? { settings: await settingsFile.json() } : {}),

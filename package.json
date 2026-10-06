@@ -34,7 +34,6 @@
     },
     "devDependencies": {
         "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-collection-build": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",

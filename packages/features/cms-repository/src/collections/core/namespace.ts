@@ -16,6 +16,21 @@ const RESERVED_CUSTOM_ELEMENT_TAGS = new Set([
     "missing-glyph",
 ]);
 
+export function collectionBlocTagIssue(value: unknown): string | null {
+    if (typeof value !== "string" || value.length === 0 || value.length > 96 || !CUSTOM_ELEMENT_TAG.test(value)) {
+        return "must be a valid lowercase custom-element tag";
+    }
+    if (RESERVED_CUSTOM_ELEMENT_TAGS.has(value)) {
+        return "uses a platform-reserved custom-element name";
+    }
+    const reserved = RESERVED_COLLECTION_ROOTS.find((root) => value === root || value.startsWith(`${root}-`));
+    return reserved ? `must not use the reserved ${reserved}- namespace` : null;
+}
+
+export function isCollectionBlocTag(value: unknown): value is string {
+    return collectionBlocTagIssue(value) === null;
+}
+
 export function isCollectionNamespace(value: unknown): value is string {
     return (
         typeof value === "string" &&
@@ -40,8 +55,9 @@ export function parseCollectionNamespace(value: unknown, path: string): string {
 
 export function parseCollectionBlocTag(value: unknown, collectionId: string, path: string): string {
     const tag = string(value, 96, path);
-    if (!CUSTOM_ELEMENT_TAG.test(tag) || RESERVED_CUSTOM_ELEMENT_TAGS.has(tag)) {
-        invalid("must be a valid lowercase custom-element tag", path);
+    const issue = collectionBlocTagIssue(tag);
+    if (issue) {
+        invalid(issue, path);
     }
     if (!tag.startsWith(`${collectionId}-`) || tag.length === collectionId.length + 1) {
         invalid(`must use the ${collectionId}- collection namespace`, path);

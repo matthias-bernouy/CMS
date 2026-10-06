@@ -82,6 +82,7 @@ compilation, site installation or execution authorization.
 | `@bernouy/cms-repository/providers/selections` | Bounded full-site graph planning, revisioned memory store and catalogue dependency source |
 | `@bernouy/cms-repository/providers/mongo` | Mongo manifest catalogue, installation and selection stores with revision-checked writes |
 | `@bernouy/cms-repository/collections` | Authored release parsing, Light DOM structure, asset and requirement verification, bundle digests |
+| `@bernouy/cms-repository/collections/build` | Bun-based collection Bloc source validation and browser runtime compilation for authoring tools |
 | `@bernouy/cms-repository/collections/installations` | Revisioned site installations, compatibility analysis, resource digests and atomic migration replacement/restoration |
 | `@bernouy/cms-repository/repository/publication` | Signed staged-publication protocol, exact remote client, mutation endpoint, upload-store and replay-store ports |
 | `@bernouy/cms-repository/repository/filesystem` | Reference immutable registry, streamed upload staging, durable replay claims, local catalogues, yanks and read endpoint |
@@ -94,7 +95,9 @@ packages or wrappers under the former package names.
 The package provides provider-domain workflows, catalogue and storage ports,
 deterministic memory implementations, and Mongo release, manifest, installation
 and selection stores. It also owns collection admission, repository sources,
-revisioned site installations and text overrides. The internal `repository-http/`
+revisioned site installations and text overrides. Its explicit
+`collections/build` subpath owns the Bun-based authoring compiler without being
+loaded by admission or the package root. The internal `repository-http/`
 directory holds bounded HTTP reads shared by collection and provider sources;
 catalogue parsing remains in each domain. Mongo contract release publication
 rejects fixture assets until separate byte storage is available.
@@ -123,7 +126,8 @@ collection path accepts verified assets and capability requirements. The CLI
 runtime composes the reference filesystem registry and loopback listener, while
 this package owns authenticated remote publication, exact `push`/`pull`, and
 reversible yanking. Gateway execution-plan primitives remain available, but no
-Control runtime currently activates collection Pages. Renderer compilation and
-third-party JavaScript isolation remain separate concerns.
+Control runtime currently activates collection Pages. Collection Bloc runtime
+compilation is implemented for trusted CLI sources; third-party JavaScript
+isolation remains a separate concern.
 [AGENTS.md](AGENTS.md) defines the domain
 boundaries and implementation invariants.
