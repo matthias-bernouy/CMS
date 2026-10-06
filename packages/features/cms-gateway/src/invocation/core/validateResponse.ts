@@ -2,6 +2,7 @@ import { projectSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import { parseContentRange } from "@bernouy/http-runner";
 import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
 import type { CompiledHttpBinding } from "@bernouy/cms-repository/contracts/bindings";
+import { parseCapabilityOperationHandle } from "@bernouy/cms-repository/contracts/protocol";
 import type { GatewayResult, GatewayTransportResponse } from "cms-gateway/invocation/interfaces/Invocation";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 
@@ -19,6 +20,21 @@ export function validateResponse(
             throw new GatewayError("invalid_provider_response", "success response contains an error code");
         }
         checkContentType(binding, response);
+        if (binding.response.kind === "operation-handle") {
+            if (response.bytes !== undefined) {
+                throw new GatewayError("invalid_provider_response", "operation handle contains binary bytes");
+            }
+            try {
+                return Object.freeze({
+                    kind: "success",
+                    requestId,
+                    status: response.status,
+                    output: parseCapabilityOperationHandle(response.output),
+                });
+            } catch {
+                throw new GatewayError("invalid_provider_response", "provider operation handle is invalid");
+            }
+        }
         if (capability.output.type === "binary") {
             if (
                 !(response.bytes instanceof Uint8Array) ||

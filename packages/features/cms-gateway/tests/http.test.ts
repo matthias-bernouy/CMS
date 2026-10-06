@@ -80,6 +80,44 @@ test("synchronous command sends validated JSON through its admitted POST binding
     });
 });
 
+test("operation transport requests JSON and forwards the idempotency key", async () => {
+    const route = await gatewayRoute({
+        behavior: { effect: "command", execution: "operation", idempotency: "keyed" },
+    });
+    const exchanges: GatewayHttpExchange[] = [];
+    const gateway = new CapabilityGateway({
+        routes: { resolve: async () => route, isCurrent: async () => true },
+        transport: new HttpGatewayTransport({
+            network: {
+                exchange: async (request) => {
+                    exchanges.push(request);
+                    return Response.json({ operationId: "00000000-0000-4000-8000-000000000010" }, { status: 202 });
+                },
+            },
+        }),
+        authorize: async () => true,
+        commandAudit: new InMemoryGatewayCommandAuditStore(),
+        now: () => "2026-09-29T08:00:00.000Z",
+    });
+    const response = await handleGatewayHttpCall(
+        new Request("https://site.example/.cms/call/catalog/item.list", {
+            method: "POST",
+            headers: { "content-type": "application/json", "idempotency-key": "operation-1" },
+            body: JSON.stringify({ term: "saved" }),
+        }),
+        {
+            siteId: "site-a",
+            origin: "control",
+            actor: { kind: "administrator", subjectId: "admin-1" },
+            prefix: "/.cms/call",
+            invoker: gateway,
+        },
+    );
+    expect(response.status).toBe(202);
+    expect(await response.json()).toEqual({ operationId: "00000000-0000-4000-8000-000000000010" });
+    expect(exchanges[0]).toMatchObject({ accept: "application/json", idempotencyKey: "operation-1" });
+});
+
 test("HTTP command uncertainty is explicit and carries a reconciliation request ID", async () => {
     const response = await handleGatewayHttpCall(
         new Request("https://site.example/.cms/call/catalog/item.list", {

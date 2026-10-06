@@ -50,8 +50,14 @@ export async function gatewayRoute(
                           ? { body: true }
                           : { query: { term: "term" } },
                     response: {
-                        successStatuses: [200],
-                        contentTypes: [overrides.binary ? "image/png" : "application/json"],
+                        successStatuses: [overrides.behavior?.execution === "operation" ? 202 : 200],
+                        contentTypes: [
+                            overrides.behavior?.execution === "operation"
+                                ? "application/json"
+                                : overrides.binary
+                                  ? "image/png"
+                                  : "application/json",
+                        ],
                         errorStatuses: { NOT_FOUND: 404 },
                     },
                 },

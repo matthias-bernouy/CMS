@@ -32,9 +32,10 @@ test("the Core relay preserves declared bodyless success responses", async () =>
     const release = {
         contractId: "ulvia.cms.health",
         capabilities: [
-            {
-                id: "probe",
-                input: { type: "object", properties: {}, required: [], additionalProperties: false },
+                {
+                    id: "probe",
+                    behavior: { effect: "query", execution: "sync" },
+                    input: { type: "object", properties: {}, required: [], additionalProperties: false },
                 output: { type: "null" },
                 binding: {
                     transport: "http",
@@ -50,6 +51,39 @@ test("the Core relay preserves declared bodyless success responses", async () =>
     const response = await relay(new Request("http://provider.test/v1/health", { headers: trustedHeaders() }));
     expect(response?.status).toBe(204);
     expect(await response?.text()).toBe("");
+});
+
+test("the Core relay returns the protocol operation handle without validating it as terminal output", async () => {
+    const release = {
+        contractId: "ulvia.cms.jobs",
+        capabilities: [
+            {
+                id: "start",
+                behavior: { effect: "command", execution: "operation", idempotency: "keyed" },
+                input: { type: "object", properties: {}, required: [] },
+                output: { type: "object", properties: { done: { type: "boolean" } }, required: ["done"] },
+                binding: {
+                    transport: "http",
+                    method: "POST",
+                    path: "/v1/jobs",
+                    input: { body: true },
+                    response: { successStatuses: [202], contentTypes: ["application/json"], errorStatuses: {} },
+                },
+            },
+        ],
+    } as never;
+    const relay = createCoreContractRelay([release], {
+        invoke: async () => ({ operationId: "00000000-0000-4000-8000-000000000010" }),
+    });
+    const response = await relay(
+        new Request("http://provider.test/v1/jobs", {
+            method: "POST",
+            headers: { ...trustedHeaders(), "content-type": "application/json", "idempotency-key": "job-1" },
+            body: "{}",
+        }),
+    );
+    expect(response?.status).toBe(202);
+    expect(await response?.json()).toEqual({ operationId: "00000000-0000-4000-8000-000000000010" });
 });
 
 function trustedHeaders(): HeadersInit {

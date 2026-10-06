@@ -3,6 +3,10 @@ export { parseStrictJson } from "cms-repository/contracts/core/protocol/json";
 export { deepFreeze } from "cms-repository/contracts/core/protocol/values";
 export { catalogueRevision } from "cms-repository/contracts/core/protocol/revision";
 export {
+    parseCapabilityOperationHandle,
+    type CapabilityOperationHandle,
+} from "cms-repository/contracts/core/protocol/operation";
+export {
     MAX_CAPABILITY_JSON_BYTES,
     MAX_CAPABILITY_JSON_DEPTH,
 } from "cms-repository/contracts/core/protocol/limits";

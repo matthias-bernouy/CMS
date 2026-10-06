@@ -66,9 +66,11 @@ export class HttpGatewayTransport implements GatewayTransport {
             ...(request.providerSubjectId ? { providerSubjectId: request.providerSubjectId } : {}),
             ...(request.idempotencyKey ? { idempotencyKey: request.idempotencyKey } : {}),
             accept:
-                request.capability.output.type === "binary"
-                    ? request.capability.output.mediaTypes.join(", ")
-                    : "application/json",
+                request.binding.response.kind === "operation-handle"
+                    ? "application/json"
+                    : request.capability.output.type === "binary"
+                      ? request.capability.output.mediaTypes.join(", ")
+                      : "application/json",
             signal,
         };
         const response = await withAbort(() => this.#network.exchange(exchange), signal);
@@ -79,13 +81,17 @@ export class HttpGatewayTransport implements GatewayTransport {
             const contentType = response.headers.get("content-type") ?? undefined;
             const responseHeaders = allowedResponseHeaders(response.headers);
             const maximum =
+                request.binding.response.kind !== "operation-handle" &&
                 request.capability.output.type === "binary" &&
                 request.binding.response.successStatuses.includes(response.status)
                     ? Math.min(this.#maxBinaryResponseBytes, request.capability.output.maxBytes)
                     : this.#maxResponseBytes;
             const bytes = await readBounded(response, maximum, signal);
             if (request.binding.response.successStatuses.includes(response.status)) {
-                if (request.capability.output.type === "binary") {
+                if (
+                    request.binding.response.kind !== "operation-handle" &&
+                    request.capability.output.type === "binary"
+                ) {
                     return { status: response.status, contentType, bytes, responseHeaders };
                 }
                 return {

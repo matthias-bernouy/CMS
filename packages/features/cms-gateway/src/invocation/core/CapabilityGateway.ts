@@ -211,12 +211,15 @@ export class CapabilityGateway implements GatewayAccessProbe {
         if (!capability || !binding) {
             throw new GatewayError("invalid_route", "selected release does not define this capability and binding");
         }
-        if (
-            capability.behavior.execution !== "sync" ||
-            (capability.behavior.effect === "command" && capability.behavior.idempotency === "keyed") ||
-            binding.body?.kind === "binary"
-        ) {
+        if (binding.body?.kind === "binary") {
             throw new GatewayError("unsupported_behavior", "this capability needs a later execution profile");
+        }
+        const keyed = capability.behavior.effect === "command" && capability.behavior.idempotency === "keyed";
+        if (keyed && !value.idempotencyKey) {
+            throw new GatewayError("invalid_input", "keyed commands require an idempotency key");
+        }
+        if (!keyed && value.idempotencyKey) {
+            throw new GatewayError("invalid_input", "idempotency keys are accepted only by keyed commands");
         }
         checkAccess(value.actor, capability, value.origin);
         if (!(await this.#options.authorize(value.actor, capability, route, value.origin))) {

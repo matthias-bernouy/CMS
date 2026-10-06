@@ -32,6 +32,7 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
         throw new GatewayError("invalid_input", "invocation origin is invalid");
     }
     const actor = snapshotActor(value.actor);
+    const idempotencyKey = snapshotIdempotencyKey(value.idempotencyKey);
     try {
         const bytes = canonicalIJsonBytes(value.input, MAX_CAPABILITY_JSON_DEPTH);
         if (bytes.byteLength > MAX_GATEWAY_JSON_BYTES) {
@@ -43,12 +44,23 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
             capabilityId: value.capabilityId,
             origin: value.origin,
             actor,
+            ...(idempotencyKey ? { idempotencyKey } : {}),
             ...(value.execution ? { execution: snapshotExecution(value.execution) } : {}),
             input: parseStrictJson(bytes, MAX_GATEWAY_JSON_BYTES, MAX_CAPABILITY_JSON_DEPTH),
         };
     } catch {
         throw new GatewayError("invalid_input", "input must be bounded interoperable JSON");
     }
+}
+
+function snapshotIdempotencyKey(value: unknown): string | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (typeof value !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u.test(value)) {
+        throw new GatewayError("invalid_input", "idempotency key is invalid");
+    }
+    return value;
 }
 
 function snapshotExecution(

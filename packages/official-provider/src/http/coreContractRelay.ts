@@ -1,5 +1,6 @@
 import { pathTemplatesOverlap } from "@bernouy/cms-repository/contracts/bindings";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
+import { parseCapabilityOperationHandle } from "@bernouy/cms-repository/contracts/protocol";
 import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
 import {
     OfficialCoreCapabilityError,
@@ -43,7 +44,11 @@ export function createCoreContractRelay(
         }
         try {
             const output = await core.invoke(contractId, capability.id, input, context);
-            validateSchemaValue(capability.output, output);
+            if (capability.behavior.execution === "operation") {
+                parseCapabilityOperationHandle(output);
+            } else {
+                validateSchemaValue(capability.output, output);
+            }
             return successResponse(request.method, capability, output);
         } catch (cause) {
             if (cause instanceof OfficialCoreCapabilityError) {

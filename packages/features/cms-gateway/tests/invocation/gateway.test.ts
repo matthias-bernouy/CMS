@@ -293,8 +293,31 @@ describe("capability gateway", () => {
         const command = harness(
             await gatewayRoute({ behavior: { effect: "command", execution: "sync", idempotency: "keyed" } }),
         );
-        await expect(command.gateway.invoke(invocation())).rejects.toMatchObject({ code: "unsupported_behavior" });
+        await expect(command.gateway.invoke(invocation())).rejects.toMatchObject({ code: "invalid_input" });
         expect(command.sent).toHaveLength(0);
+    });
+
+    test("forwards keyed operations and validates their protocol handle", async () => {
+        const scope = harness(
+            await gatewayRoute({ behavior: { effect: "command", execution: "operation", idempotency: "keyed" } }),
+        );
+        scope.setResponse({
+            status: 202,
+            contentType: "application/json",
+            output: { operationId: "00000000-0000-4000-8000-000000000010" },
+        });
+
+        await expect(scope.gateway.invoke({ ...invocation(), idempotencyKey: "migration-1" })).resolves.toMatchObject({
+            kind: "success",
+            status: 202,
+            output: { operationId: "00000000-0000-4000-8000-000000000010" },
+        });
+        expect(scope.sent[0]).toMatchObject({ idempotencyKey: "migration-1" });
+
+        scope.setResponse({ status: 202, contentType: "application/json", output: { operationId: "bad" } });
+        await expect(scope.gateway.invoke({ ...invocation(), idempotencyKey: "migration-2" })).rejects.toMatchObject({
+            code: "outcome_unknown",
+        });
     });
 
     test("returns only declared provider errors", async () => {
