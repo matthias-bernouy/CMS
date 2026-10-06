@@ -5,7 +5,8 @@ import {
     parseStrictJson,
 } from "@bernouy/cms-repository/contracts/protocol";
 import type { CoreStores } from "../../stores/core";
-import { projectDesignOverview, projectTextCatalogue, readSystemSnapshot } from "./projection";
+import { readSystemSnapshot } from "../../stores/readSystemSnapshot";
+import { projectDesignOverview, projectTextCatalogue } from "./projection";
 
 export function registerDesignCapabilities(dispatcher: CoreCapabilityRegistry, core: CoreStores): void {
     dispatcher.register("ulvia.cms.design", "overview", async (_input, context) => {
@@ -17,6 +18,7 @@ export function registerDesignCapabilities(dispatcher: CoreCapabilityRegistry, c
     });
     dispatcher.register("ulvia.cms.design", "update-languages", async (input) =>
         designCommand(async () => {
+            const expectedRevision = revision(input.expectedRevision);
             const system = await core.repo.updateSystem(
                 {
                     site: {
@@ -25,10 +27,10 @@ export function registerDesignCapabilities(dispatcher: CoreCapabilityRegistry, c
                         activeLanguages: languages(input.activeLanguages),
                     },
                 } as never,
-                revision(input.expectedRevision),
+                expectedRevision,
             );
             return {
-                revision: await core.repo.getSystemRevision(),
+                revision: expectedRevision + 1,
                 language: system.site.language,
                 additionalLanguages: system.site.additionalLanguages ?? [],
                 activeLanguages: system.site.activeLanguages ?? [],
@@ -46,9 +48,10 @@ export function registerDesignCapabilities(dispatcher: CoreCapabilityRegistry, c
     dispatcher.register("ulvia.cms.design", "save-theme", async (input) =>
         designCommand(async () => {
             const theme = parseJson(input.themeJson) as ThemeSettings;
-            const system = await core.repo.updateSystem({ theme }, revision(input.expectedRevision));
+            const expectedRevision = revision(input.expectedRevision);
+            const system = await core.repo.updateSystem({ theme }, expectedRevision);
             return {
-                revision: await core.repo.getSystemRevision(),
+                revision: expectedRevision + 1,
                 activeThemeId: system.theme.activeThemeId,
                 themeJson: JSON.stringify(system.theme),
             };

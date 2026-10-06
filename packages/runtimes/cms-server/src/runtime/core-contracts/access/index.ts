@@ -2,6 +2,7 @@ import { CoreCapabilityDispatchError, type CoreCapabilityRegistry } from "@berno
 import { deleteUserCompletely } from "@bernouy/cms-auth/management";
 import type { CoreStores } from "../../stores/core";
 import type { ProductionGateway } from "../../gateway/createProductionGateway";
+import { readSystemSnapshot } from "../../stores/readSystemSnapshot";
 import { registerAccessConfigurationCapabilities } from "./configuration";
 import {
     accessCommand,
@@ -22,16 +23,15 @@ export function registerAccessCapabilities(
 ): void {
     dispatcher.register("ulvia.cms.access", "overview", async (input) => {
         const limit = Number.isSafeInteger(input.limit) ? Number(input.limit) : 50;
-        const [system, siteRevision, page, loginProviders, administratorIds] = await Promise.all([
-            core.repo.getSystem(),
-            core.repo.getSystemRevision(),
+        const [site, page, loginProviders, administratorIds] = await Promise.all([
+            readSystemSnapshot(core.repo),
             core.users.list({ pagination: { page: 1, limit } }),
             core.identityProviders.list(),
             gateway?.administrators.list() ?? Promise.resolve([]),
         ]);
         const administrators = new Set(administratorIds);
         return {
-            site: projectSite(system, siteRevision),
+            site: projectSite(site.system, site.revision),
             users: page.users.map((user) => projectUser(user, administrators.has(user.sub))),
             totalUsers: page.total,
             loginProviders: loginProviders.map(projectIdentityProvider),

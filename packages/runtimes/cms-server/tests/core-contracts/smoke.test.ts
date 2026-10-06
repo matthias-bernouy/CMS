@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { DefaultCoreCapabilityDispatcher, defaultSystem } from "@bernouy/cms-content";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
-import { registerOfficialCoreCapabilities } from "../src/runtime/core-contracts";
+import { registerOfficialCoreCapabilities } from "../../src/runtime/core-contracts";
 
 test("all six Control domains dispatch outputs matching their official contracts", async () => {
     const dispatcher = new DefaultCoreCapabilityDispatcher();
@@ -116,6 +116,6 @@ test("all six Control domains dispatch outputs matching their official contracts
 });
 
 async function load(contractId: string) {
-    const root = resolve(import.meta.dir, `../../../official-repository/contracts/${contractId}/definition.json`);
+    const root = resolve(import.meta.dir, `../../../../official-repository/contracts/${contractId}/definition.json`);
     return (await admitContractReleaseJson(await readFile(root))).release;
 }

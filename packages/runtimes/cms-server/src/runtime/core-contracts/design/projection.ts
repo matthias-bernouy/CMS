@@ -1,17 +1,7 @@
-import { composeCollectionThemes, type CmsRepository } from "@bernouy/cms-content";
+import { composeCollectionThemes } from "@bernouy/cms-content";
 import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
 import type { CoreStores } from "../../stores/core";
-
-export async function readSystemSnapshot(repository: CmsRepository) {
-    for (let attempt = 0; attempt < 5; attempt++) {
-        const revision = await repository.getSystemRevision();
-        const system = await repository.getSystem();
-        if ((await repository.getSystemRevision()) === revision) {
-            return { revision, system };
-        }
-    }
-    throw new Error("System settings changed repeatedly while reading");
-}
+import type { readSystemSnapshot } from "../../stores/readSystemSnapshot";
 
 export function projectDesignOverview(
     snapshot: Awaited<ReturnType<typeof readSystemSnapshot>>,

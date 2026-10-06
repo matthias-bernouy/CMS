@@ -31,6 +31,7 @@ export function registerAccessConfigurationCapabilities(dispatcher: CoreCapabili
             if (input.name === undefined && input.host === undefined && input.visible === undefined) {
                 throw new CoreCapabilityDispatchError("INVALID_INPUT", 422);
             }
+            const expectedRevision = revision(input.expectedRevision);
             const system = await core.repo.updateSystem(
                 {
                     site: {
@@ -39,9 +40,9 @@ export function registerAccessConfigurationCapabilities(dispatcher: CoreCapabili
                         ...(input.visible === undefined ? {} : { visible: boolean(input.visible) }),
                     },
                 } as never,
-                revision(input.expectedRevision),
+                expectedRevision,
             );
-            return projectSite(system, await core.repo.getSystemRevision());
+            return projectSite(system, expectedRevision + 1);
         }),
     );
 }
