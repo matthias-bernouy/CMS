@@ -63,8 +63,8 @@ export function controlValue(control: TypedControl): unknown {
     if (empty !== null && !["null", "omit"].includes(empty)) {
         throw new Error("cms-form-empty must be null or omit.");
     }
-    if (!["string", "number", "boolean"].includes(type)) {
-        throw new Error("cms-form-value-type must be string, number or boolean.");
+    if (!["string", "number", "boolean", "json"].includes(type)) {
+        throw new Error("cms-form-value-type must be string, number, boolean or json.");
     }
     if (raw === "" || raw === undefined) {
         return empty === "null" ? null : empty === "omit" || type !== "string" ? undefined : raw;
@@ -83,6 +83,13 @@ export function controlValue(control: TypedControl): unknown {
             throw new Error(`Invalid boolean in ${control.getAttribute("name")}.`);
         }
         return raw === "true";
+    }
+    if (type === "json") {
+        try {
+            return JSON.parse(raw);
+        } catch {
+            throw new Error(`Invalid JSON in ${control.getAttribute("name")}.`);
+        }
     }
     return raw;
 }

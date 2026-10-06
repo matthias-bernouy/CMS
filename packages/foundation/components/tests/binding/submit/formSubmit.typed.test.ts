@@ -24,6 +24,13 @@ test("typed JSON builds nested values and preserves explicit false, zero, null a
     });
 });
 
+test("typed JSON accepts an explicit bounded JSON control value", () => {
+    expect(encode('<textarea name="targets" cms-form-value-type="json">[{"digest":"sha256:abc"}]</textarea>')).toEqual({
+        targets: [{ digest: "sha256:abc" }],
+    });
+    expect(() => encode('<textarea name="targets" cms-form-value-type="json">[</textarea>')).toThrow("Invalid JSON");
+});
+
 test("read-only and disabled controls do not contribute to typed JSON", () => {
     expect(
         encode(

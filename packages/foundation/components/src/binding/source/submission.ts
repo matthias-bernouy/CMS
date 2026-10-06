@@ -1,5 +1,6 @@
 import {
     SOURCE_BODY_ATTR,
+    SOURCE_IDEMPOTENCY_ATTR,
     SOURCE_INHERIT_QUERY_ATTR,
     SOURCE_METHOD_ATTR,
     SOURCE_PUBLISH_ATTR,
@@ -28,7 +29,11 @@ type CapturedSubmission = {
     formData: FormData;
     bodyFields: ReturnType<typeof resolveSourceBodyFields>;
     serialized: SerializedForm;
+    idempotencyKey?: string;
 };
+
+type IdempotencyAttempt = { fingerprint: string; key: string };
+const idempotencyAttempts = new WeakMap<HTMLFormElement, IdempotencyAttempt>();
 
 export class SourceSubmission {
     constructor(
@@ -47,12 +52,14 @@ export class SourceSubmission {
             method === "GET" || method === "HEAD"
                 ? undefined
                 : resolveSourceBodyFields(this.element.getAttribute(SOURCE_BODY_ATTR), this.element.ownerDocument);
+        const serialized = serializeForm(form, { url: this.submitUrl(url), method, formData, bodyFields });
         return {
             form,
             method,
             formData,
             bodyFields,
-            serialized: serializeForm(form, { url: this.submitUrl(url), method, formData, bodyFields }),
+            serialized,
+            ...this.idempotency(form, serialized),
         };
     }
 
@@ -64,6 +71,7 @@ export class SourceSubmission {
             bodyFields: captured.bodyFields,
             formData: captured.formData,
             serialized: captured.serialized,
+            ...(captured.idempotencyKey ? { headers: { "Idempotency-Key": captured.idempotencyKey } } : {}),
         });
     }
 
@@ -78,6 +86,7 @@ export class SourceSubmission {
         if (!result.ok) {
             return;
         }
+        idempotencyAttempts.delete(result.form);
         this.publish(result);
         if (this.shouldReset()) {
             result.form.reset();
@@ -86,6 +95,24 @@ export class SourceSubmission {
         if (target) {
             this.redirect(target);
         }
+    }
+
+    private idempotency(form: HTMLFormElement, serialized: SerializedForm): { idempotencyKey?: string } {
+        const mode = this.element.getAttribute(SOURCE_IDEMPOTENCY_ATTR);
+        if (mode === null) {
+            return {};
+        }
+        if (mode.trim().toLowerCase() !== "auto") {
+            throw new Error("cms-source-idempotency must be auto when specified.");
+        }
+        const fingerprint = submissionFingerprint(serialized);
+        const current = idempotencyAttempts.get(form);
+        if (current?.fingerprint === fingerprint) {
+            return { idempotencyKey: current.key };
+        }
+        const key = crypto.randomUUID();
+        idempotencyAttempts.set(form, { fingerprint, key });
+        return { idempotencyKey: key };
     }
 
     private sourceMethod(): SourceMethod {
@@ -179,6 +206,16 @@ export class SourceSubmission {
         }
         return null;
     }
+}
+
+function submissionFingerprint(serialized: SerializedForm): string {
+    if (serialized.kind === "json") {
+        return `${serialized.kind}\0${serialized.url}\0${serialized.body}`;
+    }
+    if (serialized.kind === "query") {
+        return `${serialized.kind}\0${serialized.url}`;
+    }
+    throw new Error("Automatic idempotency is not available for multipart forms.");
 }
 
 export function ownerForm(value: EventTarget | null, document: Document): HTMLFormElement | null {

@@ -3,7 +3,10 @@ import type { FormSubmitResult, SubmitFormOptions } from "./types";
 
 export async function submitForm(form: HTMLFormElement, options: SubmitFormOptions): Promise<FormSubmitResult> {
     const serialized = options.serialized ?? serializeForm(form, options);
-    const headers = new Headers({ Accept: "application/json" });
+    const headers = new Headers(options.headers);
+    if (!headers.has("Accept")) {
+        headers.set("Accept", "application/json");
+    }
     const init: RequestInit = { method: options.method, headers, signal: options.signal };
 
     if (serialized.kind === "json") {

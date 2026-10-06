@@ -100,6 +100,46 @@ describe("Source — submit request", () => {
         runtime.stop();
     });
 
+    test("automatic idempotency reuses a key after failure and rotates it after success", async () => {
+        const keys: string[] = [];
+        let status = 503;
+        globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
+            keys.push(new Headers(init?.headers).get("Idempotency-Key") ?? "");
+            return new Response(JSON.stringify({ ok: status === 200 }), {
+                status,
+                headers: { "content-type": "application/json" },
+            });
+        }) as typeof fetch;
+        const root = el(`
+            <form cms-source="/api/jobs" cms-source-trigger="submit" cms-source-method="POST"
+                cms-source-idempotency="auto">
+                <input name="name" value="migration">
+                <button type="submit">Run</button>
+            </form>
+        `) as HTMLFormElement;
+        document.body.append(root);
+        const runtime = new BindingRuntime(root);
+        runtime.start();
+        await settle();
+
+        root.requestSubmit();
+        await waitFor(() => keys.length === 1);
+        root.requestSubmit();
+        await waitFor(() => keys.length === 2);
+        expect(keys[0]).not.toBe("");
+        expect(keys[1]).toBe(keys[0]);
+
+        status = 200;
+        root.requestSubmit();
+        await waitFor(() => keys.length === 3);
+        expect(keys[2]).toBe(keys[0]);
+        await waitFor(() => (readSourceData(root) as FormSubmitResult | undefined)?.status === 200);
+        root.requestSubmit();
+        await waitFor(() => keys.length === 4);
+        expect(keys[3]).not.toBe(keys[2]);
+        runtime.stop();
+    });
+
     test("programmatic requests submit the declarative source form through binding events", async () => {
         const host = el('<div><form cms-source-id="save" cms-ready></form></div>');
         const form = host.querySelector("form")!;

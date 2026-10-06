@@ -34,4 +34,5 @@ export type SubmitFormOptions = {
     bodyFields?: AdditionalFormFields;
     formData?: FormData;
     serialized?: SerializedForm;
+    headers?: HeadersInit;
 };
