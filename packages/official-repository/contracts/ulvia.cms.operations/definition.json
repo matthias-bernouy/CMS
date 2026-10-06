@@ -77,7 +77,8 @@
                     "revision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
                     "createdAt": { "type": "string", "format": "date-time", "maxLength": 40 },
                     "updatedAt": { "type": "string", "format": "date-time", "maxLength": 40 },
-                    "errorCode": { "type": "string", "maxLength": 64 }
+                    "errorCode": { "type": "string", "maxLength": 64 },
+                    "resultJson": { "type": "string", "maxLength": 1048576 }
                 },
                 "required": ["id", "contractId", "capabilityId", "status", "revision", "createdAt", "updatedAt"]
             },

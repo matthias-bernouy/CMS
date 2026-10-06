@@ -40,7 +40,7 @@ export function registerOperationCapabilities(
             limit,
         );
         return {
-            items: page.items.map(projectOperation),
+            items: page.items.map((operation) => projectOperation(operation, false)),
             ...(page.nextCursor ? { nextCursor: page.nextCursor } : {}),
         };
     });
@@ -52,11 +52,14 @@ export function registerOperationCapabilities(
         if (!operation) {
             throw new CoreCapabilityDispatchError("NOT_FOUND", 404);
         }
-        return projectOperation(operation);
+        return projectOperation(operation, true);
     });
 }
 
-function projectOperation(operation: Awaited<ReturnType<CoreOperationExecutor["store"]["get"]>> & object) {
+function projectOperation(
+    operation: Awaited<ReturnType<CoreOperationExecutor["store"]["get"]>> & object,
+    detailed: boolean,
+) {
     return {
         id: operation.id,
         contractId: operation.contractId,
@@ -66,5 +69,6 @@ function projectOperation(operation: Awaited<ReturnType<CoreOperationExecutor["s
         createdAt: operation.createdAt,
         updatedAt: operation.updatedAt,
         ...(operation.errorCode ? { errorCode: operation.errorCode } : {}),
+        ...(detailed && operation.result !== undefined ? { resultJson: JSON.stringify(operation.result) } : {}),
     };
 }

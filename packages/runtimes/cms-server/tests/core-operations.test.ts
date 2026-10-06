@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test";
-import type { CoreCapabilityInvocationContext } from "@bernouy/cms-content";
+import { DefaultCoreCapabilityDispatcher, type CoreCapabilityInvocationContext } from "@bernouy/cms-content";
 import { CoreOperationExecutor } from "../src/runtime/core-operations/CoreOperationExecutor";
 import { MemoryCoreOperationStore } from "../src/runtime/core-operations/MemoryCoreOperationStore";
+import { registerOperationCapabilities } from "../src/runtime/core-contracts/operations";
 
 const context: CoreCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
@@ -58,6 +59,25 @@ test("Core operation recovery reclaims an expired lease and records failures", a
     await executor.recover();
     const record = await expectTerminal(store, "00000000-0000-7000-8000-000000000010", "failed");
     expect(record.errorCode).toBe("OPERATION_FAILED");
+});
+
+test("the operations contract exposes a completed result only from its detail query", async () => {
+    const store = new MemoryCoreOperationStore();
+    const executor = new CoreOperationExecutor(store);
+    executor.register("ulvia.cms.collections", "apply", async () => ({ migrationId: "migration-1" }));
+    const queued = await executor.enqueue("ulvia.cms.collections", "apply", {}, context);
+    await expectTerminal(store, queued.operationId, "succeeded");
+    const dispatcher = new DefaultCoreCapabilityDispatcher();
+    registerOperationCapabilities(
+        dispatcher,
+        { collectionMigrations: { getActive: async () => null, listAudits: async () => [] } } as never,
+        executor,
+    );
+
+    const detail = await dispatcher.invoke("ulvia.cms.operations", "get", { operationId: queued.operationId }, context);
+    expect(JSON.parse(String(detail.resultJson))).toEqual({ migrationId: "migration-1" });
+    const listed = await dispatcher.invoke("ulvia.cms.operations", "list", {}, context);
+    expect(listed.items[0]).not.toHaveProperty("resultJson");
 });
 
 async function expectTerminal(store: MemoryCoreOperationStore, id: string, status: "succeeded" | "failed") {
