@@ -9,6 +9,7 @@ const BLOC_ENTRIES = new Set([
     "default.html",
     "definition.json",
     "lightdom.html",
+    "runtime",
     "settings",
     "shadowdom.html",
     "style.css",
@@ -72,7 +73,7 @@ function validateBlocEntries(entries: Awaited<ReturnType<typeof readSourceEntrie
         if (!BLOC_ENTRIES.has(entry.name)) {
             throw new Error(`Unsupported entry in Bloc ${relativePath}: ${entry.name}`);
         }
-        if (entry.name === "settings" ? !entry.isDirectory() : !entry.isFile()) {
+        if (["settings", "runtime"].includes(entry.name) ? !entry.isDirectory() : !entry.isFile()) {
             throw new Error(`Invalid entry type in Bloc ${relativePath}: ${entry.name}`);
         }
     }

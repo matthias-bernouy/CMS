@@ -74,6 +74,38 @@ test("Bloc discovery rejects duplicate IDs and files in grouping directories", a
     );
 });
 
+test("component runtime modules stay inside the Bloc source boundary", async () => {
+    const root = await temporaryDirectory();
+    const componentRoot = join(root, "control", "example-manager");
+    await writeJson(join(componentRoot, "definition.json"), {
+        id: "example-manager",
+        kind: "component",
+        label: "bloc.example-manager.label",
+        uses: [],
+        requires: [],
+        slots: {},
+    });
+    await Bun.write(join(componentRoot, "shadowdom.html"), "<div></div>");
+    await Bun.write(join(componentRoot, "style.css"), ":host { display: block; }");
+    await Bun.write(join(componentRoot, "runtime", "message.ts"), 'export const message = "modular-runtime";');
+    await Bun.write(
+        join(componentRoot, "bloc.ts"),
+        `import { Component } from "@bernouy/components/base";
+         import template from "./shadowdom.html" with { type: "text" };
+         import css from "./style.css" with { type: "text" };
+         import { message } from "./runtime/message";
+         export class Bloc extends Component { constructor() { super({ css, template }); this.dataset.message = message; } }`,
+    );
+
+    const blocs = (await loadCollectionBlocs(root, "Example")) as { runtime: { viewJS: string } }[];
+    expect(blocs[0]!.runtime.viewJS).toContain("modular-runtime");
+
+    const compositionRoot = join(root, "content", "example-composition");
+    await writeComposition(compositionRoot, "example-composition");
+    await Bun.write(join(compositionRoot, "runtime", "invalid.ts"), "export {};");
+    await expect(loadCollectionBlocs(root, "Example")).rejects.toThrow("must have only lightdom.html");
+});
+
 test("Bloc discovery follows the collection admission ceiling beyond the former 256 limit", async () => {
     const root = await temporaryDirectory();
     await Promise.all(

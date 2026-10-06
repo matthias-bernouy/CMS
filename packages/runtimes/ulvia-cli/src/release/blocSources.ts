@@ -2,7 +2,7 @@ import { stat } from "node:fs/promises";
 import { join } from "node:path";
 import { buildCollectionBloc } from "@bernouy/cms-collection-build";
 import { discoverCollectionBlocSources, type BlocSource } from "./blocDiscovery";
-import { readSourceEntries } from "./sourceTree";
+import { readSourceEntries, scanFileSourceTree } from "./sourceTree";
 
 const DEFAULT_BLOC_SOURCE = `
 import { Component } from "@bernouy/components/base";
@@ -47,8 +47,10 @@ async function compileBlocSource(source: BlocSource, group: string): Promise<unk
     const defaults = Bun.file(join(root, "default.html"));
     const script = Bun.file(join(root, "bloc.ts"));
     const settingsRoot = join(root, "settings");
+    const runtimeRoot = join(root, "runtime");
     const settingsFile = Bun.file(join(settingsRoot, "definition.json"));
     const hasSettingsDirectory = await directoryExists(settingsRoot);
+    const runtimeSources = await loadRuntimeSources(runtimeRoot, id);
     if (hasSettingsDirectory) {
         const entries = await readSourceEntries(settingsRoot);
         if (entries.length !== 1 || entries[0]!.name !== "definition.json" || !entries[0]!.isFile()) {
@@ -65,6 +67,7 @@ async function compileBlocSource(source: BlocSource, group: string): Promise<unk
             (await shadow.exists()) ||
             (await style.exists()) ||
             (await script.exists()) ||
+            Object.keys(runtimeSources).length > 0 ||
             hasSettingsDirectory
         ) {
             throw new Error(`Composition ${id} must have only lightdom.html and optional default.html`);
@@ -94,6 +97,7 @@ async function compileBlocSource(source: BlocSource, group: string): Promise<unk
         {
             "shadowdom.html": Buffer.from(shadowdom).toString("base64"),
             "style.css": Buffer.from(css ?? "").toString("base64"),
+            ...runtimeSources,
         },
         defaultContent,
         { viewPath: "bloc.ts" },
@@ -107,6 +111,20 @@ async function compileBlocSource(source: BlocSource, group: string): Promise<unk
         ...(css ? { style: css } : {}),
         runtime: { viewJS: compiled.viewJS },
     };
+}
+
+async function loadRuntimeSources(root: string, blocId: string): Promise<Record<string, string>> {
+    const files = await scanFileSourceTree(root);
+    const sources: Record<string, string> = {};
+    for (const file of files) {
+        if (!file.relativePath.endsWith(".ts")) {
+            throw new Error(`Bloc ${blocId} runtime may contain only TypeScript files: ${file.relativePath}`);
+        }
+        sources[`runtime/${file.relativePath}`] = Buffer.from(await Bun.file(file.absolutePath).bytes()).toString(
+            "base64",
+        );
+    }
+    return sources;
 }
 
 async function directoryExists(directory: string): Promise<boolean> {
