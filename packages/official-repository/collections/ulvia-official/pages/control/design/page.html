@@ -13,19 +13,6 @@
     <ulvia-official-page-shell slot="content" width="xl">
         <div slot="title"><h1>Design &amp; languages</h1></div>
         <div slot="description"><p>The effective site themes, token sources, translations and collection texts.</p></div>
-        <section slot="content" cms-source="/.cms/call/ulvia.cms.design/overview as design" cms-source-method="POST" cms-source-body="{}">
-            <p role="status" aria-live="polite" cms-condition="$source.loading">Loading design configuration…</p>
-            <div role="alert" cms-condition="$source.error"><h2>Design unavailable</h2><p>The effective theme and locale graph could not be composed.</p></div>
-            <div cms-condition="$source.loaded">
-                <ulvia-official-grid min-item-width="18rem" gap="lg">
-                    <ulvia-official-surface padding="lg"><h2>Languages</h2><p>Default: <strong>{{ design.language }}</strong></p><p>{{ design.activeLanguages.length }} additional active languages.</p></ulvia-official-surface>
-                    <ulvia-official-surface padding="lg"><h2>Themes</h2><p>Active: <strong>{{ design.activeThemeId }}</strong></p><p>{{ design.themes.length }} themes · {{ design.sources.length }} token sources.</p></ulvia-official-surface>
-                </ulvia-official-grid>
-                <h2>Token sources</h2>
-                <ul><li cms-repeat="design.sources as source"><strong>{{ source.label }}</strong><span>{{ source.tokenCount }} tokens</span><small cms-condition="source.supportsModes">Light and dark modes</small></li></ul>
-                <h2>Collection text catalogues</h2>
-                <ul><li cms-repeat="design.collections as collection"><strong>{{ collection.collectionId }}</strong><span>{{ collection.textCount }} texts · {{ collection.themeTokenCount }} theme tokens · {{ collection.overriddenLocaleCount }} overridden locales</span></li></ul>
-            </div>
-        </section>
+        <ulvia-official-design-manager slot="content"></ulvia-official-design-manager>
     </ulvia-official-page-shell>
 </ulvia-official-app-shell>

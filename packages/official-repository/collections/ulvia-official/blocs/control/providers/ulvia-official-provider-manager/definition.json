@@ -1,0 +1,18 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-provider-manager",
+    "label": "bloc.provider-manager.label",
+    "description": "bloc.provider-manager.description",
+    "category": "bloc.category.administration",
+    "order": 30,
+    "internal": true,
+    "surfaces": ["control"],
+    "uses": ["ulvia-official-action", "ulvia-official-badge", "ulvia-official-card", "ulvia-official-select"],
+    "requires": [
+        { "contractId": "ulvia.cms.providers", "capabilityId": "list", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.providers", "capabilityId": "get", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.providers", "capabilityId": "replace-selections", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.providers", "capabilityId": "set-status", "versionRange": "^1.0.0" }
+    ],
+    "slots": {}
+}

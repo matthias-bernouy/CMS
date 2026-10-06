@@ -123,7 +123,7 @@ function action(label: string, actionId: string, key: string, emphasis = "second
 function actionControl(label: string, actionId: string, key: string, emphasis = "secondary"): HTMLElement {
     const wrapper = document.createElement("ulvia-official-action");
     wrapper.slot = "actions";
-    wrapper.setAttribute("variant", emphasis === "primary" ? "filled" : "outlined");
+    wrapper.setAttribute("variant", emphasis === "primary" ? "filled" : "outline");
     wrapper.setAttribute("tone", emphasis === "primary" ? "primary" : "secondary");
     wrapper.setAttribute("size", "sm");
     wrapper.append(button(label, actionId, key, emphasis));

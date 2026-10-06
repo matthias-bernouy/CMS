@@ -13,15 +13,6 @@
     <ulvia-official-page-shell slot="content" width="xl">
         <div slot="title"><h1>Providers &amp; contracts</h1></div>
         <div slot="description"><p>Approved provider accounts and exact contract releases selected by this CMS.</p></div>
-        <section slot="content" cms-source="/.cms/call/ulvia.cms.providers/list as providers" cms-source-method="POST" cms-source-body="{}">
-            <p role="status" aria-live="polite" cms-condition="$source.loading">Loading provider graph…</p>
-            <div role="alert" cms-condition="$source.error"><h2>Providers unavailable</h2><p>The CMS-owned installation graph could not be read.</p></div>
-            <div cms-condition="$source.loaded">
-                <h2>Installations</h2>
-                <ul><li cms-repeat="providers.installations as installation"><strong>{{ installation.providerId }}</strong><span>{{ installation.accountId }} · {{ installation.status }}</span><small>{{ installation.endpoint }} · manifest {{ installation.manifestVersion }} · revision {{ installation.revision }}</small></li></ul>
-                <h2>Selected contracts</h2>
-                <ul><li cms-repeat="providers.selections as selection"><strong>{{ selection.contractId }}</strong><span>{{ selection.version }}</span><small>Installation {{ selection.installationId }}</small></li></ul>
-            </div>
-        </section>
+        <ulvia-official-provider-manager slot="content"></ulvia-official-provider-manager>
     </ulvia-official-page-shell>
 </ulvia-official-app-shell>
