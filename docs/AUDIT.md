@@ -328,6 +328,17 @@ materialized reference graph and cursor-based projections.
 The root package export remains broad and exposes both authoring and rendering
 concepts. It can be narrowed when the new editor boundary is designed.
 
+Surface routes are now scoped by site as well as surface. Collection and site
+Page routes reconcile as one idempotent desired graph from their canonical
+stores at startup and around writes. This removes stale ownership before path
+reuse and supports route swaps. Site-owned Control Pages use the collection
+Page renderer and the generic Page execution planner. Stable references are
+checked at collection admission, installation, editable Page writes and
+activation; destructive mutations that would orphan a known reference fail
+with a conflict. The mutation coordinator is process-local: a future
+multi-runtime deployment still needs a shared lease or transaction for the
+canonical-state/route-projection boundary.
+
 ### Removed `@bernouy/cms-dashboards`
 
 The package, Mongo and memory persistence, assignments, collection Dashboard
@@ -335,7 +346,8 @@ resource, activation routes, static pages and Control components have been
 removed. This deliberately creates a temporary product gap before unified
 Control Pages exist, but eliminates a second navigation/rendering model with no
 production data to preserve. Immutable collection Pages and Page execution-plan
-primitives now replace Views, but neither currently has a mounted member flow.
+primitives now replace Views, and the same mounted flow also renders editable
+site-owned Control Pages.
 
 ### `@bernouy/cms-gateway`
 
@@ -748,8 +760,9 @@ The repository is not a fragile prototype. Its most important structural
 decisions are sound, especially explicit collection imports, resource digests,
 generations, migrations and the Repository/Content/Gateway separation.
 
-The major remaining risks are multi-step operations that do not yet survive a
-failure between two durable writes. Once the P0 items are fixed and one complete
-production journey is automated, the collection and repository foundation will
-be suitable for sustained product development without another architectural
-reset.
+The previously identified P0 multi-step file, token, migration and publication
+flows now have deterministic recovery. The largest remaining confidence gap is
+one complete black-box production journey with deliberate process, database and
+storage interruptions. High-availability coordination, internal schema
+migrations, key rotation and operational observability remain explicit future
+work rather than hidden assumptions in the current single-runtime design.

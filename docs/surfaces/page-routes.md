@@ -96,3 +96,28 @@ already returns the correct redirect or Gone response.
 Dynamic entity URLs add the separate [indexing projection](page-indexing.md).
 See [workspace architecture](../architecture/README.md) for publication and
 read/write facade boundaries.
+
+## Shared surface routes
+
+Editable site Pages and immutable collection Pages also use a site-scoped
+surface route registry. A route is unique by `(siteId, surface, path)`, so two
+sites may use the same path and Control/Delivery remain separate namespaces.
+Collection Pages contribute a default path and may retain a site override;
+editable Pages use their own current path. Runtime startup reconciles both
+route sources as one desired graph from canonical Page and collection state.
+Stale ownership is removed before a path is reassigned, path swaps are safe,
+and reconciliation is idempotent after an interrupted partial write. The same
+combined reconciliation runs before and after production Page and collection
+mutations, under one per-site in-process coordinator.
+
+Every Page owns exactly one surface. Control mounts both collection-owned and
+site-owned Control Pages through the same document renderer. Stable Page links
+use Page identities rather than stored route strings. Collection admission and
+installation reject missing imported targets and Delivery-to-Control links;
+editable Page writes and runtime activation resolve every current target. A
+Page or collection mutation that would orphan an existing reference is rejected.
+
+Canonical Page/collection state and its derived route projection are still two
+durable writes. Current single-runtime recovery is deterministic, but a future
+multi-runtime deployment must add a shared lease or MongoDB transaction around
+this boundary rather than relying on the process-local coordinator.

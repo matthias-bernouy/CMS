@@ -235,13 +235,14 @@ For each capability:
 
 ## Phase 4 — Establish The Unified Page Model
 
-**Status (2026-10-06): partially implemented.** Collection releases now admit
+**Status (2026-10-06): implemented foundation.** Collection releases now admit
 immutable surface-specific Pages with default paths, per-resource
 generations/digests, selective imports/exports and transitive Bloc surface
 validation. Site Pages have one immutable surface, expose the same
-`PageDocument` shape and can retain immutable collection-copy provenance.
-Gateway grants are Page execution grants. Control routing for site-owned Pages,
-the visual document editor and complete Page migration coverage remain open.
+`PageDocument` shape, can retain immutable collection-copy provenance and are
+mounted on Control when their surface is `control`. Gateway grants cover both
+collection and site Page revisions. The visual document editor and complete
+Page history remain open.
 
 Generalize the current page aggregate so the same document model can represent
 Control and Delivery Pages while each Page retains exactly one surface.
@@ -270,13 +271,15 @@ phase.
 
 ## Phase 5 — Unify Routes And Links
 
-**Status (2026-10-06): route foundation and first authored links implemented.**
-Surface-owned route registries, stable Page references and route overrides
-exist. Collection upgrades preserve overrides. Collection Control Pages can
-author bounded qualified Page references for anchors and successful form
-redirects; Control resolves them after the site route snapshot is known and
-preserves query/fragment suffixes. The visual editor and general link-setting
-control do not yet expose this flow.
+**Status (2026-10-06): implemented foundation.** The route registry is scoped by
+site and surface, stable Page references and route overrides exist, and startup
+reconciles site and collection routes together and idempotently. Collection
+upgrades preserve overrides, stale ownership is removed before path reuse, and
+route swaps are supported. Admission, installation and editable Page writes
+reject broken or wrong-surface references; destructive mutations cannot orphan
+known targets. The visual editor and general link-setting control do not yet
+expose this flow. Multi-runtime route mutation coordination remains future
+high-availability work.
 
 Give Pages stable qualified identities and keep routing as site-owned state.
 

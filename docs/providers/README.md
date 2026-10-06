@@ -86,9 +86,19 @@ manifest, installation and selection stores, a selected catalogue, network and
 secret adapters, image storage and observation refresh. The current host policy
 allows public/authenticated access on Delivery as declared by the capability;
 Control's generic invocation route requires the configured local administrator.
-Page execution-plan primitives restrict a compiled Control Page to declared
-capabilities and exact provider routes, but no Control route currently activates
-or consumes them. The future Control Page flow must own that integration.
+Page execution plans restrict collection-owned and site-owned Control Pages to
+the capabilities required by their exact document and transitive Blocs. Control
+activates the revisioned plan from the same-origin referring Page before each
+call and sends only its immutable execution pin to the gateway.
+
+The local provider-to-Core bridge is contract-neutral. CMS features register
+Core capability handlers in a closed dispatcher, while the provider derives
+its public HTTP relay from admitted contract bindings. The shared bounded JSON
+budget is applied at the Control gateway, provider relay and local Core
+transport, so a value accepted by a contract is not rejected by an intermediate
+hop solely because of JSON escaping overhead. The current 1 MiB Page document
+bound, including its worst-case JSON escaping, fits inside the shared 8 MiB
+envelope budget.
 
 | Surface | Routes relative to its base path |
 | --- | --- |
