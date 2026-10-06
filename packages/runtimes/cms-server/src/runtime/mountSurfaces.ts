@@ -34,14 +34,15 @@ export async function mountProductionSurfaces(
 ): Promise<ProductionSurfaceHandle> {
     const { env, core, features, authentication, gateway } = options;
     const controlRunner = new runtime.Runner();
+    const providerSources = env.CMS_REPOSITORY_URL ? [new HttpProviderRepository("local", env.CMS_REPOSITORY_URL)] : [];
+    const providerManagement = gateway ? new ProviderManagement(gateway, core.secrets, providerSources) : undefined;
     if (env.CMS_LOCAL_PROVIDER_TOKEN) {
         const dispatcher = new DefaultCoreCapabilityDispatcher();
         const operations = new CoreOperationExecutor(core.coreOperations);
-        registerOfficialCoreCapabilities(dispatcher, core, gateway, operations);
+        registerOfficialCoreCapabilities(dispatcher, core, gateway, operations, providerManagement);
         await operations.recover();
         mountLocalCoreCapabilities(controlRunner, dispatcher, env.CMS_LOCAL_PROVIDER_TOKEN);
     }
-    const providerSources = env.CMS_REPOSITORY_URL ? [new HttpProviderRepository("local", env.CMS_REPOSITORY_URL)] : [];
     const controlCms = new runtime.Control(
         controlRunner,
         core.repo,
@@ -64,7 +65,7 @@ export async function mountProductionSurfaces(
                           contracts: gateway.releases,
                           manifests: gateway.manifests,
                           isAdministrator: gateway.isAdministrator,
-                          management: new ProviderManagement(gateway, core.secrets, providerSources),
+                          management: providerManagement!,
                       },
                   }
                 : {}),

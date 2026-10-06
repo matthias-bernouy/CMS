@@ -76,7 +76,7 @@
         {
             "contractId": "ulvia.cms.providers",
             "version": "1.0.0",
-            "digest": "sha256:870e53ebad882414cfdd123a7cf5545911b858269122dc5f174e36cf051e1381",
+            "digest": "sha256:f48e63ac505ba3d103b1996f3e4e50fc4824faa23e190e63f1195b6ee8cc8a80",
             "requires": []
         },
         {

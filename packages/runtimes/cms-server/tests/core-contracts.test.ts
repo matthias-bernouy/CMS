@@ -74,7 +74,7 @@ test("all six Control domains dispatch outputs matching their official contracts
                 },
             ],
         },
-        selections: { get: async () => ({ plan: { selections: [] } }) },
+        selections: { get: async () => ({ revision: 1, plan: { selections: [] } }) },
         administrators: { list: async () => ["local:user-1"] },
     };
     registerOfficialCoreCapabilities(dispatcher, core as never, gateway as never);

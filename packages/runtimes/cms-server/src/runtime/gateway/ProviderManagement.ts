@@ -64,11 +64,28 @@ export class ProviderManagement {
         return activateProviderContract(this.gateway, input);
     }
 
+    async replaceSelections(input: {
+        expectedRevision: number;
+        selections: readonly {
+            installationId: string;
+            contractId: string;
+            version: string;
+            digest: string;
+        }[];
+    }) {
+        const stored = await this.gateway.selections.replace(
+            this.gateway.siteId,
+            input.selections.map((selection) => ({ ...selection, siteId: this.gateway.siteId })),
+            input.expectedRevision,
+        );
+        return { revision: stored.revision, selected: stored.plan.selections };
+    }
+
     async setStatus(input: { installationId: string; revision: number; action: "enable" | "disable" | "revoke" }) {
         const scope = { siteId: this.gateway.siteId, installationId: input.installationId };
         const current = await this.gateway.installations.get(scope);
         if (!current) {
-            throw new Error("Provider installation is unavailable");
+            throw Object.assign(new Error("Provider installation is unavailable"), { status: 404 });
         }
         const credentialKeys =
             input.action === "revoke"
@@ -76,7 +93,10 @@ export class ProviderManagement {
                       .filter((reference): reference is string => Boolean(reference))
                       .map(requiredSecretKey)
                 : [];
-        const stored = await this.lifecycle[input.action](scope, input.revision);
+        const stored =
+            input.action === "revoke" && current.installation.status === "revoked"
+                ? requireRevision(current, input.revision)
+                : await this.lifecycle[input.action](scope, input.revision);
         const deletions = await Promise.allSettled(credentialKeys.map((key) => this.secrets.delete(key)));
         return {
             installationId: stored.installation.id,
@@ -85,6 +105,16 @@ export class ProviderManagement {
             credentialsDeleted: deletions.every((result) => result.status === "fulfilled"),
         };
     }
+}
+
+function requireRevision<T extends { revision: number }>(record: T, expected: number): T {
+    if (record.revision !== expected) {
+        throw Object.assign(new Error("Provider installation revision conflict"), {
+            code: "revision_conflict",
+            status: 409,
+        });
+    }
+    return record;
 }
 
 function requiredSecretKey(reference: string): string {
