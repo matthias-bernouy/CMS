@@ -83,6 +83,6 @@ the initial output identity property to have the bound input's name. A custom
 identity projection does not widen that picker detection. The metadata result
 and the browser request have separate execution/error paths.
 
-See [Control selection](../../packages/surfaces/cms-control/src/core/content/page/indexing/pageIndexingSelection.ts),
+See [candidate detection](../../packages/features/cms-content/src/pages/core/indexing/detection.ts),
 [Delivery resolution](../../packages/surfaces/cms-delivery/src/core/seo/indexing/resolvePageIndexingMetadata.ts)
 and [gateway execution](../../packages/surfaces/cms-delivery/src/core/seo/indexing/executeIndexingCapability.ts).

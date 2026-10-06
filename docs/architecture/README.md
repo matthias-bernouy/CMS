@@ -75,8 +75,11 @@ Generic image transforms live in `@bernouy/image-processing`.
 The production runtime constructs Mongo catalogues and site stores, secret
 resolution, network adapters, identity storage and observation refresh. Surfaces
 receive invocation, access checks, selected catalogue reads and image handling.
-Publication, approval and selection administration are not mounted as product
-flows. See [repository and gateway flows](../providers/README.md).
+Control exposes collection-backed provider and collection administration Pages;
+provider connection approval, credential rotation and exact contract selection
+are application workflows owned by `cms-repository`. Repository publication is
+served independently by `official-repository-server`. See
+[repository and gateway flows](../providers/README.md).
 
 ### Authentication
 

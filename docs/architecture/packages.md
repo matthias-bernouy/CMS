@@ -25,8 +25,9 @@ files explain implementation invariants.
 | `@bernouy/cms-gateway` | Authorized capability invocation, provider identity aliases, file reads and image derivatives. |
 | `@bernouy/cms-auth` | Accounts, local/OIDC providers, PATs, signed sessions, public auth operations and email composition. |
 
-Collection Pages are admitted resources, but their route registry and rendering
-flow are not mounted yet. There is no separate Dashboard package, persistence model or runtime.
+Collection Pages are admitted resources and their route registry, rendering and
+revisioned execution-plan activation are mounted by Control. There is no separate
+Dashboard package, persistence model or runtime.
 Collection Bloc compilation is available only through the explicit
 `@bernouy/cms-repository/collections/build` tooling subpath. Site-owned Bloc
 source serialization remains in `cms-content` because it publishes mutable CMS
@@ -49,7 +50,7 @@ and serves admitted copies from a separate persistent volume.
 | Package | Responsibility |
 | --- | --- |
 | `@bernouy/cms-core` | Authenticated provider report, binding-derived HTTP transport, cross-domain official capability adapters and durable operation execution for admitted `ulvia.cms.*` contracts. |
-| `@bernouy/cms-control` | Authenticated admin UI, REST API, author media and selected gateway capability access. |
+| `@bernouy/cms-control` | Authenticated collection-backed admin host, shared capability transport, author media and selected gateway capability access. |
 | `@bernouy/cms-delivery` | Public pages, Bloc assets, binding runtime, auth, media, gateway calls and SEO. |
 | `@bernouy/cms-server` | Production adapter composition, Mongo Core-operation persistence and CMS Core/Control/Delivery startup. |
 | `@bernouy/official-repository-server` | Production official repository startup with persistent staged publication and immutable reads. |

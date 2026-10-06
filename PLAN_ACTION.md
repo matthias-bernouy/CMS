@@ -38,8 +38,9 @@ The end state is:
 - `Dashboard` and the collection `View` resource are removed. `Application` stays absent unless a later concrete
   lifecycle or authorization requirement proves that a replacement concept is
   necessary;
-- the static Control application is removed; retained Control and Foundation
-  components remain available while collection replacements are built.
+- the static Control application and the former Foundation component package are
+  removed; collection Blocs and the browser runtime in `cms-content` own the
+  replacement UI.
 
 ## Non-Negotiable Invariants
 
@@ -156,14 +157,13 @@ Before adding behavior:
 
 ## Phase 2 — Make The Official Local Provider The Reference
 
-**Status (2026-10-06): local development bootstrap operational, lifecycle still
-in progress.** Lot 1 implements read-only discovery of the existing local
-`default` instance. The CLI now admits its bundled official contracts, provider
-manifest and `ulvia-official` collection into the persistent local repository;
-Core then connects and selects the exact official provider contracts and
-installs or upgrades the Control collection. Fresh startup and restart on the
-same volumes have been exercised end to end. Provider-owned provisioning,
-backup, restore and Core process updates remain Lot 2 work.
+**Status (2026-10-06): local and Docker bootstrap operational; instance
+lifecycle still open.** The CLI and production image carry an admitted official
+release snapshot. Core connects its local `ulvia.official` data-plane provider,
+selects the exact official contracts and installs or upgrades the Control
+collection. The authored instance-discovery contract is not currently claimed
+by that provider. General provider-owned provisioning, backup, restore and Core
+process updates remain future work.
 
 Turn the current local composition into a real provider implementation without
 prematurely splitting it into several deployable processes.
@@ -200,9 +200,9 @@ The local provider must:
 **Status (2026-10-06): official Control data-plane catalogue completed.**
 `ulvia.cms.pages@1.0.0` publishes bounded `list`, `get`, `create`, `update`,
 `publish`, `delete` and `rename` capabilities. They are implemented by the local
-Core, relayed by the official provider and invoked from exact collection Page
-execution plans through `/.cms/call`. The six remaining Phase 8 domains now
-also have bounded official V1 contracts, local Core handlers, provider relays
+Core surface and invoked from exact collection Page execution plans through
+`/.cms/call`. The six remaining Phase 8 domains now
+also have bounded official V1 contracts and local Core handlers
 and collection-owned Control Pages. Their Core releases now include the bounded
 revision-safe mutations required for collection lifecycle, file metadata,
 design, provider selection, access and migration administration. The current
@@ -383,8 +383,8 @@ creation, detail/source editing, publication, deletion and rename flows are
 collection-owned. Six additional official contracts and Pages now cover
 installed collections, author files, design/languages, providers/contracts,
 access/site identity and operational migration state. Every Page executes via
-an exact Page plan and `/.cms/call`; the official provider uses one generic Core
-relay for all `ulvia.cms.*` contracts. File-folder creation is the first
+an exact Page plan and `/.cms/call`; the CMS Core surface derives one generic
+transport from admitted bindings for all `ulvia.cms.*` contracts. File-folder creation is the first
 non-Page command exercised by a collection Page. The underlying Core contracts
 also expose the remaining bounded metadata and administration mutations with
 optimistic revisions. Binary file transfer remains a kernel transport, and
@@ -540,7 +540,7 @@ lifecycle mutation was introduced.
 
 1. Run the workspace baseline and retain its result for final comparison.
 2. Read the package-local instructions for `cms-repository`, `cms-gateway`,
-   `official-provider`, `cms-server` and `ulvia-cli` before editing them.
+   `cms-core`, `cms-server` and `ulvia-cli` before editing them.
 3. Characterize one current provider call from contract and manifest admission
    through installation, opaque credential lookup, selection, plan compilation
    and Gateway invocation.
@@ -560,14 +560,13 @@ Exit gate:
 
 ### Lot 1 — Provider-Owned Local Instance Discovery
 
-**Status (2026-10-05): completed.** `ulvia.provider.cms-instances@1.0.0`
-publishes bounded `list` and credential-selected `get-current` queries with an
-independently versioned conformance suite. The official provider owns the
-durable registry, registers `default` from CLI-supplied Core metadata, probes
-its loopback reachability and advertises the contract through its manifest. A
-cross-package test proves admission, selection, plan compilation, opaque secret
-forwarding, Gateway validation and provider response end to end. No mutation
-capability is open yet.
+**Status (2026-10-06): contract artifact retained; runtime implementation
+deferred.** `ulvia.provider.cms-instances@1.0.0` publishes bounded `list` and
+credential-selected `get-current` queries with an independently versioned
+conformance suite. The obsolete in-repository official-provider product and its
+private registry were removed when official CMS data-plane capabilities moved
+to `@bernouy/cms-core`. A future local or Cloud instance provider may implement
+this provider-only contract without adding instance records to CmsCore.
 
 1. Confirm the final ID for the provider-only lifecycle contract currently
    called `ulvia.provider.cms-instances`.
@@ -575,8 +574,8 @@ capability is open yet.
    `get-current`, chosen from the characterized provider authentication flow.
 3. Publish a separately versioned conformance suite with no endpoint,
    credential-format, Docker or persistence assumption.
-4. Add a private instance registry and persistence adapter inside
-   `official-provider`; do not add a shared instance record to
+4. Add a private instance registry and persistence adapter inside the future
+   local instance-provider product; do not add a shared instance record to
    `cms-repository`.
 5. Register the already composed local Core as the provider's private
    `default` instance without making the provider import `cms-server`.
@@ -613,17 +612,17 @@ Three boundaries also remain explicit after Lot 1:
 
 ### Lot 2 — Real Autonomous Local Initialization
 
-**Status (2026-10-06): bootstrap slice completed, provider lifecycle slice
-open.** The development CLI seeds immutable official releases from a checked,
-pre-admitted bundle before starting its local repository. Core then idempotently
-connects the official provider, selects its ready `ulvia.cms.*` releases and
-installs or upgrades `ulvia-official`. A fresh-stack CRUD/publication flow and a
-same-volume restart have passed. The current CLI remains the process
-orchestrator; the provider does not yet provision, back up, restore or update a
-Core instance itself.
+**Status (2026-10-06): local and production bootstrap slices completed;
+provider lifecycle slice open.** The development CLI and production image carry
+the same checked, pre-admitted official releases. Docker starts a private
+repository that atomically seeds only an empty persistent volume. Core then
+idempotently connects its `ulvia.official` data-plane provider, selects its
+ready `ulvia.cms.*` releases and installs or upgrades `ulvia-official`. The CLI
+or Compose remains the process orchestrator; no provider can yet provision,
+back up, restore or update an arbitrary Core instance.
 
 1. Introduce a provider-private, single-writer local runtime driver at the
-   composition root; keep `official-provider` independent from the CMS runtime
+   composition root; keep the future instance-provider product independent from the CMS runtime
    package and add a lease before allowing another writer.
 2. Let the provider automatically create `default` on fresh local durable
    volumes and idempotently reuse it on restart.

@@ -1,11 +1,13 @@
 # Local Provider And CMS Initialization
 
-**Status (2026-10-06): target flow with local bootstrap operational.**
+**Status (2026-10-06): local and Docker bootstrap operational.**
 Provider-owned discovery and durable registration of the existing local
-`default` Core are implemented. The development CLI now seeds the persistent
-repository with official resources, and Core idempotently connects the official
-provider and installs or upgrades the Control collection. Autonomous
-provider-owned provisioning and lifecycle mutations remain Lot 2 work.
+`default` Core are implemented. The development CLI seeds its persistent
+repository with official resources. The production image carries the same
+pre-admitted snapshot; its private repository installs that snapshot atomically
+on an empty volume, then Core idempotently connects the official provider and
+installs or upgrades the Control collection. Provider-owned creation, update,
+stop, backup and restore operations remain later lifecycle work.
 
 This note defines the intended first-run, restart, Control bootstrap and
 recovery flows for the official local CMS provider. It refines the broader
@@ -64,6 +66,10 @@ The current CLI starts these as separate local processes. It gives the provider
 only the Core version and loopback reachability URL; the provider does not import
 `cms-server`. The durable provider record deliberately excludes CMS secrets and
 the published discovery response excludes its private health URL.
+
+The production Compose stack uses one CMS service and one private repository
+service from the same immutable image. This proves offline bootstrap; it is not
+yet a general provider implementation capable of creating arbitrary instances.
 
 For the current development stack, the CLI admits a checked bundle of canonical
 official contract, provider and collection releases into its immutable local

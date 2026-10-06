@@ -106,27 +106,22 @@ Core surface.
 Routes are mounted only when their dependencies are configured. Image routes
 also require the image service. These reads do not publish or select providers.
 Dynamic SEO invokes the gateway directly; see [page indexing](../surfaces/page-indexing.md).
-Control's `/admin/settings/providers` page lists connected provider accounts
-and, directly below them, provider manifests from configured repositories that
-are not connected yet. Each connection opens as a page detail. An administrator
-can also import an unlisted provider from its public manifest URL. The download
-happens in the browser; the CMS receives
-the raw JSON, validates it strictly, and resolves every implemented contract
-from configured repositories before admitting the manifest. Optional manifest
-links can point to provider account setup, documentation, support and the public
-website. The connection flow previews an exact runtime report before approval,
-then persists the token through the secret store. `/admin/sources` searches contract
-releases as catalogue cards with a trusted local icon, purpose, publisher,
-categories and repository publication date. Releases from `ulvia.official` are
-marked Official. Versions, digests and provider readiness stay in the source
-detail instead of the discovery card. A card connects or upgrades an exact
-ready release through a selected provider. Installed-source navigation uses the contract title. Its source detail
-separates the latest repository release from the latest release reported ready
-by a connected provider; the upgrade action remains disabled until the latter
-exists. It also shows the observed provider state. `/admin/health` summarizes
-these connections, selections and collection versions. It
-reports configuration and the last provider observation, not a fresh live
-probe of every capability.
+Control's `/admin/providers` Page lists provider installations and their exact
+contract selections. The `ulvia.cms.providers` capabilities provide bounded
+list/detail, selection replacement and lifecycle-status mutations. Manifest
+import and provider connection approval are application workflows owned by
+`cms-repository`: the host obtains an exact runtime report, validates it against
+the admitted manifest, persists the credential through the injected secret
+store and records an observation. These workflows are not a second protocol and
+do not give collection JavaScript direct access to credentials.
+
+`/admin/collections` exposes repository discovery, installation, configuration
+and migration through `ulvia.cms.collections`; collection theme and text
+editing use `ulvia.cms.design`. `/admin/settings` and `/admin/access` cover site
+and administrator settings. Provider health remains the last validated runtime
+observation shown by these Pages, not an implicit live probe of every
+capability. Every collection request uses the common
+`POST /.cms/call/<contract>/<capability>` transport and its Page execution pin.
 The selected API origin and token belong to installation state. Manifests list
 allowed origins but do not classify providers as local or remote. The runtime
 accepts HTTPS endpoints and literal loopback HTTP for development, and applies
@@ -148,8 +143,8 @@ clients. See [image delivery](../images/delivery.md).
 
 ## Current Integration Gaps
 
-- Control imports releases, approves a provider connection and selects its
-  contracts. The CLI can publish and retrieve exact contract and provider
+- Control manages installed releases, approved provider connections and exact
+  selections. The CLI can publish and retrieve exact contract and provider
   coordinates through an authenticated immutable repository; automated provider
   upgrade policy remains open.
 - Conformance suite validation exists, and the provider lifecycle contract has

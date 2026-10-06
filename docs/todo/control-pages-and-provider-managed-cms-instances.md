@@ -2,10 +2,10 @@
 
 **Status (2026-10-06): target design with all seven Control domains represented
 by provider-backed V1 Pages.** Provider-owned local instance discovery, local
-official-resource bootstrap, site-owned Control Page routing and the official
-Core contract catalogue are implemented. The seven Core contracts now expose
-their bounded revision-safe administration operations; most corresponding
-collection-owned Control mutation flows and full legacy-product parity remain
+and production-image official-resource bootstrap, site-owned Control Page
+routing and the official Core contract catalogue are implemented. The seven
+Core contracts expose their bounded revision-safe administration operations;
+general provider lifecycle provisioning and full legacy-product parity remain
 planned.
 
 This note records the intended direction for replacing visual Foundation

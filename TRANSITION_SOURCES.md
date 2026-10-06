@@ -3,9 +3,11 @@
 CmsCore is the Bun and TypeScript monorepo behind the Ulvia CMS platform.
 
 This branch, `codex/refonte-sources`, is the working branch for the source and
-provider redesign. The legacy Source packages have been removed; Protocol v1
-and the replacement product flows are still in progress. There is no
-production compatibility requirement for the former integration model.
+provider redesign. The legacy Source packages have been removed. Official CMS
+data-plane capabilities now live in `@bernouy/cms-core`; immutable authored
+artifacts live in `packages/official-repository`, and Control is rendered from
+collection Pages. There is no production compatibility requirement for the
+former integration model.
 
 This document records the protocol direction and its high-level phases. The
 [execution plan](./PLAN_ACTION.md) tracks the 2026-09-29 implementation state
@@ -35,19 +37,22 @@ production-ready.
 The legacy function, trigger, notification-dispatch, integration package,
 registry, verification, repository, official-integration resource, role,
 permission, `cms-sources` and `cms-source-images` stacks have been removed.
-Authentication subjects and CMS membership records contain identity only;
-view definitions and grants are still planned.
-The Ulvia CLI now starts only the local CMS and MongoDB; it no longer owns package
-pull, audit, release, publication, repository, or Supabase workflows.
+Authentication subjects and CMS membership records contain identity only.
+Dashboard and View models have been removed. The Ulvia CLI starts the local CMS,
+MongoDB and immutable repository and owns explicit local release/bootstrap
+commands; no Supabase workflow remains.
 
-`@bernouy/cms-repository` now owns contract releases, provider manifests,
-installation/selection state and initial collection bundle admission.
+`@bernouy/cms-repository` owns contract releases, provider manifests,
+installation/selection state, collection admission/build tooling and provider
+management workflows.
 `@bernouy/cms-gateway` owns selected synchronous invocation, provider-wide
-identity aliases and bounded provider media. Its production runtime uses Mongo
-catalogues and site state when `CMS_GATEWAY_SITE_ID` is configured. Authorized
-provider management, an official provider, durable operations and change feeds,
-collection installation/rendering and published views remain open. The current
-Collections UI still serves private and code-backed collections.
+identity aliases and bounded provider media. `@bernouy/cms-core` implements the
+seven official `ulvia.cms.*` contracts with an exact, sealed handler matrix and
+durable asynchronous operation records. The production runtime uses Mongo
+catalogues and site state, while the official Docker stack bootstraps a private
+repository from a pre-admitted snapshot. Live conformance, provider grants,
+third-party JavaScript isolation and a general CMS-instance lifecycle provider
+remain open.
 
 ### Why this redesign exists
 
@@ -91,14 +96,14 @@ admission has started, but their full product flows remain open:
 
 - collection replacement;
 - the new bloc format and editors;
-- transitional views and their future Control Page replacement;
+- Control Page parity and the future shared Page editor;
 - text variables and their authoring UI;
 - JSON-LD and other structured SEO projections;
 - push subscriptions that listen to capability calls.
 
 Change feeds are in scope because providers already need a reliable way to
-synchronize without push triggers. Collections and views will later consume
-the protocol; they must not define it.
+synchronize without push triggers. Collections consume the protocol through
+pinned Page execution plans; they do not define it.
 
 ## What is already good in UlviaInterfaces
 
@@ -489,15 +494,16 @@ and outbox recovery are not active.
 Exit condition: the CMS can recover after a restart or network failure without
 duplicating effects or silently losing changes.
 
-### Phase 4 — Official provider and contract migration
+### Phase 4 — Official CMS Core contracts
 
-Status: open for the official provider. `cms-sources` and
-`cms-source-images` were removed earlier than this phase's original sequence.
-The gateway replacement still needs durable image generation and recovery
-behavior before the media objective is complete.
+Status: the former standalone official-provider product was superseded by the
+`@bernouy/cms-core` surface. `cms-sources` and `cms-source-images` were removed,
+the seven official CMS contracts are admitted and fully registered, and no
+Supabase dependency remains. General business-domain providers are separate
+future products.
 
-- implement the official provider without Supabase;
-- port the remaining official contracts;
+- keep the CMS Core provider contract-neutral and adapter-injected;
+- add future official business contracts only with a real product flow;
 - run conformance in isolated disposable tenants;
 - make conformance coverage warnings blocking for official releases;
 - exercise end-to-end flows across several provider installations;
@@ -512,19 +518,20 @@ behavior before the media objective is complete.
 Exit condition: official contracts work exclusively through the new gateway,
 and the old runtime is no longer part of the composition root.
 
-### Phase 5 — Collections, views, and text variables
+### Phase 5 — Collections, Pages, and localized texts
 
-Status: collection publication, installation, rendering, Bloc configuration and
-localized texts exist. The former Dashboard runtime, assignments and collection
-resource are gone. Collection Views remain transitional while unified Control
-Pages are planned.
+Status: collection publication, installation, rendering, Bloc configuration,
+localized texts and surface-specific Pages exist. The former Dashboard runtime,
+assignments and View resource are gone. Control Pages are mounted and call the
+same provider transport as Delivery; UI parity and the shared editor remain
+incomplete.
 
 Complete the following product flows after the provider protocol is stable;
 initial bundle admission has already started:
 
 - port the new collection and bloc model;
 - integrate site and admin text variables;
-- integrate retained execution-plan primitives with future Control Pages;
+- extend mounted Control Page execution plans as new Blocs are added;
 - add JSON-LD projections;
 - add push event delivery if polling change feeds is insufficient.
 
@@ -546,36 +553,38 @@ Protocol v1 is ready to become CmsCore's integration foundation when:
 - conformance runs in isolation and covers all official capabilities;
 - the official provider passes multi-contract end-to-end tests without
   Supabase;
-- official-provider tenants can be restored in place and relocated offline to
-  a clean compatible instance with verified data and file reconciliation.
+- CMS instances can be restored in place and relocated offline to a clean
+  compatible local-provider deployment with verified data and file reconciliation.
 
 ## Workspace architecture
 
-Packages remain organized in five layers with one-way dependencies:
+Reusable CMS packages are organized in four layers with one-way dependencies:
 
 ```text
-runtimes -> surfaces -> resources -> features -> foundation
+runtimes -> surfaces -> features -> foundation
 ```
 
 - `foundation/` contains generic utilities with no CMS-domain knowledge.
 - `features/` contains CMS contracts, validation, and adapter-light behavior.
-- `resources/` is reserved for official declarative resources and releases;
-  none is published there yet.
 - `surfaces/` mounts features into HTTP applications.
 - `runtimes/` select adapters, read environment, and start processes.
+
+`packages/official-repository` is an authored product, not a reusable layer or
+runtime dependency. Its admitted copies are served by the independent
+`@bernouy/official-repository-server` runtime.
 
 The new protocol must follow the same direction. Contract, provider and future
 collection definitions and validation belong to one feature package,
 `@bernouy/cms-repository`, with separate domains and explicit public subpaths.
-The current `./contracts` and `./providers` entrypoints expose pure logic and
-models; the package root exports types only. `./collections` now exposes the
-first authored-bundle slice: assets, component shells and Light DOM compositions.
-Theme/i18n, imports, views, compilation and installation were planned at this
-stage and are now implemented to varying degrees. Immutable releases and manifests remain distinct from
+The current `./contracts`, `./providers` and `./collections` entrypoints expose
+admission, application workflows and explicit build tooling; the package root
+stays adapter-light. Themes, recursive translations, imports, assets,
+surface-specific Pages, compilation and installation are implemented. Immutable releases and manifests remain distinct from
 site installation state, and pure installation/report validators do not perform
 live connections or gateway execution.
 
-Official contract and provider manifests belong in resources; gateway routes
+Official contract, provider and collection sources belong in
+`packages/official-repository`; gateway routes
 belong in surfaces; provider and CMS composition belongs in runtimes. Persistence
 and network adapters remain explicit composition-root choices.
 

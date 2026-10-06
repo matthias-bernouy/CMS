@@ -9,7 +9,7 @@ or security vulnerabilities.
 ## Executive Summary
 
 CmsCore has a sound overall architecture. The collection, repository,
-dependency, digest, generation, migration, view and provider models are more
+dependency, digest, generation, migration, Page and provider models are more
 mature than the other parts of the product. Package boundaries are enforced by
 code, the test suite is broad, and the runtime composition generally respects
 dependency injection.
@@ -37,13 +37,52 @@ future infrastructure provider such as Ulvia Cloud. The local CMS Core manifest
 does not claim it, and no current runtime implements instance discovery or
 lifecycle management.
 
+## Remediation Update — 2026-10-06
+
+The following cleanup and hardening landed after the original audit evidence
+was captured:
+
+- `@bernouy/cms-core` now owns the generic capability dispatcher, all thin
+  official adapters and durable operation execution. The runtime only composes
+  concrete dependencies and Mongo persistence.
+- startup seals the dispatcher against the admitted official catalogue: every
+  one of the 43 declared capabilities has exactly one handler, and an omitted
+  or unexpected handler fails composition instead of becoming a latent 404;
+- domain adapters consume narrow page, collection, design, file, provider and
+  access ports rather than one broad cross-domain store;
+- generic durable operations renew a fenced lease and expose an abort signal and
+  `throwIfLeaseLost()` to handlers. A worker that loses ownership cannot publish
+  success or failure. Handlers that perform external side effects must still
+  cooperate with that signal or provide their own idempotency/fencing;
+- provider connection, secret rotation, lifecycle and selection orchestration
+  moved from `cms-server` into the public
+  `@bernouy/cms-repository/providers/management` application boundary. The
+  runtime injects the network report reader and authorization context;
+- the production image contains a pre-admitted official repository snapshot.
+  Compose starts a private repository service and atomically seeds only an empty
+  persistent volume before Core/Control bootstrap;
+- architecture checks now inspect every official collection Bloc and Control
+  Page. Collection JavaScript may call CMS capabilities only through literal
+  same-origin `/.cms/call/...` URLs; dynamic and arbitrary fetch targets fail
+  CI;
+- obsolete ignored build artifacts from removed packages and the former View
+  tree were deleted, and active architecture/deployment documentation was
+  reconciled with the current package and route model.
+
+The most important remaining limits are live provider conformance, durable audit
+and metrics, internal Mongo schema migrations, browser-host ABI versioning,
+large-release streaming, black-box backup/restore and proxy-header validation.
+The official repository remains single-active-replica, third-party collection
+JavaScript remains unsupported/trusted, and general provider-owned CMS instance
+lifecycle is still a future product rather than part of `cms-core`.
+
 ## Evidence And Scope
 
 The audit covered the 20 workspace packages, the declarative official
 repository, runtime infrastructure, quality tooling, tests and current
 documentation.
 
-The following checks succeeded:
+The following checks succeeded in the original audit run:
 
 - `bun run check:all`: all seven workspace checks passed;
 - `bun test`: 2,666 tests passed with no failure after Lot 1;
@@ -53,10 +92,10 @@ The following checks succeeded:
   undeclared subpath, cross-package source import, browser/server adapter leak or
   new environment-read violation was reported.
 
-Four `test.failing` cases remain and deliberately document known defects:
-collection build import containment, `http-runner` listener options and two
-production listener-host composition cases. The former file and authentication
-failure cases are now ordinary passing tests.
+Three `test.failing` cases currently document the remaining listener-host
+composition gap: one `http-runner` options case and two production runtime cases.
+Collection build import containment and the former file/authentication failure
+cases are now ordinary passing tests.
 
 The automated Deep Security scan did not produce a report. Its runner refused
 the configured output parent because it was group- or world-writable without a
@@ -353,9 +392,9 @@ site-owned Control Pages.
 The official collection now supplies Control Pages for all seven planned
 administration areas. `ulvia.cms.pages` retains the first complete mutation
 slice. Six new immutable contracts cover collections, files, design, providers,
-access and operations. Their handlers live in the Core runtime, the official
-provider relays them generically from admitted HTTP bindings, and the Pages call
-them only through exact execution plans and `/.cms/call`.
+access and operations. Their thin handlers live in the CMS Core surface, which
+derives transport routes from admitted HTTP bindings, and the Pages call them
+only through exact execution plans and `/.cms/call`.
 
 The collection Pages now expose revision-safe lifecycle mutations for
 collections, files, languages/design, provider routing and access/site identity.
@@ -471,18 +510,17 @@ imported token. This is the correct strict policy.
 
 ### `ulvia-official` State
 
-The current `1.0.0` source includes 78 Blocs: 68 exported public Blocs and 10
-internal helpers/managers. It also exports 119 theme tokens, 24 server texts and
-10 Control Pages. Forms, layouts, navigation and content/marketing elements
-already provide a credible base collection. Public child controls can be reused
-inside other Pages and compositions; internal managers exist only to assemble
-complete Control workspaces without polluting the author catalogue.
+The current `1.0.0` source includes more than one hundred Bloc definitions,
+119 theme tokens, recursively organized translations/texts and seven Control
+Pages. Forms, layouts, navigation and content/marketing elements provide a
+credible base collection. Public child controls can be reused inside other
+Pages and compositions; internal managers exist only to assemble complete
+Control workspaces without polluting the author catalogue.
 
 It is not yet a universal component catalogue. Data tables, pagination,
-advanced breadcrumbs, dialogs, alerts, progress/status and empty states still
-mostly exist in Foundation/Admin. They should become official product blocs
-when a real site or Page needs them; Foundation components should not be moved
-mechanically.
+advanced breadcrumbs, dialogs, alerts, progress/status and empty states remain
+incomplete or uneven. They should become official product Blocs when a real
+site or Page needs them rather than being added mechanically.
 
 Some complex official form blocs are large. Extract shared state machines and
 behavioral helpers where they improve testing and reuse, rather than splitting
@@ -585,17 +623,14 @@ fault isolation is required.
 
 Startup validates the real storage path, rejects unsafe symlink setups, tests
 write/fsync behavior, recovers upload/publication state and refreshes the index
-before accepting traffic.
+before accepting traffic. `/healthz` is process liveness; `/readyz` performs a
+bounded live storage/index probe. The production Compose service uses a
+read-only root filesystem, dropped capabilities and `no-new-privileges`.
 
-`/healthz` becomes a static success response after startup. A disk that becomes
-read-only or corrupt is not reflected in readiness. Split process liveness from
-storage/index readiness and perform a bounded live storage check.
-
-A production deployment artifact should also supply a read-only root
-filesystem, dropped capabilities, `no-new-privileges`, resource limits,
-backup/restore procedures, image publication, SBOM/provenance and rollback
-automation. The current single-active-replica filesystem model is a deliberate
-boundary rather than an immediate defect.
+Resource limits, automated repository-volume backup/restore, image publication,
+SBOM/provenance and rollback automation remain deployment work. The current
+single-active-replica filesystem model is a deliberate boundary rather than an
+immediate defect.
 
 ### Ulvia CLI
 
@@ -638,11 +673,10 @@ provider such as Ulvia Cloud.
 1. Exercise KEK backup, rotation and recovery in the black-box production
    journey.
 2. Version and freeze the collection browser ABI.
-3. Contain collection build imports.
-4. Add durable audit records for administrative and publication changes.
-5. Harden OIDC remote discovery before mounting it.
-6. Isolate high-volume hostile image decoding.
-7. Sandbox collection JavaScript before accepting community collections.
+3. Add durable audit records for administrative and publication changes.
+4. Harden OIDC remote discovery before mounting it.
+5. Isolate high-volume hostile image decoding.
+6. Sandbox collection JavaScript before accepting community collections.
 
 The last item is deliberately deferred while collection JavaScript is official
 and trusted.
@@ -681,8 +715,8 @@ The most important missing test is a real black-box production journey:
 1. sign and publish an official collection release;
 2. pull, admit and install it in a CMS;
 3. create and render cross-collection blocs, tokens, texts and assets;
-4. execute an authorized provider capability from Control and later repeat it
-   through the future Control Page execution plan;
+4. execute an authorized provider capability from a mounted Control Page and
+   verify its exact execution plan;
 5. perform a major collection migration under maintenance;
 6. interrupt and resume or roll back the migration;
 7. restart every process;
@@ -711,20 +745,12 @@ product feature.
 
 ## Documentation And Repository Hygiene
 
-The focused collection and provider documentation is generally
-source-backed and current. Higher-level documents have drifted:
-
-- the root `README.md` does not list all current packages/products;
-- `TRANSITION_SOURCES.md` still presents some implemented view/grant/provider
-  work as future work;
-- `PLAN_ACTION.md` mixes historical implementation phases with current state;
-- a few documentation-only EditorJS references remain;
-- `cms-bloc-compile` survives only in historical audit material; active build
-  tooling is `@bernouy/cms-repository/collections/build`.
-
-Historical documents should be clearly labelled rather than silently treated as
-current architecture. `docs/TODO.md` should eventually include the operational
-boundaries listed by this audit in addition to third-party JavaScript isolation.
+The active package, provider, collection and deployment guides were reconciled
+after this audit. `TRANSITION_SOURCES.md` and `PLAN_ACTION.md` retain historical
+implementation phases but now state the current Core, Page, repository and
+Docker boundaries explicitly. Active build tooling is
+`@bernouy/cms-repository/collections/build`; removed package names are not part
+of the current architecture.
 
 The root declares an MIT license while many non-private package manifests use
 `UNLICENSED`. The project should choose between explicitly private internal
@@ -749,9 +775,7 @@ site-scoped MongoDB users are implemented and covered by focused tests.
 2. Add internal MongoDB schema migrations.
 3. Exercise the implemented KEK rotation and rewrap runbook against restored
    production-like data.
-4. Contain collection compiler imports.
-5. Reconcile pending releases and orphaned chunks.
-6. Add explicit installation-state limits.
+4. Add explicit installation-state limits.
 
 ### Phase 3: Production Confidence
 

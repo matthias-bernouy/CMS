@@ -188,12 +188,11 @@ Long or formatted editorial content does not belong in a string setting. Use a
 page-owned rich-text slot instead. Media normally belongs in a media slot;
 `media-picker` is reserved for configuration such as a background or poster.
 
-`GET <basePath>/api/collections/available` lists configured sources and release
-metadata. `POST <basePath>/api/collections/install` takes a repository ID, release
-identity, digest and site revision. Control fetches the release server-side,
-validates its identity and digest, then installs or upgrades it. Explore collections
-groups releases by collection, shows the latest version, and offers Manage or
-Upgrade when a newer release is available. Immutable
+Control uses the shared capability transport for collection administration:
+`ulvia.cms.collections/catalogue` lists configured sources and immutable release
+metadata, while `install`, `upgrade` and `update-configuration` perform
+revision-checked mutations. The Core fetches releases server-side, validates
+their exact identity and digest, then installs or upgrades them. Immutable
 release bytes and mutable per-site state are stored separately. An upgrade
 retains site text overrides and checks revision and compatible resource IDs.
 
@@ -225,10 +224,12 @@ Bloc, rename/add/remove/map a setting, rename a theme token, move/add/remove/map
 a configuration value, and rename or remove a text override. Arbitrary
 JavaScript migration code is not accepted.
 
-Control exposes administrator-only plan, execute, status, resume and rollback
-endpoints below `<basePath>/api/collections/migration/`. Planning validates the
-complete target collection graph, transformed pages, configuration, text
-overrides and theme references without changing the installed site state. Page
+Control exposes administrator-only `plan-migration`, `apply-migration`,
+`get-migration`, `resume-migration` and `rollback-migration` capabilities through
+`ulvia.cms.collections`. Generic operation status and listing use
+`ulvia.cms.operations`. Planning validates the complete target collection graph,
+transformed pages, configuration, text overrides and theme references without
+changing the installed site state. Page
 planning and snapshot verification use stable ID cursors in batches of at most
 500 pages; neither path loads every page body through `getAllPages()`. The plan
 response returns at most 500 affected-page previews plus `totalPages`; its digest
@@ -277,10 +278,11 @@ persists site overrides. Delivery replaces `cms.i18n` expressions on the server
 after expanding installed compositions. Catalogue values are static; dynamic
 parameters and plural forms are not collection text features.
 
-`GET <basePath>/api/collections/workspace` supplies the workspace snapshot.
-`GET <basePath>/api/collections/installed` returns installed releases and site
-state. `PUT <basePath>/api/collections/texts` saves site text overrides with an
-expected revision.
+`ulvia.cms.collections/list` and `get` provide installed release and site state.
+`ulvia.cms.design/overview` supplies design metadata; `get-texts`, `save-texts`,
+`get-theme` and `save-theme` read or save revision-checked overrides. All calls
+use `POST <basePath>/.cms/call/<contract>/<capability>` from an activated Control
+Page execution plan.
 
 ## Private and code blocs
 
@@ -305,15 +307,16 @@ can remove a collection after checking installed dependants, but Control does no
 expose removal until it can also report affected pages, private Blocs, theme
 references and collection Pages. Remote registry transfer and authenticated
 publication are implemented by the CLI and filesystem reference registry.
-Production hosting, key rotation and multi-publisher authorization remain
-deployment work. JavaScript trust scanning is also separate; migration files
+The production repository is currently a single-active-replica filesystem
+service; key rotation and multi-publisher authorization remain deployment work.
+JavaScript trust scanning is also separate; migration files
 themselves are data-only. Collection Pages can contain local or explicitly
 imported Blocs, and the renderer can expand compositions, load transitive
 component runtimes, resolve collection texts and public assets, and apply the
-site theme. There is currently no Control navigation or activation flow for
-these Pages. The retained execution-plan API can pin the collection
-digest, Page generation, provider-selection revision, contract release digest
-and installation for the future Control Page integration. A source adapter exists
+site theme. Control mounts their navigation and route activation flow. The
+execution-plan API pins the collection digest, Page generation,
+provider-selection revision, contract release digest and installation for each
+call. A source adapter exists
 for multiple repositories, while the dev runtime configures one local source.
 Repository catalogue responses use opaque cursor pagination with at most 256
 releases per page. Clients consume every page, reject cursor loops and duplicate

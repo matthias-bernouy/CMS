@@ -22,13 +22,14 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   design for replacing the removed static admin and collection View models with
   surface-specific Pages, with local, cloud or third-party instance providers;
   provider-owned local discovery, immutable collection Pages, site-owned
-  surface routes and mounted shared rendering are implemented. Autonomous
-  provisioning and complete Control parity remain planned.
+  surface routes, mounted shared rendering and the autonomous bundled Docker
+  bootstrap are implemented. Provider lifecycle provisioning and complete
+  Control parity remain planned.
 - [Local provider and CMS initialization](todo/local-provider-initialization.md):
-  proposed offline first-run, bootstrap collection, Control Page, restart and
-  recovery flow for the official local provider; durable discovery of the
-  existing local instance is implemented, while autonomous provisioning remains
-  planned.
+  offline first-run, bootstrap collection, Control Page, restart and recovery
+  flow for the official local provider; durable local discovery and the bundled
+  Docker repository/Core/Control bootstrap are implemented, while provider-owned
+  instance lifecycle mutations remain planned.
 
 ## Providers And Collections
 

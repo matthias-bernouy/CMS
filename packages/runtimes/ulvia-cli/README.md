@@ -71,7 +71,7 @@ A collection keeps immutable administration copy in recursive locale
 directories such as `translations/en/collection.json` and
 `translations/en/theme/colors.json`. Every JSON object below
 `translations/<locale>/` contributes to that locale's flat catalogue.
-Collection, Bloc, setting, text, theme and View metadata stores
+Collection, Bloc, setting, text, theme and Page metadata stores
 reusable keys from those catalogues rather than inline labels. A key may occur
 in only one fragment per locale. The collection locale must define every
 referenced key; additional locale directories may be partial and fall back to

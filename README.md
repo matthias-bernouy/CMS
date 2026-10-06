@@ -1,9 +1,9 @@
 # CmsCore — Bernouy CMS platform
 
-Bun + TypeScript monorepo (`@bernouy/cms-workspace`). Packages are organized in
-five layers with a one-way dependency rule:
+Bun + TypeScript monorepo (`@bernouy/cms-workspace`). Reusable CMS packages are
+organized in four layers with a one-way dependency rule:
 
-> **runtimes → surfaces → resources → features → foundation**
+> **runtimes → surfaces → features → foundation**
 
 - **foundation/** — generic, zero CMS knowledge; a non-CMS product could use
   these as-is (no `cms-` prefix).
@@ -11,12 +11,13 @@ five layers with a one-way dependency rule:
   exports contracts + dependency-free implementations from its root, network
   adapters under `./mongo` / `./s3` subpaths, and its mountable HTTP values
   (handlers, registrars, middlewares, page renderers) under `src/http/`.
-- **resources/** — versioned declarative CMS resources such as official
-  integration packages. They may depend on feature contracts to describe
-  resources, but do not mount routes or choose runtime adapters.
 - **surfaces/** — mountable HTTP modules: define behavior, decide nothing
   (everything injected; no `process.env`, no `listen`).
 - **runtimes/** — executables: read env, pick adapters, mount surfaces, listen.
+
+Direct products that are not reusable CMS layers live under `packages/`.
+`official-repository` contains authored immutable releases and never mounts
+routes or chooses runtime adapters.
 
 ## Layout
 
@@ -34,14 +35,15 @@ CmsCore/
 |   |   |-- cms-auth/          @bernouy/cms-auth
 |   |   |-- cms-gateway/       @bernouy/cms-gateway
 |   |   `-- cms-repository/    @bernouy/cms-repository (including collection build tooling)
-|   |-- resources/
-|   |   `-- sites/             Declarative CMS site references
 |   |-- surfaces/
+|   |   |-- cms-core/          @bernouy/cms-core
 |   |   |-- cms-control/       @bernouy/cms-control
 |   |   `-- cms-delivery/      @bernouy/cms-delivery
-|   `-- runtimes/
-|       |-- ulvia-cli/         @bernouy/ulvia-cli
-|       `-- cms-server/        @bernouy/cms-server
+|   |-- runtimes/
+|   |   |-- ulvia-cli/         @bernouy/ulvia-cli
+|   |   |-- cms-server/        @bernouy/cms-server
+|   |   `-- official-repository-server/
+|   `-- official-repository/   Authored official releases
 |
 |-- infra/
 |   `-- images/cms/
@@ -54,7 +56,7 @@ CmsCore/
 
 ## Dependency rules
 
-- One direction only: `runtimes → surfaces → resources → features → foundation`. Never
+- One direction only: `runtimes → surfaces → features → foundation`. Never
   upward, never surface→surface (compose through features).
 - Lateral feature→feature edges are allowed when one feature consumes
   another's published contract (e.g. cms-gateway → cms-repository for selected

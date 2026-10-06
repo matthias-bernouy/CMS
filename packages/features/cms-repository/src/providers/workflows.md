@@ -1,8 +1,12 @@
 # Provider domain workflows
 
-These workflows run locally against explicit ports, deterministic memory
-implementations and optional Mongo state stores. They do not send HTTP requests, store secret values, authorize
-administrators, execute business capabilities or attest provider conformance.
+The provider domain lifecycle runs locally against explicit ports, deterministic
+memory implementations and optional Mongo state stores. It does not send HTTP
+requests, store secret values, authorize administrators, execute business
+capabilities or attest provider conformance. The separate
+`./providers/management` application workflow orchestrates a host-injected
+runtime-report reader and `SecretStore`; network policy and administrator
+authorization stay in the runtime and surface.
 
 ## Publish and compare manifests
 
@@ -27,14 +31,16 @@ ownership or authorize reconnecting an existing installation.
 
 ## Prepare and approve an installation
 
-1. A host obtains a provider report through its own future transport and puts
-   the submitted connection token in a secret store. Domain inputs contain
-   only secret references, a canonical origin and non-secret configuration.
+1. `ProviderConnectionWorkflow.preview` obtains a provider report through its
+   injected reader and prepares a short-lived approval ticket. The raw token
+   remains only in that application workflow; domain inputs contain only secret
+   references, a canonical origin and non-secret configuration.
 2. `ProviderInstallationLifecycle.prepare(candidate, report)` validates the
    exact published manifest, endpoint, provider/account identities and report.
    It issues an immutable, temporary proposal; no installation is written.
-3. An authorized host caller invokes `approve(preparation, approvedBy)`.
-   Approval revalidates the proposal and stores the exact manifest pin. A
+3. An authorized host caller approves the application ticket. The application
+   workflow stores the new credential through `SecretStore`, then invokes the
+   domain approval. Approval revalidates the proposal and stores the exact manifest pin. A
    preparation is single-use after success and expires after five minutes by
    default; the configured CMS clock and maximum age control this bound.
 4. The installation starts administratively enabled, with no stored runtime
@@ -125,7 +131,9 @@ fresh observation; it does not turn the whole installation into a ready provider
 or assert conformance. The caller chooses the maximum observation age.
 
 Memory catalogues and stores are reference adapters. `./providers/mongo` persists
-installation and selection records with revision-checked writes, but production
-still needs durable release/manifest catalogues and a coherent dependency revision
-source. Authorized host actions, secret rotation/revocation, registration/grants,
-UI and conformance execution remain separate implementation work.
+installation and selection records with revision-checked writes. Production
+composition supplies durable release and manifest catalogues plus a coherent
+dependency-revision source. Control mounts authorized management Pages, and the
+management workflow rotates local credentials. Provider-side credential
+revocation, registration/grants and live conformance execution remain separate
+implementation work.
