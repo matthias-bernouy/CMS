@@ -1,7 +1,7 @@
 # @bernouy/cms-control
 
-Control kernel of the CMS — authentication bootstrap, capability/media routes,
-and a transitional REST API. Authored Control pages are collection resources;
+Control kernel of the CMS — authentication bootstrap and shared CMS
+capability/media routes. Authored Control pages are collection resources;
 the former filesystem-backed admin application has been removed. Mounts on a
 runner you provide. Runs on **Bun** and ships
 as a Bun-first package — no transpile, consumers execute the TypeScript
@@ -155,19 +155,18 @@ through `ulvia dev credentials`.
 | `<basePath>/auth/logout`                 | public    | Drops the session cookie                  |
 | `<basePath>/auth/:providerId/{login,callback}` | public | Dynamic OIDC flow                       |
 | `<basePath>/`                            | gated     | Redirects to `<basePath>/admin`           |
-| `<basePath>/admin/*`                     | gated     | Temporary 503 until Control Pages mount   |
-| `<basePath>/api/*`                       | gated     | File-routed REST endpoints                |
-| `<basePath>/assets/*`                    | public    | `control-components.js` + `control-styles.css` |
-| `<basePath>/resources/*`                 | public    | Shared component and preview resources    |
+| `<basePath>/admin/*`                     | gated     | Installed collection and site Control Pages |
+| `<basePath>/.cms/call/*`                 | gated     | Versioned contract capability calls       |
+| `<basePath>/.cms/files/*`                | gated     | Author file mutations and reads           |
+| `<basePath>/.cms/{style,blocset}`        | gated     | Page theme and exact collection Bloc runtime |
+| `<basePath>/assets/*`                    | public    | Minimal binding/host runtime and base CSS |
 
 The auth guard (`createAuthGuard` from `@bernouy/cms-auth/http`) establishes an
 authenticated subject. It does not evaluate roles or view permissions. Control
 chooses the unauthenticated response for each route group: a login redirect or
-an explicit unauthorized response. File-routed APIs are administrator-only by
-default. The boundary allows members only their self-service profile and token
-routes. High-impact administrative handlers also fail
-closed through `requireControlAdministrator` before parsing input or accessing
-their stores.
+an explicit unauthorized response. Contract capabilities carry their own
+declared access class and the Control dispatcher verifies the caller before
+execution.
 
 Public auth routes receive operations created with `createPublicAuthActions`,
 not credential, user or recovery-token stores. Control can additionally receive

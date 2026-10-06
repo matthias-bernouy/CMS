@@ -24,7 +24,6 @@ import type { ControlAuthBackends, ControlCmsState } from "cms-control/core/admi
 import { mountControlBrowserAssets } from "cms-control/core/admin/control/mountRoutes/assets";
 import { mountControlCapabilityRoutes } from "cms-control/core/admin/control/mountRoutes/capability";
 import { mountCollectionControlPages } from "cms-control/core/admin/control/mountRoutes/pages";
-import { serveApi } from "cms-control/core/admin/registerEndpoints/serveApiFolder";
 import type { ControlCms } from "cms-control/ControlCms";
 import { createControlMaintenanceGuard } from "cms-control/core/admin/control/maintenance";
 
@@ -32,7 +31,6 @@ export function mountControlCmsRoutes(
     cms: ControlCms,
     state: ControlCmsState,
     authBackends: ControlAuthBackends,
-    apiDir: string,
 ): Promise<void> {
     const runner = state.runner;
     const authGuard = createControlAccessGuard(cms.basePath, state.auth);
@@ -124,13 +122,5 @@ export function mountControlCmsRoutes(
             ),
         [authenticatedGuard],
     );
-    let apiRoutesReady = Promise.resolve();
-    runner.group(
-        "/api",
-        (apiRunner) => {
-            apiRoutesReady = serveApi(apiRunner, apiDir, cms);
-        },
-        [authenticatedGuard, apiAuthorizationGuard, maintenanceGuard],
-    );
-    return apiRoutesReady;
+    return Promise.resolve();
 }

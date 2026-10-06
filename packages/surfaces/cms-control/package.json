@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-control",
     "version": "0.1.0",
-    "description": "Control kernel — authentication bootstrap, transitional REST API, capability/media routes, retained admin web components, and the ControlCms composition class.",
+    "description": "Control kernel — authentication bootstrap, capability/media routes, collection-backed Pages, and the ControlCms composition class.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./index.ts",

@@ -11,7 +11,6 @@ import type { CmsRepository } from "@bernouy/cms-content";
 import type { CmsFileMutationJournal, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { SecretStore } from "@bernouy/secret-store";
-import { join } from "node:path";
 import { controlCmsAccessors } from "cms-control/core/admin/control/accessors";
 import { mountControlCmsRoutes } from "cms-control/core/admin/control/mountRoutes";
 import { createControlCmsState } from "cms-control/core/admin/control/state";
@@ -56,7 +55,7 @@ export class ControlCms {
             fileMutations,
         });
         this.state = state;
-        this.ready = mountControlCmsRoutes(this, state, authBackends, join(__dirname, "./api"));
+        this.ready = mountControlCmsRoutes(this, state, authBackends);
     }
 
     get config() {

@@ -1,8 +1,8 @@
 # @bernouy/cms-control
 
-Control surface. It mounts on a provided `Runner` and exposes the temporary
-REST API, authentication bootstrap, gateway/admin media routes, and the
-browser bundle in `src/browser/control-components.js`.
+Control surface. It mounts on a provided `Runner` and exposes authentication,
+shared CMS capability/media routes, collection-backed Control Pages, and the
+minimal browser runtime in `src/browser/control-components.js`.
 
 ## Export Boundaries
 
@@ -17,8 +17,9 @@ modules.
 ## Package Layout
 
 - `src/ControlCms.ts`: mounts routes and wires injected dependencies.
-- `src/api/`: file-routed REST endpoints. See `docs/surfaces/control-api.md`.
-- `src/browser/`: the generated component bundle and its temporary base CSS.
+- `src/api/`: unmounted legacy endpoint sources retained only while dependent
+  implementation code is extracted or removed.
+- `src/browser/`: the generated binding/Bloc host runtime and base CSS.
 - `src/core/admin/auth/templates/`: kernel-owned authentication documents.
 - `src/components/`: browser custom elements bundled into
   `control-components.js`.
@@ -44,8 +45,8 @@ modules.
   selection in the owning Control component and presentation in the shared
   foundation components.
 - Use Control-owned `<cms-*>` tags only for internal admin/editor components.
-- The retained legacy components are transitional and must remain testable while
-  collection-backed Control pages replace their old static compositions.
+- Retained legacy component sources are not registered by the production
+  browser runtime. Do not add a new Page dependency on them.
 - `cms-shell-detail` owns the `back`, `title`, optional `description`, `actions`, `body`, and `footer` slots.
   Its `size="sm|md|lg|xl|full"` attribute uses the shared container scale for a
   consistent maximum width; prefer it to page-specific pixel widths.
