@@ -3,7 +3,7 @@
     "protocol": "ulvia-conformance/v1",
     "contractId": "ulvia.cms.collections",
     "contractVersion": "1.0.0",
-    "contractDigest": "sha256:e8e643fac230a8e5f7f811125465329327090d1074d0ab48b506e6f748bf7cc4",
+    "contractDigest": "sha256:6dd42bb9ec25b504cb6a47ae2142d6ae25204d63ccd6444acf8974c36a871285",
     "publisherId": "ulvia.official",
     "version": "1.0.0",
     "isolation": "disposable-tenant",
@@ -166,6 +166,11 @@
         },
         {
             "capabilityId": "apply-migration",
+            "errorCode": "IDEMPOTENCY_CONFLICT",
+            "reason": "A conflicting replay requires a suite-owned invocation key and a deliberately different payload."
+        },
+        {
+            "capabilityId": "apply-migration",
             "errorCode": "CORE_UNAVAILABLE",
             "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
         },
@@ -191,6 +196,11 @@
         },
         {
             "capabilityId": "resume-migration",
+            "errorCode": "IDEMPOTENCY_CONFLICT",
+            "reason": "A conflicting replay requires a suite-owned migration and invocation key."
+        },
+        {
+            "capabilityId": "resume-migration",
             "errorCode": "CORE_UNAVAILABLE",
             "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
         },
@@ -203,6 +213,11 @@
             "capabilityId": "rollback-migration",
             "errorCode": "MIGRATION_IN_PROGRESS",
             "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "rollback-migration",
+            "errorCode": "IDEMPOTENCY_CONFLICT",
+            "reason": "A conflicting replay requires a suite-owned migration and invocation key."
         },
         {
             "capabilityId": "rollback-migration",

@@ -86,6 +86,43 @@ test("the Core relay returns the protocol operation handle without validating it
     expect(await response?.json()).toEqual({ operationId: "00000000-0000-4000-8000-000000000010" });
 });
 
+test("the Core relay requires keys exactly for keyed commands", async () => {
+    const release = {
+        contractId: "ulvia.cms.jobs",
+        capabilities: [
+            {
+                id: "start",
+                behavior: { effect: "command", execution: "operation", idempotency: "keyed" },
+                input: { type: "object", properties: {}, required: [] },
+                output: { type: "null" },
+                binding: {
+                    transport: "http",
+                    method: "POST",
+                    path: "/v1/jobs",
+                    input: { body: true },
+                    response: { successStatuses: [202], contentTypes: ["application/json"], errorStatuses: {} },
+                },
+            },
+        ],
+    } as never;
+    let invoked = 0;
+    const relay = createCoreContractRelay([release], {
+        invoke: async () => {
+            invoked += 1;
+            return { operationId: "00000000-0000-4000-8000-000000000010" };
+        },
+    });
+    const response = await relay(
+        new Request("http://provider.test/v1/jobs", {
+            method: "POST",
+            headers: { ...trustedHeaders(), "content-type": "application/json" },
+            body: "{}",
+        }),
+    );
+    expect(response?.status).toBe(400);
+    expect(invoked).toBe(0);
+});
+
 function trustedHeaders(): HeadersInit {
     return {
         "x-ulvia-request-id": "00000000-0000-4000-8000-000000000001",

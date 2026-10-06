@@ -39,6 +39,7 @@ export function createCoreContractRelay(
             input = await decodeCoreContractInput(request, url, capability, selected.parameters);
             validateSchemaValue(capability.input, input);
             context = invocationContext(request);
+            validateIdempotencyContext(capability, context);
         } catch {
             return new Response(null, { status: 400, headers: { "Cache-Control": "no-store" } });
         }
@@ -64,6 +65,13 @@ export function createCoreContractRelay(
             return Response.json({ error: { code: "CORE_UNAVAILABLE" } }, { status: 503 });
         }
     };
+}
+
+function validateIdempotencyContext(capability: CapabilityDefinition, context: OfficialCoreInvocationContext): void {
+    const keyed = capability.behavior.effect === "command" && capability.behavior.idempotency === "keyed";
+    if (Boolean(context.idempotencyKey) !== keyed) {
+        throw new TypeError(keyed ? "Missing idempotency key" : "Unexpected idempotency key");
+    }
 }
 
 function invocationContext(request: Request): OfficialCoreInvocationContext {
