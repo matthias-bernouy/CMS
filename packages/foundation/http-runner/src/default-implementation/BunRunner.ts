@@ -1,5 +1,5 @@
 import { getRequestIP as readRequestIP } from "http-runner/core/request/ip";
-import type { Middleware, RouteHandler, Runner } from "http-runner/interfaces/Runner";
+import type { Middleware, RouteHandler, Runner, RunnerListenOptions } from "http-runner/interfaces/Runner";
 import { dispatchBunRunnerRequest, type RegisteredDefaultEndpoint, type RegisteredRoute } from "./bunRequestDispatch";
 import { stopServerGracefully } from "./gracefulServerStop";
 import { normalizePath, urlJoin } from "./runnerPaths";
@@ -81,6 +81,7 @@ export class BunRunner implements Runner {
                 this.removeRoutesByPathPrefix(urlJoin(currentPrefix, prefix));
             },
 
+            start: (options) => this.start(options),
             stop: () => this.stop(),
             stopGracefully: (timeoutMs) => this.stopGracefully(timeoutMs),
         };
@@ -133,18 +134,21 @@ export class BunRunner implements Runner {
         this.defaultEndpoints.push({ method, prefix, handler, middlewares });
     }
 
-    start(port: number = 3000): void {
+    start(options: number | RunnerListenOptions = 3000): void {
         const self = this;
+        const listen = typeof options === "number" ? { port: options } : options;
+        const port = listen.port ?? 3000;
+        const hostname = listen.hostname ?? this.options.hostname;
 
         this.server = Bun.serve({
             port,
-            ...(this.options.hostname === undefined ? {} : { hostname: this.options.hostname }),
+            ...(hostname === undefined ? {} : { hostname }),
             ...(this.options.idleTimeoutSeconds === undefined ? {} : { idleTimeout: this.options.idleTimeoutSeconds }),
             fetch: (request, server) =>
                 dispatchBunRunnerRequest(request, server, self.routes, self.defaultEndpoints, self.globalMiddlewares),
         });
 
-        console.log(`🚀 Server started on http://${this.options.hostname ?? "localhost"}:${this.server.port}`);
+        console.log(`🚀 Server started on http://${hostname ?? "localhost"}:${this.server.port}`);
     }
 
     /** Stop the `Bun.serve` listener and free the port. Idempotent. */

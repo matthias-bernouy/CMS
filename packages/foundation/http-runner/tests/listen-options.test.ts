@@ -120,10 +120,10 @@ describe("BunRunner listen options", () => {
         expect(calls).toEqual([false, true]);
     });
 
-    test.failing("forwards port and hostname options to Bun.serve", () => {
+    test("forwards port and hostname options to Bun.serve", () => {
         const listen = { port: 4123, hostname: "127.0.0.1" };
         const options = captureServeOptions((runner) => {
-            (runner.start as unknown as (input: typeof listen) => void)(listen);
+            runner.start(listen);
         });
 
         expect(options).toMatchObject(listen);

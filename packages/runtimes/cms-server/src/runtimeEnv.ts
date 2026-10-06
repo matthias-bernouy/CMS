@@ -15,6 +15,8 @@ export { parsePort } from "./runtimeEnvParsing";
 export type RuntimeEnv = {
     CONTROL_PORT: number;
     DELIVERY_PORT: number;
+    CONTROL_HOST: string;
+    DELIVERY_HOST: string;
     CORE_PORT?: number;
     CONTROL_PUBLIC_URL: string;
     DELIVERY_PUBLIC_URL: string;
@@ -65,6 +67,8 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     return {
         CONTROL_PORT,
         DELIVERY_PORT,
+        CONTROL_HOST: parseListenerHost(source.CONTROL_HOST, "CONTROL_HOST"),
+        DELIVERY_HOST: parseListenerHost(source.DELIVERY_HOST, "DELIVERY_HOST"),
         ...coreConfiguration,
         CONTROL_PUBLIC_URL,
         DELIVERY_PUBLIC_URL,
@@ -115,6 +119,19 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         ),
         ...clientAddress,
     };
+}
+
+function parseListenerHost(raw: string | undefined, name: string): string {
+    const value = raw?.trim() || "0.0.0.0";
+    if (value.length > 253 || /[\s/\\?#@\[\]]/u.test(value)) {
+        throw new Error(`${name} must be a hostname or IP address without a port`);
+    }
+    try {
+        new URL(`http://${value.includes(":") ? `[${value}]` : value}/`);
+    } catch {
+        throw new Error(`${name} must be a hostname or IP address without a port`);
+    }
+    return value;
 }
 
 function parseCoreProviderConfig(

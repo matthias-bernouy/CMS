@@ -84,7 +84,7 @@ describe("runtime env validation", () => {
         );
     });
 
-    test.failing("parses listener hosts with wildcard production defaults", () => {
+    test("parses listener hosts with wildcard production defaults", () => {
         expect(readRuntimeEnv(validEnv())).toMatchObject({
             CONTROL_HOST: "0.0.0.0",
             DELIVERY_HOST: "0.0.0.0",
@@ -99,6 +99,11 @@ describe("runtime env validation", () => {
             CONTROL_HOST: "127.0.0.1",
             DELIVERY_HOST: "::1",
         });
+    });
+
+    test("rejects malformed listener hosts and embedded ports", () => {
+        expect(() => readRuntimeEnv({ ...validEnv(), CONTROL_HOST: "bad host" })).toThrow(/hostname or IP/);
+        expect(() => readRuntimeEnv({ ...validEnv(), DELIVERY_HOST: "localhost:3001" })).toThrow(/hostname or IP/);
     });
 
     test("rejects invalid and duplicate ports", () => {

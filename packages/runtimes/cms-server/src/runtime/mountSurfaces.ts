@@ -89,8 +89,8 @@ export async function mountProductionSurfaces(
         }),
     });
 
-    controlRunner.start(env.CONTROL_PORT);
-    deliveryRunner.start(env.DELIVERY_PORT);
+    controlRunner.start({ port: env.CONTROL_PORT, hostname: env.CONTROL_HOST });
+    deliveryRunner.start({ port: env.DELIVERY_PORT, hostname: env.DELIVERY_HOST });
     const sitemapRefresh = runtime.startSitemapRefresh?.(deliveryCms, {
         reportError: (error) => runtime.reportError("Sitemap refresh failed", error),
     });

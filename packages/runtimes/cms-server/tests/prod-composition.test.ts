@@ -10,7 +10,7 @@ describe("production CMS composition", () => {
         expect(listen).toBeGreaterThan(-1);
     });
 
-    test.failing("passes configured hosts to both listeners", async () => {
+    test("passes configured hosts to both listeners", async () => {
         const source = await Bun.file(new URL("../src/runtime/mountSurfaces.ts", import.meta.url)).text();
 
         expect(source).toMatch(

@@ -8,6 +8,11 @@ export type RouteHandler = (req: Request) => Response | Promise<Response>;
  */
 export type Middleware = (req: Request, next: () => Promise<Response>) => Promise<Response>;
 
+export type RunnerListenOptions = Readonly<{
+    port?: number;
+    hostname?: string;
+}>;
+
 export interface Runner {
     readonly basePath: string;
 
@@ -88,7 +93,7 @@ export interface Runner {
      * ephemeral port (the actual port is exposed by the implementation,
      * e.g. `BunRunner.port`) — useful for isolated tests.
      */
-    start(port?: number): void;
+    start(options?: number | RunnerListenOptions): void;
 
     /**
      * Stop serving and release the listening socket. Idempotent; safe to
