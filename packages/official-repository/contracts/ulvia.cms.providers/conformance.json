@@ -1,0 +1,117 @@
+{
+    "kind": "contract-conformance-suite",
+    "protocol": "ulvia-conformance/v1",
+    "contractId": "ulvia.cms.providers",
+    "contractVersion": "1.0.0",
+    "contractDigest": "sha256:f48e63ac505ba3d103b1996f3e4e50fc4824faa23e190e63f1195b6ee8cc8a80",
+    "publisherId": "ulvia.official",
+    "version": "1.0.0",
+    "isolation": "disposable-tenant",
+    "scenarios": [
+        {
+            "id": "read-core-state",
+            "description": "Verify the portable, non-destructive administration projections exposed by a fresh CMS tenant.",
+            "calls": [
+                {
+                    "id": "list",
+                    "capabilityId": "list",
+                    "actor": {
+                        "kind": "admin"
+                    },
+                    "input": {},
+                    "expect": {
+                        "kind": "success",
+                        "checks": [
+                            {
+                                "path": "/selectionRevision",
+                                "present": true
+                            },
+                            {
+                                "path": "/installations",
+                                "present": true
+                            },
+                            {
+                                "path": "/selections",
+                                "present": true
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ],
+    "coverageExemptions": [
+        {
+            "capabilityId": "get",
+            "reason": "This capability requires a stable resource identity that a portable fresh-tenant suite cannot assume."
+        },
+        {
+            "capabilityId": "replace-selections",
+            "reason": "This state-changing capability requires dedicated suite-owned fixtures and cleanup that the portable read smoke suite does not yet prescribe."
+        },
+        {
+            "capabilityId": "set-status",
+            "reason": "This state-changing capability requires dedicated suite-owned fixtures and cleanup that the portable read smoke suite does not yet prescribe."
+        },
+        {
+            "capabilityId": "list",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "get",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "get",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "replace-selections",
+            "errorCode": "INVALID_INPUT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "replace-selections",
+            "errorCode": "INVALID_SELECTION",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "replace-selections",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "replace-selections",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "set-status",
+            "errorCode": "INVALID_INPUT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "set-status",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "set-status",
+            "errorCode": "INVALID_STATE",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "set-status",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "set-status",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        }
+    ]
+}

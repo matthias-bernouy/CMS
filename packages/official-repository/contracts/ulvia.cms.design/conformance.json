@@ -1,0 +1,170 @@
+{
+    "kind": "contract-conformance-suite",
+    "protocol": "ulvia-conformance/v1",
+    "contractId": "ulvia.cms.design",
+    "contractVersion": "1.0.0",
+    "contractDigest": "sha256:e61da73fb3fe91f592fc85d6cbfa4b51a6033eb8fb5737777d2138414f4a503a",
+    "publisherId": "ulvia.official",
+    "version": "1.0.0",
+    "isolation": "disposable-tenant",
+    "scenarios": [
+        {
+            "id": "read-core-state",
+            "description": "Verify the portable, non-destructive administration projections exposed by a fresh CMS tenant.",
+            "calls": [
+                {
+                    "id": "overview",
+                    "capabilityId": "overview",
+                    "actor": {
+                        "kind": "admin"
+                    },
+                    "input": {},
+                    "expect": {
+                        "kind": "success",
+                        "checks": [
+                            {
+                                "path": "/revision",
+                                "present": true
+                            },
+                            {
+                                "path": "/activeLanguages",
+                                "present": true
+                            },
+                            {
+                                "path": "/themes",
+                                "present": true
+                            },
+                            {
+                                "path": "/collections",
+                                "present": true
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "get-theme",
+                    "capabilityId": "get-theme",
+                    "actor": {
+                        "kind": "admin"
+                    },
+                    "input": {},
+                    "expect": {
+                        "kind": "success",
+                        "checks": [
+                            {
+                                "path": "/revision",
+                                "present": true
+                            },
+                            {
+                                "path": "/activeThemeId",
+                                "present": true
+                            },
+                            {
+                                "path": "/themeJson",
+                                "present": true
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ],
+    "coverageExemptions": [
+        {
+            "capabilityId": "update-languages",
+            "reason": "This state-changing capability requires dedicated suite-owned fixtures and cleanup that the portable read smoke suite does not yet prescribe."
+        },
+        {
+            "capabilityId": "save-theme",
+            "reason": "This state-changing capability requires dedicated suite-owned fixtures and cleanup that the portable read smoke suite does not yet prescribe."
+        },
+        {
+            "capabilityId": "get-texts",
+            "reason": "This capability requires a stable resource identity that a portable fresh-tenant suite cannot assume."
+        },
+        {
+            "capabilityId": "save-texts",
+            "reason": "This state-changing capability requires dedicated suite-owned fixtures and cleanup that the portable read smoke suite does not yet prescribe."
+        },
+        {
+            "capabilityId": "overview",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "update-languages",
+            "errorCode": "INVALID_INPUT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "update-languages",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "update-languages",
+            "errorCode": "MIGRATION_IN_PROGRESS",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "update-languages",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "get-theme",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "save-theme",
+            "errorCode": "INVALID_INPUT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "save-theme",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "save-theme",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "get-texts",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "get-texts",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "save-texts",
+            "errorCode": "INVALID_INPUT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "save-texts",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "save-texts",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "save-texts",
+            "errorCode": "MIGRATION_IN_PROGRESS",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "save-texts",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        }
+    ]
+}

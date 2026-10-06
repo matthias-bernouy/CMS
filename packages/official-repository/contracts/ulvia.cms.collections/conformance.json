@@ -1,0 +1,213 @@
+{
+    "kind": "contract-conformance-suite",
+    "protocol": "ulvia-conformance/v1",
+    "contractId": "ulvia.cms.collections",
+    "contractVersion": "1.0.0",
+    "contractDigest": "sha256:e8e643fac230a8e5f7f811125465329327090d1074d0ab48b506e6f748bf7cc4",
+    "publisherId": "ulvia.official",
+    "version": "1.0.0",
+    "isolation": "disposable-tenant",
+    "scenarios": [
+        {
+            "id": "read-core-state",
+            "description": "Verify the portable, non-destructive administration projections exposed by a fresh CMS tenant.",
+            "calls": [
+                {
+                    "id": "list",
+                    "capabilityId": "list",
+                    "actor": {
+                        "kind": "admin"
+                    },
+                    "input": {},
+                    "expect": {
+                        "kind": "success",
+                        "checks": [
+                            {
+                                "path": "/revision",
+                                "present": true
+                            },
+                            {
+                                "path": "/items",
+                                "present": true
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ],
+    "coverageExemptions": [
+        {
+            "capabilityId": "get",
+            "reason": "This capability requires a stable resource identity that a portable fresh-tenant suite cannot assume."
+        },
+        {
+            "capabilityId": "install",
+            "reason": "This state-changing capability requires dedicated suite-owned fixtures and cleanup that the portable read smoke suite does not yet prescribe."
+        },
+        {
+            "capabilityId": "update-configuration",
+            "reason": "This state-changing capability requires dedicated suite-owned fixtures and cleanup that the portable read smoke suite does not yet prescribe."
+        },
+        {
+            "capabilityId": "plan-migration",
+            "reason": "This capability requires a suite-owned migration lifecycle; the portable smoke suite does not prescribe collection release fixtures."
+        },
+        {
+            "capabilityId": "apply-migration",
+            "reason": "This capability requires a suite-owned migration lifecycle; the portable smoke suite does not prescribe collection release fixtures."
+        },
+        {
+            "capabilityId": "get-migration",
+            "reason": "This capability requires a suite-owned migration lifecycle; the portable smoke suite does not prescribe collection release fixtures."
+        },
+        {
+            "capabilityId": "resume-migration",
+            "reason": "This capability requires a suite-owned migration lifecycle; the portable smoke suite does not prescribe collection release fixtures."
+        },
+        {
+            "capabilityId": "rollback-migration",
+            "reason": "This capability requires a suite-owned migration lifecycle; the portable smoke suite does not prescribe collection release fixtures."
+        },
+        {
+            "capabilityId": "list",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "get",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "get",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "install",
+            "errorCode": "INVALID_INPUT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "install",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "install",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "install",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "update-configuration",
+            "errorCode": "INVALID_INPUT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "update-configuration",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "update-configuration",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "update-configuration",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "plan-migration",
+            "errorCode": "INVALID_INPUT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "plan-migration",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "plan-migration",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "plan-migration",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "apply-migration",
+            "errorCode": "INVALID_INPUT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "apply-migration",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "apply-migration",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "apply-migration",
+            "errorCode": "MIGRATION_IN_PROGRESS",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "apply-migration",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "get-migration",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "get-migration",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "resume-migration",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "resume-migration",
+            "errorCode": "MIGRATION_IN_PROGRESS",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "resume-migration",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "rollback-migration",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "rollback-migration",
+            "errorCode": "MIGRATION_IN_PROGRESS",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "rollback-migration",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        }
+    ]
+}

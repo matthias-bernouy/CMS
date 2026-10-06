@@ -1,0 +1,209 @@
+{
+    "kind": "contract-conformance-suite",
+    "protocol": "ulvia-conformance/v1",
+    "contractId": "ulvia.cms.access",
+    "contractVersion": "1.0.0",
+    "contractDigest": "sha256:3deb94f876287c451537aa5049ea8cf0bcbed7639ba01bad56d185d555d8f4e4",
+    "publisherId": "ulvia.official",
+    "version": "1.0.0",
+    "isolation": "disposable-tenant",
+    "scenarios": [
+        {
+            "id": "read-core-state",
+            "description": "Verify the portable, non-destructive administration projections exposed by a fresh CMS tenant.",
+            "calls": [
+                {
+                    "id": "overview",
+                    "capabilityId": "overview",
+                    "actor": {
+                        "kind": "admin"
+                    },
+                    "input": {
+                        "limit": 25
+                    },
+                    "expect": {
+                        "kind": "success",
+                        "checks": [
+                            {
+                                "path": "/site",
+                                "present": true
+                            },
+                            {
+                                "path": "/users",
+                                "present": true
+                            },
+                            {
+                                "path": "/loginProviders",
+                                "present": true
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "list-users",
+                    "capabilityId": "list-users",
+                    "actor": {
+                        "kind": "admin"
+                    },
+                    "input": {
+                        "limit": 25
+                    },
+                    "expect": {
+                        "kind": "success",
+                        "checks": [
+                            {
+                                "path": "/users",
+                                "present": true
+                            },
+                            {
+                                "path": "/total",
+                                "present": true
+                            },
+                            {
+                                "path": "/hasMore",
+                                "present": true
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ],
+    "coverageExemptions": [
+        {
+            "capabilityId": "get-user",
+            "reason": "This capability requires a stable resource identity that a portable fresh-tenant suite cannot assume."
+        },
+        {
+            "capabilityId": "set-administrator",
+            "reason": "This state-changing capability requires dedicated suite-owned fixtures and cleanup that the portable read smoke suite does not yet prescribe."
+        },
+        {
+            "capabilityId": "delete-user",
+            "reason": "This state-changing capability requires dedicated suite-owned fixtures and cleanup that the portable read smoke suite does not yet prescribe."
+        },
+        {
+            "capabilityId": "update-login-provider",
+            "reason": "This state-changing capability requires dedicated suite-owned fixtures and cleanup that the portable read smoke suite does not yet prescribe."
+        },
+        {
+            "capabilityId": "update-site",
+            "reason": "This state-changing capability requires dedicated suite-owned fixtures and cleanup that the portable read smoke suite does not yet prescribe."
+        },
+        {
+            "capabilityId": "overview",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "list-users",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "get-user",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "get-user",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "set-administrator",
+            "errorCode": "INVALID_INPUT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "set-administrator",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "set-administrator",
+            "errorCode": "CANNOT_REMOVE_SELF",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "set-administrator",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "set-administrator",
+            "errorCode": "ACTOR_UNAVAILABLE",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "set-administrator",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "delete-user",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "delete-user",
+            "errorCode": "CANNOT_REMOVE_SELF",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "delete-user",
+            "errorCode": "PROTECTED_USER",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "delete-user",
+            "errorCode": "ACTOR_UNAVAILABLE",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "delete-user",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "update-login-provider",
+            "errorCode": "INVALID_INPUT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "update-login-provider",
+            "errorCode": "NOT_FOUND",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "update-login-provider",
+            "errorCode": "INVALID_STATE",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "update-login-provider",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "update-login-provider",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        },
+        {
+            "capabilityId": "update-site",
+            "errorCode": "INVALID_INPUT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "update-site",
+            "errorCode": "REVISION_CONFLICT",
+            "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
+        },
+        {
+            "capabilityId": "update-site",
+            "errorCode": "CORE_UNAVAILABLE",
+            "reason": "A runner-independent suite must not prescribe how a provider disconnects its selected managed Core."
+        }
+    ]
+}
