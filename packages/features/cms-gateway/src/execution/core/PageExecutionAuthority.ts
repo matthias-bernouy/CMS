@@ -4,14 +4,14 @@ import type { ContractSelectionStore } from "@bernouy/cms-repository/providers/s
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import type { GatewayRouteResolver } from "cms-gateway/invocation/interfaces/Invocation";
 import type {
-    CollectionPageExecutionActivation,
-    CollectionPageExecutionAuthority,
-    CollectionPageExecutionPlan,
-    CollectionPageExecutionRequest,
     GatewayExecutionPin,
-    StoredCollectionPageExecutionGrant,
+    PageExecutionActivation,
+    PageExecutionAuthority,
+    PageExecutionPlan,
+    PageExecutionRequest,
+    StoredPageExecutionGrant,
 } from "../interfaces/PageExecution";
-import type { CollectionPageExecutionGrantStore } from "../interfaces/PageExecutionGrantStore";
+import type { PageExecutionGrantStore } from "../interfaces/PageExecutionGrantStore";
 import {
     digestPlan,
     requireExecutionIdentifier,
@@ -21,14 +21,14 @@ import {
 } from "./executionValues";
 
 /** Compiles and enforces site-owned grants without selecting or upgrading providers. */
-export class DefaultCollectionPageExecutionAuthority implements CollectionPageExecutionAuthority {
+export class DefaultPageExecutionAuthority implements PageExecutionAuthority {
     constructor(
         private readonly selections: Pick<ContractSelectionStore, "get">,
         private readonly routes: GatewayRouteResolver,
-        private readonly grants: CollectionPageExecutionGrantStore,
+        private readonly grants: PageExecutionGrantStore,
     ) {}
 
-    async activate(input: CollectionPageExecutionActivation): Promise<StoredCollectionPageExecutionGrant> {
+    async activate(input: PageExecutionActivation): Promise<StoredPageExecutionGrant> {
         const activation = snapshotActivation(input);
         const plan = await this.#compile(activation);
         const planDigest = await digestPlan(plan);
@@ -45,7 +45,7 @@ export class DefaultCollectionPageExecutionAuthority implements CollectionPageEx
         throw new GatewayError("stale_route", "page execution grant changed during activation");
     }
 
-    async authorize(input: CollectionPageExecutionRequest): Promise<GatewayExecutionPin> {
+    async authorize(input: PageExecutionRequest): Promise<GatewayExecutionPin> {
         const consumer = snapshotConsumer(input);
         requireExecutionIdentifier(input.contractId, "contract");
         requireExecutionIdentifier(input.capabilityId, "capability");
@@ -54,13 +54,10 @@ export class DefaultCollectionPageExecutionAuthority implements CollectionPageEx
             this.selections.get(consumer.siteId),
         ]);
         if (!grant) {
-            throw new GatewayError("not_authorized", "this collection Page has no active execution grant");
+            throw new GatewayError("not_authorized", "this Page has no active execution grant");
         }
         if (canonicalizeIJson(grant.plan.consumer) !== canonicalizeIJson(consumer)) {
-            throw new GatewayError(
-                "stale_route",
-                "the collection Page changed after its execution grant was activated",
-            );
+            throw new GatewayError("stale_route", "the Page changed after its execution grant was activated");
         }
         if (
             !selections ||
@@ -71,7 +68,7 @@ export class DefaultCollectionPageExecutionAuthority implements CollectionPageEx
         }
         const target = grant.plan.targets.find((item) => item.contractId === input.contractId);
         if (!target?.capabilityIds.includes(input.capabilityId)) {
-            throw new GatewayError("not_authorized", "capability is outside the collection Page execution grant");
+            throw new GatewayError("not_authorized", "capability is outside the Page execution grant");
         }
         return {
             planDigest: grant.planDigest,
@@ -81,7 +78,7 @@ export class DefaultCollectionPageExecutionAuthority implements CollectionPageEx
         };
     }
 
-    async #compile(input: CollectionPageExecutionActivation): Promise<CollectionPageExecutionPlan> {
+    async #compile(input: PageExecutionActivation): Promise<PageExecutionPlan> {
         const stored = await this.selections.get(input.consumer.siteId);
         if (!stored) {
             throw new GatewayError("not_selected", "site has no provider selections for this Page");
@@ -124,7 +121,7 @@ export class DefaultCollectionPageExecutionAuthority implements CollectionPageEx
             throw new GatewayError("stale_route", "provider selections changed during Page planning");
         }
         return deepFreeze({
-            protocol: "ulvia-page-execution/v1",
+            protocol: "ulvia-page-execution/v2",
             consumer: input.consumer,
             selectionRevision: stored.revision,
             dependencyRevision: stored.dependencyRevision,

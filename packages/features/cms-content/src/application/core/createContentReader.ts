@@ -12,7 +12,10 @@ import type { ContentReader } from "cms-content/application/interfaces/ContentRe
  */
 export function createContentReader(repository: CmsRepository): ContentReader {
     return {
-        getCollectionRevision: async () => (await repository.getInstalledCollections?.())?.revision ?? 0,
+        getCollectionRevision: async () =>
+            (await repository.getInstalledCollectionRevision?.()) ??
+            (await repository.getInstalledCollections?.())?.revision ??
+            0,
         getCollectionTexts: async () =>
             ((await repository.getInstalledCollections?.())?.collections ?? []).map((item) => ({
                 collection: item.release,

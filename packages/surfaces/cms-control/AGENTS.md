@@ -36,8 +36,9 @@ modules.
 
 ## Admin UI Rules
 
-- Control pages are collection resources. Do not add authored pages or a generic
-  filesystem-to-route scanner to this package.
+- Control Pages can be immutable collection resources or editable site Pages.
+  Both use the shared Page document renderer, site-scoped surface route registry
+  and stable Page-reference model. Do not add a filesystem-to-route scanner.
 - Use `@bernouy/components` for `<p9r-*>`, `<w13c-*>`, and binding runtime.
 - Use `p9r-nav-tabs` with `p9r-nav-tab` for page-level route tabs; keep route
   selection in the owning Control component and presentation in the shared

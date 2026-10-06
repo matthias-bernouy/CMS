@@ -83,6 +83,7 @@ export type PageScan = {
 
 export interface CmsRepository {
     getInstalledCollections?: CollectionStore["snapshot"] extends (siteId: string) => infer R ? () => R : never;
+    getInstalledCollectionRevision?(): Promise<number>;
     getSiteBlocCollections(): Promise<SiteBlocCollection[]>;
     updateSiteBlocCollection(id: string, input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection>;
     createSiteBlocCollection(input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection>;

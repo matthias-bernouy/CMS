@@ -41,6 +41,6 @@ export async function controlPageCollections() {
             }),
         },
     };
-    await synchronizeCollectionPageRoutes(collections.routes, (await collections.store.snapshot()) as never);
+    await synchronizeCollectionPageRoutes(collections.routes, "site-a", (await collections.store.snapshot()) as never);
     return collections;
 }

@@ -1,5 +1,12 @@
 import type { CollectionStore, InstalledCollection } from "@bernouy/cms-repository/collections/installations";
-import type { PageReference, SurfacePageRoute, SurfacePageRouteRegistry } from "cms-content/pages/interfaces/routing";
+import type { SurfacePageRouteRegistry } from "cms-content/pages/interfaces/routing";
+import type { TPage } from "cms-content/pages/interfaces/pages";
+import { validateCollectionMutationPageLinks } from "cms-content/pages/core/routing/collectionMutationValidation";
+import { PageRouteMutationCoordinator } from "cms-content/pages/core/routing/mutationCoordinator";
+import {
+    synchronizePageRouteRegistrations,
+    synchronizePageRoutes,
+} from "cms-content/pages/core/routing/synchronizeRoutes";
 
 type CollectionSnapshot = { readonly revision: number; readonly collections: readonly InstalledCollection[] };
 
@@ -13,19 +20,46 @@ const ROUTE_MUTATIONS = new Set([
 ]);
 
 /** Keeps collection-owned Page routes synchronized outside request handling. */
-export function withCollectionPageRoutes(store: CollectionStore, routes: SurfacePageRouteRegistry): CollectionStore {
-    const pending = new Map<string, Promise<void>>();
+export function withCollectionPageRoutes(
+    store: CollectionStore,
+    routes: SurfacePageRouteRegistry,
+    options: {
+        readonly coordinator?: PageRouteMutationCoordinator;
+        readonly getSitePages?: () => Promise<readonly TPage[]>;
+    } = {},
+): CollectionStore {
+    const coordinator = options.coordinator ?? new PageRouteMutationCoordinator();
     return new Proxy(store, {
         get(target, property, receiver) {
             const value = Reflect.get(target, property, receiver);
-            if (typeof property !== "string" || typeof value !== "function" || !ROUTE_MUTATIONS.has(property)) {
+            if (typeof property !== "string" || typeof value !== "function") {
                 return value;
+            }
+            if (!ROUTE_MUTATIONS.has(property)) {
+                return value.bind(target);
             }
             return (...args: unknown[]) => {
                 const siteId = String(args[0]);
-                return serialize(pending, siteId, async () => {
+                return coordinator.run(siteId, async () => {
+                    const sitePages = options.getSitePages ? await options.getSitePages() : undefined;
+                    if (sitePages) {
+                        await synchronizePageRoutes(routes, siteId, await target.snapshot(siteId), sitePages);
+                    }
+                    if (options.getSitePages) {
+                        await validateCollectionMutationPageLinks(
+                            target,
+                            siteId,
+                            property,
+                            args,
+                            async () => sitePages!,
+                        );
+                    }
                     const result = (await Reflect.apply(value, target, args)) as CollectionSnapshot;
-                    await synchronizeCollectionPageRoutes(routes, result);
+                    if (sitePages) {
+                        await synchronizePageRoutes(routes, siteId, result, await options.getSitePages!());
+                    } else {
+                        await synchronizeCollectionPageRoutes(routes, siteId, result);
+                    }
                     return result;
                 });
             };
@@ -36,42 +70,11 @@ export function withCollectionPageRoutes(store: CollectionStore, routes: Surface
 /** Reconciles the complete installed collection snapshot and removes orphaned collection routes. */
 export async function synchronizeCollectionPageRoutes(
     routes: SurfacePageRouteRegistry,
+    siteId: string,
     snapshot: CollectionSnapshot,
 ): Promise<void> {
-    const existing = await routes.list();
     const desired = desiredRoutes(snapshot.collections);
-    assertFinalPaths(existing, desired);
-    const desiredKeys = new Set(desired.map(({ page }) => referenceKey(page)));
-    const orphaned = existing.filter(
-        (route) => route.page.kind === "collection" && !desiredKeys.has(referenceKey(route.page)),
-    );
-    await Promise.all(orphaned.map((route) => routes.remove(route.page, route.revision)));
-
-    const currentByPage = new Map(existing.map((route) => [referenceKey(route.page), route]));
-    const replacements = desired.filter(({ page, defaultPath }) => {
-        const current = currentByPage.get(referenceKey(page));
-        return current && !current.overridePath && current.defaultPath !== defaultPath;
-    });
-    await Promise.all(
-        replacements.map(({ page }) => {
-            const current = currentByPage.get(referenceKey(page))!;
-            return routes.remove(page, current.revision);
-        }),
-    );
-
-    for (const registration of desired) {
-        const current = currentByPage.get(referenceKey(registration.page));
-        if (!current || replacements.some(({ page }) => referenceKey(page) === referenceKey(registration.page))) {
-            await routes.register(registration);
-            continue;
-        }
-        if (current.surface !== registration.surface) {
-            throw new Error("A collection Page route cannot change surface");
-        }
-        if (current.defaultPath !== registration.defaultPath) {
-            await routes.updateDefault(registration.page, registration.defaultPath, current.revision);
-        }
-    }
+    await synchronizePageRouteRegistrations(routes, siteId, desired, (route) => route.page.kind === "collection");
 }
 
 function desiredRoutes(collections: readonly InstalledCollection[]) {
@@ -87,45 +90,4 @@ function desiredRoutes(collections: readonly InstalledCollection[]) {
             defaultPath: page.defaultPath,
         })),
     );
-}
-
-function assertFinalPaths(existing: readonly SurfacePageRoute[], desired: ReturnType<typeof desiredRoutes>): void {
-    const currentByPage = new Map(existing.map((route) => [referenceKey(route.page), route]));
-    const occupied = new Set(
-        existing.filter((route) => route.page.kind === "site").map((route) => `${route.surface}:${route.path}`),
-    );
-    for (const registration of desired) {
-        const current = currentByPage.get(referenceKey(registration.page));
-        const path = current?.overridePath ?? registration.defaultPath;
-        const key = `${registration.surface}:${path}`;
-        if (occupied.has(key)) {
-            throw Object.assign(new Error(`Page route already belongs to another Page: ${path}`), { status: 409 });
-        }
-        occupied.add(key);
-    }
-}
-
-function referenceKey(page: PageReference): string {
-    return page.kind === "site"
-        ? `site:${page.pageId}`
-        : `collection:${page.publisherId}:${page.collectionId}:${page.pageId}`;
-}
-
-async function serialize<T>(pending: Map<string, Promise<void>>, key: string, operation: () => Promise<T>): Promise<T> {
-    const previous = pending.get(key) ?? Promise.resolve();
-    let release!: () => void;
-    const next = new Promise<void>((resolve) => {
-        release = resolve;
-    });
-    const queued = previous.then(() => next);
-    pending.set(key, queued);
-    await previous;
-    try {
-        return await operation();
-    } finally {
-        release();
-        if (pending.get(key) === queued) {
-            pending.delete(key);
-        }
-    }
 }

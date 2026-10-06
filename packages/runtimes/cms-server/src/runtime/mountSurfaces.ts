@@ -10,6 +10,7 @@ import { ProviderManagement } from "./gateway/ProviderManagement";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
 import { createContentReader } from "@bernouy/cms-content/rendering";
 import { mountLocalCoreCapabilities } from "./coreCapabilities";
+import { DefaultCoreCapabilityDispatcher, registerCmsPageCoreCapabilities } from "@bernouy/cms-content";
 
 export type { ProductionSurfaceRuntime } from "./surfaceRuntime";
 
@@ -32,7 +33,9 @@ export async function mountProductionSurfaces(
     const { env, core, features, authentication, gateway } = options;
     const controlRunner = new runtime.Runner();
     if (env.CMS_LOCAL_PROVIDER_TOKEN) {
-        mountLocalCoreCapabilities(controlRunner, core.repo, env.CMS_LOCAL_PROVIDER_TOKEN);
+        const dispatcher = new DefaultCoreCapabilityDispatcher();
+        registerCmsPageCoreCapabilities(dispatcher, core.repo);
+        mountLocalCoreCapabilities(controlRunner, dispatcher, env.CMS_LOCAL_PROVIDER_TOKEN);
     }
     const providerSources = env.CMS_REPOSITORY_URL ? [new HttpProviderRepository("local", env.CMS_REPOSITORY_URL)] : [];
     const controlCms = new runtime.Control(

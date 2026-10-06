@@ -6,8 +6,8 @@ import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import type { IdentityService } from "@bernouy/cms-gateway/identity";
 import { ProviderImageService } from "@bernouy/cms-gateway/media";
-import { DefaultCollectionPageExecutionAuthority } from "@bernouy/cms-gateway/execution";
-import { MongoCollectionPageExecutionGrantStore } from "@bernouy/cms-gateway/execution/mongo";
+import { DefaultPageExecutionAuthority } from "@bernouy/cms-gateway/execution";
+import { MongoPageExecutionGrantStore } from "@bernouy/cms-gateway/execution/mongo";
 import { LocalProviderImageStore } from "@bernouy/cms-gateway/media/local-fs";
 import { SharpImageTransformer } from "@bernouy/cms-gateway/media/sharp";
 import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
@@ -39,11 +39,7 @@ export async function createProductionGateway(
     const dependencies = new CatalogueSelectionDependencies(releases, manifests, installations);
     const selections = new MongoContractSelectionStore(db, dependencies);
     const routes = new CatalogueGatewayRouteResolver({ selections, installations, releases, manifests });
-    const pageExecutions = new DefaultCollectionPageExecutionAuthority(
-        selections,
-        routes,
-        new MongoCollectionPageExecutionGrantStore(db),
-    );
+    const pageExecutions = new DefaultPageExecutionAuthority(selections, routes, new MongoPageExecutionGrantStore(db));
     const catalogue = new SelectedGatewayCatalogue(selections, routes);
     const resolveSecret = createSecretResolver(secrets);
     const network = new NodeGatewayHttpNetwork({

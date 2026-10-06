@@ -1,4 +1,4 @@
-import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
+import { MAX_CAPABILITY_JSON_DEPTH, parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import { MAX_GATEWAY_JSON_BYTES } from "cms-gateway/invocation/core/snapshotInvocation";
 
@@ -33,7 +33,7 @@ export async function readGatewayHttpInput(request: Request): Promise<unknown> {
             bytes.set(chunk, offset);
             offset += chunk.byteLength;
         }
-        return parseStrictJson(bytes, MAX_GATEWAY_JSON_BYTES, 64);
+        return parseStrictJson(bytes, MAX_GATEWAY_JSON_BYTES, MAX_CAPABILITY_JSON_DEPTH);
     } catch {
         throw new GatewayError("invalid_input", "capability input is not bounded interoperable JSON");
     }

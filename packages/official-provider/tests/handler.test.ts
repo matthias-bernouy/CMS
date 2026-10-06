@@ -131,7 +131,13 @@ test("the official provider accepts canonical gateway paths and declared error e
         });
         const request = (path: string, init: RequestInit = {}) =>
             handler(
-                new Request(`http://127.0.0.1${path}`, { ...init, headers: { authorization: "Bearer test-token" } }),
+                new Request(`http://127.0.0.1${path}`, {
+                    ...init,
+                    headers: {
+                        authorization: "Bearer test-token",
+                        ...(init.body ? { "content-type": "application/json" } : {}),
+                    },
+                }),
             );
         expect((await handler(new Request("http://127.0.0.1/v1/catalog/items"))).status).toBe(401);
         const instanceList = await request("/v1/cms-instances?limit=1");

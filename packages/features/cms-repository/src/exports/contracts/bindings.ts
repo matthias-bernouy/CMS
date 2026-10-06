@@ -18,3 +18,4 @@ export type {
 export { compileContractBindings } from "cms-repository/contracts/core/bindings/compileContractBindings";
 export { compileHttpBinding } from "cms-repository/contracts/core/bindings/compileHttpBinding";
 export { decodeHttpParameter, encodeHttpParameter } from "cms-repository/contracts/core/bindings/parameters/codec";
+export { pathTemplatesOverlap } from "cms-repository/contracts/core/bindings/pathTemplate";

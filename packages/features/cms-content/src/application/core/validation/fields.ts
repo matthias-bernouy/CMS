@@ -44,12 +44,12 @@ export function validateCategory(value: string, max = 50): string {
     return trimmed;
 }
 
-const MAX_CONTENT = 5_000_000;
+export const MAX_PAGE_CONTENT_LENGTH = 1024 * 1024;
 
 /** Stored rich-text/HTML content: size-bounded then DOM-hardened (sanitized). */
 export function validateContent(value: string): string {
-    if (value.length > MAX_CONTENT) {
-        throw new ContentValidationError("content", `too long; max ${MAX_CONTENT} chars`);
+    if (value.length > MAX_PAGE_CONTENT_LENGTH) {
+        throw new ContentValidationError("content", `too long; max ${MAX_PAGE_CONTENT_LENGTH} chars`);
     }
     return validatePageContentMarkup(value);
 }

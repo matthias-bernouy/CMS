@@ -8,11 +8,12 @@ import {
 import {
     cloneSurfacePageRoute,
     nextSurfacePageRoute,
-    pageReferenceKey,
-    pageRouteKey,
+    pageScopeKey,
+    scopedPageRouteKey,
     validatePageReference,
+    validateSiteId,
+    validateSurfacePagePath,
 } from "cms-content/pages/core/routing/values";
-import { validatePagePath } from "cms-content/pages/core/validation/page";
 import type {
     PageReference,
     SurfacePageRoute,
@@ -22,30 +23,35 @@ import type {
 
 interface SurfacePageRouteDocument extends SurfacePageRoute {
     readonly _id: string;
+    readonly siteId: string;
     readonly routeKey: string;
 }
 
 export class MongoSurfacePageRouteRegistry implements SurfacePageRouteRegistry {
     readonly #routes: Collection<SurfacePageRouteDocument>;
-    readonly #ready: Promise<string>;
+    readonly #ready: Promise<unknown>;
 
     constructor(db: Db, collectionPrefix = "") {
         this.#routes = db.collection(`${collectionPrefix}cms_surface_page_routes`);
-        this.#ready = this.#routes.createIndex({ routeKey: 1 }, { unique: true });
+        this.#ready = Promise.all([
+            this.#routes.createIndex({ routeKey: 1 }, { unique: true }),
+            this.#routes.createIndex({ siteId: 1 }),
+        ]);
     }
 
-    async register(input: SurfacePageRouteRegistration): Promise<SurfacePageRoute> {
+    async register(siteId: string, input: SurfacePageRouteRegistration): Promise<SurfacePageRoute> {
         await this.#ready;
+        validateSiteId(siteId);
         const page = validatePageReference(input.page);
-        const path = validatePagePath(input.defaultPath);
+        const path = validateSurfacePagePath(input.surface, input.defaultPath);
         const route = { page, surface: input.surface, defaultPath: path, path, revision: 1 } as const;
         try {
-            await this.#routes.insertOne(this.#document(route));
+            await this.#routes.insertOne(this.#document(siteId, route));
         } catch (error) {
             if (!isDuplicateKey(error)) {
                 throw error;
             }
-            if (await this.#routes.findOne({ _id: pageReferenceKey(page) })) {
+            if (await this.#routes.findOne({ _id: pageScopeKey(siteId, page) })) {
                 throw new PageRouteAlreadyRegisteredError();
             }
             throw new PageRouteCollisionError(path);
@@ -53,51 +59,64 @@ export class MongoSurfacePageRouteRegistry implements SurfacePageRouteRegistry {
         return cloneSurfacePageRoute(route);
     }
 
-    async list(): Promise<readonly SurfacePageRoute[]> {
+    async list(siteId: string): Promise<readonly SurfacePageRoute[]> {
         await this.#ready;
-        return (await this.#routes.find({}).toArray()).map((document) => this.#route(document));
+        return (await this.#routes.find({ siteId: validateSiteId(siteId) }).toArray()).map((document) =>
+            this.#route(document),
+        );
     }
 
-    async get(page: PageReference): Promise<SurfacePageRoute | null> {
+    async get(siteId: string, page: PageReference): Promise<SurfacePageRoute | null> {
         await this.#ready;
-        const document = await this.#routes.findOne({ _id: pageReferenceKey(page) });
+        const document = await this.#routes.findOne({ _id: pageScopeKey(siteId, page) });
         return document ? this.#route(document) : null;
     }
 
-    async resolve(surface: SurfacePageRoute["surface"], path: string): Promise<SurfacePageRoute | null> {
+    async resolve(
+        siteId: string,
+        surface: SurfacePageRoute["surface"],
+        path: string,
+    ): Promise<SurfacePageRoute | null> {
         await this.#ready;
-        const document = await this.#routes.findOne({ routeKey: pageRouteKey(surface, path) });
+        const document = await this.#routes.findOne({ routeKey: scopedPageRouteKey(siteId, surface, path) });
         return document ? this.#route(document) : null;
     }
 
-    async updateDefault(page: PageReference, defaultPath: string, expectedRevision: number): Promise<SurfacePageRoute> {
-        return this.#replace(page, expectedRevision, { defaultPath });
+    async updateDefault(
+        siteId: string,
+        page: PageReference,
+        defaultPath: string,
+        expectedRevision: number,
+    ): Promise<SurfacePageRoute> {
+        return this.#replace(siteId, page, expectedRevision, { defaultPath });
     }
 
     async setOverride(
+        siteId: string,
         page: PageReference,
         overridePath: string | null,
         expectedRevision: number,
     ): Promise<SurfacePageRoute> {
-        return this.#replace(page, expectedRevision, { overridePath });
+        return this.#replace(siteId, page, expectedRevision, { overridePath });
     }
 
-    async remove(page: PageReference, expectedRevision: number): Promise<void> {
+    async remove(siteId: string, page: PageReference, expectedRevision: number): Promise<void> {
         await this.#ready;
-        const id = pageReferenceKey(page);
+        const id = pageScopeKey(siteId, page);
         const result = await this.#routes.deleteOne({ _id: id, revision: expectedRevision });
         if (!result.deletedCount) {
-            await this.#throwMissingOrConflict(page, expectedRevision);
+            await this.#throwMissingOrConflict(siteId, page, expectedRevision);
         }
     }
 
     async #replace(
+        siteId: string,
         page: PageReference,
         expectedRevision: number,
         change: { readonly defaultPath?: string; readonly overridePath?: string | null },
     ): Promise<SurfacePageRoute> {
         await this.#ready;
-        const current = await this.get(page);
+        const current = await this.get(siteId, page);
         if (!current) {
             throw new PageRouteNotFoundError(page);
         }
@@ -107,11 +126,11 @@ export class MongoSurfacePageRouteRegistry implements SurfacePageRouteRegistry {
         const next = nextSurfacePageRoute(current, change);
         try {
             const result = await this.#routes.replaceOne(
-                { _id: pageReferenceKey(page), revision: expectedRevision },
-                this.#document(next),
+                { _id: pageScopeKey(siteId, page), revision: expectedRevision },
+                this.#document(siteId, next),
             );
             if (!result.matchedCount) {
-                await this.#throwMissingOrConflict(page, expectedRevision);
+                await this.#throwMissingOrConflict(siteId, page, expectedRevision);
             }
         } catch (error) {
             if (isDuplicateKey(error)) {
@@ -122,26 +141,29 @@ export class MongoSurfacePageRouteRegistry implements SurfacePageRouteRegistry {
         return cloneSurfacePageRoute(next);
     }
 
-    async #throwMissingOrConflict(page: PageReference, expectedRevision: number): Promise<never> {
-        const actual = await this.get(page);
+    async #throwMissingOrConflict(siteId: string, page: PageReference, expectedRevision: number): Promise<never> {
+        const actual = await this.get(siteId, page);
         if (!actual) {
             throw new PageRouteNotFoundError(page);
         }
         throw new PageRouteRevisionConflictError(expectedRevision, actual.revision);
     }
 
-    #document(route: SurfacePageRoute): SurfacePageRouteDocument {
+    #document(siteId: string, route: SurfacePageRoute): SurfacePageRouteDocument {
         return {
-            _id: pageReferenceKey(route.page),
-            routeKey: pageRouteKey(route.surface, route.path),
+            _id: pageScopeKey(siteId, route.page),
+            siteId: validateSiteId(siteId),
+            routeKey: scopedPageRouteKey(siteId, route.surface, route.path),
             ...cloneSurfacePageRoute(route),
         };
     }
 
     #route(document: SurfacePageRouteDocument): SurfacePageRoute {
-        const { _id, routeKey, ...route } = document;
-        pageReferenceKey(route.page);
-        if (routeKey !== pageRouteKey(route.surface, route.path)) {
+        const { _id, siteId, routeKey, ...route } = document;
+        if (_id !== pageScopeKey(siteId, route.page)) {
+            throw new Error("Stored surface Page identity is invalid.");
+        }
+        if (routeKey !== scopedPageRouteKey(siteId, route.surface, route.path)) {
             throw new Error("Stored surface Page route key is invalid.");
         }
         return cloneSurfacePageRoute(route);

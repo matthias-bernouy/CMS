@@ -1,6 +1,6 @@
-import type { CollectionPageExecutionConsumer, StoredCollectionPageExecutionGrant } from "./PageExecution";
+import type { PageExecutionConsumer, StoredPageExecutionGrant } from "./PageExecution";
 
-export interface CollectionPageExecutionGrantStore {
-    get(consumer: CollectionPageExecutionConsumer): Promise<StoredCollectionPageExecutionGrant | null>;
-    replace(grant: StoredCollectionPageExecutionGrant, expectedRevision: number): Promise<boolean>;
+export interface PageExecutionGrantStore {
+    get(consumer: PageExecutionConsumer): Promise<StoredPageExecutionGrant | null>;
+    replace(grant: StoredPageExecutionGrant, expectedRevision: number): Promise<boolean>;
 }

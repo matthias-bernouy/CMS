@@ -1,4 +1,5 @@
 import { pageRequirements } from "@bernouy/cms-repository/collections";
+import { createBlocUsageResolver } from "@bernouy/cms-content";
 import { GatewayError } from "@bernouy/cms-gateway";
 import type { GatewayExecutionPin } from "@bernouy/cms-gateway/execution";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
@@ -17,21 +18,40 @@ export async function authorizeControlPageCall(
     const snapshot = await controlPageSnapshot(state);
     const selected = referred && snapshot ? findControlPage(snapshot, referred) : null;
     if (!authority || !snapshot || !selected) {
-        throw new GatewayError("not_authorized", "A current collection Page execution plan is required");
+        throw new GatewayError("not_authorized", "A current Page execution plan is required");
     }
     const releases = snapshot.collections.map(({ release }) => release);
     const consumer = executionConsumer(state, selected);
+    const requirements =
+        selected.kind === "collection"
+            ? pageRequirements(releases, selected.page)
+            : pageRequirements(releases, {
+                  uses: await createBlocUsageResolver(
+                      await state.repository.getBlocsList({ includeInactive: true }),
+                      state.repository,
+                  )(selected.page.content),
+                  requires: [],
+              });
     await authority.activate({
         consumer,
-        requirements: pageRequirements(releases, selected.page),
+        requirements,
     });
     return authority.authorize({ ...consumer, contractId, capabilityId });
 }
 
 function executionConsumer(state: ControlCmsState, selected: InstalledControlPage) {
     const configured = state.configuration.capabilityGateway!;
+    if (selected.kind === "site") {
+        return {
+            kind: "site" as const,
+            siteId: configured.siteId,
+            pageId: selected.page.id,
+            pageRevision: selected.page.revision,
+        };
+    }
     const { installation, page } = selected;
     return {
+        kind: "collection" as const,
         siteId: configured.siteId,
         publisherId: installation.release.publisherId,
         collectionId: installation.collectionId,

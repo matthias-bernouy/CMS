@@ -88,11 +88,28 @@ test("collection Pages admit typed capability forms without browser-owned action
 });
 
 test("collection Pages admit stable Page links without authored routes", () => {
-    const source = collectionDocument({ "page.overview.name": "Overview" });
-    const reference =
-        '{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"details"}';
+    const source = collectionDocument({
+        "page.overview.name": "Overview",
+        "page.details.name": "Details",
+        "page.private.name": "Private",
+    });
+    const reference = '{"kind":"collection","publisherId":"atlas.official","collectionId":"atlas","pageId":"details"}';
     const html = `<section><a data-cms-page-ref='${reference}' data-cms-page-suffix="?id={{ page.id }}">Details</a></section>`;
-    expect(() => parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }] })).not.toThrow();
+    const details = { ...page, id: "details", defaultPath: "/admin/details", name: "page.details.name" };
+    expect(() =>
+        parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }, details] }),
+    ).not.toThrow();
+    expect(() => parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }] })).toThrow(
+        /unknown Page details/,
+    );
+    const delivery = {
+        ...page,
+        id: "public",
+        surface: "delivery",
+        defaultPath: "/public",
+        document: { html },
+    };
+    expect(() => parseCollectionRelease({ ...source, pages: [delivery, details] })).toThrow(/cannot link to Control/);
     for (const invalidHtml of [
         `<div data-cms-page-ref='${reference}'></div>`,
         `<a data-cms-page-ref='${reference}' data-cms-page-suffix="/admin/pages"></a>`,

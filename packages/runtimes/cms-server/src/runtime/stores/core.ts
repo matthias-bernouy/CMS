@@ -2,9 +2,12 @@ import { CollectionStore } from "@bernouy/cms-repository/collections/installatio
 import { MongoCollectionStorage } from "@bernouy/cms-repository/collections/mongo";
 import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
 import {
-    synchronizeCollectionPageRoutes,
+    PageRouteMutationCoordinator,
+    synchronizePageRoutes,
+    validatePageLinks,
     withCollectionPageRoutes,
     withInstalledCollections,
+    withSitePageRoutes,
 } from "@bernouy/cms-content";
 import { CollectionMigrationService, withCollectionMigrationWriteFence } from "@bernouy/cms-content/migrations";
 import {
@@ -51,11 +54,22 @@ export async function createCoreStores(env: RuntimeEnv) {
     await collectionStorage.init();
     const rawCollections = new CollectionStore(collectionStorage, new MongoReleaseCatalogue(db));
     const pageRoutes = new MongoSurfacePageRouteRegistry(db);
-    await synchronizeCollectionPageRoutes(pageRoutes, await rawCollections.snapshot(SCOPE_ID));
-    const migrationCollections = withCollectionPageRoutes(rawCollections, pageRoutes);
-    const migrationRepo = new ValidatingCmsRepository(
+    const pageRouteMutations = new PageRouteMutationCoordinator();
+    await synchronizePageRoutes(
+        pageRoutes,
+        SCOPE_ID,
+        await rawCollections.snapshot(SCOPE_ID),
+        await innerRepo.getAllPages(),
+    );
+    const migrationCollections = withCollectionPageRoutes(rawCollections, pageRoutes, {
+        coordinator: pageRouteMutations,
+        getSitePages: () => innerRepo.getAllPages(),
+    });
+    const validatedRepo = new ValidatingCmsRepository(
         withInstalledCollections(innerRepo, migrationCollections, SCOPE_ID),
     );
+    await validatePageLinks(validatedRepo, pageRoutes, SCOPE_ID);
+    const migrationRepo = withSitePageRoutes(validatedRepo, pageRoutes, SCOPE_ID, pageRouteMutations);
     const migrationStorage = new MongoCollectionMigrationStorage(db);
     await migrationStorage.init();
     const collectionMigrations = new CollectionMigrationService(migrationRepo, migrationCollections, migrationStorage, {

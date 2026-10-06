@@ -23,7 +23,7 @@ export async function resolveControlPageLinks(document: Document, state: Control
     if (links.length > MAX_PAGE_LINKS) {
         throw new Error("A Control Page contains too many Page links");
     }
-    const reader = createPageRouteReader(state.repository, registry);
+    const reader = createPageRouteReader(registry, state.configuration.collections!.siteId);
     for (const element of links) {
         const success = element.hasAttribute("data-cms-success-page-ref");
         const referenceAttribute = success ? "data-cms-success-page-ref" : "data-cms-page-ref";

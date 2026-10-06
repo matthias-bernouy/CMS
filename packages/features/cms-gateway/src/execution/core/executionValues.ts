@@ -1,15 +1,11 @@
 import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
-import type {
-    CollectionPageExecutionActivation,
-    CollectionPageExecutionConsumer,
-    CollectionPageExecutionPlan,
-} from "../interfaces/PageExecution";
+import type { PageExecutionActivation, PageExecutionConsumer, PageExecutionPlan } from "../interfaces/PageExecution";
 
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*$/u;
 const DIGEST = /^sha256:[0-9a-f]{64}$/u;
 
-export function snapshotActivation(input: CollectionPageExecutionActivation): CollectionPageExecutionActivation {
+export function snapshotActivation(input: PageExecutionActivation): PageExecutionActivation {
     const consumer = snapshotConsumer(input.consumer);
     if (!Array.isArray(input.requirements) || input.requirements.length > 256) {
         throw new GatewayError("invalid_input", "page execution requirements are invalid");
@@ -31,22 +27,38 @@ export function snapshotActivation(input: CollectionPageExecutionActivation): Co
     return Object.freeze({ consumer, requirements: Object.freeze(requirements) });
 }
 
-export function snapshotConsumer(value: CollectionPageExecutionConsumer): CollectionPageExecutionConsumer {
+export function snapshotConsumer(value: PageExecutionConsumer): PageExecutionConsumer {
     if (!value || typeof value !== "object") {
         throw new GatewayError("invalid_input", "page execution consumer is required");
-    }
-    for (const [name, field] of Object.entries({
-        publisher: value.publisherId,
-        collection: value.collectionId,
-        page: value.pageId,
-    })) {
-        requireIdentifier(field, name);
     }
     if (
         typeof value.siteId !== "string" ||
         !value.siteId ||
         value.siteId !== value.siteId.trim() ||
-        value.siteId.length > 128 ||
+        value.siteId.length > 128
+    ) {
+        throw new GatewayError("invalid_input", "page execution consumer metadata is invalid");
+    }
+    requireIdentifier(value.pageId, "page");
+    if (value.kind === "site") {
+        if (!Number.isSafeInteger(value.pageRevision) || value.pageRevision < 1) {
+            throw new GatewayError("invalid_input", "site Page execution revision is invalid");
+        }
+        return Object.freeze({
+            kind: "site",
+            siteId: value.siteId,
+            pageId: value.pageId,
+            pageRevision: value.pageRevision,
+        });
+    }
+    for (const [name, field] of Object.entries({
+        publisher: value.publisherId,
+        collection: value.collectionId,
+    })) {
+        requireIdentifier(field, name);
+    }
+    if (
+        value.kind !== "collection" ||
         typeof value.collectionVersion !== "string" ||
         !value.collectionVersion ||
         value.collectionVersion.length > 128 ||
@@ -58,6 +70,7 @@ export function snapshotConsumer(value: CollectionPageExecutionConsumer): Collec
         throw new GatewayError("invalid_input", "page execution consumer metadata is invalid");
     }
     return Object.freeze({
+        kind: "collection",
         siteId: value.siteId,
         publisherId: value.publisherId,
         collectionId: value.collectionId,
@@ -81,7 +94,7 @@ export function sameSelection(
     );
 }
 
-export async function digestPlan(plan: CollectionPageExecutionPlan): Promise<`sha256:${string}`> {
+export async function digestPlan(plan: PageExecutionPlan): Promise<`sha256:${string}`> {
     const bytes = new TextEncoder().encode(canonicalizeIJson(plan));
     const hash = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
     return `sha256:${Array.from(hash, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;

@@ -4,6 +4,7 @@ import { DEFAULT_COLLECTION_LIMITS } from "../../core/limits";
 import { validateMarkup } from "../../core/validation/markup/validateMarkup";
 import { satisfiesVersionRange } from "../../../exports/contracts/compatibility";
 import type { CollectionInstallation, CollectionStorage } from "../interfaces/store";
+import { assertCompatibleSurface, pageReferences } from "../../core/parsing/pages/references";
 
 export async function assertInstallableCollectionResources(
     storage: CollectionStorage,
@@ -39,10 +40,43 @@ export function assertCollectionResourceIsolation(releases: readonly CollectionR
     }
     assertCollectionDependencies(releases);
     validatePageBlocSurfaces(releases);
+    validateInstalledPageReferences(releases);
     validateMarkup(
         releases.flatMap((release) => release.blocs),
         DEFAULT_COLLECTION_LIMITS,
     );
+}
+
+function validateInstalledPageReferences(releases: readonly CollectionRelease[]): void {
+    const pages = new Map(
+        releases.flatMap((release) =>
+            (release.pages ?? []).map(
+                (page) => [`${release.publisherId}\0${release.collectionId}\0${page.id}`, { release, page }] as const,
+            ),
+        ),
+    );
+    for (const release of releases) {
+        for (const page of release.pages ?? []) {
+            for (const reference of pageReferences(page.document.html)) {
+                if (reference.kind === "site") {
+                    continue;
+                }
+                const target = pages.get(`${reference.publisherId}\0${reference.collectionId}\0${reference.pageId}`);
+                if (!target) {
+                    reject(
+                        `Collection Page ${release.collectionId}.${page.id} references unavailable Page ${reference.collectionId}.${reference.pageId}`,
+                    );
+                }
+                assertCompatibleSurface(
+                    page.surface,
+                    target.page.surface,
+                    release.collectionId,
+                    page.id,
+                    reference.pageId,
+                );
+            }
+        }
+    }
 }
 
 function assertCollectionDependencies(releases: readonly CollectionRelease[]): void {

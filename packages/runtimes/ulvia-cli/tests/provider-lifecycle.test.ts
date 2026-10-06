@@ -3,10 +3,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { CapabilityGateway, type GatewayRoute } from "@bernouy/cms-gateway";
-import {
-    DefaultCollectionPageExecutionAuthority,
-    InMemoryCollectionPageExecutionGrantStore,
-} from "@bernouy/cms-gateway/execution";
+import { DefaultPageExecutionAuthority, InMemoryPageExecutionGrantStore } from "@bernouy/cms-gateway/execution";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { type CatalogueContractRelease, InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/catalogue";
@@ -79,12 +76,13 @@ test("provider instance discovery follows the admitted plan and opaque credentia
         const route = gatewayRoute(lifecycle, manifestAdmission, report);
         const stored = storedSelections(route);
         const routes = { resolve: async () => route, isCurrent: async () => true };
-        const authority = new DefaultCollectionPageExecutionAuthority(
+        const authority = new DefaultPageExecutionAuthority(
             { get: async () => stored },
             routes,
-            new InMemoryCollectionPageExecutionGrantStore(),
+            new InMemoryPageExecutionGrantStore(),
         );
         const consumer = {
+            kind: "collection",
             siteId: "default",
             publisherId: "ulvia.official",
             collectionId: "ulvia.control",

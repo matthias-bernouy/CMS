@@ -21,6 +21,7 @@ export const CMS_REPOSITORY_FENCED_MUTATIONS = [
 
 const CMS_REPOSITORY_NON_MUTATIONS = [
     "getInstalledCollections",
+    "getInstalledCollectionRevision",
     "getSiteBlocCollections",
     "getBlocRecord",
     "getBlocRecords",

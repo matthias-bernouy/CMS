@@ -1,26 +1,15 @@
 import { timingSafeEqual } from "node:crypto";
-import {
-    CmsPageNotFoundError,
-    ContentValidationError,
-    createCmsPage,
-    deleteCmsPage,
-    DuplicatePagePathError,
-    getCmsPage,
-    listCmsPages,
-    PageRevisionConflictError,
-    publishCmsPage,
-    renameCmsPage,
-    updateCmsPage,
-    type CmsRepository,
-} from "@bernouy/cms-content";
+import { CoreCapabilityDispatchError, type CoreCapabilityDispatcher } from "@bernouy/cms-content";
 import type { Runner } from "@bernouy/http-runner";
 import { readBoundedRequestBody, RequestBodyTooLargeError } from "@bernouy/http-runner";
-import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
+import {
+    MAX_CAPABILITY_JSON_BYTES,
+    MAX_CAPABILITY_JSON_DEPTH,
+    parseStrictJson,
+} from "@bernouy/cms-repository/contracts/protocol";
 
 export const LOCAL_CORE_CAPABILITY_ROUTE = "/.cms/internal/core-call";
-const MAX_INPUT_BYTES = 2 * 1024 * 1024 + 16 * 1024;
-
-export function mountLocalCoreCapabilities(runner: Runner, repository: CmsRepository, token: string): void {
+export function mountLocalCoreCapabilities(runner: Runner, dispatcher: CoreCapabilityDispatcher, token: string): void {
     if (token.length < 24 || token.length > 256) {
         throw new Error("CMS_LOCAL_PROVIDER_TOKEN must contain between 24 and 256 characters.");
     }
@@ -32,73 +21,17 @@ export function mountLocalCoreCapabilities(runner: Runner, repository: CmsReposi
             return new Response(null, { status: 415 });
         }
         try {
-            const bytes = await readBoundedRequestBody(request, MAX_INPUT_BYTES);
-            const call = parseCall(parseStrictJson(bytes, MAX_INPUT_BYTES, 8));
-            if (call.contractId !== "ulvia.cms.pages") {
-                return new Response(null, { status: 404 });
-            }
-            if (call.capabilityId === "list") {
-                return noStoreJson(await listCmsPages(repository, call.input));
-            }
-            if (call.capabilityId === "get") {
-                return pageCommand(() => getCmsPage(repository, call.input as never));
-            }
-            if (call.capabilityId === "create") {
-                return pageCommand(() => createCmsPage(repository, call.input as never));
-            }
-            if (call.capabilityId === "update") {
-                return pageCommand(() => updateCmsPage(repository, call.input as never));
-            }
-            if (call.capabilityId === "publish") {
-                return pageCommand(() => publishCmsPage(repository, call.input as never));
-            }
-            if (call.capabilityId === "delete") {
-                return pageCommand(() => deleteCmsPage(repository, call.input as never));
-            }
-            if (call.capabilityId === "rename") {
-                try {
-                    return noStoreJson(
-                        await renameCmsPage(repository, call.input as unknown as Parameters<typeof renameCmsPage>[1]),
-                    );
-                } catch (error) {
-                    if (error instanceof CmsPageNotFoundError) {
-                        return coreError("NOT_FOUND", 404);
-                    }
-                    if (error instanceof PageRevisionConflictError) {
-                        return coreError("REVISION_CONFLICT", 409);
-                    }
-                    if (error instanceof ContentValidationError) {
-                        return coreError("INVALID_TITLE", 422);
-                    }
-                    throw error;
-                }
-            }
-            return new Response(null, { status: 404 });
+            const bytes = await readBoundedRequestBody(request, MAX_CAPABILITY_JSON_BYTES);
+            const call = parseCall(parseStrictJson(bytes, MAX_CAPABILITY_JSON_BYTES, MAX_CAPABILITY_JSON_DEPTH));
+            return noStoreJson(await dispatcher.invoke(call.contractId, call.capabilityId, call.input));
         } catch (error) {
+            if (error instanceof CoreCapabilityDispatchError) {
+                return coreError(error.code, error.status);
+            }
             const status = error instanceof RequestBodyTooLargeError ? 413 : 400;
             return new Response(null, { status, headers: { "Cache-Control": "no-store" } });
         }
     });
-}
-
-async function pageCommand(operation: () => Promise<unknown>): Promise<Response> {
-    try {
-        return noStoreJson(await operation());
-    } catch (error) {
-        if (error instanceof CmsPageNotFoundError) {
-            return coreError("NOT_FOUND", 404);
-        }
-        if (error instanceof PageRevisionConflictError) {
-            return coreError("REVISION_CONFLICT", 409);
-        }
-        if (error instanceof DuplicatePagePathError) {
-            return coreError("PATH_CONFLICT", 409);
-        }
-        if (error instanceof ContentValidationError || error instanceof TypeError) {
-            return coreError("INVALID_PAGE", 422);
-        }
-        throw error;
-    }
 }
 
 function noStoreJson(value: unknown): Response {

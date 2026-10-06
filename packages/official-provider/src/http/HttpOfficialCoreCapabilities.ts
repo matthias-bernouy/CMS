@@ -1,7 +1,10 @@
-import { parseStrictJson } from "@bernouy/cms-repository/contracts/protocol";
+import {
+    canonicalIJsonBytes,
+    MAX_CAPABILITY_JSON_BYTES,
+    MAX_CAPABILITY_JSON_DEPTH,
+    parseStrictJson,
+} from "@bernouy/cms-repository/contracts/protocol";
 import { OfficialCoreCapabilityError, type OfficialCoreCapabilities } from "../core/coreCapabilities";
-
-const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 
 export class HttpOfficialCoreCapabilities implements OfficialCoreCapabilities {
     readonly #url: string;
@@ -29,6 +32,10 @@ export class HttpOfficialCoreCapabilities implements OfficialCoreCapabilities {
     }
 
     async invoke(contractId: string, capabilityId: string, input: Readonly<Record<string, unknown>>): Promise<unknown> {
+        const body = canonicalIJsonBytes({ contractId, capabilityId, input }, MAX_CAPABILITY_JSON_DEPTH);
+        if (body.byteLength > MAX_CAPABILITY_JSON_BYTES) {
+            throw new TypeError("The Core capability call exceeds the shared JSON envelope budget.");
+        }
         const response = await this.#fetch(this.#url, {
             method: "POST",
             redirect: "manual",
@@ -37,14 +44,14 @@ export class HttpOfficialCoreCapabilities implements OfficialCoreCapabilities {
                 Authorization: `Bearer ${this.#token}`,
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ contractId, capabilityId, input }),
+            body: new TextDecoder().decode(body),
         });
         if (response.headers.get("content-type")?.split(";", 1)[0] !== "application/json") {
             await response.body?.cancel();
             throw new Error("The selected local Core rejected the capability call.");
         }
-        const bytes = await readBoundedResponse(response, MAX_RESPONSE_BYTES);
-        const output = parseStrictJson(bytes, MAX_RESPONSE_BYTES, 32);
+        const bytes = await readBoundedResponse(response, MAX_CAPABILITY_JSON_BYTES);
+        const output = parseStrictJson(bytes, MAX_CAPABILITY_JSON_BYTES, MAX_CAPABILITY_JSON_DEPTH);
         if (response.status === 200) {
             return output;
         }

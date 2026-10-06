@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import {
+    DefaultCoreCapabilityDispatcher,
+    InMemoryCmsRepository,
+    registerCmsPageCoreCapabilities,
+} from "@bernouy/cms-content";
 import type { RouteHandler, Runner } from "@bernouy/http-runner";
 import { LOCAL_CORE_CAPABILITY_ROUTE, mountLocalCoreCapabilities } from "../../src/runtime/coreCapabilities";
 
@@ -10,7 +14,7 @@ describe("local provider Core capability bridge", () => {
         const repository = new InMemoryCmsRepository();
         await repository.insertPage("/", "Home");
         const { runner, request } = capturePostRoute();
-        mountLocalCoreCapabilities(runner, repository, token);
+        mountLocalCoreCapabilities(runner, pageDispatcher(repository), token);
         const invoke = async (capabilityId: string, input: Readonly<Record<string, unknown>>) =>
             request({
                 headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
@@ -60,7 +64,7 @@ describe("local provider Core capability bridge", () => {
 
     test("rejects unknown capabilities and oversized inputs", async () => {
         const { runner, request } = capturePostRoute();
-        mountLocalCoreCapabilities(runner, new InMemoryCmsRepository(), token);
+        mountLocalCoreCapabilities(runner, pageDispatcher(new InMemoryCmsRepository()), token);
         const headers = { authorization: `Bearer ${token}`, "content-type": "application/json" };
         expect(
             (
@@ -77,13 +81,33 @@ describe("local provider Core capability bridge", () => {
                     body: JSON.stringify({
                         contractId: "ulvia.cms.pages",
                         capabilityId: "list",
-                        input: { x: "a".repeat(2 * 1024 * 1024 + 20_000) },
+                        input: { x: "a".repeat(8 * 1024 * 1024 + 20_000) },
                     }),
                 })
             ).status,
         ).toBe(413);
     });
+
+    test("accepts the shared worst-case JSON envelope budget", async () => {
+        const dispatcher = new DefaultCoreCapabilityDispatcher();
+        dispatcher.register("test.contract", "echo", async (input) => input);
+        const { runner, request } = capturePostRoute();
+        mountLocalCoreCapabilities(runner, dispatcher, token);
+        const escaped = "\u0001".repeat(1024 * 1024);
+        const response = await request({
+            headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+            body: JSON.stringify({ contractId: "test.contract", capabilityId: "echo", input: { escaped } }),
+        });
+        expect(response.status).toBe(200);
+        expect(((await response.json()) as { escaped: string }).escaped.length).toBe(1024 * 1024);
+    });
 });
+
+function pageDispatcher(repository: InMemoryCmsRepository) {
+    const dispatcher = new DefaultCoreCapabilityDispatcher();
+    registerCmsPageCoreCapabilities(dispatcher, repository);
+    return dispatcher;
+}
 
 function capturePostRoute(): { runner: Runner; request: (init: RequestInit) => Promise<Response> } {
     let handler: RouteHandler | undefined;

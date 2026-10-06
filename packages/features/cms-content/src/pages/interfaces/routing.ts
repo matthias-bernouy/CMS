@@ -31,13 +31,23 @@ export interface SurfacePageRouteRegistration {
 }
 
 export interface SurfacePageRouteRegistry {
-    register(input: SurfacePageRouteRegistration): Promise<SurfacePageRoute>;
-    list(): Promise<readonly SurfacePageRoute[]>;
-    get(page: PageReference): Promise<SurfacePageRoute | null>;
-    resolve(surface: PageSurface, path: string): Promise<SurfacePageRoute | null>;
-    updateDefault(page: PageReference, defaultPath: string, expectedRevision: number): Promise<SurfacePageRoute>;
-    setOverride(page: PageReference, overridePath: string | null, expectedRevision: number): Promise<SurfacePageRoute>;
-    remove(page: PageReference, expectedRevision: number): Promise<void>;
+    register(siteId: string, input: SurfacePageRouteRegistration): Promise<SurfacePageRoute>;
+    list(siteId: string): Promise<readonly SurfacePageRoute[]>;
+    get(siteId: string, page: PageReference): Promise<SurfacePageRoute | null>;
+    resolve(siteId: string, surface: PageSurface, path: string): Promise<SurfacePageRoute | null>;
+    updateDefault(
+        siteId: string,
+        page: PageReference,
+        defaultPath: string,
+        expectedRevision: number,
+    ): Promise<SurfacePageRoute>;
+    setOverride(
+        siteId: string,
+        page: PageReference,
+        overridePath: string | null,
+        expectedRevision: number,
+    ): Promise<SurfacePageRoute>;
+    remove(siteId: string, page: PageReference, expectedRevision: number): Promise<void>;
 }
 
 export interface PageRouteReader {

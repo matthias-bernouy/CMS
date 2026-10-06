@@ -7,11 +7,12 @@ import {
 import {
     cloneSurfacePageRoute,
     nextSurfacePageRoute,
-    pageReferenceKey,
-    pageRouteKey,
+    pageScopeKey,
+    scopedPageRouteKey,
     validatePageReference,
+    validateSiteId,
+    validateSurfacePagePath,
 } from "cms-content/pages/core/routing/values";
-import { validatePagePath } from "cms-content/pages/core/validation/page";
 import type {
     PageReference,
     SurfacePageRoute,
@@ -23,73 +24,88 @@ export class InMemorySurfacePageRouteRegistry implements SurfacePageRouteRegistr
     readonly #byPage = new Map<string, SurfacePageRoute>();
     readonly #byRoute = new Map<string, string>();
 
-    async register(input: SurfacePageRouteRegistration): Promise<SurfacePageRoute> {
+    async register(siteId: string, input: SurfacePageRouteRegistration): Promise<SurfacePageRoute> {
+        validateSiteId(siteId);
         const page = validatePageReference(input.page);
-        const pageKey = pageReferenceKey(page);
+        const pageKey = pageScopeKey(siteId, page);
         if (this.#byPage.has(pageKey)) {
             throw new PageRouteAlreadyRegisteredError();
         }
-        const path = validatePagePath(input.defaultPath);
-        this.#assertAvailable(input.surface, path);
+        const path = validateSurfacePagePath(input.surface, input.defaultPath);
+        this.#assertAvailable(siteId, input.surface, path);
         const route = { page, surface: input.surface, defaultPath: path, path, revision: 1 } as const;
         this.#byPage.set(pageKey, route);
-        this.#byRoute.set(pageRouteKey(input.surface, path), pageKey);
+        this.#byRoute.set(scopedPageRouteKey(siteId, input.surface, path), pageKey);
         return cloneSurfacePageRoute(route);
     }
 
-    async list(): Promise<readonly SurfacePageRoute[]> {
-        return [...this.#byPage.values()].map(cloneSurfacePageRoute);
+    async list(siteId: string): Promise<readonly SurfacePageRoute[]> {
+        const prefix = `${JSON.stringify([validateSiteId(siteId)]).slice(0, -1)},`;
+        return [...this.#byPage.entries()]
+            .filter(([key]) => key.startsWith(prefix))
+            .map(([, route]) => cloneSurfacePageRoute(route));
     }
 
-    async get(page: PageReference): Promise<SurfacePageRoute | null> {
-        const route = this.#byPage.get(pageReferenceKey(page));
+    async get(siteId: string, page: PageReference): Promise<SurfacePageRoute | null> {
+        const route = this.#byPage.get(pageScopeKey(siteId, page));
         return route ? cloneSurfacePageRoute(route) : null;
     }
 
-    async resolve(surface: SurfacePageRoute["surface"], path: string): Promise<SurfacePageRoute | null> {
-        const pageKey = this.#byRoute.get(pageRouteKey(surface, path));
+    async resolve(
+        siteId: string,
+        surface: SurfacePageRoute["surface"],
+        path: string,
+    ): Promise<SurfacePageRoute | null> {
+        const pageKey = this.#byRoute.get(scopedPageRouteKey(siteId, surface, path));
         const route = pageKey ? this.#byPage.get(pageKey) : undefined;
         return route ? cloneSurfacePageRoute(route) : null;
     }
 
-    async updateDefault(page: PageReference, defaultPath: string, expectedRevision: number): Promise<SurfacePageRoute> {
-        return this.#replace(page, expectedRevision, { defaultPath });
+    async updateDefault(
+        siteId: string,
+        page: PageReference,
+        defaultPath: string,
+        expectedRevision: number,
+    ): Promise<SurfacePageRoute> {
+        return this.#replace(siteId, page, expectedRevision, { defaultPath });
     }
 
     async setOverride(
+        siteId: string,
         page: PageReference,
         overridePath: string | null,
         expectedRevision: number,
     ): Promise<SurfacePageRoute> {
-        return this.#replace(page, expectedRevision, { overridePath });
+        return this.#replace(siteId, page, expectedRevision, { overridePath });
     }
 
-    async remove(page: PageReference, expectedRevision: number): Promise<void> {
-        const current = this.#current(page, expectedRevision);
-        const pageKey = pageReferenceKey(page);
+    async remove(siteId: string, page: PageReference, expectedRevision: number): Promise<void> {
+        const current = this.#current(siteId, page, expectedRevision);
+        const pageKey = pageScopeKey(siteId, page);
         this.#byPage.delete(pageKey);
-        this.#byRoute.delete(pageRouteKey(current.surface, current.path));
+        this.#byRoute.delete(scopedPageRouteKey(siteId, current.surface, current.path));
     }
 
     #replace(
+        siteId: string,
         page: PageReference,
         expectedRevision: number,
         change: { readonly defaultPath?: string; readonly overridePath?: string | null },
     ): SurfacePageRoute {
-        const current = this.#current(page, expectedRevision);
+        const current = this.#current(siteId, page, expectedRevision);
         const next = nextSurfacePageRoute(current, change);
-        const pageKey = pageReferenceKey(page);
+        const pageKey = pageScopeKey(siteId, page);
         if (next.path !== current.path) {
-            this.#assertAvailable(next.surface, next.path, pageKey);
-            this.#byRoute.delete(pageRouteKey(current.surface, current.path));
-            this.#byRoute.set(pageRouteKey(next.surface, next.path), pageKey);
+            this.#assertAvailable(siteId, next.surface, next.path, pageKey);
+            this.#byRoute.delete(scopedPageRouteKey(siteId, current.surface, current.path));
+            this.#byRoute.set(scopedPageRouteKey(siteId, next.surface, next.path), pageKey);
         }
         this.#byPage.set(pageKey, next);
         return cloneSurfacePageRoute(next);
     }
 
-    #current(page: PageReference, expectedRevision: number): SurfacePageRoute {
-        const current = this.#byPage.get(pageReferenceKey(page));
+    #current(siteId: string, page: PageReference, expectedRevision: number): SurfacePageRoute {
+        const current = this.#byPage.get(pageScopeKey(siteId, page));
         if (!current) {
             throw new PageRouteNotFoundError(page);
         }
@@ -99,8 +115,8 @@ export class InMemorySurfacePageRouteRegistry implements SurfacePageRouteRegistr
         return current;
     }
 
-    #assertAvailable(surface: SurfacePageRoute["surface"], path: string, owner?: string): void {
-        const existing = this.#byRoute.get(pageRouteKey(surface, path));
+    #assertAvailable(siteId: string, surface: SurfacePageRoute["surface"], path: string, owner?: string): void {
+        const existing = this.#byRoute.get(scopedPageRouteKey(siteId, surface, path));
         if (existing && existing !== owner) {
             throw new PageRouteCollisionError(path);
         }

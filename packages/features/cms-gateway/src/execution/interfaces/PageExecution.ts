@@ -1,7 +1,8 @@
 import type { CollectionCapabilityRequirement } from "@bernouy/cms-repository/collections";
 import type { ReleaseDigest } from "@bernouy/cms-repository/contracts";
 
-export interface CollectionPageExecutionConsumer {
+export interface InstalledCollectionPageExecutionConsumer {
+    readonly kind: "collection";
     readonly siteId: string;
     readonly publisherId: string;
     readonly collectionId: string;
@@ -11,7 +12,16 @@ export interface CollectionPageExecutionConsumer {
     readonly pageGeneration: number;
 }
 
-export interface CollectionPageExecutionTarget {
+export interface SitePageExecutionConsumer {
+    readonly kind: "site";
+    readonly siteId: string;
+    readonly pageId: string;
+    readonly pageRevision: number;
+}
+
+export type PageExecutionConsumer = InstalledCollectionPageExecutionConsumer | SitePageExecutionConsumer;
+
+export interface PageExecutionTarget {
     readonly contractId: string;
     readonly capabilityIds: readonly string[];
     readonly version: string;
@@ -19,24 +29,24 @@ export interface CollectionPageExecutionTarget {
     readonly installationId: string;
 }
 
-/** Immutable authority snapshot for one installed collection Page. */
-export interface CollectionPageExecutionPlan {
-    readonly protocol: "ulvia-page-execution/v1";
-    readonly consumer: CollectionPageExecutionConsumer;
+/** Immutable authority snapshot for one collection-owned or site-owned Page. */
+export interface PageExecutionPlan {
+    readonly protocol: "ulvia-page-execution/v2";
+    readonly consumer: PageExecutionConsumer;
     readonly selectionRevision: number;
     readonly dependencyRevision: string;
     readonly requirements: readonly CollectionCapabilityRequirement[];
-    readonly targets: readonly CollectionPageExecutionTarget[];
+    readonly targets: readonly PageExecutionTarget[];
 }
 
-export interface StoredCollectionPageExecutionGrant {
+export interface StoredPageExecutionGrant {
     readonly revision: number;
     readonly planDigest: `sha256:${string}`;
-    readonly plan: CollectionPageExecutionPlan;
+    readonly plan: PageExecutionPlan;
 }
 
-export interface CollectionPageExecutionActivation {
-    readonly consumer: CollectionPageExecutionConsumer;
+export interface PageExecutionActivation {
+    readonly consumer: PageExecutionConsumer;
     readonly requirements: readonly CollectionCapabilityRequirement[];
 }
 
@@ -48,12 +58,12 @@ export interface GatewayExecutionPin {
     readonly installationId: string;
 }
 
-export interface CollectionPageExecutionRequest extends CollectionPageExecutionConsumer {
+export type PageExecutionRequest = PageExecutionConsumer & {
     readonly contractId: string;
     readonly capabilityId: string;
-}
+};
 
-export interface CollectionPageExecutionAuthority {
-    activate(input: CollectionPageExecutionActivation): Promise<StoredCollectionPageExecutionGrant>;
-    authorize(input: CollectionPageExecutionRequest): Promise<GatewayExecutionPin>;
+export interface PageExecutionAuthority {
+    activate(input: PageExecutionActivation): Promise<StoredPageExecutionGrant>;
+    authorize(input: PageExecutionRequest): Promise<GatewayExecutionPin>;
 }

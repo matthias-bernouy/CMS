@@ -11,6 +11,7 @@ import type { CmsRepository } from "cms-content/application/interfaces/CmsReposi
 import type { BlocRecord, TBloc } from "cms-content/blocs/interfaces/blocs";
 import { presentationImageContentType } from "cms-content/blocs/core/presentationImage";
 import { compileCollectionComponent } from "./compiledComponent";
+import { createInstalledSnapshotReader } from "./installedSnapshot";
 
 /** Installed resources are projected from their immutable release, never copied into editable bloc storage. */
 export function withInstalledCollections(
@@ -26,6 +27,7 @@ export function withInstalledCollections(
     };
     let cache: InstalledState | undefined;
     let pending: Promise<InstalledState> | undefined;
+    const installedSnapshot = createInstalledSnapshotReader(store, siteId);
     const installedState = async (): Promise<InstalledState> => {
         const revision = await store.revision(siteId);
         if (cache?.revision === revision) {
@@ -46,7 +48,7 @@ export function withInstalledCollections(
         }
     };
     const loadInstalledState = async (): Promise<InstalledState> => {
-        const snapshot = await store.snapshot(siteId);
+        const snapshot = await installedSnapshot();
         const collections = await Promise.all(
             snapshot.collections.map(async ({ collectionId, digest, release }) =>
                 Promise.all(
@@ -130,7 +132,8 @@ export function withInstalledCollections(
             repository.updateSystem(
                 patch.theme ? { ...patch, theme: composeCollectionThemes(patch.theme, await releases()) } : patch,
             ),
-        getInstalledCollections: () => store.snapshot(siteId),
+        getInstalledCollections: async () => structuredClone(await installedSnapshot()),
+        getInstalledCollectionRevision: async () => (await installedSnapshot()).revision,
         getBlocRecords: records,
         getBlocRecord: read,
         getBlocsList: async (options) => {

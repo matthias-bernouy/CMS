@@ -8,7 +8,7 @@ import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/in
 import type { OfficialCmsInstanceDiscovery } from "../core/InstanceDiscovery";
 import type { OfficialCoreCapabilities } from "../core/coreCapabilities";
 import type { OfficialSubmissionStore } from "../core/submissions";
-import { handleOfficialPages, type OfficialPageCapabilities } from "./pages";
+import { createCoreContractRelay } from "./coreContractRelay";
 
 const ITEMS = Object.freeze([
     Object.freeze({ id: "starter", name: "Starter item" }),
@@ -39,6 +39,7 @@ export function createOfficialProviderHandler(options: {
         throw new Error("Official provider token must not be blank");
     }
     const capabilities = resolveCapabilities(options.contracts);
+    const relayCoreContract = createCoreContractRelay([options.contracts.pages], options.core);
     return async (request) => {
         if (!authorized(request.headers.get("authorization"), options.token)) {
             return new Response(null, { status: 401, headers: { "WWW-Authenticate": "Bearer" } });
@@ -71,9 +72,9 @@ export function createOfficialProviderHandler(options: {
                 throw error;
             }
         }
-        const pages = await handleOfficialPages(request, capabilities.pages, options.core);
-        if (pages) {
-            return pages;
+        const coreResponse = await relayCoreContract(request);
+        if (coreResponse) {
+            return coreResponse;
         }
         if (request.method === "GET" && path === "/v1/catalog/items") {
             const output = { items: ITEMS };
@@ -132,7 +133,6 @@ function resolveCapabilities(contracts: OfficialProviderContracts): {
     instanceList: CapabilityDefinition;
     instanceCurrent: CapabilityDefinition;
     assetRead: CapabilityDefinition;
-    pages: OfficialPageCapabilities;
 } {
     assertContract(contracts.catalog, "catalog.items");
     assertContract(contracts.forms, "forms.submissions");
@@ -150,15 +150,6 @@ function resolveCapabilities(contracts: OfficialProviderContracts): {
         submissionGet: requiredCapability(contracts.forms, "submission.get"),
         instanceList: requiredCapability(contracts.instances, "list"),
         instanceCurrent: requiredCapability(contracts.instances, "get-current"),
-        pages: {
-            list: requiredCapability(contracts.pages, "list"),
-            get: requiredCapability(contracts.pages, "get"),
-            create: requiredCapability(contracts.pages, "create"),
-            update: requiredCapability(contracts.pages, "update"),
-            publish: requiredCapability(contracts.pages, "publish"),
-            delete: requiredCapability(contracts.pages, "delete"),
-            rename: requiredCapability(contracts.pages, "rename"),
-        },
         assetRead,
     };
 }

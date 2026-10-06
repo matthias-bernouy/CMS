@@ -1,16 +1,16 @@
 import { deepFreeze } from "@bernouy/cms-repository/contracts/protocol";
-import type { CollectionPageExecutionGrantStore } from "../interfaces/PageExecutionGrantStore";
-import type { CollectionPageExecutionConsumer, StoredCollectionPageExecutionGrant } from "../interfaces/PageExecution";
+import type { PageExecutionGrantStore } from "../interfaces/PageExecutionGrantStore";
+import type { PageExecutionConsumer, StoredPageExecutionGrant } from "../interfaces/PageExecution";
 
-export class InMemoryCollectionPageExecutionGrantStore implements CollectionPageExecutionGrantStore {
-    readonly #records = new Map<string, StoredCollectionPageExecutionGrant>();
+export class InMemoryPageExecutionGrantStore implements PageExecutionGrantStore {
+    readonly #records = new Map<string, StoredPageExecutionGrant>();
 
-    async get(consumer: CollectionPageExecutionConsumer): Promise<StoredCollectionPageExecutionGrant | null> {
+    async get(consumer: PageExecutionConsumer): Promise<StoredPageExecutionGrant | null> {
         const record = this.#records.get(key(consumer));
         return record ? deepFreeze(structuredClone(record)) : null;
     }
 
-    async replace(grant: StoredCollectionPageExecutionGrant, expectedRevision: number): Promise<boolean> {
+    async replace(grant: StoredPageExecutionGrant, expectedRevision: number): Promise<boolean> {
         const id = key(grant.plan.consumer);
         if ((this.#records.get(id)?.revision ?? 0) !== expectedRevision || grant.revision !== expectedRevision + 1) {
             return false;
@@ -20,14 +20,17 @@ export class InMemoryCollectionPageExecutionGrantStore implements CollectionPage
     }
 }
 
-function key(consumer: CollectionPageExecutionConsumer): string {
-    return JSON.stringify([
-        consumer.siteId,
-        consumer.publisherId,
-        consumer.collectionId,
-        consumer.collectionVersion,
-        consumer.collectionDigest,
-        consumer.pageId,
-        consumer.pageGeneration,
-    ]);
+function key(consumer: PageExecutionConsumer): string {
+    return consumer.kind === "site"
+        ? JSON.stringify(["site", consumer.siteId, consumer.pageId, consumer.pageRevision])
+        : JSON.stringify([
+              "collection",
+              consumer.siteId,
+              consumer.publisherId,
+              consumer.collectionId,
+              consumer.collectionVersion,
+              consumer.collectionDigest,
+              consumer.pageId,
+              consumer.pageGeneration,
+          ]);
 }

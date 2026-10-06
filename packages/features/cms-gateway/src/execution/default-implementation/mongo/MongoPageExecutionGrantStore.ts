@@ -1,23 +1,21 @@
 import type { Db } from "mongodb";
 import { deepFreeze } from "@bernouy/cms-repository/contracts/protocol";
-import type { CollectionPageExecutionGrantStore } from "../../interfaces/PageExecutionGrantStore";
-import type {
-    CollectionPageExecutionConsumer,
-    StoredCollectionPageExecutionGrant,
-} from "../../interfaces/PageExecution";
+import type { PageExecutionGrantStore } from "../../interfaces/PageExecutionGrantStore";
+import type { PageExecutionConsumer, StoredPageExecutionGrant } from "../../interfaces/PageExecution";
+import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
 
-interface GrantDocument extends StoredCollectionPageExecutionGrant {
+interface GrantDocument extends StoredPageExecutionGrant {
     readonly _id: string;
 }
 
-export class MongoCollectionPageExecutionGrantStore implements CollectionPageExecutionGrantStore {
+export class MongoPageExecutionGrantStore implements PageExecutionGrantStore {
     readonly #collection;
 
     constructor(db: Db) {
-        this.#collection = db.collection<GrantDocument>("cms_collection_page_execution_grants");
+        this.#collection = db.collection<GrantDocument>("cms_page_execution_grants");
     }
 
-    async get(consumer: CollectionPageExecutionConsumer): Promise<StoredCollectionPageExecutionGrant | null> {
+    async get(consumer: PageExecutionConsumer): Promise<StoredPageExecutionGrant | null> {
         const document = await this.#collection.findOne({ _id: key(consumer) });
         if (!document) {
             return null;
@@ -26,21 +24,15 @@ export class MongoCollectionPageExecutionGrantStore implements CollectionPageExe
         if (
             !Number.isSafeInteger(grant.revision) ||
             grant.revision < 1 ||
-            grant.plan.consumer.siteId !== consumer.siteId ||
-            grant.plan.consumer.publisherId !== consumer.publisherId ||
-            grant.plan.consumer.collectionId !== consumer.collectionId ||
-            grant.plan.consumer.collectionVersion !== consumer.collectionVersion ||
-            grant.plan.consumer.collectionDigest !== consumer.collectionDigest ||
-            grant.plan.consumer.pageId !== consumer.pageId ||
-            grant.plan.consumer.pageGeneration !== consumer.pageGeneration ||
+            canonicalizeIJson(grant.plan.consumer) !== canonicalizeIJson(consumer) ||
             !/^sha256:[0-9a-f]{64}$/u.test(grant.planDigest)
         ) {
-            throw new Error("Stored collection Page execution grant is invalid");
+            throw new Error("Stored Page execution grant is invalid");
         }
         return deepFreeze(structuredClone(grant));
     }
 
-    async replace(grant: StoredCollectionPageExecutionGrant, expectedRevision: number): Promise<boolean> {
+    async replace(grant: StoredPageExecutionGrant, expectedRevision: number): Promise<boolean> {
         const document = { _id: key(grant.plan.consumer), ...structuredClone(grant) };
         if (expectedRevision === 0) {
             try {
@@ -58,16 +50,19 @@ export class MongoCollectionPageExecutionGrantStore implements CollectionPageExe
     }
 }
 
-function key(consumer: CollectionPageExecutionConsumer): string {
-    return JSON.stringify([
-        consumer.siteId,
-        consumer.publisherId,
-        consumer.collectionId,
-        consumer.collectionVersion,
-        consumer.collectionDigest,
-        consumer.pageId,
-        consumer.pageGeneration,
-    ]);
+function key(consumer: PageExecutionConsumer): string {
+    return consumer.kind === "site"
+        ? JSON.stringify(["site", consumer.siteId, consumer.pageId, consumer.pageRevision])
+        : JSON.stringify([
+              "collection",
+              consumer.siteId,
+              consumer.publisherId,
+              consumer.collectionId,
+              consumer.collectionVersion,
+              consumer.collectionDigest,
+              consumer.pageId,
+              consumer.pageGeneration,
+          ]);
 }
 
 function isDuplicateKey(error: unknown): boolean {

@@ -1,4 +1,4 @@
-import { createContentReader } from "@bernouy/cms-content";
+import { createContentReader, pageDocument } from "@bernouy/cms-content";
 import { renderPageDocument } from "@bernouy/cms-content/rendering";
 import { prepareNetworkInertBindings } from "@bernouy/components/binding-dom";
 import { resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
@@ -18,11 +18,18 @@ export async function renderControlPage(
     selected: InstalledControlPage,
 ): Promise<Response> {
     const { document } = parseHTML("<!doctype html><html><head></head><body></body></html>");
-    const language = requestLocale(request, selected.installation.release.locale);
-    const title = resolveCollectionTranslation(selected.installation.release, selected.page.name, language);
+    const system = selected.kind === "site" ? await state.repository.getSystem() : null;
+    const fallbackLocale =
+        selected.kind === "collection" ? selected.installation.release.locale : system?.site.language || "en";
+    const language = requestLocale(request, fallbackLocale);
+    const title =
+        selected.kind === "collection"
+            ? resolveCollectionTranslation(selected.installation.release, selected.page.name, language)
+            : selected.page.title;
     const reader = createContentReader(state.repository);
     const releases = snapshot.collections.map(({ release }) => release);
-    const rendered = await renderPageDocument(document.body, selected.page.document, {
+    const selectedDocument = selected.kind === "collection" ? selected.page.document : pageDocument(selected.page);
+    const rendered = await renderPageDocument(document.body, selectedDocument, {
         repository: reader,
         language,
         ...(state.configuration.deliveryUrl

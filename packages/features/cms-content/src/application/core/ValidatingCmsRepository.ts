@@ -48,6 +48,10 @@ export class ValidatingCmsRepository implements CmsRepository {
     async getInstalledCollections() {
         return (await this.inner.getInstalledCollections?.()) ?? { revision: 0, collections: [] };
     }
+
+    async getInstalledCollectionRevision(): Promise<number> {
+        return (await this.inner.getInstalledCollectionRevision?.()) ?? (await this.getInstalledCollections()).revision;
+    }
     getSiteBlocCollections(): Promise<SiteBlocCollection[]> {
         return this.inner.getSiteBlocCollections();
     }

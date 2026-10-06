@@ -1,12 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import {
-    DefaultCollectionPageExecutionAuthority,
-    InMemoryCollectionPageExecutionGrantStore,
-} from "@bernouy/cms-gateway/execution";
+import { DefaultPageExecutionAuthority, InMemoryPageExecutionGrantStore } from "@bernouy/cms-gateway/execution";
 import type { ContractSelectionStore, StoredContractSelections } from "@bernouy/cms-repository/providers/selections";
 import { gatewayRoute } from "../fixtures";
 
 const consumer = {
+    kind: "collection",
     siteId: "site-a",
     publisherId: "ulvia.official",
     collectionId: "ulvia.official",
@@ -16,14 +14,14 @@ const consumer = {
     pageGeneration: 1,
 } as const;
 
-describe("collection Page execution authority", () => {
+describe("Page execution authority", () => {
     test("pins one immutable provider target and authorizes only declared capabilities", async () => {
         const route = await gatewayRoute();
         let stored = selections(route);
-        const authority = new DefaultCollectionPageExecutionAuthority(
+        const authority = new DefaultPageExecutionAuthority(
             { get: async () => stored } as Pick<ContractSelectionStore, "get">,
             { resolve: async () => route, isCurrent: async () => true },
-            new InMemoryCollectionPageExecutionGrantStore(),
+            new InMemoryPageExecutionGrantStore(),
         );
         const grant = await authority.activate({
             consumer,
@@ -61,10 +59,10 @@ describe("collection Page execution authority", () => {
 
     test("rejects incompatible selections and keeps grants for collection releases independent", async () => {
         const route = await gatewayRoute();
-        const authority = new DefaultCollectionPageExecutionAuthority(
+        const authority = new DefaultPageExecutionAuthority(
             { get: async () => selections(route) },
             { resolve: async () => route, isCurrent: async () => true },
-            new InMemoryCollectionPageExecutionGrantStore(),
+            new InMemoryPageExecutionGrantStore(),
         );
         await expect(
             authority.activate({
@@ -96,6 +94,32 @@ describe("collection Page execution authority", () => {
         await expect(
             authority.authorize({ ...target, contractId: "catalog", capabilityId: "item.list" }),
         ).resolves.toMatchObject({ version: "1.0.0" });
+    });
+
+    test("pins site-owned Pages by their revision", async () => {
+        const route = await gatewayRoute();
+        const authority = new DefaultPageExecutionAuthority(
+            { get: async () => selections(route) },
+            { resolve: async () => route, isCurrent: async () => true },
+            new InMemoryPageExecutionGrantStore(),
+        );
+        const sitePage = {
+            kind: "site",
+            siteId: "site-a",
+            pageId: "settings",
+            pageRevision: 4,
+        } as const;
+        await authority.activate({
+            consumer: sitePage,
+            requirements: [{ contractId: "catalog", capabilityId: "item.list", versionRange: "^1.0.0" }],
+        });
+
+        await expect(
+            authority.authorize({ ...sitePage, contractId: "catalog", capabilityId: "item.list" }),
+        ).resolves.toMatchObject({ version: "1.0.0", installationId: "install-a" });
+        await expect(
+            authority.authorize({ ...sitePage, pageRevision: 5, contractId: "catalog", capabilityId: "item.list" }),
+        ).rejects.toMatchObject({ code: "not_authorized" });
     });
 });
 

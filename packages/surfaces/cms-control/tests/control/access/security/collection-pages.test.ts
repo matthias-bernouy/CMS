@@ -3,6 +3,7 @@ import {
     InMemoryCmsRepository,
     InMemorySurfacePageRouteRegistry,
     synchronizeCollectionPageRoutes,
+    synchronizeSitePageRoutes,
 } from "@bernouy/cms-content";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { handleControlPage } from "cms-control/core/admin/control/mountRoutes/pages";
@@ -60,7 +61,11 @@ test("collection Control Pages render through site routes while preserving path 
             },
         },
     } as unknown as ControlCmsState;
-    await synchronizeCollectionPageRoutes(routes, await state.configuration.collections!.store.snapshot("site-a"));
+    await synchronizeCollectionPageRoutes(
+        routes,
+        "site-a",
+        await state.configuration.collections!.store.snapshot("site-a"),
+    );
 
     const response = await handleControlPage(new Request("http://control.test/admin"), state);
     expect(response.status).toBe(200);
@@ -73,11 +78,15 @@ test("collection Control Pages render through site routes while preserving path 
     const first = await controlPageSnapshot(state);
     const reference = collectionPageReference(installation as never, page);
     const detailsReference = collectionPageReference(installation as never, details);
-    const detailsRoute = await routes.get(detailsReference);
-    await routes.setOverride(detailsReference, "/admin/content", detailsRoute!.revision);
-    await routes.setOverride(reference, "/admin/custom", first!.pages[0]!.route.revision);
+    const detailsRoute = await routes.get("site-a", detailsReference);
+    await routes.setOverride("site-a", detailsReference, "/admin/content", detailsRoute!.revision);
+    await routes.setOverride("site-a", reference, "/admin/custom", first!.pages[0]!.route.revision);
     page.defaultPath = "/admin/new";
-    await synchronizeCollectionPageRoutes(routes, await state.configuration.collections!.store.snapshot("site-a"));
+    await synchronizeCollectionPageRoutes(
+        routes,
+        "site-a",
+        await state.configuration.collections!.store.snapshot("site-a"),
+    );
     const reconciled = await controlPageSnapshot(state);
     expect(reconciled!.pages.find(({ page: item }) => item.id === "pages")!.route).toMatchObject({
         defaultPath: "/admin/new",
@@ -86,4 +95,30 @@ test("collection Control Pages render through site routes while preserving path 
     });
     const overridden = await handleControlPage(new Request("http://control.test/admin/custom"), state);
     expect(await overridden.text()).toContain('href="/admin/content?id={{ page.id }}"');
+});
+
+test("site-owned Control Pages use the same renderer and shared route registry", async () => {
+    const routes = new InMemorySurfacePageRouteRegistry();
+    const repository = new InMemoryCmsRepository();
+    await repository.insertPage("/admin/custom", "Custom administration", "<main><h1>Custom</h1></main>", {
+        surface: "control",
+    });
+    await synchronizeSitePageRoutes(routes, "site-a", await repository.getAllPages());
+    const state = {
+        runner: { basePath: "/" },
+        repository,
+        cache: new InMemoryCache(),
+        configuration: {
+            collections: {
+                siteId: "site-a",
+                routes,
+                store: { snapshot: async () => ({ revision: 0, collections: [] }) },
+            },
+        },
+    } as unknown as ControlCmsState;
+
+    const response = await handleControlPage(new Request("http://control.test/admin/custom"), state);
+    expect(response.status).toBe(200);
+    expect(await response.text()).toContain("Custom administration");
+    expect((await controlPageSnapshot(state))?.pages[0]?.kind).toBe("site");
 });

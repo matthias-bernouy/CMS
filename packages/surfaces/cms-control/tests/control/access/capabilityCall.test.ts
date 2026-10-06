@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import type { GatewayInvocation } from "@bernouy/cms-gateway";
 import {
     handleControlCapabilityCall,
@@ -14,6 +15,7 @@ test("Control mounts a separate capability route with verified administrator ide
     const runner = new CaptureRunner();
     const state = {
         runner,
+        repository: new InMemoryCmsRepository(),
         auth: { getSubject: async () => ({ identifier: "cms-admin-1" }) },
         configuration: {
             collections: await controlPageCollections(),

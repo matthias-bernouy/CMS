@@ -25,18 +25,33 @@ export function pageReferenceKey(page: PageReference): string {
         : JSON.stringify(["collection", value.publisherId, value.collectionId, value.pageId]);
 }
 
+export function pageScopeKey(siteId: string, page: PageReference): string {
+    return JSON.stringify([validateSiteId(siteId), pageReferenceKey(page)]);
+}
+
 export function pageRouteKey(surface: PageSurface, path: string): string {
-    return JSON.stringify([surface, validatePagePath(path)]);
+    return JSON.stringify([surface, validateSurfacePagePath(surface, path)]);
+}
+
+export function scopedPageRouteKey(siteId: string, surface: PageSurface, path: string): string {
+    return JSON.stringify([validateSiteId(siteId), pageRouteKey(surface, path)]);
+}
+
+export function validateSiteId(siteId: string): string {
+    if (typeof siteId !== "string" || !siteId || siteId !== siteId.trim() || siteId.length > 128) {
+        throw new TypeError("A Page route site ID must be a nonempty bounded string.");
+    }
+    return siteId;
 }
 
 export function nextSurfacePageRoute(
     route: SurfacePageRoute,
     change: { readonly defaultPath?: string; readonly overridePath?: string | null },
 ): SurfacePageRoute {
-    const defaultPath = validatePagePath(change.defaultPath ?? route.defaultPath);
+    const defaultPath = validateSurfacePagePath(route.surface, change.defaultPath ?? route.defaultPath);
     const overridePath = change.overridePath === undefined ? route.overridePath : (change.overridePath ?? undefined);
     if (overridePath !== undefined) {
-        validatePagePath(overridePath);
+        validateSurfacePagePath(route.surface, overridePath);
     }
     return {
         ...route,
@@ -45,6 +60,25 @@ export function nextSurfacePageRoute(
         path: overridePath ?? defaultPath,
         revision: route.revision + 1,
     };
+}
+
+export function validateSurfacePagePath(surface: PageSurface, value: string): string {
+    const path = validatePagePath(value);
+    const controlPath = path === "/admin" || path.startsWith("/admin/");
+    if ((surface === "control") !== controlPath) {
+        throw new TypeError(
+            surface === "control" ? "Control Pages must use /admin paths." : "Delivery Pages cannot use /admin paths.",
+        );
+    }
+    if (
+        surface === "delivery" &&
+        ["/.cms", "/api", "/assets", "/auth", "/login"].some(
+            (prefix) => path === prefix || path.startsWith(`${prefix}/`),
+        )
+    ) {
+        throw new TypeError("Delivery Page path is reserved by the runtime.");
+    }
+    return path;
 }
 
 export function cloneSurfacePageRoute(route: SurfacePageRoute): SurfacePageRoute {

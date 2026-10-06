@@ -69,6 +69,8 @@ test("indexes installed Blocs once per collection revision", async () => {
     await repository.getBlocViewJS("cached-card");
     await repository.getBlocRecord("cached-card");
     await repository.getBlocsList();
+    await repository.getInstalledCollections?.();
+    await repository.getInstalledCollectionRevision?.();
     expect(storage.metadataReads).toBe(1);
     expect(storage.assetReads).toBe(1);
 

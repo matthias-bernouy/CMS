@@ -35,6 +35,15 @@ export type {
     TPageRef,
 } from "cms-content/pages/interfaces/pages";
 export { pageDocument } from "cms-content/pages/interfaces/pages";
+export { MAX_PAGE_CONTENT_LENGTH } from "cms-content/application/core/validation/fields";
+export {
+    CoreCapabilityDispatchError,
+    DefaultCoreCapabilityDispatcher,
+    registerCmsPageCoreCapabilities,
+    type CoreCapabilityDispatcher,
+    type CoreCapabilityHandler,
+    type CoreCapabilityRegistry,
+} from "cms-content/application/core/CoreCapabilityDispatcher";
 export {
     listCmsPages,
     type CmsPageListItem,
@@ -64,12 +73,24 @@ export type {
     SurfacePageRouteRegistration,
     SurfacePageRouteRegistry,
 } from "cms-content/pages/interfaces/routing";
-export { createPageRouteReader, resolvePageLinkTarget } from "cms-content/pages/core/routing/links";
+export {
+    assertPageContentLinks,
+    createPageRouteReader,
+    pageContentReferences,
+    resolvePageLinkTarget,
+} from "cms-content/pages/core/routing/links";
 export { validatePageReference } from "cms-content/pages/core/routing/values";
+export { PageRouteMutationCoordinator } from "cms-content/pages/core/routing/mutationCoordinator";
+export { synchronizePageRoutes } from "cms-content/pages/core/routing/synchronizeRoutes";
 export {
     synchronizeCollectionPageRoutes,
     withCollectionPageRoutes,
 } from "cms-content/pages/core/routing/collectionRoutes";
+export {
+    synchronizeSitePageRoutes,
+    validatePageLinks,
+    withSitePageRoutes,
+} from "cms-content/pages/core/routing/siteRoutes";
 export {
     PageLinkSurfaceError,
     PageRouteAlreadyRegisteredError,
