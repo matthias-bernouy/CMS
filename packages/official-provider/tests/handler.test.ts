@@ -150,6 +150,12 @@ test("the official provider accepts canonical gateway paths and declared error e
                     headers: {
                         authorization: "Bearer test-token",
                         ...(init.body ? { "content-type": "application/json" } : {}),
+                        "x-ulvia-request-id": "00000000-0000-4000-8000-000000000001",
+                        "x-ulvia-site-id": "default",
+                        "x-ulvia-installation-id": "official",
+                        "x-ulvia-origin": "control",
+                        "x-ulvia-actor-kind": "administrator",
+                        "x-ulvia-subject-id": "00000000-0000-4000-8000-000000000002",
                     },
                 }),
             );

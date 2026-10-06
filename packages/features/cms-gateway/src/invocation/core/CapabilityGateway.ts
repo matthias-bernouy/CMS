@@ -91,6 +91,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 invocationOrigin: invocation.origin,
                 actorKind: invocation.actor.kind,
                 ...(providerSubjectId ? { providerSubjectId } : {}),
+                ...(invocation.idempotencyKey ? { idempotencyKey: invocation.idempotencyKey } : {}),
             });
             if (!(await this.#options.routes.isCurrent(route))) {
                 throw new GatewayError("stale_route", "selection or installation changed during invocation");
@@ -232,7 +233,10 @@ export class CapabilityGateway implements GatewayAccessProbe {
         capability: CapabilityDefinition,
         route: GatewayRoute,
     ): Promise<string | undefined> {
-        if (capability.access !== "authenticated" || (actor.kind !== "user" && actor.kind !== "administrator")) {
+        if (
+            (capability.access !== "authenticated" && capability.access !== "admin") ||
+            (actor.kind !== "user" && actor.kind !== "administrator")
+        ) {
             return undefined;
         }
         if (!this.#options.identities) {

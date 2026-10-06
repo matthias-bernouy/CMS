@@ -49,6 +49,7 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
     }
     try {
         const input = await readGatewayHttpInput(request);
+        const idempotencyKey = parseIdempotencyKey(request.headers.get("idempotency-key"));
         const result = await options.invoker.invoke({
             siteId: options.siteId,
             contractId,
@@ -56,6 +57,7 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
             origin: options.origin,
             actor: options.actor,
             ...(options.execution ? { execution: options.execution } : {}),
+            ...(idempotencyKey ? { idempotencyKey } : {}),
             input,
         });
         return resultResponse(result);
@@ -65,6 +67,16 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
         }
         return jsonResponse({ error: { code: error.code } }, errorStatus(error, options.actor), error.requestId);
     }
+}
+
+function parseIdempotencyKey(value: string | null): string | undefined {
+    if (value === null) {
+        return undefined;
+    }
+    if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u.test(value)) {
+        throw new GatewayError("invalid_input", "idempotency key is invalid");
+    }
+    return value;
 }
 
 function resultResponse(result: GatewayResult): Response {

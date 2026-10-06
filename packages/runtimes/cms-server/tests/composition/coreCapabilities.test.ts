@@ -8,6 +8,13 @@ import type { RouteHandler, Runner } from "@bernouy/http-runner";
 import { LOCAL_CORE_CAPABILITY_ROUTE, mountLocalCoreCapabilities } from "../../src/runtime/coreCapabilities";
 
 const token = "local-provider-to-core-token";
+const context = {
+    requestId: "00000000-0000-4000-8000-000000000001",
+    siteId: "default",
+    installationId: "official",
+    origin: "control",
+    actorKind: "administrator",
+};
 
 describe("local provider Core capability bridge", () => {
     test("authenticates and dispatches the bounded Pages contract", async () => {
@@ -18,7 +25,7 @@ describe("local provider Core capability bridge", () => {
         const invoke = async (capabilityId: string, input: Readonly<Record<string, unknown>>) =>
             request({
                 headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-                body: JSON.stringify({ contractId: "ulvia.cms.pages", capabilityId, input }),
+                body: JSON.stringify({ contractId: "ulvia.cms.pages", capabilityId, context, input }),
             });
         const unauthorized = await request({ headers: { "content-type": "application/json" }, body: "{}" });
         expect(unauthorized.status).toBe(401);
@@ -70,7 +77,7 @@ describe("local provider Core capability bridge", () => {
             (
                 await request({
                     headers,
-                    body: JSON.stringify({ contractId: "unknown", capabilityId: "list", input: {} }),
+                    body: JSON.stringify({ contractId: "unknown", capabilityId: "list", context, input: {} }),
                 })
             ).status,
         ).toBe(404);
@@ -81,6 +88,7 @@ describe("local provider Core capability bridge", () => {
                     body: JSON.stringify({
                         contractId: "ulvia.cms.pages",
                         capabilityId: "list",
+                        context,
                         input: { x: "a".repeat(8 * 1024 * 1024 + 20_000) },
                     }),
                 })
@@ -96,7 +104,7 @@ describe("local provider Core capability bridge", () => {
         const escaped = "\u0001".repeat(1024 * 1024);
         const response = await request({
             headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-            body: JSON.stringify({ contractId: "test.contract", capabilityId: "echo", input: { escaped } }),
+            body: JSON.stringify({ contractId: "test.contract", capabilityId: "echo", context, input: { escaped } }),
         });
         expect(response.status).toBe(200);
         expect(((await response.json()) as { escaped: string }).escaped.length).toBe(1024 * 1024);

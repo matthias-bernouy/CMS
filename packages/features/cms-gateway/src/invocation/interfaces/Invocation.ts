@@ -24,6 +24,8 @@ export interface GatewayInvocation {
     readonly origin: GatewayOrigin;
     /** Constructed by a trusted surface from verified authentication. */
     readonly actor: GatewayActor;
+    /** Required by keyed commands and transported outside authored capability input. */
+    readonly idempotencyKey?: string;
     /** Required for collection Page calls; constructed from a current CMS-owned execution grant. */
     readonly execution?: GatewayExecutionPin;
 }
@@ -53,6 +55,7 @@ export interface GatewayTransportRequest {
     readonly invocationOrigin: GatewayOrigin;
     readonly actorKind: GatewayActor["kind"];
     readonly providerSubjectId?: string;
+    readonly idempotencyKey?: string;
 }
 
 export interface GatewayTransportResponse {

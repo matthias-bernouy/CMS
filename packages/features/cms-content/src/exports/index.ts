@@ -41,6 +41,7 @@ export {
     DefaultCoreCapabilityDispatcher,
     registerCmsPageCoreCapabilities,
     type CoreCapabilityDispatcher,
+    type CoreCapabilityInvocationContext,
     type CoreCapabilityHandler,
     type CoreCapabilityRegistry,
 } from "cms-content/application/core/CoreCapabilityDispatcher";

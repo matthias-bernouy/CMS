@@ -4,7 +4,11 @@ import {
     MAX_CAPABILITY_JSON_DEPTH,
     parseStrictJson,
 } from "@bernouy/cms-repository/contracts/protocol";
-import { OfficialCoreCapabilityError, type OfficialCoreCapabilities } from "../core/coreCapabilities";
+import {
+    OfficialCoreCapabilityError,
+    type OfficialCoreCapabilities,
+    type OfficialCoreInvocationContext,
+} from "../core/coreCapabilities";
 
 export class HttpOfficialCoreCapabilities implements OfficialCoreCapabilities {
     readonly #url: string;
@@ -31,8 +35,13 @@ export class HttpOfficialCoreCapabilities implements OfficialCoreCapabilities {
         this.#fetch = fetcher;
     }
 
-    async invoke(contractId: string, capabilityId: string, input: Readonly<Record<string, unknown>>): Promise<unknown> {
-        const body = canonicalIJsonBytes({ contractId, capabilityId, input }, MAX_CAPABILITY_JSON_DEPTH);
+    async invoke(
+        contractId: string,
+        capabilityId: string,
+        input: Readonly<Record<string, unknown>>,
+        context: OfficialCoreInvocationContext,
+    ): Promise<unknown> {
+        const body = canonicalIJsonBytes({ contractId, capabilityId, context, input }, MAX_CAPABILITY_JSON_DEPTH);
         if (body.byteLength > MAX_CAPABILITY_JSON_BYTES) {
             throw new TypeError("The Core capability call exceeds the shared JSON envelope budget.");
         }

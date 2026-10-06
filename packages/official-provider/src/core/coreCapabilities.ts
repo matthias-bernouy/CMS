@@ -1,5 +1,20 @@
+export interface OfficialCoreInvocationContext {
+    readonly requestId: string;
+    readonly siteId: string;
+    readonly installationId: string;
+    readonly origin: "delivery" | "page" | "control" | "provider" | "system" | "conformance";
+    readonly actorKind: "anonymous" | "user" | "administrator" | "provider" | "system";
+    readonly providerSubjectId?: string;
+    readonly idempotencyKey?: string;
+}
+
 export interface OfficialCoreCapabilities {
-    invoke(contractId: string, capabilityId: string, input: Readonly<Record<string, unknown>>): Promise<unknown>;
+    invoke(
+        contractId: string,
+        capabilityId: string,
+        input: Readonly<Record<string, unknown>>,
+        context: OfficialCoreInvocationContext,
+    ): Promise<unknown>;
 }
 
 export class OfficialCoreCapabilityError extends Error {

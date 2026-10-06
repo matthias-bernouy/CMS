@@ -74,7 +74,10 @@ function trustedHeaders(request: GatewayHttpExchange, token: string): Record<str
         "x-ulvia-request-id": request.requestId,
         "x-ulvia-origin": request.invocationOrigin,
         "x-ulvia-actor-kind": request.actorKind,
+        "x-ulvia-site-id": request.siteId,
+        "x-ulvia-installation-id": request.installationId,
         ...(request.providerSubjectId ? { "x-ulvia-subject-id": request.providerSubjectId } : {}),
+        ...(request.idempotencyKey ? { "idempotency-key": request.idempotencyKey } : {}),
     };
 }
 

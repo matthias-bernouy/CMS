@@ -146,6 +146,16 @@ describe("capability gateway", () => {
         expect(otherInstallation.sent[0]?.providerSubjectId).toBe(alias);
     });
 
+    test("propagates an opaque subject alias for administrator capabilities", async () => {
+        const scope = harness(await gatewayRoute({ access: "admin" }));
+        await scope.gateway.invoke(invocation({ kind: "administrator", subjectId: "cms-admin-1" }));
+
+        const alias = scope.sent[0]?.providerSubjectId;
+        expect(alias).toMatch(/^[0-9a-f-]{36}$/);
+        expect(JSON.stringify(scope.sent[0])).not.toContain("cms-admin-1");
+        expect(await scope.identities.resolve({ providerId: "ulvia.example" }, alias!)).toBe("cms-admin-1");
+    });
+
     test("checks access without invoking the provider or creating an identity alias", async () => {
         const identities = new InMemoryIdentityService();
         const scope = harness(await gatewayRoute({ access: "authenticated" }), new ProviderIdentityAliases(identities));

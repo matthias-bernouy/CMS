@@ -23,7 +23,7 @@ export function mountLocalCoreCapabilities(runner: Runner, dispatcher: CoreCapab
         try {
             const bytes = await readBoundedRequestBody(request, MAX_CAPABILITY_JSON_BYTES);
             const call = parseCall(parseStrictJson(bytes, MAX_CAPABILITY_JSON_BYTES, MAX_CAPABILITY_JSON_DEPTH));
-            return noStoreJson(await dispatcher.invoke(call.contractId, call.capabilityId, call.input));
+            return noStoreJson(await dispatcher.invoke(call.contractId, call.capabilityId, call.input, call.context));
         } catch (error) {
             if (error instanceof CoreCapabilityDispatchError) {
                 return coreError(error.code, error.status);
@@ -46,6 +46,7 @@ type CoreCapabilityCall = {
     contractId: string;
     capabilityId: string;
     input: Readonly<Record<string, unknown>>;
+    context: Parameters<CoreCapabilityDispatcher["invoke"]>[3];
 };
 
 function parseCall(value: unknown): CoreCapabilityCall {
@@ -54,16 +55,44 @@ function parseCall(value: unknown): CoreCapabilityCall {
     }
     const call = value as Record<string, unknown>;
     if (
-        Object.keys(call).some((key) => !["contractId", "capabilityId", "input"].includes(key)) ||
+        Object.keys(call).some((key) => !["contractId", "capabilityId", "context", "input"].includes(key)) ||
         typeof call.contractId !== "string" ||
         typeof call.capabilityId !== "string" ||
         !call.input ||
         typeof call.input !== "object" ||
-        Array.isArray(call.input)
+        Array.isArray(call.input) ||
+        !validContext(call.context)
     ) {
         throw new TypeError("Invalid Core capability call.");
     }
     return call as CoreCapabilityCall;
+}
+
+function validContext(value: unknown): boolean {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return false;
+    }
+    const context = value as Record<string, unknown>;
+    const allowed = [
+        "requestId",
+        "siteId",
+        "installationId",
+        "origin",
+        "actorKind",
+        "providerSubjectId",
+        "idempotencyKey",
+    ];
+    return (
+        Object.keys(context).every((key) => allowed.includes(key)) &&
+        typeof context.requestId === "string" &&
+        /^[0-9a-f-]{36}$/u.test(context.requestId) &&
+        typeof context.siteId === "string" &&
+        typeof context.installationId === "string" &&
+        ["delivery", "page", "control", "provider", "system", "conformance"].includes(String(context.origin)) &&
+        ["anonymous", "user", "administrator", "provider", "system"].includes(String(context.actorKind)) &&
+        (context.providerSubjectId === undefined || typeof context.providerSubjectId === "string") &&
+        (context.idempotencyKey === undefined || typeof context.idempotencyKey === "string")
+    );
 }
 
 function authorized(header: string | null, expected: string): boolean {

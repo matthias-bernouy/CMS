@@ -10,10 +10,32 @@ import { deleteCmsPage, publishCmsPage, updateCmsPage } from "cms-content/pages/
 import { getCmsPage } from "cms-content/pages/core/contracts/pageDetails";
 import { CmsPageNotFoundError, renameCmsPage } from "cms-content/pages/core/contracts/renamePage";
 
-export type CoreCapabilityHandler = (input: Readonly<Record<string, unknown>>) => Promise<unknown>;
+export type CoreCapabilityActorKind = "anonymous" | "user" | "administrator" | "provider" | "system";
+export type CoreCapabilityOrigin = "delivery" | "page" | "control" | "provider" | "system" | "conformance";
+
+/** Trusted transport metadata. It is never populated from a capability's authored input. */
+export interface CoreCapabilityInvocationContext {
+    readonly requestId: string;
+    readonly siteId: string;
+    readonly installationId: string;
+    readonly origin: CoreCapabilityOrigin;
+    readonly actorKind: CoreCapabilityActorKind;
+    readonly providerSubjectId?: string;
+    readonly idempotencyKey?: string;
+}
+
+export type CoreCapabilityHandler = (
+    input: Readonly<Record<string, unknown>>,
+    context: CoreCapabilityInvocationContext,
+) => Promise<unknown>;
 
 export interface CoreCapabilityDispatcher {
-    invoke(contractId: string, capabilityId: string, input: Readonly<Record<string, unknown>>): Promise<unknown>;
+    invoke(
+        contractId: string,
+        capabilityId: string,
+        input: Readonly<Record<string, unknown>>,
+        context: CoreCapabilityInvocationContext,
+    ): Promise<unknown>;
 }
 
 export interface CoreCapabilityRegistry extends CoreCapabilityDispatcher {
@@ -43,19 +65,24 @@ export class DefaultCoreCapabilityDispatcher implements CoreCapabilityRegistry {
         this.#handlers.set(key, handler);
     }
 
-    async invoke(contractId: string, capabilityId: string, input: Readonly<Record<string, unknown>>): Promise<unknown> {
+    async invoke(
+        contractId: string,
+        capabilityId: string,
+        input: Readonly<Record<string, unknown>>,
+        context: CoreCapabilityInvocationContext,
+    ): Promise<unknown> {
         const handler = this.#handlers.get(capabilityKey(contractId, capabilityId));
         if (!handler) {
             throw new CoreCapabilityDispatchError("CAPABILITY_NOT_FOUND", 404);
         }
-        return handler(input);
+        return handler(input, context);
     }
 }
 
 export function registerCmsPageCoreCapabilities(dispatcher: CoreCapabilityRegistry, repository: CmsRepository): void {
     const register = (capabilityId: string, handler: CoreCapabilityHandler, invalidCode = "INVALID_PAGE") => {
-        dispatcher.register("ulvia.cms.pages", capabilityId, async (input) =>
-            pageCommand(() => handler(input), invalidCode),
+        dispatcher.register("ulvia.cms.pages", capabilityId, async (input, context) =>
+            pageCommand(() => handler(input, context), invalidCode),
         );
     };
     register("list", (input) => listCmsPages(repository, input));

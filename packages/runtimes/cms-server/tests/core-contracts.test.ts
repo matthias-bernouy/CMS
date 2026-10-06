@@ -89,7 +89,13 @@ test("all six Control domains dispatch outputs matching their official contracts
     for (const [contractId, capabilityId, input] of calls) {
         const release = await load(contractId);
         const capability = release.capabilities.find(({ id }) => id === capabilityId)!;
-        const output = await dispatcher.invoke(contractId, capabilityId, input);
+        const output = await dispatcher.invoke(contractId, capabilityId, input, {
+            requestId: "00000000-0000-4000-8000-000000000001",
+            siteId: "default",
+            installationId: "official",
+            origin: "control",
+            actorKind: "administrator",
+        });
         expect(() => validateSchemaValue(capability.output, output)).not.toThrow();
         if (contractId === "ulvia.cms.files") {
             expect(output).not.toHaveProperty("items.0.blobKey");

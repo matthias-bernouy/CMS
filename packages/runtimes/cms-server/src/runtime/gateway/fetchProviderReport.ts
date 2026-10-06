@@ -13,6 +13,7 @@ export async function fetchProviderReport(endpoint: string, token: string, netwo
         method: "GET",
         headers: {},
         requestId: randomUUID(),
+        siteId: "provider-connection-preview",
         installationId: "provider-connection-preview",
         providerTokenRef: "${PENDING_PROVIDER_TOKEN}",
         invocationOrigin: "control",
