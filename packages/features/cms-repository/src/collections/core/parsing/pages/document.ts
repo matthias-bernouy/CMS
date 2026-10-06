@@ -4,6 +4,7 @@ import type { CollectionPageSurface } from "../../../interfaces/CollectionPage";
 import { invalid } from "../../errors";
 import { string } from "../../values";
 import { PAGE_ATTRIBUTES, PAGE_INPUT_TYPES, PAGE_TAGS } from "./elements";
+import { validateStablePageLink } from "./references";
 const IDENTIFIER = "[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*";
 const CUSTOM_ATTRIBUTE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const CONTROL_CHARACTER = /[\u0000-\u001F\u007F]/u;
@@ -138,6 +139,7 @@ function validateAttributes(
             invalid("Page form empty behavior is not controlled", path);
         }
     }
+    validateStablePageLink(tag, attributes, path);
     if (attributes["cms-source"] && attributes["cms-source-method"]?.toUpperCase() !== "POST") {
         invalid("Page capability sources must declare POST", path);
     }

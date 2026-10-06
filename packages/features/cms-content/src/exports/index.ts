@@ -65,6 +65,7 @@ export type {
     SurfacePageRouteRegistry,
 } from "cms-content/pages/interfaces/routing";
 export { createPageRouteReader, resolvePageLinkTarget } from "cms-content/pages/core/routing/links";
+export { validatePageReference } from "cms-content/pages/core/routing/values";
 export {
     synchronizeCollectionPageRoutes,
     withCollectionPageRoutes,

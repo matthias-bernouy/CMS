@@ -8,11 +8,11 @@ import type { ProviderManagement } from "./ProviderManagement";
 
 const PROVIDER_ID = "ulvia.official";
 const CONTROL_COLLECTION_ID = "ulvia-official";
-const CONTROL_COLLECTION_VERSION = "1.0.0";
+const CONTROL_COLLECTION_VERSION = "1.1.0";
 const BOOTSTRAP_ACTOR = "system:local-bootstrap";
 
 type Management = Pick<ProviderManagement, "importManifest" | "list" | "preview" | "approve" | "selectContract">;
-type Collections = Pick<CollectionStore, "importRelease" | "snapshot" | "install">;
+type Collections = Pick<CollectionStore, "importRelease" | "snapshot" | "install" | "upgrade">;
 
 export async function bootstrapLocalOfficialResources(options: {
     readonly management: Management;
@@ -87,9 +87,7 @@ export async function bootstrapLocalOfficialResources(options: {
     }
 
     const snapshot = await options.collections.snapshot("default");
-    if (snapshot.collections.some(({ collectionId }) => collectionId === CONTROL_COLLECTION_ID)) {
-        return;
-    }
+    const installedCollection = snapshot.collections.find(({ collectionId }) => collectionId === CONTROL_COLLECTION_ID);
     const collectionEntry = (await collectionSource.list()).find(
         (entry) =>
             entry.publisherId === PROVIDER_ID &&
@@ -103,6 +101,13 @@ export async function bootstrapLocalOfficialResources(options: {
     const imported = await options.collections.importRelease(bundle.release, bundle.assets);
     if (imported.digest !== collectionEntry.digest) {
         throw new Error("The official Control collection digest changed during bootstrap");
+    }
+    if (installedCollection?.digest === imported.digest) {
+        return;
+    }
+    if (installedCollection) {
+        await options.collections.upgrade("default", imported.digest, snapshot.revision, collectionSource.id);
+        return;
     }
     await options.collections.install("default", imported.digest, snapshot.revision, collectionSource.id);
 }

@@ -1,0 +1,30 @@
+{
+    "id": "details",
+    "surface": "control",
+    "defaultPath": "/admin/pages",
+    "name": "page.details.name",
+    "icon": "pages",
+    "description": "page.details.description",
+    "requires": [
+        {
+            "contractId": "ulvia.cms.pages",
+            "capabilityId": "get",
+            "versionRange": "^1.1.0"
+        },
+        {
+            "contractId": "ulvia.cms.pages",
+            "capabilityId": "update",
+            "versionRange": "^1.1.0"
+        },
+        {
+            "contractId": "ulvia.cms.pages",
+            "capabilityId": "publish",
+            "versionRange": "^1.1.0"
+        },
+        {
+            "contractId": "ulvia.cms.pages",
+            "capabilityId": "delete",
+            "versionRange": "^1.1.0"
+        }
+    ]
+}

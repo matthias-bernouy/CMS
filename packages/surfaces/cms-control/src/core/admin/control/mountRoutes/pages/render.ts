@@ -9,6 +9,7 @@ import { requestLocale } from "cms-control/core/admin/http/requestLocale";
 import { resolvePreviewCollectionAssets } from "cms-control/core/content/bloc/preview/assets";
 import { controlAssetPath } from "./paths";
 import type { ControlPageSnapshot, InstalledControlPage } from "./registry";
+import { resolveControlPageLinks } from "./pageLinks";
 
 export async function renderControlPage(
     request: Request,
@@ -32,6 +33,7 @@ export async function renderControlPage(
             : {}),
         prepareBody: prepareNetworkInertBindings,
     });
+    await resolveControlPageLinks(document, state);
 
     document.documentElement.lang = language;
     document.title = title;

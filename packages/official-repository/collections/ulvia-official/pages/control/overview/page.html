@@ -1,24 +1,50 @@
 <ulvia-official-app-shell layout="sidebar" sticky-header>
     <strong slot="brand">Ulvia</strong>
-    <div slot="secondary-navigation">
-        <nav aria-label="Workspace">
-            <strong>Content</strong>
-            <p>Pages</p>
-            <strong>Design</strong>
-            <p>Blocs and theme</p>
-        </nav>
-    </div>
+    <nav slot="secondary-navigation" aria-label="Workspace">
+        <strong>Content</strong>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'>Pages</a>
+        <strong>Design</strong>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"resources"}'>Blocs</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"theme"}'>Theme</a>
+    </nav>
     <ulvia-official-page-shell slot="content" width="xl">
         <div slot="title"><h1>Pages</h1></div>
-        <div slot="description"><p>All site Pages, loaded through the selected local Core provider.</p></div>
+        <div slot="description"><p>Create and manage site Pages through the selected local Core provider.</p></div>
+        <ulvia-official-surface slot="content" elevation="sm" padding="lg">
+            <h2>Create a Delivery Page</h2>
+            <p>The Page is created as a draft. Open it afterwards to edit its document and publish it.</p>
+            <form cms-source="/.cms/call/ulvia.cms.pages/create as created" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" data-cms-success-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"details"}' data-cms-page-suffix="?id={{ created.body.id }}">
+                <input type="hidden" name="surface" value="delivery">
+                <ulvia-official-grid min-item-width="16rem" gap="md">
+                    <ulvia-official-field label-position="top">
+                        <label slot="label" for="new-page-title">Title</label>
+                        <ulvia-official-input slot="control">
+                            <input id="new-page-title" type="text" name="title" maxlength="70" autocomplete="off" placeholder="About us" required>
+                        </ulvia-official-input>
+                    </ulvia-official-field>
+                    <ulvia-official-field label-position="top">
+                        <label slot="label" for="new-page-path">Public path</label>
+                        <span slot="help">Use a path such as /about. Reserved CMS and Control paths are rejected.</span>
+                        <ulvia-official-input slot="control">
+                            <input id="new-page-path" type="text" name="path" maxlength="2048" autocomplete="off" placeholder="/about" required>
+                        </ulvia-official-input>
+                    </ulvia-official-field>
+                </ulvia-official-grid>
+                <ulvia-official-form-actions align="end">
+                    <p role="status" aria-live="polite" cms-condition="$source.loading">Creating…</p>
+                    <p role="alert" cms-condition="$source.error">The Page could not be created. Check that its path is unique and valid.</p>
+                    <ulvia-official-action variant="filled" tone="primary"><button type="submit">Create Page</button></ulvia-official-action>
+                </ulvia-official-form-actions>
+            </form>
+        </ulvia-official-surface>
         <section id="pages-list" slot="content" cms-source="/.cms/call/ulvia.cms.pages/list as pages" cms-source-method="POST" cms-source-body="{&quot;limit&quot;:100}">
             <div role="status" aria-live="polite" cms-condition="$source.loading">
                 <h2>Loading Pages</h2>
-                <p>The collection is asking the provider for the current Page catalogue.</p>
+                <p>The latest Page catalogue is being read from the Core.</p>
             </div>
             <div role="alert" cms-condition="$source.error">
                 <h2>Pages unavailable</h2>
-                <p>The provider could not read the Core Page catalogue. Check the provider selection and try again.</p>
+                <p>The provider could not read the Page catalogue. Check the selected provider and try again.</p>
             </div>
             <div cms-condition="$source.loaded">
                 <header>
@@ -30,23 +56,26 @@
                         <header>
                             <strong>{{ page.title }}</strong>
                             <span>{{ page.path }}</span>
-                            <small>{{ page.surface }}</small>
+                            <small>{{ page.surface }} · revision {{ page.revision }}</small>
                         </header>
-                        <form cms-source="/.cms/call/ulvia.cms.pages/rename" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#pages-list">
-                            <input type="hidden" name="id" value="{{ page.id }}">
-                            <input type="hidden" name="expectedRevision" value="{{ page.revision }}" cms-form-value-type="number">
-                            <ulvia-official-field label-position="top">
-                                <span slot="label">Page title</span>
-                                <ulvia-official-input slot="control">
-                                    <input type="text" name="title" value="{{ page.title }}" maxlength="70" autocomplete="off" aria-label="Page title" required>
-                                </ulvia-official-input>
-                            </ulvia-official-field>
-                            <ulvia-official-action variant="filled" tone="primary" size="sm">
-                                <button type="submit">Save title</button>
-                            </ulvia-official-action>
-                            <p role="status" aria-live="polite" cms-condition="$source.loading">Saving…</p>
-                            <p role="alert" cms-condition="$source.error">The title was not saved. Reload the catalogue and try again.</p>
-                        </form>
+                        <ulvia-official-cluster align="center" justify="between">
+                            <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"details"}' data-cms-page-suffix="?id={{ page.id }}">Open Page</a>
+                            <form cms-source="/.cms/call/ulvia.cms.pages/rename" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#pages-list">
+                                <input type="hidden" name="id" value="{{ page.id }}">
+                                <input type="hidden" name="expectedRevision" value="{{ page.revision }}" cms-form-value-type="number">
+                                <ulvia-official-field label-position="inline">
+                                    <span slot="label">Title</span>
+                                    <ulvia-official-input slot="control">
+                                        <input type="text" name="title" value="{{ page.title }}" maxlength="70" autocomplete="off" aria-label="Page title" required>
+                                    </ulvia-official-input>
+                                </ulvia-official-field>
+                                <ulvia-official-action variant="outlined" tone="secondary" size="sm">
+                                    <button type="submit">Rename</button>
+                                </ulvia-official-action>
+                                <p role="status" aria-live="polite" cms-condition="$source.loading">Saving…</p>
+                                <p role="alert" cms-condition="$source.error">Reload this catalogue before retrying.</p>
+                            </form>
+                        </ulvia-official-cluster>
                     </li>
                 </ul>
                 <div cms-condition="pages.items.length == 0">

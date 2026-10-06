@@ -1,0 +1,91 @@
+<ulvia-official-app-shell layout="sidebar" sticky-header>
+    <strong slot="brand">Ulvia</strong>
+    <nav slot="secondary-navigation" aria-label="Workspace">
+        <strong>Content</strong>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'>Pages</a>
+        <strong>Design</strong>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"resources"}'>Blocs</a>
+        <a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"theme"}'>Theme</a>
+    </nav>
+    <ulvia-official-page-shell slot="content" width="lg">
+        <div slot="title"><h1>Page details</h1></div>
+        <div slot="description"><p>Update the shared Page document through revision-checked Core capabilities.</p></div>
+        <a slot="actions" data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'>Back to Pages</a>
+        <section id="page-detail" slot="content" cms-source="/.cms/call/ulvia.cms.pages/get as selected" cms-source-method="POST" cms-source-body='{"id":{"from":"queryParam","name":"id"}}'>
+            <div role="status" aria-live="polite" cms-condition="$source.loading">
+                <h2>Loading Page</h2>
+                <p>The latest revision is being read from the Core.</p>
+            </div>
+            <div role="alert" cms-condition="$source.error">
+                <h2>Page unavailable</h2>
+                <p>The Page may have been removed, or the provider is currently unavailable.</p>
+            </div>
+            <div cms-condition="$source.loaded">
+                <ulvia-official-surface elevation="sm" padding="lg">
+                    <form cms-source="/.cms/call/ulvia.cms.pages/update as saved" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#page-detail" cms-source-success-reset="false">
+                        <input type="hidden" name="id" value="{{ selected.id }}">
+                        <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
+                        <ulvia-official-stack gap="lg">
+                            <header>
+                                <p>{{ selected.surface }} Page · revision {{ selected.revision }}</p>
+                                <h2>{{ selected.title }}</h2>
+                                <code>{{ selected.path }}</code>
+                            </header>
+                            <ulvia-official-field label-position="top">
+                                <label slot="label" for="page-title">Title</label>
+                                <span slot="help">Displayed in Control and used as the default document title.</span>
+                                <ulvia-official-input slot="control">
+                                    <input id="page-title" type="text" name="title" value="{{ selected.title }}" maxlength="70" autocomplete="off" required>
+                                </ulvia-official-input>
+                            </ulvia-official-field>
+                            <ulvia-official-field label-position="top">
+                                <label slot="label" for="page-description">Description</label>
+                                <ulvia-official-textarea slot="control">
+                                    <textarea id="page-description" name="description" maxlength="200" rows="3">{{ selected.description }}</textarea>
+                                </ulvia-official-textarea>
+                            </ulvia-official-field>
+                            <ulvia-official-field label-position="top">
+                                <label slot="label" for="page-content">Page document</label>
+                                <span slot="help">This first editor slice exposes the shared HTML document. Visual Bloc editing remains the next layer.</span>
+                                <ulvia-official-textarea slot="control">
+                                    <textarea id="page-content" name="content" maxlength="1048576" rows="18" spellcheck="false">{{ selected.content }}</textarea>
+                                </ulvia-official-textarea>
+                            </ulvia-official-field>
+                            <ulvia-official-form-actions align="end">
+                                <p role="status" aria-live="polite" cms-condition="$source.loading">Saving…</p>
+                                <p role="alert" cms-condition="$source.error">The revision changed or the Page is invalid. Reload before retrying.</p>
+                                <ulvia-official-action variant="filled" tone="primary"><button type="submit">Save changes</button></ulvia-official-action>
+                            </ulvia-official-form-actions>
+                        </ulvia-official-stack>
+                    </form>
+                </ulvia-official-surface>
+                <ulvia-official-surface elevation="none" padding="lg">
+                    <ulvia-official-cluster align="center" justify="between">
+                        <div><h2>Publication</h2><p>Current state: {{ selected.visible }}</p></div>
+                        <form cms-condition="selected.visible == false" cms-source="/.cms/call/ulvia.cms.pages/publish as publication" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#page-detail">
+                            <input type="hidden" name="id" value="{{ selected.id }}">
+                            <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
+                            <input type="hidden" name="visible" value="true" cms-form-value-type="boolean">
+                            <ulvia-official-action variant="filled" tone="primary"><button type="submit">Publish</button></ulvia-official-action>
+                        </form>
+                        <form cms-condition="selected.visible" cms-source="/.cms/call/ulvia.cms.pages/publish as publication" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#page-detail">
+                            <input type="hidden" name="id" value="{{ selected.id }}">
+                            <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
+                            <input type="hidden" name="visible" value="false" cms-form-value-type="boolean">
+                            <ulvia-official-action variant="outlined" tone="secondary"><button type="submit">Return to draft</button></ulvia-official-action>
+                        </form>
+                    </ulvia-official-cluster>
+                </ulvia-official-surface>
+                <ulvia-official-surface elevation="none" padding="lg">
+                    <h2>Danger zone</h2>
+                    <p>Deletion is revision checked and cannot silently remove a newer edit.</p>
+                    <form cms-source="/.cms/call/ulvia.cms.pages/delete as deletion" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" data-cms-success-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'>
+                        <input type="hidden" name="id" value="{{ selected.id }}">
+                        <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
+                        <ulvia-official-action variant="outlined" tone="danger"><button type="submit">Delete Page</button></ulvia-official-action>
+                    </form>
+                </ulvia-official-surface>
+            </div>
+        </section>
+    </ulvia-official-page-shell>
+</ulvia-official-app-shell>

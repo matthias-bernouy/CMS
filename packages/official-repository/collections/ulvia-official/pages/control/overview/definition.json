@@ -13,6 +13,11 @@
         },
         {
             "contractId": "ulvia.cms.pages",
+            "capabilityId": "create",
+            "versionRange": "^1.1.0"
+        },
+        {
+            "contractId": "ulvia.cms.pages",
             "capabilityId": "rename",
             "versionRange": "^1.0.0"
         }

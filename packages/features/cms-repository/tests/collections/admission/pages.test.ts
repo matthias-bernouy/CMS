@@ -87,6 +87,23 @@ test("collection Pages admit typed capability forms without browser-owned action
     }
 });
 
+test("collection Pages admit stable Page links without authored routes", () => {
+    const source = collectionDocument({ "page.overview.name": "Overview" });
+    const reference =
+        '{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"details"}';
+    const html = `<section><a data-cms-page-ref='${reference}' data-cms-page-suffix="?id={{ page.id }}">Details</a></section>`;
+    expect(() => parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }] })).not.toThrow();
+    for (const invalidHtml of [
+        `<div data-cms-page-ref='${reference}'></div>`,
+        `<a data-cms-page-ref='${reference}' data-cms-page-suffix="/admin/pages"></a>`,
+        `<a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official"}'></a>`,
+    ]) {
+        expect(() =>
+            parseCollectionRelease({ ...source, pages: [{ ...page, document: { html: invalidHtml } }] }),
+        ).toThrow();
+    }
+});
+
 test("collection Pages reject executable or unbounded markup", () => {
     const source = collectionDocument({ "page.overview.name": "Overview" });
     for (const html of [

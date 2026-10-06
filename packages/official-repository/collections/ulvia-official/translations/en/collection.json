@@ -3,6 +3,8 @@
     "collection.name": "Ulvia Official",
     "page.catalog.description": "Live catalog items provided through the selected catalog.items source.",
     "page.catalog.name": "Catalog",
+    "page.details.description": "Edit one site Page through revision-checked Core capabilities.",
+    "page.details.name": "Page details",
     "page.overview.description": "Manage site Pages through the selected local Core provider.",
     "page.overview.name": "Pages",
     "page.resources.description": "Official reusable blocs available to this workspace.",

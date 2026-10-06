@@ -4,10 +4,10 @@ import { bootstrapLocalOfficialResources } from "../../src/runtime/gateway/boots
 const pagesDigest = `sha256:${"5".repeat(64)}`;
 const collectionDigest = `sha256:${"c".repeat(64)}`;
 
-test("local bootstrap connects, selects, installs, and then reuses exact official resources", async () => {
+test("local bootstrap connects, selects, installs, reuses, and upgrades official resources", async () => {
     let installation: Record<string, unknown> | undefined;
     let selected: Record<string, unknown>[] = [];
-    let installed = false;
+    let installedDigest: string | undefined;
     const importManifest = mock(async () => ({}));
     const preview = mock(async (input: Record<string, unknown>) => {
         expect(input.version).toBe("0.5.0");
@@ -39,7 +39,11 @@ test("local bootstrap connects, selects, installs, and then reuses exact officia
         return {};
     });
     const install = mock(async () => {
-        installed = true;
+        installedDigest = collectionDigest;
+        return {};
+    });
+    const upgrade = mock(async () => {
+        installedDigest = collectionDigest;
         return {};
     });
     const options = {
@@ -53,10 +57,11 @@ test("local bootstrap connects, selects, installs, and then reuses exact officia
         collections: {
             importRelease: async () => ({ digest: collectionDigest, release: {} }),
             snapshot: async () => ({
-                revision: installed ? 1 : 0,
-                collections: installed ? [{ collectionId: "ulvia-official" }] : [],
+                revision: installedDigest ? 1 : 0,
+                collections: installedDigest ? [{ collectionId: "ulvia-official", digest: installedDigest }] : [],
             }),
             install,
+            upgrade,
         } as never,
         repositoryUrl: "http://127.0.0.1:5102",
         providerEndpoint: "http://127.0.0.1:5103",
@@ -73,7 +78,7 @@ test("local bootstrap connects, selects, installs, and then reuses exact officia
                     repositoryId: "fixture",
                     publisherId: "ulvia.official",
                     collectionId: "ulvia-official",
-                    version: "1.0.0",
+                    version: "1.1.0",
                     digest: collectionDigest,
                     name: "Ulvia Official",
                     description: "Official Control resources",
@@ -87,12 +92,15 @@ test("local bootstrap connects, selects, installs, and then reuses exact officia
 
     await bootstrapLocalOfficialResources(options);
     await bootstrapLocalOfficialResources(options);
+    installedDigest = `sha256:${"a".repeat(64)}`;
+    await bootstrapLocalOfficialResources(options);
 
-    expect(importManifest).toHaveBeenCalledTimes(2);
+    expect(importManifest).toHaveBeenCalledTimes(3);
     expect(preview).toHaveBeenCalledTimes(1);
     expect(approve).toHaveBeenCalledTimes(1);
     expect(selectContract).toHaveBeenCalledTimes(1);
     expect(install).toHaveBeenCalledTimes(1);
+    expect(upgrade).toHaveBeenCalledTimes(1);
 });
 
 function providerEntry(version: string) {
