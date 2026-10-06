@@ -9,6 +9,7 @@ import { importRepositoryArtifact } from "@bernouy/cms-repository/providers/sour
 import { runCli } from "../../src/cli";
 import { LocalArtifactFiles, LocalContractReleases } from "@bernouy/cms-repository/repository/filesystem";
 import { startLocalRepository } from "../../src/runtime/repository";
+import { writeAuthoredContractFixture } from "../authoredContractFixture";
 
 test("contract and provider releases use explicit kinds and exact local contract references", async () => {
     const data = await mkdtemp(join(tmpdir(), "ulvia-artifacts-"));
@@ -27,7 +28,7 @@ test("contract and provider releases use explicit kinds and exact local contract
         );
         const contract = JSON.parse(await readFile(fixture, "utf8")) as Record<string, unknown>;
         contract.catalogue = { icon: "mail", categories: ["communication"] };
-        await writeFile(join(contractFolder, "definition.json"), JSON.stringify(contract));
+        await writeAuthoredContractFixture(contractFolder, contract);
         const providerFixture = resolve(
             import.meta.dir,
             "../../../../features/cms-repository/fixtures/providers/protocol-v1/example.provider-manifest.json",
@@ -44,7 +45,7 @@ test("contract and provider releases use explicit kinds and exact local contract
             import.meta.dir,
             "../../../../features/cms-repository/fixtures/contracts/protocol-v1/mock.contract.json",
         );
-        await writeFile(join(bundleFolder, "definition.json"), await readFile(bundleFixture));
+        await writeAuthoredContractFixture(bundleFolder, await readFile(bundleFixture));
         await expect(runCli(["release", bundleFolder], options)).rejects.toThrow();
         await mkdir(join(bundleFolder, "fixtures"));
         const assetFixture = resolve(

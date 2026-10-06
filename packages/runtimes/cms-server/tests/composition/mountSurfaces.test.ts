@@ -5,7 +5,7 @@ import { surfaceMountFixtures, waitFor } from "./surfaceMountFixtures";
 describe("production surface mounting", () => {
     test("mounts and stops production surfaces", async () => {
         const events: string[] = [];
-        const starts: Array<[string, number]> = [];
+        const starts: Array<[string, number | { readonly port?: number; readonly hostname?: string }]> = [];
         const logs: string[] = [];
         const runners: FakeRunner[] = [];
         let controlArguments: unknown[] = [];
@@ -29,9 +29,9 @@ describe("production surface mounting", () => {
                 events.push(`group:${this.name}:${prefix}`);
                 callback({ basePath: prefix, owner: this.name });
             }
-            start(port: number): void {
+            start(options: number | { readonly port?: number; readonly hostname?: string }): void {
                 events.push(`start:${this.name}`);
-                starts.push([this.name, port]);
+                starts.push([this.name, options]);
             }
 
             async stopGracefully(): Promise<void> {
@@ -150,8 +150,8 @@ describe("production surface mounting", () => {
         expect(sitemapRefreshOptions).toEqual({ reportError: expect.any(Function) });
         expect(observationStarted).toBe(true);
         expect(starts).toEqual([
-            ["control", 3100],
-            ["delivery", 3101],
+            ["control", { port: 3100, hostname: undefined }],
+            ["delivery", { port: 3101, hostname: undefined }],
         ]);
         expect(events.filter((event) => event.includes("group:"))).toEqual([]);
         expect(logs).toEqual([

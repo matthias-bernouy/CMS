@@ -5,6 +5,7 @@ import { join, resolve } from "node:path";
 import { runCli } from "../../src/cli";
 import { LocalArtifactFiles } from "@bernouy/cms-repository/repository/filesystem";
 import { startLocalRepository } from "../../src/runtime/repository";
+import { writeAuthoredContractFixture } from "../authoredContractFixture";
 
 test("remote contract transfer preserves and re-verifies declared fixture bytes", async () => {
     const sourceData = await mkdtemp(join(tmpdir(), "ulvia-assets-source-"));
@@ -22,7 +23,7 @@ test("remote contract transfer preserves and re-verifies declared fixture bytes"
         );
         const definition = await readFile(join(fixtureRoot, "mock.contract.json"));
         const asset = await readFile(join(fixtureRoot, "mock-assets", "receipt.svg"));
-        await writeFile(join(directory, "definition.json"), definition);
+        await writeAuthoredContractFixture(directory, definition);
         await writeFile(join(directory, "fixtures", "receipt.svg"), asset);
         const coordinate = "ulvia.official/communication.receipt@0.1.0";
 
