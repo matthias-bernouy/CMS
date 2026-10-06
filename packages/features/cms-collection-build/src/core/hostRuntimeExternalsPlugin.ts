@@ -1,4 +1,5 @@
 import type { BunPlugin } from "bun";
+import { isAbsolute, relative, resolve, sep } from "node:path";
 
 /**
  * Bloc bundles must not re-bundle shared component and binding runtimes. Each
@@ -52,3 +53,34 @@ export const hostRuntimeExternalsPlugin: BunPlugin = {
         });
     },
 };
+
+/** Prevent a collection compiler invocation from reading host files or dependencies. */
+export function collectionSourceBoundaryPlugin(sourceRoot: string): BunPlugin {
+    const root = resolve(sourceRoot);
+    return {
+        name: "cms-collection-source-boundary",
+        setup(build) {
+            build.onResolve({ filter: /.*/ }, (args) => {
+                if (isAbsolute(args.path)) {
+                    assertInsideSourceRoot(root, resolve(args.path), args.path);
+                    return undefined;
+                }
+                if (!args.path.startsWith(".")) {
+                    throw new Error(
+                        `Bloc imports may only use bundled relative sources or approved host APIs: ${args.path}`,
+                    );
+                }
+                const candidate = resolve(args.resolveDir, args.path);
+                assertInsideSourceRoot(root, candidate, args.path);
+                return undefined;
+            });
+        },
+    };
+}
+
+function assertInsideSourceRoot(root: string, candidate: string, importPath: string): void {
+    const fromRoot = relative(root, candidate);
+    if (fromRoot === ".." || fromRoot.startsWith(`..${sep}`) || isAbsolute(fromRoot)) {
+        throw new Error(`Bloc import escapes its source bundle: ${importPath}`);
+    }
+}

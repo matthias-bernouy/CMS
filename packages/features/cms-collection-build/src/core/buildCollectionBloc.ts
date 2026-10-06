@@ -7,7 +7,7 @@ import {
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
-import { hostRuntimeExternalsPlugin } from "./hostRuntimeExternalsPlugin";
+import { collectionSourceBoundaryPlugin, hostRuntimeExternalsPlugin } from "./hostRuntimeExternalsPlugin";
 import { writeViewRegistrationEntry } from "./viewRegistrationEntry";
 import { isNativeBlocTag, nativeBlocOwnershipError } from "./nativeBlocTags";
 import { validateBlocTag } from "./validateBloc";
@@ -74,7 +74,7 @@ export async function buildCollectionBloc(
             target: "browser" as const,
             format: "iife" as const,
             minify: true,
-            plugins: [hostRuntimeExternalsPlugin],
+            plugins: [hostRuntimeExternalsPlugin, collectionSourceBoundaryPlugin(tempDir)],
         });
 
         const viewPath = options.viewPath

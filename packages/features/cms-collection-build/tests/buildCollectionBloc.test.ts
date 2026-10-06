@@ -94,7 +94,7 @@ describe("buildCollectionBloc output", () => {
         ).rejects.toThrow("Invalid bloc source path: ../outside.js");
     });
 
-    test.failing("rejects imports that resolve outside the uploaded source bundle", async () => {
+    test("rejects imports that resolve outside the uploaded source bundle", async () => {
         const outsideDir = await mkdtemp(join(tmpdir(), "cms-bloc-outside-"));
         const outsidePath = join(outsideDir, "outside.ts");
         await Bun.write(outsidePath, 'export const marker = "OUTSIDE_BUNDLE";');
@@ -111,6 +111,17 @@ describe("buildCollectionBloc output", () => {
         } finally {
             await rm(outsideDir, { recursive: true, force: true });
         }
+    });
+
+    test("rejects undeclared host package imports", async () => {
+        const view = new File(
+            [`import { readFile } from "node:fs/promises";`, `export class Bloc { static readFile = readFile; }`],
+            "Bloc.ts",
+            { type: "text/typescript" },
+        );
+        await expect(buildCollectionBloc(view, "Unsafe", "Security", "", "demo-unsafe-package")).rejects.toThrow(
+            "Bloc imports may only use bundled relative sources or approved host APIs",
+        );
     });
 
     test("exposes the Component base to view bundles", async () => {
