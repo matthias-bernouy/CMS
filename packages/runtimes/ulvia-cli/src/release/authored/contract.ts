@@ -18,17 +18,11 @@ import {
 /** Assemble authored contract fragments into the one immutable release artifact. */
 export async function compileContractSource(directory: string): Promise<string> {
     const definition = await readJsonSourceRecord(join(directory, "definition.json"), "definition.json");
-    const fragments = await readJsonSourceTree(join(directory, "capabilities"), "capabilities");
-    if (fragments === undefined) {
-        if (!Array.isArray(definition.value.capabilities)) {
-            throw new Error("Contract sources require capabilities/ or an inline capabilities array");
-        }
-        return JSON.stringify(definition.value);
-    }
     if (Object.hasOwn(definition.value, "capabilities")) {
-        throw new Error("definition.json must not declare capabilities when capabilities/ exists");
+        throw new Error("definition.json must keep capabilities in the capabilities/ source tree");
     }
-    if (fragments.length === 0) {
+    const fragments = await readJsonSourceTree(join(directory, "capabilities"), "capabilities");
+    if (!fragments?.length) {
         throw new Error("capabilities/ must contain at least one JSON capability fragment");
     }
     assertUniqueSourceIds(fragments, "id", "Capability");

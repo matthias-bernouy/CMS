@@ -44,8 +44,8 @@ capabilities recursively below `capabilities/`. Each capability is one JSON
 object. Optional `mocks/**/*.json` fragments contain one mock plus its explicit
 `capabilityId`; mocks embedded in capability fragments reject. The compiler
 sorts capabilities and mocks by their declared IDs, so paths never affect the
-immutable digest. A legacy monolithic `capabilities` array remains accepted when
-the `capabilities/` directory is absent.
+immutable digest. `definition.json` cannot contain an inline `capabilities`
+array: the recursive source tree is the only authored contract format.
 
 An optional conformance companion uses `conformance/definition.json`, recursive
 `conformance/scenarios/**/*.json` scenario objects and recursive

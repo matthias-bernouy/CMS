@@ -20,16 +20,13 @@ import {
 /** Assemble recursive conformance sources without coupling them to contract publication. */
 export async function compileConformanceSource(directory: string): Promise<string | undefined> {
     const legacy = await readOptionalJsonSourceRecord(join(directory, "conformance.json"), "conformance.json");
+    if (legacy) {
+        throw new Error("conformance.json is not an authored source; use the conformance/ source tree");
+    }
     const definition = await readOptionalJsonSourceRecord(
         join(directory, "conformance", "definition.json"),
         "conformance/definition.json",
     );
-    if (legacy && definition) {
-        throw new Error("Use either conformance.json or conformance/, never both");
-    }
-    if (legacy) {
-        return JSON.stringify(legacy.value);
-    }
     if (!definition) {
         return undefined;
     }

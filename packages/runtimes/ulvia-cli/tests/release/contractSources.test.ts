@@ -59,6 +59,32 @@ test("recursive contract sources reject duplicate IDs and unknown mock owners", 
     }
 });
 
+test("authored contracts reject retired monolithic source shapes", async () => {
+    const root = await mkdtemp(join(tmpdir(), "ulvia-contract-monolith-"));
+    try {
+        await writeJson(join(root, "definition.json"), {
+            kind: "contract",
+            capabilities: [capability("alpha")],
+        });
+        await expect(compileContractSource(root)).rejects.toThrow("capabilities/ source tree");
+
+        await writeJson(join(root, "definition.json"), {
+            kind: "contract",
+            protocol: "ulvia-provider/v1",
+            schemaDialect: "ulvia-schema/v1",
+            contractId: "example.contract",
+            name: "Example contract",
+            version: "1.0.0",
+            publisherId: "example.publisher",
+        });
+        await writeJson(join(root, "capabilities", "alpha.json"), capability("alpha"));
+        await writeJson(join(root, "conformance.json"), { scenarios: [] });
+        await expect(compileConformanceSource(root)).rejects.toThrow("use the conformance/ source tree");
+    } finally {
+        await rm(root, { recursive: true, force: true });
+    }
+});
+
 test("release rejects an invalid authored conformance suite before publishing its contract", async () => {
     const root = await mkdtemp(join(tmpdir(), "ulvia-contract-release-"));
     const source = join(root, "example.contract");
