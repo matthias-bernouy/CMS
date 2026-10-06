@@ -4,6 +4,7 @@ import type { CollectionStore } from "@bernouy/cms-repository/collections/instal
 import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
 import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
 import type { ProviderRepositorySource } from "@bernouy/cms-repository/providers/sources";
+import type { RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/sources";
 import type { ProviderManagement } from "./ProviderManagement";
 
 const PROVIDER_ID = "ulvia.official";
@@ -31,6 +32,7 @@ export async function bootstrapLocalOfficialResources(options: {
     readonly providerToken: string;
     readonly providerSource?: ProviderRepositorySource;
     readonly collectionSource?: CollectionRepositorySource;
+    readonly onManifestImported?: (entry: RepositoryArtifactEntry) => Promise<void>;
 }): Promise<void> {
     const providerSource =
         options.providerSource ?? new HttpProviderRepository("local-bootstrap", options.repositoryUrl);
@@ -44,6 +46,7 @@ export async function bootstrapLocalOfficialResources(options: {
         throw new Error("The official local provider manifest is unavailable from the bootstrap repository");
     }
     await options.management.importManifest(await providerSource.get(manifestEntry));
+    await options.onManifestImported?.(manifestEntry);
 
     let state = await options.management.list();
     let installation = state.installations.find((item) => item.providerId === PROVIDER_ID);

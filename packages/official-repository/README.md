@@ -8,9 +8,10 @@ The separate `@bernouy/official-repository-server` runtime never scans this
 directory; the release pipeline pushes reviewed exact coordinates into its
 persistent store.
 
-The official Ulvia provider implementation lives separately in
-`packages/official-provider`. Generic protocol fixtures remain beside the
-`cms-repository` tests and must not be moved here.
+The official `ulvia.cms.*` contracts are served by the `@bernouy/cms-core`
+surface after admission. Generic protocol fixtures remain beside the
+`cms-repository` tests and must not be moved here. `catalog.items`,
+`forms.submissions` and `media.assets` are no longer published demo contracts.
 
 A contract may carry an independently versioned `conformance.json` companion.
 It is admitted against the exact contract digest in tests and contains only

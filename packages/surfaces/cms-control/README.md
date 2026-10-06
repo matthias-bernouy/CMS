@@ -21,7 +21,7 @@ A working composition lives in `packages/runtimes/cms-server/src/runtime/`.
 
 ## Installation
 
-This package lives in the `@bernouy/cms-core` monorepo as a workspace
+This package lives in the `@bernouy/cms-workspace` monorepo as a workspace
 package. External installation is not the primary distribution path
 today.
 

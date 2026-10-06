@@ -1,8 +1,11 @@
 import { startLocalRepository } from "../runtime/repository";
-import { loadOrCreateDevRuntimeConfig, loadOrCreateRepositoryToken } from "../runtime/config";
+import {
+    loadOrCreateCoreProviderToken,
+    loadOrCreateDevRuntimeConfig,
+    loadOrCreateRepositoryToken,
+} from "../runtime/config";
 import { startLocalCms, stopLocalCms, type DevPorts } from "../runtime/cms";
 import { localMongoStatus, startLocalMongo, stopLocalMongo } from "../runtime/mongo";
-import { loadOrCreateProviderToken, startLocalProvider, stopLocalProvider } from "../runtime/provider";
 import type { UlviaPaths } from "../runtime/paths";
 import { bootstrapOfficialRepository } from "./bootstrap";
 
@@ -11,7 +14,7 @@ const DEFAULT_PORTS: DevPorts = Object.freeze({
     delivery: 5101,
     mongo: 27019,
     repository: 5102,
-    provider: 5103,
+    core: 5103,
 });
 
 export async function devCommand(
@@ -36,7 +39,7 @@ export async function devCommand(
         const config = await loadOrCreateDevRuntimeConfig(paths.dev);
         log(`Email: ${config.adminEmail}`);
         log(`Password: ${config.adminPassword}`);
-        log(`Provider token: ${await loadOrCreateProviderToken(paths.dev)}`);
+        log(`CMS Core provider token: ${await loadOrCreateCoreProviderToken(paths.dev)}`);
         log(`Repository token: ${await loadOrCreateRepositoryToken(paths.dev)}`);
         return;
     }
@@ -59,32 +62,24 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
         paths.repository,
         await loadOrCreateRepositoryToken(paths.dev),
     );
-    const provider = await startLocalProvider(paths, ports).catch((error) => {
-        repository.stop();
-        throw error;
-    });
     let cms: Awaited<ReturnType<typeof startLocalCms>>;
     try {
         cms = await startLocalCms(paths, config, mongo, ports, {
-            localProviderToken: provider.coreCallToken,
-            localProviderEndpoint: provider.url,
-            localProviderAccessToken: provider.token,
+            coreProviderToken: await loadOrCreateCoreProviderToken(paths.dev),
         });
     } catch (error) {
-        await stopLocalProvider(provider.process);
         repository.stop();
         throw error;
     }
     log("");
     log(`Resource repository: ${repository.url}`);
-    log(`Official provider: ${provider.url}`);
+    log(`CMS Core provider: http://127.0.0.1:${ports.core}`);
     log(`CMS Control: http://127.0.0.1:${ports.control}`);
     log(`CMS Delivery: http://127.0.0.1:${ports.delivery}`);
     log("Credentials: bun run ulvia -- dev credentials");
     try {
         await superviseCms(cms);
     } finally {
-        await stopLocalProvider(provider.process);
         repository.stop();
     }
 }
@@ -95,7 +90,7 @@ export function resolveDevPorts(environment: Record<string, string | undefined>)
         delivery: readPort(environment, "ULVIA_DEV_DELIVERY_PORT", DEFAULT_PORTS.delivery),
         mongo: readPort(environment, "ULVIA_DEV_MONGO_PORT", DEFAULT_PORTS.mongo),
         repository: readPort(environment, "ULVIA_DEV_REPOSITORY_PORT", DEFAULT_PORTS.repository),
-        provider: DEFAULT_PORTS.provider,
+        core: DEFAULT_PORTS.core,
     };
     if (new Set(Object.values(ports)).size !== Object.values(ports).length) {
         throw new Error("Ulvia dev ports must be distinct");

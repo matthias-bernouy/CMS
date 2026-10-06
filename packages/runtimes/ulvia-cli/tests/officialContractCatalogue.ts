@@ -5,7 +5,6 @@ import { InMemoryReleaseCatalogue } from "@bernouy/cms-repository/contracts/cata
 export async function officialContractCatalogue(): Promise<InMemoryReleaseCatalogue> {
     const catalogue = new InMemoryReleaseCatalogue();
     for (const contractId of [
-        "catalog.items",
         "ulvia.cms.access",
         "ulvia.cms.collections",
         "ulvia.cms.design",

@@ -1,6 +1,6 @@
 # CmsCore — Bernouy CMS platform
 
-Bun + TypeScript monorepo (`@bernouy/cms-core`). Packages are organized in
+Bun + TypeScript monorepo (`@bernouy/cms-workspace`). Packages are organized in
 five layers with a one-way dependency rule:
 
 > **runtimes → surfaces → resources → features → foundation**

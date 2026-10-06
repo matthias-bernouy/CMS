@@ -137,23 +137,16 @@ describe("runtime env validation", () => {
         expect(() => readRuntimeEnv({ ...validEnv(), CMS_GATEWAY_SITE_ID: "bad site" })).toThrow();
     });
 
-    test("keeps the local provider bridge credential optional and opaque", () => {
-        expect(readRuntimeEnv(validEnv()).CMS_LOCAL_PROVIDER_TOKEN).toBeUndefined();
-        expect(
-            readRuntimeEnv({ ...validEnv(), CMS_LOCAL_PROVIDER_TOKEN: "opaque-local-provider-core-secret" })
-                .CMS_LOCAL_PROVIDER_TOKEN,
-        ).toBe("opaque-local-provider-core-secret");
-    });
-
-    test("requires a complete local provider bootstrap tuple", () => {
-        expect(() => readRuntimeEnv({ ...validEnv(), CMS_LOCAL_PROVIDER_ENDPOINT: "http://127.0.0.1:5103" })).toThrow(
+    test("requires a complete CMS Core provider bootstrap tuple", () => {
+        expect(() => readRuntimeEnv({ ...validEnv(), CORE_PUBLIC_URL: "http://127.0.0.1:5103" })).toThrow(
             /configured together/,
         );
         expect(() =>
             readRuntimeEnv({
                 ...validEnv(),
-                CMS_LOCAL_PROVIDER_ENDPOINT: "http://127.0.0.1:5103",
-                CMS_LOCAL_PROVIDER_ACCESS_TOKEN: "opaque-token",
+                CORE_PORT: "5103",
+                CORE_PUBLIC_URL: "http://127.0.0.1:5103",
+                CMS_CORE_PROVIDER_TOKEN: "opaque-core-provider-token",
             }),
         ).toThrow(/requires CMS_REPOSITORY_URL/);
         expect(
@@ -161,12 +154,25 @@ describe("runtime env validation", () => {
                 ...validEnv(),
                 CMS_GATEWAY_SITE_ID: "default",
                 CMS_REPOSITORY_URL: "http://127.0.0.1:5102",
-                CMS_LOCAL_PROVIDER_ENDPOINT: "http://127.0.0.1:5103",
-                CMS_LOCAL_PROVIDER_ACCESS_TOKEN: "opaque-token",
+                CORE_PORT: "5103",
+                CORE_PUBLIC_URL: "http://127.0.0.1:5103",
+                CMS_CORE_PROVIDER_TOKEN: "opaque-core-provider-token",
             }),
         ).toMatchObject({
-            CMS_LOCAL_PROVIDER_ENDPOINT: "http://127.0.0.1:5103",
-            CMS_LOCAL_PROVIDER_ACCESS_TOKEN: "opaque-token",
+            CORE_PORT: 5103,
+            CORE_PUBLIC_URL: "http://127.0.0.1:5103",
+            CMS_CORE_PROVIDER_TOKEN: "opaque-core-provider-token",
         });
+        expect(() =>
+            readRuntimeEnv({
+                ...validEnv(),
+                CONTROL_PORT: "5103",
+                CMS_GATEWAY_SITE_ID: "default",
+                CMS_REPOSITORY_URL: "http://127.0.0.1:5102",
+                CORE_PORT: "5103",
+                CORE_PUBLIC_URL: "http://127.0.0.1:5103",
+                CMS_CORE_PROVIDER_TOKEN: "opaque-core-provider-token",
+            }),
+        ).toThrow(/must be distinct/);
     });
 });

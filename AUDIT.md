@@ -18,14 +18,14 @@ There is no production deployment or production data to preserve. Historical imp
 | `cms-dashboards` | Removed after audit | The disposable Dashboard aggregate, assignments, collection resource, routes and UI were deleted before the Control Page rebuild. |
 | `cms-editor-system-v2` | Removed after audit | The retired editor package and its Control shell were deleted before the planned rewrite. |
 | `cms-gateway` | Completed | Media is coupled to generic invocation by an implicit `fileId` convention; HTTP handling is duplicated. |
-| `ulvia-official-provider` | Relocated after audit | The official provider is now a direct product package with explicit media identity and a declared server entrypoint. |
+| `cms-core` | Created after audit | The provider-facing surface now serves admitted `ulvia.cms.*` bindings directly; the standalone official-provider product and demo contracts were removed. |
 | `cms-repository` | Completed | Collection admission and installation disagree; upgrade checks miss text override validity; HTTP source clients duplicate policy. |
 
 ## Highest-priority verified findings
 
 1. **Resolved after audit: Bloc source imports are constrained to the supplied source bundle.** The regression coverage now lives beside the Repository build toolchain. See [`buildCollectionBloc.test.ts`](packages/features/cms-repository/tests/collections/admission/tooling/buildCollectionBloc.test.ts) and [`hostRuntimeExternalsPlugin.ts`](packages/features/cms-repository/src/collections/tooling/hostRuntimeExternalsPlugin.ts).
 2. **Resolved after audit: the compiled Bloc editor channel was removed.** Collection settings and placement now live in declarative collection JSON; collection builds produce only the browser runtime artifact.
-3. **Resolved after audit: provider media identity is explicit and consistent.** Contracts opt into media URLs through `media.idInput: "fileId"`; Gateway no longer infers media intent from arbitrary binary inputs, and the official media contract and handler use `fileId`.
+3. **Resolved after audit: provider media identity is explicit and consistent.** Contracts opt into media URLs through `media.idInput: "fileId"`; Gateway no longer infers media intent from arbitrary binary inputs. The former official demonstration media contract was subsequently removed.
 4. **Email verification and password reset consume their token before the durable credential change.** A transient failure in `markEmailVerified` or `setPassword` makes the token unusable for retry. This is already documented locally and captured by failing recovery tests. See [`flows.ts`](packages/features/cms-auth/src/application/core/public-flows/flows.ts#L65) and [`publicAuthFailure.test.ts`](packages/features/cms-auth/tests/application/public-flows/publicAuthFailure.test.ts#L13).
 5. **Resolved after audit: collection bundles are supported end to end.** CLI authoring, immutable local storage, bounded HTTP transport, CMS admission, Mongo storage and installed Bloc thumbnails now carry verified assets. Collection requirements are admitted against the contract catalogue and reported separately as ready, missing or degraded against the site's selected provider grants.
 6. **Resolved after audit: collection upgrades revalidate mutable site state.** Saved text overrides are parsed against the candidate release before the digest changes, and existing Bloc setting declarations cannot silently change during an upgrade.
@@ -74,12 +74,11 @@ There is no production deployment or production data to preserve. Historical imp
 - The browser media runtime still prioritizes old `data-source-width`/`data-source-height` over current `data-cms-*` attributes. Workspace sources no longer produce the old names. Identity aliases also retain old numeric Source IDs, which may still protect persisted records. [`providerMediaImages.ts`](packages/features/cms-gateway/src/media/browser/providerMediaImages.ts#L23), [`ProviderIdentityAliases.ts`](packages/features/cms-gateway/src/identity/core/ProviderIdentityAliases.ts#L37)
 - Several public helpers and `./identity/request-scope` have no known production consumer outside the package. This is only a workspace usage observation; external consumers are unknown. [`package.json`](packages/features/cms-gateway/package.json#L15)
 
-### `ulvia-official-provider`
+### `cms-core`
 
-- Resolved after audit: the handler receives the exact catalogue, forms and media releases claimed by its manifest, requires every served capability at startup and validates JSON/binary outputs against them.
-- Resolved after audit: the public handler rejects blank credentials before serving requests.
-- The bounded body reader duplicates a pattern used in Gateway and Repository. [`handler.ts`](packages/official-provider/src/http/handler.ts#L98)
-- Resolved after relocation: provider tests consume the declared root and `./local-fs` exports instead of its source tree. [`handler.test.ts`](packages/official-provider/tests/handler.test.ts#L7)
+- Created after the audit as the dedicated provider-facing surface for admitted `ulvia.cms.*` releases.
+- It derives routes from contract bindings, authenticates every request and invokes the injected closed dispatcher without choosing stores or environment configuration.
+- Control and Delivery retain the normal Gateway path. The former standalone provider process and `/.cms/internal/core-call` relay were removed.
 
 ### `cms-repository`
 
@@ -92,13 +91,13 @@ There is no production deployment or production data to preserve. Historical imp
 
 ## What appears sound
 
-Package dependencies generally follow the repository's layer direction. Mongo, filesystem, SMTP, Sharp, and Node HTTP adapters are mostly kept behind dedicated subpaths. The reviewed packages have no blocking directory fanout finding. Several risks already have focused tests, including expected-failure tests that document unresolved behavior. The `cms-gateway` review reported passing architecture checks and 97 package tests; the official provider review reported its single test passing. The repository suite was run again for this review: 570 passing tests. These results should be rerun before implementation work.
+Package dependencies generally follow the repository's layer direction. Mongo, filesystem, SMTP, Sharp, and Node HTTP adapters are mostly kept behind dedicated subpaths. The reviewed packages have no blocking directory fanout finding. Several risks already have focused tests, including expected-failure tests that document unresolved behavior. Historical test counts in this audit should be rerun before implementation work.
 
 ## Action plan
 
 1. **Completed: make the collection release scope coherent.** V1 now carries assets and capability requirements through publication, transport, import, installation and upgrade. Persisted text overrides are revalidated.
 2. **Make authored Bloc compilation safe and deterministic.** Constrain the resolved import graph to the supplied bundle and remove the historical self-registration form rather than preserving two registration contracts. Public Bloc ID validation and the obsolete editor artifact have already been resolved.
-3. **Completed: normalize the provider media contract.** `fileId` and explicit media capability declarations are canonical across contracts, Gateway and the official provider.
+3. **Completed: normalize the provider media contract.** `fileId` and explicit media capability declarations are canonical across contracts and Gateway.
 4. **Completed: remove the Dashboard model.** Its package, persistence, collection resource, routes, assignments and Control UI are gone. Do not recreate it during the Page rebuild.
 5. **Fix auth state transitions.** Make verification/reset token consumption retry-safe and bind the built-in provider invariant to a stable identity. Remove token-bearing console output. Decide whether OIDC is in the current product; either compose and test it or remove its incomplete public flow for now.
 6. **Build the new editor on canonical contracts.** Reuse `cms-content` binding types and URL helpers; inject page/file access; represent tree actions as a discriminated union. Avoid carrying over mechanical CSS fragments or direct Control route constants.
@@ -116,7 +115,7 @@ The follow-up `cms-repository` structure cleanup aligned collection installation
 
 The follow-up editor cleanup removed `@bernouy/cms-editor-system-v2`, the V2 page/composition editor integration from Control and the compiled Bloc editor artifact. Admin page settings, composition CRUD, generic Bloc previews and content persistence remain. Bloc settings and placement are declarative collection JSON, and collection build ownership now lives behind `@bernouy/cms-repository/collections/build`.
 
-Provider follow-up added explicit media declarations, exact-release startup validation for the official provider, administrator enable/disable/revoke actions, credential cleanup on revocation, and collection requirement readiness derived from selected provider grants. Live conformance execution remains intentionally unimplemented rather than being inferred from provider self-reporting.
+Provider follow-up added explicit media declarations, administrator enable/disable/revoke actions, credential cleanup on revocation, and collection requirement readiness derived from selected provider grants. The later CMS Core surface validates its exact admitted releases at startup. Live conformance execution remains intentionally unimplemented rather than being inferred from provider self-reporting.
 
 Dashboard follow-up ultimately removed the package, Mongo and memory storage,
 collection format, activation/assignment routes, static pages and Control UI.

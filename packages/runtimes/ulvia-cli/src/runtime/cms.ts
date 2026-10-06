@@ -9,7 +9,7 @@ export type DevPorts = Readonly<{
     delivery: number;
     mongo: number;
     repository: number;
-    provider: number;
+    core: number;
 }>;
 
 export type CmsProcess = ReturnType<typeof Bun.spawn>;
@@ -21,9 +21,7 @@ export async function startLocalCms(
     ports: DevPorts,
     options: Readonly<{
         inheritOutput?: boolean;
-        localProviderToken?: string;
-        localProviderEndpoint?: string;
-        localProviderAccessToken?: string;
+        coreProviderToken?: string;
     }> = {},
 ): Promise<CmsProcess> {
     const entrypoint = fileURLToPath(import.meta.resolve("@bernouy/cms-server"));
@@ -48,10 +46,12 @@ export async function startLocalCms(
             MONGO_URL: mongo.url,
             CMS_REPOSITORY_URL: `http://127.0.0.1:${ports.repository}`,
             CMS_GATEWAY_SITE_ID: "default",
-            ...(options.localProviderToken ? { CMS_LOCAL_PROVIDER_TOKEN: options.localProviderToken } : {}),
-            ...(options.localProviderEndpoint ? { CMS_LOCAL_PROVIDER_ENDPOINT: options.localProviderEndpoint } : {}),
-            ...(options.localProviderAccessToken
-                ? { CMS_LOCAL_PROVIDER_ACCESS_TOKEN: options.localProviderAccessToken }
+            ...(options.coreProviderToken
+                ? {
+                      CORE_PORT: String(ports.core),
+                      CORE_PUBLIC_URL: `http://127.0.0.1:${ports.core}`,
+                      CMS_CORE_PROVIDER_TOKEN: options.coreProviderToken,
+                  }
                 : {}),
             CMS_AUTH_SITE_NAME: "Ulvia local CMS",
             CMS_AUTH_EMAIL_COOLDOWN_SECONDS: "0",

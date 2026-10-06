@@ -10,7 +10,7 @@ bun run ulvia -- dev stop
 bun run ulvia -- release packages/official-repository/collections/test
 bun run ulvia -- release /path/to/contract-directory
 bun run ulvia -- release /path/to/provider-directory
-bun run ulvia -- push contract ulvia.official/catalog.items@0.1.0 --repository https://repository.example
+bun run ulvia -- push contract ulvia.official/ulvia.cms.operations@1.0.0 --repository https://repository.example
 bun run ulvia -- pull collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
 bun run ulvia -- yank collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example --reason "Superseded"
 bun run ulvia -- restore collection ulvia.official/ulvia-official@1.0.0 --repository https://repository.example
@@ -20,9 +20,9 @@ bun run ulvia -- prune
 The CLI stores local releases in `ULVIA_DATA_DIR/repository`, or under
 `$XDG_DATA_HOME/ulvia/repository` / `~/.local/share/ulvia/repository` by default.
 The separate `dev/` directory holds credentials, CMS files, and MongoDB data.
-`dev` also starts the loopback official provider on port 5103. `dev credentials`
-prints its bearer token alongside the CMS administrator credentials. The
-provider keeps form submissions in its own `dev/official-provider/` directory.
+`dev` mounts the authenticated CMS Core provider surface on loopback port 5103.
+`dev credentials` prints its bearer token alongside the CMS administrator
+credentials.
 `release <resource-directory>` reads `definition.json` and routes by `kind`:
 `collection`, `contract`, or `provider-manifest`. It validates and stores one
 immutable release. A provider manifest must reference exact contract releases
@@ -98,25 +98,23 @@ ID, and discovery stops there so `settings/definition.json` is never mistaken
 for a nested Bloc. Intermediate grouping directories contain only directories
 and do not affect release identity.
 
-To try the official provider, release these resources in order, then start `dev`
-and open `/admin/settings/providers` on the Control port:
+The bundled bootstrap already admits the official CMS Core contracts, manifest
+and Control collection before starting the local stack. To publish the same
+resources manually, release the Core contracts before the manifest:
 
 ```bash
-bun run ulvia -- release packages/official-repository/contracts/catalog.items
-bun run ulvia -- release packages/official-repository/contracts/forms.submissions
-bun run ulvia -- release packages/official-repository/contracts/media.assets
-bun run ulvia -- release packages/official-repository/contracts/ulvia.provider.cms-instances
+bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.access
+bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.collections
+bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.design
+bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.files
+bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.operations
+bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.pages
+bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.providers
 bun run ulvia -- release packages/official-repository/providers/ulvia.official
 bun run ulvia -- dev
 ```
 
-Import the provider manifest from Explore providers. Connect the provider at
-`http://127.0.0.1:5103` with the bearer token from `dev credentials`. Review
-and approve the connection, then connect the contract releases separately
-from Explore sources.
-The provider privately persists one `default` instance and reports its bounded
-discovery state through `ulvia.provider.cms-instances`; its health URL and
-provider routing never enter the CMS execution plan. The connection review
-validates the runtime report and exact manifest claims;
-it does not yet execute a live conformance suite. This provider is a local
-development fixture with one account and a static catalogue and SVG asset.
+Local `dev` connects and selects this provider automatically. Manual connection
+uses `http://127.0.0.1:5103` and the bearer token from `dev credentials`.
+Connection review validates the runtime report and exact manifest claims; it
+does not yet execute a live conformance suite.

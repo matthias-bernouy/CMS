@@ -52,13 +52,12 @@ return an opaque `nextCursor`. Repository clients consume all pages with global
 duplicate, loop and memory bounds. Exact-coordinate reads are independent of
 the metadata-only catalogue index.
 
-The first official resources are `catalog.items`, `forms.submissions`,
-`media.assets`, the provider-only `ulvia.provider.cms-instances` lifecycle
-contract and the `ulvia.official` manifest under `packages/official-repository/`.
-The `@bernouy/ulvia-official-provider/server` entrypoint serves one authenticated account,
-a durable private `default` CMS record, a starter catalogue item,
-provider-owned form receipts and one SVG asset. Instance discovery returns only
-safe public fields and keeps routing, health URLs and credentials private.
+The official repository publishes the `ulvia.cms.*` Core contracts, the
+provider-only `ulvia.provider.cms-instances` contract reserved for future
+instance providers, and the `ulvia.official` CMS Core manifest. The local
+runtime implements only the Core contracts. The former `catalog.items`,
+`forms.submissions` and `media.assets` demonstration contracts are not official
+resources.
 The [CLI guide](../../packages/runtimes/ulvia-cli/README.md) gives the local
 release and connection steps.
 
@@ -91,14 +90,12 @@ the capabilities required by their exact document and transitive Blocs. Control
 activates the revisioned plan from the same-origin referring Page before each
 call and sends only its immutable execution pin to the gateway.
 
-The local provider-to-Core bridge is contract-neutral. CMS features register
-Core capability handlers in a closed dispatcher, while the provider derives
-its public HTTP relay from admitted contract bindings. The shared bounded JSON
-budget is applied at the Control gateway, provider relay and local Core
-transport, so a value accepted by a contract is not rejected by an intermediate
-hop solely because of JSON escaping overhead. The current 1 MiB Page document
-bound, including its worst-case JSON escaping, fits inside the shared 8 MiB
-envelope budget.
+The local CMS Core provider surface is contract-neutral. CMS features register
+capability handlers in a closed dispatcher, while `@bernouy/cms-core` derives
+its HTTP routes from admitted contract bindings. Control and Delivery still use
+their normal `/.cms/call` gateway transport; there is no direct Core shortcut or
+internal relay hop. The shared bounded JSON budget applies at the gateway and
+Core surface.
 
 | Surface | Routes relative to its base path |
 | --- | --- |

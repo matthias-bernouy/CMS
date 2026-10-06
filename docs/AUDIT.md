@@ -26,17 +26,16 @@ public/admin request bodies are bounded before parsing.
 The remaining production work is concentrated in the P1 operational and
 long-lived compatibility items below rather than these original failure paths.
 
-Lot 1 of the provider-managed redesign is also complete. The official provider
-now owns a durable private local instance registry and exposes bounded discovery
-through `ulvia.provider.cms-instances@1.0.0`. The existing Gateway path still
-pins only installation, exact release, capability and consumer authority;
-provider credentials and instance routing remain opaque.
+The provider-managed redesign now exposes the official `ulvia.cms.*` contracts
+through the dedicated `@bernouy/cms-core` surface. The standalone development
+provider, its private instance registry and the catalogue/forms/media demo
+contracts were removed. Control and Delivery still traverse the normal Gateway;
+the surface replaces only the provider-side relay.
 
-That discovery is intentionally not a lifecycle manager yet. Its file registry
-assumes one official-provider writer, its health probe proves only bounded
-loopback reachability, and the independently admitted conformance suite has no
-remote repository coordinate or live runner. These are explicit gates for the
-autonomous local provider, not capabilities inferred from the read-only API.
+`ulvia.provider.cms-instances@1.0.0` remains an authored contract reserved for a
+future infrastructure provider such as Ulvia Cloud. The local CMS Core manifest
+does not claim it, and no current runtime implements instance discovery or
+lifecycle management.
 
 ## Evidence And Scope
 
@@ -152,10 +151,9 @@ now a declarative non-workspace tree. This should become an explicit rule:
   dependency graph;
 - or the architecture checker should model and validate it.
 
-`@bernouy/official-provider` is a standalone product but declares itself as a
-runtime to fit the existing checker. A future `product` or `service` package
-class would express the intended boundary more accurately and could restrict it
-to Foundation plus selected public CMS protocols.
+`@bernouy/cms-core` is now an ordinary surface package, so the former product
+classification exception no longer exists. It consumes public feature contracts
+and receives runtime dependencies through its constructor.
 
 The runtime still uses several literal `"default"` site/scope identifiers while
 the gateway can use `CMS_GATEWAY_SITE_ID`. One database per site makes this
@@ -603,17 +601,18 @@ destructive prune behavior are explicit. Publication should later persist upload
 receipts for restart recovery, upload independent assets with bounded
 parallelism, and expose clearer progress and recovery diagnostics.
 
-### Official Provider
+### CMS Core Surface
 
-The official provider is correctly separated as its own product. It authenticates
-requests, validates capabilities and outputs, bounds submission bodies and binds
-to loopback for local use.
+The CMS Core provider boundary is now an injected surface rather than a
+standalone product. It authenticates requests, derives routes from exact
+admitted contracts, validates inputs and outputs, and dispatches only registered
+`ulvia.cms.*` capabilities. The local runtime binds it to loopback before
+installing and selecting its manifest.
 
-It remains a development implementation: one local account, filesystem
-submissions, no durable multi-account database, no production rate limits,
-rotation, audit, callbacks, jobs, backups, deployment image or conformance
-attestation. Its existence must not be interpreted as a production-ready
-official provider.
+The surface is not an infrastructure provider: it does not create, enumerate or
+route CMS instances. Multi-account hosting, instance lifecycle, external network
+exposure, credential rotation and conformance attestation belong to a future
+provider such as Ulvia Cloud.
 
 ## Security Assessment
 

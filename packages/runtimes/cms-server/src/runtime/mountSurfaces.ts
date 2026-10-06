@@ -1,18 +1,10 @@
-import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
-import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
 import type { RuntimeEnv } from "../runtimeEnv";
 import type { ProductionAuthentication } from "./auth";
 import type { CoreStores } from "./stores/core";
 import { createPublicFileStores } from "./stores/authorFiles";
 import type { ProductionGateway } from "./gateway/createProductionGateway";
-import { ProviderManagement } from "./gateway/ProviderManagement";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
 import { createContentReader } from "@bernouy/cms-content/rendering";
-import { mountLocalCoreCapabilities } from "./coreCapabilities";
-import { DefaultCoreCapabilityDispatcher } from "@bernouy/cms-content";
-import { registerOfficialCoreCapabilities } from "./core-contracts";
-import { CoreOperationExecutor } from "./core-operations/CoreOperationExecutor";
-import { CollectionSources } from "./core-contracts/collections/sources";
 
 export type { ProductionSurfaceRuntime } from "./surfaceRuntime";
 
@@ -33,25 +25,6 @@ export async function mountProductionSurfaces(
 ): Promise<ProductionSurfaceHandle> {
     const { env, core, authentication, gateway } = options;
     const controlRunner = new runtime.Runner();
-    const collectionRepositorySources = env.CMS_REPOSITORY_URL
-        ? [new HttpCollectionRepository("local", env.CMS_REPOSITORY_URL)]
-        : [];
-    const providerSources = env.CMS_REPOSITORY_URL ? [new HttpProviderRepository("local", env.CMS_REPOSITORY_URL)] : [];
-    const providerManagement = gateway ? new ProviderManagement(gateway, core.secrets, providerSources) : undefined;
-    if (env.CMS_LOCAL_PROVIDER_TOKEN) {
-        const dispatcher = new DefaultCoreCapabilityDispatcher();
-        const operations = new CoreOperationExecutor(core.coreOperations);
-        registerOfficialCoreCapabilities(
-            dispatcher,
-            core,
-            gateway,
-            operations,
-            providerManagement,
-            new CollectionSources(core.collections, collectionRepositorySources),
-        );
-        await operations.recover();
-        mountLocalCoreCapabilities(controlRunner, dispatcher, env.CMS_LOCAL_PROVIDER_TOKEN);
-    }
     const controlCms = new runtime.Control(controlRunner, core.repo, authentication.auth, {
         configuration: {
             deliveryUrl: env.DELIVERY_PUBLIC_URL,

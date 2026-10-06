@@ -28,15 +28,15 @@ runtimes -> surfaces -> features -> foundation
   instantiate adapters, mount surfaces, and start listeners.
 
 Direct product packages may live at `packages/<product>/` when they are not a
-CMS layer. `packages/official-provider` owns the official provider product and
-declares its dependency rank in `package.json`. `packages/official-repository`
-contains authored official releases only; it is not a runtime dependency and
-does not mount routes, connect to databases or choose adapters.
+CMS layer. `packages/official-repository` contains authored official releases
+only; it is not a runtime dependency and does not mount routes, connect to
+databases or choose adapters.
 
-`official-provider` may import generic packages from Foundation and the public
-provider-protocol/contract facades it implements. CMS features and surfaces must
-not import the official provider. The local CLI may depend on its `./server`
-entrypoint solely to compose the complete development environment.
+`@bernouy/cms-core` is the provider-facing surface for the official
+`ulvia.cms.*` contracts. It receives admitted releases and a capability
+dispatcher from a runtime; it must not choose persistence or read environment
+configuration. The local CLI launches `cms-server`, which mounts this surface
+alongside Control and Delivery.
 
 Never introduce dependencies against the direction above. Feature-to-feature
 dependencies are allowed only through the published package exports.

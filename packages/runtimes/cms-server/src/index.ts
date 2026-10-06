@@ -9,6 +9,7 @@ import { dirname, join } from "node:path";
 import { ProviderManagement } from "./runtime/gateway/ProviderManagement";
 import { bootstrapLocalOfficialResources } from "./runtime/gateway/bootstrapLocalOfficialResources";
 import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
+import { startLocalCoreProvider, type LocalCoreProviderHandle } from "./runtime/localCoreProvider";
 
 const env = readRuntimeEnv(process.env);
 await validateCmsStorageRoots(env.CMS_FILES_DIR);
@@ -27,23 +28,47 @@ const gateway = env.CMS_GATEWAY_SITE_ID
           env.CMS_PROVIDER_MEDIA_DIR ?? join(dirname(env.CMS_FILES_DIR), "cms-provider-media"),
       )
     : undefined;
-if (gateway && env.CMS_REPOSITORY_URL && env.CMS_LOCAL_PROVIDER_ENDPOINT && env.CMS_LOCAL_PROVIDER_ACCESS_TOKEN) {
+let localCoreProvider: LocalCoreProviderHandle | undefined;
+if (gateway && env.CMS_REPOSITORY_URL && env.CORE_PUBLIC_URL && env.CMS_CORE_PROVIDER_TOKEN) {
     const providerSource = new HttpProviderRepository("local-bootstrap", env.CMS_REPOSITORY_URL);
-    await bootstrapLocalOfficialResources({
-        management: new ProviderManagement(gateway, core.secrets, [providerSource]),
-        collections: core.collections,
-        repositoryUrl: env.CMS_REPOSITORY_URL,
-        providerEndpoint: env.CMS_LOCAL_PROVIDER_ENDPOINT,
-        providerToken: env.CMS_LOCAL_PROVIDER_ACCESS_TOKEN,
-        providerSource,
-    });
+    const management = new ProviderManagement(gateway, core.secrets, [providerSource]);
+    try {
+        await bootstrapLocalOfficialResources({
+            management,
+            collections: core.collections,
+            repositoryUrl: env.CMS_REPOSITORY_URL,
+            providerEndpoint: env.CORE_PUBLIC_URL,
+            providerToken: env.CMS_CORE_PROVIDER_TOKEN,
+            providerSource,
+            onManifestImported: async ({ version }) => {
+                localCoreProvider = await startLocalCoreProvider({
+                    env,
+                    core,
+                    gateway,
+                    management,
+                    manifestVersion: version,
+                });
+            },
+        });
+    } catch (error) {
+        await localCoreProvider?.stop();
+        await core.close();
+        throw error;
+    }
 }
-const surfaces = await mountProductionSurfaces({
-    env,
-    core,
-    authentication,
-    ...(gateway ? { gateway } : {}),
-});
+let surfaces;
+try {
+    surfaces = await mountProductionSurfaces({
+        env,
+        core,
+        authentication,
+        ...(gateway ? { gateway } : {}),
+    });
+} catch (error) {
+    await localCoreProvider?.stop();
+    await core.close();
+    throw error;
+}
 
 let stopping = false;
 const shutdown = async (signal: string) => {
@@ -54,6 +79,7 @@ const shutdown = async (signal: string) => {
     console.log(`\n→ Stopping (${signal})...`);
     try {
         await surfaces.stop();
+        await localCoreProvider?.stop();
     } finally {
         await core.close();
     }

@@ -3,8 +3,8 @@
     "protocol": "ulvia-provider/v1",
     "schemaDialect": "ulvia-schema/v1",
     "providerId": "ulvia.official",
-    "name": "Ulvia Official Provider",
-    "version": "0.1.0",
+    "name": "Ulvia CMS Core",
+    "version": "0.2.0",
     "provenance": {
         "publisherId": "ulvia.official",
         "publishedAt": "2026-10-01T00:00:00Z"
@@ -19,24 +19,6 @@
         { "id": "provider-token", "label": "Provider token", "required": true, "secretType": "token" }
     ],
     "implementations": [
-        {
-            "contractId": "catalog.items",
-            "version": "0.1.0",
-            "digest": "sha256:608121a52e9c7233f3f91a85ef315763cb24821a8c35ff9b57cb8823fb30ad34",
-            "requires": []
-        },
-        {
-            "contractId": "forms.submissions",
-            "version": "0.1.0",
-            "digest": "sha256:b41742ac44a18bef4d7cce8b7d77c6083b83581389e739240af67a55af17732f",
-            "requires": []
-        },
-        {
-            "contractId": "media.assets",
-            "version": "0.1.0",
-            "digest": "sha256:894842b6bcbcb0465614fe11ee5e929ce195c6f932994a838e6cfecd8d78f5c3",
-            "requires": []
-        },
         {
             "contractId": "ulvia.cms.access",
             "version": "1.0.0",
@@ -77,12 +59,6 @@
             "contractId": "ulvia.cms.providers",
             "version": "1.0.0",
             "digest": "sha256:f48e63ac505ba3d103b1996f3e4e50fc4824faa23e190e63f1195b6ee8cc8a80",
-            "requires": []
-        },
-        {
-            "contractId": "ulvia.provider.cms-instances",
-            "version": "1.0.0",
-            "digest": "sha256:09806efae5f8cae5f125c90dc41c2e13ba791e2f5ce34a8826b11f1a83d640a3",
             "requires": []
         }
     ]

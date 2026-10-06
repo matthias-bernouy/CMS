@@ -32,9 +32,6 @@
             "path": "packages/features/cms-repository"
         },
         {
-            "path": "packages/official-provider"
-        },
-        {
             "path": "packages/features/cms-gateway"
         },
         {
@@ -42,6 +39,9 @@
         },
         {
             "path": "packages/surfaces/cms-control"
+        },
+        {
+            "path": "packages/surfaces/cms-core"
         },
         {
             "path": "packages/runtimes/ulvia-cli"

@@ -21,8 +21,7 @@
     "dependencies": {
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/cms-server": "workspace:*",
-        "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/ulvia-official-provider": "workspace:*"
+        "@bernouy/cms-repository": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^7.0.2"

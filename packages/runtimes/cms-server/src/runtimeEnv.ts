@@ -15,17 +15,17 @@ export { parsePort } from "./runtimeEnvParsing";
 export type RuntimeEnv = {
     CONTROL_PORT: number;
     DELIVERY_PORT: number;
+    CORE_PORT?: number;
     CONTROL_PUBLIC_URL: string;
     DELIVERY_PUBLIC_URL: string;
+    CORE_PUBLIC_URL?: string;
     CMS_SESSION_SECRET: string;
     CMS_KEK_HEX?: string;
     CMS_KEK: RuntimeKekConfig;
     CMS_ADMIN_EMAIL: string;
     CMS_ADMIN_PASSWORD: string;
     CMS_GATEWAY_SITE_ID?: string;
-    CMS_LOCAL_PROVIDER_TOKEN?: string;
-    CMS_LOCAL_PROVIDER_ENDPOINT?: string;
-    CMS_LOCAL_PROVIDER_ACCESS_TOKEN?: string;
+    CMS_CORE_PROVIDER_TOKEN?: string;
     CMS_PROVIDER_MEDIA_DIR?: string;
     CMS_REPOSITORY_URL?: string;
     CMS_FILES_DIR: string;
@@ -60,24 +60,12 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     if (migrationRetention > 10_000) {
         throw new Error("CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION must be at most 10000");
     }
-    const localProviderEndpoint = source.CMS_LOCAL_PROVIDER_ENDPOINT?.trim();
-    const localProviderAccessToken = source.CMS_LOCAL_PROVIDER_ACCESS_TOKEN?.trim();
-    if (Boolean(localProviderEndpoint) !== Boolean(localProviderAccessToken)) {
-        throw new Error("CMS local provider endpoint and access token must be configured together");
-    }
-    if (
-        localProviderAccessToken &&
-        (localProviderAccessToken.length > 512 || /[\r\n]/u.test(localProviderAccessToken))
-    ) {
-        throw new Error("CMS_LOCAL_PROVIDER_ACCESS_TOKEN is invalid");
-    }
-    if (localProviderEndpoint && (!source.CMS_REPOSITORY_URL?.trim() || !source.CMS_GATEWAY_SITE_ID?.trim())) {
-        throw new Error("CMS local provider bootstrap requires CMS_REPOSITORY_URL and CMS_GATEWAY_SITE_ID");
-    }
+    const coreConfiguration = parseCoreProviderConfig(source, CONTROL_PORT, DELIVERY_PORT);
 
     return {
         CONTROL_PORT,
         DELIVERY_PORT,
+        ...coreConfiguration,
         CONTROL_PUBLIC_URL,
         DELIVERY_PUBLIC_URL,
         CMS_SESSION_SECRET: requiredEnv(source, "CMS_SESSION_SECRET"),
@@ -88,15 +76,6 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         ...(!source.CMS_GATEWAY_SITE_ID?.trim()
             ? {}
             : { CMS_GATEWAY_SITE_ID: parseSelectionSiteId(source.CMS_GATEWAY_SITE_ID.trim()) }),
-        ...(!source.CMS_LOCAL_PROVIDER_TOKEN?.trim()
-            ? {}
-            : { CMS_LOCAL_PROVIDER_TOKEN: source.CMS_LOCAL_PROVIDER_TOKEN.trim() }),
-        ...(!localProviderEndpoint
-            ? {}
-            : {
-                  CMS_LOCAL_PROVIDER_ENDPOINT: parseHttpUrl(localProviderEndpoint, "CMS_LOCAL_PROVIDER_ENDPOINT"),
-              }),
-        ...(!localProviderAccessToken ? {} : { CMS_LOCAL_PROVIDER_ACCESS_TOKEN: localProviderAccessToken }),
         ...(!source.CMS_PROVIDER_MEDIA_DIR?.trim()
             ? {}
             : { CMS_PROVIDER_MEDIA_DIR: source.CMS_PROVIDER_MEDIA_DIR.trim() }),
@@ -135,6 +114,38 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
             `${CONTROL_PUBLIC_URL}/auth/reset-password`,
         ),
         ...clientAddress,
+    };
+}
+
+function parseCoreProviderConfig(
+    source: RuntimeEnvSource,
+    controlPort: number,
+    deliveryPort: number,
+): Pick<RuntimeEnv, "CORE_PORT" | "CORE_PUBLIC_URL" | "CMS_CORE_PROVIDER_TOKEN"> {
+    const configured = [source.CORE_PORT, source.CORE_PUBLIC_URL, source.CMS_CORE_PROVIDER_TOKEN].map((value) =>
+        Boolean(value?.trim()),
+    );
+    if (configured.some(Boolean) && !configured.every(Boolean)) {
+        throw new Error("CORE_PORT, CORE_PUBLIC_URL and CMS_CORE_PROVIDER_TOKEN must be configured together");
+    }
+    if (!configured[0]) {
+        return {};
+    }
+    if (!source.CMS_REPOSITORY_URL?.trim() || !source.CMS_GATEWAY_SITE_ID?.trim()) {
+        throw new Error("CMS Core provider bootstrap requires CMS_REPOSITORY_URL and CMS_GATEWAY_SITE_ID");
+    }
+    const CORE_PORT = parsePort(source.CORE_PORT, "CORE_PORT", 5103);
+    if (CORE_PORT === controlPort || CORE_PORT === deliveryPort) {
+        throw new Error("CORE_PORT, CONTROL_PORT and DELIVERY_PORT must be distinct");
+    }
+    const token = source.CMS_CORE_PROVIDER_TOKEN!.trim();
+    if (token.length < 24 || token.length > 512 || /[\r\n]/u.test(token)) {
+        throw new Error("CMS_CORE_PROVIDER_TOKEN is invalid");
+    }
+    return {
+        CORE_PORT,
+        CORE_PUBLIC_URL: parseHttpUrl(source.CORE_PUBLIC_URL!, "CORE_PUBLIC_URL"),
+        CMS_CORE_PROVIDER_TOKEN: token,
     };
 }
 

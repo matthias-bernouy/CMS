@@ -18,7 +18,7 @@ test("local bootstrap connects, selects, installs, reuses, and upgrades official
     let installedDigest: string | undefined;
     const importManifest = mock(async () => ({}));
     const preview = mock(async (input: Record<string, unknown>) => {
-        expect(input.version).toBe("0.1.0");
+        expect(input.version).toBe("0.2.0");
         return { ticket: "bootstrap-ticket" };
     });
     const approve = mock(async () => {
@@ -28,7 +28,7 @@ test("local bootstrap connects, selects, installs, reuses, and upgrades official
             accountId: "local-dev",
             endpoint: "http://127.0.0.1:5103",
             status: "enabled",
-            manifestVersion: "0.1.0",
+            manifestVersion: "0.2.0",
             revision: 1,
             observedAt: "2026-10-06T00:00:00.000Z",
             contracts: coreContractIds.map((contractId, index) => ({
@@ -77,7 +77,7 @@ test("local bootstrap connects, selects, installs, reuses, and upgrades official
         providerToken: "opaque-provider-token",
         providerSource: {
             id: "fixture",
-            list: async () => [providerEntry("0.0.1"), providerEntry("0.1.0")],
+            list: async () => [providerEntry("0.1.0"), providerEntry("0.2.0")],
             get: async () => new TextEncoder().encode("{}"),
         },
         collectionSource: {
@@ -119,7 +119,7 @@ function providerEntry(version: string) {
         publisherId: "ulvia.official",
         id: "ulvia.official",
         version,
-        digest: `sha256:${(version === "0.1.0" ? "1" : "0").repeat(64)}`,
+        digest: `sha256:${(version === "0.2.0" ? "2" : "1").repeat(64)}`,
         name: "Ulvia Official Provider",
     };
 }

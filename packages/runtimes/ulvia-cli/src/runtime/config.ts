@@ -41,7 +41,14 @@ export async function loadOrCreateDevRuntimeConfig(devRoot: string): Promise<Dev
 }
 
 export async function loadOrCreateRepositoryToken(devRoot: string): Promise<string> {
-    const path = join(devRoot, "repository-token");
+    return loadOrCreateToken(join(devRoot, "repository-token"), "Repository");
+}
+
+export async function loadOrCreateCoreProviderToken(devRoot: string): Promise<string> {
+    return loadOrCreateToken(join(devRoot, "core-provider-token"), "CMS Core provider");
+}
+
+async function loadOrCreateToken(path: string, label: string): Promise<string> {
     const existing = await readSecret(path);
     if (existing) {
         return existing;
@@ -56,7 +63,7 @@ export async function loadOrCreateRepositoryToken(devRoot: string): Promise<stri
         }
         const concurrent = await readSecret(path);
         if (!concurrent) {
-            throw new Error("Repository token disappeared during creation");
+            throw new Error(`${label} token disappeared during creation`);
         }
         return concurrent;
     }
@@ -102,7 +109,7 @@ async function readSecret(path: string): Promise<string | null> {
         throw error;
     });
     if (value !== null && !/^[A-Za-z0-9_-]{43}$/u.test(value)) {
-        throw new Error("Local repository token is invalid");
+        throw new Error("Local runtime token is invalid");
     }
     return value;
 }

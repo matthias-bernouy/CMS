@@ -18,14 +18,10 @@ A package can skip intermediate layers. Feature-to-feature imports use declared
 package exports. See the [package map](packages.md) and [import rules](imports.md).
 
 Products that are not CMS layers can live directly below `packages/`.
-`official-provider` contains the official provider domain, adapters and server
-entrypoint. `official-repository` contains its versioned catalogue of official
-contracts, provider manifests and collections; it is authored publication data,
-not an executable dependency layer.
-
-The official provider may consume Foundation and public provider-protocol
-facades. CMS features and surfaces do not depend on its implementation; only
-the local CLI composes its declared server entrypoint for development.
+`official-repository` contains the versioned catalogue of official contracts,
+provider manifests and collections; it is authored publication data, not an
+executable dependency layer. The `cms-core` surface exposes admitted official
+CMS contracts through the same provider protocol used by every other provider.
 
 ## Domain Organization
 
@@ -95,13 +91,15 @@ is generic infrastructure in `@bernouy/secret-store` under Foundation.
 
 ## Surface And Runtime Composition
 
-Control mounts its admin UI, file-routed API and editor on a supplied `Runner`.
+Control mounts its authentication kernel, collection-backed administration Pages
+and shared capability transports on a supplied `Runner`.
 Delivery mounts public rendering, authentication, files, gateway routes,
-sitemaps and robots on its supplied runner. Neither surface chooses
+sitemaps and robots on its supplied runner. CMS Core mounts the provider report
+and the declared HTTP bindings of `ulvia.cms.*`. No surface chooses
 production databases or storage roots.
 
 `cms-server` reads environment configuration, wires concrete dependencies,
-mounts both surfaces and starts listeners. `ulvia-cli` manages the persistent
+mounts all three surfaces and starts listeners. `ulvia-cli` manages the persistent
 local development stack. `official-repository-server` mounts the public immutable
 repository and its signed publication protocol over one persistent production
 volume; authored official releases remain separate publication inputs. New

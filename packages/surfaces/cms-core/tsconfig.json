@@ -1,0 +1,15 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "composite": true,
+        "outDir": "dist",
+        "rootDir": "."
+    },
+    "include": ["src/**/*.ts", "tests/**/*.ts"],
+    "references": [
+        { "path": "../../foundation/http-runner" },
+        { "path": "../../features/cms-content" },
+        { "path": "../../features/cms-repository" }
+    ]
+}
+

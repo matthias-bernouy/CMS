@@ -1,8 +1,5 @@
 {
     "contracts": [
-        "contracts/catalog.items/definition.json",
-        "contracts/forms.submissions/definition.json",
-        "contracts/media.assets/definition.json",
         "contracts/cms/ulvia.cms.access/definition.json",
         "contracts/cms/ulvia.cms.collections/definition.json",
         "contracts/cms/ulvia.cms.design/definition.json",

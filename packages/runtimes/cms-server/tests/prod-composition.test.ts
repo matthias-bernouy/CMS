@@ -29,13 +29,18 @@ describe("production CMS composition", () => {
         expect(gateway).toMatch(/resolveToken:\s*async\s*\(reference\)/);
     });
 
-    test("closes MongoDB only after the HTTP surfaces have drained", async () => {
+    test("closes MongoDB only after every HTTP surface has drained", async () => {
         const source = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
-        const stop = source.search(/await\s+surfaces\.stop\s*\(\s*\)/);
-        const close = source.search(/await\s+core\.close\s*\(\s*\)/);
+        const shutdown = source.search(/const\s+shutdown\s*=/);
+        const shutdownSource = source.slice(shutdown);
+        const stop = shutdownSource.search(/await\s+surfaces\.stop\s*\(\s*\)/);
+        const stopCoreProvider = shutdownSource.search(/await\s+localCoreProvider\?\.stop\s*\(\s*\)/);
+        const close = shutdownSource.search(/await\s+core\.close\s*\(\s*\)/);
 
+        expect(shutdown).toBeGreaterThan(-1);
         expect(stop).toBeGreaterThan(-1);
-        expect(close).toBeGreaterThan(stop);
+        expect(stopCoreProvider).toBeGreaterThan(stop);
+        expect(close).toBeGreaterThan(stopCoreProvider);
         expect(source).not.toContain("process.exit(0)");
     });
 });
