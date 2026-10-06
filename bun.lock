@@ -90,6 +90,7 @@
       "dependencies": {
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/blob-store": "workspace:*",
+        "@bernouy/secret-store": "workspace:*",
         "canonicalize": "^3.0.0",
         "htmlparser2": "^10.1.0",
         "jsonc-parser": "^3.3.1",
@@ -228,7 +229,10 @@
       "name": "@bernouy/cms-core",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/blob-store": "workspace:*",
+        "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
+        "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
       },

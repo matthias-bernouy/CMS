@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { InMemorySecretStore, secretKeyToRef } from "@bernouy/secret-store";
+import { ProviderManagement } from "@bernouy/cms-repository/providers/management";
 import type { ProductionGateway } from "../../src/runtime/gateway/createProductionGateway";
-import { ProviderManagement } from "../../src/runtime/gateway/ProviderManagement";
 
 test("revoking a provider installation removes its stored credentials after the durable transition", async () => {
     const secrets = new InMemorySecretStore();
@@ -39,7 +39,7 @@ test("revoking a provider installation removes its stored credentials after the 
         manifests: {},
     } as unknown as ProductionGateway;
 
-    const result = await new ProviderManagement(gateway, secrets).setStatus({
+    const result = await management(gateway, secrets).setStatus({
         installationId: installation.id,
         revision: 3,
         action: "revoke",
@@ -82,7 +82,7 @@ test("retries credential cleanup after the installation is already revoked", asy
         manifests: {},
     } as unknown as ProductionGateway;
 
-    const result = await new ProviderManagement(gateway, secrets).setStatus({
+    const result = await management(gateway, secrets).setStatus({
         installationId: installation.id,
         revision: 4,
         action: "revoke",
@@ -110,7 +110,7 @@ test("replaces the complete selection graph at the caller revision", async () =>
         },
     ];
 
-    const result = await new ProviderManagement(gateway, new InMemorySecretStore()).replaceSelections({
+    const result = await management(gateway, new InMemorySecretStore()).replaceSelections({
         expectedRevision: 2,
         selections: selected,
     });
@@ -120,3 +120,11 @@ test("replaces the complete selection graph at the caller revision", async () =>
         selected: [{ siteId: "site-1", ...selected[0] }],
     });
 });
+
+function management(gateway: ProductionGateway, secrets: InMemorySecretStore): ProviderManagement {
+    return new ProviderManagement(gateway, secrets, {
+        readReport: async () => {
+            throw new Error("Report probing is not used by this test.");
+        },
+    });
+}

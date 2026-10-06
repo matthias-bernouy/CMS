@@ -5,7 +5,7 @@ import { compareSemVer } from "@bernouy/cms-repository/contracts/compatibility";
 import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
 import type { ProviderRepositorySource } from "@bernouy/cms-repository/providers/sources";
 import type { RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/sources";
-import type { ProviderManagement } from "./ProviderManagement";
+import type { ProviderManagement } from "@bernouy/cms-repository/providers/management";
 
 const PROVIDER_ID = "ulvia.official";
 const CONTROL_COLLECTION_ID = "ulvia-official";

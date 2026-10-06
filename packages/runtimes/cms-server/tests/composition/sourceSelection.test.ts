@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
+import { activateProviderContract } from "@bernouy/cms-repository/providers/management";
 import type { ProductionGateway } from "../../src/runtime/gateway/createProductionGateway";
-import { activateProviderContract } from "../../src/runtime/gateway/activateProviderContracts";
 
 test("source selection pins only the ready exact release and preserves other contracts", async () => {
     let ready = true;

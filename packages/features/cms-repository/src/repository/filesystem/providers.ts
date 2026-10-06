@@ -2,10 +2,10 @@ import { createHash } from "node:crypto";
 import {
     admitProviderManifestJson,
     type AdmittedProviderManifest,
+    InMemoryProviderManifestCatalogue,
     type ProviderManifestDigest,
     verifyStoredProviderManifestJson,
 } from "cms-repository/exports/providers/index";
-import { InMemoryProviderManifestCatalogue } from "cms-repository/exports/providers/catalogue";
 import { LocalArtifactFiles } from "./artifacts/files";
 import { LocalContractReleases } from "./contracts";
 import { LocalRepositoryYanks } from "./yanks";

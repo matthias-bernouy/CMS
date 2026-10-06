@@ -36,3 +36,9 @@ export {
     satisfiesVersionRange,
     type VersionRange,
 } from "cms-repository/providers/manifests/core/versioning/versionRange";
+export type {
+    CatalogueProviderManifest,
+    ProviderManifestCatalogue,
+    ProviderManifestYank,
+} from "cms-repository/providers/manifests/interfaces/ProviderManifestCatalogue";
+export { InMemoryProviderManifestCatalogue } from "cms-repository/providers/manifests/default-implementation/InMemoryProviderManifestCatalogue";

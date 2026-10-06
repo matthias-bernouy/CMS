@@ -10,6 +10,7 @@
     "include": ["src/**/*.ts"],
     "references": [
         { "path": "../../foundation/binary-media" },
-        { "path": "../../foundation/blob-store" }
+        { "path": "../../foundation/blob-store" },
+        { "path": "../../foundation/secret-store" }
     ]
 }

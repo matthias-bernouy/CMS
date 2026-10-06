@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { InMemorySecretStore } from "@bernouy/secret-store";
-import { ProviderConnectionWorkflow } from "../../src/runtime/gateway/ProviderConnectionWorkflow";
+import { ProviderConnectionWorkflow } from "@bernouy/cms-repository/providers/management";
 import type { ProductionGateway } from "../../src/runtime/gateway/createProductionGateway";
 
 test("provider reconnection rotates the credential after revision-checked approval", async () => {
@@ -50,7 +50,7 @@ test("provider reconnection rotates the credential after revision-checked approv
     const ids = ["next-secret", "preview-ticket"];
     const workflow = new ProviderConnectionWorkflow(gateway, secrets, {
         lifecycle,
-        fetchReport: async () => report,
+        readReport: async () => report,
         createId: () => ids.shift()!,
         now: () => 1_000,
     });

@@ -6,10 +6,11 @@ import { createProductionGateway } from "./runtime/gateway/createProductionGatew
 import { validateCmsStorageRoots } from "./runtime/stores/storageRoots";
 import { readRuntimeEnv } from "./runtimeEnv";
 import { dirname, join } from "node:path";
-import { ProviderManagement } from "./runtime/gateway/ProviderManagement";
+import { ProviderManagement } from "@bernouy/cms-repository/providers/management";
 import { bootstrapLocalOfficialResources } from "./runtime/gateway/bootstrapLocalOfficialResources";
 import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
 import { startLocalCoreProvider, type LocalCoreProviderHandle } from "./runtime/localCoreProvider";
+import { fetchProviderReport } from "./runtime/gateway/fetchProviderReport";
 
 const env = readRuntimeEnv(process.env);
 await validateCmsStorageRoots(env.CMS_FILES_DIR);
@@ -31,7 +32,10 @@ const gateway = env.CMS_GATEWAY_SITE_ID
 let localCoreProvider: LocalCoreProviderHandle | undefined;
 if (gateway && env.CMS_REPOSITORY_URL && env.CORE_PUBLIC_URL && env.CMS_CORE_PROVIDER_TOKEN) {
     const providerSource = new HttpProviderRepository("local-bootstrap", env.CMS_REPOSITORY_URL);
-    const management = new ProviderManagement(gateway, core.secrets, [providerSource]);
+    const management = new ProviderManagement(gateway, core.secrets, {
+        sources: [providerSource],
+        readReport: fetchProviderReport,
+    });
     try {
         await bootstrapLocalOfficialResources({
             management,

@@ -1,8 +1,8 @@
-import type { ProductionGateway } from "./createProductionGateway";
+import type { ProviderManagementGateway } from "./types";
 
 /** Pin one contract release to one approved provider account. */
 export async function activateProviderContract(
-    gateway: ProductionGateway,
+    gateway: ProviderManagementGateway,
     input: { installationId: string; contractId: string; version: string; digest: string },
 ) {
     const installed = await gateway.installations.get({ siteId: gateway.siteId, installationId: input.installationId });

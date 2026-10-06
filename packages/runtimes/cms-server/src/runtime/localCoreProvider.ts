@@ -8,9 +8,9 @@ import {
 import { BunRunner } from "@bernouy/http-runner";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
+import type { ProviderManagement } from "@bernouy/cms-repository/providers/management";
 import type { RuntimeEnv } from "../runtimeEnv";
 import type { ProductionGateway } from "./gateway/createProductionGateway";
-import type { ProviderManagement } from "./gateway/ProviderManagement";
 import type { CoreStores } from "./stores/core";
 
 const PROVIDER_ID = "ulvia.official";

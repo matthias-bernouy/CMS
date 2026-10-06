@@ -1,11 +1,9 @@
 import { randomUUID } from "node:crypto";
-import {
-    ProviderInstallationLifecycle,
-    type ProviderInstallationPreparation,
-} from "@bernouy/cms-repository/providers/installations";
+import { ProviderInstallationLifecycle } from "cms-repository/providers/installations/core/lifecycle/ProviderInstallationLifecycle";
+import type { ProviderInstallationPreparation } from "cms-repository/providers/installations/interfaces/ProviderInstallationPreparation";
+import type { ProviderRuntimeReport } from "cms-repository/providers/installations/interfaces/ProviderRuntimeReport";
+import type { ProviderManagementGateway } from "./types";
 import { secretKeyToRef, secretRefToKey, type SecretStore } from "@bernouy/secret-store";
-import type { ProductionGateway } from "./createProductionGateway";
-import { fetchProviderReport } from "./fetchProviderReport";
 
 export type ProviderConnectionPreviewInput = {
     providerId: string;
@@ -43,10 +41,12 @@ type Pending = {
 };
 type Dependencies = {
     lifecycle?: Lifecycle;
-    fetchReport?: typeof fetchProviderReport;
+    readReport: ProviderReportReader;
     createId?: () => string;
     now?: () => number;
 };
+
+export type ProviderReportReader = (endpoint: string, token: string) => Promise<ProviderRuntimeReport>;
 
 const PREVIEW_LIFETIME_MS = 5 * 60_000;
 
@@ -59,14 +59,14 @@ export class ProviderConnectionWorkflow {
     private readonly now;
 
     constructor(
-        private readonly gateway: ProductionGateway,
+        private readonly gateway: ProviderManagementGateway,
         private readonly secrets: SecretStore,
-        dependencies: Dependencies = {},
+        dependencies: Dependencies,
     ) {
         this.lifecycle =
             dependencies.lifecycle ??
             new ProviderInstallationLifecycle(gateway.installations, gateway.manifests, () => new Date().toISOString());
-        this.reportReader = dependencies.fetchReport ?? fetchProviderReport;
+        this.reportReader = dependencies.readReport;
         this.createId = dependencies.createId ?? randomUUID;
         this.now = dependencies.now ?? Date.now;
     }
@@ -213,7 +213,7 @@ function previewResult(
     providerName: string,
     endpoint: string,
     manifestDigest: string,
-    report: Awaited<ReturnType<typeof fetchProviderReport>>,
+    report: ProviderRuntimeReport,
 ): ProviderConnectionPreview {
     return {
         ticket,

@@ -1,9 +1,19 @@
-import { importProviderManifest, type ProviderRepositorySource } from "@bernouy/cms-repository/providers/sources";
-import { ProviderInstallationLifecycle } from "@bernouy/cms-repository/providers/installations";
+import { ProviderInstallationLifecycle } from "cms-repository/providers/installations/core/lifecycle/ProviderInstallationLifecycle";
+import { importProviderManifest } from "cms-repository/providers/sources/importProviderManifest";
+import type { ProviderRepositorySource } from "cms-repository/providers/sources/interfaces";
 import { secretRefToKey, type SecretStore } from "@bernouy/secret-store";
-import type { ProductionGateway } from "./createProductionGateway";
-import { activateProviderContract } from "./activateProviderContracts";
-import { ProviderConnectionWorkflow, type ProviderConnectionPreviewInput } from "./ProviderConnectionWorkflow";
+import { activateProviderContract } from "./activateProviderContract";
+import {
+    ProviderConnectionWorkflow,
+    type ProviderConnectionPreviewInput,
+    type ProviderReportReader,
+} from "./ProviderConnectionWorkflow";
+import type { ProviderManagementGateway } from "./types";
+
+export type ProviderManagementOptions = Readonly<{
+    sources?: readonly ProviderRepositorySource[];
+    readReport: ProviderReportReader;
+}>;
 
 /** Host-owned orchestration: report probing and approval are separate admin actions. */
 export class ProviderManagement {
@@ -11,15 +21,18 @@ export class ProviderManagement {
     private readonly lifecycle: ProviderInstallationLifecycle;
 
     constructor(
-        private readonly gateway: ProductionGateway,
+        private readonly gateway: ProviderManagementGateway,
         private readonly secrets: SecretStore,
-        private readonly sources: readonly ProviderRepositorySource[] = [],
+        options: ProviderManagementOptions,
     ) {
-        this.connections = new ProviderConnectionWorkflow(gateway, secrets);
+        this.sources = options.sources ?? [];
+        this.connections = new ProviderConnectionWorkflow(gateway, secrets, { readReport: options.readReport });
         this.lifecycle = new ProviderInstallationLifecycle(gateway.installations, gateway.manifests, () =>
             new Date().toISOString(),
         );
     }
+
+    private readonly sources: readonly ProviderRepositorySource[];
 
     async importManifest(manifest: string | Uint8Array): Promise<unknown> {
         return importProviderManifest(manifest, this.sources, this.gateway.releases, this.gateway.manifests);

@@ -15,13 +15,14 @@
         "./contracts/mongo": "./src/exports/contracts/mongo.ts",
         "./contracts/protocol": "./src/exports/contracts/protocol.ts",
         "./providers": "./src/exports/providers/index.ts",
-        "./providers/catalogue": "./src/exports/providers/catalogue.ts",
+        "./providers/catalogue": "./src/exports/providers/index.ts",
         "./providers/compatibility": "./src/exports/providers/compatibility.ts",
         "./providers/installations": "./src/exports/providers/installations.ts",
         "./providers/selections": "./src/exports/providers/selections.ts",
         "./providers/sources": "./src/exports/providers/sources.ts",
         "./providers/http": "./src/exports/providers/http.ts",
         "./providers/mongo": "./src/exports/providers/mongo.ts",
+        "./providers/management": "./src/exports/providers/management.ts",
         "./collections": "./src/exports/collections/index.ts",
         "./collections/build": "./src/exports/collections/build.ts",
         "./collections/installations": "./src/exports/collections/installations.ts",
@@ -35,6 +36,7 @@
     "dependencies": {
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/blob-store": "workspace:*",
+        "@bernouy/secret-store": "workspace:*",
         "canonicalize": "^3.0.0",
         "htmlparser2": "^10.1.0",
         "jsonc-parser": "^3.3.1"
