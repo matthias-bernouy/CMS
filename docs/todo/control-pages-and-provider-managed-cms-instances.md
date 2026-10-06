@@ -3,8 +3,10 @@
 **Status (2026-10-06): target design with all seven Control domains represented
 by provider-backed V1 Pages.** Provider-owned local instance discovery, local
 official-resource bootstrap, site-owned Control Page routing and the official
-Core contract catalogue are implemented. Most non-Page administrative mutations
-and full legacy-product parity remain planned.
+Core contract catalogue are implemented. The seven Core contracts now expose
+their bounded revision-safe administration operations; most corresponding
+collection-owned Control mutation flows and full legacy-product parity remain
+planned.
 
 This note records the intended direction for replacing visual Foundation
 components and the removed collection View model. The former Dashboard system and
@@ -364,12 +366,20 @@ ulvia.cms.pages/delete
 ulvia.cms.pages/publish
 ```
 
-The other official V1 contracts deliberately start with bounded projections:
-installed collection releases, the author file tree, effective design and
-language state, selected providers/contracts, members and safe site identity,
-and maintenance/migration history. File-folder creation is also exposed as a
-command. Upload streaming stays on the CMS kernel transport; instance backup,
-restore and Core updates stay on `ulvia.provider.cms-instances`.
+The other official V1 contracts expose bounded projections plus revision-safe
+domain mutations: collection installation/configuration/migrations, author-file
+metadata, languages/themes/text overrides, exact provider selections and
+status, administrator/user/site management, and durable operation history.
+Upload streaming stays on the CMS kernel transport; provider credentials remain
+a kernel/provider bootstrap concern; instance backup, restore and Core updates
+stay on `ulvia.provider.cms-instances`.
+
+Each official Core release also publishes an independently versioned
+declarative conformance suite. Portable read scenarios are executable on a
+fresh tenant. Mutations that require owned fixtures and failures that require
+runner-controlled outages or races remain explicit coverage exemptions until a
+live disposable-tenant runner is implemented; suite admission is not provider
+attestation.
 
 Potentially unbounded list operations must be paginated from their first
 version. A generic `get-all` operation must not expose unbounded persistence

@@ -203,9 +203,11 @@ The local provider must:
 Core, relayed by the official provider and invoked from exact collection Page
 execution plans through `/.cms/call`. The six remaining Phase 8 domains now
 also have bounded official V1 contracts, local Core handlers, provider relays
-and collection-owned Control Pages. Their first release is intentionally
-read-oriented except for revision-safe Page mutations and file-folder creation;
-the parity mutations listed in Phase 8 remain follow-up work.
+and collection-owned Control Pages. Their Core releases now include the bounded
+revision-safe mutations required for collection lifecycle, file metadata,
+design, provider selection, access and migration administration. The current
+collection Pages expose only the flows already authored in their UI; contract
+coverage must not be confused with Control product parity.
 
 Do not convert the whole Control API at once. Introduce one official contract
 family and prove the complete authorization chain.
@@ -383,17 +385,19 @@ installed collections, author files, design/languages, providers/contracts,
 access/site identity and operational migration state. Every Page executes via
 an exact Page plan and `/.cms/call`; the official provider uses one generic Core
 relay for all `ulvia.cms.*` contracts. File-folder creation is the first
-non-Page command. Binary file transfer remains a kernel transport, and backup
-or Core process lifecycle remains provider control-plane behavior.
+non-Page command exercised by a collection Page. The underlying Core contracts
+also expose the remaining bounded metadata and administration mutations with
+optimistic revisions. Binary file transfer remains a kernel transport, and
+backup or Core process lifecycle remains provider control-plane behavior.
 
 This is functional coverage, not legacy-product parity. The transitional APIs
-and retained components are not deleted yet: collection installation and
-upgrade controls, file upload/rename/delete, text/theme/settings writes,
-provider connection and selection, user administration, migration commands,
-backup/restore, path editing, localization, SEO, visual Bloc editing,
-filtering, pagination UX and replacement redirects have not all reached
-contract parity. Deleting those routes now would remove behavior instead of
-completing a clean migration.
+and retained components are not deleted yet. Collection-owned Control Pages
+still need to expose most mutation workflows, file byte upload remains a kernel
+transport, provider credential creation remains a kernel/provider workflow,
+and backup/restore remains provider lifecycle. Path editing, localization,
+SEO, visual Bloc editing, filtering, pagination UX and replacement redirects
+also lack complete product parity. Deleting the transitional routes now would
+remove behavior instead of completing a clean migration.
 
 Rebuild Control one domain at a time from the retained APIs, components and
 documented behavior. Likely groups are:
@@ -411,12 +415,19 @@ Current official V1 mapping:
 | Area | Contract | Implemented capability |
 | --- | --- | --- |
 | Pages and routing | `ulvia.cms.pages@1.0.0` | Complete first lifecycle slice |
-| Collections | `ulvia.cms.collections@1.0.0` | Installed release catalogue |
-| Files | `ulvia.cms.files@1.0.0` | Bounded listing and folder creation |
-| Design | `ulvia.cms.design@1.0.0` | Effective locale/theme/text overview |
-| Providers | `ulvia.cms.providers@1.0.0` | Installations and exact selections |
-| Access | `ulvia.cms.access@1.0.0` | Members, login methods and safe site identity |
-| Operations | `ulvia.cms.operations@1.0.0` | Readiness, maintenance and migration history |
+| Collections | `ulvia.cms.collections@1.0.0` | Catalogue, installation, configuration and migration lifecycle |
+| Files | `ulvia.cms.files@1.0.0` | Bounded metadata listing, folders, rename/move and deletion |
+| Design | `ulvia.cms.design@1.0.0` | Languages, theme state and per-collection text overrides |
+| Providers | `ulvia.cms.providers@1.0.0` | Installations, exact selections and lifecycle status |
+| Access | `ulvia.cms.access@1.0.0` | Members, administrator grants, login methods and site identity |
+| Operations | `ulvia.cms.operations@1.0.0` | Readiness, maintenance and durable operation history |
+
+Every official Core release has an independently versioned declarative
+conformance suite. Safe projections are exercised without mutation; fixture-
+dependent writes and orchestrated fault cases carry explicit coverage
+exemptions until the live disposable-tenant runner exists. Admission and
+coverage analysis therefore prevent silent capability or error-code gaps, but
+do not claim that a provider has executed and passed the suite.
 
 For each area:
 
