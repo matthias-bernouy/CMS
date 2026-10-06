@@ -93,14 +93,15 @@ interpreted as an exhaustive security certification.
 1. Version and freeze the collection browser host ABI currently exposed through
    `window.cmsRuntime`.
 2. Add a general migration mechanism for internal MongoDB document schemas.
-3. Exercise the implemented KEK key-ring and DEK rewrap procedure in the full
-   backup/restore production journey.
-4. Prevent collection builds from resolving imports outside their submitted
-   source bundle.
-5. Reconcile pending Mongo collection releases and orphaned chunks after a
-   crash.
-6. Close MongoDB and drain active work during runtime shutdown.
-7. Replace static repository health with separate liveness and readiness.
+3. Exercise the implemented, startup-verified and audited KEK key-ring/DEK
+   rewrap procedure in the full backup/restore production journey. The runtime
+   now refuses startup when a referenced historical key is unavailable and can
+   perform an explicit single-operator rotation before accepting traffic.
+
+Collection build import containment, pending Mongo release recovery, graceful
+work draining/Mongo shutdown, and separate liveness/readiness probes have been
+implemented since the original audit. They remain regression-sensitive, but
+are no longer open P1 design gaps.
 
 ### P2: Scale And Product Maturity
 
@@ -359,20 +360,21 @@ access and operations. Their handlers live in the Core runtime, the official
 provider relays them generically from admitted HTTP bindings, and the Pages call
 them only through exact execution plans and `/.cms/call`.
 
-The first release is intentionally conservative. It exposes bounded read models
-and one safe file-folder command rather than moving actor-sensitive or
-specialized transports into an underspecified generic API. Binary uploads stay
-on the kernel file transport. Provider credentials remain inaccessible to
-collections. Backup and Core process updates remain provider lifecycle
-operations. User deletion/administrator changes wait for actor identity to be
-propagated to Core commands, and collection migrations keep their existing
-revision, plan-digest and maintenance guarantees until equivalent contract
-commands are implemented.
+The collection Pages now expose revision-safe lifecycle mutations for
+collections, files, languages/design, provider routing and access/site identity.
+Authenticated file upload and replacement deliberately stay on the bounded
+kernel multipart transport; collection Blocs receive no arbitrary private
+Control endpoint access. Provider credentials remain inaccessible to
+collections, while backup and Core process updates remain provider lifecycle
+operations. Operational state is part of the Collections workspace rather than
+a standalone Operations Page.
 
-This provides real navigation and operational visibility without claiming
-legacy parity. The remaining Phase 8 work is to migrate the missing mutations,
-run their recovery and accessibility flows, then remove each superseded Control
-API separately.
+Generic child controls remain public, reusable collection Blocs. Only the
+domain managers that orchestrate complete administration workspaces are
+internal and absent from the author catalogue. The production Control
+composition no longer mounts the legacy `/api/*` route tree or registers the
+legacy administration component set. Those source files are retained only as
+temporary migration reference until product parity decisions are complete.
 
 ### `@bernouy/cms-gateway`
 
@@ -428,10 +430,10 @@ renamed away.
 #### Mongo Release Recovery
 
 Mongo release insertion stages a pending document, writes asset chunks and then
-marks the release ready. A crash can leave a pending release and orphaned chunks.
-An exact retry can resume, but data that is never retried remains invisible.
-Startup reconciliation, TTL-backed quarantine or an administrative repair flow
-is required.
+marks the release ready. Startup now reconciles interrupted pending releases,
+removes orphaned chunks and preserves exact retries. This closes the invisible
+pending-release leak identified by the original audit; fault-injection coverage
+must remain part of repository regression testing.
 
 #### Remaining Limits
 
@@ -471,10 +473,12 @@ imported token. This is the correct strict policy.
 
 ### `ulvia-official` State
 
-The current `1.0.0` source includes approximately 67 exported public blocs, 71
-component/style roots including internal helpers, 119 exported theme tokens, 24
-exported server texts and four Control Pages. Forms, layouts, navigation
-and content/marketing elements already provide a credible base collection.
+The current `1.0.0` source includes 78 Blocs: 68 exported public Blocs and 10
+internal helpers/managers. It also exports 119 theme tokens, 24 server texts and
+10 Control Pages. Forms, layouts, navigation and content/marketing elements
+already provide a credible base collection. Public child controls can be reused
+inside other Pages and compositions; internal managers exist only to assemble
+complete Control workspaces without polluting the author catalogue.
 
 It is not yet a universal component catalogue. Data tables, pagination,
 advanced breadcrumbs, dialogs, alerts, progress/status and empty states still
@@ -512,18 +516,21 @@ themselves.
 
 ### `@bernouy/cms-control`
 
-Control protects API routes with authentication, administrator/member policies,
-CSRF checks and collection-maintenance guards. Preview documents use an iframe
-sandbox, restrictive CSP/nonces, disabled connections/forms and Delivery-backed
-collection asset resolution. Dynamic route discovery rejects duplicate routes,
-and security headers are covered by tests.
+The active Control surface is now a small collection Page host. It protects the
+shared CMS transports with authentication, administrator/member policies, CSRF
+checks and collection-maintenance guards. The legacy file-routed `/api/*` tree
+is not mounted. Preview documents use an iframe sandbox, restrictive CSP/nonces,
+disabled connections/forms and Delivery-backed collection asset resolution.
+Security headers are covered by tests.
 
 The main limits are:
 
 - bounded bodies are currently buffered after streaming admission rather than
   incrementally decoded;
-- a large UI package with concentrated state/effect files;
-- 53 UI contract diagnostics, mostly imperative fetch usage;
+- a large retained legacy source package with concentrated state/effect files,
+  although those components are no longer registered in the production host;
+- UI contract diagnostics in those retained sources, mostly imperative fetch
+  usage, which disappear only when the corresponding source is deleted;
 - a constructor with many positional dependencies;
 - incomplete user-locale persistence and hard-coded interface labels;
 - no editor, which is a deliberate current product state.
