@@ -30,6 +30,7 @@ export interface SurfacePageRouteRegistration {
 
 export interface SurfacePageRouteRegistry {
     register(input: SurfacePageRouteRegistration): Promise<SurfacePageRoute>;
+    list(): Promise<readonly SurfacePageRoute[]>;
     get(page: PageReference): Promise<SurfacePageRoute | null>;
     resolve(surface: PageSurface, path: string): Promise<SurfacePageRoute | null>;
     updateDefault(page: PageReference, defaultPath: string, expectedRevision: number): Promise<SurfacePageRoute>;

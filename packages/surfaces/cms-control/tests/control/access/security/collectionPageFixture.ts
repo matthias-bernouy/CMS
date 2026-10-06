@@ -1,7 +1,7 @@
-import { InMemorySurfacePageRouteRegistry } from "@bernouy/cms-content";
+import { InMemorySurfacePageRouteRegistry, synchronizeCollectionPageRoutes } from "@bernouy/cms-content";
 
-export function controlPageCollections() {
-    return {
+export async function controlPageCollections() {
+    const collections = {
         siteId: "site-a",
         routes: new InMemorySurfacePageRouteRegistry(),
         store: {
@@ -41,4 +41,6 @@ export function controlPageCollections() {
             }),
         },
     };
+    await synchronizeCollectionPageRoutes(collections.routes, (await collections.store.snapshot()) as never);
+    return collections;
 }

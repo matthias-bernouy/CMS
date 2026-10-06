@@ -1,7 +1,11 @@
 import { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import { MongoCollectionStorage } from "@bernouy/cms-repository/collections/mongo";
 import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
-import { withInstalledCollections } from "@bernouy/cms-content";
+import {
+    synchronizeCollectionPageRoutes,
+    withCollectionPageRoutes,
+    withInstalledCollections,
+} from "@bernouy/cms-content";
 import { CollectionMigrationService, withCollectionMigrationWriteFence } from "@bernouy/cms-content/migrations";
 import {
     MongoAuthTokenStore,
@@ -45,7 +49,10 @@ export async function createCoreStores(env: RuntimeEnv) {
     await innerRepo.init();
     const collectionStorage = new MongoCollectionStorage(db);
     await collectionStorage.init();
-    const migrationCollections = new CollectionStore(collectionStorage, new MongoReleaseCatalogue(db));
+    const rawCollections = new CollectionStore(collectionStorage, new MongoReleaseCatalogue(db));
+    const pageRoutes = new MongoSurfacePageRouteRegistry(db);
+    await synchronizeCollectionPageRoutes(pageRoutes, await rawCollections.snapshot(SCOPE_ID));
+    const migrationCollections = withCollectionPageRoutes(rawCollections, pageRoutes);
     const migrationRepo = new ValidatingCmsRepository(
         withInstalledCollections(innerRepo, migrationCollections, SCOPE_ID),
     );
@@ -67,8 +74,6 @@ export async function createCoreStores(env: RuntimeEnv) {
         (_method, args) => String(args[0]),
         COLLECTION_STORE_FENCED_MUTATIONS,
     );
-    const pageRoutes = new MongoSurfacePageRouteRegistry(db);
-
     const mongoFilesMetadata = new MongoCmsFilesMetadata(db);
     await mongoFilesMetadata.init();
     const filesMetadata = new ValidatingCmsFilesMetadata(mongoFilesMetadata);

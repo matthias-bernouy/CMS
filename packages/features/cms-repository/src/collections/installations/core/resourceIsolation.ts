@@ -25,12 +25,16 @@ export async function assertInstallableCollectionResources(
 export function assertCollectionResourceIsolation(releases: readonly CollectionRelease[]): void {
     const blocTags = new Set<string>();
     const themeTokens = new Set<string>();
+    const pagePaths = new Set<string>();
     for (const release of releases) {
         for (const bloc of release.blocs) {
             assertUnique(blocTags, bloc.id, "Bloc tag");
         }
         for (const token of release.theme?.categories.flatMap((category) => category.tokens) ?? []) {
             assertUnique(themeTokens, collectionThemeTokenId(release.collectionId, token.id), "theme token");
+        }
+        for (const page of release.pages ?? []) {
+            assertUnique(pagePaths, `${page.surface}:${page.defaultPath}`, "Page default path");
         }
     }
     assertCollectionDependencies(releases);

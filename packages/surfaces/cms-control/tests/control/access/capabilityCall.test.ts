@@ -16,7 +16,7 @@ test("Control mounts a separate capability route with verified administrator ide
         runner,
         auth: { getSubject: async () => ({ identifier: "cms-admin-1" }) },
         configuration: {
-            collections: controlPageCollections(),
+            collections: await controlPageCollections(),
             capabilityGateway: {
                 siteId: "site-a",
                 isAdministrator: async () => true,

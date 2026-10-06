@@ -56,6 +56,10 @@ export type {
 } from "cms-content/pages/interfaces/routing";
 export { resolvePageLinkTarget } from "cms-content/pages/core/routing/links";
 export {
+    synchronizeCollectionPageRoutes,
+    withCollectionPageRoutes,
+} from "cms-content/pages/core/routing/collectionRoutes";
+export {
     PageLinkSurfaceError,
     PageRouteAlreadyRegisteredError,
     PageRouteCollisionError,

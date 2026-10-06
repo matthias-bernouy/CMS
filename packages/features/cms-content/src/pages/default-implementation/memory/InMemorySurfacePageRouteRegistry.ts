@@ -37,6 +37,10 @@ export class InMemorySurfacePageRouteRegistry implements SurfacePageRouteRegistr
         return cloneSurfacePageRoute(route);
     }
 
+    async list(): Promise<readonly SurfacePageRoute[]> {
+        return [...this.#byPage.values()].map(cloneSurfacePageRoute);
+    }
+
     async get(page: PageReference): Promise<SurfacePageRoute | null> {
         const route = this.#byPage.get(pageReferenceKey(page));
         return route ? cloneSurfacePageRoute(route) : null;

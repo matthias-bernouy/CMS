@@ -1,10 +1,4 @@
-import {
-    PageRouteAlreadyRegisteredError,
-    PageRouteRevisionConflictError,
-    type PageReference,
-    type SurfacePageRoute,
-    type SurfacePageRouteRegistry,
-} from "@bernouy/cms-content";
+import { type PageReference, type SurfacePageRoute } from "@bernouy/cms-content";
 import type { CollectionPage } from "@bernouy/cms-repository/collections";
 import type { InstalledCollection } from "@bernouy/cms-repository/collections/installations";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
@@ -21,13 +15,15 @@ export interface ControlPageSnapshot {
     readonly pages: readonly InstalledControlPage[];
 }
 
-/** Reconciles immutable collection Page identities with site-owned route overrides. */
+/** Reads the immutable collection snapshot and its precomputed site-owned routes. */
 export async function controlPageSnapshot(state: ControlCmsState): Promise<ControlPageSnapshot | null> {
     const configured = state.configuration.collections;
     if (!configured?.routes) {
         return null;
     }
     const snapshot = await configured.store.snapshot(configured.siteId);
+    const routes = await configured.routes.list();
+    const routesByPage = new Map(routes.map((route) => [pageReferenceKey(route.page), route]));
     const pages: InstalledControlPage[] = [];
     for (const installation of snapshot.collections) {
         for (const page of installation.release.pages ?? []) {
@@ -35,7 +31,10 @@ export async function controlPageSnapshot(state: ControlCmsState): Promise<Contr
                 continue;
             }
             const reference = collectionPageReference(installation, page);
-            const route = await reconcileRoute(configured.routes, reference, page.defaultPath);
+            const route = routesByPage.get(pageReferenceKey(reference));
+            if (!route) {
+                throw new Error("Collection Page routes are not synchronized");
+            }
             if (route.surface !== page.surface) {
                 throw new Error("Stored collection Page route changed surface");
             }
@@ -62,33 +61,8 @@ export function collectionPageReference(
     };
 }
 
-async function reconcileRoute(
-    routes: SurfacePageRouteRegistry,
-    page: PageReference,
-    defaultPath: string,
-): Promise<SurfacePageRoute> {
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-        const current = await routes.get(page);
-        if (!current) {
-            try {
-                return await routes.register({ page, surface: "control", defaultPath });
-            } catch (error) {
-                if (!(error instanceof PageRouteAlreadyRegisteredError)) {
-                    throw error;
-                }
-                continue;
-            }
-        }
-        if (current.defaultPath === defaultPath) {
-            return current;
-        }
-        try {
-            return await routes.updateDefault(page, defaultPath, current.revision);
-        } catch (error) {
-            if (!(error instanceof PageRouteRevisionConflictError)) {
-                throw error;
-            }
-        }
-    }
-    throw new Error("Collection Page route changed during reconciliation");
+function pageReferenceKey(page: PageReference): string {
+    return page.kind === "site"
+        ? `site:${page.pageId}`
+        : `collection:${page.publisherId}:${page.collectionId}:${page.pageId}`;
 }

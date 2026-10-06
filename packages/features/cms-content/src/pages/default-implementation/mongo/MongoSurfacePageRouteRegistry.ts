@@ -53,6 +53,11 @@ export class MongoSurfacePageRouteRegistry implements SurfacePageRouteRegistry {
         return cloneSurfacePageRoute(route);
     }
 
+    async list(): Promise<readonly SurfacePageRoute[]> {
+        await this.#ready;
+        return (await this.#routes.find({}).toArray()).map((document) => this.#route(document));
+    }
+
     async get(page: PageReference): Promise<SurfacePageRoute | null> {
         await this.#ready;
         const document = await this.#routes.findOne({ _id: pageReferenceKey(page) });

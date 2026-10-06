@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test";
-import { InMemoryCmsRepository, InMemorySurfacePageRouteRegistry } from "@bernouy/cms-content";
+import {
+    InMemoryCmsRepository,
+    InMemorySurfacePageRouteRegistry,
+    synchronizeCollectionPageRoutes,
+} from "@bernouy/cms-content";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { handleControlPage } from "cms-control/core/admin/control/mountRoutes/pages";
 import {
@@ -47,6 +51,7 @@ test("collection Control Pages render through site routes while preserving path 
             },
         },
     } as unknown as ControlCmsState;
+    await synchronizeCollectionPageRoutes(routes, await state.configuration.collections!.store.snapshot("site-a"));
 
     const response = await handleControlPage(new Request("http://control.test/admin"), state);
     expect(response.status).toBe(200);
@@ -57,6 +62,7 @@ test("collection Control Pages render through site routes while preserving path 
     const reference = collectionPageReference(installation as never, page);
     await routes.setOverride(reference, "/admin/custom", first!.pages[0]!.route.revision);
     page.defaultPath = "/admin/new";
+    await synchronizeCollectionPageRoutes(routes, await state.configuration.collections!.store.snapshot("site-a"));
     const reconciled = await controlPageSnapshot(state);
     expect(reconciled!.pages[0]!.route).toMatchObject({
         defaultPath: "/admin/new",

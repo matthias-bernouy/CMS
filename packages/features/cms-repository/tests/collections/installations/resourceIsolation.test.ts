@@ -72,6 +72,37 @@ test("installations and upgrades reject global Bloc and theme token collisions",
     await expect(store.upgrade("themes", themeCollision.digest, 2, "local")).rejects.toThrow("theme token");
 });
 
+test("installations reject collection Pages claiming the same surface path", async () => {
+    const store = new CollectionStore(new MemoryCollectionStorage());
+    const withPage = (collectionId: string, pageId: string) => {
+        const source = release(collectionId, "1.0.0", `${collectionId}-card`);
+        return {
+            ...source,
+            translations: {
+                en: {
+                    ...source.translations.en,
+                    [`page.${pageId}.name`]: pageId,
+                },
+            },
+            pages: [
+                {
+                    id: pageId,
+                    surface: "control",
+                    defaultPath: "/admin/shared",
+                    name: `page.${pageId}.name`,
+                    document: { html: "<main></main>" },
+                },
+            ],
+        };
+    };
+    const first = await store.importRelease(withPage("first", "overview"));
+    const second = await store.importRelease(withPage("second", "settings"));
+
+    await store.install("site", first.digest, 0);
+    await expect(store.install("site", second.digest, 1)).rejects.toThrow("Page default path");
+    expect((await store.snapshot("site")).revision).toBe(1);
+});
+
 test("installs only declared public resources from compatible collection dependencies", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const assetBytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
