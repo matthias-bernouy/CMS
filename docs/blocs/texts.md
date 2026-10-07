@@ -109,10 +109,12 @@ an installed-catalogue implementation.
 
 The official Settings Control Page includes a working Texts editor: category sections contain
 groups, each displaying a table with Key, Label, immutable default-language value
-and editable selected-language value. Optional `category`, `group`, `label` and
-`description` metadata are keys in the collection's immutable administration
-catalogue assembled recursively from `translations/<locale>/**/*.json`.
-Unclassified texts appear under General / Texts. Navigation keeps unsaved edits;
+and editable selected-language value. Every definition must declare `category`,
+`group` and `label`; `description` is optional. These fields are keys in the
+collection's immutable administration catalogue assembled recursively from
+`translations/<locale>/**/*.json`. Collection admission requires all three
+navigation keys and verifies them against the default-locale catalogue, so an
+unclassifiable text cannot be released. Navigation keeps unsaved edits;
 language changes require saving
 first. Reset removes the site override after Save. Concurrent stale writes return
 409 and require reloading; they never overwrite newer translations.
@@ -128,7 +130,9 @@ languages. Complete site-language removal/migration workflows are not implemente
 `packages/official-repository/collections/ulvia-official/texts/` contains the installable Ulvia Official
 catalogue, split recursively by definition, locale, domain and group. It also
 serves as the reference release for validating text metadata independently from
-page-owned Bloc slot content.
+page-owned Bloc slot content. Ulvia Official ships complete English and French
+catalogues: its source-quality test requires identical administration keys in
+both locales and a nonblank `en` and `fr` value for every text definition.
 The checkout example remains an admission fixture. The temporary preview route
 has been removed. Existing private/code collections retain the earlier Texts
 mockup; only installed immutable releases have persisted translation editing.

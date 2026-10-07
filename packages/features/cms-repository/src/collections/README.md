@@ -20,7 +20,9 @@ This slice supports:
   a key, every key must exist in the default locale and additional locales may
   be partial. Resolution tries the requested locale, its regional parents and
   finally the collection locale.
-- Optional JSON text definitions with static locale values. Dynamic parameters
+- Optional JSON text definitions with static locale values. Every definition
+  declares `label`, `category` and `group` keys present in the default
+  administration catalogue; `description` remains optional. Dynamic parameters
   and plural forms are deliberately outside this catalogue. `./collections/texts`
   exposes validation and fallback resolution; see
   [collection texts](../../../../../docs/blocs/texts.md).

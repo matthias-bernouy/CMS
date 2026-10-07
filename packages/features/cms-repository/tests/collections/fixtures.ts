@@ -7,6 +7,15 @@ export function collectionDocument(translations: Record<string, string> = {}): R
         "bloc.page.label": "Page",
         "bloc.panel.label": "Panel",
         "collection.name": "Atlas UI",
+        "text.category.content": "Content",
+        "text.group.general": "General",
+        "text.label.greeting": "Greeting",
+        "text.label.heading": "Heading",
+        "text.label.hello": "Hello",
+        "text.label.legacy-title": "Legacy title",
+        "text.label.other": "Other",
+        "text.label.submit": "Submit",
+        "text.label.title": "Title",
         ...translations,
     };
     return {
@@ -24,6 +33,16 @@ export function collectionDocument(translations: Record<string, string> = {}): R
         },
         assets: [],
         blocs: [component(), composition()],
+    };
+}
+
+export function textDefinition(id: string, values: Readonly<Record<string, string>>): Record<string, unknown> {
+    return {
+        id,
+        label: `text.label.${id}`,
+        category: "text.category.content",
+        group: "text.group.general",
+        values,
     };
 }
 

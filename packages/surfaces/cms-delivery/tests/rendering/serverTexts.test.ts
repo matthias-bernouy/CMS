@@ -27,7 +27,15 @@ const ctx: RenderContext = {
             collection: {
                 collectionId: "test",
                 locale: "en",
-                texts: [{ id: "title", values: { en: "Order", fr: "Commande" } }],
+                texts: [
+                    {
+                        id: "title",
+                        label: "text.label.title",
+                        category: "text.category.content",
+                        group: "text.group.general",
+                        values: { en: "Order", fr: "Commande" },
+                    },
+                ],
             },
         },
     ],

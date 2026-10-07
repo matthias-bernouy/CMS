@@ -16,6 +16,9 @@ function release(collectionId: string, version: string, blocId: string, tokenId?
             en: {
                 "bloc.welcome.label": "Welcome",
                 "collection.name": collectionId,
+                "text.category.content": "Content",
+                "text.group.general": "General",
+                "text.label.submit": "Submit",
                 "theme.category.colors.label": "Colors",
                 "theme.label": "Theme",
                 "theme.token.accent.label": "Accent",
@@ -115,7 +118,15 @@ test("installs only declared public resources from compatible collection depende
                 "page.home.name": "Home",
             },
         },
-        texts: [{ id: "submit", values: { en: "Submit" } }],
+        texts: [
+            {
+                id: "submit",
+                label: "text.label.submit",
+                category: "text.category.content",
+                group: "text.group.general",
+                values: { en: "Submit" },
+            },
+        ],
         pages: [
             {
                 id: "home",

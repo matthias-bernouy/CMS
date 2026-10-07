@@ -1,0 +1,12 @@
+{
+    "setting.active.label": "Page actuelle",
+    "setting.divider.label": "Séparateur de section",
+    "setting.emphasis.label": "Emphase",
+    "setting.expanded.label": "Déplié initialement",
+    "setting.group.state": "État",
+    "setting.item-count.help": "Définissez zéro pour masquer le badge de décompte",
+    "setting.item-count.label": "Nombre d’éléments",
+    "setting.navigation-label.label": "Libellé de navigation accessible",
+    "setting.option.pills": "Pastilles",
+    "setting.option.underline": "Soulignement"
+}

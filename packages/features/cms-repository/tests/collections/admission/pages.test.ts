@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { parseCollectionRelease } from "../../../src/exports/collections";
-import { collectionDocument } from "../fixtures";
+import { collectionDocument, textDefinition } from "../fixtures";
 
 const page = {
     id: "overview",
@@ -43,7 +43,7 @@ test("collection Pages derive capability and resource references from their docu
 
     const localized = {
         ...source,
-        texts: [{ id: "heading", values: { "en-US": "Overview" } }],
+        texts: [textDefinition("heading", { "en-US": "Overview" })],
         assets: [
             {
                 id: "logo",

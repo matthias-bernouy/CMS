@@ -26,13 +26,24 @@ const release = {
             "setting.option.accent": "Accent",
             "setting.option.quiet": "Quiet",
             "setting.tone.label": "Tone",
+            "text.category.content": "Content",
+            "text.group.general": "General",
+            "text.label.title": "Title",
             "theme.category.colors.label": "Colors",
             "theme.label": "Test theme",
             "theme.token.accent.label": "Accent",
         },
     },
     assets: [],
-    texts: [{ id: "title", values: { en: "Welcome" } }],
+    texts: [
+        {
+            id: "title",
+            label: "text.label.title",
+            category: "text.category.content",
+            group: "text.group.general",
+            values: { en: "Welcome" },
+        },
+    ],
     blocs: [
         {
             kind: "composition",

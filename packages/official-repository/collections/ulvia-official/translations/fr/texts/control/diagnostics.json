@@ -1,0 +1,22 @@
+{
+    "text.ui-content-maintenance.label": "Maintenance du contenu",
+    "text.ui-copy.label": "/",
+    "text.ui-copy-a137f17a.label": "·",
+    "text.ui-durable-jobs.label": "Tâches durables",
+    "text.ui-job-diagnostics-are-unavailable.label": "Les diagnostics des tâches sont indisponibles.",
+    "text.ui-live-operational-signals-from-the-selected-cms-core-contracts.label": "Signaux opérationnels en direct provenant des contrats CMS Core sélectionnés.",
+    "text.ui-maintenance.label": "Maintenance",
+    "text.ui-maintenance-mode-is-active.label": "Le mode maintenance est actif",
+    "text.ui-manifest.label": "· manifeste",
+    "text.ui-migration-diagnostics-are-unavailable.label": "Les diagnostics de migration sont indisponibles.",
+    "text.ui-no-maintenance-operation-is-active.label": "Aucune opération de maintenance n’est active",
+    "text.ui-operations-9b1b6f78.label": "opérations ·",
+    "text.ui-pages.label": "Pages ·",
+    "text.ui-provider-diagnostics-are-unavailable.label": "Les diagnostics des providers sont indisponibles.",
+    "text.ui-provider-installations.label": "Installations de providers",
+    "text.ui-reading-durable-jobs.label": "Lecture des tâches durables…",
+    "text.ui-reading-migration-state.label": "Lecture de l’état de la migration…",
+    "text.ui-reading-provider-state.label": "Lecture de l’état des providers…",
+    "text.ui-ready.label": "Prêt",
+    "text.ui-retained-migration-records.label": "enregistrements de migration conservés"
+}

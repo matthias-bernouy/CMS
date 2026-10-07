@@ -1,0 +1,9 @@
+{
+    "text.ui-activity.label": "Activité",
+    "text.ui-blocks.label": "Blocs",
+    "text.ui-navigation-item.label": "Élément de navigation",
+    "text.ui-resources.label": "Ressources",
+    "text.ui-section.label": "Section",
+    "text.ui-tab-label.label": "Libellé de l’onglet",
+    "text.ui-theme-tokens.label": "Jetons de thème"
+}

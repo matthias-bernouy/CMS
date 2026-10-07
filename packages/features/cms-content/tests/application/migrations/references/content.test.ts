@@ -2,7 +2,17 @@ import { expect, test } from "bun:test";
 import { referenceFixture, release } from "./fixture";
 
 test("blocks removal of a collection text still referenced by a page", async () => {
-    const fixture = await referenceFixture({ texts: [{ id: "legacy-title", values: { en: "Legacy" } }] });
+    const fixture = await referenceFixture({
+        texts: [
+            {
+                id: "legacy-title",
+                label: "text.label.legacy-title",
+                category: "text.category.content",
+                group: "text.group.general",
+                values: { en: "Legacy" },
+            },
+        ],
+    });
     const next = await fixture.collections.importRelease({
         ...release("2.0.0", "atlas-card"),
         dataGeneration: 2,

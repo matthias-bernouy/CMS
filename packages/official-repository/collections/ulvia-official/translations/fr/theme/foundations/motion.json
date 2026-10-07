@@ -1,0 +1,9 @@
+{
+    "theme.category.motion.label": "Mouvement",
+    "theme.category.motion.description": "Durées et courbes d’accélération cohérentes pour les transitions facultatives de l’interface.",
+    "theme.token.duration-fast.label": "Durée rapide",
+    "theme.token.duration-normal.label": "Durée normale",
+    "theme.token.duration-slow.label": "Durée lente",
+    "theme.token.easing-standard.label": "Accélération standard",
+    "theme.token.easing-emphasized.label": "Accélération accentuée"
+}

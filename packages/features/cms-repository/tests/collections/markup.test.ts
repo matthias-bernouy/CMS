@@ -5,6 +5,7 @@ import {
     collectionDocument,
     demoComponent as component,
     demoComposition as composition,
+    textDefinition,
 } from "./fixtures";
 
 describe("collection markup admission", () => {
@@ -178,7 +179,7 @@ describe("collection markup admission", () => {
 
     test("resolves reserved text bindings within the declaring collection", () => {
         const source = collectionDocument();
-        source.texts = [{ id: "title", values: { "en-US": "Title" } }];
+        source.texts = [textDefinition("title", { "en-US": "Title" })];
         const composition = (source.blocs as Record<string, unknown>[])[1]!;
 
         composition.lightdom =
@@ -197,7 +198,7 @@ describe("collection markup admission", () => {
 
     test("validates collection text references in editable defaults", () => {
         const source = collectionDocument();
-        source.texts = [{ id: "title", values: { "en-US": "Title" } }];
+        source.texts = [textDefinition("title", { "en-US": "Title" })];
         (source.blocs as Record<string, unknown>[])[0]!.defaultContent = "<p>{{ cms.i18n.atlas.missing }}</p>";
         expect(() => parseCollectionRelease(source)).toThrow("unknown collection text missing");
     });
@@ -208,7 +209,7 @@ describe("collection markup admission", () => {
         expect(() => parseCollectionRelease(blocSource)).toThrow("user-facing copy");
 
         (blocSource.blocs as Record<string, unknown>[])[0]!.defaultContent = "<p>{{ cms.i18n.atlas.title }}:</p>";
-        blocSource.texts = [{ id: "title", values: { "en-US": "Title" } }];
+        blocSource.texts = [textDefinition("title", { "en-US": "Title" })];
         expect(() => parseCollectionRelease(blocSource)).toThrow("user-facing copy");
 
         (blocSource.blocs as Record<string, unknown>[])[0]!.defaultContent = '<input type="submit" value="Save">';

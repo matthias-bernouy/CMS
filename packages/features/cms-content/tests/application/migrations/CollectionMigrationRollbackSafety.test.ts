@@ -137,10 +137,23 @@ function release(version: string, blocId: string, extended: boolean): Record<str
                 "theme.label": "Theme",
                 "theme.category.label": "Colors",
                 "theme.token.label": "Brand",
+                "text.category.content": "Content",
+                "text.group.general": "General",
+                "text.label.new-title": "New title",
             },
         },
         assets: [],
-        texts: extended ? [{ id: "new-title", values: { en: "New" } }] : [],
+        texts: extended
+            ? [
+                  {
+                      id: "new-title",
+                      label: "text.label.new-title",
+                      category: "text.category.content",
+                      group: "text.group.general",
+                      values: { en: "New" },
+                  },
+              ]
+            : [],
         blocs: [
             {
                 kind: "component",

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { CollectionStore, MemoryCollectionStorage } from "../../../src/exports/collections/installations";
-import { collectionDocument } from "../fixtures";
+import { collectionDocument, textDefinition } from "../fixtures";
 import { contractDocument, releaseCatalogue } from "../../providers/support/fixtures";
 
 function release() {
@@ -22,7 +22,7 @@ function release() {
                 slots: {},
             },
         ],
-        texts: [{ id: "title", values: { en: "Hello", fr: "Bonjour" } }],
+        texts: [textDefinition("title", { en: "Hello", fr: "Bonjour" })],
         locale: "en",
     };
 }
@@ -66,10 +66,7 @@ test("compatible repository upgrade preserves site texts and rejects removals", 
     const newer = await store.importRelease({
         ...release(),
         version: "1.1.0",
-        texts: [
-            { id: "title", values: { en: "New", fr: "Nouveau" } },
-            { id: "other", values: { en: "Other" } },
-        ],
+        texts: [textDefinition("title", { en: "New", fr: "Nouveau" }), textDefinition("other", { en: "Other" })],
     });
     await store.upgrade("site", newer.digest, 2, "local");
     const current = (await store.snapshot("site")).collections[0]!;

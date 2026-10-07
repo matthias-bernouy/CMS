@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test";
 import { admitCollectionRelease, parseCollectionRelease } from "../../../src/exports/collections";
 import { parseCollectionTexts, resolveCollectionTexts } from "../../../src/exports/collections/texts";
-import { collectionDocument } from "../fixtures";
+import { collectionDocument, textDefinition } from "../fixtures";
 
 const definitions = [
-    { id: "title", values: { en: "Order", fr: "Commande" } },
-    { id: "greeting", values: { en: "Hello" } },
+    textDefinition("title", { en: "Order", fr: "Commande" }),
+    textDefinition("greeting", { en: "Hello" }),
 ];
 const release = () => parseCollectionRelease({ ...collectionDocument(), locale: "en", texts: definitions });
 
@@ -32,25 +32,22 @@ test("locale resolution is per key with regional fallback and site overrides", (
 });
 
 test.each([
-    [{ id: "title", values: { fr: "Missing default" } }],
-    [{ id: "title", values: { en: "Unknown {name}" } }],
-    [{ id: "title", values: { en: "Unclosed {" } }],
-    [{ id: "title", values: { en: "Title" }, html: true }],
-    [{ id: "title", parameters: { name: "string" }, values: { en: "Title" } }],
-    [{ id: "title", plural: "count", values: { en: "Title" } }],
-    [{ id: "title", values: { en: { other: "Title" } } }],
-    [
-        { id: "title", values: { en: "Title" } },
-        { id: "title", values: { en: "Duplicate" } },
-    ],
-    [{ id: "constructor", values: { en: "Unsafe key" } }],
-    [{ id: "title", values: { en: "x".repeat(8193) } }],
+    [textDefinition("title", { fr: "Missing default" })],
+    [textDefinition("title", { en: "Unknown {name}" })],
+    [textDefinition("title", { en: "Unclosed {" })],
+    [{ ...textDefinition("title", { en: "Title" }), html: true }],
+    [{ ...textDefinition("title", { en: "Title" }), parameters: { name: "string" } }],
+    [{ ...textDefinition("title", { en: "Title" }), plural: "count" }],
+    [textDefinition("title", { en: { other: "Title" } as never })],
+    [textDefinition("title", { en: "Title" }), textDefinition("title", { en: "Duplicate" })],
+    [textDefinition("constructor", { en: "Unsafe key" })],
+    [textDefinition("title", { en: "x".repeat(8193) })],
 ])("rejects invalid text definitions", (...values) => {
     expect(() => parseCollectionRelease({ ...collectionDocument(), locale: "en", texts: values })).toThrow();
 });
 
 test("normalization rejects aliases of the same locale and sparse definitions", () => {
-    expect(() => parseCollectionTexts([{ id: "title", values: { "en-us": "A", "en-US": "B" } }], "en-US")).toThrow();
+    expect(() => parseCollectionTexts([textDefinition("title", { "en-us": "A", "en-US": "B" })], "en-US")).toThrow();
     expect(() => parseCollectionTexts(new Array(1), "en")).toThrow();
     expect(() => resolveCollectionTexts(release(), "en", { unknown: { en: "No" } })).toThrow();
     expect(() => resolveCollectionTexts(release(), "en", { title: { en: "Bad {extra}" } })).toThrow();
@@ -71,3 +68,21 @@ test("text catalogue preserves bounded navigation and label metadata", () => {
         expect(() => parseCollectionTexts([{ ...text, [key]: "x".repeat(501) }], "en")).toThrow();
     }
 });
+
+test.each(["label", "category", "group"] as const)("rejects a text without required %s metadata", (key) => {
+    const text = { ...textDefinition("title", { en: "Hello" }) };
+    delete text[key];
+    expect(() => parseCollectionRelease({ ...collectionDocument(), locale: "en", texts: [text] })).toThrow(
+        new RegExp(`missing text ${key}`),
+    );
+});
+
+test.each(["label", "category", "group"] as const)(
+    "rejects a text whose %s is absent from the default translation catalogue",
+    (key) => {
+        const text = { ...textDefinition("title", { en: "Hello" }), [key]: `text.missing.${key}` };
+        expect(() => parseCollectionRelease({ ...collectionDocument(), locale: "en", texts: [text] })).toThrow(
+            /missing default translation/,
+        );
+    },
+);

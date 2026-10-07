@@ -1,0 +1,13 @@
+{
+    "theme.category.borders-and-shape.label": "Bordures et formes",
+    "theme.category.borders-and-shape.description": "Largeurs de bordure et rayons des contrôles, cartes, panneaux et pastilles.",
+    "theme.token.border-width.label": "Largeur de bordure par défaut",
+    "theme.token.border-width-strong.label": "Largeur de bordure forte",
+    "theme.token.radius-none.label": "Aucun rayon",
+    "theme.token.radius-sm.label": "Rayon SM",
+    "theme.token.radius-md.label": "Rayon MD",
+    "theme.token.radius-lg.label": "Rayon LG",
+    "theme.token.radius-xl.label": "Rayon XL",
+    "theme.token.radius-2xl.label": "Rayon 2XL",
+    "theme.token.radius-full.label": "Rayon complet"
+}

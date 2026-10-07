@@ -99,7 +99,15 @@ test("reports removed imported texts and assets before a migration acquires main
     const bytes = new TextEncoder().encode("asset");
     const provider = parseCollectionRelease({
         ...release("1.0.0", "atlas-card"),
-        texts: [{ id: "title", values: { en: "Title" } }],
+        texts: [
+            {
+                id: "title",
+                label: "text.label.title",
+                category: "text.category.content",
+                group: "text.group.general",
+                values: { en: "Title" },
+            },
+        ],
         assets: [asset("logo.svg", bytes)],
         exports: { blocs: [], themeTokens: [], texts: ["title"], assets: ["logo.svg"] },
     });
@@ -425,7 +433,15 @@ function release(version: string, id: string): Record<string, unknown> {
         version,
         name: "collection.name",
         locale: "en",
-        translations: { en: { "collection.name": "Atlas", "bloc.label": "Card" } },
+        translations: {
+            en: {
+                "collection.name": "Atlas",
+                "bloc.label": "Card",
+                "text.category.content": "Content",
+                "text.group.general": "General",
+                "text.label.title": "Title",
+            },
+        },
         assets: [],
         blocs: [
             {

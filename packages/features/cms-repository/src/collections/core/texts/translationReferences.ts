@@ -30,10 +30,10 @@ function collectReferences(release: CollectionRelease): Reference[] {
     optional(references, release.description, "$.description", 4096);
     for (const [index, text] of (release.texts ?? []).entries()) {
         const path = `$.texts[${index}]`;
-        optional(references, text.label, `${path}.label`, 120);
+        references.push(reference(text.label, `${path}.label`, 120));
         optional(references, text.description, `${path}.description`, 500);
-        optional(references, text.category, `${path}.category`, 120);
-        optional(references, text.group, `${path}.group`, 120);
+        references.push(reference(text.category, `${path}.category`, 120));
+        references.push(reference(text.group, `${path}.group`, 120));
     }
     if (release.theme) {
         references.push(reference(release.theme.label, "$.theme.label", 120));

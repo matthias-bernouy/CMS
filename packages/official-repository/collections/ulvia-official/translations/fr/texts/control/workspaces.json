@@ -1,0 +1,6 @@
+{
+    "text.ui-approved-provider-accounts-and-exact-contract-releases-selected-by-this-cms.label": "Comptes de providers approuvés et versions exactes des contrats sélectionnées par ce CMS.",
+    "text.ui-configure-the-site-identity-availability-and-languages.label": "Configurez l’identité, la disponibilité et les langues du site.",
+    "text.ui-install-immutable-releases-configure-collections-and-preview-migrations-before-applying-them.label": "Installez des releases immuables, configurez les Collections et prévisualisez les migrations avant de les appliquer.",
+    "text.ui-providers-and-contracts.label": "Providers et contrats"
+}

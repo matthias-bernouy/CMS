@@ -1,0 +1,20 @@
+{
+    "bloc.icon.description": "Une icône décorative de la bibliothèque d’interface officielle Ulvia",
+    "bloc.icon.label": "Icône",
+    "setting.icon.label": "Icône",
+    "setting.option.current": "Couleur actuelle",
+    "setting.option.icon-alert": "Alerte",
+    "setting.option.icon-check": "Validation",
+    "setting.option.icon-collections": "Collections",
+    "setting.option.icon-dashboard": "Tableau de bord",
+    "setting.option.icon-health": "Santé",
+    "setting.option.icon-layout": "Mise en page",
+    "setting.option.icon-media": "Média",
+    "setting.option.icon-pages": "Pages",
+    "setting.option.icon-profile": "Profil",
+    "setting.option.icon-search": "Recherche",
+    "setting.option.icon-settings": "Paramètres",
+    "setting.option.icon-sources": "Sources",
+    "setting.option.icon-users": "Utilisateurs",
+    "setting.option.muted": "Atténuée"
+}

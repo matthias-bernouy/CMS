@@ -283,9 +283,11 @@ models and validation for CMS-owned installations and site selections.
   never accept executable migration code. Contract and implementation digests
   are derived after admission and do not replace the collection SemVer or
   immutable release digest.
-- Text metadata (`category`, `group`, `label`, `description`) uses collection
-  translation keys. It is declarative and bounded, does not change server text
-  keys and does not grant runtime capabilities.
+- Every text definition declares `category`, `group` and `label` as collection
+  translation keys; `description` remains optional. Admission verifies every
+  declared key against the default translation catalogue, so an incomplete text
+  catalogue cannot become a release. This metadata is declarative and bounded,
+  does not change server text keys and does not grant runtime capabilities.
   Text locale values are static strings: parameters, plural forms and braces are
   not part of the collection contract.
 - Treat `collectionId` as the runtime namespace. It is lowercase kebab-case,

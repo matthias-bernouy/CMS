@@ -1,0 +1,14 @@
+{
+    "theme.category.layout.label": "Mise en page",
+    "theme.category.layout.description": "Largeurs de contenu, marges adaptatives, rythme des sections et hauteurs des contrôles.",
+    "theme.token.content-width-sm.label": "Largeur du contenu SM",
+    "theme.token.content-width-md.label": "Largeur du contenu MD",
+    "theme.token.content-width-lg.label": "Largeur du contenu LG",
+    "theme.token.content-width-xl.label": "Largeur du contenu XL",
+    "theme.token.page-gutter.label": "Marge de la Page",
+    "theme.token.page-gutter-wide.label": "Marge large de la Page",
+    "theme.token.section-spacing.label": "Espacement des sections",
+    "theme.token.control-height-sm.label": "Hauteur des contrôles SM",
+    "theme.token.control-height-md.label": "Hauteur des contrôles MD",
+    "theme.token.control-height-lg.label": "Hauteur des contrôles LG"
+}

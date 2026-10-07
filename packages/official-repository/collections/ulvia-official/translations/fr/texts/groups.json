@@ -1,0 +1,12 @@
+{
+    "text.group.components.content": "Composants de contenu",
+    "text.group.components.forms": "Composants de formulaire",
+    "text.group.components.layout": "Composants de mise en page",
+    "text.group.components.navigation": "Composants de navigation",
+    "text.group.control.access": "Accès",
+    "text.group.control.diagnostics": "Diagnostics",
+    "text.group.control.files": "Fichiers",
+    "text.group.control.pages": "Pages",
+    "text.group.control.workspaces": "Espaces de travail",
+    "text.group.shared": "Textes partagés"
+}

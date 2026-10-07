@@ -1,0 +1,20 @@
+{
+    "collection.description": "Blocs de fondation officiels, textes traduits, jetons de thème sémantiques et Pages Control réutilisables.",
+    "collection.name": "Ulvia Official",
+    "page.access.description": "Gérez les membres du CMS, les droits d’administration et les méthodes de connexion.",
+    "page.access.name": "Utilisateurs",
+    "page.collections.description": "Consultez les releases exactes des Collections installées et l’ensemble de leurs ressources.",
+    "page.collections.name": "Collections",
+    "page.details.description": "Modifiez une Page du site avec les capacités Core qui vérifient la révision.",
+    "page.details.name": "Détails de la Page",
+    "page.diagnostics.description": "Consultez la maintenance, les tâches durables et la connexion aux providers.",
+    "page.diagnostics.name": "Diagnostics",
+    "page.files.description": "Parcourez et organisez la bibliothèque de fichiers des auteurs.",
+    "page.files.name": "Fichiers",
+    "page.overview.description": "Gérez les Pages du site avec le provider Core local sélectionné.",
+    "page.overview.name": "Pages",
+    "page.providers.description": "Consultez les providers approuvés et les contrats exacts sélectionnés.",
+    "page.providers.name": "Providers",
+    "page.settings.description": "Configurez l’identité, la disponibilité et les langues du site.",
+    "page.settings.name": "Paramètres"
+}

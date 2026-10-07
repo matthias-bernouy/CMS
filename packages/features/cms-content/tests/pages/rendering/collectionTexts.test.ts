@@ -6,7 +6,15 @@ const source: CollectionTextSource = {
     collection: {
         collectionId: "test",
         locale: "en",
-        texts: [{ id: "hello", values: { en: "Hello", fr: "Bonjour" } }],
+        texts: [
+            {
+                id: "hello",
+                label: "text.label.hello",
+                category: "text.category.content",
+                group: "text.group.general",
+                values: { en: "Hello", fr: "Bonjour" },
+            },
+        ],
     },
 };
 function root(markup: string) {

@@ -26,7 +26,15 @@ export function release(version: string, id: string): Record<string, unknown> {
         version,
         name: "collection.name",
         locale: "en",
-        translations: { en: { "collection.name": "Atlas", "bloc.label": "Card" } },
+        translations: {
+            en: {
+                "collection.name": "Atlas",
+                "bloc.label": "Card",
+                "text.category.content": "Content",
+                "text.group.general": "General",
+                "text.label.legacy-title": "Legacy title",
+            },
+        },
         assets: [],
         blocs: [
             {

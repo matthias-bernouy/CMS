@@ -274,7 +274,9 @@ The theme workspace projects installed collection tokens into the shared site
 theme. The collection owns token definitions and defaults; the site may edit
 token values. Delivery includes the resulting CSS variables in its public
 stylesheet. The Texts workspace groups translations by category and group and
-persists site overrides. Delivery replaces `cms.i18n` expressions on the server
+persists site overrides. Each text definition must provide translated `label`,
+`category` and `group` metadata; release admission rejects missing fields or
+default-locale catalogue entries. Delivery replaces `cms.i18n` expressions on the server
 after expanding installed compositions. Catalogue values are static; dynamic
 parameters and plural forms are not collection text features.
 Collection admission rejects hardcoded visible and accessible copy in Bloc

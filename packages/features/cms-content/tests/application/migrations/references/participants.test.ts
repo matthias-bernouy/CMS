@@ -104,7 +104,15 @@ test("prepares feature state for the exact forward and rollback collection targe
 function previousResources(): Record<string, unknown> {
     return {
         configuration: { schema: { type: "object", properties: {}, required: [] }, defaults: {} },
-        texts: [{ id: "legacy-title", values: { en: "Legacy" } }],
+        texts: [
+            {
+                id: "legacy-title",
+                label: "text.label.legacy-title",
+                category: "text.category.content",
+                group: "text.group.general",
+                values: { en: "Legacy" },
+            },
+        ],
         theme: {
             label: "collection.name",
             categories: [
@@ -126,6 +134,9 @@ function previousResources(): Record<string, unknown> {
             en: {
                 "collection.name": "Atlas",
                 "bloc.label": "Card",
+                "text.category.content": "Content",
+                "text.group.general": "General",
+                "text.label.legacy-title": "Legacy title",
                 "token.accent": "Accent",
                 "view.name": "Legacy view",
             },

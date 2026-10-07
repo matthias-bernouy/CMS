@@ -24,28 +24,30 @@ export function parseCollectionTexts(
             source.generation === undefined
                 ? 1
                 : integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `$.texts.${id}.generation`);
-        const metadata = Object.fromEntries(
-            ["label", "description", "category", "group"].flatMap((key) => {
-                const value = source[key];
-                if (value === undefined) {
-                    return [];
-                }
-                if (typeof value !== "string" || !value.trim() || value.length > (key === "description" ? 500 : 120)) {
-                    throw new TypeError(`Invalid text ${key}`);
-                }
-                return [[key, value]];
-            }),
-        );
+        const label = textMetadata(source.label, "label", 120);
+        const category = textMetadata(source.category, "category", 120);
+        const group = textMetadata(source.group, "group", 120);
+        const description =
+            source.description === undefined
+                ? {}
+                : { description: textMetadata(source.description, "description", 500) };
         const values = parseTextLocales(source.values);
         if (!Object.hasOwn(values, locale)) {
             throw new TypeError(`Text ${id} is missing its default locale ${locale}`);
         }
-        return Object.freeze({ id, generation, ...metadata, values });
+        return Object.freeze({ id, generation, label, category, group, ...description, values });
     });
     if (new Set(texts.map(({ id }) => id)).size !== texts.length) {
         throw new TypeError("Duplicate text ID");
     }
     return Object.freeze(texts.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)));
+}
+
+function textMetadata(value: unknown, key: "label" | "description" | "category" | "group", maximum: number): string {
+    if (typeof value !== "string" || !value.trim() || value.length > maximum) {
+        throw new TypeError(`Invalid or missing text ${key}`);
+    }
+    return value;
 }
 
 export function parseCollectionTextOverrides(
