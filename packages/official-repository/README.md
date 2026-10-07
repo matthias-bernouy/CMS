@@ -23,8 +23,10 @@ sorted by declared identities, so moving a fragment does not change the release.
 
 The independently versioned conformance companion is admitted against the exact
 compiled contract digest and contains only runner-neutral capability scenarios.
-Conformance-suite repository coordinates and live execution are not implemented
-yet; the companion must not contain an endpoint, credential format or deployment
+The Gateway live runner consumes that companion through an injected disposable
+provider environment. Published evidence embeds the canonical suite and exact
+digest; suites do not yet have an independent repository catalogue. The
+companion must not contain an endpoint, credential format or deployment
 assumption.
 
 Official collections keep reusable administration copy in recursively scanned

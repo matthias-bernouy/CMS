@@ -11,6 +11,7 @@ import type { RepositoryPublicationRegistry, RepositoryPublicationUploadStore, R
 
 const SIGNATURE_TTL_MS = 5 * 60 * 1_000;
 const UPLOAD_TTL_MS = 60 * 60 * 1_000;
+const MAX_CONFORMANCE_EVIDENCE_BYTES = 8 * 1024 * 1024;
 
 export type RepositoryMutationOptions = Readonly<{
     token?: string;
@@ -46,6 +47,11 @@ export class RepositoryMutationEndpoint {
                 const manifest = parsePublicationUpload(bytes);
                 return this.uploads!.create(manifest, new Date(Date.now() + UPLOAD_TTL_MS));
             });
+        }
+        if (request.method === "POST" && url.pathname === "/v1/conformance-evidence") {
+            return this.withBytes(request, MAX_CONFORMANCE_EVIDENCE_BYTES, (bytes) =>
+                this.registry.publishEvidence(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
+            );
         }
         const upload = parsePublicationUploadPath(url.pathname);
         if (upload && !upload.assetId && request.method === "GET") {

@@ -28,6 +28,8 @@ export {
 } from "cms-repository/repository/publication/protocol";
 export { boundedResponseBytes, repositoryUrl } from "cms-repository/repository/publication/transport/index";
 export type {
+    ConformanceEvidenceCoordinate,
+    ConformanceEvidencePublicationResult,
     PublicationAsset,
     PublicationEnvelope,
     PublicationUploadAsset,

@@ -107,7 +107,11 @@ replay store is process-local while the filesystem adapter persists replay
 claims for every process sharing one repository root. Multi-node deployments
 without a shared filesystem still need shared atomic implementations. Publication
 creates bounded metadata first, streams each asset separately and only exposes
-the immutable release after a final idempotent commit. The Mongo catalogues expose revision tokens from publication metadata for
+the immutable release after a final idempotent commit. The same authenticated
+channel accepts immutable live conformance evidence. Publication re-admits its
+embedded suite against the exact published contract and dependencies, verifies
+the provider manifest and build range, and stores bounded output-free evidence.
+Exact evidence reads are public and digest-verified. The Mongo catalogues expose revision tokens from publication metadata for
 selection planning. Gateway freshness checks compare the selected site route's
 mutable records and do not rescan the global catalogues.
 Admission and graph planning validate

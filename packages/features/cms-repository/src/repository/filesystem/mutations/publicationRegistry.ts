@@ -1,4 +1,6 @@
 import { admitCollectionReleaseJson } from "cms-repository/exports/collections/index";
+import { admitConformanceEvidenceJson, parseConformanceSuiteJson } from "cms-repository/exports/contracts/index";
+import { satisfiesVersionRange } from "cms-repository/exports/providers/index";
 import type {
     PublicationEnvelope,
     RemoteCoordinate,
@@ -65,6 +67,88 @@ export class FilesystemRepositoryPublicationRegistry implements RepositoryPublic
         this.index?.invalidate();
         return result;
     }
+
+    async publishEvidence(canonicalJson: string) {
+        const published = await withRepositoryWriteLock(this.root, async () => {
+            const evidence = await admitConformanceEvidenceJson(canonicalJson);
+            const files = new LocalArtifactFiles(this.root);
+            const contracts = new LocalContractReleases(files, new LocalRepositoryYanks(this.root));
+            const contract = await contracts.getMetadata(
+                evidence.evidence.contract.publisherId,
+                evidence.evidence.contract.id,
+                evidence.evidence.contract.version,
+            );
+            if (!contract || contract.digest !== evidence.evidence.contract.digest) {
+                throw new Error("Conformance evidence refers to an unavailable contract release");
+            }
+            const dependencies = await conformanceDependencies(evidence.evidence.suite.canonicalJson, contracts);
+            parseConformanceSuiteJson(evidence.evidence.suite.canonicalJson, contract, undefined, dependencies);
+            const providers = new LocalProviderReleases(files, contracts, new LocalRepositoryYanks(this.root));
+            const manifest = await providers.getMetadata(
+                evidence.evidence.publisherId,
+                evidence.evidence.providerId,
+                evidence.evidence.providerManifest.version,
+            );
+            if (
+                !manifest ||
+                manifest.digest !== evidence.evidence.providerManifest.digest ||
+                !satisfiesVersionRange(evidence.evidence.providerBuildVersion, manifest.manifest.buildVersionRange) ||
+                !manifest.manifest.implementations.some(
+                    (item) =>
+                        item.contractId === evidence.evidence.contract.id &&
+                        item.version === evidence.evidence.contract.version &&
+                        item.digest === evidence.evidence.contract.digest,
+                )
+            ) {
+                throw new Error("Conformance evidence is not covered by its provider manifest");
+            }
+            const added = await files.storeEvidence(
+                evidence.evidence.providerId,
+                evidence.evidence.contract.id,
+                evidence.evidence.id,
+                evidence.canonicalJson,
+            );
+            return {
+                providerId: evidence.evidence.providerId,
+                contractId: evidence.evidence.contract.id,
+                evidenceId: evidence.evidence.id,
+                added,
+                digest: evidence.digest,
+            };
+        });
+        this.index?.invalidate();
+        return published;
+    }
+}
+
+async function conformanceDependencies(source: string, contracts: LocalContractReleases) {
+    const value = JSON.parse(source) as {
+        dependencyProfiles?: readonly {
+            releases?: readonly { contractId?: unknown; version?: unknown; digest?: unknown }[];
+        }[];
+    };
+    const coordinates = new Map<string, { contractId: string; version: string; digest: string }>();
+    for (const profile of value.dependencyProfiles ?? []) {
+        for (const release of profile.releases ?? []) {
+            if (
+                typeof release.contractId === "string" &&
+                typeof release.version === "string" &&
+                typeof release.digest === "string"
+            ) {
+                coordinates.set(`${release.contractId}@${release.version}#${release.digest}`, release as never);
+            }
+        }
+    }
+    const catalogue = await contracts.catalogue({ includeYanks: false });
+    return Promise.all(
+        [...coordinates.values()].map(async (coordinate) => {
+            const record = await catalogue.get(coordinate.contractId, coordinate.version);
+            if (!record || record.admission.digest !== coordinate.digest) {
+                throw new Error("Conformance evidence dependency is unavailable");
+            }
+            return record.admission;
+        }),
+    );
 }
 
 async function assertPublished(root: string, coordinate: RemoteCoordinate): Promise<void> {

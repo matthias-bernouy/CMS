@@ -68,3 +68,14 @@ export type {
     ConformanceEventually,
     ConformancePagination,
 } from "cms-repository/contracts/interfaces/ConformanceControls";
+export {
+    admitConformanceEvidence,
+    admitConformanceEvidenceJson,
+    parseConformanceEvidence,
+    type AdmittedConformanceEvidence,
+} from "cms-repository/contracts/core/conformance/evidence";
+export type {
+    ConformanceCallEvidence,
+    ConformanceEvidence,
+    ConformanceScenarioEvidence,
+} from "cms-repository/contracts/interfaces/ConformanceEvidence";

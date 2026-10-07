@@ -98,6 +98,12 @@ the storage port; `./media/local-fs` is the production derivative store. The
 byte fingerprint invalidates a derivative when a provider changes the file.
 `./media/sharp` applies gateway limits over the generic
 `@bernouy/image-processing/sharp` adapter.
+`./conformance` executes an admitted suite against an injected disposable
+environment factory. Every scenario receives a fresh environment, contract
+inputs and outputs are checked, capture, retry, pagination, operation and replay
+rules are enforced, and disposal runs after failures. Its immutable evidence
+pins the exact release, provider manifest, suite and runner without retaining
+provider outputs.
 
 The source tree follows these responsibilities: `invocation/` contains routing,
 authorization, HTTP handlers and transport; `identity/` contains provider-wide
@@ -111,8 +117,9 @@ declare the response fields projected into metadata and canonical URLs.
 
 ## Current Operational Limits
 
-1. Live provider conformance evidence and remote conformance-suite publication
-   are not part of Gateway execution yet.
+1. The live conformance runner is transport-neutral. A runtime still has to
+   provide the disposable provider environment and decide when passing evidence
+   is required for approval or selection.
 2. Production network composition still needs black-box custom-provider tests,
    cross-catalogue snapshot stress tests and selected-route/observation
    benchmarks before large deployments.

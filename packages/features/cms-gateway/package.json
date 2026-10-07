@@ -9,6 +9,7 @@
         ".": "./src/exports/index.ts",
         "./audit": "./src/exports/audit/index.ts",
         "./audit/mongo": "./src/exports/audit/mongo.ts",
+        "./conformance": "./src/exports/conformance/index.ts",
         "./execution": "./src/exports/execution/index.ts",
         "./execution/mongo": "./src/exports/execution/mongo.ts",
         "./http": "./src/exports/http/index.ts",

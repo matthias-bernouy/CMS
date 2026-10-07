@@ -7,6 +7,7 @@ import {
 
 export class RecordingRegistry implements RepositoryPublicationRegistry {
     readonly publications: PublicationEnvelope[] = [];
+    readonly evidencePublications: string[] = [];
 
     async publish(envelope: PublicationEnvelope) {
         this.publications.push({
@@ -28,6 +29,17 @@ export class RecordingRegistry implements RepositoryPublicationRegistry {
         return {
             ...coordinate,
             yank: reason ? { reason, yankedAt: new Date(0).toISOString() } : null,
+        };
+    }
+
+    async publishEvidence(canonicalJson: string) {
+        this.evidencePublications.push(canonicalJson);
+        return {
+            providerId: "ulvia.example",
+            contractId: "ulvia.example.items",
+            evidenceId: "00000000-0000-4000-8000-000000000001",
+            added: true,
+            digest: `sha256:${"0".repeat(64)}` as const,
         };
     }
 }

@@ -95,8 +95,35 @@ export class LocalArtifactFiles {
         return artifacts;
     }
 
+    async storeEvidence(providerId: string, contractId: string, evidenceId: string, canonicalJson: string) {
+        const path = this.evidencePath(providerId, contractId, evidenceId);
+        const existing = await this.getEvidence(providerId, contractId, evidenceId);
+        if (existing) {
+            return sameBytes(existing, canonicalJson, "conformance evidence", evidenceId, "immutable");
+        }
+        await ensureDurableDirectory(dirname(path), this.root);
+        await writeImmutable(path, Buffer.from(canonicalJson));
+        return true;
+    }
+
+    async getEvidence(providerId: string, contractId: string, evidenceId: string): Promise<Buffer | null> {
+        if (!IDENTIFIER.test(providerId) || !IDENTIFIER.test(contractId) || !UUID.test(evidenceId)) {
+            return null;
+        }
+        return readFile(this.evidencePath(providerId, contractId, evidenceId)).catch((error: NodeJS.ErrnoException) => {
+            if (error.code === "ENOENT") {
+                return null;
+            }
+            throw error;
+        });
+    }
+
     private path(type: ArtifactType, publisherId: string, id: string, version: string): string {
         return join(this.root, type, publisherId, id, `${version}.json`);
+    }
+
+    private evidencePath(providerId: string, contractId: string, evidenceId: string): string {
+        return join(this.root, "conformance-evidence", providerId, contractId, `${evidenceId}.json`);
     }
 }
 
@@ -132,12 +159,13 @@ async function sameBlobBytes(left: Blob, right: Blob): Promise<boolean> {
 
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
 const VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 
 function releaseHash(canonicalJson: string): string {
     return createHash("sha256").update(canonicalJson).digest("hex");
 }
 
-function sameBytes(existing: Buffer, candidate: string, type: ArtifactType, id: string, version: string): false {
+function sameBytes(existing: Buffer, candidate: string, type: string, id: string, version: string): false {
     if (existing.toString("utf8") !== candidate) {
         throw new Error(`${type} ${id}@${version} already exists with different content`);
     }

@@ -32,6 +32,15 @@ export type RepositoryPublicationResult = Readonly<{
 export type RepositoryYank = Readonly<{ reason: string; yankedAt: string }>;
 export type RepositoryYankResult = RemoteCoordinate & Readonly<{ yank: RepositoryYank | null }>;
 
+export type ConformanceEvidenceCoordinate = Readonly<{
+    providerId: string;
+    contractId: string;
+    evidenceId: string;
+}>;
+
+export type ConformanceEvidencePublicationResult = ConformanceEvidenceCoordinate &
+    Readonly<{ added: boolean; digest: `sha256:${string}` }>;
+
 export type PublicationUploadAsset = Readonly<{
     id: string;
     byteLength: number;
@@ -54,6 +63,7 @@ export type PublicationUploadReceipt = Readonly<{
 /** Storage-independent mutation boundary implemented by a repository server adapter. */
 export interface RepositoryPublicationRegistry {
     publish(envelope: PublicationEnvelope): Promise<RepositoryPublicationResult>;
+    publishEvidence(canonicalJson: string): Promise<ConformanceEvidencePublicationResult>;
     setYank(coordinate: RemoteCoordinate, reason: string | null): Promise<RepositoryYankResult>;
 }
 

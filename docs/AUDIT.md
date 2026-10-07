@@ -198,14 +198,16 @@ penetration testing, dependency monitoring or deployment review.
 
 ### Product Completeness
 
-1. The new Control UI covers the official management areas but is not yet at
-   legacy feature parity. Per-page route/SEO authoring, richer diagnostics and
-   several administration flows remain incomplete.
+1. The new Control UI covers the official management areas, including per-page
+   route/SEO mutation and an operational diagnostics Page. Several deeper
+   administration journeys still need dedicated product flows.
 2. There is no active visual Page editor. The shared Page/Bloc authoring model
    is ready for one, but the editor itself is intentionally deferred.
-3. Conformance suites are validated when authored locally, but live provider
-   conformance evidence, remote suite publication and operator-visible results
-   are incomplete.
+3. Conformance suites can run against injected disposable environments and
+   immutable output-free evidence can be published and read remotely. Production
+   environment provisioning, approval policy and operator-visible evidence
+   history remain incomplete; suites are embedded in evidence rather than
+   catalogued independently.
 4. Generic CMS-instance creation, backup, restore and Core upgrades belong to a
    future provider such as the official local provider or Ulvia Cloud. They are
    not CMS Core data-plane capabilities.
@@ -283,8 +285,9 @@ changing a constant.
    emergency redesign.
 5. **Finish Control product flows, then build the shared Page editor.** Keep both
    Control and Delivery on the one Page/Bloc model.
-6. **Add live provider conformance.** Publish exact evidence for each claimed
-   contract release before non-local providers become operationally important.
+6. **Operationalize live provider conformance.** Compose disposable provider
+   environments, surface evidence history to operators and require current
+   passing evidence where approval policy demands it.
 7. **Harden deferred trust boundaries before enabling them.** In particular,
    isolate unreviewed collection JavaScript and harden OIDC networking before
    those features are exposed.

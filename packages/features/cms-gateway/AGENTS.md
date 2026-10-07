@@ -13,6 +13,8 @@ publish releases or choose providers.
   memory, Mongo, and request-scoped implementations.
 - `src/media/` owns provider file handlers, derivatives, image policy, storage
   adapters, and browser image helpers. Generic image processing remains in Foundation.
+- `src/conformance/` executes already-admitted suites against injected disposable
+  live environments. It never provisions production tenants or publishes artifacts itself.
 - `src/exports/` is the public facade. The package root exposes invocation;
   optional HTTP, identity, and media APIs use their named subpaths.
 

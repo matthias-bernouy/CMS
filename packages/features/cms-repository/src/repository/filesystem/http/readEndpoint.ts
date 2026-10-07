@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { LocalArtifactFiles } from "../artifacts/files";
 import { LocalContractReleases } from "../contracts";
 import { LocalCollectionRepository } from "../artifacts/collections";
@@ -13,10 +14,12 @@ export class RepositoryReadEndpoint {
     private readonly providers: LocalProviderReleases;
     private readonly index: FilesystemRepositoryCatalogueIndex;
     private readonly refreshCatalogueReads: boolean;
+    private readonly files: LocalArtifactFiles;
 
     constructor(root: string, index?: FilesystemRepositoryCatalogueIndex) {
         this.collections = new LocalCollectionRepository(root);
         const files = new LocalArtifactFiles(root);
+        this.files = files;
         this.yanks = new LocalRepositoryYanks(root);
         this.contracts = new LocalContractReleases(files, this.yanks);
         this.providers = new LocalProviderReleases(files, this.contracts, this.yanks);
@@ -33,6 +36,9 @@ export class RepositoryReadEndpoint {
             return notFound();
         }
         const type = parts[2];
+        if (parts.length === 6 && type === "conformance-evidence") {
+            return this.conformanceEvidence(parts);
+        }
         if (parts.length === 3) {
             return (await readCatalogue(request, type, this.index, this.refreshCatalogueReads)) ?? notFound();
         }
@@ -60,6 +66,27 @@ export class RepositoryReadEndpoint {
                 return artifact ? releaseResponse(artifact.canonicalJson, artifact.digest) : notFound();
             }
             return notFound();
+        } catch (error) {
+            if (error instanceof URIError) {
+                return notFound();
+            }
+            throw error;
+        }
+    }
+
+    private async conformanceEvidence(parts: string[]): Promise<Response> {
+        try {
+            const [providerId, contractId, evidenceId] = parts.slice(3).map(decodeURIComponent) as [
+                string,
+                string,
+                string,
+            ];
+            const bytes = await this.files.getEvidence(providerId, contractId, evidenceId);
+            if (!bytes) {
+                return notFound();
+            }
+            const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+            return releaseResponse(bytes.toString("utf8"), digest);
         } catch (error) {
             if (error instanceof URIError) {
                 return notFound();

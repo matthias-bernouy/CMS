@@ -1,7 +1,13 @@
 import { createHash } from "node:crypto";
 import { signRepositoryContentDigest, signRepositoryRequest } from "./auth";
 import { encodePublicationUpload, type PublicationUploadManifest } from "./protocol";
-import type { PublicationAsset, PublicationEnvelope, PublicationUploadReceipt, RemoteCoordinate } from "./types";
+import type {
+    ConformanceEvidencePublicationResult,
+    PublicationAsset,
+    PublicationEnvelope,
+    PublicationUploadReceipt,
+    RemoteCoordinate,
+} from "./types";
 import { concurrentlyMap } from "./transport/concurrency";
 
 const TRANSFER_CONCURRENCY = 4;
@@ -45,6 +51,14 @@ export class RemoteRepositoryWriter {
             `v1/yanks/${coordinate.kind}/${encodeURIComponent(coordinate.publisherId)}/${encodeURIComponent(coordinate.id)}/${encodeURIComponent(coordinate.version)}`,
             body,
         );
+    }
+
+    async pushEvidence(canonicalJson: string): Promise<ConformanceEvidencePublicationResult> {
+        const value = await this.mutateBytes("POST", "v1/conformance-evidence", Buffer.from(canonicalJson));
+        if (!evidencePublicationResult(value)) {
+            throw new Error("Repository returned an invalid conformance evidence result");
+        }
+        return value;
     }
 
     private async uploadAsset(
@@ -144,6 +158,17 @@ function uploadReceipt(value: unknown): value is PublicationUploadReceipt {
 
 function digest(value: unknown): value is string {
     return typeof value === "string" && /^sha256:[0-9a-f]{64}$/u.test(value);
+}
+
+function evidencePublicationResult(value: unknown): value is ConformanceEvidencePublicationResult {
+    return (
+        plainRecord(value) &&
+        typeof value.providerId === "string" &&
+        typeof value.contractId === "string" &&
+        typeof value.evidenceId === "string" &&
+        typeof value.added === "boolean" &&
+        digest(value.digest)
+    );
 }
 
 function remoteError(value: unknown, status: number): string {
