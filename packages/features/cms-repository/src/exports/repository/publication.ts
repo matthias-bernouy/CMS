@@ -7,7 +7,10 @@ export {
     type RepositorySignature,
     type VerifiedRepositorySignature,
 } from "cms-repository/repository/publication/auth";
-export { RemoteRepositoryClient } from "cms-repository/repository/publication/client";
+export {
+    RemoteRepositoryClient,
+    type RepositoryAssetDownloadSink,
+} from "cms-repository/repository/publication/client";
 export {
     InMemoryRepositoryReplayStore,
     RepositoryMutationEndpoint,
@@ -23,7 +26,7 @@ export {
     parseYank,
     readRepositoryMutationBody,
 } from "cms-repository/repository/publication/protocol";
-export { boundedResponseBytes, repositoryUrl } from "cms-repository/repository/publication/transport";
+export { boundedResponseBytes, repositoryUrl } from "cms-repository/repository/publication/transport/index";
 export type {
     PublicationAsset,
     PublicationEnvelope,
@@ -32,6 +35,7 @@ export type {
     PublicationUploadReceipt,
     RemoteCoordinate,
     RepositoryArtifactKind,
+    RepositoryDownloadAsset,
     RepositoryPublicationRegistry,
     RepositoryPublicationResult,
     RepositoryPublicationUploadStore,

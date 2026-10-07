@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { link, lstat, readFile, readdir, rename, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import type {
@@ -14,6 +14,10 @@ import { acquireFilesystemLease, FilesystemLeaseBusyError } from "../core/lock";
 
 const SCHEMA = "ulvia.repository-upload.v1";
 const UPLOAD_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
+
+function uploadManifestFingerprint(manifest: PublicationUploadManifest): string {
+    return createHash("sha256").update(JSON.stringify(manifest)).digest("hex");
+}
 
 type UploadDocument = Readonly<{
     schema: typeof SCHEMA;
@@ -35,6 +39,10 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
     async create(manifest: PublicationUploadManifest, expiresAt: Date): Promise<PublicationUploadReceipt> {
         await ensureDurableDirectory(this.uploadRoot, this.root);
         await this.pruneExpired();
+        const resumable = await this.findOpenUpload(manifest);
+        if (resumable) {
+            return resumable;
+        }
         const uploadId = randomUUID();
         const directory = this.directory(uploadId);
         await ensureDurableDirectory(join(directory, "assets"), this.root);
@@ -54,7 +62,16 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
             await rm(directory, { recursive: true, force: true });
             throw error;
         }
-        return { uploadId, expiresAt: document.expiresAt };
+        return { uploadId, expiresAt: document.expiresAt, uploadedAssetIds: [] };
+    }
+
+    async status(uploadId: string): Promise<PublicationUploadReceipt> {
+        const document = await this.readOpen(uploadId);
+        return {
+            uploadId,
+            expiresAt: document.expiresAt,
+            uploadedAssetIds: await this.verifiedAssetIds(document),
+        };
     }
 
     async putAsset(
@@ -111,16 +128,14 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
                 return winner;
             }
             const document = await this.readOpen(uploadId);
-            const assets = await Promise.all(
-                document.manifest.assets.map(async (asset) => {
-                    const path = join(this.directory(uploadId), "assets", asset.id);
-                    const metadata = await stat(path).catch(() => null);
-                    if (!metadata?.isFile() || metadata.size !== asset.byteLength) {
-                        throw new Error(`Publication upload asset ${asset.id} is incomplete`);
-                    }
-                    return { id: asset.id, bytes: Bun.file(path) };
-                }),
-            );
+            const verified = await this.verifiedAssetIds(document);
+            if (verified.length !== document.manifest.assets.length) {
+                throw new Error("Publication upload is incomplete");
+            }
+            const assets = document.manifest.assets.map((asset) => ({
+                id: asset.id,
+                bytes: Bun.file(join(this.directory(uploadId), "assets", asset.id)),
+            }));
             const result = await publish({
                 kind: document.manifest.kind,
                 canonicalJson: document.manifest.canonicalJson,
@@ -162,6 +177,41 @@ export class FilesystemRepositoryPublicationUploadStore implements RepositoryPub
             throw new Error("Publication upload is already committed");
         }
         return document;
+    }
+
+    private async findOpenUpload(manifest: PublicationUploadManifest): Promise<PublicationUploadReceipt | null> {
+        const expected = uploadManifestFingerprint(manifest);
+        for (const entry of await readdir(this.uploadRoot, { withFileTypes: true })) {
+            if (!entry.isDirectory() || !UPLOAD_ID.test(entry.name)) {
+                continue;
+            }
+            const document = await this.readDocumentIfPresent(entry.name);
+            if (
+                document &&
+                Date.parse(document.expiresAt) > Date.now() &&
+                uploadManifestFingerprint(document.manifest) === expected &&
+                !(await this.readResult(entry.name))
+            ) {
+                return this.status(entry.name);
+            }
+        }
+        return null;
+    }
+
+    private async verifiedAssetIds(document: UploadDocument): Promise<string[]> {
+        const verified: string[] = [];
+        for (const asset of document.manifest.assets) {
+            const path = join(this.directory(document.uploadId), "assets", asset.id);
+            const metadata = await stat(path).catch(() => null);
+            if (!metadata?.isFile() || metadata.size !== asset.byteLength) {
+                continue;
+            }
+            const actual = await digestUploadFile(path);
+            if (actual.byteLength === asset.byteLength && actual.digest === asset.digest) {
+                verified.push(asset.id);
+            }
+        }
+        return verified;
     }
 
     private async readDocument(uploadId: string): Promise<UploadDocument> {

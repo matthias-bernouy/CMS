@@ -48,6 +48,9 @@ export class RepositoryMutationEndpoint {
             });
         }
         const upload = parsePublicationUploadPath(url.pathname);
+        if (upload && !upload.assetId && request.method === "GET") {
+            return this.authorized(request, () => this.uploads!.status(upload.uploadId));
+        }
         if (upload?.assetId && request.method === "PUT") {
             return this.putAsset(request, upload.uploadId, upload.assetId);
         }

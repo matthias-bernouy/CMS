@@ -102,12 +102,10 @@ export class LocalCollectionRepository {
         if (!metadata) {
             return null;
         }
-        const assets = await Promise.all(
-            metadata.release.assets.map(async ({ id }) => ({
-                id,
-                bytes: await readFile(join(this.assetDirectory(metadata.canonicalJson), id)),
-            })),
-        );
+        const assets = metadata.release.assets.map(({ id }) => ({
+            id,
+            bytes: Bun.file(join(this.assetDirectory(metadata.canonicalJson), id)),
+        }));
         return verifyStoredCollectionArtifact(metadata.release, assets, metadata.digest);
     }
 
@@ -147,13 +145,13 @@ export class LocalCollectionRepository {
         collectionId: string,
         version: string,
         assetId: string,
-    ): Promise<{ definition: CollectionAssetDefinition; bytes: Uint8Array } | null> {
+    ): Promise<{ definition: CollectionAssetDefinition; bytes: Blob } | null> {
         const metadata = await this.getMetadata(publisherId, collectionId, version);
         const definition = metadata?.release.assets.find((asset) => asset.id === assetId);
         if (!metadata || !definition) {
             return null;
         }
-        const bytes = new Uint8Array(await readFile(join(this.assetDirectory(metadata.canonicalJson), assetId)));
+        const bytes = Bun.file(join(this.assetDirectory(metadata.canonicalJson), assetId));
         const snapshots = snapshotCollectionAssets([definition], [{ id: assetId, bytes }], {
             ...DEFAULT_COLLECTION_LIMITS,
             maxBundleBytes: DEFAULT_COLLECTION_LIMITS.maxAssetBytes,

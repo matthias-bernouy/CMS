@@ -10,11 +10,9 @@ import {
     RepositoryMutationEndpoint,
     signRepositoryContentDigest,
     signRepositoryRequest,
-    type PublicationEnvelope,
-    type RemoteCoordinate,
-    type RepositoryPublicationRegistry,
 } from "@bernouy/cms-repository/repository/publication";
 import { createHash } from "node:crypto";
+import { emptySignedRequest, RecordingRegistry, signedRequest, signedRequestWithoutBody } from "./publicationFixtures";
 
 const directories: string[] = [];
 
@@ -100,6 +98,13 @@ test("assets remain invisible until every streamed byte is verified and committe
         )?.status,
     ).toBe(204);
 
+    const status = await endpoint.handle(signedRequestWithoutBody(commitUrl, "GET", token));
+    expect(await status!.json()).toMatchObject({ uploadId, uploadedAssetIds: ["fixture.txt"] });
+    const resumed = await endpoint.handle(
+        signedRequest(createUrl, "POST", manifest, signRepositoryRequest("POST", createUrl, manifest, token)),
+    );
+    expect(await resumed!.json()).toMatchObject({ uploadId, uploadedAssetIds: ["fixture.txt"] });
+
     expect((await endpoint.handle(emptySignedRequest(commitUrl, "POST", token)))?.status).toBe(200);
     expect(registry.publications).toHaveLength(1);
     const published = registry.publications[0]!.assets[0]!.bytes;
@@ -109,57 +114,6 @@ test("assets remain invisible until every streamed byte is verified and committe
     expect((await endpoint.handle(emptySignedRequest(commitUrl, "POST", token)))?.status).toBe(200);
     expect(registry.publications).toHaveLength(1);
 });
-
-class RecordingRegistry implements RepositoryPublicationRegistry {
-    readonly publications: PublicationEnvelope[] = [];
-
-    async publish(envelope: PublicationEnvelope) {
-        this.publications.push({
-            ...envelope,
-            assets: await Promise.all(
-                envelope.assets.map(async (asset) => ({
-                    id: asset.id,
-                    bytes:
-                        asset.bytes instanceof Blob
-                            ? new Uint8Array(await asset.bytes.arrayBuffer())
-                            : asset.bytes.slice(),
-                })),
-            ),
-        });
-        return { kind: envelope.kind, added: true, digest: `sha256:${"0".repeat(64)}`, release: {} };
-    }
-
-    async setYank(coordinate: RemoteCoordinate, reason: string | null) {
-        return {
-            ...coordinate,
-            yank: reason ? { reason, yankedAt: new Date(0).toISOString() } : null,
-        };
-    }
-}
-
-function signedRequest(
-    url: URL,
-    method: string,
-    body: Uint8Array,
-    signed: ReturnType<typeof signRepositoryRequest>,
-): Request {
-    return new Request(url, {
-        method,
-        body: Buffer.from(body),
-        headers: {
-            Authorization: signed.authorization,
-            "X-Ulvia-Timestamp": signed.timestamp,
-            "X-Ulvia-Nonce": signed.nonce,
-            "X-Ulvia-Content-SHA256": signed.contentDigest,
-            "X-Ulvia-Signature": signed.signature,
-        },
-    });
-}
-
-function emptySignedRequest(url: URL, method: string, token: string): Request {
-    const body = new Uint8Array();
-    return signedRequest(url, method, body, signRepositoryRequest(method, url, body, token));
-}
 
 async function temporaryDirectory(): Promise<string> {
     const path = await mkdtemp(join(tmpdir(), "repository-publication-"));

@@ -54,6 +54,13 @@ export class LocalArtifactFiles {
         return readFile(join(this.root, "assets", "contracts", releaseHash(canonicalJson), assetId));
     }
 
+    fixtureBlob(canonicalJson: string, assetId: string): Blob {
+        if (!IDENTIFIER.test(assetId)) {
+            throw new Error("Invalid fixture asset ID");
+        }
+        return Bun.file(join(this.root, "assets", "contracts", releaseHash(canonicalJson), assetId));
+    }
+
     async get(type: ArtifactType, publisherId: string, id: string, version: string): Promise<Buffer | null> {
         if (!IDENTIFIER.test(publisherId) || !IDENTIFIER.test(id) || !VERSION.test(version)) {
             return null;

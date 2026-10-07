@@ -115,8 +115,8 @@ function releaseResponse(canonicalJson: string, digest: string): Response {
     });
 }
 
-function assetResponse(bytes: Uint8Array, mediaType: string, digest: string): Response {
-    return new Response(Buffer.from(bytes), {
+function assetResponse(bytes: Uint8Array | Blob, mediaType: string, digest: string): Response {
+    return new Response(bytes instanceof Blob ? bytes : Buffer.from(bytes), {
         headers: {
             "Content-Type": mediaType,
             ETag: `"${digest}"`,

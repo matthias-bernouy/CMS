@@ -132,7 +132,7 @@ export class LocalContractReleases {
         if (!admission || !definition) {
             return null;
         }
-        const bytes = await this.files.fixture(admission.canonicalJson, assetId);
+        const bytes = this.files.fixtureBlob(admission.canonicalJson, assetId);
         await verifyFixtureAssets([definition], [{ id: assetId, bytes }]);
         return { definition, bytes };
     }

@@ -9,6 +9,13 @@ export type RemoteCoordinate = Readonly<{
 
 export type PublicationAsset = Readonly<{ id: string; bytes: Uint8Array | Blob }>;
 
+export type RepositoryDownloadAsset = Readonly<{
+    id: string;
+    byteLength: number;
+    digest: `sha256:${string}`;
+    mediaType: string;
+}>;
+
 export type PublicationEnvelope = Readonly<{
     kind: RepositoryArtifactKind;
     canonicalJson: string;
@@ -40,6 +47,8 @@ export type PublicationUploadManifest = Readonly<{
 export type PublicationUploadReceipt = Readonly<{
     uploadId: string;
     expiresAt: string;
+    /** Assets already durably staged and verified for this manifest. */
+    uploadedAssetIds: readonly string[];
 }>;
 
 /** Storage-independent mutation boundary implemented by a repository server adapter. */
@@ -56,6 +65,7 @@ export interface RepositoryReplayStore {
 /** Durable staging boundary. Assets stay invisible until the supplied publication callback succeeds. */
 export interface RepositoryPublicationUploadStore {
     create(manifest: PublicationUploadManifest, expiresAt: Date): Promise<PublicationUploadReceipt>;
+    status(uploadId: string): Promise<PublicationUploadReceipt>;
     putAsset(
         uploadId: string,
         assetId: string,

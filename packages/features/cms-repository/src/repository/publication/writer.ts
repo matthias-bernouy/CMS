@@ -2,6 +2,9 @@ import { createHash } from "node:crypto";
 import { signRepositoryContentDigest, signRepositoryRequest } from "./auth";
 import { encodePublicationUpload, type PublicationUploadManifest } from "./protocol";
 import type { PublicationAsset, PublicationEnvelope, PublicationUploadReceipt, RemoteCoordinate } from "./types";
+import { concurrentlyMap } from "./transport/concurrency";
+
+const TRANSFER_CONCURRENCY = 4;
 
 export class RemoteRepositoryWriter {
     constructor(
@@ -14,29 +17,25 @@ export class RemoteRepositoryWriter {
         const manifest: PublicationUploadManifest = {
             kind: envelope.kind,
             canonicalJson: envelope.canonicalJson,
-            assets: await Promise.all(assets.map(describeAsset)),
+            assets: await concurrentlyMap(assets, TRANSFER_CONCURRENCY, describeAsset),
         };
         const created = await this.mutateBytes("POST", "v1/publication-uploads", encodePublicationUpload(manifest));
         if (!uploadReceipt(created)) {
             throw new Error("Repository returned an invalid publication upload receipt");
         }
-        try {
-            for (const asset of assets) {
+        const uploaded = new Set(created.uploadedAssetIds);
+        await concurrentlyMap(
+            assets.filter((asset) => !uploaded.has(asset.id)),
+            TRANSFER_CONCURRENCY,
+            async (asset) => {
                 await this.uploadAsset(created.uploadId, asset, manifest.assets.find((item) => item.id === asset.id)!);
-            }
-            const value = await this.mutateBytes(
-                "POST",
-                `v1/publication-uploads/${created.uploadId}`,
-                new Uint8Array(),
-            );
-            if (!plainRecord(value) || typeof value.added !== "boolean" || !digest(value.digest)) {
-                throw new Error("Repository returned an invalid publication result");
-            }
-            return { added: value.added, digest: value.digest };
-        } catch (error) {
-            await this.abortUpload(created.uploadId);
-            throw error;
+            },
+        );
+        const value = await this.mutateBytes("POST", `v1/publication-uploads/${created.uploadId}`, new Uint8Array());
+        if (!plainRecord(value) || typeof value.added !== "boolean" || !digest(value.digest)) {
+            throw new Error("Repository returned an invalid publication result");
         }
+        return { added: value.added, digest: value.digest };
     }
 
     async yank(coordinate: RemoteCoordinate, reason: string | null): Promise<void> {
@@ -60,10 +59,6 @@ export class RemoteRepositoryWriter {
             description.digest.slice("sha256:".length),
             "application/octet-stream",
         );
-    }
-
-    private async abortUpload(uploadId: string): Promise<void> {
-        await this.mutateBytes("DELETE", `v1/publication-uploads/${uploadId}`, new Uint8Array()).catch(() => undefined);
     }
 
     private async mutateBytes(method: string, path: string, body: Uint8Array): Promise<unknown> {
@@ -140,7 +135,10 @@ function uploadReceipt(value: unknown): value is PublicationUploadReceipt {
         typeof value.uploadId === "string" &&
         /^[0-9a-f-]{36}$/u.test(value.uploadId) &&
         typeof value.expiresAt === "string" &&
-        Number.isFinite(Date.parse(value.expiresAt))
+        Number.isFinite(Date.parse(value.expiresAt)) &&
+        Array.isArray(value.uploadedAssetIds) &&
+        value.uploadedAssetIds.every((id) => typeof id === "string") &&
+        new Set(value.uploadedAssetIds).size === value.uploadedAssetIds.length
     );
 }
 

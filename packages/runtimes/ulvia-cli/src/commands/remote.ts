@@ -20,6 +20,7 @@ import {
     type RemoteCoordinate,
 } from "@bernouy/cms-repository/repository/publication";
 import { formatCoordinate, parseRemoteArguments, type RemoteAction } from "./remoteArguments";
+import { RemoteAssetFileSink } from "./remoteAssetSink";
 
 export async function remoteCommand(
     action: RemoteAction,
@@ -44,8 +45,14 @@ export async function remoteCommand(
         log(`${result.added ? "+" : "="} ${formatCoordinate(coordinate)} (${result.digest})`);
         return;
     }
-    const remote = await client.pull(coordinate);
-    const added = await withRepositoryWriteLock(repositoryRoot, () => storeLocal(repositoryRoot, remote));
+    const sink = new RemoteAssetFileSink(repositoryRoot);
+    const remote = await client.pull(coordinate, sink);
+    let added: boolean;
+    try {
+        added = await withRepositoryWriteLock(repositoryRoot, () => storeLocal(repositoryRoot, remote));
+    } finally {
+        await sink.complete();
+    }
     log(`${added ? "+" : "="} ${formatCoordinate(coordinate)} (${remote.expectedDigest})`);
 }
 
@@ -129,12 +136,10 @@ async function collectionAssets(assets: readonly { id: string; bytes: Blob }[]):
 }
 
 async function contractAssets(files: LocalArtifactFiles, canonicalJson: string): Promise<PublicationAsset[]> {
-    return Promise.all(
-        (parseContractReleaseJson(canonicalJson).fixtureAssets ?? []).map(async (asset) => ({
-            id: asset.id,
-            bytes: await files.fixture(canonicalJson, asset.id),
-        })),
-    );
+    return (parseContractReleaseJson(canonicalJson).fixtureAssets ?? []).map((asset) => ({
+        id: asset.id,
+        bytes: files.fixtureBlob(canonicalJson, asset.id),
+    }));
 }
 
 function assertDigest(actual: string, expected: string): void {
