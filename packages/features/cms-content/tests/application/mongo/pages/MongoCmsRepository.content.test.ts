@@ -23,8 +23,38 @@ describe("MongoCmsRepository content persistence", () => {
             { keys: { path: 1 }, options: { unique: true } },
             { keys: { "deletionIntent.requestedAt": 1 }, options: { sparse: true } },
             { keys: { "pathUpdateIntent.requestedAt": 1 }, options: { sparse: true } },
+            { keys: { contentReferences: 1 }, options: undefined },
         ]);
         expect(db.requestedCollections.every((name) => name.startsWith("tenant_"))).toBe(true);
+    });
+
+    test("maintains indexed reverse references when Page content changes", async () => {
+        const { repository } = createMongoContentRepository();
+        await repository.init();
+        await repository.insertPage(
+            "/references",
+            "References",
+            "<official-card>{{ cms.i18n.ulvia-official.card-title }}</official-card>",
+        );
+        const page = (await repository.getPage("/references"))!;
+
+        expect(
+            (await repository.scanPagesByContentReference({ kind: "bloc", tag: "official-card" }, undefined, 10)).pages,
+        ).toHaveLength(1);
+        expect(
+            (
+                await repository.scanPagesByContentReference(
+                    { kind: "text", collectionId: "ulvia-official", textId: "card-title" },
+                    undefined,
+                    10,
+                )
+            ).pages,
+        ).toHaveLength(1);
+
+        await repository.updatePage({ id: page.id, content: "<main>Empty</main>" }, page.revision);
+        expect(
+            (await repository.scanPagesByContentReference({ kind: "bloc", tag: "official-card" }, undefined, 10)).pages,
+        ).toEqual([]);
     });
 
     test("stores, replaces, and projects blocs while translating duplicate tags", async () => {

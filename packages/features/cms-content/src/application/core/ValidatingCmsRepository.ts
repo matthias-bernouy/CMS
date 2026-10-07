@@ -169,6 +169,13 @@ export class ValidatingCmsRepository implements CmsRepository {
     scanPages(cursor: string | undefined, limit: number) {
         return this.inner.scanPages(cursor, limit);
     }
+    scanPagesByContentReference(
+        reference: Parameters<CmsRepository["scanPagesByContentReference"]>[0],
+        cursor: string | undefined,
+        limit: number,
+    ) {
+        return this.inner.scanPagesByContentReference(reference, cursor, limit);
+    }
     getPublishedPage(path: string) {
         return this.inner.getPublishedPage(path);
     }

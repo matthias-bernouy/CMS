@@ -9,10 +9,8 @@ import {
 import { PageRouteCollisionError } from "cms-content/pages/core/routing/errors";
 import { planPagePaths } from "cms-content/pages/core/lifecycle/pagePaths";
 import { PageRouteMutationCoordinator } from "cms-content/pages/core/routing/mutationCoordinator";
-import {
-    synchronizePageRouteRegistrations,
-    synchronizePageRoutes,
-} from "cms-content/pages/core/routing/synchronizeRoutes";
+import { synchronizePageRouteRegistrations } from "cms-content/pages/core/routing/synchronizeRoutes";
+import { applySiteRouteMutation, pageBeforeMutation } from "cms-content/pages/core/routing/site/mutations";
 
 const PAGE_ROUTE_MUTATIONS = new Set([
     "insertPage",
@@ -40,24 +38,10 @@ export function withSitePageRoutes(
             }
             return (...args: unknown[]) => {
                 return coordinator.run(siteId, async () => {
-                    const before = await target.getAllPages();
-                    const installed = await target.getInstalledCollections?.();
-                    if (installed) {
-                        await synchronizePageRoutes(routes, siteId, installed, before);
-                    }
                     await validateMutationLinks(target, routes, siteId, property, args);
+                    const previous = await pageBeforeMutation(target, property, args);
                     const result = await Reflect.apply(value, target, args);
-                    const pages = await target.getAllPages();
-                    if (installed) {
-                        await synchronizePageRoutes(
-                            routes,
-                            siteId,
-                            (await target.getInstalledCollections?.()) ?? installed,
-                            pages,
-                        );
-                    } else {
-                        await synchronizeSitePageRoutes(routes, siteId, pages);
-                    }
+                    await applySiteRouteMutation(target, routes, siteId, property, args, previous, result);
                     return result;
                 });
             };
@@ -108,7 +92,8 @@ async function validateMutationLinks(
     }
     if (method === "deletePage" || method === "deletePageWithAlternative") {
         const pageId = String(args[0]);
-        const sitePages = await repository.getAllPages();
+        const sitePages = (await repository.scanPagesByContentReference({ kind: "site-page", pageId }, undefined, 2))
+            .pages;
         const installed = await repository.getInstalledCollections?.();
         const documents = [
             ...sitePages.filter((page) => page.id !== pageId).map((page) => page.content),

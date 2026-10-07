@@ -261,7 +261,9 @@ function matches(document: StoredDocument, filter: Filter): boolean {
                 return true;
             }
         }
-        return Bun.deepEquals(value, expected);
+        return Array.isArray(value) && !Array.isArray(expected)
+            ? value.some((entry) => Bun.deepEquals(entry, expected))
+            : Bun.deepEquals(value, expected);
     });
 }
 

@@ -1,26 +1,34 @@
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
-import { escapeRegex } from "cms-content/pages/core/queries/escapeRegex";
 
 export async function findPagesReferencingBloc(
-    reader: Pick<CmsRepository, "getAllPages">,
+    reader: Pick<CmsRepository, "scanPagesByContentReference">,
     blocTag: string,
 ): Promise<TPage[]> {
-    const tagRe = new RegExp(`<${escapeRegex(blocTag)}(\\s|>|/)`, "i");
-    return findPagesReferencingPredicate(reader, (content) => tagRe.test(content));
+    return readReferencePages(reader, { kind: "bloc", tag: blocTag.toLowerCase() });
 }
 
 export async function findPagesReferencingText(
-    reader: Pick<CmsRepository, "getAllPages">,
+    reader: Pick<CmsRepository, "scanPagesByContentReference">,
     ref: string,
 ): Promise<TPage[]> {
-    return findPagesReferencingPredicate(reader, (content) => content.includes(ref));
+    const match = /^(?:\{\{\s*)?cms\.i18n\.([a-z][a-z0-9-]{0,95})\.([a-z][a-z0-9-]{0,95})(?:\s*\}\})?$/.exec(ref);
+    if (!match) {
+        return [];
+    }
+    return readReferencePages(reader, { kind: "text", collectionId: match[1]!, textId: match[2]! });
 }
 
-async function findPagesReferencingPredicate(
-    reader: Pick<CmsRepository, "getAllPages">,
-    matches: (content: string) => boolean,
+async function readReferencePages(
+    reader: Pick<CmsRepository, "scanPagesByContentReference">,
+    reference: Parameters<CmsRepository["scanPagesByContentReference"]>[0],
 ): Promise<TPage[]> {
-    const pages = await reader.getAllPages();
-    return pages.filter((page) => matches(page.content ?? ""));
+    const pages: TPage[] = [];
+    let cursor: string | undefined;
+    do {
+        const batch = await reader.scanPagesByContentReference(reference, cursor, 250);
+        pages.push(...batch.pages);
+        cursor = batch.nextCursor;
+    } while (cursor !== undefined);
+    return pages;
 }

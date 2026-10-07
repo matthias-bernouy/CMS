@@ -9,6 +9,7 @@ import type {
 } from "cms-content/blocs/interfaces/blocs";
 import type { PageCreateOptions, PageRoute, TPage } from "cms-content/pages/interfaces/pages";
 import type { PageReference } from "cms-content/pages/interfaces/routing";
+import type { PageContentReference } from "cms-content/pages/core/queries/contentReferences";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 
 export type BlocListItemResponse = {
@@ -117,6 +118,11 @@ export interface CmsRepository {
     getPageById(id: string): Promise<TPage | null>;
     getAllPages(): Promise<TPage[]>;
     scanPages(cursor: string | undefined, limit: number): Promise<PageScan>;
+    scanPagesByContentReference(
+        reference: PageContentReference,
+        cursor: string | undefined,
+        limit: number,
+    ): Promise<PageScan>;
     getPublishedPage(path: string): Promise<TPage | null>;
     getPublishedPageById(id: string): Promise<TPage | null>;
     getPublishedPages(): Promise<TPage[]>;

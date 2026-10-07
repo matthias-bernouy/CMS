@@ -29,6 +29,7 @@ export class MongoRepositoryStorage {
         await this.pages.createIndex({ path: 1 }, { unique: true });
         await this.pages.createIndex({ "deletionIntent.requestedAt": 1 }, { sparse: true });
         await this.pages.createIndex({ "pathUpdateIntent.requestedAt": 1 }, { sparse: true });
+        await this.pages.createIndex({ contentReferences: 1 });
         await this.pageRoutes.createIndex({ pageId: 1 });
         await this.pageRoutes.createIndex({ pageInsertToken: 1 }, { sparse: true });
     }

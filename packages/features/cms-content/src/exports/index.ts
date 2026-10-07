@@ -83,7 +83,7 @@ export {
     synchronizeSitePageRoutes,
     validatePageLinks,
     withSitePageRoutes,
-} from "cms-content/pages/core/routing/siteRoutes";
+} from "cms-content/pages/core/routing/site";
 export {
     PageLinkSurfaceError,
     PageRouteAlreadyRegisteredError,
@@ -232,6 +232,11 @@ export {
     nativeFormBindingIssue,
 } from "cms-content/blocs/core/validation/nativeBindings";
 export { findPagesReferencingBloc, findPagesReferencingText } from "cms-content/pages/core/queries/pagesReferencing";
+export type { PageContentReference } from "cms-content/pages/core/queries/contentReferences";
+export {
+    pageContentReferenceKey,
+    pageContentReferenceKeys,
+} from "cms-content/pages/core/queries/contentReferences";
 export { createBlocUsageResolver } from "cms-content/blocs/core/usage/resolveUsedBlocTags";
 export { findUsedBlocTags } from "cms-content/blocs/core/usage/findUsedBlocTags";
 export { buildBlocFoucShellCss } from "cms-content/blocs/core/composition/buildBlocFoucShellCss";

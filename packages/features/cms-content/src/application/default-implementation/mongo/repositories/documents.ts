@@ -18,6 +18,8 @@ export type PagePathUpdateIntent = {
     phase: "preparing" | "committed";
 };
 export type PageDoc = WithMongoId<TPage> & {
+    /** Derived reverse-lookup projection. It is never exposed as authored Page data. */
+    contentReferences?: readonly string[];
     deletionIntent?: PageDeletionIntent;
     pathUpdateIntent?: PagePathUpdateIntent;
 };
@@ -77,7 +79,13 @@ export function fromPageDoc(document: PageDoc | null): TPage | null {
     if (!document) {
         return null;
     }
-    const { _id, deletionIntent: _deletionIntent, pathUpdateIntent: _pathUpdateIntent, ...rest } = document;
+    const {
+        _id,
+        contentReferences: _contentReferences,
+        deletionIntent: _deletionIntent,
+        pathUpdateIntent: _pathUpdateIntent,
+        ...rest
+    } = document;
     return {
         id: _id,
         ...rest,

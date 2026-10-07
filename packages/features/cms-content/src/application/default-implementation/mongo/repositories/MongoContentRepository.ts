@@ -37,12 +37,20 @@ import {
     withPageDeletionLock,
     withPageRouteWrite,
 } from "cms-content/application/default-implementation/mongo/repositories/pageRoutes/systemFence";
+import {
+    type PageContentReference,
+    pageContentReferenceKey,
+    pageContentReferenceKeys,
+} from "cms-content/pages/core/queries/contentReferences";
+
+const PAGE_REFERENCE_BACKFILL_BATCH_SIZE = 250;
 
 export class MongoContentRepository extends MongoBlocRepository {
     override async init(): Promise<void> {
         await super.init();
         await this.pages.updateMany({ revision: { $exists: false } }, { $set: { revision: 1 } });
         await this.pages.updateMany({ surface: { $exists: false } }, { $set: { surface: "delivery" } });
+        await this.backfillPageContentReferences();
         for (let attempt = 0; attempt < 20; attempt++) {
             const stored = await readSystemDocument(this.system);
             let revision = stored.settingsRevision ?? 0;
@@ -143,6 +151,23 @@ export class MongoContentRepository extends MongoBlocRepository {
         };
     }
 
+    async scanPagesByContentReference(reference: PageContentReference, cursor: string | undefined, limit: number) {
+        requirePageScan(cursor, limit);
+        const documents = await this.pages
+            .find({
+                contentReferences: pageContentReferenceKey(reference),
+                ...(cursor === undefined ? {} : { _id: { $gt: cursor } }),
+            })
+            .sort({ _id: 1 })
+            .limit(limit)
+            .toArray();
+        const pages = documents.map((document) => fromPageDoc(document)!);
+        return {
+            pages,
+            ...(pages.length === limit ? { nextCursor: pages.at(-1)!.id } : {}),
+        };
+    }
+
     async getPublishedPage(path: string): Promise<TPage | null> {
         if ((await this.getPageRoute(path))?.state === "gone") {
             return null;
@@ -203,6 +228,7 @@ export class MongoContentRepository extends MongoBlocRepository {
                     ...(surface === "delivery" && language ? { paths: { [language]: path } } : {}),
                     title,
                     content,
+                    contentReferences: pageContentReferenceKeys(content),
                     description: "",
                     tags: [],
                     visible: false,
@@ -271,6 +297,9 @@ export class MongoContentRepository extends MongoBlocRepository {
             }
         } else {
             delete rest.path;
+        }
+        if (rest.content !== undefined) {
+            Object.assign(rest, { contentReferences: pageContentReferenceKeys(rest.content) });
         }
         try {
             const saved = await this.pages.updateOne(
@@ -415,6 +444,30 @@ export class MongoContentRepository extends MongoBlocRepository {
 
     private async routeSystem() {
         return systemFromDocument(await readSystemDocument(this.system));
+    }
+
+    private async backfillPageContentReferences(): Promise<void> {
+        let cursor: string | undefined;
+        while (true) {
+            const documents = await this.pages
+                .find({
+                    contentReferences: { $exists: false },
+                    ...(cursor === undefined ? {} : { _id: { $gt: cursor } }),
+                })
+                .sort({ _id: 1 })
+                .limit(PAGE_REFERENCE_BACKFILL_BATCH_SIZE)
+                .toArray();
+            for (const document of documents) {
+                await this.pages.updateOne(
+                    { _id: document._id, contentReferences: { $exists: false } },
+                    { $set: { contentReferences: pageContentReferenceKeys(document.content) } },
+                );
+            }
+            if (documents.length < PAGE_REFERENCE_BACKFILL_BATCH_SIZE) {
+                return;
+            }
+            cursor = documents.at(-1)!._id;
+        }
     }
 
     private async recoverPendingPageWrites(system: TSystem): Promise<void> {

@@ -14,10 +14,16 @@ import {
 } from "cms-content/application/core/validation/errors";
 import { pagePathsForSystem, planPagePaths } from "cms-content/pages/core/lifecycle/pagePaths";
 import { publicPagePath } from "cms-content/pages/core/paths/localizedPagePath";
+import {
+    type PageContentReference,
+    pageContentReferenceKey,
+    pageContentReferenceKeys,
+} from "cms-content/pages/core/queries/contentReferences";
 
 export class InMemoryContentRepository extends InMemoryBlocRepository {
     protected readonly pages = new Map<string, TPage>();
     private readonly pageKeysById = new Map<string, string>();
+    private readonly pageIdsByContentReference = new Map<string, Set<string>>();
     protected readonly pageRoutes = new Map<string, PageRoute>();
     protected system: TSystem = defaultSystem();
 
@@ -42,6 +48,21 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
             .filter((page) => cursor === undefined || page.id > cursor)
             .sort((left, right) => left.id.localeCompare(right.id))
             .slice(0, limit)
+            .map((page) => structuredClone(page));
+        return {
+            pages,
+            ...(pages.length === limit ? { nextCursor: pages.at(-1)!.id } : {}),
+        };
+    }
+
+    async scanPagesByContentReference(reference: PageContentReference, cursor: string | undefined, limit: number) {
+        requirePageScan(cursor, limit);
+        const pages = [...(this.pageIdsByContentReference.get(pageContentReferenceKey(reference)) ?? [])]
+            .filter((id) => cursor === undefined || id > cursor)
+            .sort((left, right) => left.localeCompare(right))
+            .slice(0, limit)
+            .map((id) => this.findPageEntryById(id)?.[1])
+            .filter((page): page is TPage => page !== undefined)
             .map((page) => structuredClone(page));
         return {
             pages,
@@ -89,6 +110,7 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         };
         this.pages.set(page.path, page);
         this.pageKeysById.set(page.id, page.path);
+        this.indexPageContent(page);
         this.pageRoutes.set(page.path, {
             path: page.path,
             state: "current",
@@ -146,7 +168,9 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
             paths: current.paths,
             revision: current.revision + 1,
         };
+        this.removePageContentIndex(current);
         this.pages.set(merged.path, merged);
+        this.indexPageContent(merged);
         return { ...merged };
     }
 
@@ -237,6 +261,7 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         }
         this.pages.delete(entry[0]);
         this.pageKeysById.delete(id);
+        this.removePageContentIndex(entry[1]);
     }
 
     protected async reconfigurePageRoutes(
@@ -272,6 +297,24 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         }
         for (const { page, plan } of plans) {
             await this.setPagePaths(page.id, plan.paths, system, undefined, undefined, true);
+        }
+    }
+
+    private indexPageContent(page: TPage): void {
+        for (const reference of pageContentReferenceKeys(page.content)) {
+            const pageIds = this.pageIdsByContentReference.get(reference) ?? new Set<string>();
+            pageIds.add(page.id);
+            this.pageIdsByContentReference.set(reference, pageIds);
+        }
+    }
+
+    private removePageContentIndex(page: TPage): void {
+        for (const reference of pageContentReferenceKeys(page.content)) {
+            const pageIds = this.pageIdsByContentReference.get(reference);
+            pageIds?.delete(page.id);
+            if (pageIds?.size === 0) {
+                this.pageIdsByContentReference.delete(reference);
+            }
         }
     }
 
