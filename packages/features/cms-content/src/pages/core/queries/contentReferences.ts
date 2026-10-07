@@ -4,14 +4,19 @@ import { parseHTML } from "linkedom";
 
 export type PageContentReference =
     | { readonly kind: "bloc"; readonly tag: string }
+    | { readonly kind: "file"; readonly fileId: string }
     | { readonly kind: "site-page"; readonly pageId: string }
     | { readonly kind: "text"; readonly collectionId: string; readonly textId: string };
+
+const FILE_REFERENCE = /\/\.cms\/files\/by-id\/([^/?#\s"'<>]+)/g;
 
 /** Stable persistence key used by the Page reference projection. */
 export function pageContentReferenceKey(reference: PageContentReference): string {
     switch (reference.kind) {
         case "bloc":
             return `bloc:${reference.tag}`;
+        case "file":
+            return `file:${reference.fileId}`;
         case "site-page":
             return `site-page:${reference.pageId}`;
         case "text":
@@ -33,6 +38,13 @@ export function pageContentReferenceKeys(content: string): readonly string[] {
         keys.add(pageContentReferenceKey({ kind: "text", collectionId, textId }));
         return "";
     });
+    for (const match of content.matchAll(FILE_REFERENCE)) {
+        try {
+            keys.add(pageContentReferenceKey({ kind: "file", fileId: decodeURIComponent(match[1]!) }));
+        } catch {
+            // Invalid URL escapes cannot name a stable CMS file identity.
+        }
+    }
     for (const reference of pageContentReferences(content)) {
         if (reference.kind === "site") {
             keys.add(pageContentReferenceKey({ kind: "site-page", pageId: reference.pageId }));

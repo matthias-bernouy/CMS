@@ -238,7 +238,11 @@ export {
     nativeBindingAttributeIssue,
     nativeFormBindingIssue,
 } from "cms-content/blocs/core/validation/nativeBindings";
-export { findPagesReferencingBloc, findPagesReferencingText } from "cms-content/pages/core/queries/pagesReferencing";
+export {
+    findPagesReferencingBloc,
+    findPagesReferencingFile,
+    findPagesReferencingText,
+} from "cms-content/pages/core/queries/pagesReferencing";
 export type { PageContentReference } from "cms-content/pages/core/queries/contentReferences";
 export {
     pageContentReferenceKey,

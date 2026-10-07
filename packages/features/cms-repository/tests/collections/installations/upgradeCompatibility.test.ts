@@ -79,7 +79,7 @@ test("upgrades preserve Page and Bloc surface contracts", async () => {
             surface: "control",
             defaultPath: "/admin",
             name: "page.overview.name",
-            document: { html: "<section>Overview</section>" },
+            document: { html: "<section>{{ page.title }}</section>" },
         },
     ];
     const store = new CollectionStore(new MemoryCollectionStorage());
@@ -110,7 +110,7 @@ test("upgrades preserve managed native element choices", async () => {
                 label: "bloc.panel.label",
                 nativeElement: { accepts },
                 shadowdom: "<slot></slot>",
-                defaultContent: `<${root}>Action</${root}>`,
+                defaultContent: `<${root}></${root}>`,
                 uses: [],
                 requires: [],
                 slots: {},
@@ -136,7 +136,7 @@ test("upgrades accept wider slot and managed native contracts", async () => {
         label: "bloc.panel.label",
         nativeElement: { accepts: ["button"] },
         shadowdom: "<slot></slot>",
-        defaultContent: "<button>Action</button>",
+        defaultContent: "<button></button>",
         uses: [],
         requires: [],
         slots: {},

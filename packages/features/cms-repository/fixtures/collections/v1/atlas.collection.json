@@ -62,7 +62,7 @@
             "uses": ["atlas-panel"],
             "lightdom": "<atlas-panel tone=\"default\"><slot name=\"main\" slot=\"body\"></slot></atlas-panel>",
             "slots": { "main": { "max": 8 } },
-            "defaultContent": "<p slot=\"main\">Start here.</p>"
+            "defaultContent": "<p slot=\"main\"></p>"
         }
     ]
 }

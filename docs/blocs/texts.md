@@ -46,7 +46,7 @@ Templates reserve the `cms` root for server-owned expressions:
 
 ```html
 <h2>{{ cms.i18n.checkout.title }}</h2>
-<p>{{ cms.i18n.checkout.greeting }}: {{ order.total }}</p>
+<p>{{ cms.i18n.checkout.greeting }} {{ order.total }}</p>
 <input placeholder="{{ cms.i18n.checkout.placeholder }}">
 ```
 
@@ -60,6 +60,14 @@ parameters, plural objects or braces. Dynamic names, counts, dates, prices and
 other request data belong to the bloc data-rendering model, not to the collection
 text catalogue. They remain ordinary business expressions outside the reserved
 `cms` root until that model defines translated dynamic sentences explicitly.
+
+Collection admission rejects hardcoded user-facing copy in Bloc defaults,
+fixed Light DOM and Page documents. Text nodes and user-facing attributes such
+as `title`, `placeholder`, `alt`, `label` and accessible labels must consist only
+of business-data bindings or exact `cms.i18n` bindings. Even punctuation between
+bindings belongs in a translated value when it affects the rendered sentence.
+Technical attributes such as IDs, roles, routes, field names and enumerated
+control values remain literal.
 
 The browser receives final translations, without catalogues or an i18n filter.
 Source and repeat aliases cannot be named `cms`; scope lookup cannot resolve

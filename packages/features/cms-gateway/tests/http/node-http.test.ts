@@ -5,7 +5,7 @@ import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { selectGatewayAddress } from "cms-gateway/invocation/node-http/addressPolicy";
 import { toResponse } from "cms-gateway/invocation/node-http/nodeHttpRequest";
-import { gatewayRoute } from "./fixtures";
+import { gatewayRoute } from "../fixtures";
 
 test("node transport pins the target and injects trusted context", async () => {
     const sent: Array<{ url: string; address: string; headers: Readonly<Record<string, string>> }> = [];

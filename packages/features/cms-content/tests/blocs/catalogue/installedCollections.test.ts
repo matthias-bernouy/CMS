@@ -199,7 +199,7 @@ test("installed polymorphic native components project their contract and keep wr
                 label: "bloc.card.label",
                 nativeElement: { accepts: ["button", "a"] },
                 shadowdom: "<slot></slot>",
-                defaultContent: '<button type="button">Action</button>',
+                defaultContent: '<button type="button">{{ cms.i18n.test.title }}</button>',
                 settings: [
                     {
                         id: "title",
@@ -289,7 +289,7 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
                 shadowdom: '<article><slot name="body"></slot></article>',
                 lightdom:
                     '<slot name="title" slot="body"></slot><section slot="body"><p>{{ cms.i18n.test.title }}</p></section>',
-                defaultContent: '<h2 slot="title">Page title</h2>',
+                defaultContent: '<h2 slot="title">{{ cms.i18n.test.title }}</h2>',
                 settings: [
                     {
                         id: "tone",
@@ -324,7 +324,7 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
     const repository = withInstalledCollections(new InMemoryCmsRepository(), store, "site");
     const record = (await repository.getBlocRecord("test-card"))!;
     expect(record.artifact?.componentHTML).toContain("cms.i18n.test.title");
-    expect(record.artifact?.defaultContent).toContain("Page title");
+    expect(record.artifact?.defaultContent).toContain("cms.i18n.test.title");
     expect(record.artifact?.collectionSettings?.map((item) => [item.id, item.default])).toEqual([
         ["tone", "quiet"],
         ["compact", false],

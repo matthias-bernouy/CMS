@@ -1,0 +1,22 @@
+{
+    "ui-content-maintenance": "Content maintenance",
+    "ui-copy": "/",
+    "ui-copy-a137f17a": "·",
+    "ui-durable-jobs": "Durable jobs",
+    "ui-job-diagnostics-are-unavailable": "Job diagnostics are unavailable.",
+    "ui-live-operational-signals-from-the-selected-cms-core-contracts": "Live operational signals from the selected CMS Core contracts.",
+    "ui-maintenance": "Maintenance",
+    "ui-maintenance-mode-is-active": "Maintenance mode is active",
+    "ui-manifest": "· manifest",
+    "ui-migration-diagnostics-are-unavailable": "Migration diagnostics are unavailable.",
+    "ui-no-maintenance-operation-is-active": "No maintenance operation is active",
+    "ui-operations-9b1b6f78": "operations ·",
+    "ui-pages": "Pages ·",
+    "ui-provider-diagnostics-are-unavailable": "Provider diagnostics are unavailable.",
+    "ui-provider-installations": "Provider installations",
+    "ui-reading-durable-jobs": "Reading durable jobs…",
+    "ui-reading-migration-state": "Reading migration state…",
+    "ui-reading-provider-state": "Reading provider state…",
+    "ui-ready": "Ready",
+    "ui-retained-migration-records": "retained migration records"
+}

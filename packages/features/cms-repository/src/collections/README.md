@@ -135,6 +135,12 @@ by its collection and Page IDs independently from its route. Assets remain scope
 digest. Installation and upgrade reject exact Bloc-tag or projected theme-token
 collisions between collections.
 
+Admission does not permit hardcoded user-facing copy in Bloc defaults, fixed
+Light DOM or Page HTML. Visible text and textual accessibility attributes must
+come from a business-data binding or an exact admitted `cms.i18n` reference;
+technical HTML and CMS transport values remain literal. This makes locale
+coverage a publication property instead of a browser convention.
+
 Each requirement names `contractId`, `capabilityId` and a bounded SemVer range.
 Admission requires a supplied `ReleaseCatalogue` whenever requirements exist.
 One non-yanked release must jointly satisfy every requirement to a given

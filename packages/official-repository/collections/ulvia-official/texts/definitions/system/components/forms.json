@@ -1,0 +1,188 @@
+[
+    {
+        "id": "ui-add-concise-help-for-this-field",
+        "label": "text.ui-add-concise-help-for-this-field.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-choose-an-option",
+        "label": "text.ui-choose-an-option.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-choose-one-option",
+        "label": "text.ui-choose-one-option.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-contact-details",
+        "label": "text.ui-contact-details.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-design",
+        "label": "text.ui-design.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-email",
+        "label": "text.ui-email.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-email-address",
+        "label": "text.ui-email-address.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-engineering",
+        "label": "text.ui-engineering.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-enter-a-valid-email-address",
+        "label": "text.ui-enter-a-valid-email-address.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-first-option",
+        "label": "text.ui-first-option.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-form-errors",
+        "label": "text.ui-form-errors.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-grid",
+        "label": "text.ui-grid.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-list",
+        "label": "text.ui-list.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-more-information",
+        "label": "text.ui-more-information.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-operations",
+        "label": "text.ui-operations.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-option",
+        "label": "text.ui-option.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-phone",
+        "label": "text.ui-phone.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-please-correct-the-following-fields",
+        "label": "text.ui-please-correct-the-following-fields.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-preferred-contact-method",
+        "label": "text.ui-preferred-contact-method.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-reset",
+        "label": "text.ui-reset.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-search",
+        "label": "text.ui-search.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-second-option",
+        "label": "text.ui-second-option.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-send-me-product-updates",
+        "label": "text.ui-send-me-product-updates.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-submit",
+        "label": "text.ui-submit.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-tell-us-how-to-reach-you",
+        "label": "text.ui-tell-us-how-to-reach-you.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-third-option",
+        "label": "text.ui-third-option.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-use-a-valid-address-such-as-alex-example-com",
+        "label": "text.ui-use-a-valid-address-such-as-alex-example-com.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-view",
+        "label": "text.ui-view.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-we-will-only-use-this-address-to-reply",
+        "label": "text.ui-we-will-only-use-this-address-to-reply.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-you-can-unsubscribe-at-any-time",
+        "label": "text.ui-you-can-unsubscribe-at-any-time.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
+        "id": "ui-your-changes-have-been-saved",
+        "label": "text.ui-your-changes-have-been-saved.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    }
+]

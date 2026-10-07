@@ -83,6 +83,11 @@ test("the official collection passes its source quality contract", async () => {
         visible.filter((bloc) => bloc.kind === "component").every((bloc) => bloc.style?.includes(":host")),
     ).toBeTrue();
     expect(visible.filter((bloc) => bloc.kind === "composition").every((bloc) => bloc.uses.length > 0)).toBeTrue();
+    expect(
+        artifact.release.texts?.every(
+            (text) => text.label !== undefined && text.category !== undefined && text.group !== undefined,
+        ),
+    ).toBeTrue();
     expect(artifact.release.exports?.blocs).toEqual(visible.map((bloc) => bloc.id).toSorted());
 });
 

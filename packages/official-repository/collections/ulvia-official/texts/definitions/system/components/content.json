@@ -1,0 +1,248 @@
+[
+    {
+        "id": "ui-29-month",
+        "label": "text.ui-29-month.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-99",
+        "label": "text.ui-99.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-a-clear-description-of-who-this-plan-is-for",
+        "label": "text.ui-a-clear-description-of-who-this-plan-is-for.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-a-clear-promise",
+        "label": "text.ui-a-clear-promise.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-about",
+        "label": "text.ui-about.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-action-label",
+        "label": "text.ui-action-label.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-add-a-specific-customer-outcome-here",
+        "label": "text.ui-add-a-specific-customer-outcome-here.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-add-an-optional-caption",
+        "label": "text.ui-add-an-optional-caption.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-add-concise-supporting-content",
+        "label": "text.ui-add-concise-supporting-content.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-brand",
+        "label": "text.ui-brand.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-build-something-people-understand",
+        "label": "text.ui-build-something-people-understand.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-card-title",
+        "label": "text.ui-card-title.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-choose-essential",
+        "label": "text.ui-choose-essential.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-choose-plan",
+        "label": "text.ui-choose-plan.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-company",
+        "label": "text.ui-company.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-contact",
+        "label": "text.ui-contact.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-core-feature",
+        "label": "text.ui-core-feature.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-customer-name",
+        "label": "text.ui-customer-name.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-describe-a-concrete-benefit-for-the-visitor",
+        "label": "text.ui-describe-a-concrete-benefit-for-the-visitor.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-email-support",
+        "label": "text.ui-email-support.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-essential",
+        "label": "text.ui-essential.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-explain-the-value-in-one-focused-sentence-and-give-visitors-a-useful-next-step",
+        "label": "text.ui-explain-the-value-in-one-focused-sentence-and-give-visitors-a-useful-next-step.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-first-advantage",
+        "label": "text.ui-first-advantage.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-first-benefit",
+        "label": "text.ui-first-benefit.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-for-getting-started",
+        "label": "text.ui-for-getting-started.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-frequently-asked-question",
+        "label": "text.ui-frequently-asked-question.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-get-started",
+        "label": "text.ui-get-started.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-give-a-direct-and-useful-answer",
+        "label": "text.ui-give-a-direct-and-useful-answer.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-introduce-the-strongest-reasons-to-choose-this-product-or-service",
+        "label": "text.ui-introduce-the-strongest-reasons-to-choose-this-product-or-service.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-learn-more",
+        "label": "text.ui-learn-more.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-make-the-differences-between-plans-easy-to-compare",
+        "label": "text.ui-make-the-differences-between-plans-easy-to-compare.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-metric-label",
+        "label": "text.ui-metric-label.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-plan-name",
+        "label": "text.ui-plan-name.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-role-company",
+        "label": "text.ui-role-company.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-second-benefit",
+        "label": "text.ui-second-benefit.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-section-heading",
+        "label": "text.ui-section-heading.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-simple-pricing",
+        "label": "text.ui-simple-pricing.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-what-makes-this-different",
+        "label": "text.ui-what-makes-this-different.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-what-should-visitors-know",
+        "label": "text.ui-what-should-visitors-know.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-write-a-focused-answer-that-removes-uncertainty",
+        "label": "text.ui-write-a-focused-answer-that-removes-uncertainty.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    },
+    {
+        "id": "ui-write-clear-useful-content-for-this-section",
+        "label": "text.ui-write-clear-useful-content-for-this-section.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    }
+]

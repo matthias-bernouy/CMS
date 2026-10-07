@@ -1,23 +1,23 @@
 <ulvia-official-app-shell layout="sidebar" sticky-header data-cms-composition-controller>
-    <strong slot="brand">Ulvia</strong>
-    <span slot="primary-mobile-label">Workspace</span>
-    <ulvia-official-navigation-menu slot="secondary-navigation" label="Administration">
-        <span slot="header">Control</span>
+    <strong slot="brand">{{ cms.i18n.ulvia-official.ui-ulvia }}</strong>
+    <span slot="primary-mobile-label">{{ cms.i18n.ulvia-official.ui-workspace }}</span>
+    <ulvia-official-navigation-menu slot="secondary-navigation" label="{{ cms.i18n.ulvia-official.ui-administration }}">
+        <span slot="header">{{ cms.i18n.ulvia-official.ui-control }}</span>
         <ulvia-official-navigation-section slot="sections">
-            <span slot="label">Content</span>
-            <ulvia-official-navigation-item slot="items"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'><ulvia-official-icon name="pages" size="sm" tone="current"></ulvia-official-icon><span>Pages</span></a></ulvia-official-navigation-item>
-            <ulvia-official-navigation-item slot="items"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"collections"}'><ulvia-official-icon name="collections" size="sm" tone="current"></ulvia-official-icon><span>Collections</span></a></ulvia-official-navigation-item>
-            <ulvia-official-navigation-item slot="items"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"files"}'><ulvia-official-icon name="media" size="sm" tone="current"></ulvia-official-icon><span>Files</span></a></ulvia-official-navigation-item>
+            <span slot="label">{{ cms.i18n.ulvia-official.ui-content }}</span>
+            <ulvia-official-navigation-item slot="items"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'><ulvia-official-icon name="pages" size="sm" tone="current"></ulvia-official-icon><span>{{ cms.i18n.ulvia-official.ui-pages-9046da16 }}</span></a></ulvia-official-navigation-item>
+            <ulvia-official-navigation-item slot="items"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"collections"}'><ulvia-official-icon name="collections" size="sm" tone="current"></ulvia-official-icon><span>{{ cms.i18n.ulvia-official.ui-collections }}</span></a></ulvia-official-navigation-item>
+            <ulvia-official-navigation-item slot="items"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"files"}'><ulvia-official-icon name="media" size="sm" tone="current"></ulvia-official-icon><span>{{ cms.i18n.ulvia-official.ui-files }}</span></a></ulvia-official-navigation-item>
         </ulvia-official-navigation-section>
         <ulvia-official-navigation-section slot="sections">
-            <span slot="label">Workspace</span>
-            <ulvia-official-navigation-item slot="items"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"providers"}'><ulvia-official-icon name="providers" size="sm" tone="current"></ulvia-official-icon><span>Providers</span></a></ulvia-official-navigation-item>
+            <span slot="label">{{ cms.i18n.ulvia-official.ui-workspace }}</span>
+            <ulvia-official-navigation-item slot="items"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"providers"}'><ulvia-official-icon name="providers" size="sm" tone="current"></ulvia-official-icon><span>{{ cms.i18n.ulvia-official.ui-providers }}</span></a></ulvia-official-navigation-item>
         </ulvia-official-navigation-section>
         <ulvia-official-navigation-section slot="sections">
-            <span slot="label">Administration</span>
-            <ulvia-official-navigation-item slot="items"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"diagnostics"}'><ulvia-official-icon name="health" size="sm" tone="current"></ulvia-official-icon><span>Diagnostics</span></a></ulvia-official-navigation-item>
-            <ulvia-official-navigation-item slot="items"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"access"}'><ulvia-official-icon name="users" size="sm" tone="current"></ulvia-official-icon><span>Users</span></a></ulvia-official-navigation-item>
-            <ulvia-official-navigation-item slot="items"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"settings"}'><ulvia-official-icon name="settings" size="sm" tone="current"></ulvia-official-icon><span>Settings</span></a></ulvia-official-navigation-item>
+            <span slot="label">{{ cms.i18n.ulvia-official.ui-administration }}</span>
+            <ulvia-official-navigation-item slot="items"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"diagnostics"}'><ulvia-official-icon name="health" size="sm" tone="current"></ulvia-official-icon><span>{{ cms.i18n.ulvia-official.ui-diagnostics }}</span></a></ulvia-official-navigation-item>
+            <ulvia-official-navigation-item slot="items"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"access"}'><ulvia-official-icon name="users" size="sm" tone="current"></ulvia-official-icon><span>{{ cms.i18n.ulvia-official.ui-users }}</span></a></ulvia-official-navigation-item>
+            <ulvia-official-navigation-item slot="items"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"settings"}'><ulvia-official-icon name="settings" size="sm" tone="current"></ulvia-official-icon><span>{{ cms.i18n.ulvia-official.ui-settings }}</span></a></ulvia-official-navigation-item>
         </ulvia-official-navigation-section>
     </ulvia-official-navigation-menu>
     <ulvia-official-page-shell slot="content" width="xl">

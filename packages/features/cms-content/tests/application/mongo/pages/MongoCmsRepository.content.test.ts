@@ -34,7 +34,7 @@ describe("MongoCmsRepository content persistence", () => {
         await repository.insertPage(
             "/references",
             "References",
-            "<official-card>{{ cms.i18n.ulvia-official.card-title }}</official-card>",
+            '<official-card><img src="/.cms/files/by-id/file%201">{{ cms.i18n.ulvia-official.card-title }}</official-card>',
         );
         const page = (await repository.getPage("/references"))!;
 
@@ -49,6 +49,9 @@ describe("MongoCmsRepository content persistence", () => {
                     10,
                 )
             ).pages,
+        ).toHaveLength(1);
+        expect(
+            (await repository.scanPagesByContentReference({ kind: "file", fileId: "file 1" }, undefined, 10)).pages,
         ).toHaveLength(1);
 
         await repository.updatePage({ id: page.id, content: "<main>Empty</main>" }, page.revision);

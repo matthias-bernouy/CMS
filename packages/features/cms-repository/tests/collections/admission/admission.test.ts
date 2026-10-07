@@ -51,7 +51,7 @@ describe("collection authored bundle admission", () => {
         });
         blocs[1] = {
             ...blocs[1],
-            lightdom: "<main>Independent resource</main>",
+            lightdom: "<main>{{ resource.name }}</main>",
             uses: [],
             slots: {},
             defaultContent: "",

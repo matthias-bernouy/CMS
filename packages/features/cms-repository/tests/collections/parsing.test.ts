@@ -339,7 +339,7 @@ describe("collection release parsing", () => {
                 surface: "control",
                 defaultPath: "/admin",
                 name: "page.overview.name",
-                document: { html: "<section>Overview</section>" },
+                document: { html: "<section>{{ page.title }}</section>" },
             },
         ];
         source.exports = { blocs: ["atlas-panel"], themeTokens: ["accent"], pages: ["overview"] };

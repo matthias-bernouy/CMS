@@ -1,7 +1,7 @@
-import type { AdmittedContractRelease } from "../admission/admitContractRelease";
-import type { ContractConformanceSuite } from "../../interfaces/Conformance";
-import { ReleaseValidationError } from "../protocol/errors";
-import { deepFreeze } from "../protocol/values";
+import type { AdmittedContractRelease } from "../../admission/admitContractRelease";
+import { ReleaseValidationError } from "../../protocol/errors";
+import { deepFreeze } from "../../protocol/values";
+import type { ContractConformanceSuite } from "../../../interfaces/Conformance";
 
 export interface CapabilityConformanceCoverage {
     readonly capabilityId: string;

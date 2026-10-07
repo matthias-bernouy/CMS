@@ -1,0 +1,26 @@
+[
+    {
+        "id": "ui-approved-provider-accounts-and-exact-contract-releases-selected-by-this-cms",
+        "label": "text.ui-approved-provider-accounts-and-exact-contract-releases-selected-by-this-cms.label",
+        "category": "text.category.control",
+        "group": "text.group.control.workspaces"
+    },
+    {
+        "id": "ui-configure-the-site-identity-availability-and-languages",
+        "label": "text.ui-configure-the-site-identity-availability-and-languages.label",
+        "category": "text.category.control",
+        "group": "text.group.control.workspaces"
+    },
+    {
+        "id": "ui-install-immutable-releases-configure-collections-and-preview-migrations-before-applying-them",
+        "label": "text.ui-install-immutable-releases-configure-collections-and-preview-migrations-before-applying-them.label",
+        "category": "text.category.control",
+        "group": "text.group.control.workspaces"
+    },
+    {
+        "id": "ui-providers-and-contracts",
+        "label": "text.ui-providers-and-contracts.label",
+        "category": "text.category.control",
+        "group": "text.group.control.workspaces"
+    }
+]

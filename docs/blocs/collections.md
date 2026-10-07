@@ -277,6 +277,10 @@ stylesheet. The Texts workspace groups translations by category and group and
 persists site overrides. Delivery replaces `cms.i18n` expressions on the server
 after expanding installed compositions. Catalogue values are static; dynamic
 parameters and plural forms are not collection text features.
+Collection admission rejects hardcoded visible and accessible copy in Bloc
+defaults, fixed Light DOM and Page documents. Authors use exact collection text
+references for reusable copy and ordinary bindings for provider-owned data;
+routes, IDs, roles, field names and other technical attributes stay literal.
 
 `ulvia.cms.collections/list` and `get` provide installed release and site state.
 `ulvia.cms.localization/overview`, `get-texts` and `save-texts` expose languages

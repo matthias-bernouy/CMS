@@ -18,7 +18,7 @@ function release(collectionId: string, version = "1.0.0") {
                 kind: "composition",
                 id: `${collectionId}-block`,
                 label: "bloc.label",
-                lightdom: "<p>Block</p>",
+                lightdom: "<p>{{ copy }}</p>",
                 uses: [],
                 requires: [],
                 slots: {},

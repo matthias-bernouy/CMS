@@ -15,13 +15,19 @@ function root(markup: string) {
 
 test("server text replacement escapes text and attributes, preserves unrelated bindings and removes markers", () => {
     const body = root(
-        '<p>{{ cms.i18n.test.hello }}</p><input placeholder="{{ cms.i18n.test.hello }}"><b>{{ order.total }}</b>',
+        '<p>{{ cms.i18n.test.hello }}</p><input placeholder="{{ cms.i18n.test.hello }}"><span aria-roledescription="{{ cms.i18n.test.hello }}"></span><input type="submit" value="{{ cms.i18n.test.hello }}"><b>{{ order.total }}</b>',
     );
     renderCollectionTexts(body, "fr-CA", [
         { ...source, overrides: { hello: { fr: 'Bonjour <img src=x onerror="alert(1)">' } } },
     ]);
     expect(body.querySelector("p")!.textContent).toBe('Bonjour <img src=x onerror="alert(1)">');
     expect(body.querySelector("input")!.getAttribute("placeholder")).toBe('Bonjour <img src=x onerror="alert(1)">');
+    expect(body.querySelector("span")!.getAttribute("aria-roledescription")).toBe(
+        'Bonjour <img src=x onerror="alert(1)">',
+    );
+    expect(body.querySelector('input[type="submit"]')!.getAttribute("value")).toBe(
+        'Bonjour <img src=x onerror="alert(1)">',
+    );
     expect(body.querySelector("img")).toBeNull();
     expect(body.querySelector("b")!.textContent).toBe("{{ order.total }}");
     expect(body.innerHTML).not.toContain("cms.i18n");
@@ -46,7 +52,7 @@ test.each([
     "<p>{{ cms.i18n.test.hello(name) }}</p>",
     "<p>{{ cms.i18n.test.hello</p>",
     "<p>{{ cms.other.test }}</p>",
-    '<input value="{{ cms.i18n.test.hello }}">',
+    '<input type="text" value="{{ cms.i18n.test.hello }}">',
 ])("rejects unsupported server expressions or contexts: %s", (markup) => {
     expect(() => renderCollectionTexts(root(markup), "en", [source])).toThrow();
 });

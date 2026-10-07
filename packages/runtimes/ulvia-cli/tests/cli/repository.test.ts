@@ -30,7 +30,7 @@ test("local repository lists immutable metadata and serves matching release byte
             publisherId: "ulvia.official",
             collectionId: "ulvia-official",
             version,
-            blocCount: 81,
+            blocCount: 82,
             hasTheme: true,
         });
         const bundle = await source.get(entries[0]!);
@@ -39,7 +39,7 @@ test("local repository lists immutable metadata and serves matching release byte
         );
         expect(bundle.assets).toEqual([]);
         const release = bundle.release;
-        expect(release.blocs).toHaveLength(81);
+        expect(release.blocs).toHaveLength(82);
         expect(release.exports?.blocs).toHaveLength(68);
         expect(release.exports?.themeTokens).toHaveLength(119);
         expect(release.theme?.categories.flatMap((category) => category.tokens)).toHaveLength(119);
@@ -74,7 +74,7 @@ test("local repository lists immutable metadata and serves matching release byte
             if (!bloc.lightdom) {
                 continue;
             }
-            for (const match of bloc.lightdom.matchAll(/cms\.i18n\.ulvia-official\.([a-z-]+)/g)) {
+            for (const match of bloc.lightdom.matchAll(/cms\.i18n\.ulvia-official\.([a-z0-9-]+)/g)) {
                 expect(textIds.has(match[1]!)).toBeTrue();
             }
         }
@@ -183,7 +183,7 @@ test("collection source assets keep their verified bytes through the repository 
                 join(root, "definition.json"),
                 JSON.stringify({ id, kind: "composition", label: `bloc.${id}.label`, internal, slots: {} }),
             );
-            await writeFile(join(root, "lightdom.html"), "<p>Example</p>");
+            await writeFile(join(root, "lightdom.html"), "<p>{{ example.name }}</p>");
         }
         await writeFile(
             join(sourceRoot, "translations", "en", "collection.json"),
@@ -235,7 +235,7 @@ test("collection source assets keep their verified bytes through the repository 
         const pageRoot = join(sourceRoot, "pages", "control", "overview");
         await mkdir(pageRoot, { recursive: true });
         await writeFile(join(pageRoot, "definition.json"), JSON.stringify({ id: "overview" }));
-        await writeFile(join(pageRoot, "page.html"), "<p>Overview</p>");
+        await writeFile(join(pageRoot, "page.html"), "<p>{{ page.title }}</p>");
         await writeFile(join(pageRoot, "unexpected.txt"), "not part of the Page source contract");
         await expect(prepareCollectionRelease(sourceRoot)).rejects.toThrow("must contain exactly");
     } finally {

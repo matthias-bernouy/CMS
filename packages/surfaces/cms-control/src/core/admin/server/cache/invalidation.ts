@@ -1,4 +1,4 @@
-import { findPagesReferencingText, CMS_CACHE_KEYS, publicPagePath, type TPage } from "@bernouy/cms-content";
+import { findPagesReferencingFile, CMS_CACHE_KEYS, publicPagePath, type TPage } from "@bernouy/cms-content";
 import { cmsFilesByIdRef } from "@bernouy/cms-content/files/urls";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
 
@@ -43,7 +43,7 @@ export async function invalidatePagesReferencingFile(
         invalidateAllPages(dependencies);
         return;
     }
-    const pages = await findPagesReferencingText(dependencies.repository, ref);
+    const pages = await findPagesReferencingFile(dependencies.repository, fileId);
     if (pages.length === 0) {
         return;
     }

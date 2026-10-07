@@ -1,9 +1,9 @@
-import type { CapabilityDefinition } from "../../interfaces/ContractRelease";
-import type { ConformanceCoverageExemption, ConformanceScenario } from "../../interfaces/Conformance";
-import { parseErrorCode, parseIdentifier } from "../parsing/identifiers";
-import { ReleaseValidationError } from "../protocol/errors";
-import type { ReleaseLimits } from "../protocol/limits";
-import { expectArray, expectRecord, expectString, rejectUnknownKeys } from "../protocol/values";
+import type { CapabilityDefinition } from "../../../interfaces/ContractRelease";
+import type { ConformanceCoverageExemption, ConformanceScenario } from "../../../interfaces/Conformance";
+import { parseErrorCode, parseIdentifier } from "../../parsing/identifiers";
+import { ReleaseValidationError } from "../../protocol/errors";
+import type { ReleaseLimits } from "../../protocol/limits";
+import { expectArray, expectRecord, expectString, rejectUnknownKeys } from "../../protocol/values";
 
 export function parseCoverageExemptions(
     value: unknown,

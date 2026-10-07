@@ -8,7 +8,7 @@ import { parseStrictJson } from "../protocol/json";
 import { DEFAULT_RELEASE_LIMITS, type ReleaseLimits } from "../protocol/limits";
 import { deepFreeze, expectArray, expectRecord, expectString, rejectUnknownKeys } from "../protocol/values";
 import type { ContractConformanceSuite, ConformanceScenario } from "../../interfaces/Conformance";
-import { parseCoverageExemptions } from "./exemptions";
+import { parseCoverageExemptions } from "./coverage-analysis/exemptions";
 import { parseConformanceScenarios } from "./parseConformance";
 import { parseDependencyProfiles } from "./dependencies/references";
 import { resolveDependencyProfiles } from "./dependencies/resolveProfiles";

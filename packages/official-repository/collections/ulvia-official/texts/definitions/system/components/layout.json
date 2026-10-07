@@ -1,0 +1,224 @@
+[
+    {
+        "id": "ui-administration",
+        "label": "text.ui-administration.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-application-content",
+        "label": "text.ui-application-content.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-centered-content",
+        "label": "text.ui-centered-content.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-close-navigation",
+        "label": "text.ui-close-navigation.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-container-content",
+        "label": "text.ui-container-content.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-contemporary-interior",
+        "label": "text.ui-contemporary-interior.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-control",
+        "label": "text.ui-control.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-control-workspace",
+        "label": "text.ui-control-workspace.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-cover-focal-content",
+        "label": "text.ui-cover-focal-content.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-current-section",
+        "label": "text.ui-current-section.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-detail-navigation",
+        "label": "text.ui-detail-navigation.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-first-item",
+        "label": "text.ui-first-item.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-first-item-d029c624",
+        "label": "text.ui-first-item-d029c624.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-main-content",
+        "label": "text.ui-main-content.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-main-detail-content",
+        "label": "text.ui-main-detail-content.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-manage-this-site",
+        "label": "text.ui-manage-this-site.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-navigation",
+        "label": "text.ui-navigation.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-optional-footer",
+        "label": "text.ui-optional-footer.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-optional-header",
+        "label": "text.ui-optional-header.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-page-content",
+        "label": "text.ui-page-content.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-page-description",
+        "label": "text.ui-page-description.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-panel-content",
+        "label": "text.ui-panel-content.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-panel-heading",
+        "label": "text.ui-panel-heading.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-primary-content",
+        "label": "text.ui-primary-content.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-providers",
+        "label": "text.ui-providers.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-related-information",
+        "label": "text.ui-related-information.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-scrollable-content",
+        "label": "text.ui-scrollable-content.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-second-item",
+        "label": "text.ui-second-item.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-second-item-a24b5513",
+        "label": "text.ui-second-item-a24b5513.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-secondary-content",
+        "label": "text.ui-secondary-content.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-sections",
+        "label": "text.ui-sections.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-sidebar",
+        "label": "text.ui-sidebar.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-start-building-this-section",
+        "label": "text.ui-start-building-this-section.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-sticky-content",
+        "label": "text.ui-sticky-content.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-surface-content",
+        "label": "text.ui-surface-content.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-third-item",
+        "label": "text.ui-third-item.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    },
+    {
+        "id": "ui-ulvia",
+        "label": "text.ui-ulvia.label",
+        "category": "text.category.components",
+        "group": "text.group.components.layout"
+    }
+]

@@ -4,7 +4,7 @@ import { gatewayRoutePrefix, handleGatewayHttpCall } from "@bernouy/cms-gateway/
 import { handleGatewayFileGet } from "@bernouy/cms-gateway/media/handlers";
 import { buildHttpInvocation, HttpGatewayTransport, type GatewayHttpExchange } from "@bernouy/cms-gateway/http";
 import { validateResponse } from "cms-gateway/invocation/core/validateResponse";
-import { gatewayRoute } from "./fixtures";
+import { gatewayRoute } from "../fixtures";
 import { InMemoryGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
 
 test("shared gateway routes remain relative to each surface base path", () => {

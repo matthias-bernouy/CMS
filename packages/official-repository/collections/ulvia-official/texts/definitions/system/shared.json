@@ -1,0 +1,80 @@
+[
+    {
+        "id": "ui-collections",
+        "label": "text.ui-collections.label",
+        "category": "text.category.shared",
+        "group": "text.group.shared"
+    },
+    {
+        "id": "ui-content",
+        "label": "text.ui-content.label",
+        "category": "text.category.shared",
+        "group": "text.group.shared"
+    },
+    {
+        "id": "ui-creating",
+        "label": "text.ui-creating.label",
+        "category": "text.category.shared",
+        "group": "text.group.shared"
+    },
+    {
+        "id": "ui-diagnostics",
+        "label": "text.ui-diagnostics.label",
+        "category": "text.category.shared",
+        "group": "text.group.shared"
+    },
+    {
+        "id": "ui-files",
+        "label": "text.ui-files.label",
+        "category": "text.category.shared",
+        "group": "text.group.shared"
+    },
+    {
+        "id": "ui-overview",
+        "label": "text.ui-overview.label",
+        "category": "text.category.shared",
+        "group": "text.group.shared"
+    },
+    {
+        "id": "ui-page-title",
+        "label": "text.ui-page-title.label",
+        "category": "text.category.shared",
+        "group": "text.group.shared"
+    },
+    {
+        "id": "ui-pages-9046da16",
+        "label": "text.ui-pages-9046da16.label",
+        "category": "text.category.shared",
+        "group": "text.group.shared"
+    },
+    {
+        "id": "ui-rename",
+        "label": "text.ui-rename.label",
+        "category": "text.category.shared",
+        "group": "text.group.shared"
+    },
+    {
+        "id": "ui-revision",
+        "label": "text.ui-revision.label",
+        "category": "text.category.shared",
+        "group": "text.group.shared"
+    },
+    {
+        "id": "ui-settings",
+        "label": "text.ui-settings.label",
+        "category": "text.category.shared",
+        "group": "text.group.shared"
+    },
+    {
+        "id": "ui-users",
+        "label": "text.ui-users.label",
+        "category": "text.category.shared",
+        "group": "text.group.shared"
+    },
+    {
+        "id": "ui-workspace",
+        "label": "text.ui-workspace.label",
+        "category": "text.category.shared",
+        "group": "text.group.shared"
+    }
+]

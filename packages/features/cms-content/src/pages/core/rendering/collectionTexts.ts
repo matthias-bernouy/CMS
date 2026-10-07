@@ -1,13 +1,15 @@
 import type { CollectionRelease } from "@bernouy/cms-repository/collections";
-import { resolveCollectionTexts, replaceCollectionTextExpressions } from "@bernouy/cms-repository/collections/texts";
+import {
+    isUserFacingTextAttribute,
+    resolveCollectionTexts,
+    replaceCollectionTextExpressions,
+} from "@bernouy/cms-repository/collections/texts";
 
 /** Trusted, public catalogue inputs. */
 export interface CollectionTextSource {
     collection: Pick<CollectionRelease, "collectionId" | "locale" | "texts">;
     overrides?: unknown;
 }
-
-const ATTRIBUTES = new Set(["title", "placeholder", "alt", "aria-label", "aria-description"]);
 
 /** Server-only DOM pass. Does not inspect or evaluate browser binding expressions. */
 export function renderCollectionTexts(
@@ -48,7 +50,10 @@ export function renderCollectionTexts(
             });
         for (const name of element.getAttributeNames()) {
             const value = element.getAttribute(name)!;
-            const rendered = replace(value, ATTRIBUTES.has(name));
+            const rendered = replace(
+                value,
+                isUserFacingTextAttribute(element.localName, name, element.getAttribute("type") ?? ""),
+            );
             if (rendered !== value) {
                 element.setAttribute(name, rendered);
             }

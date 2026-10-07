@@ -27,7 +27,7 @@ function release(collectionId: string, version: string, blocId: string, tokenId?
                 kind: "composition",
                 id: blocId,
                 label: "bloc.welcome.label",
-                lightdom: "<p>Hello</p>",
+                lightdom: "<p>{{ copy }}</p>",
                 uses: [],
                 requires: [],
                 slots: {},

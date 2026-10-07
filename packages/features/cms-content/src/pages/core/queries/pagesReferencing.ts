@@ -19,6 +19,13 @@ export async function findPagesReferencingText(
     return readReferencePages(reader, { kind: "text", collectionId: match[1]!, textId: match[2]! });
 }
 
+export async function findPagesReferencingFile(
+    reader: Pick<CmsRepository, "scanPagesByContentReference">,
+    fileId: string,
+): Promise<TPage[]> {
+    return readReferencePages(reader, { kind: "file", fileId });
+}
+
 async function readReferencePages(
     reader: Pick<CmsRepository, "scanPagesByContentReference">,
     reference: Parameters<CmsRepository["scanPagesByContentReference"]>[0],

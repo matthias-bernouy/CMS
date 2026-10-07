@@ -1,0 +1,164 @@
+[
+    {
+        "id": "ui-access-unavailable",
+        "label": "text.ui-access-unavailable.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-administrator",
+        "label": "text.ui-administrator.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-choose-which-configured-identity-methods-are-available-on-the-control-sign-in-page",
+        "label": "text.ui-choose-which-configured-identity-methods-are-available-on-the-control-sign-in-page.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-delete-member",
+        "label": "text.ui-delete-member.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-disabled",
+        "label": "text.ui-disabled.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-display-name",
+        "label": "text.ui-display-name.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-display-name-61cee3ef",
+        "label": "text.ui-display-name-61cee3ef.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-enabled",
+        "label": "text.ui-enabled.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-identity",
+        "label": "text.ui-identity.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-last-seen",
+        "label": "text.ui-last-seen.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-loading-access-configuration",
+        "label": "text.ui-loading-access-configuration.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-login-providers",
+        "label": "text.ui-login-providers.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-make-administrator",
+        "label": "text.ui-make-administrator.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-manage-cms-members-administrator-access-and-sign-in-methods",
+        "label": "text.ui-manage-cms-members-administrator-access-and-sign-in-methods.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-member",
+        "label": "text.ui-member.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-members",
+        "label": "text.ui-members.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-protected-members-and-the-current-account-cannot-be-deleted",
+        "label": "text.ui-protected-members-and-the-current-account-cannot-be-deleted.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-provider-display-name",
+        "label": "text.ui-provider-display-name.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-provider-status",
+        "label": "text.ui-provider-status.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-remove-administrator",
+        "label": "text.ui-remove-administrator.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-save-provider",
+        "label": "text.ui-save-provider.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-status",
+        "label": "text.ui-status.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-the-administrator-grant-changed-reload-and-retry",
+        "label": "text.ui-the-administrator-grant-changed-reload-and-retry.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-the-provider-cannot-be-changed-in-its-current-state",
+        "label": "text.ui-the-provider-cannot-be-changed-in-its-current-state.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-total-users",
+        "label": "text.ui-total-users.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-users-and-settings-could-not-be-read",
+        "label": "text.ui-users-and-settings-could-not-be-read.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    },
+    {
+        "id": "ui-your-own-or-protected-grant-cannot-be-removed",
+        "label": "text.ui-your-own-or-protected-grant-cannot-be-removed.label",
+        "category": "text.category.control",
+        "group": "text.group.control.access"
+    }
+]

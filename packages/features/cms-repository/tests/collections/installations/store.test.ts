@@ -16,7 +16,7 @@ function release() {
                 kind: "composition",
                 id: "atlas-welcome",
                 label: "bloc.welcome.label",
-                lightdom: "<p>Hello</p>",
+                lightdom: "<p>{{ copy }}</p>",
                 uses: [],
                 requires: [],
                 slots: {},

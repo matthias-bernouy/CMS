@@ -5,7 +5,7 @@ import {
     SelectedGatewayCatalogue,
     type CatalogueGatewayRouteResolverOptions,
 } from "@bernouy/cms-gateway";
-import { gatewayRoute, NOW } from "./fixtures";
+import { gatewayRoute, NOW } from "../fixtures";
 import { InMemoryGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit";
 
 test("catalogue resolver fences selected policy changes without scanning unrelated catalogues", async () => {

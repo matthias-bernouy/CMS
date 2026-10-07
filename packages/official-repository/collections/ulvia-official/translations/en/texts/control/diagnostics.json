@@ -1,0 +1,22 @@
+{
+    "text.ui-content-maintenance.label": "Content maintenance",
+    "text.ui-copy.label": "Path separator",
+    "text.ui-copy-a137f17a.label": "Middle dot separator",
+    "text.ui-durable-jobs.label": "Durable jobs",
+    "text.ui-job-diagnostics-are-unavailable.label": "Job diagnostics are unavailable.",
+    "text.ui-live-operational-signals-from-the-selected-cms-core-contracts.label": "Live operational signals from the selected CMS Core contracts.",
+    "text.ui-maintenance.label": "Maintenance",
+    "text.ui-maintenance-mode-is-active.label": "Maintenance mode is active",
+    "text.ui-manifest.label": "· manifest",
+    "text.ui-migration-diagnostics-are-unavailable.label": "Migration diagnostics are unavailable.",
+    "text.ui-no-maintenance-operation-is-active.label": "No maintenance operation is active",
+    "text.ui-operations-9b1b6f78.label": "operations ·",
+    "text.ui-pages.label": "Pages ·",
+    "text.ui-provider-diagnostics-are-unavailable.label": "Provider diagnostics are unavailable.",
+    "text.ui-provider-installations.label": "Provider installations",
+    "text.ui-reading-durable-jobs.label": "Reading durable jobs…",
+    "text.ui-reading-migration-state.label": "Reading migration state…",
+    "text.ui-reading-provider-state.label": "Reading provider state…",
+    "text.ui-ready.label": "Ready",
+    "text.ui-retained-migration-records.label": "retained migration records"
+}

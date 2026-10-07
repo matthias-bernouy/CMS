@@ -202,6 +202,43 @@ describe("collection markup admission", () => {
         expect(() => parseCollectionRelease(source)).toThrow("unknown collection text missing");
     });
 
+    test("rejects hardcoded user-facing copy in Blocs and Pages", () => {
+        const blocSource = collectionDocument();
+        (blocSource.blocs as Record<string, unknown>[])[0]!.defaultContent = "<p>Hardcoded copy</p>";
+        expect(() => parseCollectionRelease(blocSource)).toThrow("user-facing copy");
+
+        (blocSource.blocs as Record<string, unknown>[])[0]!.defaultContent = "<p>{{ cms.i18n.atlas.title }}:</p>";
+        blocSource.texts = [{ id: "title", values: { "en-US": "Title" } }];
+        expect(() => parseCollectionRelease(blocSource)).toThrow("user-facing copy");
+
+        (blocSource.blocs as Record<string, unknown>[])[0]!.defaultContent = '<input type="submit" value="Save">';
+        expect(() => parseCollectionRelease(blocSource)).toThrow("user-facing copy");
+
+        const pageSource = collectionDocument({ "page.demo.name": "Demo" });
+        pageSource.pages = [
+            {
+                id: "demo",
+                surface: "delivery",
+                defaultPath: "/demo",
+                name: "page.demo.name",
+                document: { html: '<p title="Hardcoded tooltip">Hardcoded copy</p>' },
+            },
+        ];
+        expect(() => parseCollectionRelease(pageSource)).toThrow("user-facing copy");
+
+        (pageSource.pages as { document: { html: string } }[])[0]!.document.html =
+            '<p aria-label="Hardcoded accessible name"></p>';
+        expect(() => parseCollectionRelease(pageSource)).toThrow("user-facing copy");
+
+        (pageSource.pages as { document: { html: string } }[])[0]!.document.html =
+            '<p aria-label="{{ cms.asset.ulvia-official.icon }}"></p>';
+        expect(() => parseCollectionRelease(pageSource)).toThrow("business data or cms.i18n");
+
+        (pageSource.pages as { document: { html: string } }[])[0]!.document.html =
+            '<p title="{{ page.tooltip }}">{{ page.copy }}</p>';
+        expect(() => parseCollectionRelease(pageSource)).not.toThrow();
+    });
+
     test.each([
         ["text", "<div>Hidden headline</div>"],
         ["link", '<a href="/products"><slot name="body"></slot></a>'],

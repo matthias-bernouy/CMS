@@ -1,0 +1,122 @@
+[
+    {
+        "id": "ui-content-maintenance",
+        "label": "text.ui-content-maintenance.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-copy",
+        "label": "text.ui-copy.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-copy-a137f17a",
+        "label": "text.ui-copy-a137f17a.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-durable-jobs",
+        "label": "text.ui-durable-jobs.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-job-diagnostics-are-unavailable",
+        "label": "text.ui-job-diagnostics-are-unavailable.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-live-operational-signals-from-the-selected-cms-core-contracts",
+        "label": "text.ui-live-operational-signals-from-the-selected-cms-core-contracts.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-maintenance",
+        "label": "text.ui-maintenance.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-maintenance-mode-is-active",
+        "label": "text.ui-maintenance-mode-is-active.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-manifest",
+        "label": "text.ui-manifest.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-migration-diagnostics-are-unavailable",
+        "label": "text.ui-migration-diagnostics-are-unavailable.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-no-maintenance-operation-is-active",
+        "label": "text.ui-no-maintenance-operation-is-active.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-operations-9b1b6f78",
+        "label": "text.ui-operations-9b1b6f78.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-pages",
+        "label": "text.ui-pages.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-provider-diagnostics-are-unavailable",
+        "label": "text.ui-provider-diagnostics-are-unavailable.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-provider-installations",
+        "label": "text.ui-provider-installations.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-reading-durable-jobs",
+        "label": "text.ui-reading-durable-jobs.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-reading-migration-state",
+        "label": "text.ui-reading-migration-state.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-reading-provider-state",
+        "label": "text.ui-reading-provider-state.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-ready",
+        "label": "text.ui-ready.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    },
+    {
+        "id": "ui-retained-migration-records",
+        "label": "text.ui-retained-migration-records.label",
+        "category": "text.category.control",
+        "group": "text.group.control.diagnostics"
+    }
+]

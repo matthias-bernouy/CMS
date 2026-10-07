@@ -10,3 +10,4 @@ export {
 } from "cms-repository/collections/core/texts/parseCollectionTexts";
 export { resolveCollectionTexts } from "cms-repository/collections/core/texts/resolveCollectionTexts";
 export { replaceCollectionTextExpressions } from "cms-repository/collections/core/texts/expressions";
+export { isUserFacingTextAttribute } from "cms-repository/collections/core/texts/userFacingAttributes";

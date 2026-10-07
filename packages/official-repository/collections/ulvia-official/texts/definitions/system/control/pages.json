@@ -1,0 +1,332 @@
+[
+    {
+        "id": "ui-about-979bddc4",
+        "label": "text.ui-about-979bddc4.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-about-us",
+        "label": "text.ui-about-us.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-back-to-pages",
+        "label": "text.ui-back-to-pages.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-create-a-delivery-page",
+        "label": "text.ui-create-a-delivery-page.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-create-and-manage-site-pages-through-the-selected-local-core-provider",
+        "label": "text.ui-create-and-manage-site-pages-through-the-selected-local-core-provider.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-create-page",
+        "label": "text.ui-create-page.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-create-the-first-delivery-page-to-start-building-the-site",
+        "label": "text.ui-create-the-first-delivery-page-to-start-building-the-site.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-danger-zone",
+        "label": "text.ui-danger-zone.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-delete-page",
+        "label": "text.ui-delete-page.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-deletion-is-revision-checked-and-cannot-silently-remove-a-newer-edit",
+        "label": "text.ui-deletion-is-revision-checked-and-cannot-silently-remove-a-newer-edit.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-description",
+        "label": "text.ui-description.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-displayed-in-control-and-used-as-the-default-document-title",
+        "label": "text.ui-displayed-in-control-and-used-as-the-default-document-title.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-document-preview",
+        "label": "text.ui-document-preview.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-draft",
+        "label": "text.ui-draft.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-each-language-owns-a-local-path-the-primary-language-determines-the-canonical-page-path",
+        "label": "text.ui-each-language-owns-a-local-path-the-primary-language-determines-the-canonical-page-path.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-empty-values-inherit-the-page-title-and-description",
+        "label": "text.ui-empty-values-inherit-the-page-title-and-description.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-loading-page",
+        "label": "text.ui-loading-page.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-loading-pages",
+        "label": "text.ui-loading-pages.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-no-pages-yet",
+        "label": "text.ui-no-pages-yet.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-open-page",
+        "label": "text.ui-open-page.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-page-catalogue",
+        "label": "text.ui-page-catalogue.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-page-details",
+        "label": "text.ui-page-details.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-page-document",
+        "label": "text.ui-page-document.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-page-revision",
+        "label": "text.ui-page-revision.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-page-unavailable",
+        "label": "text.ui-page-unavailable.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-pages-in-this-batch",
+        "label": "text.ui-pages-in-this-batch.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-pages-unavailable",
+        "label": "text.ui-pages-unavailable.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-primary-route",
+        "label": "text.ui-primary-route.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-public-path",
+        "label": "text.ui-public-path.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-publication",
+        "label": "text.ui-publication.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-publish",
+        "label": "text.ui-publish.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-published",
+        "label": "text.ui-published.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-reload-this-catalogue-before-retrying",
+        "label": "text.ui-reload-this-catalogue-before-retrying.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-rename-page",
+        "label": "text.ui-rename-page.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-return-to-draft",
+        "label": "text.ui-return-to-draft.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-route",
+        "label": "text.ui-route.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-routes",
+        "label": "text.ui-routes.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-save-changes",
+        "label": "text.ui-save-changes.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-save-metadata",
+        "label": "text.ui-save-metadata.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-save-route",
+        "label": "text.ui-save-route.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-saving",
+        "label": "text.ui-saving.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-search-description",
+        "label": "text.ui-search-description.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-search-metadata",
+        "label": "text.ui-search-metadata.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-search-title",
+        "label": "text.ui-search-title.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-the-latest-page-catalogue-is-being-read-from-the-core",
+        "label": "text.ui-the-latest-page-catalogue-is-being-read-from-the-core.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-the-latest-revision-is-being-read-from-the-core",
+        "label": "text.ui-the-latest-revision-is-being-read-from-the-core.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-the-page-could-not-be-created-check-that-its-path-is-unique-and-valid",
+        "label": "text.ui-the-page-could-not-be-created-check-that-its-path-is-unique-and-valid.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-the-page-is-created-as-a-draft-open-it-afterwards-to-edit-its-document-and-publish-it",
+        "label": "text.ui-the-page-is-created-as-a-draft-open-it-afterwards-to-edit-its-document-and-publish-it.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable",
+        "label": "text.ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-the-provider-could-not-read-the-page-catalogue-check-the-selected-provider-and-try-again",
+        "label": "text.ui-the-provider-could-not-read-the-page-catalogue-check-the-selected-provider-and-try-again.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying",
+        "label": "text.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-the-same-page-document-is-used-by-control-and-delivery-the-isolated-preview-never-ex-d971177f",
+        "label": "text.ui-the-same-page-document-is-used-by-control-and-delivery-the-isolated-preview-never-ex-d971177f.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-title",
+        "label": "text.ui-title.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-update-the-shared-page-document-through-revision-checked-core-capabilities",
+        "label": "text.ui-update-the-shared-page-document-through-revision-checked-core-capabilities.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    },
+    {
+        "id": "ui-use-a-path-such-as-about-reserved-cms-and-control-paths-are-rejected",
+        "label": "text.ui-use-a-path-such-as-about-reserved-cms-and-control-paths-are-rejected.label",
+        "category": "text.category.control",
+        "group": "text.group.control.pages"
+    }
+]

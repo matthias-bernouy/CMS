@@ -1,0 +1,176 @@
+[
+    {
+        "id": "ui-back-to-root",
+        "label": "text.ui-back-to-root.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-choose-a-file",
+        "label": "text.ui-choose-a-file.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-create-a-folder",
+        "label": "text.ui-create-a-folder.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-create-folder",
+        "label": "text.ui-create-folder.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-delete",
+        "label": "text.ui-delete.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-file-or-folder-name",
+        "label": "text.ui-file-or-folder-name.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-files-are-validated-and-limited-by-the-server-upload-policy",
+        "label": "text.ui-files-are-validated-and-limited-by-the-server-upload-policy.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-files-unavailable",
+        "label": "text.ui-files-unavailable.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-folder-name",
+        "label": "text.ui-folder-name.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-folders-must-be-empty-before-deletion",
+        "label": "text.ui-folders-must-be-empty-before-deletion.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-items-in-this-folder",
+        "label": "text.ui-items-in-this-folder.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-library",
+        "label": "text.ui-library.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-loading-files",
+        "label": "text.ui-loading-files.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-open-file",
+        "label": "text.ui-open-file.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-open-folder",
+        "label": "text.ui-open-folder.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-reload-this-folder-before-retrying",
+        "label": "text.ui-reload-this-folder-before-retrying.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-replace-content",
+        "label": "text.ui-replace-content.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-replacement-file-for",
+        "label": "text.ui-replacement-file-for.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-save-name",
+        "label": "text.ui-save-name.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-the-author-library-could-not-be-read",
+        "label": "text.ui-the-author-library-could-not-be-read.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-the-file-could-not-be-uploaded",
+        "label": "text.ui-the-file-could-not-be-uploaded.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-the-folder-could-not-be-created-its-name-may-already-be-used",
+        "label": "text.ui-the-folder-could-not-be-created-its-name-may-already-be-used.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-the-replacement-could-not-be-stored",
+        "label": "text.ui-the-replacement-could-not-be-stored.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-this-folder-is-empty",
+        "label": "text.ui-this-folder-is-empty.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-updated",
+        "label": "text.ui-updated.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-upload-a-file",
+        "label": "text.ui-upload-a-file.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-upload-file",
+        "label": "text.ui-upload-file.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-upload-replace-and-organise-author-files-through-stable-cms-identities",
+        "label": "text.ui-upload-replace-and-organise-author-files-through-stable-cms-identities.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    },
+    {
+        "id": "ui-uploading",
+        "label": "text.ui-uploading.label",
+        "category": "text.category.control",
+        "group": "text.group.control.files"
+    }
+]

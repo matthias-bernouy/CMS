@@ -41,7 +41,7 @@ export {
     type CapabilityConformanceCoverage,
     type ConformanceCoverageReport,
     type ConformanceProfileCoverage,
-} from "cms-repository/contracts/core/conformance/coverage";
+} from "cms-repository/contracts/core/conformance/coverage-analysis";
 export { parseConformanceSuite, parseConformanceSuiteJson } from "cms-repository/contracts/core/conformance/parseSuite";
 export {
     admitConformanceSuite,

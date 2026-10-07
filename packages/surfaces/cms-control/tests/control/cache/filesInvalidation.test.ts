@@ -20,7 +20,12 @@ function makeCms(opts: { pages?: TPage[]; favicon?: string }) {
     let allInvalidated = false;
     const cms: any = {
         repository: {
-            getAllPages: async () => opts.pages ?? [],
+            scanPagesByContentReference: async (reference: { kind: string; fileId?: string }) => ({
+                pages:
+                    reference.kind === "file"
+                        ? (opts.pages ?? []).filter((page) => page.content.includes(`by-id/${reference.fileId}`))
+                        : [],
+            }),
             getSystem: async () => ({ site: { favicon: opts.favicon ?? "", language: "fr" } }),
         },
         cache: {
