@@ -7,6 +7,8 @@
     "page.collections.name": "Collections",
     "page.details.description": "Edit one site Page through revision-checked Core capabilities.",
     "page.details.name": "Page details",
+    "page.diagnostics.description": "Inspect maintenance, durable jobs and provider connectivity.",
+    "page.diagnostics.name": "Diagnostics",
     "page.files.description": "Browse and organize the author file library.",
     "page.files.name": "Files",
     "page.overview.description": "Manage site Pages through the selected local Core provider.",

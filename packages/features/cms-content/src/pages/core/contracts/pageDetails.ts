@@ -1,5 +1,6 @@
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
+import type { TSystem } from "cms-content/settings/interfaces/settings";
 import { CmsPageNotFoundError } from "cms-content/pages/core/contracts/renamePage";
 
 export type CmsPageDetails = Pick<
@@ -7,16 +8,41 @@ export type CmsPageDetails = Pick<
     "id" | "revision" | "surface" | "path" | "title" | "description" | "content" | "tags" | "visible"
 >;
 
+export type CmsPageEditingDetails = CmsPageDetails & {
+    readonly routes: readonly CmsPageRouteEntry[];
+    readonly seoEntries: readonly CmsPageSeoEntry[];
+};
+
+export type CmsPageRouteDetails = Pick<CmsPageDetails, "id" | "revision" | "path"> & {
+    readonly routes: readonly CmsPageRouteEntry[];
+};
+
+export type CmsPageSeoDetails = Pick<CmsPageDetails, "id" | "revision"> & {
+    readonly seoEntries: readonly CmsPageSeoEntry[];
+};
+
+export type CmsPageRouteEntry = {
+    readonly language: string;
+    readonly path: string;
+    readonly primary: boolean;
+};
+
+export type CmsPageSeoEntry = {
+    readonly language: string;
+    readonly title: string;
+    readonly description: string;
+};
+
 export async function getCmsPage(
-    repository: Pick<CmsRepository, "getPageById">,
+    repository: Pick<CmsRepository, "getPageById" | "getSystem">,
     input: { readonly id: string },
-): Promise<CmsPageDetails> {
+): Promise<CmsPageEditingDetails> {
     const id = cmsPageId(input.id);
-    const page = await repository.getPageById(id);
+    const [page, system] = await Promise.all([repository.getPageById(id), repository.getSystem()]);
     if (!page) {
         throw new CmsPageNotFoundError(id);
     }
-    return cmsPageDetails(page);
+    return cmsPageEditingDetails(page, system);
 }
 
 export function cmsPageId(value: unknown): string {
@@ -45,4 +71,31 @@ export function cmsPageDetails(page: TPage): CmsPageDetails {
         tags: [...page.tags],
         visible: page.visible,
     };
+}
+
+export function cmsPageEditingDetails(page: TPage, system: TSystem): CmsPageEditingDetails {
+    const languages = system.site.language ? [system.site.language, ...(system.site.additionalLanguages ?? [])] : [];
+    return {
+        ...cmsPageDetails(page),
+        routes: languages.map((language) => ({
+            language,
+            path: page.paths?.[language] ?? (language === system.site.language ? page.path : ""),
+            primary: language === system.site.language,
+        })),
+        seoEntries: languages.map((language) => ({
+            language,
+            title: page.seo?.[language]?.title ?? "",
+            description: page.seo?.[language]?.description ?? "",
+        })),
+    };
+}
+
+export function cmsPageRouteDetails(page: TPage, system: TSystem): CmsPageRouteDetails {
+    const details = cmsPageEditingDetails(page, system);
+    return { id: details.id, revision: details.revision, path: details.path, routes: details.routes };
+}
+
+export function cmsPageSeoDetails(page: TPage, system: TSystem): CmsPageSeoDetails {
+    const details = cmsPageEditingDetails(page, system);
+    return { id: details.id, revision: details.revision, seoEntries: details.seoEntries };
 }

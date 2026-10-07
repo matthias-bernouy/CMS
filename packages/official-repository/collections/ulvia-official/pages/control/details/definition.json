@@ -18,6 +18,16 @@
         },
         {
             "contractId": "ulvia.cms.pages",
+            "capabilityId": "update-route",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.pages",
+            "capabilityId": "update-seo",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.pages",
             "capabilityId": "publish",
             "versionRange": "^1.0.0"
         },

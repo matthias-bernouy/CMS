@@ -1,0 +1,24 @@
+:host {
+    display: block;
+    min-width: 0;
+    container-type: inline-size;
+}
+
+[part="preview"] {
+    overflow: clip;
+    border: var(--ulvia-official-border-width, 1px) solid var(--ulvia-official-border-default, #c9d5d0);
+    border-radius: var(--ulvia-official-radius-lg, .75rem);
+    background: var(--ulvia-official-background-base, #fff);
+}
+
+[part="frame"] {
+    display: block;
+    width: 100%;
+    min-height: 26rem;
+    border: 0;
+    background: #fff;
+}
+
+@container (max-width: 36rem) {
+    [part="frame"] { min-height: 20rem; }
+}

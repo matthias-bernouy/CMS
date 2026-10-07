@@ -1,0 +1,5 @@
+{
+    "capabilityId": "update-route",
+    "errorCode": "INVALID_PAGE",
+    "reason": "Configured language and route validation belong to the selected Core."
+}

@@ -1,0 +1,13 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-document-preview",
+    "label": "bloc.document-preview.label",
+    "description": "bloc.document-preview.description",
+    "category": "bloc.category.administration",
+    "order": 20,
+    "internal": true,
+    "surfaces": ["control"],
+    "uses": [],
+    "requires": [],
+    "slots": {}
+}

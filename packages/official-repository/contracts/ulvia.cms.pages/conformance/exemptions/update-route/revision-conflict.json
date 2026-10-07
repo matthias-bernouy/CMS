@@ -1,0 +1,5 @@
+{
+    "capabilityId": "update-route",
+    "errorCode": "REVISION_CONFLICT",
+    "reason": "A conflict requires coordinated concurrent writes to a suite-owned Page."
+}

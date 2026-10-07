@@ -37,11 +37,15 @@
                             </ulvia-official-field>
                             <ulvia-official-field slot="items" label-position="top">
                                 <label slot="label" for="page-content">Page document</label>
-                                <span slot="description">This first editor slice exposes the shared HTML document. Visual Bloc editing remains the next layer.</span>
+                                <span slot="description">The same Page document is used by Control and Delivery. The isolated preview never executes document scripts.</span>
                                 <ulvia-official-textarea slot="control">
                                     <textarea id="page-content" name="content" maxlength="1048576" rows="18" spellcheck="false">{{ selected.content }}</textarea>
                                 </ulvia-official-textarea>
                             </ulvia-official-field>
+                            <section slot="items" aria-labelledby="document-preview-title">
+                                <h3 id="document-preview-title">Document preview</h3>
+                                <ulvia-official-document-preview document="{{ selected.content }}"></ulvia-official-document-preview>
+                            </section>
                             <ulvia-official-form-actions slot="items" align="end">
                                 <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loading">Saving…</p>
                                 <p slot="actions" role="alert" cms-condition="$source.error">The revision changed or the Page is invalid. Reload before retrying.</p>
@@ -49,6 +53,53 @@
                             </ulvia-official-form-actions>
                         </ulvia-official-stack>
                     </form>
+                </ulvia-official-surface>
+                <ulvia-official-surface appearance="outlined" padding="lg">
+                    <ulvia-official-stack slot="content" gap="lg">
+                        <header slot="items">
+                            <h2>Routes</h2>
+                            <p>Each language owns a local path. The primary language determines the canonical Page path.</p>
+                        </header>
+                        <form slot="items" cms-repeat="selected.routes as route" cms-source="/.cms/call/ulvia.cms.pages/update-route" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#page-detail" cms-source-success-reset="false">
+                            <input type="hidden" name="id" value="{{ selected.id }}">
+                            <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
+                            <input type="hidden" name="language" value="{{ route.language }}">
+                            <ulvia-official-control-group layout="joined">
+                                <ulvia-official-field slot="controls" label-position="top">
+                                    <label slot="label" for="route-{{ route.language }}">{{ route.language }} route</label>
+                                    <span slot="description" cms-condition="route.primary">Primary route</span>
+                                    <ulvia-official-input slot="control"><input id="route-{{ route.language }}" name="path" value="{{ route.path }}" maxlength="2048" autocomplete="off" cms-condition="route.primary == false"></ulvia-official-input>
+                                    <ulvia-official-input slot="control"><input id="route-primary-{{ route.language }}" name="path" value="{{ route.path }}" maxlength="2048" autocomplete="off" required cms-condition="route.primary"></ulvia-official-input>
+                                </ulvia-official-field>
+                                <ulvia-official-action slot="actions" variant="outline" tone="secondary"><button type="submit">Save route</button></ulvia-official-action>
+                            </ulvia-official-control-group>
+                        </form>
+                    </ulvia-official-stack>
+                </ulvia-official-surface>
+                <ulvia-official-surface appearance="outlined" padding="lg">
+                    <ulvia-official-stack slot="content" gap="lg">
+                        <header slot="items">
+                            <h2>Search metadata</h2>
+                            <p>Empty values inherit the Page title and description.</p>
+                        </header>
+                        <form slot="items" cms-repeat="selected.seoEntries as entry" cms-source="/.cms/call/ulvia.cms.pages/update-seo" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#page-detail" cms-source-success-reset="false">
+                            <input type="hidden" name="id" value="{{ selected.id }}">
+                            <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
+                            <input type="hidden" name="language" value="{{ entry.language }}">
+                            <ulvia-official-stack gap="md">
+                                <h3 slot="items">{{ entry.language }}</h3>
+                                <ulvia-official-field slot="items" label-position="top">
+                                    <label slot="label" for="seo-title-{{ entry.language }}">Search title</label>
+                                    <ulvia-official-input slot="control"><input id="seo-title-{{ entry.language }}" type="text" name="title" value="{{ entry.title }}" maxlength="70" autocomplete="off"></ulvia-official-input>
+                                </ulvia-official-field>
+                                <ulvia-official-field slot="items" label-position="top">
+                                    <label slot="label" for="seo-description-{{ entry.language }}">Search description</label>
+                                    <ulvia-official-textarea slot="control"><textarea id="seo-description-{{ entry.language }}" name="description" maxlength="200" rows="3">{{ entry.description }}</textarea></ulvia-official-textarea>
+                                </ulvia-official-field>
+                                <ulvia-official-form-actions slot="items" align="end"><ulvia-official-action slot="actions" variant="outline" tone="secondary"><button type="submit">Save metadata</button></ulvia-official-action></ulvia-official-form-actions>
+                            </ulvia-official-stack>
+                        </form>
+                    </ulvia-official-stack>
                 </ulvia-official-surface>
                 <ulvia-official-surface appearance="outlined" padding="lg">
                     <ulvia-official-cluster slot="content" align="center" justify="between">

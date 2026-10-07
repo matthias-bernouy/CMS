@@ -1,0 +1,63 @@
+{
+    "id": "update-seo",
+    "description": "Update localized Page search metadata with optimistic revision control.",
+    "access": "admin",
+    "behavior": { "effect": "command", "idempotency": "none", "execution": "sync" },
+    "input": {
+        "type": "object",
+        "properties": {
+            "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "expectedRevision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+            "language": { "type": "string", "minLength": 1, "maxLength": 35 },
+            "title": { "type": "string", "maxLength": 70 },
+            "description": { "type": "string", "maxLength": 200 }
+        },
+        "required": ["id", "expectedRevision", "language"]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "id": { "type": "string", "maxLength": 200 },
+            "revision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+            "seoEntries": {
+                "type": "array",
+                "maxItems": 32,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "language": { "type": "string", "maxLength": 35 },
+                        "title": { "type": "string", "maxLength": 70 },
+                        "description": { "type": "string", "maxLength": 200 }
+                    },
+                    "required": ["language", "title", "description"]
+                }
+            }
+        },
+        "required": ["id", "revision", "seoEntries"]
+    },
+    "errors": [
+        { "code": "NOT_FOUND", "retryable": false },
+        { "code": "REVISION_CONFLICT", "retryable": true },
+        { "code": "INVALID_PAGE", "retryable": false },
+        { "code": "CORE_UNAVAILABLE", "retryable": true }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "PUT",
+        "path": "/v1/cms/pages/{id}/seo/{language}",
+        "input": {
+            "path": { "id": "id", "language": "language" },
+            "body": { "properties": ["expectedRevision", "title", "description"] }
+        },
+        "response": {
+            "successStatuses": [200],
+            "contentTypes": ["application/json"],
+            "errorStatuses": {
+                "NOT_FOUND": 404,
+                "REVISION_CONFLICT": 409,
+                "INVALID_PAGE": 422,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

@@ -37,7 +37,7 @@ test("mounts and dispatches every official CMS contract release", async () => {
             });
         }
     }
-    expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(43);
+    expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(45);
     const runner = new BunRunner();
     new CmsCore(runner, {
         token: TOKEN,

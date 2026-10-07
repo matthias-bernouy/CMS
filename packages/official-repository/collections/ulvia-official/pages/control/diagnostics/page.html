@@ -1,0 +1,58 @@
+<ulvia-official-control-workspace>
+    <h1 slot="title">Diagnostics</h1>
+    <p slot="description">Live operational signals from the selected CMS Core contracts.</p>
+    <ulvia-official-stack slot="content" gap="lg">
+        <section slot="items" aria-labelledby="migration-health" cms-source="/.cms/call/ulvia.cms.collections/migration-status as migrations" cms-source-method="POST" cms-source-body='{"limit":20}'>
+            <ulvia-official-surface appearance="elevated" padding="lg">
+                <h2 slot="content" id="migration-health">Content maintenance</h2>
+                <p slot="content" role="status" cms-condition="$source.loading">Reading migration state…</p>
+                <p slot="content" role="alert" cms-condition="$source.error">Migration diagnostics are unavailable.</p>
+                <ulvia-official-cluster slot="content" cms-condition="$source.loaded" align="center" justify="between">
+                    <div slot="items">
+                        <strong cms-condition="migrations.maintenance">Maintenance mode is active</strong>
+                        <strong cms-condition="migrations.maintenance == false">No maintenance operation is active</strong>
+                        <p>{{ migrations.migrations.length }} retained migration records</p>
+                    </div>
+                    <ulvia-official-badge slot="items" cms-condition="migrations.maintenance" tone="warning"><span slot="label">Maintenance</span></ulvia-official-badge>
+                    <ulvia-official-badge slot="items" cms-condition="migrations.maintenance == false" tone="success"><span slot="label">Ready</span></ulvia-official-badge>
+                </ulvia-official-cluster>
+                <ulvia-official-stack slot="content" cms-condition="$source.loaded" gap="sm" role="list">
+                    <article slot="items" cms-repeat="migrations.migrations as migration" role="listitem">
+                        <strong>{{ migration.status }} · {{ migration.id }}</strong>
+                        <p>{{ migration.totalPages }} Pages · {{ migration.operationCount }} operations · {{ migration.updatedAt }}</p>
+                    </article>
+                </ulvia-official-stack>
+            </ulvia-official-surface>
+        </section>
+        <section slot="items" aria-labelledby="job-health" cms-source="/.cms/call/ulvia.cms.jobs/list as jobs" cms-source-method="POST" cms-source-body='{"limit":50}'>
+            <ulvia-official-surface appearance="outlined" padding="lg">
+                <h2 slot="content" id="job-health">Durable jobs</h2>
+                <p slot="content" role="status" cms-condition="$source.loading">Reading durable jobs…</p>
+                <p slot="content" role="alert" cms-condition="$source.error">Job diagnostics are unavailable.</p>
+                <ulvia-official-stack slot="content" cms-condition="$source.loaded" gap="sm" role="list">
+                    <article slot="items" cms-repeat="jobs.items as job" role="listitem">
+                        <ulvia-official-cluster align="center" justify="between">
+                            <div slot="items"><strong>{{ job.contractId }} / {{ job.capabilityId }}</strong><p>{{ job.updatedAt }}</p></div>
+                            <ulvia-official-badge slot="items" tone="neutral"><span slot="label">{{ job.status }}</span></ulvia-official-badge>
+                        </ulvia-official-cluster>
+                    </article>
+                </ulvia-official-stack>
+            </ulvia-official-surface>
+        </section>
+        <section slot="items" aria-labelledby="provider-health" cms-source="/.cms/call/ulvia.cms.providers/list as providers" cms-source-method="POST">
+            <ulvia-official-surface appearance="outlined" padding="lg">
+                <h2 slot="content" id="provider-health">Provider installations</h2>
+                <p slot="content" role="status" cms-condition="$source.loading">Reading provider state…</p>
+                <p slot="content" role="alert" cms-condition="$source.error">Provider diagnostics are unavailable.</p>
+                <ulvia-official-stack slot="content" cms-condition="$source.loaded" gap="sm" role="list">
+                    <article slot="items" cms-repeat="providers.installations as provider" role="listitem">
+                        <ulvia-official-cluster align="center" justify="between">
+                            <div slot="items"><strong>{{ provider.providerId }}</strong><p>{{ provider.endpoint }} · manifest {{ provider.manifestVersion }}</p></div>
+                            <ulvia-official-badge slot="items" tone="neutral"><span slot="label">{{ provider.status }}</span></ulvia-official-badge>
+                        </ulvia-official-cluster>
+                    </article>
+                </ulvia-official-stack>
+            </ulvia-official-surface>
+        </section>
+    </ulvia-official-stack>
+</ulvia-official-control-workspace>

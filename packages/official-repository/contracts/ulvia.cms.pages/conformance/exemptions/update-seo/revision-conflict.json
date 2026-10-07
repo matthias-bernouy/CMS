@@ -1,0 +1,5 @@
+{
+    "capabilityId": "update-seo",
+    "errorCode": "REVISION_CONFLICT",
+    "reason": "A conflict requires coordinated concurrent writes to a suite-owned Page."
+}

@@ -10,6 +10,8 @@ import {
     publishCmsPage,
     renameCmsPage,
     updateCmsPage,
+    updateCmsPageRoute,
+    updateCmsPageSeo,
 } from "@bernouy/cms-content";
 import {
     CoreCapabilityDispatchError,
@@ -28,6 +30,8 @@ export function registerPageCapabilities(dispatcher: CoreCapabilityRegistry, dep
     register("get", (input) => getCmsPage(dependencies.repo, input as never));
     register("create", (input) => createCmsPage(dependencies.repo, input as never));
     register("update", (input) => updateCmsPage(dependencies.repo, input as never));
+    register("update-route", (input) => updateCmsPageRoute(dependencies.repo, input as never));
+    register("update-seo", (input) => updateCmsPageSeo(dependencies.repo, input as never));
     register("publish", (input) => publishCmsPage(dependencies.repo, input as never));
     register("delete", (input) => deleteCmsPage(dependencies.repo, input as never));
     register("rename", (input) => renameCmsPage(dependencies.repo, input as never), "INVALID_TITLE");
