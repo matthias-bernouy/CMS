@@ -130,11 +130,11 @@
             },
             "functions": {
                 "covered": 302,
-                "total": 331
+                "total": 330
             },
             "lines": {
-                "covered": 1675,
-                "total": 1802
+                "covered": 1674,
+                "total": 1797
             }
         },
         "@bernouy/cms-content": {
@@ -308,50 +308,15 @@
                 "packages/features/cms-content/src/browser/component/Component.ts",
                 "packages/features/cms-content/src/browser/index.ts",
                 "packages/features/cms-content/src/exports/bindings.ts",
-                "packages/features/cms-content/src/exports/files/index.ts",
-                "packages/features/cms-content/src/exports/files/local-fs.ts",
-                "packages/features/cms-content/src/exports/files/mongo.ts",
-                "packages/features/cms-content/src/exports/files/serving.ts",
-                "packages/features/cms-content/src/exports/files/urls.ts",
                 "packages/features/cms-content/src/exports/index.ts",
                 "packages/features/cms-content/src/exports/migrations.ts",
                 "packages/features/cms-content/src/exports/mongo.ts",
                 "packages/features/cms-content/src/exports/rendering.ts",
-                "packages/features/cms-content/src/files/core/lifecycle/deleteFileTree.ts",
-                "packages/features/cms-content/src/files/core/lifecycle/fileMutationRecovery.ts",
-                "packages/features/cms-content/src/files/core/lifecycle/fileTreeMutations.ts",
-                "packages/features/cms-content/src/files/core/lifecycle/updateFileContent.ts",
-                "packages/features/cms-content/src/files/core/lifecycle/uploadFile.ts",
-                "packages/features/cms-content/src/files/core/media/fileIntegrity.ts",
-                "packages/features/cms-content/src/files/core/media/fileUrls.ts",
-                "packages/features/cms-content/src/files/core/media/imageVariants.ts",
-                "packages/features/cms-content/src/files/core/media/injectMediaVersions.ts",
-                "packages/features/cms-content/src/files/core/optimization/optimizePageJob.ts",
-                "packages/features/cms-content/src/files/core/optimization/optimizeQueue.ts",
-                "packages/features/cms-content/src/files/core/serving/capabilities.ts",
-                "packages/features/cms-content/src/files/core/validation/ValidatingCmsFilesMetadata.ts",
-                "packages/features/cms-content/src/files/core/validation/validation.ts",
-                "packages/features/cms-content/src/files/default-implementation/local-fs/LocalFilesRegistry.ts",
-                "packages/features/cms-content/src/files/default-implementation/local-fs/LocalFsCmsFiles.ts",
-                "packages/features/cms-content/src/files/default-implementation/local-fs/localFsMutations.ts",
-                "packages/features/cms-content/src/files/default-implementation/local-fs/localFsQueries.ts",
-                "packages/features/cms-content/src/files/default-implementation/local-fs/localFsRegistryEntries.ts",
-                "packages/features/cms-content/src/files/default-implementation/local-fs/reconcileLocalFiles.ts",
-                "packages/features/cms-content/src/files/default-implementation/memory/InMemoryCmsFileMutationJournal.ts",
-                "packages/features/cms-content/src/files/default-implementation/memory/InMemoryCmsFilesMetadata.ts",
-                "packages/features/cms-content/src/files/default-implementation/memory/inMemoryFilesQueries.ts",
-                "packages/features/cms-content/src/files/default-implementation/mongo/MongoCmsFileMutationJournal.ts",
-                "packages/features/cms-content/src/files/default-implementation/mongo/MongoCmsFilesMetadata.ts",
-                "packages/features/cms-content/src/files/default-implementation/mongo/mongoFilesDocuments.ts",
-                "packages/features/cms-content/src/files/default-implementation/mongo/mongoFilesMutations.ts",
-                "packages/features/cms-content/src/files/default-implementation/mongo/mongoFilesQueries.ts",
-                "packages/features/cms-content/src/files/http/authoringRequests.ts",
-                "packages/features/cms-content/src/files/http/serveFilesRequest.ts",
-                "packages/features/cms-content/src/files/http/serveVariant.ts",
                 "packages/features/cms-content/src/pages/core/contracts/createPage.ts",
                 "packages/features/cms-content/src/pages/core/contracts/listPages.ts",
                 "packages/features/cms-content/src/pages/core/contracts/mutatePage.ts",
                 "packages/features/cms-content/src/pages/core/contracts/pageDetails.ts",
+                "packages/features/cms-content/src/pages/core/contracts/presentation.ts",
                 "packages/features/cms-content/src/pages/core/contracts/renamePage.ts",
                 "packages/features/cms-content/src/pages/core/indexing/detection.ts",
                 "packages/features/cms-content/src/pages/core/indexing/projection.ts",
@@ -361,6 +326,7 @@
                 "packages/features/cms-content/src/pages/core/lifecycle/publication.ts",
                 "packages/features/cms-content/src/pages/core/paths/localizedPagePath.ts",
                 "packages/features/cms-content/src/pages/core/paths/pagePath.ts",
+                "packages/features/cms-content/src/pages/core/queries/contentReferences.ts",
                 "packages/features/cms-content/src/pages/core/queries/counts.ts",
                 "packages/features/cms-content/src/pages/core/queries/escapeRegex.ts",
                 "packages/features/cms-content/src/pages/core/queries/pagesQuery.ts",
@@ -375,7 +341,8 @@
                 "packages/features/cms-content/src/pages/core/routing/errors.ts",
                 "packages/features/cms-content/src/pages/core/routing/links.ts",
                 "packages/features/cms-content/src/pages/core/routing/mutationCoordinator.ts",
-                "packages/features/cms-content/src/pages/core/routing/siteRoutes.ts",
+                "packages/features/cms-content/src/pages/core/routing/site/index.ts",
+                "packages/features/cms-content/src/pages/core/routing/site/mutations.ts",
                 "packages/features/cms-content/src/pages/core/routing/synchronizeRoutes.ts",
                 "packages/features/cms-content/src/pages/core/routing/values.ts",
                 "packages/features/cms-content/src/pages/core/validation/indexing.ts",
@@ -415,24 +382,21 @@
                 "packages/features/cms-content/src/browser/dom.ts",
                 "packages/features/cms-content/src/exports/page-path.ts",
                 "packages/features/cms-content/src/exports/theme.ts",
-                "packages/features/cms-content/src/files/interfaces/CmsFileMutationJournal.ts",
-                "packages/features/cms-content/src/files/interfaces/CmsFileStores.ts",
-                "packages/features/cms-content/src/files/interfaces/CmsFilesMetadataRepository.ts",
                 "packages/features/cms-content/src/pages/interfaces/routing.ts",
                 "packages/features/cms-content/src/settings/interfaces/settings.ts",
                 "packages/features/cms-content/src/theme/interfaces/theme.ts"
             ],
             "files": {
-                "covered": 265,
-                "total": 279
+                "covered": 232,
+                "total": 243
             },
             "functions": {
-                "covered": 1944,
-                "total": 2195
+                "covered": 1728,
+                "total": 1908
             },
             "lines": {
-                "covered": 14719,
-                "total": 17042
+                "covered": 13236,
+                "total": 14951
             }
         },
         "@bernouy/cms-control": {
@@ -455,8 +419,7 @@
                 "packages/surfaces/cms-control/src/core/admin/control/mountRoutes/pages/render.ts",
                 "packages/surfaces/cms-control/src/core/admin/control/mountRoutes/unavailable.ts",
                 "packages/surfaces/cms-control/src/core/admin/control/state.ts",
-                "packages/surfaces/cms-control/src/core/admin/http/requestLocale.ts",
-                "packages/surfaces/cms-control/src/core/admin/server/cache/invalidation.ts"
+                "packages/surfaces/cms-control/src/core/admin/http/requestLocale.ts"
             ],
             "uncoveredSourceFiles": [
                 "packages/surfaces/cms-control/index.ts",
@@ -468,16 +431,16 @@
                 "packages/surfaces/cms-control/types/HTMLElements.ts"
             ],
             "files": {
-                "covered": 19,
-                "total": 26
+                "covered": 18,
+                "total": 25
             },
             "functions": {
-                "covered": 81,
-                "total": 107
+                "covered": 66,
+                "total": 84
             },
             "lines": {
-                "covered": 640,
-                "total": 830
+                "covered": 532,
+                "total": 697
             }
         },
         "@bernouy/cms-core": {
@@ -491,13 +454,15 @@
                 "packages/surfaces/cms-core/src/capabilities/collections/projection.ts",
                 "packages/surfaces/cms-core/src/capabilities/collections/sources.ts",
                 "packages/surfaces/cms-core/src/capabilities/collections/support.ts",
-                "packages/surfaces/cms-core/src/capabilities/design/index.ts",
-                "packages/surfaces/cms-core/src/capabilities/design/projection.ts",
                 "packages/surfaces/cms-core/src/capabilities/files.ts",
                 "packages/surfaces/cms-core/src/capabilities/index.ts",
-                "packages/surfaces/cms-core/src/capabilities/operations.ts",
+                "packages/surfaces/cms-core/src/capabilities/jobs.ts",
                 "packages/surfaces/cms-core/src/capabilities/pages/index.ts",
                 "packages/surfaces/cms-core/src/capabilities/providers.ts",
+                "packages/surfaces/cms-core/src/capabilities/site-configuration/localization.ts",
+                "packages/surfaces/cms-core/src/capabilities/site-configuration/projection.ts",
+                "packages/surfaces/cms-core/src/capabilities/site-configuration/support.ts",
+                "packages/surfaces/cms-core/src/capabilities/site-configuration/theme.ts",
                 "packages/surfaces/cms-core/src/dispatch/registry.ts",
                 "packages/surfaces/cms-core/src/index.ts",
                 "packages/surfaces/cms-core/src/operations/CoreOperationExecutor.ts",
@@ -514,16 +479,16 @@
                 "packages/surfaces/cms-core/src/ports/index.ts"
             ],
             "files": {
-                "covered": 25,
-                "total": 27
+                "covered": 27,
+                "total": 29
             },
             "functions": {
-                "covered": 61,
-                "total": 188
+                "covered": 65,
+                "total": 212
             },
             "lines": {
-                "covered": 484,
-                "total": 1719
+                "covered": 568,
+                "total": 1941
             }
         },
         "@bernouy/cms-delivery": {
@@ -542,10 +507,10 @@
                 "packages/surfaces/cms-delivery/src/core/head/buildMetaCsp.ts",
                 "packages/surfaces/cms-delivery/src/core/head/buildPreconnect.ts",
                 "packages/surfaces/cms-delivery/src/core/head/buildScriptTags.ts",
+                "packages/surfaces/cms-delivery/src/core/html/fileImages.ts",
                 "packages/surfaces/cms-delivery/src/core/html/renderPage.ts",
                 "packages/surfaces/cms-delivery/src/core/html/runtimeContext.ts",
                 "packages/surfaces/cms-delivery/src/core/maintenance.ts",
-                "packages/surfaces/cms-delivery/src/core/pages/PageOptimizer.ts",
                 "packages/surfaces/cms-delivery/src/core/pages/handlePageRequest.ts",
                 "packages/surfaces/cms-delivery/src/core/pages/preflightPageGatewayAccess.ts",
                 "packages/surfaces/cms-delivery/src/core/pages/publicPagePaths.ts",
@@ -592,22 +557,58 @@
                 "total": 55
             },
             "functions": {
-                "covered": 257,
-                "total": 284
+                "covered": 236,
+                "total": 263
             },
             "lines": {
-                "covered": 2213,
-                "total": 2407
+                "covered": 2134,
+                "total": 2303
+            }
+        },
+        "@bernouy/cms-files": {
+            "path": "packages/features/cms-files",
+            "coveredSourceFiles": [
+                "packages/features/cms-files/src/core/credentials.ts",
+                "packages/features/cms-files/src/default-implementation/InMemoryCmsFilesStore.ts",
+                "packages/features/cms-files/src/exports/index.ts",
+                "packages/features/cms-files/src/exports/memory.ts",
+                "packages/features/cms-files/src/imageDerivatives.ts",
+                "packages/features/cms-files/src/service.ts"
+            ],
+            "uncoveredSourceFiles": [
+                "packages/features/cms-files/src/default-implementation/MongoCmsFilesStore.ts",
+                "packages/features/cms-files/src/exports/mongo.ts",
+                "packages/features/cms-files/src/interfaces.ts"
+            ],
+            "files": {
+                "covered": 6,
+                "total": 9
+            },
+            "functions": {
+                "covered": 82,
+                "total": 109
+            },
+            "lines": {
+                "covered": 546,
+                "total": 841
             }
         },
         "@bernouy/cms-gateway": {
             "path": "packages/features/cms-gateway",
             "coveredSourceFiles": [
                 "packages/features/cms-gateway/src/audit/default-implementation/InMemoryGatewayAuditStore.ts",
+                "packages/features/cms-gateway/src/conformance/LiveConformanceRunner.ts",
+                "packages/features/cms-gateway/src/conformance/assertions.ts",
+                "packages/features/cms-gateway/src/conformance/executeCall.ts",
+                "packages/features/cms-gateway/src/conformance/interfaces.ts",
+                "packages/features/cms-gateway/src/conformance/pagination.ts",
+                "packages/features/cms-gateway/src/conformance/runnerPlan.ts",
+                "packages/features/cms-gateway/src/conformance/templates.ts",
                 "packages/features/cms-gateway/src/execution/core/PageExecutionAuthority.ts",
                 "packages/features/cms-gateway/src/execution/core/executionValues.ts",
                 "packages/features/cms-gateway/src/execution/default-implementation/InMemoryPageExecutionGrantStore.ts",
                 "packages/features/cms-gateway/src/exports/audit/index.ts",
+                "packages/features/cms-gateway/src/exports/conformance/index.ts",
                 "packages/features/cms-gateway/src/exports/execution/index.ts",
                 "packages/features/cms-gateway/src/exports/http/handlers.ts",
                 "packages/features/cms-gateway/src/exports/http/index.ts",
@@ -616,10 +617,6 @@
                 "packages/features/cms-gateway/src/exports/identity/mongo.ts",
                 "packages/features/cms-gateway/src/exports/identity/request-scope.ts",
                 "packages/features/cms-gateway/src/exports/index.ts",
-                "packages/features/cms-gateway/src/exports/media/browser.ts",
-                "packages/features/cms-gateway/src/exports/media/handlers.ts",
-                "packages/features/cms-gateway/src/exports/media/index.ts",
-                "packages/features/cms-gateway/src/exports/media/local-fs.ts",
                 "packages/features/cms-gateway/src/identity/core/ProviderIdentityAliases.ts",
                 "packages/features/cms-gateway/src/identity/core/errors.ts",
                 "packages/features/cms-gateway/src/identity/core/keys.ts",
@@ -644,17 +641,7 @@
                 "packages/features/cms-gateway/src/invocation/http/withAbort.ts",
                 "packages/features/cms-gateway/src/invocation/node-http/NodeGatewayHttpNetwork.ts",
                 "packages/features/cms-gateway/src/invocation/node-http/addressPolicy.ts",
-                "packages/features/cms-gateway/src/invocation/node-http/nodeHttpRequest.ts",
-                "packages/features/cms-gateway/src/media/browser/providerMediaAttributes.ts",
-                "packages/features/cms-gateway/src/media/browser/providerMediaImages.ts",
-                "packages/features/cms-gateway/src/media/core/derivativeKey.ts",
-                "packages/features/cms-gateway/src/media/core/providerImageService.ts",
-                "packages/features/cms-gateway/src/media/core/providerImageWidths.ts",
-                "packages/features/cms-gateway/src/media/default-implementation/LocalProviderImageStore.ts",
-                "packages/features/cms-gateway/src/media/default-implementation/localStoreRecord.ts",
-                "packages/features/cms-gateway/src/media/http/handleFileGet.ts",
-                "packages/features/cms-gateway/src/media/http/handleImageGet.ts",
-                "packages/features/cms-gateway/src/media/http/privateMediaError.ts"
+                "packages/features/cms-gateway/src/invocation/node-http/nodeHttpRequest.ts"
             ],
             "uncoveredSourceFiles": [
                 "packages/features/cms-gateway/src/audit/default-implementation/mongo/MongoGatewayAuditStore.ts",
@@ -664,23 +651,20 @@
                 "packages/features/cms-gateway/src/execution/interfaces/PageExecutionGrantStore.ts",
                 "packages/features/cms-gateway/src/exports/audit/mongo.ts",
                 "packages/features/cms-gateway/src/exports/execution/mongo.ts",
-                "packages/features/cms-gateway/src/exports/media/sharp.ts",
                 "packages/features/cms-gateway/src/identity/interfaces/ProviderIdentityService.ts",
-                "packages/features/cms-gateway/src/invocation/interfaces/Invocation.ts",
-                "packages/features/cms-gateway/src/media/default-implementation/SharpImageTransformer.ts",
-                "packages/features/cms-gateway/src/media/interfaces/imageTransformer.ts"
+                "packages/features/cms-gateway/src/invocation/interfaces/Invocation.ts"
             ],
             "files": {
-                "covered": 52,
-                "total": 64
+                "covered": 46,
+                "total": 55
             },
             "functions": {
-                "covered": 230,
-                "total": 258
+                "covered": 231,
+                "total": 277
             },
             "lines": {
-                "covered": 2348,
-                "total": 2571
+                "covered": 2398,
+                "total": 2740
             }
         },
         "@bernouy/cms-repository": {
@@ -719,6 +703,7 @@
                 "packages/features/cms-repository/src/collections/core/texts/resolveCollectionTexts.ts",
                 "packages/features/cms-repository/src/collections/core/texts/translationCatalogue.ts",
                 "packages/features/cms-repository/src/collections/core/texts/translationReferences.ts",
+                "packages/features/cms-repository/src/collections/core/texts/userFacingAttributes.ts",
                 "packages/features/cms-repository/src/collections/core/texts/validation.ts",
                 "packages/features/cms-repository/src/collections/core/validation/markup/assets.ts",
                 "packages/features/cms-repository/src/collections/core/validation/markup/managedNative.ts",
@@ -786,13 +771,16 @@
                 "packages/features/cms-repository/src/contracts/core/conformance/calls/parseCall.ts",
                 "packages/features/cms-repository/src/contracts/core/conformance/calls/paths.ts",
                 "packages/features/cms-repository/src/contracts/core/conformance/calls/templates.ts",
-                "packages/features/cms-repository/src/contracts/core/conformance/coverage.ts",
+                "packages/features/cms-repository/src/contracts/core/conformance/coverage-analysis/exemptions.ts",
+                "packages/features/cms-repository/src/contracts/core/conformance/coverage-analysis/index.ts",
                 "packages/features/cms-repository/src/contracts/core/conformance/dependencies/calledCapabilities.ts",
                 "packages/features/cms-repository/src/contracts/core/conformance/dependencies/references.ts",
                 "packages/features/cms-repository/src/contracts/core/conformance/dependencies/resolveGraph.ts",
                 "packages/features/cms-repository/src/contracts/core/conformance/dependencies/resolveProfiles.ts",
                 "packages/features/cms-repository/src/contracts/core/conformance/dependencies/scenarioProfiles.ts",
-                "packages/features/cms-repository/src/contracts/core/conformance/exemptions.ts",
+                "packages/features/cms-repository/src/contracts/core/conformance/evidence.ts",
+                "packages/features/cms-repository/src/contracts/core/conformance/evidenceSuite.ts",
+                "packages/features/cms-repository/src/contracts/core/conformance/evidenceValues.ts",
                 "packages/features/cms-repository/src/contracts/core/conformance/parseConformance.ts",
                 "packages/features/cms-repository/src/contracts/core/conformance/parseSuite.ts",
                 "packages/features/cms-repository/src/contracts/core/parsing/identifiers.ts",
@@ -926,7 +914,9 @@
                 "packages/features/cms-repository/src/repository/publication/mutationEndpoint.ts",
                 "packages/features/cms-repository/src/repository/publication/protocol.ts",
                 "packages/features/cms-repository/src/repository/publication/routes.ts",
-                "packages/features/cms-repository/src/repository/publication/transport.ts",
+                "packages/features/cms-repository/src/repository/publication/transport/assets.ts",
+                "packages/features/cms-repository/src/repository/publication/transport/concurrency.ts",
+                "packages/features/cms-repository/src/repository/publication/transport/index.ts",
                 "packages/features/cms-repository/src/repository/publication/writer.ts"
             ],
             "uncoveredSourceFiles": [
@@ -942,6 +932,7 @@
                 "packages/features/cms-repository/src/collections/sources/interfaces.ts",
                 "packages/features/cms-repository/src/contracts/interfaces/Conformance.ts",
                 "packages/features/cms-repository/src/contracts/interfaces/ConformanceControls.ts",
+                "packages/features/cms-repository/src/contracts/interfaces/ConformanceEvidence.ts",
                 "packages/features/cms-repository/src/contracts/interfaces/ContractRelease.ts",
                 "packages/features/cms-repository/src/contracts/interfaces/HttpBinding.ts",
                 "packages/features/cms-repository/src/contracts/interfaces/ReleaseCatalogue.ts",
@@ -972,16 +963,16 @@
                 "packages/features/cms-repository/src/repository/publication/types.ts"
             ],
             "files": {
-                "covered": 242,
-                "total": 282
+                "covered": 248,
+                "total": 289
             },
             "functions": {
-                "covered": 1530,
-                "total": 1743
+                "covered": 1657,
+                "total": 1837
             },
             "lines": {
-                "covered": 13972,
-                "total": 16496
+                "covered": 14852,
+                "total": 16985
             }
         },
         "@bernouy/cms-server": {
@@ -993,7 +984,6 @@
                 "packages/runtimes/cms-server/src/runtime/gateway/bootstrapLocalOfficialResources.ts",
                 "packages/runtimes/cms-server/src/runtime/gateway/fetchProviderReport.ts",
                 "packages/runtimes/cms-server/src/runtime/mountSurfaces.ts",
-                "packages/runtimes/cms-server/src/runtime/stores/authorFiles.ts",
                 "packages/runtimes/cms-server/src/runtime/stores/core.ts",
                 "packages/runtimes/cms-server/src/runtime/stores/envelopeCrypto.ts",
                 "packages/runtimes/cms-server/src/runtime/stores/features.ts",
@@ -1011,16 +1001,16 @@
                 "packages/runtimes/cms-server/src/runtime/localCoreProvider.ts"
             ],
             "files": {
-                "covered": 16,
-                "total": 20
+                "covered": 15,
+                "total": 19
             },
             "functions": {
                 "covered": 79,
-                "total": 110
+                "total": 113
             },
             "lines": {
-                "covered": 894,
-                "total": 1118
+                "covered": 923,
+                "total": 1194
             }
         },
         "@bernouy/envelope-crypto": {
@@ -1094,11 +1084,11 @@
             },
             "functions": {
                 "covered": 93,
-                "total": 127
+                "total": 128
             },
             "lines": {
-                "covered": 695,
-                "total": 773
+                "covered": 699,
+                "total": 777
             }
         },
         "@bernouy/image-processing": {
@@ -1215,13 +1205,18 @@
                 "packages/runtimes/ulvia-cli/src/commands/release.ts",
                 "packages/runtimes/ulvia-cli/src/commands/remote.ts",
                 "packages/runtimes/ulvia-cli/src/commands/remoteArguments.ts",
+                "packages/runtimes/ulvia-cli/src/commands/remoteAssetSink.ts",
+                "packages/runtimes/ulvia-cli/src/release/authored/conformance.ts",
+                "packages/runtimes/ulvia-cli/src/release/authored/conformanceDependencies.ts",
+                "packages/runtimes/ulvia-cli/src/release/authored/contract.ts",
+                "packages/runtimes/ulvia-cli/src/release/authored/jsonFragments.ts",
+                "packages/runtimes/ulvia-cli/src/release/authored/sourceTree.ts",
                 "packages/runtimes/ulvia-cli/src/release/blocDiscovery.ts",
                 "packages/runtimes/ulvia-cli/src/release/blocSources.ts",
                 "packages/runtimes/ulvia-cli/src/release/metadataSources.ts",
                 "packages/runtimes/ulvia-cli/src/release/migrationSources.ts",
                 "packages/runtimes/ulvia-cli/src/release/quality.ts",
                 "packages/runtimes/ulvia-cli/src/release/source.ts",
-                "packages/runtimes/ulvia-cli/src/release/sourceTree.ts",
                 "packages/runtimes/ulvia-cli/src/release/textSources.ts",
                 "packages/runtimes/ulvia-cli/src/runtime/cms.ts",
                 "packages/runtimes/ulvia-cli/src/runtime/config.ts",
@@ -1234,16 +1229,16 @@
                 "packages/runtimes/ulvia-cli/src/index.ts"
             ],
             "files": {
-                "covered": 22,
-                "total": 23
+                "covered": 27,
+                "total": 28
             },
             "functions": {
-                "covered": 140,
-                "total": 174
+                "covered": 186,
+                "total": 223
             },
             "lines": {
-                "covered": 1030,
-                "total": 1488
+                "covered": 1325,
+                "total": 1804
             }
         }
     }

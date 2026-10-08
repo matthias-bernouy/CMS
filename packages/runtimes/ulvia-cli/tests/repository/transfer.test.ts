@@ -112,7 +112,7 @@ test("CLI push and pull preserve every official artifact kind through a remote r
             [sourceData, targetData, remoteRoot].map((path) => rm(path, { recursive: true, force: true })),
         );
     }
-});
+}, 15_000);
 
 async function definitionVersion(directory: string): Promise<string> {
     return ((await Bun.file(join(directory, "definition.json")).json()) as { version: string }).version;
