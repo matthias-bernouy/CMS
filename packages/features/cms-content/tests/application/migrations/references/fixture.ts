@@ -41,10 +41,10 @@ export function release(version: string, id: string): Record<string, unknown> {
                 kind: "component",
                 id,
                 label: "bloc.label",
-                shadowdom: "<div></div>",
+                shadowdom: '<div><slot name="content"></slot></div>',
                 uses: [],
                 requires: [],
-                slots: {},
+                slots: { content: { accepts: [{ kind: "rich-text", profile: "prose" }] } },
             },
         ],
     };

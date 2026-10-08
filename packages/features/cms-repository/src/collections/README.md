@@ -64,6 +64,12 @@ root of a component's light DOM. Shells reject dynamic interpolation, visible
 text, semantic content and CMS directives. Inline styles are forbidden in all
 markup; classes belong only in shadow shells and bindings only in light DOM.
 Composition-only settings, styles and behaviour fields reject.
+Collection Page roots must be collection or explicitly imported Blocs. Page
+documents and `defaultContent` enforce named slot acceptance and cardinality;
+native editable content exists only through `plain-text`, `rich-text`, `media`
+or managed-native contracts. `any-component` excludes compositions. Fixed
+Light DOM remains code-owned native markup, while its nested Bloc placements
+must target compatible component slots.
 Component settings are an ordered list of items. Each item owns a safe lowercase
 attribute ID, label key, optional group key, scalar type, constraints and default.
 Supported values are strings, booleans, finite numbers and safe integers.
@@ -101,10 +107,11 @@ Installation repeats type checks for exact aliases to imported tokens.
 **Admission is not an HTML/CSS sanitizer or template compiler.** The separate
 `@bernouy/cms-repository/collections/build` authoring toolchain compiles a
 component's browser runtime before admission, but it does not weaken these
-admission boundaries. Admission itself does not
-type-check expressions, capability calls embedded in markup, slot content
-cardinalities, rich-text profile conformance, general CSS or render expansion. Stored
-component settings are validated separately by `cms-content`. The HTML parser applies
+admission boundaries. Admission itself does not type-check arbitrary business
+expressions, general CSS or final render expansion. It does validate controlled
+capability bindings, slot content cardinalities and rich-text profiles at the
+authored boundaries. Stored component settings are validated separately by
+`cms-content`. The HTML parser applies
 its parsing rules; acceptance does not certify author syntax as conforming HTML.
 Never render or execute an admitted bundle directly as trusted code. Renderer
 compilation, content policies and execution authorization are separate gates

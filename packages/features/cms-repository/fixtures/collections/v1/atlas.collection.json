@@ -37,7 +37,7 @@
             "thumbnail": "preview",
             "shadowdom": "<section><slot name=\"body\"></slot></section>",
             "style": ":host { display: block; } :host([tone=\"muted\"]) { opacity: 0.8; }",
-            "slots": { "body": {} },
+            "slots": { "body": { "accepts": [{ "kind": "rich-text", "profile": "prose" }] } },
             "settings": [
                 {
                     "id": "tone",
@@ -61,7 +61,7 @@
             "label": "bloc.page.label",
             "uses": ["atlas-panel"],
             "lightdom": "<atlas-panel tone=\"default\"><slot name=\"main\" slot=\"body\"></slot></atlas-panel>",
-            "slots": { "main": { "max": 8 } },
+            "slots": { "main": { "accepts": [{ "kind": "rich-text", "profile": "prose" }], "max": 8 } },
             "defaultContent": "<p slot=\"main\"></p>"
         }
     ]

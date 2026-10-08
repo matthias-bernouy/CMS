@@ -87,7 +87,7 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         return (await this.getAllPages()).filter(isPublishedPage).map((page) => structuredClone(page));
     }
 
-    async insertPage(path: string, title: string, content = "<p></p>", options: PageCreateOptions = {}): Promise<void> {
+    async insertPage(path: string, title: string, content = "", options: PageCreateOptions = {}): Promise<void> {
         this.assertPageRoutesReady();
         const surface = options.surface ?? "delivery";
         const language = this.system.site.language;

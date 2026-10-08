@@ -9,7 +9,7 @@ const page = {
     name: "page.overview.name",
     icon: "star",
     document: {
-        html: "<section><h2>{{ copy }}</h2><atlas-panel></atlas-panel></section>",
+        html: "<atlas-panel></atlas-panel>",
     },
 } as const;
 
@@ -35,7 +35,7 @@ test("collection Pages derive capability and resource references from their docu
         ...page,
         requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
         document: {
-            html: '<section cms-source="/.cms/call/catalog.items/item.list as catalog" cms-source-method="POST" cms-source-body="{}"><p cms-condition="$source.loaded">{{ catalog.items.length }}</p></section>',
+            html: '<atlas-panel cms-source="/.cms/call/catalog.items/item.list as catalog" cms-source-method="POST" cms-source-body="{}"></atlas-panel>',
         },
     };
     expect(parseCollectionRelease({ ...source, pages: [bound] }).pages?.[0]?.requires).toEqual(bound.requires);
@@ -56,7 +56,7 @@ test("collection Pages derive capability and resource references from their docu
             {
                 ...page,
                 document: {
-                    html: '<section><h2>{{ cms.i18n.atlas.heading }}</h2><atlas-panel artwork="{{ cms.asset.atlas.logo }}"></atlas-panel></section>',
+                    html: '<atlas-panel title="{{ cms.i18n.atlas.heading }}" artwork="{{ cms.asset.atlas.logo }}"></atlas-panel>',
                 },
             },
         ],
@@ -65,27 +65,39 @@ test("collection Pages derive capability and resource references from their docu
     expect(() =>
         parseCollectionRelease({
             ...localized,
-            pages: [{ ...page, document: { html: "<section>{{ cms.i18n.atlas.unknown }}</section>" } }],
+            pages: [
+                { ...page, document: { html: '<atlas-panel title="{{ cms.i18n.atlas.unknown }}"></atlas-panel>' } },
+            ],
         }),
     ).toThrow(/unknown collection text/);
 });
 
-test("collection Pages admit typed capability forms without browser-owned actions", () => {
+test("collection Pages admit typed capability forms owned by a composition", () => {
     const source = collectionDocument({ "page.overview.name": "Overview" });
+    const form =
+        '<form cms-source="/.cms/call/catalog.items/item.rename" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#catalog"><label for="title">{{ copy }}</label><input id="title" type="text" name="title" required><input type="hidden" name="expectedRevision" value="1" cms-form-value-type="number"><button type="submit">{{ copy }}</button></form>';
+    (source.blocs as Record<string, unknown>[]).push({
+        kind: "composition",
+        id: "atlas-form-page",
+        label: "bloc.page.label",
+        lightdom: form,
+        slots: {},
+        uses: [],
+        requires: [{ contractId: "catalog.items", capabilityId: "item.rename", versionRange: "^1.0.0" }],
+    });
     const mutation = {
         ...page,
-        requires: [{ contractId: "catalog.items", capabilityId: "item.rename", versionRange: "^1.0.0" }],
-        document: {
-            html: '<form cms-source="/.cms/call/catalog.items/item.rename" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#catalog"><label for="title">{{ copy }}</label><input id="title" type="text" name="title" required><input type="hidden" name="expectedRevision" value="1" cms-form-value-type="number"><button type="submit">{{ copy }}</button></form>',
-        },
+        document: { html: "<atlas-form-page></atlas-form-page>" },
     };
     expect(() => parseCollectionRelease({ ...source, pages: [mutation] })).not.toThrow();
     for (const html of [
-        mutation.document.html.replace('cms-source-trigger="submit"', 'action="https://example.com"'),
-        mutation.document.html.replace('cms-source-trigger="submit"', 'cms-source-trigger="auto"'),
-        mutation.document.html.replace('cms-form-value-type="number"', 'cms-form-value-type="object"'),
+        form.replace('cms-source-trigger="submit"', 'action="https://example.com"'),
+        form.replace('cms-source-trigger="submit"', 'cms-source-trigger="auto"'),
+        form.replace('cms-form-value-type="number"', 'cms-form-value-type="object"'),
     ]) {
-        expect(() => parseCollectionRelease({ ...source, pages: [{ ...mutation, document: { html } }] })).toThrow();
+        const invalid = structuredClone(source);
+        (invalid.blocs as Record<string, unknown>[]).find(({ id }) => id === "atlas-form-page")!.lightdom = html;
+        expect(() => parseCollectionRelease({ ...invalid, pages: [mutation] })).toThrow();
     }
 });
 
@@ -111,7 +123,7 @@ test("collection Pages admit stable Page links without authored routes", () => {
         "page.private.name": "Private",
     });
     const reference = '{"kind":"collection","publisherId":"atlas.official","collectionId":"atlas","pageId":"details"}';
-    const html = `<section><a data-cms-page-ref='${reference}' data-cms-page-suffix="?id={{ page.id }}">{{ copy }}</a></section>`;
+    const html = `<atlas-panel><a slot="body" data-cms-page-ref='${reference}' data-cms-page-suffix="?id={{ page.id }}">{{ copy }}</a></atlas-panel>`;
     const details = { ...page, id: "details", defaultPath: "/admin/details", name: "page.details.name" };
     expect(() =>
         parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }, details] }),

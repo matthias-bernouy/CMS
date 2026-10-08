@@ -16,6 +16,8 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   browser boundaries.
 - [Development](development/README.md): local startup, builds and validation.
 - [Commit messages](development/commits.md): the recommended message convention.
+- [First published Page](product/first-published-page.md): locked MVP decisions,
+  the administrator's golden path and its executable completion gate.
 - [Deferred platform work](TODO.md): explicit trust assumptions and work that
   must be completed before those assumptions change.
 - [Control Pages and provider-managed CMS instances](todo/control-pages-and-provider-managed-cms-instances.md):

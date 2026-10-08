@@ -4,24 +4,25 @@ import { managedNativeElementIssue } from "cms-content/blocs/core/markup/validat
 import { assertCollectionSettingAttributes } from "cms-content/blocs/core/markup/validation/collectionSettings";
 import type { CollectionComponentSettings } from "@bernouy/cms-repository/collections";
 import type { TBloc } from "cms-content/blocs/interfaces/blocs";
+import { parseHTML } from "linkedom";
+import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
+import { blocHostContractIssue } from "cms-content/blocs/core/markup/validation/pageSlotContracts";
 
 /** Minimal reader — `CmsRepository` satisfies it structurally. */
 export type ContentRefsReader = {
-    getBlocsList(options?: {
-        includeInactive?: boolean;
-    }): Promise<
-        Array<{ id: string; nativeElement?: TBloc["nativeElement"]; collectionSettings?: CollectionComponentSettings }>
+    getBlocsList(options?: { includeInactive?: boolean }): Promise<
+        Array<{
+            id: string;
+            nativeElement?: TBloc["nativeElement"];
+            collectionSlots?: TBloc["collectionSlots"];
+            collectionSettings?: CollectionComponentSettings;
+        }>
     >;
 };
 
 /**
- * Reject content that references a bloc tag missing from the repository. The CLI
- * does the same check pre-push; this is the server-side gate that catches saves
- * from the admin UI, direct API calls and any other client. Strict by design —
- * no escape hatch.
- *
- * Skipped on empty content (no refs to verify). The bloc list is fetched only
- * when the content actually contains bloc refs.
+ * Server-side Page grammar gate. Every root is an active Bloc and every child
+ * must satisfy the direct parent's managed-native or named-slot contract.
  */
 export async function assertContentRefsExist(repository: ContentRefsReader, content: string): Promise<void> {
     if (!content) {
@@ -29,14 +30,9 @@ export async function assertContentRefsExist(repository: ContentRefsReader, cont
     }
 
     const { blocs: referencedBlocs } = extractRefs(content);
-    if (referencedBlocs.size === 0) {
-        return;
-    }
-
     const missing: string[] = [];
-
-    const registeredBlocs = await repository.getBlocsList({ includeInactive: true });
-    const known = new Set(registeredBlocs.map((bloc) => bloc.id));
+    const registeredBlocs = await repository.getBlocsList();
+    const known = new Map(registeredBlocs.map((bloc) => [bloc.id, bloc]));
     for (const tag of referencedBlocs) {
         if (!known.has(tag)) {
             missing.push(`bloc "${tag}"`);
@@ -44,7 +40,7 @@ export async function assertContentRefsExist(repository: ContentRefsReader, cont
     }
 
     if (missing.length > 0) {
-        throw new ContentValidationError("content", `unknown reference(s): ${missing.join(", ")}`);
+        throw new ContentValidationError("content", `unknown or inactive reference(s): ${missing.join(", ")}`);
     }
 
     const managedIssue = managedNativeElementIssue(
@@ -57,4 +53,30 @@ export async function assertContentRefsExist(repository: ContentRefsReader, cont
         throw new ContentValidationError("content", managedIssue);
     }
     assertCollectionSettingAttributes(content, registeredBlocs);
+
+    const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
+    document.body.innerHTML = content;
+    for (const node of Array.from(document.body.childNodes)) {
+        if (node.nodeType === 3 && node.textContent?.trim()) {
+            throw new ContentValidationError("content", "Page root text must be owned by a Bloc slot");
+        }
+        if (node.nodeType !== 1) {
+            continue;
+        }
+        const root = node as Element;
+        if (!isValidCustomElementTag(root.localName)) {
+            throw new ContentValidationError(
+                "content",
+                `native <${root.localName}> cannot be a Page root; add it through a Bloc contract`,
+            );
+        }
+        const bloc = known.get(root.localName);
+        if (!bloc) {
+            throw new ContentValidationError("content", `unavailable Page root Bloc <${root.localName}>`);
+        }
+        const issue = blocHostContractIssue(root, bloc, known);
+        if (issue) {
+            throw new ContentValidationError("content", issue);
+        }
+    }
 }

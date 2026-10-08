@@ -62,10 +62,13 @@ A `composition` has only `definition.json`, `lightdom.html` and optional
 server expands it before rendering and loads the transitive component runtimes
 used by its markup.
 
-`default.html` supplies initial editable Page content. `lightdom.html` is a
-fixed reusable assembly. Changing either in a later release does not silently
-rewrite arbitrary site-owned Page content; collection migrations describe
-breaking stored-data changes.
+`default.html` supplies initial editable Page content and therefore follows the
+same strict grammar as a stored Page: every child targets a declared slot and
+matches its acceptance and cardinality contract. `lightdom.html` is a fixed,
+code-owned reusable assembly, so it may contain the native semantic structure
+needed by the Bloc. Changing either in a later release does not silently rewrite
+arbitrary site-owned Page content; collection migrations describe breaking
+stored-data changes.
 
 ## Runtime Rules
 
@@ -105,6 +108,21 @@ paragraphs, images and SVGs use typed platform policies; arbitrary `class`,
 `style`, event handlers, free-form `data-*` and unvalidated navigation are not
 author settings. Rich text remains Page-owned HTML in a declared slot rather
 than an HTML string setting.
+
+## Page Boundary
+
+The CMS supplies no implicit Page wrapper or native editorial vocabulary. An
+empty Page contains an empty document. Every non-empty root must be an active
+Bloc available from the site's installed catalogue. Native elements such as
+headings, paragraphs, sections, forms and images enter editable Page content
+only through a Bloc's managed-native or named-slot contract.
+
+Named slots enforce `accepts`, `min` and `max` when a default is admitted, a
+Page is created or updated, and an existing draft is published. `any-component`
+accepts components, not compositions. An inactive or uninstalled Bloc is not
+valid for a new save or publication; migrate dependent Pages before removing
+it. Native markup remains available to Bloc authors inside fixed Light DOM and
+Shadow DOM, subject to the corresponding collection safety rules.
 
 ## Build And Validation
 

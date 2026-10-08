@@ -72,7 +72,11 @@ test("migrates an installed collection asset reference and restores it on rollba
     const repository = new ValidatingCmsRepository(
         withInstalledCollections(new InMemoryCmsRepository(), collections, "site"),
     );
-    await repository.insertPage("/asset", "Asset", '<img src="{{ cms.asset.atlas.old.svg }}" alt="Asset">');
+    await repository.insertPage(
+        "/asset",
+        "Asset",
+        '<atlas-card><img slot="media" src="{{ cms.asset.atlas.old.svg }}" alt="Asset"></atlas-card>',
+    );
     const inserted = (await repository.getPage("/asset"))!;
     const storage = new MemoryCollectionMigrationStorage();
     const service = new CollectionMigrationService(repository, collections, storage);
@@ -82,14 +86,14 @@ test("migrates an installed collection asset reference and restores it on rollba
     expect(plan.resources).toContainEqual(expect.objectContaining({ kind: "asset", id: "old.svg" }));
     const completed = await service.execute("site", [{ digest: next.digest, repositoryId: "local" }], 1);
     expect(await repository.getPageById(inserted.id)).toMatchObject({
-        content: '<img src="{{ cms.asset.atlas.new.svg }}" alt="Asset">',
+        content: '<atlas-card><img slot="media" src="{{ cms.asset.atlas.new.svg }}" alt="Asset"></atlas-card>',
         revision: 2,
     });
     expect(await collections.getReleaseAsset(next.digest, "new.svg")).toEqual(newBytes);
 
     await service.rollback("site", completed.id);
     expect(await repository.getPageById(inserted.id)).toMatchObject({
-        content: '<img src="{{ cms.asset.atlas.old.svg }}" alt="Asset">',
+        content: '<atlas-card><img slot="media" src="{{ cms.asset.atlas.old.svg }}" alt="Asset"></atlas-card>',
         revision: 3,
     });
     expect(await collections.getReleaseAsset(previous.digest, "old.svg")).toEqual(oldBytes);
@@ -448,10 +452,10 @@ function release(version: string, id: string): Record<string, unknown> {
                 kind: "component",
                 id,
                 label: "bloc.label",
-                shadowdom: "<div></div>",
+                shadowdom: '<div><slot name="media"></slot></div>',
                 uses: [],
                 requires: [],
-                slots: {},
+                slots: { media: { accepts: [{ kind: "media" }] } },
             },
         ],
     };

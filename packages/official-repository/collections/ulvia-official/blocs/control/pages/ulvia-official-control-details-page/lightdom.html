@@ -1,0 +1,126 @@
+<ulvia-official-control-workspace>
+    <h1 slot="title">{{ cms.i18n.ulvia-official.ui-page-details }}</h1>
+    <p slot="description">{{ cms.i18n.ulvia-official.ui-update-the-shared-page-document-through-revision-checked-core-capabilities }}</p>
+        <ulvia-official-action slot="actions" variant="outline" tone="secondary"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'>{{ cms.i18n.ulvia-official.ui-back-to-pages }}</a></ulvia-official-action>
+        <section id="page-detail" slot="content" cms-source="/.cms/call/ulvia.cms.pages/get as selected" cms-source-method="POST" cms-source-body='{"id":{"from":"queryParam","name":"id"}}'>
+            <div role="status" aria-live="polite" cms-condition="$source.loading">
+                <h2>{{ cms.i18n.ulvia-official.ui-loading-page }}</h2>
+                <p>{{ cms.i18n.ulvia-official.ui-the-latest-revision-is-being-read-from-the-core }}</p>
+            </div>
+            <div role="alert" cms-condition="$source.error">
+                <h2>{{ cms.i18n.ulvia-official.ui-page-unavailable }}</h2>
+                <p>{{ cms.i18n.ulvia-official.ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable }}</p>
+            </div>
+            <div cms-condition="$source.loaded">
+                <ulvia-official-surface appearance="elevated" padding="lg">
+                    <form slot="content" cms-source="/.cms/call/ulvia.cms.pages/update as saved" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#page-detail" cms-source-success-reset="false">
+                        <input type="hidden" name="id" value="{{ selected.id }}">
+                        <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
+                        <ulvia-official-stack gap="lg">
+                            <header slot="items">
+                                <p>{{ selected.surface }} {{ cms.i18n.ulvia-official.ui-page-revision }} {{ selected.revision }}</p>
+                                <h2>{{ selected.title }}</h2>
+                                <code>{{ selected.path }}</code>
+                            </header>
+                            <ulvia-official-field slot="items" label-position="top">
+                                <label slot="label" for="page-title">{{ cms.i18n.ulvia-official.ui-title }}</label>
+                                <span slot="description">{{ cms.i18n.ulvia-official.ui-displayed-in-control-and-used-as-the-default-document-title }}</span>
+                                <ulvia-official-input slot="control">
+                                    <input id="page-title" type="text" name="title" value="{{ selected.title }}" maxlength="70" autocomplete="off" required>
+                                </ulvia-official-input>
+                            </ulvia-official-field>
+                            <ulvia-official-field slot="items" label-position="top">
+                                <label slot="label" for="page-description">{{ cms.i18n.ulvia-official.ui-description }}</label>
+                                <ulvia-official-textarea slot="control">
+                                    <textarea id="page-description" name="description" maxlength="200" rows="3">{{ selected.description }}</textarea>
+                                </ulvia-official-textarea>
+                            </ulvia-official-field>
+                            <ulvia-official-form-actions slot="items" align="end">
+                                <p slot="actions" role="status" aria-live="polite" cms-condition="$source.loading">{{ cms.i18n.ulvia-official.ui-saving }}</p>
+                                <p slot="actions" role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying }}</p>
+                                <ulvia-official-action slot="actions" variant="filled" tone="primary"><button type="submit">{{ cms.i18n.ulvia-official.ui-save-changes }}</button></ulvia-official-action>
+                            </ulvia-official-form-actions>
+                        </ulvia-official-stack>
+                    </form>
+                </ulvia-official-surface>
+                <ulvia-official-surface appearance="elevated" padding="lg">
+                    <ulvia-official-page-editor slot="content" page-id="{{ selected.id }}" revision="{{ selected.revision }}" surface="{{ selected.surface }}" document="{{ selected.content }}"></ulvia-official-page-editor>
+                </ulvia-official-surface>
+                <ulvia-official-surface appearance="outlined" padding="lg">
+                    <ulvia-official-stack slot="content" gap="lg">
+                        <header slot="items">
+                            <h2>{{ cms.i18n.ulvia-official.ui-routes }}</h2>
+                            <p>{{ cms.i18n.ulvia-official.ui-each-language-owns-a-local-path-the-primary-language-determines-the-canonical-page-path }}</p>
+                        </header>
+                        <form slot="items" cms-repeat="selected.routes as route" cms-source="/.cms/call/ulvia.cms.pages/update-route" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#page-detail" cms-source-success-reset="false">
+                            <input type="hidden" name="id" value="{{ selected.id }}">
+                            <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
+                            <input type="hidden" name="language" value="{{ route.language }}">
+                            <ulvia-official-control-group layout="joined">
+                                <ulvia-official-field slot="control" label-position="top">
+                                    <label slot="label" for="route-{{ route.language }}">{{ route.language }} {{ cms.i18n.ulvia-official.ui-route }}</label>
+                                    <ulvia-official-input slot="control"><input id="route-{{ route.language }}" type="text" name="path" value="{{ route.path }}" maxlength="2048" autocomplete="off" required></ulvia-official-input>
+                                </ulvia-official-field>
+                                <ulvia-official-action slot="trailing" variant="outline" tone="secondary"><button type="submit">{{ cms.i18n.ulvia-official.ui-save-route }}</button></ulvia-official-action>
+                            </ulvia-official-control-group>
+                        </form>
+                    </ulvia-official-stack>
+                </ulvia-official-surface>
+                <ulvia-official-surface appearance="outlined" padding="lg">
+                    <ulvia-official-stack slot="content" gap="lg">
+                        <header slot="items">
+                            <h2>{{ cms.i18n.ulvia-official.ui-search-metadata }}</h2>
+                            <p>{{ cms.i18n.ulvia-official.ui-empty-values-inherit-the-page-title-and-description }}</p>
+                        </header>
+                        <form slot="items" cms-repeat="selected.seoEntries as entry" cms-source="/.cms/call/ulvia.cms.pages/update-seo" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#page-detail" cms-source-success-reset="false">
+                            <input type="hidden" name="id" value="{{ selected.id }}">
+                            <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
+                            <input type="hidden" name="language" value="{{ entry.language }}">
+                            <ulvia-official-stack gap="md">
+                                <h3 slot="items">{{ entry.language }}</h3>
+                                <ulvia-official-field slot="items" label-position="top">
+                                    <label slot="label" for="seo-title-{{ entry.language }}">{{ cms.i18n.ulvia-official.ui-search-title }}</label>
+                                    <ulvia-official-input slot="control"><input id="seo-title-{{ entry.language }}" type="text" name="title" value="{{ entry.title }}" maxlength="70" autocomplete="off"></ulvia-official-input>
+                                </ulvia-official-field>
+                                <ulvia-official-field slot="items" label-position="top">
+                                    <label slot="label" for="seo-description-{{ entry.language }}">{{ cms.i18n.ulvia-official.ui-search-description }}</label>
+                                    <ulvia-official-textarea slot="control"><textarea id="seo-description-{{ entry.language }}" name="description" maxlength="200" rows="3">{{ entry.description }}</textarea></ulvia-official-textarea>
+                                </ulvia-official-field>
+                                <ulvia-official-form-actions slot="items" align="end"><ulvia-official-action slot="actions" variant="outline" tone="secondary"><button type="submit">{{ cms.i18n.ulvia-official.ui-save-metadata }}</button></ulvia-official-action></ulvia-official-form-actions>
+                            </ulvia-official-stack>
+                        </form>
+                    </ulvia-official-stack>
+                </ulvia-official-surface>
+                <ulvia-official-surface appearance="outlined" padding="lg">
+                    <ulvia-official-cluster slot="content" align="center" justify="between">
+                        <div slot="items">
+                            <h2>{{ cms.i18n.ulvia-official.ui-publication }}</h2>
+                            <ulvia-official-badge cms-condition="selected.visible" tone="success"><span slot="label">{{ cms.i18n.ulvia-official.ui-published }}</span></ulvia-official-badge>
+                            <ulvia-official-badge cms-condition="selected.visible == false" tone="neutral"><span slot="label">{{ cms.i18n.ulvia-official.ui-draft }}</span></ulvia-official-badge>
+                        </div>
+                        <form slot="items" cms-condition="selected.visible == false" cms-source="/.cms/call/ulvia.cms.pages/publish as publication" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#page-detail">
+                            <input type="hidden" name="id" value="{{ selected.id }}">
+                            <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
+                            <input type="hidden" name="visible" value="true" cms-form-value-type="boolean">
+                            <ulvia-official-action variant="filled" tone="primary"><button type="submit">{{ cms.i18n.ulvia-official.ui-publish }}</button></ulvia-official-action>
+                        </form>
+                        <form slot="items" cms-condition="selected.visible" cms-source="/.cms/call/ulvia.cms.pages/publish as publication" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#page-detail">
+                            <input type="hidden" name="id" value="{{ selected.id }}">
+                            <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
+                            <input type="hidden" name="visible" value="false" cms-form-value-type="boolean">
+                            <ulvia-official-action variant="outline" tone="secondary"><button type="submit">{{ cms.i18n.ulvia-official.ui-return-to-draft }}</button></ulvia-official-action>
+                        </form>
+                    </ulvia-official-cluster>
+                </ulvia-official-surface>
+                <ulvia-official-surface appearance="outlined" padding="lg">
+                    <h2 slot="content">{{ cms.i18n.ulvia-official.ui-danger-zone }}</h2>
+                    <p slot="content">{{ cms.i18n.ulvia-official.ui-deletion-is-revision-checked-and-cannot-silently-remove-a-newer-edit }}</p>
+                    <form slot="content" cms-source="/.cms/call/ulvia.cms.pages/delete as deletion" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" data-cms-success-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'>
+                        <input type="hidden" name="id" value="{{ selected.id }}">
+                        <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
+                        <ulvia-official-action variant="outline" tone="danger"><button type="submit">{{ cms.i18n.ulvia-official.ui-delete-page }}</button></ulvia-official-action>
+                    </form>
+                </ulvia-official-surface>
+            </div>
+        </section>
+</ulvia-official-control-workspace>

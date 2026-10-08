@@ -46,6 +46,7 @@ export async function validateTargetPages(
     const targetBlocs = targets.flatMap(({ artifact }) =>
         artifact.release.blocs.map((bloc) => ({
             id: bloc.id,
+            collectionSlots: bloc.slots,
             surfaces: bloc.surfaces,
             uses: bloc.uses,
             ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),

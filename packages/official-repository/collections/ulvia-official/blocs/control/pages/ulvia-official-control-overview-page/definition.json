@@ -1,0 +1,41 @@
+{
+    "kind": "composition",
+    "id": "ulvia-official-control-overview-page",
+    "label": "page.overview.name",
+    "description": "page.overview.description",
+    "category": "bloc.category.administration",
+    "internal": true,
+    "surfaces": [
+        "control"
+    ],
+    "uses": [
+        "ulvia-official-action",
+        "ulvia-official-badge",
+        "ulvia-official-cluster",
+        "ulvia-official-control-workspace",
+        "ulvia-official-field",
+        "ulvia-official-form-actions",
+        "ulvia-official-grid",
+        "ulvia-official-input",
+        "ulvia-official-stack",
+        "ulvia-official-surface"
+    ],
+    "requires": [
+        {
+            "contractId": "ulvia.cms.pages",
+            "capabilityId": "list",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.pages",
+            "capabilityId": "create",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.pages",
+            "capabilityId": "rename",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {}
+}

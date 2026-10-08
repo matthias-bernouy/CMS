@@ -339,7 +339,7 @@ describe("collection release parsing", () => {
                 surface: "control",
                 defaultPath: "/admin",
                 name: "page.overview.name",
-                document: { html: "<section>{{ page.title }}</section>" },
+                document: { html: "<atlas-panel></atlas-panel>" },
             },
         ];
         source.exports = { blocs: ["atlas-panel"], themeTokens: ["accent"], pages: ["overview"] };
@@ -355,6 +355,10 @@ describe("collection release parsing", () => {
                 },
             },
         ];
+        (((source.blocs as Record<string, unknown>[])[0]!.slots as Record<string, any>).body.accepts as any[]).push({
+            kind: "component",
+            tag: "ulvia-official-button",
+        });
         (source.blocs as Record<string, unknown>[])[1]!.uses = ["atlas-panel", "ulvia-official-button"];
         (source.blocs as Record<string, unknown>[])[1]!.lightdom =
             '<atlas-panel><slot name="main" slot="body"></slot><ulvia-official-button slot="body"></ulvia-official-button></atlas-panel>';

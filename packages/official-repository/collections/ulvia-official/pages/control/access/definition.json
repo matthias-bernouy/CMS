@@ -5,10 +5,5 @@
     "name": "page.access.name",
     "icon": "users",
     "description": "page.access.description",
-    "requires": [
-        { "contractId": "ulvia.cms.access", "capabilityId": "delete-user", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.access", "capabilityId": "overview", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.access", "capabilityId": "set-administrator", "versionRange": "^1.0.0" },
-        { "contractId": "ulvia.cms.access", "capabilityId": "update-login-provider", "versionRange": "^1.0.0" }
-    ]
+    "requires": []
 }

@@ -16,10 +16,13 @@ export type BlocListItemResponse = {
     id: string;
     name: string;
     group: string;
+    catalogueOrder?: number;
     description: string;
     thumbnail?: TBloc["thumbnail"];
     compositionHTML?: string;
     componentHTML?: string;
+    defaultContent?: string;
+    collectionSlots?: TBloc["collectionSlots"];
     collectionSettings?: TBloc["collectionSettings"];
     internal?: boolean;
     surfaces?: TBloc["surfaces"];

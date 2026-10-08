@@ -26,9 +26,12 @@ export function projectBlocList(records: BlocRecord[], options: BlocListOptions 
                       id: record.tag,
                       name: bloc.name,
                       group: bloc.group || "",
+                      ...(bloc.catalogueOrder === undefined ? {} : { catalogueOrder: bloc.catalogueOrder }),
                       description: bloc.description || "",
                       ...(bloc.compositionHTML ? { compositionHTML: bloc.compositionHTML } : {}),
                       ...(bloc.componentHTML ? { componentHTML: bloc.componentHTML } : {}),
+                      ...(bloc.defaultContent ? { defaultContent: bloc.defaultContent } : {}),
+                      ...(bloc.collectionSlots ? { collectionSlots: structuredClone(bloc.collectionSlots) } : {}),
                       ...(bloc.collectionSettings
                           ? { collectionSettings: structuredClone(bloc.collectionSettings) }
                           : {}),

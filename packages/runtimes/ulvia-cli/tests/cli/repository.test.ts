@@ -30,7 +30,7 @@ test("local repository lists immutable metadata and serves matching release byte
             publisherId: "ulvia.official",
             collectionId: "ulvia-official",
             version,
-            blocCount: 83,
+            blocCount: 88,
             hasTheme: true,
         });
         const bundle = await source.get(entries[0]!);
@@ -39,7 +39,7 @@ test("local repository lists immutable metadata and serves matching release byte
         );
         expect(bundle.assets).toEqual([]);
         const release = bundle.release;
-        expect(release.blocs).toHaveLength(83);
+        expect(release.blocs).toHaveLength(88);
         expect(release.exports?.blocs).toHaveLength(69);
         expect(release.exports?.themeTokens).toHaveLength(119);
         expect(release.theme?.categories.flatMap((category) => category.tokens)).toHaveLength(119);

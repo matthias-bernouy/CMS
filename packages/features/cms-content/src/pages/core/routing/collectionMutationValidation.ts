@@ -1,4 +1,5 @@
 import type { CollectionStore, InstalledCollection } from "@bernouy/cms-repository/collections/installations";
+import { pageReferenceSources } from "@bernouy/cms-repository/collections";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 import { pageContentReferences } from "cms-content/pages/core/routing/links";
 
@@ -42,7 +43,8 @@ export async function validateCollectionMutationPageLinks(
     }
     for (const installation of candidate.collections) {
         for (const page of installation.release.pages ?? []) {
-            for (const reference of pageContentReferences(page.document.html)) {
+            const sources = [page.document.html, ...pageReferenceSources(installation.release, page.uses)];
+            for (const reference of sources.flatMap(pageContentReferences)) {
                 if (reference.kind !== "site") {
                     continue;
                 }

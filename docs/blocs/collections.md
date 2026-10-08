@@ -123,6 +123,33 @@ inside Shadow DOM, and permits bindings only inside Light DOM. Shadow shells
 also reject visible text, links, headings and images, so crawlable content stays
 in Light DOM.
 
+### Page document grammar
+
+CmsCore does not inject a default Page Bloc or wrapper. A blank Page has an
+empty document. Every non-empty Page root must be a Bloc from the active
+installed catalogue; native roots such as `<main>`, `<section>` or `<div>` are
+invalid. Collection `page.html` files follow the same rule and may root only in
+a Bloc admitted with the collection or imported explicitly.
+
+Editable native HTML is admitted only below a Bloc contract:
+
+- `plain-text`, `rich-text` and `media` accept their bounded native profiles;
+- `component` accepts the declared component tag;
+- `any-component` accepts components, never compositions;
+- `min` and `max` apply to direct assigned children.
+
+These rules are checked for `default.html`, collection Pages, Page creation and
+updates, publication of an existing draft, and collection migration planning
+and rollback. Inactive and uninstalled Blocs are excluded from the authoring
+grammar. Existing content must be migrated before its Bloc is deactivated or
+removed.
+
+This editable boundary does not prohibit native structure authored inside a
+Bloc. Fixed `lightdom.html` may contain semantic native HTML and bindings;
+`shadowdom.html` remains a static encapsulated shell. Fixed nested component
+placements still target declared slots, and capability forms in fixed Light DOM
+remain subject to controlled transport validation.
+
 A component may instead declare one page-owned managed native child:
 
 ```json

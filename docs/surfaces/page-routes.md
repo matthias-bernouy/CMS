@@ -19,10 +19,11 @@ variant.
 
 The underlying repository supports revision-checked path matrices and localized
 SEO. The former `/api/page/seo` route and its static panel have been removed.
-The current `ulvia.cms.pages@1.0.0` Control slice creates a Page with one path
-and manages title, description, content, tags and publication; it does not yet
-expose per-Page route or localized-SEO editing. That future UI must call a
-versioned capability rather than revive a private `/api/*` transport.
+The current `ulvia.cms.pages@1.0.0` Control slice creates a Page, manages its
+title, description, content, tags, publication, per-language routes and
+localized SEO, and exposes the admitted Bloc catalogue used by the Page editor.
+All of those flows use versioned capabilities rather than private `/api/*`
+transports.
 
 The default language requires a path; other configured languages may have none.
 Only the default language and active additional languages are publicly served.

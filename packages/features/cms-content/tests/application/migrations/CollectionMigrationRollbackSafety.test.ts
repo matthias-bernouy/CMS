@@ -17,7 +17,12 @@ test("rejects rollback when a page created later needs a target-only bloc", asyn
 test("rejects rollback when a later page needs a target-only theme token or text", async () => {
     const fixture = await rollbackFixture();
     const completed = await fixture.service.execute("site", [{ digest: fixture.next.digest }], 1);
-    await fixture.repository.insertPage("/new", "New", "<p>var(--atlas-brand) {{ cms.i18n.atlas.new-title }}</p>");
+    await fixture.repository.createBloc(stableShell());
+    await fixture.repository.insertPage(
+        "/new",
+        "New",
+        '<stable-shell><p slot="content">var(--atlas-brand) {{ cms.i18n.atlas.new-title }}</p></stable-shell>',
+    );
 
     await expect(fixture.service.rollback("site", completed.id)).rejects.toThrow("Rollback would invalidate page");
     expect((await fixture.collections.snapshot("site")).collections[0]!.digest).toBe(fixture.next.digest);
@@ -26,7 +31,12 @@ test("rejects rollback when a later page needs a target-only theme token or text
 test("rejects rollback when a later page needs only a target collection text", async () => {
     const fixture = await rollbackFixture();
     const completed = await fixture.service.execute("site", [{ digest: fixture.next.digest }], 1);
-    await fixture.repository.insertPage("/new", "New", "<p>{{ cms.i18n.atlas.new-title }}</p>");
+    await fixture.repository.createBloc(stableShell());
+    await fixture.repository.insertPage(
+        "/new",
+        "New",
+        '<stable-shell><p slot="content">{{ cms.i18n.atlas.new-title }}</p></stable-shell>',
+    );
 
     await expect(fixture.service.rollback("site", completed.id)).rejects.toThrow(
         "references collection text atlas.new-title",
@@ -37,11 +47,13 @@ test("rejects rollback when a later page needs only a target collection text", a
 test("keeps compatible pages created after migration when rollback succeeds", async () => {
     const fixture = await rollbackFixture();
     const completed = await fixture.service.execute("site", [{ digest: fixture.next.digest }], 1);
-    await fixture.repository.insertPage("/new", "New", "<p>Independent content</p>");
+    await fixture.repository.insertPage("/new", "New", "");
 
     const rolledBack = await fixture.service.rollback("site", completed.id);
     expect(rolledBack.status).toBe("rolled-back");
-    expect(await fixture.repository.getPage("/new")).toMatchObject({ content: "<p>Independent content</p>" });
+    expect(await fixture.repository.getPage("/new")).toMatchObject({
+        content: "",
+    });
     expect((await fixture.collections.snapshot("site")).collections[0]!.digest).not.toBe(fixture.next.digest);
 });
 
@@ -120,6 +132,18 @@ async function rollbackFixture() {
     };
 }
 
+function stableShell() {
+    return {
+        id: "stable-shell",
+        name: "Stable shell",
+        group: "Test",
+        description: "",
+        viewJS: "",
+        collectionSlots: { content: { accepts: [{ kind: "rich-text" as const, profile: "prose" as const }] } },
+        ownership: { kind: "code-managed" as const },
+    };
+}
+
 function release(version: string, blocId: string, extended: boolean): Record<string, unknown> {
     return {
         kind: "collection",
@@ -159,10 +183,10 @@ function release(version: string, blocId: string, extended: boolean): Record<str
                 kind: "component",
                 id: blocId,
                 label: "bloc.label",
-                shadowdom: "<div></div>",
+                shadowdom: '<div><slot name="content"></slot></div>',
                 uses: [],
                 requires: [],
-                slots: {},
+                slots: { content: { accepts: [{ kind: "rich-text", profile: "prose" }] } },
             },
         ],
         theme: {

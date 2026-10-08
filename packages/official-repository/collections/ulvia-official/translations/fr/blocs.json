@@ -1,6 +1,8 @@
 {
     "bloc.document-preview.description": "Un aperçu isolé du document d’une Page qui n’exécute jamais ses scripts.",
     "bloc.document-preview.label": "Aperçu du document de la Page",
+    "bloc.page-editor.description": "Composez une Page à partir des Blocs installés sur ce site",
+    "bloc.page-editor.label": "Éditeur de Page",
     "bloc.action.description": "Un bouton natif ou un lien de navigation adapté au thème",
     "bloc.action.label": "Action",
     "bloc.badge.description": "Un libellé compact d’état ou de catégorie avec des tons de retour accessibles",

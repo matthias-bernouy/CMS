@@ -27,7 +27,7 @@ describe("site Page surface ownership", () => {
 
     test("creates a Control Page with immutable collection-copy provenance", async () => {
         const repository = new ValidatingCmsRepository(new InMemoryCmsRepository());
-        await repository.insertPage("/admin/overview", "Overview", "<main>Control</main>", {
+        await repository.insertPage("/admin/overview", "Overview", "", {
             surface: "control",
             origin,
         });

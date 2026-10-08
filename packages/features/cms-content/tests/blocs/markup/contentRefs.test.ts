@@ -20,19 +20,18 @@ describe("assertContentRefsExist", () => {
         await assertContentRefsExist(makeSystem(), "");
     });
 
-    test("noop when content has no custom-element refs", async () => {
-        await assertContentRefsExist(makeSystem(), "<p>hello</p><div>x</div>");
+    test("rejects native Page roots", async () => {
+        await expect(assertContentRefsExist(makeSystem(), "<p>hello</p><div>x</div>")).rejects.toThrow(
+            "cannot be a Page root",
+        );
     });
 
     test("passes when every bloc ref is registered", async () => {
         const cms = makeSystem({ blocs: ["fixture-card"] });
-        await assertContentRefsExist(
-            cms,
-            `<fixture-card></fixture-card><w13c-reserved-example data-id="header"></w13c-reserved-example>`,
-        );
+        await assertContentRefsExist(cms, `<fixture-card></fixture-card>`);
     });
 
-    test("checks installed inactive blocs instead of the authoring catalogue", async () => {
+    test("rejects inactive Blocs outside the authoring catalogue", async () => {
         let includeInactive = false;
         const cms = {
             getBlocsList: async (options?: { includeInactive?: boolean }) => {
@@ -41,14 +40,16 @@ describe("assertContentRefsExist", () => {
             },
         };
 
-        await assertContentRefsExist(cms, "<basic-button></basic-button>");
-        expect(includeInactive).toBeTrue();
+        await expect(assertContentRefsExist(cms, "<basic-button></basic-button>")).rejects.toThrow(
+            "unknown or inactive",
+        );
+        expect(includeInactive).toBeFalse();
     });
 
     test("rejects unknown bloc tag", async () => {
         const cms = makeSystem({ blocs: ["fixture-card"] });
         await expect(assertContentRefsExist(cms, `<fixture-mystery></fixture-mystery>`)).rejects.toThrow(
-            /unknown reference\(s\): bloc "fixture-mystery"/,
+            /unknown or inactive reference\(s\): bloc "fixture-mystery"/,
         );
     });
 
@@ -101,15 +102,14 @@ describe("assertContentRefsExist", () => {
         ).rejects.toThrow(/bloc "fixture-a".*bloc "fixture-b"/);
     });
 
-    test("ignores reserved system prefixes (w13c-*, cms-*)", async () => {
+    test("rejects reserved system elements as Page roots", async () => {
         const cms = makeSystem();
-        await assertContentRefsExist(
-            cms,
-            `<cms-binding-core></cms-binding-core><w13c-fixed-admin-layout></w13c-fixed-admin-layout>`,
+        await expect(assertContentRefsExist(cms, `<cms-binding-core></cms-binding-core>`)).rejects.toThrow(
+            "unavailable Page root Bloc",
         );
     });
 
-    test("does not query bloc list when content has no bloc refs", async () => {
+    test("queries the active catalogue for every non-empty Page", async () => {
         let blocCalls = 0;
         const cms: any = {
             getBlocsList: async () => {
@@ -117,7 +117,48 @@ describe("assertContentRefsExist", () => {
                 return [];
             },
         };
-        await assertContentRefsExist(cms, `<w13c-reserved-example data-id="header"></w13c-reserved-example>`);
-        expect(blocCalls).toBe(0);
+        await expect(
+            assertContentRefsExist(cms, `<w13c-reserved-example data-id="header"></w13c-reserved-example>`),
+        ).rejects.toThrow();
+        expect(blocCalls).toBe(1);
+    });
+
+    test("enforces named slot accepts and cardinality", async () => {
+        const cms: any = {
+            getBlocsList: async () => [
+                {
+                    id: "fixture-card",
+                    collectionSlots: {
+                        title: { accepts: [{ kind: "rich-text", profile: "inline" }], min: 1, max: 1 },
+                        actions: { accepts: [{ kind: "any-component" }], max: 1 },
+                    },
+                },
+                { id: "fixture-action", collectionSlots: {} },
+                {
+                    id: "fixture-composition",
+                    compositionHTML: "<fixture-action></fixture-action>",
+                    collectionSlots: {},
+                },
+            ],
+        };
+        await assertContentRefsExist(
+            cms,
+            '<fixture-card><h2 slot="title">Title</h2><fixture-action slot="actions"></fixture-action></fixture-card>',
+        );
+        await expect(
+            assertContentRefsExist(cms, '<fixture-card><p slot="missing">Text</p></fixture-card>'),
+        ).rejects.toThrow("does not declare slot");
+        await expect(
+            assertContentRefsExist(cms, '<fixture-card><fixture-action slot="title"></fixture-action></fixture-card>'),
+        ).rejects.toThrow("does not accept Bloc");
+        await expect(
+            assertContentRefsExist(
+                cms,
+                '<fixture-card><fixture-composition slot="actions"></fixture-composition></fixture-card>',
+            ),
+        ).rejects.toThrow("does not accept Bloc");
+        await expect(assertContentRefsExist(cms, "<fixture-card></fixture-card>")).rejects.toThrow(
+            "requires at least 1 item",
+        );
     });
 });

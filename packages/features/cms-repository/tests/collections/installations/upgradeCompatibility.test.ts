@@ -79,7 +79,9 @@ test("upgrades preserve Page and Bloc surface contracts", async () => {
             surface: "control",
             defaultPath: "/admin",
             name: "page.overview.name",
-            document: { html: "<section>{{ page.title }}</section>" },
+            document: {
+                html: `<${(initialSource.blocs as Record<string, unknown>[])[0]!.id}></${(initialSource.blocs as Record<string, unknown>[])[0]!.id}>`,
+            },
         },
     ];
     const store = new CollectionStore(new MemoryCollectionStorage());
@@ -95,7 +97,7 @@ test("upgrades preserve Page and Bloc surface contracts", async () => {
 
     const narrowedBloc = structuredClone(initialSource);
     narrowedBloc.version = "1.2.0";
-    (narrowedBloc.blocs as Record<string, unknown>[])[0]!.surfaces = ["delivery"];
+    (narrowedBloc.blocs as Record<string, unknown>[]).find(({ id }) => id === "atlas-page")!.surfaces = ["delivery"];
     const blocArtifact = await store.importRelease(narrowedBloc);
     await expect(store.upgrade("site", blocArtifact.digest, 1, "local")).rejects.toThrow("Bloc surfaces");
 });

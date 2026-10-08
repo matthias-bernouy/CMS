@@ -31,6 +31,8 @@ export async function validateTargetSiteResources(
     const targetBlocs = targets.flatMap(({ artifact }) =>
         artifact.release.blocs.map((bloc) => ({
             id: bloc.id,
+            collectionSlots: bloc.slots,
+            ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
             ...(bloc.kind === "component" && bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
             ...(bloc.kind === "component" && bloc.settings ? { collectionSettings: bloc.settings } : {}),
         })),

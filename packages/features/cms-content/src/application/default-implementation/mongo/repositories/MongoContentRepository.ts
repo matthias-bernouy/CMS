@@ -200,7 +200,7 @@ export class MongoContentRepository extends MongoBlocRepository {
         return documents.map((document) => fromPageDoc(document)!);
     }
 
-    async insertPage(path: string, title: string, content = "<p></p>", options: PageCreateOptions = {}): Promise<void> {
+    async insertPage(path: string, title: string, content = "", options: PageCreateOptions = {}): Promise<void> {
         return withPageRouteWrite(this.system, async (system) => {
             const surface = options.surface ?? "delivery";
             const language = system.site.language;

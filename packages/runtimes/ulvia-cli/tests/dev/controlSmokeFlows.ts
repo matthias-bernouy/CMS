@@ -1,12 +1,14 @@
 import type { Page } from "playwright";
+import { mutatePages, verifyPublishedPage } from "./controlSmokePages";
 
 export async function runControlSmoke(
     page: Page,
     credentials: { adminEmail: string; adminPassword: string },
     controlOrigin: string,
+    deliveryOrigin: string,
 ): Promise<void> {
     await signIn(page, credentials, controlOrigin);
-    await mutatePages(page);
+    await mutatePages(page, controlOrigin, deliveryOrigin);
     await mutateCollections(page);
     await mutateSettings(page);
     await mutateProviders(page);
@@ -18,6 +20,7 @@ export async function verifyControlStateAfterRestart(
     page: Page,
     credentials: { adminEmail: string; adminPassword: string },
     controlOrigin: string,
+    deliveryOrigin: string,
 ): Promise<void> {
     await signIn(page, credentials, controlOrigin);
     await page.getByText("Smoke Page", { exact: true }).waitFor();
@@ -39,6 +42,7 @@ export async function verifyControlStateAfterRestart(
     await page.getByText("1 total users.", { exact: true }).waitFor();
 
     await inspectDiagnostics(page);
+    await verifyPublishedPage(page, deliveryOrigin);
 }
 
 async function signIn(
@@ -52,16 +56,6 @@ async function signIn(
     await page.getByLabel("Password").fill(credentials.adminPassword);
     await Promise.all([page.waitForURL(/\/admin$/u), page.getByRole("button", { name: /Sign in with/u }).click()]);
     await page.getByRole("heading", { name: "Pages", exact: true }).waitFor();
-}
-
-async function mutatePages(page: Page): Promise<void> {
-    await page.getByLabel("Title", { exact: true }).fill("Smoke Page");
-    await page.getByLabel("Public path").fill("/smoke-page");
-    await Promise.all([
-        page.waitForURL(/\/admin\/pages\?id=/u),
-        page.getByRole("button", { name: "Create Page" }).click(),
-    ]);
-    await page.getByRole("heading", { name: "Smoke Page" }).waitFor();
 }
 
 async function mutateCollections(page: Page): Promise<void> {

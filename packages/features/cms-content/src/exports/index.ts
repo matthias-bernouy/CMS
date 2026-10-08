@@ -58,6 +58,11 @@ export {
 export { updateCmsPageRoute, updateCmsPageSeo } from "cms-content/pages/core/contracts/presentation";
 export { createCmsPage, type CmsPageCreateInput } from "cms-content/pages/core/contracts/createPage";
 export {
+    getCmsEditorCatalogue,
+    type CmsEditorBloc,
+    type CmsEditorCatalogue,
+} from "cms-content/pages/core/contracts/editorCatalogue";
+export {
     deleteCmsPage,
     publishCmsPage,
     updateCmsPage,

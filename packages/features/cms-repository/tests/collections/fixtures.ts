@@ -53,7 +53,7 @@ export function component(): Record<string, unknown> {
         label: "bloc.panel.label",
         shadowdom: '<section><slot name="body"></slot></section>',
         style: ":host { display: block; }",
-        slots: { body: {} },
+        slots: { body: { accepts: [{ kind: "rich-text", profile: "prose" }] } },
         uses: [],
         requires: [],
     };
@@ -66,7 +66,7 @@ export function composition(): Record<string, unknown> {
         label: "bloc.page.label",
         lightdom: '<atlas-panel><slot name="main" slot="body"><p>{{ copy }}</p></slot></atlas-panel>',
         defaultContent: '<p slot="main"></p>',
-        slots: { main: {} },
+        slots: { main: { accepts: [{ kind: "rich-text", profile: "prose" }] } },
         uses: ["atlas-panel"],
         requires: [],
     };

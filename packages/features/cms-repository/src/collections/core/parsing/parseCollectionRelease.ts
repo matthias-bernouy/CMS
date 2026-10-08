@@ -91,7 +91,8 @@ export function parseCollectionRelease(
                 dependency.imports.blocs.map(({ id }) => [id, ["control", "delivery"] as const] as const),
             ) ?? []),
         ]);
-        const pages = source.pages === undefined ? undefined : parseCollectionPages(source.pages, blocSurfaces, limits);
+        const pages =
+            source.pages === undefined ? undefined : parseCollectionPages(source.pages, blocSurfaces, limits, blocs);
         validateLocalPageSurfaces(pages ?? [], blocs);
         validateCollectionTextReferences(
             blocs,

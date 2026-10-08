@@ -75,7 +75,7 @@ describe("collection authored bundle admission", () => {
                 name: "page.catalog.name",
                 requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
                 document: {
-                    html: '<section cms-source="/.cms/call/catalog.items/item.list" cms-source-method="POST"></section>',
+                    html: '<atlas-panel cms-source="/.cms/call/catalog.items/item.list" cms-source-method="POST"></atlas-panel>',
                 },
             },
         ];

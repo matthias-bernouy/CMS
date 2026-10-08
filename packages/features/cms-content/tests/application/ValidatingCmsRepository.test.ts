@@ -16,7 +16,28 @@ function makeRepo(opts: { blocs?: string[] } = {}) {
         updatePage: async (p: any) => {
             calls.updatePage.push(p);
         },
-        getBlocsList: async () => (opts.blocs ?? []).map((id) => ({ id, name: id, group: "", description: "" })),
+        getBlocsList: async () =>
+            (opts.blocs ?? []).map((id) => ({
+                id,
+                name: id,
+                group: "",
+                description: "",
+                ...(id === "fixture-card"
+                    ? { collectionSlots: { image: { accepts: [{ kind: "media" as const }] } } }
+                    : {}),
+                ...(id === "fixture-newsletter-card"
+                    ? {
+                          collectionSlots: {
+                              title: { accepts: [{ kind: "rich-text" as const, profile: "inline" as const }] },
+                              actions: { accepts: [{ kind: "any-component" as const }] },
+                              illustration: { accepts: [{ kind: "media" as const }] },
+                              label: { accepts: [{ kind: "plain-text" as const }] },
+                              criteria: { accepts: [{ kind: "rich-text" as const, profile: "prose" as const }] },
+                          },
+                      }
+                    : {}),
+                ...(id === "fixture-button" ? { nativeElement: { accepts: ["button" as const] } } : {}),
+            })),
     } as unknown as CmsRepository;
     return { repo: new ValidatingCmsRepository(inner), calls };
 }
@@ -104,6 +125,27 @@ describe("ValidatingCmsRepository — pages", () => {
         await expect(repo.updatePage({ id: "p1", content: "<fixture-ghost></fixture-ghost>" })).rejects.toThrow();
     });
 
+    test("publish revalidates the stored document against the active catalogue", async () => {
+        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const bloc = {
+            id: "fixture-card",
+            name: "Card",
+            group: "",
+            description: "",
+            viewJS: "customElements.define('fixture-card', class extends HTMLElement {})",
+            ownership: { kind: "code-managed" as const },
+            collectionSlots: {},
+        };
+        await repo.createBloc(bloc);
+        await repo.insertPage("/draft", "Draft", "<fixture-card></fixture-card>");
+        const page = (await repo.getPage("/draft"))!;
+        await repo.replaceBloc({ ...bloc, catalogue: "inactive" });
+
+        await expect(repo.updatePage({ id: page.id, visible: true }, page.revision)).rejects.toThrow(
+            "unknown or inactive",
+        );
+    });
+
     test("rejects invalid native HTML at both page-write boundaries", async () => {
         const invalid = [
             ["<span>Root bypass</span>", /explicit component text slot/],
@@ -150,14 +192,14 @@ describe("ValidatingCmsRepository — pages", () => {
     test("accepts immutable cms-files URLs and rejects the removed Source image route", async () => {
         const { repo, calls } = makeRepo({ blocs: ["fixture-card"] });
         const image =
-            '<fixture-card><img src="/.cms/call/ulvia.cms.files/files/photo/generation" alt="Product"></fixture-card>';
+            '<fixture-card><img slot="image" src="/.cms/call/ulvia.cms.files/files/photo/generation" alt="Product"></fixture-card>';
         await repo.updatePage({ id: "p1", content: image });
         expect(calls.updatePage[0].content).toContain("/.cms/call/ulvia.cms.files/files/");
         await expect(
             repo.updatePage({
                 id: "p1",
                 content:
-                    '<fixture-card><img src="/.cms/sources/catalog/image?id={{ product.image }}" alt="Product"></fixture-card>',
+                    '<fixture-card><img slot="image" src="/.cms/sources/catalog/image?id={{ product.image }}" alt="Product"></fixture-card>',
             }),
         ).rejects.toThrow("gateway provider image");
     });
@@ -176,29 +218,19 @@ describe("ValidatingCmsRepository — pages", () => {
     test("persists controlled native content and component light DOM", async () => {
         const { repo, calls } = makeRepo({ blocs: ["fixture-newsletter-card", "fixture-input", "fixture-button"] });
         const content = `
-            <fixture-newsletter-card cms-source="/.cms/call/content/newsletter as newsletterPage">
+            <fixture-newsletter-card>
                 <h2 slot="title">Stay informed</h2>
-                <form slot="form"
-                    cms-source="/.cms/call/newsletter/setSubscription as newsletterSubscription"
-                    cms-source-id="newsletterSubscription"
-                    cms-source-trigger="submit"
-                    cms-source-method="POST"
-                    cms-source-inherit-query="false" cms-source-success-reset="true">
-                    <fixture-input name="email"></fixture-input>
-                    <fixture-button><button type="submit">Subscribe</button></fixture-button>
-                    <p class="status" data-state="loading"
-                        cms-condition="$sources.newsletterSubscription.loading">Loading</p>
-                </form>
+                <fixture-button slot="actions"><button type="button">Subscribe</button></fixture-button>
                 <img slot="illustration" src="/.cms/call/ulvia.cms.files/files/newsletter/generation" alt="Newsletter illustration">
-                <span>Default-slot label</span>
-                <li slot="criteria">Component-owned list criterion</li>
+                <span slot="label">Newsletter label</span>
+                <p slot="criteria">Component-owned criterion</p>
             </fixture-newsletter-card>
         `;
 
         await repo.insertPage("/newsletter", "Newsletter", content);
         await repo.updatePage({ id: "p1", content });
 
-        expect(calls.insertPage[0][2]).toContain('cms-source-trigger="submit"');
+        expect(calls.insertPage[0][2]).toContain('slot="actions"');
         expect(calls.updatePage[0].content).toContain('slot="illustration"');
     });
 });

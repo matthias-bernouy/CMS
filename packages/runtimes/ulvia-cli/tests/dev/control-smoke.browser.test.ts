@@ -10,7 +10,7 @@ const smoke = process.env.ULVIA_RUN_CONTROL_SMOKE === "1" ? test : test.skip;
 const PORTS = { control: 15_100, delivery: 15_101, mongo: 27_029, repository: 15_102 } as const;
 
 smoke(
-    "fresh local installation supports every Control workspace and representative mutations",
+    "fresh local installation publishes to Delivery and preserves representative Control state",
     async () => {
         const data = await mkdtemp(join(tmpdir(), "ulvia-control-smoke-"));
         const environment = {
@@ -50,7 +50,12 @@ smoke(
             const browserErrors: string[] = [];
             page.on("pageerror", (error) => browserErrors.push(error.message));
 
-            await runControlSmoke(page, credentials, `http://127.0.0.1:${PORTS.control}`);
+            await runControlSmoke(
+                page,
+                credentials,
+                `http://127.0.0.1:${PORTS.control}`,
+                `http://127.0.0.1:${PORTS.delivery}`,
+            );
 
             expect(browserErrors).toEqual([]);
             await browser.close();
@@ -77,7 +82,12 @@ smoke(
             const restartErrors: string[] = [];
             restartedPage.on("pageerror", (error) => restartErrors.push(error.message));
 
-            await verifyControlStateAfterRestart(restartedPage, credentials, `http://127.0.0.1:${PORTS.control}`);
+            await verifyControlStateAfterRestart(
+                restartedPage,
+                credentials,
+                `http://127.0.0.1:${PORTS.control}`,
+                `http://127.0.0.1:${PORTS.delivery}`,
+            );
             expect(restartErrors).toEqual([]);
         } catch (error) {
             throw new Error(`${error instanceof Error ? error.message : String(error)}\n\nRuntime output:\n${output}`);

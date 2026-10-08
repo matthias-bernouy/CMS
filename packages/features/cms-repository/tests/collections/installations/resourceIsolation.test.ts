@@ -93,7 +93,7 @@ test("installations reject collection Pages claiming the same surface path", asy
                     surface: "control",
                     defaultPath: "/admin/shared",
                     name: `page.${pageId}.name`,
-                    document: { html: "<main></main>" },
+                    document: { html: `<${collectionId}-card></${collectionId}-card>` },
                 },
             ],
         };
@@ -133,7 +133,7 @@ test("installs only declared public resources from compatible collection depende
                 surface: "delivery",
                 defaultPath: "/",
                 name: "page.home.name",
-                document: { html: "<section><ulvia-official-button></ulvia-official-button></section>" },
+                document: { html: "<ulvia-official-button></ulvia-official-button>" },
             },
         ],
         assets: [
@@ -259,7 +259,7 @@ test("rejects imported Blocs that do not support a Page surface", async () => {
                 surface: "delivery",
                 defaultPath: "/",
                 name: "page.home.name",
-                document: { html: "<section><ulvia-official-admin-card></ulvia-official-admin-card></section>" },
+                document: { html: "<ulvia-official-admin-card></ulvia-official-admin-card>" },
             },
         ],
     };

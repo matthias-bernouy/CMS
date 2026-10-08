@@ -78,7 +78,9 @@ export class ValidatingCmsRepository implements CmsRepository {
     async updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<TPage | null> {
         const valid = validatePagePatch(page);
         const current =
-            valid.id && (valid.content !== undefined || valid.surface !== undefined) && this.inner.getPageById
+            valid.id &&
+            (valid.content !== undefined || valid.surface !== undefined || valid.visible === true) &&
+            this.inner.getPageById
                 ? await this.inner.getPageById(valid.id)
                 : null;
         if (current && valid.surface !== undefined && valid.surface !== current.surface) {
@@ -91,6 +93,9 @@ export class ValidatingCmsRepository implements CmsRepository {
                 valid.content,
                 current?.surface ?? valid.surface ?? "delivery",
             );
+        } else if (valid.visible === true && current) {
+            await assertContentRefsExist(this.inner, current.content);
+            await assertContentSupportsSurface(this.inner, current.content, current.surface);
         }
         return this.inner.updatePage(valid, expectedRevision);
     }

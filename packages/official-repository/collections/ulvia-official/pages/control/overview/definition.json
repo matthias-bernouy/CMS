@@ -5,21 +5,5 @@
     "name": "page.overview.name",
     "icon": "pages",
     "description": "page.overview.description",
-    "requires": [
-        {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "list",
-            "versionRange": "^1.0.0"
-        },
-        {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "create",
-            "versionRange": "^1.0.0"
-        },
-        {
-            "contractId": "ulvia.cms.pages",
-            "capabilityId": "rename",
-            "versionRange": "^1.0.0"
-        }
-    ]
+    "requires": []
 }

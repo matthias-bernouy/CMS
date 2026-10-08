@@ -1,0 +1,48 @@
+<ulvia-official-control-workspace>
+    <h1 slot="title">{{ cms.i18n.ulvia-official.ui-users }}</h1>
+    <p slot="description">{{ cms.i18n.ulvia-official.ui-manage-cms-members-administrator-access-and-sign-in-methods }}</p>
+        <section id="access-overview" slot="content" cms-source="/.cms/call/ulvia.cms.access/overview as access" cms-source-method="POST" cms-source-body='{"limit":100}'>
+            <p role="status" aria-live="polite" cms-condition="$source.loading">{{ cms.i18n.ulvia-official.ui-loading-access-configuration }}</p>
+            <div role="alert" cms-condition="$source.error"><h2>{{ cms.i18n.ulvia-official.ui-access-unavailable }}</h2><p>{{ cms.i18n.ulvia-official.ui-users-and-settings-could-not-be-read }}</p></div>
+            <div cms-condition="$source.loaded">
+                <header><h2>{{ cms.i18n.ulvia-official.ui-members }}</h2><p>{{ access.totalUsers }} {{ cms.i18n.ulvia-official.ui-total-users }}</p></header>
+                <ulvia-official-grid gap="md" role="list">
+                    <ulvia-official-surface slot="items" cms-repeat="access.users as user" appearance="outlined" padding="lg" role="listitem">
+                        <ulvia-official-stack slot="content" gap="md">
+                            <header slot="items">
+                                <ulvia-official-cluster align="center" justify="between">
+                                    <strong slot="items">{{ user.email }}</strong>
+                                    <ulvia-official-badge slot="items" cms-condition="user.administrator" tone="info"><span slot="label">{{ cms.i18n.ulvia-official.ui-administrator }}</span></ulvia-official-badge>
+                                    <ulvia-official-badge slot="items" cms-condition="user.administrator == false" tone="neutral"><span slot="label">{{ cms.i18n.ulvia-official.ui-member }}</span></ulvia-official-badge>
+                                </ulvia-official-cluster>
+                                <p>{{ user.provider }} {{ cms.i18n.ulvia-official.ui-identity }}</p><small>{{ cms.i18n.ulvia-official.ui-last-seen }} {{ user.lastSeenAt }}</small>
+                            </header>
+                            <form slot="items" cms-condition="user.administrator == false" cms-source="/.cms/call/ulvia.cms.access/set-administrator" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#access-overview">
+                                <input type="hidden" name="sub" value="{{ user.sub }}"><input type="hidden" name="enabled" value="true" cms-form-value-type="boolean"><input type="hidden" name="expectedRevision" value="{{ user.administratorRevision }}" cms-form-value-type="number">
+                                <ulvia-official-action variant="outline" tone="secondary" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-make-administrator }}</button></ulvia-official-action><p role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-the-administrator-grant-changed-reload-and-retry }}</p>
+                            </form>
+                            <form slot="items" cms-condition="user.administrator" cms-source="/.cms/call/ulvia.cms.access/set-administrator" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#access-overview">
+                                <input type="hidden" name="sub" value="{{ user.sub }}"><input type="hidden" name="enabled" value="false" cms-form-value-type="boolean"><input type="hidden" name="expectedRevision" value="{{ user.administratorRevision }}" cms-form-value-type="number">
+                                <ulvia-official-action variant="outline" tone="secondary" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-remove-administrator }}</button></ulvia-official-action><p role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-your-own-or-protected-grant-cannot-be-removed }}</p>
+                            </form>
+                            <form slot="items" cms-source="/.cms/call/ulvia.cms.access/delete-user" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#access-overview">
+                                <input type="hidden" name="sub" value="{{ user.sub }}"><ulvia-official-action variant="ghost" tone="danger" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-delete-member }}</button></ulvia-official-action><p role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-protected-members-and-the-current-account-cannot-be-deleted }}</p>
+                            </form>
+                        </ulvia-official-stack>
+                    </ulvia-official-surface>
+                </ulvia-official-grid>
+                <header><h2>{{ cms.i18n.ulvia-official.ui-login-providers }}</h2><p>{{ cms.i18n.ulvia-official.ui-choose-which-configured-identity-methods-are-available-on-the-control-sign-in-page }}</p></header>
+                <ulvia-official-grid gap="md" role="list">
+                    <ulvia-official-surface slot="items" cms-repeat="access.loginProviders as provider" appearance="outlined" padding="lg" role="listitem">
+                        <form slot="content" cms-source="/.cms/call/ulvia.cms.access/update-login-provider" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#access-overview">
+                            <input type="hidden" name="providerId" value="{{ provider.id }}"><input type="hidden" name="expectedRevision" value="{{ provider.revision }}" cms-form-value-type="number">
+                            <ulvia-official-field label-position="top" cms-condition="provider.kind == oidc"><span slot="label">{{ cms.i18n.ulvia-official.ui-display-name }}</span><ulvia-official-input slot="control"><input type="text" name="displayName" value="{{ provider.displayName }}" maxlength="160" aria-label="{{ cms.i18n.ulvia-official.ui-provider-display-name }}" required></ulvia-official-input></ulvia-official-field>
+                            <p cms-condition="provider.kind == local"><strong>{{ cms.i18n.ulvia-official.ui-display-name-61cee3ef }}</strong> {{ provider.displayName }}</p>
+                            <ulvia-official-field label-position="top"><span slot="label">{{ cms.i18n.ulvia-official.ui-status }}</span><ulvia-official-select slot="control"><select name="enabled" cms-form-value-type="boolean" aria-label="{{ cms.i18n.ulvia-official.ui-provider-status }}"><option value="true" cms-condition="provider.enabled" selected>{{ cms.i18n.ulvia-official.ui-enabled }}</option><option value="true" cms-condition="provider.enabled == false">{{ cms.i18n.ulvia-official.ui-enabled }}</option><option value="false" cms-condition="provider.enabled">{{ cms.i18n.ulvia-official.ui-disabled }}</option><option value="false" cms-condition="provider.enabled == false" selected>{{ cms.i18n.ulvia-official.ui-disabled }}</option></select></ulvia-official-select></ulvia-official-field>
+                            <ulvia-official-action variant="outline" tone="secondary" size="sm"><button type="submit">{{ cms.i18n.ulvia-official.ui-save-provider }}</button></ulvia-official-action><p role="alert" cms-condition="$source.error">{{ cms.i18n.ulvia-official.ui-the-provider-cannot-be-changed-in-its-current-state }}</p>
+                        </form>
+                    </ulvia-official-surface>
+                </ulvia-official-grid>
+            </div>
+        </section>
+</ulvia-official-control-workspace>

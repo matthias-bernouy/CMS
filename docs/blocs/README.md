@@ -11,7 +11,8 @@ CmsCore Blocs separate four concerns:
 
 One Page document and one rendering pipeline serve both surfaces. A Page owns
 exactly one surface (`control` or `delivery`); a Bloc may support one or both.
-There is no collection View, Dashboard renderer or active visual editor.
+There is no collection View or Dashboard renderer. Control exposes the active
+installed Bloc catalogue through the visual Page editor.
 
 ## Guides
 

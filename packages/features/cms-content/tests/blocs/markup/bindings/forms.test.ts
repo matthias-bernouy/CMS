@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { parseHTML } from "linkedom";
 import {
     CMS_BINDING_ATTRIBUTES,
     CMS_FORM_EMPTY_BEHAVIORS,
@@ -46,24 +45,15 @@ describe("declarative form contracts", () => {
         }
     });
 
-    test("preserves typed fields and reload targets through both page-write boundaries", async () => {
+    test("rejects typed forms that are not owned by a Bloc contract", async () => {
         const { repo, writes } = repository();
         const content = form(
             'cms-source-serialization="typed-json" cms-source-success-reload="#order-detail"',
             '<input name="items[0][price]" cms-form-value-type="number" cms-form-empty="null"><fixture-field name="note" cms-form-value-type="string" cms-form-empty="omit"></fixture-field>',
         );
-        await repo.insertPage("/orders", "Orders", content);
-        await repo.updatePage({ id: "page", content });
-        for (const html of writes) {
-            const { document } = parseHTML(html);
-            expect(document.querySelector("form")?.getAttribute(CMS_BINDING_ATTRIBUTES.sourceSuccessReload)).toBe(
-                "#order-detail",
-            );
-            expect(document.querySelector("input")?.getAttribute(CMS_BINDING_ATTRIBUTES.formValueType)).toBe("number");
-            expect(document.querySelector("fixture-field")?.getAttribute(CMS_BINDING_ATTRIBUTES.formEmpty)).toBe(
-                "omit",
-            );
-        }
+        await expect(repo.insertPage("/orders", "Orders", content)).rejects.toThrow("does not declare slot");
+        await expect(repo.updatePage({ id: "page", content })).rejects.toThrow("does not declare slot");
+        expect(writes).toEqual([]);
     });
 
     test("rejects invalid values and attribute placement at both page-write boundaries", async () => {
@@ -88,10 +78,12 @@ describe("declarative form contracts", () => {
         }
     });
 
-    test("keeps ordinary forms valid without typed serialization", async () => {
+    test("rejects ordinary forms that bypass Bloc ownership", async () => {
         const { repo } = repository();
         for (const method of ["GET", "POST", "PUT", "PATCH", "DELETE"]) {
-            await repo.insertPage("/orders", "Orders", form("", '<input name="query">', method));
+            await expect(
+                repo.insertPage("/orders", "Orders", form("", '<input name="query">', method)),
+            ).rejects.toThrow("does not declare slot");
         }
         expect(nativeBindingAttributeIssue(CMS_BINDING_ATTRIBUTES.formValueType, "boolean")).toBeNull();
     });

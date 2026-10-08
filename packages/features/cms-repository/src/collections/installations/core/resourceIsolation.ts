@@ -4,7 +4,7 @@ import { DEFAULT_COLLECTION_LIMITS } from "../../core/limits";
 import { validateMarkup } from "../../core/validation/markup/validateMarkup";
 import { satisfiesVersionRange } from "../../../exports/contracts/compatibility";
 import type { CollectionInstallation, CollectionStorage } from "../interfaces/store";
-import { assertCompatibleSurface, pageReferences } from "../../core/parsing/pages/references";
+import { assertCompatibleSurface, pageReferences, pageReferenceSources } from "../../core/parsing/pages/references";
 
 export async function assertInstallableCollectionResources(
     storage: CollectionStorage,
@@ -57,7 +57,8 @@ function validateInstalledPageReferences(releases: readonly CollectionRelease[])
     );
     for (const release of releases) {
         for (const page of release.pages ?? []) {
-            for (const reference of pageReferences(page.document.html)) {
+            const sources = [page.document.html, ...pageReferenceSources(release, page.uses)];
+            for (const reference of sources.flatMap(pageReferences)) {
                 if (reference.kind === "site") {
                     continue;
                 }

@@ -1,0 +1,36 @@
+{
+    "kind": "composition",
+    "id": "ulvia-official-control-diagnostics-page",
+    "label": "page.diagnostics.name",
+    "description": "page.diagnostics.description",
+    "category": "bloc.category.administration",
+    "internal": true,
+    "surfaces": [
+        "control"
+    ],
+    "uses": [
+        "ulvia-official-badge",
+        "ulvia-official-cluster",
+        "ulvia-official-control-workspace",
+        "ulvia-official-stack",
+        "ulvia-official-surface"
+    ],
+    "requires": [
+        {
+            "contractId": "ulvia.cms.collections",
+            "capabilityId": "migration-status",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.jobs",
+            "capabilityId": "list",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.providers",
+            "capabilityId": "list",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {}
+}

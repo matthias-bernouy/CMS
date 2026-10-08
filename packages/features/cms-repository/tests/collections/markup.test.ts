@@ -91,7 +91,10 @@ describe("collection markup admission", () => {
     });
 
     test("resolves slot targets against their actual parent, not unrelated shells", () => {
-        const card = component({ shadowdom: '<slot name="heading"></slot>', slots: { heading: {} } });
+        const card = component({
+            shadowdom: '<slot name="heading"></slot>',
+            slots: { heading: { accepts: [{ kind: "rich-text", profile: "inline" }] } },
+        });
         const page = composition({
             uses: ["demo-card"],
             lightdom: '<demo-card><p slot="heading">Title</p></demo-card>',
@@ -111,6 +114,7 @@ describe("collection markup admission", () => {
             shadowdom: '<slot name="shell"></slot>',
             lightdom: '<slot name="body" slot="shell"></slot>',
             defaultContent: '<p slot="body">Initial</p>',
+            slots: { body: { accepts: [{ kind: "rich-text", profile: "prose" }] } },
         });
         const page = composition({
             uses: ["demo-card"],
@@ -143,6 +147,25 @@ describe("collection markup admission", () => {
     test("places nested blocs in lightdom, outside static shadow shells", () => {
         const shell = component({ shadowdom: "<demo-page></demo-page>", slots: {}, uses: ["demo-page"] });
         expect(() => check([shell, composition()])).toThrow("layout and slots only");
+    });
+
+    test("any-component slots reject compositions", () => {
+        expect(() =>
+            check([
+                component({ slots: { body: { accepts: [{ kind: "any-component" }] } } }),
+                composition({
+                    id: "demo-nested",
+                    lightdom: "<demo-card></demo-card>",
+                    uses: ["demo-card"],
+                    slots: {},
+                }),
+                composition({
+                    lightdom: '<demo-card><demo-nested slot="body"></demo-nested></demo-card>',
+                    uses: ["demo-card", "demo-nested"],
+                    slots: {},
+                }),
+            ]),
+        ).toThrow("does not accept Bloc demo-nested");
     });
 
     test("forbids inline style attributes in every markup field", () => {
@@ -199,20 +222,22 @@ describe("collection markup admission", () => {
     test("validates collection text references in editable defaults", () => {
         const source = collectionDocument();
         source.texts = [textDefinition("title", { "en-US": "Title" })];
-        (source.blocs as Record<string, unknown>[])[0]!.defaultContent = "<p>{{ cms.i18n.atlas.missing }}</p>";
+        (source.blocs as Record<string, unknown>[])[0]!.defaultContent =
+            '<p slot="body">{{ cms.i18n.atlas.missing }}</p>';
         expect(() => parseCollectionRelease(source)).toThrow("unknown collection text missing");
     });
 
     test("rejects hardcoded user-facing copy in Blocs and Pages", () => {
         const blocSource = collectionDocument();
-        (blocSource.blocs as Record<string, unknown>[])[0]!.defaultContent = "<p>Hardcoded copy</p>";
+        (blocSource.blocs as Record<string, unknown>[])[0]!.defaultContent = '<p slot="body">Hardcoded copy</p>';
         expect(() => parseCollectionRelease(blocSource)).toThrow("user-facing copy");
 
-        (blocSource.blocs as Record<string, unknown>[])[0]!.defaultContent = "<p>{{ cms.i18n.atlas.title }}:</p>";
+        (blocSource.blocs as Record<string, unknown>[])[0]!.defaultContent =
+            '<p slot="body">{{ cms.i18n.atlas.title }}:</p>';
         blocSource.texts = [textDefinition("title", { "en-US": "Title" })];
         expect(() => parseCollectionRelease(blocSource)).toThrow("user-facing copy");
 
-        (blocSource.blocs as Record<string, unknown>[])[0]!.defaultContent = '<input type="submit" value="Save">';
+        (blocSource.blocs as Record<string, unknown>[])[0]!.defaultContent = '<p slot="body" title="Save"></p>';
         expect(() => parseCollectionRelease(blocSource)).toThrow("user-facing copy");
 
         const pageSource = collectionDocument({ "page.demo.name": "Demo" });
@@ -222,21 +247,23 @@ describe("collection markup admission", () => {
                 surface: "delivery",
                 defaultPath: "/demo",
                 name: "page.demo.name",
-                document: { html: '<p title="Hardcoded tooltip">Hardcoded copy</p>' },
+                document: {
+                    html: '<atlas-panel><p slot="body" title="Hardcoded tooltip">Hardcoded copy</p></atlas-panel>',
+                },
             },
         ];
         expect(() => parseCollectionRelease(pageSource)).toThrow("user-facing copy");
 
         (pageSource.pages as { document: { html: string } }[])[0]!.document.html =
-            '<p aria-label="Hardcoded accessible name"></p>';
+            '<atlas-panel><p slot="body" aria-label="Hardcoded accessible name"></p></atlas-panel>';
         expect(() => parseCollectionRelease(pageSource)).toThrow("user-facing copy");
 
         (pageSource.pages as { document: { html: string } }[])[0]!.document.html =
-            '<p aria-label="{{ cms.asset.ulvia-official.icon }}"></p>';
+            '<atlas-panel><p slot="body" aria-label="{{ cms.asset.ulvia-official.icon }}"></p></atlas-panel>';
         expect(() => parseCollectionRelease(pageSource)).toThrow("business data or cms.i18n");
 
         (pageSource.pages as { document: { html: string } }[])[0]!.document.html =
-            '<p title="{{ page.tooltip }}">{{ page.copy }}</p>';
+            '<atlas-panel><p slot="body" title="{{ page.tooltip }}">{{ page.copy }}</p></atlas-panel>';
         expect(() => parseCollectionRelease(pageSource)).not.toThrow();
     });
 

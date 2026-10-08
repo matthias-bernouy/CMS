@@ -5,6 +5,8 @@ import { validateDeclarative, validateHost, validateNoBindings, validateShadow }
 import { type BlocMarkup, pageSlots, validatePageSlots, validateSlotTargets } from "./slots";
 import { elements, type MarkupTree, markupTree, offeredSlots, significantRoots } from "./tree";
 import { validateManagedNativeDefinition, validateManagedNativeHosts } from "./managedNative";
+import { validateDefaultSlotContracts, validateFixedLightDomSlotContracts } from "./slotContracts";
+import { validateBlocLightHtml } from "../../parsing/pages/blocLightDocument";
 
 function inspect(bloc: CollectionBloc): BlocMarkup {
     const shadow = bloc.kind === "component" ? markupTree(bloc.shadowdom) : undefined;
@@ -66,6 +68,16 @@ export function validateMarkup(
             validateHost(content.light, bloc, `${path}.lightdom`);
             validatePlacedBlocs(content.light, bloc, ids, `${path}.lightdom`);
             validateSlotTargets(content.light, content.shellSlots, byId, markup, `${path}.lightdom`, importedBlocs);
+            validateFixedLightDomSlotContracts(content.light, byId, importedBlocs, `${path}.lightdom`);
+            const calls = validateBlocLightHtml(bloc.lightdom!, `${path}.lightdom`);
+            const requirements = new Set(
+                bloc.requires.map(({ contractId, capabilityId }) => `${contractId}/${capabilityId}`),
+            );
+            for (const call of calls) {
+                if (!requirements.has(call)) {
+                    invalid(`capability call ${call} must be declared in requires`, `${path}.requires`);
+                }
+            }
         }
         if (content.initial) {
             validateDeclarative(content.initial, `${path}.defaultContent`);
@@ -83,6 +95,7 @@ export function validateMarkup(
                 `${path}.defaultContent`,
                 importedBlocs,
             );
+            validateDefaultSlotContracts(content.initial, bloc, byId, importedBlocs, `${path}.defaultContent`);
         }
     }
 }

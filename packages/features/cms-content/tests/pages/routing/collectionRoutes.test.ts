@@ -136,9 +136,25 @@ function collectionRelease(html: string) {
         version: "1.0.0",
         name: "collection.name",
         locale: "en",
-        translations: { en: { "collection.name": "Official", "page.overview.name": "Overview" } },
+        translations: {
+            en: {
+                "bloc.page.label": "Page",
+                "collection.name": "Official",
+                "page.overview.name": "Overview",
+            },
+        },
         assets: [],
-        blocs: [],
+        blocs: [
+            {
+                kind: "composition",
+                id: "official-page",
+                label: "bloc.page.label",
+                lightdom: html,
+                uses: [],
+                requires: [],
+                slots: {},
+            },
+        ],
         pages: [
             {
                 id: "overview",
@@ -146,9 +162,9 @@ function collectionRelease(html: string) {
                 surface: "control",
                 defaultPath: "/admin",
                 name: "page.overview.name",
-                uses: [],
+                uses: ["official-page"],
                 requires: [],
-                document: { html },
+                document: { html: "<official-page></official-page>" },
             },
         ],
     };

@@ -1,0 +1,24 @@
+{
+    "id": "editor-catalogue",
+    "calls": [
+        {
+            "id": "delivery-blocs",
+            "capabilityId": "editor-catalogue",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {
+                "surface": "delivery"
+            },
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/items",
+                        "present": true
+                    }
+                ]
+            }
+        }
+    ]
+}

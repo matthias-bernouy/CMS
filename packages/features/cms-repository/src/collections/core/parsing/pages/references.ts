@@ -87,11 +87,12 @@ function parseStablePageReference(value: string, path: string): StablePageRefere
 
 /** Validates references that can be proven from one immutable release alone. */
 export function validateDeclaredPageReferences(
-    release: Pick<CollectionRelease, "collectionId" | "publisherId" | "dependencies" | "pages">,
+    release: Pick<CollectionRelease, "collectionId" | "publisherId" | "dependencies" | "pages" | "blocs">,
 ): void {
     const pages = new Map((release.pages ?? []).map((page) => [page.id, page]));
     for (const page of release.pages ?? []) {
-        for (const reference of pageReferences(page.document.html)) {
+        const sources = [page.document.html, ...pageReferenceSources(release, page.uses)];
+        for (const reference of sources.flatMap(pageReferences)) {
             if (reference.kind === "site") {
                 continue;
             }
@@ -114,6 +115,32 @@ export function validateDeclaredPageReferences(
             }
         }
     }
+}
+
+export function pageReferenceSources(
+    release: Pick<CollectionRelease, "blocs">,
+    rootBlocs: readonly string[],
+): string[] {
+    const sources: string[] = [];
+    const byId = new Map(release.blocs.map((bloc) => [bloc.id, bloc]));
+    const pending = [...rootBlocs];
+    const seen = new Set<string>();
+    while (pending.length > 0) {
+        const id = pending.pop()!;
+        if (seen.has(id)) {
+            continue;
+        }
+        seen.add(id);
+        const bloc = byId.get(id);
+        if (!bloc) {
+            continue;
+        }
+        if (bloc.lightdom) {
+            sources.push(bloc.lightdom);
+        }
+        pending.push(...bloc.uses);
+    }
+    return sources;
 }
 
 export function pageReferences(html: string): readonly StablePageReference[] {

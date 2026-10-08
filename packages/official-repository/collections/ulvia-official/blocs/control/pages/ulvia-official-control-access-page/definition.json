@@ -1,0 +1,46 @@
+{
+    "kind": "composition",
+    "id": "ulvia-official-control-access-page",
+    "label": "page.access.name",
+    "description": "page.access.description",
+    "category": "bloc.category.administration",
+    "internal": true,
+    "surfaces": [
+        "control"
+    ],
+    "uses": [
+        "ulvia-official-action",
+        "ulvia-official-badge",
+        "ulvia-official-cluster",
+        "ulvia-official-control-workspace",
+        "ulvia-official-field",
+        "ulvia-official-grid",
+        "ulvia-official-input",
+        "ulvia-official-select",
+        "ulvia-official-stack",
+        "ulvia-official-surface"
+    ],
+    "requires": [
+        {
+            "contractId": "ulvia.cms.access",
+            "capabilityId": "delete-user",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.access",
+            "capabilityId": "overview",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.access",
+            "capabilityId": "set-administrator",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.access",
+            "capabilityId": "update-login-provider",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {}
+}

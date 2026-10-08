@@ -327,7 +327,7 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
                 ],
                 uses: [],
                 requires: [],
-                slots: { title: {} },
+                slots: { title: { accepts: [{ kind: "rich-text", profile: "inline" }] } },
             },
         ],
     });

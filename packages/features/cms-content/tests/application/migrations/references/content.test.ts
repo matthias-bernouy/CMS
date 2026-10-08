@@ -24,7 +24,11 @@ test("blocks removal of a collection text still referenced by a page", async () 
             },
         ],
     });
-    await fixture.repository.insertPage("/demo", "Demo", "<p>{{ cms.i18n.atlas.legacy-title }}</p>");
+    await fixture.repository.insertPage(
+        "/demo",
+        "Demo",
+        '<atlas-card><p slot="content">{{ cms.i18n.atlas.legacy-title }}</p></atlas-card>',
+    );
 
     const plan = await fixture.service.plan("site", [{ digest: next.digest }], 1);
     expect(plan.blockedReasons).toContainEqual(expect.stringContaining("collection text atlas.legacy-title"));
