@@ -42,9 +42,9 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 - [Site health](providers/README.md): provider observations, selected sources,
   and collection versions in the admin Health page.
 
-The root [transition document](../TRANSITION_SOURCES.md) and
-[execution plan](../PLAN_ACTION.md) track direction and implementation phases.
-Use the guides here and the referenced source code to establish current behavior.
+Use the [repository audit](AUDIT.md), the architecture guides and the referenced
+source code to establish current behavior. Deliberately deferred activation
+gates remain recorded in [Deferred platform work](TODO.md).
 
 ## HTTP Surfaces
 

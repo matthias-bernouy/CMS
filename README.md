@@ -25,14 +25,17 @@ routes or chooses runtime adapters.
 CmsCore/
 |-- packages/
 |   |-- foundation/
+|   |   |-- binary-media/      @bernouy/binary-media
+|   |   |-- blob-store/        @bernouy/blob-store
 |   |   |-- http-runner/       @bernouy/http-runner
 |   |   |-- envelope-crypto/   @bernouy/envelope-crypto
 |   |   |-- rate-limiter/      @bernouy/rate-limiter
 |   |   |-- image-processing/  @bernouy/image-processing
 |   |   `-- secret-store/      @bernouy/secret-store
 |   |-- features/
-|   |   |-- cms-content/       @bernouy/cms-content (pages, blocs, settings, files)
+|   |   |-- cms-content/       @bernouy/cms-content (pages, blocs, settings, themes)
 |   |   |-- cms-auth/          @bernouy/cms-auth
+|   |   |-- cms-files/         @bernouy/cms-files
 |   |   |-- cms-gateway/       @bernouy/cms-gateway
 |   |   `-- cms-repository/    @bernouy/cms-repository (including collection build tooling)
 |   |-- surfaces/

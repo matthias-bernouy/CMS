@@ -1,6 +1,6 @@
 # Repository Audit
 
-This audit describes the CmsCore repository as reviewed on 2026-10-06. It is a
+This audit describes the CmsCore repository as reviewed on 2026-10-08. It is a
 source-backed engineering assessment, not a security certification or a claim
 that every production failure mode has been exercised.
 
@@ -20,10 +20,10 @@ deployment validation rather than unclear ownership between packages.
 
 ## Verified Shape
 
-The workspace contains 17 packages:
+The workspace contains 18 packages:
 
 - seven Foundation packages;
-- four feature packages: authentication, content, gateway and repository;
+- five feature packages: authentication, content, files, gateway and repository;
 - three surfaces: CMS Core, Control and Delivery;
 - three executable runtimes: CMS server, official repository server and CLI.
 
@@ -50,17 +50,16 @@ runtime that admits and serves its immutable artifacts.
 
 The final review run completed with:
 
-- all seven `check:all` diagnostics passing;
+- all nine `check:all` diagnostics passing;
 - the complete workspace build passing;
-- 2,296 tests passing, no failure and one explicitly opt-in fresh-install
+- more than 2,100 tests passing, no failure and one explicitly opt-in fresh-install
   browser smoke test skipped;
-- all relative links across the 70 active Markdown files resolving;
+- all tracked relative Markdown links resolving;
 - no whitespace error in the resulting patch.
 
-Repository-shape diagnostics remained advisory: 123 file-size information
-items, 111 file-size warnings and 64 eight-entry directory information items,
-with no blocking directory-fanout error. CI separately runs the high-severity
-dependency advisory audit because it requires current registry access.
+Repository-shape diagnostics remained advisory, with no blocking
+directory-fanout error. CI separately runs the high-severity dependency
+advisory audit because it requires current registry access.
 
 ## What Is Strong
 

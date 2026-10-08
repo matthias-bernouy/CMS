@@ -180,4 +180,5 @@ transport rules. See [files and responsive images](../images/README.md).
 The code establishing the production boundary is
 [createProductionGateway](../../packages/runtimes/cms-server/src/runtime/gateway/createProductionGateway.ts)
 and [mountSurfaces](../../packages/runtimes/cms-server/src/runtime/mountSurfaces.ts).
-The [transition plan](../../PLAN_ACTION.md) tracks the remaining implementation work.
+The [repository audit](../AUDIT.md) and [deferred platform work](../TODO.md)
+track the remaining implementation and activation gates.
