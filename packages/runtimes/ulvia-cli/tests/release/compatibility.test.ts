@@ -43,6 +43,49 @@ describe("local release compatibility", () => {
         expect(calls).toEqual([]);
     });
 
+    test("selects one dependency version satisfying every collection endpoint range", async () => {
+        const owner = await releasePackage("1.0.0", {
+            schema: "cms.integration.definition.v2",
+            type: "collection",
+            resourceCategories: [{ id: "content", label: "Content" }],
+            resources: [
+                {
+                    id: "demo/blocs/card",
+                    type: "bloc",
+                    artifact: "demo-card",
+                    category: "content",
+                    endpoints: [
+                        {
+                            source: "dependency",
+                            sourceVersion: ">=1.0.0 <3.0.0",
+                            endpoint: "urn:dependency:list",
+                            contractVersion: "^1.0.0",
+                        },
+                        {
+                            source: "dependency",
+                            sourceVersion: "^1.0.0",
+                            endpoint: "urn:dependency:detail",
+                            contractVersion: "^1.0.0",
+                        },
+                    ],
+                },
+            ],
+            artifacts: [{ type: "bloc", bloc: { tag: "demo-card", name: "Card" } }],
+        });
+        const versionOne = await releasePackage("1.2.0", {}, "dependency");
+        const versionTwo = await releasePackage("2.0.0", {}, "dependency");
+        const calls: string[] = [];
+        const installed = new Map<string, string>();
+        const client = {
+            install: async (kind: string, version: string) => calls.push(`install:${kind}@${version}`),
+        } as unknown as ReleaseSandboxClient;
+
+        await installRequiredDependencies(owner, [versionOne, versionTwo], installed, client);
+
+        expect(calls).toEqual(["install:dependency@1.2.0"]);
+        expect(installed.get("dependency")).toBe("1.2.0");
+    });
+
     test("classifies a published dependency installation failure as infrastructure", async () => {
         const owner = await releasePackage("1.0.0", {
             dependencies: [{ name: "dependency", kind: "dependency", versionRange: "1.0.0" }],

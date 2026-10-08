@@ -12,21 +12,26 @@ export async function installRequiredDependencies(
     client: ReleaseSandboxClient,
     visiting = new Set<string>(),
 ): Promise<void> {
-    for (const dependency of integrationRuntimeDependencies(owner.definition)) {
-        const current = installed.get(dependency.kind);
-        if (current && (!dependency.versionRange || integrationVersionSatisfies(current, dependency.versionRange))) {
+    const requirements = Map.groupBy(integrationRuntimeDependencies(owner.definition), ({ kind }) => kind);
+    const orderedRequirements = [...requirements].toSorted(([left], [right]) =>
+        left < right ? -1 : left > right ? 1 : 0,
+    );
+    for (const [kind, dependencies] of orderedRequirements) {
+        const satisfiesEveryRange = (version: string) =>
+            dependencies.every(
+                ({ versionRange }) => !versionRange || integrationVersionSatisfies(version, versionRange),
+            );
+        const current = installed.get(kind);
+        if (current && satisfiesEveryRange(current)) {
             continue;
         }
         const selected = packages
             .filter(
-                (entry) =>
-                    entry.package.envelope.kind === dependency.kind &&
-                    (!dependency.versionRange ||
-                        integrationVersionSatisfies(entry.package.envelope.version, dependency.versionRange)),
+                (entry) => entry.package.envelope.kind === kind && satisfiesEveryRange(entry.package.envelope.version),
             )
             .sort((left, right) => rcompare(left.package.envelope.version, right.package.envelope.version))[0];
         if (!selected) {
-            throw new Error(`Release sandbox is missing required dependency ${dependency.kind}`);
+            throw new Error(`Release sandbox is missing a compatible required dependency ${kind}`);
         }
         const key = coordinate(selected);
         if (visiting.has(key)) {
