@@ -33,7 +33,7 @@ export interface GatewayInvocation {
     readonly execution?: GatewayExecutionPin;
 }
 
-export interface GatewayBinaryBody {
+interface GatewayBinaryBody {
     readonly stream: ReadableStream<Uint8Array>;
     readonly contentType?: string;
     readonly contentLength?: number;

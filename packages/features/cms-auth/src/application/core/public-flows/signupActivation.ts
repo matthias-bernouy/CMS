@@ -15,13 +15,6 @@ type SignupActivationContext = {
     emailDeliveryEnabled: boolean;
 };
 
-export async function activateOrResumeLocalSignup(
-    cfg: PublicAuthFlowConfig,
-    context: SignupActivationContext,
-): Promise<SignupLocalUserResult> {
-    return (await prepareOrResumeLocalSignup(cfg, context)).finalize();
-}
-
 export async function prepareOrResumeLocalSignup(
     cfg: PublicAuthFlowConfig,
     context: SignupActivationContext,

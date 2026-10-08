@@ -6,7 +6,6 @@ import { createControlCmsState } from "cms-control/core/admin/control/state";
 import type { ControlCmsDependencies } from "cms-control/core/admin/control/types";
 
 export type {
-    ControlAuthBackends,
     ControlCmsDependencies,
     ControlCmsOptions,
 } from "cms-control/core/admin/control/types";

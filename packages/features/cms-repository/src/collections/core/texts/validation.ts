@@ -36,7 +36,7 @@ export function textLocale(value: unknown): string {
     return Intl.getCanonicalLocales(value)[0]!;
 }
 
-export function parseTextValue(value: unknown): string {
+function parseTextValue(value: unknown): string {
     if (typeof value !== "string" || value.length > TEXT_LIMITS.length) {
         throw new TypeError("Text message exceeds its string bound");
     }

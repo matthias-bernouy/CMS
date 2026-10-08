@@ -19,17 +19,6 @@ export class PageIndexingDiscoveryError extends Error {
     override name = "PageIndexingDiscoveryError";
 }
 
-export async function discoverIndexingEntityItems(
-    entity: Entity,
-    execute: IndexingDiscoveryExecutor,
-): Promise<ProjectedIndexingDiscoveryItem[]> {
-    const items: ProjectedIndexingDiscoveryItem[] = [];
-    for await (const item of iterateIndexingEntityItems(entity, execute)) {
-        items.push(item);
-    }
-    return items;
-}
-
 export async function* iterateIndexingEntityItems(
     entity: Entity,
     execute: IndexingDiscoveryExecutor,

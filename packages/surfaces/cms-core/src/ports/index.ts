@@ -47,14 +47,14 @@ export type CmsCoreDependencies = CmsPageDependencies &
     CmsLocalizationDependencies &
     CmsAccessDependencies;
 
-export type CmsCoreAdministratorState = Readonly<{
+type CmsCoreAdministratorState = Readonly<{
     sub: string;
     enabled: boolean;
     revision: number;
     bootstrap: boolean;
 }>;
 
-export interface CmsCoreAdministratorStore {
+interface CmsCoreAdministratorStore {
     canRevoke(sub: string): Promise<boolean>;
     get(sub: string): Promise<CmsCoreAdministratorState>;
     list(): Promise<readonly string[]>;

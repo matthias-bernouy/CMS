@@ -224,14 +224,6 @@ export async function prepareCollectionMigration(
     return { ...prepared, planDigest: collectionMigrationPlanDigest(prepared) };
 }
 
-export function collectionPageRevisionDigest(pages: readonly { id: string; revision: number }[]): string {
-    const hash = createHash("sha256").update("ulvia-page-revisions/v1\n");
-    for (const { id, revision } of [...pages].sort((left, right) => left.id.localeCompare(right.id))) {
-        hash.update(canonicalizeIJson({ id, revision })).update("\n");
-    }
-    return `sha256:${hash.digest("hex")}`;
-}
-
 export function collectionSiteResourceDigest(
     records: readonly unknown[],
     participants: readonly { id: string; digest: string }[],

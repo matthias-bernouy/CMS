@@ -3,14 +3,14 @@ import type { CollectionPage } from "@bernouy/cms-repository/collections";
 import type { InstalledCollection } from "@bernouy/cms-repository/collections/installations";
 import type { ControlCmsState } from "cms-control/core/admin/control/types";
 
-export interface InstalledCollectionControlPage {
+interface InstalledCollectionControlPage {
     readonly kind: "collection";
     readonly installation: InstalledCollection;
     readonly page: CollectionPage;
     readonly route: SurfacePageRoute;
 }
 
-export interface InstalledSiteControlPage {
+interface InstalledSiteControlPage {
     readonly kind: "site";
     readonly page: TPage;
     readonly route: SurfacePageRoute;

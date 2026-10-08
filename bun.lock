@@ -61,7 +61,6 @@
       "devDependencies": {
         "@happy-dom/global-registrator": "^20.14.5",
         "@types/bun": "1.4.2",
-        "happy-dom": "^20.14.5",
       },
       "peerDependencies": {
         "mongodb": "^7.2.0",
@@ -209,9 +208,6 @@
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-server": "workspace:*",
       },
-      "devDependencies": {
-        "@bernouy/cms-gateway": "workspace:*",
-      },
       "peerDependencies": {
         "typescript": "^7.0.2",
       },
@@ -240,7 +236,6 @@
       "name": "@bernouy/cms-core",
       "version": "0.1.0",
       "dependencies": {
-        "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
@@ -263,10 +258,6 @@
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "linkedom": "^0.18.13",
-      },
-      "devDependencies": {
-        "@bernouy/binary-media": "workspace:*",
-        "sharp": "^0.35.4",
       },
       "peerDependencies": {
         "typescript": "^7.0.2",

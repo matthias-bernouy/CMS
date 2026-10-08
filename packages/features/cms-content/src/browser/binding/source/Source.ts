@@ -28,7 +28,7 @@ import { acknowledgeForm } from "./runtime/submission/acknowledgement";
 import { SubmissionTransaction } from "./runtime/submission/transaction";
 
 export { clearRuntimeStamps } from "./runtime/runtimeStamps";
-export { RELOAD_ATTR, RELOAD_EVENT } from "./sourceEvents";
+export { RELOAD_EVENT } from "./sourceEvents";
 export type { SourceStatusValue } from "./presentation/sourceStatus";
 
 type SourceOptions = SourceStatusOptions & {

@@ -1,12 +1,12 @@
 import type { AdmittedContractRelease, ReleaseDigest } from "@bernouy/cms-repository/contracts";
 
-export type ConformanceDependencyCoordinate = Readonly<{
+type ConformanceDependencyCoordinate = Readonly<{
     contractId: string;
     version: string;
     digest: ReleaseDigest;
 }>;
 
-export function conformanceDependencyCoordinates(sourceJson: string): ConformanceDependencyCoordinate[] {
+function conformanceDependencyCoordinates(sourceJson: string): ConformanceDependencyCoordinate[] {
     const source = JSON.parse(sourceJson) as {
         dependencyProfiles?: { releases?: Partial<ConformanceDependencyCoordinate>[] }[];
     };

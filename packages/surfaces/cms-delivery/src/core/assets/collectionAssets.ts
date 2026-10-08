@@ -44,12 +44,7 @@ export async function resolveCollectionAssetExpressions(input: string, delivery:
     });
 }
 
-export function collectionAssetUrl(
-    delivery: DeliveryCms,
-    collectionId: string,
-    assetId: string,
-    version: string,
-): string {
+function collectionAssetUrl(delivery: DeliveryCms, collectionId: string, assetId: string, version: string): string {
     return `${delivery.basePath}${COLLECTION_ASSETS_ROUTE}/${encodeURIComponent(collectionId)}/assets/${encodeURIComponent(assetId)}?v=${version}`;
 }
 

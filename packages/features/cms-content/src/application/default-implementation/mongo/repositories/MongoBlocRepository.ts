@@ -27,11 +27,7 @@ import {
     requireBlocRecord,
 } from "cms-content/application/default-implementation/mongo/repositories/blocReadModels";
 import { MongoRepositoryStorage } from "cms-content/application/default-implementation/mongo/repositories/MongoRepositoryStorage";
-import {
-    type BlocDoc,
-    fromBlocDoc,
-    toBlocDoc,
-} from "cms-content/application/default-implementation/mongo/repositories/documents";
+import { fromBlocDoc, toBlocDoc } from "cms-content/application/default-implementation/mongo/repositories/documents";
 import {
     publishMongoSiteBloc,
     withMongoSiteBlocPublicationLock,
@@ -118,7 +114,6 @@ export class MongoBlocRepository extends MongoRepositoryStorage {
         return publishMongoSiteBloc(
             this.db,
             this.blocs,
-            this.siteBlocPublicationLocks,
             tag,
             artifact,
             expectedDraftRevision,

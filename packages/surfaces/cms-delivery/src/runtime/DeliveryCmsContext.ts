@@ -1,7 +1,6 @@
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import type { BlobStore } from "@bernouy/blob-store";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
-import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import { BunRunner, type Cache, type Runner, TtlCache } from "@bernouy/http-runner";
 import type { DeliveryCmsConfig } from "cms-delivery/interfaces/DeliveryCmsConfig";
 import type { HeadInjector } from "cms-delivery/interfaces/HeadInjector";

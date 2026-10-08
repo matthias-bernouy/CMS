@@ -9,7 +9,7 @@ export function parsePointer(value: unknown, path: string): string {
 }
 
 /** Decode JSON Pointer segments once, including escaped slashes and tildes in map keys. */
-export function pointerSegments(pointer: string, path: string): readonly string[] {
+function pointerSegments(pointer: string, path: string): readonly string[] {
     if (pointer === "") {
         return [];
     }

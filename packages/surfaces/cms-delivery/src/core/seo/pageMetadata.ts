@@ -8,7 +8,7 @@ import {
     pageSeoForLanguage,
 } from "@bernouy/cms-content/rendering";
 
-export type PageCanonicalIdentity = {
+type PageCanonicalIdentity = {
     queryParam: string;
     value: string | number;
 };

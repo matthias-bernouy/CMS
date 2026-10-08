@@ -10,19 +10,7 @@ export {
     reconcileSubmittedThemeSettings,
     removeIntegrationTheme,
 } from "cms-content/theme/core/integration";
-export {
-    allTokens,
-    canReferenceThemeToken,
-    directTokenReference,
-    effectiveTokenValue,
-    parseDirectTokenReference,
-    resolveThemeTokenValue,
-    themeReferenceCycles,
-    themeTokenEntries,
-    type DirectTokenReference,
-    type ResolvedThemeValue,
-    type ThemeTokenEntry,
-} from "cms-content/theme/core/tokens";
+export { allTokens } from "cms-content/theme/core/tokens";
 export { validateThemeSettings } from "cms-content/theme/core/validation";
 
 export { collectionThemeSource, composeCollectionThemes } from "cms-content/theme/core/collections";

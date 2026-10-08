@@ -29,7 +29,7 @@ export function pageScopeKey(siteId: string, page: PageReference): string {
     return JSON.stringify([validateSiteId(siteId), pageReferenceKey(page)]);
 }
 
-export function pageRouteKey(surface: PageSurface, path: string): string {
+function pageRouteKey(surface: PageSurface, path: string): string {
     return JSON.stringify([surface, validateSurfacePagePath(surface, path)]);
 }
 

@@ -22,12 +22,7 @@ import {
     readSystemDocument,
     systemFromDocument,
 } from "cms-content/application/default-implementation/mongo/repositories/pageRoutes/systemFence";
-import {
-    SYSTEM_ID,
-    type MongoCmsRepositoryConfig,
-} from "cms-content/application/default-implementation/mongo/repositories/MongoRepositoryStorage";
-
-export type { MongoCmsRepositoryConfig } from "cms-content/application/default-implementation/mongo/repositories/MongoRepositoryStorage";
+import { SYSTEM_ID } from "cms-content/application/default-implementation/mongo/repositories/MongoRepositoryStorage";
 
 export class MongoCmsRepository extends MongoContentRepository implements CmsRepository {
     async updateSiteBlocCollection(id: string, input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection> {

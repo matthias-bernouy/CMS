@@ -12,7 +12,6 @@
         "layer": "surfaces"
     },
     "dependencies": {
-        "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-files": "workspace:*",

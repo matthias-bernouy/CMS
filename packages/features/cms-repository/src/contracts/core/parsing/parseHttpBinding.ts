@@ -1,13 +1,6 @@
 import { ReleaseValidationError } from "../protocol/errors";
 import { type ReleaseLimits } from "../protocol/limits";
-import {
-    expectArray,
-    expectRecord,
-    expectSafeInteger,
-    expectString,
-    rejectUnknownKeys,
-    type UnknownRecord,
-} from "../protocol/values";
+import { expectArray, expectRecord, expectSafeInteger, expectString, rejectUnknownKeys } from "../protocol/values";
 import type {
     CapabilityHttpMethod,
     HttpBinaryBodyBinding,

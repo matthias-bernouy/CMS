@@ -34,7 +34,7 @@ export function createControlAdministratorGuard(
 }
 
 /** Resolves the verified request subject and fails closed unless Control grants administrator access. */
-export async function requireControlAdministrator(
+async function requireControlAdministrator(
     request: Request,
     auth: Authentication,
     administrator: ControlCmsOptions["administrator"],

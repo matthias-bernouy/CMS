@@ -1,6 +1,6 @@
 import type { Scope } from "../../core/scope";
 
-export type LiteralValue = string | number | boolean | null;
+type LiteralValue = string | number | boolean | null;
 export type Operator = "!" | "&&" | "||" | "==" | "!=" | ">" | ">=" | "<" | "<=";
 export type CompareOperator = "==" | "!=" | ">" | ">=" | "<" | "<=";
 

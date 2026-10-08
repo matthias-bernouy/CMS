@@ -38,11 +38,11 @@ export function canonicalSiteBlocDefinition(definition: SiteBlocDefinition): str
     return canonicalJson(normalized);
 }
 
-export function canonicalJson(value: unknown): string {
+function canonicalJson(value: unknown): string {
     return `${JSON.stringify(sortJsonValue(value), null, 4)}\n`;
 }
 
-export function normalizeLineEndings(value: string): string {
+function normalizeLineEndings(value: string): string {
     return value.replace(/\r\n?/g, "\n");
 }
 

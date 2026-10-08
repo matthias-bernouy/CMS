@@ -68,16 +68,6 @@ export async function stopLocalMongo(dataRoot: string): Promise<boolean> {
     return true;
 }
 
-export async function destroyLocalMongo(dataRoot: string): Promise<boolean> {
-    requireExecutable("docker");
-    const name = containerName(dataRoot);
-    if ((await containerStatus(name)) === null) {
-        return false;
-    }
-    await runCommand(["docker", "rm", "--force", "--volumes", name]);
-    return true;
-}
-
 async function containerStatus(name: string): Promise<string | null> {
     const result = await runCommand(["docker", "inspect", "--format", "{{.State.Status}}", name], {
         allowFailure: true,

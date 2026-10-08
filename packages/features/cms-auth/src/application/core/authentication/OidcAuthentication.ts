@@ -1,7 +1,7 @@
 import { jwtVerify, type JWTPayload } from "jose";
 import type { SignedCookieCodec } from "cms-auth/sessions/core/SignedCookieCodec";
 import type { SecretReader } from "@bernouy/secret-store";
-import type { IdentityProviderRepository, IdentityProvider } from "cms-auth/providers/interfaces/IdentityProvider";
+import type { IdentityProviderRepository } from "cms-auth/providers/interfaces/IdentityProvider";
 import type { SubjectResolver } from "cms-auth/accounts/core/SubjectResolver";
 import { readCookie, setCookie, clearCookie, sanitizeReturnTo } from "cms-auth/sessions/core/cookies";
 import { SessionCookie } from "cms-auth/sessions/core/SessionCookie";

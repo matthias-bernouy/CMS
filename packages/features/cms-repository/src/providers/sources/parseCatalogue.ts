@@ -25,14 +25,6 @@ export function validProviderReference(reference: RepositoryArtifactReference): 
     );
 }
 
-export function parseProviderCatalogue(
-    data: unknown,
-    repositoryId: string,
-    kind: RepositoryArtifactKind,
-): readonly RepositoryArtifactEntry[] {
-    return parseProviderCataloguePage(data, repositoryId, kind).entries;
-}
-
 export function parseProviderCataloguePage(
     data: unknown,
     repositoryId: string,

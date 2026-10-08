@@ -7,5 +7,3 @@ export async function createFeatureStores(db: Db) {
 
     return { identities };
 }
-
-export type FeatureStores = Awaited<ReturnType<typeof createFeatureStores>>;

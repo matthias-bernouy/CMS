@@ -7,7 +7,7 @@ export interface SchemaParseState {
     nodes: number;
 }
 
-export const DESCRIPTION_MAX_LENGTH = 4096;
+const DESCRIPTION_MAX_LENGTH = 4096;
 export const PROPERTY_NAME_PATTERN = /^[A-Za-z][A-Za-z0-9_]{0,63}$/;
 export const MEDIA_TYPE_PATTERN = /^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+$/;
 

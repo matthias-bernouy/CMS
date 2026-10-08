@@ -8,7 +8,7 @@ export const FAVICON_ROUTE = "/favicon.ico";
  * Lives in `core/` (not `endpoints/`) so both the runtime endpoint and
  * the build pipeline can reach it without crossing layer boundaries.
  */
-export const DEFAULT_FAVICON_SVG =
+const DEFAULT_FAVICON_SVG =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">` +
     `<rect width="64" height="64" rx="12" fill="#4361ee"/>` +
     `<rect x="12" y="14" width="40" height="8" rx="2" fill="#ffffff" opacity="0.95"/>` +

@@ -3,7 +3,7 @@ import type { CollectionRelease } from "../../interfaces/CollectionRelease";
 import type { CollectionTextOverrides } from "../../interfaces/CollectionText";
 import type { BlobRange } from "@bernouy/blob-store";
 
-export type StoredCollectionAsset = { id: string; bytes: Uint8Array };
+type StoredCollectionAsset = { id: string; bytes: Uint8Array };
 export type StoredCollectionRelease = {
     digest: string;
     release: CollectionRelease;

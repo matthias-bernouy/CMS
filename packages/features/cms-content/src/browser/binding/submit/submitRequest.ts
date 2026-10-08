@@ -19,10 +19,10 @@ export async function submitForm(form: HTMLFormElement, options: SubmitFormOptio
     return { ...(await requestBindingData(serialized.url, init)), form };
 }
 
-export type BindingRequestResult = Omit<FormSubmitResult, "form">;
+type BindingRequestResult = Omit<FormSubmitResult, "form">;
 
 /** Shared binding transport for schema-driven operations that cannot own a static form. */
-export async function requestBindingData(url: string, init: RequestInit = {}): Promise<BindingRequestResult> {
+async function requestBindingData(url: string, init: RequestInit = {}): Promise<BindingRequestResult> {
     try {
         const response = await fetch(url, init);
         const body = await readResponseBody(response);

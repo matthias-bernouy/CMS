@@ -49,7 +49,7 @@ export class CmsFilesError extends Error {
     }
 }
 
-export function randomBase64Url(length: number): string {
+function randomBase64Url(length: number): string {
     const bytes = crypto.getRandomValues(new Uint8Array(length));
     return bytesToBase64Url(bytes);
 }

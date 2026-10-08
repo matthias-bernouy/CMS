@@ -81,20 +81,3 @@ export function parseBoolean(raw: string | undefined, name: string, fallback: bo
     }
     throw new Error(`${name} must be true or false`);
 }
-
-export function parseBoundedNumber(
-    raw: string | undefined,
-    name: string,
-    fallback: number,
-    minimum: number,
-    maximum: number,
-): number {
-    if (raw === undefined) {
-        return fallback;
-    }
-    const value = Number(raw);
-    if (!raw.trim() || !Number.isFinite(value) || value < minimum || value > maximum) {
-        throw new Error(`${name} must be between ${minimum} and ${maximum}`);
-    }
-    return value;
-}

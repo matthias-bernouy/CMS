@@ -21,13 +21,13 @@ export type CmsPageSeoDetails = Pick<CmsPageDetails, "id" | "revision"> & {
     readonly seoEntries: readonly CmsPageSeoEntry[];
 };
 
-export type CmsPageRouteEntry = {
+type CmsPageRouteEntry = {
     readonly language: string;
     readonly path: string;
     readonly primary: boolean;
 };
 
-export type CmsPageSeoEntry = {
+type CmsPageSeoEntry = {
     readonly language: string;
     readonly title: string;
     readonly description: string;
@@ -73,7 +73,7 @@ export function cmsPageDetails(page: TPage): CmsPageDetails {
     };
 }
 
-export function cmsPageEditingDetails(page: TPage, system: TSystem): CmsPageEditingDetails {
+function cmsPageEditingDetails(page: TPage, system: TSystem): CmsPageEditingDetails {
     const languages = system.site.language ? [system.site.language, ...(system.site.additionalLanguages ?? [])] : [];
     return {
         ...cmsPageDetails(page),

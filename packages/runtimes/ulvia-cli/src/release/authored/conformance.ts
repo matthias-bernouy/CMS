@@ -10,7 +10,6 @@ import {
 import {
     assertUniqueSourceIds,
     compareOrdinal,
-    readJsonSourceRecord,
     readJsonSourceTree,
     readOptionalJsonSourceRecord,
     sourceId,

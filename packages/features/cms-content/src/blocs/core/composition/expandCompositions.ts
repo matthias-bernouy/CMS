@@ -4,7 +4,7 @@ export const COMPOSITION_OUTPUT_ATTRIBUTE = "data-cms-composition-output";
 export const COMPOSITION_CONTROLLER_ATTRIBUTE = "data-cms-composition-controller";
 export const COMPOSITION_AUTHORED_ATTRIBUTE = "data-cms-composition-authored";
 export const COMPOSITION_CONTROLLER_RUNTIME_ATTRIBUTE = "data-cms-composition-controller-runtime";
-export const COMPONENT_COMPOSITION_ATTRIBUTE = "data-cms-component-composition";
+const COMPONENT_COMPOSITION_ATTRIBUTE = "data-cms-component-composition";
 
 const SLOT_START = "cms-composition-slot-start:";
 const SLOT_END = "cms-composition-slot-end:";

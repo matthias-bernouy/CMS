@@ -1,6 +1,6 @@
 import { BSON } from "mongodb";
 
-export const MAX_MONGO_BSON_DOCUMENT_BYTES = 16 * 1024 * 1024;
+const MAX_MONGO_BSON_DOCUMENT_BYTES = 16 * 1024 * 1024;
 
 /** Fail before issuing a Mongo write that the server must reject for BSON size. */
 export function assertMongoBsonDocumentSize(document: Record<string, unknown>, label: string): void {

@@ -24,7 +24,7 @@ export function definePageStructuredData(
     head.appendChild(script);
 }
 
-export function pageStructuredData(settings: RenderingSettings, metadata: ResolvedPageMetadata): JsonObject | null {
+function pageStructuredData(settings: RenderingSettings, metadata: ResolvedPageMetadata): JsonObject | null {
     const host = canonicalSiteBaseUrl(settings.site.host);
     const canonicalUrl = metadata.canonicalUrl;
     if (!host || !canonicalUrl || metadata.robots?.includes("noindex")) {

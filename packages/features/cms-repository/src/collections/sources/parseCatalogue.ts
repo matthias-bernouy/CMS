@@ -1,6 +1,5 @@
 import type { CollectionRepositoryEntry } from "./interfaces";
 import { isCollectionNamespace } from "../core/namespace";
-import { DEFAULT_COLLECTION_LIMITS } from "../core/limits";
 import { isCanonicalSemVer } from "cms-repository/exports/contracts/compatibility";
 
 const IDENTIFIER = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
@@ -28,10 +27,6 @@ export function validCollectionReference(reference: {
 
 export function validCollectionRepositoryId(id: string): boolean {
     return validIdentifier(id);
-}
-
-export function parseCollectionCatalogue(data: unknown, repositoryId: string): CollectionRepositoryEntry[] {
-    return parseCollectionCataloguePage(data, repositoryId).entries;
 }
 
 export function parseCollectionCataloguePage(data: unknown, repositoryId: string): CollectionCataloguePage {

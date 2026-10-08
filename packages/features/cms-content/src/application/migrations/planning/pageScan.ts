@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 
-export const COLLECTION_MIGRATION_PAGE_BATCH_SIZE = 500;
+const COLLECTION_MIGRATION_PAGE_BATCH_SIZE = 500;
 
 /** Bounded ID-ordered scan with cursor-progress checks. */
 export async function* collectionPageBatches(

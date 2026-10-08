@@ -2,10 +2,7 @@ import type { Collection, Db } from "mongodb";
 import { publishedSiteRecord } from "cms-content/blocs/core/catalogue/records";
 import { replaceSiteBlocRecord } from "cms-content/application/default-implementation/mongo/repositories/blocPersistence";
 import { requireBlocRecord } from "cms-content/application/default-implementation/mongo/repositories/blocReadModels";
-import type {
-    BlocDoc,
-    SiteBlocPublicationLockDoc,
-} from "cms-content/application/default-implementation/mongo/repositories/documents";
+import type { BlocDoc } from "cms-content/application/default-implementation/mongo/repositories/documents";
 import { commitMongoSiteBlocPublication } from "cms-content/application/default-implementation/mongo/repositories/siteBlocPublication/commit";
 import type { SiteBlocPublicationGuard } from "cms-content/application/interfaces/CmsRepository";
 import type { BlocRecord, TBlocWrite } from "cms-content/blocs/interfaces/blocs";
@@ -15,7 +12,6 @@ type PublicationLock = (operation: (guard: SiteBlocPublicationGuard) => Promise<
 export async function publishMongoSiteBloc(
     db: Db,
     blocs: Collection<BlocDoc>,
-    locks: Collection<SiteBlocPublicationLockDoc>,
     tag: string,
     artifact: TBlocWrite,
     expectedDraftRevision: number,
@@ -25,16 +21,15 @@ export async function publishMongoSiteBloc(
 ): Promise<BlocRecord> {
     if (!guard) {
         return withPublicationLock((acquiredGuard) =>
-            commitPublication(db, blocs, locks, tag, artifact, expectedDraftRevision, publicationDate, acquiredGuard),
+            commitPublication(db, blocs, tag, artifact, expectedDraftRevision, publicationDate, acquiredGuard),
         );
     }
-    return commitPublication(db, blocs, locks, tag, artifact, expectedDraftRevision, publicationDate, guard);
+    return commitPublication(db, blocs, tag, artifact, expectedDraftRevision, publicationDate, guard);
 }
 
 function commitPublication(
     db: Db,
     blocs: Collection<BlocDoc>,
-    locks: Collection<SiteBlocPublicationLockDoc>,
     tag: string,
     artifact: TBlocWrite,
     expectedDraftRevision: number,

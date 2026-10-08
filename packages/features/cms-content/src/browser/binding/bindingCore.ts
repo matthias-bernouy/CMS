@@ -21,12 +21,7 @@ import {
     BINDING_DISABLED_ATTR,
     BIND_STOP_ATTR,
     isSourceState,
-    PAGE_STATE_ATTR,
-    READY_ATTR,
-    SOURCE_BODY_ATTR,
-    SOURCE_ID_ATTR,
     SOURCE_STATE_FORCE_ATTR,
-    SOURCE_TRIGGER_ATTR,
     type SourceState,
 } from "./core/attrs";
 

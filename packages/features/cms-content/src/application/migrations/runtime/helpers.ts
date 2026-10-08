@@ -6,16 +6,10 @@ import type {
 import { isDeepStrictEqual } from "node:util";
 import type {
     CollectionMigrationParticipant,
-    CollectionMigrationPageChange,
     CollectionMigrationRecord,
     CollectionMigrationSummary,
 } from "../interfaces";
 import type { prepareCollectionMigration } from "../plan";
-
-export function pagePatch(page: CollectionMigrationPageChange["before"]) {
-    const { revision: _revision, ...patch } = page;
-    return patch;
-}
 
 export function migrationTargetsMatch(
     collections: readonly InstalledCollection[],
@@ -36,7 +30,6 @@ export function migrationTargetInstallationsMatch(
     const current = new Map(
         collections.map(({ release: _release, ...installation }) => [installation.collectionId, installation]),
     );
-    const replacements = new Map(record.replacements.map((replacement) => [replacement.collectionId, replacement]));
     return record.replacements.every((replacement) => {
         const expected =
             side === "after"

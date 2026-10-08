@@ -35,15 +35,6 @@ export function validateOptionalText(field: string, value: string, max: number):
     return trimmed;
 }
 
-/** Optional category slug. Empty is allowed. */
-export function validateCategory(value: string, max = 50): string {
-    const trimmed = value.trim();
-    if (trimmed.length > max) {
-        throw new ContentValidationError("category", `too long; max ${max}`);
-    }
-    return trimmed;
-}
-
 export const MAX_PAGE_CONTENT_LENGTH = 1024 * 1024;
 
 /** Stored rich-text/HTML content: size-bounded then DOM-hardened (sanitized). */

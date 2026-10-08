@@ -1,7 +1,7 @@
 import type { TPageRef } from "cms-content/pages/interfaces/pages";
 import type { ThemeSettings } from "cms-content/theme/interfaces/theme";
 
-export type TEmailTemplate = {
+type TEmailTemplate = {
     subject: string;
     html: string;
 };

@@ -17,7 +17,6 @@ import type {
     FileReference,
     FileVariant,
     NamespacePermission,
-    UploadRecord,
 } from "cms-files/interfaces";
 
 const ALL_PERMISSIONS: readonly NamespacePermission[] = [

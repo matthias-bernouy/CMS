@@ -18,7 +18,7 @@ export {
     sameBlocOwner,
 } from "cms-content/blocs/core/catalogue/ownership";
 
-export function siteDefinition(record: BlocRecord): SiteBlocDefinition {
+function siteDefinition(record: BlocRecord): SiteBlocDefinition {
     const definition = record.siteDefinition;
     if (!definition || record.ownership.kind !== "site-builder") {
         throw new SiteBlocNotFoundError(record.tag);
@@ -105,7 +105,7 @@ function assertPublishedSlotContract(tag: string, definition: SiteBlocDefinition
     }
 }
 
-export function assertDraftRevision(tag: string, definition: SiteBlocDefinition, expectedRevision: number): void {
+function assertDraftRevision(tag: string, definition: SiteBlocDefinition, expectedRevision: number): void {
     if (definition.draftRevision !== expectedRevision) {
         throw new BlocRevisionConflictError(tag, expectedRevision, definition.draftRevision);
     }

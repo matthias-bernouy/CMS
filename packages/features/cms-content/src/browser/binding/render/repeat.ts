@@ -15,8 +15,6 @@
  *                                        bound to the integers from zero to four.
  */
 
-export { REPEAT_ATTR } from "../core/attrs";
-
 export type RepeatSpec = {
     path: string;
     name?: string;

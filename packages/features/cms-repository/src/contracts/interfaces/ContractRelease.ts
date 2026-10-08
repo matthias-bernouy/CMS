@@ -53,7 +53,7 @@ export interface ContractFixtureAssetDefinition {
 }
 
 /** Optional discovery metadata. Icon names are rendered by the consuming CMS. */
-export interface ContractCatalogueMetadata {
+interface ContractCatalogueMetadata {
     readonly categories?: readonly string[];
     readonly icon?: string;
 }

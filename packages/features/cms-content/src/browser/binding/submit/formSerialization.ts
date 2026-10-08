@@ -53,7 +53,7 @@ export function serializeForm(
     return { kind: "json", url: options.url, formData, data, body: JSON.stringify(data) };
 }
 
-export function serializeFormData(formData: FormData): SerializedFormData {
+function serializeFormData(formData: FormData): SerializedFormData {
     const data: SerializedFormData = {};
     for (const [key, value] of formData.entries()) {
         if (isEmptyFile(value)) {

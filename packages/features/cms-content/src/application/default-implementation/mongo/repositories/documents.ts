@@ -4,7 +4,7 @@ import type { TSystem } from "cms-content/settings/interfaces/settings";
 
 export const SYSTEM_ID = "singleton" as const;
 
-export type WithMongoId<T extends { id: string }> = Omit<T, "id"> & { _id: string };
+type WithMongoId<T extends { id: string }> = Omit<T, "id"> & { _id: string };
 export type BlocRecordDoc = Omit<BlocRecord, "tag"> & { _id: string };
 export type BlocDoc = BlocRecordDoc;
 export type PageDeletionIntent = {
@@ -12,7 +12,7 @@ export type PageDeletionIntent = {
     alternativePath: string | null;
     requestedAt: Date;
 };
-export type PagePathUpdateIntent = {
+type PagePathUpdateIntent = {
     token: string;
     requestedAt: Date;
     phase: "preparing" | "committed";
@@ -49,11 +49,6 @@ export type SiteBlocPublicationLockDoc = {
     phase?: "leased" | "committing";
     committingAt?: Date;
 };
-
-export function toDoc<T extends { id: string }>(model: T): WithMongoId<T> {
-    const { id, ...rest } = model;
-    return { _id: id, ...rest } as WithMongoId<T>;
-}
 
 export function toBlocDoc(record: BlocRecord): BlocRecordDoc {
     return structuredClone({

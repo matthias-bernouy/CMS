@@ -46,7 +46,7 @@ export function validateStablePageLink(
     return parsed;
 }
 
-export function parseStablePageReference(value: string, path: string): StablePageReference {
+function parseStablePageReference(value: string, path: string): StablePageReference {
     let parsed: unknown;
     try {
         parsed = parseStrictJson(value, 1024, 4);

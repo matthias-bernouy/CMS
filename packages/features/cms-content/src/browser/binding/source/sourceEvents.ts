@@ -9,7 +9,7 @@ import { listenReactiveUrlChanges } from "./runtime/reactiveUrl";
 import { sourceUrl } from "./runtime/sourceSpec";
 
 /** Space-separated event names in this attribute re-run the source. */
-export const RELOAD_ATTR = "cms-reload-on";
+const RELOAD_ATTR = "cms-reload-on";
 /** Refreshes automatic sources; form-triggered sources require an explicit event. */
 export const RELOAD_EVENT = "cms-source:reload";
 

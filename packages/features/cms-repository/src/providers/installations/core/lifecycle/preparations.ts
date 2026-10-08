@@ -28,10 +28,7 @@ export function workflowOptions(options: ProviderInstallationWorkflowOptions) {
     return Object.freeze({ limits, manifestLimits, maxPreparationAgeMs });
 }
 
-export function snapshotApproval(
-    command: ProviderInstallationApprovalCommand,
-    limits: Readonly<ProviderInstallationLimits>,
-) {
+function snapshotApproval(command: ProviderInstallationApprovalCommand, limits: Readonly<ProviderInstallationLimits>) {
     // The envelope contains two bounded documents plus metadata, with one extra nesting level.
     // Allow six bytes per metadata character for JSON escaping, plus keys and punctuation.
     // validateProposal still applies the original budgets to each document before any await.
