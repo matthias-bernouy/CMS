@@ -3,5 +3,8 @@
     "bloc.card.label": "Smoke card",
     "bloc.category.components": "Components",
     "collection.description": "A minimal immutable release used to verify installation through Control.",
-    "collection.name": "Smoke Kit"
+    "collection.name": "Smoke Kit",
+    "text.category.components": "Components",
+    "text.group.components.content": "Content",
+    "text.ui-smoke-content.label": "Smoke content"
 }

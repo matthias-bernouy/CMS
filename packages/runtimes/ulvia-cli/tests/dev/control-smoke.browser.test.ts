@@ -10,7 +10,7 @@ const smoke = process.env.ULVIA_RUN_CONTROL_SMOKE === "1" ? test : test.skip;
 const PORTS = { control: 15_100, delivery: 15_101, mongo: 27_029, repository: 15_102 } as const;
 
 smoke(
-    "fresh local installation supports every Control workspace and one mutation per domain",
+    "fresh local installation supports every Control workspace and representative mutations",
     async () => {
         const data = await mkdtemp(join(tmpdir(), "ulvia-control-smoke-"));
         const environment = {

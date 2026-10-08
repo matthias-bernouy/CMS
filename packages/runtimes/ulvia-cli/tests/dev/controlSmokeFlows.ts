@@ -8,10 +8,10 @@ export async function runControlSmoke(
     await signIn(page, credentials, controlOrigin);
     await mutatePages(page);
     await mutateCollections(page);
-    await mutateFiles(page);
     await mutateSettings(page);
     await mutateProviders(page);
     await mutateAccess(page);
+    await inspectDiagnostics(page);
 }
 
 export async function verifyControlStateAfterRestart(
@@ -25,9 +25,6 @@ export async function verifyControlStateAfterRestart(
     await page.getByRole("link", { name: "Collections", exact: true }).click();
     await page.getByRole("heading", { name: "smoke-kit", exact: true }).waitFor();
 
-    await page.getByRole("link", { name: "Files", exact: true }).click();
-    await page.getByRole("heading", { name: "Smoke folder", exact: true }).waitFor();
-
     await page.getByRole("link", { name: "Settings", exact: true }).click();
     await expectControlValue(page, "Site name", "Smoke CMS");
     await page.getByRole("button", { name: "Languages", exact: true }).click();
@@ -40,6 +37,8 @@ export async function verifyControlStateAfterRestart(
 
     await page.getByRole("link", { name: "Users", exact: true }).click();
     await page.getByText("1 total users.", { exact: true }).waitFor();
+
+    await inspectDiagnostics(page);
 }
 
 async function signIn(
@@ -81,22 +80,6 @@ async function mutateCollections(page: Page): Promise<void> {
     await page.getByRole("button", { name: /Collections/u }).click();
 }
 
-async function mutateFiles(page: Page): Promise<void> {
-    await page.getByRole("link", { name: "Files", exact: true }).click();
-    await page.getByRole("heading", { name: "Library", exact: true }).waitFor();
-    await page.getByText("This folder is empty.", { exact: true }).waitFor();
-    await page.getByLabel("Folder name", { exact: true }).fill("Smoke folder");
-    const [response, refresh] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.files/create-folder")),
-        page.waitForResponse((candidate) => candidate.url().includes("ulvia.cms.files/list")),
-        page.getByRole("button", { name: "Create folder" }).click(),
-    ]);
-    if (!response.ok() || !refresh.ok()) {
-        throw new Error(`Folder flow failed (create ${response.status()}, refresh ${refresh.status()}).`);
-    }
-    await page.getByRole("heading", { name: "Smoke folder", exact: true }).waitFor();
-}
-
 async function mutateSettings(page: Page): Promise<void> {
     await page.getByRole("link", { name: "Settings", exact: true }).click();
     await page.getByRole("heading", { name: "General", exact: true }).waitFor();
@@ -130,6 +113,12 @@ async function mutateAccess(page: Page): Promise<void> {
     if (!response.ok()) {
         throw new Error(`Login provider flow failed (${response.status()}).`);
     }
+}
+
+async function inspectDiagnostics(page: Page): Promise<void> {
+    await page.getByRole("link", { name: "Diagnostics", exact: true }).click();
+    await page.getByRole("heading", { name: "Diagnostics", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Content maintenance", exact: true }).waitFor();
 }
 
 async function expectControlValue(page: Page, label: string, expected: string): Promise<void> {

@@ -61,12 +61,17 @@ automatically.
 | `bun run typecheck` | TypeScript project-reference check/build. |
 | `bun run build` | Build components, TypeScript references, then the Control browser bundle. |
 | `bun test` | Run the test suite. |
+| `bun run test:control-smoke` | Exercise a fresh local Control installation, representative mutations and restart through Chromium. |
 | `bun run clean` | Clean TypeScript build outputs through `tsc --build --clean`. |
 
 `check:all` is an aggregate static check; it does not execute the application
 test suite or browser scenarios. Run focused tests for behavior changes and the
 build when generated browser assets are affected. Browser/network integration
 tests require an environment that permits Chromium and local listeners.
+
+The fresh-install Control smoke test additionally requires Docker Compose. It is
+opt-in locally and runs every night, or on demand, through the dedicated GitHub
+Actions workflow.
 
 `check:dead-code` exits with a failure when it finds unused declarations,
 exports, exported types or package dependencies. Public exports can be

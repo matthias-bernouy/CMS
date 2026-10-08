@@ -1,0 +1,8 @@
+[
+    {
+        "id": "ui-smoke-content",
+        "label": "text.ui-smoke-content.label",
+        "category": "text.category.components",
+        "group": "text.group.components.content"
+    }
+]
