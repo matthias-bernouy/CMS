@@ -62,12 +62,8 @@ test("quality workflow keeps every G0 check visible", async () => {
         "bun run quality/ci/coverage/ratchet.ts",
         "bun run --cwd packages/surfaces/cms-control src/prebuildControl.ts",
         "docker compose version",
-        "bun test packages/features/cms-gateway/tests/media",
-        "bun test quality/image-performance/tests",
-        "bun node_modules/playwright/cli.js install --with-deps chromium",
-        "--synthetic 2",
-        "bun run quality/image-performance/browser/run.ts",
-        "bun run quality/image-performance/compare/smoke.ts",
+        "bun test packages/features/cms-files/tests",
+        "bun test packages/features/cms-gateway/tests/http packages/features/cms-gateway/tests/invocation",
     ]) {
         expect(configuration).toContain(command);
     }
@@ -94,32 +90,23 @@ test("quality workflow keeps every G0 check visible", async () => {
     );
     expect(workflow).toContain("uses: ./.github/workflows/quality-integration-contracts.yml");
     expect(integrationWorkflow).toContain("name: Quality runtime contracts");
-    expect(integrationWorkflow).toContain("name: Gateway image safety and Chromium smoke");
-    expect(integrationWorkflow).toContain("PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/playwright");
-    expect(integrationWorkflow).toContain("--suite-id gateway-images-ci-smoke");
+    expect(integrationWorkflow).toContain("name: Files provider and binary gateway conformance");
     expect(workflow).toContain("INTEGRATION_RESULT: ${{ needs.integration-contracts.result }}");
     expect(workflow).toContain("name: Quality gate");
     expect(workflow).toContain("path: coverage/");
 });
 
-test("gateway image CI uses the real adapter with deterministic public fixtures only", async () => {
+test("integration CI runs Files and binary gateway conformance", async () => {
     const workflow = await readFile(workflowPath, "utf8");
     const integrationWorkflow = await readFile(integrationWorkflowPath, "utf8");
-    const job = integrationWorkflow.match(/\n  gateway-image-safety:[\s\S]*$/)?.[0];
+    const job = integrationWorkflow.match(/\n  files-provider-conformance:[\s\S]*$/)?.[0];
     const qualityGate = workflow.match(/\n  quality-gate:[\s\S]*$/)?.[0];
 
     expect(job).toBeDefined();
-    expect(job).toContain("bun test packages/features/cms-gateway/tests/media");
-    expect(job).toContain("bun test quality/image-performance/tests");
-    expect(job).toContain("bun node_modules/playwright/cli.js install --with-deps chromium");
-    expect(job).toContain("--adapter module:quality/image-performance/benchmark/adapters/gatewayImagesAdapter.ts");
-    expect(job).toContain("--synthetic 2");
-    expect(job).toContain("bun run quality/image-performance/browser/run.ts");
-    expect(job).toContain("bun run quality/image-performance/compare/smoke.ts");
-    expect(job).not.toContain("IMAGE_CORPUS_DIR");
-    expect(job).not.toMatch(/\s--corpus(?:\s|$)/);
-    expect(job).not.toContain("compare:image-performance");
-    expect(job).not.toContain("quality/image-performance/compare/run.ts");
+    expect(job).toContain("bun test packages/features/cms-files/tests");
+    expect(job).toContain(
+        "bun test packages/features/cms-gateway/tests/http packages/features/cms-gateway/tests/invocation",
+    );
     expect(qualityGate).toContain("- integration-contracts");
     expect(qualityGate).toContain('test "$INTEGRATION_RESULT" = success');
 });

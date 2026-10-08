@@ -40,6 +40,10 @@ services:
             # to the Control admin get nginx 413 before reaching the app).
             # http-level directive → applies to every vhost.
             - ./nginx-conf.d/client_max_body.conf:/etc/nginx/conf.d/zzz_client_max_body.conf:ro
+            - ./nginx-conf.d/capability-cache.conf:/etc/nginx/conf.d/zzz_capability_cache.conf:ro
+            - ./nginx-conf.d/query-safe-access-log.conf:/etc/nginx/conf.d/zzz_query_safe_access_log.conf:ro
+            - ./nginx-vhost.d/default_location:/etc/nginx/vhost.d/default_location:ro
+            - nginx_cache:/var/cache/nginx
             - nginx_certs:/etc/nginx/certs
             - nginx_vhost:/etc/nginx/vhost.d
             - nginx_html:/usr/share/nginx/html
@@ -113,4 +117,5 @@ volumes:
     nginx_vhost:
     nginx_html:
     nginx_acme:
+    nginx_cache:
     mongo_data:

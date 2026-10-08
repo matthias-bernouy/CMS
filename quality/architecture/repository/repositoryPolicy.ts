@@ -5,12 +5,6 @@ const CONTROL_RUNTIME_ASSET = "packages/surfaces/cms-control/src/browser/control
 
 /** Existing reads are frozen here until runtime configuration is injected into their owners. */
 export const ENVIRONMENT_READ_BASELINE = {
-    "packages/features/cms-content/src/files/http/serveFilesRequest.ts": {
-        "process.env.MODE": 1,
-    },
-    "packages/features/cms-content/src/files/http/serveVariant.ts": {
-        "process.env.MODE": 1,
-    },
     "packages/foundation/http-runner/src/core/compression/headers.ts": {
         "process.env.MODE": 3,
     },
@@ -42,7 +36,6 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
             "packages/features/cms-content/src/exports/bindings.ts",
             "packages/features/cms-content/src/exports/theme.ts",
             "packages/features/cms-content/src/exports/page-path.ts",
-            "packages/features/cms-content/src/exports/files/urls.ts",
         ],
         packageImportAllowlist: {
             "@bernouy/cms-delivery": {
@@ -53,8 +46,6 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
                     "./browser/dom",
                     "./theme",
                     "./page-path",
-                    "./files/serving",
-                    "./files/urls",
                 ],
             },
         },

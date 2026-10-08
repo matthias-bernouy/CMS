@@ -7,8 +7,8 @@ permissions:
   contents: read
 
 jobs:
-  gateway-image-safety:
-    name: Gateway image safety and Chromium smoke
+  files-provider-conformance:
+    name: Files provider and binary gateway conformance
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -18,42 +18,8 @@ jobs:
       - name: Set up workspace
         uses: ./.github/actions/setup-workspace
 
-      - name: Run gateway image security contracts
-        run: |
-          bun test packages/features/cms-gateway/tests/media
+      - name: Run Files provider conformance
+        run: bun test packages/features/cms-files/tests
 
-      - name: Run image performance harness tests
-        run: bun test quality/image-performance/tests
-
-      - name: Install locked Playwright Chromium
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/playwright
-        run: bun node_modules/playwright/cli.js install --with-deps chromium
-
-      - name: Capture deterministic synthetic candidate
-        run: |
-          bun run quality/image-performance/benchmark/run.ts \
-            --label ci-candidate \
-            --adapter module:quality/image-performance/benchmark/adapters/gatewayImagesAdapter.ts \
-            --suite-id gateway-images-ci-smoke \
-            --synthetic 2 \
-            --repetitions 1 \
-            --users 1 \
-            --foreground-requests 4 \
-            --output "$RUNNER_TEMP/image-performance-candidate.json"
-
-      - name: Verify provider media runtime in Chromium
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/playwright
-        run: |
-          bun run quality/image-performance/browser/run.ts \
-            --suite-id gateway-images-ci-smoke \
-            --candidate "$RUNNER_TEMP/image-performance-candidate.json" \
-            --output "$RUNNER_TEMP/image-performance-browser.json"
-
-      - name: Validate synthetic performance and browser evidence
-        run: |
-          bun run quality/image-performance/compare/smoke.ts \
-            --candidate "$RUNNER_TEMP/image-performance-candidate.json" \
-            --browser "$RUNNER_TEMP/image-performance-browser.json" \
-            --output "$RUNNER_TEMP/image-performance-smoke.json"
+      - name: Run binary gateway contracts
+        run: bun test packages/features/cms-gateway/tests/http packages/features/cms-gateway/tests/invocation

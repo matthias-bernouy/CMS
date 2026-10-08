@@ -8,7 +8,6 @@ import { createWorkspaceFixture, manifest, ofKind } from "./checkWorkspace.fixtu
 const { createWorkspace } = createWorkspaceFixture();
 const REPOSITORY_ROOT = resolve(import.meta.dir, "../../..");
 const OFFICIAL_COLLECTIONS = resolve(REPOSITORY_ROOT, "packages/official-repository/collections");
-const BINARY_FILE_TRANSPORTS = new Set(["/.cms/files/upload", "/.cms/files/content"]);
 
 test("Delivery imports only public content capabilities, including type and dynamic imports", async () => {
     const root = await createWorkspace({
@@ -16,29 +15,26 @@ test("Delivery imports only public content capabilities, including type and dyna
             exports: {
                 ".": "./src/index.ts",
                 "./rendering": "./src/rendering.ts",
-                "./files": "./src/files.ts",
-                "./files/local-fs": "./src/local.ts",
+                "./mongo": "./src/mongo.ts",
             },
         }),
         "packages/features/cms-content/src/index.ts": "export type CmsRepository = {};",
         "packages/features/cms-content/src/rendering.ts": "export type ContentReader = {};",
-        "packages/features/cms-content/src/files.ts": "export const mutation = true;",
-        "packages/features/cms-content/src/local.ts": "export const filesystem = true;",
+        "packages/features/cms-content/src/mongo.ts": "export const persistence = true;",
         "packages/surfaces/cms-delivery/package.json": manifest("@bernouy/cms-delivery", {
             dependencies: { "@bernouy/cms-content": "workspace:*" },
         }),
         "packages/surfaces/cms-delivery/src/index.ts": [
             "import type { ContentReader } from '@bernouy/cms-content/rendering';",
             "import type { CmsRepository } from '@bernouy/cms-content';",
-            "void import('@bernouy/cms-content/files');",
-            "void import('@bernouy/cms-content/files/local-fs');",
+            "void import('@bernouy/cms-content/mongo');",
         ].join("\n"),
     });
     const violations = await checkWorkspaceArchitecture({
         rootDir: root,
         packageImportAllowlist: repositoryArchitectureOptions(root).packageImportAllowlist,
     });
-    expect(ofKind(violations, "restricted-package-import")).toHaveLength(3);
+    expect(ofKind(violations, "restricted-package-import")).toHaveLength(2);
     expect(ofKind(violations, "surface-runtime-adapter")).toHaveLength(1);
 });
 
@@ -67,10 +63,7 @@ test("official collection scripts use only the common capability transport", asy
         const source = await readFile(path, "utf8");
         for (const match of source.matchAll(/\bcms-source="([^"]+)"/gu)) {
             const endpoint = match[1]!.split(" as ", 1)[0]!;
-            expect(
-                endpoint.startsWith("/.cms/call/") || BINARY_FILE_TRANSPORTS.has(endpoint),
-                `${path}: ${endpoint}`,
-            ).toBeTrue();
+            expect(endpoint.startsWith("/.cms/call/"), `${path}: ${endpoint}`).toBeTrue();
         }
     }
 });

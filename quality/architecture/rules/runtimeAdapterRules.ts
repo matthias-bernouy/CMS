@@ -39,9 +39,6 @@ export function isRuntimeAdapter(
     if (!browser && (specifier === "@bernouy/cms-auth/http" || specifier === "@bernouy/cms-gateway/http/handlers")) {
         return false;
     }
-    if (browser && specifier === "@bernouy/cms-gateway/media/handlers") {
-        return true;
-    }
     const normalizedBuiltin = specifier.replace(/^node:/, "");
     if (browser && (specifier === "bun" || specifier.startsWith("bun:") || NODE_BUILTINS.has(normalizedBuiltin))) {
         return true;
