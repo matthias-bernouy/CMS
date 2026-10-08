@@ -40,22 +40,21 @@ every package must reproduce.
 
 ### Content And Authoring
 
-`cms-content/src/` groups `pages`, `blocs`, `files`, `settings`, `theme`,
+`cms-content/src/` groups `pages`, `blocs`, `settings`, `theme`,
 `application` and `exports`. Its `CmsRepository` is the content
 persistence facade; it is distinct from the `@bernouy/cms-repository` package.
 
-Control receives a writable `CmsRepository` and authoring file dependencies.
+Control receives a writable `CmsRepository`.
 Delivery receives a fresh `ContentReader` from `@bernouy/cms-content/rendering`:
 published pages/routes, projected settings and renderable Bloc artifacts.
-`@bernouy/cms-content/files/serving` exposes original reads, writable variants
-and separate sitemap storage. Runtimes construct these facades and adapters.
+File references are resolved through the selected `ulvia.cms.files` provider.
+Sitemap storage is an independent runtime dependency.
 
 Every page has a monotonic concurrency revision used by authoring and collection
 migrations. This is not user-facing page history. Page publication is
 `visible === true`; user-facing Page history is not implemented.
-Editorial preview belongs to Control. Author files are publicly
-readable by ID/path, including files used only by drafts or no page at all.
-The shared runtime does not provide confidential author-file enforcement.
+Editorial preview belongs to Control. File visibility and temporary private
+access are enforced by the selected Files provider.
 
 Installed collection Blocs, themes, texts and surface-specific Pages are projected
 from immutable releases. Breaking stored-data upgrades use the maintenance-mode
@@ -67,14 +66,14 @@ workflow documented in [collections](../blocs/collections.md).
 site installation and selection models, revisioned storage, and authored
 collection admission. It does not call providers.
 
-`cms-gateway` owns `invocation`, `identity` and `media`. It resolves exact
+`cms-gateway` owns `invocation` and `identity`. It resolves exact
 selections, checks readiness and authorization, executes admitted transport
-plans, validates results, and supplies provider aliases and image derivatives.
-Generic image transforms live in `@bernouy/image-processing`.
+plans, validates results, and supplies provider aliases and streaming transport.
+Files providers use generic transforms from `@bernouy/image-processing`.
 
 The production runtime constructs Mongo catalogues and site stores, secret
 resolution, network adapters, identity storage and observation refresh. Surfaces
-receive invocation, access checks, selected catalogue reads and image handling.
+receive invocation, access checks and selected catalogue reads.
 Control exposes collection-backed provider and collection administration Pages;
 provider connection approval, credential rotation and exact contract selection
 are application workflows owned by `cms-repository`. Repository publication is

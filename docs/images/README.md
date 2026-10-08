@@ -1,41 +1,30 @@
-# Responsive Images
+# Files And Responsive Images
 
-CmsCore uses native responsive-image HTML and bounded WebP derivatives. The
-browser selects a candidate from `srcset` using image layout, `sizes`, device
-pixel ratio, and its own loading policy.
+Files are provided through the standard `ulvia.cms.files` contract. Control,
+Delivery, browsers and other providers use the same binding-derived gateway
+routes under `/.cms/call/ulvia.cms.files`.
 
-## Supported Paths
+The selected Files provider owns namespaces, credentials, upload sessions,
+metadata, immutable generations, visibility, access signatures, quotas and
+image representations. The gateway only authenticates the caller, checks the
+effective grant and streams the declared binary capability.
 
-| Image URL | Optimization | Generation |
-| --- | --- | --- |
-| `/.cms/files/by-id/<id>` rendered by Delivery | CMS Files variants at `/.cms/img/...` | Background job after a page first references the file. |
-| Selected provider file at `/.cms/media/<contract>/<capability>/<fileId>` | Gateway derivatives at `/.cms/image/<contract>/<capability>/<fileId>/<width>.webp` | Bounded on-demand processing after a fresh authorized file read. |
-| Other URL | None | No generated candidates. |
+Public immutable files use URLs such as:
 
-The original remains authoritative. Derivatives are disposable and never grant
-access to the original. Gateway requests recheck the selected contract,
-installation, actor grant, and original file before a derivative cache lookup.
-Gateway derivative responses currently use `private, no-store`; durable jobs and
-public cache policy have not been added yet.
+```text
+/.cms/call/ulvia.cms.files/files/file_123/sha256-abcd
+```
 
-`no-store` controls browser and intermediary caching. Server-side transformation
-and reuse of stored derivative bytes still happen; a warm request avoids another
-encode, but still authorizes access and reads the original provider bytes.
+Private reads use the same URL with an opaque `access` query minted by
+`files.sign`. Application and reverse-proxy access logs must omit query strings.
 
-The old `/.cms/sources` image route and Source image worker have been removed.
-Provider media uses selected gateway capabilities.
+The official provider offers `thumbnail` and `responsive` WebP profiles. It
+keeps originals, never enlarges images, skips SVG and animated inputs, creates
+at most ten content-addressed representations, and serves the original while
+background representations are unavailable. Representation discovery and reads
+are ordinary contract capabilities.
 
-## Responsibilities
-
-- The provider retains the original and supplies intrinsic width and height.
-- Bloc authors write semantic `<img>` markup, `alt`, layout CSS, loading policy,
-  and optional `sizes` or art direction.
-- The binding runtime keeps unresolved URLs inert until interpolation finishes.
-- The gateway browser helper generates bounded candidates for same-origin
-  `/.cms/media` URLs with known dimensions.
-- The browser chooses the candidate. CmsCore does not measure the rendered
-  element to select a width.
-
-See [authoring](./authoring.md), [delivery](./delivery.md), and
-[operations](./operations.md) for the current contracts.
-The [gateway flow](../providers/README.md) describes selection and runtime wiring.
+`ulvia-official-image` receives a `FileReference`, a profile, `sizes`, `alt`,
+loading and presentation settings. Delivery can emit known public references
+during server rendering; the browser helper resolves dynamic references after a
+binding completes. Image processing never runs in the gateway or the block.

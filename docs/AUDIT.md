@@ -71,9 +71,12 @@ dependency advisory audit because it requires current registry access.
   and new environment reads outside composition roots.
 - Surfaces receive dependencies; runtimes choose MongoDB, filesystem, network
   and listener adapters.
-- `cms-content` owns mutable Pages, Blocs, settings, themes and author files.
+- `cms-content` owns mutable Pages, Blocs, settings and themes.
+- `cms-files` owns namespaces, credentials, uploads, file metadata, byte storage,
+  signed access and image representations for the official Files provider.
   `cms-repository` owns immutable contracts, providers and collections.
-  `cms-gateway` owns live provider invocation, identities and media.
+  `cms-gateway` owns live provider invocation and identities; Files providers
+  own file and image semantics.
 - The official CMS provider behavior is a normal `cms-core` surface. The future
   `ulvia.provider.cms-instances` control plane remains a separate provider
   product concern.

@@ -184,7 +184,7 @@ colour contrast, logical reading order, and native element semantics. Gate
 non-essential motion with `prefers-reduced-motion`.
 
 For image candidate selection inside fluid layouts, follow
-[Authoring Responsive Images](../images/authoring.md).
+[Files And Responsive Images](../images/README.md).
 
 The implementation is in [theme defaults](../../packages/features/cms-content/src/theme/core/defaults.ts)
 and [CSS generation](../../packages/features/cms-content/src/theme/core/generateStyleEntry.ts).

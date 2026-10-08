@@ -306,7 +306,7 @@ loading/error behavior, and never embed a secret or call a provider directly.
 
 Bound image URLs use the same interpolation layer and have additional
 network-inert activation rules. Follow
-[Authoring Responsive Images](../images/authoring.md) instead of building a
+[Files And Responsive Images](../images/README.md) instead of building a
 custom fetch-and-Blob loader.
 
 The binding syntax and activation constants are exported from

@@ -47,9 +47,11 @@ expand that baseline to bypass dependency injection.
 `cms-content` owns the content persistence facade named `CmsRepository`.
 `cms-repository` owns contract/provider artifacts, site installation/selection
 models, collection admission and the explicit collection build toolchain.
-`cms-gateway` owns live invocation,
-provider-wide identities and media. Generic secret storage and image transforms
-belong to Foundation. See the [package map](docs/architecture/packages.md).
+`cms-gateway` owns provider-neutral live invocation and provider-wide identities.
+`cms-files` owns namespaces, file credentials, uploads, immutable generations,
+access signatures, storage metadata and image representations. Generic secret
+storage and image transforms belong to Foundation. See the
+[package map](docs/architecture/packages.md).
 
 ## Imports
 

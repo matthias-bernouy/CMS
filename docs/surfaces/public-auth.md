@@ -31,11 +31,10 @@ forms can submit to the corresponding auth route. For example:
 </form>
 ```
 
-Delivery does not mount `/.cms/sources`. Provider data and file reads use
-selected gateway capabilities under `/.cms/call`, `/.cms/media`, and
-`/.cms/image`.
+Delivery does not mount `/.cms/sources`. Provider data, files and image
+representations use selected gateway capabilities under `/.cms/call`.
 
 See [binding forms](../blocs/data-bindings.md) for submission state and
-[provider identities](../providers/README.md#identity-and-media) for the separate
+[provider identities](../providers/README.md#identity) for the separate
 provider alias contract. Public login establishes the CMS session; it does not
 select or approve a provider installation.

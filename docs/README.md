@@ -58,7 +58,6 @@ Use the guides here and the referenced source code to establish current behavior
 
 ## Images And UI Quality
 
-- [Responsive images](images/README.md): [authoring](images/authoring.md),
-  [delivery](images/delivery.md) and [operations](images/operations.md).
+- [Files and responsive images](images/README.md).
 - [UI contracts](quality/ui-contracts.md): binding ownership, browser request
   diagnostics, source/form checks and current scanner limitations.

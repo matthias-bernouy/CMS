@@ -83,7 +83,7 @@ Keyed commands still require durable idempotency before activation.
 
 When `CMS_GATEWAY_SITE_ID` is configured, `cms-server` constructs Mongo release,
 manifest, installation and selection stores, a selected catalogue, network and
-secret adapters, image storage and observation refresh. The current host policy
+secret adapters and observation refresh. The current host policy
 allows public/authenticated access on Delivery as declared by the capability;
 Control's generic invocation route requires the configured local administrator.
 Page execution plans restrict collection-owned and site-owned Control Pages to
@@ -101,11 +101,11 @@ Core surface.
 
 | Surface | Routes relative to its base path |
 | --- | --- |
-| Control | `POST /.cms/call/<contract>/<capability>`, `GET /.cms/media/<contract>/<capability>/<fileId>`, `GET /.cms/image/<contract>/<capability>/<fileId>/<width>.webp` |
-| Delivery | Same `/.cms/*` transport, with Delivery access policy |
+| Control | `/.cms/call/<contractId><binding.path>` for every admitted HTTP method |
+| Delivery | Same binding-derived `/.cms/call/*` transport, with Delivery access policy |
 
-Routes are mounted only when their dependencies are configured. Image routes
-also require the image service. These reads do not publish or select providers.
+Routes are mounted only when their dependencies are configured. Binary reads,
+including Files representations, use the same generic route.
 Dynamic SEO invokes the gateway directly; see [page indexing](../surfaces/page-indexing.md).
 Control's `/admin/providers` Page lists provider installations and their exact
 contract selections. The `ulvia.cms.providers` capabilities provide bounded
@@ -123,7 +123,7 @@ and migration through `ulvia.cms.collections`; collection theme editing uses
 Provider health remains the last validated runtime
 observation shown by these Pages, not an implicit live probe of every
 capability. Every collection request uses the common
-`POST /.cms/call/<contract>/<capability>` transport and its Page execution pin.
+`/.cms/call/<contractId>{binding.path}` transport and its Page execution pin.
 The selected API origin and token belong to installation state. Manifests list
 allowed origins but do not classify providers as local or remote. The runtime
 accepts HTTPS endpoints and literal loopback HTTP for development, and applies
@@ -134,18 +134,18 @@ runtime injects provider provisioning and invocation. Evidence can then be
 pushed and pulled through the signed repository client without publishing
 provider outputs.
 
-## Identity And Media
+## Identity And Files
 
 A CMS user keeps one alias per **provider ID**, shared across sites and
 installations of that provider. Existing authority aliases are reused; a new
 alias is generated only when none exists. CMS subject IDs remain inside the
 CMS. Revoking an installation does not delete the provider-wide identity.
 
-File access and derivative requests resolve and authorize the selected
-capability again. Image processing is shared with author files through
-Foundation, while their storage and lifecycle remain separate. Gateway images
-have a server derivative store and currently return `private, no-store` to
-clients. See [image delivery](../images/delivery.md).
+File access and representation requests resolve and authorize the selected
+`ulvia.cms.files` capability again. The selected Files provider owns namespaces,
+credentials, storage, visibility, signatures, cache policy and derivatives.
+The gateway only applies the admitted binding, grants and generic binary
+transport rules. See [files and responsive images](../images/README.md).
 
 ## Current Integration Gaps
 
@@ -165,8 +165,9 @@ clients. See [image delivery](../images/delivery.md).
   `@bernouy/official-repository-server` provides single-replica production hosting
   with durable staged uploads and replay claims. Horizontal storage and
   multi-publisher authorization remain separate work.
-- Provider image transforms run on demand; there is no durable derivative queue
-  or public shared-cache policy.
+- The official Files provider schedules reconstructible image representations in
+  process; a durable derivative worker remains future work. Public immutable
+  file responses already expose a shared-cache policy.
 
 The code establishing the production boundary is
 [createProductionGateway](../../packages/runtimes/cms-server/src/runtime/gateway/createProductionGateway.ts)

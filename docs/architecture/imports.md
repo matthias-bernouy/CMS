@@ -44,10 +44,9 @@ Adapter subpaths isolate optional infrastructure:
 
 - `./mongo` imports MongoDB-backed repositories.
 - `@bernouy/blob-store/s3` imports the generic S3-backed blob adapter.
-- `@bernouy/blob-store/local-fs` imports the generic filesystem blob adapter;
-  `./files/local-fs` on `cms-content` imports filesystem-backed CMS metadata.
+- `@bernouy/blob-store/local-fs` imports the generic filesystem blob adapter.
 - `./browser` exposes browser-safe APIs where the package declares it, such as
-  `cms-auth/browser`; gateway image helpers use `cms-gateway/media/browser`.
+  `cms-auth/browser`.
 
 Production adapters belong in composition roots such as `@bernouy/cms-server`
 and local development wiring. Tests can also compose adapters.

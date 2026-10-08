@@ -10,11 +10,11 @@ Page can render:
 - `/login` and the configured authentication routes;
 - `/assets/control-runtime.js` and `/assets/control-styles.css` for the
   presentation-free binding and Bloc host runtime;
-- capability calls, provider media and author-file delivery;
+- generic capability calls;
 - `/admin/*`, resolved from the installed collection Control Page registry; it
   returns the kernel `503` recovery document when no matching Page is usable;
-- authenticated `/.cms/call/*`, `/.cms/media/*`, `/.cms/image/*` and
-  `/.cms/blocset`, which are the shared capability and rendering transports.
+- authenticated `/.cms/call/*` and `/.cms/blocset`, which are the shared
+  capability and rendering transports.
 
 The two browser assets are mounted explicitly. Adding a file below
 `src/browser/` never creates a route. Authentication documents live below
