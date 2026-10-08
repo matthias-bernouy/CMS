@@ -36,12 +36,13 @@ test("node transport pins the target and injects trusted context", async () => {
     expect(result).toMatchObject({ status: 200, output: { items: ["one"] } });
     expect(sent).toEqual([
         {
-            url: "http://127.0.0.1:8080/v1/items?term=%22one%22",
+            url: "http://127.0.0.1:8080/v1/items?term=one",
             address: "127.0.0.1",
             headers: {
                 accept: "application/json",
                 authorization: "Bearer secret-token",
                 "x-ulvia-request-id": "request-1",
+                "x-ulvia-contract-id": "catalog",
                 "x-ulvia-site-id": "site-a",
                 "x-ulvia-installation-id": "install-a",
                 "x-ulvia-origin": "delivery",

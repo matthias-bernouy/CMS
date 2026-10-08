@@ -28,7 +28,7 @@ function binaryRelease(overrides: Record<string, unknown> = {}): Record<string, 
         fixtureAssets: [asset],
         capabilities: [
             capabilityDocument({
-                output: { type: "binary", maxBytes: 1024, mediaTypes: ["image/svg+xml"] },
+                output: { type: "binary", maxBytes: 1024 },
                 binding: {
                     transport: "http",
                     method: "POST",
@@ -49,7 +49,7 @@ describe("contract mock assets", () => {
             new URL("../../../fixtures/contracts/protocol-v1/mock.contract.json", import.meta.url),
         ).text();
         const admitted = await admitContractBundleJson(json, [{ id: asset.id, bytes: assetBytes }]);
-        expect(admitted.digest).toBe("sha256:00d6488f5216597efa8f4dc0d603f02de6a52b23f80b6b5f5286fa26835ca56f");
+        expect(admitted.digest).toBe("sha256:155d407e13a70dff204944c01343f8e13f4790a350e022f0bc505c3fec770fb9");
         expect(admitted.release.capabilities[0]?.mocks).toHaveLength(2);
     });
 
@@ -74,9 +74,11 @@ describe("contract mock assets", () => {
         await expect(admitContractBundle(release, [{ id: asset.id, bytes: new Uint8Array(200) }])).rejects.toThrow(
             "digest mismatch",
         );
-        expect(() =>
-            parseContractRelease({ ...release, fixtureAssets: [{ ...asset, mediaType: "application/pdf" }] }),
-        ).toThrow("incompatible or undeclared");
+        await expect(
+            admitContractBundle({ ...release, fixtureAssets: [{ ...asset, mediaType: "application/pdf" }] }, [
+                { id: asset.id, bytes: assetBytes },
+            ]),
+        ).rejects.toThrow("media type");
         expect(() => parseContractRelease({ ...release, fixtureAssets: [{ ...asset, byteLength: 1025 }] })).toThrow(
             "incompatible or undeclared",
         );
@@ -102,7 +104,7 @@ describe("contract mock assets", () => {
             fixtureAssets,
             capabilities: [
                 capabilityDocument({
-                    output: { type: "binary", maxBytes: 8, mediaTypes: ["application/octet-stream"] },
+                    output: { type: "binary", maxBytes: 8 },
                     binding: {
                         transport: "http",
                         method: "POST",
@@ -133,10 +135,7 @@ describe("contract mock assets", () => {
             fixtureAssets: [asset],
             capabilities: [
                 capabilityDocument({
-                    input: objectSchema(
-                        { attachment: { type: "binary", maxBytes: 1024, mediaTypes: ["image/svg+xml"] } },
-                        ["attachment"],
-                    ),
+                    input: objectSchema({ attachment: { type: "binary", maxBytes: 1024 } }, ["attachment"]),
                     binding: {
                         transport: "http",
                         method: "POST",

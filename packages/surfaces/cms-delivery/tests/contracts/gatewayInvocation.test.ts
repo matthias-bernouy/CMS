@@ -4,7 +4,7 @@ import DeliveryCms from "cms-delivery/DeliveryCms";
 import { handleCapabilityCall } from "cms-delivery/endpoints/capabilityCall.server";
 import { CaptureRunner } from "../gateway/support/CaptureRunner";
 
-test("Delivery mounts a capability call that derives site and actor from trusted state", async () => {
+test("Delivery mounts every gateway binding method and supplies trusted actor state", async () => {
     const calls: GatewayInvocation[] = [];
     const runner = new CaptureRunner();
     new DeliveryCms({
@@ -12,133 +12,142 @@ test("Delivery mounts a capability call that derives site and actor from trusted
         repository: {} as never,
         capabilityGateway: {
             siteId: "site-a",
-            invoker: {
-                invoke: async (invocation) => {
-                    calls.push(invocation);
-                    return { kind: "success", status: 200, requestId: "request-1", output: { items: ["one"] } };
-                },
-            },
+            invoker: invoker(calls),
         },
     });
     const response = await runner.defaultHandler(
         "POST",
         "/.cms/call",
     )(
-        new Request("http://site/.cms/call/catalog/item.list", {
+        new Request("http://site/.cms/call/catalog/v1/items", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ term: "one" }),
+            body: '{"term":"one"}',
         }),
     );
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ items: ["one"] });
-    expect(response.headers.get("x-ulvia-request-id")).toBe("request-1");
-    expect(calls).toEqual([
-        {
-            siteId: "site-a",
-            contractId: "catalog",
-            capabilityId: "item.list",
-            origin: "delivery",
-            actor: { kind: "anonymous" },
-            input: { term: "one" },
-        },
-    ]);
+    expect(calls[0]).toMatchObject({
+        siteId: "site-a",
+        contractId: "catalog",
+        capabilityId: "item.list",
+        origin: "delivery",
+        actor: { kind: "anonymous" },
+        input: { term: "one" },
+    });
+    for (const method of ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"]) {
+        expect(() => runner.defaultHandler(method, "/.cms/call")).not.toThrow();
+    }
 });
 
-test("Delivery derives authenticated users and refuses malformed or unauthorized calls", async () => {
+test("Delivery authenticates provider machine calls independently from users", async () => {
+    const calls: GatewayInvocation[] = [];
+    const delivery = {
+        basePath: "",
+        auth: { subject: async () => ({ identifier: "cms-user-1" }) },
+        capabilityGateway: {
+            siteId: "site-a",
+            authenticateProvider: async (token: string) =>
+                token === "provider-secret-token" ? "install-caller" : null,
+            invoker: invoker(calls),
+        },
+    } as unknown as DeliveryCms;
+    const response = await handleCapabilityCall(
+        new Request("http://site/.cms/call/catalog/v1/items", {
+            method: "POST",
+            headers: {
+                authorization: "Bearer provider-secret-token",
+                "content-type": "application/json",
+            },
+            body: '{"term":"one"}',
+        }),
+        delivery,
+    );
+    expect(response.status).toBe(200);
+    expect(calls[0]).toMatchObject({
+        origin: "provider",
+        actor: { kind: "provider", installationId: "install-caller" },
+    });
+});
+
+test("Delivery rejects malformed provider call-chain metadata before dispatch", async () => {
+    const calls: GatewayInvocation[] = [];
+    const delivery = {
+        basePath: "",
+        capabilityGateway: {
+            siteId: "site-a",
+            authenticateProvider: async () => "install-caller",
+            invoker: invoker(calls),
+        },
+    } as unknown as DeliveryCms;
+    const response = await handleCapabilityCall(
+        new Request("http://site/.cms/call/catalog/v1/items", {
+            method: "POST",
+            headers: {
+                authorization: "Bearer provider-secret-token",
+                "content-type": "application/json",
+                "x-ulvia-call-chain-id": "00000000-0000-4000-8000-000000000001",
+                "x-ulvia-call-depth": "0",
+                "x-ulvia-call-path": encodeURIComponent(JSON.stringify(["another-installation"])),
+            },
+            body: '{"term":"one"}',
+        }),
+        delivery,
+    );
+    expect(response.status).toBe(403);
+    expect(calls).toHaveLength(0);
+});
+
+test("Delivery projects gateway authorization failures", async () => {
     const delivery = {
         basePath: "",
         auth: { subject: async () => ({ identifier: "cms-user-1" }) },
         capabilityGateway: {
             siteId: "site-a",
             invoker: {
+                ...invoker([]),
                 invoke: async () => {
                     throw new GatewayError("not_authorized", "denied");
                 },
             },
         },
     } as unknown as DeliveryCms;
-    const request = (body: string) =>
-        new Request("http://site/.cms/call/catalog/item.list", {
+    const denied = await handleCapabilityCall(
+        new Request("http://site/.cms/call/catalog/v1/items", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body,
-        });
-    const denied = await handleCapabilityCall(request("{}"), delivery);
+            body: "{}",
+        }),
+        delivery,
+    );
     expect(denied.status).toBe(403);
     expect(await denied.json()).toEqual({ error: { code: "not_authorized" } });
-    const malformed = await handleCapabilityCall(request('{"term":"one","term":"two"}'), delivery);
-    expect(malformed.status).toBe(400);
-    expect(await malformed.json()).toEqual({ error: { code: "invalid_input" } });
 });
 
-test("Delivery mounts provider file reads with its verified user", async () => {
-    const calls: GatewayInvocation[] = [];
-    const runner = new CaptureRunner();
-    new DeliveryCms({
-        runner,
-        repository: {} as never,
-        auth: { subject: async () => ({ identifier: "cms-user-1" }) } as never,
-        capabilityGateway: {
-            siteId: "site-a",
-            invoker: {
-                invoke: async (invocation) => {
-                    calls.push(invocation);
-                    return {
-                        kind: "binary",
-                        status: 200,
-                        requestId: "request-1",
-                        contentType: "image/png",
-                        bytes: new Uint8Array([1, 2]),
-                    };
+function invoker(calls: GatewayInvocation[]) {
+    return {
+        resolveHttp: async () =>
+            ({
+                capability: {
+                    id: "item.list",
+                    input: {
+                        type: "object",
+                        properties: { term: { type: "string", maxLength: 50 } },
+                        required: [],
+                    },
                 },
-            },
-        },
-    });
-    const response = await runner.defaultHandler(
-        "GET",
-        "/.cms/media",
-    )(new Request("http://site/.cms/media/files/file.read/photo-1"));
-    expect(response.status).toBe(200);
-    expect(await response.arrayBuffer()).toEqual(new Uint8Array([1, 2]).buffer);
-    expect(calls).toEqual([
-        {
-            siteId: "site-a",
-            contractId: "files",
-            capabilityId: "file.read",
-            origin: "delivery",
-            actor: { kind: "user", subjectId: "cms-user-1" },
-            input: { fileId: "photo-1" },
-        },
-    ]);
-});
-
-test("Delivery mounts provider image derivatives behind verified actors", async () => {
-    const runner = new CaptureRunner();
-    const calls: GatewayInvocation[] = [];
-    new DeliveryCms({
-        runner,
-        repository: {} as never,
-        capabilityGateway: {
-            siteId: "site-a",
-            invoker: { invoke: async () => ({ kind: "success", status: 200, requestId: "unused" }) },
-            images: {
-                get: async (invocation, width) => {
-                    calls.push(invocation);
-                    return { bytes: new Uint8Array([width]), etag: '"test"', width, height: 40 };
+                binding: {
+                    method: "POST",
+                    path: "/v1/items",
+                    pathParameters: [],
+                    query: [],
+                    headers: [],
+                    body: { kind: "json", properties: ["term"], contentTypes: ["application/json"] },
                 },
-            },
+                pathValues: {},
+            }) as never,
+        invoke: async (invocation: GatewayInvocation) => {
+            calls.push(invocation);
+            return { kind: "success" as const, status: 200, requestId: "request-1", output: { items: ["one"] } };
         },
-    });
-    const response = await runner.defaultHandler(
-        "GET",
-        "/.cms/image",
-    )(new Request("http://site/.cms/image/files/file.read/photo-1/128.webp"));
-    expect(response.status).toBe(200);
-    expect(calls[0]).toMatchObject({
-        siteId: "site-a",
-        origin: "delivery",
-        actor: { kind: "anonymous" },
-        input: { fileId: "photo-1" },
-    });
-});
+    };
+}

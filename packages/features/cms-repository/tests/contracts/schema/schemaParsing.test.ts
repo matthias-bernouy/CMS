@@ -16,7 +16,7 @@ describe("ulvia-schema/v1 parsing", () => {
                         maxProperties: 20,
                         values: stringSchema(200),
                     },
-                    attachment: { type: "binary", maxBytes: 1024, mediaTypes: ["application/pdf"] },
+                    attachment: { type: "binary", maxBytes: 1024 },
                 },
                 ["title"],
             ),
@@ -32,19 +32,17 @@ describe("ulvia-schema/v1 parsing", () => {
         expect(() => parseUlviaSchema({ type: "map", maxKeyLength: 20, values: stringSchema() })).toThrow(
             "maxProperties",
         );
-        expect(() => parseUlviaSchema({ type: "binary", maxBytes: 100, mediaTypes: [] })).toThrow("non-empty");
+        expect(parseUlviaSchema({ type: "binary", maxBytes: 100 })).toEqual({ type: "binary", maxBytes: 100 });
     });
 
-    test("accepts declared custom media types without a global allowlist", () => {
-        expect(
-            parseUlviaSchema({
-                type: "binary",
-                maxBytes: 100,
-                mediaTypes: ["application/vnd.ulvia.report+json"],
-            }),
-        ).toMatchObject({ mediaTypes: ["application/vnd.ulvia.report+json"] });
-        expect(() => parseUlviaSchema({ type: "binary", maxBytes: 100, mediaTypes: ["application/*"] })).toThrow(
-            "lowercase media type without parameters",
+    test("marks bounded strings as sensitive without changing their value domain", () => {
+        expect(parseUlviaSchema({ type: "string", maxLength: 100, sensitive: true })).toMatchObject({
+            type: "string",
+            maxLength: 100,
+            sensitive: true,
+        });
+        expect(() => parseUlviaSchema({ type: "binary", maxBytes: 100, mediaTypes: ["image/png"] })).toThrow(
+            'unknown property "mediaTypes"',
         );
     });
 
@@ -92,8 +90,5 @@ describe("ulvia-schema/v1 parsing", () => {
 
     test("rejects sparse arrays at the standalone schema boundary", () => {
         expect(() => parseUlviaSchema({ type: "string", maxLength: 10, enum: Array(1) })).toThrow("must not be sparse");
-        expect(() => parseUlviaSchema({ type: "binary", maxBytes: 10, mediaTypes: Array(1) })).toThrow(
-            "must not be sparse",
-        );
     });
 });

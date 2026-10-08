@@ -34,7 +34,7 @@ describe("MongoCmsRepository content persistence", () => {
         await repository.insertPage(
             "/references",
             "References",
-            '<official-card><img src="/.cms/files/by-id/file%201">{{ cms.i18n.ulvia-official.card-title }}</official-card>',
+            '<official-card><img src="/.cms/call/ulvia.cms.files/files/file%201/generation">{{ cms.i18n.ulvia-official.card-title }}</official-card>',
         );
         const page = (await repository.getPage("/references"))!;
 

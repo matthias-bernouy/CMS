@@ -66,6 +66,7 @@ export async function startLocalCoreProvider(options: {
         operations,
         management,
         new CollectionSources(core.collections, [new HttpCollectionRepository("local-core", env.CMS_REPOSITORY_URL)]),
+        core.providerFiles,
     );
     await operations.recover();
     const report: ProviderRuntimeReport = {

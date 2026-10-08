@@ -10,8 +10,25 @@ export interface CoreCapabilityInvocationContext {
     readonly installationId: string;
     readonly origin: CoreCapabilityOrigin;
     readonly actorKind: CoreCapabilityActorKind;
+    readonly callChainId?: string;
+    readonly callDepth?: number;
+    readonly callerInstallationId?: string;
     readonly providerSubjectId?: string;
     readonly idempotencyKey?: string;
+    readonly binaryBody?: {
+        readonly stream: ReadableStream<Uint8Array>;
+        readonly contentType?: string;
+        readonly contentLength?: number;
+    };
+}
+
+export interface CoreBinaryResult {
+    readonly kind: "binary";
+    readonly stream: ReadableStream<Uint8Array>;
+    readonly contentType: string;
+    readonly status?: number;
+    readonly contentLength?: number;
+    readonly headers?: Readonly<Record<string, string>>;
 }
 
 export type CoreCapabilityHandler = (
@@ -38,6 +55,7 @@ export class CoreCapabilityDispatchError extends Error {
         readonly code: string,
         readonly status: number,
         message = code,
+        readonly responseHeaders: Readonly<Record<string, string>> = {},
     ) {
         super(message);
         this.name = "CoreCapabilityDispatchError";

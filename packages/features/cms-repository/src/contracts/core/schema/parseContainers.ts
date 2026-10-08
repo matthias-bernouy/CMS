@@ -1,9 +1,8 @@
 import { ReleaseValidationError } from "../protocol/errors";
-import { expectArray, expectString, rejectUnknownKeys, type UnknownRecord } from "../protocol/values";
+import { rejectUnknownKeys, type UnknownRecord } from "../protocol/values";
 import type { UlviaArraySchema, UlviaBinarySchema, UlviaMapSchema, UlviaSchema } from "../../interfaces/UlviaSchema";
 import {
     assertRange,
-    MEDIA_TYPE_PATTERN,
     parseDescription,
     parseNullable,
     requireBoundedInteger,
@@ -77,30 +76,10 @@ export function parseArraySchema(
 }
 
 export function parseBinarySchema(record: UnknownRecord, path: string, state: SchemaParseState): UlviaBinarySchema {
-    rejectUnknownKeys(record, ["type", "description", "nullable", "maxBytes", "mediaTypes"], path, "invalid_schema");
-    const source = expectArray(record.mediaTypes, `${path}.mediaTypes`, "invalid_schema");
-    const mediaTypes = source.map((value, index) => {
-        const mediaType = expectString(value, `${path}.mediaTypes[${index}]`, "invalid_schema", 127);
-        if (!MEDIA_TYPE_PATTERN.test(mediaType)) {
-            throw new ReleaseValidationError(
-                "invalid_schema",
-                "must be a lowercase media type without parameters",
-                path,
-            );
-        }
-        return mediaType;
-    });
-    if (mediaTypes.length === 0 || new Set(mediaTypes).size !== mediaTypes.length) {
-        throw new ReleaseValidationError(
-            "invalid_schema",
-            "mediaTypes must be non-empty and unique",
-            `${path}.mediaTypes`,
-        );
-    }
+    rejectUnknownKeys(record, ["type", "description", "nullable", "maxBytes"], path, "invalid_schema");
     return {
         type: "binary",
         maxBytes: requireBoundedInteger(record.maxBytes, `${path}.maxBytes`, state.limits.maxBinaryBytes),
-        mediaTypes,
         ...base(record, path),
     };
 }

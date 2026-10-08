@@ -29,6 +29,8 @@
     "bloc.heading.label": "Titre",
     "bloc.media-figure.description": "Une image ou une vidéo avec une légende facultative",
     "bloc.media-figure.label": "Illustration média",
+    "bloc.image.description": "Une image responsive et accessible liée à une référence de fichier immuable",
+    "bloc.image.label": "Image",
     "bloc.prose.description": "Une zone lisible pour du contenu éditorial mis en forme",
     "bloc.prose.label": "Texte éditorial",
     "bloc.provider-manager.description": "Gérez l’état d’installation des providers et le routage exact des contrats",

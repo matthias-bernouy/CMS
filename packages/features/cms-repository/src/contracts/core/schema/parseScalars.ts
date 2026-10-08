@@ -15,7 +15,7 @@ const STRING_FORMATS = new Set<UlviaStringFormat>(["date", "date-time", "email",
 export function parseStringSchema(record: UnknownRecord, path: string, state: SchemaParseState): UlviaStringSchema {
     rejectUnknownKeys(
         record,
-        ["type", "description", "nullable", "enum", "format", "minLength", "maxLength"],
+        ["type", "description", "nullable", "sensitive", "enum", "format", "minLength", "maxLength"],
         path,
         "invalid_schema",
     );
@@ -31,9 +31,13 @@ export function parseStringSchema(record: UnknownRecord, path: string, state: Sc
     }
     const values = parseStringEnum(record.enum, path, state, minLength, maxLength, format);
     const description = parseDescription(record, path);
+    if (record.sensitive !== undefined && record.sensitive !== true) {
+        throw new ReleaseValidationError("invalid_schema", "sensitive must be true when present", `${path}.sensitive`);
+    }
     return {
         type: "string",
         ...(description ? { description } : {}),
+        ...(record.sensitive === true ? { sensitive: true as const } : {}),
         ...(parseNullable(record, path) ? { nullable: true as const } : {}),
         ...(values ? { enum: values } : {}),
         ...(format ? { format } : {}),

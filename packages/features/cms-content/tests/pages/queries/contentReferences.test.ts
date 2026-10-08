@@ -12,7 +12,7 @@ describe("Page content reference projection", () => {
         const target = JSON.stringify({ kind: "site", pageId: "target-page" });
         expect(
             pageContentReferenceKeys(
-                `<official-card><a data-cms-page-ref='${target}'><img src="/.cms/files/by-id/file%201?v=abc">{{ cms.i18n.ulvia-official.card-title }}</a></official-card>`,
+                `<official-card><a data-cms-page-ref='${target}'><img src="/.cms/call/ulvia.cms.files/files/file%201/generation?v=abc">{{ cms.i18n.ulvia-official.card-title }}</a></official-card>`,
             ),
         ).toEqual(["bloc:official-card", "file:file 1", "site-page:target-page", "text:ulvia-official:card-title"]);
     });
@@ -22,7 +22,7 @@ describe("Page content reference projection", () => {
         await repository.insertPage(
             "/card",
             "Card",
-            '<official-card><img src="/.cms/files/by-id/file%201">{{ cms.i18n.ulvia-official.card-title }}</official-card>',
+            '<official-card><img src="/.cms/call/ulvia.cms.files/files/file%201/generation">{{ cms.i18n.ulvia-official.card-title }}</official-card>',
         );
         const page = (await repository.getPage("/card"))!;
 

@@ -111,14 +111,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "GET",
-        "path": "/v1/cms/access/users",
+        "method": "POST",
+        "path": "/list-users",
         "input": {
-            "query": {
-                "search": "search",
-                "page": "page",
-                "limit": "limit"
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

@@ -52,6 +52,6 @@ describe("HTTP method and capability effect", () => {
                 },
             }),
         );
-        expect(compiled.pathParameters).toEqual([{ encoding: "json-percent", property: "id", wireName: "id" }]);
+        expect(compiled.pathParameters).toEqual([{ encoding: "uri-component", property: "id", wireName: "id" }]);
     });
 });

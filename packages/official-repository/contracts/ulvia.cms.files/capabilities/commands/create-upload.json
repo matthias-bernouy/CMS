@@ -1,0 +1,137 @@
+{
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "none"
+    },
+    "id": "upload.create",
+    "description": "Create a bounded upload session.",
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespaceId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "namespaceKey": {
+                "type": "string",
+                "maxLength": 512,
+                "minLength": 20,
+                "sensitive": true
+            },
+            "filename": {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+            },
+            "contentType": {
+                "type": "string",
+                "maxLength": 255,
+                "nullable": true
+            },
+            "size": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10737418240
+            },
+            "visibility": {
+                "type": "string",
+                "maxLength": 7,
+                "enum": [
+                    "private",
+                    "public"
+                ]
+            },
+            "imageProfile": {
+                "type": "string",
+                "maxLength": 10,
+                "nullable": true,
+                "enum": [
+                    "thumbnail",
+                    "responsive"
+                ]
+            }
+        },
+        "required": [
+            "namespaceId",
+            "namespaceKey",
+            "filename",
+            "size"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "uploadId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "uploadToken": {
+                "type": "string",
+                "maxLength": 512,
+                "minLength": 20,
+                "sensitive": true
+            },
+            "expiresAt": {
+                "type": "string",
+                "maxLength": 64
+            },
+            "maxBytes": {
+                "type": "integer",
+                "minimum": 1
+            }
+        },
+        "required": [
+            "uploadId",
+            "uploadToken",
+            "expiresAt",
+            "maxBytes"
+        ]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_AUTHORIZED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        },
+        {
+            "code": "QUOTA_EXCEEDED",
+            "retryable": false
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "POST",
+        "path": "/uploads",
+        "input": {
+            "body": true
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NOT_AUTHORIZED": 403,
+                "NOT_FOUND": 404,
+                "CORE_UNAVAILABLE": 503,
+                "QUOTA_EXCEEDED": 409
+            }
+        }
+    }
+}

@@ -32,7 +32,7 @@ describe("HTTP input binding compilation", () => {
 
         expect(compiled.routeKey).toBe("PATCH /v1/messages/{}");
         expect(compiled.pathParameters).toEqual([
-            { encoding: "json-percent", wireName: "messageId", property: "messageId" },
+            { encoding: "uri-component", wireName: "messageId", property: "messageId" },
         ]);
         expect(compiled.body).toEqual({
             kind: "json",
@@ -94,6 +94,40 @@ describe("HTTP input binding compilation", () => {
                 ),
             ).toThrow("gateway-owned");
         }
+    });
+
+    test("keeps credentials out of URLs except for opaque signed access tokens", () => {
+        const sensitive = { ...stringSchema(512), sensitive: true as const };
+        expect(() =>
+            compileHttpBinding(
+                capability({
+                    behavior: { effect: "query", execution: "sync" },
+                    input: objectSchema({ secret: sensitive }, ["secret"]),
+                    binding: {
+                        transport: "http",
+                        method: "GET",
+                        path: "/v1/private",
+                        input: { query: { secret: "secret" } },
+                        response: { successStatuses: [200], contentTypes: ["application/json"] },
+                    },
+                }),
+            ),
+        ).toThrow("sensitive parameters must use headers");
+
+        const access = compileHttpBinding(
+            capability({
+                behavior: { effect: "query", execution: "sync" },
+                input: objectSchema({ access: sensitive }, []),
+                binding: {
+                    transport: "http",
+                    method: "GET",
+                    path: "/v1/private",
+                    input: { query: { access: "access" } },
+                    response: { successStatuses: [200], contentTypes: ["application/json"] },
+                },
+            }),
+        );
+        expect(access.query).toEqual([{ encoding: "uri-component", wireName: "access", property: "access" }]);
     });
 
     test("rejects request bodies on GET and HEAD", () => {

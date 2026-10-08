@@ -5,22 +5,10 @@ import RobotsServer from "cms-delivery/endpoints/robots.txt.server";
 import SitemapServer from "cms-delivery/endpoints/sitemap.xml.server";
 import SitemapChunkServer from "cms-delivery/endpoints/sitemap-chunk.server";
 import FaviconServer from "cms-delivery/endpoints/assets/favicon.server";
-import {
-    handleCapabilityCall,
-    handleCapabilityFile,
-    handleCapabilityImage,
-} from "cms-delivery/endpoints/capabilityCall.server";
+import { handleCapabilityCall } from "cms-delivery/endpoints/capabilityCall.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import BindingCoreServer from "cms-delivery/endpoints/assets/bindingCore.server";
 import { PUBLIC_AUTH_ROUTES, registerPublicAuthRoutes } from "@bernouy/cms-auth/http";
-import {
-    CMS_FILES_ROUTE,
-    CMS_IMAGE_VARIANT_ROUTE,
-    filesPrefix,
-    imageVariantPrefix,
-    serveFilesRequest,
-    serveVariantRequest,
-} from "@bernouy/cms-content/files/serving";
 import {
     generateStyleEntry,
     CMS_CACHE_KEYS,
@@ -28,11 +16,7 @@ import {
     servePublishedPageSnapshot,
 } from "@bernouy/cms-content/rendering";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
-import {
-    CMS_CAPABILITY_CALL_ROUTE,
-    CMS_CAPABILITY_IMAGE_ROUTE,
-    CMS_CAPABILITY_MEDIA_ROUTE,
-} from "@bernouy/cms-gateway/http/handlers";
+import { CMS_CAPABILITY_CALL_ROUTE } from "@bernouy/cms-gateway/http/handlers";
 import { handlePageRequest } from "cms-delivery/core/pages/handlePageRequest";
 import { FAVICON_ROUTE } from "cms-delivery/core/assets/defaultFavicon";
 import { matchRootSitemapChunkPath } from "cms-delivery/core/seo/sitemap/manifest";
@@ -48,10 +32,6 @@ import { COLLECTION_ASSETS_ROUTE } from "cms-delivery/core/assets/collectionAsse
  * gets prepended automatically. Assets always sit under a `/.cms` sub-prefix
  * within the tenant; pages sit at the tenant root and fall through to the
  * default endpoint.
- *
- * File bytes are served at `<basePath>/.cms/files/<readable-path>`, resolving
- * the path against the file metadata tree and streaming from the blob store
- * (the same backends Control writes to).
  *
  * Pages are served through the runner's default GET endpoint: any path that
  * doesn't match a specific route falls through to `handlePageRequest`, which
@@ -102,43 +82,11 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms) {
         ),
     );
 
-    runner.group(CMS_FILES_ROUTE, (filesRunner) => {
-        const prefix = filesPrefix(runner.basePath);
-        filesRunner.setDefaultEndpoint("GET", (req) =>
-            serveFilesRequest({ metadata: delivery.filesMetadata, blob: delivery.filesBlob }, req, { prefix }),
-        );
-    });
-
     if (delivery.capabilityGateway) {
         runner.group(CMS_CAPABILITY_CALL_ROUTE, (callRunner) => {
-            callRunner.setDefaultEndpoint("POST", (request) => handleCapabilityCall(request, delivery));
-        });
-        runner.group(CMS_CAPABILITY_MEDIA_ROUTE, (mediaRunner) => {
-            mediaRunner.setDefaultEndpoint("GET", (request) => handleCapabilityFile(request, delivery));
-        });
-        if (delivery.capabilityGateway.images) {
-            runner.group(CMS_CAPABILITY_IMAGE_ROUTE, (imageRunner) => {
-                imageRunner.setDefaultEndpoint("GET", (request) => handleCapabilityImage(request, delivery));
-            });
-        }
-    }
-
-    // Responsive image variants at `/.cms/img/<id>/<width>.webp` — mounted only
-    // when a variant store is wired (else the renderer just serves originals).
-    if (delivery.variantStoreOrNull && delivery.filesMetadataOrNull && delivery.filesBlobOrNull) {
-        runner.group(CMS_IMAGE_VARIANT_ROUTE, (imgRunner) => {
-            const prefix = imageVariantPrefix(runner.basePath);
-            imgRunner.setDefaultEndpoint("GET", (req) =>
-                serveVariantRequest(
-                    {
-                        metadata: delivery.filesMetadata,
-                        sourceBlob: delivery.filesBlob,
-                        variantStore: delivery.variantStoreOrNull!,
-                    },
-                    req,
-                    { prefix },
-                ),
-            );
+            for (const method of ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT"] as const) {
+                callRunner.setDefaultEndpoint(method, (request) => handleCapabilityCall(request, delivery));
+            }
         });
     }
 

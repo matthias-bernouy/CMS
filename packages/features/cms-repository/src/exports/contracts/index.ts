@@ -27,7 +27,6 @@ export type {
     CapabilityExecution,
     CapabilityMockDefinition,
     CapabilityMockOutcome,
-    CapabilityMediaDefinition,
     CapabilityDeprecation,
     ContractFixtureAssetDefinition,
     ContractRelease,

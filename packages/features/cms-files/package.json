@@ -1,0 +1,23 @@
+{
+    "name": "@bernouy/cms-files",
+    "version": "0.1.0",
+    "description": "Provider-neutral namespaces, uploads, immutable files, private access signatures, and derivatives.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./memory": "./src/exports/memory.ts",
+        "./mongo": "./src/exports/mongo.ts"
+    },
+    "dependencies": {
+        "@bernouy/blob-store": "workspace:*",
+        "@bernouy/binary-media": "workspace:*",
+        "@bernouy/image-processing": "workspace:*"
+    },
+    "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "sharp": "^0.35.4",
+        "typescript": "^7.0.2"
+    }
+}

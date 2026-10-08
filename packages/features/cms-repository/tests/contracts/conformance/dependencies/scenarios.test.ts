@@ -123,7 +123,7 @@ describe("dependency scenario validation", () => {
                 entry.id === "payment.inspect"
                     ? {
                           ...entry,
-                          output: { type: "binary" as const, maxBytes: 100, mediaTypes: ["application/pdf"] },
+                          output: { type: "binary" as const, maxBytes: 100 },
                           binding: {
                               ...entry.binding,
                               response: { ...entry.binding.response, contentTypes: ["application/pdf"] },

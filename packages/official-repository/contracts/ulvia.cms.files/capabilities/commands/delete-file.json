@@ -1,0 +1,83 @@
+{
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "none"
+    },
+    "id": "files.delete",
+    "description": "Delete every generation of one file.",
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespaceId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "namespaceKey": {
+                "type": "string",
+                "maxLength": 512,
+                "minLength": 20,
+                "sensitive": true
+            },
+            "fileId": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        "required": [
+            "namespaceId",
+            "namespaceKey",
+            "fileId"
+        ]
+    },
+    "output": {
+        "type": "null"
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_AUTHORIZED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "DELETE",
+        "path": "/files/{fileId}",
+        "input": {
+            "path": {
+                "fileId": "fileId"
+            },
+            "body": {
+                "properties": [
+                    "namespaceId",
+                    "namespaceKey"
+                ]
+            }
+        },
+        "response": {
+            "successStatuses": [
+                204
+            ],
+            "contentTypes": [],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NOT_AUTHORIZED": 403,
+                "NOT_FOUND": 404,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

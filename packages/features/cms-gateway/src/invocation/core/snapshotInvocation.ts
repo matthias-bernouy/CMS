@@ -4,7 +4,7 @@ import {
     MAX_CAPABILITY_JSON_DEPTH,
     parseStrictJson,
 } from "@bernouy/cms-repository/contracts/protocol";
-import type { GatewayActor, GatewayInvocation } from "cms-gateway/invocation/interfaces/Invocation";
+import type { GatewayActor, GatewayCallContext, GatewayInvocation } from "cms-gateway/invocation/interfaces/Invocation";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 
 /** Bounded JSON envelope budget, including escaping and metadata around a 1 MiB contract string. */
@@ -31,26 +31,86 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
     if (!["delivery", "page", "control", "provider", "system", "conformance"].includes(value.origin)) {
         throw new GatewayError("invalid_input", "invocation origin is invalid");
     }
+    if (value.httpMethod !== undefined && value.httpMethod !== "HEAD") {
+        throw new GatewayError("invalid_input", "HTTP method override is invalid");
+    }
     const actor = snapshotActor(value.actor);
+    const callContext = snapshotCallContext(value.callContext, actor);
     const idempotencyKey = snapshotIdempotencyKey(value.idempotencyKey);
     try {
         const bytes = canonicalIJsonBytes(value.input, MAX_CAPABILITY_JSON_DEPTH);
         if (bytes.byteLength > MAX_GATEWAY_JSON_BYTES) {
             throw new TypeError("input exceeds gateway limit");
         }
+        const binaryBody = snapshotBinaryBody(value.binaryBody);
         return {
             siteId: value.siteId,
             contractId: value.contractId,
             capabilityId: value.capabilityId,
             origin: value.origin,
             actor,
+            ...(callContext ? { callContext } : {}),
+            ...(value.httpMethod ? { httpMethod: value.httpMethod } : {}),
             ...(idempotencyKey ? { idempotencyKey } : {}),
             ...(value.execution ? { execution: snapshotExecution(value.execution) } : {}),
+            ...(binaryBody ? { binaryBody } : {}),
             input: parseStrictJson(bytes, MAX_GATEWAY_JSON_BYTES, MAX_CAPABILITY_JSON_DEPTH),
         };
     } catch {
         throw new GatewayError("invalid_input", "input must be bounded interoperable JSON");
     }
+}
+
+function snapshotCallContext(
+    value: GatewayInvocation["callContext"],
+    actor: GatewayActor,
+): GatewayCallContext | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (
+        actor.kind !== "provider" ||
+        !/^[0-9a-f-]{36}$/u.test(value.callChainId) ||
+        !Number.isSafeInteger(value.callDepth) ||
+        value.callDepth < 0 ||
+        value.callDepth > 7 ||
+        !Array.isArray(value.installationPath) ||
+        value.installationPath.length !== value.callDepth + 1 ||
+        value.installationPath.at(-1) !== actor.installationId ||
+        new Set(value.installationPath).size !== value.installationPath.length ||
+        value.installationPath.some((id) => typeof id !== "string" || !id || id.length > 256 || id.trim() !== id)
+    ) {
+        throw new GatewayError("not_authorized", "provider call context is invalid");
+    }
+    return Object.freeze({
+        callChainId: value.callChainId,
+        callDepth: value.callDepth,
+        installationPath: Object.freeze([...value.installationPath]),
+    });
+}
+
+function snapshotBinaryBody(value: GatewayInvocation["binaryBody"]): GatewayInvocation["binaryBody"] {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (!value || typeof value !== "object" || !(value.stream instanceof ReadableStream)) {
+        throw new GatewayError("invalid_input", "binary body must be a readable byte stream");
+    }
+    if (value.contentLength !== undefined && (!Number.isSafeInteger(value.contentLength) || value.contentLength < 0)) {
+        throw new GatewayError("invalid_input", "binary content length is invalid");
+    }
+    if (
+        value.contentType !== undefined &&
+        (!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+\/[!#$%&'*+.^_`|~0-9A-Za-z-]+(?:\s*;[^\r\n]*)?$/.test(value.contentType) ||
+            value.contentType.length > 256)
+    ) {
+        throw new GatewayError("invalid_input", "binary content type is invalid");
+    }
+    return {
+        stream: value.stream,
+        ...(value.contentType ? { contentType: value.contentType } : {}),
+        ...(value.contentLength === undefined ? {} : { contentLength: value.contentLength }),
+    };
 }
 
 function snapshotIdempotencyKey(value: unknown): string | undefined {

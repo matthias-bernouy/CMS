@@ -19,12 +19,6 @@ export function compileCoreRoutes(releases: readonly ContractRelease[]): readonl
 }
 
 function compileRoute(contractId: string, capability: CapabilityDefinition): CoreRoute {
-    if (
-        (typeof capability.binding.input?.body === "object" && "binaryProperty" in capability.binding.input.body) ||
-        capability.binding.response.contentTypes.some((contentType) => contentType !== "application/json")
-    ) {
-        throw new TypeError("CMS Core currently supports JSON contract bindings only.");
-    }
     const names: string[] = [];
     const escaped = capability.binding.path.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
     const pattern = escaped.replace(/\\\{([A-Za-z][A-Za-z0-9_-]*)\\\}/gu, (_match, name: string) => {
@@ -36,7 +30,9 @@ function compileRoute(contractId: string, capability: CapabilityDefinition): Cor
         contractId,
         capability,
         match(method, path) {
-            if (method !== capability.binding.method) {
+            const automaticHead =
+                method === "HEAD" && capability.binding.method === "GET" && capability.output.type === "binary";
+            if (method !== capability.binding.method && !automaticHead) {
                 return null;
             }
             const match = expression.exec(path);
@@ -51,6 +47,7 @@ function assertRoutesDoNotOverlap(routes: readonly CoreRoute[]): void {
         for (let rightIndex = leftIndex + 1; rightIndex < routes.length; rightIndex += 1) {
             const right = routes[rightIndex]!;
             if (
+                left.contractId === right.contractId &&
                 left.capability.binding.method === right.capability.binding.method &&
                 pathTemplatesOverlap(left.capability.binding.path, right.capability.binding.path)
             ) {

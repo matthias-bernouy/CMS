@@ -1,0 +1,83 @@
+{
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "none"
+    },
+    "id": "upload.write",
+    "description": "Stream the exact bytes for an upload session.",
+    "input": {
+        "type": "object",
+        "properties": {
+            "uploadId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "uploadToken": {
+                "type": "string",
+                "maxLength": 512,
+                "minLength": 20,
+                "sensitive": true
+            },
+            "bytes": {
+                "type": "binary",
+                "maxBytes": 10737418240
+            }
+        },
+        "required": [
+            "uploadId",
+            "uploadToken",
+            "bytes"
+        ]
+    },
+    "output": {
+        "type": "null"
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_AUTHORIZED",
+            "retryable": false
+        },
+        {
+            "code": "SIZE_MISMATCH",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "PUT",
+        "path": "/uploads/{uploadId}",
+        "input": {
+            "path": {
+                "uploadId": "uploadId"
+            },
+            "headers": {
+                "upload-token": "uploadToken"
+            },
+            "body": {
+                "binaryProperty": "bytes"
+            }
+        },
+        "response": {
+            "successStatuses": [
+                204
+            ],
+            "contentTypes": [],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NOT_AUTHORIZED": 403,
+                "SIZE_MISMATCH": 409,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

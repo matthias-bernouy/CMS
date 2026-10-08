@@ -42,8 +42,8 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "GET",
-        "path": "/v1/cms/theme",
+        "method": "POST",
+        "path": "/get",
         "input": {},
         "response": {
             "successStatuses": [

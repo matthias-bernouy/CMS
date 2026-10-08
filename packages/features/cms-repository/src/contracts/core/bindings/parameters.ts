@@ -64,6 +64,16 @@ export function compileParameterMap(
             );
         }
         assertTransportScalar(schema, `${errorPath}.${wireName}`);
+        if (schema.type === "string" && schema.sensitive && location !== "header") {
+            const signedAccessException = location === "query" && wireName === "access" && property === "access";
+            if (!signedAccessException) {
+                throw new ReleaseValidationError(
+                    "invalid_binding",
+                    "sensitive parameters must use headers; only opaque signed access tokens may use the access query",
+                    `${errorPath}.${wireName}`,
+                );
+            }
+        }
         if (location === "path") {
             if (!input.required.includes(property) || ("nullable" in schema && schema.nullable)) {
                 throw new ReleaseValidationError(
@@ -74,7 +84,7 @@ export function compileParameterMap(
             }
         }
         used.add(property);
-        return { encoding: "json-percent" as const, wireName, property };
+        return { encoding: "uri-component" as const, wireName, property };
     });
     return parameters.sort((left, right) =>
         left.wireName < right.wireName ? -1 : left.wireName > right.wireName ? 1 : 0,

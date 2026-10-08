@@ -1,6 +1,5 @@
 import type { ContentReader, RenderingSettings } from "@bernouy/cms-content/rendering";
-import type { BlobReader } from "@bernouy/blob-store";
-import type { VariantStore, SitemapStore } from "@bernouy/cms-content/files/serving";
+import type { BlobReader, BlobStore as SitemapStore } from "@bernouy/blob-store";
 import type { DeliveryCmsConfig } from "@bernouy/cms-delivery";
 
 declare const settings: RenderingSettings;
@@ -15,14 +14,15 @@ const reader: ContentReader = {
     getRenderingSettings: async () => settings,
 };
 const originals: BlobReader = { get: async () => null, head: async () => null };
-const variants: VariantStore = { ...originals, put: async () => ({ size: 0 }) };
-const sitemaps: SitemapStore = { ...variants, delete: async () => {} };
+const sitemaps: SitemapStore = {
+    ...originals,
+    exists: async () => false,
+    put: async () => ({ size: 0 }),
+    delete: async () => {},
+};
 
 export const config: DeliveryCmsConfig = {
     repository: reader,
-    filesMetadata: { getItem: async () => null, getItemByPath: async () => null },
-    filesBlob: originals,
-    variantStore: variants,
     sitemapStore: sitemaps,
 };
 
@@ -39,8 +39,3 @@ settings.email;
 settings.site.additionalLanguages;
 // @ts-expect-error Delivery cannot write an original blob.
 originals.put("original", new Uint8Array());
-// @ts-expect-error Variant writers do not receive retention deletion.
-variants.delete("original");
-// @ts-expect-error Original blobs must not be used as a writable derivative store.
-const invalidVariantStore: VariantStore = originals;
-void invalidVariantStore;

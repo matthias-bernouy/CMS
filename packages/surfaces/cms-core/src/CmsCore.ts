@@ -32,6 +32,11 @@ export class CmsCore {
             authorized(() => Response.json(options.report, { headers: { "Cache-Control": "no-store" } })),
         );
         const methods = new Set(routes.map(({ capability }) => capability.binding.method));
+        if (
+            routes.some(({ capability }) => capability.binding.method === "GET" && capability.output.type === "binary")
+        ) {
+            methods.add("HEAD");
+        }
         for (const method of methods) {
             runner.setDefaultEndpoint(
                 method,

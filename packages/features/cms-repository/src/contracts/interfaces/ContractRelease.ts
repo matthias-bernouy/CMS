@@ -68,12 +68,6 @@ export interface CapabilityRequirement {
     readonly supportRanges?: readonly string[];
 }
 
-/** Declares that a synchronous binary query is addressable through CMS media URLs. */
-export interface CapabilityMediaDefinition {
-    /** Protocol v1 uses the required string input `fileId` as the provider-owned media identity. */
-    readonly idInput: "fileId";
-}
-
 export interface CapabilityDefinition {
     readonly id: string;
     readonly description?: string;
@@ -83,7 +77,6 @@ export interface CapabilityDefinition {
     readonly output: UlviaSchema;
     readonly errors: readonly CapabilityErrorDefinition[];
     readonly binding: HttpBindingDefinition;
-    readonly media?: CapabilityMediaDefinition;
     readonly requires?: readonly CapabilityRequirement[];
     readonly mocks?: readonly CapabilityMockDefinition[];
     readonly deprecation?: CapabilityDeprecation;

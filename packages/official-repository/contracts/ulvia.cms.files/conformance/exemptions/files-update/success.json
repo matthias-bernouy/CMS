@@ -1,0 +1,4 @@
+{
+    "capabilityId": "files.update",
+    "reason": "Covered by the stateful cms-files provider conformance harness; the portable contract suite cannot share returned credentials between isolated calls."
+}

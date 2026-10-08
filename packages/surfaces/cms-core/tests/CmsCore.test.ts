@@ -42,14 +42,14 @@ describe("CmsCore", () => {
             expect(report.status).toBe(200);
             expect((await report.json()).providerId).toBe("ulvia.official");
 
-            const response = await server.request("POST", `/v1/core/echo/${encodeURIComponent('"record-1"')}`, {
+            const response = await server.request("POST", "/v1/core/echo/record-1", {
                 headers: { ...authorization(), ...trustedHeaders(), "Content-Type": "application/json" },
                 body: JSON.stringify({ value: "hello" }),
             });
             expect(response.status).toBe(200);
             expect(await response.json()).toEqual({ id: "record-1", value: "hello" });
 
-            const oversized = await server.request("POST", `/v1/core/echo/${encodeURIComponent('"record-1"')}`, {
+            const oversized = await server.request("POST", "/v1/core/echo/record-1", {
                 headers: { ...authorization(), ...trustedHeaders(), "Content-Type": "application/json" },
                 body: JSON.stringify({ value: "x".repeat(MAX_CAPABILITY_JSON_BYTES + 1) }),
             });
@@ -99,6 +99,7 @@ function authorization(): Record<string, string> {
 
 function trustedHeaders(): Record<string, string> {
     return {
+        "x-ulvia-contract-id": "ulvia.cms.fixture",
         "x-ulvia-request-id": "00000000-0000-4000-8000-000000000001",
         "x-ulvia-site-id": "default",
         "x-ulvia-installation-id": "local-core",

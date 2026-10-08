@@ -128,21 +128,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "PUT",
-        "path": "/v1/cms/pages/{id}",
+        "method": "POST",
+        "path": "/update",
         "input": {
-            "path": {
-                "id": "id"
-            },
-            "body": {
-                "properties": [
-                    "expectedRevision",
-                    "title",
-                    "description",
-                    "content",
-                    "tags"
-                ]
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

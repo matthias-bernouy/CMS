@@ -7,13 +7,10 @@ import type {
 } from "@bernouy/cms-auth";
 import type { PublicAuthRoutesConfig, OidcAuthHandlers } from "@bernouy/cms-auth/http";
 import type { CmsRepository, SurfacePageRouteRegistry } from "@bernouy/cms-content";
-import type { BlobStore } from "@bernouy/blob-store";
 import type { CollectionMigrationService } from "@bernouy/cms-content/migrations";
-import type { CmsFileMutationJournal, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { GatewayCapabilityCatalogue } from "@bernouy/cms-gateway";
 import type { PageExecutionAuthority } from "@bernouy/cms-gateway/execution";
-import type { ProviderImageService } from "@bernouy/cms-gateway/media";
 import type { Cache, Runner } from "@bernouy/http-runner";
 
 type Configuration = {
@@ -34,7 +31,6 @@ export type ControlCmsOptions = Configuration & {
     capabilityGateway?: {
         readonly siteId: string;
         readonly invoker: GatewayInvoker;
-        readonly images?: Pick<ProviderImageService, "get">;
         readonly catalogue?: GatewayCapabilityCatalogue;
         readonly pageExecutions?: PageExecutionAuthority;
         /** Host-owned verified administrator grant, independent of request fields. */
@@ -50,9 +46,6 @@ export type ControlAuthBackends = {
 export type ControlCmsDependencies = {
     configuration?: ControlCmsOptions;
     cache?: Cache;
-    filesMetadata?: CmsFilesMetadataRepository;
-    filesBlob?: BlobStore;
-    fileMutations?: CmsFileMutationJournal;
     identityProviders?: IdentityProviderRepository;
     authBackends?: ControlAuthBackends;
 };
@@ -63,8 +56,5 @@ export type ControlCmsState = {
     repository: CmsRepository;
     auth: Authentication;
     cache: Cache;
-    filesMetadata: CmsFilesMetadataRepository | null;
-    filesBlob: BlobStore | null;
-    fileMutations: CmsFileMutationJournal | null;
     identityProviders: IdentityProviderRepository | null;
 };

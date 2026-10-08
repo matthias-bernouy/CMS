@@ -13,6 +13,11 @@ export function encodeHttpParameter(schema: UlviaScalarSchema, value: unknown): 
     }
     assertScalar(value);
     validateSchemaValue(schema, value);
+    if (schema.type === "string") {
+        canonicalScalar(value);
+        const wireValue = schema.nullable ? (value === null ? "~n" : `~s${String(value)}`) : String(value);
+        return encodeURIComponent(wireValue);
+    }
     return encodeURIComponent(canonicalScalar(value));
 }
 
@@ -21,20 +26,32 @@ export function decodeHttpParameter(schema: UlviaScalarSchema, encoded: unknown)
     if (encoded === undefined) {
         return undefined;
     }
-    const maximum = schema.type === "string" ? Math.max(64, 18 * schema.maxLength + 6) : 64;
+    const maximum = schema.type === "string" ? Math.max(64, 18 * schema.maxLength + 9) : 64;
     if (typeof encoded !== "string" || encoded.length > maximum || !ENCODED_COMPONENT.test(encoded)) {
         throw new SchemaValueError("must be a bounded percent-encoded JSON scalar");
     }
     let value: unknown;
     try {
-        value = parseStrictJson(decodeURIComponent(encoded), maximum, 1);
+        const decoded = decodeURIComponent(encoded);
+        if (schema.type === "string") {
+            value = schema.nullable ? (decoded === "~n" ? null : requiredNullableString(decoded)) : decoded;
+        } else {
+            value = parseStrictJson(decoded, maximum, 1);
+        }
     } catch {
-        throw new SchemaValueError("must contain exactly one percent-encoded JSON scalar");
+        throw new SchemaValueError("must contain one valid URI-encoded scalar");
     }
     assertScalar(value);
     validateSchemaValue(schema, value);
     canonicalScalar(value);
     return value;
+}
+
+function requiredNullableString(value: string): string {
+    if (!value.startsWith("~s")) {
+        throw new SchemaValueError("nullable strings must use their URI component marker");
+    }
+    return value.slice(2);
 }
 
 function assertScalar(value: unknown): asserts value is HttpParameterValue {

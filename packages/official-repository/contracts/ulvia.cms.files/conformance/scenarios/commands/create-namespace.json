@@ -1,0 +1,34 @@
+{
+    "id": "create-namespace",
+    "description": "Verify that a fresh provider can create an isolated file namespace and receives its authority credential once.",
+    "calls": [
+        {
+            "id": "create",
+            "capabilityId": "namespace.create",
+            "actor": {
+                "kind": "admin"
+            },
+            "input": {
+                "name": "Conformance files",
+                "defaultVisibility": "private"
+            },
+            "expect": {
+                "kind": "success",
+                "checks": [
+                    {
+                        "path": "/namespaceId",
+                        "present": true
+                    },
+                    {
+                        "path": "/keyId",
+                        "present": true
+                    },
+                    {
+                        "path": "/namespaceKey",
+                        "present": true
+                    }
+                ]
+            }
+        }
+    ]
+}

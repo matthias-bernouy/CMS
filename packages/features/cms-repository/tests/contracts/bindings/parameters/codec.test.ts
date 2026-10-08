@@ -6,13 +6,13 @@ import type { UlviaScalarSchema } from "@bernouy/cms-repository/contracts/schema
 const text: UlviaScalarSchema = { type: "string", nullable: true, maxLength: 128 };
 const number: UlviaScalarSchema = { type: "number" };
 
-describe("json-percent HTTP parameter encoding", () => {
+describe("URI component HTTP parameter encoding", () => {
     test("distinguishes missing, null, empty text and text containing null", () => {
         for (const [value, encoded] of [
             [undefined, undefined],
-            [null, "null"],
-            ["", "%22%22"],
-            ["null", "%22null%22"],
+            [null, "~n"],
+            ["", "~s"],
+            ["null", "~snull"],
         ] as const) {
             expect(encodeHttpParameter(text, value)).toBe(encoded);
             expect(decodeHttpParameter(text, encoded)).toBe(value);
@@ -22,17 +22,17 @@ describe("json-percent HTTP parameter encoding", () => {
     test("round-trips Unicode and control characters as ASCII without raw line breaks", () => {
         for (const value of ["café", "😀", "line one\r\nline two", " /?#&+=% "]) {
             const encoded = encodeHttpParameter(text, value)!;
-            expect(encoded).toBe(encodeURIComponent(JSON.stringify(value)));
+            expect(encoded).toBe(encodeURIComponent(`~s${value}`));
             expect(encoded).toMatch(/^[\x21-\x7E]+$/);
             expect(decodeHttpParameter(text, encoded)).toBe(value);
         }
     });
 
     test("performs exactly one decoding pass and never treats plus as a space", () => {
-        expect(decodeHttpParameter(text, "%22%252F%22")).toBe("%2F");
-        expect(decodeHttpParameter(text, "%22%2B%22")).toBe("+");
-        expect(() => decodeHttpParameter(text, "%22+%22")).toThrow("percent-encoded");
-        expect(() => decodeHttpParameter(text, "%2522value%2522")).toThrow("exactly one");
+        expect(decodeHttpParameter(text, "~s%252F")).toBe("%2F");
+        expect(decodeHttpParameter(text, "~s%2B")).toBe("+");
+        expect(() => decodeHttpParameter(text, "~s+")).toThrow("percent-encoded");
+        expect(decodeHttpParameter({ type: "string", maxLength: 64 }, "%252F")).toBe("%2F");
     });
 
     test("round-trips numbers and booleans without coercion", () => {
@@ -55,11 +55,11 @@ describe("json-percent HTTP parameter encoding", () => {
     });
 
     test("rejects malformed encodings, malformed Unicode and non-scalar JSON", () => {
-        for (const value of ["", "%", "%GG", "%FF", '"raw"', "%22café%22", "%7B%7D", "%5B1%5D", "true%20false"]) {
+        for (const value of ["%", "%GG", "%FF", "%22café%22"]) {
             expect(() => decodeHttpParameter(text, value)).toThrow();
         }
         expect(() => encodeHttpParameter(text, "\uD800")).toThrow("valid Unicode");
-        expect(() => decodeHttpParameter(text, "%22%5Cud800%22")).toThrow("valid Unicode");
+        expect(() => decodeHttpParameter(text, "~s%ED%A0%80")).toThrow();
     });
 
     test("enforces schema length, enum, format, nullability and numeric bounds", () => {
@@ -68,10 +68,10 @@ describe("json-percent HTTP parameter encoding", () => {
         expect(() => decodeHttpParameter(bounded, "0")).toThrow("at least 1");
         expect(() => encodeHttpParameter(bounded, null)).toThrow("finite number");
         const literal: UlviaScalarSchema = { type: "string", maxLength: 3, enum: ["yes"] };
-        expect(() => decodeHttpParameter(literal, "%22no%22")).toThrow("enum");
+        expect(() => decodeHttpParameter(literal, "no")).toThrow("enum");
         expect(() => encodeHttpParameter(literal, "long")).toThrow("length");
         const date = parseUlviaSchema({ type: "string", format: "date", maxLength: 10 }) as UlviaScalarSchema;
-        expect(() => decodeHttpParameter(date, "%222025-02-29%22")).toThrow("format date");
+        expect(() => decodeHttpParameter(date, "2025-02-29")).toThrow("format date");
         expect(() => decodeHttpParameter({ type: "string", maxLength: 0 }, "a".repeat(65))).toThrow("bounded");
     });
 });

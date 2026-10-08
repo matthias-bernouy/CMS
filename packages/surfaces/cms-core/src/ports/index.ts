@@ -1,4 +1,3 @@
-import type { BlobStore } from "@bernouy/blob-store";
 import type {
     IdentityProviderRepository,
     LocalCredentialStore,
@@ -6,7 +5,6 @@ import type {
     UsersRepository,
 } from "@bernouy/cms-auth";
 import type { CmsRepository } from "@bernouy/cms-content";
-import type { CmsFileMutationJournal, CmsFilesMetadataRepository } from "@bernouy/cms-content/files";
 import type { CollectionMigrationService } from "@bernouy/cms-content/migrations";
 import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
 import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
@@ -35,12 +33,6 @@ export interface CmsLocalizationDependencies {
     readonly collections: CollectionStore;
 }
 
-export interface CmsFileDependencies {
-    readonly filesMetadata: CmsFilesMetadataRepository;
-    readonly filesBlob: BlobStore;
-    readonly fileMutations: CmsFileMutationJournal;
-}
-
 export interface CmsAccessDependencies {
     readonly repo: CmsRepository;
     readonly users: UsersRepository;
@@ -53,7 +45,6 @@ export type CmsCoreDependencies = CmsPageDependencies &
     CmsCollectionDependencies &
     CmsThemeDependencies &
     CmsLocalizationDependencies &
-    CmsFileDependencies &
     CmsAccessDependencies;
 
 export type CmsCoreAdministratorState = Readonly<{

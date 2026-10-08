@@ -4,7 +4,6 @@ import type { CatalogueContractRelease } from "@bernouy/cms-repository/contracts
 import type { CatalogueProviderManifest } from "@bernouy/cms-repository/providers/catalogue";
 import type { StoredProviderInstallation } from "@bernouy/cms-repository/providers/installations";
 import type { ContractSelection } from "@bernouy/cms-repository/providers/selections";
-import type { ProviderMediaIdentity } from "cms-gateway/media/core/derivativeKey";
 import type { GatewayExecutionPin } from "cms-gateway/execution/interfaces/PageExecution";
 
 export type GatewayActor =
@@ -15,11 +14,23 @@ export type GatewayActor =
 
 export type GatewayOrigin = "delivery" | "page" | "control" | "provider" | "system" | "conformance";
 
+export interface GatewayCallContext {
+    readonly callChainId: string;
+    readonly callDepth: number;
+    readonly installationPath: readonly string[];
+}
+
 export interface GatewayInvocation {
     readonly siteId: string;
     readonly contractId: string;
     readonly capabilityId: string;
     readonly input: unknown;
+    /** Streaming body kept outside the JSON input snapshot. Its property is fixed by the admitted binding. */
+    readonly binaryBody?: GatewayBinaryBody;
+    /** Trusted HTTP transport override used only for automatic HEAD on binary GET resources. */
+    readonly httpMethod?: "HEAD";
+    /** Gateway-issued context forwarded by providers for nested calls. */
+    readonly callContext?: GatewayCallContext;
     /** Constructed by the trusted surface; never copied from capability input. */
     readonly origin: GatewayOrigin;
     /** Constructed by a trusted surface from verified authentication. */
@@ -28,6 +39,12 @@ export interface GatewayInvocation {
     readonly idempotencyKey?: string;
     /** Required for collection Page calls; constructed from a current CMS-owned execution grant. */
     readonly execution?: GatewayExecutionPin;
+}
+
+export interface GatewayBinaryBody {
+    readonly stream: ReadableStream<Uint8Array>;
+    readonly contentType?: string;
+    readonly contentLength?: number;
 }
 
 export interface GatewayRoute {
@@ -52,8 +69,10 @@ export interface GatewayTransportRequest {
     readonly capability: CapabilityDefinition;
     readonly binding: CompiledHttpBinding;
     readonly input: Readonly<Record<string, unknown>>;
+    readonly binaryBody?: GatewayBinaryBody;
     readonly invocationOrigin: GatewayOrigin;
     readonly actorKind: GatewayActor["kind"];
+    readonly callContext?: GatewayCallContext;
     readonly providerSubjectId?: string;
     readonly idempotencyKey?: string;
 }
@@ -64,6 +83,8 @@ export interface GatewayTransportResponse {
     readonly responseHeaders?: Readonly<Record<string, string>>;
     readonly output?: unknown;
     readonly bytes?: Uint8Array;
+    readonly stream?: ReadableStream<Uint8Array>;
+    readonly contentLength?: number;
     readonly errorCode?: string;
 }
 
@@ -81,9 +102,9 @@ export type GatewayResult =
     | (GatewayResultBase & { readonly kind: "success"; readonly output?: unknown })
     | (GatewayResultBase & {
           readonly kind: "binary";
-          readonly bytes: Uint8Array;
+          readonly stream: ReadableStream<Uint8Array>;
           readonly contentType: string;
-          readonly media?: ProviderMediaIdentity;
+          readonly contentLength?: number;
       })
     | (GatewayResultBase & {
           readonly kind: "declared-error";
@@ -93,6 +114,21 @@ export type GatewayResult =
 
 export interface GatewayInvoker {
     invoke(value: GatewayInvocation): Promise<GatewayResult>;
+    resolveHttp(value: GatewayHttpRouteRequest): Promise<GatewayHttpRoute>;
+}
+
+export interface GatewayHttpRouteRequest {
+    readonly siteId: string;
+    readonly contractId: string;
+    readonly method: string;
+    /** Path relative to the contract ID, beginning with a slash. */
+    readonly path: string;
+}
+
+export interface GatewayHttpRoute {
+    readonly capability: CapabilityDefinition;
+    readonly binding: CompiledHttpBinding;
+    readonly pathValues: Readonly<Record<string, string>>;
 }
 
 export interface GatewayAccessProbe {

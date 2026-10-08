@@ -6,9 +6,9 @@ import type { GatewayRoute } from "@bernouy/cms-gateway";
 export const NOW = "2026-09-29T08:00:00.000Z";
 
 export async function gatewayRoute(
-    overrides: { access?: string; behavior?: Record<string, unknown>; binary?: boolean; media?: boolean } = {},
+    overrides: { access?: string; behavior?: Record<string, unknown>; binary?: boolean; binaryInput?: boolean } = {},
 ): Promise<GatewayRoute> {
-    const command = overrides.behavior?.effect === "command";
+    const command = overrides.binaryInput || overrides.behavior?.effect === "command";
     const contract = await admitContractRelease({
         kind: "contract",
         protocol: "ulvia-provider/v1",
@@ -21,43 +21,66 @@ export async function gatewayRoute(
             {
                 id: "item.list",
                 access: overrides.access ?? "public",
-                behavior: overrides.behavior ?? { effect: "query", execution: "sync" },
+                behavior:
+                    overrides.behavior ??
+                    (overrides.binaryInput
+                        ? { effect: "command", execution: "sync", idempotency: "natural" }
+                        : { effect: "query", execution: "sync" }),
                 input: overrides.binary
                     ? {
                           type: "object",
                           properties: { fileId: { type: "string", maxLength: 256 } },
                           required: ["fileId"],
                       }
-                    : { type: "object", properties: { term: { type: "string", maxLength: 50 } }, required: [] },
+                    : overrides.binaryInput
+                      ? {
+                            type: "object",
+                            properties: {
+                                uploadId: { type: "string", maxLength: 256 },
+                                bytes: { type: "binary", maxBytes: 8 },
+                            },
+                            required: ["uploadId", "bytes"],
+                        }
+                      : { type: "object", properties: { term: { type: "string", maxLength: 50 } }, required: [] },
                 output: overrides.binary
-                    ? { type: "binary", maxBytes: 8, mediaTypes: ["image/png"] }
-                    : {
-                          type: "object",
-                          properties: {
-                              items: { type: "array", items: { type: "string", maxLength: 50 }, maxItems: 10 },
-                          },
-                          required: ["items"],
-                      },
+                    ? { type: "binary", maxBytes: 8 }
+                    : overrides.binaryInput
+                      ? { type: "null" }
+                      : {
+                            type: "object",
+                            properties: {
+                                items: { type: "array", items: { type: "string", maxLength: 50 }, maxItems: 10 },
+                            },
+                            required: ["items"],
+                        },
                 errors: [{ code: "NOT_FOUND", retryable: false }],
-                ...(overrides.binary && overrides.media !== false ? { media: { idInput: "fileId" } } : {}),
                 binding: {
                     transport: "http",
-                    method: command ? "POST" : "GET",
-                    path: overrides.binary ? "/v1/files/{fileId}" : "/v1/items",
+                    method: overrides.binaryInput ? "PUT" : command ? "POST" : "GET",
+                    path: overrides.binary
+                        ? "/v1/files/{fileId}"
+                        : overrides.binaryInput
+                          ? "/v1/uploads/{uploadId}"
+                          : "/v1/items",
                     input: overrides.binary
                         ? { path: { fileId: "fileId" } }
-                        : command
-                          ? { body: true }
-                          : { query: { term: "term" } },
+                        : overrides.binaryInput
+                          ? { path: { uploadId: "uploadId" }, body: { binaryProperty: "bytes" } }
+                          : command
+                            ? { body: true }
+                            : { query: { term: "term" } },
                     response: {
-                        successStatuses: [overrides.behavior?.execution === "operation" ? 202 : 200],
-                        contentTypes: [
-                            overrides.behavior?.execution === "operation"
-                                ? "application/json"
-                                : overrides.binary
-                                  ? "image/png"
-                                  : "application/json",
+                        successStatuses: [
+                            overrides.binaryInput ? 204 : overrides.behavior?.execution === "operation" ? 202 : 200,
                         ],
+                        contentTypes:
+                            overrides.binary || overrides.binaryInput
+                                ? []
+                                : [
+                                      overrides.behavior?.execution === "operation"
+                                          ? "application/json"
+                                          : "application/json",
+                                  ],
                         errorStatuses: { NOT_FOUND: 404 },
                     },
                 },

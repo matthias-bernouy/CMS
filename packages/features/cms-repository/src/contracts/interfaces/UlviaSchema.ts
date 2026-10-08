@@ -7,6 +7,8 @@ interface UlviaSchemaBase {
 
 export interface UlviaStringSchema extends UlviaSchemaBase {
     readonly type: "string";
+    /** Sensitive values are valid contract inputs but must be redacted from captures, logs, and audit payloads. */
+    readonly sensitive?: true;
     readonly enum?: readonly string[];
     readonly format?: UlviaStringFormat;
     readonly maxLength: number;
@@ -53,7 +55,6 @@ export interface UlviaArraySchema extends UlviaSchemaBase {
 export interface UlviaBinarySchema extends UlviaSchemaBase {
     readonly type: "binary";
     readonly maxBytes: number;
-    readonly mediaTypes: readonly string[];
 }
 
 export type UlviaSchema =

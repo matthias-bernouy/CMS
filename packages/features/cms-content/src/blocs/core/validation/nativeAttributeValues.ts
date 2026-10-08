@@ -151,7 +151,9 @@ export function isCmsMediaSource(value: string): boolean {
         value.startsWith("/") &&
         !value.startsWith("//") &&
         !/[\u0000-\u0020\u007F]/.test(value) &&
-        /\/\.cms\/files\/by-id\/[^/?#]+(?:[?#].*)?$/.test(value)
+        /\/\.cms\/call\/ulvia\.cms\.files\/files\/[^/?#]+\/[^/?#]+(?:\/representations\/(?:thumbnail|responsive)\/\d+\.webp)?(?:[?#].*)?$/.test(
+            value,
+        )
     );
 }
 

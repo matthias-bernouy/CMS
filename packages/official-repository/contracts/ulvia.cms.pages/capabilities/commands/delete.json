@@ -58,15 +58,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "DELETE",
-        "path": "/v1/cms/pages/{id}",
+        "method": "POST",
+        "path": "/delete",
         "input": {
-            "path": {
-                "id": "id"
-            },
-            "query": {
-                "expectedRevision": "expectedRevision"
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

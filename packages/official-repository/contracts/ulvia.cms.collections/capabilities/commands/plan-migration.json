@@ -152,7 +152,7 @@
     "binding": {
         "transport": "http",
         "method": "POST",
-        "path": "/v1/cms/collections/migration-plans",
+        "path": "/plan-migration",
         "input": {
             "body": true
         },

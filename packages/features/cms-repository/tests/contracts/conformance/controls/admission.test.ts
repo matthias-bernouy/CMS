@@ -24,7 +24,7 @@ async function example() {
     const operation = {
         ...capability("item.export"),
         behavior: { effect: "command" as const, execution: "operation" as const, idempotency: "keyed" as const },
-        output: { type: "binary" as const, maxBytes: 1000, mediaTypes: ["application/pdf"] },
+        output: { type: "binary" as const, maxBytes: 1000 },
         binding: {
             ...capability("item.export").binding,
             response: { contentTypes: ["application/json"], successStatuses: [202], errorStatuses: {} },

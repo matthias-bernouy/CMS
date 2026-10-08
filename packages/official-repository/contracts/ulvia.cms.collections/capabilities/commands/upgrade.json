@@ -177,8 +177,8 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "PUT",
-        "path": "/v1/cms/collections/installation-upgrades",
+        "method": "POST",
+        "path": "/upgrade",
         "input": {
             "body": true
         },

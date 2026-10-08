@@ -100,13 +100,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "GET",
-        "path": "/v1/cms/jobs",
+        "method": "POST",
+        "path": "/list",
         "input": {
-            "query": {
-                "cursor": "cursor",
-                "limit": "limit"
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

@@ -179,7 +179,7 @@
     "binding": {
         "transport": "http",
         "method": "POST",
-        "path": "/v1/cms/collections/installations",
+        "path": "/install",
         "input": {
             "body": true
         },

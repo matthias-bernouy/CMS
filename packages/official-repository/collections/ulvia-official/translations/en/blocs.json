@@ -29,6 +29,8 @@
     "bloc.heading.label": "Heading",
     "bloc.media-figure.description": "An image or video with an optional caption",
     "bloc.media-figure.label": "Media figure",
+    "bloc.image.description": "An accessible responsive image backed by an immutable file reference",
+    "bloc.image.label": "Image",
     "bloc.prose.description": "A readable region for formatted editorial content",
     "bloc.prose.label": "Prose",
     "bloc.provider-manager.description": "Manage provider installation status and exact contract routing",

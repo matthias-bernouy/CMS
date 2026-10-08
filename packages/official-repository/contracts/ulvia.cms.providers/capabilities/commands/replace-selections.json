@@ -121,8 +121,8 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "PUT",
-        "path": "/v1/cms/providers/selections",
+        "method": "POST",
+        "path": "/replace-selections",
         "input": {
             "body": true
         },

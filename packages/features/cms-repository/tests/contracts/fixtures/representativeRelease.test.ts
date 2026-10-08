@@ -17,6 +17,6 @@ describe("representative Protocol v1 contract fixture", () => {
             "catalog.item.changes",
             "catalog.item.snapshot",
         ]);
-        expect(admitted.digest).toBe("sha256:03cdf6293b8f923978a83a8da70f3bc6bd8469f9a709b356ce681db35db281f2");
+        expect(admitted.digest).toBe("sha256:c66d801e3316668e8a460e340de06a39f9c9788a178ddcf03cdde5bd4649ce9a");
     });
 });

@@ -12,7 +12,7 @@ export function completeSettings(): TSystem {
         name: "Example",
         legalName: "Example SAS",
         description: "Site publisher",
-        logo: "/site/.cms/files/by-id/logo",
+        logo: "/site/.cms/call/ulvia.cms.files/files/logo/generation",
         email: "contact@example.com",
         telephone: "+33123456789",
         address: {

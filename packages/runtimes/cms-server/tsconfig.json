@@ -8,11 +8,13 @@
     "references": [
         { "path": "../../foundation/blob-store" },
         { "path": "../../foundation/http-runner" },
+        { "path": "../../foundation/image-processing" },
         { "path": "../../foundation/envelope-crypto" },
         { "path": "../../foundation/rate-limiter" },
         { "path": "../../features/cms-auth" },
         { "path": "../../foundation/secret-store" },
         { "path": "../../features/cms-content" },
+        { "path": "../../features/cms-files" },
         { "path": "../../features/cms-repository" },
         { "path": "../../features/cms-gateway" },
         { "path": "../../surfaces/cms-core" },

@@ -7,7 +7,7 @@ export interface PinnedHttpRequest {
     readonly address: ResolvedAddress;
     readonly method: string;
     readonly headers: Readonly<Record<string, string>>;
-    readonly body?: string;
+    readonly body?: string | ReadableStream<Uint8Array>;
     readonly signal: AbortSignal;
 }
 
@@ -35,8 +35,36 @@ export async function sendPinnedHttpRequest(value: PinnedHttpRequest): Promise<R
             },
         );
         request.once("error", reject);
-        request.end(value.body);
+        if (value.body instanceof ReadableStream) {
+            void pipeBody(value.body, request).catch(reject);
+        } else {
+            request.end(value.body);
+        }
     });
+}
+
+async function pipeBody(body: ReadableStream<Uint8Array>, request: ReturnType<typeof httpRequest>): Promise<void> {
+    const reader = body.getReader();
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+                request.end();
+                return;
+            }
+            if (!request.write(value)) {
+                await new Promise<void>((resolve, reject) => {
+                    request.once("drain", resolve);
+                    request.once("error", reject);
+                });
+            }
+        }
+    } catch (error) {
+        request.destroy(error instanceof Error ? error : new Error("binary request stream failed"));
+        throw error;
+    } finally {
+        reader.releaseLock();
+    }
 }
 
 export function toResponse(incoming: IncomingMessage, method: string): Response {
@@ -54,6 +82,9 @@ export function toResponse(incoming: IncomingMessage, method: string): Response 
         "content-disposition",
         "content-range",
         "accept-ranges",
+        "cache-control",
+        "content-length",
+        "last-modified",
     ]) {
         const value = incoming.headers[name];
         if (typeof value === "string") {

@@ -94,18 +94,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "PATCH",
-        "path": "/v1/cms/pages/{id}",
+        "method": "POST",
+        "path": "/rename",
         "input": {
-            "path": {
-                "id": "id"
-            },
-            "body": {
-                "properties": [
-                    "title",
-                    "expectedRevision"
-                ]
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

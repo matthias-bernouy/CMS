@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-content",
     "version": "0.1.0",
-    "description": "CMS-owned content — pages, blocs, settings, bindings, and the author file library, with explicit persistence, rendering, file-storage, serving, and image-derivative subpaths.",
+    "description": "CMS-owned pages, blocs, settings, bindings, persistence, and rendering.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./src/exports/index.ts",
@@ -14,12 +14,7 @@
         "./theme": "./src/exports/theme.ts",
         "./page-path": "./src/exports/page-path.ts",
         "./mongo": "./src/exports/mongo.ts",
-        "./migrations": "./src/exports/migrations.ts",
-        "./files": "./src/exports/files/index.ts",
-        "./files/serving": "./src/exports/files/serving.ts",
-        "./files/local-fs": "./src/exports/files/local-fs.ts",
-        "./files/urls": "./src/exports/files/urls.ts",
-        "./files/mongo": "./src/exports/files/mongo.ts"
+        "./migrations": "./src/exports/migrations.ts"
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^20.14.5",
@@ -27,13 +22,9 @@
         "happy-dom": "^20.14.5"
     },
     "dependencies": {
-        "@bernouy/binary-media": "workspace:*",
-        "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/image-processing": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
-        "linkedom": "^0.18.13",
-        "sharp": "^0.35.4"
+        "linkedom": "^0.18.13"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",

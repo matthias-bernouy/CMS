@@ -19,7 +19,7 @@ describe("Site structured data", () => {
                     url: "https://example.com/site/",
                     legalName: "Example SAS",
                     description: "Site publisher",
-                    logo: "https://example.com/site/.cms/files/by-id/logo",
+                    logo: "https://example.com/site/.cms/call/ulvia.cms.files/files/logo/generation",
                     email: "contact@example.com",
                     telephone: "+33123456789",
                     sameAs: ["https://social.example.com/example"],

@@ -5,11 +5,8 @@ import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import type { IdentityService } from "@bernouy/cms-gateway/identity";
-import { ProviderImageService } from "@bernouy/cms-gateway/media";
 import { DefaultPageExecutionAuthority } from "@bernouy/cms-gateway/execution";
 import { MongoPageExecutionGrantStore } from "@bernouy/cms-gateway/execution/mongo";
-import { LocalProviderImageStore } from "@bernouy/cms-gateway/media/local-fs";
-import { SharpImageTransformer } from "@bernouy/cms-gateway/media/sharp";
 import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
 import {
     MongoProviderManifestCatalogue,
@@ -29,10 +26,16 @@ export async function createProductionGateway(
     legacyIdentities: IdentityService,
     siteId: string,
     administratorEmail: string,
-    mediaDirectory: string,
 ) {
     const releases = new MongoReleaseCatalogue(db);
     await db.collection("cms_administrator_grants").createIndex({ sub: 1 }, { unique: true });
+    await db
+        .collection("cms_provider_capability_grants")
+        .createIndex(
+            { sourceInstallationId: 1, targetInstallationId: 1, contractId: 1, capabilityId: 1 },
+            { unique: true },
+        );
+    await db.collection("cms_provider_capability_usage").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
     const manifests = new MongoProviderManifestCatalogue(db, releases);
     const installations = new MongoProviderInstallationStore(db, manifests, () => new Date().toISOString());
     await installations.init();
@@ -52,7 +55,7 @@ export async function createProductionGateway(
         },
     });
     const observations = new ProviderObservationRefresher(siteId, selections, installations, network);
-    const access = createProductionGatewayAccess(credentials, administratorEmail, db);
+    const access = createProductionGatewayAccess(credentials, administratorEmail, db, siteId, installations, manifests);
     const commandAudit = new MongoGatewayCommandAuditStore(db);
     await commandAudit.init();
     const identities = new ProviderIdentityAliases(legacyIdentities);
@@ -63,9 +66,23 @@ export async function createProductionGateway(
         authorize: access.authorize,
         commandAudit,
     });
-    const imageStore = new LocalProviderImageStore(mediaDirectory);
-    await imageStore.initialize();
-    const images = new ProviderImageService({ invoker, transformer: new SharpImageTransformer(), store: imageStore });
+    const authenticateProvider = async (token: string): Promise<string | null> => {
+        if (!/^[\x21-\x7e]{20,4096}$/u.test(token)) {
+            return null;
+        }
+        const candidates = await installations.list(siteId);
+        for (const candidate of candidates) {
+            const reference = candidate.installation.gatewayTokenRef;
+            if (candidate.installation.status !== "enabled" || !reference) {
+                continue;
+            }
+            const expected = await resolveSecret(reference).catch(() => null);
+            if (expected && constantTimeEqual(token, expected)) {
+                return candidate.installation.id;
+            }
+        }
+        return null;
+    };
     return {
         siteId,
         releases,
@@ -74,15 +91,27 @@ export async function createProductionGateway(
         selections,
         invoker,
         access: invoker,
-        images,
         catalogue,
         pageExecutions,
         commandAudit,
         observations,
+        authenticateProvider,
         identities,
         isAdministrator: access.isAdministrator,
         administrators: access.administrators,
+        providerGrants: access.providerGrants,
     };
+}
+
+function constantTimeEqual(left: string, right: string): boolean {
+    if (left.length !== right.length) {
+        return false;
+    }
+    let difference = 0;
+    for (let index = 0; index < left.length; index += 1) {
+        difference |= left.charCodeAt(index) ^ right.charCodeAt(index);
+    }
+    return difference === 0;
 }
 
 export type ProductionGateway = Awaited<ReturnType<typeof createProductionGateway>>;

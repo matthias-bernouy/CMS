@@ -65,8 +65,8 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "PUT",
-        "path": "/v1/cms/theme",
+        "method": "POST",
+        "path": "/save",
         "input": {
             "body": true
         },

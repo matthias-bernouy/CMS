@@ -94,12 +94,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "GET",
-        "path": "/v1/cms/jobs/{jobId}",
+        "method": "POST",
+        "path": "/get",
         "input": {
-            "path": {
-                "jobId": "jobId"
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

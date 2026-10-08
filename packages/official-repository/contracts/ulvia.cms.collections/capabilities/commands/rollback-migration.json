@@ -53,11 +53,9 @@
     "binding": {
         "transport": "http",
         "method": "POST",
-        "path": "/v1/cms/collections/migration-runs/{migrationId}/rollback",
+        "path": "/rollback-migration",
         "input": {
-            "path": {
-                "migrationId": "migrationId"
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

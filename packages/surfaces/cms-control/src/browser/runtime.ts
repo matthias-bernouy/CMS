@@ -1,10 +1,4 @@
 import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/bindings";
-import {
-    PROVIDER_IMAGE_WIDTHS,
-    buildProviderImageAttributes,
-    installProviderMediaImageRuntime,
-    syncProviderMediaImage,
-} from "@bernouy/cms-gateway/media/browser";
 import { Component } from "@bernouy/cms-content/browser";
 import {
     BindingCore,
@@ -29,9 +23,6 @@ if (!customElements.get(CMS_BINDING_CORE_TAG)) {
 
 const runtime = {
     Component,
-    PROVIDER_IMAGE_WIDTHS,
-    buildProviderImageAttributes,
-    syncProviderMediaImage,
     observeSource,
     readSourceData,
     refreshSourceContext,
@@ -40,5 +31,3 @@ const runtime = {
     SourceFormError,
 };
 Object.defineProperty(window, "cmsRuntime", { configurable: true, value: runtime, writable: true });
-
-installProviderMediaImageRuntime(document);

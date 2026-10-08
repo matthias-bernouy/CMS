@@ -108,12 +108,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "GET",
-        "path": "/v1/cms/collections/migrations/status",
+        "method": "POST",
+        "path": "/migration-status",
         "input": {
-            "query": {
-                "limit": "limit"
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

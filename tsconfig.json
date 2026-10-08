@@ -29,6 +29,9 @@
             "path": "packages/features/cms-content"
         },
         {
+            "path": "packages/features/cms-files"
+        },
+        {
             "path": "packages/features/cms-repository"
         },
         {

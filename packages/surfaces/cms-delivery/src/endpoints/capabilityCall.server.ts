@@ -1,6 +1,5 @@
 import { type GatewayActor } from "@bernouy/cms-gateway";
 import { handleGatewayHttpCall } from "@bernouy/cms-gateway/http/handlers";
-import { handleGatewayFileGet, handleGatewayImageGet } from "@bernouy/cms-gateway/media/handlers";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 
 /** Public surface decides the verified actor; gateway HTTP owns parsing and projection. */
@@ -9,42 +8,26 @@ export async function handleCapabilityCall(request: Request, delivery: DeliveryC
     if (!configured) {
         return new Response(null, { status: 404 });
     }
-    const actor = await deliveryActor(delivery, request);
+    const providerInstallationId = await providerActor(delivery, request);
+    const actor = providerInstallationId
+        ? ({ kind: "provider", installationId: providerInstallationId } as const)
+        : await deliveryActor(delivery, request);
     return handleGatewayHttpCall(request, {
         siteId: configured.siteId,
         invoker: configured.invoker,
-        origin: "delivery",
+        origin: providerInstallationId ? "provider" : "delivery",
         actor,
         prefix: `${delivery.basePath}/.cms/call`,
     });
 }
 
-export async function handleCapabilityFile(request: Request, delivery: DeliveryCms): Promise<Response> {
-    const configured = delivery.capabilityGateway;
-    if (!configured) {
-        return new Response(null, { status: 404 });
+async function providerActor(delivery: DeliveryCms, request: Request): Promise<string | null> {
+    const authenticate = delivery.capabilityGateway?.authenticateProvider;
+    const authorization = request.headers.get("authorization");
+    if (!authenticate || !authorization?.startsWith("Bearer ")) {
+        return null;
     }
-    return handleGatewayFileGet(request, {
-        siteId: configured.siteId,
-        invoker: configured.invoker,
-        origin: "delivery",
-        actor: await deliveryActor(delivery, request),
-        prefix: `${delivery.basePath}/.cms/media`,
-    });
-}
-
-export async function handleCapabilityImage(request: Request, delivery: DeliveryCms): Promise<Response> {
-    const configured = delivery.capabilityGateway;
-    if (!configured?.images) {
-        return new Response(null, { status: 404 });
-    }
-    return handleGatewayImageGet(request, {
-        siteId: configured.siteId,
-        images: configured.images,
-        origin: "delivery",
-        actor: await deliveryActor(delivery, request),
-        prefix: `${delivery.basePath}/.cms/image`,
-    });
+    return authenticate(authorization.slice(7)).catch(() => null);
 }
 
 async function deliveryActor(delivery: DeliveryCms, request: Request): Promise<GatewayActor> {

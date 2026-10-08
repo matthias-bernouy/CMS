@@ -4,7 +4,7 @@
     "schemaDialect": "ulvia-schema/v1",
     "contractId": "ulvia.cms.files",
     "name": "CMS Files",
-    "description": "Browse and organize the author file library while binary upload, replacement and download remain dedicated CMS transports.",
+    "description": "Provider-neutral namespaces, streamed uploads, immutable public files, and signed private access.",
     "version": "1.0.0",
     "publisherId": "ulvia.official",
     "catalogue": {

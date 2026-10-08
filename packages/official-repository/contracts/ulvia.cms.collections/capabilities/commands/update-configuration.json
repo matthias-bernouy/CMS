@@ -139,18 +139,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "PUT",
-        "path": "/v1/cms/collections/installed/{collectionId}/configuration",
+        "method": "POST",
+        "path": "/update-configuration",
         "input": {
-            "path": {
-                "collectionId": "collectionId"
-            },
-            "body": {
-                "properties": [
-                    "expectedRevision",
-                    "configurationJson"
-                ]
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

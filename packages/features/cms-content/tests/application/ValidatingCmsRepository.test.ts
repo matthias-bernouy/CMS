@@ -147,12 +147,12 @@ describe("ValidatingCmsRepository — pages", () => {
         }
     });
 
-    test("accepts gateway provider images and rejects the removed Source image route", async () => {
+    test("accepts immutable cms-files URLs and rejects the removed Source image route", async () => {
         const { repo, calls } = makeRepo({ blocs: ["fixture-card"] });
         const image =
-            '<fixture-card><img src="/.cms/media/catalog/photo.read/{{ product.image }}" alt="Product"></fixture-card>';
+            '<fixture-card><img src="/.cms/call/ulvia.cms.files/files/photo/generation" alt="Product"></fixture-card>';
         await repo.updatePage({ id: "p1", content: image });
-        expect(calls.updatePage[0].content).toContain("/.cms/media/catalog/photo.read/");
+        expect(calls.updatePage[0].content).toContain("/.cms/call/ulvia.cms.files/files/");
         await expect(
             repo.updatePage({
                 id: "p1",
@@ -168,7 +168,7 @@ describe("ValidatingCmsRepository — pages", () => {
             repo.updatePage({
                 id: "p1",
                 content:
-                    '<fixture-card><img src="/.cms/files/by-id/photo-1" data-cms-src="https://other.example/tracker.png" alt="Product"></fixture-card>',
+                    '<fixture-card><img src="/.cms/call/ulvia.cms.files/files/photo-1/generation" data-cms-src="https://other.example/tracker.png" alt="Product"></fixture-card>',
             }),
         ).rejects.toThrow('attribute "data-cms-src" is forbidden');
     });
@@ -189,7 +189,7 @@ describe("ValidatingCmsRepository — pages", () => {
                     <p class="status" data-state="loading"
                         cms-condition="$sources.newsletterSubscription.loading">Loading</p>
                 </form>
-                <img slot="illustration" src="/.cms/files/by-id/newsletter" alt="Newsletter illustration">
+                <img slot="illustration" src="/.cms/call/ulvia.cms.files/files/newsletter/generation" alt="Newsletter illustration">
                 <span>Default-slot label</span>
                 <li slot="criteria">Component-owned list criterion</li>
             </fixture-newsletter-card>

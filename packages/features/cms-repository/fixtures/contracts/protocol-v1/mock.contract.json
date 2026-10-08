@@ -18,35 +18,75 @@
         {
             "id": "receipt.render",
             "access": "admin",
-            "behavior": { "effect": "query", "execution": "sync" },
+            "behavior": {
+                "effect": "query",
+                "execution": "sync"
+            },
             "input": {
                 "type": "object",
-                "properties": { "receiptId": { "type": "string", "maxLength": 64 } },
-                "required": ["receiptId"]
+                "properties": {
+                    "receiptId": {
+                        "type": "string",
+                        "maxLength": 64
+                    }
+                },
+                "required": [
+                    "receiptId"
+                ]
             },
-            "output": { "type": "binary", "maxBytes": 1024, "mediaTypes": ["image/svg+xml"] },
-            "errors": [{ "code": "NOT_FOUND", "retryable": false }],
+            "output": {
+                "type": "binary",
+                "maxBytes": 1024
+            },
+            "errors": [
+                {
+                    "code": "NOT_FOUND",
+                    "retryable": false
+                }
+            ],
             "binding": {
                 "transport": "http",
                 "method": "GET",
                 "path": "/v1/receipts/{receiptId}",
-                "input": { "path": { "receiptId": "receiptId" } },
+                "input": {
+                    "path": {
+                        "receiptId": "receiptId"
+                    }
+                },
                 "response": {
-                    "successStatuses": [200],
-                    "contentTypes": ["image/svg+xml"],
-                    "errorStatuses": { "NOT_FOUND": 404 }
+                    "successStatuses": [
+                        200
+                    ],
+                    "contentTypes": [
+                        "image/svg+xml"
+                    ],
+                    "errorStatuses": {
+                        "NOT_FOUND": 404
+                    }
                 }
             },
             "mocks": [
                 {
                     "id": "found",
-                    "input": { "receiptId": "example" },
-                    "outcome": { "kind": "success", "output": { "assetId": "receipt.svg" } }
+                    "input": {
+                        "receiptId": "example"
+                    },
+                    "outcome": {
+                        "kind": "success",
+                        "output": {
+                            "assetId": "receipt.svg"
+                        }
+                    }
                 },
                 {
                     "id": "missing",
-                    "input": { "receiptId": "missing" },
-                    "outcome": { "kind": "error", "code": "NOT_FOUND" }
+                    "input": {
+                        "receiptId": "missing"
+                    },
+                    "outcome": {
+                        "kind": "error",
+                        "code": "NOT_FOUND"
+                    }
                 }
             ]
         }

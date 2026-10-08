@@ -2,7 +2,7 @@ import type { BunPlugin } from "bun";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 
 /**
- * Bloc bundles must not re-bundle the shared browser and media runtimes. Each
+ * Bloc bundles must not re-bundle the shared browser runtime. Each
  * bundle keeps only its own view behavior and reads shared APIs from the host.
  */
 export const hostRuntimeExternalsPlugin: BunPlugin = {
@@ -10,22 +10,12 @@ export const hostRuntimeExternalsPlugin: BunPlugin = {
     setup(build) {
         build.onResolve(
             {
-                filter: /^@bernouy\/(?:cms-content\/browser|cms-gateway\/media\/browser)$/,
+                filter: /^@bernouy\/cms-content\/browser$/,
             },
             (args) => ({ path: args.path, namespace: "cms-host-runtime" }),
         );
 
         build.onLoad({ filter: /.*/, namespace: "cms-host-runtime" }, (args) => {
-            if (args.path === "@bernouy/cms-gateway/media/browser") {
-                return {
-                    contents: [
-                        "export const PROVIDER_IMAGE_WIDTHS = window.cmsRuntime.PROVIDER_IMAGE_WIDTHS;",
-                        "export const buildProviderImageAttributes = window.cmsRuntime.buildProviderImageAttributes;",
-                        "export const syncProviderMediaImage = window.cmsRuntime.syncProviderMediaImage;",
-                    ].join("\n"),
-                    loader: "js",
-                };
-            }
             if (args.path === "@bernouy/cms-content/browser") {
                 return {
                     contents: [

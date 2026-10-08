@@ -117,16 +117,9 @@
     "binding": {
         "transport": "http",
         "method": "POST",
-        "path": "/v1/cms/pages",
+        "path": "/create",
         "input": {
-            "body": {
-                "properties": [
-                    "path",
-                    "title",
-                    "content",
-                    "surface"
-                ]
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

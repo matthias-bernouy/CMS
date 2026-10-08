@@ -10,7 +10,8 @@ export interface PreparedHttpInvocation {
     readonly method: string;
     /** Application headers only; credentials and identity are added by the trusted network adapter. */
     readonly headers: Readonly<Record<string, string>>;
-    readonly body?: string;
+    readonly body?: string | ReadableStream<Uint8Array>;
+    readonly contentLength?: number;
 }
 
 /** Compiles an admitted binding and validated input into one HTTP request. */
@@ -50,7 +51,8 @@ export function buildHttpInvocation(request: GatewayTransportRequest): PreparedH
             return encoded === undefined ? [] : [[parameter.wireName, encoded]];
         }),
     );
-    let body: string | undefined;
+    let body: string | ReadableStream<Uint8Array> | undefined;
+    let contentLength: number | undefined;
     if (binding.body?.kind === "json") {
         const values: Record<string, unknown> = {};
         for (const property of binding.body.properties) {
@@ -61,7 +63,14 @@ export function buildHttpInvocation(request: GatewayTransportRequest): PreparedH
         body = canonicalizeIJson(values);
         headers["content-type"] = "application/json";
     } else if (binding.body) {
-        throw new TypeError("binary request transport is not active");
+        if (!request.binaryBody) {
+            throw new TypeError("binary request body is missing");
+        }
+        body = request.binaryBody.stream;
+        contentLength = request.binaryBody.contentLength;
+        if (request.binaryBody.contentType) {
+            headers["content-type"] = request.binaryBody.contentType;
+        }
     }
     return Object.freeze({
         origin: target.origin,
@@ -69,6 +78,7 @@ export function buildHttpInvocation(request: GatewayTransportRequest): PreparedH
         method: binding.method,
         headers: Object.freeze(headers),
         ...(body === undefined ? {} : { body }),
+        ...(contentLength === undefined ? {} : { contentLength }),
     });
 
     function encode(parameter: CompiledHttpParameter): string | undefined {

@@ -1,0 +1,120 @@
+{
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "none"
+    },
+    "id": "namespace.keys.create",
+    "description": "Create another scoped namespace credential.",
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespaceId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "namespaceKey": {
+                "type": "string",
+                "maxLength": 512,
+                "minLength": 20,
+                "sensitive": true
+            },
+            "permissions": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 6,
+                "items": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "enum": [
+                        "files.read",
+                        "files.write",
+                        "files.delete",
+                        "files.sign",
+                        "files.publish",
+                        "namespace.manage"
+                    ]
+                }
+            },
+            "expiresAt": {
+                "type": "string",
+                "maxLength": 64,
+                "nullable": true
+            }
+        },
+        "required": [
+            "namespaceId",
+            "namespaceKey",
+            "permissions"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "keyId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "namespaceKey": {
+                "type": "string",
+                "maxLength": 512,
+                "minLength": 20,
+                "sensitive": true
+            }
+        },
+        "required": [
+            "keyId",
+            "namespaceKey"
+        ]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_AUTHORIZED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "POST",
+        "path": "/namespaces/{namespaceId}/keys",
+        "input": {
+            "path": {
+                "namespaceId": "namespaceId"
+            },
+            "body": {
+                "properties": [
+                    "namespaceKey",
+                    "permissions",
+                    "expiresAt"
+                ]
+            }
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NOT_AUTHORIZED": 403,
+                "NOT_FOUND": 404,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

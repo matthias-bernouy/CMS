@@ -135,7 +135,7 @@ function compileBinaryBody(
         );
     }
     used.add(property);
-    return { kind: "binary", contentTypes: [...schema.mediaTypes].sort(), property };
+    return { kind: "binary", contentTypes: [], property };
 }
 
 function assertPathMappings(

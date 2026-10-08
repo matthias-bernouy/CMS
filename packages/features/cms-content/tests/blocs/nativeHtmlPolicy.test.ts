@@ -116,7 +116,12 @@ describe("platform native HTML policy", () => {
         ],
         [{ kind: "bloc", tag: "button", attributes: { type: "reset" }, children: [] }, "button type"],
         [
-            { kind: "bloc", tag: "img", attributes: { src: "/.cms/files/by-id/photo" }, children: [] },
+            {
+                kind: "bloc",
+                tag: "img",
+                attributes: { src: "/.cms/call/ulvia.cms.files/files/photo/generation" },
+                children: [],
+            },
             "alternative text",
         ],
         [
@@ -124,7 +129,7 @@ describe("platform native HTML policy", () => {
                 kind: "bloc",
                 tag: "img",
                 attributes: {
-                    src: "https://attacker.example/.cms/files/by-id/photo",
+                    src: "https://attacker.example/.cms/call/ulvia.cms.files/files/photo/generation",
                     alt: "Photo",
                 },
                 children: [],
@@ -135,7 +140,7 @@ describe("platform native HTML policy", () => {
             {
                 kind: "bloc",
                 tag: "img",
-                attributes: { src: "/.cms/files/by-id/photo", alt: "Photo", loading: "auto" },
+                attributes: { src: "/.cms/call/ulvia.cms.files/files/photo/generation", alt: "Photo", loading: "auto" },
                 children: [],
             },
             "loading",
@@ -147,7 +152,7 @@ describe("platform native HTML policy", () => {
             {
                 kind: "bloc",
                 tag: "img",
-                attributes: { src: "/.cms/files/by-id/photo", alt: "Photo" },
+                attributes: { src: "/.cms/call/ulvia.cms.files/files/photo/generation", alt: "Photo" },
                 children: [{ kind: "text", value: "forged child" }],
             },
             "cannot contain children",
@@ -174,7 +179,7 @@ describe("platform native HTML policy", () => {
                             kind: "bloc",
                             tag: "img",
                             attributes: {
-                                src: "/.cms/files/by-id/photo",
+                                src: "/.cms/call/ulvia.cms.files/files/photo/generation",
                                 alt: "Product photo",
                                 loading: "lazy",
                                 fetchpriority: "auto",
@@ -187,7 +192,7 @@ describe("platform native HTML policy", () => {
                             kind: "bloc",
                             tag: "img",
                             attributes: {
-                                src: "/.cms/files/by-id/texture",
+                                src: "/.cms/call/ulvia.cms.files/files/texture/generation",
                                 role: "presentation",
                                 "aria-hidden": "true",
                                 alt: "",

@@ -57,25 +57,22 @@ function repositoryWith(options: {
 }
 
 describe("resolveRuntimeAssets", () => {
-    test("exposes components and provider images through the public runtime bundle", async () => {
+    test("exposes the generic component base through the public runtime bundle", async () => {
         const entry = await generateComponentJsEntry();
         const js = new TextDecoder().decode(entry.raw);
 
         expect(entry.contentType).toBe("text/javascript");
         expect(js).toMatch(/window\.cmsRuntime\s*=\s*\{[\s\S]*\bComponent\b/);
-        expect(js).toContain("syncProviderMediaImage");
-        expect(js).not.toContain("syncResponsiveSourceImageElement");
+        expect(js).not.toContain("syncProviderMediaImage");
 
         (window as any).cmsRuntime = {};
         window.eval(js);
         expect(typeof (window as any).cmsRuntime.Component).toBe("function");
         expect((window as any).cmsRuntime.Composition).toBeUndefined();
-        expect((window as any).cmsRuntime.PROVIDER_IMAGE_WIDTHS).toEqual([
-            64, 128, 256, 384, 512, 768, 1_024, 1_280, 1_600, 1_920, 2_560,
-        ]);
+        expect((window as any).cmsRuntime.PROVIDER_IMAGE_WIDTHS).toBeUndefined();
     });
 
-    test("serves a provider media bundle with a stable hashed URL", async () => {
+    test("serves the component bundle with a stable hashed URL", async () => {
         const delivery = { cache: new InMemoryCache() } as unknown as DeliveryCms;
         const current = await ComponentServer(new Request("http://localhost/.cms/assets/component.js"), delivery);
         const entry = await generateComponentJsEntry();
@@ -87,12 +84,7 @@ describe("resolveRuntimeAssets", () => {
         expect(immutable.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
         (window as any).cmsRuntime = {};
         window.eval(await immutable.text());
-        const image = document.createElement("img");
-        image.setAttribute("data-cms-src", "/.cms/media/catalog/photo/file-7");
-        image.setAttribute("data-cms-width", "800");
-        image.setAttribute("data-cms-height", "600");
-        (window as any).cmsRuntime.syncProviderMediaImage(image);
-        expect(image.getAttribute("srcset")).toContain("/.cms/image/catalog/photo/file-7/384.webp 384w");
+        expect(typeof (window as any).cmsRuntime.Component).toBe("function");
 
         const unknown = await ComponentServer(
             new Request("http://localhost/.cms/assets/component.js?v=unknown"),

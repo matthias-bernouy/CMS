@@ -1,0 +1,198 @@
+{
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "none"
+    },
+    "id": "upload.complete",
+    "description": "Finalize an uploaded blob into an immutable generation.",
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespaceId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "namespaceKey": {
+                "type": "string",
+                "maxLength": 512,
+                "minLength": 20,
+                "sensitive": true
+            },
+            "uploadId": {
+                "type": "string",
+                "maxLength": 128
+            }
+        },
+        "required": [
+            "namespaceId",
+            "namespaceKey",
+            "uploadId"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "namespaceId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "fileId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "generation": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "name": {
+                "type": "string",
+                "maxLength": 255
+            },
+            "mimeType": {
+                "type": "string",
+                "maxLength": 255
+            },
+            "size": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10737418240
+            },
+            "visibility": {
+                "type": "string",
+                "maxLength": 7,
+                "enum": [
+                    "private",
+                    "public"
+                ]
+            },
+            "url": {
+                "type": "string",
+                "maxLength": 4096
+            },
+            "width": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16384,
+                "nullable": true
+            },
+            "height": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16384,
+                "nullable": true
+            },
+            "variants": {
+                "type": "array",
+                "maxItems": 10,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "profile": {
+                            "type": "string",
+                            "maxLength": 10,
+                            "enum": [
+                                "thumbnail",
+                                "responsive"
+                            ]
+                        },
+                        "width": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 16384
+                        },
+                        "height": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 16384
+                        },
+                        "mimeType": {
+                            "type": "string",
+                            "maxLength": 64
+                        },
+                        "url": {
+                            "type": "string",
+                            "maxLength": 4096
+                        }
+                    },
+                    "required": [
+                        "profile",
+                        "width",
+                        "height",
+                        "mimeType",
+                        "url"
+                    ]
+                }
+            }
+        },
+        "required": [
+            "namespaceId",
+            "fileId",
+            "generation",
+            "name",
+            "mimeType",
+            "size",
+            "visibility",
+            "url"
+        ]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_AUTHORIZED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        },
+        {
+            "code": "QUOTA_EXCEEDED",
+            "retryable": false
+        },
+        {
+            "code": "UPLOAD_NOT_READY",
+            "retryable": false
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "POST",
+        "path": "/uploads/{uploadId}/complete",
+        "input": {
+            "path": {
+                "uploadId": "uploadId"
+            },
+            "body": {
+                "properties": [
+                    "namespaceId",
+                    "namespaceKey"
+                ]
+            }
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NOT_AUTHORIZED": 403,
+                "NOT_FOUND": 404,
+                "CORE_UNAVAILABLE": 503,
+                "QUOTA_EXCEEDED": 409,
+                "UPLOAD_NOT_READY": 409
+            }
+        }
+    }
+}

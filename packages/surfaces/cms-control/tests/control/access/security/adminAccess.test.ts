@@ -18,7 +18,7 @@ describe("Control machine route authentication", () => {
     test("returns an API response instead of a login redirect for CMS transports", async () => {
         const guard = createAuthenticatedControlGuard("/cms", unauthenticated());
         const response = await guard(
-            new Request("http://localhost/cms/.cms/files/upload", { method: "POST" }),
+            new Request("http://localhost/cms/.cms/call/ulvia.cms.files/uploads", { method: "POST" }),
             async () => new Response("ok"),
         );
         expect(response.status).toBe(401);
@@ -53,10 +53,17 @@ describe("Control collection maintenance", () => {
         });
         const next = async () => new Response("ok");
 
-        expect((await guard(new Request("http://localhost/.cms/files/by-id/file"), next)).status).toBe(200);
-        expect((await guard(new Request("http://localhost/.cms/files/content", { method: "PUT" }), next)).status).toBe(
-            423,
-        );
+        expect(
+            (await guard(new Request("http://localhost/.cms/call/ulvia.cms.files/files/file/generation"), next)).status,
+        ).toBe(200);
+        expect(
+            (
+                await guard(
+                    new Request("http://localhost/.cms/call/ulvia.cms.files/uploads/upload", { method: "PUT" }),
+                    next,
+                )
+            ).status,
+        ).toBe(423);
         expect(
             (
                 await guard(
@@ -91,7 +98,7 @@ async function administratorStatus(administrator: boolean): Promise<number> {
     try {
         return (
             await guard(
-                new Request("http://localhost/cms/.cms/files/upload", { method: "POST" }),
+                new Request("http://localhost/cms/.cms/call/ulvia.cms.files/uploads", { method: "POST" }),
                 async () => new Response("ok"),
             )
         ).status;

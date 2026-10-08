@@ -72,12 +72,21 @@ function trustedHeaders(request: GatewayHttpExchange, token: string): Record<str
         accept: request.accept ?? "application/json",
         authorization: `Bearer ${token}`,
         "x-ulvia-request-id": request.requestId,
+        ...(request.contractId ? { "x-ulvia-contract-id": request.contractId } : {}),
         "x-ulvia-origin": request.invocationOrigin,
         "x-ulvia-actor-kind": request.actorKind,
         "x-ulvia-site-id": request.siteId,
         "x-ulvia-installation-id": request.installationId,
+        ...(request.callContext
+            ? {
+                  "x-ulvia-call-chain-id": request.callContext.callChainId,
+                  "x-ulvia-call-depth": String(request.callContext.callDepth),
+                  "x-ulvia-call-path": encodeURIComponent(JSON.stringify(request.callContext.installationPath)),
+              }
+            : {}),
         ...(request.providerSubjectId ? { "x-ulvia-subject-id": request.providerSubjectId } : {}),
         ...(request.idempotencyKey ? { "idempotency-key": request.idempotencyKey } : {}),
+        ...(request.contentLength === undefined ? {} : { "content-length": String(request.contentLength) }),
     };
 }
 
@@ -118,7 +127,7 @@ function assertSafeApplicationHeaders(request: GatewayHttpExchange): void {
             /[\r\n]/.test(value) ||
             RESERVED_HEADERS.has(name) ||
             ["proxy-", "sec-", "x-cms-", "x-forwarded-", "x-ulvia-"].some((prefix) => name.startsWith(prefix)) ||
-            (name === "content-type" && (request.body === undefined || value !== "application/json"))
+            (name === "content-type" && request.body === undefined)
         ) {
             throw new TypeError("provider binding supplied a forbidden header");
         }

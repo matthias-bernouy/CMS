@@ -8,7 +8,7 @@ export type PageContentReference =
     | { readonly kind: "site-page"; readonly pageId: string }
     | { readonly kind: "text"; readonly collectionId: string; readonly textId: string };
 
-const FILE_REFERENCE = /\/\.cms\/files\/by-id\/([^/?#\s"'<>]+)/g;
+const FILE_REFERENCE = /\/\.cms\/call\/ulvia\.cms\.files\/files\/([^/?#\s"'<>]+)\/[^/?#\s"'<>]+/g;
 
 /** Stable persistence key used by the Page reference projection. */
 export function pageContentReferenceKey(reference: PageContentReference): string {

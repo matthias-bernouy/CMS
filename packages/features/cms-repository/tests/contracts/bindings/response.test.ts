@@ -51,26 +51,24 @@ describe("HTTP response binding compilation", () => {
         ).toThrow("only application/json");
     });
 
-    test("checks binary response media types against the output schema", () => {
+    test("keeps binary response content types provider-defined", () => {
         const binary = {
             type: "binary",
             maxBytes: 1024,
-            mediaTypes: ["application/pdf"],
         };
-        expect(() =>
-            compileHttpBinding(
-                capability({
-                    output: binary,
-                    binding: {
-                        transport: "http",
-                        method: "POST",
-                        path: "/v1/messages",
-                        input: { body: true },
-                        response: { successStatuses: [200], contentTypes: ["image/png"] },
-                    },
-                }),
-            ),
-        ).toThrow("declared by the output schema");
+        const compiled = compileHttpBinding(
+            capability({
+                output: binary,
+                binding: {
+                    transport: "http",
+                    method: "POST",
+                    path: "/v1/messages",
+                    input: { body: true },
+                    response: { successStatuses: [200], contentTypes: [] },
+                },
+            }),
+        );
+        expect(compiled.response.contentTypes).toEqual([]);
     });
 
     test("rejects nullable binary response outputs", () => {
@@ -81,7 +79,6 @@ describe("HTTP response binding compilation", () => {
                         type: "binary",
                         nullable: true,
                         maxBytes: 1024,
-                        mediaTypes: ["application/pdf"],
                     },
                     binding: {
                         transport: "http",
@@ -122,7 +119,6 @@ describe("HTTP response binding compilation", () => {
                             attachment: {
                                 type: "binary",
                                 maxBytes: 1024,
-                                mediaTypes: ["application/pdf"],
                             },
                         },
                         ["name", "attachment"],
@@ -169,6 +165,6 @@ describe("HTTP response binding compilation", () => {
                     binding,
                 }),
             ),
-        ).toThrow("HEAD responses require a null output schema");
+        ).toThrow("HEAD responses require a null or binary resource output schema");
     });
 });

@@ -1,5 +1,5 @@
 import { canonicalSiteBaseUrl, type TPage } from "@bernouy/cms-content/rendering";
-import type { SitemapStore } from "@bernouy/cms-content/files/serving";
+import type { BlobStore as SitemapStore } from "@bernouy/blob-store";
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { collectPublicPageProviderPaths } from "cms-delivery/core/pages/publicPagePaths";
 import {

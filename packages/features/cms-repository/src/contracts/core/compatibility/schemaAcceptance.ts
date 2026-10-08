@@ -32,7 +32,7 @@ export function firstSchemaSubsetViolation(source: UlviaSchema, target: UlviaSch
             if (source.maxBytes > target.maxBytes) {
                 return `${path}.maxBytes`;
             }
-            return source.mediaTypes.every((type) => target.mediaTypes.includes(type)) ? null : `${path}.mediaTypes`;
+            return null;
         case "boolean":
             return null;
         case "integer":

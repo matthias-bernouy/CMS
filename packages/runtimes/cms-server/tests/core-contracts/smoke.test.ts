@@ -10,6 +10,9 @@ import {
 } from "@bernouy/cms-core";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
+import { MemoryBlobStore } from "@bernouy/blob-store/memory";
+import { CmsFilesService } from "@bernouy/cms-files";
+import { InMemoryCmsFilesStore } from "@bernouy/cms-files/memory";
 
 test("all eight Control domains dispatch outputs matching their official contracts", async () => {
     const dispatcher = new DefaultCoreCapabilityDispatcher();
@@ -20,31 +23,6 @@ test("all eight Control domains dispatch outputs matching their official contrac
     const core = {
         repo: { getSystem: async () => system, getSystemRevision: async () => 0 },
         collections: { snapshot: async () => ({ revision: 0, collections: [] }) },
-        filesMetadata: {
-            listChildren: async () => ({
-                items: [
-                    {
-                        id: "file-1",
-                        revision: 1,
-                        type: "file",
-                        name: "hero.png",
-                        parentId: null,
-                        size: 128,
-                        mimeType: "image/png",
-                        contentHash: "a".repeat(64),
-                        representationVersion: "private-version",
-                        blobKey: "private-blob-key",
-                        createdAt: now,
-                        updatedAt: now,
-                    },
-                ],
-                total: 1,
-                page: 1,
-                limit: 50,
-                hasMore: false,
-            }),
-        },
-        fileMutations: {},
         users: {
             list: async () => ({
                 users: [{ sub: "local:user-1", email: "admin@example.test", createdAt: now, lastSeenAt: now }],
@@ -95,17 +73,27 @@ test("all eight Control domains dispatch outputs matching their official contrac
             list: async () => ["local:user-1"],
         },
     };
+    const files = new CmsFilesService({
+        store: new InMemoryCmsFilesStore(),
+        blobs: new MemoryBlobStore(),
+        signingKey: new Uint8Array(32).fill(7),
+        publicBaseUrl: "https://cms.example",
+        now: () => now,
+    });
     registerOfficialCoreCapabilities(
         dispatcher,
         core as never,
         gateway as never,
         new CoreOperationExecutor(new MemoryCoreOperationStore()),
+        undefined,
+        undefined,
+        files,
     );
 
     const calls = [
         ["ulvia.cms.collections", "list", {}],
         ["ulvia.cms.collections", "migration-status", {}],
-        ["ulvia.cms.files", "list", {}],
+        ["ulvia.cms.files", "namespace.create", { name: "Smoke files", defaultVisibility: "private" }],
         ["ulvia.cms.jobs", "list", {}],
         ["ulvia.cms.localization", "overview", {}],
         ["ulvia.cms.theme", "get", {}],
@@ -123,10 +111,6 @@ test("all eight Control domains dispatch outputs matching their official contrac
             actorKind: "administrator",
         });
         expect(() => validateSchemaValue(capability.output, output)).not.toThrow();
-        if (contractId === "ulvia.cms.files") {
-            expect(output).not.toHaveProperty("items.0.blobKey");
-            expect(output).not.toHaveProperty("items.0.contentHash");
-        }
     }
 });
 

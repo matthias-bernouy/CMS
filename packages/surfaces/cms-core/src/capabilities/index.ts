@@ -10,6 +10,7 @@ import { registerLocalizationCapabilities } from "./site-configuration/localizat
 import { registerThemeCapabilities } from "./site-configuration/theme";
 import type { CollectionSources } from "./collections/sources";
 import type { CoreOperationExecutor } from "../operations/CoreOperationExecutor";
+import type { CmsFilesService } from "@bernouy/cms-files";
 
 export function registerOfficialCoreCapabilities(
     dispatcher: CoreCapabilityRegistry,
@@ -18,10 +19,13 @@ export function registerOfficialCoreCapabilities(
     operations?: CoreOperationExecutor,
     providerManagement?: CmsCoreProviderManagement,
     collectionSources?: CollectionSources,
+    files?: CmsFilesService,
 ): void {
     registerPageCapabilities(dispatcher, core);
     registerCollectionCapabilities(dispatcher, core, operations, collectionSources);
-    registerFileCapabilities(dispatcher, core);
+    if (files) {
+        registerFileCapabilities(dispatcher, files);
+    }
     registerThemeCapabilities(dispatcher, core);
     registerLocalizationCapabilities(dispatcher, core);
     registerProviderCapabilities(dispatcher, gateway, providerManagement);

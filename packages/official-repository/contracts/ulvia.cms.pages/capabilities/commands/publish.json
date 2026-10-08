@@ -108,17 +108,9 @@
     "binding": {
         "transport": "http",
         "method": "POST",
-        "path": "/v1/cms/pages/{id}/publication",
+        "path": "/publish",
         "input": {
-            "path": {
-                "id": "id"
-            },
-            "body": {
-                "properties": [
-                    "visible",
-                    "expectedRevision"
-                ]
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

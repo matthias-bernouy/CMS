@@ -4,7 +4,7 @@ import DeliveryCms from "cms-delivery/DeliveryCms";
 import { CaptureRunner } from "../../gateway/support/CaptureRunner";
 
 describe("Delivery robots", () => {
-    test("allows rendering assets, public files, variants, and gateway media routes", async () => {
+    test("allows rendering assets and generic gateway calls", async () => {
         const runner = new CaptureRunner("/site");
         const repository = {
             getRenderingSettings: async () => ({ site: { host: "https://canonical.test/store" } }),
@@ -33,11 +33,8 @@ describe("Delivery robots", () => {
             expect(body).toContain(`Allow: ${path}$\n`);
             expect(body).toContain(`Allow: ${path}?\n`);
         }
-        expect(body).toContain("Allow: /site/.cms/files/\n");
-        expect(body).toContain("Allow: /site/.cms/img/\n");
         expect(body).toContain("Allow: /site/.cms/collections/\n");
-        expect(body).toContain("Allow: /site/.cms/media/\n");
-        expect(body).toContain("Allow: /site/.cms/image/\n");
+        expect(body).toContain("Allow: /site/.cms/call/\n");
         expect(body).not.toContain("/.cms/sources/");
         expect(body).toContain("Disallow: /site/.cms/\n");
         expect(body).toContain("Sitemap: https://canonical.test/store/sitemap.xml\n");

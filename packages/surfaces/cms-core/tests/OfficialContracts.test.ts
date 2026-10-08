@@ -14,17 +14,18 @@ import type { ProviderManifestDigest } from "@bernouy/cms-repository/providers";
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
 import { CmsCore } from "../src";
+import type { CmsFilesService } from "@bernouy/cms-files";
 
 const TOKEN = "official-contract-matrix-token";
 const ROUTES = [
-    ["ulvia.cms.access", "overview", "/v1/cms/access"],
-    ["ulvia.cms.collections", "list", "/v1/cms/collections/installed"],
-    ["ulvia.cms.files", "list", "/v1/cms/files"],
-    ["ulvia.cms.jobs", "list", "/v1/cms/jobs"],
-    ["ulvia.cms.localization", "overview", "/v1/cms/localization"],
-    ["ulvia.cms.pages", "list", "/v1/cms/pages"],
-    ["ulvia.cms.providers", "list", "/v1/cms/providers"],
-    ["ulvia.cms.theme", "get", "/v1/cms/theme"],
+    ["ulvia.cms.access", "overview", "POST", "/overview", {}],
+    ["ulvia.cms.collections", "list", "POST", "/list", {}],
+    ["ulvia.cms.files", "namespace.create", "POST", "/namespaces", { name: "Test", defaultVisibility: "private" }],
+    ["ulvia.cms.jobs", "list", "POST", "/list", {}],
+    ["ulvia.cms.localization", "overview", "POST", "/overview", {}],
+    ["ulvia.cms.pages", "list", "POST", "/list", {}],
+    ["ulvia.cms.providers", "list", "POST", "/list", {}],
+    ["ulvia.cms.theme", "get", "POST", "/get", {}],
 ] as const;
 
 test("mounts and dispatches every official CMS contract release", async () => {
@@ -37,7 +38,7 @@ test("mounts and dispatches every official CMS contract release", async () => {
             });
         }
     }
-    expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(45);
+    expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(60);
     const runner = new BunRunner();
     new CmsCore(runner, {
         token: TOKEN,
@@ -47,8 +48,15 @@ test("mounts and dispatches every official CMS contract release", async () => {
     });
     const server = serveForTest(runner);
     try {
-        for (const [contractId, capabilityId, path] of ROUTES) {
-            const response = await server.request("GET", path, { headers: requestHeaders() });
+        for (const [contractId, capabilityId, method, path, body] of ROUTES) {
+            const response = await server.request(method, path, {
+                headers: {
+                    ...requestHeaders(),
+                    "x-ulvia-contract-id": contractId,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify(body),
+            });
             expect(response.status, `${contractId}/${capabilityId}`).toBe(503);
             expect(await response.json()).toEqual({ error: { code: "CORE_UNAVAILABLE" } });
         }
@@ -68,6 +76,7 @@ test("the official adapters implement the complete declared capability matrix", 
         operations,
         undefined,
         undefined,
+        {} as CmsFilesService,
     );
 
     expect(() => dispatcher.seal(contracts.map(({ release }) => release))).not.toThrow();

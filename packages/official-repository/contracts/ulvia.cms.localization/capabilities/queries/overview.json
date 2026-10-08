@@ -55,8 +55,8 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "GET",
-        "path": "/v1/cms/localization",
+        "method": "POST",
+        "path": "/overview",
         "input": {},
         "response": {
             "successStatuses": [

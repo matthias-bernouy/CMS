@@ -14,11 +14,7 @@ const SOURCE = new RegExp(
     `^/\\.cms/call/(?<contract>${IDENTIFIER})/(?<capability>${IDENTIFIER})(?: as [A-Za-z_$][\\w$]*)?$`,
     "u",
 );
-const KERNEL_FORM_TRANSPORTS = new Map<string, "POST" | "PUT">([
-    ["/.cms/files/upload", "POST"],
-    ["/.cms/files/content", "PUT"],
-]);
-const FILE_RESOURCE = /^\/\.cms\/files\/by-id\/(?:[A-Za-z0-9._:-]{1,200}|\{\{\s*[A-Za-z_$][\w$.]*\s*\}\})$/u;
+const FILE_RESOURCE = /^\/\.cms\/call\/ulvia\.cms\.files\/files\/[^/?#]+\/[^/?#]+(?:\?access=[^#]+)?$/u;
 
 export function validatePageHtml(
     html: string,
@@ -118,8 +114,8 @@ function validateAttributes(
             const match = SOURCE.exec(value);
             if (match?.groups) {
                 calls.add(`${match.groups.contract}/${match.groups.capability}`);
-            } else if (surface !== "control" || !KERNEL_FORM_TRANSPORTS.has(value)) {
-                invalid("Page sources must use a canonical CMS capability or controlled kernel transport", path);
+            } else {
+                invalid("Page sources must use a canonical CMS capability", path);
             }
         }
         if (name === "cms-source-body" && !isJsonObject(value)) {
@@ -152,15 +148,7 @@ function validateAttributes(
     const source = attributes["cms-source"];
     if (source) {
         const method = attributes["cms-source-method"]?.toUpperCase();
-        const kernelMethod = KERNEL_FORM_TRANSPORTS.get(source);
-        if (kernelMethod) {
-            if (surface !== "control" || tag !== "form" || method !== kernelMethod) {
-                invalid(`Page kernel transport ${source} requires a Control form using ${kernelMethod}`, path);
-            }
-            if (attributes["cms-source-serialization"] !== undefined || attributes["cms-source-body"] !== undefined) {
-                invalid("Page kernel file transports use native multipart form serialization", path);
-            }
-        } else if (method !== "POST") {
+        if (method !== "POST") {
             invalid("Page capability sources must declare POST", path);
         }
     }

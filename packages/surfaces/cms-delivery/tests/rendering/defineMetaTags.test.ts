@@ -19,8 +19,9 @@ function faviconHref(rawFavicon: string | undefined, stableUrl = "/favicon.ico")
 }
 
 describe("defineMetaTags favicon", () => {
-    test("hides the configured file id behind the stable public URL", () => {
-        expect(faviconHref("/.cms/files/by-id/01h-abc")).toBe("/favicon.ico");
+    test("uses a generic immutable capability URL supplied by the renderer", () => {
+        const url = "/.cms/call/ulvia.cms.files/files/file/generation";
+        expect(faviconHref(url, url)).toBe(url);
     });
 
     test("does not expose a legacy favicon URL in rendered metadata", () => {

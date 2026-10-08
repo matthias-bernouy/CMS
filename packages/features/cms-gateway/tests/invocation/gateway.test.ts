@@ -168,32 +168,13 @@ describe("capability gateway", () => {
         await expect(scope.gateway.assertAuthorized(invocation())).rejects.toMatchObject({ code: "not_authorized" });
     });
 
-    test("pins provider file identity to the selected installation and returned bytes", async () => {
+    test("returns provider binary output as a neutral stream", async () => {
         const scope = harness(await gatewayRoute({ binary: true }));
         scope.setResponse({ status: 200, contentType: "image/png", bytes: new Uint8Array([1, 2, 3]) });
         const result = await scope.gateway.invoke(invocation(undefined, { fileId: "photo-1" }));
         expect(result.kind).toBe("binary");
         if (result.kind === "binary") {
-            expect(result.media).toMatchObject({
-                siteId: "site-a",
-                installationId: "install-a",
-                contractId: "catalog",
-                capabilityId: "item.list",
-                fileId: "photo-1",
-            });
-            expect(result.media?.generation).toMatch(/^sha256:[0-9a-f]{64}$/);
-        }
-    });
-
-    test("does not infer a provider media identity from an unrelated binary capability", async () => {
-        const scope = harness(await gatewayRoute({ binary: true, media: false }));
-        scope.setResponse({ status: 200, contentType: "image/png", bytes: new Uint8Array([1, 2, 3]) });
-
-        const result = await scope.gateway.invoke(invocation(undefined, { fileId: "export-1" }));
-
-        expect(result).toMatchObject({ kind: "binary" });
-        if (result.kind === "binary") {
-            expect(result.media).toBeUndefined();
+            expect(new Uint8Array(await new Response(result.stream).arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
         }
     });
 
@@ -332,14 +313,58 @@ describe("capability gateway", () => {
         await expect(scope.gateway.invoke(invocation())).rejects.toMatchObject({ code: "invalid_provider_response" });
     });
 
-    test("keeps provider, system, and conformance origins closed", async () => {
+    test("accepts only trusted actor kinds for provider and system origins", async () => {
         const scope = harness(await gatewayRoute());
-        for (const origin of ["provider", "system", "conformance"] as const) {
-            await expect(scope.gateway.invoke({ ...invocation(), origin })).rejects.toMatchObject({
-                code: "unsupported_behavior",
-            });
-        }
-        expect(scope.sent).toHaveLength(0);
+        await expect(scope.gateway.invoke({ ...invocation(), origin: "provider" })).rejects.toMatchObject({
+            code: "not_authorized",
+        });
+        await expect(
+            scope.gateway.invoke({
+                ...invocation({ kind: "provider", installationId: "caller-installation" }),
+                origin: "provider",
+            }),
+        ).resolves.toMatchObject({ kind: "success" });
+        await expect(
+            scope.gateway.invoke({ ...invocation({ kind: "system", serviceId: "scheduler" }), origin: "system" }),
+        ).resolves.toMatchObject({ kind: "success" });
+        await expect(
+            scope.gateway.invoke({
+                ...invocation({ kind: "system", serviceId: "conformance" }),
+                origin: "conformance",
+            }),
+        ).resolves.toMatchObject({ kind: "success" });
+    });
+
+    test("propagates provider call chains and rejects cycles before transport", async () => {
+        const scope = harness(await gatewayRoute());
+        const actor = { kind: "provider" as const, installationId: "caller-installation" };
+        await scope.gateway.invoke({
+            ...invocation(actor),
+            origin: "provider",
+            callContext: {
+                callChainId: "00000000-0000-4000-8000-000000000001",
+                callDepth: 0,
+                installationPath: ["caller-installation"],
+            },
+        });
+        expect(scope.sent[0]?.callContext).toEqual({
+            callChainId: "00000000-0000-4000-8000-000000000001",
+            callDepth: 1,
+            installationPath: ["caller-installation", "install-a"],
+        });
+
+        await expect(
+            scope.gateway.invoke({
+                ...invocation(actor),
+                origin: "provider",
+                callContext: {
+                    callChainId: "00000000-0000-4000-8000-000000000001",
+                    callDepth: 1,
+                    installationPath: ["install-a", "caller-installation"],
+                },
+            }),
+        ).rejects.toMatchObject({ code: "not_authorized" });
+        expect(scope.sent).toHaveLength(1);
     });
 
     test("requires an exact execution pin for Page calls", async () => {

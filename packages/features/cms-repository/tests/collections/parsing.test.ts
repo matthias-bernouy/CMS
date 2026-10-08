@@ -195,7 +195,7 @@ describe("collection release parsing", () => {
             {
                 schema: {
                     type: "object",
-                    properties: { file: { type: "binary", maxBytes: 8, mediaTypes: ["image/png"] } },
+                    properties: { file: { type: "binary", maxBytes: 8 } },
                     required: [],
                 },
             },

@@ -22,7 +22,7 @@ export interface ReleaseLimits {
 
 export const DEFAULT_RELEASE_LIMITS: Readonly<ReleaseLimits> = Object.freeze({
     maxArrayItems: 10_000,
-    maxBinaryBytes: 100 * 1024 * 1024,
+    maxBinaryBytes: 10 * 1024 * 1024 * 1024,
     maxCapabilities: 512,
     maxConformanceAttempts: 100,
     maxConformanceCallsPerScenario: 64,

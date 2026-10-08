@@ -1,5 +1,5 @@
 import { CryptoHasher, gzipSync } from "bun";
-import type { SitemapStore } from "@bernouy/cms-content/files/serving";
+import type { BlobStore as SitemapStore } from "@bernouy/blob-store";
 import { isDeliveryReservedPath } from "cms-delivery/core/pages/publicPagePaths";
 import type { PageIndexingLocation } from "cms-delivery/core/seo/indexing/discoverPageIndexingLocations";
 import { sitemapChunkKey, type SitemapChunkDescriptor, type SitemapSnapshotDescriptor } from "./manifest";

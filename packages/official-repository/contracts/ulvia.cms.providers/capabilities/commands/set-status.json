@@ -92,18 +92,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "PUT",
-        "path": "/v1/cms/providers/{installationId}/status",
+        "method": "POST",
+        "path": "/set-status",
         "input": {
-            "path": {
-                "installationId": "installationId"
-            },
-            "body": {
-                "properties": [
-                    "expectedRevision",
-                    "action"
-                ]
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

@@ -154,12 +154,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "GET",
-        "path": "/v1/cms/providers/{installationId}",
+        "method": "POST",
+        "path": "/get",
         "input": {
-            "path": {
-                "installationId": "installationId"
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

@@ -58,7 +58,7 @@ describe("provider manifest parsing", () => {
                     configuration: {
                         type: "object",
                         properties: {
-                            certificate: { type: "binary", maxBytes: 1024, mediaTypes: ["application/x-pem-file"] },
+                            certificate: { type: "binary", maxBytes: 1024 },
                         },
                         required: ["certificate"],
                     },

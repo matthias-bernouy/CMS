@@ -1,0 +1,121 @@
+{
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "none"
+    },
+    "id": "files.sign",
+    "description": "Mint a temporary private read URL.",
+    "input": {
+        "type": "object",
+        "properties": {
+            "namespaceId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "namespaceKey": {
+                "type": "string",
+                "maxLength": 512,
+                "minLength": 20,
+                "sensitive": true
+            },
+            "fileId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "generation": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "operation": {
+                "type": "string",
+                "maxLength": 4,
+                "enum": [
+                    "read"
+                ]
+            },
+            "expiresIn": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 86400
+            }
+        },
+        "required": [
+            "namespaceId",
+            "namespaceKey",
+            "fileId",
+            "generation",
+            "operation",
+            "expiresIn"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "url": {
+                "type": "string",
+                "maxLength": 4096
+            },
+            "expiresAt": {
+                "type": "string",
+                "maxLength": 64
+            }
+        },
+        "required": [
+            "url",
+            "expiresAt"
+        ]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "NOT_AUTHORIZED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "POST",
+        "path": "/files/{fileId}/sign",
+        "input": {
+            "path": {
+                "fileId": "fileId"
+            },
+            "body": {
+                "properties": [
+                    "namespaceId",
+                    "namespaceKey",
+                    "generation",
+                    "operation",
+                    "expiresIn"
+                ]
+            }
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "NOT_AUTHORIZED": 403,
+                "NOT_FOUND": 404,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

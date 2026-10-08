@@ -102,8 +102,8 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "PUT",
-        "path": "/v1/cms/localization/languages",
+        "method": "POST",
+        "path": "/update-languages",
         "input": {
             "body": true
         },

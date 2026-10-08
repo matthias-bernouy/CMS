@@ -18,7 +18,6 @@ describe("HTTP body representation", () => {
                             attachment: {
                                 type: "binary",
                                 maxBytes: 1024,
-                                mediaTypes: ["application/pdf"],
                             },
                         },
                         ["attachment"],
@@ -36,7 +35,6 @@ describe("HTTP body representation", () => {
                         attachment: {
                             type: "binary",
                             maxBytes: 1024,
-                            mediaTypes: ["application/pdf"],
                         },
                     },
                     ["attachment"],
@@ -57,7 +55,7 @@ describe("HTTP body representation", () => {
 
         expect(compiled.body).toEqual({
             kind: "binary",
-            contentTypes: ["application/pdf"],
+            contentTypes: [],
             property: "attachment",
         });
     });

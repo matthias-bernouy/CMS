@@ -41,6 +41,7 @@
             "ulvia-official-heading",
             "ulvia-official-hero",
             "ulvia-official-icon",
+            "ulvia-official-image",
             "ulvia-official-input",
             "ulvia-official-lookup",
             "ulvia-official-media-figure",
@@ -230,7 +231,6 @@
             "access",
             "collections",
             "details",
-            "files",
             "overview",
             "providers",
             "settings"

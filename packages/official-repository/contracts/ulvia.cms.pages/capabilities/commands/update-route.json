@@ -2,57 +2,126 @@
     "id": "update-route",
     "description": "Update one localized Page route with optimistic revision control.",
     "access": "admin",
-    "behavior": { "effect": "command", "idempotency": "none", "execution": "sync" },
+    "behavior": {
+        "effect": "command",
+        "idempotency": "none",
+        "execution": "sync"
+    },
     "input": {
         "type": "object",
         "properties": {
-            "id": { "type": "string", "minLength": 1, "maxLength": 200 },
-            "expectedRevision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
-            "language": { "type": "string", "minLength": 1, "maxLength": 35 },
-            "path": { "type": "string", "maxLength": 2048 }
+            "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+            },
+            "expectedRevision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+            },
+            "language": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 35
+            },
+            "path": {
+                "type": "string",
+                "maxLength": 2048
+            }
         },
-        "required": ["id", "expectedRevision", "language", "path"]
+        "required": [
+            "id",
+            "expectedRevision",
+            "language",
+            "path"
+        ]
     },
     "output": {
         "type": "object",
         "properties": {
-            "id": { "type": "string", "maxLength": 200 },
-            "revision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
-            "path": { "type": "string", "maxLength": 2048 },
+            "id": {
+                "type": "string",
+                "maxLength": 200
+            },
+            "revision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+            },
+            "path": {
+                "type": "string",
+                "maxLength": 2048
+            },
             "routes": {
                 "type": "array",
                 "maxItems": 32,
                 "items": {
                     "type": "object",
                     "properties": {
-                        "language": { "type": "string", "maxLength": 35 },
-                        "path": { "type": "string", "maxLength": 2048 },
-                        "primary": { "type": "boolean" }
+                        "language": {
+                            "type": "string",
+                            "maxLength": 35
+                        },
+                        "path": {
+                            "type": "string",
+                            "maxLength": 2048
+                        },
+                        "primary": {
+                            "type": "boolean"
+                        }
                     },
-                    "required": ["language", "path", "primary"]
+                    "required": [
+                        "language",
+                        "path",
+                        "primary"
+                    ]
                 }
             }
         },
-        "required": ["id", "revision", "path", "routes"]
+        "required": [
+            "id",
+            "revision",
+            "path",
+            "routes"
+        ]
     },
     "errors": [
-        { "code": "NOT_FOUND", "retryable": false },
-        { "code": "REVISION_CONFLICT", "retryable": true },
-        { "code": "PATH_CONFLICT", "retryable": false },
-        { "code": "INVALID_PAGE", "retryable": false },
-        { "code": "CORE_UNAVAILABLE", "retryable": true }
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "REVISION_CONFLICT",
+            "retryable": true
+        },
+        {
+            "code": "PATH_CONFLICT",
+            "retryable": false
+        },
+        {
+            "code": "INVALID_PAGE",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
     ],
     "binding": {
         "transport": "http",
-        "method": "PUT",
-        "path": "/v1/cms/pages/{id}/routes/{language}",
+        "method": "POST",
+        "path": "/update-route",
         "input": {
-            "path": { "id": "id", "language": "language" },
-            "body": { "properties": ["expectedRevision", "path"] }
+            "body": true
         },
         "response": {
-            "successStatuses": [200],
-            "contentTypes": ["application/json"],
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
             "errorStatuses": {
                 "NOT_FOUND": 404,
                 "REVISION_CONFLICT": 409,

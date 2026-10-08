@@ -204,12 +204,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "GET",
-        "path": "/v1/cms/access",
+        "method": "POST",
+        "path": "/overview",
         "input": {
-            "query": {
-                "limit": "limit"
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

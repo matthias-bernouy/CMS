@@ -84,8 +84,8 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "PUT",
-        "path": "/v1/cms/access/administrator",
+        "method": "POST",
+        "path": "/set-administrator",
         "input": {
             "body": true
         },

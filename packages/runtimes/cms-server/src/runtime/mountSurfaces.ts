@@ -1,7 +1,6 @@
 import type { RuntimeEnv } from "../runtimeEnv";
 import type { ProductionAuthentication } from "./auth";
 import type { CoreStores } from "./stores/core";
-import { createPublicFileStores } from "./stores/authorFiles";
 import type { ProductionGateway } from "./gateway/createProductionGateway";
 import { PRODUCTION_SURFACE_RUNTIME, type ProductionSurfaceRuntime } from "./surfaceRuntime";
 import { createContentReader } from "@bernouy/cms-content/rendering";
@@ -40,7 +39,6 @@ export async function mountProductionSurfaces(
                       capabilityGateway: {
                           siteId: gateway.siteId,
                           invoker: gateway.invoker,
-                          images: gateway.images,
                           catalogue: gateway.catalogue,
                           pageExecutions: gateway.pageExecutions,
                           isAdministrator: gateway.isAdministrator,
@@ -57,9 +55,6 @@ export async function mountProductionSurfaces(
             },
         },
         cache: core.cache,
-        filesMetadata: core.filesMetadata,
-        filesBlob: core.filesBlob,
-        fileMutations: core.fileMutations,
         identityProviders: core.identityProviders,
         authBackends: { local: authentication.auth },
     });
@@ -78,11 +73,11 @@ export async function mountProductionSurfaces(
                       siteId: gateway.siteId,
                       invoker: gateway.invoker,
                       access: gateway.access,
-                      images: gateway.images,
+                      authenticateProvider: gateway.authenticateProvider,
                   },
               }
             : {}),
-        ...createPublicFileStores(core),
+        sitemapStore: core.sitemapStore,
         auth: authentication.createPublicAuth({
             emailVerificationUrl: env.CMS_AUTH_EMAIL_VERIFICATION_URL,
             passwordResetUrl: env.CMS_AUTH_PASSWORD_RESET_URL,

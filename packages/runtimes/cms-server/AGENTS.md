@@ -27,9 +27,10 @@ Production runtime composition root.
 - Changes here usually need an integration-style test or a clear manual
   verification path.
 - Give Control the authoring repository and stores. Construct Delivery's
-  `createContentReader` and `createPublicFileStores` facades at composition;
-  never inject the full authoring objects merely under narrower types.
-- `stores/authorFiles.ts` owns the existing local original/`.variants`/`.sitemaps`
-  layout. Keep original bytes unchanged when generating or cleaning derivatives.
+  `createContentReader` facade at composition; never inject the full authoring
+  objects merely under narrower types.
+- Compose the official `@bernouy/cms-files` provider here with its Mongo metadata
+  store, BlobStore and image derivative adapter. Keep original bytes unchanged
+  when generating or cleaning reconstructible derivatives.
 - These shared-process facades are application boundaries, not isolation from
   arbitrary code execution or separate database/storage permissions.

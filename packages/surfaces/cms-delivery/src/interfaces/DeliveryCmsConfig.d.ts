@@ -1,11 +1,9 @@
 import type { CollectionTextSource } from "@bernouy/cms-content/rendering";
-import type { BlobReader } from "@bernouy/blob-store";
+import type { BlobStore } from "@bernouy/blob-store";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
 import type { CollectionMigrationService } from "@bernouy/cms-content/migrations";
-import type { VariantStore, SitemapStore, PublicFileMetadataLookup } from "@bernouy/cms-content/files/serving";
 import type { GatewayAccessProbe, GatewayInvoker } from "@bernouy/cms-gateway";
-import type { ProviderImageService } from "@bernouy/cms-gateway/media";
 import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { HeadInjector } from "./HeadInjector";
@@ -38,15 +36,10 @@ export type DeliveryCmsConfig = {
         readonly siteId: string;
         readonly invoker: GatewayInvoker;
         readonly access?: GatewayAccessProbe;
-        readonly images?: Pick<ProviderImageService, "get">;
+        readonly authenticateProvider?: (token: string) => Promise<string | null>;
     };
     /** Optional first-party public authentication routes. */
     auth?: PublicAuthRoutesConfig;
-    /** File metadata and bytes backing the public file route. */
-    filesMetadata?: PublicFileMetadataLookup;
-    filesBlob?: BlobReader;
-    /** Shared storage for derived responsive image variants. */
-    variantStore?: VariantStore;
     /** Dedicated immutable chunk and atomic-manifest storage for generated sitemaps. */
-    sitemapStore?: SitemapStore;
+    sitemapStore?: BlobStore;
 };

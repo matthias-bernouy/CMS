@@ -1,11 +1,14 @@
 import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { CompiledHttpBinding } from "@bernouy/cms-repository/contracts/bindings";
+import { matchPathTemplate } from "@bernouy/cms-repository/contracts/bindings";
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import type { ProviderIdentityService } from "cms-gateway/identity/interfaces/ProviderIdentityService";
 import type {
     GatewayActor,
     GatewayAccessProbe,
     GatewayInvocation,
+    GatewayHttpRoute,
+    GatewayHttpRouteRequest,
     GatewayOrigin,
     GatewayResult,
     GatewayRoute,
@@ -16,7 +19,6 @@ import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 import { resolveRoute } from "cms-gateway/invocation/core/resolveRoute";
 import { snapshotInvocation } from "cms-gateway/invocation/core/snapshotInvocation";
 import { validateResponse } from "cms-gateway/invocation/core/validateResponse";
-import { providerByteGeneration } from "cms-gateway/media/core/derivativeKey";
 import type {
     GatewayCommandAuditEvent,
     GatewayCommandAuditStage,
@@ -59,11 +61,39 @@ export class CapabilityGateway implements GatewayAccessProbe {
         await this.#authorizedRoute(value);
     }
 
+    async resolveHttp(value: GatewayHttpRouteRequest): Promise<GatewayHttpRoute> {
+        const route = await this.#options.routes.resolve(value.siteId, value.contractId);
+        if (!route) {
+            throw new GatewayError("not_selected", "site has no selected release for this contract");
+        }
+        const method = value.method.toUpperCase();
+        for (const candidate of route.release.admission.bindings) {
+            const pathValues = matchPathTemplate(candidate.binding.path, value.path);
+            if (!pathValues) {
+                continue;
+            }
+            const capability = route.release.admission.release.capabilities.find(
+                (item) => item.id === candidate.capabilityId,
+            );
+            if (!capability) {
+                break;
+            }
+            if (candidate.binding.method === method) {
+                return { capability, binding: candidate.binding, pathValues };
+            }
+            if (method === "HEAD" && candidate.binding.method === "GET" && capability.output.type === "binary") {
+                return { capability, binding: headBinding(candidate.binding), pathValues };
+            }
+        }
+        throw new GatewayError("invalid_route", "selected release has no matching HTTP binding");
+    }
+
     async invoke(value: GatewayInvocation): Promise<GatewayResult> {
         const invocation = snapshotInvocation(value);
         const { route, release, capability, binding } = await this.#authorizedRoute(invocation);
         const input = snapshotInput(invocation.input, capability);
         const providerSubjectId = await this.#providerSubjectId(invocation.actor, capability, route);
+        const callContext = nextCallContext(invocation, route);
         if (!(await this.#options.routes.isCurrent(route))) {
             throw new GatewayError("stale_route", "installation changed while resolving actor identity");
         }
@@ -88,8 +118,10 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 capability,
                 binding,
                 input,
+                ...(invocation.binaryBody ? { binaryBody: invocation.binaryBody } : {}),
                 invocationOrigin: invocation.origin,
                 actorKind: invocation.actor.kind,
+                callContext,
                 ...(providerSubjectId ? { providerSubjectId } : {}),
                 ...(invocation.idempotencyKey ? { idempotencyKey: invocation.idempotencyKey } : {}),
             });
@@ -126,22 +158,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
             }
             throw new GatewayError("transport_failure", "provider transport failed");
         }
-        const mediaId = capability.media ? input[capability.media.idInput] : undefined;
-        if (result.kind !== "binary" || typeof mediaId !== "string") {
-            return result;
-        }
-        return {
-            ...result,
-            media: {
-                siteId: invocation.siteId,
-                installationId: route.installation.installation.id,
-                contractId: invocation.contractId,
-                releaseDigest: route.selection.digest,
-                capabilityId: invocation.capabilityId,
-                fileId: mediaId,
-                generation: await providerByteGeneration(result.bytes),
-            },
-        };
+        return result;
     }
 
     #now(): string {
@@ -205,15 +222,15 @@ export class CapabilityGateway implements GatewayAccessProbe {
             this.#options.maxObservationAgeMs ?? 60_000,
         );
         const capability = release.capabilities.find((item) => item.id === value.capabilityId);
-        const binding = route.release.admission.bindings.find(
+        const admittedBinding = route.release.admission.bindings.find(
             (item) => item.capabilityId === value.capabilityId,
         )?.binding;
-        if (!capability || !binding) {
+        if (!capability || !admittedBinding) {
             throw new GatewayError("invalid_route", "selected release does not define this capability and binding");
         }
-        if (binding.body?.kind === "binary") {
-            throw new GatewayError("unsupported_behavior", "this capability needs a later execution profile");
-        }
+        const binding =
+            value.httpMethod === "HEAD" ? automaticHeadBinding(capability, admittedBinding) : admittedBinding;
+        checkBinaryBody(value.binaryBody, capability, binding);
         const keyed = capability.behavior.effect === "command" && capability.behavior.idempotency === "keyed";
         if (keyed && !value.idempotencyKey) {
             throw new GatewayError("invalid_input", "keyed commands require an idempotency key");
@@ -252,18 +269,65 @@ export class CapabilityGateway implements GatewayAccessProbe {
     }
 }
 
+function nextCallContext(invocation: GatewayInvocation, route: GatewayRoute) {
+    const target = route.installation.installation.id;
+    const current =
+        invocation.actor.kind === "provider"
+            ? (invocation.callContext ?? {
+                  callChainId: crypto.randomUUID(),
+                  callDepth: 0,
+                  installationPath: [invocation.actor.installationId],
+              })
+            : { callChainId: crypto.randomUUID(), callDepth: -1, installationPath: [] as readonly string[] };
+    if (current.installationPath.includes(target)) {
+        throw new GatewayError("not_authorized", "provider call cycle detected");
+    }
+    if (current.callDepth >= 7) {
+        throw new GatewayError("not_authorized", "provider call depth exceeded");
+    }
+    return Object.freeze({
+        callChainId: current.callChainId,
+        callDepth: current.callDepth + 1,
+        installationPath: Object.freeze([...current.installationPath, target]),
+    });
+}
+
+function automaticHeadBinding(capability: CapabilityDefinition, binding: CompiledHttpBinding): CompiledHttpBinding {
+    if (binding.method !== "GET" || capability.output.type !== "binary") {
+        throw new GatewayError("invalid_route", "HEAD is available only for binary GET capabilities");
+    }
+    return headBinding(binding);
+}
+
+function headBinding(binding: CompiledHttpBinding): CompiledHttpBinding {
+    return Object.freeze({
+        ...binding,
+        method: "HEAD" as const,
+        response: Object.freeze({
+            ...binding.response,
+            contentTypes: Object.freeze([]),
+            errorEnvelope: Object.freeze({
+                kind: "headers" as const,
+                encoding: "json-percent" as const,
+                codeHeader: "x-ulvia-error-code" as const,
+                requestIdHeader: "x-ulvia-request-id" as const,
+            }),
+        }),
+    });
+}
+
 function checkAccess(actor: GatewayActor, capability: CapabilityDefinition, origin: GatewayOrigin): void {
-    if (
-        actor.kind === "provider" ||
-        actor.kind === "system" ||
-        origin === "provider" ||
-        origin === "system" ||
-        origin === "conformance"
-    ) {
-        throw new GatewayError(
-            "unsupported_behavior",
-            "provider and system actor grants need their dedicated entrypoints",
-        );
+    if (origin === "provider" && actor.kind !== "provider") {
+        throw new GatewayError("not_authorized", "provider origin requires a verified provider actor");
+    }
+    if (origin === "system" && actor.kind !== "system") {
+        throw new GatewayError("not_authorized", "system origin requires a verified system actor");
+    }
+    if (origin === "conformance" && actor.kind !== "system") {
+        throw new GatewayError("not_authorized", "conformance origin requires a verified system actor");
+    }
+    if (actor.kind === "provider" || actor.kind === "system") {
+        return;
     }
     if (
         (capability.access === "authenticated" && actor.kind === "anonymous") ||
@@ -273,10 +337,48 @@ function checkAccess(actor: GatewayActor, capability: CapabilityDefinition, orig
     }
 }
 
+function checkBinaryBody(
+    body: GatewayInvocation["binaryBody"],
+    capability: CapabilityDefinition,
+    binding: CompiledHttpBinding,
+): void {
+    if (binding.body?.kind !== "binary") {
+        if (body) {
+            throw new GatewayError("invalid_input", "capability does not accept a binary body");
+        }
+        return;
+    }
+    if (!body) {
+        throw new GatewayError("invalid_input", "capability requires a binary body");
+    }
+    const schema = capability.input.properties[binding.body.property];
+    if (schema?.type !== "binary") {
+        throw new GatewayError("invalid_route", "binary binding does not match its capability schema");
+    }
+    if (body.contentLength !== undefined && body.contentLength > schema.maxBytes) {
+        throw new GatewayError("invalid_input", "binary body exceeds the capability limit");
+    }
+}
+
 function snapshotInput(value: unknown, capability: CapabilityDefinition): Readonly<Record<string, unknown>> {
     try {
-        validateSchemaValue(capability.input, value);
-        return value as Readonly<Record<string, unknown>>;
+        const input = value as Readonly<Record<string, unknown>>;
+        const binaryProperties = Object.entries(capability.input.properties)
+            .filter(([, schema]) => schema.type === "binary")
+            .map(([name]) => name);
+        if (binaryProperties.length === 0) {
+            validateSchemaValue(capability.input, value);
+            return input;
+        }
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+            throw new TypeError("input must be an object");
+        }
+        const required = capability.input.required.filter((name) => !binaryProperties.includes(name));
+        const properties = Object.fromEntries(
+            Object.entries(capability.input.properties).filter(([name]) => !binaryProperties.includes(name)),
+        );
+        validateSchemaValue({ ...capability.input, properties, required }, value);
+        return input;
     } catch {
         throw new GatewayError("invalid_input", "input violates the selected capability schema");
     }

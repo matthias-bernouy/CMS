@@ -146,15 +146,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "GET",
-        "path": "/v1/cms/localization/texts/{collectionId}",
+        "method": "POST",
+        "path": "/get-texts",
         "input": {
-            "path": {
-                "collectionId": "collectionId"
-            },
-            "query": {
-                "locale": "locale"
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

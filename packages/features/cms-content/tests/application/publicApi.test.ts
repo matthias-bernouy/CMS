@@ -1,26 +1,17 @@
 import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 import * as rendering from "@bernouy/cms-content/rendering";
-import * as serving from "@bernouy/cms-content/files/serving";
-import * as authoringFiles from "@bernouy/cms-content/files";
 
 test("rendering entrypoints omit authoring mutations and concrete stores", () => {
     expect(rendering.createContentReader).toBeFunction();
     for (const name of ["InMemoryCmsRepository", "ValidatingCmsRepository", "resolvePublishedRoute"]) {
         expect(rendering).not.toHaveProperty(name);
     }
-    expect(serving.serveFilesRequest).toBeFunction();
-    for (const name of ["uploadFile", "updateFileContent", "deleteFileTree", "LocalFsBlobStore"]) {
-        expect(serving).not.toHaveProperty(name);
-    }
-    expect(authoringFiles.uploadFile).toBeFunction();
-    expect(authoringFiles).not.toHaveProperty("LocalFsBlobStore");
-    expect(authoringFiles).not.toHaveProperty("serveFilesRequest");
 });
 
 test("browser-safe content entrypoints bundle without persistence or image adapters", async () => {
     const result = await Bun.build({
-        entrypoints: ["bindings.ts", "theme.ts", "page-path.ts", "files/urls.ts"].map((entry) =>
+        entrypoints: ["bindings.ts", "theme.ts", "page-path.ts"].map((entry) =>
             resolve(import.meta.dir, "../../src/exports", entry),
         ),
         target: "browser",
@@ -28,7 +19,7 @@ test("browser-safe content entrypoints bundle without persistence or image adapt
     });
     expect(result.logs).toEqual([]);
     expect(result.success).toBe(true);
-    expect(result.outputs).toHaveLength(4);
+    expect(result.outputs).toHaveLength(3);
     for (const output of result.outputs) {
         expect(await output.text()).not.toMatch(/sharp|MongoCmsRepository|LocalFsBlobStore|S3BlobStore/);
     }

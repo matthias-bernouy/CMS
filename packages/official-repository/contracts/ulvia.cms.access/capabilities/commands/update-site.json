@@ -80,8 +80,8 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "PATCH",
-        "path": "/v1/cms/access/site",
+        "method": "POST",
+        "path": "/update-site",
         "input": {
             "body": true
         },

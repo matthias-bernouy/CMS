@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-gateway",
     "version": "0.1.0",
-    "description": "Capability invocation, provider-scoped identity, and authorized provider media for CmsCore.",
+    "description": "Provider-neutral capability routing, authorization, and streaming transport for CmsCore.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./src/exports/index.ts",
@@ -17,21 +17,14 @@
         "./http/node": "./src/exports/http/node.ts",
         "./identity": "./src/exports/identity/index.ts",
         "./identity/mongo": "./src/exports/identity/mongo.ts",
-        "./identity/request-scope": "./src/exports/identity/request-scope.ts",
-        "./media": "./src/exports/media/index.ts",
-        "./media/browser": "./src/exports/media/browser.ts",
-        "./media/handlers": "./src/exports/media/handlers.ts",
-        "./media/local-fs": "./src/exports/media/local-fs.ts",
-        "./media/sharp": "./src/exports/media/sharp.ts"
+        "./identity/request-scope": "./src/exports/identity/request-scope.ts"
     },
     "dependencies": {
         "@bernouy/http-runner": "workspace:*",
-        "@bernouy/image-processing": "workspace:*",
         "@bernouy/cms-repository": "workspace:*"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",
-        "sharp": "^0.35.4",
         "typescript": "^7.0.2"
     }
 }

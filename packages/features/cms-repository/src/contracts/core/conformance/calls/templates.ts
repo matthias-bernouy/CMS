@@ -85,7 +85,7 @@ export function validateConformanceTemplate(
                 throw new ReleaseValidationError("invalid_contract", "binary value must be { assetId: string }", path);
             }
             const asset = context.assets.get(reference.assetId);
-            if (!asset || !schema.mediaTypes.includes(asset.mediaType) || asset.byteLength > schema.maxBytes) {
+            if (!asset || asset.byteLength > schema.maxBytes) {
                 throw new ReleaseValidationError("invalid_contract", "incompatible or undeclared fixture asset", path);
             }
             context.referencedAssets.add(asset.id);

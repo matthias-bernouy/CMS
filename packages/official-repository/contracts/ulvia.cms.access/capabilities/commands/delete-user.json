@@ -60,12 +60,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "DELETE",
-        "path": "/v1/cms/access/user",
+        "method": "POST",
+        "path": "/delete-user",
         "input": {
-            "query": {
-                "sub": "sub"
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

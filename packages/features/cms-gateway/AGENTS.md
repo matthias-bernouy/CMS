@@ -11,12 +11,10 @@ publish releases or choose providers.
 - `src/execution/` owns immutable collection-Page plans and revisioned grants.
 - `src/identity/` owns provider-wide authority aliases, their contracts, and
   memory, Mongo, and request-scoped implementations.
-- `src/media/` owns provider file handlers, derivatives, image policy, storage
-  adapters, and browser image helpers. Generic image processing remains in Foundation.
 - `src/conformance/` executes already-admitted suites against injected disposable
   live environments. It never provisions production tenants or publishes artifacts itself.
 - `src/exports/` is the public facade. The package root exposes invocation;
-  optional HTTP, identity, and media APIs use their named subpaths.
+  optional HTTP and identity APIs use their named subpaths.
 
 - Keep untrusted request parsing, authenticated actor creation, and secret
   resolution in explicit host or adapter boundaries. Never accept a provider's
@@ -31,8 +29,8 @@ publish releases or choose providers.
   requests. Installation revocation must not delete provider-wide aliases.
 - Deny execution paths without complete validation or authorization. In
   particular, keyed commands need durable idempotency before activation.
-- Keep derivative identity and recipe logic independent of legacy Source IDs.
-  Private media disclosure requires current gateway authorization.
+- Keep the gateway independent of file, image, MIME, namespace, visibility,
+  signature and representation semantics. Binary response headers come from the provider.
 - Runtime adapters select HTTP, persistence, DNS policy, secret storage and
   worker implementations. Keep optional adapters in explicit domain subpaths.
 

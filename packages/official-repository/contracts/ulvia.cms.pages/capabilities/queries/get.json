@@ -73,11 +73,23 @@
                 "items": {
                     "type": "object",
                     "properties": {
-                        "language": { "type": "string", "maxLength": 35 },
-                        "path": { "type": "string", "maxLength": 2048 },
-                        "primary": { "type": "boolean" }
+                        "language": {
+                            "type": "string",
+                            "maxLength": 35
+                        },
+                        "path": {
+                            "type": "string",
+                            "maxLength": 2048
+                        },
+                        "primary": {
+                            "type": "boolean"
+                        }
                     },
-                    "required": ["language", "path", "primary"]
+                    "required": [
+                        "language",
+                        "path",
+                        "primary"
+                    ]
                 }
             },
             "seoEntries": {
@@ -86,11 +98,24 @@
                 "items": {
                     "type": "object",
                     "properties": {
-                        "language": { "type": "string", "maxLength": 35 },
-                        "title": { "type": "string", "maxLength": 70 },
-                        "description": { "type": "string", "maxLength": 200 }
+                        "language": {
+                            "type": "string",
+                            "maxLength": 35
+                        },
+                        "title": {
+                            "type": "string",
+                            "maxLength": 70
+                        },
+                        "description": {
+                            "type": "string",
+                            "maxLength": 200
+                        }
                     },
-                    "required": ["language", "title", "description"]
+                    "required": [
+                        "language",
+                        "title",
+                        "description"
+                    ]
                 }
             }
         },
@@ -120,12 +145,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "GET",
-        "path": "/v1/cms/pages/{id}",
+        "method": "POST",
+        "path": "/get",
         "input": {
-            "path": {
-                "id": "id"
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

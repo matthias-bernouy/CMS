@@ -5,7 +5,6 @@ export type {
     CmsAccessDependencies,
     CmsCollectionDependencies,
     CmsCoreDependencies,
-    CmsFileDependencies,
     CmsLocalizationDependencies,
     CmsPageDependencies,
     CmsThemeDependencies,

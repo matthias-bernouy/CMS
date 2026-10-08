@@ -177,26 +177,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "PATCH",
-        "path": "/v1/cms/access/login-providers/{providerId}",
+        "method": "POST",
+        "path": "/update-login-provider",
         "input": {
-            "path": {
-                "providerId": "providerId"
-            },
-            "body": {
-                "properties": [
-                    "expectedRevision",
-                    "displayName",
-                    "enabled",
-                    "icon",
-                    "issuer",
-                    "authorizationEndpoint",
-                    "tokenEndpoint",
-                    "jwksUri",
-                    "clientId",
-                    "scopes"
-                ]
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

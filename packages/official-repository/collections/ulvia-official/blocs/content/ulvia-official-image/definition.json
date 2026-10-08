@@ -1,0 +1,20 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-image",
+    "label": "bloc.image.label",
+    "description": "bloc.image.description",
+    "category": "bloc.category.media",
+    "order": 5,
+    "nativeElement": {
+        "accepts": ["img"]
+    },
+    "uses": [],
+    "requires": [
+        {
+            "contractId": "ulvia.cms.files",
+            "capabilityId": "files.read",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {}
+}

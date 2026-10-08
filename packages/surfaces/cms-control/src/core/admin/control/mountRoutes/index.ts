@@ -10,17 +10,9 @@ import {
     resolveLoginMethods,
 } from "@bernouy/cms-auth/http";
 import { CMS_CACHE_KEYS, createContentReader, generateStyleEntry } from "@bernouy/cms-content";
-import { CMS_FILES_ROUTE, filesPrefix } from "@bernouy/cms-content/files/urls";
-import { serveFilesRequest } from "@bernouy/cms-content/files/serving";
-import { replaceAuthorFileRequest, uploadAuthorFileRequest } from "@bernouy/cms-content/files";
 import { cachedResponseAsync, publicAssetCacheControl, redirect } from "@bernouy/http-runner";
 import { renderLoginPage } from "cms-control/core/admin/auth/authPages";
-import { invalidatePagesReferencingFile } from "cms-control/core/admin/server/cache/invalidation";
-import {
-    createAuthenticatedControlGuard,
-    createControlAccessGuard,
-    createControlAdministratorGuard,
-} from "cms-control/core/admin/control/adminAccess";
+import { createAuthenticatedControlGuard, createControlAccessGuard } from "cms-control/core/admin/control/adminAccess";
 import type { ControlAuthBackends, ControlCmsState } from "cms-control/core/admin/control/types";
 import { mountControlBrowserAssets } from "cms-control/core/admin/control/mountRoutes/assets";
 import { mountControlCapabilityRoutes } from "cms-control/core/admin/control/mountRoutes/capability";
@@ -32,7 +24,6 @@ export function mountControlCmsRoutes(state: ControlCmsState, authBackends: Cont
     const basePath = runner.basePath === "/" ? "" : runner.basePath;
     const authGuard = createControlAccessGuard(basePath, state.auth);
     const authenticatedGuard = createAuthenticatedControlGuard(basePath, state.auth);
-    const administratorGuard = createControlAdministratorGuard(state.auth, state.configuration.administrator);
     const maintenanceGuard = createControlMaintenanceGuard(state.configuration.collections);
     mountControlBrowserAssets(runner, state.cache);
     runner.addEndpoint("GET", "/login", async (req) => {
@@ -86,47 +77,6 @@ export function mountControlCmsRoutes(state: ControlCmsState, authBackends: Cont
     runner.addEndpoint("GET", "/", () => redirect(`${basePath}/admin`), [authGuard]);
     mountCollectionControlPages(state, [authGuard]);
     mountControlCapabilityRoutes(state, [authenticatedGuard, maintenanceGuard]);
-    const fileMutationGuards = [authenticatedGuard, administratorGuard, maintenanceGuard];
-    runner.addEndpoint(
-        "POST",
-        `${CMS_FILES_ROUTE}/upload`,
-        (request) =>
-            uploadAuthorFileRequest(request, {
-                metadata: required(state.filesMetadata, "files metadata backend not configured"),
-                blob: required(state.filesBlob, "files blob backend not configured"),
-                mutations: required(state.fileMutations, "file mutation journal not configured"),
-            }),
-        fileMutationGuards,
-    );
-    runner.addEndpoint(
-        "PUT",
-        `${CMS_FILES_ROUTE}/content`,
-        (request) =>
-            replaceAuthorFileRequest(request, {
-                metadata: required(state.filesMetadata, "files metadata backend not configured"),
-                blob: required(state.filesBlob, "files blob backend not configured"),
-                mutations: required(state.fileMutations, "file mutation journal not configured"),
-                afterContentUpdated: async ({ id }) => invalidatePagesReferencingFile(state, id),
-            }),
-        fileMutationGuards,
-    );
-    runner.group(
-        CMS_FILES_ROUTE,
-        (filesRunner) => {
-            const prefix = filesPrefix(runner.basePath);
-            filesRunner.setDefaultEndpoint("GET", (req) =>
-                serveFilesRequest(
-                    {
-                        metadata: required(state.filesMetadata, "files metadata backend not configured"),
-                        blob: required(state.filesBlob, "files blob backend not configured"),
-                    },
-                    req,
-                    { prefix },
-                ),
-            );
-        },
-        [authGuard],
-    );
     runner.addEndpoint(
         "GET",
         "/.cms/style",
@@ -141,11 +91,4 @@ export function mountControlCmsRoutes(state: ControlCmsState, authBackends: Cont
         [authenticatedGuard],
     );
     return Promise.resolve();
-}
-
-function required<T>(value: T, message: string): NonNullable<T> {
-    if (!value) {
-        throw new Error(message);
-    }
-    return value;
 }

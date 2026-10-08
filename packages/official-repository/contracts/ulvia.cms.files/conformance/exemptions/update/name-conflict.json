@@ -1,5 +1,0 @@
-{
-    "capabilityId": "update",
-    "errorCode": "NAME_CONFLICT",
-    "reason": "The portable smoke suite does not prescribe the state or concurrency fault needed to produce this domain error."
-}

@@ -7,13 +7,17 @@ import {
 import type { UlviaScalarSchema } from "@bernouy/cms-repository/contracts/schema";
 import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
 import { readBoundedRequestBody } from "@bernouy/http-runner";
+import type { CoreCapabilityInvocationContext } from "../dispatch/registry";
 
 export async function decodeCoreContractInput(
     request: Request,
     url: URL,
     capability: CapabilityDefinition,
     pathParameters: Readonly<Record<string, string>>,
-): Promise<Readonly<Record<string, unknown>>> {
+): Promise<{
+    input: Readonly<Record<string, unknown>>;
+    binaryBody?: CoreCapabilityInvocationContext["binaryBody"];
+}> {
     const input: Record<string, unknown> = {};
     const binding = capability.binding.input;
     for (const [property, wireName] of Object.entries(binding?.path ?? {})) {
@@ -33,7 +37,24 @@ export async function decodeCoreContractInput(
     }
     if (binding?.body) {
         if (typeof binding.body === "object" && "binaryProperty" in binding.body) {
-            throw new TypeError("Binary CMS Core contract inputs are not supported.");
+            if (!request.body) {
+                throw new TypeError("Binary CMS Core contract body is required.");
+            }
+            const lengthHeader = request.headers.get("content-length");
+            const contentLength = lengthHeader === null ? undefined : Number(lengthHeader);
+            if (contentLength !== undefined && (!Number.isSafeInteger(contentLength) || contentLength < 0)) {
+                throw new TypeError("Binary CMS Core content length is invalid.");
+            }
+            return {
+                input,
+                binaryBody: {
+                    stream: request.body,
+                    ...(request.headers.get("content-type")
+                        ? { contentType: request.headers.get("content-type")! }
+                        : {}),
+                    ...(contentLength === undefined ? {} : { contentLength }),
+                },
+            };
         }
         const body = await readJsonObject(request);
         const properties = binding.body === true ? Object.keys(body) : binding.body.properties;
@@ -46,7 +67,7 @@ export async function decodeCoreContractInput(
             }
         }
     }
-    return input;
+    return { input };
 }
 
 function decodeScalar(capability: CapabilityDefinition, property: string, raw: string | undefined): unknown {

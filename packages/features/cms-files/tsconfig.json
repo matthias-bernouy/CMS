@@ -1,0 +1,16 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "paths": {
+            "cms-files/*": ["./src/*"]
+        }
+    },
+    "include": ["src/**/*.ts"],
+    "references": [
+        { "path": "../../foundation/blob-store" },
+        { "path": "../../foundation/binary-media" },
+        { "path": "../../foundation/image-processing" }
+    ]
+}

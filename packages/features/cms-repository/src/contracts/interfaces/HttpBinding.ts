@@ -30,7 +30,7 @@ export interface HttpBindingDefinition {
 }
 
 export interface CompiledHttpParameter {
-    readonly encoding: "json-percent";
+    readonly encoding: "uri-component";
     readonly property: string;
     readonly wireName: string;
 }

@@ -1,0 +1,238 @@
+{
+    "access": "public",
+    "behavior": {
+        "effect": "query",
+        "execution": "sync"
+    },
+    "id": "representations.list",
+    "description": "List available image representations.",
+    "input": {
+        "type": "object",
+        "properties": {
+            "fileId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "generation": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "access": {
+                "type": "string",
+                "maxLength": 2048,
+                "sensitive": true
+            },
+            "namespaceKey": {
+                "type": "string",
+                "maxLength": 512,
+                "minLength": 20,
+                "sensitive": true
+            }
+        },
+        "required": [
+            "fileId",
+            "generation"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "original": {
+                "type": "object",
+                "properties": {
+                    "namespaceId": {
+                        "type": "string",
+                        "maxLength": 128
+                    },
+                    "fileId": {
+                        "type": "string",
+                        "maxLength": 128
+                    },
+                    "generation": {
+                        "type": "string",
+                        "maxLength": 128
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "mimeType": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "size": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 10737418240
+                    },
+                    "visibility": {
+                        "type": "string",
+                        "maxLength": 7,
+                        "enum": [
+                            "private",
+                            "public"
+                        ]
+                    },
+                    "url": {
+                        "type": "string",
+                        "maxLength": 4096
+                    },
+                    "width": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 16384,
+                        "nullable": true
+                    },
+                    "height": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 16384,
+                        "nullable": true
+                    },
+                    "variants": {
+                        "type": "array",
+                        "maxItems": 10,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "profile": {
+                                    "type": "string",
+                                    "maxLength": 10,
+                                    "enum": [
+                                        "thumbnail",
+                                        "responsive"
+                                    ]
+                                },
+                                "width": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 16384
+                                },
+                                "height": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 16384
+                                },
+                                "mimeType": {
+                                    "type": "string",
+                                    "maxLength": 64
+                                },
+                                "url": {
+                                    "type": "string",
+                                    "maxLength": 4096
+                                }
+                            },
+                            "required": [
+                                "profile",
+                                "width",
+                                "height",
+                                "mimeType",
+                                "url"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "namespaceId",
+                    "fileId",
+                    "generation",
+                    "name",
+                    "mimeType",
+                    "size",
+                    "visibility",
+                    "url"
+                ]
+            },
+            "representations": {
+                "type": "array",
+                "maxItems": 10,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "profile": {
+                            "type": "string",
+                            "maxLength": 10,
+                            "enum": [
+                                "thumbnail",
+                                "responsive"
+                            ]
+                        },
+                        "width": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 16384
+                        },
+                        "height": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 16384
+                        },
+                        "mimeType": {
+                            "type": "string",
+                            "maxLength": 64
+                        },
+                        "url": {
+                            "type": "string",
+                            "maxLength": 4096
+                        }
+                    },
+                    "required": [
+                        "profile",
+                        "width",
+                        "height",
+                        "mimeType",
+                        "url"
+                    ]
+                }
+            }
+        },
+        "required": [
+            "original",
+            "representations"
+        ]
+    },
+    "errors": [
+        {
+            "code": "NOT_AUTHORIZED",
+            "retryable": false
+        },
+        {
+            "code": "NOT_FOUND",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "GET",
+        "path": "/files/{fileId}/{generation}/representations",
+        "input": {
+            "path": {
+                "fileId": "fileId",
+                "generation": "generation"
+            },
+            "query": {
+                "access": "access"
+            },
+            "headers": {
+                "namespace-key": "namespaceKey"
+            }
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "NOT_AUTHORIZED": 403,
+                "NOT_FOUND": 404,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

@@ -1,7 +1,7 @@
 # @bernouy/cms-content
 
-Feature package for CMS-owned content: pages, blocs, settings, the author file
-library, declarative bindings, validation, and read models.
+Feature package for CMS-owned content: pages, blocs, settings, declarative
+bindings, validation, and read models.
 
 ## Boundaries
 
@@ -22,24 +22,14 @@ library, declarative bindings, validation, and read models.
 - `@bernouy/cms-content/migrations` exposes collection migration planning,
   execution, journals and the memory adapter. The Mongo journal adapter is
   exported from `./mongo`.
-- `@bernouy/cms-content/files` exposes authoring metadata contracts, lifecycle,
-  validation and metadata implementations. Generic byte-store contracts and
-  adapters come directly from `@bernouy/blob-store`.
-- `@bernouy/cms-content/files/serving` exposes public metadata lookup, read-only
-  originals, variant read/write, sitemap read/write/delete, and serving/optimization
-  helpers. Fresh facade objects restrict the methods exposed at runtime.
-- `@bernouy/cms-content/files/local-fs` exposes filesystem implementations to
-  composition roots.
-- `@bernouy/cms-content/files/urls` is the browser-safe file URL surface.
-- `@bernouy/cms-content/files/mongo` exposes the Mongo metadata adapter.
-- Provider-owned files and collection-release assets do not belong to the CMS
-  author file tree.
+- File data belongs to providers implementing `ulvia.cms.files`. Content stores
+  only provider-neutral file references.
 - Do not import surfaces, runtimes, Control internals, or persistence adapters
   into `core/` or `interfaces/`.
 
 ## Source Layout
 
-- `pages/`, `blocs/`, `bindings/`, `files/`, `settings/` and `theme/` are sibling
+- `pages/`, `blocs/`, `bindings/`, `settings/` and `theme/` are sibling
   domains. Theme owns tokens, modes, values and CSS independently of settings.
 - Site-owned Bloc source serialization belongs to Bloc publication in this
   package. Collection Bloc compilation belongs to
@@ -51,7 +41,7 @@ library, declarative bindings, validation, and read models.
 - `application/` owns cross-domain contracts, reader composition, aggregate
   validation/error primitives and memory/Mongo repositories. Domain rules stay
   with the domain; do not create a catch-all repository business domain.
-- `exports/` contains all declared public entrypoints, including `exports/files/`.
+- `exports/` contains all declared public entrypoints.
 - Tests follow domains; aggregate repository tests live in `tests/application/`.
 
 ## Rules
@@ -80,16 +70,3 @@ library, declarative bindings, validation, and read models.
   authored Blocs depend on them even while no visual editor is mounted.
 - When changing repository behavior, update both in-memory and Mongo behavior
   or document why only one implementation changes.
-- File metadata and blob mutations must stay consistent. Upload/update/delete
-  flows should roll back where possible.
-- Preserve `/.cms/files`, image-variant URL semantics, and the local
-  `.cms-files-registry.json` format unless a task explicitly changes their
-  external contract.
-- Generated variants are cacheable and reconstructible; original author files
-  are not disposable.
-- Image byte transforms use `@bernouy/image-processing/sharp`; keep author-file
-  variant keys, manifests, and serving policy in this package.
-- Media publication is independent of pages: files with metadata and bytes
-  remain public by ID/path even when draft-only or unreferenced. This refactor
-  provides no confidential-media policy or process/credential isolation.
-- Validate file names, sizes, and tree operations through the file core helpers.

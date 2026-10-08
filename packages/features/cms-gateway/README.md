@@ -2,128 +2,42 @@
 
 The gateway resolves a site's exact contract selection and approved provider
 installation before invoking a capability. It checks the selected release,
-manifest claim, current installation state, fresh runtime observation, actor
-access, trusted invocation origin, host grants, input and output schema, and
-compiled binding pin.
+manifest claim, current installation state, runtime observation, actor access,
+effective host grant, input/output schemas and compiled HTTP binding.
 
-## Provider credential path
+All public capability traffic uses the binding-derived route:
 
-Provider credentials deliberately remain opaque to CmsCore. The current path
-is:
+```text
+/.cms/call/{contractId}{binding.path}
+```
 
-1. `ProviderConnectionWorkflow` admits an exact manifest and endpoint, probes
-   the provider with the submitted credential, then stores the credential in
-   `SecretStore` under a generated reference.
-2. `ProviderInstallation` persists only that secret reference. Contract
-   selection and compiled execution plans pin the installation and exact
-   release; they do not copy account, CMS-instance or Bearer-token claims.
-3. `CapabilityGateway` resolves the selected route and passes the unchanged
-   `providerTokenRef` to `HttpGatewayTransport`.
-4. The server-only `NodeGatewayHttpNetwork` resolves the secret at the final
-   network boundary and writes its exact value to `Authorization: Bearer ...`.
+The same admitted binding builds the provider request. JSON and binary bodies
+are transported without domain-specific interpretation. Binary responses are
+streamed with backpressure, cancellation, transfer limits, first-byte and
+inactivity timeouts. Safe provider headers include content type and length,
+disposition, ETag, cache policy, range metadata and last-modified. The public
+response always adds `X-Content-Type-Options: nosniff`.
 
-No layer in that path parses account or instance semantics from the reference
-or credential. The provider remains responsible for authenticating it and
-routing the call to its privately managed CMS instance.
+A binary `GET` binding automatically accepts `HEAD`. `Range` and `If-Range`
+are forwarded, and `206`/`416` range metadata is validated before projection.
+The provider owns resource and cache semantics.
 
-`./execution` can compile an immutable plan for a capability-bearing installed
-collection Page. The plan pins the collection digest and Page generation
-together with the current selection revision and each exact contract release,
-digest and provider installation. Collection upgrades and provider-selection
-changes make an old plan stale. `./execution/mongo` persists these revisioned
-grants. Control activates a plan for the same-origin referring Page before each
-collection capability call; Delivery uses the same plan model for declared
-bindings.
+Provider credentials remain opaque. `CapabilityGateway` passes only a secret
+reference to the server-side network adapter, which resolves it immediately
+before the request. Provider-origin calls require an enabled installation, an
+exact declared dependency and a separate effective capability grant. Call
+context carries a chain ID, depth and installation path; the gateway rejects
+cycles and depth above eight.
 
-`CapabilityGateway` activates synchronous JSON queries, synchronous natural or
-non-idempotent commands, and bounded binary file reads through an injected
-transport. Generic provider keyed commands remain closed until their durable
-idempotency protocol is implemented; CMS Core's own durable jobs are a separate
-surface concern.
-Once a synchronous command has been dispatched, a transport error, route change,
-or invalid response produces `outcome_unknown` with the request ID. Callers must
-reconcile that request with the provider before retrying the command.
-Delivery exposes provider file reads
-at `/.cms/media/<contract>/<capability>/<fileId>`; Control exposes the same
-capability behind its authenticated `/.cms/media` route. Both recheck the
-current selection and actor grant before returning bytes. Delivery also serves
-bounded WebP derivatives at `/.cms/image/<contract>/<capability>/<fileId>/<width>.webp`;
-Control uses the same `/.cms/image` route with its own actor policy. Each request reauthorizes the original file before
-looking up its byte-generation key in the local derivative store.
-`./media/browser` builds bounded `srcset` candidates for same-origin provider media
-URLs and activates resolved `data-cms-src` image bindings only for same-origin
-CMS media or file routes. Control and Delivery
-expose those helpers in their component bundles for authored Blocs.
-`./http/node` provides a Node network adapter that
-resolves and pins one public address, permits canonical HTTP loopback targets,
-rejects redirects through the transport, and injects host-resolved credentials
-and trusted context headers. Asynchronous operations, binary file writes,
-provider-to-gateway calls, and system actors fail closed until their
-execution and grant protocols are implemented. Derivatives currently run on
-bounded demand; durable derivative jobs and public file cache policy are not
-active. Surfaces must create
-actors from verified authentication and supply a host authorization decision;
-the gateway never accepts an actor or an endpoint from capability input.
-`./http/handlers` projects successful JSON outputs directly as the selected contract
-declares them, with the request ID in a response header, for separately
-authenticated Control and Delivery POST routes. `./media/handlers` serves
-authorized provider files and image derivatives. The production runtime injects a site-scoped
-gateway when `CMS_GATEWAY_SITE_ID` is set. It persists release, manifest,
-installation and selection state in MongoDB, reuses the existing provider
-identity aliases in `cms_identity_aliases`, resolves provider token references
-through `@bernouy/secret-store`, and uses the pinned
-Node network adapter. Delivery grants public capabilities and authenticated
-capabilities to verified users; Control grants calls only to the configured
-local administrator. Control reads callable JSON capabilities from the site's
-selected releases when projecting page indexing settings.
-Declared errors retain a bounded `Retry-After`; unchanged binary responses
-retain `ETag`, `Content-Disposition` and valid range metadata. Provider file GET
-routes also serve single byte ranges from the bounded validated file response.
-The host keeps `private, no-store` on gateway responses.
-The runtime refreshes selected, enabled installations through the bounded, authenticated
-`GET /ulvia/report` connection protocol. Route checks read only the selected
-site selection and installation; a renewed ready observation does not invalidate
-an in-flight invocation.
-Delivery checks automatic capability bindings before rendering a page, so a
-protected binding can send anonymous visitors to the configured login page
-without contacting the provider.
+The gateway has no file, image, video, MIME, namespace, visibility, signature,
+variant or image-processing model. Those concepts belong to providers such as
+`@bernouy/cms-files`.
 
-`./identity` owns the authority-alias service and resolves one stable user alias
-per provider ID. `./identity/mongo` retains the `cms_identity_aliases` collection and its
-indexes; `./identity/request-scope` caches resolutions for one request. The
-production runtime shares that store across capability calls. Site or
-installation changes do not revoke provider-wide aliases.
-`./media` owns deterministic derivative keys, the bounded image service, and
-the storage port; `./media/local-fs` is the production derivative store. The
-byte fingerprint invalidates a derivative when a provider changes the file.
-`./media/sharp` applies gateway limits over the generic
-`@bernouy/image-processing/sharp` adapter.
-`./conformance` executes an admitted suite against an injected disposable
-environment factory. Every scenario receives a fresh environment, contract
-inputs and outputs are checked, capture, retry, pagination, operation and replay
-rules are enforced, and disposal runs after failures. Its immutable evidence
-pins the exact release, provider manifest, suite and runner without retaining
-provider outputs.
+`./execution` owns immutable collection Page plans and grants. `./identity`
+owns provider-wide user aliases. `./conformance` runs admitted suites against
+injected disposable provider environments. `./http` and `./http/node` expose
+the generic binding transport and hardened network adapter.
 
-The source tree follows these responsibilities: `invocation/` contains routing,
-authorization, HTTP handlers and transport; `identity/` contains provider-wide
-aliases and their stores; `execution/` contains Page plans and grants; `media/`
-contains authorized derivatives and browser helpers. `exports/` contains the corresponding public entrypoints. The package
-root remains the invocation API; optional adapters use domain-specific subpaths.
-
-Control and Delivery invoke selected capabilities for authoring, rendering,
-metadata resolution, and sitemap discovery. Page-owned indexing definitions
-declare the response fields projected into metadata and canonical URLs.
-
-## Current Operational Limits
-
-1. The live conformance runner is transport-neutral. A runtime still has to
-   provide the disposable provider environment and decide when passing evidence
-   is required for approval or selection.
-2. Production network composition still needs black-box custom-provider tests,
-   cross-catalogue snapshot stress tests and selected-route/observation
-   benchmarks before large deployments.
-3. Invocation audit exists for current command paths, but rate policy, metrics,
-   traces and operator diagnostics are not yet systematic across every domain.
-4. Expensive derivative work remains in-process; durable jobs, cache recovery,
-   garbage collection and volume benchmarks are future scale work.
+Synchronous commands are durably audited. A failure after dispatch produces
+`outcome_unknown` with the request ID so callers can reconcile before retrying.
+Sensitive capability fields are not included in command audit events.

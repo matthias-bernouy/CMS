@@ -74,12 +74,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "GET",
-        "path": "/v1/cms/access/user",
+        "method": "POST",
+        "path": "/get-user",
         "input": {
-            "query": {
-                "sub": "sub"
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

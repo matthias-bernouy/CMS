@@ -74,7 +74,7 @@ describe("capability mocks", () => {
     });
 
     test("checks container cardinality before materializing nested binary references", () => {
-        const binary = { type: "binary", maxBytes: 10, mediaTypes: ["application/pdf"] };
+        const binary = { type: "binary", maxBytes: 10 };
         const cases = [
             { schema: { type: "array", maxItems: 1, items: binary }, value: [{ assetId: "missing" }, null] },
             {

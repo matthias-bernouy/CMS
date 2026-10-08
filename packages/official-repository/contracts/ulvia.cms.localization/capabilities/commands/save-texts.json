@@ -171,19 +171,10 @@
     ],
     "binding": {
         "transport": "http",
-        "method": "PUT",
-        "path": "/v1/cms/localization/texts/{collectionId}",
+        "method": "POST",
+        "path": "/save-texts",
         "input": {
-            "path": {
-                "collectionId": "collectionId"
-            },
-            "body": {
-                "properties": [
-                    "expectedRevision",
-                    "locale",
-                    "overridesJson"
-                ]
-            }
+            "body": true
         },
         "response": {
             "successStatuses": [

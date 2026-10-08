@@ -1,0 +1,32 @@
+[
+    {
+        "id": "ratio",
+        "label": "setting.ratio.label",
+        "group": "setting.group.media",
+        "type": "string",
+        "default": "auto",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "auto", "label": "setting.option.auto" },
+                { "value": "square", "label": "setting.option.square" },
+                { "value": "landscape", "label": "setting.option.landscape" },
+                { "value": "portrait", "label": "setting.option.portrait" }
+            ]
+        }
+    },
+    {
+        "id": "fit",
+        "label": "setting.fit.label",
+        "group": "setting.group.media",
+        "type": "string",
+        "default": "cover",
+        "control": {
+            "kind": "segmented",
+            "options": [
+                { "value": "cover", "label": "setting.option.cover" },
+                { "value": "contain", "label": "setting.option.contain" }
+            ]
+        }
+    }
+]

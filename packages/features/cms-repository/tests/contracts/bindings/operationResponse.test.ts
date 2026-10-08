@@ -6,7 +6,6 @@ describe("HTTP operation response compilation", () => {
     const binaryResult = {
         type: "binary",
         maxBytes: 10 * 1024 * 1024,
-        mediaTypes: ["application/pdf"],
     };
 
     test("distinguishes the operation handle from the final result", () => {

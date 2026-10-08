@@ -3,7 +3,7 @@ import { parseHTML } from "linkedom";
 import type { TPage } from "@bernouy/cms-content/rendering";
 import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
-import { injectMediaVersions } from "@bernouy/cms-content/files/serving";
+import { projectKnownFileImages } from "cms-delivery/core/html/fileImages";
 import { prepareNetworkInertBindings } from "@bernouy/cms-content/browser/dom";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
 import { buildMetaCsp } from "cms-delivery/core/head/buildMetaCsp";
@@ -96,21 +96,19 @@ export async function renderPage(
     buildAssetPreloads(document, head, assets, { includeBindingCore: hasBindingCore });
     buildBindingCloak(document, head, hasBindingCore);
     buildFoucShell(document, head, usedTags);
-    defineMetaTags(document, head, page, settings, ctx.faviconUrl, metadata, storedSettings.site);
+    defineMetaTags(
+        document,
+        head,
+        page,
+        settings,
+        storedSettings.site?.favicon?.trim() || ctx.faviconUrl,
+        metadata,
+        storedSettings.site,
+    );
     definePageStructuredData(document, head, settings, metadata);
     buildStylesheetLink(document, head, assets);
     buildScriptTags(document, head, assets, { includeBindingCore: hasBindingCore });
-
-    // Stamp every by-id media URL with `?v=<contentHash>` (cache bust), expand
-    // raster <img>s whose variants are ready into responsive srcsets, and collect
-    // the rest for background optimization (served as originals until ready).
-    const unoptimized = await injectMediaVersions(document, {
-        files: ctx.filesMetadata,
-        variantStore: ctx.variantStore,
-    });
-    if (unoptimized.length > 0) {
-        ctx.optimizePage?.(page.path, unoptimized);
-    }
+    projectKnownFileImages(document);
 
     return compress(document.toString(), "text/html");
 }

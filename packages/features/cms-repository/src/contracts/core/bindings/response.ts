@@ -47,8 +47,12 @@ export function compileResponse(
         throw new ReleaseValidationError("invalid_binding", "status 202 requires operation execution", path);
     }
     if (method === "HEAD") {
-        if (output.type !== "null") {
-            throw new ReleaseValidationError("invalid_binding", "HEAD responses require a null output schema", path);
+        if (output.type !== "null" && output.type !== "binary") {
+            throw new ReleaseValidationError(
+                "invalid_binding",
+                "HEAD responses require a null or binary resource output schema",
+                path,
+            );
         }
         if (contentTypes.length > 0) {
             throw new ReleaseValidationError("invalid_binding", "HEAD responses cannot declare content types", path);
@@ -70,13 +74,7 @@ export function compileResponse(
         );
     }
     if (output.type === "binary") {
-        if (contentTypes.length === 0 || contentTypes.some((type) => !output.mediaTypes.includes(type))) {
-            throw new ReleaseValidationError(
-                "invalid_binding",
-                "binary response content types must be declared by the output schema",
-                `${path}.contentTypes`,
-            );
-        }
+        // An empty set means the provider supplies the concrete Content-Type at runtime.
     } else if (output.type === "null" && contentTypes.length === 0) {
         if (statuses.some((status) => status !== 204 && status !== 205)) {
             throw new ReleaseValidationError(

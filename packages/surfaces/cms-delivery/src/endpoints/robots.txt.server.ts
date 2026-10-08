@@ -1,6 +1,5 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { canonicalSiteBaseUrl } from "@bernouy/cms-content/rendering";
-import { CMS_FILES_ROUTE, CMS_IMAGE_VARIANT_ROUTE } from "@bernouy/cms-content/files/serving";
 import { compress, sendCompressed } from "@bernouy/http-runner";
 import { COLLECTION_ASSETS_ROUTE } from "cms-delivery/core/assets/collectionAssets";
 
@@ -11,12 +10,8 @@ export default async function RobotsServer(req: Request, delivery: DeliveryCms) 
         "User-agent: *",
         "Allow: /",
         ...publicRuntimePaths(delivery).flatMap((path) => [`Allow: ${path}$`, `Allow: ${path}?`]),
-        `Allow: ${delivery.basePath}${CMS_FILES_ROUTE}/`,
-        `Allow: ${delivery.basePath}${CMS_IMAGE_VARIANT_ROUTE}/`,
         `Allow: ${delivery.basePath}${COLLECTION_ASSETS_ROUTE}/`,
-        ...(delivery.capabilityGateway
-            ? [`Allow: ${delivery.cmsPathPrefix}/media/`, `Allow: ${delivery.cmsPathPrefix}/image/`]
-            : []),
+        ...(delivery.capabilityGateway ? [`Allow: ${delivery.cmsPathPrefix}/call/`] : []),
         `Disallow: ${delivery.cmsPathPrefix}/`,
         ...(publicBaseUrl ? [`Sitemap: ${publicBaseUrl}/sitemap.xml`] : []),
         "",

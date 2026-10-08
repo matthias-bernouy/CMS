@@ -1,7 +1,7 @@
 # @bernouy/cms-control
 
-Control kernel of the CMS — authentication bootstrap and shared CMS
-capability/media routes. Authored Control pages are collection resources;
+Control surface of the CMS — authentication bootstrap and shared CMS
+capability routes. Authored Control pages are collection resources;
 the former filesystem-backed admin application has been removed. Mounts on a
 runner you provide. Runs on **Bun** and ships
 as a Bun-first package — no transpile, consumers execute the TypeScript
@@ -10,8 +10,9 @@ source directly.
 Pair it with:
 
 - **`@bernouy/cms-delivery`** for the public-facing rendering layer.
-- **`@bernouy/cms-content`** and its **`./files`** subpath for persistence
-  contracts and default stores.
+- **`@bernouy/cms-content`** for authored content persistence.
+- **`@bernouy/cms-files`** through the selected `ulvia.cms.files` provider for
+  file operations.
 - **`@bernouy/cms-auth`** for the auth chain (login + signed cookie +
   PATs).
 
@@ -44,8 +45,6 @@ import {
 } from "@bernouy/cms-auth";
 import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
-import { MemoryBlobStore } from "@bernouy/blob-store/memory";
-import { InMemoryCmsFilesMetadata } from "@bernouy/cms-content/files";
 
 const runner = new BunRunner();
 
@@ -75,8 +74,6 @@ runner.group("/cms", (sub) => {
         auth,
         {
             cache: new InMemoryCache(),
-            filesMetadata: new InMemoryCmsFilesMetadata(),
-            filesBlob: new MemoryBlobStore(),
             identityProviders: new InMemoryIdentityProviderRepository(),
             authBackends: { local: auth },
         },
@@ -96,9 +93,6 @@ new ControlCms(
     dependencies: {
         configuration?: ControlCmsOptions;
         cache?: Cache;
-        filesMetadata?: CmsFilesMetadataRepository;
-        filesBlob?: BlobStore;
-        fileMutations?: CmsFileMutationJournal;
         identityProviders?: IdentityProviderRepository;
         authBackends?: { local?: LocalAuthenticationActions; oidc?: OidcAuthHandlers };
     } = {},
@@ -111,9 +105,6 @@ name so adding or removing a backend cannot shift positional arguments:
 | Optional dep         | Disabling effect                              |
 |----------------------|-----------------------------------------------|
 | `cache`              | Defaults to `InMemoryCache`                   |
-| `filesMetadata`      | File transports throw "not configured" on call |
-| `filesBlob`          | File transports throw "not configured" on call |
-| `fileMutations`      | Defaults to an in-memory journal when both file stores exist |
 | `identityProviders`  | The login page cannot list configured OIDC methods |
 | `authBackends.local` | Local login/logout routes are not mounted     |
 | `authBackends.oidc`  | OIDC login/callback routes are not mounted    |
@@ -150,7 +141,6 @@ through `ulvia dev credentials`.
 | `<basePath>/`                            | gated     | Redirects to `<basePath>/admin`           |
 | `<basePath>/admin/*`                     | gated     | Installed collection and site Control Pages |
 | `<basePath>/.cms/call/*`                 | gated     | Versioned contract capability calls       |
-| `<basePath>/.cms/files/*`                | gated     | Author file mutations and reads           |
 | `<basePath>/.cms/{style,blocset}`        | gated     | Page theme and exact collection Bloc runtime |
 | `<basePath>/assets/*`                    | public    | Minimal binding/host runtime and base CSS |
 

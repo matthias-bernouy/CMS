@@ -64,9 +64,9 @@ describe("container and binary schema compatibility", () => {
         });
     });
 
-    test("expanding accepted binary inputs is minor", () => {
-        const binary = (maxBytes: number, mediaTypes: readonly string[]) => ({
-            input: objectSchema({ attachment: { type: "binary", maxBytes, mediaTypes } }, ["attachment"]),
+    test("expanding accepted binary input size is minor", () => {
+        const binary = (maxBytes: number) => ({
+            input: objectSchema({ attachment: { type: "binary", maxBytes } }, ["attachment"]),
             binding: {
                 transport: "http",
                 method: "POST",
@@ -75,23 +75,19 @@ describe("container and binary schema compatibility", () => {
             },
         });
 
-        expect(
-            compare(binary(1024, ["application/pdf"]), binary(2048, ["application/pdf", "image/png"])),
-        ).toMatchObject({
+        expect(compare(binary(1024), binary(2048))).toMatchObject({
             validEvolution: true,
             requiredBump: "minor",
         });
-        expect(
-            compare(binary(2048, ["application/pdf", "image/png"]), binary(1024, ["application/pdf"])),
-        ).toMatchObject({
+        expect(compare(binary(2048), binary(1024))).toMatchObject({
             validEvolution: false,
             requiredBump: "major",
         });
     });
 
-    test("narrowing possible binary outputs is minor", () => {
-        const binary = (maxBytes: number, mediaTypes: readonly string[]) => ({
-            output: { type: "binary", maxBytes, mediaTypes },
+    test("narrowing possible binary output size is minor", () => {
+        const binary = (maxBytes: number) => ({
+            output: { type: "binary", maxBytes },
             binding: {
                 transport: "http",
                 method: "POST",
@@ -99,21 +95,17 @@ describe("container and binary schema compatibility", () => {
                 input: { body: true },
                 response: {
                     successStatuses: [200],
-                    contentTypes: mediaTypes,
+                    contentTypes: [],
                     errorStatuses: { INVALID_RECIPIENT: 422 },
                 },
             },
         });
 
-        expect(
-            compare(binary(2048, ["application/pdf", "image/png"]), binary(1024, ["application/pdf"])),
-        ).toMatchObject({
+        expect(compare(binary(2048), binary(1024))).toMatchObject({
             validEvolution: true,
             requiredBump: "minor",
         });
-        expect(
-            compare(binary(1024, ["application/pdf"]), binary(2048, ["application/pdf", "image/png"])),
-        ).toMatchObject({
+        expect(compare(binary(1024), binary(2048))).toMatchObject({
             validEvolution: false,
             requiredBump: "major",
         });

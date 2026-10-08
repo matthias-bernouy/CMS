@@ -1,0 +1,86 @@
+{
+    "access": "admin",
+    "behavior": {
+        "effect": "command",
+        "execution": "sync",
+        "idempotency": "none"
+    },
+    "id": "namespace.create",
+    "description": "Create a credential-owned file namespace.",
+    "input": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string",
+                "maxLength": 160,
+                "minLength": 1
+            },
+            "defaultVisibility": {
+                "type": "string",
+                "maxLength": 7,
+                "enum": [
+                    "private",
+                    "public"
+                ]
+            }
+        },
+        "required": [
+            "name",
+            "defaultVisibility"
+        ]
+    },
+    "output": {
+        "type": "object",
+        "properties": {
+            "namespaceId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "keyId": {
+                "type": "string",
+                "maxLength": 128
+            },
+            "namespaceKey": {
+                "type": "string",
+                "maxLength": 512,
+                "minLength": 20,
+                "sensitive": true
+            }
+        },
+        "required": [
+            "namespaceId",
+            "keyId",
+            "namespaceKey"
+        ]
+    },
+    "errors": [
+        {
+            "code": "INVALID_INPUT",
+            "retryable": false
+        },
+        {
+            "code": "CORE_UNAVAILABLE",
+            "retryable": true
+        }
+    ],
+    "binding": {
+        "transport": "http",
+        "method": "POST",
+        "path": "/namespaces",
+        "input": {
+            "body": true
+        },
+        "response": {
+            "successStatuses": [
+                200
+            ],
+            "contentTypes": [
+                "application/json"
+            ],
+            "errorStatuses": {
+                "INVALID_INPUT": 422,
+                "CORE_UNAVAILABLE": 503
+            }
+        }
+    }
+}

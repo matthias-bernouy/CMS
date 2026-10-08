@@ -131,7 +131,7 @@ describe("production surface mounting", () => {
                 siteId: gateway.siteId,
                 invoker: expect.objectContaining({ invoke: expect.any(Function) }),
             },
-            sitemapStore: { get: expect.any(Function), put: expect.any(Function), delete: expect.any(Function) },
+            sitemapStore: options.core.sitemapStore,
             auth: {
                 marker: "public-auth",
                 emailVerificationUrl: options.env.CMS_AUTH_EMAIL_VERIFICATION_URL,
@@ -142,11 +142,6 @@ describe("production surface mounting", () => {
         expect(deliveryConfig?.repository).not.toBe(options.core.repo);
         expect(deliveryConfig?.repository).not.toHaveProperty("getAllPages");
         expect(deliveryConfig?.repository).not.toHaveProperty("updatePage");
-        expect(deliveryConfig?.filesBlob).not.toBe(options.core.filesBlob);
-        expect(Object.keys(deliveryConfig?.filesBlob as object)).toEqual(["get", "head"]);
-        expect(Object.keys(deliveryConfig?.filesMetadata as object).sort()).toEqual(["getItem", "getItemByPath"]);
-        expect(Object.keys(deliveryConfig?.variantStore as object).sort()).toEqual(["get", "head", "put"]);
-        expect(deliveryConfig?.sitemapStore).not.toBe(options.core.sitemapStore);
         expect(sitemapRefreshOptions).toEqual({ reportError: expect.any(Function) });
         expect(observationStarted).toBe(true);
         expect(starts).toEqual([
