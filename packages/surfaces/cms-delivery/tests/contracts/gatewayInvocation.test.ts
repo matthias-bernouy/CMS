@@ -69,34 +69,6 @@ test("Delivery authenticates provider machine calls independently from users", a
     });
 });
 
-test("Delivery rejects malformed provider call-chain metadata before dispatch", async () => {
-    const calls: GatewayInvocation[] = [];
-    const delivery = {
-        basePath: "",
-        capabilityGateway: {
-            siteId: "site-a",
-            authenticateProvider: async () => "install-caller",
-            invoker: invoker(calls),
-        },
-    } as unknown as DeliveryCms;
-    const response = await handleCapabilityCall(
-        new Request("http://site/.cms/call/catalog/v1/items", {
-            method: "POST",
-            headers: {
-                authorization: "Bearer provider-secret-token",
-                "content-type": "application/json",
-                "x-ulvia-call-chain-id": "00000000-0000-4000-8000-000000000001",
-                "x-ulvia-call-depth": "0",
-                "x-ulvia-call-path": encodeURIComponent(JSON.stringify(["another-installation"])),
-            },
-            body: '{"term":"one"}',
-        }),
-        delivery,
-    );
-    expect(response.status).toBe(403);
-    expect(calls).toHaveLength(0);
-});
-
 test("Delivery projects gateway authorization failures", async () => {
     const delivery = {
         basePath: "",

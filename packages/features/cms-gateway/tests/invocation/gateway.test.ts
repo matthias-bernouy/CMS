@@ -335,36 +335,19 @@ describe("capability gateway", () => {
         ).resolves.toMatchObject({ kind: "success" });
     });
 
-    test("propagates provider call chains and rejects cycles before transport", async () => {
+    test("authorizes provider calls from their verified installation identity", async () => {
         const scope = harness(await gatewayRoute());
         const actor = { kind: "provider" as const, installationId: "caller-installation" };
         await scope.gateway.invoke({
             ...invocation(actor),
             origin: "provider",
-            callContext: {
-                callChainId: "00000000-0000-4000-8000-000000000001",
-                callDepth: 0,
-                installationPath: ["caller-installation"],
-            },
         });
-        expect(scope.sent[0]?.callContext).toEqual({
-            callChainId: "00000000-0000-4000-8000-000000000001",
-            callDepth: 1,
-            installationPath: ["caller-installation", "install-a"],
-        });
-
-        await expect(
-            scope.gateway.invoke({
-                ...invocation(actor),
-                origin: "provider",
-                callContext: {
-                    callChainId: "00000000-0000-4000-8000-000000000001",
-                    callDepth: 1,
-                    installationPath: ["install-a", "caller-installation"],
-                },
-            }),
-        ).rejects.toMatchObject({ code: "not_authorized" });
         expect(scope.sent).toHaveLength(1);
+        expect(scope.sent[0]).toMatchObject({
+            invocationOrigin: "provider",
+            actorKind: "provider",
+            providerInstallationId: "caller-installation",
+        });
     });
 
     test("requires an exact execution pin for Page calls", async () => {

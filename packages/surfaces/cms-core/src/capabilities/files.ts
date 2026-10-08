@@ -14,7 +14,7 @@ export function registerFileCapabilities(dispatcher: CoreCapabilityRegistry, fil
                             : context.actorKind === "system"
                               ? "system"
                               : "administrator",
-                    id: context.callerInstallationId ?? context.providerSubjectId ?? "cms-host",
+                    id: context.providerInstallationId ?? context.providerSubjectId ?? "cms-host",
                 },
             }),
         ),

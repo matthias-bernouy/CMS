@@ -77,12 +77,8 @@ function trustedHeaders(request: GatewayHttpExchange, token: string): Record<str
         "x-ulvia-actor-kind": request.actorKind,
         "x-ulvia-site-id": request.siteId,
         "x-ulvia-installation-id": request.installationId,
-        ...(request.callContext
-            ? {
-                  "x-ulvia-call-chain-id": request.callContext.callChainId,
-                  "x-ulvia-call-depth": String(request.callContext.callDepth),
-                  "x-ulvia-call-path": encodeURIComponent(JSON.stringify(request.callContext.installationPath)),
-              }
+        ...(request.providerInstallationId
+            ? { "x-ulvia-provider-installation-id": request.providerInstallationId }
             : {}),
         ...(request.providerSubjectId ? { "x-ulvia-subject-id": request.providerSubjectId } : {}),
         ...(request.idempotencyKey ? { "idempotency-key": request.idempotencyKey } : {}),

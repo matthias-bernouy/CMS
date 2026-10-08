@@ -93,7 +93,6 @@ export class CapabilityGateway implements GatewayAccessProbe {
         const { route, release, capability, binding } = await this.#authorizedRoute(invocation);
         const input = snapshotInput(invocation.input, capability);
         const providerSubjectId = await this.#providerSubjectId(invocation.actor, capability, route);
-        const callContext = nextCallContext(invocation, route);
         if (!(await this.#options.routes.isCurrent(route))) {
             throw new GatewayError("stale_route", "installation changed while resolving actor identity");
         }
@@ -121,7 +120,9 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 ...(invocation.binaryBody ? { binaryBody: invocation.binaryBody } : {}),
                 invocationOrigin: invocation.origin,
                 actorKind: invocation.actor.kind,
-                callContext,
+                ...(invocation.actor.kind === "provider"
+                    ? { providerInstallationId: invocation.actor.installationId }
+                    : {}),
                 ...(providerSubjectId ? { providerSubjectId } : {}),
                 ...(invocation.idempotencyKey ? { idempotencyKey: invocation.idempotencyKey } : {}),
             });
@@ -267,29 +268,6 @@ export class CapabilityGateway implements GatewayAccessProbe {
             actor.subjectId,
         );
     }
-}
-
-function nextCallContext(invocation: GatewayInvocation, route: GatewayRoute) {
-    const target = route.installation.installation.id;
-    const current =
-        invocation.actor.kind === "provider"
-            ? (invocation.callContext ?? {
-                  callChainId: crypto.randomUUID(),
-                  callDepth: 0,
-                  installationPath: [invocation.actor.installationId],
-              })
-            : { callChainId: crypto.randomUUID(), callDepth: -1, installationPath: [] as readonly string[] };
-    if (current.installationPath.includes(target)) {
-        throw new GatewayError("not_authorized", "provider call cycle detected");
-    }
-    if (current.callDepth >= 7) {
-        throw new GatewayError("not_authorized", "provider call depth exceeded");
-    }
-    return Object.freeze({
-        callChainId: current.callChainId,
-        callDepth: current.callDepth + 1,
-        installationPath: Object.freeze([...current.installationPath, target]),
-    });
 }
 
 function automaticHeadBinding(capability: CapabilityDefinition, binding: CompiledHttpBinding): CompiledHttpBinding {

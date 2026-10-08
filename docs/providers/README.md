@@ -74,6 +74,14 @@ Control or Delivery request
   -> contract validation and response projection
 ```
 
+Provider-origin calls authenticate the source installation with its Bearer
+credential. The host then checks that the source manifest declares the exact
+contract capability and compatible target version, that an exact source/target
+grant is enabled, and that its quota allows the call. Cycles and paths longer
+than eight contracts are rejected when the site selection graph is validated;
+live calls forward the verified source installation identity and the request ID
+used for correlation.
+
 The current execution slice supports synchronous JSON queries, synchronous
 commands with `none` or `natural` idempotency, and bounded file reads. Keyed
 commands, asynchronous execution and binary request bodies are rejected. A

@@ -10,9 +10,7 @@ export interface CoreCapabilityInvocationContext {
     readonly installationId: string;
     readonly origin: CoreCapabilityOrigin;
     readonly actorKind: CoreCapabilityActorKind;
-    readonly callChainId?: string;
-    readonly callDepth?: number;
-    readonly callerInstallationId?: string;
+    readonly providerInstallationId?: string;
     readonly providerSubjectId?: string;
     readonly idempotencyKey?: string;
     readonly binaryBody?: {

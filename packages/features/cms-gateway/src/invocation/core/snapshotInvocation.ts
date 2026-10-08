@@ -4,7 +4,7 @@ import {
     MAX_CAPABILITY_JSON_DEPTH,
     parseStrictJson,
 } from "@bernouy/cms-repository/contracts/protocol";
-import type { GatewayActor, GatewayCallContext, GatewayInvocation } from "cms-gateway/invocation/interfaces/Invocation";
+import type { GatewayActor, GatewayInvocation } from "cms-gateway/invocation/interfaces/Invocation";
 import { GatewayError } from "cms-gateway/invocation/core/GatewayError";
 
 /** Bounded JSON envelope budget, including escaping and metadata around a 1 MiB contract string. */
@@ -35,7 +35,6 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
         throw new GatewayError("invalid_input", "HTTP method override is invalid");
     }
     const actor = snapshotActor(value.actor);
-    const callContext = snapshotCallContext(value.callContext, actor);
     const idempotencyKey = snapshotIdempotencyKey(value.idempotencyKey);
     try {
         const bytes = canonicalIJsonBytes(value.input, MAX_CAPABILITY_JSON_DEPTH);
@@ -49,7 +48,6 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
             capabilityId: value.capabilityId,
             origin: value.origin,
             actor,
-            ...(callContext ? { callContext } : {}),
             ...(value.httpMethod ? { httpMethod: value.httpMethod } : {}),
             ...(idempotencyKey ? { idempotencyKey } : {}),
             ...(value.execution ? { execution: snapshotExecution(value.execution) } : {}),
@@ -59,34 +57,6 @@ export function snapshotInvocation(value: GatewayInvocation): GatewayInvocation 
     } catch {
         throw new GatewayError("invalid_input", "input must be bounded interoperable JSON");
     }
-}
-
-function snapshotCallContext(
-    value: GatewayInvocation["callContext"],
-    actor: GatewayActor,
-): GatewayCallContext | undefined {
-    if (value === undefined) {
-        return undefined;
-    }
-    if (
-        actor.kind !== "provider" ||
-        !/^[0-9a-f-]{36}$/u.test(value.callChainId) ||
-        !Number.isSafeInteger(value.callDepth) ||
-        value.callDepth < 0 ||
-        value.callDepth > 7 ||
-        !Array.isArray(value.installationPath) ||
-        value.installationPath.length !== value.callDepth + 1 ||
-        value.installationPath.at(-1) !== actor.installationId ||
-        new Set(value.installationPath).size !== value.installationPath.length ||
-        value.installationPath.some((id) => typeof id !== "string" || !id || id.length > 256 || id.trim() !== id)
-    ) {
-        throw new GatewayError("not_authorized", "provider call context is invalid");
-    }
-    return Object.freeze({
-        callChainId: value.callChainId,
-        callDepth: value.callDepth,
-        installationPath: Object.freeze([...value.installationPath]),
-    });
 }
 
 function snapshotBinaryBody(value: GatewayInvocation["binaryBody"]): GatewayInvocation["binaryBody"] {

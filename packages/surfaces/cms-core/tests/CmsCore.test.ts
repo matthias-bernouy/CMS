@@ -13,7 +13,11 @@ describe("CmsCore", () => {
     test("authenticates the report and dispatches declared HTTP bindings", async () => {
         const contract = await contractRelease();
         const dispatcher = new DefaultCoreCapabilityDispatcher();
-        dispatcher.register("ulvia.cms.fixture", "echo", async (input) => ({ id: input.id, value: input.value }));
+        const providerInstallationIds: Array<string | undefined> = [];
+        dispatcher.register("ulvia.cms.fixture", "echo", async (input, context) => {
+            providerInstallationIds.push(context.providerInstallationId);
+            return { id: input.id, value: input.value };
+        });
         const runner = new BunRunner();
         new CmsCore(runner, {
             token,
@@ -48,6 +52,20 @@ describe("CmsCore", () => {
             });
             expect(response.status).toBe(200);
             expect(await response.json()).toEqual({ id: "record-1", value: "hello" });
+
+            const providerResponse = await server.request("POST", "/v1/core/echo/record-2", {
+                headers: {
+                    ...authorization(),
+                    ...trustedHeaders(),
+                    "Content-Type": "application/json",
+                    "x-ulvia-origin": "provider",
+                    "x-ulvia-actor-kind": "provider",
+                    "x-ulvia-provider-installation-id": "caller-installation",
+                },
+                body: JSON.stringify({ value: "from-provider" }),
+            });
+            expect(providerResponse.status).toBe(200);
+            expect(providerInstallationIds).toEqual([undefined, "caller-installation"]);
 
             const oversized = await server.request("POST", "/v1/core/echo/record-1", {
                 headers: { ...authorization(), ...trustedHeaders(), "Content-Type": "application/json" },

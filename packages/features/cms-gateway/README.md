@@ -25,9 +25,10 @@ The provider owns resource and cache semantics.
 Provider credentials remain opaque. `CapabilityGateway` passes only a secret
 reference to the server-side network adapter, which resolves it immediately
 before the request. Provider-origin calls require an enabled installation, an
-exact declared dependency and a separate effective capability grant. Call
-context carries a chain ID, depth and installation path; the gateway rejects
-cycles and depth above eight.
+exact declared dependency and a separate effective capability grant. The
+selection graph rejects cycles and dependency paths containing more than eight
+contracts before activation. Live calls carry the verified source installation
+identity and a request ID; they do not maintain a second dynamic call graph.
 
 The gateway has no file, image, video, MIME, namespace, visibility, signature,
 variant or image-processing model. Those concepts belong to providers such as

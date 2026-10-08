@@ -18,10 +18,10 @@ export interface GatewayHttpExchange extends PreparedHttpInvocation {
     readonly providerTokenRef: string;
     readonly invocationOrigin: GatewayTransportRequest["invocationOrigin"];
     readonly actorKind: GatewayTransportRequest["actorKind"];
+    readonly providerInstallationId?: string;
     readonly providerSubjectId?: string;
     readonly siteId: string;
     readonly idempotencyKey?: string;
-    readonly callContext?: GatewayTransportRequest["callContext"];
     readonly signal: AbortSignal;
     readonly accept?: string;
 }
@@ -79,9 +79,9 @@ export class HttpGatewayTransport implements GatewayTransport {
             invocationOrigin: request.invocationOrigin,
             actorKind: request.actorKind,
             siteId: request.siteId,
+            ...(request.providerInstallationId ? { providerInstallationId: request.providerInstallationId } : {}),
             ...(request.providerSubjectId ? { providerSubjectId: request.providerSubjectId } : {}),
             ...(request.idempotencyKey ? { idempotencyKey: request.idempotencyKey } : {}),
-            ...(request.callContext ? { callContext: request.callContext } : {}),
             accept:
                 request.binding.response.kind === "operation-handle"
                     ? "application/json"

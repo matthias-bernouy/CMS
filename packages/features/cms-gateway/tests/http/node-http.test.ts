@@ -30,8 +30,9 @@ test("node transport pins the target and injects trusted context", async () => {
         capability: fixture.release.admission.release.capabilities[0]!,
         binding: fixture.release.admission.bindings[0]!.binding,
         input: { term: "one" },
-        invocationOrigin: "delivery",
-        actorKind: "anonymous",
+        invocationOrigin: "provider",
+        actorKind: "provider",
+        providerInstallationId: "caller-installation",
     });
     expect(result).toMatchObject({ status: 200, output: { items: ["one"] } });
     expect(sent).toEqual([
@@ -45,8 +46,9 @@ test("node transport pins the target and injects trusted context", async () => {
                 "x-ulvia-contract-id": "catalog",
                 "x-ulvia-site-id": "site-a",
                 "x-ulvia-installation-id": "install-a",
-                "x-ulvia-origin": "delivery",
-                "x-ulvia-actor-kind": "anonymous",
+                "x-ulvia-origin": "provider",
+                "x-ulvia-actor-kind": "provider",
+                "x-ulvia-provider-installation-id": "caller-installation",
             },
         },
     ]);

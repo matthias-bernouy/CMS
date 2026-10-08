@@ -37,7 +37,6 @@ export async function handleGatewayHttpCall(request: Request, options: GatewayHt
             capabilityId: route.capability.id,
             origin: options.origin,
             actor: options.actor,
-            ...(options.origin === "provider" ? { callContext: providerCallContext(request, options.actor) } : {}),
             ...(request.method === "HEAD" ? { httpMethod: "HEAD" as const } : {}),
             ...(options.execution ? { execution: options.execution } : {}),
             ...(idempotencyKey ? { idempotencyKey } : {}),
@@ -69,42 +68,6 @@ function headFailure(code: string, status: number, requestId?: string): Response
             ...(requestId ? { "x-ulvia-request-id": requestId } : {}),
         },
     });
-}
-
-function providerCallContext(request: Request, actor: GatewayActor) {
-    if (actor.kind !== "provider") {
-        throw new GatewayError("not_authorized", "provider origin requires a provider actor");
-    }
-    const chainId = request.headers.get("x-ulvia-call-chain-id");
-    const depth = request.headers.get("x-ulvia-call-depth");
-    const path = request.headers.get("x-ulvia-call-path");
-    if (chainId === null && depth === null && path === null) {
-        return undefined;
-    }
-    if (!chainId || depth === null || path === null) {
-        throw new GatewayError("not_authorized", "provider call context is incomplete");
-    }
-    let installationPath: unknown;
-    try {
-        installationPath = JSON.parse(decodeURIComponent(path));
-    } catch {
-        throw new GatewayError("not_authorized", "provider call context is malformed");
-    }
-    const callDepth = Number(depth);
-    if (
-        !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(chainId) ||
-        !Number.isSafeInteger(callDepth) ||
-        callDepth < 0 ||
-        callDepth > 7 ||
-        !Array.isArray(installationPath) ||
-        installationPath.length !== callDepth + 1 ||
-        installationPath.some((id) => typeof id !== "string" || id.length < 1 || id.length > 128) ||
-        installationPath.at(-1) !== actor.installationId ||
-        new Set(installationPath).size !== installationPath.length
-    ) {
-        throw new GatewayError("not_authorized", "provider call context is invalid");
-    }
-    return { callChainId: chainId, callDepth, installationPath } as const;
 }
 
 function parseTarget(request: Request, prefix: string): { contractId: string; bindingPath: string } {

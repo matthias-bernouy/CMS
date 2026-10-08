@@ -14,12 +14,6 @@ export type GatewayActor =
 
 export type GatewayOrigin = "delivery" | "page" | "control" | "provider" | "system" | "conformance";
 
-export interface GatewayCallContext {
-    readonly callChainId: string;
-    readonly callDepth: number;
-    readonly installationPath: readonly string[];
-}
-
 export interface GatewayInvocation {
     readonly siteId: string;
     readonly contractId: string;
@@ -29,8 +23,6 @@ export interface GatewayInvocation {
     readonly binaryBody?: GatewayBinaryBody;
     /** Trusted HTTP transport override used only for automatic HEAD on binary GET resources. */
     readonly httpMethod?: "HEAD";
-    /** Gateway-issued context forwarded by providers for nested calls. */
-    readonly callContext?: GatewayCallContext;
     /** Constructed by the trusted surface; never copied from capability input. */
     readonly origin: GatewayOrigin;
     /** Constructed by a trusted surface from verified authentication. */
@@ -72,7 +64,8 @@ export interface GatewayTransportRequest {
     readonly binaryBody?: GatewayBinaryBody;
     readonly invocationOrigin: GatewayOrigin;
     readonly actorKind: GatewayActor["kind"];
-    readonly callContext?: GatewayCallContext;
+    /** Verified source installation for provider-origin calls. */
+    readonly providerInstallationId?: string;
     readonly providerSubjectId?: string;
     readonly idempotencyKey?: string;
 }
