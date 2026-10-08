@@ -11,13 +11,13 @@ import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { parseTableData } from "../blocs/foundation/content/display/table/tableData";
 import { buildBloc, decodeDefaultContent, decodeSource } from "./source";
 
-describe("Mossa collection 1.1.0", () => {
+describe("Mossa collection 1.2.2", () => {
     test("publishes one site-neutral, fully namespaced catalogue", async () => {
         const { definitions, mossa } = await catalogue();
         const artifacts = blocArtifacts(mossa);
         const tags = artifacts.map(({ bloc }) => bloc.tag);
 
-        expect(mossa.version).toBe("1.1.0");
+        expect(mossa.version).toBe("1.2.2");
         expect(mossa.resources).toHaveLength(103);
         expect(artifacts).toHaveLength(103);
         expect(new Set(tags).size).toBe(tags.length);
@@ -88,7 +88,7 @@ describe("Mossa collection 1.1.0", () => {
         ]);
         expect(selection.requiredSources).toEqual(
             expect.arrayContaining([
-                { kind: "commerce", versionRange: "^1.0.0" },
+                { kind: "commerce", versionRange: ">=1.0.0 <3.0.0" },
                 { kind: "commerce-mondial-relay-delivery", versionRange: "^1.0.0" },
                 { kind: "commerce-stripe-payments", versionRange: "^1.0.0" },
                 { kind: "mondial-relay", versionRange: "^1.0.0" },

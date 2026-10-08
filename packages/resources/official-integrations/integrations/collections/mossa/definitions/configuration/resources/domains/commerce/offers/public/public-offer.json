@@ -7,28 +7,28 @@
     "endpoints": [
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:offer",
             "contractVersion": "^1.0.0",
             "bindings": { "input": { "params.slug": "route.slug" } }
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:product",
             "contractVersion": "^1.0.0",
             "bindings": { "input": { "params.id": "state.product.id" } }
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:offerFilterSchema",
             "contractVersion": "^1.0.0",
             "bindings": { "input": { "params.category": "state.product.primaryCategory.fullSlug" } }
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:publicOfferImage",
             "contractVersion": "^1.0.0",
             "bindings": { "input": { "params.id": "state.image.id" } }

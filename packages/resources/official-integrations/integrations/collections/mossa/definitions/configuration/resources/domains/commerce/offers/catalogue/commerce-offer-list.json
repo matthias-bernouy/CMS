@@ -6,7 +6,7 @@
     "endpoints": [
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:offers",
             "contractVersion": "^1.0.0",
             "bindings": {
@@ -29,7 +29,7 @@
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:publicOfferImage",
             "contractVersion": "^1.0.0",
             "bindings": {

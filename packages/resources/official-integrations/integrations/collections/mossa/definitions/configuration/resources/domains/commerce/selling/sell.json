@@ -7,7 +7,7 @@
     "endpoints": [
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:products",
             "contractVersion": "^1.0.0",
             "bindings": {
@@ -19,13 +19,13 @@
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:offerConditions",
             "contractVersion": "^1.0.0"
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:product",
             "contractVersion": "^1.0.0",
             "bindings": {
@@ -36,19 +36,19 @@
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:mySeller",
             "contractVersion": "^1.0.0"
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:registerMySeller",
             "contractVersion": "^1.0.0"
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:createMyOffer",
             "contractVersion": "^1.0.0",
             "bindings": {
@@ -61,7 +61,7 @@
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:uploadMyOfferImage",
             "contractVersion": "^1.0.0",
             "bindings": {
@@ -72,7 +72,7 @@
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:submitMyOffer",
             "contractVersion": "^1.0.0",
             "bindings": {

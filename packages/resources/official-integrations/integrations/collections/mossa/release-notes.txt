@@ -1,1 +1,1 @@
-1.1.0: make seller-fulfillment actions follow authoritative Commerce permissions, display configurable manual-review guidance, and provide an optional review-action slot while preserving declarative bindings and editor customization.
+1.2.2: retry Commerce image-validation failures by converting iPhone photo-library images to bounded JPEG files in the browser, while preserving the original upload path, HEIC and HEIF selection, and Commerce 1.x/2.x compatibility.

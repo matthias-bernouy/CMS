@@ -7,21 +7,21 @@
     "endpoints": [
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:myOrder",
             "contractVersion": "^1.0.0",
             "bindings": { "input": { "params.id": "route.orderId" } }
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:offer",
             "contractVersion": "^1.0.0",
             "bindings": { "input": { "params.id": "state.offer.id" } }
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:publicOfferImage",
             "contractVersion": "^1.0.0",
             "bindings": { "input": { "params.id": "state.image.id" } }

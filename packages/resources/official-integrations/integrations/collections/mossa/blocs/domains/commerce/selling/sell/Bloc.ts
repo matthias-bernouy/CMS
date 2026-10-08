@@ -1,5 +1,6 @@
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
+import { uploadPhotoWithJpegFallback } from "./photoUpload";
 import { Component } from "@bernouy/components/base";
 import { SourceFormError, sourceFormRequest } from "@bernouy/components/binding";
 
@@ -617,7 +618,9 @@ export class Bloc extends Component {
                 this.setStatus(
                     this.copy("uploading", { position: String(index + 1), count: String(this.files.length) }),
                 );
-                await this.requestSource("sell-image-upload", { file: this.files[index] });
+                await uploadPhotoWithJpegFallback(this.files[index]!, (file) =>
+                    this.requestSource("sell-image-upload", { file }),
+                );
             }
             this.setStatus(this.copy("submitting"));
             await this.requestSource("sell-offer-submit", { expectedVersion: offer.version });

@@ -7,7 +7,7 @@
     "endpoints": [
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:offer",
             "contractVersion": "^1.0.0",
             "bindings": {
@@ -18,7 +18,7 @@
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:getMyPriceAgreementCheckout",
             "contractVersion": "^1.0.0",
             "bindings": {
@@ -29,7 +29,7 @@
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:myOrder",
             "contractVersion": "^1.0.0",
             "bindings": {
@@ -40,7 +40,7 @@
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:entityCustomFields",
             "contractVersion": "^1.0.0",
             "bindings": {
@@ -51,7 +51,7 @@
         },
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:publicOfferImage",
             "contractVersion": "^1.0.0",
             "bindings": {

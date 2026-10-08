@@ -7,7 +7,7 @@
     "endpoints": [
         {
             "source": "commerce",
-            "sourceVersion": "^1.0.0",
+            "sourceVersion": ">=1.0.0 <3.0.0",
             "endpoint": "urn:commerce:mySale",
             "contractVersion": "^1.0.0",
             "bindings": {

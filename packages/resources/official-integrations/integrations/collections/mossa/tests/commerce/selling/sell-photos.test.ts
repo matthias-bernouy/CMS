@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { Bloc } from "../../../blocs/domains/commerce/selling/sell/Bloc";
 import defaultMarkup from "../../../blocs/domains/commerce/selling/sell/default.html" with { type: "text" };
+import { uploadPhotoWithJpegFallback } from "../../../blocs/domains/commerce/selling/sell/photoUpload";
 
 if (!customElements.get("mossa-sell")) {
     customElements.define("mossa-sell", Bloc);
@@ -57,5 +58,92 @@ describe("Mossa seller photo step", () => {
         upload.dispatchEvent(new Event("change"));
         expect(root.querySelectorAll(".photo-preview")).toHaveLength(5);
         expect(error.textContent).toBe("Maximum of 5 photos reached.");
+    });
+
+    test("retries an image rejected by Commerce after converting it to JPEG", async () => {
+        const original = new File(["heic"], "phone.heic", { type: "image/heic" });
+        const converted = new File(["jpeg"], "phone.jpg", { type: "image/jpeg" });
+        const uploads: File[] = [];
+        let conversions = 0;
+
+        await uploadPhotoWithJpegFallback(
+            original,
+            async (file) => {
+                uploads.push(file);
+                if (file === original) {
+                    throw Object.assign(new Error("file is not a valid supported image"), { status: 400 });
+                }
+            },
+            async (file) => {
+                conversions++;
+                expect(file).toBe(original);
+                return converted;
+            },
+        );
+
+        expect(uploads).toEqual([original, converted]);
+        expect(conversions).toBe(1);
+    });
+
+    test("keeps a successful original upload unchanged", async () => {
+        const original = new File(["jpeg"], "phone.jpg", { type: "image/jpeg" });
+        const uploads: File[] = [];
+        let conversions = 0;
+
+        await uploadPhotoWithJpegFallback(
+            original,
+            async (file) => {
+                uploads.push(file);
+            },
+            async () => {
+                conversions++;
+                return original;
+            },
+        );
+
+        expect(uploads).toEqual([original]);
+        expect(conversions).toBe(0);
+    });
+
+    test("does not convert photos for unrelated upload failures", async () => {
+        const original = new File(["heic"], "phone.heic", { type: "image/heic" });
+        const error = Object.assign(new Error("unauthorized"), { status: 401 });
+        let conversions = 0;
+
+        await expect(
+            uploadPhotoWithJpegFallback(
+                original,
+                async () => {
+                    throw error;
+                },
+                async () => {
+                    conversions++;
+                    return original;
+                },
+            ),
+        ).rejects.toBe(error);
+        expect(conversions).toBe(0);
+    });
+
+    test("does not retry again when the converted upload fails", async () => {
+        const original = new File(["heic"], "phone.heic", { type: "image/heic" });
+        const converted = new File(["jpeg"], "phone.jpg", { type: "image/jpeg" });
+        const retryError = Object.assign(new Error("file is not a valid supported image"), { status: 400 });
+        let uploads = 0;
+
+        await expect(
+            uploadPhotoWithJpegFallback(
+                original,
+                async (file) => {
+                    uploads++;
+                    if (file === original) {
+                        throw Object.assign(new Error("file is not a valid supported image"), { status: 400 });
+                    }
+                    throw retryError;
+                },
+                async () => converted,
+            ),
+        ).rejects.toBe(retryError);
+        expect(uploads).toBe(2);
     });
 });
