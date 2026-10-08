@@ -1,0 +1,15 @@
+{
+    "$schema": "./node_modules/knip/schema.json",
+    "include": ["dependencies", "devDependencies", "optionalPeerDependencies", "exports", "types"],
+    "ignoreFiles": ["**/dist/**"],
+    "ignoreIssues": {
+        "**/tests/**": ["exports", "types"],
+        "infra/**": ["exports", "types"],
+        "quality/**": ["exports", "types"]
+    },
+    "workspaces": {
+        "packages/features/cms-content": {
+            "ignoreDependencies": ["happy-dom"]
+        }
+    }
+}

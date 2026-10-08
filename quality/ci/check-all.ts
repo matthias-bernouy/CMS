@@ -28,6 +28,11 @@ export const ALL_CHECKS: CheckDefinition[] = [
         args: ["x", "tsc", "--project", "quality/architecture/tsconfig.json"],
     },
     {
+        id: "dead-code-tooling",
+        label: "Dead-code tooling typecheck",
+        args: ["x", "tsc", "--project", "quality/dead-code/tsconfig.json"],
+    },
+    {
         id: "ci-tooling",
         label: "CI tooling typecheck",
         args: ["x", "tsc", "--project", "quality/ci/tsconfig.json"],

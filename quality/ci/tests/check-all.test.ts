@@ -22,6 +22,7 @@ test("check:all declares every fast workspace diagnostic in a stable order", () 
         "style",
         "typecheck",
         "architecture-tooling",
+        "dead-code-tooling",
         "ci-tooling",
     ]);
     expect(ALL_CHECKS.map(({ args }) => args)).toEqual([
@@ -31,6 +32,7 @@ test("check:all declares every fast workspace diagnostic in a stable order", () 
         ["run", "check:style"],
         ["run", "typecheck"],
         ["x", "tsc", "--project", "quality/architecture/tsconfig.json"],
+        ["x", "tsc", "--project", "quality/dead-code/tsconfig.json"],
         ["x", "tsc", "--project", "quality/ci/tsconfig.json"],
     ]);
 });
