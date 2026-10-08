@@ -2,7 +2,7 @@
     "name": "@bernouy/cms-server",
     "version": "0.1.0",
     "description": "Production composition root — wires infrastructure and mounts CMS Core, Control and Delivery on dedicated Bun runners.",
-    "license": "UNLICENSED",
+    "license": "MIT",
     "private": true,
     "type": "module",
     "main": "./src/index.ts",

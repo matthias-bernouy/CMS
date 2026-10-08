@@ -2,7 +2,7 @@
     "name": "@bernouy/blob-store",
     "version": "0.1.0",
     "description": "Generic opaque stream-first blob storage contracts and memory, local-filesystem, and S3-compatible adapters.",
-    "license": "UNLICENSED",
+    "license": "MIT",
     "type": "module",
     "main": "./src/exports/index.ts",
     "exports": {

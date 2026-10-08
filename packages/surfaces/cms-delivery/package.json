@@ -2,7 +2,7 @@
     "name": "@bernouy/cms-delivery",
     "version": "0.1.0",
     "description": "Public-facing rendering layer of the CMS — `DeliveryCms` mounts page resolution, bloc bundles, theme CSS, the component runtime, and the favicon under a runner. Reads from a `DeliveryRepository` (the read-only subset of `CmsRepository`). Pure on-demand rendering — no Playwright, no build-time pre-rendering.",
-    "license": "UNLICENSED",
+    "license": "MIT",
     "type": "module",
     "main": "./src/index.ts",
     "exports": {

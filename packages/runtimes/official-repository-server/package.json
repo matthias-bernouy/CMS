@@ -1,8 +1,9 @@
 {
     "name": "@bernouy/official-repository-server",
     "version": "0.1.0",
+    "private": true,
     "description": "Production composition root for the official immutable Ulvia repository.",
-    "license": "UNLICENSED",
+    "license": "MIT",
     "type": "module",
     "scripts": {
         "start": "bun run src/index.ts"

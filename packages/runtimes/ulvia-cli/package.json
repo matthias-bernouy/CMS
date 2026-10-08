@@ -2,7 +2,7 @@
     "name": "@bernouy/ulvia-cli",
     "version": "0.1.0",
     "description": "Local Ulvia CMS development runtime.",
-    "license": "UNLICENSED",
+    "license": "MIT",
     "type": "module",
     "bin": {
         "ulvia": "./src/index.ts"

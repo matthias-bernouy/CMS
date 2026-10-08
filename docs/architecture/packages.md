@@ -4,6 +4,20 @@ This inventory follows the package manifests under `packages/`. Public APIs are
 the exact exports declared in each `package.json`; package-local `AGENTS.md`
 files explain implementation invariants.
 
+## Publication Policy
+
+All workspace packages use the repository MIT license. Foundation, feature, and
+surface packages are publishable libraries unless their manifest explicitly sets
+`"private": true`. `@bernouy/ulvia-cli` is also publishable because it is the
+distributed developer command-line application.
+
+Server composition roots are deployment units rather than reusable packages:
+`@bernouy/cms-server` and `@bernouy/official-repository-server` are private.
+`packages/official-repository` has no package manifest; its authored artifacts
+are admitted and served by the official repository runtime. A package being
+publishable describes its intended boundary, not evidence that a release has
+already been published to a registry.
+
 ## Foundation
 
 | Package | Responsibility |

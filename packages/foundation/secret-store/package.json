@@ -2,7 +2,7 @@
     "name": "@bernouy/secret-store",
     "version": "0.1.0",
     "description": "Generic secret storage and reference resolution with in-memory and envelope-encrypted Mongo implementations. The Mongo adapter lives under the `./mongo` subpath.",
-    "license": "UNLICENSED",
+    "license": "MIT",
     "type": "module",
     "main": "./src/exports/index.ts",
     "exports": {

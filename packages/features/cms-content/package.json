@@ -2,7 +2,7 @@
     "name": "@bernouy/cms-content",
     "version": "0.1.0",
     "description": "CMS-owned pages, blocs, settings, bindings, persistence, and rendering.",
-    "license": "UNLICENSED",
+    "license": "MIT",
     "type": "module",
     "main": "./src/exports/index.ts",
     "exports": {

@@ -2,7 +2,7 @@
     "name": "@bernouy/cms-repository",
     "version": "0.1.0",
     "description": "Versioned CMS contracts, providers, authored collections, collection build tooling, and installation models.",
-    "license": "UNLICENSED",
+    "license": "MIT",
     "type": "module",
     "main": "./src/exports/index.ts",
     "exports": {

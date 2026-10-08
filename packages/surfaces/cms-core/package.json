@@ -2,7 +2,7 @@
     "name": "@bernouy/cms-core",
     "version": "0.1.0",
     "description": "Provider-facing surface for the official Ulvia CMS contracts.",
-    "license": "UNLICENSED",
+    "license": "MIT",
     "type": "module",
     "exports": {
         ".": "./src/index.ts",
