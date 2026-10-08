@@ -6,10 +6,5 @@
         "**/tests/**": ["exports", "types"],
         "infra/**": ["exports", "types"],
         "quality/**": ["exports", "types"]
-    },
-    "workspaces": {
-        "packages/features/cms-content": {
-            "ignoreDependencies": ["happy-dom"]
-        }
     }
 }

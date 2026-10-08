@@ -22,6 +22,7 @@ export const ALL_CHECKS: CheckDefinition[] = [
     { id: "repository-shape", label: "Repository shape guidance", args: ["run", "check:repository-shape"] },
     { id: "style", label: "Code style", args: ["run", "check:style"] },
     { id: "typecheck", label: "Workspace typecheck", args: ["run", "typecheck"] },
+    { id: "dead-code", label: "Dead code", args: ["run", "check:dead-code"] },
     {
         id: "architecture-tooling",
         label: "Architecture tooling typecheck",

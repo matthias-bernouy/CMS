@@ -54,7 +54,7 @@ automatically.
 
 | Command | Purpose |
 | --- | --- |
-| `bun run check:all` | Architecture, UI contracts, repository shape, style, workspace types and tooling types. |
+| `bun run check:all` | Architecture, UI contracts, repository shape, style, workspace types, dead code and tooling types. |
 | `bun run check:dead-code` | Report unused declarations, exports, exported types and package dependencies. |
 | `bun run check:style` | Read-only Biome check. |
 | `bun run format` | Apply Biome formatting and configured safe/unsafe fixes; inspect the diff. |
@@ -68,10 +68,9 @@ test suite or browser scenarios. Run focused tests for behavior changes and the
 build when generated browser assets are affected. Browser/network integration
 tests require an environment that permits Chromium and local listeners.
 
-`check:dead-code` is separate from `check:all`. It exits with a failure while
-findings remain, so use its report to review and remove findings deliberately
-before making it a required aggregate check. Public exports can be intentional;
-confirm their package contract before removing them.
+`check:dead-code` exits with a failure when it finds unused declarations,
+exports, exported types or package dependencies. Public exports can be
+intentional; confirm their package contract before removing them.
 
 For code changes, capture `check:all` before and after the work in the same
 workspace. Address introduced errors and inspect new warnings in scope.
