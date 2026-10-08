@@ -483,12 +483,12 @@
                 "total": 29
             },
             "functions": {
-                "covered": 65,
-                "total": 212
+                "covered": 114,
+                "total": 237
             },
             "lines": {
-                "covered": 568,
-                "total": 1941
+                "covered": 759,
+                "total": 1963
             }
         },
         "@bernouy/cms-delivery": {
@@ -568,7 +568,13 @@
         "@bernouy/cms-files": {
             "path": "packages/features/cms-files",
             "coveredSourceFiles": [
+                "packages/features/cms-files/src/core/FileAccess.ts",
+                "packages/features/cms-files/src/core/FileCatalog.ts",
+                "packages/features/cms-files/src/core/NamespaceAuthority.ts",
+                "packages/features/cms-files/src/core/UploadManager.ts",
                 "packages/features/cms-files/src/core/credentials.ts",
+                "packages/features/cms-files/src/core/streams.ts",
+                "packages/features/cms-files/src/core/validation.ts",
                 "packages/features/cms-files/src/default-implementation/InMemoryCmsFilesStore.ts",
                 "packages/features/cms-files/src/exports/index.ts",
                 "packages/features/cms-files/src/exports/memory.ts",
@@ -581,16 +587,16 @@
                 "packages/features/cms-files/src/interfaces.ts"
             ],
             "files": {
-                "covered": 6,
-                "total": 9
+                "covered": 12,
+                "total": 15
             },
             "functions": {
-                "covered": 82,
-                "total": 109
+                "covered": 143,
+                "total": 158
             },
             "lines": {
-                "covered": 546,
-                "total": 841
+                "covered": 792,
+                "total": 902
             }
         },
         "@bernouy/cms-gateway": {

@@ -1,4 +1,4 @@
-import type { NamespaceKeyRecord, NamespacePermission } from "cms-files/interfaces";
+import type { FileRecord, NamespaceKeyRecord, NamespacePermission } from "cms-files/interfaces";
 
 export function newCredential(prefix: string): { id: string; value: string } {
     const id = prefix + "_" + crypto.randomUUID();
@@ -54,8 +54,76 @@ function randomBase64Url(length: number): string {
     return bytesToBase64Url(bytes);
 }
 
-export function bytesToBase64Url(bytes: Uint8Array): string {
+function bytesToBase64Url(bytes: Uint8Array): string {
     return Buffer.from(bytes).toString("base64url");
+}
+
+export async function createFileAccess(file: FileRecord, expiresAt: Date, signingKey: Uint8Array): Promise<string> {
+    const payload = bytesToBase64Url(
+        new TextEncoder().encode(
+            JSON.stringify({ fileId: file.id, generation: file.generation, exp: expiresAt.getTime() }),
+        ),
+    );
+    return payload + "." + (await sign(payload, signingKey));
+}
+
+export async function validFileAccess(
+    file: FileRecord,
+    access: string | undefined,
+    signingKey: Uint8Array,
+    now: Date,
+): Promise<boolean> {
+    if (!access || access.length > 2048) {
+        return false;
+    }
+    const separator = access.lastIndexOf(".");
+    if (separator < 1) {
+        return false;
+    }
+    const payload = access.slice(0, separator);
+    if (!(await validSignature(payload, access.slice(separator + 1), signingKey))) {
+        return false;
+    }
+    try {
+        const value = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as Record<string, unknown>;
+        return (
+            value.fileId === file.id &&
+            value.generation === file.generation &&
+            typeof value.exp === "number" &&
+            value.exp >= now.getTime()
+        );
+    } catch {
+        return false;
+    }
+}
+
+async function sign(payload: string, signingKey: Uint8Array): Promise<string> {
+    const key = await importHmacKey(signingKey, ["sign"]);
+    return bytesToBase64Url(new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload))));
+}
+
+async function validSignature(payload: string, signature: string, signingKey: Uint8Array): Promise<boolean> {
+    try {
+        const key = await importHmacKey(signingKey, ["verify"]);
+        return crypto.subtle.verify(
+            "HMAC",
+            key,
+            new Uint8Array(Buffer.from(signature, "base64url")),
+            new TextEncoder().encode(payload),
+        );
+    } catch {
+        return false;
+    }
+}
+
+function importHmacKey(signingKey: Uint8Array, usages: KeyUsage[]): Promise<CryptoKey> {
+    return crypto.subtle.importKey(
+        "raw",
+        new Uint8Array(signingKey).buffer as ArrayBuffer,
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        usages,
+    );
 }
 
 function constantTimeEqual(left: string, right: string): boolean {
