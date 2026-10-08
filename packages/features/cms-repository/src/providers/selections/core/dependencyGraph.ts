@@ -3,6 +3,8 @@ import type { ContractSelectionDependency } from "../interfaces/ContractSelectio
 import { ContractSelectionValidationError } from "./errors";
 import type { ResolvedSelection } from "./resolveSelections";
 
+const MAX_SELECTION_DEPENDENCY_DEPTH = 8;
+
 export function selectionDependencies(
     resolved: ReadonlyMap<string, ResolvedSelection>,
     maximum: number,
@@ -93,5 +95,42 @@ export function validateSelectionGraph(
     };
     for (const contractId of resolved.keys()) {
         walk(contractId, []);
+    }
+    assertMaximumDependencyDepth(resolved, edges);
+}
+
+function assertMaximumDependencyDepth(
+    resolved: ReadonlyMap<string, ResolvedSelection>,
+    edges: ReadonlyMap<string, readonly ContractSelectionDependency[]>,
+): void {
+    const paths = new Map<string, readonly string[]>();
+    const longestPathFrom = (contractId: string): readonly string[] => {
+        const cached = paths.get(contractId);
+        if (cached) {
+            return cached;
+        }
+        let longest: readonly string[] = [contractId];
+        for (const dependency of edges.get(contractId) ?? []) {
+            if (!resolved.has(dependency.contractId)) {
+                continue;
+            }
+            const candidate = [contractId, ...longestPathFrom(dependency.contractId)];
+            if (candidate.length > longest.length) {
+                longest = candidate;
+            }
+        }
+        paths.set(contractId, longest);
+        return longest;
+    };
+    for (const contractId of resolved.keys()) {
+        const path = longestPathFrom(contractId);
+        if (path.length > MAX_SELECTION_DEPENDENCY_DEPTH) {
+            throw new ContractSelectionValidationError(
+                "dependency_depth_exceeded",
+                `selection dependency path exceeds ${MAX_SELECTION_DEPENDENCY_DEPTH} contracts`,
+                "$",
+                path,
+            );
+        }
     }
 }

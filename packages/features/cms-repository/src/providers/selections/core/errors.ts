@@ -14,6 +14,7 @@ export type ContractSelectionValidationCode =
     | "missing_dependency"
     | "incompatible_dependency"
     | "dependency_cycle"
+    | "dependency_depth_exceeded"
     | "revision_conflict"
     | "stale_dependencies";
 

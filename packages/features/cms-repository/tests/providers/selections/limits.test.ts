@@ -5,10 +5,14 @@ import {
     DEFAULT_PROVIDER_INSTALLATION_LIMITS,
     parseProviderInstallation,
 } from "@bernouy/cms-repository/providers/installations";
-import { InMemoryContractSelectionStore, planContractSelections } from "@bernouy/cms-repository/providers/selections";
+import {
+    InMemoryContractSelectionStore,
+    planContractSelections,
+    type ContractSelection,
+} from "@bernouy/cms-repository/providers/selections";
 import { installationDocument } from "../installations/fixtures";
-import { contractDocument, implementation, manifestDocument, releaseCatalogue } from "../support/fixtures";
-import { graphFixture, siteId } from "./fixtures";
+import { contractDocument, implementation, manifestDocument, releaseCatalogue, requirement } from "../support/fixtures";
+import { graphFixture, installationFor, siteId } from "./fixtures";
 
 describe("selection installation limits", () => {
     test("propagates configured installation limits through parsing, manifest validation and persistence", async () => {
@@ -70,3 +74,51 @@ describe("selection installation limits", () => {
         expect((await pending).structurallyValid).toBe(true);
     });
 });
+
+describe("selection dependency depth", () => {
+    test("accepts a dependency path containing eight contracts", async () => {
+        const fixture = await linearDependencyGraph(8);
+        await expect(planContractSelections(siteId, fixture.selections, fixture.context)).resolves.toMatchObject({
+            structurallyValid: true,
+        });
+    });
+
+    test("rejects a dependency path containing nine contracts", async () => {
+        const fixture = await linearDependencyGraph(9);
+        await expect(planContractSelections(siteId, fixture.selections, fixture.context)).rejects.toMatchObject({
+            code: "dependency_depth_exceeded",
+            dependencyPath: fixture.contractIds,
+        });
+    });
+});
+
+async function linearDependencyGraph(length: number) {
+    const contractIds = Array.from({ length }, (_, index) => `node-${String.fromCharCode(97 + index)}`);
+    const releases = await releaseCatalogue(...contractIds.map((id) => contractDocument(id, "run")));
+    const manifests = new InMemoryProviderManifestCatalogue(releases);
+    const selections: ContractSelection[] = [];
+    const installations = [];
+    for (const [index, contractId] of contractIds.entries()) {
+        const record = (await releases.get(contractId, "1.0.0"))!.admission;
+        const target = contractIds[index + 1];
+        const installation = await installationFor(
+            releases,
+            manifests,
+            [implementation(contractId, "1.0.0", record.digest, target ? [requirement(target, "run")] : [])],
+            `ulvia.${contractId}`,
+        );
+        installations.push(installation);
+        selections.push({
+            siteId,
+            contractId,
+            version: "1.0.0",
+            digest: record.digest,
+            installationId: installation.id,
+        });
+    }
+    return {
+        contractIds,
+        selections,
+        context: { releases, manifests, installations },
+    };
+}
