@@ -15,6 +15,8 @@ const SOURCE = new RegExp(
     "u",
 );
 const FILE_RESOURCE = /^\/\.cms\/call\/ulvia\.cms\.files\/files\/[^/?#]+\/[^/?#]+(?:\?access=[^#]+)?$/u;
+const ARIA_CURRENT_VALUES = new Set(["page", "step", "location", "date", "time", "true", "false"]);
+const ARIA_LIVE_VALUES = new Set(["off", "polite", "assertive"]);
 
 export function validatePageHtml(
     html: string,
@@ -109,6 +111,18 @@ function validateAttributes(
         if (name === "type" && tag === "input" && !PAGE_INPUT_TYPES.has(value)) {
             invalid("Page input type is not controlled", path);
         }
+        if (name === "aria-label" && !value.trim()) {
+            invalid("Page accessible labels must not be empty", path);
+        }
+        if (name === "aria-current" && !ARIA_CURRENT_VALUES.has(value)) {
+            invalid("Page aria-current value is not controlled", path);
+        }
+        if (name === "aria-live" && !ARIA_LIVE_VALUES.has(value)) {
+            invalid("Page aria-live value is not controlled", path);
+        }
+        if (name === "role" && tag === "input" && value !== "switch") {
+            invalid('Page input role must be "switch" or omitted', path);
+        }
         if (name === "name" && !FORM_NAME.test(value)) {
             invalid("Page form control name is invalid", path);
         }
@@ -144,6 +158,9 @@ function validateAttributes(
         if (name === "cms-form-empty" && value !== "null" && value !== "omit") {
             invalid("Page form empty behavior is not controlled", path);
         }
+    }
+    if (tag === "input" && attributes.role === "switch" && attributes.type !== "checkbox") {
+        invalid('Page role="switch" requires input type="checkbox"', path);
     }
     validateStablePageLink(tag, attributes, path);
     validateResourceLink(tag, attributes, surface, path);

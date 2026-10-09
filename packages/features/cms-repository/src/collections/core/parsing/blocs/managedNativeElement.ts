@@ -27,8 +27,8 @@ export const COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS = [
 
 const tags = new Set<string>(COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS);
 const NATIVE_ATTRIBUTES: Readonly<Record<string, ReadonlySet<string>>> = {
-    a: new Set(["href", "target", "rel", "aria-current"]),
-    button: new Set(["type", "disabled", "name", "value"]),
+    a: new Set(["href", "target", "rel", "aria-current", "aria-label"]),
+    button: new Set(["type", "disabled", "name", "value", "aria-label"]),
     img: new Set(["src", "alt", "role", "aria-hidden", "loading", "fetchpriority", "width", "height", "decoding"]),
     input: new Set([
         "type",
@@ -47,11 +47,22 @@ const NATIVE_ATTRIBUTES: Readonly<Record<string, ReadonlySet<string>>> = {
         "accept",
         "inputmode",
         "role",
+        "aria-label",
     ]),
-    output: new Set(["name", "for", "aria-live"]),
-    select: new Set(["name", "multiple", "size", "required", "disabled"]),
+    output: new Set(["name", "for", "aria-live", "aria-label"]),
+    select: new Set(["name", "multiple", "size", "required", "disabled", "aria-label"]),
     svg: new Set(["role", "aria-hidden", "aria-label"]),
-    textarea: new Set(["name", "rows", "required", "readonly", "disabled", "autocomplete", "placeholder", "maxlength"]),
+    textarea: new Set([
+        "name",
+        "rows",
+        "required",
+        "readonly",
+        "disabled",
+        "autocomplete",
+        "placeholder",
+        "maxlength",
+        "aria-label",
+    ]),
 };
 
 function parseTag(value: unknown, path: string): CollectionManagedNativeElementTag {

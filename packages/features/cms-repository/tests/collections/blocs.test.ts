@@ -46,6 +46,26 @@ describe("collection bloc admission", () => {
         expect(() => check([component({ nativeElement: { accepts: [] } })])).toThrow("at least one");
         expect(() => check([component({ nativeElement: { accepts: ["a", "a"] } })])).toThrow("duplicate");
         expect(() => check([component({ nativeElement: { accepts: ["div"] } })])).toThrow("must be one of");
+        expect(() =>
+            check([
+                component({
+                    nativeElement: { accepts: ["button"] },
+                    shadowdom: "<slot></slot>",
+                    slots: {},
+                    defaultContent: '<button type="button"></button>',
+                }),
+            ]),
+        ).toThrow("requires text content or a non-empty aria-label");
+        expect(() =>
+            check([
+                component({
+                    nativeElement: { accepts: ["button"] },
+                    shadowdom: "<slot></slot>",
+                    slots: {},
+                    defaultContent: '<button type="button" aria-label="Save"></button>',
+                }),
+            ]),
+        ).not.toThrow();
         const checkbox = {
             accepts: ["input"],
             attributes: { type: { required: true, values: ["checkbox"] } },

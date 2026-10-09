@@ -37,6 +37,12 @@ export function validateManagedNativeDefinition(bloc: CollectionBloc, markup: Bl
     if (attributeIssue) {
         invalid(`defaultContent ${attributeIssue}`, `${path}.defaultContent`);
     }
+    if (isElement(roots[0]!)) {
+        const semanticIssue = managedNativeSemanticIssue(roots[0]!);
+        if (semanticIssue) {
+            invalid(`defaultContent ${semanticIssue}`, `${path}.defaultContent`);
+        }
+    }
 }
 
 export function validateManagedNativeHosts(
@@ -74,7 +80,45 @@ function hasOnlyManagedChild(
         !siblingText &&
         managedNativeAttributesIssue(bloc.nativeElement!, children[0]!.attribs, children[0]!.name, {
             allowUnknown: !strictAttributes,
-        }) === null
+        }) === null &&
+        managedNativeSemanticIssue(children[0]!) === null
+    );
+}
+
+function managedNativeSemanticIssue(element: ReturnType<typeof elements>[number]): string | null {
+    const label = element.attribs["aria-label"];
+    if (label !== undefined && !label.trim()) {
+        return "native aria-label must not be empty";
+    }
+    const current = element.attribs["aria-current"];
+    if (current !== undefined && !["page", "step", "location", "date", "time", "true", "false"].includes(current)) {
+        return "native aria-current value is not controlled";
+    }
+    const live = element.attribs["aria-live"];
+    if (live !== undefined && !["off", "polite", "assertive"].includes(live)) {
+        return "native aria-live value is not controlled";
+    }
+    const role = element.attribs.role;
+    if (element.name === "input" && role !== undefined && role !== "switch") {
+        return 'native input role must be "switch" or omitted';
+    }
+    if (element.name === "input" && role === "switch" && element.attribs.type !== "checkbox") {
+        return 'native role="switch" requires input type="checkbox"';
+    }
+    if (
+        (element.name === "a" || element.name === "button") &&
+        !element.attribs["aria-label"]?.trim() &&
+        !hasAuthoredText(element)
+    ) {
+        return `native <${element.name}> requires text content or a non-empty aria-label`;
+    }
+    return null;
+}
+
+function hasAuthoredText(element: ReturnType<typeof elements>[number]): boolean {
+    return element.children.some(
+        (child) =>
+            (child.type === "text" && child.data.trim().length > 0) || (isElement(child) && hasAuthoredText(child)),
     );
 }
 

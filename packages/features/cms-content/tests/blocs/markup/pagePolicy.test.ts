@@ -27,9 +27,16 @@ test("Page-owned rich text rejects arbitrary native attributes", async () => {
 
 test("managed native children use the closed native attribute policy", async () => {
     await validate('<fixture-action><button type="button">Save</button></fixture-action>');
+    await validate('<fixture-action><button type="button" aria-label="Save"></button></fixture-action>');
     for (const attribute of ['type="wat"', 'style="position:fixed"', 'mystery="value"']) {
         await expect(validate(`<fixture-action><button ${attribute}>Save</button></fixture-action>`)).rejects.toThrow();
     }
+    await expect(validate('<fixture-action><button type="button"></button></fixture-action>')).rejects.toThrow(
+        "requires text content or a non-empty aria-label",
+    );
+    await expect(
+        validate('<fixture-action><a aria-current="selected">Current page</a></fixture-action>'),
+    ).rejects.toThrow("aria-current");
 });
 
 test("Page documents reject comments", () => {

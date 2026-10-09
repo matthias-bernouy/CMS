@@ -16,6 +16,7 @@ export type NativePolicyElement = {
     readonly tagName: string;
     readonly children: ArrayLike<NativePolicyElement>;
     readonly childNodes: ArrayLike<{ readonly nodeType: number; readonly textContent: string | null }>;
+    readonly textContent: string | null;
     getAttribute(name: string): string | null;
     getAttributeNames(): string[];
 };
@@ -84,7 +85,13 @@ export function nativeElementAttributesIssue(
         }
         return attributes.src || allowIncompleteMedia ? null : "native image source must reference a CMS media item";
     }
-    return tag === "svg" ? accessibleSvgIssue(attributes) : null;
+    if (tag === "svg") {
+        return accessibleSvgIssue(attributes);
+    }
+    if ((tag === "a" || tag === "button") && !element.textContent?.trim() && !attributes["aria-label"]?.trim()) {
+        return `native <${tag}> requires text content or a non-empty aria-label`;
+    }
+    return null;
 }
 
 function nativeAttributesIssue(

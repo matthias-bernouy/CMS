@@ -52,12 +52,25 @@ export function validateNativeSiteBlocNode(
     if (valueIssue) {
         throw new ContentValidationError(field, valueIssue);
     }
+    if (
+        (node.tag === "a" || node.tag === "button") &&
+        !node.attributes["aria-label"]?.trim() &&
+        !hasAuthoredText(node)
+    ) {
+        throw new ContentValidationError(field, `native <${node.tag}> requires text content or a non-empty aria-label`);
+    }
     if (node.tag === "form") {
         const formIssue = nativeFormBindingIssue(node.attributes);
         if (formIssue) {
             throw new ContentValidationError(field, formIssue);
         }
     }
+}
+
+function hasAuthoredText(node: Extract<SiteBlocNode, { kind: "bloc" }>): boolean {
+    return node.children.some((child) =>
+        child.kind === "text" ? child.value.trim().length > 0 : child.kind === "bloc" && hasAuthoredText(child),
+    );
 }
 
 export function validateSiteBlocBindingAttributes(node: Extract<SiteBlocNode, { kind: "bloc" }>, field: string): void {

@@ -3,6 +3,28 @@ import { isSafeNavigationalUrl } from "cms-content/blocs/core/markup/security/sa
 const DYNAMIC_TOKEN = /(?:\{\{|#\{|@\{)/;
 const CONTROL_CHARACTER = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;
 const POSITIVE_INTEGER = /^[1-9]\d*$/;
+const INPUT_TYPES = new Set([
+    "checkbox",
+    "color",
+    "date",
+    "datetime-local",
+    "email",
+    "file",
+    "hidden",
+    "month",
+    "number",
+    "password",
+    "radio",
+    "range",
+    "search",
+    "tel",
+    "text",
+    "time",
+    "url",
+    "week",
+]);
+const ARIA_CURRENT_VALUES = new Set(["page", "step", "location", "date", "time", "true", "false"]);
+const ARIA_LIVE_VALUES = new Set(["off", "polite", "assertive"]);
 
 const SAME_TAB_REL = new Set(["", "nofollow", "sponsored", "ugc"]);
 const NEW_TAB_REL = new Set([
@@ -31,6 +53,12 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
     if (normalizedAttribute === "aria-label") {
         return value.trim() ? null : `attribute "${attribute}" must not be empty`;
     }
+    if (normalizedAttribute === "aria-current") {
+        return ARIA_CURRENT_VALUES.has(value) ? null : "native aria-current value is not controlled";
+    }
+    if (normalizedAttribute === "aria-live") {
+        return ARIA_LIVE_VALUES.has(value) ? null : "native aria-live value is not controlled";
+    }
     if (normalizedTag === "a" && normalizedAttribute === "href") {
         return collectionAssetUrl || isSafeNavigationalUrl(value)
             ? null
@@ -49,6 +77,12 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
     }
     if (normalizedTag === "button" && normalizedAttribute === "disabled") {
         return value === "" ? null : "native disabled is a boolean attribute";
+    }
+    if (normalizedTag === "input" && normalizedAttribute === "type") {
+        return INPUT_TYPES.has(value) ? null : "native input type is not controlled";
+    }
+    if (normalizedTag === "input" && normalizedAttribute === "role") {
+        return value === "switch" ? null : 'native input role must be "switch" or omitted';
     }
     if (normalizedTag === "form" && normalizedAttribute === "autocomplete") {
         return value === "on" || value === "off" ? null : 'native form autocomplete must be "on" or "off"';
@@ -107,6 +141,13 @@ export function nativeAttributeSetIssue(tag: string, attributes: Readonly<Record
         ) {
             return 'decorative native SVGs require aria-hidden="true" and no accessible label';
         }
+    }
+    if (
+        normalizedTag === "input" &&
+        normalizedAttributes.role === "switch" &&
+        normalizedAttributes.type !== "checkbox"
+    ) {
+        return 'native role="switch" requires input type="checkbox"';
     }
     return null;
 }

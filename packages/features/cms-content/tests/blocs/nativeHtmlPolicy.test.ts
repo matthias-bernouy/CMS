@@ -7,6 +7,7 @@ import {
     validateSiteBlocSnapshot,
 } from "@bernouy/cms-content";
 import { siteBlocSnapshot } from "./siteBlocFixture";
+import { nativeAttributeSetIssue } from "cms-content/blocs/core/validation/nativeAttributeValues";
 
 describe("platform native HTML policy", () => {
     test("separates native integration roots, authorable tags and safe site structure", () => {
@@ -52,7 +53,14 @@ describe("platform native HTML policy", () => {
                                                 kind: "bloc",
                                                 tag: "strong",
                                                 attributes: {},
-                                                children: [{ kind: "bloc", tag: "em", attributes: {}, children: [] }],
+                                                children: [
+                                                    {
+                                                        kind: "bloc",
+                                                        tag: "em",
+                                                        attributes: {},
+                                                        children: [{ kind: "text", value: "Home" }],
+                                                    },
+                                                ],
                                             },
                                         ],
                                     },
@@ -118,6 +126,15 @@ describe("platform native HTML policy", () => {
         [
             {
                 kind: "bloc",
+                tag: "a",
+                attributes: { "aria-current": "selected" },
+                children: [{ kind: "text", value: "Current" }],
+            },
+            "aria-current",
+        ],
+        [
+            {
+                kind: "bloc",
                 tag: "img",
                 attributes: { src: "/.cms/call/ulvia.cms.files/files/photo/generation" },
                 children: [],
@@ -162,12 +179,25 @@ describe("platform native HTML policy", () => {
                 kind: "bloc",
                 tag: "button",
                 attributes: {},
-                children: [{ kind: "bloc", tag: "strong", attributes: {}, children: [] }],
+                children: [
+                    {
+                        kind: "bloc",
+                        tag: "strong",
+                        attributes: {},
+                        children: [{ kind: "text", value: "Label" }],
+                    },
+                ],
             },
             "inside rich text",
         ],
     ] as const)("rejects uncontrolled native attribute values", (node, message) => {
         expect(() => validateSiteBlocSnapshot(siteBlocSnapshot({ structure: [node] }))).toThrow(new RegExp(message));
+    });
+
+    test("validates finite ARIA states and native switch semantics", () => {
+        expect(nativeAttributeSetIssue("output", { "aria-live": "urgent" })).toContain("aria-live");
+        expect(nativeAttributeSetIssue("input", { type: "radio", role: "switch" })).toContain('role="switch"');
+        expect(nativeAttributeSetIssue("input", { type: "checkbox", role: "switch" })).toBeNull();
     });
 
     test("accepts the controlled informative and decorative media states", () => {
@@ -226,7 +256,7 @@ describe("platform native HTML policy", () => {
                             kind: "bloc",
                             tag: "a",
                             attributes: { href: "{{ cms.asset.atlas.guide.pdf }}" },
-                            children: [],
+                            children: [{ kind: "text", value: "Guide" }],
                         },
                         {
                             kind: "bloc",
