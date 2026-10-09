@@ -109,6 +109,13 @@ paragraphs, images and SVGs use typed platform policies; arbitrary `class`,
 author settings. Rich text remains Page-owned HTML in a declared slot rather
 than an HTML string setting.
 
+An editorial image is therefore an image Bloc containing its managed `<img>`,
+not a raw `<img>` accepted by a parent slot. The child owns the file URL,
+alternative text and native loading attributes. The host owns only declared
+presentation settings such as ratio and fit. `media-picker` controls remain
+valid for non-editorial configuration values, but slots accept Blocs or bounded
+text profiles only.
+
 ## Page Boundary
 
 The CMS supplies no implicit Page wrapper or native editorial vocabulary. An
@@ -123,6 +130,12 @@ accepts components, not compositions. An inactive or uninstalled Bloc is not
 valid for a new save or publication; migrate dependent Pages before removing
 it. Native markup remains available to Bloc authors inside fixed Light DOM and
 Shadow DOM, subject to the corresponding collection safety rules.
+
+The Page boundary is closed for attributes as well as elements. Bloc hosts may
+carry only declared settings and platform-owned placement or binding
+attributes. Managed native children use a per-tag allowlist and finite semantic
+values. Persisted links and buttons require an accessible name; image and SVG
+states, ARIA current/live values and switch roles are validated before storage.
 
 ## Build And Validation
 

@@ -270,6 +270,66 @@ test("rejects imported Blocs that do not support a Page surface", async () => {
     await expect(store.install("site", consumer.digest, 1)).rejects.toThrow("cannot use");
 });
 
+test("revalidates imported Bloc Page contracts against the installed catalogue", async () => {
+    const foundationBase = release("foundation", "1.0.0", "foundation-card");
+    const foundationSource = {
+        ...foundationBase,
+        blocs: [
+            {
+                kind: "component",
+                id: "foundation-card",
+                label: "bloc.welcome.label",
+                shadowdom: '<section><slot name="body"></slot></section>',
+                uses: [],
+                requires: [],
+                slots: { body: { accepts: [{ kind: "rich-text", profile: "prose" }] } },
+            },
+        ],
+        exports: { blocs: ["foundation-card"], themeTokens: [] },
+    };
+    const consumerBase = release("consumer", "1.0.0", "consumer-shell");
+    const dependency = {
+        collectionId: "foundation",
+        publisherId: "atlas.official",
+        versionRange: "^1.0.0",
+        imports: { blocs: [{ id: "foundation-card", generation: 1 }], themeTokens: [] },
+    };
+    const consumer = (html: string, version: string) => ({
+        ...consumerBase,
+        version,
+        translations: { en: { ...consumerBase.translations.en, "page.home.name": "Home" } },
+        dependencies: [dependency],
+        pages: [
+            {
+                id: "home",
+                surface: "delivery",
+                defaultPath: "/",
+                name: "page.home.name",
+                document: { html },
+            },
+        ],
+    });
+
+    for (const [html, message] of [
+        ['<foundation-card><p slot="ghost"></p></foundation-card>', "slot target"],
+        ['<foundation-card mystery="value"><p slot="body"></p></foundation-card>', "attribute"],
+    ] as const) {
+        const store = new CollectionStore(new MemoryCollectionStorage());
+        const foundation = await store.importRelease(foundationSource);
+        const imported = await store.importRelease(consumer(html, "1.0.0"));
+        await store.install("site", foundation.digest, 0);
+        await expect(store.install("site", imported.digest, 1)).rejects.toThrow(message);
+    }
+
+    const store = new CollectionStore(new MemoryCollectionStorage());
+    const foundation = await store.importRelease(foundationSource);
+    const valid = await store.importRelease(
+        consumer('<foundation-card><p slot="body"></p></foundation-card>', "1.0.1"),
+    );
+    await store.install("site", foundation.digest, 0);
+    await expect(store.install("site", valid.digest, 1)).resolves.toMatchObject({ revision: 2 });
+});
+
 test("rejects imports that the dependency does not export", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const foundation = {

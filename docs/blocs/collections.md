@@ -133,7 +133,7 @@ a Bloc admitted with the collection or imported explicitly.
 
 Editable native HTML is admitted only below a Bloc contract:
 
-- `plain-text`, `rich-text` and `media` accept their bounded native profiles;
+- `plain-text` and `rich-text` accept their bounded native profiles;
 - `component` accepts the declared component tag;
 - `any-component` accepts components, never compositions;
 - `min` and `max` apply to direct assigned children.
@@ -180,12 +180,21 @@ a concrete accepted child. A composition may place its own editable slot inside
 that child, for example `<example-heading><h2><slot
 name="heading"></slot></h2></example-heading>`.
 
-Slot acceptance distinguishes components, media and editorial content.
+Slot acceptance distinguishes components from editorial content.
 `plain-text` describes an unformatted page-owned text region. `rich-text`
 requires the closed `inline` or `prose` profile and is intended to drive a
 future bounded rich-text editor. In both cases the stored value remains real
 page HTML assigned to the slot; it is not collection configuration, an encoded
 HTML attribute or an EditorJS document.
+
+Media content is always represented by a component Bloc, never by a raw native
+element admitted directly by a slot. For example, an image Bloc declares
+`nativeElement.accepts: ["img"]`; a specialized image position accepts that
+Bloc with `{ "kind": "component", "tag": "example-image" }`, while a generic
+layout position may accept it through `any-component`. The file reference,
+alternative text and loading attributes belong to the managed `<img>` child.
+Presentation settings such as ratio or fit belong to the Bloc host. Future
+video and audio support follows the same dedicated-Bloc model.
 
 Component attributes may be declared in the bloc's `definition.json` under
 `settings`, or in a separate `settings/definition.json`. The release command
@@ -212,8 +221,8 @@ Inserting a bloc writes its default attributes onto that page's host, and page
 saves validate changed values against the installed schema. `bloc.ts` remains
 optional behavior code; it is not required to describe the settings panel.
 Long or formatted editorial content does not belong in a string setting. Use a
-page-owned rich-text slot instead. Media normally belongs in a media slot;
-`media-picker` is reserved for configuration such as a background or poster.
+page-owned rich-text slot instead. `media-picker` remains a setting control for
+configuration such as a background or poster; it is not a Page slot contract.
 
 Control uses the shared capability transport for collection administration:
 `ulvia.cms.collections/catalogue` lists configured sources and immutable release
