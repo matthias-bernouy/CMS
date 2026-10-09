@@ -8,6 +8,7 @@ import { assertCompatibleSurface, pageReferences, pageReferenceSources } from ".
 import { markupTree } from "../../core/validation/markup/tree";
 import { validatePageDocumentSlotContracts } from "../../core/validation/markup/slotContracts";
 import { validatePageBlocHosts } from "../../core/validation/pageDocument/hosts";
+import { validateManagedNativeHosts } from "../../core/validation/markup/managedNative";
 
 export async function assertInstallableCollectionResources(
     storage: CollectionStorage,
@@ -59,6 +60,7 @@ function validateInstalledPageDocuments(releases: readonly CollectionRelease[]):
             const tree = markupTree(page.document.html);
             validatePageDocumentSlotContracts(tree, blocs, new Set(), path);
             validatePageBlocHosts(tree, blocs, new Set(), path);
+            validateManagedNativeHosts(tree, blocs, path);
         }
     }
 }

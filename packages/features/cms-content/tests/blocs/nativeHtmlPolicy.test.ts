@@ -114,7 +114,7 @@ describe("platform native HTML policy", () => {
             { kind: "bloc", tag: "a", attributes: { target: "_blank", rel: "nofollow" }, children: [] },
             "noopener noreferrer",
         ],
-        [{ kind: "bloc", tag: "button", attributes: { type: "reset" }, children: [] }, "button type"],
+        [{ kind: "bloc", tag: "button", attributes: { type: "menu" }, children: [] }, "button type"],
         [
             {
                 kind: "bloc",

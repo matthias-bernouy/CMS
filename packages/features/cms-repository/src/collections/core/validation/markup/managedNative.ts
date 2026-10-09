@@ -32,7 +32,7 @@ export function validateManagedNativeDefinition(bloc: CollectionBloc, markup: Bl
         );
     }
     const attributeIssue = isElement(roots[0]!)
-        ? managedNativeAttributesIssue(bloc.nativeElement, roots[0]!.attribs)
+        ? managedNativeAttributesIssue(bloc.nativeElement, roots[0]!.attribs, roots[0]!.name)
         : null;
     if (attributeIssue) {
         invalid(`defaultContent ${attributeIssue}`, `${path}.defaultContent`);
@@ -43,13 +43,14 @@ export function validateManagedNativeHosts(
     tree: MarkupTree,
     blocs: ReadonlyMap<string, CollectionBloc>,
     path: string,
+    options: { strictAttributes?: boolean } = {},
 ): void {
     for (const host of elements(tree)) {
         const target = blocs.get(host.name);
         if (target?.kind !== "component" || !target.nativeElement) {
             continue;
         }
-        if (!hasOnlyManagedChild(host, target)) {
+        if (!hasOnlyManagedChild(host, target, options.strictAttributes !== false)) {
             invalid(
                 `bloc ${target.id} requires exactly one direct, un-slotted accepted native child (${formatAccepted(target)})`,
                 path,
@@ -58,7 +59,11 @@ export function validateManagedNativeHosts(
     }
 }
 
-function hasOnlyManagedChild(host: ReturnType<typeof elements>[number], bloc: CollectionComponent): boolean {
+function hasOnlyManagedChild(
+    host: ReturnType<typeof elements>[number],
+    bloc: CollectionComponent,
+    strictAttributes: boolean,
+): boolean {
     const children = host.children.filter(isElement);
     const siblingText = host.children.some((node) => node.type === "text" && node.data.trim().length > 0);
     return (
@@ -67,7 +72,9 @@ function hasOnlyManagedChild(host: ReturnType<typeof elements>[number], bloc: Co
             true &&
         children[0]!.attribs.slot === undefined &&
         !siblingText &&
-        managedNativeAttributesIssue(bloc.nativeElement!, children[0]!.attribs) === null
+        managedNativeAttributesIssue(bloc.nativeElement!, children[0]!.attribs, children[0]!.name, {
+            allowUnknown: !strictAttributes,
+        }) === null
     );
 }
 

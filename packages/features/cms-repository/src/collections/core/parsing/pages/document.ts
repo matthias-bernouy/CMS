@@ -3,7 +3,7 @@ import { DomUtils, parseDocument } from "htmlparser2";
 import type { CollectionPageSurface } from "../../../interfaces/CollectionPage";
 import { invalid } from "../../errors";
 import { string } from "../../values";
-import { PAGE_ATTRIBUTES, PAGE_INPUT_TYPES, PAGE_TAGS } from "./elements";
+import { PAGE_INPUT_TYPES, PAGE_NATIVE_ATTRIBUTES, PAGE_TAGS } from "./elements";
 import { validateStablePageLink } from "./references";
 const IDENTIFIER = "[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)*";
 const CUSTOM_ATTRIBUTE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
@@ -98,11 +98,13 @@ function validateAttributes(
             CUSTOM_ATTRIBUTE.test(name) &&
             !name.startsWith("on") &&
             !["is", "style"].includes(name);
-        if (!PAGE_ATTRIBUTES.has(name) && !name.startsWith("aria-") && name !== "slot" && !customBlocAttribute) {
+        const nativeAttribute =
+            !blocIds.has(tag) && (name === "slot" || PAGE_NATIVE_ATTRIBUTES[tag]?.has(name) === true);
+        if (!customBlocAttribute && !nativeAttribute) {
             invalid(`unsupported Page attribute ${name}`, path);
         }
-        if (name === "type" && tag === "button" && value !== "button" && value !== "submit") {
-            invalid("Page buttons must be buttons or controlled form submitters", path);
+        if (name === "type" && tag === "button" && !["button", "submit", "reset"].includes(value)) {
+            invalid("Page buttons must be buttons, resetters or controlled form submitters", path);
         }
         if (name === "type" && tag === "input" && !PAGE_INPUT_TYPES.has(value)) {
             invalid("Page input type is not controlled", path);

@@ -36,6 +36,7 @@ const NATIVE_HTML_TAGS = new Set([
     "embed",
     "fieldset",
     "figcaption",
+    "label",
     "figure",
     "footer",
     "form",
@@ -137,7 +138,20 @@ export const PLATFORM_NATIVE_ADDABLE_TAGS = [
 
 export const PLATFORM_NATIVE_CONTEXTUAL_TAGS = ["span", "li"] as const;
 export const PLATFORM_NATIVE_SEMANTIC_TAGS = ["article", "nav", "header", "footer", "main", "aside"] as const;
-export const PLATFORM_NATIVE_RICH_TEXT_TAGS = ["strong", "em", "code"] as const;
+export const PLATFORM_NATIVE_RICH_TEXT_TAGS = [
+    "abbr",
+    "b",
+    "blockquote",
+    "br",
+    "cite",
+    "code",
+    "div",
+    "em",
+    "figcaption",
+    "pre",
+    "small",
+    "strong",
+] as const;
 
 /**
  * Native elements that a custom bloc may own as its single, managed Light DOM
@@ -156,28 +170,61 @@ const PLATFORM_NATIVE_CONTENT_TAG_SET = new Set<string>([
     ...PLATFORM_NATIVE_CONTEXTUAL_TAGS,
     ...PLATFORM_NATIVE_SEMANTIC_TAGS,
     ...PLATFORM_NATIVE_RICH_TEXT_TAGS,
+    ...COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS,
+    "option",
+    "optgroup",
+    "source",
+    "track",
 ]);
 const PLATFORM_MANAGED_NATIVE_ELEMENT_TAG_SET = new Set<string>(PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS);
 const SITE_BLOC_NATIVE_STRUCTURE_TAG_SET = new Set<string>([
     ...PLATFORM_NATIVE_ADDABLE_TAGS,
     ...PLATFORM_NATIVE_CONTEXTUAL_TAGS,
     ...PLATFORM_NATIVE_SEMANTIC_TAGS,
-    ...PLATFORM_NATIVE_RICH_TEXT_TAGS,
+    "strong",
+    "em",
+    "code",
 ]);
 
 const PLATFORM_NATIVE_ATTRIBUTES: Readonly<Record<string, ReadonlySet<string>>> = {
-    a: new Set(["href", "target", "rel"]),
+    a: new Set(["href", "target", "rel", "aria-current"]),
     article: new Set(["aria-label"]),
     aside: new Set(["aria-label"]),
-    button: new Set(["type", "disabled"]),
+    button: new Set(["type", "disabled", "name", "value"]),
     footer: new Set(["aria-label"]),
     form: new Set(["autocomplete"]),
     header: new Set(["aria-label"]),
+    input: new Set([
+        "type",
+        "name",
+        "value",
+        "checked",
+        "disabled",
+        "required",
+        "readonly",
+        "autocomplete",
+        "placeholder",
+        "min",
+        "max",
+        "step",
+        "multiple",
+        "accept",
+        "inputmode",
+        "role",
+    ]),
+    label: new Set(["for"]),
     img: new Set(["src", "alt", "role", "aria-hidden", "loading", "fetchpriority", "width", "height", "decoding"]),
     main: new Set(["aria-label"]),
     nav: new Set(["aria-label"]),
+    option: new Set(["value", "selected", "disabled"]),
+    optgroup: new Set(["label", "disabled"]),
+    output: new Set(["name", "for", "aria-live"]),
     section: new Set(["aria-label"]),
+    select: new Set(["name", "multiple", "size", "required", "disabled"]),
+    source: new Set(["src", "srcset", "sizes", "media", "type"]),
     svg: new Set(["role", "aria-hidden", "aria-label"]),
+    textarea: new Set(["name", "rows", "required", "readonly", "disabled", "autocomplete", "placeholder", "maxlength"]),
+    track: new Set(["src", "kind", "srclang", "label", "default"]),
 };
 
 export function isNativeHtmlTag(tag: string): boolean {

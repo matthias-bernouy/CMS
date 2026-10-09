@@ -8,6 +8,7 @@ import { parseDefaultPath, parseSurface, validatePageHtml } from "./document";
 import { markupTree } from "../../validation/markup/tree";
 import { validatePageDocumentSlotContracts } from "../../validation/markup/slotContracts";
 import { validatePageBlocHosts } from "../../validation/pageDocument/hosts";
+import { validateManagedNativeHosts } from "../../validation/markup/managedNative";
 
 /** Parses a bounded Page document for exactly one rendering surface. */
 export function parseCollectionPages(
@@ -47,6 +48,7 @@ export function parseCollectionPages(
         const tree = markupTree(html);
         validatePageDocumentSlotContracts(tree, localById, importedBlocs, `${path}.document.html`);
         validatePageBlocHosts(tree, localById, importedBlocs, `${path}.document.html`);
+        validateManagedNativeHosts(tree, localById, `${path}.document.html`);
         const uses = [...structure.blocs].sort();
         if (source.uses !== undefined) {
             const declared = array(source.uses, limits.maxBlocs, `${path}.uses`).map((item, itemIndex) =>

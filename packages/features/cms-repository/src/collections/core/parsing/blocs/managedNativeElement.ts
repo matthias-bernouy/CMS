@@ -26,6 +26,33 @@ export const COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS = [
 ] as const satisfies readonly CollectionManagedNativeElementTag[];
 
 const tags = new Set<string>(COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS);
+const NATIVE_ATTRIBUTES: Readonly<Record<string, ReadonlySet<string>>> = {
+    a: new Set(["href", "target", "rel", "aria-current"]),
+    button: new Set(["type", "disabled", "name", "value"]),
+    img: new Set(["src", "alt", "role", "aria-hidden", "loading", "fetchpriority", "width", "height", "decoding"]),
+    input: new Set([
+        "type",
+        "name",
+        "value",
+        "checked",
+        "disabled",
+        "required",
+        "readonly",
+        "autocomplete",
+        "placeholder",
+        "min",
+        "max",
+        "step",
+        "multiple",
+        "accept",
+        "inputmode",
+        "role",
+    ]),
+    output: new Set(["name", "for", "aria-live"]),
+    select: new Set(["name", "multiple", "size", "required", "disabled"]),
+    svg: new Set(["role", "aria-hidden", "aria-label"]),
+    textarea: new Set(["name", "rows", "required", "readonly", "disabled", "autocomplete", "placeholder", "maxlength"]),
+};
 
 function parseTag(value: unknown, path: string): CollectionManagedNativeElementTag {
     if (typeof value !== "string" || !tags.has(value)) {
@@ -106,7 +133,17 @@ function parseAttributeConstraints(
 export function managedNativeAttributesIssue(
     contract: CollectionManagedNativeElement,
     attributes: Readonly<Record<string, string>>,
+    tag?: string,
+    options: { allowUnknown?: boolean } = {},
 ): string | null {
+    if (tag && !options.allowUnknown) {
+        const allowed = NATIVE_ATTRIBUTES[tag] ?? new Set<string>();
+        for (const name of Object.keys(attributes)) {
+            if (!allowed.has(name) && !Object.hasOwn(contract.attributes ?? {}, name)) {
+                return `native attribute ${JSON.stringify(name)} is not allowed on <${tag}>`;
+            }
+        }
+    }
     for (const [name, constraint] of Object.entries(contract.attributes ?? {})) {
         const value = attributes[name];
         if (value === undefined) {

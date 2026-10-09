@@ -39,6 +39,7 @@ export function managedNativeElementIssue(
                 managedNativeAttributesIssue(
                     contract.nativeElement,
                     Object.fromEntries(child.getAttributeNames().map((name) => [name, child.getAttribute(name) ?? ""])),
+                    child.localName.toLowerCase(),
                 ) !== null ||
                 child.hasAttribute("slot") ||
                 hasAuthoredSiblingText

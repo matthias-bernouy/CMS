@@ -43,7 +43,9 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
         return SAME_TAB_REL.has(value) || NEW_TAB_REL.has(value) ? null : "native link relationship is not controlled";
     }
     if (normalizedTag === "button" && normalizedAttribute === "type") {
-        return value === "button" || value === "submit" ? null : 'native button type must be "button" or "submit"';
+        return ["button", "submit", "reset"].includes(value)
+            ? null
+            : 'native button type must be "button", "submit" or "reset"';
     }
     if (normalizedTag === "button" && normalizedAttribute === "disabled") {
         return value === "" ? null : "native disabled is a boolean attribute";

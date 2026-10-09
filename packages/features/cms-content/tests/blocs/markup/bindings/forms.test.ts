@@ -51,8 +51,8 @@ describe("declarative form contracts", () => {
             'cms-source-serialization="typed-json" cms-source-success-reload="#order-detail"',
             '<input name="items[0][price]" cms-form-value-type="number" cms-form-empty="null"><fixture-field name="note" cms-form-value-type="string" cms-form-empty="omit"></fixture-field>',
         );
-        await expect(repo.insertPage("/orders", "Orders", content)).rejects.toThrow("does not declare slot");
-        await expect(repo.updatePage({ id: "page", content })).rejects.toThrow("does not declare slot");
+        await expect(repo.insertPage("/orders", "Orders", content)).rejects.toThrow("not a declared setting");
+        await expect(repo.updatePage({ id: "page", content })).rejects.toThrow("not a declared setting");
         expect(writes).toEqual([]);
     });
 

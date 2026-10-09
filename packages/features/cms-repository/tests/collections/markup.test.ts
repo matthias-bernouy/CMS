@@ -252,19 +252,19 @@ describe("collection markup admission", () => {
                 },
             },
         ];
-        expect(() => parseCollectionRelease(pageSource)).toThrow("user-facing copy");
+        expect(() => parseCollectionRelease(pageSource)).toThrow("unsupported Page attribute title");
 
         (pageSource.pages as { document: { html: string } }[])[0]!.document.html =
             '<atlas-panel><p slot="body" aria-label="Hardcoded accessible name"></p></atlas-panel>';
-        expect(() => parseCollectionRelease(pageSource)).toThrow("user-facing copy");
+        expect(() => parseCollectionRelease(pageSource)).toThrow("unsupported Page attribute aria-label");
 
         (pageSource.pages as { document: { html: string } }[])[0]!.document.html =
             '<atlas-panel><p slot="body" aria-label="{{ cms.asset.ulvia-official.icon }}"></p></atlas-panel>';
-        expect(() => parseCollectionRelease(pageSource)).toThrow("business data or cms.i18n");
+        expect(() => parseCollectionRelease(pageSource)).toThrow("unsupported Page attribute aria-label");
 
         (pageSource.pages as { document: { html: string } }[])[0]!.document.html =
             '<atlas-panel><p slot="body" title="{{ page.tooltip }}">{{ page.copy }}</p></atlas-panel>';
-        expect(() => parseCollectionRelease(pageSource)).not.toThrow();
+        expect(() => parseCollectionRelease(pageSource)).toThrow("unsupported Page attribute title");
     });
 
     test.each([

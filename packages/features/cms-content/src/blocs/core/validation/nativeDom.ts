@@ -46,7 +46,7 @@ function elementIssue(
     if (!custom && !isNativeHtmlTag(tag)) {
         return `unsupported HTML element <${tag}>`;
     }
-    if (!custom && !componentOwned && !isPlatformNativeContentTag(tag)) {
+    if (!custom && !isPlatformNativeContentTag(tag)) {
         return `native <${tag}> is not part of the platform authoring policy`;
     }
 

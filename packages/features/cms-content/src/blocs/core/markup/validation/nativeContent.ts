@@ -3,6 +3,7 @@ import { nativeDomTreeIssue } from "cms-content/blocs/core/validation/nativeDom"
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { hardenStoredHtml } from "cms-content/blocs/core/markup/security/hardenStoredHtml";
 import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
+import { storedMarkupSecurityIssue } from "cms-content/blocs/core/markup/security/storedMarkupIssue";
 
 export function validatePageContentMarkup(value: string): string {
     const normalized = validateNativeMarkup(value, "content");
@@ -27,6 +28,10 @@ export function validateSiteBlocDefaultContent(value: string, ownerTag?: string)
 }
 
 function validateNativeMarkup(value: string, field: string, rootParentTag?: string): string {
+    const securityIssue = storedMarkupSecurityIssue(value);
+    if (securityIssue) {
+        throw new ContentValidationError(field, securityIssue);
+    }
     const hardened = hardenStoredHtml(value);
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = hardened;

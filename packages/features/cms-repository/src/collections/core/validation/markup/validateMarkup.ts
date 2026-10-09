@@ -64,7 +64,7 @@ export function validateMarkup(
                 invalid("component lightdom needs element roots for slot projection", `${path}.lightdom`);
             }
             validateDeclarative(content.light, `${path}.lightdom`);
-            validateManagedNativeHosts(content.light, byId, `${path}.lightdom`);
+            validateManagedNativeHosts(content.light, byId, `${path}.lightdom`, { strictAttributes: false });
             validateHost(content.light, bloc, `${path}.lightdom`);
             validatePlacedBlocs(content.light, bloc, ids, `${path}.lightdom`);
             validateSlotTargets(content.light, content.shellSlots, byId, markup, `${path}.lightdom`, importedBlocs);

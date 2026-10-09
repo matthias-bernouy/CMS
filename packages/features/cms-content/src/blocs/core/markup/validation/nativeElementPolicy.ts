@@ -123,9 +123,6 @@ function nativeAttributesIssue(
                 return issue;
             }
         }
-        if (componentOwned) {
-            continue;
-        }
         if (tag === "svg" && name !== "slot") {
             continue;
         }
@@ -134,7 +131,7 @@ function nativeAttributesIssue(
         }
         controlled[name] = value;
     }
-    return componentOwned ? null : nativeAttributeSetIssue(tag, controlled);
+    return nativeAttributeSetIssue(tag, controlled);
 }
 
 function attributesOf(element: NativePolicyElement): Record<string, string> {
