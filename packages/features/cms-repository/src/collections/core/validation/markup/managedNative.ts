@@ -1,7 +1,7 @@
 import type { CollectionBloc, CollectionComponent } from "../../../interfaces/CollectionBloc";
 import { invalid } from "../../errors";
 import type { BlocMarkup } from "./slots";
-import { elements, isElement, type MarkupTree, significantRoots } from "./tree";
+import { elements, isElement, significantRoots } from "./tree";
 import { managedNativeAttributesIssue } from "../../parsing/blocs/managedNativeElement";
 
 export function validateManagedNativeDefinition(bloc: CollectionBloc, markup: BlocMarkup, path: string): void {
@@ -43,46 +43,6 @@ export function validateManagedNativeDefinition(bloc: CollectionBloc, markup: Bl
             invalid(`defaultContent ${semanticIssue}`, `${path}.defaultContent`);
         }
     }
-}
-
-export function validateManagedNativeHosts(
-    tree: MarkupTree,
-    blocs: ReadonlyMap<string, CollectionBloc>,
-    path: string,
-    options: { strictAttributes?: boolean } = {},
-): void {
-    for (const host of elements(tree)) {
-        const target = blocs.get(host.name);
-        if (target?.kind !== "component" || !target.nativeElement) {
-            continue;
-        }
-        if (!hasOnlyManagedChild(host, target, options.strictAttributes !== false)) {
-            invalid(
-                `bloc ${target.id} requires exactly one direct, un-slotted accepted native child (${formatAccepted(target)})`,
-                path,
-            );
-        }
-    }
-}
-
-function hasOnlyManagedChild(
-    host: ReturnType<typeof elements>[number],
-    bloc: CollectionComponent,
-    strictAttributes: boolean,
-): boolean {
-    const children = host.children.filter(isElement);
-    const siblingText = host.children.some((node) => node.type === "text" && node.data.trim().length > 0);
-    return (
-        children.length === 1 &&
-        bloc.nativeElement?.accepts.includes(children[0]!.name as (typeof bloc.nativeElement.accepts)[number]) ===
-            true &&
-        children[0]!.attribs.slot === undefined &&
-        !siblingText &&
-        managedNativeAttributesIssue(bloc.nativeElement!, children[0]!.attribs, children[0]!.name, {
-            allowUnknown: !strictAttributes,
-        }) === null &&
-        managedNativeSemanticIssue(children[0]!) === null
-    );
 }
 
 function managedNativeSemanticIssue(element: ReturnType<typeof elements>[number]): string | null {

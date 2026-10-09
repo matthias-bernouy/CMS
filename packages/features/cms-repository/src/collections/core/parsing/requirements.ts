@@ -12,6 +12,14 @@ import { array, identifier, integer, keys, ordinal, record, string, unique } fro
 import { collectionThemeTokenId, parseCollectionBlocTag, parseCollectionNamespace } from "../namespace";
 import { textIdentifier } from "../texts/validation";
 
+const CAPABILITY_SOURCE =
+    /^\/\.cms\/call\/(?<contract>[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*)\/(?<capability>[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*)$/u;
+
+export function capabilityCallKey(url: string): string | null {
+    const match = CAPABILITY_SOURCE.exec(url);
+    return match?.groups ? `${match.groups.contract}/${match.groups.capability}` : null;
+}
+
 export function parseRequirements(
     value: unknown,
     path: string,

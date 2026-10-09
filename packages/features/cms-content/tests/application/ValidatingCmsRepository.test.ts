@@ -250,3 +250,31 @@ describe("ValidatingCmsRepository — pass-through", () => {
         expect((await repo.getBlocsList()).map((b) => b.id)).toEqual(["x"]);
     });
 });
+
+describe("ValidatingCmsRepository — blocs", () => {
+    test("validates published Bloc documents against the same catalogue contracts as Pages", async () => {
+        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        await repo.createBloc({
+            id: "fixture-child",
+            name: "Child",
+            group: "",
+            description: "",
+            viewJS: "customElements.define('fixture-child', class extends HTMLElement {})",
+            ownership: { kind: "code-managed" },
+            slots: {},
+        });
+        await expect(
+            repo.createBloc({
+                id: "fixture-shell",
+                name: "Shell",
+                group: "",
+                description: "",
+                viewJS: "customElements.define('fixture-shell', class extends HTMLElement {})",
+                ownership: { kind: "code-managed" },
+                slots: { body: { accepts: [{ kind: "component", tag: "fixture-child" }] } },
+                uses: ["fixture-child"],
+                defaultContent: '<fixture-child slot="ghost"></fixture-child>',
+            }),
+        ).rejects.toThrow("does not declare slot");
+    });
+});

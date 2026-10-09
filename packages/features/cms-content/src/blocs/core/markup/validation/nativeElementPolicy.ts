@@ -58,6 +58,8 @@ export function nativeElementAttributesIssue(
     componentOwned: boolean,
     requireFormSource: boolean,
     allowIncompleteMedia: boolean,
+    allowImplementationAttributes = false,
+    allowTextAttributes = false,
 ): string | null {
     const tag = element.localName.toLowerCase();
     const attributes = attributesOf(element);
@@ -65,7 +67,13 @@ export function nativeElementAttributesIssue(
     if (placementIssue) {
         return placementIssue;
     }
-    const attributeIssue = nativeAttributesIssue(tag, attributes);
+    const attributeIssue = nativeAttributesIssue(
+        tag,
+        attributes,
+        allowImplementationAttributes,
+        allowTextAttributes,
+        allowIncompleteMedia,
+    );
     if (attributeIssue) {
         return attributeIssue;
     }
@@ -76,7 +84,7 @@ export function nativeElementAttributesIssue(
         }
     }
     if (tag === "img") {
-        if (componentOwned) {
+        if (componentOwned || allowIncompleteMedia) {
             return componentImageIssue(attributes, allowIncompleteMedia);
         }
         const imageIssue = nativeAttributeSetIssue(tag, attributes);
@@ -94,7 +102,13 @@ export function nativeElementAttributesIssue(
     return null;
 }
 
-function nativeAttributesIssue(tag: string, attributes: Readonly<Record<string, string>>): string | null {
+function nativeAttributesIssue(
+    tag: string,
+    attributes: Readonly<Record<string, string>>,
+    allowImplementationAttributes: boolean,
+    allowTextAttributes: boolean,
+    allowIncompleteMedia: boolean,
+): string | null {
     const controlled: Record<string, string> = {};
     for (const [name, value] of Object.entries(attributes)) {
         if ((tag !== "svg" && name !== name.toLowerCase()) || CONTROL_CHARACTER.test(value)) {
@@ -120,6 +134,17 @@ function nativeAttributesIssue(tag: string, attributes: Readonly<Record<string, 
         if (name.startsWith("cms-")) {
             return `attribute "${name}" is not a declared CMS binding`;
         }
+        if (allowImplementationAttributes && isImplementationAttribute(name, value)) {
+            continue;
+        }
+        if (
+            allowTextAttributes &&
+            ["alt", "aria-label", "placeholder", "title"].includes(name) &&
+            !CONTROL_CHARACTER.test(value)
+        ) {
+            controlled[name] = /(?:\{\{|#\{|@\{)/u.test(value) ? "dynamic text" : value;
+            continue;
+        }
         if (name.toLowerCase() === "slot") {
             const issue = nativeAttributeValueIssue(tag, name, value);
             if (issue) {
@@ -134,7 +159,38 @@ function nativeAttributesIssue(tag: string, attributes: Readonly<Record<string, 
         }
         controlled[name] = value;
     }
+    if (tag === "img" && allowIncompleteMedia && attributes.src === undefined) {
+        for (const [name, value] of Object.entries(controlled)) {
+            const issue = nativeAttributeValueIssue(tag, name, value);
+            if (issue) {
+                return issue;
+            }
+        }
+        return null;
+    }
     return nativeAttributeSetIssue(tag, controlled);
+}
+
+function isImplementationAttribute(name: string, value: string): boolean {
+    if (CONTROL_CHARACTER.test(value)) {
+        return false;
+    }
+    if (name === "id") {
+        return /^[A-Za-z][A-Za-z0-9_.:-]{0,127}$/u.test(value);
+    }
+    if (name === "hidden") {
+        return value === "";
+    }
+    if (name === "tabindex") {
+        return value === "-1" || value === "0";
+    }
+    if (name === "role") {
+        return /^[a-z][a-z0-9-]*$/u.test(value);
+    }
+    if (name.startsWith("aria-")) {
+        return value.trim().length > 0;
+    }
+    return /^data-(?!cms-)[a-z][a-z0-9-]*$/u.test(name);
 }
 
 function attributesOf(element: NativePolicyElement): Record<string, string> {

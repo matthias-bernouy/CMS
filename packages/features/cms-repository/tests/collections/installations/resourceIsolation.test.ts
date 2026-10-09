@@ -159,7 +159,7 @@ test("installs only declared public resources from compatible collection depende
             {
                 ...baseConsumer.blocs[0]!,
                 lightdom:
-                    '<ulvia-official-button></ulvia-official-button><span>{{ cms.i18n.ulvia-official.submit }}</span><img src="{{ cms.asset.ulvia-official.empty.svg }}">',
+                    '<ulvia-official-button></ulvia-official-button><span>{{ cms.i18n.ulvia-official.submit }}</span><img src="{{ cms.asset.ulvia-official.empty.svg }}" alt="{{ cms.i18n.ulvia-official.submit }}">',
                 uses: ["ulvia-official-button"],
             },
         ],

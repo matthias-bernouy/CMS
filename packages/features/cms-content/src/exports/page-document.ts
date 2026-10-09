@@ -16,7 +16,23 @@ export type {
     PageSlotAccept,
     PageSurface,
 } from "cms-content/pages/interfaces/document";
-export { validatePageContentMarkup } from "cms-content/blocs/core/markup/validation/nativeContent";
+export {
+    validateBlocContentMarkup,
+    validatePageContentMarkup,
+    type BlocContentMarkupResult,
+} from "cms-content/blocs/core/markup/validation/nativeContent";
+export {
+    validatePageDocument,
+    type PageDocumentBlocContract,
+    type PageDocumentSource,
+    type PageDocumentValidationResult,
+    type UnresolvedPageDocumentBloc,
+} from "cms-content/blocs/core/markup/validation/documents/pageDocument";
+export {
+    validateBlocDocument,
+    type BlocDocumentContract,
+    type BlocDocumentValidationResult,
+} from "cms-content/blocs/core/markup/validation/documents/blocDocument";
 export { assertContentRefsExist } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
 export { assertContentSupportsSurface } from "cms-content/blocs/core/markup/validation/assertContentSurface";
 export { isUserFacingTextAttribute } from "cms-content/pages/core/rendering/userFacingTextAttributes";

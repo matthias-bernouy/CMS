@@ -46,6 +46,13 @@ describe("site bloc validation", () => {
                 nativeElement: { accepts: ["a"] },
             }),
         ).toThrow(/nativeElement/);
+        expect(() =>
+            validateBlocWrite({
+                ...artifact,
+                viewJS: "",
+                compositionHTML: '<a href="javascript:run()">Run</a>',
+            }),
+        ).toThrow(/forbidden/);
     });
 
     test("rejects malformed runtime ownership without throwing native type errors", () => {

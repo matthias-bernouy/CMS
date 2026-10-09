@@ -144,6 +144,16 @@ describe("collection markup admission", () => {
         );
     });
 
+    test("applies the shared stored-document security policy to Bloc light DOM", () => {
+        for (const lightdom of [
+            '<iframe srcdoc="<script>run()</script>"></iframe>',
+            '<object data="https://example.invalid/payload"></object>',
+            '<a href="javascript:run()">Run</a>',
+        ]) {
+            expect(() => check([composition({ lightdom, slots: {} })])).toThrow();
+        }
+    });
+
     test("places nested blocs in lightdom, outside static shadow shells", () => {
         const shell = component({ shadowdom: "<demo-page></demo-page>", slots: {}, uses: ["demo-page"] });
         expect(() => check([shell, composition()])).toThrow("layout and slots only");
@@ -252,19 +262,19 @@ describe("collection markup admission", () => {
                 },
             },
         ];
-        expect(() => parseCollectionRelease(pageSource)).toThrow("unsupported Page attribute title");
+        expect(() => parseCollectionRelease(pageSource)).toThrow('attribute "title" is not allowed');
 
         (pageSource.pages as { document: { html: string } }[])[0]!.document.html =
             '<atlas-panel><p slot="body" aria-label="Hardcoded accessible name"></p></atlas-panel>';
-        expect(() => parseCollectionRelease(pageSource)).toThrow("unsupported Page attribute aria-label");
+        expect(() => parseCollectionRelease(pageSource)).toThrow('attribute "aria-label" is not allowed');
 
         (pageSource.pages as { document: { html: string } }[])[0]!.document.html =
             '<atlas-panel><p slot="body" aria-label="{{ cms.asset.ulvia-official.icon }}"></p></atlas-panel>';
-        expect(() => parseCollectionRelease(pageSource)).toThrow("unsupported Page attribute aria-label");
+        expect(() => parseCollectionRelease(pageSource)).toThrow('attribute "aria-label" is not allowed');
 
         (pageSource.pages as { document: { html: string } }[])[0]!.document.html =
             '<atlas-panel><p slot="body" title="{{ page.tooltip }}">{{ page.copy }}</p></atlas-panel>';
-        expect(() => parseCollectionRelease(pageSource)).toThrow("unsupported Page attribute title");
+        expect(() => parseCollectionRelease(pageSource)).toThrow('attribute "title" is not allowed');
     });
 
     test.each([

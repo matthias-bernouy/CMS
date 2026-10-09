@@ -1,9 +1,8 @@
 import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
-import type { TBloc } from "cms-content/blocs/interfaces/blocs";
-import type { PageSlot, PageSlotAccept } from "cms-content/pages/interfaces/document";
+import type { PageBlocContract, PageSlot, PageSlotAccept } from "cms-content/pages/interfaces/document";
 
 type ContractElement = Element & { readonly children: HTMLCollectionOf<ContractElement> };
-type ContractBloc = Pick<TBloc, "id" | "nativeElement" | "slots" | "compositionHTML">;
+type ContractBloc = PageBlocContract;
 
 const INLINE_ROOTS = new Set([
     "a",
@@ -33,9 +32,11 @@ export function blocHostContractIssue(
     host: ContractElement,
     bloc: ContractBloc,
     registered: ReadonlyMap<string, ContractBloc>,
+    unresolved: ReadonlySet<string> = new Set(),
+    allowTemplateSlots = false,
 ): string | null {
     if (bloc.nativeElement) {
-        return validateNestedCustomElements(host, registered);
+        return validateNestedCustomElements(host, registered, unresolved, allowTemplateSlots);
     }
     const slots = bloc.slots ?? {};
     const counts = new Map<string, number>();
@@ -50,9 +51,12 @@ export function blocHostContractIssue(
         const slotName = child.getAttribute("slot") ?? "";
         const slot = slots[slotName];
         if (!slot) {
-            return `<${bloc.id}> does not declare slot ${JSON.stringify(slotName || "(default)")}`;
+            return `<${bloc.id}> direct parent does not declare slot target ${JSON.stringify(slotName || "(default)")}`;
         }
-        const issue = slotChildIssue(child, slot, registered);
+        const issue =
+            allowTemplateSlots && child.localName === "slot"
+                ? null
+                : slotChildIssue(child, slot, registered, unresolved, allowTemplateSlots);
         if (issue) {
             return `<${bloc.id}> slot ${JSON.stringify(slotName)} ${issue}`;
         }
@@ -74,18 +78,20 @@ function slotChildIssue(
     child: ContractElement,
     slot: PageSlot,
     registered: ReadonlyMap<string, ContractBloc>,
+    unresolved: ReadonlySet<string>,
+    allowTemplateSlots: boolean,
 ): string | null {
     const tag = child.localName.toLowerCase();
     const accepts = slot.accepts ?? [];
     if (isValidCustomElementTag(tag)) {
         const nested = registered.get(tag);
-        if (!nested) {
+        if (!nested && !unresolved.has(tag)) {
             return `references unavailable Bloc <${tag}>`;
         }
-        if (!accepts.some((accept) => acceptsCustomBloc(accept, nested))) {
-            return `does not accept Bloc <${tag}>`;
+        if (!accepts.some((accept) => acceptsCustomBloc(accept, tag, nested))) {
+            return `does not accept Bloc ${tag}`;
         }
-        return blocHostContractIssue(child, nested, registered);
+        return nested ? blocHostContractIssue(child, nested, registered, unresolved, allowTemplateSlots) : null;
     }
     if (!accepts.some((accept) => acceptsNativeElement(accept, child))) {
         return `does not accept native <${tag}>`;
@@ -93,12 +99,12 @@ function slotChildIssue(
     return null;
 }
 
-function acceptsCustomBloc(accept: PageSlotAccept, bloc: ContractBloc): boolean {
+function acceptsCustomBloc(accept: PageSlotAccept, tag: string, bloc: ContractBloc | undefined): boolean {
     if (accept.kind === "any-component") {
-        return bloc.compositionHTML === undefined;
+        return bloc?.kind !== "composition";
     }
     if (accept.kind === "component") {
-        return accept.tag === bloc.id && bloc.compositionHTML === undefined;
+        return accept.tag === tag && bloc?.kind !== "composition";
     }
     return false;
 }
@@ -132,16 +138,21 @@ function nativeSubtreeMatches(element: ContractElement, allowed: ReadonlySet<str
 function validateNestedCustomElements(
     root: ContractElement,
     registered: ReadonlyMap<string, ContractBloc>,
+    unresolved: ReadonlySet<string>,
+    allowTemplateSlots: boolean,
 ): string | null {
     for (const child of Array.from(root.children)) {
         if (!isValidCustomElementTag(child.localName)) {
             continue;
         }
         const nested = registered.get(child.localName);
-        if (!nested) {
+        if (!nested && !unresolved.has(child.localName)) {
             return `<${root.localName}> references unavailable Bloc <${child.localName}>`;
         }
-        const issue = blocHostContractIssue(child, nested, registered);
+        if (!nested) {
+            continue;
+        }
+        const issue = blocHostContractIssue(child, nested, registered, unresolved, allowTemplateSlots);
         if (issue) {
             return issue;
         }

@@ -28,11 +28,8 @@ import {
 import { assertContentRefsExist } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
 import { assertContentSupportsSurface } from "cms-content/blocs/core/markup/validation/assertContentSurface";
 import { validateSettingsPatch } from "cms-content/settings/core/validation";
-import {
-    validateBlocWrite,
-    validateSiteBlocDefinition,
-    validateSiteBlocSnapshot,
-} from "cms-content/blocs/core/validation";
+import { validateSiteBlocDefinition, validateSiteBlocSnapshot } from "cms-content/blocs/core/validation";
+import { validateBlocArtifact } from "cms-content/application/core/validation/blocArtifact";
 /**
  * Decorator that VALIDATES + NORMALIZES every authored-content write before
  * delegating to the wrapped repository — the single, unbypassable barrier so
@@ -97,11 +94,11 @@ export class ValidatingCmsRepository implements CmsRepository {
     }
 
     // ── Pass-through: blocs (compiled + validated upstream) ────────────────
-    createBloc(bloc: TBlocWrite): Promise<TBloc> {
-        return this.inner.createBloc(validateBlocWrite(bloc));
+    async createBloc(bloc: TBlocWrite): Promise<TBloc> {
+        return this.inner.createBloc(await validateBlocArtifact(this.inner, bloc));
     }
-    replaceBloc(bloc: TBlocWrite): Promise<TBloc> {
-        return this.inner.replaceBloc(validateBlocWrite(bloc));
+    async replaceBloc(bloc: TBlocWrite): Promise<TBloc> {
+        return this.inner.replaceBloc(await validateBlocArtifact(this.inner, bloc));
     }
     getBlocRecord(tag: string): Promise<BlocRecord | null> {
         return this.inner.getBlocRecord(tag);
@@ -126,7 +123,7 @@ export class ValidatingCmsRepository implements CmsRepository {
     ): Promise<SiteBlocDefinition> {
         return this.inner.saveSiteBlocDraft(tag, validateSiteBlocSnapshot(draft, tag), expectedDraftRevision);
     }
-    publishSiteBloc(
+    async publishSiteBloc(
         tag: string,
         artifact: TBlocWrite,
         expectedDraftRevision: number,
@@ -135,7 +132,7 @@ export class ValidatingCmsRepository implements CmsRepository {
     ): Promise<BlocRecord> {
         return this.inner.publishSiteBloc(
             tag,
-            validateBlocWrite(artifact),
+            await validateBlocArtifact(this.inner, artifact),
             expectedDraftRevision,
             publicationDate,
             publicationGuard,

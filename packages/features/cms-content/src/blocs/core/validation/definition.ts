@@ -4,6 +4,7 @@ import { validateSiteBlocSnapshot } from "cms-content/blocs/core/validation/snap
 import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
 import { isPlatformManagedNativeElementTag } from "cms-content/blocs/core/validation/nativeHtml";
 import { parsePresentationImage } from "cms-content/blocs/core/presentationImage";
+import { validateBlocContentMarkup } from "cms-content/blocs/core/markup/validation/nativeContent";
 import type { BlocOwnership, SiteBlocDefinition, TBloc, TBlocWrite } from "cms-content/blocs/interfaces/blocs";
 
 export function validateBlocWrite(value: TBlocWrite): TBloc {
@@ -50,6 +51,27 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
     validateManagedNativeElement(bloc.nativeElement);
     if (bloc.nativeElement !== undefined && (bloc.internal || bloc.compositionHTML !== undefined)) {
         throw new ContentValidationError("nativeElement", "managed native elements require an editable component view");
+    }
+    if (bloc.compositionHTML !== undefined) {
+        bloc.compositionHTML = validateBlocContentMarkup(bloc.compositionHTML, {
+            field: "compositionHTML",
+            kind: "fixed",
+            ownerTag: bloc.id,
+        }).html;
+    }
+    if (bloc.componentHTML !== undefined) {
+        bloc.componentHTML = validateBlocContentMarkup(bloc.componentHTML, {
+            field: "componentHTML",
+            kind: "fixed",
+            ownerTag: bloc.id,
+        }).html;
+    }
+    if (bloc.defaultContent !== undefined) {
+        bloc.defaultContent = validateBlocContentMarkup(bloc.defaultContent, {
+            field: "defaultContent",
+            kind: "default",
+            ownerTag: bloc.id,
+        }).html;
     }
     return bloc;
 }

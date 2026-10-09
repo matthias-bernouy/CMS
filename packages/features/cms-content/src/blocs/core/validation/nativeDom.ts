@@ -11,16 +11,26 @@ type NativePolicyRoot = { readonly children: ArrayLike<NativePolicyElement> };
 
 export type NativeDomPolicyOptions = {
     allowIncompleteMedia?: boolean;
+    allowImplementationAttributes?: boolean;
+    allowTextAttributes?: boolean;
+    allowTemplateSlots?: boolean;
     rootParentTag?: string;
     skipRootPlacement?: boolean;
     requireFormSource?: boolean;
+    rootIsComponentChild?: boolean;
 };
 
 const RICH_TEXT_PARENTS = /^(?:h[1-6]|p|a|li|span|strong|em|code)$/;
 
 export function nativeDomTreeIssue(root: NativePolicyRoot, options: NativeDomPolicyOptions = {}): string | null {
     for (const element of Array.from(root.children)) {
-        const issue = elementIssue(element, options.rootParentTag, false, true, options);
+        const issue = elementIssue(
+            element,
+            options.rootParentTag,
+            options.rootIsComponentChild === true,
+            true,
+            options,
+        );
         if (issue) {
             return issue;
         }
@@ -37,6 +47,19 @@ function elementIssue(
 ): string | null {
     const tag = element.localName.toLowerCase();
     const custom = isValidCustomElementTag(tag);
+    if (tag === "slot" && options.allowTemplateSlots) {
+        const slotIssue = templateSlotIssue(element);
+        if (slotIssue) {
+            return slotIssue;
+        }
+        for (const child of Array.from(element.children)) {
+            const issue = elementIssue(child, tag, true, false, options);
+            if (issue) {
+                return `<slot> contains invalid fallback content: ${issue}`;
+            }
+        }
+        return null;
+    }
     if ((parentTag === "ul" || parentTag === "ol") && tag !== "li") {
         return `native <${parentTag}> can contain only direct <li> children`;
     }
@@ -60,7 +83,7 @@ function elementIssue(
         const placementIssue =
             componentOwned || (rootElement && options.skipRootPlacement)
                 ? null
-                : nativePlacementIssue(tag, parentTag, element, rootElement);
+                : nativePlacementIssue(tag, parentTag, element, rootElement, options.rootIsComponentChild === true);
         if (placementIssue) {
             return placementIssue;
         }
@@ -69,6 +92,8 @@ function elementIssue(
             componentOwned,
             options.requireFormSource !== false,
             options.allowIncompleteMedia === true,
+            options.allowImplementationAttributes === true,
+            options.allowTextAttributes === true,
         );
         if (attributeIssue) {
             return attributeIssue;
@@ -88,15 +113,31 @@ function elementIssue(
     return null;
 }
 
+function templateSlotIssue(element: NativePolicyElement): string | null {
+    for (const name of element.getAttributeNames()) {
+        if (name !== "name" && name !== "slot") {
+            return `attribute "${name}" is not allowed on template <slot>`;
+        }
+        const value = element.getAttribute(name) ?? "";
+        if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(value)) {
+            return `template <slot> ${name} must be a lower-case kebab-case identifier`;
+        }
+    }
+    return null;
+}
+
 function nativePlacementIssue(
     tag: string,
     parentTag: string | undefined,
     element: NativePolicyElement,
     rootElement: boolean,
+    rootIsComponentChild: boolean,
 ): string | null {
-    const directCustomChild = Boolean(!rootElement && parentTag && isValidCustomElementTag(parentTag));
+    const directCustomChild = Boolean(
+        parentTag && isValidCustomElementTag(parentTag) && (!rootElement || rootIsComponentChild),
+    );
     if (element.getAttribute("slot") !== null && (!parentTag || !isValidCustomElementTag(parentTag))) {
-        return "native slot placement must target a direct custom-element child";
+        return "native slot target has an invalid direct parent; it must be a direct custom-element child";
     }
     if (tag === "li" && parentTag !== "ul" && parentTag !== "ol" && !directCustomChild) {
         return "native <li> must be a direct child of <ul> or <ol>";

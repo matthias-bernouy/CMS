@@ -171,10 +171,15 @@ const PLATFORM_NATIVE_CONTENT_TAG_SET = new Set<string>([
     ...PLATFORM_NATIVE_SEMANTIC_TAGS,
     ...PLATFORM_NATIVE_RICH_TEXT_TAGS,
     ...MANAGED_NATIVE_ELEMENT_TAGS,
+    "details",
+    "fieldset",
+    "legend",
+    "label",
     "option",
     "optgroup",
     "source",
     "track",
+    "summary",
 ]);
 const PLATFORM_MANAGED_NATIVE_ELEMENT_TAG_SET = new Set<string>(PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS);
 const SITE_BLOC_NATIVE_STRUCTURE_TAG_SET = new Set<string>([

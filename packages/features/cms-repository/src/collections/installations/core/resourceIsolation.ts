@@ -5,10 +5,7 @@ import { validateMarkup } from "../../core/validation/markup/validateMarkup";
 import { satisfiesVersionRange } from "../../../exports/contracts/compatibility";
 import type { CollectionInstallation, CollectionStorage } from "../interfaces/store";
 import { assertCompatibleSurface, pageReferences, pageReferenceSources } from "../../core/parsing/pages/references";
-import { markupTree } from "../../core/validation/markup/tree";
-import { validatePageDocumentSlotContracts } from "../../core/validation/markup/slotContracts";
-import { validatePageBlocHosts } from "../../core/validation/pageDocument/hosts";
-import { validateManagedNativeHosts } from "../../core/validation/markup/managedNative";
+import { validatePageDocument } from "@bernouy/cms-content/page-document";
 
 export async function assertInstallableCollectionResources(
     storage: CollectionStorage,
@@ -53,14 +50,15 @@ export function assertCollectionResourceIsolation(releases: readonly CollectionR
 }
 
 function validateInstalledPageDocuments(releases: readonly CollectionRelease[]): void {
-    const blocs = new Map(releases.flatMap((release) => release.blocs.map((bloc) => [bloc.id, bloc] as const)));
+    const blocs = releases.flatMap((release) => release.blocs);
     for (const release of releases) {
         for (const page of release.pages ?? []) {
             const path = `Collection Page ${release.collectionId}.${page.id}`;
-            const tree = markupTree(page.document.html);
-            validatePageDocumentSlotContracts(tree, blocs, new Set(), path);
-            validatePageBlocHosts(tree, blocs, new Set(), path);
-            validateManagedNativeHosts(tree, blocs, path);
+            try {
+                validatePageDocument(page.document.html, blocs, { surface: page.surface });
+            } catch (error) {
+                reject(`${path} is invalid: ${error instanceof Error ? error.message : "invalid Page document"}`);
+            }
         }
     }
 }

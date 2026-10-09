@@ -15,7 +15,7 @@ export type StablePageReference =
           readonly pageId: string;
       };
 
-export function validateStablePageLink(
+function validateStablePageLink(
     tag: string,
     attributes: Readonly<Record<string, string>>,
     path: string,

@@ -1,8 +1,4 @@
-import type {
-    CollectionBloc,
-    CollectionSlot,
-    CollectionSlotAccept,
-} from "cms-repository/collections/interfaces/CollectionBloc";
+import type { CollectionBloc } from "cms-repository/collections/interfaces/CollectionBloc";
 import { invalid } from "../../errors";
 import { elements, isElement, type MarkupElement, type MarkupTree, offeredSlots } from "./tree";
 
@@ -75,60 +71,4 @@ export function validateSlotTargets(
 export function pageSlots(light: MarkupTree | undefined, shadow: MarkupTree | undefined): ReadonlySet<string> {
     const tree = light ?? shadow;
     return tree ? offeredSlots(tree) : new Set();
-}
-
-const INLINE_ROOTS = new Set([
-    "a",
-    "abbr",
-    "b",
-    "br",
-    "cite",
-    "code",
-    "em",
-    "figcaption",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "label",
-    "p",
-    "small",
-    "span",
-    "strong",
-]);
-const INLINE_CHILDREN = new Set(["a", "abbr", "b", "br", "cite", "code", "em", "small", "span", "strong"]);
-const PROSE_ROOTS = new Set([...INLINE_ROOTS, "blockquote", "div", "ol", "p", "pre", "ul"]);
-const PROSE_CHILDREN = new Set([...PROSE_ROOTS, "li"]);
-export function slotAcceptsBloc(accept: CollectionSlotAccept, tag: string, bloc?: CollectionBloc): boolean {
-    if (accept.kind === "any-component") {
-        return bloc?.kind === "component" || bloc === undefined;
-    }
-    if (accept.kind === "component") {
-        return accept.tag === tag && (bloc?.kind === "component" || bloc === undefined);
-    }
-    return false;
-}
-
-export function slotAcceptsNative(slot: CollectionSlot, element: MarkupElement): boolean {
-    return (slot.accepts ?? []).some((accept) => {
-        if (accept.kind === "plain-text") {
-            return element.name === "span" && !element.children.some(isElement);
-        }
-        if (accept.kind !== "rich-text") {
-            return false;
-        }
-        const roots = accept.profile === "inline" ? INLINE_ROOTS : PROSE_ROOTS;
-        const descendants = accept.profile === "inline" ? INLINE_CHILDREN : PROSE_CHILDREN;
-        return roots.has(element.name) && nativeChildrenMatch(element, descendants);
-    });
-}
-
-function nativeChildrenMatch(element: MarkupElement, allowed: ReadonlySet<string>): boolean {
-    return element.children.every(
-        (child) =>
-            !isElement(child) ||
-            (child.attribs.slot === undefined && allowed.has(child.name) && nativeChildrenMatch(child, allowed)),
-    );
 }

@@ -3,13 +3,9 @@ import type { CollectionPage, CollectionPageSurface } from "../../../interfaces/
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { array, identifier, integer, keys, record, string, unique } from "../../values";
-import { parseRequirements } from "../requirements";
-import { parseDefaultPath, parseSurface, validatePageHtml } from "./document";
-import { markupTree } from "../../validation/markup/tree";
-import { validatePageDocumentSlotContracts } from "../../validation/markup/slotContracts";
-import { validatePageBlocHosts } from "../../validation/pageDocument/hosts";
-import { validateManagedNativeHosts } from "../../validation/markup/managedNative";
-import { validatePageContentMarkup } from "@bernouy/cms-content/page-document";
+import { capabilityCallKey, parseRequirements } from "../requirements";
+import { parseDefaultPath, parseSurface } from "./document";
+import { validatePageDocument, type PageDocumentValidationResult } from "@bernouy/cms-content/page-document";
 
 /** Parses a bounded Page document for exactly one rendering surface. */
 export function parseCollectionPages(
@@ -45,18 +41,19 @@ export function parseCollectionPages(
         const document = record(source.document, `${path}.document`);
         keys(document, ["html"], `${path}.document`);
         const authoredHtml = string(document.html, limits.maxMarkupLength, `${path}.document.html`);
-        let html = authoredHtml;
-        const structure = validatePageHtml(html, new Set(blocSurfaces.keys()), surface, `${path}.document.html`);
-        const tree = markupTree(html);
-        validatePageDocumentSlotContracts(tree, localById, importedBlocs, `${path}.document.html`);
-        validatePageBlocHosts(tree, localById, importedBlocs, `${path}.document.html`);
-        validateManagedNativeHosts(tree, localById, `${path}.document.html`);
+        let validated: PageDocumentValidationResult;
         try {
-            html = validatePageContentMarkup(authoredHtml);
+            validated = validatePageDocument(authoredHtml, localBlocs, {
+                surface,
+                unresolvedBlocs: [...importedBlocs].map((blocId) => ({
+                    id: blocId,
+                    surfaces: blocSurfaces.get(blocId),
+                })),
+            });
         } catch (error) {
             invalid(error instanceof Error ? error.message : "invalid Page document", `${path}.document.html`);
         }
-        const uses = [...structure.blocs].sort();
+        const { html, sources, uses } = validated!;
         if (source.uses !== undefined) {
             const declared = array(source.uses, limits.maxBlocs, `${path}.uses`).map((item, itemIndex) =>
                 string(item, 128, `${path}.uses[${itemIndex}]`),
@@ -72,11 +69,20 @@ export function parseCollectionPages(
             }
         }
         const requires = parseRequirements(source.requires, `${path}.requires`, limits);
+        const calls = new Set(
+            sources.map(({ method, url }) => {
+                const call = capabilityCallKey(url);
+                if (!call || method !== "POST") {
+                    return invalid(
+                        "Page sources must use a canonical CMS capability with POST",
+                        `${path}.document.html`,
+                    );
+                }
+                return call;
+            }),
+        );
         const declaredCalls = new Set(requires.map((item) => `${item.contractId}/${item.capabilityId}`));
-        if (
-            declaredCalls.size !== structure.calls.size ||
-            [...structure.calls].some((call) => !declaredCalls.has(call))
-        ) {
+        if (declaredCalls.size !== calls.size || [...calls].some((call) => !declaredCalls.has(call))) {
             invalid("must exactly match the capabilities called by Page HTML", `${path}.requires`);
         }
         return {
