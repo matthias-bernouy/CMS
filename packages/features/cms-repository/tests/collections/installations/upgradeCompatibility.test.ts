@@ -31,6 +31,16 @@ function release(version: string) {
     };
 }
 
+function actionText() {
+    return {
+        id: "submit",
+        label: "text.label.submit",
+        category: "text.category.content",
+        group: "text.group.general",
+        values: { en: "Submit", "en-US": "Submit" },
+    };
+}
+
 test("upgrades preserve existing slot contracts and theme token types", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const initial = await store.importRelease(release("1.0.0"));
@@ -105,6 +115,7 @@ test("upgrades preserve Page and Bloc surface contracts", async () => {
 test("upgrades preserve managed native element choices", async () => {
     const managedRelease = (version: string, accepts: string[], root: string) => {
         const source = release(version);
+        source.texts = [actionText()];
         source.blocs = [
             {
                 kind: "component",
@@ -112,7 +123,7 @@ test("upgrades preserve managed native element choices", async () => {
                 label: "bloc.panel.label",
                 nativeElement: { accepts },
                 shadowdom: "<slot></slot>",
-                defaultContent: `<${root}></${root}>`,
+                defaultContent: `<${root}>{{ cms.i18n.atlas.submit }}</${root}>`,
                 uses: [],
                 requires: [],
                 slots: {},
@@ -130,6 +141,7 @@ test("upgrades preserve managed native element choices", async () => {
 
 test("upgrades accept wider slot and managed native contracts", async () => {
     const initial = release("1.0.0");
+    initial.texts = [actionText()];
     const panel = (initial.blocs as Record<string, unknown>[]).find((bloc) => bloc.id === "atlas-panel")!;
     panel.slots = { body: { min: 1, max: 1 } };
     const managed = {
@@ -138,7 +150,7 @@ test("upgrades accept wider slot and managed native contracts", async () => {
         label: "bloc.panel.label",
         nativeElement: { accepts: ["button"] },
         shadowdom: "<slot></slot>",
-        defaultContent: "<button></button>",
+        defaultContent: "<button>{{ cms.i18n.atlas.submit }}</button>",
         uses: [],
         requires: [],
         slots: {},

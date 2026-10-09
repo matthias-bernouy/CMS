@@ -239,12 +239,12 @@ test("installed polymorphic native components project their contract and keep wr
     await repository.insertPage(
         "/native-button",
         "Button",
-        '<test-action title="Wrapper title"><button type="button" title="Native title">Save</button></test-action>',
+        '<test-action title="Wrapper title"><button type="button">Save</button></test-action>',
     );
     await repository.insertPage(
         "/native-link",
         "Link",
-        '<test-action title="Wrapper title"><a href="/about" title="Native title">About</a></test-action>',
+        '<test-action title="Wrapper title"><a href="/about">About</a></test-action>',
     );
     await expect(
         repository.insertPage("/native-wrong", "Wrong", "<test-action><p>Wrong</p></test-action>"),
@@ -351,5 +351,5 @@ test("installed hybrid component keeps its fixed Light DOM and page defaults dis
     await validated.insertPage("/valid-card", "Valid", '<test-card tone="accent" compact></test-card>');
     await expect(
         validated.insertPage("/invalid-card", "Invalid", '<test-card tone="unknown"></test-card>'),
-    ).rejects.toThrow("invalid test-card settings");
+    ).rejects.toThrow("settings are invalid");
 });

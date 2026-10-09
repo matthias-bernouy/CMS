@@ -64,7 +64,7 @@ describe("collection authored bundle admission", () => {
         });
     });
 
-    test("requires a contract witness for capabilities called directly by a Page", async () => {
+    test("rejects capability bindings placed on Page Bloc hosts", async () => {
         const contracts = await releaseCatalogue(contractDocument("catalog.items", "item.list"));
         const source = collectionDocument({ "page.catalog.name": "Catalog" });
         source.pages = [
@@ -79,10 +79,8 @@ describe("collection authored bundle admission", () => {
                 },
             },
         ];
-        await expect(admitCollectionRelease(source)).rejects.toMatchObject({ code: "resolution_failed" });
-        await expect(admitCollectionRelease(source, [], { contracts })).resolves.toMatchObject({
-            release: { pages: [{ id: "catalog" }] },
-        });
+        await expect(admitCollectionRelease(source)).rejects.toThrow("not a declared setting");
+        await expect(admitCollectionRelease(source, [], { contracts })).rejects.toThrow("not a declared setting");
     });
 
     test("snapshots release and all asset bytes before any asynchronous work", async () => {

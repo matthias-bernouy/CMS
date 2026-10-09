@@ -65,7 +65,7 @@ export function nativeElementAttributesIssue(
     if (placementIssue) {
         return placementIssue;
     }
-    const attributeIssue = nativeAttributesIssue(tag, attributes, componentOwned);
+    const attributeIssue = nativeAttributesIssue(tag, attributes);
     if (attributeIssue) {
         return attributeIssue;
     }
@@ -94,11 +94,7 @@ export function nativeElementAttributesIssue(
     return null;
 }
 
-function nativeAttributesIssue(
-    tag: string,
-    attributes: Readonly<Record<string, string>>,
-    componentOwned: boolean,
-): string | null {
+function nativeAttributesIssue(tag: string, attributes: Readonly<Record<string, string>>): string | null {
     const controlled: Record<string, string> = {};
     for (const [name, value] of Object.entries(attributes)) {
         if ((tag !== "svg" && name !== name.toLowerCase()) || CONTROL_CHARACTER.test(value)) {
