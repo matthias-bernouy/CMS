@@ -48,7 +48,7 @@ test("collection number attributes use strict JSON syntax before schema validati
                 `<example-counter count="${value}" ratio="0.5"></example-counter>`,
                 configured,
             ),
-        ).toThrow("numeric attributes must use JSON number syntax");
+        ).toThrow("must use JSON number syntax");
     }
 });
 
@@ -65,4 +65,13 @@ test("collection number attributes enforce explicit values and accept absent att
     expect(() =>
         assertCollectionSettingAttributes('<example-counter ratio="0.5"></example-counter>', configured),
     ).not.toThrow();
+});
+
+test("collection settings reject undeclared host attributes", () => {
+    expect(() =>
+        assertCollectionSettingAttributes(
+            '<example-counter count="3" ratio="0.5" mystery="value"></example-counter>',
+            configured,
+        ),
+    ).toThrow("not a declared setting");
 });

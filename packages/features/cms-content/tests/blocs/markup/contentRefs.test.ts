@@ -161,4 +161,38 @@ describe("assertContentRefsExist", () => {
             "requires at least 1 item",
         );
     });
+
+    test("rejects undeclared Bloc host attributes and root slot targets", async () => {
+        const cms = makeSystem({ blocs: ["fixture-card"] });
+        await expect(assertContentRefsExist(cms, '<fixture-card mystery="value"></fixture-card>')).rejects.toThrow(
+            "not a declared setting",
+        );
+        await expect(assertContentRefsExist(cms, '<fixture-card slot="ghost"></fixture-card>')).rejects.toThrow(
+            "cannot target a slot",
+        );
+    });
+
+    test("accepts only declared settings on Bloc hosts", async () => {
+        const cms: any = {
+            getBlocsList: async () => [
+                {
+                    id: "fixture-card",
+                    collectionSettings: [
+                        {
+                            id: "tone",
+                            label: "Tone",
+                            type: "string",
+                            default: "quiet",
+                            maxLength: 5,
+                            control: { kind: "text" },
+                        },
+                    ],
+                },
+            ],
+        };
+        await assertContentRefsExist(cms, '<fixture-card tone="loud"></fixture-card>');
+        await expect(assertContentRefsExist(cms, '<fixture-card tone="too-long"></fixture-card>')).rejects.toThrow(
+            "settings are invalid",
+        );
+    });
 });

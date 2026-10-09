@@ -30,9 +30,21 @@ function validateNativeMarkup(value: string, field: string, rootParentTag?: stri
     const hardened = hardenStoredHtml(value);
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = hardened;
+    if (containsComment(document.body)) {
+        throw new ContentValidationError(field, "HTML comments are not part of the persisted Page grammar");
+    }
     const issue = nativeDomTreeIssue(document.body, { rootParentTag });
     if (issue) {
         throw new ContentValidationError(field, issue);
     }
     return document.body.innerHTML;
+}
+
+function containsComment(root: Node): boolean {
+    for (const child of Array.from(root.childNodes)) {
+        if (child.nodeType === 8 || containsComment(child)) {
+            return true;
+        }
+    }
+    return false;
 }

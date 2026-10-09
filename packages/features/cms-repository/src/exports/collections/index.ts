@@ -94,5 +94,9 @@ export {
     pageRequirements,
 } from "cms-repository/collections/core/admission/pageRequirements";
 export { pageReferenceSources } from "cms-repository/collections/core/parsing/pages/references";
+export {
+    pageBlocHostAttributesIssue,
+    type PageBlocHostContract,
+} from "cms-repository/collections/core/validation/pageDocument/hostAttributes";
 
 export * from "./texts";

@@ -29,7 +29,7 @@ test("collection Pages keep one bounded document on exactly one surface", () => 
     }
 });
 
-test("collection Pages derive capability and resource references from their document", () => {
+test("collection Page hosts reject undeclared capability and resource attributes", () => {
     const source = collectionDocument({ "page.overview.name": "Overview" });
     const bound = {
         ...page,
@@ -38,8 +38,7 @@ test("collection Pages derive capability and resource references from their docu
             html: '<atlas-panel cms-source="/.cms/call/catalog.items/item.list as catalog" cms-source-method="POST" cms-source-body="{}"></atlas-panel>',
         },
     };
-    expect(parseCollectionRelease({ ...source, pages: [bound] }).pages?.[0]?.requires).toEqual(bound.requires);
-    expect(() => parseCollectionRelease({ ...source, pages: [{ ...bound, requires: [] }] })).toThrow(/exactly match/);
+    expect(() => parseCollectionRelease({ ...source, pages: [bound] })).toThrow(/not a declared setting/);
 
     const localized = {
         ...source,
@@ -61,7 +60,7 @@ test("collection Pages derive capability and resource references from their docu
             },
         ],
     };
-    expect(() => parseCollectionRelease(localized)).not.toThrow();
+    expect(() => parseCollectionRelease(localized)).toThrow(/not a declared setting/);
     expect(() =>
         parseCollectionRelease({
             ...localized,
@@ -69,7 +68,7 @@ test("collection Pages derive capability and resource references from their docu
                 { ...page, document: { html: '<atlas-panel title="{{ cms.i18n.atlas.unknown }}"></atlas-panel>' } },
             ],
         }),
-    ).toThrow(/unknown collection text/);
+    ).toThrow(/not a declared setting/);
 });
 
 test("collection Pages admit typed capability forms owned by a composition", () => {
