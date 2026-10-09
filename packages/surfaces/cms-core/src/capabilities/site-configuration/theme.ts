@@ -1,4 +1,5 @@
-import { composeCollectionThemes, readSystemSnapshot, type ThemeSettings } from "@bernouy/cms-content";
+import { readSystemSnapshot, type ThemeSettings } from "@bernouy/cms-content";
+import { composeCollectionThemes } from "@bernouy/cms-repository/collections/content";
 import type { CoreCapabilityRegistry } from "../../dispatch/registry";
 import type { CmsThemeDependencies } from "../../ports";
 import { configurationCommand, parseConfigurationJson, revision } from "./support";

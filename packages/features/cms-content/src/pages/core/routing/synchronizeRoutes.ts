@@ -1,5 +1,3 @@
-import type { InstalledCollection } from "@bernouy/cms-repository/collections/installations";
-import type { TPage } from "cms-content/pages/interfaces/pages";
 import type {
     PageReference,
     SurfacePageRoute,
@@ -7,19 +5,6 @@ import type {
     SurfacePageRouteRegistry,
 } from "cms-content/pages/interfaces/routing";
 import { pageReferenceKey, validateSurfacePagePath } from "cms-content/pages/core/routing/values";
-
-type CollectionSnapshot = { readonly collections: readonly InstalledCollection[] };
-
-/** Rebuilds the complete site route projection from both canonical Page sources. */
-export async function synchronizePageRoutes(
-    routes: SurfacePageRouteRegistry,
-    siteId: string,
-    collections: CollectionSnapshot,
-    sitePages: readonly TPage[],
-): Promise<void> {
-    const desired = [...collectionRegistrations(collections.collections), ...siteRegistrations(sitePages)];
-    await synchronizePageRouteRegistrations(routes, siteId, desired, () => true);
-}
 
 /** Reconciles one owned subset while treating every other route as fixed. */
 export async function synchronizePageRouteRegistrations(
@@ -54,29 +39,6 @@ export async function synchronizePageRouteRegistrations(
             await routes.updateDefault(siteId, registration.page, registration.defaultPath, current.revision);
         }
     }
-}
-
-function collectionRegistrations(collections: readonly InstalledCollection[]): readonly SurfacePageRouteRegistration[] {
-    return collections.flatMap((installation) =>
-        (installation.release.pages ?? []).map((page) => ({
-            page: {
-                kind: "collection" as const,
-                publisherId: installation.release.publisherId,
-                collectionId: installation.collectionId,
-                pageId: page.id,
-            },
-            surface: page.surface,
-            defaultPath: page.defaultPath,
-        })),
-    );
-}
-
-function siteRegistrations(pages: readonly TPage[]): readonly SurfacePageRouteRegistration[] {
-    return pages.map((page) => ({
-        page: { kind: "site" as const, pageId: page.id },
-        surface: page.surface,
-        defaultPath: page.path,
-    }));
 }
 
 function assertDesiredRoutes(

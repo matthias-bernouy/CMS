@@ -1,4 +1,4 @@
-import type { PageSurface } from "@bernouy/cms-repository/collections";
+import type { PageSurface } from "cms-content/pages/interfaces/document";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { TBloc } from "cms-content/blocs/interfaces/blocs";
 import { createBlocUsageResolver } from "cms-content/blocs/core/usage/resolveUsedBlocTags";

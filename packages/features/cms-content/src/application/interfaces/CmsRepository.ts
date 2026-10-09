@@ -1,7 +1,6 @@
-import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import type {
     BlocRecord,
-    SiteBlocCollection,
+    SiteBlocGroup,
     SiteBlocDefinition,
     SiteBlocSnapshot,
     TBloc,
@@ -11,6 +10,14 @@ import type { PageCreateOptions, PageRoute, TPage } from "cms-content/pages/inte
 import type { PageReference } from "cms-content/pages/interfaces/routing";
 import type { PageContentReference } from "cms-content/pages/core/queries/contentReferences";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
+import type { PageDocument, PageSurface } from "cms-content/pages/interfaces/document";
+import type { ContentTextSource } from "cms-content/pages/core/rendering/contentTexts";
+
+export type ContentContributionSnapshot = {
+    readonly revision: number;
+    readonly pages: readonly { readonly surface: PageSurface; readonly document: PageDocument }[];
+    readonly texts: readonly ContentTextSource[];
+};
 
 export type BlocListItemResponse = {
     id: string;
@@ -22,8 +29,8 @@ export type BlocListItemResponse = {
     compositionHTML?: string;
     componentHTML?: string;
     defaultContent?: string;
-    collectionSlots?: TBloc["collectionSlots"];
-    collectionSettings?: TBloc["collectionSettings"];
+    slots?: TBloc["slots"];
+    settings?: TBloc["settings"];
     internal?: boolean;
     surfaces?: TBloc["surfaces"];
     uses?: TBloc["uses"];
@@ -86,11 +93,11 @@ export type PageScan = {
 };
 
 export interface CmsRepository {
-    getInstalledCollections?: CollectionStore["snapshot"] extends (siteId: string) => infer R ? () => R : never;
-    getInstalledCollectionRevision?(): Promise<number>;
-    getSiteBlocCollections(): Promise<SiteBlocCollection[]>;
-    updateSiteBlocCollection(id: string, input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection>;
-    createSiteBlocCollection(input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection>;
+    /** Runtime projections supplied by package/extension adapters. */
+    getContentContributions?(): Promise<ContentContributionSnapshot>;
+    getSiteBlocGroups(): Promise<SiteBlocGroup[]>;
+    updateSiteBlocGroup(id: string, input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup>;
+    createSiteBlocGroup(input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup>;
 
     // BLOC
     createBloc(bloc: TBlocWrite): Promise<TBloc>;

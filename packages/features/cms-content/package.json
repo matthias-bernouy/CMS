@@ -13,15 +13,14 @@
         "./rendering": "./src/exports/rendering.ts",
         "./theme": "./src/exports/theme.ts",
         "./page-path": "./src/exports/page-path.ts",
-        "./mongo": "./src/exports/mongo.ts",
-        "./migrations": "./src/exports/migrations.ts"
+        "./page-document": "./src/exports/page-document.ts",
+        "./mongo": "./src/exports/mongo.ts"
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^20.14.5",
         "@types/bun": "1.4.2"
     },
     "dependencies": {
-        "@bernouy/cms-repository": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "linkedom": "^0.18.13"
     },

@@ -128,16 +128,16 @@ describe("assertContentRefsExist", () => {
             getBlocsList: async () => [
                 {
                     id: "fixture-card",
-                    collectionSlots: {
+                    slots: {
                         title: { accepts: [{ kind: "rich-text", profile: "inline" }], min: 1, max: 1 },
                         actions: { accepts: [{ kind: "any-component" }], max: 1 },
                     },
                 },
-                { id: "fixture-action", collectionSlots: {} },
+                { id: "fixture-action", slots: {} },
                 {
                     id: "fixture-composition",
                     compositionHTML: "<fixture-action></fixture-action>",
-                    collectionSlots: {},
+                    slots: {},
                 },
             ],
         };
@@ -177,7 +177,7 @@ describe("assertContentRefsExist", () => {
             getBlocsList: async () => [
                 {
                     id: "fixture-card",
-                    collectionSettings: [
+                    settings: [
                         {
                             id: "tone",
                             label: "Tone",

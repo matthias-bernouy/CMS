@@ -2,7 +2,7 @@ import type { CmsRepository } from "cms-content/application/interfaces/CmsReposi
 import { cmsPageDetails, type CmsPageDetails } from "cms-content/pages/core/contracts/pageDetails";
 import { CmsPageNotFoundError } from "cms-content/pages/core/contracts/renamePage";
 import { validatePagePath, validatePageTitle } from "cms-content/pages/core/validation/page";
-import type { PageSurface } from "@bernouy/cms-repository/collections";
+import type { PageSurface } from "cms-content/pages/interfaces/document";
 
 export interface CmsPageCreateInput {
     readonly path: string;

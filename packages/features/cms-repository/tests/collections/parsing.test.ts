@@ -16,7 +16,7 @@ describe("collection release parsing", () => {
     test("reserves one HTML and CSS safe namespace for every collection", () => {
         expect(isCollectionNamespace("atlas")).toBe(true);
         expect(isCollectionNamespace("atlas-widgets")).toBe(true);
-        expect(collectionThemeSourceId("atlas-widgets")).toBe("collection-atlas-widgets");
+        expect(collectionThemeSourceId("atlas-widgets")).toBe("contribution-atlas-widgets");
         expect(collectionThemeTokenId("atlas-widgets", "accent")).toBe("atlas-widgets-accent");
         expect(() => collectionThemeTokenId("atlas-widgets", "accent--strong")).toThrow("Invalid local");
 

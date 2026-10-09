@@ -9,9 +9,9 @@ const SITE_PAGE_ID = /^[0-9A-Za-z][0-9A-Za-z._:-]{0,199}$/u;
 export type StablePageReference =
     | { readonly kind: "site"; readonly pageId: string }
     | {
-          readonly kind: "collection";
-          readonly publisherId: string;
-          readonly collectionId: string;
+          readonly kind: "contribution";
+          readonly sourceId: string;
+          readonly contributionId: string;
           readonly pageId: string;
       };
 
@@ -58,12 +58,12 @@ function parseStablePageReference(value: string, path: string): StablePageRefere
     }
     const reference = parsed as Record<string, unknown>;
     const keys = Object.keys(reference).sort();
-    const expected = reference.kind === "site" ? ["kind", "pageId"] : ["collectionId", "kind", "pageId", "publisherId"];
+    const expected = reference.kind === "site" ? ["kind", "pageId"] : ["contributionId", "kind", "pageId", "sourceId"];
     if (keys.length !== expected.length || keys.some((key, index) => key !== expected[index])) {
         invalid("stable Page reference has an invalid shape", path);
     }
-    if (reference.kind !== "site" && reference.kind !== "collection") {
-        invalid("stable Page reference kind must be site or collection", path);
+    if (reference.kind !== "site" && reference.kind !== "contribution") {
+        invalid("stable Page reference kind must be site or contribution", path);
     }
     if (reference.kind === "site") {
         if (typeof reference.pageId !== "string" || !SITE_PAGE_ID.test(reference.pageId)) {
@@ -78,9 +78,9 @@ function parseStablePageReference(value: string, path: string): StablePageRefere
         }
     }
     return {
-        kind: "collection",
-        publisherId: reference.publisherId as string,
-        collectionId: reference.collectionId as string,
+        kind: "contribution",
+        sourceId: reference.sourceId as string,
+        contributionId: reference.contributionId as string,
         pageId: reference.pageId as string,
     };
 }
@@ -96,7 +96,7 @@ export function validateDeclaredPageReferences(
             if (reference.kind === "site") {
                 continue;
             }
-            if (reference.publisherId === release.publisherId && reference.collectionId === release.collectionId) {
+            if (reference.sourceId === release.publisherId && reference.contributionId === release.collectionId) {
                 const target = pages.get(reference.pageId);
                 if (!target) {
                     invalid(`references unknown Page ${reference.pageId}`, `$.pages.${page.id}.document.html`);
@@ -105,11 +105,11 @@ export function validateDeclaredPageReferences(
                 continue;
             }
             const dependency = release.dependencies?.find(
-                (item) => item.publisherId === reference.publisherId && item.collectionId === reference.collectionId,
+                (item) => item.publisherId === reference.sourceId && item.collectionId === reference.contributionId,
             );
             if (!dependency?.imports.pages?.some((item) => item.id === reference.pageId)) {
                 invalid(
-                    `references Page ${reference.collectionId}.${reference.pageId} without importing it`,
+                    `references Page ${reference.contributionId}.${reference.pageId} without importing it`,
                     `$.pages.${page.id}.document.html`,
                 );
             }

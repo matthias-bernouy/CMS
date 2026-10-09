@@ -1,17 +1,17 @@
-import type { PageDocument } from "@bernouy/cms-repository/collections";
+import type { PageDocument } from "cms-content/pages/interfaces/document";
 import type { ContentReader } from "cms-content/application/interfaces/ContentReader";
 import { expandCompositions } from "cms-content/blocs/core/composition/expandCompositions";
 import { wrapBindingCore } from "cms-content/blocs/core/markup/bindingRoot";
 import { CMS_BINDING_CORE_TAG } from "cms-content/blocs/core/markup/bindings";
 import { sanitizeDomTree } from "cms-content/blocs/core/markup/security/sanitizeDomTree";
 import { createBlocUsageResolver } from "cms-content/blocs/core/usage/resolveUsedBlocTags";
-import { renderCollectionTexts, type CollectionTextSource } from "cms-content/pages/core/rendering/collectionTexts";
+import { renderContentTexts, type ContentTextSource } from "cms-content/pages/core/rendering/contentTexts";
 
 export interface PageDocumentRenderContext {
-    readonly repository: Pick<ContentReader, "getBlocViewJS" | "getCollectionTexts" | "getRenderableBlocs">;
+    readonly repository: Pick<ContentReader, "getBlocViewJS" | "getContentTexts" | "getRenderableBlocs">;
     readonly language: string;
-    readonly collectionTexts?: readonly CollectionTextSource[];
-    readonly resolveCollectionAssets?: (input: string) => Promise<string>;
+    readonly contentTexts?: readonly ContentTextSource[];
+    readonly resolveContributedAssets?: (input: string) => Promise<string>;
     readonly prepareBody?: (body: Element) => void | Promise<void>;
 }
 
@@ -32,15 +32,13 @@ export async function renderPageDocument(
 
     const blocList = await context.repository.getRenderableBlocs();
     expandCompositions(body, blocList);
-    renderCollectionTexts(
+    renderContentTexts(
         body,
         context.language,
-        context.repository.getCollectionTexts
-            ? await context.repository.getCollectionTexts()
-            : (context.collectionTexts ?? []),
+        context.repository.getContentTexts ? await context.repository.getContentTexts() : (context.contentTexts ?? []),
     );
-    if (context.resolveCollectionAssets) {
-        body.innerHTML = await context.resolveCollectionAssets(body.innerHTML);
+    if (context.resolveContributedAssets) {
+        body.innerHTML = await context.resolveContributedAssets(body.innerHTML);
     }
     sanitizeDomTree(body);
     await context.prepareBody?.(body);

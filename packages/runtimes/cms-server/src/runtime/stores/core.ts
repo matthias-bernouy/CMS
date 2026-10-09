@@ -1,15 +1,16 @@
 import { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import { MongoCollectionStorage } from "@bernouy/cms-repository/collections/mongo";
 import { MongoReleaseCatalogue } from "@bernouy/cms-repository/contracts/mongo";
+import { PageRouteMutationCoordinator, validatePageLinks, withSitePageRoutes } from "@bernouy/cms-content";
 import {
-    PageRouteMutationCoordinator,
     synchronizePageRoutes,
-    validatePageLinks,
     withCollectionPageRoutes,
     withInstalledCollections,
-    withSitePageRoutes,
-} from "@bernouy/cms-content";
-import { CollectionMigrationService, withCollectionMigrationWriteFence } from "@bernouy/cms-content/migrations";
+} from "@bernouy/cms-repository/collections/content";
+import {
+    CollectionMigrationService,
+    withCollectionMigrationWriteFence,
+} from "@bernouy/cms-repository/collections/installations";
 import {
     MongoAuthTokenStore,
     MongoIdentityProviderRepository,
@@ -18,11 +19,8 @@ import {
     MongoUsersRepository,
 } from "@bernouy/cms-auth/mongo";
 import { ValidatingCmsRepository } from "@bernouy/cms-content";
-import {
-    MongoCmsRepository,
-    MongoCollectionMigrationStorage,
-    MongoSurfacePageRouteRegistry,
-} from "@bernouy/cms-content/mongo";
+import { MongoCmsRepository, MongoSurfacePageRouteRegistry } from "@bernouy/cms-content/mongo";
+import { MongoCollectionMigrationStorage } from "@bernouy/cms-repository/collections/mongo";
 import { createFieldCrypto } from "@bernouy/envelope-crypto/mongo";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { MongoRateLimiter } from "@bernouy/rate-limiter/mongo";

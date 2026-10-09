@@ -1,5 +1,5 @@
-import type { PageDocument, PageSurface } from "@bernouy/cms-repository/collections";
 import type { SitePageReference } from "cms-content/pages/interfaces/routing";
+import type { PageDocument, PageSurface } from "cms-content/pages/interfaces/document";
 
 export type PageIndexingConfiguration = {
     /** Whether search engines may index this page or its discovered entity URLs. */
@@ -41,7 +41,7 @@ export type TPage = {
     /** Immutable execution and routing boundary. */
     surface: PageSurface;
     /** Informational provenance for a site-owned copy; never live inheritance. */
-    origin?: SitePageOrigin;
+    origin?: PageContributionOrigin;
     /** Primary public path used by delivery and route lookups. */
     path: string;
     /** Local path per site language. Absent until the site has a default language. */
@@ -57,18 +57,18 @@ export type TPage = {
     indexing?: PageIndexingConfiguration;
 };
 
-export type SitePageOrigin = {
-    readonly publisherId: string;
-    readonly collectionId: string;
-    readonly collectionVersion: string;
-    readonly collectionDigest: string;
+export type PageContributionOrigin = {
+    readonly sourceId: string;
+    readonly contributionId: string;
+    readonly version: string;
+    readonly digest: string;
     readonly pageId: string;
-    readonly pageGeneration: number;
+    readonly generation: number;
 };
 
 export type PageCreateOptions = {
     readonly surface?: PageSurface;
-    readonly origin?: SitePageOrigin;
+    readonly origin?: PageContributionOrigin;
 };
 
 export function pageDocument(page: Pick<TPage, "content">): PageDocument {

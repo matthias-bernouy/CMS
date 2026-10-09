@@ -5,7 +5,7 @@ import type {
     UsersRepository,
 } from "@bernouy/cms-auth";
 import type { CmsRepository } from "@bernouy/cms-content";
-import type { CollectionMigrationService } from "@bernouy/cms-content/migrations";
+import type { CollectionMigrationService } from "@bernouy/cms-repository/collections/installations";
 import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
 import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import type {

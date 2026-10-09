@@ -37,11 +37,19 @@ const NEW_TAB_REL = new Set([
 export function nativeAttributeValueIssue(tag: string, attribute: string, value: string): string | null {
     const normalizedTag = tag.toLowerCase();
     const normalizedAttribute = attribute.toLowerCase();
-    const collectionAssetUrl =
-        isCollectionAssetSource(value) &&
+    if (normalizedAttribute === "data-cms-page-ref" || normalizedAttribute === "data-cms-success-page-ref") {
+        return CONTROL_CHARACTER.test(value) ? `attribute "${attribute}" contains control characters` : null;
+    }
+    if (normalizedAttribute === "data-cms-page-suffix") {
+        return !CONTROL_CHARACTER.test(value) && (value.startsWith("?") || value.startsWith("#"))
+            ? null
+            : "stable Page suffix must be a query or fragment";
+    }
+    const contributedAssetUrl =
+        isContributedAssetSource(value) &&
         ((normalizedTag === "a" && normalizedAttribute === "href") ||
             (normalizedTag === "img" && normalizedAttribute === "src"));
-    if ((DYNAMIC_TOKEN.test(value) && !collectionAssetUrl) || CONTROL_CHARACTER.test(value)) {
+    if ((DYNAMIC_TOKEN.test(value) && !contributedAssetUrl) || CONTROL_CHARACTER.test(value)) {
         return `attribute "${attribute}" must be a static value without control characters`;
     }
     if (normalizedAttribute === "slot") {
@@ -60,7 +68,7 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
         return ARIA_LIVE_VALUES.has(value) ? null : "native aria-live value is not controlled";
     }
     if (normalizedTag === "a" && normalizedAttribute === "href") {
-        return collectionAssetUrl || isSafeNavigationalUrl(value)
+        return contributedAssetUrl || isSafeNavigationalUrl(value)
             ? null
             : "native link destination uses a forbidden URL scheme";
     }
@@ -154,7 +162,7 @@ export function nativeAttributeSetIssue(tag: string, attributes: Readonly<Record
 
 function imageAttributeIssue(attribute: string, value: string): string | null {
     if (attribute === "src") {
-        return isCmsMediaSource(value) || isCollectionAssetSource(value)
+        return isCmsMediaSource(value) || isContributedAssetSource(value)
             ? null
             : "native image source must reference a CMS media item";
     }
@@ -200,6 +208,6 @@ export function isCmsMediaSource(value: string): boolean {
     );
 }
 
-export function isCollectionAssetSource(value: string): boolean {
+export function isContributedAssetSource(value: string): boolean {
     return /^\{\{\s*cms\.asset\.[a-z][a-z0-9-]{0,95}\.[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*\s*\}\}$/u.test(value);
 }

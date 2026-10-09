@@ -1,12 +1,12 @@
-import { replaceCollectionTextExpressions } from "@bernouy/cms-repository/collections/texts";
 import { pageContentReferences } from "cms-content/pages/core/routing/links";
+import { replaceContentTextExpressions } from "cms-content/pages/core/rendering/contentTexts";
 import { parseHTML } from "linkedom";
 
 export type PageContentReference =
     | { readonly kind: "bloc"; readonly tag: string }
     | { readonly kind: "file"; readonly fileId: string }
     | { readonly kind: "site-page"; readonly pageId: string }
-    | { readonly kind: "text"; readonly collectionId: string; readonly textId: string };
+    | { readonly kind: "text"; readonly namespace: string; readonly textId: string };
 
 const FILE_REFERENCE = /\/\.cms\/call\/ulvia\.cms\.files\/files\/([^/?#\s"'<>]+)\/[^/?#\s"'<>]+/g;
 
@@ -20,7 +20,7 @@ export function pageContentReferenceKey(reference: PageContentReference): string
         case "site-page":
             return `site-page:${reference.pageId}`;
         case "text":
-            return `text:${reference.collectionId}:${reference.textId}`;
+            return `text:${reference.namespace}:${reference.textId}`;
     }
 }
 
@@ -34,8 +34,8 @@ export function pageContentReferenceKeys(content: string): readonly string[] {
             keys.add(pageContentReferenceKey({ kind: "bloc", tag }));
         }
     }
-    replaceCollectionTextExpressions(content, (collectionId, textId) => {
-        keys.add(pageContentReferenceKey({ kind: "text", collectionId, textId }));
+    replaceContentTextExpressions(content, (namespace, textId) => {
+        keys.add(pageContentReferenceKey({ kind: "text", namespace, textId }));
         return "";
     });
     for (const match of content.matchAll(FILE_REFERENCE)) {

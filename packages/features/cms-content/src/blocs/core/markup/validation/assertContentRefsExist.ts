@@ -1,12 +1,12 @@
 import { extractRefs } from "cms-content/blocs/core/markup/contentRefs";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { managedNativeElementIssue } from "cms-content/blocs/core/markup/validation/managedNativeElements";
-import { assertCollectionSettingAttributes } from "cms-content/blocs/core/markup/validation/collectionSettings";
-import type { CollectionComponentSettings } from "@bernouy/cms-repository/collections";
+import { assertBlocSettingAttributes } from "cms-content/blocs/core/markup/validation/contracts/settings";
 import type { TBloc } from "cms-content/blocs/interfaces/blocs";
+import type { BlocSettings } from "cms-content/pages/interfaces/document";
 import { parseHTML } from "linkedom";
 import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
-import { blocHostContractIssue } from "cms-content/blocs/core/markup/validation/pageSlotContracts";
+import { blocHostContractIssue } from "cms-content/blocs/core/markup/validation/contracts/pageSlotContracts";
 
 /** Minimal reader — `CmsRepository` satisfies it structurally. */
 export type ContentRefsReader = {
@@ -14,8 +14,8 @@ export type ContentRefsReader = {
         Array<{
             id: string;
             nativeElement?: TBloc["nativeElement"];
-            collectionSlots?: TBloc["collectionSlots"];
-            collectionSettings?: CollectionComponentSettings;
+            slots?: TBloc["slots"];
+            settings?: BlocSettings;
         }>
     >;
 };
@@ -52,7 +52,7 @@ export async function assertContentRefsExist(repository: ContentRefsReader, cont
     if (managedIssue) {
         throw new ContentValidationError("content", managedIssue);
     }
-    assertCollectionSettingAttributes(content, registeredBlocs);
+    assertBlocSettingAttributes(content, registeredBlocs);
 
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = content;

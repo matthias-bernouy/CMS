@@ -30,7 +30,7 @@ const DOCUMENT_FOUNDATION = `@layer cms-foundation {
 /**
  * Build the theme stylesheet entry served at `/.cms/style`.
  * A non-visual document foundation is emitted first. Structured theme values
- * follow as custom properties; collections remain responsible for all native
+ * follow as custom properties; contributions remain responsible for all native
  * element presentation, including typography, colour, spacing, and focus.
  */
 export async function generateStyleEntry(

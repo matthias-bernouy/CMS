@@ -1,4 +1,4 @@
-/** Browser runtime shared by rendered Pages and authored collection Blocs. */
+/** Browser runtime shared by rendered Pages and contributed Blocs. */
 export {
     Component,
     type ComponentMetadata,

@@ -61,6 +61,12 @@ models and validation for CMS-owned installations and site selections.
   validating Bloc source and producing immutable browser runtime bundles. Keep
   compiler and filesystem dependencies behind this subpath; the package root and
   normal collection admission must never import the build pipeline.
+- `./collections/content` projects admitted and installed collections into the
+  generic Page, Bloc, text and theme contribution contracts owned by
+  `@bernouy/cms-content`.
+- `./collections/installations` also exposes collection migration planning,
+  execution, journals and the memory adapter. The Mongo journal adapter is
+  exported from `./collections/mongo`.
 - `src/repository-http/` contains only bounded HTTP transport shared by the
   collection and provider repository sources. It must not import any domain.
   Keep catalogue parsing, references and admission in their respective domains.
@@ -283,6 +289,14 @@ models and validation for CMS-owned installations and site selections.
   never accept executable migration code. Contract and implementation digests
   are derived after admission and do not replace the collection SemVer or
   immutable release digest.
+- Collection migrations are maintenance-mode operations. Keep their impact
+  plan read-only and bounded, their Page writes revision-checked, their journal
+  resumable and batch-readable, and their rollback snapshots separate from
+  user-facing Page history. Migration writes must retain the exact maintenance
+  lease; never let a stale worker release a successor's lease.
+- Features persisting references to collection resources must register a
+  `CollectionMigrationParticipant`; every mutation of that persisted state must
+  use the shared site migration write fence.
 - Every text definition declares `category`, `group` and `label` as collection
   translation keys; `description` remains optional. Admission verifies every
   declared key against the default translation catalogue, so an incomplete text

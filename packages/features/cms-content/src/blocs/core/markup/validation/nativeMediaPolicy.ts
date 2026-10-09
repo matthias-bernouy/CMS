@@ -1,4 +1,4 @@
-import { isCmsMediaSource, isCollectionAssetSource } from "cms-content/blocs/core/validation/nativeAttributeValues";
+import { isCmsMediaSource, isContributedAssetSource } from "cms-content/blocs/core/validation/nativeAttributeValues";
 
 export function componentImageIssue(
     attributes: Readonly<Record<string, string>>,
@@ -19,7 +19,7 @@ export function componentImageIssue(
             ? null
             : "decorative native images require an empty alt and aria-hidden";
     }
-    if (!isCmsMediaSource(source) && !isGatewayProviderMedia(source) && !isCollectionAssetSource(source)) {
+    if (!isCmsMediaSource(source) && !isGatewayProviderMedia(source) && !isContributedAssetSource(source)) {
         return "native image source must reference CMS media or a gateway provider image";
     }
     const decorative = attributes.role === "presentation";

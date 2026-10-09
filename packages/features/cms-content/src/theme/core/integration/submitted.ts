@@ -25,12 +25,12 @@ export function reconcileSubmittedThemeSettings(
         ),
     ]);
 
-    const collectionSources = current.sources.filter((source) => source.owner?.kind === "collection");
-    const collectionNamespaces = collectionSources.map((source) =>
-        source.owner?.kind === "collection" ? source.owner.collectionId : "",
+    const contributionSources = current.sources.filter((source) => source.owner?.kind === "contribution");
+    const contributionNamespaces = contributionSources.map((source) =>
+        source.owner?.kind === "contribution" ? source.owner.contributionId : "",
     );
     next.sources = next.sources.flatMap((source) => {
-        if (source.owner?.kind === "collection" || source.id.startsWith("collection-")) {
+        if (source.owner?.kind === "contribution" || source.id.startsWith("contribution-")) {
             return [];
         }
         if (isReservedIntegrationSource(source)) {
@@ -42,7 +42,7 @@ export function reconcileSubmittedThemeSettings(
                 (token) =>
                     !isReservedIntegrationName(token.id, reservedNamespaces) &&
                     !isReservedIntegrationName(token.variable, reservedNamespaces) &&
-                    !collectionNamespaces.some(
+                    !contributionNamespaces.some(
                         (namespace) =>
                             token.id.startsWith(`${namespace}-`) || token.variable.startsWith(`${namespace}-`),
                     ),
@@ -50,7 +50,7 @@ export function reconcileSubmittedThemeSettings(
         }
         return [source];
     });
-    next.sources.push(...structuredClone(collectionSources));
+    next.sources.push(...structuredClone(contributionSources));
     for (const theme of next.themes) {
         for (const mode of ["light", "dark"] as const) {
             for (const tokenId of Object.keys(theme.values[mode] ?? {})) {

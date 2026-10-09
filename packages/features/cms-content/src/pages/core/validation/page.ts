@@ -1,4 +1,4 @@
-import type { PageCreateOptions, SitePageOrigin, TPage } from "cms-content/pages/interfaces/pages";
+import type { PageContributionOrigin, PageCreateOptions, TPage } from "cms-content/pages/interfaces/pages";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { isValidPathFormat } from "cms-content/application/core/validation/predicates";
 import { validatePageIndexingConfiguration } from "cms-content/pages/core/validation/indexing";
@@ -37,19 +37,19 @@ export function validatePageCreateOptions(options: PageCreateOptions | undefined
     };
 }
 
-function validatePageOrigin(origin: SitePageOrigin): SitePageOrigin {
+function validatePageOrigin(origin: PageContributionOrigin): PageContributionOrigin {
     const identifier = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
     const version = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u;
     if (
-        !identifier.test(origin.publisherId) ||
-        !identifier.test(origin.collectionId) ||
+        !identifier.test(origin.sourceId) ||
+        !identifier.test(origin.contributionId) ||
         !identifier.test(origin.pageId) ||
-        !version.test(origin.collectionVersion) ||
-        !/^sha256:[0-9a-f]{64}$/u.test(origin.collectionDigest) ||
-        !Number.isSafeInteger(origin.pageGeneration) ||
-        origin.pageGeneration < 1
+        !version.test(origin.version) ||
+        !/^sha256:[0-9a-f]{64}$/u.test(origin.digest) ||
+        !Number.isSafeInteger(origin.generation) ||
+        origin.generation < 1
     ) {
-        throw new ContentValidationError("origin", "must identify one exact admitted collection Page");
+        throw new ContentValidationError("origin", "must identify one exact contributed Page");
     }
     return structuredClone(origin);
 }

@@ -139,7 +139,7 @@ describe("structured themes", () => {
         expect(validateThemeSettings(settings)).toEqual(settings);
     });
 
-    test("requires collection-owned theme links to use an explicitly imported token", () => {
+    test("requires contribution-owned theme links to use an explicitly imported token", () => {
         const settings = defaultThemeSettings();
         const shop = collectionSource("shop", "Shop accent");
         const foundation = collectionSource("foundation", "Foundation accent");
@@ -152,12 +152,12 @@ describe("structured themes", () => {
         settings.sources.push(shop, foundation);
         settings.themes[0]!.values.light["shop-accent"] = "var(--foundation-accent)";
 
-        expect(() => validateThemeSettings(settings)).toThrow("undeclared collection dependency");
+        expect(() => validateThemeSettings(settings)).toThrow("undeclared dependency");
 
-        shop.owner.themeTokenImports = ["foundation-accent"];
+        shop.owner.tokenImports = ["foundation-accent"];
         expect(validateThemeSettings(settings)).toEqual(settings);
         settings.themes[0]!.values.light["shop-accent"] = "var(--foundation-muted)";
-        expect(() => validateThemeSettings(settings)).toThrow("undeclared collection dependency");
+        expect(() => validateThemeSettings(settings)).toThrow("undeclared dependency");
     });
 });
 
@@ -198,18 +198,18 @@ function integrationSource(integrationId: string, label: string) {
     };
 }
 
-function collectionSource(collectionId: string, label: string) {
-    const id = `${collectionId}-accent`;
+function collectionSource(contributionId: string, label: string) {
+    const id = `${contributionId}-accent`;
     return {
-        id: `collection-${collectionId}`,
-        label: collectionId,
+        id: `contribution-${contributionId}`,
+        label: contributionId,
         supportsModes: true,
-        owner: { kind: "collection" as const, collectionId },
+        owner: { kind: "contribution" as const, contributionId },
         categories: [
             {
                 id: "general",
                 label: "General",
-                description: `${collectionId} tokens`,
+                description: `${contributionId} tokens`,
                 tokens: [
                     {
                         id,

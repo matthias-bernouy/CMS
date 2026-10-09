@@ -6,7 +6,7 @@ const repository: any = {
     getBlocsList: async () => [
         {
             id: "fixture-card",
-            collectionSlots: { body: { accepts: [{ kind: "rich-text", profile: "prose" }] } },
+            slots: { body: { accepts: [{ kind: "rich-text", profile: "prose" }] } },
         },
         { id: "fixture-action", nativeElement: { accepts: ["button", "a"] } },
     ],
@@ -23,6 +23,12 @@ test("Page-owned rich text rejects arbitrary native attributes", async () => {
             "not allowed",
         );
     }
+});
+
+test("Page-owned rich text rejects descendant slot targets", async () => {
+    await expect(
+        validate('<fixture-card><p slot="body"><span slot="ghost">Text</span></p></fixture-card>'),
+    ).rejects.toThrow("does not accept native");
 });
 
 test("managed native children use the closed native attribute policy", async () => {

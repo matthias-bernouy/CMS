@@ -18,7 +18,7 @@ const ctx: RenderContext = {
         blocUrls: [],
         scriptUrls: [],
     }),
-    resolveCollectionAssets: async (input) =>
+    resolveContributedAssets: async (input) =>
         input.replace("{{ cms.asset.test.hero.svg }}", "/.cms/collections/test/assets/hero.svg?v=digest"),
     faviconUrl: "/favicon.ico",
     headInjectors: [],
@@ -63,5 +63,5 @@ test("Delivery sends translated HTML for the route language before any browser c
 });
 
 test("Delivery refuses unresolved catalogue references", async () => {
-    await expect(renderPage(page, { ...ctx, collectionTexts: [] })).rejects.toThrow("Unknown collection text");
+    await expect(renderPage(page, { ...ctx, collectionTexts: [] })).rejects.toThrow("Unknown content text");
 });

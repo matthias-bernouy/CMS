@@ -1,13 +1,13 @@
-import type { PageSurface } from "@bernouy/cms-repository/collections";
+import type { PageSurface } from "cms-content/pages/interfaces/document";
 
 export type SitePageReference = { readonly kind: "site"; readonly pageId: string };
 
 export type PageReference =
     | SitePageReference
     | {
-          readonly kind: "collection";
-          readonly publisherId: string;
-          readonly collectionId: string;
+          readonly kind: "contribution";
+          readonly sourceId: string;
+          readonly contributionId: string;
           readonly pageId: string;
       };
 

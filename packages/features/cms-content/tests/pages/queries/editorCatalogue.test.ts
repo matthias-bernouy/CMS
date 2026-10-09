@@ -27,8 +27,8 @@ test("editor catalogue projects deterministic delivery authoring contracts", asy
             description: "A reusable card.",
             surfaces: ["delivery" as const],
             defaultContent: "<p>Card copy</p>",
-            collectionSlots: { actions: { max: 1, accepts: [{ kind: "any-component" as const }] } },
-            collectionSettings: [
+            slots: { actions: { max: 1, accepts: [{ kind: "any-component" as const }] } },
+            settings: [
                 {
                     id: "featured",
                     label: "Featured",

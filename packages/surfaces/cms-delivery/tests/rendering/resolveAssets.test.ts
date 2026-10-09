@@ -52,7 +52,7 @@ function repositoryWith(options: {
         resolvePublishedRoute: async () => null,
         ...(options.collectionRevision === undefined
             ? {}
-            : { getCollectionRevision: async () => options.collectionRevision! }),
+            : { getContentRevision: async () => options.collectionRevision! }),
     };
 }
 

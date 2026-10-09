@@ -59,7 +59,9 @@ describe("repository domain boundaries", () => {
                             !target.startsWith("repository-http/") &&
                             target !== "exports/contracts" &&
                             !target.startsWith("exports/contracts/")) ||
-                        specifier.startsWith("@bernouy/cms-repository")
+                        (specifier.startsWith("@bernouy/cms-repository") &&
+                            !specifier.startsWith(`@bernouy/cms-repository/${domain}`) &&
+                            !specifier.startsWith("@bernouy/cms-repository/contracts"))
                     ) {
                         violations.push(`${relative(sourceRoot, file)} -> ${specifier}`);
                     }

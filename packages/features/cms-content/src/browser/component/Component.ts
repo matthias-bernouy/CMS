@@ -1,5 +1,5 @@
 /**
- * Minimal custom-element base shared by collection Blocs on every CMS surface.
+ * Minimal custom-element base shared by contributed Blocs on every CMS surface.
  *
  * Intentionally tiny: wires up an open Shadow Root, optionally injects the
  * caller's CSS (as a `<style>`) and HTML template (via `<template>`) at

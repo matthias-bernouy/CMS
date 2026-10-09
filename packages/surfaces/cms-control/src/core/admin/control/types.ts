@@ -7,7 +7,7 @@ import type {
 } from "@bernouy/cms-auth";
 import type { PublicAuthRoutesConfig, OidcAuthHandlers } from "@bernouy/cms-auth/http";
 import type { CmsRepository, SurfacePageRouteRegistry } from "@bernouy/cms-content";
-import type { CollectionMigrationService } from "@bernouy/cms-content/migrations";
+import type { CollectionMigrationService } from "@bernouy/cms-repository/collections/installations";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { GatewayCapabilityCatalogue } from "@bernouy/cms-gateway";
 import type { PageExecutionAuthority } from "@bernouy/cms-gateway/execution";

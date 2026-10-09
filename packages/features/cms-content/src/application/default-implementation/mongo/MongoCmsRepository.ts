@@ -1,13 +1,13 @@
 import { randomUUIDv7 } from "bun";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { CmsRepository, PageMeta, PagesQuery } from "cms-content/application/interfaces/CmsRepository";
-import type { SiteBlocCollection } from "cms-content/blocs/interfaces/blocs";
+import type { SiteBlocGroup } from "cms-content/blocs/interfaces/blocs";
 import {
-    createSiteBlocCollection,
-    siteBlocCollections,
-    validateSiteBlocCollectionInput,
-    DEFAULT_SITE_BLOC_COLLECTION_ID,
-} from "cms-content/blocs/core/catalogue/siteBlocCollections";
+    createSiteBlocGroup,
+    siteBlocGroups,
+    validateSiteBlocGroupInput,
+    DEFAULT_SITE_BLOC_GROUP_ID,
+} from "cms-content/blocs/core/catalogue/siteBlocGroups";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 import { escapeRegex } from "cms-content/pages/core/queries/escapeRegex";
 import { mergeSystemUpdate } from "cms-content/settings/core/system";
@@ -25,27 +25,27 @@ import {
 import { SYSTEM_ID } from "cms-content/application/default-implementation/mongo/repositories/MongoRepositoryStorage";
 
 export class MongoCmsRepository extends MongoContentRepository implements CmsRepository {
-    async updateSiteBlocCollection(id: string, input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection> {
-        const metadata = validateSiteBlocCollectionInput(input);
-        const result = await this.siteBlocCollections.replaceOne({ _id: id }, metadata, {
-            upsert: id === DEFAULT_SITE_BLOC_COLLECTION_ID,
+    async updateSiteBlocGroup(id: string, input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup> {
+        const metadata = validateSiteBlocGroupInput(input);
+        const result = await this.siteBlocGroups.replaceOne({ _id: id }, metadata, {
+            upsert: id === DEFAULT_SITE_BLOC_GROUP_ID,
         });
         if (!result.matchedCount && !result.upsertedCount) {
-            throw new ContentValidationError("collectionId", "site collection was not found");
+            throw new ContentValidationError("groupId", "site Bloc group was not found");
         }
         return { id, ...metadata };
     }
 
-    async getSiteBlocCollections(): Promise<SiteBlocCollection[]> {
-        const documents = await this.siteBlocCollections.find({}).toArray();
-        return siteBlocCollections(documents.map(({ _id, ...metadata }) => ({ id: _id, ...metadata })));
+    async getSiteBlocGroups(): Promise<SiteBlocGroup[]> {
+        const documents = await this.siteBlocGroups.find({}).toArray();
+        return siteBlocGroups(documents.map(({ _id, ...metadata }) => ({ id: _id, ...metadata })));
     }
 
-    async createSiteBlocCollection(input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection> {
-        const collection = createSiteBlocCollection(input);
-        const { id, ...metadata } = collection;
-        await this.siteBlocCollections.insertOne({ _id: id, ...metadata });
-        return structuredClone(collection);
+    async createSiteBlocGroup(input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup> {
+        const group = createSiteBlocGroup(input);
+        const { id, ...metadata } = group;
+        await this.siteBlocGroups.insertOne({ _id: id, ...metadata });
+        return structuredClone(group);
     }
 
     async getPagesMetadata(options: PagesQuery = {}): Promise<PageMeta[]> {

@@ -16,7 +16,7 @@ export async function findPagesReferencingText(
     if (!match) {
         return [];
     }
-    return readReferencePages(reader, { kind: "text", collectionId: match[1]!, textId: match[2]! });
+    return readReferencePages(reader, { kind: "text", namespace: match[1]!, textId: match[2]! });
 }
 
 export async function findPagesReferencingFile(

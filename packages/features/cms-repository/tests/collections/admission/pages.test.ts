@@ -121,7 +121,7 @@ test("collection Pages admit stable Page links without authored routes", () => {
         "page.details.name": "Details",
         "page.private.name": "Private",
     });
-    const reference = '{"kind":"collection","publisherId":"atlas.official","collectionId":"atlas","pageId":"details"}';
+    const reference = '{"kind":"contribution","sourceId":"atlas.official","contributionId":"atlas","pageId":"details"}';
     const html = `<atlas-panel><a slot="body" data-cms-page-ref='${reference}' data-cms-page-suffix="?id={{ page.id }}">{{ copy }}</a></atlas-panel>`;
     const details = { ...page, id: "details", defaultPath: "/admin/details", name: "page.details.name" };
     expect(() =>
@@ -141,10 +141,28 @@ test("collection Pages admit stable Page links without authored routes", () => {
     for (const invalidHtml of [
         `<div data-cms-page-ref='${reference}'></div>`,
         `<a data-cms-page-ref='${reference}' data-cms-page-suffix="/admin/pages"></a>`,
-        `<a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official"}'></a>`,
+        `<a data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official"}'></a>`,
     ]) {
         expect(() =>
             parseCollectionRelease({ ...source, pages: [{ ...page, document: { html: invalidHtml } }] }),
+        ).toThrow();
+    }
+});
+
+test("collection Pages use the closed content grammar", () => {
+    const source = collectionDocument({
+        "page.overview.name": "Overview",
+        "page.details.name": "Details",
+    });
+    const reference = '{"kind":"contribution","sourceId":"atlas.official","contributionId":"atlas","pageId":"details"}';
+    const details = { ...page, id: "details", defaultPath: "/admin/details", name: "page.details.name" };
+    const invalidDocuments = [
+        '<atlas-panel><p slot="body"><span slot="ghost">{{ copy }}</span></p></atlas-panel>',
+        `<atlas-panel><a slot="body" data-cms-page-ref='${reference}'></a></atlas-panel>`,
+    ];
+    for (const html of invalidDocuments) {
+        expect(() =>
+            parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }, details] }),
         ).toThrow();
     }
 });

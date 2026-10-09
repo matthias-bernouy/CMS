@@ -8,7 +8,7 @@ import type {
 } from "cms-content/application/interfaces/CmsRepository";
 import type {
     BlocRecord,
-    SiteBlocCollection,
+    SiteBlocGroup,
     SiteBlocDefinition,
     SiteBlocSnapshot,
     TBloc,
@@ -17,7 +17,7 @@ import type {
 import type { PageCreateOptions, TPage } from "cms-content/pages/interfaces/pages";
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import { planPagePaths } from "cms-content/pages/core/lifecycle/pagePaths";
-import { validateSiteBlocCollectionInput } from "cms-content/blocs/core/catalogue/siteBlocCollections";
+import { validateSiteBlocGroupInput } from "cms-content/blocs/core/catalogue/siteBlocGroups";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 import {
     validatePageCreateOptions,
@@ -45,21 +45,17 @@ import {
  */
 export class ValidatingCmsRepository implements CmsRepository {
     constructor(private readonly inner: CmsRepository) {}
-    async getInstalledCollections() {
-        return (await this.inner.getInstalledCollections?.()) ?? { revision: 0, collections: [] };
+    async getContentContributions() {
+        return (await this.inner.getContentContributions?.()) ?? { revision: 0, pages: [], texts: [] };
     }
-
-    async getInstalledCollectionRevision(): Promise<number> {
-        return (await this.inner.getInstalledCollectionRevision?.()) ?? (await this.getInstalledCollections()).revision;
+    getSiteBlocGroups(): Promise<SiteBlocGroup[]> {
+        return this.inner.getSiteBlocGroups();
     }
-    getSiteBlocCollections(): Promise<SiteBlocCollection[]> {
-        return this.inner.getSiteBlocCollections();
+    async createSiteBlocGroup(input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup> {
+        return this.inner.createSiteBlocGroup(validateSiteBlocGroupInput(input));
     }
-    async createSiteBlocCollection(input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection> {
-        return this.inner.createSiteBlocCollection(validateSiteBlocCollectionInput(input));
-    }
-    async updateSiteBlocCollection(id: string, input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection> {
-        return this.inner.updateSiteBlocCollection(id, validateSiteBlocCollectionInput(input));
+    async updateSiteBlocGroup(id: string, input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup> {
+        return this.inner.updateSiteBlocGroup(id, validateSiteBlocGroupInput(input));
     }
     // ── Validated authored-content writes ─────────────────────────────────
     async insertPage(path: string, title: string, content?: string, options?: PageCreateOptions): Promise<void> {
@@ -115,10 +111,10 @@ export class ValidatingCmsRepository implements CmsRepository {
     }
     async createSiteBloc(definition: SiteBlocDefinition): Promise<BlocRecord> {
         const validated = validateSiteBlocDefinition(definition);
-        if (validated.collectionId !== undefined) {
-            const collections = await this.getSiteBlocCollections();
-            if (!collections.some(({ id }) => id === validated.collectionId)) {
-                throw new ContentValidationError("collectionId", "site collection was not found");
+        if (validated.groupId !== undefined) {
+            const groups = await this.getSiteBlocGroups();
+            if (!groups.some(({ id }) => id === validated.groupId)) {
+                throw new ContentValidationError("groupId", "site Bloc group was not found");
             }
         }
         return this.inner.createSiteBloc(validated);

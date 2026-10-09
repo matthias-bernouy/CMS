@@ -1,5 +1,5 @@
 import type { PageReference, SurfacePageRoute } from "cms-content/pages/interfaces/routing";
-import type { PageSurface } from "@bernouy/cms-repository/collections";
+import type { PageSurface } from "cms-content/pages/interfaces/document";
 import { validatePagePath } from "cms-content/pages/core/validation/page";
 
 const identifier = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
@@ -12,8 +12,8 @@ export function validatePageReference(page: PageReference): PageReference {
         }
         return { kind: "site", pageId: page.pageId };
     }
-    if (!identifier.test(page.publisherId) || !identifier.test(page.collectionId) || !identifier.test(page.pageId)) {
-        throw new TypeError("A collection Page reference must contain valid qualified identifiers.");
+    if (!identifier.test(page.sourceId) || !identifier.test(page.contributionId) || !identifier.test(page.pageId)) {
+        throw new TypeError("A contributed Page reference must contain valid qualified identifiers.");
     }
     return { ...page };
 }
@@ -22,7 +22,7 @@ export function pageReferenceKey(page: PageReference): string {
     const value = validatePageReference(page);
     return value.kind === "site"
         ? JSON.stringify(["site", value.pageId])
-        : JSON.stringify(["collection", value.publisherId, value.collectionId, value.pageId]);
+        : JSON.stringify(["contribution", value.sourceId, value.contributionId, value.pageId]);
 }
 
 export function pageScopeKey(siteId: string, page: PageReference): string {

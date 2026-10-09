@@ -2,8 +2,8 @@ import type { CollectionStore } from "@bernouy/cms-repository/collections/instal
 import type { CmsRepository } from "@bernouy/cms-content";
 
 export const CMS_REPOSITORY_FENCED_MUTATIONS = [
-    "updateSiteBlocCollection",
-    "createSiteBlocCollection",
+    "updateSiteBlocGroup",
+    "createSiteBlocGroup",
     "createBloc",
     "replaceBloc",
     "createSiteBloc",
@@ -20,9 +20,8 @@ export const CMS_REPOSITORY_FENCED_MUTATIONS = [
 ] as const satisfies readonly (keyof CmsRepository)[];
 
 const CMS_REPOSITORY_NON_MUTATIONS = [
-    "getInstalledCollections",
-    "getInstalledCollectionRevision",
-    "getSiteBlocCollections",
+    "getContentContributions",
+    "getSiteBlocGroups",
     "getBlocRecord",
     "getBlocRecords",
     "withSiteBlocPublicationLock",

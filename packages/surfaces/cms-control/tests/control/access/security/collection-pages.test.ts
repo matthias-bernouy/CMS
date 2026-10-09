@@ -2,9 +2,9 @@ import { expect, test } from "bun:test";
 import {
     InMemoryCmsRepository,
     InMemorySurfacePageRouteRegistry,
-    synchronizeCollectionPageRoutes,
     synchronizeSitePageRoutes,
 } from "@bernouy/cms-content";
+import { synchronizeCollectionPageRoutes } from "@bernouy/cms-repository/collections/content";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { handleControlPage } from "cms-control/core/admin/control/mountRoutes/pages";
 import {
@@ -24,7 +24,7 @@ test("collection Control Pages render through site routes while preserving path 
         uses: [],
         requires: [],
         document: {
-            html: `<section><h1>Collection Pages</h1><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"official","pageId":"details"}' data-cms-page-suffix="?id={{ page.id }}">Details</a></section>`,
+            html: `<section><h1>Collection Pages</h1><a data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"official","pageId":"details"}' data-cms-page-suffix="?id={{ page.id }}">Details</a></section>`,
         },
     };
     const details = {

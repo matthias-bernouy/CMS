@@ -67,7 +67,7 @@ export function parseCollectionBlocTag(value: unknown, collectionId: string, pat
 
 export function collectionThemeSourceId(collectionId: string): string {
     assertCollectionNamespace(collectionId);
-    return `collection-${collectionId}`;
+    return `contribution-${collectionId}`;
 }
 
 export function collectionThemeTokenId(collectionId: string, tokenId: string): string {

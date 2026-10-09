@@ -44,7 +44,7 @@ describe("MongoCmsRepository content persistence", () => {
         expect(
             (
                 await repository.scanPagesByContentReference(
-                    { kind: "text", collectionId: "ulvia-official", textId: "card-title" },
+                    { kind: "text", namespace: "ulvia-official", textId: "card-title" },
                     undefined,
                     10,
                 )

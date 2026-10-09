@@ -94,12 +94,10 @@ async function validateMutationLinks(
         const pageId = String(args[0]);
         const sitePages = (await repository.scanPagesByContentReference({ kind: "site-page", pageId }, undefined, 2))
             .pages;
-        const installed = await repository.getInstalledCollections?.();
+        const contributions = await repository.getContentContributions?.();
         const documents = [
             ...sitePages.filter((page) => page.id !== pageId).map((page) => page.content),
-            ...(installed?.collections.flatMap(({ release }) =>
-                (release.pages ?? []).map((page) => page.document.html),
-            ) ?? []),
+            ...(contributions?.pages.map((page) => page.document.html) ?? []),
         ];
         if (
             documents.some((content) =>
@@ -151,10 +149,8 @@ export async function validatePageLinks(
     for (const page of await repository.getAllPages()) {
         await assertPageContentLinks(reader, page.surface, page.content);
     }
-    const installed = await repository.getInstalledCollections?.();
-    for (const installation of installed?.collections ?? []) {
-        for (const page of installation.release.pages ?? []) {
-            await assertPageContentLinks(reader, page.surface, page.document.html);
-        }
+    const contributions = await repository.getContentContributions?.();
+    for (const page of contributions?.pages ?? []) {
+        await assertPageContentLinks(reader, page.surface, page.document.html);
     }
 }

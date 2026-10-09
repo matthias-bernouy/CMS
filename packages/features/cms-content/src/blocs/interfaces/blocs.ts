@@ -1,10 +1,10 @@
 import type {
-    CollectionComponentSettings,
-    CollectionManagedNativeElement,
-    CollectionSlot,
-    CollectionSlotAccept,
+    BlocSettings,
+    ManagedNativeElement,
+    PageSlot,
+    PageSlotAccept,
     PageSurface,
-} from "@bernouy/cms-repository/collections";
+} from "cms-content/pages/interfaces/document";
 
 export type BlocOwnership = { kind: "site-builder"; definitionId: string } | { kind: "code-managed" };
 
@@ -12,21 +12,21 @@ export type TBloc = {
     id: string;
     name: string;
     group: string;
-    /** Optional stable order supplied by an installed collection catalogue. */
+    /** Optional stable order supplied by an external contribution catalogue. */
     catalogueOrder?: number;
     description: string;
     /** Optional authored image under the immutable package's assets/ directory. */
     thumbnail?: PresentationImage;
-    /** Inactive collection resources remain renderable but are hidden from the authoring catalogue. */
+    /** Inactive contributed resources remain renderable but are hidden from the authoring catalogue. */
     catalogue?: "active" | "inactive";
     /** Internal behavior component omitted from the authoring catalogue. */
     internal?: boolean;
     /** Omission for legacy/local Blocs means both rendering surfaces. */
     surfaces?: readonly PageSurface[];
-    /** Explicit dependency closure seed for immutable collection Blocs. */
+    /** Explicit dependency closure seed for immutable contributed Blocs. */
     uses?: readonly string[];
     /** Allowed tags for the single required native Light DOM child. */
-    nativeElement?: CollectionManagedNativeElement;
+    nativeElement?: ManagedNativeElement;
     viewJS: string;
     /**
      * Server-rendered light-DOM template. A bloc carrying this field is a
@@ -38,10 +38,10 @@ export type TBloc = {
     componentHTML?: string;
     /** Initial page-owned children supplied when this bloc is inserted. */
     defaultContent?: string;
-    /** Named page-owned substitution slots offered by an installed collection bloc. */
-    collectionSlots?: Readonly<Record<string, CollectionSlot>>;
-    /** Declarative component attributes and insertion defaults from an installed collection. */
-    collectionSettings?: CollectionComponentSettings;
+    /** Named Page-owned substitution slots offered by a contributed Bloc. */
+    slots?: Readonly<Record<string, PageSlot>>;
+    /** Declarative component attributes and insertion defaults supplied with the Bloc. */
+    settings?: BlocSettings;
     ownership: BlocOwnership;
     /**
      * Author-side source folder, base64-encoded per relative path.
@@ -66,7 +66,7 @@ export type SiteBlocNode =
       }
     | { kind: "slot"; slotId: string };
 
-type SiteBlocSlotAccept = Extract<CollectionSlotAccept, { readonly kind: "component" | "any-component" }>;
+type SiteBlocSlotAccept = Extract<PageSlotAccept, { readonly kind: "component" | "any-component" }>;
 
 /** A named editable region in a site-owned bloc definition. */
 export type SiteBlocSlot = {
@@ -89,7 +89,7 @@ export type SiteBlocSnapshot = {
     dependencies: string[];
 };
 
-export type SiteBlocCollection = {
+export type SiteBlocGroup = {
     icon?: "folder" | "layers" | "grid" | "layout" | "star" | "code";
     id: string;
     name: string;
@@ -97,8 +97,8 @@ export type SiteBlocCollection = {
 };
 
 export type SiteBlocDefinition = {
-    /** Missing membership belongs to the default Site collection. */
-    collectionId?: string;
+    /** Missing membership belongs to the default Site group. */
+    groupId?: string;
     schema: "cms.site-bloc.v1";
     id: string;
     tag: string;
@@ -115,8 +115,8 @@ export type SiteBlocDefinition = {
 
 /** One globally unique aggregate per custom-element tag. */
 export type BlocRecord = {
-    /** Immutable installed collection provenance, absent for local resources. */
-    collectionId?: string;
+    /** Immutable external contribution provenance, absent for local resources. */
+    contributionId?: string;
     tag: string;
     ownership: BlocOwnership;
     /** The active compiled publication. Draft-only records have no artifact. */

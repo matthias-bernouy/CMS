@@ -1,12 +1,12 @@
 import { ContentValidationError } from "cms-content/application/core/validation/errors";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
-import type { SiteBlocCollection } from "cms-content/blocs/interfaces/blocs";
+import type { SiteBlocGroup } from "cms-content/blocs/interfaces/blocs";
 import {
-    createSiteBlocCollection,
-    siteBlocCollections,
-    validateSiteBlocCollectionInput,
-    DEFAULT_SITE_BLOC_COLLECTION_ID,
-} from "cms-content/blocs/core/catalogue/siteBlocCollections";
+    createSiteBlocGroup,
+    siteBlocGroups,
+    validateSiteBlocGroupInput,
+    DEFAULT_SITE_BLOC_GROUP_ID,
+} from "cms-content/blocs/core/catalogue/siteBlocGroups";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
 import { mergeSystemUpdate } from "cms-content/settings/core/system";
 import { languageRoutesChanged } from "cms-content/pages/core/lifecycle/pagePaths";
@@ -15,28 +15,28 @@ import { InMemoryContentRepository } from "cms-content/application/default-imple
 
 /** In-memory repository for local development and tests. */
 export class InMemoryCmsRepository extends InMemoryContentRepository implements CmsRepository {
-    private readonly collections = new Map<string, SiteBlocCollection>();
+    private readonly groups = new Map<string, SiteBlocGroup>();
     private pendingSystem: TSystem | null = null;
     private systemRevision = 0;
     private systemUpdateTail: Promise<void> = Promise.resolve();
 
-    async updateSiteBlocCollection(id: string, input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection> {
-        if (id !== DEFAULT_SITE_BLOC_COLLECTION_ID && !this.collections.has(id)) {
-            throw new ContentValidationError("collectionId", "site collection was not found");
+    async updateSiteBlocGroup(id: string, input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup> {
+        if (id !== DEFAULT_SITE_BLOC_GROUP_ID && !this.groups.has(id)) {
+            throw new ContentValidationError("groupId", "site Bloc group was not found");
         }
-        const collection = { id, ...validateSiteBlocCollectionInput(input) };
-        this.collections.set(id, collection);
-        return structuredClone(collection);
+        const group = { id, ...validateSiteBlocGroupInput(input) };
+        this.groups.set(id, group);
+        return structuredClone(group);
     }
 
-    async getSiteBlocCollections(): Promise<SiteBlocCollection[]> {
-        return siteBlocCollections([...this.collections.values()]);
+    async getSiteBlocGroups(): Promise<SiteBlocGroup[]> {
+        return siteBlocGroups([...this.groups.values()]);
     }
 
-    async createSiteBlocCollection(input: Omit<SiteBlocCollection, "id">): Promise<SiteBlocCollection> {
-        const collection = createSiteBlocCollection(input);
-        this.collections.set(collection.id, collection);
-        return structuredClone(collection);
+    async createSiteBlocGroup(input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup> {
+        const group = createSiteBlocGroup(input);
+        this.groups.set(group.id, group);
+        return structuredClone(group);
     }
 
     async getTagCounts() {

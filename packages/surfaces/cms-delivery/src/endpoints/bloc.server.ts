@@ -11,7 +11,7 @@ export default async function BlocServer(req: Request, delivery: DeliveryCms) {
     if (!tag) {
         return Response.error();
     }
-    const collectionRevision = (await delivery.repository.getCollectionRevision?.()) ?? 0;
+    const collectionRevision = (await delivery.repository.getContentRevision?.()) ?? 0;
 
     return cachedResponseAsync(
         req,

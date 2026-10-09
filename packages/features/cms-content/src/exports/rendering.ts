@@ -1,4 +1,4 @@
-export type { PageDocument, PageSurface } from "@bernouy/cms-repository/collections";
+export type { PageDocument, PageSurface } from "cms-content/pages/interfaces/document";
 export type { PageIndexingConfiguration, TPage, TPageRef } from "cms-content/pages/interfaces/pages";
 export { pageDocument } from "cms-content/pages/interfaces/pages";
 export type { PageMetadataContext, PageMetadataScope } from "cms-content/pages/core/rendering/pageMetadata";
@@ -36,8 +36,8 @@ export {
 export { sanitizeDomTree } from "cms-content/blocs/core/markup/security/sanitizeDomTree";
 export { CMS_CACHE_KEYS } from "cms-content/application/core/cacheKeys";
 
-export { renderCollectionTexts } from "cms-content/pages/core/rendering/collectionTexts";
-export type { CollectionTextSource } from "cms-content/pages/core/rendering/collectionTexts";
+export { renderContentTexts, replaceContentTextExpressions } from "cms-content/pages/core/rendering/contentTexts";
+export type { ContentTextSource } from "cms-content/pages/core/rendering/contentTexts";
 export {
     renderPageDocument,
     type PageDocumentRenderContext,

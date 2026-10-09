@@ -11,7 +11,6 @@
     "references": [
         { "path": "../../foundation/binary-media" },
         { "path": "../../foundation/blob-store" },
-        { "path": "../../features/cms-repository" },
         { "path": "../../foundation/http-runner" },
         { "path": "../../foundation/image-processing" }
     ]

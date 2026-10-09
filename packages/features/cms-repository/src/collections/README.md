@@ -238,10 +238,11 @@ surviving broken resource increments its generation. Breaking site-owned data ch
 from generation `1`; the runtime composes those steps for any older installed
 generation. Operations are a closed JSON vocabulary and never executable code.
 
-Migration execution belongs to `@bernouy/cms-content/migrations`, not this
-package. The collection store only validates and atomically commits an exact
-multi-collection replacement or restoration after the content layer has planned
-the affected pages and site-owned values.
+Migration planning and execution belong to
+`@bernouy/cms-repository/collections/installations`. The collection store validates
+and atomically commits an exact multi-collection replacement or restoration;
+the migration orchestration consumes the generic Page and site-content ports
+published by `@bernouy/cms-content`.
 
 The store can remove a collection only when no installed collection depends on
 it. This is deliberately not exposed as a Control HTTP action yet: site Pages,

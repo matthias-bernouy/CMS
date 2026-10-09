@@ -1,4 +1,4 @@
-/** Serializes canonical Page and collection mutations that share one site's route namespace. */
+/** Serializes canonical Page and contribution mutations that share one site's route namespace. */
 export class PageRouteMutationCoordinator {
     readonly #pending = new Map<string, Promise<void>>();
 

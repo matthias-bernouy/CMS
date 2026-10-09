@@ -4,7 +4,7 @@
         <ulvia-official-surface slot="content" appearance="elevated" padding="lg">
             <h2 slot="content">{{ cms.i18n.ulvia-official.ui-create-a-delivery-page }}</h2>
             <p slot="content">{{ cms.i18n.ulvia-official.ui-the-page-is-created-as-a-draft-open-it-afterwards-to-edit-its-document-and-publish-it }}</p>
-            <form slot="content" cms-source="/.cms/call/ulvia.cms.pages/create as created" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" data-cms-success-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"details"}' data-cms-page-suffix="?id={{ created.body.id }}">
+            <form slot="content" cms-source="/.cms/call/ulvia.cms.pages/create as created" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" data-cms-success-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"details"}' data-cms-page-suffix="?id={{ created.body.id }}">
                 <input type="hidden" name="surface" value="delivery">
                 <ulvia-official-grid gap="md">
                     <ulvia-official-field slot="items" label-position="top">
@@ -53,7 +53,7 @@
                                 <p><code>{{ page.path }}</code></p>
                                 <small>{{ cms.i18n.ulvia-official.ui-revision }} {{ page.revision }}</small>
                             </header>
-                            <ulvia-official-action slot="items" variant="filled" tone="secondary" size="sm"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"details"}' data-cms-page-suffix="?id={{ page.id }}">{{ cms.i18n.ulvia-official.ui-open-page }}</a></ulvia-official-action>
+                            <ulvia-official-action slot="items" variant="filled" tone="secondary" size="sm"><a data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"details"}' data-cms-page-suffix="?id={{ page.id }}">{{ cms.i18n.ulvia-official.ui-open-page }}</a></ulvia-official-action>
                             <form slot="items" cms-source="/.cms/call/ulvia.cms.pages/rename" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" cms-source-success-reload="#pages-list">
                                 <input type="hidden" name="id" value="{{ page.id }}">
                                 <input type="hidden" name="expectedRevision" value="{{ page.revision }}" cms-form-value-type="number">

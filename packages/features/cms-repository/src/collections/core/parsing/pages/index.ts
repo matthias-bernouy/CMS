@@ -9,6 +9,7 @@ import { markupTree } from "../../validation/markup/tree";
 import { validatePageDocumentSlotContracts } from "../../validation/markup/slotContracts";
 import { validatePageBlocHosts } from "../../validation/pageDocument/hosts";
 import { validateManagedNativeHosts } from "../../validation/markup/managedNative";
+import { validatePageContentMarkup } from "@bernouy/cms-content/page-document";
 
 /** Parses a bounded Page document for exactly one rendering surface. */
 export function parseCollectionPages(
@@ -43,12 +44,18 @@ export function parseCollectionPages(
         const defaultPath = parseDefaultPath(source.defaultPath, surface, `${path}.defaultPath`);
         const document = record(source.document, `${path}.document`);
         keys(document, ["html"], `${path}.document`);
-        const html = string(document.html, limits.maxMarkupLength, `${path}.document.html`);
+        const authoredHtml = string(document.html, limits.maxMarkupLength, `${path}.document.html`);
+        let html = authoredHtml;
         const structure = validatePageHtml(html, new Set(blocSurfaces.keys()), surface, `${path}.document.html`);
         const tree = markupTree(html);
         validatePageDocumentSlotContracts(tree, localById, importedBlocs, `${path}.document.html`);
         validatePageBlocHosts(tree, localById, importedBlocs, `${path}.document.html`);
         validateManagedNativeHosts(tree, localById, `${path}.document.html`);
+        try {
+            html = validatePageContentMarkup(authoredHtml);
+        } catch (error) {
+            invalid(error instanceof Error ? error.message : "invalid Page document", `${path}.document.html`);
+        }
         const uses = [...structure.blocs].sort();
         if (source.uses !== undefined) {
             const declared = array(source.uses, limits.maxBlocs, `${path}.uses`).map((item, itemIndex) =>

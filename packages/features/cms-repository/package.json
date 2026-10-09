@@ -26,6 +26,7 @@
         "./collections": "./src/exports/collections/index.ts",
         "./collections/build": "./src/exports/collections/build.ts",
         "./collections/installations": "./src/exports/collections/installations.ts",
+        "./collections/content": "./src/exports/collections/content.ts",
         "./collections/mongo": "./src/exports/collections/mongo.ts",
         "./collections/texts": "./src/exports/collections/texts.ts",
         "./collections/sources": "./src/exports/collections/sources.ts",
@@ -36,10 +37,12 @@
     "dependencies": {
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/blob-store": "workspace:*",
+        "@bernouy/cms-content": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "canonicalize": "^3.0.0",
         "htmlparser2": "^10.1.0",
-        "jsonc-parser": "^3.3.1"
+        "jsonc-parser": "^3.3.1",
+        "linkedom": "^0.18.13"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",

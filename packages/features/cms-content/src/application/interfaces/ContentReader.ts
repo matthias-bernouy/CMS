@@ -1,4 +1,4 @@
-import type { CollectionTextSource } from "cms-content/pages/core/rendering/collectionTexts";
+import type { ContentTextSource } from "cms-content/pages/core/rendering/contentTexts";
 import type { TBloc } from "cms-content/blocs/interfaces/blocs";
 import type { TPage } from "cms-content/pages/interfaces/pages";
 import type { RenderingSettings } from "cms-content/settings/interfaces/settings";
@@ -31,8 +31,8 @@ export type PublishedRouteResolution =
  * entirely and read from a projection (file export, S3 snapshot, etc.).
  */
 export interface ContentReader {
-    getCollectionTexts?(): Promise<CollectionTextSource[]>;
-    getCollectionRevision?(): Promise<number>;
+    getContentTexts?(): Promise<ContentTextSource[]>;
+    getContentRevision?(): Promise<number>;
     // PAGE
     getPublishedPage(path: string): Promise<TPage | null>;
     getPublishedPageById(id: string): Promise<TPage | null>;

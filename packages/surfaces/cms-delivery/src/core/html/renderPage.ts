@@ -1,4 +1,5 @@
 import { pageDocument, renderPageDocument } from "@bernouy/cms-content/rendering";
+import { projectCollectionTextSource } from "@bernouy/cms-repository/collections/content";
 import { parseHTML } from "linkedom";
 import type { TPage } from "@bernouy/cms-content/rendering";
 import type { CacheEntry } from "@bernouy/http-runner";
@@ -51,8 +52,8 @@ export async function renderPage(
     const rendered = await renderPageDocument(document.body, pageDocument(page), {
         repository: ctx.repository,
         language: settings.site.language || "en",
-        collectionTexts: ctx.collectionTexts,
-        resolveCollectionAssets: ctx.resolveCollectionAssets,
+        contentTexts: ctx.collectionTexts?.map(projectCollectionTextSource),
+        resolveContributedAssets: ctx.resolveContributedAssets,
         // A browser may fetch an interpolated img src before the deferred
         // binding runtime executes. Keep those network attributes inert.
         prepareBody: prepareNetworkInertBindings,

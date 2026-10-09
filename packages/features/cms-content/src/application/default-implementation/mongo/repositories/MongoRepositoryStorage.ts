@@ -1,4 +1,4 @@
-import type { SiteBlocCollection } from "cms-content/blocs/interfaces/blocs";
+import type { SiteBlocGroup } from "cms-content/blocs/interfaces/blocs";
 import type { Collection, Db } from "mongodb";
 import {
     SYSTEM_ID,
@@ -34,8 +34,8 @@ export class MongoRepositoryStorage {
         await this.pageRoutes.createIndex({ pageInsertToken: 1 }, { sparse: true });
     }
 
-    protected get siteBlocCollections(): Collection<Omit<SiteBlocCollection, "id"> & { _id: string }> {
-        return this.db.collection(this.prefix + "site_bloc_collections");
+    protected get siteBlocGroups(): Collection<Omit<SiteBlocGroup, "id"> & { _id: string }> {
+        return this.db.collection(this.prefix + "site_bloc_groups");
     }
 
     protected get blocs(): Collection<BlocDoc> {

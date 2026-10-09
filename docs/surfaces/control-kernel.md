@@ -32,7 +32,7 @@ Collection Pages link by stable identity rather than by authored Control URL:
 
 ```html
 <a
-    data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"details"}'
+    data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"details"}'
     data-cms-page-suffix="?id={{ page.id }}"
 >Open Page</a>
 ```

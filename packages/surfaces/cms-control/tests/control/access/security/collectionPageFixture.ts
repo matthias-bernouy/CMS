@@ -1,4 +1,5 @@
-import { InMemorySurfacePageRouteRegistry, synchronizeCollectionPageRoutes } from "@bernouy/cms-content";
+import { InMemorySurfacePageRouteRegistry } from "@bernouy/cms-content";
+import { synchronizeCollectionPageRoutes } from "@bernouy/cms-repository/collections/content";
 
 export async function controlPageCollections() {
     const collections = {

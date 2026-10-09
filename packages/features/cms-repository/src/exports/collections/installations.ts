@@ -17,3 +17,31 @@ export type {
     StoredCollectionRelease,
     StoredCollectionReleaseMetadata,
 } from "cms-repository/collections/installations/interfaces/store";
+export {
+    CollectionMigrationService,
+    type CollectionMigrationServiceOptions,
+} from "cms-repository/collections/installations/migrations/runtime/CollectionMigrationService";
+export { prepareCollectionMigration } from "cms-repository/collections/installations/migrations/plan";
+export {
+    MemoryCollectionMigrationStorage,
+    isCollectionMigrationActive,
+} from "cms-repository/collections/installations/migrations/storage";
+export { withCollectionMigrationWriteFence } from "cms-repository/collections/installations/migrations/storage/writeFence";
+export type {
+    CollectionMigrationPageChange,
+    CollectionMigrationActive,
+    CollectionMigrationAudit,
+    CollectionMigrationParticipant,
+    CollectionMigrationParticipantSnapshot,
+    CollectionMigrationTargetSnapshot,
+    CollectionMigrationProgress,
+    CollectionMigrationRecord,
+    CollectionMigrationResourceReference,
+    CollectionMigrationResourceChange,
+    CollectionMigrationStatus,
+    CollectionMigrationStorage,
+    CollectionMigrationWriteFence,
+    CollectionMigrationSummary,
+    CollectionMigrationTarget,
+    PreparedCollectionMigration,
+} from "cms-repository/collections/installations/migrations/interfaces";

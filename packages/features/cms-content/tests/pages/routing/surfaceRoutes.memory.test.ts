@@ -7,16 +7,16 @@ import {
     PageRouteCollisionError,
     PageRouteRevisionConflictError,
     resolvePageLinkTarget,
-    synchronizePageRoutes,
+    synchronizePageRouteRegistrations,
     synchronizeSitePageRoutes,
     withSitePageRoutes,
     type PageReference,
 } from "@bernouy/cms-content";
 
 const overview = {
-    kind: "collection",
-    publisherId: "ulvia",
-    collectionId: "ulvia-control",
+    kind: "contribution",
+    sourceId: "ulvia",
+    contributionId: "ulvia-control",
     pageId: "overview",
 } as const satisfies PageReference;
 
@@ -179,7 +179,16 @@ describe("surface Page route registry", () => {
             },
         } as never;
 
-        await synchronizePageRoutes(routes, "site-a", { collections: [installation] }, []);
+        await synchronizePageRouteRegistrations(
+            routes,
+            "site-a",
+            installation.release.pages.map((page) => ({
+                page: overview,
+                surface: page.surface,
+                defaultPath: page.defaultPath,
+            })),
+            () => true,
+        );
         expect(await routes.resolve("site-a", "control", "/admin/shared")).toMatchObject({
             page: overview,
         });
@@ -192,10 +201,15 @@ describe("surface Page route registry", () => {
         await routes.register("site-a", { page: first, surface: "delivery", defaultPath: "/first" });
         await routes.register("site-a", { page: second, surface: "delivery", defaultPath: "/second" });
 
-        await synchronizePageRoutes(routes, "site-a", { collections: [] }, [
-            { id: "first", surface: "delivery", path: "/second" },
-            { id: "second", surface: "delivery", path: "/first" },
-        ] as never);
+        await synchronizePageRouteRegistrations(
+            routes,
+            "site-a",
+            [
+                { page: first, surface: "delivery", defaultPath: "/second" },
+                { page: second, surface: "delivery", defaultPath: "/first" },
+            ],
+            () => true,
+        );
         expect((await routes.get("site-a", first))?.path).toBe("/second");
         expect((await routes.get("site-a", second))?.path).toBe("/first");
     });

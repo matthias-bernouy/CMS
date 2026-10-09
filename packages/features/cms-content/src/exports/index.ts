@@ -11,7 +11,7 @@
 export type {
     BlocOwnership,
     BlocRecord,
-    SiteBlocCollection,
+    SiteBlocGroup,
     PresentationImage,
     SiteBlocDefinition,
     SiteBlocNode,
@@ -30,10 +30,11 @@ export type {
     PageCreateOptions,
     PageIndexingConfiguration,
     PageRoute,
-    SitePageOrigin,
+    PageContributionOrigin,
     TPage,
     TPageRef,
 } from "cms-content/pages/interfaces/pages";
+export type { PageDocument, PageSurface } from "cms-content/pages/interfaces/document";
 export { pageDocument } from "cms-content/pages/interfaces/pages";
 export { MAX_PAGE_CONTENT_LENGTH } from "cms-content/application/core/validation/fields";
 export { readSystemSnapshot } from "cms-content/settings/core/readSystemSnapshot";
@@ -86,11 +87,7 @@ export {
 } from "cms-content/pages/core/routing/links";
 export { validatePageReference } from "cms-content/pages/core/routing/values";
 export { PageRouteMutationCoordinator } from "cms-content/pages/core/routing/mutationCoordinator";
-export { synchronizePageRoutes } from "cms-content/pages/core/routing/synchronizeRoutes";
-export {
-    synchronizeCollectionPageRoutes,
-    withCollectionPageRoutes,
-} from "cms-content/pages/core/routing/collectionRoutes";
+export { synchronizePageRouteRegistrations } from "cms-content/pages/core/routing/synchronizeRoutes";
 export {
     synchronizeSitePageRoutes,
     validatePageLinks,
@@ -137,6 +134,7 @@ export { createContentReader } from "cms-content/application/core/createContentR
 export { resolvePublishedRoute } from "cms-content/pages/core/queries/resolvePublishedRoute";
 export type {
     CmsRepository,
+    ContentContributionSnapshot,
     BlocListItemResponse,
     BlocListOptions,
     PageLink,
@@ -152,8 +150,6 @@ export { defaultSystem, mergeSystemUpdate } from "cms-content/settings/core/syst
 export {
     allTokens,
     composeThemeSettings,
-    composeCollectionThemes,
-    collectionThemeSource,
     createIntegrationThemeSource,
     defaultThemeSettings,
     generateThemeCss,
@@ -202,9 +198,9 @@ export {
     sameBlocOwner,
 } from "cms-content/blocs/core/catalogue/records";
 export {
-    DEFAULT_SITE_BLOC_COLLECTION_ID,
-    validateSiteBlocCollectionInput,
-} from "cms-content/blocs/core/catalogue/siteBlocCollections";
+    DEFAULT_SITE_BLOC_GROUP_ID,
+    validateSiteBlocGroupInput,
+} from "cms-content/blocs/core/catalogue/siteBlocGroups";
 export { nextSiteBlocUpdatedAt } from "cms-content/blocs/core/catalogue/timestamps";
 export { SiteBlocPublicationQueue } from "cms-content/blocs/core/publication/SiteBlocPublicationQueue";
 export { generateSiteBlocSourceBundle } from "cms-content/blocs/core/publication/source/generateSiteBlocSourceBundle";
@@ -338,5 +334,3 @@ export { derivePagePath } from "cms-content/pages/core/paths/pagePath";
 export { sanitizeDomTree } from "cms-content/blocs/core/markup/security/sanitizeDomTree";
 export { sanitizeSvgTree } from "cms-content/blocs/core/markup/security/sanitizeSvgTree";
 export { escapeRegex } from "cms-content/pages/core/queries/escapeRegex";
-
-export { withInstalledCollections } from "cms-content/blocs/core/collections/installedRepository";

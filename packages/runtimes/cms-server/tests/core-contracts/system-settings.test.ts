@@ -184,7 +184,7 @@ test("theme reads compose the authoritative token catalogues from installed coll
     expect(theme.sources).toContainEqual(
         expect.objectContaining({
             label: "Thème exemple",
-            owner: { kind: "collection", collectionId: "example" },
+            owner: { kind: "contribution", contributionId: "example" },
             categories: [
                 expect.objectContaining({
                     label: "Couleurs",

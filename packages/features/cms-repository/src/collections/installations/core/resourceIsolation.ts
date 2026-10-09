@@ -80,10 +80,10 @@ function validateInstalledPageReferences(releases: readonly CollectionRelease[])
                 if (reference.kind === "site") {
                     continue;
                 }
-                const target = pages.get(`${reference.publisherId}\0${reference.collectionId}\0${reference.pageId}`);
+                const target = pages.get(`${reference.sourceId}\0${reference.contributionId}\0${reference.pageId}`);
                 if (!target) {
                     reject(
-                        `Collection Page ${release.collectionId}.${page.id} references unavailable Page ${reference.collectionId}.${reference.pageId}`,
+                        `Collection Page ${release.collectionId}.${page.id} references unavailable Page ${reference.contributionId}.${reference.pageId}`,
                     );
                 }
                 assertCompatibleSurface(

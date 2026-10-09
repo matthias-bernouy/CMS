@@ -1,0 +1,71 @@
+import { expect, test } from "bun:test";
+import { assertBlocSettingAttributes } from "cms-content/blocs/core/markup/validation/contracts/settings";
+
+const configured = [
+    {
+        id: "example-counter",
+        settings: [
+            {
+                id: "count",
+                label: "Count",
+                type: "integer" as const,
+                default: 3,
+                minimum: 1,
+                maximum: 6,
+                control: { kind: "number" as const, step: 1 },
+            },
+            {
+                id: "ratio",
+                label: "Ratio",
+                type: "number" as const,
+                default: 0.5,
+                minimum: 0,
+                maximum: 1,
+                control: { kind: "range" as const, step: 0.1 },
+            },
+            {
+                id: "compact",
+                label: "Compact",
+                type: "boolean" as const,
+                default: false,
+                control: { kind: "toggle" as const },
+            },
+        ],
+    },
+];
+
+test("collection number attributes use strict JSON syntax before schema validation", () => {
+    expect(() =>
+        assertBlocSettingAttributes('<example-counter count="3" ratio="5e-1" compact></example-counter>', configured),
+    ).not.toThrow();
+
+    for (const value of ["", "01", "0x2", "NaN", "Infinity", " 3 "]) {
+        expect(() =>
+            assertBlocSettingAttributes(`<example-counter count="${value}" ratio="0.5"></example-counter>`, configured),
+        ).toThrow("must use JSON number syntax");
+    }
+});
+
+test("collection number attributes enforce explicit values and accept absent attributes through defaults", () => {
+    expect(() =>
+        assertBlocSettingAttributes('<example-counter count="1.5" ratio="0.5"></example-counter>', configured),
+    ).toThrow("safe integer");
+    expect(() =>
+        assertBlocSettingAttributes('<example-counter count="7" ratio="0.5"></example-counter>', configured),
+    ).toThrow("at most 6");
+    expect(() =>
+        assertBlocSettingAttributes('<example-counter count="3" ratio="2"></example-counter>', configured),
+    ).toThrow("at most 1");
+    expect(() =>
+        assertBlocSettingAttributes('<example-counter ratio="0.5"></example-counter>', configured),
+    ).not.toThrow();
+});
+
+test("collection settings reject undeclared host attributes", () => {
+    expect(() =>
+        assertBlocSettingAttributes(
+            '<example-counter count="3" ratio="0.5" mystery="value"></example-counter>',
+            configured,
+        ),
+    ).toThrow("not a declared setting");
+});

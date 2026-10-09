@@ -127,6 +127,8 @@ export function slotAcceptsNative(slot: CollectionSlot, element: MarkupElement):
 
 function nativeChildrenMatch(element: MarkupElement, allowed: ReadonlySet<string>): boolean {
     return element.children.every(
-        (child) => !isElement(child) || (allowed.has(child.name) && nativeChildrenMatch(child, allowed)),
+        (child) =>
+            !isElement(child) ||
+            (child.attribs.slot === undefined && allowed.has(child.name) && nativeChildrenMatch(child, allowed)),
     );
 }

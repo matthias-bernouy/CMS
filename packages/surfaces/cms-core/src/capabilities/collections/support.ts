@@ -1,5 +1,5 @@
 import { CoreCapabilityDispatchError } from "../../dispatch/registry";
-import type { CollectionMigrationTarget } from "@bernouy/cms-content/migrations";
+import type { CollectionMigrationTarget } from "@bernouy/cms-repository/collections/installations";
 import {
     MAX_CAPABILITY_JSON_BYTES,
     MAX_CAPABILITY_JSON_DEPTH,

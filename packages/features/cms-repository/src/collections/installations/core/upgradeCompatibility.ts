@@ -1,6 +1,6 @@
 import { firstSchemaSubsetViolation } from "cms-repository/exports/contracts/compatibility";
 import { canonicalizeIJson } from "cms-repository/exports/contracts/protocol";
-import { collectionSettingsSchema } from "../../core/parsing/blocs/settingSchema";
+import { settingsSchema } from "../../core/parsing/blocs/settingSchema";
 import type {
     CollectionComponentSettings,
     CollectionSlot,
@@ -49,8 +49,8 @@ function settingsAcceptPrevious(previous: CollectionComponentSettings, next: Col
         if (!replacement) {
             return false;
         }
-        const previousSchema = collectionSettingsSchema([setting]).properties[setting.id]!;
-        const nextSchema = collectionSettingsSchema([replacement]).properties[replacement.id]!;
+        const previousSchema = settingsSchema([setting]).properties[setting.id]!;
+        const nextSchema = settingsSchema([replacement]).properties[replacement.id]!;
         return firstSchemaSubsetViolation(previousSchema, nextSchema, `settings.${setting.id}`) === null;
     });
 }

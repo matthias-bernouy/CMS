@@ -1,7 +1,7 @@
 <ulvia-official-control-workspace>
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-page-details }}</h1>
     <p slot="description">{{ cms.i18n.ulvia-official.ui-update-the-shared-page-document-through-revision-checked-core-capabilities }}</p>
-        <ulvia-official-action slot="actions" variant="outline" tone="secondary"><a data-cms-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'>{{ cms.i18n.ulvia-official.ui-back-to-pages }}</a></ulvia-official-action>
+        <ulvia-official-action slot="actions" variant="outline" tone="secondary"><a data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"overview"}'>{{ cms.i18n.ulvia-official.ui-back-to-pages }}</a></ulvia-official-action>
         <section id="page-detail" slot="content" cms-source="/.cms/call/ulvia.cms.pages/get as selected" cms-source-method="POST" cms-source-body='{"id":{"from":"queryParam","name":"id"}}'>
             <div role="status" aria-live="polite" cms-condition="$source.loading">
                 <h2>{{ cms.i18n.ulvia-official.ui-loading-page }}</h2>
@@ -115,7 +115,7 @@
                 <ulvia-official-surface appearance="outlined" padding="lg">
                     <h2 slot="content">{{ cms.i18n.ulvia-official.ui-danger-zone }}</h2>
                     <p slot="content">{{ cms.i18n.ulvia-official.ui-deletion-is-revision-checked-and-cannot-silently-remove-a-newer-edit }}</p>
-                    <form slot="content" cms-source="/.cms/call/ulvia.cms.pages/delete as deletion" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" data-cms-success-page-ref='{"kind":"collection","publisherId":"ulvia.official","collectionId":"ulvia-official","pageId":"overview"}'>
+                    <form slot="content" cms-source="/.cms/call/ulvia.cms.pages/delete as deletion" cms-source-method="POST" cms-source-trigger="submit" cms-source-serialization="typed-json" data-cms-success-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"overview"}'>
                         <input type="hidden" name="id" value="{{ selected.id }}">
                         <input type="hidden" name="expectedRevision" value="{{ selected.revision }}" cms-form-value-type="number">
                         <ulvia-official-action variant="outline" tone="danger"><button type="submit">{{ cms.i18n.ulvia-official.ui-delete-page }}</button></ulvia-official-action>

@@ -31,10 +31,8 @@ export function projectBlocList(records: BlocRecord[], options: BlocListOptions 
                       ...(bloc.compositionHTML ? { compositionHTML: bloc.compositionHTML } : {}),
                       ...(bloc.componentHTML ? { componentHTML: bloc.componentHTML } : {}),
                       ...(bloc.defaultContent ? { defaultContent: bloc.defaultContent } : {}),
-                      ...(bloc.collectionSlots ? { collectionSlots: structuredClone(bloc.collectionSlots) } : {}),
-                      ...(bloc.collectionSettings
-                          ? { collectionSettings: structuredClone(bloc.collectionSettings) }
-                          : {}),
+                      ...(bloc.slots ? { slots: structuredClone(bloc.slots) } : {}),
+                      ...(bloc.settings ? { settings: structuredClone(bloc.settings) } : {}),
                       ...(bloc.internal ? { internal: true } : {}),
                       ...(bloc.surfaces ? { surfaces: [...bloc.surfaces] } : {}),
                       ...(bloc.uses ? { uses: [...bloc.uses] } : {}),

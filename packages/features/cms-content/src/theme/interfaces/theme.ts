@@ -11,10 +11,10 @@ export type ThemeSourceOwner =
           dependencies?: string[];
       }
     | {
-          kind: "collection";
-          collectionId: string;
-          /** Fully qualified public token IDs explicitly imported by this collection. */
-          themeTokenImports?: string[];
+          kind: "contribution";
+          contributionId: string;
+          /** Fully qualified public token IDs explicitly imported by this contribution. */
+          tokenImports?: string[];
           dependencies?: never;
       };
 

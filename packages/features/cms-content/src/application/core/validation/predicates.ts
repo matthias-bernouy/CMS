@@ -41,8 +41,7 @@ export function isValidResourceIdentifier(id: string): boolean {
  * HTML custom-element name — the subset we accept for bloc tags. Must start
  * with a lowercase letter, contain at least one dash, and be composed of
  * lowercase alphanumerics and dashes after that. Locked to a conservative
- * subset so the tag can also be used safely as a filesystem path by
- * `buildCollectionBloc`.
+ * subset so the tag can also be used safely as an authored artifact path.
  */
 export function isValidCustomElementTag(tag: string): boolean {
     if (!tag || typeof tag !== "string") {

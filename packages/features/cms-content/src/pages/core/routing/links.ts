@@ -7,7 +7,7 @@ import type {
     ResolvedPageLink,
     SurfacePageRouteRegistry,
 } from "cms-content/pages/interfaces/routing";
-import type { PageSurface } from "@bernouy/cms-repository/collections";
+import type { PageSurface } from "cms-content/pages/interfaces/document";
 import { parseHTML } from "linkedom";
 import { validatePageReference } from "cms-content/pages/core/routing/values";
 

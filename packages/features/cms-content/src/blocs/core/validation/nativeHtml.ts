@@ -1,4 +1,4 @@
-import { COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS } from "@bernouy/cms-repository/collections";
+import { MANAGED_NATIVE_ELEMENT_TAGS } from "cms-content/blocs/core/markup/validation/contracts/managedNativePolicy";
 
 const NATIVE_HTML_TAGS = new Set([
     "a",
@@ -157,7 +157,7 @@ export const PLATFORM_NATIVE_RICH_TEXT_TAGS = [
  * Native elements that a custom bloc may own as its single, managed Light DOM
  * child. Containers with content-slot semantics are intentionally excluded.
  */
-export const PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS = COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS;
+export const PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS = MANAGED_NATIVE_ELEMENT_TAGS;
 
 export type PlatformManagedNativeElementTag = (typeof PLATFORM_MANAGED_NATIVE_ELEMENT_TAGS)[number];
 
@@ -170,7 +170,7 @@ const PLATFORM_NATIVE_CONTENT_TAG_SET = new Set<string>([
     ...PLATFORM_NATIVE_CONTEXTUAL_TAGS,
     ...PLATFORM_NATIVE_SEMANTIC_TAGS,
     ...PLATFORM_NATIVE_RICH_TEXT_TAGS,
-    ...COLLECTION_MANAGED_NATIVE_ELEMENT_TAGS,
+    ...MANAGED_NATIVE_ELEMENT_TAGS,
     "option",
     "optgroup",
     "source",
@@ -187,12 +187,12 @@ const SITE_BLOC_NATIVE_STRUCTURE_TAG_SET = new Set<string>([
 ]);
 
 const PLATFORM_NATIVE_ATTRIBUTES: Readonly<Record<string, ReadonlySet<string>>> = {
-    a: new Set(["href", "target", "rel", "aria-current", "aria-label"]),
+    a: new Set(["href", "target", "rel", "aria-current", "aria-label", "data-cms-page-ref", "data-cms-page-suffix"]),
     article: new Set(["aria-label"]),
     aside: new Set(["aria-label"]),
     button: new Set(["type", "disabled", "name", "value", "aria-label"]),
     footer: new Set(["aria-label"]),
-    form: new Set(["autocomplete"]),
+    form: new Set(["autocomplete", "data-cms-success-page-ref"]),
     header: new Set(["aria-label"]),
     input: new Set([
         "type",

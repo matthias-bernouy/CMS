@@ -34,7 +34,7 @@ export async function renderControlPage(
         language,
         ...(state.configuration.deliveryUrl
             ? {
-                  resolveCollectionAssets: (input: string) =>
+                  resolveContributedAssets: (input: string) =>
                       resolveCollectionAssets(input, releases, state.configuration.deliveryUrl!),
               }
             : {}),

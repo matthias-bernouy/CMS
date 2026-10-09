@@ -14,7 +14,7 @@ export function makeRuntimeRenderContext(delivery: DeliveryCms): RenderContext {
     return {
         repository: delivery.repository,
         collectionTexts: delivery.collectionTexts,
-        resolveCollectionAssets: (input) => resolveCollectionAssetExpressions(input, delivery),
+        resolveContributedAssets: (input) => resolveCollectionAssetExpressions(input, delivery),
         resolveAssets: (usedTags) => resolveRuntimeAssets(delivery, usedTags),
         faviconUrl: `${delivery.basePath}${FAVICON_ROUTE}`,
         headInjectors: delivery.headInjectors,

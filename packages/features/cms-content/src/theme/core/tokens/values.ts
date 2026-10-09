@@ -91,10 +91,10 @@ function compatibleTokenTypes(current: ThemeToken, target: ThemeToken): boolean 
 function compatibleTokenOwners(current: ThemeTokenEntry, target: ThemeTokenEntry): boolean {
     const currentOwner = current.source.owner;
     const targetOwner = target.source.owner;
-    if (currentOwner?.kind === "collection" && targetOwner?.kind === "collection") {
+    if (currentOwner?.kind === "contribution" && targetOwner?.kind === "contribution") {
         return (
-            currentOwner.collectionId === targetOwner.collectionId ||
-            currentOwner.themeTokenImports?.includes(target.token.id) === true
+            currentOwner.contributionId === targetOwner.contributionId ||
+            currentOwner.tokenImports?.includes(target.token.id) === true
         );
     }
     return (

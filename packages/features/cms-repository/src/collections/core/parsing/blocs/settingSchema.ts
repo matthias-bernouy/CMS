@@ -2,7 +2,7 @@ import type { UlviaObjectSchema } from "cms-repository/exports/contracts/schema"
 import type { CollectionComponentSettings } from "../../../interfaces/CollectionBloc";
 import { settingControlValues } from "./settingControls";
 
-export function collectionSettingsSchema(settings: CollectionComponentSettings): UlviaObjectSchema {
+export function settingsSchema(settings: CollectionComponentSettings): UlviaObjectSchema {
     return {
         type: "object",
         properties: Object.fromEntries(

@@ -77,14 +77,14 @@ function assertOwnerIsolation(
     for (const match of value.matchAll(/var\s*\(\s*--([a-z][a-z0-9-]*)/gi)) {
         const target = variableSources.get(match[1]!.toLowerCase());
         if (
-            source.owner.kind === "collection" &&
-            target?.source.owner?.kind === "collection" &&
-            target.source.owner.collectionId !== source.owner.collectionId &&
-            !source.owner.themeTokenImports?.includes(target.token.id)
+            source.owner.kind === "contribution" &&
+            target?.source.owner?.kind === "contribution" &&
+            target.source.owner.contributionId !== source.owner.contributionId &&
+            !source.owner.tokenImports?.includes(target.token.id)
         ) {
             throw new ContentValidationError(
                 "theme",
-                `collection token cannot reference undeclared collection dependency: ${source.owner.collectionId}`,
+                `contribution token cannot reference undeclared dependency: ${source.owner.contributionId}`,
             );
         }
         if (
@@ -126,22 +126,25 @@ function validateSource(source: ThemeSource, sourceIds: Set<string>, integration
                 `source id is not derived for integration: ${owner.integrationId}`,
             );
         }
-    } else if (owner?.kind === "collection") {
-        assertIdentifier("collection id", owner.collectionId);
+    } else if (owner?.kind === "contribution") {
+        assertIdentifier("contribution id", owner.contributionId);
         const imports = new Set<string>();
-        for (const tokenId of owner.themeTokenImports ?? []) {
-            assertIdentifier("collection theme token import", tokenId);
-            if (tokenId.startsWith(`${owner.collectionId}-`)) {
-                throw new ContentValidationError("theme", `collection theme cannot import itself: ${source.id}`);
+        for (const tokenId of owner.tokenImports ?? []) {
+            assertIdentifier("contribution theme token import", tokenId);
+            if (tokenId.startsWith(`${owner.contributionId}-`)) {
+                throw new ContentValidationError("theme", `contribution theme cannot import itself: ${source.id}`);
             }
-            assertUnique(imports, tokenId, "collection theme token import");
+            assertUnique(imports, tokenId, "contribution theme token import");
         }
-        if (source.id !== `collection-${owner.collectionId}`) {
-            throw new ContentValidationError("theme", `source id is not derived for collection: ${owner.collectionId}`);
+        if (source.id !== `contribution-${owner.contributionId}`) {
+            throw new ContentValidationError(
+                "theme",
+                `source id is not derived for contribution: ${owner.contributionId}`,
+            );
         }
     } else if (owner) {
         throw new ContentValidationError("theme", `invalid owner for source: ${source.id}`);
-    } else if (source.id.startsWith("integration-") || source.id.startsWith("collection-")) {
+    } else if (source.id.startsWith("integration-") || source.id.startsWith("contribution-")) {
         throw new ContentValidationError("theme", `reserved source id: ${source.id}`);
     }
 
@@ -170,10 +173,10 @@ function validateToken(source: ThemeSource, token: ThemeToken, integrationOwners
         assertCssValue(token.id, value);
     }
 
-    if (source.owner?.kind === "collection") {
-        const prefix = `${source.owner.collectionId}-`;
+    if (source.owner?.kind === "contribution") {
+        const prefix = `${source.owner.contributionId}-`;
         if (token.id !== token.variable || !token.id.startsWith(prefix) || !token.defaults?.light?.trim()) {
-            throw new ContentValidationError("theme", `invalid collection token: ${token.id}`);
+            throw new ContentValidationError("theme", `invalid contribution token: ${token.id}`);
         }
         return;
     }

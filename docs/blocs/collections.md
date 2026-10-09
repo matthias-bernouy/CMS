@@ -329,7 +329,7 @@ execution plan.
 
 ## Site-Owned Blocs
 
-`cms-content` retains revisioned site-owned Bloc and Bloc-collection domain
+`cms-content` retains revisioned site-owned Bloc and Bloc-group domain
 APIs because a future editor will need them. Control does not currently mount a
 private Bloc catalogue, import or editing transport. They must not be treated as
 an alternative collection publication path: installable reusable Blocs come

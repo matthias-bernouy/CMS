@@ -1,9 +1,10 @@
 import { parseHTML } from "linkedom";
-import { managedNativeAttributesIssue, type CollectionManagedNativeElement } from "@bernouy/cms-repository/collections";
+import type { ManagedNativeElement } from "cms-content/pages/interfaces/document";
+import { managedNativeAttributesIssue } from "cms-content/blocs/core/markup/validation/contracts/managedNativePolicy";
 
 export type ManagedNativeElementContract = {
     tag: string;
-    nativeElement: CollectionManagedNativeElement;
+    nativeElement: ManagedNativeElement;
 };
 
 /** Returns the first managed-native structure issue found in an HTML fragment. */

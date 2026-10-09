@@ -53,7 +53,7 @@ export async function resolveRuntimeAssets(delivery: DeliveryCms, usedTags: stri
     const componentCacheKey = componentJsCacheKey(componentJsUrl);
     const bindingCoreJsUrl = `${prefix}/assets/cms-binding-core.js`;
     const bindingCoreJsCacheKey = CMS_CACHE_KEYS.js(bindingCoreJsUrl);
-    const collectionRevision = (await delivery.repository.getCollectionRevision?.()) ?? 0;
+    const collectionRevision = (await delivery.repository.getContentRevision?.()) ?? 0;
     const collectionAssetReader = {
         getBlocViewJS: async (tag: string) => {
             const source = await delivery.repository.getBlocViewJS(tag);

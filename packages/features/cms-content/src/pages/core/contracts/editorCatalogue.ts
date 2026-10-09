@@ -1,6 +1,5 @@
-import { canonicalizeIJson } from "@bernouy/cms-repository/contracts/protocol";
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
-import type { PageSurface } from "@bernouy/cms-repository/collections";
+import type { PageSurface } from "cms-content/pages/interfaces/document";
 
 export type CmsEditorBloc = Readonly<{
     id: string;
@@ -36,15 +35,33 @@ export async function getCmsEditorCatalogue(
                 ownership: bloc.ownership.kind,
                 order: bloc.catalogueOrder ?? 0,
                 defaultContent: bloc.defaultContent ?? "",
-                authoringJson: canonicalizeIJson({
-                    slots: bloc.collectionSlots ?? {},
-                    settings: bloc.collectionSettings ?? [],
+                authoringJson: canonicalJson({
+                    slots: bloc.slots ?? {},
+                    settings: bloc.settings ?? [],
                     ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
                 }),
             }),
         );
     items.sort(compareEditorBlocs);
     return { items };
+}
+
+function canonicalJson(value: unknown): string {
+    return JSON.stringify(sortJson(value));
+}
+
+function sortJson(value: unknown): unknown {
+    if (Array.isArray(value)) {
+        return value.map(sortJson);
+    }
+    if (!value || typeof value !== "object") {
+        return value;
+    }
+    return Object.fromEntries(
+        Object.entries(value)
+            .sort(([left], [right]) => left.localeCompare(right))
+            .map(([key, item]) => [key, sortJson(item)]),
+    );
 }
 
 function compareEditorBlocs(left: CmsEditorBloc, right: CmsEditorBloc): number {

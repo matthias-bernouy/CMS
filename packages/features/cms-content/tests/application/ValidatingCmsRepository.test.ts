@@ -24,14 +24,14 @@ function makeRepo(opts: { blocs?: string[] } = {}) {
                 description: "",
                 ...(id === "fixture-card"
                     ? {
-                          collectionSlots: {
+                          slots: {
                               image: { accepts: [{ kind: "component" as const, tag: "fixture-image" }] },
                           },
                       }
                     : {}),
                 ...(id === "fixture-newsletter-card"
                     ? {
-                          collectionSlots: {
+                          slots: {
                               title: { accepts: [{ kind: "rich-text" as const, profile: "inline" as const }] },
                               actions: { accepts: [{ kind: "any-component" as const }] },
                               illustration: {
@@ -141,7 +141,7 @@ describe("ValidatingCmsRepository — pages", () => {
             description: "",
             viewJS: "customElements.define('fixture-card', class extends HTMLElement {})",
             ownership: { kind: "code-managed" as const },
-            collectionSlots: {},
+            slots: {},
         };
         await repo.createBloc(bloc);
         await repo.insertPage("/draft", "Draft", "<fixture-card></fixture-card>");

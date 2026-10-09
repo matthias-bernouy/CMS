@@ -51,13 +51,13 @@ export async function renderRef(
                         { status, skipCspHeader: true },
                     );
                 }
-                const collectionRevision = (await delivery.repository.getCollectionRevision?.()) ?? 0;
+                const collectionRevision = (await delivery.repository.getContentRevision?.()) ?? 0;
                 return await cachedResponseAsync(
                     req,
                     `${CMS_CACHE_KEYS.page(page.path)}:collections:${collectionRevision}`,
                     delivery.cache,
                     () => renderPage(page, makeRuntimeRenderContext(delivery)),
-                    delivery.repository.getCollectionRevision ? "public, no-cache" : undefined,
+                    delivery.repository.getContentRevision ? "public, no-cache" : undefined,
                     { status, skipCspHeader: true },
                 );
             }

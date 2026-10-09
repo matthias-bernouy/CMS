@@ -21,7 +21,7 @@ export async function serveControlBlocset(request: Request, state: ControlCmsSta
         return new Response(null, { status: 400 });
     }
     const reader = createContentReader(state.repository);
-    const actualRevision = (await reader.getCollectionRevision?.()) ?? 0;
+    const actualRevision = (await reader.getContentRevision?.()) ?? 0;
     if (revision !== actualRevision) {
         return new Response(null, { status: 409, headers: { "cache-control": "no-store" } });
     }

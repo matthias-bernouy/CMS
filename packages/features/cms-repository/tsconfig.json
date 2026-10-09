@@ -11,6 +11,7 @@
     "references": [
         { "path": "../../foundation/binary-media" },
         { "path": "../../foundation/blob-store" },
+        { "path": "../../features/cms-content" },
         { "path": "../../foundation/secret-store" }
     ]
 }

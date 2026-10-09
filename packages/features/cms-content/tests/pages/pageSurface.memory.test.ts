@@ -7,12 +7,12 @@ import {
 } from "@bernouy/cms-content";
 
 const origin = {
-    publisherId: "ulvia",
-    collectionId: "ulvia-official",
-    collectionVersion: "1.0.0",
-    collectionDigest: `sha256:${"a".repeat(64)}`,
+    sourceId: "ulvia",
+    contributionId: "ulvia-official",
+    version: "1.0.0",
+    digest: `sha256:${"a".repeat(64)}`,
     pageId: "overview",
-    pageGeneration: 1,
+    generation: 1,
 } as const;
 
 describe("site Page surface ownership", () => {
@@ -25,7 +25,7 @@ describe("site Page surface ownership", () => {
         expect(pageDocument(page)).toEqual({ html: "<main>About</main>" });
     });
 
-    test("creates a Control Page with immutable collection-copy provenance", async () => {
+    test("creates a Control Page with immutable contribution provenance", async () => {
         const repository = new ValidatingCmsRepository(new InMemoryCmsRepository());
         await repository.insertPage("/admin/overview", "Overview", "", {
             surface: "control",
@@ -42,12 +42,12 @@ describe("site Page surface ownership", () => {
         );
     });
 
-    test("rejects malformed collection provenance", async () => {
+    test("rejects malformed contribution provenance", async () => {
         const repository = new ValidatingCmsRepository(new InMemoryCmsRepository());
         await expect(
             repository.insertPage("/admin/overview", "Overview", undefined, {
                 surface: "control",
-                origin: { ...origin, collectionDigest: "not-a-digest" },
+                origin: { ...origin, digest: "not-a-digest" },
             }),
         ).rejects.toThrow(ContentValidationError);
     });

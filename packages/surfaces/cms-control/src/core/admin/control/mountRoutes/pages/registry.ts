@@ -30,8 +30,7 @@ export async function controlPageSnapshot(state: ControlCmsState): Promise<Contr
     if (!configured?.routes) {
         return null;
     }
-    const snapshot =
-        (await state.repository.getInstalledCollections?.()) ?? (await configured.store.snapshot(configured.siteId));
+    const snapshot = await configured.store.snapshot(configured.siteId);
     const routes = await configured.routes.list(configured.siteId);
     const routesByPage = new Map(routes.map((route) => [pageReferenceKey(route.page), route]));
     const pages: InstalledControlPage[] = [];
@@ -73,11 +72,11 @@ export function findControlPage(snapshot: ControlPageSnapshot, path: string): In
 export function collectionPageReference(
     installation: InstalledCollection,
     page: CollectionPage,
-): Extract<PageReference, { kind: "collection" }> {
+): Extract<PageReference, { kind: "contribution" }> {
     return {
-        kind: "collection",
-        publisherId: installation.release.publisherId,
-        collectionId: installation.collectionId,
+        kind: "contribution",
+        sourceId: installation.release.publisherId,
+        contributionId: installation.collectionId,
         pageId: page.id,
     };
 }
@@ -85,5 +84,5 @@ export function collectionPageReference(
 function pageReferenceKey(page: PageReference): string {
     return page.kind === "site"
         ? `site:${page.pageId}`
-        : `collection:${page.publisherId}:${page.collectionId}:${page.pageId}`;
+        : `contribution:${page.sourceId}:${page.contributionId}:${page.pageId}`;
 }
