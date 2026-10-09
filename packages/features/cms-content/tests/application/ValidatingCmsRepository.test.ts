@@ -23,20 +23,27 @@ function makeRepo(opts: { blocs?: string[] } = {}) {
                 group: "",
                 description: "",
                 ...(id === "fixture-card"
-                    ? { collectionSlots: { image: { accepts: [{ kind: "media" as const }] } } }
+                    ? {
+                          collectionSlots: {
+                              image: { accepts: [{ kind: "component" as const, tag: "fixture-image" }] },
+                          },
+                      }
                     : {}),
                 ...(id === "fixture-newsletter-card"
                     ? {
                           collectionSlots: {
                               title: { accepts: [{ kind: "rich-text" as const, profile: "inline" as const }] },
                               actions: { accepts: [{ kind: "any-component" as const }] },
-                              illustration: { accepts: [{ kind: "media" as const }] },
+                              illustration: {
+                                  accepts: [{ kind: "component" as const, tag: "fixture-image" }],
+                              },
                               label: { accepts: [{ kind: "plain-text" as const }] },
                               criteria: { accepts: [{ kind: "rich-text" as const, profile: "prose" as const }] },
                           },
                       }
                     : {}),
                 ...(id === "fixture-button" ? { nativeElement: { accepts: ["button" as const] } } : {}),
+                ...(id === "fixture-image" ? { nativeElement: { accepts: ["img" as const] } } : {}),
             })),
     } as unknown as CmsRepository;
     return { repo: new ValidatingCmsRepository(inner), calls };
@@ -160,9 +167,9 @@ describe("ValidatingCmsRepository — pages", () => {
             ["<fixture-card><form></form></fixture-card>", /declared CMS source endpoint/],
             [
                 '<fixture-card><img src="https:\/\/example.invalid\/photo.jpg" alt="Photo"></fixture-card>',
-                /CMS media or a gateway provider image/,
+                /CMS media item/,
             ],
-            ['<fixture-card><img alt=""></fixture-card>', /CMS media or a gateway provider image/],
+            ['<fixture-card><img alt=""></fixture-card>', /alternative text/],
             ['<fixture-card cms-source="https:\/\/example.invalid\/items"></fixture-card>', /same-site endpoint/],
             [
                 `<fixture-card><form cms-source="/.cms/call/forms/contact" cms-source-method="POST"
@@ -190,18 +197,18 @@ describe("ValidatingCmsRepository — pages", () => {
     });
 
     test("accepts immutable cms-files URLs and rejects the removed Source image route", async () => {
-        const { repo, calls } = makeRepo({ blocs: ["fixture-card"] });
+        const { repo, calls } = makeRepo({ blocs: ["fixture-card", "fixture-image"] });
         const image =
-            '<fixture-card><img slot="image" src="/.cms/call/ulvia.cms.files/files/photo/generation" alt="Product"></fixture-card>';
+            '<fixture-card><fixture-image slot="image"><img src="/.cms/call/ulvia.cms.files/files/photo/generation" alt="Product"></fixture-image></fixture-card>';
         await repo.updatePage({ id: "p1", content: image });
         expect(calls.updatePage[0].content).toContain("/.cms/call/ulvia.cms.files/files/");
         await expect(
             repo.updatePage({
                 id: "p1",
                 content:
-                    '<fixture-card><img slot="image" src="/.cms/sources/catalog/image?id={{ product.image }}" alt="Product"></fixture-card>',
+                    '<fixture-card><fixture-image slot="image"><img src="/.cms/sources/catalog/image?id={{ product.image }}" alt="Product"></fixture-image></fixture-card>',
             }),
-        ).rejects.toThrow("gateway provider image");
+        ).rejects.toThrow("static value");
     });
 
     test("rejects authored runtime image attributes that could bypass the image source policy", async () => {
@@ -216,12 +223,14 @@ describe("ValidatingCmsRepository — pages", () => {
     });
 
     test("persists controlled native content and component light DOM", async () => {
-        const { repo, calls } = makeRepo({ blocs: ["fixture-newsletter-card", "fixture-input", "fixture-button"] });
+        const { repo, calls } = makeRepo({
+            blocs: ["fixture-newsletter-card", "fixture-input", "fixture-button", "fixture-image"],
+        });
         const content = `
             <fixture-newsletter-card>
                 <h2 slot="title">Stay informed</h2>
                 <fixture-button slot="actions"><button type="button">Subscribe</button></fixture-button>
-                <img slot="illustration" src="/.cms/call/ulvia.cms.files/files/newsletter/generation" alt="Newsletter illustration">
+                <fixture-image slot="illustration"><img src="/.cms/call/ulvia.cms.files/files/newsletter/generation" alt="Newsletter illustration"></fixture-image>
                 <span slot="label">Newsletter label</span>
                 <p slot="criteria">Component-owned criterion</p>
             </fixture-newsletter-card>

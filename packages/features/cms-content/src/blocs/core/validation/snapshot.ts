@@ -172,16 +172,7 @@ function validateAccept(slotId: string, accept: SiteBlocSlot["accepts"][number],
         }
         return;
     }
-    if (accept.kind === "media") {
-        if (accept.accept !== undefined) {
-            const allowed = new Set(["image", "bitmap", "svg", "video", "audio", "document"]);
-            if (!Array.isArray(accept.accept) || accept.accept.some((value) => !allowed.has(value))) {
-                throw new ContentValidationError(field, "valid media types expected");
-            }
-        }
-        return;
-    }
-    throw new ContentValidationError(field, 'expected "component", "any-component" or "media"');
+    throw new ContentValidationError(field, 'expected "component" or "any-component"');
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

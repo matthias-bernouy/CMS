@@ -5,13 +5,13 @@
     "description": "bloc.navigation.description",
     "category": "bloc.category.site",
     "order": 10,
-    "uses": ["ulvia-official-action"],
+    "uses": ["ulvia-official-action", "ulvia-official-image"],
     "requires": [],
     "slots": {
         "brand": {
             "accepts": [
                 { "kind": "rich-text", "profile": "inline" },
-                { "kind": "media", "accept": ["image", "bitmap", "svg"] }
+                { "kind": "component", "tag": "ulvia-official-image" }
             ],
             "min": 1,
             "max": 1

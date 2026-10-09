@@ -94,9 +94,6 @@ function acceptIncludes(candidate: CollectionSlotAccept, previous: CollectionSlo
     if (candidate.kind === "rich-text" && previous.kind === "rich-text") {
         return candidate.profile === previous.profile;
     }
-    if (candidate.kind === "media" && previous.kind === "media") {
-        return !candidate.accept || Boolean(previous.accept?.every((type) => candidate.accept!.includes(type)));
-    }
     return true;
 }
 

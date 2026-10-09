@@ -11,14 +11,12 @@
         "primary": {
             "accepts": [
                 { "kind": "any-component" },
-                { "kind": "media" },
                 { "kind": "rich-text", "profile": "prose" }
             ]
         },
         "secondary": {
             "accepts": [
                 { "kind": "any-component" },
-                { "kind": "media" },
                 { "kind": "rich-text", "profile": "prose" }
             ]
         }

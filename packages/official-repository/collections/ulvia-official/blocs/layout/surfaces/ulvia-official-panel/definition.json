@@ -22,7 +22,6 @@
         "content": {
             "accepts": [
                 { "kind": "any-component" },
-                { "kind": "media" },
                 { "kind": "rich-text", "profile": "prose" }
             ]
         },

@@ -5,11 +5,11 @@
     "description": "bloc.card.description",
     "category": "bloc.category.components",
     "order": 10,
-    "uses": ["ulvia-official-action"],
+    "uses": ["ulvia-official-action", "ulvia-official-image"],
     "requires": [],
     "slots": {
         "media": {
-            "accepts": [{ "kind": "media", "accept": ["image", "bitmap", "svg", "video"] }],
+            "accepts": [{ "kind": "component", "tag": "ulvia-official-image" }],
             "max": 1
         },
         "eyebrow": {

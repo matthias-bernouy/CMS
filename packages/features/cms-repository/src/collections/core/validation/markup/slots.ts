@@ -101,8 +101,6 @@ const INLINE_ROOTS = new Set([
 const INLINE_CHILDREN = new Set(["a", "abbr", "b", "br", "cite", "code", "em", "small", "span", "strong"]);
 const PROSE_ROOTS = new Set([...INLINE_ROOTS, "blockquote", "div", "ol", "p", "pre", "ul"]);
 const PROSE_CHILDREN = new Set([...PROSE_ROOTS, "li"]);
-const MEDIA_ROOTS = new Set(["audio", "img", "picture", "svg", "video"]);
-
 export function slotAcceptsBloc(accept: CollectionSlotAccept, tag: string, bloc?: CollectionBloc): boolean {
     if (accept.kind === "any-component") {
         return bloc?.kind === "component" || bloc === undefined;
@@ -110,20 +108,13 @@ export function slotAcceptsBloc(accept: CollectionSlotAccept, tag: string, bloc?
     if (accept.kind === "component") {
         return accept.tag === tag && (bloc?.kind === "component" || bloc === undefined);
     }
-    return (
-        accept.kind === "media" &&
-        bloc?.kind === "component" &&
-        Boolean(bloc.nativeElement?.accepts.some((nativeTag) => MEDIA_ROOTS.has(nativeTag)))
-    );
+    return false;
 }
 
 export function slotAcceptsNative(slot: CollectionSlot, element: MarkupElement): boolean {
     return (slot.accepts ?? []).some((accept) => {
         if (accept.kind === "plain-text") {
             return element.name === "span" && !element.children.some(isElement);
-        }
-        if (accept.kind === "media") {
-            return MEDIA_ROOTS.has(element.name);
         }
         if (accept.kind !== "rich-text") {
             return false;

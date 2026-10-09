@@ -75,7 +75,7 @@ test("migrates an installed collection asset reference and restores it on rollba
     await repository.insertPage(
         "/asset",
         "Asset",
-        '<atlas-card><img slot="media" src="{{ cms.asset.atlas.old.svg }}" alt="Asset"></atlas-card>',
+        '<atlas-card><atlas-image slot="media"><img src="{{ cms.asset.atlas.old.svg }}" alt="Asset"></atlas-image></atlas-card>',
     );
     const inserted = (await repository.getPage("/asset"))!;
     const storage = new MemoryCollectionMigrationStorage();
@@ -86,14 +86,16 @@ test("migrates an installed collection asset reference and restores it on rollba
     expect(plan.resources).toContainEqual(expect.objectContaining({ kind: "asset", id: "old.svg" }));
     const completed = await service.execute("site", [{ digest: next.digest, repositoryId: "local" }], 1);
     expect(await repository.getPageById(inserted.id)).toMatchObject({
-        content: '<atlas-card><img slot="media" src="{{ cms.asset.atlas.new.svg }}" alt="Asset"></atlas-card>',
+        content:
+            '<atlas-card><atlas-image slot="media"><img src="{{ cms.asset.atlas.new.svg }}" alt="Asset"></atlas-image></atlas-card>',
         revision: 2,
     });
     expect(await collections.getReleaseAsset(next.digest, "new.svg")).toEqual(newBytes);
 
     await service.rollback("site", completed.id);
     expect(await repository.getPageById(inserted.id)).toMatchObject({
-        content: '<atlas-card><img slot="media" src="{{ cms.asset.atlas.old.svg }}" alt="Asset"></atlas-card>',
+        content:
+            '<atlas-card><atlas-image slot="media"><img src="{{ cms.asset.atlas.old.svg }}" alt="Asset"></atlas-image></atlas-card>',
         revision: 3,
     });
     expect(await collections.getReleaseAsset(previous.digest, "old.svg")).toEqual(oldBytes);
@@ -455,7 +457,18 @@ function release(version: string, id: string): Record<string, unknown> {
                 shadowdom: '<div><slot name="media"></slot></div>',
                 uses: [],
                 requires: [],
-                slots: { media: { accepts: [{ kind: "media" }] } },
+                slots: { media: { accepts: [{ kind: "component", tag: "atlas-image" }] } },
+            },
+            {
+                kind: "component",
+                id: "atlas-image",
+                label: "bloc.label",
+                shadowdom: "<slot></slot>",
+                uses: [],
+                requires: [],
+                slots: {},
+                nativeElement: { accepts: ["img"] },
+                defaultContent: '<img alt="">',
             },
         ],
     };

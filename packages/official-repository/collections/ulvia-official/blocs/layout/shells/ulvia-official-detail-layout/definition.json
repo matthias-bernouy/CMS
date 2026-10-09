@@ -9,7 +9,7 @@
     "requires": [],
     "slots": {
         "navigation": { "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }] },
-        "main": { "accepts": [{ "kind": "any-component" }, { "kind": "media" }, { "kind": "rich-text", "profile": "prose" }] },
-        "aside": { "accepts": [{ "kind": "any-component" }, { "kind": "media" }, { "kind": "rich-text", "profile": "prose" }] }
+        "main": { "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }] },
+        "aside": { "accepts": [{ "kind": "any-component" }, { "kind": "rich-text", "profile": "prose" }] }
     }
 }

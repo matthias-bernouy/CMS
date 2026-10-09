@@ -29,8 +29,6 @@ const INLINE_ROOTS = new Set([
 const INLINE_DESCENDANTS = new Set(["a", "abbr", "b", "br", "cite", "code", "em", "small", "span", "strong"]);
 const PROSE_ROOTS = new Set([...INLINE_ROOTS, "blockquote", "div", "ol", "p", "pre", "ul"]);
 const PROSE_DESCENDANTS = new Set([...PROSE_ROOTS, "li"]);
-const MEDIA_ROOTS = new Set(["audio", "img", "picture", "svg", "video"]);
-
 export function blocHostContractIssue(
     host: ContractElement,
     bloc: ContractBloc,
@@ -102,16 +100,13 @@ function acceptsCustomBloc(accept: CollectionSlotAccept, bloc: ContractBloc): bo
     if (accept.kind === "component") {
         return accept.tag === bloc.id && bloc.compositionHTML === undefined;
     }
-    return accept.kind === "media" && Boolean(bloc.nativeElement?.accepts.some((tag) => MEDIA_ROOTS.has(tag)));
+    return false;
 }
 
 function acceptsNativeElement(accept: CollectionSlotAccept, element: ContractElement): boolean {
     const tag = element.localName.toLowerCase();
     if (accept.kind === "plain-text") {
         return tag === "span" && element.children.length === 0;
-    }
-    if (accept.kind === "media") {
-        return MEDIA_ROOTS.has(tag);
     }
     if (accept.kind !== "rich-text") {
         return false;

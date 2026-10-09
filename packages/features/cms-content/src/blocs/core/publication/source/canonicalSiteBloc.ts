@@ -82,18 +82,12 @@ function normalizeSlot(slot: SiteBlocSlot): SiteBlocSlot {
 }
 
 function normalizeAccept(accept: SlotAccept): SlotAccept {
-    if (accept.kind !== "media" || !accept.accept) {
-        return { ...accept };
-    }
-    return { ...accept, accept: [...accept.accept].sort(compareText) };
+    return { ...accept };
 }
 
 function acceptKey(accept: SlotAccept): string {
     if (accept.kind === "component") {
         return `component:${accept.tag}`;
-    }
-    if (accept.kind === "media") {
-        return `media:${accept.accept?.join(",") ?? ""}`;
     }
     return "any-component";
 }

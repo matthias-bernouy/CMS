@@ -1,13 +1,8 @@
-import type {
-    CollectionMediaAccept,
-    CollectionSlot,
-    CollectionSlotAccept,
-} from "cms-repository/collections/interfaces/CollectionBloc";
+import type { CollectionSlot, CollectionSlotAccept } from "cms-repository/collections/interfaces/CollectionBloc";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { array, identifier, integer, keys, ordinal, record, unique } from "../../values";
 
-const MEDIA_ACCEPTS: CollectionMediaAccept[] = ["image", "bitmap", "svg", "video", "audio", "document"];
 const RICH_TEXT_PROFILES = ["inline", "prose"] as const;
 
 export function blocReferences(value: unknown, path: string, limits: Readonly<CollectionLimits>): string[] {
@@ -68,15 +63,6 @@ function parseSlotAccepts(value: unknown, path: string, limits: Readonly<Collect
             keys(source, ["kind"], itemPath);
             return { kind: "any-component" };
         }
-        if (source.kind === "media") {
-            keys(source, ["kind", "accept"], itemPath);
-            return {
-                kind: "media",
-                ...(source.accept === undefined
-                    ? {}
-                    : { accept: parseMediaAccepts(source.accept, `${itemPath}.accept`) }),
-            };
-        }
         if (source.kind === "plain-text") {
             keys(source, ["kind"], itemPath);
             return { kind: "plain-text" };
@@ -89,22 +75,11 @@ function parseSlotAccepts(value: unknown, path: string, limits: Readonly<Collect
             return { kind: "rich-text", profile: source.profile as (typeof RICH_TEXT_PROFILES)[number] };
         }
         return invalid(
-            "slot acceptance kind must be component, any-component, media, plain-text or rich-text",
+            "slot acceptance kind must be component, any-component, plain-text or rich-text",
             `${itemPath}.kind`,
         );
     });
     const signatures = accepts.map((accept) => JSON.stringify(accept));
     unique(signatures, path);
     return accepts;
-}
-
-function parseMediaAccepts(value: unknown, path: string): CollectionMediaAccept[] {
-    const values = array(value, MEDIA_ACCEPTS.length, path).map((value, index) => {
-        if (typeof value !== "string" || !MEDIA_ACCEPTS.includes(value as CollectionMediaAccept)) {
-            return invalid(`must be one of ${MEDIA_ACCEPTS.join(", ")}`, `${path}[${index}]`);
-        }
-        return value as CollectionMediaAccept;
-    });
-    unique(values, path);
-    return values;
 }

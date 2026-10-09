@@ -9,9 +9,9 @@
 
 [part="figure"] { display: grid; gap: var(--ulvia-official-spacing-sm, .75rem); margin: 0; }
 [part="media"] { display: grid; overflow: hidden; aspect-ratio: var(--ulvia-official-media-figure-ratio); border-radius: var(--ulvia-official-media-figure-radius); background: var(--ulvia-official-media-figure-background); }
-::slotted(img), ::slotted(video), ::slotted(picture), ::slotted(svg) { width: 100%; height: 100%; object-fit: cover; }
+::slotted(ulvia-official-image) { --ulvia-official-image-ratio: var(--ulvia-official-media-figure-ratio); --ulvia-official-image-radius: var(--ulvia-official-media-figure-radius); width: 100%; height: 100%; }
 ::slotted(figcaption) { font-size: var(--ulvia-official-font-size-sm, .875rem); line-height: var(--ulvia-official-line-height-normal, 1.5); }
 :host([ratio="square"]) { --ulvia-official-media-figure-ratio: 1; }
 :host([ratio="landscape"]) { --ulvia-official-media-figure-ratio: 16 / 9; }
 :host([ratio="portrait"]) { --ulvia-official-media-figure-ratio: 4 / 5; }
-:host([fit="contain"]) ::slotted(img), :host([fit="contain"]) ::slotted(video) { object-fit: contain; }
+:host([fit="contain"]) ::slotted(ulvia-official-image) { --ulvia-official-image-fit: contain; }

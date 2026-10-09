@@ -13,13 +13,6 @@ const expectedSnapshotJson = `{
                     {
                         "kind": "component",
                         "tag": "basic-heading-1"
-                    },
-                    {
-                        "accept": [
-                            "image",
-                            "video"
-                        ],
-                        "kind": "media"
                     }
                 ],
                 "id": "title",

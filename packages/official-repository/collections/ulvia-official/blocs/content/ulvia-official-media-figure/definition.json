@@ -5,11 +5,11 @@
     "description": "bloc.media-figure.description",
     "category": "bloc.category.media",
     "order": 10,
-    "uses": [],
+    "uses": ["ulvia-official-image"],
     "requires": [],
     "slots": {
         "media": {
-            "accepts": [{ "kind": "media", "accept": ["image", "bitmap", "svg", "video"] }],
+            "accepts": [{ "kind": "component", "tag": "ulvia-official-image" }],
             "max": 1
         },
         "caption": {

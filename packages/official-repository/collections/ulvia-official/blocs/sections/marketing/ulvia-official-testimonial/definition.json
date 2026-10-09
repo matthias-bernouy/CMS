@@ -5,7 +5,7 @@
     "description": "bloc.testimonial.description",
     "category": "bloc.category.sections",
     "order": 50,
-    "uses": [],
+    "uses": ["ulvia-official-image"],
     "requires": [],
     "slots": {
         "quote": {
@@ -23,7 +23,7 @@
             "max": 1
         },
         "media": {
-            "accepts": [{ "kind": "media", "accept": ["image", "bitmap"] }],
+            "accepts": [{ "kind": "component", "tag": "ulvia-official-image" }],
             "max": 1
         }
     }

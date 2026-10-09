@@ -22,10 +22,7 @@ export const publishedSnapshot: SiteBlocSnapshot = {
             slot: "title",
             min: 1,
             max: 1,
-            accepts: [
-                { kind: "media", accept: ["video", "image"] },
-                { kind: "component", tag: "basic-heading-1" },
-            ],
+            accepts: [{ kind: "component", tag: "basic-heading-1" }],
         },
         {
             id: "content",

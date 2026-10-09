@@ -6,7 +6,7 @@
 [part="testimonial"] { display: grid; gap: var(--ulvia-official-spacing-lg, 1.5rem); }
 [part="quote"] { font-family: var(--ulvia-official-font-family-secondary, inherit); font-size: var(--ulvia-official-font-size-2xl, 1.75rem); font-weight: var(--ulvia-official-font-weight-medium, 500); line-height: var(--ulvia-official-line-height-snug, 1.35); }
 [part="attribution"] { display: grid; gap: var(--ulvia-official-spacing-3xs, .25rem); color: var(--ulvia-official-text-secondary, #5b6472); }
-::slotted([slot="media"]) { display: block; width: 100%; border-radius: var(--ulvia-official-radius-full, 9999px); }
+::slotted([slot="media"]) { --ulvia-official-image-ratio: 1; --ulvia-official-image-radius: var(--ulvia-official-radius-full, 9999px); display: block; width: 100%; }
 ::slotted([slot="quote"]) { margin: 0; }
 :host([surface="base"]) { background: var(--ulvia-official-background-base, Canvas); }
 :host([surface="inverse"]) { color: var(--ulvia-official-text-inverse, #ffffff); background: var(--ulvia-official-background-inverse, #17191c); }

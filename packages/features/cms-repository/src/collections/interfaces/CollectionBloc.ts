@@ -13,7 +13,6 @@ export type CollectionMediaAccept = "image" | "bitmap" | "svg" | "video" | "audi
 export type CollectionSlotAccept =
     | { readonly kind: "component"; readonly tag: string }
     | { readonly kind: "any-component" }
-    | { readonly kind: "media"; readonly accept?: readonly CollectionMediaAccept[] }
     | { readonly kind: "plain-text" }
     | { readonly kind: "rich-text"; readonly profile: CollectionRichTextProfile };
 

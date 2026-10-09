@@ -10,8 +10,7 @@
     "slots": {
         "content": {
             "accepts": [
-                { "kind": "any-component" },
-                { "kind": "media" }
+                { "kind": "any-component" }
             ]
         }
     }

@@ -267,7 +267,6 @@ describe("collection bloc admission", () => {
                     body: {
                         accepts: [
                             { kind: "any-component" },
-                            { kind: "media", accept: ["image", "svg"] },
                             { kind: "plain-text" },
                             { kind: "rich-text", profile: "prose" },
                         ],
@@ -308,7 +307,14 @@ describe("collection bloc admission", () => {
                 ],
             }),
         ])[0];
-        expect(parsed?.slots.body?.accepts).toHaveLength(4);
+        expect(parsed?.slots.body?.accepts).toHaveLength(3);
+        expect(() =>
+            check([
+                component({
+                    slots: { body: { accepts: [{ kind: "media", accept: ["image"] }] as never } },
+                }),
+            ]),
+        ).toThrow("slot acceptance kind must be component, any-component, plain-text or rich-text");
         expect(parsed?.kind === "component" ? parsed.settings?.map(({ control }) => control.kind) : undefined).toEqual([
             "text",
             "page-link",

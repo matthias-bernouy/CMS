@@ -19,7 +19,11 @@ export function validatePageBlocHosts(
         const nested = Boolean(
             parent && isElement(parent) && (blocs.has(parent.name) || importedBlocs.has(parent.name)),
         );
-        const issue = pageBlocHostAttributesIssue(host.attribs, { id: bloc.id, settings: bloc.settings }, nested);
+        const issue = pageBlocHostAttributesIssue(
+            host.attribs,
+            { id: bloc.id, settings: bloc.kind === "component" ? bloc.settings : undefined },
+            nested,
+        );
         if (issue) {
             invalid(issue, path);
         }
