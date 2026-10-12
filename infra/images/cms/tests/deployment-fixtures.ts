@@ -8,6 +8,7 @@ type ComposeService = {
     image?: string;
     entrypoint?: string[];
     environment?: Record<string, string>;
+    network_mode?: string;
     networks?: Record<string, ComposeNetworkAttachment>;
     init?: boolean;
     read_only?: boolean;

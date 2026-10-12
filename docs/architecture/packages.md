@@ -12,7 +12,8 @@ surface packages are publishable libraries unless their manifest explicitly sets
 distributed developer command-line application.
 
 Server composition roots are deployment units rather than reusable packages:
-`@bernouy/cms-server` and `@bernouy/official-repository-server` are private.
+`@bernouy/cms-kernel-server`, `@bernouy/ulvia-provider-server` and
+`@bernouy/official-repository-server` are private.
 `packages/official-repository` has no package manifest; its authored artifacts
 are admitted and served by the official repository runtime. A package being
 publishable describes its intended boundary, not evidence that a release has
@@ -69,7 +70,8 @@ and serves admitted copies from a separate persistent volume.
 | --- | --- |
 | `@bernouy/ulvia-provider` | Authenticated provider report, binding-derived HTTP transport, cross-domain official capability adapters and durable asynchronous job execution for admitted `ulvia.cms.*` contracts. |
 | `@bernouy/cms-kernel` | HTTP mounting and Page presentation for site and contributed Pages, authentication and injected feature handlers. |
-| `@bernouy/cms-server` | Production adapter composition, Mongo provider-operation persistence and Ulvia Provider/Kernel startup. |
+| `@bernouy/cms-kernel-server` | Kernel environment, official-resource bootstrap and CMS Kernel listener. |
+| `@bernouy/ulvia-provider-server` | Official manifest admission, Provider adapter composition and Ulvia Provider listener. |
 | `@bernouy/official-repository-server` | Production official repository startup with persistent staged publication and immutable reads. |
 | `@bernouy/ulvia-cli` | Persistent local CMS development stack backed by MongoDB. |
 

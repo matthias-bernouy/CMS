@@ -21,6 +21,8 @@ The CLI stores local releases in `ULVIA_DATA_DIR/repository`, or under
 `$XDG_DATA_HOME/ulvia/repository` / `~/.local/share/ulvia/repository` by default.
 The separate `dev/` directory holds credentials, CMS files, and MongoDB data.
 `dev` mounts the authenticated Ulvia Provider surface on loopback port 5103.
+That port is fixed because it is part of the admitted official Provider
+manifest; `ULVIA_DEV_PROVIDER_PORT` cannot select another origin.
 `dev credentials` prints its bearer token alongside the CMS administrator
 credentials.
 `release <resource-directory>` reads `definition.json` and routes by `kind`:

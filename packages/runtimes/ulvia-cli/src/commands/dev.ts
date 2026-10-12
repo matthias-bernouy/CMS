@@ -4,7 +4,13 @@ import {
     loadOrCreateDevRuntimeConfig,
     loadOrCreateRepositoryToken,
 } from "../runtime/config";
-import { startLocalCms, stopLocalCms, type DevPorts } from "../runtime/cms";
+import {
+    startLocalKernel,
+    startLocalProvider,
+    stopLocalServer,
+    type CmsServerProcess,
+    type DevPorts,
+} from "../runtime/cms";
 import { localMongoStatus, startLocalMongo, stopLocalMongo } from "../runtime/mongo";
 import type { UlviaPaths } from "../runtime/paths";
 import { bootstrapOfficialRepository } from "./bootstrap";
@@ -61,12 +67,19 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
         paths.repository,
         await loadOrCreateRepositoryToken(paths.dev),
     );
-    let cms: Awaited<ReturnType<typeof startLocalCms>>;
+    const ulviaProviderToken = await loadOrCreateUlviaProviderToken(paths.dev);
+    let provider: CmsServerProcess;
     try {
-        cms = await startLocalCms(paths, config, mongo, ports, {
-            ulviaProviderToken: await loadOrCreateUlviaProviderToken(paths.dev),
-        });
+        provider = await startLocalProvider(paths, config, mongo, ports, { ulviaProviderToken });
     } catch (error) {
+        repository.stop();
+        throw error;
+    }
+    let kernel: CmsServerProcess;
+    try {
+        kernel = await startLocalKernel(paths, config, mongo, ports, { ulviaProviderToken });
+    } catch (error) {
+        await stopLocalServer(provider);
         repository.stop();
         throw error;
     }
@@ -76,18 +89,24 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
     log(`CMS Kernel: http://127.0.0.1:${ports.kernel}`);
     log("Credentials: bun run ulvia -- dev credentials");
     try {
-        await superviseCms(cms);
+        await superviseServers(kernel, provider);
     } finally {
         repository.stop();
     }
 }
 
 export function resolveDevPorts(environment: Record<string, string | undefined>): DevPorts {
+    const configuredProviderPort = environment.ULVIA_DEV_PROVIDER_PORT?.trim();
+    if (configuredProviderPort && configuredProviderPort !== String(DEFAULT_PORTS.provider)) {
+        throw new Error(
+            `ULVIA_DEV_PROVIDER_PORT cannot override the official Provider origin; expected ${DEFAULT_PORTS.provider}`,
+        );
+    }
     const ports: DevPorts = {
         kernel: readPort(environment, "ULVIA_DEV_KERNEL_PORT", DEFAULT_PORTS.kernel),
         mongo: readPort(environment, "ULVIA_DEV_MONGO_PORT", DEFAULT_PORTS.mongo),
         repository: readPort(environment, "ULVIA_DEV_REPOSITORY_PORT", DEFAULT_PORTS.repository),
-        provider: readPort(environment, "ULVIA_DEV_PROVIDER_PORT", DEFAULT_PORTS.provider),
+        provider: DEFAULT_PORTS.provider,
     };
     if (new Set(Object.values(ports)).size !== Object.values(ports).length) {
         throw new Error("Ulvia dev ports must be distinct");
@@ -107,24 +126,32 @@ function readPort(environment: Record<string, string | undefined>, name: string,
     return port;
 }
 
-async function superviseCms(cms: Awaited<ReturnType<typeof startLocalCms>>): Promise<void> {
+async function superviseServers(kernel: CmsServerProcess, provider: CmsServerProcess): Promise<void> {
     let stopping: Promise<void> | undefined;
     const stop = () => {
-        stopping ??= stopLocalCms(cms);
+        stopping ??= stopServers(kernel, provider);
     };
     process.once("SIGINT", stop);
     process.once("SIGTERM", stop);
     try {
-        const exitCode = await cms.exited;
+        const [name, exitCode] = await Promise.race([
+            kernel.exited.then((code) => ["CMS Kernel", code] as const),
+            provider.exited.then((code) => ["Ulvia Provider", code] as const),
+        ]);
         await stopping;
         if (exitCode !== 0 && !stopping) {
-            throw new Error(`Local CMS exited with code ${exitCode}`);
+            throw new Error(`${name} exited with code ${exitCode}`);
         }
     } finally {
         process.off("SIGINT", stop);
         process.off("SIGTERM", stop);
-        await stopLocalCms(cms);
+        await stopServers(kernel, provider);
     }
+}
+
+async function stopServers(kernel: CmsServerProcess, provider: CmsServerProcess): Promise<void> {
+    await stopLocalServer(kernel);
+    await stopLocalServer(provider);
 }
 
 async function devStatus(paths: UlviaPaths, log: (message: string) => void): Promise<void> {

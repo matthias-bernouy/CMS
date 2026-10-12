@@ -44,7 +44,8 @@ CmsCore/
 |   |   `-- cms-kernel/        @bernouy/cms-kernel
 |   |-- runtimes/
 |   |   |-- ulvia-cli/         @bernouy/ulvia-cli
-|   |   |-- cms-server/        @bernouy/cms-server
+|   |   |-- cms-kernel-server/ @bernouy/cms-kernel-server
+|   |   |-- ulvia-provider-server/
 |   |   `-- official-repository-server/
 |   `-- official-repository/   Authored official releases
 |
@@ -93,8 +94,8 @@ straight to `src/` outside the explicit Kernel browser bundle.
 
 ## Deployment
 
-`infra/images/cms/` ships the deployment artefact: a `Dockerfile` (runs
-`packages/runtimes/cms-server`), a per-instance `compose.yml`, and a shared
+`infra/images/cms/` ships the deployment artefact: a `Dockerfile` containing
+the two independent server entrypoints, a per-instance `compose.yml`, and a shared
 `infra/compose.yml` (`nginx-proxy` + `acme-companion` + `mongo`). The design hosts
 **many instances on one server** sharing the TLS proxy and one authenticated
 MongoDB server. Every instance selects a dedicated database and owns its file

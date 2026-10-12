@@ -1,4 +1,4 @@
-# CMS image — single Bun process for the unified Kernel.
+# CMS image — independent Kernel and Ulvia Provider entrypoints.
 # Build context is the repo root (the workspace must be fully available).
 
 FROM oven/bun:1.4.2-alpine@sha256:d888c0ae6c86d7866ff10c5aafdd9077b36aee6455b33dd270fb93c0dd5cef6f AS build
@@ -16,14 +16,14 @@ RUN bun -e 'import { bootstrapOfficialRepository } from "./packages/runtimes/ulv
 # Remove build-only installs before copying the generated workspace into the
 # runtime stage. The production install below recreates the workspace links.
 FROM build AS runtime-source
-RUN rm -rf /app/node_modules /app/packages/*/*/node_modules
+RUN rm -rf /app/node_modules /app/packages/*/node_modules /app/packages/*/*/node_modules
 
 FROM oven/bun:1.4.2-alpine@sha256:d888c0ae6c86d7866ff10c5aafdd9077b36aee6455b33dd270fb93c0dd5cef6f AS runtime
 
 ARG IMAGE_VERSION=dev
 ARG VCS_REF=unknown
 
-LABEL org.opencontainers.image.title="@bernouy/cms-server" \
+LABEL org.opencontainers.image.title="CmsCore servers" \
       org.opencontainers.image.description="CmsCore runtime" \
       org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.opencontainers.image.revision="${VCS_REF}"
@@ -38,9 +38,10 @@ USER bun
 
 # Keep peer dependencies because workspace adapters import them from their own
 # package location at runtime (not from the composition root's nested modules).
-# The same image runs the CMS and its private official repository sidecar.
+# The same image runs the Kernel, Provider and private repository services.
 RUN bun install --frozen-lockfile --production \
-    --filter=@bernouy/cms-server \
+    --filter=@bernouy/cms-kernel-server \
+    --filter=@bernouy/ulvia-provider-server \
     --filter=@bernouy/official-repository-server
 
 ENV NODE_ENV=production \
@@ -51,4 +52,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     CMD ["bun", "-e", "const port = process.env.KERNEL_PORT || '3000'; const response = await fetch(`http://127.0.0.1:${port}/login`, { signal: AbortSignal.timeout(4000) }); if (!response.ok) process.exit(1); await response.body?.cancel();"]
 
-CMD ["bun", "run", "packages/runtimes/cms-server/src/index.ts"]
+CMD ["bun", "run", "packages/runtimes/cms-kernel-server/src/index.ts"]

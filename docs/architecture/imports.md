@@ -48,8 +48,9 @@ Adapter subpaths isolate optional infrastructure:
 - `./browser` exposes browser-safe APIs where the package declares it, such as
   `cms-auth/browser`.
 
-Production adapters belong in composition roots such as `@bernouy/cms-server`
-and local development wiring. Tests can also compose adapters.
+Production adapters are composed inside the server that consumes them. Kernel
+and Provider must not share an aggregate instance-runtime package or import one
+another's composition root. Tests can also compose adapters.
 Surfaces consume interfaces and receive concrete instances through their
 constructors or config.
 

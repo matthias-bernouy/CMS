@@ -50,7 +50,10 @@
             "path": "packages/runtimes/ulvia-cli"
         },
         {
-            "path": "packages/runtimes/cms-server"
+            "path": "packages/runtimes/cms-kernel-server"
+        },
+        {
+            "path": "packages/runtimes/ulvia-provider-server"
         },
         {
             "path": "packages/runtimes/official-repository-server"

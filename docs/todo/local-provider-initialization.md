@@ -38,8 +38,8 @@ persistent MongoDB, files and encrypted secrets
 ```
 
 The CLI starts the repository, Ulvia Provider and Kernel as separate local HTTP applications.
-The production Compose stack uses one CMS service plus one private repository
-service from the same immutable image. This proves offline bootstrap; it is not
+The production Compose stack uses separate Kernel and Provider processes plus
+one private repository service from the same immutable image. This proves offline bootstrap; it is not
 yet a general provider implementation capable of provisioning arbitrary CMS
 instances.
 

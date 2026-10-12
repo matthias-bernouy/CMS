@@ -7,7 +7,7 @@
 # instance uses its own database and a database-scoped account selected by
 # `MONGO_URL`. Instances share only the MongoDB process and `cms_mongo` network.
 #
-# nginx-proxy detects the CMS container via `VIRTUAL_HOST_MULTIPORTS` and
+# nginx-proxy detects the instance network owner via `VIRTUAL_HOST_MULTIPORTS` and
 # routes ${DOMAIN} to the unified Kernel on port 3000.
 #
 # Required `.env` values (never commit that file):
@@ -53,19 +53,20 @@ services:
             start_period: 10s
         stop_grace_period: 15s
 
-    cms:
+    provider:
         image: ${CMS_IMAGE:?CMS_IMAGE must be an immutable version tag or digest}
         restart: unless-stopped
         init: true
+        command: ["bun", "run", "packages/runtimes/ulvia-provider-server/src/index.ts"]
         environment:
             MODE:                 PROD
             NODE_ENV:             production
-            KERNEL_PORT:          "3000"
             KERNEL_PUBLIC_URL:    "https://${DOMAIN:?DOMAIN must be set}"
             CMS_FILES_DIR:        /var/lib/cms/files
             CMS_GATEWAY_SITE_ID:  ${CMS_GATEWAY_SITE_ID:-default}
             CMS_REPOSITORY_URL:   http://repository:3100
             ULVIA_PROVIDER_PORT:            "5103"
+            ULVIA_PROVIDER_HOST:            127.0.0.1
             ULVIA_PROVIDER_PUBLIC_URL:      http://127.0.0.1:5103
 
             # Application secrets are injected from `.env`; no secret value is
@@ -73,27 +74,13 @@ services:
             CMS_SESSION_SECRET:   ${CMS_SESSION_SECRET:?CMS_SESSION_SECRET must be set (32+ chars; openssl rand -hex 32)}
             CMS_KEK_HEX:          ${CMS_KEK_HEX:?CMS_KEK_HEX must be set (32 bytes hex = 64 chars; openssl rand -hex 32)}
             CMS_ADMIN_EMAIL:      ${CMS_ADMIN_EMAIL:-admin@${DOMAIN}}
-            CMS_ADMIN_PASSWORD:   ${CMS_ADMIN_PASSWORD:?CMS_ADMIN_PASSWORD must be set}
             ULVIA_PROVIDER_TOKEN: ${ULVIA_PROVIDER_TOKEN:?ULVIA_PROVIDER_TOKEN must be set}
             # Required for both the server-wide MongoDB service and an external
             # cluster. Both the database path and credential are dedicated to
             # this instance; the runtime must never receive the root account.
             MONGO_URL: ${MONGO_URL:?MONGO_URL must be set to this instance's authenticated MongoDB database}
 
-            # Public authentication links and throttling.
-            CMS_AUTH_SITE_NAME:                      ${CMS_AUTH_SITE_NAME:-CMS}
-            CMS_AUTH_EMAIL_COOLDOWN_SECONDS:         "${CMS_AUTH_EMAIL_COOLDOWN_SECONDS:-300}"
             CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: "${CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION:-100}"
-            CMS_AUTH_EMAIL_VERIFICATION_URL:         ${CMS_AUTH_EMAIL_VERIFICATION_URL:-https://${DOMAIN}/auth/confirm-email}
-            CMS_AUTH_PASSWORD_RESET_URL:             ${CMS_AUTH_PASSWORD_RESET_URL:-https://${DOMAIN}/auth/reset-password}
-
-            SMTP_HOST:                      ${SMTP_HOST:-}
-            SMTP_PORT:                      ${SMTP_PORT:-}
-            SMTP_SECURE:                    ${SMTP_SECURE:-}
-            SMTP_USER:                      ${SMTP_USER:-}
-            SMTP_PASSWORD:                  ${SMTP_PASSWORD:-}
-            SMTP_FROM:                      ${SMTP_FROM:-}
-            SMTP_REPLY_TO:                  ${SMTP_REPLY_TO:-}
 
             # nginx-proxy + acme-companion routing/cert directives.
             VIRTUAL_HOST_MULTIPORTS: |-
@@ -128,6 +115,72 @@ services:
             # remain instance-specific.
             cms_mongo: {}
             cms_internal: {}
+        healthcheck:
+            test:
+                - CMD
+                - bun
+                - -e
+                - >-
+                    const response = await fetch("http://127.0.0.1:5103/ulvia/report", { headers: { authorization: "Bearer " + process.env.ULVIA_PROVIDER_TOKEN } });
+                    if (!response.ok) process.exit(1);
+                    await response.body?.cancel();
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 60s
+        stop_grace_period: 30s
+
+    cms:
+        image: ${CMS_IMAGE:?CMS_IMAGE must be an immutable version tag or digest}
+        restart: unless-stopped
+        init: true
+        command: ["bun", "run", "packages/runtimes/cms-kernel-server/src/index.ts"]
+        network_mode: "service:provider"
+        environment:
+            MODE:                 PROD
+            NODE_ENV:             production
+            KERNEL_PORT:          "3000"
+            KERNEL_HOST:          0.0.0.0
+            KERNEL_PUBLIC_URL:    "https://${DOMAIN:?DOMAIN must be set}"
+            CMS_FILES_DIR:        /var/lib/cms/files
+            CMS_GATEWAY_SITE_ID:  ${CMS_GATEWAY_SITE_ID:-default}
+            CMS_REPOSITORY_URL:   http://repository:3100
+            ULVIA_PROVIDER_PUBLIC_URL: http://127.0.0.1:5103
+
+            CMS_SESSION_SECRET:   ${CMS_SESSION_SECRET:?CMS_SESSION_SECRET must be set (32+ chars; openssl rand -hex 32)}
+            CMS_KEK_HEX:          ${CMS_KEK_HEX:?CMS_KEK_HEX must be set (32 bytes hex = 64 chars; openssl rand -hex 32)}
+            CMS_ADMIN_EMAIL:      ${CMS_ADMIN_EMAIL:-admin@${DOMAIN}}
+            CMS_ADMIN_PASSWORD:   ${CMS_ADMIN_PASSWORD:?CMS_ADMIN_PASSWORD must be set}
+            ULVIA_PROVIDER_TOKEN: ${ULVIA_PROVIDER_TOKEN:?ULVIA_PROVIDER_TOKEN must be set}
+            MONGO_URL: ${MONGO_URL:?MONGO_URL must be set to this instance's authenticated MongoDB database}
+
+            CMS_AUTH_SITE_NAME:                      ${CMS_AUTH_SITE_NAME:-CMS}
+            CMS_AUTH_EMAIL_COOLDOWN_SECONDS:         "${CMS_AUTH_EMAIL_COOLDOWN_SECONDS:-300}"
+            CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: "${CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION:-100}"
+            CMS_AUTH_EMAIL_VERIFICATION_URL:         ${CMS_AUTH_EMAIL_VERIFICATION_URL:-https://${DOMAIN}/auth/confirm-email}
+            CMS_AUTH_PASSWORD_RESET_URL:             ${CMS_AUTH_PASSWORD_RESET_URL:-https://${DOMAIN}/auth/reset-password}
+
+            SMTP_HOST:                      ${SMTP_HOST:-}
+            SMTP_PORT:                      ${SMTP_PORT:-}
+            SMTP_SECURE:                    ${SMTP_SECURE:-}
+            SMTP_USER:                      ${SMTP_USER:-}
+            SMTP_PASSWORD:                  ${SMTP_PASSWORD:-}
+            SMTP_FROM:                      ${SMTP_FROM:-}
+            SMTP_REPLY_TO:                  ${SMTP_REPLY_TO:-}
+        volumes:
+            - ./files:/var/lib/cms/files
+        depends_on:
+            provider:
+                condition: service_healthy
+            repository:
+                condition: service_healthy
+        read_only: true
+        tmpfs:
+            - /tmp:rw,nosuid,nodev,noexec,size=256m
+        cap_drop:
+            - ALL
+        security_opt:
+            - no-new-privileges:true
         healthcheck:
             test:
                 - CMD

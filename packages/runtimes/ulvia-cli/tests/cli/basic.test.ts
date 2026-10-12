@@ -31,6 +31,7 @@ describe("Ulvia CLI", () => {
             /ports must be distinct/,
         );
         expect(() => resolveDevPorts({ ULVIA_DEV_MONGO_PORT: "70000" })).toThrow(/between 1 and 65535/);
+        expect(() => resolveDevPorts({ ULVIA_DEV_PROVIDER_PORT: "5213" })).toThrow(/official Provider origin/);
     });
 
     test("disables retryable writes for the standalone local MongoDB", () => {

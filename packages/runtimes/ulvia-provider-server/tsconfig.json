@@ -1,0 +1,21 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src"
+    },
+    "include": ["src/**/*.ts"],
+    "references": [
+        { "path": "../../foundation/blob-store" },
+        { "path": "../../foundation/envelope-crypto" },
+        { "path": "../../foundation/image-processing" },
+        { "path": "../../foundation/secret-store" },
+        { "path": "../../foundation/http-runner" },
+        { "path": "../../features/cms-auth" },
+        { "path": "../../features/cms-content" },
+        { "path": "../../features/cms-files" },
+        { "path": "../../features/cms-gateway" },
+        { "path": "../../features/cms-repository" },
+        { "path": "../../surfaces/ulvia-provider" }
+    ]
+}

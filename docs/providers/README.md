@@ -98,7 +98,7 @@ dispatched command whose response cannot be accepted can return an unknown
 outcome with a request ID; consumers must reconcile it before retrying.
 Keyed commands still require durable idempotency before activation.
 
-When `CMS_GATEWAY_SITE_ID` is configured, `cms-server` constructs Mongo release,
+When `CMS_GATEWAY_SITE_ID` is configured, the private instance runtime constructs Mongo release,
 manifest, installation and selection stores, a selected catalogue, network and
 secret adapters and observation refresh. The current host policy
 allows public, authenticated or administrator access as declared by each
@@ -185,7 +185,7 @@ transport rules. See [files and responsive images](../images/README.md).
   file responses already expose a shared-cache policy.
 
 The code establishing the production boundary is
-[createProductionGateway](../../packages/runtimes/cms-server/src/runtime/gateway/createProductionGateway.ts)
-and [mountProductionKernel](../../packages/runtimes/cms-server/src/runtime/mountKernel.ts).
+[createProductionGateway](../../packages/runtimes/cms-kernel-server/src/runtime/gateway/createProductionGateway.ts)
+and [mountProductionKernel](../../packages/runtimes/cms-kernel-server/src/runtime/mountKernel.ts).
 The [repository audit](../AUDIT.md) and [deferred platform work](../TODO.md)
 track the remaining implementation and activation gates.

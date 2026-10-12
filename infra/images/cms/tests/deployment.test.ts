@@ -26,12 +26,12 @@ describe("per-instance Compose rendering", () => {
             MONGO_URL: mongoUrl,
         });
 
-        expect(Object.keys(config.services).sort()).toEqual(["cms", "repository"]);
+        expect(Object.keys(config.services).sort()).toEqual(["cms", "provider", "repository"]);
 
         const cms = config.services.cms;
         expect(cms.environment?.MONGO_URL).toBe(mongoUrl);
-        expect(Object.keys(cms.networks ?? {}).sort()).toEqual(["cms_internal", "cms_mongo", "cms_proxy"]);
-        expect(cms.networks?.cms_proxy).toMatchObject({ gw_priority: 1 });
+        expect(cms.network_mode).toBe("service:provider");
+        expect(cms.networks).toBeUndefined();
         expect(config.networks?.cms_mongo).toMatchObject({ name: "cms_mongo", external: true });
         expect(config.networks?.cms_proxy).toMatchObject({ name: "cms_proxy", external: true });
         expect(config.networks?.cms_internal).toMatchObject({ internal: true });
@@ -50,6 +50,15 @@ describe("per-instance Compose rendering", () => {
         });
         expect(cms.volumes?.map(({ target }) => target)).toEqual(["/var/lib/cms/files"]);
         expect(cms.volumes?.map(({ source }) => source)).toEqual([`${cmsDirectory}/files`]);
+
+        const provider = config.services.provider;
+        expect(provider.environment?.MONGO_URL).toBe(mongoUrl);
+        expect(Object.keys(provider.networks ?? {}).sort()).toEqual(["cms_internal", "cms_mongo", "cms_proxy"]);
+        expect(provider.networks?.cms_proxy).toMatchObject({ gw_priority: 1 });
+        expect(provider.environment).toMatchObject({
+            ULVIA_PROVIDER_HOST: "127.0.0.1",
+            ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
+        });
 
         const repository = config.services.repository;
         expect(Object.keys(repository.networks ?? {})).toEqual(["cms_internal"]);
@@ -70,8 +79,9 @@ describe("per-instance Compose rendering", () => {
             MONGO_URL: mongoUrl,
         });
 
-        expect(Object.keys(config.services).sort()).toEqual(["cms", "repository"]);
+        expect(Object.keys(config.services).sort()).toEqual(["cms", "provider", "repository"]);
         expect(config.services.cms.environment?.MONGO_URL).toBe(mongoUrl);
+        expect(config.services.provider.environment?.MONGO_URL).toBe(mongoUrl);
     });
 
     composeTest("forwards the optional gateway site scope to the CMS", () => {
@@ -82,6 +92,7 @@ describe("per-instance Compose rendering", () => {
             CMS_GATEWAY_SITE_ID: "site:main",
         });
         expect(config.services.cms.environment?.CMS_GATEWAY_SITE_ID).toBe("site:main");
+        expect(config.services.provider.environment?.CMS_GATEWAY_SITE_ID).toBe("site:main");
     });
 });
 
@@ -165,7 +176,8 @@ describe("deployment definition safeguards", () => {
     });
 
     test("installs both runtime entrypoint dependency closures", () => {
-        expect(dockerfileSource).toContain("--filter=@bernouy/cms-server");
+        expect(dockerfileSource).toContain("--filter=@bernouy/cms-kernel-server");
+        expect(dockerfileSource).toContain("--filter=@bernouy/ulvia-provider-server");
         expect(dockerfileSource).toContain("--filter=@bernouy/official-repository-server");
         expect(dockerfileSource).not.toContain("--omit=peer");
     });

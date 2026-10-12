@@ -1,8 +1,9 @@
-# CMS image and single-server deployment
+# CMS image and per-instance deployment
 
-This directory contains the production image for `@bernouy/cms-server` and
-the Compose files used to run several CMS instances on one server. Each CMS
-container serves the unified Kernel on port 3000 from one Bun process.
+This directory contains the production image for `@bernouy/cms-kernel-server`,
+`@bernouy/ulvia-provider-server` and the official repository, plus the Compose
+files used to run several CMS instances on one server. Kernel and Provider are
+independent Bun processes.
 
 ## Architecture
 
@@ -14,7 +15,8 @@ Run `infra/compose.yml` once per server. It provides:
 
 Run the root `compose.yml` once per CMS instance. Each instance has:
 
-- one CMS container;
+- one Kernel container and one Ulvia Provider container sharing the instance
+  network namespace so their HTTP boundary remains loopback-only;
 - one private official-repository container seeded by the same immutable image;
 - one persistent official-repository volume;
 - one local `./files` directory for original files and generated variants;
@@ -22,18 +24,18 @@ Run the root `compose.yml` once per CMS instance. Each instance has:
 
 Each local CMS instance connects with a distinct user created inside its own
 database and granted only `readWrite` on that database. The root account stays
-in the infrastructure environment and is never passed to CMS containers. A
+in the infrastructure environment and is never passed to instance containers. A
 compromised CMS credential therefore cannot authenticate to another site's
 database, although every site still shares the MongoDB process and its
 availability boundary.
 
 Two stable Docker networks connect the stacks:
 
-- `cms_proxy` connects nginx and CMS containers for ingress. A CMS container
+- `cms_proxy` connects nginx and the instance network owner for ingress. The instance
   also uses it for required outbound HTTP or SMTP traffic.
-- `cms_mongo` is an internal Docker network shared only by MongoDB and CMS
-  containers. MongoDB publishes no host port.
-- the per-instance `cms_internal` network connects the CMS only to its private
+- `cms_mongo` is an internal Docker network shared only by MongoDB and instance
+  processes. MongoDB publishes no host port.
+- the per-instance `cms_internal` network connects the instance only to its private
   official repository.
 
 The public routes are:
@@ -96,8 +98,8 @@ sha256sum "/tmp/cms-${VERSION}.tar.gz" > "/tmp/cms-${VERSION}.tar.gz.sha256"
 
 The runtime image runs as the non-root `bun` user and uses a read-only root
 filesystem in Compose. It contains the CMS production dependency closure and a
-pre-admitted official repository snapshot. The CMS and repository services run
-different entry points from that same immutable image.
+pre-admitted official repository snapshot. Kernel, Provider and repository
+services run different entry points from that same immutable image.
 
 ## Transfer the release
 
@@ -668,7 +670,7 @@ rollback window remains open.
 - MongoDB is authenticated, not published on a host port, and connected through
   an internal network. Every CMS credential is additionally restricted to one
   database; the root credential remains infrastructure-only.
-- CMS containers run as UID/GID 1000 with a read-only root filesystem, all
+- Kernel and Provider containers run as UID/GID 1000 with a read-only root filesystem, all
   Linux capabilities dropped, `no-new-privileges`, and a bounded `/tmp` tmpfs.
 - `nginx-proxy` and `acme-companion` can access the Docker socket. Treat the
   infrastructure stack and host as a privileged trust boundary.
@@ -678,7 +680,8 @@ rollback window remains open.
 - There is one MongoDB process and one MongoDB volume per server, without a
   replica set or automatic failover. It is a single failure and maintenance
   domain for all local CMS instances.
-- Each instance is one CMS process with an in-memory cache and local file
-  storage. It is not highly available, and files are not replicated.
+- Each instance has one Kernel process, one Provider process, an in-memory
+  Kernel cache and local file storage. It is not highly available, and files
+  are not replicated.
 - Health checks and `restart: unless-stopped` improve recovery from simple
   process failures; they do not provide high availability or zero downtime.
