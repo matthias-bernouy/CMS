@@ -17,16 +17,12 @@ export default class KernelCms extends KernelCmsContext {
         this.state = createKernelCmsState({
             runner: this.runner,
             repository: this.cmsRepository,
-            auth: this.authentication,
             dependencies: {
                 configuration: {
-                    publicUrl: this.publicUrl,
                     publicAuth: this.publicAuth,
-                    administrator: this.administrator,
                     collections: this.collections,
                     capabilityGateway: this.capabilityGateway,
                 },
-                cache: this.cache,
                 identityProviders: this.identityProviders,
             },
         });

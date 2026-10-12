@@ -53,7 +53,6 @@ export async function renderedHtml(page: TPage, settings: TSystem, metadata: Pag
             scriptUrls: ["/.cms/assets/component.js"],
         }),
         faviconUrl: "/favicon.ico",
-        headInjectors: [],
     };
     const entry = await renderPage(page, context, metadata);
     return new TextDecoder().decode(entry.raw);

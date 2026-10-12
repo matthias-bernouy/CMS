@@ -4,7 +4,6 @@ import type { CmsRepository } from "@bernouy/cms-content/kernel";
 import { createContentReader, type ContentReader } from "@bernouy/cms-content/rendering";
 import { BunRunner, type Cache, type Runner, TtlCache } from "@bernouy/http-runner";
 import type { KernelCmsConfig } from "cms-kernel/interfaces/KernelCmsConfig";
-import type { HeadInjector } from "cms-kernel/interfaces/HeadInjector";
 import type { PublicPageProvider } from "cms-kernel/interfaces/PublicPageProvider";
 
 export class KernelCmsContext {
@@ -24,10 +23,6 @@ export class KernelCmsContext {
         return this.resolvedRunner;
     }
 
-    get publicUrl(): string {
-        return this.config.publicUrl;
-    }
-
     get repository(): ContentReader {
         return this.resolvedContent;
     }
@@ -42,14 +37,6 @@ export class KernelCmsContext {
 
     get collections(): KernelCmsConfig["collections"] {
         return this.config.collections;
-    }
-
-    get headInjectors(): readonly HeadInjector[] {
-        return this.config.headInjectors ?? [];
-    }
-
-    get collectionTexts(): KernelCmsConfig["collectionTexts"] {
-        return this.config.collectionTexts;
     }
 
     get collectionAssets(): KernelCmsConfig["collectionAssets"] {
@@ -78,10 +65,6 @@ export class KernelCmsContext {
 
     get identityProviders(): KernelCmsConfig["identityProviders"] {
         return this.config.identityProviders;
-    }
-
-    get administrator(): KernelCmsConfig["administrator"] {
-        return this.config.administrator;
     }
 
     get sitemapStore(): BlobStore {

@@ -65,7 +65,6 @@ describe("production Kernel mounting", () => {
         const mounted = await mounting;
 
         expect(kernelConfig).toMatchObject({
-            publicUrl: options.env.KERNEL_PUBLIC_URL,
             repository: options.core.repo,
             runner: expect.any(FakeRunner),
             publicAuth: {

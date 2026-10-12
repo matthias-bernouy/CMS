@@ -10,7 +10,6 @@ describe("Kernel public auth mount", () => {
         const { local, publicAuth } = authSystem();
         const cms = new KernelCms({
             runner,
-            publicUrl: "http://admin.test",
             repository: new InMemoryCmsRepository(),
             authentication: local,
             publicAuth,
@@ -25,14 +24,13 @@ describe("Kernel public auth mount", () => {
         const runner = new CaptureRunner();
         const cms = new KernelCms({
             runner,
-            publicUrl: "http://admin.test",
             repository: new InMemoryCmsRepository(),
             authentication: new InMemoryAuthentication(),
         });
         await cms.ready;
         expect(runner.handlers.has("POST /.cms/sources")).toBe(false);
-        expect(runner.handlers.has("GET /assets/admin-runtime.js")).toBe(true);
-        expect(runner.handlers.has("GET /assets/admin-styles.css")).toBe(true);
+        expect(runner.handlers.has("GET /assets/admin-runtime.js")).toBe(false);
+        expect(runner.handlers.has("GET /assets/admin-styles.css")).toBe(false);
         expect(runner.handlers.has("GET /login")).toBe(true);
     });
 });

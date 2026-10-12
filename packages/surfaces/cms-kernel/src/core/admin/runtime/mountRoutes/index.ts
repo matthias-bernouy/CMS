@@ -11,12 +11,10 @@ import {
 } from "@bernouy/cms-auth/http";
 import { renderLoginPage } from "cms-kernel/core/admin/auth/authPages";
 import type { AdminAuthBackends, KernelCmsState } from "cms-kernel/core/admin/runtime/types";
-import { mountAdminBrowserAssets } from "cms-kernel/core/admin/runtime/mountRoutes/assets";
 
 export function mountKernelCmsRoutes(state: KernelCmsState, authBackends: AdminAuthBackends): Promise<void> {
     const runner = state.runner;
     const basePath = runner.basePath === "/" ? "" : runner.basePath;
-    mountAdminBrowserAssets(runner, state.cache);
     runner.addEndpoint("GET", "/login", async (req) => {
         const supportedKinds: ("local" | "oidc")[] = [];
         if (authBackends.local) {

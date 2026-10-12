@@ -37,7 +37,6 @@ function makeCtx(): RenderContext {
             scriptUrls: ["/.cms/assets/component.js?v=c", "/.cms/blocs/example.js?v=b"],
         }),
         faviconUrl: "/favicon.ico",
-        headInjectors: [],
     };
 }
 
@@ -147,13 +146,7 @@ describe("renderPage — binding core wrapper", () => {
     });
 
     test("resolves platform metadata variables and an explicit noindex state", async () => {
-        let injectedTitle = "";
         const ctx = makeCtx();
-        ctx.headInjectors = [
-            ({ metadata }) => {
-                injectedTitle = metadata.title;
-            },
-        ];
         const entry = await renderPage(
             {
                 ...page,
@@ -168,6 +161,5 @@ describe("renderPage — binding core wrapper", () => {
         expect(document.title).toBe("Site — /p");
         expect(document.querySelector('meta[name="description"]')?.getAttribute("content")).toBe("");
         expect(document.querySelector('meta[name="robots"]')?.getAttribute("content")).toBe("noindex,follow");
-        expect(injectedTitle).toBe("Site — /p");
     });
 });

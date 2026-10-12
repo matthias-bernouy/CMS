@@ -143,7 +143,6 @@ function authConfig(): PublicAuthRoutesConfig {
 function kernelConfig(runner: Runner, publicAuth?: PublicAuthRoutesConfig) {
     return {
         runner,
-        publicUrl: "http://site.test",
         repository: new InMemoryCmsRepository(),
         authentication: new InMemoryAuthentication(),
         publicAuth,

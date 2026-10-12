@@ -30,13 +30,11 @@ export async function mountProductionKernel(
     });
     const kernel = new runtime.Kernel({
         runner,
-        publicUrl: env.KERNEL_PUBLIC_URL,
         repository: core.repo,
         authentication: authentication.auth,
-        publicAuth: { ...publicAuth, emailTest: authentication.createEmailTest() },
+        publicAuth,
         authBackends: { local: authentication.auth },
         identityProviders: core.identityProviders,
-        administrator: gateway?.isAdministrator,
         collections: {
             store: core.collections,
             siteId: "default",

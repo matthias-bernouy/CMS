@@ -18,7 +18,6 @@ describe("cms-kernel public API", () => {
                     const runner = new CaptureRunner();
                     const kernel = new KernelCms({
                         runner,
-                        publicUrl: "http://site.test",
                         repository: new InMemoryCmsRepository(),
                         authentication: new InMemoryAuthentication(),
                     });

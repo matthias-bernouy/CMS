@@ -1,8 +1,4 @@
 import { rmSync } from "node:fs";
-import prebuildAdmin from "cms-kernel/tooling/prebuildAdmin";
-
-// Pre-build: bundle the minimal binding and collection Bloc host runtime.
-await prebuildAdmin();
 
 // Build to dist/: emit type declarations via tsc
 rmSync("dist", { recursive: true, force: true });

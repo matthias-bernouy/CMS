@@ -12,7 +12,6 @@ describe("KernelCms application", () => {
     test("mounts from one explicit configuration object", async () => {
         const cms = new KernelCms({
             runner: new CaptureRunner(),
-            publicUrl: "http://site.test",
             repository: new InMemoryCmsRepository(),
             authentication: new InMemoryAuthentication(),
         });

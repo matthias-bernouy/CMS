@@ -14,7 +14,6 @@ describe("Kernel robots", () => {
         });
         new KernelCms({
             runner,
-            publicUrl: "https://canonical.test/store",
             repository,
             authentication: new InMemoryAuthentication(),
             capabilityGateway: {
@@ -52,7 +51,6 @@ describe("Kernel robots", () => {
         const repository = new InMemoryCmsRepository();
         new KernelCms({
             runner,
-            publicUrl: "https://unexpected.test",
             repository,
             authentication: new InMemoryAuthentication(),
         });

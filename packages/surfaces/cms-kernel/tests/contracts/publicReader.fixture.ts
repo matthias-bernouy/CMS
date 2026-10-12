@@ -26,14 +26,13 @@ const sitemaps: SitemapStore = {
 };
 
 export const config: KernelCmsConfig = {
-    publicUrl: "https://site.test",
     repository,
     authentication,
     sitemapStore: sitemaps,
 };
 
 // @ts-expect-error The unified Kernel requires the writable repository contract.
-const invalidReadOnlyConfig: KernelCmsConfig = { publicUrl: "https://site.test", repository: reader, authentication };
+const invalidReadOnlyConfig: KernelCmsConfig = { repository: reader, authentication };
 void invalidReadOnlyConfig;
 
 // This fixture is compiled, never executed. These failures are part of the API contract.

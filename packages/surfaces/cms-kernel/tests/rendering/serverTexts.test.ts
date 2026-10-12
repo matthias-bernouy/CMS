@@ -10,6 +10,12 @@ const ctx: RenderContext = {
             security: { connectExtras: [], mediaExtras: [] },
         }),
         getRenderableBlocs: async () => [],
+        getContentTexts: async () => [
+            {
+                namespace: "test",
+                resolve: (locale: string) => ({ title: locale === "fr" ? "Commande" : "Order" }),
+            },
+        ],
     } as unknown as ContentReader,
     resolveAssets: async () => ({
         componentUrl: "/component.js",
@@ -21,24 +27,6 @@ const ctx: RenderContext = {
     resolveContributedAssets: async (input) =>
         input.replace("{{ cms.asset.test.hero.svg }}", "/.cms/collections/test/assets/hero.svg?v=digest"),
     faviconUrl: "/favicon.ico",
-    headInjectors: [],
-    collectionTexts: [
-        {
-            collection: {
-                collectionId: "test",
-                locale: "en",
-                texts: [
-                    {
-                        id: "title",
-                        label: "text.label.title",
-                        category: "text.category.content",
-                        group: "text.group.general",
-                        values: { en: "Order", fr: "Commande" },
-                    },
-                ],
-            },
-        },
-    ],
 };
 const page = {
     path: "/example",
@@ -63,5 +51,10 @@ test("Kernel sends translated HTML for the route language before any browser cod
 });
 
 test("Kernel refuses unresolved catalogue references", async () => {
-    await expect(renderPage(page, { ...ctx, collectionTexts: [] })).rejects.toThrow("Unknown content text");
+    await expect(
+        renderPage(page, {
+            ...ctx,
+            repository: { ...ctx.repository, getContentTexts: async () => [] },
+        }),
+    ).rejects.toThrow("Unknown content text");
 });

@@ -11,7 +11,6 @@ test("Kernel mounts every gateway binding method and supplies trusted actor stat
     const runner = new CaptureRunner();
     new KernelCms({
         runner,
-        publicUrl: "http://site",
         repository: new InMemoryCmsRepository(),
         authentication: new InMemoryAuthentication(),
         capabilityGateway: {

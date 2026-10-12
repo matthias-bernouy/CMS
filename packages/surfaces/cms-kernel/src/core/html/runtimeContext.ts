@@ -14,11 +14,9 @@ import { resolvePageLinks } from "cms-kernel/core/pages/pageLinks";
 export function makeRuntimeRenderContext(kernel: KernelCms): RenderContext {
     return {
         repository: kernel.repository,
-        collectionTexts: kernel.collectionTexts,
         resolveContributedAssets: (input) => resolveCollectionAssetExpressions(input, kernel),
         prepareBody: (body) => resolvePageLinks(body, kernel),
         resolveAssets: (usedTags) => resolveRuntimeAssets(kernel, usedTags),
         faviconUrl: `${kernel.basePath}${FAVICON_ROUTE}`,
-        headInjectors: kernel.headInjectors,
     };
 }

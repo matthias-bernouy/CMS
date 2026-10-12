@@ -1,5 +1,4 @@
 import { pageDocument, renderPageDocument } from "@bernouy/cms-content/rendering";
-import { projectCollectionTextSource } from "@bernouy/cms-repository/collections/content";
 import { parseHTML } from "linkedom";
 import type { TPage } from "@bernouy/cms-content/rendering";
 import type { CacheEntry } from "@bernouy/http-runner";
@@ -14,7 +13,6 @@ import {
     buildFoucShell,
     buildStylesheetLink,
 } from "cms-kernel/core/head/buildAssets";
-import { buildPreconnect } from "cms-kernel/core/head/buildPreconnect";
 import { buildScriptTags } from "cms-kernel/core/head/buildScriptTags";
 import { defineMetaTags } from "cms-kernel/core/seo/defineMetaTags";
 import { definePageStructuredData } from "cms-kernel/core/seo/pageStructuredData";
@@ -52,7 +50,6 @@ export async function renderPage(
     const rendered = await renderPageDocument(document.body, pageDocument(page), {
         repository: ctx.repository,
         language: settings.site.language || "en",
-        contentTexts: ctx.collectionTexts?.map(projectCollectionTextSource),
         resolveContributedAssets: ctx.resolveContributedAssets,
         // A browser may fetch an interpolated img src before the deferred
         // binding runtime executes. Keep those network attributes inert.
@@ -82,21 +79,11 @@ export async function renderPage(
     };
 
     // <head> assembly, in exact document order. Consumer-supplied head
-    // injectors run right after the document basics so they land before any
-    // preload/meta/stylesheet/deferred-script that the rest of the pipeline
-    // adds — that ordering matters for parser-blocking scripts (e.g. an
-    // observability agent that must monkeypatch `customElements.define`
-    // before any deferred bloc IIFE registers its tag).
-    //
     // `buildMetaCsp` is `prepend`ed inside the helper so it ends up FIRST
     // regardless of the call order here — meta-borne CSP only governs
     // resources requested AFTER its position in the document.
     buildHtmlBasics(document, head, settings);
     buildMetaCsp(document, head, cspExtras);
-    for (const inject of ctx.headInjectors) {
-        inject({ document, head, metadata, usedTags });
-    }
-    buildPreconnect(document, head);
     buildAssetPreloads(document, head, assets, { includeBindingCore: hasBindingCore });
     buildBindingCloak(document, head, hasBindingCore);
     buildFoucShell(document, head, usedTags);

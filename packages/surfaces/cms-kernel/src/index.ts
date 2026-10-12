@@ -10,7 +10,6 @@
 
 export { default as KernelCms } from "cms-kernel/KernelCms";
 export type { KernelCmsConfig } from "cms-kernel/interfaces/KernelCmsConfig";
-export type { HeadInjector, HeadInjectorContext } from "cms-kernel/interfaces/HeadInjector";
 export type { ResolvedPageMetadata } from "cms-kernel/core/seo/pageMetadata";
 export {
     DEFAULT_SITEMAP_REFRESH_INTERVAL_MS,
