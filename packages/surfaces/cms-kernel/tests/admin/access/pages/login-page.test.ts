@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { renderLoginPage } from "cms-kernel/core/admin/auth/authPages";
+import { renderLoginPage } from "cms-kernel/auth/loginPage";
 
 test("renders the native credential and redirect admins without legacy custom elements", async () => {
     const response = renderLoginPage(new Request("http://admin.test/login?returnTo=%2Fadmin%2Ffiles"), "/cms", [

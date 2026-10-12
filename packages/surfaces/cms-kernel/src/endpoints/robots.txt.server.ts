@@ -1,7 +1,7 @@
 import type KernelCms from "cms-kernel/KernelCms";
 import { canonicalSiteBaseUrl } from "@bernouy/cms-content/rendering";
 import { compress, sendCompressed } from "@bernouy/http-runner";
-import { COLLECTION_ASSETS_ROUTE } from "cms-kernel/core/assets/collectionAssets";
+import { COLLECTION_ASSETS_ROUTE } from "cms-kernel/site/assets/collectionAssets";
 
 export default async function RobotsServer(req: Request, kernel: KernelCms) {
     const publicBaseUrl = await canonicalSeoBaseUrl(kernel);

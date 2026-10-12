@@ -35,6 +35,8 @@ export type KernelCmsConfig = {
         >;
     };
     cache?: Cache;
+    bypassCache?: boolean;
+    enforcePageCsp?: boolean;
     publicPageProviders?: readonly PublicPageProvider[];
     capabilityGateway?: {
         readonly siteId: string;

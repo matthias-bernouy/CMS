@@ -14,7 +14,7 @@ import { PageExecutionService, type PageExecutionAuthority } from "@bernouy/cms-
 import { type CacheEntry, TtlCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
 import type { KernelCmsConfig } from "cms-kernel/interfaces/KernelCmsConfig";
-import { componentRuntimeCacheKey } from "cms-kernel/core/assets/browserRuntimeAssets";
+import { componentRuntimeCacheKey } from "cms-kernel/site/assets/browserRuntimeAssets";
 import { CaptureRunner } from "../gateway/support/CaptureRunner";
 
 export function publicPage(id: string, path: string, content = `<p>${id}</p>`): TPage {

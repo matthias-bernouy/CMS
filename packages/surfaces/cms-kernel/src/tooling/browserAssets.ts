@@ -1,7 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 
-const OUTPUT_DIRECTORY = join(import.meta.dir, "../../assets/browser");
+const OUTPUT_DIRECTORY = join(import.meta.dir, "../site/assets/generated");
 const ENTRIES = [
     { source: "../endpoints/assets/component.client.ts", output: "component.js" },
     { source: "../endpoints/assets/bindingCore.client.ts", output: "binding-core.js" },

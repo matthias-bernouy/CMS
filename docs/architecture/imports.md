@@ -29,7 +29,7 @@ Inside a package, use the package-local path aliases already configured for
 that package:
 
 ```ts
-import { requestLocale } from "cms-kernel/core/admin/http/requestLocale";
+import { renderPage } from "cms-kernel/site/rendering/renderPage";
 import { isPublishedPage } from "cms-content/pages/core/lifecycle/publication";
 import { BunRunner } from "http-runner/default-implementation/BunRunner";
 ```

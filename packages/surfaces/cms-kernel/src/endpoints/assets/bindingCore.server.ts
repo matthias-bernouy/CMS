@@ -1,6 +1,6 @@
 import type KernelCms from "cms-kernel/KernelCms";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
-import { loadBindingCoreRuntimeEntry } from "cms-kernel/core/assets/browserRuntimeAssets";
+import { loadBindingCoreRuntimeEntry } from "cms-kernel/site/assets/browserRuntimeAssets";
 import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
 
 /**

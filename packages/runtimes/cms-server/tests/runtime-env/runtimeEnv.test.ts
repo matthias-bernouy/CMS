@@ -15,6 +15,8 @@ describe("runtime env validation", () => {
     test("parses default ports and derived auth URLs", () => {
         const env = readRuntimeEnv(validEnv());
 
+        expect(env.MODE).toBe("PROD");
+        expect(readRuntimeEnv({ ...validEnv(), MODE: "DEV" }).MODE).toBe("DEV");
         expect(env.KERNEL_PORT).toBe(3000);
         expect(env.CMS_AUTH_EMAIL_VERIFICATION_URL).toBe("https://www.example.com/auth/confirm-email");
         expect(env.CMS_AUTH_PASSWORD_RESET_URL).toBe("https://www.example.com/auth/reset-password");
@@ -116,6 +118,7 @@ describe("runtime env validation", () => {
     });
 
     test("rejects missing required values and invalid email cooldowns", () => {
+        expect(() => readRuntimeEnv({ ...validEnv(), MODE: "test" })).toThrow(/MODE must be DEV or PROD/);
         expect(() => readRuntimeEnv({ ...validEnv(), CMS_FILES_DIR: " " })).toThrow(/env CMS_FILES_DIR missing/);
         expect(() => readRuntimeEnv({ ...validEnv(), CMS_AUTH_EMAIL_COOLDOWN_SECONDS: "-1" })).toThrow(
             /must be a non-negative integer/,

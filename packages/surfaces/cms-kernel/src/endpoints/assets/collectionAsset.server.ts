@@ -1,6 +1,6 @@
 import { ifNoneMatchMatches, ifRangeAllowsPartial, parseSingleByteRange, securityHeaders } from "@bernouy/http-runner";
 import type KernelCms from "cms-kernel/KernelCms";
-import { COLLECTION_ASSETS_ROUTE, collectionAssetVersion } from "cms-kernel/core/assets/collectionAssets";
+import { COLLECTION_ASSETS_ROUTE, collectionAssetVersion } from "cms-kernel/site/assets/collectionAssets";
 
 const IMMUTABLE = "public, max-age=31536000, immutable";
 const REVALIDATE = "public, no-cache";

@@ -1,8 +1,8 @@
 import type KernelCms from "cms-kernel/KernelCms";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { generateBlocSetEntry } from "@bernouy/cms-content/rendering";
-import { resolveCollectionAssetExpressions } from "cms-kernel/core/assets/collectionAssets";
-import { collectionBlocsetCacheKey } from "cms-kernel/core/assets/resolveAssets";
+import { resolveCollectionAssetExpressions } from "cms-kernel/site/assets/collectionAssets";
+import { collectionBlocsetCacheKey } from "cms-kernel/site/assets/resolveAssets";
 
 /**
  * Serve ONE bundle = the concatenated viewJS of several blocs, for the

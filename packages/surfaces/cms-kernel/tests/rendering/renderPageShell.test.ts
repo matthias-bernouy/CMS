@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { parseHTML } from "linkedom";
-import { renderPage } from "cms-kernel/core/html/renderPage";
-import type { RenderContext } from "cms-kernel/core/html/RenderContext";
+import { renderPage } from "cms-kernel/site/rendering/renderPage";
+import type { RenderContext } from "cms-kernel/site/rendering/RenderContext";
 import type { ContentReader } from "@bernouy/cms-content";
 import { type TPage, type TSystem } from "@bernouy/cms-content";
 
@@ -161,5 +161,14 @@ describe("renderPage — binding core wrapper", () => {
         expect(document.title).toBe("Site — /p");
         expect(document.querySelector('meta[name="description"]')?.getAttribute("content")).toBe("");
         expect(document.querySelector('meta[name="robots"]')?.getAttribute("content")).toBe("noindex,follow");
+    });
+
+    test("lets the runtime omit the enforcing CSP meta in development", async () => {
+        const context = makeCtx();
+        context.enforceCsp = false;
+        const entry = await renderPage(page, context);
+        const { document } = parseHTML(new TextDecoder().decode(entry.raw));
+
+        expect(document.querySelector('meta[http-equiv="Content-Security-Policy"]')).toBeNull();
     });
 });

@@ -3,8 +3,8 @@ import { createHash } from "node:crypto";
 import { compress, InMemoryCache } from "@bernouy/http-runner";
 import { CMS_CACHE_KEYS, defaultSystem, type ContentReader, type TPage } from "@bernouy/cms-content";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
-import { componentRuntimeCacheKey, loadComponentRuntimeEntry } from "cms-kernel/core/assets/browserRuntimeAssets";
-import { collectionBlocsetCacheKey, resolveRuntimeAssets } from "cms-kernel/core/assets/resolveAssets";
+import { componentRuntimeCacheKey, loadComponentRuntimeEntry } from "cms-kernel/site/assets/browserRuntimeAssets";
+import { collectionBlocsetCacheKey, resolveRuntimeAssets } from "cms-kernel/site/assets/resolveAssets";
 import ComponentServer from "cms-kernel/endpoints/assets/component.server";
 import type KernelCms from "cms-kernel/KernelCms";
 

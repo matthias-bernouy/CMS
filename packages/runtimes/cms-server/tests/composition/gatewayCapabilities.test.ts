@@ -43,6 +43,8 @@ test("production composition supplies one generic capability gateway", async () 
         expect(configured).not.toHaveProperty("pageExecutions");
         expect(configured).not.toHaveProperty("resolveCapabilityAccess");
         expect(configured).not.toHaveProperty("images");
+        expect(captured?.bypassCache).toBe(false);
+        expect(captured?.enforcePageCsp).toBe(true);
     } finally {
         await mounted.stop();
     }

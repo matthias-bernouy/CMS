@@ -2,7 +2,7 @@ import type KernelCms from "cms-kernel/KernelCms";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { generateBlocEntry } from "@bernouy/cms-content/rendering";
 import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
-import { resolveCollectionAssetExpressions } from "cms-kernel/core/assets/collectionAssets";
+import { resolveCollectionAssetExpressions } from "cms-kernel/site/assets/collectionAssets";
 
 export default async function BlocServer(req: Request, kernel: KernelCms) {
     const url = new URL(req.url);

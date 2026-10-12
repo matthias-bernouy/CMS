@@ -16,12 +16,12 @@ import {
 } from "@bernouy/cms-content/rendering";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { CMS_CAPABILITY_CALL_ROUTE } from "@bernouy/cms-gateway/http/handlers";
-import { handlePageRequest } from "cms-kernel/core/pages/handlePageRequest";
-import { FAVICON_ROUTE } from "cms-kernel/core/assets/defaultFavicon";
+import { handlePageRequest } from "cms-kernel/site/pages/handlePageRequest";
+import { FAVICON_ROUTE } from "cms-kernel/site/assets/defaultFavicon";
 import { matchRootSitemapChunkPath } from "@bernouy/cms-seo";
-import { createKernelMaintenanceGuard } from "cms-kernel/core/maintenance";
+import { createKernelMaintenanceGuard } from "cms-kernel/runtime/maintenance";
 import CollectionAssetServer from "cms-kernel/endpoints/assets/collectionAsset.server";
-import { COLLECTION_ASSETS_ROUTE } from "cms-kernel/core/assets/collectionAssets";
+import { COLLECTION_ASSETS_ROUTE } from "cms-kernel/site/assets/collectionAssets";
 
 /**
  * Wire every Kernel endpoint onto `kernel.runner`. Called from the

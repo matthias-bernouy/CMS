@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
 import KernelCms from "cms-kernel/KernelCms";
-import { collectionAssetVersion, resolveCollectionAssetExpressions } from "cms-kernel/core/assets/collectionAssets";
+import { collectionAssetVersion, resolveCollectionAssetExpressions } from "cms-kernel/site/assets/collectionAssets";
 import { CaptureRunner } from "../gateway/support/CaptureRunner";
 
 test("serves installed collection assets publicly through immutable digest URLs", async () => {

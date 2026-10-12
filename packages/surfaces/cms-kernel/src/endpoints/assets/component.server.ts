@@ -1,6 +1,6 @@
 import type KernelCms from "cms-kernel/KernelCms";
 import { getOrGenerateEntryAsync, sendCompressed } from "@bernouy/http-runner";
-import { componentRuntimeCacheKey, loadComponentRuntimeEntry } from "cms-kernel/core/assets/browserRuntimeAssets";
+import { componentRuntimeCacheKey, loadComponentRuntimeEntry } from "cms-kernel/site/assets/browserRuntimeAssets";
 
 const IMMUTABLE_ASSET_CACHE_CONTROL = "public, max-age=31536000, immutable";
 const REVALIDATED_ASSET_CACHE_CONTROL = "no-cache, must-revalidate";

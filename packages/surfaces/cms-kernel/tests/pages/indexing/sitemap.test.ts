@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { gunzipSync } from "bun";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
-import { materializeSitemapSnapshot } from "cms-kernel/seo/sitemap";
+import { materializeSitemapSnapshot } from "cms-kernel/site/seo/sitemap";
 import SitemapChunkServer from "cms-kernel/endpoints/sitemap-chunk.server";
 import SitemapServer from "cms-kernel/endpoints/sitemap.xml.server";
 import { mountPublicPages, publicPage } from "../publicPage.fixture";

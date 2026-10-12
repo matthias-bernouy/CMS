@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { renderPage } from "cms-kernel/core/html/renderPage";
-import type { RenderContext } from "cms-kernel/core/html/RenderContext";
+import { renderPage } from "cms-kernel/site/rendering/renderPage";
+import type { RenderContext } from "cms-kernel/site/rendering/RenderContext";
 import type { TPage, ContentReader } from "@bernouy/cms-content/rendering";
 
 const ctx: RenderContext = {

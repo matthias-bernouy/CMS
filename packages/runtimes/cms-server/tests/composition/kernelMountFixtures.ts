@@ -2,6 +2,7 @@ export function kernelMountFixtures() {
     const token = (name: string) => ({ name });
     return {
         env: {
+            MODE: "PROD" as const,
             KERNEL_PORT: 3100,
             KERNEL_HOST: "127.0.0.1",
             KERNEL_PUBLIC_URL: "https://www.example.test",

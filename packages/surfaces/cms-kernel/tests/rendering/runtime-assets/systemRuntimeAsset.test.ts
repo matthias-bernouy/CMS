@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadBindingCoreRuntimeEntry } from "cms-kernel/core/assets/browserRuntimeAssets";
+import { loadBindingCoreRuntimeEntry } from "cms-kernel/site/assets/browserRuntimeAssets";
 import { buildKernelBrowserAssets } from "cms-kernel/tooling/browserAssets";
 
 describe("kernel system runtime asset", () => {
@@ -26,7 +26,7 @@ describe("kernel system runtime asset", () => {
             for (const filename of ["component.js", "binding-core.js"]) {
                 const [generated, shipped] = await Promise.all([
                     readFile(join(directory, filename)),
-                    readFile(join(import.meta.dir, `../../../assets/browser/${filename}`)),
+                    readFile(join(import.meta.dir, `../../../src/site/assets/generated/${filename}`)),
                 ]);
                 expect(generated).toEqual(shipped);
             }

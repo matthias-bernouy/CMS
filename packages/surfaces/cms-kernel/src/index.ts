@@ -10,7 +10,7 @@
 
 export { default as KernelCms } from "cms-kernel/KernelCms";
 export type { KernelCmsConfig } from "cms-kernel/interfaces/KernelCmsConfig";
-export { startSitemapSnapshotRefresh } from "cms-kernel/seo/sitemap";
+export { startSitemapSnapshotRefresh } from "cms-kernel/site/seo/sitemap";
 export type {
     PublicPageProvider,
     PublicPageRequestContext,

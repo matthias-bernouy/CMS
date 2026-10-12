@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { parseHTML } from "linkedom";
-import { buildMetaCsp } from "cms-kernel/core/head/buildMetaCsp";
+import { buildMetaCsp } from "cms-kernel/site/rendering/head/buildMetaCsp";
 
 function makeHead() {
     const { document } = parseHTML("<!DOCTYPE html><html><head><title>x</title></head><body></body></html>");

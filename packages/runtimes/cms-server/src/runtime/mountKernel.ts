@@ -51,6 +51,8 @@ export async function mountProductionKernel(
             migrations: core.collectionMigrations,
         },
         cache: core.cache,
+        bypassCache: env.MODE === "DEV",
+        enforcePageCsp: env.MODE !== "DEV",
         collectionAssets: { siteId: "default", store: core.collections },
         ...(gateway
             ? {

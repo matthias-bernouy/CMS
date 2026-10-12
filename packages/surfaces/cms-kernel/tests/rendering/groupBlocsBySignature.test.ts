@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { groupBlocsBySignature } from "cms-kernel/core/blocs/groupBlocsBySignature";
-import { getBlocGroupManifest } from "cms-kernel/core/blocs/blocGroupManifest";
+import { groupBlocsBySignature } from "cms-kernel/site/blocs/groupBlocsBySignature";
+import { getBlocGroupManifest } from "cms-kernel/site/blocs/blocGroupManifest";
 import type KernelCms from "cms-kernel/KernelCms";
 
 describe("groupBlocsBySignature", () => {

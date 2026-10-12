@@ -8,8 +8,8 @@ in their exact execution plan, including transitive Bloc requirements.
 The Kernel owns:
 
 - `/login` and the configured authentication routes;
-- `/assets/admin-runtime.js` and `/assets/admin-styles.css` for the
-  presentation-free binding and Bloc host runtime used by administration Pages;
+- `/.cms/assets/component.js` and `/.cms/assets/cms-binding-core.js`, prebuilt
+  browser runtimes shared by all rendered Pages;
 - generic capability calls;
 - every Page path, resolved from the shared site route registry;
 - `/.cms/call/*`, `/.cms/blocset` and the immutable asset routes used by Page
@@ -18,7 +18,7 @@ The Kernel owns:
 
 The two browser assets are mounted explicitly. Adding a file below
 `src/browser/` never creates a route. Authentication documents live below
-`src/core/admin/auth/templates/` because they belong to the bootstrap kernel,
+`src/auth/` because they belong to the bootstrap kernel,
 not to an authored administration Page.
 
 New administration screens are ordinary collection Pages. Navigation, shells

@@ -1,6 +1,6 @@
 import type KernelCms from "cms-kernel/KernelCms";
 import { sendCompressed } from "@bernouy/http-runner";
-import { generateFaviconEntry } from "cms-kernel/core/assets/defaultFavicon";
+import { generateFaviconEntry } from "cms-kernel/site/assets/defaultFavicon";
 
 const FAVICON_CACHE_CONTROL = "no-cache, must-revalidate";
 

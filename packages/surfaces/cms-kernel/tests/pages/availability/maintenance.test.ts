@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type KernelCms from "cms-kernel/KernelCms";
-import { createKernelMaintenanceGuard } from "cms-kernel/core/maintenance";
+import { createKernelMaintenanceGuard } from "cms-kernel/runtime/maintenance";
 
 const kernel = {
     basePath: "/cms",

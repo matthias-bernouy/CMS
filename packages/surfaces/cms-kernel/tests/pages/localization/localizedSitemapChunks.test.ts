@@ -4,7 +4,7 @@ import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { InMemoryCmsRepository, validateSettingsPatch } from "@bernouy/cms-content";
 import type { PublicPageProvider } from "@bernouy/cms-kernel";
 import { readSitemapManifest, sitemapChunkPath } from "@bernouy/cms-seo";
-import { materializeSitemapSnapshot } from "cms-kernel/seo/sitemap";
+import { materializeSitemapSnapshot } from "cms-kernel/site/seo/sitemap";
 import SitemapServer from "cms-kernel/endpoints/sitemap.xml.server";
 import { mountPublicPages } from "../publicPage.fixture";
 import { PRODUCT_PAGE } from "../indexing/fixtures";

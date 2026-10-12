@@ -1,6 +1,5 @@
 import type { BlobStore } from "@bernouy/blob-store";
 import type { Authentication } from "@bernouy/cms-auth";
-import type { CmsRepository } from "@bernouy/cms-content/kernel";
 import { createContentReader, type ContentReader } from "@bernouy/cms-content/rendering";
 import type { PageExecutionService } from "@bernouy/cms-gateway/execution";
 import { BunRunner, type Cache, type Runner, TtlCache } from "@bernouy/http-runner";
@@ -16,7 +15,7 @@ export class KernelCmsContext {
     constructor(config: KernelCmsConfig) {
         this.config = config;
         this.resolvedRunner = config.runner ?? new BunRunner();
-        this.resolvedCache = config.cache ?? new TtlCache({ bypass: process.env.MODE === "DEV" });
+        this.resolvedCache = config.cache ?? new TtlCache({ bypass: config.bypassCache ?? false });
         this.resolvedContent = createContentReader(config.repository);
     }
 
@@ -28,12 +27,12 @@ export class KernelCmsContext {
         return this.resolvedContent;
     }
 
-    get cmsRepository(): CmsRepository {
-        return this.config.repository;
-    }
-
     get cache(): Cache {
         return this.resolvedCache;
+    }
+
+    get enforcePageCsp(): boolean {
+        return this.config.enforcePageCsp ?? true;
     }
 
     get collections(): KernelCmsConfig["collections"] {

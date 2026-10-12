@@ -13,6 +13,7 @@ import { parseRuntimeKekConfig, type RuntimeKekConfig } from "./runtimeEnvKek";
 export { parsePort } from "./runtimeEnvParsing";
 
 export type RuntimeEnv = {
+    MODE: "DEV" | "PROD";
     KERNEL_PORT: number;
     KERNEL_HOST: string;
     CORE_PORT?: number;
@@ -38,6 +39,7 @@ export type RuntimeEnv = {
 };
 
 export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
+    const MODE = parseRuntimeMode(source.MODE);
     const KERNEL_PORT = parsePort(source.KERNEL_PORT, "KERNEL_PORT", 3000);
     const KERNEL_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "KERNEL_PUBLIC_URL"), "KERNEL_PUBLIC_URL");
     const clientAddress = parseClientAddressConfig(source);
@@ -53,6 +55,7 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     const coreConfiguration = parseCoreProviderConfig(source, KERNEL_PORT);
 
     return {
+        MODE,
         KERNEL_PORT,
         KERNEL_HOST: parseListenerHost(source.KERNEL_HOST, "KERNEL_HOST"),
         ...coreConfiguration,
@@ -91,6 +94,14 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         ),
         ...clientAddress,
     };
+}
+
+function parseRuntimeMode(raw: string | undefined): RuntimeEnv["MODE"] {
+    const mode = raw?.trim() || "PROD";
+    if (mode !== "DEV" && mode !== "PROD") {
+        throw new Error("MODE must be DEV or PROD");
+    }
+    return mode;
 }
 
 function parseListenerHost(raw: string | undefined, name: string): string {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { renderRef } from "cms-kernel/core/pages/renderRef";
+import { renderRef } from "cms-kernel/site/pages/renderRef";
 
 function kernelWithDraftFallback(field: "notFound" | "forbidden" | "serverError") {
     const calls: string[] = [];
