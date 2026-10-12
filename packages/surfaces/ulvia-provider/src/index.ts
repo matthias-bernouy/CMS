@@ -30,3 +30,13 @@ export type {
     ProviderOperationStore,
 } from "./operations/types";
 export type { ProviderOperationExecutorOptions } from "./operations/ProviderOperationExecutor";
+export type { ProviderInstanceRegistry } from "./instances/registry";
+export { ProviderInstanceRevisionConflictError } from "./instances/registry";
+export type {
+    CreateProviderInstanceRecord,
+    ProviderInstanceProfile,
+    ProviderInstanceRecord,
+    ProviderInstanceStatus,
+    UpdateProviderInstanceRecord,
+} from "./instances/types";
+export { PROVIDER_INSTANCE_STATUSES } from "./instances/types";
