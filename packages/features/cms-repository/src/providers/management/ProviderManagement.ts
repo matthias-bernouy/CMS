@@ -51,6 +51,7 @@ export class ProviderManagement {
                 endpoint: installation.endpoint,
                 status: installation.status,
                 manifestVersion: installation.approval.manifestVersion,
+                manifestDigest: installation.approval.manifestDigest,
                 revision,
                 observedAt: observation?.observedAt ?? null,
                 contracts:

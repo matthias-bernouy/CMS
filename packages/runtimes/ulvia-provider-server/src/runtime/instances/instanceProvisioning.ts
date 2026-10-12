@@ -40,7 +40,10 @@ export function createInstanceProvisioningTarget(options: TargetOptions): Offici
 
 async function connectProvider(options: TargetOptions, profile: OfficialInstanceProfile): Promise<void> {
     const state = await options.composition.management.list();
-    if (state.installations.some((item) => item.providerId === profile.manifest.providerId)) {
+    const installation = state.installations.find(
+        (item) => item.providerId === profile.manifest.providerId && item.accountId === options.instance.id,
+    );
+    if (installation && connectionIsReady(installation, options, profile)) {
         return;
     }
     const credential = await options.credentials.getByInstanceId(options.instance.id);
@@ -54,15 +57,22 @@ async function connectProvider(options: TargetOptions, profile: OfficialInstance
             version: profile.manifest.version,
             endpoint: options.env.ULVIA_PROVIDER_PUBLIC_URL,
             token,
+            ...(installation ? { installationId: installation.id, revision: installation.revision } : {}),
         },
         BOOTSTRAP_ACTOR,
     );
-    await options.composition.management.approve(preview.ticket, BOOTSTRAP_ACTOR);
+    const approved = await options.composition.management.approve(preview.ticket, BOOTSTRAP_ACTOR);
+    if (!approved.observed) {
+        throw new Error("Official Provider observation was not persisted");
+    }
 }
 
 async function selectContracts(composition: InstanceComposition, profile: OfficialInstanceProfile): Promise<void> {
     const state = await composition.management.list();
-    const installation = state.installations.find((item) => item.providerId === profile.manifest.providerId);
+    const installation = state.installations.find(
+        (item) =>
+            item.providerId === profile.manifest.providerId && item.accountId === composition.runtime.report.instanceId,
+    );
     if (!installation) {
         throw new Error("Official Provider installation is unavailable during provisioning");
     }
@@ -73,6 +83,33 @@ async function selectContracts(composition: InstanceComposition, profile: Offici
         }
         await composition.management.selectContract({ installationId: installation.id, ...contract });
     }
+}
+
+type ProviderInstallationState = Awaited<
+    ReturnType<InstanceComposition["management"]["list"]>
+>["installations"][number];
+
+function connectionIsReady(
+    installation: ProviderInstallationState,
+    options: TargetOptions,
+    profile: OfficialInstanceProfile,
+): boolean {
+    return (
+        installation.status === "enabled" &&
+        installation.endpoint === options.env.ULVIA_PROVIDER_PUBLIC_URL &&
+        installation.manifestVersion === profile.manifest.version &&
+        installation.manifestDigest === profile.manifest.digest &&
+        installation.observedAt !== null &&
+        profile.contracts.every((contract) =>
+            installation.contracts.some(
+                (observed) =>
+                    observed.contractId === contract.contractId &&
+                    observed.version === contract.version &&
+                    observed.digest === contract.digest &&
+                    observed.status === "ready",
+            ),
+        )
+    );
 }
 
 async function installCollection(options: TargetOptions, profile: OfficialInstanceProfile): Promise<void> {
