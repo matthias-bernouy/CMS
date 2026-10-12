@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import type { CacheEntry } from "@bernouy/http-runner";
-import { TtlCache } from "@bernouy/http-runner";
+import { InMemoryCache, TtlCache } from "@bernouy/http-runner";
 
 const entry = (s: string): CacheEntry => {
     const raw = new TextEncoder().encode(s);
@@ -49,4 +49,17 @@ describe("TtlCache", () => {
         cache.set("page:/a", entry("a"));
         expect(cache.get("page:/a")).toBeNull();
     });
+});
+
+test("InMemoryCache evicts the least recently used entry at its cardinality limit", () => {
+    const cache = new InMemoryCache({ maxEntries: 2 });
+    cache.set("a", entry("a"));
+    cache.set("b", entry("b"));
+    expect(cache.get("a")).not.toBeNull();
+
+    cache.set("c", entry("c"));
+
+    expect(cache.get("a")).not.toBeNull();
+    expect(cache.get("b")).toBeNull();
+    expect(cache.get("c")).not.toBeNull();
 });

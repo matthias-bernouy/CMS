@@ -10,19 +10,41 @@ import type { Cache, CacheEntry } from "http-runner/interfaces/Cache";
 export class InMemoryCache implements Cache {
     private readonly store = new Map<string, CacheEntry>();
     private readonly isDev = process.env.MODE === "DEV";
+    private readonly maxEntries: number;
+
+    constructor(options: { maxEntries?: number } = {}) {
+        this.maxEntries = options.maxEntries ?? 2_048;
+        if (!Number.isSafeInteger(this.maxEntries) || this.maxEntries < 1) {
+            throw new TypeError("In-memory cache maxEntries must be a positive safe integer");
+        }
+    }
 
     get(key: string): CacheEntry | null {
         if (this.isDev) {
             return null;
         }
-        return this.store.get(key) ?? null;
+        const entry = this.store.get(key);
+        if (!entry) {
+            return null;
+        }
+        this.store.delete(key);
+        this.store.set(key, entry);
+        return entry;
     }
 
     set(key: string, value: CacheEntry): void {
         if (this.isDev) {
             return;
         }
+        this.store.delete(key);
         this.store.set(key, value);
+        while (this.store.size > this.maxEntries) {
+            const oldest = this.store.keys().next().value;
+            if (oldest === undefined) {
+                break;
+            }
+            this.store.delete(oldest);
+        }
     }
 
     delete(key: string): void {

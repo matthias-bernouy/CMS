@@ -3,6 +3,11 @@ import type { ContentReader } from "cms-content/application/interfaces/ContentRe
 import { generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";
 import { collectionBlocsetCacheKey } from "cms-content/blocs/core/assets/resolvePageAssets";
 
+const BLOC_TAG = /^[a-z][a-z0-9]{0,62}-[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u;
+const CONTENT_REVISION = /^sha256:[0-9a-f]{64}$/u;
+const MAX_TAGS = 128;
+const MAX_TAGS_LENGTH = 16_384;
+
 /**
  * Serve ONE bundle = the concatenated viewJS of several blocs, for the
  * signature-grouped kernel path. URL shape:
@@ -25,7 +30,7 @@ export async function serveBlocSet(
     const tagsParam = url.searchParams.get("tags");
     const revision = url.searchParams.get("r");
 
-    if (!tagsParam || !validRevision(revision)) {
+    if (!tagsParam || tagsParam.length > MAX_TAGS_LENGTH || !validRevision(revision)) {
         return new Response(null, { status: 400 });
     }
 
@@ -33,7 +38,7 @@ export async function serveBlocSet(
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean);
-    if (tags.length === 0) {
+    if (tags.length === 0 || tags.length > MAX_TAGS || tags.some((tag) => !BLOC_TAG.test(tag))) {
         return new Response(null, { status: 400 });
     }
 
@@ -53,5 +58,5 @@ export async function serveBlocSet(
 }
 
 function validRevision(value: string | null): value is string {
-    return value !== null && value.length > 0 && value.length <= 8_192 && !/[\x00-\x1f\x7f]/u.test(value);
+    return value !== null && CONTENT_REVISION.test(value);
 }

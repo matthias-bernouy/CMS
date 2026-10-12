@@ -65,6 +65,7 @@ export async function resolvePageAssets(context: PageAssetContext, usedTags: str
     const bindingCoreJsUrl = `${prefix}/assets/cms-binding-core.js`;
     const bindingCoreJsCacheKey = CMS_CACHE_KEYS.js(bindingCoreJsUrl);
     const collectionRevision = (await context.content.getContentRevision?.()) ?? 0;
+    const collectionRevisionDigest = await digestContentRevision(collectionRevision);
     const collectionAssetReader = {
         getBlocViewJS: async (tag: string) => {
             const source = await context.content.getBlocViewJS(tag);
@@ -99,7 +100,7 @@ export async function resolvePageAssets(context: PageAssetContext, usedTags: str
         getOrGenerateEntryAsync(bindingCoreJsCacheKey, context.cache, loadBindingCoreRuntimeEntry),
         getOrGenerateEntryAsync(CMS_CACHE_KEYS.STYLE, context.cache, () => generateStyleEntry(context.content)),
         ...bundles.map((tags) =>
-            getOrGenerateEntryAsync(collectionBlocsetCacheKey(tags, collectionRevision), context.cache, () =>
+            getOrGenerateEntryAsync(collectionBlocsetCacheKey(tags, collectionRevisionDigest), context.cache, () =>
                 generateBlocSetEntry(tags, collectionAssetReader),
             ),
         ),
@@ -113,7 +114,7 @@ export async function resolvePageAssets(context: PageAssetContext, usedTags: str
         .filter((asset) => asset.entry.raw.length > 0);
     const blocUrls = blocAssets.map(
         ({ tags, entry }) =>
-            `${prefix}/blocset?tags=${[...tags].sort().join(",")}&r=${collectionRevision}&v=${entry.hash}`,
+            `${prefix}/blocset?tags=${[...tags].sort().join(",")}&r=${collectionRevisionDigest}&v=${entry.hash}`,
     );
     const scriptUrls = [componentUrl, ...blocUrls];
 
@@ -122,4 +123,10 @@ export async function resolvePageAssets(context: PageAssetContext, usedTags: str
 
 export function collectionBlocsetCacheKey(tags: string[], collectionRevision: number | string): string {
     return `${CMS_CACHE_KEYS.blocset(tags)}:collections:${collectionRevision}`;
+}
+
+async function digestContentRevision(revision: number | string): Promise<string> {
+    const bytes = new TextEncoder().encode(String(revision));
+    const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+    return `sha256:${Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 }
