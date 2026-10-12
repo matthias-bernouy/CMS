@@ -34,9 +34,10 @@ export function blocHostContractIssue(
     registered: ReadonlyMap<string, ContractBloc>,
     unresolved: ReadonlySet<string> = new Set(),
     allowTemplateSlots = false,
+    allowOwnedNative = false,
 ): string | null {
     if (bloc.nativeElement) {
-        return validateNestedCustomElements(host, registered, unresolved, allowTemplateSlots);
+        return validateNestedCustomElements(host, registered, unresolved, allowTemplateSlots, allowOwnedNative);
     }
     const slots = bloc.slots ?? {};
     const counts = new Map<string, number>();
@@ -56,7 +57,7 @@ export function blocHostContractIssue(
         const issue =
             allowTemplateSlots && child.localName === "slot"
                 ? null
-                : slotChildIssue(child, slot, registered, unresolved, allowTemplateSlots);
+                : slotChildIssue(child, slot, registered, unresolved, allowTemplateSlots, allowOwnedNative);
         if (issue) {
             return `<${bloc.id}> slot ${JSON.stringify(slotName)} ${issue}`;
         }
@@ -80,6 +81,7 @@ function slotChildIssue(
     registered: ReadonlyMap<string, ContractBloc>,
     unresolved: ReadonlySet<string>,
     allowTemplateSlots: boolean,
+    allowOwnedNative: boolean,
 ): string | null {
     const tag = child.localName.toLowerCase();
     const accepts = slot.accepts ?? [];
@@ -91,7 +93,12 @@ function slotChildIssue(
         if (!accepts.some((accept) => acceptsCustomBloc(accept, tag, nested))) {
             return `does not accept Bloc ${tag}`;
         }
-        return nested ? blocHostContractIssue(child, nested, registered, unresolved, allowTemplateSlots) : null;
+        return nested
+            ? blocHostContractIssue(child, nested, registered, unresolved, allowTemplateSlots, allowOwnedNative)
+            : null;
+    }
+    if (allowOwnedNative) {
+        return null;
     }
     if (!accepts.some((accept) => acceptsNativeElement(accept, child))) {
         return `does not accept native <${tag}>`;
@@ -140,6 +147,7 @@ function validateNestedCustomElements(
     registered: ReadonlyMap<string, ContractBloc>,
     unresolved: ReadonlySet<string>,
     allowTemplateSlots: boolean,
+    allowOwnedNative: boolean,
 ): string | null {
     for (const child of Array.from(root.children)) {
         if (!isValidCustomElementTag(child.localName)) {
@@ -152,7 +160,14 @@ function validateNestedCustomElements(
         if (!nested) {
             continue;
         }
-        const issue = blocHostContractIssue(child, nested, registered, unresolved, allowTemplateSlots);
+        const issue = blocHostContractIssue(
+            child,
+            nested,
+            registered,
+            unresolved,
+            allowTemplateSlots,
+            allowOwnedNative,
+        );
         if (issue) {
             return issue;
         }

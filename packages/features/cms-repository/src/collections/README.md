@@ -204,7 +204,7 @@ capability requirement; admission verifies those witnesses alongside transitive
 local Bloc requirements. Scripts, links, inline handlers and inline styles reject.
 Every Page declares exactly one surface; every local and imported Bloc in its
 transitive closure must support that surface. Page exports and imports pin exact
-resource generations. Control and Delivery project installed Pages into the
+resource generations. The Kernel projects installed Pages into the
 site-scoped surface route registry and render them through the shared Page
 document pipeline. Stable Page references resolve independently from route
 overrides.
@@ -245,7 +245,7 @@ the migration orchestration consumes the generic Page and site-content ports
 published by `@bernouy/cms-content`.
 
 The store can remove a collection only when no installed collection depends on
-it. This is deliberately not exposed as a Control HTTP action yet: site Pages,
+it. This is deliberately not exposed as an administration HTTP action yet: site Pages,
 private Blocs, theme overrides and collection Pages still need affected-resource analysis
 before removal is safe.
 

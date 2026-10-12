@@ -9,7 +9,7 @@ that every production failure mode has been exercised.
 CmsCore now has a coherent platform core. The dependency direction is enforced,
 immutable contracts and collection releases have strict admission rules, CMS
 Core capabilities are sealed at startup, collection migrations are recoverable,
-and Control is rendered from collection-owned Pages rather than a second static
+and administration is rendered from collection-owned Pages rather than a second static
 application model.
 
 The repository is suitable for continued product development and a controlled
@@ -24,7 +24,7 @@ The workspace contains 18 packages:
 
 - seven Foundation packages;
 - five feature packages: authentication, content, files, gateway and repository;
-- three surfaces: CMS Core, Control and Delivery;
+- two HTTP applications: provider-facing CMS Core and the site Kernel;
 - three executable runtimes: CMS server, official repository server and CLI.
 
 The official repository currently contains:
@@ -34,7 +34,7 @@ The official repository currently contains:
   does not claim;
 - the `ulvia.official` provider manifest;
 - the `ulvia-official` collection with 141 Bloc definitions, 119 theme tokens
-  and seven Control Pages covering the eight Core domains.
+  and seven administration Pages covering the eight Core domains.
 
 The supported package dependency direction is:
 
@@ -99,7 +99,7 @@ advisory audit because it requires current registry access.
 ### Collections And Content
 
 - Collections can recursively author Blocs, translations, texts, theme tokens,
-  assets, Control or Delivery Pages, migrations and selective dependency
+  assets, administration or public Pages, migrations and selective dependency
   imports.
 - Namespace and reference validation covers Blocs, tokens, texts, assets,
   Pages, CSS variables and imported resources.
@@ -149,15 +149,15 @@ runtime deployment. It produced no reportable finding. The review was
 surface-complete rather than a line-by-line proof and does not replace external
 penetration testing, dependency monitoring or deployment review.
 
-### Control And Delivery
+### Unified Kernel
 
-- The legacy static Control application, Dashboard model, collection View model
+- The legacy static administration application, Dashboard model, collection View model
   and Foundation visual component package are removed.
-- Control and Delivery use the same Page/Bloc/resource model and the same
+- Administration and public rendering use the same Page/Bloc/resource model and the same
   `/.cms/call` capability transport.
-- Control Pages are collection resources, while login, sessions, bootstrap,
+- Administration Pages are collection resources, while login, sessions, bootstrap,
   recovery, file streaming and health remain kernel transport concerns.
-- The official Control collection provides Pages for overview, content details,
+- The official administration collection provides Pages for overview, content details,
   collections, files, providers, access and settings.
 
 ## Current Weaknesses
@@ -200,7 +200,7 @@ penetration testing, dependency monitoring or deployment review.
 
 ### Product Completeness
 
-1. The new Control UI covers the official management areas, including per-page
+1. The new administration UI covers the official management areas, including per-page
    route/SEO mutation and an operational diagnostics Page. Several deeper
    administration journeys still need dedicated product flows.
 2. There is no active visual Page editor. The shared Page/Bloc authoring model
@@ -260,7 +260,7 @@ changing a constant.
 
 ## Code And Documentation Hygiene
 
-- The retired EditorJS/editor-v2, Dashboard, View, static Control and visual
+- The retired EditorJS/editor-v2, Dashboard, View, static administration app and visual
   Foundation component implementations are absent from active code.
 - Contract source compatibility now has one recursive format instead of a
   legacy inline alternative.
@@ -285,8 +285,8 @@ changing a constant.
 4. **Materialize resource references and stream release work.** Remove remaining
    all-Page scans and make large transfers restartable before volume forces an
    emergency redesign.
-5. **Finish Control product flows, then build the shared Page editor.** Keep both
-   Control and Delivery on the one Page/Bloc model.
+5. **Finish administration product flows, then build the shared Page editor.** Keep
+   administration and public rendering on the one Page/Bloc model.
 6. **Operationalize live provider conformance.** Compose disposable provider
    environments, surface evidence history to operators and require current
    passing evidence where approval policy demands it.

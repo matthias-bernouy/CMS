@@ -12,7 +12,7 @@ admitted contract releases.
 
 The surface maps transport to feature operations. It does not select persistence,
 read environment configuration, start listeners, or bypass the normal gateway
-used by Control and Delivery.
+used by the site Kernel.
 
 See the [workspace package map](../../../docs/architecture/packages.md). Licensed
 under the repository [MIT License](../../../LICENSE).

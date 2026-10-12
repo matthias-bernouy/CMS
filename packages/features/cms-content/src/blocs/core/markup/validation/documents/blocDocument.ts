@@ -71,14 +71,14 @@ function validateFragment(
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = html;
     validateReferences(html, document, ownerTag, known, unresolved, allowCmsHost);
-    validateHostAttributes(document, known, unresolved, true);
+    validateHostAttributes(document, known, unresolved, true, true);
     validateManagedNative(html, known);
     for (const host of Array.from(document.body.querySelectorAll("*"))) {
         const contract = known.get(host.localName);
         if (!contract) {
             continue;
         }
-        const issue = blocHostContractIssue(host, contract, known, unresolved, true);
+        const issue = blocHostContractIssue(host, contract, known, unresolved, true, true);
         if (issue) {
             throw new ContentValidationError("fixedContent", issue);
         }
@@ -136,6 +136,7 @@ function validateHostAttributes(
     known: ReadonlyMap<string, PageDocumentBlocContract>,
     unresolved: ReadonlySet<string>,
     fragmentOwned: boolean,
+    allowDynamicSettings = false,
 ): void {
     for (const host of Array.from(document.body.querySelectorAll("*"))) {
         const tag = host.localName.toLowerCase();
@@ -147,6 +148,8 @@ function validateHostAttributes(
             Object.fromEntries(host.getAttributeNames().map((name) => [name, host.getAttribute(name) ?? ""])),
             contract,
             fragmentOwned || host.parentElement !== document.body,
+            allowDynamicSettings,
+            fragmentOwned,
         );
         if (issue) {
             throw new ContentValidationError("content", issue);

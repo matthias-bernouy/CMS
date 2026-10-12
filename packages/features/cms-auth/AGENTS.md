@@ -40,7 +40,7 @@ the exact same operation.
 - Never log credentials, PAT tokens, auth tokens, email verification tokens, or
   password reset tokens.
 - Public auth routes are mounted under `PUBLIC_AUTH_ROUTES.base` by a surface.
-  Control disables signup for its guarded admin context.
+  The Kernel disables signup for its guarded administration context.
 - Membership records contain identity and activity metadata only. Authorization
   belongs to CMS policies, capability grants and Page execution plans; it must
   not be added to authentication subjects.

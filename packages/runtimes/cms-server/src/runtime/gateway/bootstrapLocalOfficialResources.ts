@@ -8,8 +8,8 @@ import type { RepositoryArtifactEntry } from "@bernouy/cms-repository/providers/
 import type { ProviderManagement } from "@bernouy/cms-repository/providers/management";
 
 const PROVIDER_ID = "ulvia.official";
-const CONTROL_COLLECTION_ID = "ulvia-official";
-const CONTROL_COLLECTION_VERSION = "1.0.0";
+const OFFICIAL_COLLECTION_ID = "ulvia-official";
+const OFFICIAL_COLLECTION_VERSION = "1.0.0";
 const BOOTSTRAP_ACTOR = "system:local-bootstrap";
 const CORE_CONTRACT_IDS = [
     "ulvia.cms.access",
@@ -103,20 +103,22 @@ export async function bootstrapLocalOfficialResources(options: {
     }
 
     const snapshot = await options.collections.snapshot("default");
-    const installedCollection = snapshot.collections.find(({ collectionId }) => collectionId === CONTROL_COLLECTION_ID);
+    const installedCollection = snapshot.collections.find(
+        ({ collectionId }) => collectionId === OFFICIAL_COLLECTION_ID,
+    );
     const collectionEntry = (await collectionSource.list()).find(
         (entry) =>
             entry.publisherId === PROVIDER_ID &&
-            entry.collectionId === CONTROL_COLLECTION_ID &&
-            entry.version === CONTROL_COLLECTION_VERSION,
+            entry.collectionId === OFFICIAL_COLLECTION_ID &&
+            entry.version === OFFICIAL_COLLECTION_VERSION,
     );
     if (!collectionEntry) {
-        throw new Error("The bundled official Control collection is unavailable from the bootstrap repository");
+        throw new Error("The bundled official administration collection is unavailable from the bootstrap repository");
     }
     const bundle = await collectionSource.get(collectionEntry);
     const imported = await options.collections.importRelease(bundle.release, bundle.assets);
     if (imported.digest !== collectionEntry.digest) {
-        throw new Error("The official Control collection digest changed during bootstrap");
+        throw new Error("The official administration collection digest changed during bootstrap");
     }
     if (installedCollection?.digest === imported.digest) {
         return;

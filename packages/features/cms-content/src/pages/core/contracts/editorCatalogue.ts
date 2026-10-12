@@ -1,5 +1,4 @@
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
-import type { PageSurface } from "cms-content/pages/interfaces/document";
 
 export type CmsEditorBloc = Readonly<{
     id: string;
@@ -17,14 +16,10 @@ export type CmsEditorCatalogue = Readonly<{ items: readonly CmsEditorBloc[] }>;
 
 export async function getCmsEditorCatalogue(
     repository: Pick<CmsRepository, "getBlocsList">,
-    input: { readonly surface: PageSurface },
 ): Promise<CmsEditorCatalogue> {
-    if (input.surface !== "control" && input.surface !== "delivery") {
-        throw new TypeError("Invalid editor surface.");
-    }
     const blocs = await repository.getBlocsList();
     const items = blocs
-        .filter(({ internal, surfaces }) => !internal && (surfaces ?? ["control", "delivery"]).includes(input.surface))
+        .filter(({ internal }) => !internal)
         .map(
             (bloc): CmsEditorBloc => ({
                 id: bloc.id,

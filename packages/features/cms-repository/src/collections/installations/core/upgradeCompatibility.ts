@@ -21,9 +21,6 @@ function assertBlocCompatibility(previous: CollectionBloc, next: CollectionBloc 
     if (!next || next.kind !== previous.kind) {
         reject(`Upgrade removes or changes existing bloc ${previous.id}`);
     }
-    if (!previous.surfaces.every((surface) => next.surfaces.includes(surface))) {
-        reject(`Upgrade narrows existing Bloc surfaces ${previous.id}`);
-    }
     for (const [slotId, slot] of Object.entries(previous.slots)) {
         if (!slotAcceptsPrevious(slot, next.slots[slotId])) {
             reject(`Upgrade removes or changes existing slot contract ${previous.id}.${slotId}`);
@@ -125,7 +122,7 @@ export function assertCompatibleCollectionUpgrade(previous: CollectionRelease, n
     const nextPages = new Map((next.pages ?? []).map((page) => [page.id, page]));
     for (const page of previous.pages ?? []) {
         const replacement = nextPages.get(page.id);
-        if (!replacement || replacement.surface !== page.surface) {
+        if (!replacement) {
             reject(`Upgrade removes or changes existing Page ${page.id}`);
         }
     }
@@ -193,8 +190,8 @@ export function collectionUpgradeBreakingResources(
     const nextPages = new Map((next.pages ?? []).map((page) => [page.id, page]));
     for (const page of previous.pages ?? []) {
         const replacement = nextPages.get(page.id);
-        if (!replacement || replacement.surface !== page.surface) {
-            changes.push({ kind: "page", id: page.id, reason: `Page ${page.id} was removed or changed surface` });
+        if (!replacement) {
+            changes.push({ kind: "page", id: page.id, reason: `Page ${page.id} was removed` });
         }
     }
     const nextAssets = new Map(next.assets.map((asset) => [asset.id, asset]));

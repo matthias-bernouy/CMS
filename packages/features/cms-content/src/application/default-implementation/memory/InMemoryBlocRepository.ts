@@ -134,7 +134,6 @@ export class InMemoryBlocRepository {
                           ...(bloc.slots ? { slots: structuredClone(bloc.slots) } : {}),
                           ...(bloc.settings ? { settings: structuredClone(bloc.settings) } : {}),
                           ...(bloc.internal ? { internal: true } : {}),
-                          ...(bloc.surfaces ? { surfaces: [...bloc.surfaces] } : {}),
                           ...(bloc.uses ? { uses: [...bloc.uses] } : {}),
                           ...(bloc.nativeElement ? { nativeElement: bloc.nativeElement } : {}),
                           ...(bloc.thumbnail ? { thumbnail: structuredClone(bloc.thumbnail) } : {}),

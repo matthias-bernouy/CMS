@@ -1,6 +1,6 @@
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
-import type { SurfacePageRouteRegistry } from "cms-content/pages/interfaces/routing";
+import type { PageRouteRegistry } from "cms-content/pages/interfaces/routing";
 
 export async function pageBeforeMutation(
     repository: CmsRepository,
@@ -19,7 +19,7 @@ export async function pageBeforeMutation(
 
 export async function applySiteRouteMutation(
     repository: CmsRepository,
-    routes: SurfacePageRouteRegistry,
+    routes: PageRouteRegistry,
     siteId: string,
     method: string,
     args: readonly unknown[],
@@ -45,7 +45,7 @@ export async function applySiteRouteMutation(
     const reference = { kind: "site" as const, pageId: page.id };
     const route = await routes.get(siteId, reference);
     if (!route) {
-        await routes.register(siteId, { page: reference, surface: page.surface, defaultPath: page.path });
+        await routes.register(siteId, { page: reference, defaultPath: page.path });
     } else if (route.defaultPath !== page.path) {
         await routes.updateDefault(siteId, reference, page.path, route.revision);
     }

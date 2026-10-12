@@ -11,7 +11,7 @@ import { parseAssets } from "./assets";
 import { parseBlocs } from "./blocs/parseBlocs";
 import { validateBlocs } from "./blocs/validateBlocs";
 import { parseConfiguration } from "./configuration";
-import { parseCollectionPages, validateLocalPageSurfaces } from "./pages";
+import { parseCollectionPages } from "./pages";
 import { validateDeclaredPageReferences } from "./pages/references";
 import { validateCollectionTextReferences } from "../validation/markup/texts";
 import { parseCollectionTranslations } from "../texts/translationCatalogue";
@@ -85,15 +85,14 @@ export function parseCollectionRelease(
             limits,
             new Set(dependencies?.flatMap((dependency) => dependency.imports.blocs.map(({ id }) => id)) ?? []),
         );
-        const blocSurfaces = new Map([
-            ...blocs.map((bloc) => [bloc.id, bloc.surfaces] as const),
-            ...(dependencies?.flatMap((dependency) =>
-                dependency.imports.blocs.map(({ id }) => [id, ["control", "delivery"] as const] as const),
-            ) ?? []),
+        const availableBlocIds = new Set([
+            ...blocs.map((bloc) => bloc.id),
+            ...(dependencies?.flatMap((dependency) => dependency.imports.blocs.map(({ id }) => id)) ?? []),
         ]);
         const pages =
-            source.pages === undefined ? undefined : parseCollectionPages(source.pages, blocSurfaces, limits, blocs);
-        validateLocalPageSurfaces(pages ?? [], blocs);
+            source.pages === undefined
+                ? undefined
+                : parseCollectionPages(source.pages, availableBlocIds, limits, blocs);
         validateCollectionTextReferences(
             blocs,
             collectionId,

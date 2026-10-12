@@ -12,9 +12,9 @@ test("discovery follows browser helpers but excludes server-only code, tests and
         await writeFile(absolute, content);
     }
     try {
-        const pkg = "packages/surfaces/cms-control";
-        await file(`${pkg}/package.json`, JSON.stringify({ name: "@bernouy/cms-control" }));
-        await file(`${pkg}/src/components/Admin.ts`, 'import { getData } from "cms-control/core/data"; getData();');
+        const pkg = "packages/surfaces/cms-kernel";
+        await file(`${pkg}/package.json`, JSON.stringify({ name: "@bernouy/cms-kernel" }));
+        await file(`${pkg}/src/components/Admin.ts`, 'import { getData } from "cms-kernel/core/data"; getData();');
         await file(`${pkg}/src/core/data.ts`, 'export async function getData() { return fetch("/api/data"); }');
         await file(
             `${pkg}/src/core/server.ts`,
@@ -22,7 +22,7 @@ test("discovery follows browser helpers but excludes server-only code, tests and
         );
         await file(`${pkg}/src/core/admin/auth/templates/example.html`, '<div cms-source="/api/data"></div>');
         await file(`${pkg}/tests/example.test.ts`, 'fetch("/api/test");');
-        await file(`${pkg}/src/browser/control-runtime.js`, 'fetch("/compiled");');
+        await file(`${pkg}/src/browser/admin-runtime.js`, 'fetch("/compiled");');
         await file(`${pkg}/dist/index.js`, 'fetch("/generated");');
         const sources = await discoverUiSources(root);
         expect(sources.map((source) => source.path)).toHaveLength(4);
@@ -44,5 +44,5 @@ test("production policy does not mistake declarations, fixtures or frozen packag
     ]) {
         expect(isProductionSource(path)).toBe(false);
     }
-    expect(isProductionSource("packages/surfaces/cms-control/src/core/api.ts")).toBe(true);
+    expect(isProductionSource("packages/surfaces/cms-kernel/src/core/api.ts")).toBe(true);
 });

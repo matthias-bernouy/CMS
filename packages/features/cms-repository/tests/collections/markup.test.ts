@@ -254,7 +254,6 @@ describe("collection markup admission", () => {
         pageSource.pages = [
             {
                 id: "demo",
-                surface: "delivery",
                 defaultPath: "/demo",
                 name: "page.demo.name",
                 document: {

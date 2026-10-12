@@ -2,7 +2,7 @@
 
 `@bernouy/cms-repository` describes and validates artifacts and site choices.
 `@bernouy/cms-gateway` executes selected capabilities. Runtimes supply storage,
-network access, secrets and trusted actors; Control and Delivery mount the HTTP
+network access, secrets and trusted actors; the Kernel mounts the site HTTP
 entry points.
 
 ## Artifacts And Site State
@@ -38,14 +38,14 @@ Ulvia data directory. Contract folders declare `kind: "contract"`; provider
 folders declare `kind: "provider-manifest"`. Release contracts before provider
 manifests that reference their exact version and digest. The loopback local
 repository lists and serves both types at `/v1/contracts` and `/v1/providers`.
-Control can list and import exact contract and manifest releases from this
+The administration Pages can list and import exact contract and manifest releases from this
 repository. Importing a provider manifest resolves and preflights its exact
 implemented contract releases from the same configured repository before any
 catalogue publication. Releasing an artifact does not contact a provider, execute
 conformance tests, or approve an installation.
 Declared contract fixture assets live in `fixtures/<asset-id>` inside the
 authored folder and are validated before the local release is stored.
-Control's Mongo contract catalogue does not yet persist fixture assets, so
+The Mongo contract catalogue does not yet persist fixture assets, so
 the current import flow accepts only contracts without them.
 
 Each V1 repository catalogue response contains at most 256 releases and may
@@ -65,8 +65,8 @@ release and connection steps.
 ## Live Invocation
 
 ```text
-Control or Delivery request
-  -> trusted actor supplied by the surface
+Kernel Page request
+  -> trusted actor supplied by the Kernel
   -> exact site selection and approved installation
   -> current readiness and host authorization
   -> admitted binding plan, credentials and provider identity alias
@@ -92,30 +92,28 @@ Keyed commands still require durable idempotency before activation.
 When `CMS_GATEWAY_SITE_ID` is configured, `cms-server` constructs Mongo release,
 manifest, installation and selection stores, a selected catalogue, network and
 secret adapters and observation refresh. The current host policy
-allows public/authenticated access on Delivery as declared by the capability;
-Control's generic invocation route requires the configured local administrator.
-Page execution plans restrict collection-owned and site-owned Control Pages to
-the capabilities required by their exact document and transitive Blocs. Control
-activates the revisioned plan from the same-origin referring Page before each
+allows public, authenticated or administrator access as declared by each
+capability. Page execution plans restrict collection-owned and site-owned Pages
+to the capabilities required by their exact document and transitive Blocs. The
+Kernel activates the revisioned plan from the same-origin referring Page before each
 call and sends only its immutable execution pin to the gateway.
 
 The local CMS Core transport is contract-neutral: `@bernouy/cms-core` derives
 its HTTP routes from admitted contract bindings. The same package contains thin
 official capability adapters that coordinate injected feature ports; it does
-not select stores or persistence adapters. Control and Delivery still use
-their normal `/.cms/call` gateway transport; there is no direct Core shortcut or
+not select stores or persistence adapters. The Kernel uses its normal
+`/.cms/call` gateway transport; there is no direct Core shortcut or
 internal relay hop. The shared bounded JSON budget applies at the gateway and
 Core surface.
 
-| Surface | Routes relative to its base path |
+| Application | Routes relative to its base path |
 | --- | --- |
-| Control | `/.cms/call/<contractId><binding.path>` for every admitted HTTP method |
-| Delivery | Same binding-derived `/.cms/call/*` transport, with Delivery access policy |
+| Kernel | `/.cms/call/<contractId><binding.path>` for every admitted HTTP method, with capability-derived access |
 
 Routes are mounted only when their dependencies are configured. Binary reads,
 including Files representations, use the same generic route.
 Dynamic SEO invokes the gateway directly; see [page indexing](../surfaces/page-indexing.md).
-Control's `/admin/providers` Page lists provider installations and their exact
+The `/admin/providers` Page lists provider installations and their exact
 contract selections. The `ulvia.cms.providers` capabilities provide bounded
 list/detail, selection replacement and lifecycle-status mutations. Manifest
 import and provider connection approval are application workflows owned by
@@ -157,7 +155,7 @@ transport rules. See [files and responsive images](../images/README.md).
 
 ## Current Integration Gaps
 
-- Control manages installed releases, approved provider connections and exact
+- Administration Pages manage installed releases, approved provider connections and exact
   selections. The CLI can publish and retrieve exact contract and provider
   coordinates through an authenticated immutable repository; automated provider
   upgrade policy remains open.
@@ -179,6 +177,6 @@ transport rules. See [files and responsive images](../images/README.md).
 
 The code establishing the production boundary is
 [createProductionGateway](../../packages/runtimes/cms-server/src/runtime/gateway/createProductionGateway.ts)
-and [mountSurfaces](../../packages/runtimes/cms-server/src/runtime/mountSurfaces.ts).
+and [mountProductionKernel](../../packages/runtimes/cms-server/src/runtime/mountKernel.ts).
 The [repository audit](../AUDIT.md) and [deferred platform work](../TODO.md)
 track the remaining implementation and activation gates.

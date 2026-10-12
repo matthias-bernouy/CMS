@@ -22,7 +22,7 @@ test("Gateway JSON envelopes preserve a contract-sized Page document", async () 
             siteId: "default",
             contractId: "ulvia.cms.pages",
             capabilityId: "update",
-            origin: "control",
+            origin: "system",
             actor: { kind: "administrator", subjectId: "admin-1" },
             input: { content: CONTRACT_SIZED_TEXT },
         }).input,
@@ -44,7 +44,7 @@ test("the default provider response budget includes a contract-sized Page docume
         capability: route.release.admission.release.capabilities[0]!,
         binding: route.release.admission.bindings[0]!.binding,
         input: { term: "page" },
-        invocationOrigin: "control",
+        invocationOrigin: "system",
         actorKind: "administrator",
     });
     expect(response).toMatchObject({ output: { content: CONTRACT_SIZED_TEXT } });

@@ -14,7 +14,7 @@ A release may include a bounded `catalogue` object with an `icon` token and up
 to six category tokens. Repositories expose those values for discovery UIs;
 the consuming CMS maps icon tokens to trusted local artwork and never renders
 publisher-supplied SVG. The repository catalogue owns `publishedAt`, so release
-authors cannot choose the “last updated” date displayed by Control.
+authors cannot choose the “last updated” date displayed by the administration UI.
 
 Changing discovery metadata changes the immutable release digest and therefore
 needs a new release coordinate once that artifact has been published.

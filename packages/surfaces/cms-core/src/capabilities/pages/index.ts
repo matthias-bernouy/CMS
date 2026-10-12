@@ -29,7 +29,7 @@ export function registerPageCapabilities(dispatcher: CoreCapabilityRegistry, dep
     };
     register("list", (input) => listCmsPages(dependencies.repo, input));
     register("get", (input) => getCmsPage(dependencies.repo, input as never));
-    register("editor-catalogue", (input) => getCmsEditorCatalogue(dependencies.repo, input as never));
+    register("editor-catalogue", () => getCmsEditorCatalogue(dependencies.repo));
     register("create", (input) => createCmsPage(dependencies.repo, input as never));
     register("update", (input) => updateCmsPage(dependencies.repo, input as never));
     register("update-route", (input) => updateCmsPageRoute(dependencies.repo, input as never));

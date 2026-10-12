@@ -1,5 +1,4 @@
-import type { PageReference, SurfacePageRoute } from "cms-content/pages/interfaces/routing";
-import type { PageSurface } from "cms-content/pages/interfaces/document";
+import type { PageReference, RegisteredPageRoute } from "cms-content/pages/interfaces/routing";
 import { validatePagePath } from "cms-content/pages/core/validation/page";
 
 const identifier = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/u;
@@ -29,12 +28,8 @@ export function pageScopeKey(siteId: string, page: PageReference): string {
     return JSON.stringify([validateSiteId(siteId), pageReferenceKey(page)]);
 }
 
-function pageRouteKey(surface: PageSurface, path: string): string {
-    return JSON.stringify([surface, validateSurfacePagePath(surface, path)]);
-}
-
-export function scopedPageRouteKey(siteId: string, surface: PageSurface, path: string): string {
-    return JSON.stringify([validateSiteId(siteId), pageRouteKey(surface, path)]);
+export function scopedPageRouteKey(siteId: string, path: string): string {
+    return JSON.stringify([validateSiteId(siteId), validateRegisteredPagePath(path)]);
 }
 
 export function validateSiteId(siteId: string): string {
@@ -44,14 +39,14 @@ export function validateSiteId(siteId: string): string {
     return siteId;
 }
 
-export function nextSurfacePageRoute(
-    route: SurfacePageRoute,
+export function nextPageRoute(
+    route: RegisteredPageRoute,
     change: { readonly defaultPath?: string; readonly overridePath?: string | null },
-): SurfacePageRoute {
-    const defaultPath = validateSurfacePagePath(route.surface, change.defaultPath ?? route.defaultPath);
+): RegisteredPageRoute {
+    const defaultPath = validateRegisteredPagePath(change.defaultPath ?? route.defaultPath);
     const overridePath = change.overridePath === undefined ? route.overridePath : (change.overridePath ?? undefined);
     if (overridePath !== undefined) {
-        validateSurfacePagePath(route.surface, overridePath);
+        validateRegisteredPagePath(overridePath);
     }
     return {
         ...route,
@@ -62,25 +57,18 @@ export function nextSurfacePageRoute(
     };
 }
 
-export function validateSurfacePagePath(surface: PageSurface, value: string): string {
+export function validateRegisteredPagePath(value: string): string {
     const path = validatePagePath(value);
-    const controlPath = path === "/admin" || path.startsWith("/admin/");
-    if ((surface === "control") !== controlPath) {
-        throw new TypeError(
-            surface === "control" ? "Control Pages must use /admin paths." : "Delivery Pages cannot use /admin paths.",
-        );
-    }
     if (
-        surface === "delivery" &&
         ["/.cms", "/api", "/assets", "/auth", "/login"].some(
             (prefix) => path === prefix || path.startsWith(`${prefix}/`),
         )
     ) {
-        throw new TypeError("Delivery Page path is reserved by the runtime.");
+        throw new TypeError("Page path is reserved by the kernel.");
     }
     return path;
 }
 
-export function cloneSurfacePageRoute(route: SurfacePageRoute): SurfacePageRoute {
+export function clonePageRoute(route: RegisteredPageRoute): RegisteredPageRoute {
     return structuredClone(route);
 }

@@ -1,7 +1,7 @@
 # Files And Responsive Images
 
-Files are provided through the standard `ulvia.cms.files` contract. Control,
-Delivery, browsers and other providers use the same binding-derived gateway
+Files are provided through the standard `ulvia.cms.files` contract. The Kernel,
+browsers and other providers use the same binding-derived gateway
 routes under `/.cms/call/ulvia.cms.files`.
 
 The selected Files provider owns namespaces, credentials, upload sessions,
@@ -25,6 +25,6 @@ background representations are unavailable. Representation discovery and reads
 are ordinary contract capabilities.
 
 `ulvia-official-image` receives a `FileReference`, a profile, `sizes`, `alt`,
-loading and presentation settings. Delivery can emit known public references
+loading and presentation settings. The Kernel can emit known public references
 during server rendering; the browser helper resolves dynamic references after a
 binding completes. Image processing never runs in the gateway or the block.

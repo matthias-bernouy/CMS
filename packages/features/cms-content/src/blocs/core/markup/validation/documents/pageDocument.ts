@@ -6,16 +6,13 @@ import { managedNativeElementIssue } from "cms-content/blocs/core/markup/validat
 import { validatePageContentMarkup } from "cms-content/blocs/core/markup/validation/nativeContent";
 import { pageBlocHostAttributesIssue } from "cms-content/blocs/core/markup/validation/contracts/hostAttributes";
 import { blocHostContractIssue } from "cms-content/blocs/core/markup/validation/contracts/pageSlotContracts";
-import type { PageBlocContract, PageSurface } from "cms-content/pages/interfaces/document";
+import type { PageBlocContract } from "cms-content/pages/interfaces/document";
 import { parseHTML } from "linkedom";
 
-export type PageDocumentBlocContract = PageBlocContract & {
-    readonly surfaces?: readonly PageSurface[];
-};
+export type PageDocumentBlocContract = PageBlocContract;
 
 export type UnresolvedPageDocumentBloc = {
     readonly id: string;
-    readonly surfaces?: readonly PageSurface[];
 };
 
 export type PageDocumentValidationResult = {
@@ -34,7 +31,6 @@ export function validatePageDocument(
     html: string,
     blocs: readonly PageDocumentBlocContract[],
     options: {
-        readonly surface?: PageSurface;
         readonly unresolvedBlocs?: readonly UnresolvedPageDocumentBloc[];
     } = {},
 ): PageDocumentValidationResult {
@@ -63,7 +59,6 @@ export function validatePageDocument(
     validateRoots(document, known, new Set(unresolved.keys()));
     validateHosts(document, known, unresolved);
     validateManagedNative(normalized, blocs);
-    validateSurface(uses, known, unresolved, options.surface);
 
     const sources = Array.from(document.querySelectorAll("[cms-source]"), (element): PageDocumentSource | null => {
         const source = parseSource(element.getAttribute("cms-source") ?? "");
@@ -139,23 +134,5 @@ function validateRoots(
         if (issue) {
             throw new ContentValidationError("content", issue);
         }
-    }
-}
-
-function validateSurface(
-    uses: readonly string[],
-    known: ReadonlyMap<string, PageDocumentBlocContract>,
-    unresolved: ReadonlyMap<string, UnresolvedPageDocumentBloc>,
-    surface: PageSurface | undefined,
-): void {
-    if (!surface) {
-        return;
-    }
-    const incompatible = uses.find((tag) => {
-        const supported = known.get(tag)?.surfaces ?? unresolved.get(tag)?.surfaces ?? ["control", "delivery"];
-        return !supported.includes(surface);
-    });
-    if (incompatible) {
-        throw new ContentValidationError("content", `bloc "${incompatible}" is outside the ${surface} surface`);
     }
 }

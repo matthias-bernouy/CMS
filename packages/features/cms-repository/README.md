@@ -130,7 +130,7 @@ collection path accepts verified assets and capability requirements. The CLI
 runtime composes the reference filesystem registry and loopback listener, while
 this package owns authenticated remote publication, exact `push`/`pull`, and
 reversible yanking. Gateway execution-plan primitives remain available, but no
-provider invocation occurs inside this package. Control activates collection
+provider invocation occurs inside this package. The Kernel activates collection
 Page plans through `cms-gateway`. Collection Bloc runtime compilation is
 implemented for trusted CLI sources; third-party JavaScript isolation remains a
 separate concern.

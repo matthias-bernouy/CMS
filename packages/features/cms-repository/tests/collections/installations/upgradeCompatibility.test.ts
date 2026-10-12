@@ -80,13 +80,12 @@ test("simple upgrades cannot bypass a resource generation migration", async () =
     await expect(store.upgrade("site", admitted.digest, 1, "local")).rejects.toThrow("resource generation changed");
 });
 
-test("upgrades preserve Page and Bloc surface contracts", async () => {
+test("upgrades preserve Page identities while allowing route changes", async () => {
     const initialSource = release("1.0.0");
     initialSource.translations["en-US"]!["page.overview.name"] = "Overview";
     initialSource.pages = [
         {
             id: "overview",
-            surface: "control",
             defaultPath: "/admin",
             name: "page.overview.name",
             document: {
@@ -100,16 +99,15 @@ test("upgrades preserve Page and Bloc surface contracts", async () => {
 
     const changedPage = structuredClone(initialSource);
     changedPage.version = "1.1.0";
-    changedPage.pages[0]!.surface = "delivery";
     changedPage.pages[0]!.defaultPath = "/";
     const pageArtifact = await store.importRelease(changedPage);
-    await expect(store.upgrade("site", pageArtifact.digest, 1, "local")).rejects.toThrow("existing Page");
+    await expect(store.upgrade("site", pageArtifact.digest, 1, "local")).resolves.toMatchObject({ revision: 2 });
 
-    const narrowedBloc = structuredClone(initialSource);
-    narrowedBloc.version = "1.2.0";
-    (narrowedBloc.blocs as Record<string, unknown>[]).find(({ id }) => id === "atlas-page")!.surfaces = ["delivery"];
-    const blocArtifact = await store.importRelease(narrowedBloc);
-    await expect(store.upgrade("site", blocArtifact.digest, 1, "local")).rejects.toThrow("Bloc surfaces");
+    const removedPage = structuredClone(changedPage);
+    removedPage.version = "1.2.0";
+    removedPage.pages = [];
+    const removedArtifact = await store.importRelease(removedPage);
+    await expect(store.upgrade("site", removedArtifact.digest, 2, "local")).rejects.toThrow("existing Page");
 });
 
 test("upgrades preserve managed native element choices", async () => {

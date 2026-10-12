@@ -34,7 +34,7 @@ at `/v1/collections`, `/v1/contracts`, and `/v1/providers` on loopback port
 5102, with declared contract fixtures at
 `/v1/contracts/<publisher>/<contract>/<version>/fixtures/<asset-id>`, and sees
 new releases without restarting. The CMS consumes the collection and provider
-repository endpoints. Control explores manifests in Settings → Provider
+repository endpoints. Administration Pages explore manifests in Settings → Provider
 connections, connects an account, then selects exact contract releases in
 Explore sources for gateway calls. `prune` empties all local repository content without
 deleting `dev/` data.
@@ -115,7 +115,7 @@ for a nested Bloc. Intermediate grouping directories contain only directories
 and do not affect release identity.
 
 The bundled bootstrap already admits the official CMS Core contracts, manifest
-and Control collection before starting the local stack. To publish the same
+and administration collection before starting the local stack. To publish the same
 resources manually, release the Core contracts before the manifest:
 
 ```bash

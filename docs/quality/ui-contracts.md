@@ -34,7 +34,7 @@ An empty or invalid workspace fails instead of reporting a successful audit.
 | `ui.network.websocket`, `ui.network.eventsource` | INFO | Review connection ownership and lifecycle; ordinary HTTP binding does not replace these protocols. |
 | `source-automatic-method` | WARNING | Currently flags non-GET automatic sources; its GET-only assumption is stale. See the limitation below. |
 | `source-trigger-target` | WARNING | Flags non-GET event-triggered sources outside native forms; its GET-only message is stale. |
-| `source-automatic-mutation` | ERROR | An automatic source targets a proven mutating GET endpoint (currently Control logout only). |
+| `source-automatic-mutation` | ERROR | An automatic source targets a proven mutating GET endpoint (currently logout only). |
 | `source-publish-reload-loop` | ERROR | A submitted form reloads on an event its own success emits, causing another submission. |
 | `source-body-contract` | WARNING | A static `cms-source-body` contains descriptors the runtime ignores. |
 
@@ -100,10 +100,10 @@ accepted as a documented document boundary.
 
 Discovery reads production HTML and TypeScript/JavaScript inside real workspace
 packages. It excludes dependency/output/test/fixture directories, declaration
-files, and the generated Control components bundle. All HTML is checked as
+files, and the generated Kernel administration bundle. All HTML is checked as
 markup; executable inline scripts are treated as browser code.
 
-Browser script entrypoints are Control components, foundation visual components
+Browser script entrypoints are administration components, foundation visual components
 and binding, `*.client.*`, and resource `Bloc.ts` files. Static imports are followed through workspace aliases and
 package exports, including helpers outside component directories. This is import
 reachability, not proof that an exported function executes. It is deliberately

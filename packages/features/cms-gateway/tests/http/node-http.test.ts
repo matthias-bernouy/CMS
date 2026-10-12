@@ -84,7 +84,7 @@ test("provider credentials remain opaque while their secret value is forwarded b
         capability: fixture.release.admission.release.capabilities[0]!,
         binding: fixture.release.admission.bindings[0]!.binding,
         input: { term: "opaque" },
-        invocationOrigin: "control",
+        invocationOrigin: "system",
         actorKind: "user",
     });
 
@@ -113,7 +113,7 @@ test("node transport rejects mixed public and private DNS answers before reading
             requestId: "request-1",
             installationId: "install-a",
             providerTokenRef: "token-ref",
-            invocationOrigin: "delivery",
+            invocationOrigin: "system",
             actorKind: "anonymous",
             signal: new AbortController().signal,
         }),
@@ -139,7 +139,7 @@ test("node transport rejects a forged literal address and reserved headers", asy
         requestId: "request-1",
         installationId: "install-a",
         providerTokenRef: "token-ref",
-        invocationOrigin: "delivery" as const,
+        invocationOrigin: "system" as const,
         actorKind: "anonymous" as const,
         signal: new AbortController().signal,
     };
@@ -172,7 +172,7 @@ test("node transport aborts DNS and secret lookups that outlast the request dead
                     requestId: "request-1",
                     installationId: "install-a",
                     providerTokenRef: "token-ref",
-                    invocationOrigin: "delivery",
+                    invocationOrigin: "system",
                     actorKind: "anonymous",
                     signal: AbortSignal.timeout(5),
                 })

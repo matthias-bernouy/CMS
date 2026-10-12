@@ -18,7 +18,6 @@
         { "path": "../../features/cms-repository" },
         { "path": "../../features/cms-gateway" },
         { "path": "../../surfaces/cms-core" },
-        { "path": "../../surfaces/cms-control" },
-        { "path": "../../surfaces/cms-delivery" }
+        { "path": "../../surfaces/cms-kernel" }
     ]
 }

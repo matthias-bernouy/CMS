@@ -14,7 +14,7 @@ import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { CmsFilesService } from "@bernouy/cms-files";
 import { InMemoryCmsFilesStore } from "@bernouy/cms-files/memory";
 
-test("all eight Control domains dispatch outputs matching their official contracts", async () => {
+test("all eight administration domains dispatch outputs matching their official contracts", async () => {
     const dispatcher = new DefaultCoreCapabilityDispatcher();
     const now = new Date("2026-10-06T12:00:00.000Z");
     const system = defaultSystem();
@@ -107,7 +107,7 @@ test("all eight Control domains dispatch outputs matching their official contrac
             requestId: "00000000-0000-4000-8000-000000000001",
             siteId: "default",
             installationId: "official",
-            origin: "control",
+            origin: "page",
             actorKind: "administrator",
         });
         expect(() => validateSchemaValue(capability.output, output)).not.toThrow();

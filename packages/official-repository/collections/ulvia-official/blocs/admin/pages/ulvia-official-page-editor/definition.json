@@ -1,0 +1,28 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-page-editor",
+    "label": "bloc.page-editor.label",
+    "description": "bloc.page-editor.description",
+    "category": "bloc.category.administration",
+    "order": 10,
+    "internal": true,
+    "uses": [],
+    "requires": [
+        {
+            "contractId": "ulvia.cms.pages",
+            "capabilityId": "get",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.pages",
+            "capabilityId": "update",
+            "versionRange": "^1.0.0"
+        },
+        {
+            "contractId": "ulvia.cms.pages",
+            "capabilityId": "editor-catalogue",
+            "versionRange": "^1.0.0"
+        }
+    ],
+    "slots": {}
+}

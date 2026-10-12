@@ -5,7 +5,7 @@ import { CmsPageNotFoundError } from "cms-content/pages/core/contracts/renamePag
 
 export type CmsPageDetails = Pick<
     TPage,
-    "id" | "revision" | "surface" | "path" | "title" | "description" | "content" | "tags" | "visible"
+    "id" | "revision" | "path" | "title" | "description" | "content" | "tags" | "visible"
 >;
 
 export type CmsPageEditingDetails = CmsPageDetails & {
@@ -63,7 +63,6 @@ export function cmsPageDetails(page: TPage): CmsPageDetails {
     return {
         id: page.id,
         revision: page.revision,
-        surface: page.surface,
         path: page.path,
         title: page.title,
         description: page.description,

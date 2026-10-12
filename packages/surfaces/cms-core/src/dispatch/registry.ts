@@ -1,7 +1,7 @@
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
 
 type CoreCapabilityActorKind = "anonymous" | "user" | "administrator" | "provider" | "system";
-type CoreCapabilityOrigin = "delivery" | "page" | "control" | "provider" | "system" | "conformance";
+type CoreCapabilityOrigin = "page" | "provider" | "system" | "conformance";
 
 /** Trusted transport metadata. It is never populated from authored capability input. */
 export interface CoreCapabilityInvocationContext {

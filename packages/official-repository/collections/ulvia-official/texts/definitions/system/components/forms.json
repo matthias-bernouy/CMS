@@ -36,6 +36,12 @@
         "group": "text.group.components.forms"
     },
     {
+        "id": "ui-clear-search",
+        "label": "text.ui-clear-search.label",
+        "category": "text.category.components",
+        "group": "text.group.components.forms"
+    },
+    {
         "id": "ui-email-address",
         "label": "text.ui-email-address.label",
         "category": "text.category.components",

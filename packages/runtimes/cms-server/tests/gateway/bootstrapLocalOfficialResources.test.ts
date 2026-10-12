@@ -91,7 +91,7 @@ test("local bootstrap connects, selects, installs, reuses, and upgrades official
                     version: "1.0.0",
                     digest: collectionDigest,
                     name: "Ulvia Official",
-                    description: "Official Control resources",
+                    description: "Official administration resources",
                     blocCount: 1,
                     hasTheme: true,
                 },

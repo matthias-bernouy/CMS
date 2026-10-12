@@ -13,7 +13,7 @@ published rendering read models.
   collection migration toolchain.
 
 File bytes belong to providers implementing `ulvia.cms.files`; this package
-stores provider-neutral references only. Public Delivery code should consume the
+stores provider-neutral references only. Kernel rendering code should consume the
 rendering entrypoint rather than the authoring root.
 
 See the [workspace package map](../../../docs/architecture/packages.md). Licensed

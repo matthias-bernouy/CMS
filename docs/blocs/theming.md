@@ -26,7 +26,7 @@ Use only tokens contributed by installed collections or created in the site's
 settings. Neither `--ctx-*` nor an unnamespaced `--ulvia-*` is an automatically
 available cross-collection API.
 
-Control edits structured theme values. Delivery serves the document foundation
+Administration Pages edit structured theme values. The Kernel serves the document foundation
 and the active structured values through `/.cms/style`. The foundation does not
 restyle headings, links, controls, lists, media, or focus states: a collection
 that manages a native element owns its complete presentation. Arbitrary site CSS

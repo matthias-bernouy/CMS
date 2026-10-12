@@ -2,8 +2,7 @@
 
 This directory contains the production image for `@bernouy/cms-server` and
 the Compose files used to run several CMS instances on one server. Each CMS
-container serves Control on port 3000 and Delivery on port 3001 from one Bun
-process.
+container serves the unified Kernel on port 3000 from one Bun process.
 
 ## Architecture
 
@@ -41,9 +40,9 @@ The public routes are:
 
 | URL | Service |
 | --- | --- |
-| `https://example.com/` | Delivery |
-| `https://admin.example.com/login` | Control sign-in |
-| `https://admin.example.com/admin/pages` | Control after sign-in |
+| `https://example.com/` | Public Pages |
+| `https://example.com/login` | Administration sign-in |
+| `https://example.com/admin/pages` | Administration after sign-in |
 
 ## Prerequisites
 
@@ -56,8 +55,8 @@ The public routes are:
   image tarballs, staging, and backups.
 - A clean CmsCore checkout and its complete workspace when building the image.
 
-Before starting an instance, create DNS records for both its public domain and
-its `admin.` subdomain. Every A and AAAA record must resolve to this server.
+Before starting an instance, create DNS records for its public domain. Every A
+and AAAA record must resolve to this server.
 Let's Encrypt HTTP-01 validation cannot complete while DNS is missing or while
 port 80 is unreachable.
 
@@ -308,7 +307,7 @@ environment file.
 
 | Variable | Purpose |
 | --- | --- |
-| `DOMAIN` | Delivery domain; Control is derived as `admin.${DOMAIN}`. |
+| `DOMAIN` | Public domain of the unified Kernel. |
 | `CMS_IMAGE` | Unique, immutable image tag or registry digest. |
 | `MONGO_URL` | Authenticated URL whose path selects this instance's database. |
 | `CMS_SESSION_SECRET` | Session-cookie signing secret; use at least 32 random bytes. |
@@ -326,10 +325,8 @@ environment file.
 | `CMS_AUTH_SITE_NAME` | Public authentication site name; defaults to `CMS`. |
 | `CMS_AUTH_EMAIL_COOLDOWN_SECONDS` | Email throttle interval; defaults to 300 seconds. |
 | `CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION` | Full rollback journals retained per site; defaults to 100. Purged journals keep a lightweight audit summary. |
-| `CMS_AUTH_EMAIL_VERIFICATION_URL` | Delivery email-verification URL. |
-| `CMS_AUTH_PASSWORD_RESET_URL` | Delivery password-reset URL. |
-| `CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL` | Control email-verification URL. |
-| `CMS_CONTROL_AUTH_PASSWORD_RESET_URL` | Control password-reset URL. |
+| `CMS_AUTH_EMAIL_VERIFICATION_URL` | Kernel email-verification URL. |
+| `CMS_AUTH_PASSWORD_RESET_URL` | Kernel password-reset URL. |
 
 Treat the MongoDB URL, session secret, KEK, Core provider token, repository
 token and any configured SMTP credentials as server-side secrets. Never expose
@@ -656,7 +653,7 @@ docker compose config --quiet
 docker compose up -d --wait
 ```
 
-Verify its public pages, Control login, content, users, encrypted settings, and
+Verify its public Pages, administration login, content, users, encrypted settings, and
 file upload/download. Then update and start the remaining instances. Keep the
 maintenance window open until every database path and site has been checked.
 

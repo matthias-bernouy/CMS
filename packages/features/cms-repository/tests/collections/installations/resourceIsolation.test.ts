@@ -75,7 +75,7 @@ test("installations and upgrades reject global Bloc and theme token collisions",
     await expect(store.upgrade("themes", themeCollision.digest, 2, "local")).rejects.toThrow("theme token");
 });
 
-test("installations reject collection Pages claiming the same surface path", async () => {
+test("installations reject collection Pages claiming the same global path", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const withPage = (collectionId: string, pageId: string) => {
         const source = release(collectionId, "1.0.0", `${collectionId}-card`);
@@ -90,7 +90,6 @@ test("installations reject collection Pages claiming the same surface path", asy
             pages: [
                 {
                     id: pageId,
-                    surface: "control",
                     defaultPath: "/admin/shared",
                     name: `page.${pageId}.name`,
                     document: { html: `<${collectionId}-card></${collectionId}-card>` },
@@ -130,7 +129,6 @@ test("installs only declared public resources from compatible collection depende
         pages: [
             {
                 id: "home",
-                surface: "delivery",
                 defaultPath: "/",
                 name: "page.home.name",
                 document: { html: "<ulvia-official-button></ulvia-official-button>" },
@@ -229,14 +227,14 @@ test("installs only declared public resources from compatible collection depende
     await expect(store.install("types", wrongType.digest, 1)).rejects.toThrow("cannot use color token");
 });
 
-test("rejects imported Blocs that do not support a Page surface", async () => {
+test("admits imported Blocs under the same Page grammar", async () => {
     const store = new CollectionStore(new MemoryCollectionStorage());
     const foundationBase = release("ulvia-official", "1.0.0", "ulvia-official-admin-card");
     const foundationSource = {
         ...foundationBase,
         publisherId: "ulvia.official",
         exports: { blocs: ["ulvia-official-admin-card"], themeTokens: [] },
-        blocs: foundationBase.blocs.map((bloc) => ({ ...bloc, surfaces: ["control"] })),
+        blocs: foundationBase.blocs,
     };
     const consumerBase = release("shop", "1.0.0", "shop-shell");
     const consumerSource = {
@@ -256,7 +254,6 @@ test("rejects imported Blocs that do not support a Page surface", async () => {
         pages: [
             {
                 id: "home",
-                surface: "delivery",
                 defaultPath: "/",
                 name: "page.home.name",
                 document: { html: "<ulvia-official-admin-card></ulvia-official-admin-card>" },
@@ -267,7 +264,7 @@ test("rejects imported Blocs that do not support a Page surface", async () => {
     const foundation = await store.importRelease(foundationSource);
     const consumer = await store.importRelease(consumerSource);
     await store.install("site", foundation.digest, 0);
-    await expect(store.install("site", consumer.digest, 1)).rejects.toThrow("cannot use");
+    await expect(store.install("site", consumer.digest, 1)).resolves.toMatchObject({ revision: 2 });
 });
 
 test("revalidates imported Bloc Page contracts against the installed catalogue", async () => {
@@ -302,7 +299,6 @@ test("revalidates imported Bloc Page contracts against the installed catalogue",
         pages: [
             {
                 id: "home",
-                surface: "delivery",
                 defaultPath: "/",
                 name: "page.home.name",
                 document: { html },

@@ -197,7 +197,7 @@ const PLATFORM_NATIVE_ATTRIBUTES: Readonly<Record<string, ReadonlySet<string>>> 
     aside: new Set(["aria-label"]),
     button: new Set(["type", "disabled", "name", "value", "aria-label"]),
     footer: new Set(["aria-label"]),
-    form: new Set(["autocomplete", "data-cms-success-page-ref"]),
+    form: new Set(["autocomplete", "data-cms-success-page-ref", "data-cms-page-suffix"]),
     header: new Set(["aria-label"]),
     input: new Set([
         "type",
@@ -209,6 +209,7 @@ const PLATFORM_NATIVE_ATTRIBUTES: Readonly<Record<string, ReadonlySet<string>>> 
         "readonly",
         "autocomplete",
         "placeholder",
+        "maxlength",
         "min",
         "max",
         "step",
@@ -266,6 +267,7 @@ export function isSiteBlocNativeStructureTag(tag: string): boolean {
 export function isPlatformNativeAttributeAllowed(tag: string, attribute: string): boolean {
     const normalizedAttribute = attribute.toLowerCase();
     return (
+        normalizedAttribute === "id" ||
         normalizedAttribute === "slot" ||
         PLATFORM_NATIVE_ATTRIBUTES[tag.toLowerCase()]?.has(normalizedAttribute) === true
     );

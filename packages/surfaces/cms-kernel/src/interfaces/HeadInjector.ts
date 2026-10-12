@@ -1,0 +1,23 @@
+/**
+ * Generic extension point for `<head>` content. `renderPage` runs every
+ * registered injector right after `buildHtmlBasics` (and before preloads,
+ * meta tags, stylesheet, deferred scripts) so injectors are guaranteed to
+ * land at the top of <head> in the order they were registered.
+ *
+ * Use cases: A/B testing scripts, observability agents,
+ * `<link rel="preconnect">` to a third-party CDN — anything that needs to
+ * be in <head> but isn't part of Kernel's own render pipeline.
+ *
+ * Injectors mutate the linkedom document in place. They receive the page's
+ * bloc tag list and resolved metadata context. Structured-data injectors can
+ * therefore reuse the exact content/page/site values used by SEO templates.
+ */
+export type HeadInjectorContext = {
+    document: Document;
+    head: HTMLElement;
+    usedTags: readonly string[];
+    metadata: ResolvedPageMetadata;
+};
+
+export type HeadInjector = (ctx: HeadInjectorContext) => void;
+import type { ResolvedPageMetadata } from "cms-kernel/core/seo/pageMetadata";

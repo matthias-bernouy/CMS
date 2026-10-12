@@ -112,7 +112,6 @@ describe("MongoCmsRepository content persistence", () => {
                 page: { kind: "site", pageId: draft!.id },
                 path: "/draft",
                 title: "Draft",
-                surface: "delivery",
             },
         ]);
         await expect(repository.deletePage(draft!.id, draft!.revision)).rejects.toBeInstanceOf(
@@ -121,17 +120,6 @@ describe("MongoCmsRepository content persistence", () => {
         await repository.deletePage(draft!.id, 2);
         expect(await repository.getAllPages()).toEqual([]);
         await expect(repository.updatePage({ title: "Missing id" })).rejects.toThrow(/requires `id`/);
-    });
-
-    test("never publishes Control pages even when their visibility flag is set", async () => {
-        const { repository } = createMongoContentRepository();
-        await repository.insertPage("/admin/private", "Private", "<main>secret</main>", { surface: "control" });
-        const controlPage = (await repository.getPage("/admin/private"))!;
-        await repository.updatePage({ id: controlPage.id, visible: true });
-
-        expect(await repository.getPublishedPage("/admin/private")).toBeNull();
-        expect(await repository.getPublishedPageById(controlPage.id)).toBeNull();
-        expect(await repository.getPublishedPages()).toEqual([]);
     });
 
     test("translates page path duplicate-key errors on insert and update", async () => {

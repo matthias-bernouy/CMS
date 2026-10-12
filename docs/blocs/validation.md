@@ -3,7 +3,7 @@
 The former integration package workflow has been removed. Validate Bloc work
 against the collection release admission, compiler, and workspace checks. The
 current collection format has local and remote immutable publication plus a
-Control/Delivery renderer bridge.
+Kernel renderer bridge.
 
 ## Local loop
 
@@ -14,7 +14,7 @@ bun run ulvia -- dev
 ```
 
 Keep view code independent from the editor. Verify the same saved Light DOM in
-Control preview and Delivery, including keyboard use, narrow layouts, dark mode,
+administration preview and public rendering, including keyboard use, narrow layouts, dark mode,
 loading, empty, error, and long-content states.
 
 ## Compiler checks
@@ -24,7 +24,7 @@ builds the browser runtime bundle. Tag validation rejects native roots and
 reserved or invalid custom-element names.
 Source validation detects selected registration and navigation patterns; it is
 not a complete JavaScript safety analysis. Bundling enforces supported imports
-and validates emitted syntax. The Control import path additionally checks source
+and validates emitted syntax. The collection import path additionally checks source
 bundles, default content and managed native-child structure.
 
 When changing compiler behavior, add a focused test beside
@@ -43,7 +43,7 @@ bun test
 
 `check:all` covers architecture, package exports, repository shape, style, UI
 contracts, and the TypeScript project. The build also verifies the generated
-Control bundle used by the browser.
+Kernel administration bundle used by the browser.
 
 ## Publication status
 
@@ -51,7 +51,7 @@ Use `ulvia release` for explicit authored directories, then `ulvia push` for one
 exact admitted coordinate. Do not restore the removed package repository or
 integration manifests. The receiving repository re-runs collection,
 contract/provider and release-evolution validation before making bytes visible.
-Installation remains a separate Control action, and a live provider conformance
+Installation remains a separate administration action, and a live provider conformance
 runner remains open. There is no mounted private Bloc import route; authored
 collection Blocs use the explicit release pipeline described in
 [authoring](authoring.md).

@@ -36,14 +36,8 @@
         "group": "text.group.components.layout"
     },
     {
-        "id": "ui-control",
-        "label": "text.ui-control.label",
-        "category": "text.category.components",
-        "group": "text.group.components.layout"
-    },
-    {
-        "id": "ui-control-workspace",
-        "label": "text.ui-control-workspace.label",
+        "id": "ui-admin-workspace",
+        "label": "text.ui-admin-workspace.label",
         "category": "text.category.components",
         "group": "text.group.components.layout"
     },

@@ -6,7 +6,6 @@ import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repositor
 const page = {
     id: "overview",
     generation: 1,
-    surface: "control" as const,
     defaultPath: "/admin",
     name: "page.overview.name",
     uses: [],
@@ -110,7 +109,6 @@ test("collection removal cannot orphan an editable Page reference", async () => 
     const artifact = await raw.importRelease(collectionRelease("<main>{{ page.title }}</main>"));
     const sitePage = {
         id: "site-page",
-        surface: "control",
         path: "/admin/site-page",
         content: `<a data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"official","pageId":"overview"}'>Overview</a>`,
     } as never;
@@ -156,7 +154,6 @@ function collectionRelease(html: string) {
             {
                 id: "overview",
                 generation: 1,
-                surface: "control",
                 defaultPath: "/admin",
                 name: "page.overview.name",
                 uses: ["official-page"],

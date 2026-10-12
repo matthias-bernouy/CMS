@@ -9,15 +9,15 @@ page without editing HTML or handling provider credentials.
 
 Starting from an empty local data directory, one administrator can:
 
-1. start CmsCore and discover the Control URL and credentials;
-2. sign in to Control;
-3. create an `Accueil` Delivery Page from the official Landing Page starter;
+1. start CmsCore and discover the Kernel URL and credentials;
+2. sign in to the administration area;
+3. create an `Accueil` Page from the official Landing Page starter;
 4. change the hero heading and add a text section visually;
 5. upload an image to the site's media library;
 6. select the image, provide alternative text and preview the result;
 7. configure `/` and the Page's search metadata;
 8. save a draft and publish that exact revision;
-9. open Delivery and see the published text and image;
+9. open the public URL and see the published text and image;
 10. restart CmsCore and find the same draft, publication and media state.
 
 The administrator must not edit the Page document as raw HTML, provide a Files
@@ -34,7 +34,7 @@ namespace key, select a provider or install a required official dependency.
   required for this journey.
 - An advanced raw-document escape hatch may remain, but it is not the primary
   path and is not used by the acceptance journey.
-- Site media credentials remain server-side. Control receives File references,
+- Site media credentials remain server-side. Administration Pages receive File references,
   upload progress and previews, never a namespace key.
 - Publication targets the last saved revision. Unsaved changes cannot be
   presented as published.
@@ -47,20 +47,20 @@ namespace key, select a provider or install a required official dependency.
 | Checkpoint | Current evidence | State |
 | --- | --- | --- |
 | Fresh local startup and credential discovery | `ulvia dev` and `ulvia dev credentials` | Implemented |
-| Administrator sign-in | Control browser smoke | Implemented |
-| Delivery Page creation | `ulvia.cms.pages/create` through Control | Implemented |
+| Administrator sign-in | Kernel browser smoke | Implemented |
+| Page creation | `ulvia.cms.pages/create` through an administration Page | Implemented |
 | Blank Page creation | New Pages start with an empty document and no implicit Bloc | Implemented |
 | Landing/Content starter selection | No authored starter catalogue is exposed yet | Missing |
 | Visual Bloc insertion and editing | Page editor catalogue, outline, settings, move/duplicate/remove controls and browser smoke | Implemented for top-level Blocs |
-| Site media library and picker | Files provider exists; no site-bound Control workflow exists | Missing |
+| Site media library and picker | Files provider exists; no site-bound administration workflow exists | Missing |
 | Isolated document preview | Current document preview Bloc | Partial |
 | Revision-checked save and publication | Page update and publish capabilities | Implemented |
-| Public Delivery rendering | Browser smoke publishes and opens `/smoke-page` | Implemented |
-| Restart persistence | Browser smoke repeats Control and Delivery reads after restart | Implemented |
+| Public Page rendering | Browser smoke publishes and opens `/smoke-page` | Implemented |
+| Restart persistence | Browser smoke repeats administration and public Page reads after restart | Implemented |
 
 The existing smoke establishes the executable lower bound: it creates a blank
 document, adds and edits a managed Heading through the visual editor, publishes
-it, verifies Delivery and repeats the public read after restart. It must add
+it, verifies public rendering and repeats the public read after restart. It must add
 starter and nested-slot selection next, then add the media journey.
 
 ## Required Failure Behaviour
@@ -78,7 +78,7 @@ starter and nested-slot selection next, then add the media journey.
 ## Completion Gate
 
 The slice is complete when one opt-in browser test performs the entire user
-outcome against a fresh data directory, asserts the public Delivery result,
+outcome against a fresh data directory, asserts the public Page result,
 restarts the stack and asserts it again. The same journey must pass against the
 production container and proxy composition before a product release.
 

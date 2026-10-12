@@ -15,5 +15,5 @@ coordinate several feature ports, project the official wire response and map
 domain failures, but it must not import a runtime or select a persistence
 adapter.
 
-Keep the surface independent from Control and Delivery. Both call Core through
+Keep the surface independent from the site Kernel. It calls Core through
 the normal capability gateway; never add a direct browser or surface shortcut.

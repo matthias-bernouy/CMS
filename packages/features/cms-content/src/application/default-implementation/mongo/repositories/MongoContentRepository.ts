@@ -49,7 +49,6 @@ export class MongoContentRepository extends MongoBlocRepository {
     override async init(): Promise<void> {
         await super.init();
         await this.pages.updateMany({ revision: { $exists: false } }, { $set: { revision: 1 } });
-        await this.pages.updateMany({ surface: { $exists: false } }, { $set: { surface: "delivery" } });
         await this.backfillPageContentReferences();
         for (let attempt = 0; attempt < 20; attempt++) {
             const stored = await readSystemDocument(this.system);
@@ -173,7 +172,7 @@ export class MongoContentRepository extends MongoBlocRepository {
             return null;
         }
         const direct = fromPageDoc(
-            await this.pages.findOne({ path, surface: "delivery", visible: true, deletionIntent: { $exists: false } }),
+            await this.pages.findOne({ path, visible: true, deletionIntent: { $exists: false } }),
         );
         if (direct) {
             return direct;
@@ -186,7 +185,6 @@ export class MongoContentRepository extends MongoBlocRepository {
         return fromPageDoc(
             await this.pages.findOne({
                 _id: id,
-                surface: "delivery",
                 visible: true,
                 deletionIntent: { $exists: false },
             }),
@@ -194,17 +192,14 @@ export class MongoContentRepository extends MongoBlocRepository {
     }
 
     async getPublishedPages(): Promise<TPage[]> {
-        const documents = await this.pages
-            .find({ surface: "delivery", visible: true, deletionIntent: { $exists: false } })
-            .toArray();
+        const documents = await this.pages.find({ visible: true, deletionIntent: { $exists: false } }).toArray();
         return documents.map((document) => fromPageDoc(document)!);
     }
 
     async insertPage(path: string, title: string, content = "", options: PageCreateOptions = {}): Promise<void> {
         return withPageRouteWrite(this.system, async (system) => {
-            const surface = options.surface ?? "delivery";
             const language = system.site.language;
-            const publicPath = surface === "delivery" ? publicPagePath(language, path, language) : path;
+            const publicPath = publicPagePath(language, path, language);
             const id = randomUUIDv7();
             try {
                 await this.pageRoutes.insertOne({
@@ -212,7 +207,7 @@ export class MongoContentRepository extends MongoBlocRepository {
                     state: "current",
                     pageId: id,
                     ownerPageId: id,
-                    language: surface === "delivery" ? language : "",
+                    language,
                     pageInsertToken: id,
                 });
             } catch (error) {
@@ -222,10 +217,9 @@ export class MongoContentRepository extends MongoBlocRepository {
                 await this.pages.insertOne({
                     _id: id,
                     revision: 1,
-                    surface,
                     ...(options.origin ? { origin: structuredClone(options.origin) } : {}),
                     path: publicPath,
-                    ...(surface === "delivery" && language ? { paths: { [language]: path } } : {}),
+                    ...(language ? { paths: { [language]: path } } : {}),
                     title,
                     content,
                     contentReferences: pageContentReferenceKeys(content),
@@ -267,9 +261,6 @@ export class MongoContentRepository extends MongoBlocRepository {
             throw new PagePathUpdateConflictError();
         }
         const existing = fromPageDoc(stored)!;
-        if (rest.surface !== undefined && rest.surface !== existing.surface) {
-            throw new ContentValidationError("surface", "cannot change after Page creation");
-        }
         if (rest.origin !== undefined) {
             throw new ContentValidationError("origin", "cannot change after Page creation");
         }
@@ -366,12 +357,11 @@ export class MongoContentRepository extends MongoBlocRepository {
     }
 
     async getLinks(): Promise<PageLink[]> {
-        const documents = await this.pages.find({}, { projection: { path: 1, title: 1, surface: 1 } }).toArray();
+        const documents = await this.pages.find({}, { projection: { path: 1, title: 1 } }).toArray();
         return documents.map((document) => ({
             page: { kind: "site", pageId: document._id },
             path: document.path,
             title: document.title,
-            surface: document.surface ?? "delivery",
         }));
     }
 

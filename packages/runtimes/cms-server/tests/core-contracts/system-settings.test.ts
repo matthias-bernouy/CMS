@@ -11,7 +11,7 @@ const context = {
     requestId: "00000000-0000-4000-8000-000000000001",
     siteId: "default",
     installationId: "official",
-    origin: "control" as const,
+    origin: "page" as const,
     actorKind: "administrator" as const,
 };
 

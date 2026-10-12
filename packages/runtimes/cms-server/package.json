@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-server",
     "version": "0.1.0",
-    "description": "Production composition root — wires infrastructure and mounts CMS Core, Control and Delivery on dedicated Bun runners.",
+    "description": "Production composition root — wires infrastructure and mounts the CMS kernel and local Core provider.",
     "license": "MIT",
     "private": true,
     "type": "module",
@@ -21,9 +21,8 @@
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-core": "workspace:*",
-        "@bernouy/cms-delivery": "workspace:*",
+        "@bernouy/cms-kernel": "workspace:*",
         "mongodb": "^7.6.0"
     },
     "peerDependencies": {

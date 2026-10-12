@@ -5,9 +5,9 @@ import { sanitizeSvgTree } from "cms-content/blocs/core/markup/security/sanitize
 /**
  * Server-side hardening for stored rich-text/page HTML, applied at write time so
  * the admin editing surface (which loads raw stored content) can't be turned into
- * a self-XSS vector, and as defense-in-depth behind the Delivery render sink.
+ * a self-XSS vector, and as defense-in-depth behind the Kernel render sink.
  *
- * Parses with the same engine and the same `innerHTML` assignment Delivery uses,
+ * Parses with the same engine and the same `innerHTML` assignment the Kernel uses,
  * then runs the shared DOM sanitizer — a real parser, so attribute boundaries and
  * HTML entities are resolved before inspection (no string/regex bypass). See
  * `sanitizeDomTree` for exactly what is stripped.

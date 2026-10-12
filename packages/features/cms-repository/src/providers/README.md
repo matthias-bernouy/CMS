@@ -74,7 +74,7 @@ for wire shapes, intended sequencing, and remaining transport obligations.
 Catalogue publication, manifest comparison, explicit preparation/approval,
 modification, disable/enable/revoke, report observation, full-site planning and
 memory/Mongo storage are implemented. The production runtime adds repository
-imports, a bounded runtime-report probe, secret-store persistence and Control
+imports, a bounded runtime-report probe, secret-store persistence and administration
 routes/UI for importing and approving a connection. See
 [provider workflows](workflows.md) for lifecycle sequencing, optimistic
 revisions and deliberate V1 policies.

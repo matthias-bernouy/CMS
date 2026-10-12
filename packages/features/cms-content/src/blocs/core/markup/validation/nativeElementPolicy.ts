@@ -97,10 +97,21 @@ export function nativeElementAttributesIssue(
     if (tag === "svg") {
         return accessibleSvgIssue(attributes);
     }
-    if ((tag === "a" || tag === "button") && !element.textContent?.trim() && !attributes["aria-label"]?.trim()) {
+    if (
+        (tag === "a" || tag === "button") &&
+        !element.textContent?.trim() &&
+        !attributes["aria-label"]?.trim() &&
+        !containsTemplateSlot(element)
+    ) {
         return `native <${tag}> requires text content or a non-empty aria-label`;
     }
     return null;
+}
+
+function containsTemplateSlot(element: NativePolicyElement): boolean {
+    return Array.from(element.children).some(
+        (child) => child.localName.toLowerCase() === "slot" || containsTemplateSlot(child),
+    );
 }
 
 function nativeAttributesIssue(

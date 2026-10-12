@@ -1,54 +1,38 @@
 import type { CollectionBloc } from "../../../interfaces/CollectionBloc";
-import type { CollectionPage, CollectionPageSurface } from "../../../interfaces/CollectionPage";
+import type { CollectionPage } from "../../../interfaces/CollectionPage";
 import { invalid } from "../../errors";
 import type { CollectionLimits } from "../../limits";
 import { array, identifier, integer, keys, record, string, unique } from "../../values";
 import { capabilityCallKey, parseRequirements } from "../requirements";
-import { parseDefaultPath, parseSurface } from "./document";
+import { parseDefaultPath } from "./document";
 import { validatePageDocument, type PageDocumentValidationResult } from "@bernouy/cms-content/page-document";
 
-/** Parses a bounded Page document for exactly one rendering surface. */
+/** Parses a bounded immutable Page document. */
 export function parseCollectionPages(
     value: unknown,
-    blocSurfaces: ReadonlyMap<string, readonly CollectionPageSurface[]>,
+    availableBlocIds: ReadonlySet<string>,
     limits: Readonly<CollectionLimits>,
     localBlocs: readonly CollectionBloc[] = [],
 ): readonly CollectionPage[] {
     const localById = new Map(localBlocs.map((bloc) => [bloc.id, bloc]));
-    const importedBlocs = new Set([...blocSurfaces.keys()].filter((id) => !localById.has(id)));
+    const importedBlocs = new Set([...availableBlocIds].filter((id) => !localById.has(id)));
     const pages = array(value, limits.maxPages, "$.pages").map((entry, index) => {
         const path = `$.pages[${index}]`;
         const source = record(entry, path);
         keys(
             source,
-            [
-                "id",
-                "generation",
-                "surface",
-                "defaultPath",
-                "name",
-                "icon",
-                "description",
-                "requires",
-                "uses",
-                "document",
-            ],
+            ["id", "generation", "defaultPath", "name", "icon", "description", "requires", "uses", "document"],
             path,
         );
         const id = identifier(source.id, `${path}.id`);
-        const surface = parseSurface(source.surface, `${path}.surface`);
-        const defaultPath = parseDefaultPath(source.defaultPath, surface, `${path}.defaultPath`);
+        const defaultPath = parseDefaultPath(source.defaultPath, `${path}.defaultPath`);
         const document = record(source.document, `${path}.document`);
         keys(document, ["html"], `${path}.document`);
         const authoredHtml = string(document.html, limits.maxMarkupLength, `${path}.document.html`);
         let validated: PageDocumentValidationResult;
         try {
             validated = validatePageDocument(authoredHtml, localBlocs, {
-                surface,
-                unresolvedBlocs: [...importedBlocs].map((blocId) => ({
-                    id: blocId,
-                    surfaces: blocSurfaces.get(blocId),
-                })),
+                unresolvedBlocs: [...importedBlocs].map((id) => ({ id })),
             });
         } catch (error) {
             invalid(error instanceof Error ? error.message : "invalid Page document", `${path}.document.html`);
@@ -61,11 +45,6 @@ export function parseCollectionPages(
             unique(declared, `${path}.uses`);
             if (declared.sort().join("\0") !== uses.join("\0")) {
                 invalid("must exactly match the Blocs referenced by Page HTML", `${path}.uses`);
-            }
-        }
-        for (const blocId of uses) {
-            if (!blocSurfaces.get(blocId)?.includes(surface)) {
-                invalid(`references Bloc ${blocId} outside the ${surface} surface`, `${path}.document.html`);
             }
         }
         const requires = parseRequirements(source.requires, `${path}.requires`, limits);
@@ -91,7 +70,6 @@ export function parseCollectionPages(
                 source.generation === undefined
                     ? 1
                     : integer(source.generation, 1, Number.MAX_SAFE_INTEGER, `${path}.generation`),
-            surface,
             defaultPath,
             name: string(source.name, 128, `${path}.name`),
             ...(source.icon === undefined ? {} : { icon: identifier(source.icon, `${path}.icon`) }),
@@ -108,32 +86,10 @@ export function parseCollectionPages(
         "$.pages",
     );
     unique(
-        pages.map((page) => `${page.surface}:${page.defaultPath}`),
+        pages.map((page) => page.defaultPath),
         "$.pages",
     );
     return pages.sort((left, right) => left.id.localeCompare(right.id));
 }
 
 /** Validates the complete local Bloc closure; imported Blocs are checked when collections are installed together. */
-export function validateLocalPageSurfaces(pages: readonly CollectionPage[], blocs: readonly CollectionBloc[]): void {
-    const byId = new Map(blocs.map((bloc) => [bloc.id, bloc]));
-    for (const [index, page] of pages.entries()) {
-        const seen = new Set<string>();
-        const pending = [...page.uses];
-        while (pending.length > 0) {
-            const id = pending.pop()!;
-            if (seen.has(id)) {
-                continue;
-            }
-            seen.add(id);
-            const bloc = byId.get(id);
-            if (!bloc) {
-                continue;
-            }
-            if (!bloc.surfaces.includes(page.surface)) {
-                invalid(`references Bloc ${id} outside the ${page.surface} surface`, `$.pages[${index}].document.html`);
-            }
-            pending.push(...bloc.uses);
-        }
-    }
-}

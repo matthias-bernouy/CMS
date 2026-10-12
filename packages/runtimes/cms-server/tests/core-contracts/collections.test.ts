@@ -15,7 +15,7 @@ const context = {
     requestId: "00000000-0000-4000-8000-000000000001",
     siteId: "default",
     installationId: "official",
-    origin: "control" as const,
+    origin: "page" as const,
     actorKind: "administrator" as const,
 };
 
@@ -117,7 +117,6 @@ test("collection details expose translated metadata and the installed bloc catal
                                     description: "bloc.card.description",
                                     generation: 2,
                                     internal: false,
-                                    surfaces: ["control", "delivery"],
                                 },
                             ],
                         },
@@ -140,7 +139,6 @@ test("collection details expose translated metadata and the installed bloc catal
                 description: "A reusable card.",
                 generation: 2,
                 internal: false,
-                surfaces: ["control", "delivery"],
             },
         ],
     });

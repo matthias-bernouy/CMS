@@ -34,7 +34,7 @@ export type {
     TPage,
     TPageRef,
 } from "cms-content/pages/interfaces/pages";
-export type { PageDocument, PageSurface } from "cms-content/pages/interfaces/document";
+export type { PageDocument } from "cms-content/pages/interfaces/document";
 export { pageDocument } from "cms-content/pages/interfaces/pages";
 export { MAX_PAGE_CONTENT_LENGTH } from "cms-content/application/core/validation/fields";
 export { readSystemSnapshot } from "cms-content/settings/core/readSystemSnapshot";
@@ -75,9 +75,9 @@ export type {
     PageRouteReader,
     SitePageReference,
     ResolvedPageLink,
-    SurfacePageRoute,
-    SurfacePageRouteRegistration,
-    SurfacePageRouteRegistry,
+    PageRouteRegistration,
+    PageRouteRegistry,
+    RegisteredPageRoute,
 } from "cms-content/pages/interfaces/routing";
 export {
     assertPageContentLinks,
@@ -94,13 +94,12 @@ export {
     withSitePageRoutes,
 } from "cms-content/pages/core/routing/site";
 export {
-    PageLinkSurfaceError,
     PageRouteAlreadyRegisteredError,
     PageRouteCollisionError,
     PageRouteNotFoundError,
     PageRouteRevisionConflictError,
 } from "cms-content/pages/core/routing/errors";
-export { InMemorySurfacePageRouteRegistry } from "cms-content/pages/default-implementation/memory/InMemorySurfacePageRouteRegistry";
+export { InMemoryPageRouteRegistry } from "cms-content/pages/default-implementation/memory/InMemoryPageRouteRegistry";
 export { languagePrefix, localPagePath, publicPagePath } from "cms-content/pages/core/paths/localizedPagePath";
 export { pageSeoForLanguage } from "cms-content/pages/core/lifecycle/pageSeo";
 export type {
@@ -287,10 +286,6 @@ export {
     assertContentRefsExist,
     type ContentRefsReader,
 } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
-export {
-    assertContentSupportsSurface,
-    type ContentSurfaceReader,
-} from "cms-content/blocs/core/markup/validation/assertContentSurface";
 export {
     managedNativeElementIssue,
     type ManagedNativeElementContract,

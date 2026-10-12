@@ -3,4 +3,4 @@
  */
 
 export { MongoCmsRepository } from "cms-content/application/default-implementation/mongo/MongoCmsRepository";
-export { MongoSurfacePageRouteRegistry } from "cms-content/pages/default-implementation/mongo/MongoSurfacePageRouteRegistry";
+export { MongoPageRouteRegistry } from "cms-content/pages/default-implementation/mongo/MongoPageRouteRegistry";

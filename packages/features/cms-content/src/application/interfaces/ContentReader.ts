@@ -22,12 +22,12 @@ export type PublishedRouteResolution =
  * Read-only view of the content aggregate — the subset public rendering
  * needs: no create/update/delete paths and no editorial page reads.
  *
- * Delivery normally addresses rendered pages by path. Stable page identifiers
+ * The Kernel normally addresses rendered Pages by path. Stable Page identifiers
  * remain available for read-only machine contracts that must survive a path
  * change, such as a published-page snapshot.
  *
  * An adapter that wraps the existing `CmsRepository` is the short-term way
- * to satisfy this contract; longer term, Delivery can bypass the admin DB
+ * to satisfy this contract; longer term, the Kernel can bypass the authoring DB
  * entirely and read from a projection (file export, S3 snapshot, etc.).
  */
 export interface ContentReader {

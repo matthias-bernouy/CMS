@@ -1,14 +1,14 @@
 # Page languages and routes
 
-Page content and route persistence belong to `@bernouy/cms-content`; Control
-edits them and Delivery serves the published projection. This guide describes
-that content repository, not the contract/provider `cms-repository` package.
+Page content and route persistence belong to `@bernouy/cms-content`; the Kernel
+edits and renders them. This guide describes that content repository, not the
+contract/provider `cms-repository` package.
 
 One page record owns its content and stable ID. Its `paths` map stores a local
 path for each configured site language. The default language uses the site
 root: `fr: "/about"` becomes `/about`, and `fr: "/"` becomes `/`. Other
 languages add a lowercase prefix: `en: "/about"` becomes `/en/about`. The
-primary `path` field is the default language's public URL used by delivery and
+primary `path` field is the default language's public URL used by rendering and
 route lookups. Content is shared across languages in this version.
 
 The page title and description provide default SEO copy. Optional
@@ -19,7 +19,7 @@ variant.
 
 The underlying repository supports revision-checked path matrices and localized
 SEO. The former `/api/page/seo` route and its static panel have been removed.
-The current `ulvia.cms.pages@1.0.0` Control slice creates a Page, manages its
+The current `ulvia.cms.pages@1.0.0` administration flow creates a Page, manages its
 title, description, content, tags, publication, per-language routes and
 localized SEO, and exposes the admitted Bloc catalogue used by the Page editor.
 All of those flows use versioned capabilities rather than private `/api/*`
@@ -43,7 +43,7 @@ an alternative, those paths return 410 Gone and remain reserved. Route records
 retain their original page owner when deletion redirects to an alternative.
 Gone URLs render the configured Not Found page with HTTP status 410, no
 canonical or `hreflang`, and `noindex`. If no published Not Found page is
-configured, Delivery returns a plain-text fallback with the same status.
+configured, the Kernel returns a plain-text fallback with the same status.
 
 Mongo stores route records in `page_routes`, keyed by the exact public path
 through `_id`. Public resolution uses exact route and page-ID lookups plus
@@ -95,11 +95,11 @@ Dynamic entity URLs add the separate [indexing projection](page-indexing.md).
 See [workspace architecture](../architecture/README.md) for publication and
 read/write facade boundaries.
 
-## Shared surface routes
+## Shared Page routes
 
-Editable site Pages and immutable collection Pages also use a site-scoped
-surface route registry. A route is unique by `(siteId, surface, path)`, so two
-sites may use the same path and Control/Delivery remain separate namespaces.
+Editable site Pages and immutable collection Pages use one site-scoped Page
+route registry. A route is unique by `(siteId, path)`, so two sites may use the
+same path but two Pages in the same site cannot.
 Collection Pages contribute a default path and may retain a site override;
 editable Pages use their own current path. Runtime startup reconciles both
 route sources as one desired graph from canonical Page and collection state.
@@ -108,12 +108,12 @@ and reconciliation is idempotent after an interrupted partial write. The same
 combined reconciliation runs before and after production Page and collection
 mutations, under one per-site in-process coordinator.
 
-Every Page owns exactly one surface. Control mounts both collection-owned and
-site-owned Control Pages through the same document renderer. Stable Page links
-use Page identities rather than stored route strings. Collection admission and
-installation reject missing imported targets and Delivery-to-Control links;
-editable Page writes and runtime activation resolve every current target. A
-Page or collection mutation that would orphan an existing reference is rejected.
+The Kernel mounts collection-owned and site-owned Pages through the same
+document renderer. Stable Page links use Page identities rather than stored
+route strings. Collection admission and installation reject missing imported
+targets; editable Page writes and runtime activation resolve every current
+target. A Page or collection mutation that would orphan an existing reference
+is rejected.
 
 Canonical Page/collection state and its derived route projection are still two
 durable writes. Current single-runtime recovery is deterministic, but a future

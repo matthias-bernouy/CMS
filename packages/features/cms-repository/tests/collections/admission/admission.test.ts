@@ -70,7 +70,6 @@ describe("collection authored bundle admission", () => {
         source.pages = [
             {
                 id: "catalog",
-                surface: "control",
                 defaultPath: "/admin/catalog",
                 name: "page.catalog.name",
                 requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
@@ -79,7 +78,6 @@ describe("collection authored bundle admission", () => {
                 },
             },
         ];
-        await expect(admitCollectionRelease(source)).rejects.toThrow("not a declared setting");
         await expect(admitCollectionRelease(source, [], { contracts })).rejects.toThrow("not a declared setting");
     });
 

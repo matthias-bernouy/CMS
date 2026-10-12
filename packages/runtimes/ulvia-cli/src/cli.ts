@@ -27,8 +27,7 @@ Commands:
 
 Environment:
   ULVIA_DATA_DIR          Absolute persistent data directory override
-  ULVIA_DEV_CONTROL_PORT  Local Control port
-  ULVIA_DEV_DELIVERY_PORT Local Delivery port
+  ULVIA_DEV_KERNEL_PORT   Local Kernel port
   ULVIA_DEV_MONGO_PORT    Local MongoDB port
   ULVIA_DEV_REPOSITORY_PORT Local collection repository port
   ULVIA_REPOSITORY_URL      Default remote repository URL

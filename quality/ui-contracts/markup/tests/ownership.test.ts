@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { inspectMarkup } from "../index";
 import { BINDING_OWNERS } from "../owners";
 
-const component = "packages/surfaces/cms-control/src/components/admin/Example.ts";
+const component = "packages/surfaces/cms-kernel/src/components/admin/Example.ts";
 const script = (content: string, path = component) => inspectMarkup({ path, content, kind: "script", browser: true });
 const html = (content: string, path = component.replace(".ts", ".html")) =>
     inspectMarkup({ path, content, kind: "html", browser: true });
@@ -26,8 +26,8 @@ describe("binding document ownership", () => {
     test("rejects ordinary components even when named preview or shell", () => {
         for (const path of [
             component,
-            "packages/surfaces/cms-control/src/components/Preview.ts",
-            "packages/surfaces/cms-control/src/components/Shell.ts",
+            "packages/surfaces/cms-kernel/src/components/Preview.ts",
+            "packages/surfaces/cms-kernel/src/components/Shell.ts",
         ]) {
             expect(script('document.createElement("cms-binding-core")', path)[0]?.severity).toBe("ERROR");
         }
@@ -77,13 +77,6 @@ describe("binding document ownership", () => {
                 return new Response(\`<!doctype html><html><body><\${CMS_BINDING_CORE_TAG} cms-binding-disabled></\${CMS_BINDING_CORE_TAG}></body></html>\`, { headers: { "Content-Type": "text/html" } });
             }`;
         expect(script(content)[0]).toMatchObject({ rule: "binding-core-owner", severity: "ERROR" });
-        expect(
-            script(content, "packages/surfaces/cms-control/src/core/content/bloc/preview/document.ts")[0],
-        ).toMatchObject({
-            rule: "binding-core-owner",
-            severity: "INFO",
-            message: "Produces an autonomous sandboxed bloc preview document with binding disabled.",
-        });
         expect(
             script('new Example("<cms-binding-core>"); new Response("ok", { statusText: "<cms-binding-core>" });'),
         ).toEqual([]);

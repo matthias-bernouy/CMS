@@ -1,0 +1,15 @@
+{
+    "kind": "component",
+    "id": "ulvia-official-collection-theme",
+    "label": "bloc.collection-theme.label",
+    "description": "bloc.collection-theme.description",
+    "category": "bloc.category.administration",
+    "order": 30,
+    "internal": true,
+    "uses": ["ulvia-official-action", "ulvia-official-select"],
+    "requires": [
+        { "contractId": "ulvia.cms.theme", "capabilityId": "get", "versionRange": "^1.0.0" },
+        { "contractId": "ulvia.cms.theme", "capabilityId": "save", "versionRange": "^1.0.0" }
+    ],
+    "slots": {}
+}

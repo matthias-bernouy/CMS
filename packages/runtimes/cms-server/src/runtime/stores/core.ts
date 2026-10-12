@@ -19,7 +19,7 @@ import {
     MongoUsersRepository,
 } from "@bernouy/cms-auth/mongo";
 import { ValidatingCmsRepository } from "@bernouy/cms-content";
-import { MongoCmsRepository, MongoSurfacePageRouteRegistry } from "@bernouy/cms-content/mongo";
+import { MongoCmsRepository, MongoPageRouteRegistry } from "@bernouy/cms-content/mongo";
 import { MongoCollectionMigrationStorage } from "@bernouy/cms-repository/collections/mongo";
 import { createFieldCrypto } from "@bernouy/envelope-crypto/mongo";
 import { InMemoryCache } from "@bernouy/http-runner";
@@ -55,7 +55,7 @@ export async function createCoreStores(env: RuntimeEnv) {
     const collectionStorage = new MongoCollectionStorage(db);
     await collectionStorage.init();
     const rawCollections = new CollectionStore(collectionStorage, new MongoReleaseCatalogue(db));
-    const pageRoutes = new MongoSurfacePageRouteRegistry(db);
+    const pageRoutes = new MongoPageRouteRegistry(db);
     const pageRouteMutations = new PageRouteMutationCoordinator();
     await synchronizePageRoutes(
         pageRoutes,
@@ -103,7 +103,7 @@ export async function createCoreStores(env: RuntimeEnv) {
         store: providerFilesStore,
         blobs: providerBlobs,
         signingKey,
-        publicBaseUrl: env.DELIVERY_PUBLIC_URL,
+        publicBaseUrl: env.KERNEL_PUBLIC_URL,
         derivatives: new CmsImageDerivatives({
             store: providerFilesStore,
             blobs: providerBlobs,

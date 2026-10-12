@@ -1,6 +1,6 @@
 # Collections
 
-Control exposes private site collections, compiled code blocs, and immutable
+Administration Pages expose private site collections, compiled code Blocs, and immutable
 collections installed from a repository. Private compositions are editable;
 installed blocs are read-only and can be placed on pages.
 
@@ -26,7 +26,7 @@ packages/official-repository/collections/ulvia-official/
 ├── theme/definition.json    # ordered theme category IDs
 ├── theme/**/*.json          # recursively organized category/token defaults
 ├── definitions/             # reserved for later collection definitions
-├── pages/**/<page>/definition.json  # Page identity, surface, default route and requirements
+├── pages/**/<page>/definition.json  # Page identity, default route and requirements
 └── pages/**/<page>/page.html   # immutable collection Page document
 ```
 
@@ -63,7 +63,7 @@ the receiving repository re-runs admission, dependency and SemVer/generation
 checks while holding its write lock. `yank` hides a release from new catalogue
 resolution without deleting historical bytes, and `restore` reverses it. The
 current release format does not install the `definitions/` directory. No direct
-collection JSON upload is available in Control.
+collection JSON upload is available in the administration UI.
 
 ### Collection admission limits
 
@@ -116,7 +116,7 @@ Their template is shared across every page using the installed release; an
 upgrade changes every rendering. Named `<slot>` elements in `lightdom.html`
 accept page-owned children, optionally initialized from `default.html`.
 For a component with both DOM layers, its host remains and its fixed Light DOM
-children project into the Shadow DOM slots. For a composition alone, Delivery
+children project into the Shadow DOM slots. For a composition alone, the Kernel
 replaces the temporary host with the expanded template.
 Admission forbids inline `style` attributes everywhere, permits `class` only
 inside Shadow DOM, and permits bindings only inside Light DOM. Shadow shells
@@ -224,7 +224,7 @@ Long or formatted editorial content does not belong in a string setting. Use a
 page-owned rich-text slot instead. `media-picker` remains a setting control for
 configuration such as a background or poster; it is not a Page slot contract.
 
-Control uses the shared capability transport for collection administration:
+The Kernel uses the shared capability transport for collection administration:
 `ulvia.cms.collections/catalogue` lists configured sources and immutable release
 metadata, while `install`, `upgrade` and `update-configuration` perform
 revision-checked mutations. The Core fetches releases server-side, validates
@@ -260,7 +260,7 @@ Bloc, rename/add/remove/map a setting, rename a theme token, move/add/remove/map
 a configuration value, and rename or remove a text override. Arbitrary
 JavaScript migration code is not accepted.
 
-Control exposes administrator-only `plan-migration`, `apply-migration`,
+Administration Pages expose administrator-only `plan-migration`, `apply-migration`,
 `get-migration`, `migration-status`, `resume-migration` and `rollback-migration`
 capabilities through `ulvia.cms.collections`. Durable asynchronous work is
 listed and inspected through `ulvia.cms.jobs`. Planning validates the complete target collection graph,
@@ -280,7 +280,7 @@ Execution then:
 5. rewrites affected pages with compare-and-swap revisions;
 6. validates the result and commits the transformed site theme.
 
-Delivery returns `503` with `Retry-After` while a migration is active. Control
+The Kernel returns `503` with `Retry-After` while a migration is active. Administration Pages
 keeps reads and migration recovery available, but ordinary writes return `423`.
 A failed run stays in maintenance until it is resumed or rolled back. Rollback
 is rejected if committed collections or migrated pages changed afterward. Page
@@ -308,11 +308,11 @@ encoded in these routes:
 
 The theme workspace projects installed collection tokens into the shared site
 theme. The collection owns token definitions and defaults; the site may edit
-token values. Delivery includes the resulting CSS variables in its public
+token values. The Kernel includes the resulting CSS variables in its public
 stylesheet. The Texts workspace groups translations by category and group and
 persists site overrides. Each text definition must provide translated `label`,
 `category` and `group` metadata; release admission rejects missing fields or
-default-locale catalogue entries. Delivery replaces `cms.i18n` expressions on the server
+default-locale catalogue entries. The Kernel replaces `cms.i18n` expressions on the server
 after expanding installed compositions. Catalogue values are static; dynamic
 parameters and plural forms are not collection text features.
 Collection admission rejects hardcoded visible and accessible copy in Bloc
@@ -324,13 +324,13 @@ routes, IDs, roles, field names and other technical attributes stay literal.
 `ulvia.cms.localization/overview`, `get-texts` and `save-texts` expose languages
 and revision-checked collection text overrides. `ulvia.cms.theme/get` and `save`
 expose the composed site theme and its revision-checked values. All calls use
-`POST <basePath>/.cms/call/<contract>/<capability>` from an activated Control Page
+`POST <basePath>/.cms/call/<contract>/<capability>` from an activated administration Page
 execution plan.
 
 ## Site-Owned Blocs
 
 `cms-content` retains revisioned site-owned Bloc and Bloc-group domain
-APIs because a future editor will need them. Control does not currently mount a
+APIs because a future editor will need them. The Kernel does not currently mount a
 private Bloc catalogue, import or editing transport. They must not be treated as
 an alternative collection publication path: installable reusable Blocs come
 from exact immutable collection releases.
@@ -340,7 +340,7 @@ from exact immutable collection releases.
 The installed-collection bridge renders compositions and Shadow components,
 including fixed Light DOM, named slots and initial page content. Verified asset
 bytes and revision-checked collection configuration are implemented. The store
-can remove a collection after checking installed dependants, but Control does not
+can remove a collection after checking installed dependants, but the administration UI does not
 expose removal until it can also report affected pages, private Blocs, theme
 references and collection Pages. Remote repository transfer and authenticated
 publication are implemented by the CLI and filesystem reference repository.
@@ -350,7 +350,7 @@ JavaScript trust scanning is also separate; migration files
 themselves are data-only. Collection Pages can contain local or explicitly
 imported Blocs, and the renderer can expand compositions, load transitive
 component runtimes, resolve collection texts and public assets, and apply the
-site theme. Control mounts their navigation and route activation flow. The
+site theme. The Kernel mounts their navigation and route activation flow. The
 execution-plan API pins the collection digest, Page generation,
 provider-selection revision, contract release digest and installation for each
 call. A source adapter exists

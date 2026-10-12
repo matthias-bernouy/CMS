@@ -12,7 +12,7 @@ export type GatewayActor =
     | { readonly kind: "provider"; readonly installationId: string }
     | { readonly kind: "system"; readonly serviceId: string };
 
-export type GatewayOrigin = "delivery" | "page" | "control" | "provider" | "system" | "conformance";
+export type GatewayOrigin = "page" | "provider" | "system" | "conformance";
 
 export interface GatewayInvocation {
     readonly siteId: string;

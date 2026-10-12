@@ -3,7 +3,6 @@ import type { CollectionStore } from "@bernouy/cms-repository/collections/instal
 import { replaceCollectionTextExpressions } from "@bernouy/cms-repository/collections/texts";
 import type { CmsRepository } from "@bernouy/cms-content";
 import { assertContentRefsExist } from "@bernouy/cms-content/page-document";
-import { assertContentSupportsSurface } from "@bernouy/cms-content/page-document";
 import type { CollectionMigrationParticipant, CollectionMigrationRecord } from "../interfaces";
 import { snapshotMigrationParticipants } from "../planning/participants";
 import { referencesThemeToken } from "../transforms/themeTokenReferences";
@@ -112,7 +111,6 @@ async function assertProspectivePagesValid(
         release.blocs.map((bloc) => ({
             id: bloc.id,
             slots: bloc.slots,
-            surfaces: bloc.surfaces,
             uses: bloc.uses,
             ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
             ...(bloc.kind === "component" && bloc.lightdom ? { componentHTML: bloc.lightdom } : {}),
@@ -151,7 +149,6 @@ async function assertProspectivePagesValid(
                     getBlocViewJS: (tag: string) => context.repository.getBlocViewJS(tag),
                 };
                 await assertContentRefsExist(prospectiveRepository, content);
-                await assertContentSupportsSurface(prospectiveRepository, content, page.surface);
                 for (const tokenId of removedTokens) {
                     if (referencesThemeToken(content, tokenId)) {
                         throw new Error(`references theme token ${tokenId}`);

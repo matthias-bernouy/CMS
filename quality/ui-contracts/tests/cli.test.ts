@@ -27,9 +27,9 @@ test("CLI audits imported browser helpers, reports real violations, and fails cl
         const empty = await run();
         expect(empty.code).toBe(2);
         expect(empty.stderr).toBeTruthy();
-        const pkg = "packages/surfaces/cms-control";
-        await write(`${pkg}/package.json`, '{"name":"@bernouy/cms-control"}');
-        await write(`${pkg}/src/components/View.ts`, 'import { load } from "cms-control/core/data"; load();');
+        const pkg = "packages/surfaces/cms-kernel";
+        await write(`${pkg}/package.json`, '{"name":"@bernouy/cms-kernel"}');
+        await write(`${pkg}/src/components/View.ts`, 'import { load } from "cms-kernel/core/data"; load();');
         await write(`${pkg}/src/core/data.ts`, 'export const load = () => fetch("/api/items");');
         await write(`${pkg}/src/core/server.ts`, 'fetch("https://provider.test");');
         const template = `${pkg}/src/components/view.html`;

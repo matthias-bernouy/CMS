@@ -51,12 +51,10 @@ export function createProductionGatewayAccess(
                 route.selection.contractId,
                 route.installation.installation.id,
             ))) ||
-        (origin === "delivery" &&
+        (origin === "page" &&
             (capability.access === "public" ||
-                (capability.access === "authenticated" &&
-                    (actor.kind === "user" || actor.kind === "administrator")))) ||
-        (origin === "page" && (actor.kind === "user" || actor.kind === "administrator")) ||
-        (origin === "control" && actor.kind === "administrator");
+                (capability.access === "authenticated" && (actor.kind === "user" || actor.kind === "administrator")) ||
+                (capability.access === "admin" && actor.kind === "administrator")));
 
     const providerMayCall = async (
         installationId: string,

@@ -14,7 +14,6 @@ export type {
     PageRichTextProfile,
     PageSlot,
     PageSlotAccept,
-    PageSurface,
 } from "cms-content/pages/interfaces/document";
 export {
     validateBlocContentMarkup,
@@ -34,7 +33,6 @@ export {
     type BlocDocumentValidationResult,
 } from "cms-content/blocs/core/markup/validation/documents/blocDocument";
 export { assertContentRefsExist } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
-export { assertContentSupportsSurface } from "cms-content/blocs/core/markup/validation/assertContentSurface";
 export { isUserFacingTextAttribute } from "cms-content/pages/core/rendering/userFacingTextAttributes";
 export {
     pageBlocHostAttributesIssue,

@@ -155,7 +155,7 @@ test("HTTP target construction never exposes provider credential references", as
         capability,
         binding,
         input: { term: "a b" },
-        invocationOrigin: "delivery",
+        invocationOrigin: "system",
         actorKind: "anonymous",
     });
     expect(prepared.pathAndQuery).toBe("/v1/items?term=a%20b");
@@ -179,8 +179,8 @@ function gatewayFor(
 function options(invoker: CapabilityGateway) {
     return {
         siteId: "site-a",
-        origin: "delivery" as const,
-        actor: { kind: "anonymous" as const },
+        origin: "system" as const,
+        actor: { kind: "system" as const, serviceId: "http-test" },
         prefix: "/.cms/call",
         invoker,
     };

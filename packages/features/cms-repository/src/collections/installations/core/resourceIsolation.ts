@@ -4,7 +4,7 @@ import { DEFAULT_COLLECTION_LIMITS } from "../../core/limits";
 import { validateMarkup } from "../../core/validation/markup/validateMarkup";
 import { satisfiesVersionRange } from "../../../exports/contracts/compatibility";
 import type { CollectionInstallation, CollectionStorage } from "../interfaces/store";
-import { assertCompatibleSurface, pageReferences, pageReferenceSources } from "../../core/parsing/pages/references";
+import { pageReferences, pageReferenceSources } from "../../core/parsing/pages/references";
 import { validatePageDocument } from "@bernouy/cms-content/page-document";
 
 export async function assertInstallableCollectionResources(
@@ -36,11 +36,10 @@ export function assertCollectionResourceIsolation(releases: readonly CollectionR
             assertUnique(themeTokens, collectionThemeTokenId(release.collectionId, token.id), "theme token");
         }
         for (const page of release.pages ?? []) {
-            assertUnique(pagePaths, `${page.surface}:${page.defaultPath}`, "Page default path");
+            assertUnique(pagePaths, page.defaultPath, "Page default path");
         }
     }
     assertCollectionDependencies(releases);
-    validatePageBlocSurfaces(releases);
     validateInstalledPageDocuments(releases);
     validateInstalledPageReferences(releases);
     validateMarkup(
@@ -55,7 +54,7 @@ function validateInstalledPageDocuments(releases: readonly CollectionRelease[]):
         for (const page of release.pages ?? []) {
             const path = `Collection Page ${release.collectionId}.${page.id}`;
             try {
-                validatePageDocument(page.document.html, blocs, { surface: page.surface });
+                validatePageDocument(page.document.html, blocs);
             } catch (error) {
                 reject(`${path} is invalid: ${error instanceof Error ? error.message : "invalid Page document"}`);
             }
@@ -84,13 +83,6 @@ function validateInstalledPageReferences(releases: readonly CollectionRelease[])
                         `Collection Page ${release.collectionId}.${page.id} references unavailable Page ${reference.contributionId}.${reference.pageId}`,
                     );
                 }
-                assertCompatibleSurface(
-                    page.surface,
-                    target.page.surface,
-                    release.collectionId,
-                    page.id,
-                    reference.pageId,
-                );
             }
         }
     }
@@ -171,33 +163,6 @@ function validateDependencies(release: CollectionRelease, byId: ReadonlyMap<stri
         }
     }
     validateImportedThemeTypes(release, byId);
-}
-
-function validatePageBlocSurfaces(releases: readonly CollectionRelease[]): void {
-    const blocs = new Map(releases.flatMap((release) => release.blocs.map((bloc) => [bloc.id, bloc] as const)));
-    for (const release of releases) {
-        for (const page of release.pages ?? []) {
-            const pending = [...page.uses];
-            const seen = new Set<string>();
-            while (pending.length > 0) {
-                const id = pending.pop()!;
-                if (seen.has(id)) {
-                    continue;
-                }
-                seen.add(id);
-                const bloc = blocs.get(id);
-                if (!bloc) {
-                    reject(`Collection page ${release.collectionId}.${page.id} references unavailable bloc ${id}`);
-                }
-                if (!bloc.surfaces.includes(page.surface)) {
-                    reject(
-                        `Collection page ${release.collectionId}.${page.id} cannot use ${id} on the ${page.surface} surface`,
-                    );
-                }
-                pending.push(...bloc.uses);
-            }
-        }
-    }
 }
 
 function validateImportedThemeTypes(release: CollectionRelease, byId: ReadonlyMap<string, CollectionRelease>): void {

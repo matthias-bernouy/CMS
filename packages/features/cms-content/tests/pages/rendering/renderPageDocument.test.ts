@@ -3,7 +3,7 @@ import { parseHTML } from "linkedom";
 import { renderPageDocument } from "@bernouy/cms-content/rendering";
 
 describe("renderPageDocument", () => {
-    test("composes and hardens the same Page document for either surface", async () => {
+    test("composes and hardens the Page document", async () => {
         const { document } = parseHTML("<html><body></body></html>");
         const rendered = await renderPageDocument(
             document.body,

@@ -38,7 +38,7 @@ export async function validateBlocArtifact(repository: BlocCatalogueReader, valu
 }
 
 function pageDocumentContract(
-    bloc: Pick<TBloc, "id" | "compositionHTML" | "nativeElement" | "settings" | "slots" | "surfaces">,
+    bloc: Pick<TBloc, "id" | "compositionHTML" | "nativeElement" | "settings" | "slots">,
 ): PageDocumentBlocContract {
     return {
         id: bloc.id,
@@ -46,6 +46,5 @@ function pageDocumentContract(
         slots: bloc.slots ?? {},
         ...(bloc.nativeElement === undefined ? {} : { nativeElement: bloc.nativeElement }),
         ...(bloc.settings === undefined ? {} : { settings: bloc.settings }),
-        ...(bloc.surfaces === undefined ? {} : { surfaces: bloc.surfaces }),
     };
 }

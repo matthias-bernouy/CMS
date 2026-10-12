@@ -37,7 +37,7 @@ services:
         volumes:
             - /var/run/docker.sock:/tmp/docker.sock:ro
             # Raise the default 1 MB upload cap (else large media/PDF uploads
-            # to the Control admin get nginx 413 before reaching the app).
+            # to the administration area get nginx 413 before reaching the app).
             # http-level directive → applies to every vhost.
             - ./nginx-conf.d/client_max_body.conf:/etc/nginx/conf.d/zzz_client_max_body.conf:ro
             - ./nginx-conf.d/capability-cache.conf:/etc/nginx/conf.d/zzz_capability_cache.conf:ro

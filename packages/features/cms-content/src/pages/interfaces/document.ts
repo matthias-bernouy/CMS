@@ -1,6 +1,3 @@
-/** Rendering and authorization boundary shared by every authored Page. */
-export type PageSurface = "control" | "delivery";
-
 /** Surface-neutral authored Page document. */
 export interface PageDocument {
     readonly html: string;

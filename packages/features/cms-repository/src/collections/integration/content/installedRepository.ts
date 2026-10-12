@@ -73,7 +73,6 @@ export function withInstalledCollections(
                                     ? resolveCollectionTranslation(release, bloc.description)
                                     : "",
                                 ownership: { kind: "code-managed" },
-                                surfaces: bloc.surfaces,
                                 uses: bloc.uses,
                                 viewJS:
                                     bloc.kind === "component"
@@ -137,7 +136,7 @@ export function withInstalledCollections(
             return {
                 revision: snapshot.revision,
                 pages: snapshot.collections.flatMap(({ release }) =>
-                    (release.pages ?? []).map((page) => ({ surface: page.surface, document: page.document })),
+                    (release.pages ?? []).map((page) => ({ document: page.document })),
                 ),
                 texts: snapshot.collections.map(({ release, textOverrides }) =>
                     projectCollectionTextSource({ collection: release, overrides: textOverrides }),

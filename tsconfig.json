@@ -38,10 +38,7 @@
             "path": "packages/features/cms-gateway"
         },
         {
-            "path": "packages/surfaces/cms-delivery"
-        },
-        {
-            "path": "packages/surfaces/cms-control"
+            "path": "packages/surfaces/cms-kernel"
         },
         {
             "path": "packages/surfaces/cms-core"

@@ -1,0 +1,8 @@
+{
+    "id": "overview",
+    "defaultPath": "/admin",
+    "name": "page.overview.name",
+    "icon": "pages",
+    "description": "page.overview.description",
+    "requires": []
+}

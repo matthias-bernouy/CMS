@@ -13,13 +13,10 @@ import { parseRuntimeKekConfig, type RuntimeKekConfig } from "./runtimeEnvKek";
 export { parsePort } from "./runtimeEnvParsing";
 
 export type RuntimeEnv = {
-    CONTROL_PORT: number;
-    DELIVERY_PORT: number;
-    CONTROL_HOST: string;
-    DELIVERY_HOST: string;
+    KERNEL_PORT: number;
+    KERNEL_HOST: string;
     CORE_PORT?: number;
-    CONTROL_PUBLIC_URL: string;
-    DELIVERY_PUBLIC_URL: string;
+    KERNEL_PUBLIC_URL: string;
     CORE_PUBLIC_URL?: string;
     CMS_SESSION_SECRET: string;
     CMS_KEK_HEX?: string;
@@ -36,21 +33,13 @@ export type RuntimeEnv = {
     CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: number;
     CMS_AUTH_EMAIL_VERIFICATION_URL: string;
     CMS_AUTH_PASSWORD_RESET_URL: string;
-    CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL: string;
-    CMS_CONTROL_AUTH_PASSWORD_RESET_URL: string;
     CMS_HTTP_CLIENT_ADDRESS_MODE: "direct" | "disabled" | "trusted-proxy";
     CMS_HTTP_TRUSTED_PROXY_HOPS: number;
 };
 
 export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
-    const CONTROL_PORT = parsePort(source.CONTROL_PORT, "CONTROL_PORT", 3000);
-    const DELIVERY_PORT = parsePort(source.DELIVERY_PORT, "DELIVERY_PORT", 3001);
-    if (CONTROL_PORT === DELIVERY_PORT) {
-        throw new Error("CONTROL_PORT and DELIVERY_PORT must be distinct");
-    }
-
-    const CONTROL_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "CONTROL_PUBLIC_URL"), "CONTROL_PUBLIC_URL");
-    const DELIVERY_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "DELIVERY_PUBLIC_URL"), "DELIVERY_PUBLIC_URL");
+    const KERNEL_PORT = parsePort(source.KERNEL_PORT, "KERNEL_PORT", 3000);
+    const KERNEL_PUBLIC_URL = parseHttpUrl(requiredEnv(source, "KERNEL_PUBLIC_URL"), "KERNEL_PUBLIC_URL");
     const clientAddress = parseClientAddressConfig(source);
     const kek = parseRuntimeKekConfig(source);
     const migrationRetention = parseNonNegativeInteger(
@@ -61,16 +50,13 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     if (migrationRetention > 10_000) {
         throw new Error("CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION must be at most 10000");
     }
-    const coreConfiguration = parseCoreProviderConfig(source, CONTROL_PORT, DELIVERY_PORT);
+    const coreConfiguration = parseCoreProviderConfig(source, KERNEL_PORT);
 
     return {
-        CONTROL_PORT,
-        DELIVERY_PORT,
-        CONTROL_HOST: parseListenerHost(source.CONTROL_HOST, "CONTROL_HOST"),
-        DELIVERY_HOST: parseListenerHost(source.DELIVERY_HOST, "DELIVERY_HOST"),
+        KERNEL_PORT,
+        KERNEL_HOST: parseListenerHost(source.KERNEL_HOST, "KERNEL_HOST"),
         ...coreConfiguration,
-        CONTROL_PUBLIC_URL,
-        DELIVERY_PUBLIC_URL,
+        KERNEL_PUBLIC_URL,
         CMS_SESSION_SECRET: requiredEnv(source, "CMS_SESSION_SECRET"),
         ...(kek.keysHex.legacy ? { CMS_KEK_HEX: kek.keysHex.legacy } : {}),
         CMS_KEK: kek,
@@ -96,22 +82,12 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
         CMS_AUTH_EMAIL_VERIFICATION_URL: parseOptionalHttpUrl(
             source.CMS_AUTH_EMAIL_VERIFICATION_URL,
             "CMS_AUTH_EMAIL_VERIFICATION_URL",
-            `${DELIVERY_PUBLIC_URL}/auth/confirm-email`,
+            `${KERNEL_PUBLIC_URL}/auth/confirm-email`,
         ),
         CMS_AUTH_PASSWORD_RESET_URL: parseOptionalHttpUrl(
             source.CMS_AUTH_PASSWORD_RESET_URL,
             "CMS_AUTH_PASSWORD_RESET_URL",
-            `${DELIVERY_PUBLIC_URL}/auth/reset-password`,
-        ),
-        CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL: parseOptionalHttpUrl(
-            source.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
-            "CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL",
-            `${CONTROL_PUBLIC_URL}/auth/verify-email`,
-        ),
-        CMS_CONTROL_AUTH_PASSWORD_RESET_URL: parseOptionalHttpUrl(
-            source.CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
-            "CMS_CONTROL_AUTH_PASSWORD_RESET_URL",
-            `${CONTROL_PUBLIC_URL}/auth/reset-password`,
+            `${KERNEL_PUBLIC_URL}/auth/reset-password`,
         ),
         ...clientAddress,
     };
@@ -132,8 +108,7 @@ function parseListenerHost(raw: string | undefined, name: string): string {
 
 function parseCoreProviderConfig(
     source: RuntimeEnvSource,
-    controlPort: number,
-    deliveryPort: number,
+    kernelPort: number,
 ): Pick<RuntimeEnv, "CORE_PORT" | "CORE_PUBLIC_URL" | "CMS_CORE_PROVIDER_TOKEN"> {
     const configured = [source.CORE_PORT, source.CORE_PUBLIC_URL, source.CMS_CORE_PROVIDER_TOKEN].map((value) =>
         Boolean(value?.trim()),
@@ -148,8 +123,8 @@ function parseCoreProviderConfig(
         throw new Error("CMS Core provider bootstrap requires CMS_REPOSITORY_URL and CMS_GATEWAY_SITE_ID");
     }
     const CORE_PORT = parsePort(source.CORE_PORT, "CORE_PORT", 5103);
-    if (CORE_PORT === controlPort || CORE_PORT === deliveryPort) {
-        throw new Error("CORE_PORT, CONTROL_PORT and DELIVERY_PORT must be distinct");
+    if (CORE_PORT === kernelPort) {
+        throw new Error("CORE_PORT and KERNEL_PORT must be distinct");
     }
     const token = source.CMS_CORE_PROVIDER_TOKEN!.trim();
     if (token.length < 24 || token.length > 512 || /[\r\n]/u.test(token)) {

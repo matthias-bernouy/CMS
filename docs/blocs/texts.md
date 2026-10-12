@@ -38,9 +38,9 @@ site overrides and repository transport do not depend on the source layout.
 
 `@bernouy/cms-repository/collections/texts` provides pure parsing and locale
 resolution. `@bernouy/cms-content/rendering` provides the shared
-server DOM pass `renderCollectionTexts(root, locale, sources)`. Delivery runs
+server DOM pass `renderCollectionTexts(root, locale, sources)`. The Kernel runs
 this pass after composition expansion, before serializing and caching HTML.
-The same helper renders installed Control Pages.
+The same helper renders installed administration Pages.
 
 Templates reserve the `cms` root for server-owned expressions:
 
@@ -101,13 +101,13 @@ not HTML or an ICU message grammar.
 
 The runtime persists immutable collection releases and revisioned site installations
 in MongoDB. `createContentReader` exposes installed public text catalogues with
-site overrides and a collection revision. Delivery loads them on render, includes
-the revision in its page-cache keys and requests HTTP revalidation. Control
-invalidates cached pages after saving translations. The static
-`DeliveryCmsConfig.collectionTexts` option remains available for readers without
+site overrides and a collection revision. The Kernel loads them on render,
+includes the revision in its Page-cache keys and requests HTTP revalidation. It
+invalidates cached Pages after saving translations. The static
+`KernelCmsConfig.collectionTexts` option remains available for readers without
 an installed-catalogue implementation.
 
-The official Settings Control Page includes a working Texts editor: category sections contain
+The official Settings administration Page includes a working Texts editor: category sections contain
 groups, each displaying a table with Key, Label, immutable default-language value
 and editable selected-language value. Every definition must declare `category`,
 `group` and `label`; `description` is optional. These fields are keys in the

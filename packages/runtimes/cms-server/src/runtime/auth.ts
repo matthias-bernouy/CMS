@@ -49,7 +49,7 @@ export async function createProductionAuth(env: RuntimeEnv, stores: CoreStores) 
         pats: stores.pats,
         rateLimit: stores.rateLimit,
         cookieName: "cms-session",
-        cookieSecure: env.CONTROL_PUBLIC_URL.startsWith("https"),
+        cookieSecure: env.KERNEL_PUBLIC_URL.startsWith("https"),
         defaultHome: "/admin",
     });
     const publicAuthBase = {
@@ -72,11 +72,11 @@ export async function createProductionAuth(env: RuntimeEnv, stores: CoreStores) 
         createPublicAuth(options: { emailVerificationUrl: string; passwordResetUrl: string; allowSignup?: boolean }) {
             return { ...createPublicAuthActions({ ...publicAuthBase, ...options }), allowSignup: options.allowSignup };
         },
-        createControlEmailTest: () =>
+        createEmailTest: () =>
             createAuthEmailTestSender({
                 ...publicAuthBase,
-                emailVerificationUrl: env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
-                passwordResetUrl: env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
+                emailVerificationUrl: env.CMS_AUTH_EMAIL_VERIFICATION_URL,
+                passwordResetUrl: env.CMS_AUTH_PASSWORD_RESET_URL,
             }),
     };
 }

@@ -2,7 +2,7 @@ import type { CollectionStore, InstalledCollection } from "@bernouy/cms-reposito
 import {
     PageRouteMutationCoordinator,
     synchronizePageRouteRegistrations,
-    type SurfacePageRouteRegistry,
+    type PageRouteRegistry,
     type TPage,
 } from "@bernouy/cms-content";
 import { validateCollectionMutationPageLinks } from "./routeMutationValidation";
@@ -11,7 +11,7 @@ type CollectionSnapshot = { readonly revision: number; readonly collections: rea
 
 /** Rebuilds the complete route projection from installed and site-owned Pages. */
 export async function synchronizePageRoutes(
-    routes: SurfacePageRouteRegistry,
+    routes: PageRouteRegistry,
     siteId: string,
     collections: CollectionSnapshot,
     sitePages: readonly TPage[],
@@ -20,7 +20,6 @@ export async function synchronizePageRoutes(
         ...desiredRoutes(collections.collections),
         ...sitePages.map((page) => ({
             page: { kind: "site" as const, pageId: page.id },
-            surface: page.surface,
             defaultPath: page.path,
         })),
     ];
@@ -39,7 +38,7 @@ const ROUTE_MUTATIONS = new Set([
 /** Keeps collection-owned Page routes synchronized outside request handling. */
 export function withCollectionPageRoutes(
     store: CollectionStore,
-    routes: SurfacePageRouteRegistry,
+    routes: PageRouteRegistry,
     options: {
         readonly coordinator?: PageRouteMutationCoordinator;
         readonly getSitePages?: () => Promise<readonly TPage[]>;
@@ -86,7 +85,7 @@ export function withCollectionPageRoutes(
 
 /** Reconciles the complete installed collection snapshot and removes orphaned collection routes. */
 export async function synchronizeCollectionPageRoutes(
-    routes: SurfacePageRouteRegistry,
+    routes: PageRouteRegistry,
     siteId: string,
     snapshot: CollectionSnapshot,
 ): Promise<void> {
@@ -103,7 +102,6 @@ function desiredRoutes(collections: readonly InstalledCollection[]) {
                 contributionId: installation.collectionId,
                 pageId: page.id,
             },
-            surface: page.surface,
             defaultPath: page.defaultPath,
         })),
     );

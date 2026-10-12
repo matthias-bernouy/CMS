@@ -1,6 +1,6 @@
 {
     "id": "editor-catalogue",
-    "description": "List the author-visible Blocs and bounded insertion metadata available to one Page surface.",
+    "description": "List the author-visible Blocs and bounded insertion metadata available to Pages.",
     "access": "admin",
     "behavior": {
         "effect": "query",
@@ -8,19 +8,8 @@
     },
     "input": {
         "type": "object",
-        "properties": {
-            "surface": {
-                "type": "string",
-                "enum": [
-                    "control",
-                    "delivery"
-                ],
-                "maxLength": 8
-            }
-        },
-        "required": [
-            "surface"
-        ]
+        "properties": {},
+        "required": []
     },
     "output": {
         "type": "object",
@@ -105,9 +94,7 @@
         "transport": "http",
         "method": "POST",
         "path": "/editor-catalogue",
-        "input": {
-            "body": true
-        },
+        "input": {},
         "response": {
             "successStatuses": [
                 200

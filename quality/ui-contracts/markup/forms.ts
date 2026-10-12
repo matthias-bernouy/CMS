@@ -103,7 +103,7 @@ function dynamic(value: string): boolean {
 }
 
 function knownMutatingGet(source: UiSource, value: string): boolean {
-    if (!source.path.replaceAll("\\", "/").startsWith("packages/surfaces/cms-control/")) {
+    if (!source.path.replaceAll("\\", "/").startsWith("packages/surfaces/cms-kernel/")) {
         return false;
     }
     // mountRoutes/index.ts mounts GET <basePath>/logout; LocalAuthentication.logout clears its cookie.

@@ -1,6 +1,6 @@
 {
     "id": "create",
-    "description": "Create one Page on exactly one rendering surface.",
+    "description": "Create one Page.",
     "access": "admin",
     "behavior": {
         "effect": "command",
@@ -23,20 +23,11 @@
             "content": {
                 "type": "string",
                 "maxLength": 1048576
-            },
-            "surface": {
-                "type": "string",
-                "enum": [
-                    "control",
-                    "delivery"
-                ],
-                "maxLength": 8
             }
         },
         "required": [
             "path",
-            "title",
-            "surface"
+            "title"
         ]
     },
     "output": {
@@ -50,14 +41,6 @@
                 "type": "integer",
                 "minimum": 1,
                 "maximum": 9007199254740991
-            },
-            "surface": {
-                "type": "string",
-                "enum": [
-                    "control",
-                    "delivery"
-                ],
-                "maxLength": 8
             },
             "path": {
                 "type": "string",
@@ -91,7 +74,6 @@
         "required": [
             "id",
             "revision",
-            "surface",
             "path",
             "title",
             "description",

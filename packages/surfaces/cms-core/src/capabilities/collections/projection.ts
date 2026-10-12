@@ -69,7 +69,6 @@ export function projectInstalled(
                           : "",
                       generation: bloc.generation ?? 1,
                       internal: bloc.internal ?? false,
-                      surfaces: bloc.surfaces ?? ["control", "delivery"],
                   })),
               }
             : {}),

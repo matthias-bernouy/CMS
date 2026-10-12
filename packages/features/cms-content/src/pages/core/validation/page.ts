@@ -28,11 +28,7 @@ export function validatePageCreateOptions(options: PageCreateOptions | undefined
     if (!options) {
         return undefined;
     }
-    if (options.surface !== undefined && options.surface !== "control" && options.surface !== "delivery") {
-        throw new ContentValidationError("surface", "must be control or delivery");
-    }
     return {
-        ...(options.surface ? { surface: options.surface } : {}),
         ...(options.origin ? { origin: validatePageOrigin(options.origin) } : {}),
     };
 }
@@ -92,9 +88,6 @@ export function validatePagePatch(page: Partial<TPage>): Partial<TPage> {
     }
     if (page.indexing !== undefined) {
         out.indexing = validatePageIndexingConfiguration(page.indexing);
-    }
-    if (page.surface !== undefined && page.surface !== "control" && page.surface !== "delivery") {
-        throw new ContentValidationError("surface", "must be control or delivery");
     }
     if (page.origin !== undefined) {
         throw new ContentValidationError("origin", "cannot change after Page creation");

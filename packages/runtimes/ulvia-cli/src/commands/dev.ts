@@ -10,8 +10,7 @@ import type { UlviaPaths } from "../runtime/paths";
 import { bootstrapOfficialRepository } from "./bootstrap";
 
 const DEFAULT_PORTS: DevPorts = Object.freeze({
-    control: 5100,
-    delivery: 5101,
+    kernel: 5100,
     mongo: 27019,
     repository: 5102,
     core: 5103,
@@ -74,8 +73,7 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
     log("");
     log(`Resource repository: ${repository.url}`);
     log(`CMS Core provider: http://127.0.0.1:${ports.core}`);
-    log(`CMS Control: http://127.0.0.1:${ports.control}`);
-    log(`CMS Delivery: http://127.0.0.1:${ports.delivery}`);
+    log(`CMS Kernel: http://127.0.0.1:${ports.kernel}`);
     log("Credentials: bun run ulvia -- dev credentials");
     try {
         await superviseCms(cms);
@@ -86,8 +84,7 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
 
 export function resolveDevPorts(environment: Record<string, string | undefined>): DevPorts {
     const ports: DevPorts = {
-        control: readPort(environment, "ULVIA_DEV_CONTROL_PORT", DEFAULT_PORTS.control),
-        delivery: readPort(environment, "ULVIA_DEV_DELIVERY_PORT", DEFAULT_PORTS.delivery),
+        kernel: readPort(environment, "ULVIA_DEV_KERNEL_PORT", DEFAULT_PORTS.kernel),
         mongo: readPort(environment, "ULVIA_DEV_MONGO_PORT", DEFAULT_PORTS.mongo),
         repository: readPort(environment, "ULVIA_DEV_REPOSITORY_PORT", DEFAULT_PORTS.repository),
         core: DEFAULT_PORTS.core,

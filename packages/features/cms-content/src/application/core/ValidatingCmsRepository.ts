@@ -26,7 +26,6 @@ import {
     validatePagePatch,
 } from "cms-content/pages/core/validation/page";
 import { assertContentRefsExist } from "cms-content/blocs/core/markup/validation/assertContentRefsExist";
-import { assertContentSupportsSurface } from "cms-content/blocs/core/markup/validation/assertContentSurface";
 import { validateSettingsPatch } from "cms-content/settings/core/validation";
 import { validateSiteBlocDefinition, validateSiteBlocSnapshot } from "cms-content/blocs/core/validation";
 import { validateBlocArtifact } from "cms-content/application/core/validation/blocArtifact";
@@ -64,31 +63,19 @@ export class ValidatingCmsRepository implements CmsRepository {
         }
         const validContent = validatePagePatch({ content }).content!;
         await assertContentRefsExist(this.inner, validContent);
-        await assertContentSupportsSurface(this.inner, validContent, validOptions?.surface ?? "delivery");
         return this.inner.insertPage(validPath, validTitle, validContent, validOptions);
     }
 
     async updatePage(page: Partial<TPage>, expectedRevision?: number): Promise<TPage | null> {
         const valid = validatePagePatch(page);
         const current =
-            valid.id &&
-            (valid.content !== undefined || valid.surface !== undefined || valid.visible === true) &&
-            this.inner.getPageById
+            valid.id && (valid.content !== undefined || valid.visible === true) && this.inner.getPageById
                 ? await this.inner.getPageById(valid.id)
                 : null;
-        if (current && valid.surface !== undefined && valid.surface !== current.surface) {
-            throw new ContentValidationError("surface", "cannot change after Page creation");
-        }
         if (valid.content !== undefined) {
             await assertContentRefsExist(this.inner, valid.content);
-            await assertContentSupportsSurface(
-                this.inner,
-                valid.content,
-                current?.surface ?? valid.surface ?? "delivery",
-            );
         } else if (valid.visible === true && current) {
             await assertContentRefsExist(this.inner, current.content);
-            await assertContentSupportsSurface(this.inner, current.content, current.surface);
         }
         return this.inner.updatePage(valid, expectedRevision);
     }

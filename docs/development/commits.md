@@ -18,10 +18,10 @@ Examples:
 
 ```text
 feat(cms-content): add image variant manifest
-fix(cms-control): validate page editor id before loading
+fix(cms-kernel): validate page editor id before loading
 docs(agents): refresh package instructions
 ```
 
 Keep the domain close to the package or feature being changed:
-`cms-control`, `cms-delivery`, `cms-auth`, `components`, `http-runner`, `cli`,
+`cms-kernel`, `cms-auth`, `components`, `http-runner`, `cli`,
 `docs`, and so on.

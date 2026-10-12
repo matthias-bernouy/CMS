@@ -89,19 +89,17 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
 
     async insertPage(path: string, title: string, content = "", options: PageCreateOptions = {}): Promise<void> {
         this.assertPageRoutesReady();
-        const surface = options.surface ?? "delivery";
         const language = this.system.site.language;
-        const publicPath = surface === "delivery" ? publicPagePath(language, path, language) : path;
+        const publicPath = publicPagePath(language, path, language);
         if (this.pageRoutes.has(publicPath) || this.pages.has(publicPath)) {
             throw new DuplicatePagePathError(publicPath);
         }
         const page: TPage = {
             id: randomUUIDv7(),
             revision: 1,
-            surface,
             ...(options.origin ? { origin: structuredClone(options.origin) } : {}),
             path: publicPath,
-            ...(surface === "delivery" && language ? { paths: { [language]: path } } : {}),
+            ...(language ? { paths: { [language]: path } } : {}),
             title,
             content,
             description: "",
@@ -116,7 +114,7 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
             state: "current",
             pageId: page.id,
             ownerPageId: page.id,
-            language: surface === "delivery" ? language : "",
+            language,
         });
     }
 
@@ -136,9 +134,6 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
         let current = entry[1];
         if (expectedRevision !== undefined && current.revision !== expectedRevision) {
             throw new PageRevisionConflictError(expectedRevision, current.revision);
-        }
-        if (page.surface !== undefined && page.surface !== current.surface) {
-            throw new ContentValidationError("surface", "cannot change after Page creation");
         }
         if (page.origin !== undefined) {
             throw new ContentValidationError("origin", "cannot change after Page creation");
@@ -323,7 +318,6 @@ export class InMemoryContentRepository extends InMemoryBlocRepository {
             page: { kind: "site", pageId: page.id },
             path: page.path,
             title: page.title,
-            surface: page.surface,
         }));
     }
 

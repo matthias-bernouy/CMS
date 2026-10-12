@@ -83,6 +83,10 @@ export async function createProductionGateway(
         }
         return null;
     };
+    const resolveCapabilityAccess = async (contractId: string, capabilityId: string) => {
+        const route = await routes.resolve(siteId, contractId);
+        return route?.release.admission.release.capabilities.find(({ id }) => id === capabilityId)?.access ?? null;
+    };
     return {
         siteId,
         releases,
@@ -96,6 +100,7 @@ export async function createProductionGateway(
         commandAudit,
         observations,
         authenticateProvider,
+        resolveCapabilityAccess,
         identities,
         isAdministrator: access.isAdministrator,
         administrators: access.administrators,

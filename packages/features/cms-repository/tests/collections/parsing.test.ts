@@ -336,7 +336,6 @@ describe("collection release parsing", () => {
         source.pages = [
             {
                 id: "overview",
-                surface: "control",
                 defaultPath: "/admin",
                 name: "page.overview.name",
                 document: { html: "<atlas-panel></atlas-panel>" },

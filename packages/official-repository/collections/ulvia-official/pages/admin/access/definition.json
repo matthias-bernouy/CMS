@@ -1,0 +1,8 @@
+{
+    "id": "access",
+    "defaultPath": "/admin/access",
+    "name": "page.access.name",
+    "icon": "users",
+    "description": "page.access.description",
+    "requires": []
+}

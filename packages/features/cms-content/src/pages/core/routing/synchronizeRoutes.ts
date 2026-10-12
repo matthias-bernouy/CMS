@@ -1,17 +1,17 @@
 import type {
     PageReference,
-    SurfacePageRoute,
-    SurfacePageRouteRegistration,
-    SurfacePageRouteRegistry,
+    PageRouteRegistration,
+    PageRouteRegistry,
+    RegisteredPageRoute,
 } from "cms-content/pages/interfaces/routing";
-import { pageReferenceKey, validateSurfacePagePath } from "cms-content/pages/core/routing/values";
+import { pageReferenceKey, validateRegisteredPagePath } from "cms-content/pages/core/routing/values";
 
 /** Reconciles one owned subset while treating every other route as fixed. */
 export async function synchronizePageRouteRegistrations(
-    routes: SurfacePageRouteRegistry,
+    routes: PageRouteRegistry,
     siteId: string,
-    desired: readonly SurfacePageRouteRegistration[],
-    owns: (route: SurfacePageRoute) => boolean,
+    desired: readonly PageRouteRegistration[],
+    owns: (route: RegisteredPageRoute) => boolean,
 ): Promise<void> {
     const existing = await routes.list(siteId);
     const desiredKeys = new Set(desired.map(({ page }) => pageReferenceKey(page)));
@@ -42,14 +42,14 @@ export async function synchronizePageRouteRegistrations(
 }
 
 function assertDesiredRoutes(
-    existingRoutes: readonly SurfacePageRoute[],
-    existing: ReadonlyMap<string, SurfacePageRoute>,
-    desired: readonly SurfacePageRouteRegistration[],
-    owns: (route: SurfacePageRoute) => boolean,
+    existingRoutes: readonly RegisteredPageRoute[],
+    existing: ReadonlyMap<string, RegisteredPageRoute>,
+    desired: readonly PageRouteRegistration[],
+    owns: (route: RegisteredPageRoute) => boolean,
 ): void {
     const occupied = new Map<string, PageReference>();
     for (const route of existingRoutes.filter((candidate) => !owns(candidate))) {
-        occupied.set(`${route.surface}:${route.path}`, route.page);
+        occupied.set(route.path, route.page);
     }
     const owners = new Set<string>();
     for (const registration of desired) {
@@ -59,12 +59,9 @@ function assertDesiredRoutes(
         }
         owners.add(owner);
         const current = existing.get(owner);
-        if (current && current.surface !== registration.surface) {
-            throw new Error("A Page route cannot change surface");
-        }
-        validateSurfacePagePath(registration.surface, registration.defaultPath);
-        const path = validateSurfacePagePath(registration.surface, current?.overridePath ?? registration.defaultPath);
-        const key = `${registration.surface}:${path}`;
+        validateRegisteredPagePath(registration.defaultPath);
+        const path = validateRegisteredPagePath(current?.overridePath ?? registration.defaultPath);
+        const key = path;
         if (occupied.has(key)) {
             throw Object.assign(new Error(`Page route already belongs to another Page: ${path}`), { status: 409 });
         }

@@ -40,18 +40,6 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
         expect(reader).not.toHaveProperty("getAllPages");
     });
 
-    test("public reader never exposes visible Control pages", async () => {
-        const repository = new InMemoryCmsRepository();
-        await repository.insertPage("/admin/private", "Private", "<main>secret</main>", { surface: "control" });
-        const controlPage = (await repository.getPage("/admin/private"))!;
-        await repository.updatePage({ id: controlPage.id, visible: true });
-        const reader = createContentReader(repository);
-
-        expect(await reader.getPublishedPage("/admin/private")).toBeNull();
-        expect(await reader.getPublishedPageById(controlPage.id)).toBeNull();
-        expect(await reader.getPublishedPages()).toEqual([]);
-    });
-
     test("public reader returns cloned published pages", async () => {
         const repository = await seeded();
         const reader = createContentReader(repository);
@@ -65,7 +53,6 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
         const page = {
             id: "page",
             revision: 1,
-            surface: "delivery" as const,
             path: "/page",
             title: "Page",
             description: "Description",
@@ -155,11 +142,10 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
     });
 
     test("published helper accepts only strict visible true", () => {
-        expect(isPublishedPage({ surface: "delivery", visible: true })).toBe(true);
-        expect(isPublishedPage({ surface: "control", visible: true })).toBe(false);
-        expect(isPublishedPage({ surface: "delivery", visible: "true" } as any)).toBe(false);
-        expect(isPublishedPage({ surface: "delivery", visible: "false" } as any)).toBe(false);
-        expect(isPublishedPage({ surface: "delivery", visible: false })).toBe(false);
+        expect(isPublishedPage({ visible: true })).toBe(true);
+        expect(isPublishedPage({ visible: "true" } as any)).toBe(false);
+        expect(isPublishedPage({ visible: "false" } as any)).toBe(false);
+        expect(isPublishedPage({ visible: false })).toBe(false);
     });
 
     test("can create a page with initial editorial content", async () => {

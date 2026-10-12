@@ -1,4 +1,4 @@
-export type { PageDocument, PageSurface } from "cms-content/pages/interfaces/document";
+export type { PageDocument } from "cms-content/pages/interfaces/document";
 export type { PageIndexingConfiguration, TPage, TPageRef } from "cms-content/pages/interfaces/pages";
 export { pageDocument } from "cms-content/pages/interfaces/pages";
 export type { PageMetadataContext, PageMetadataScope } from "cms-content/pages/core/rendering/pageMetadata";

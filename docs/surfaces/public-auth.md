@@ -1,8 +1,8 @@
 # Public Authentication
 
-Delivery mounts CMS-owned authentication under `/.cms/auth` when public auth is
+The Kernel mounts CMS-owned authentication under `/.cms/auth` when public auth is
 configured. These routes work independently of provider selections.
-Paths below are relative to Delivery's base path. `@bernouy/cms-auth/http`
+Paths below are relative to the Kernel's base path. `@bernouy/cms-auth/http`
 supplies the registrar, and the runtime injects the public auth operations.
 
 | Method | Path | JSON body | Response |
@@ -31,7 +31,7 @@ forms can submit to the corresponding auth route. For example:
 </form>
 ```
 
-Delivery does not mount `/.cms/sources`. Provider data, files and image
+The Kernel does not mount `/.cms/sources`. Provider data, files and image
 representations use selected gateway capabilities under `/.cms/call`.
 
 See [binding forms](../blocs/data-bindings.md) for submission state and

@@ -14,20 +14,20 @@ const COMPONENT_OUTPUT_START = "cms-component-output-start";
 const COMPONENT_OUTPUT_END = "cms-component-output-end";
 
 export type CompositionDefinition = { id: string; compositionHTML?: string; componentHTML?: string };
-export type CompositionExpansionMode = "delivery" | "preview";
+export type CompositionExpansionMode = "render" | "preview";
 type Template = { html: string; retainHost: boolean };
 
 /**
  * Expands registered composition templates into real light DOM.
  *
- * Pure compositions replace their host in Delivery. Component compositions
+ * Pure compositions replace their host in rendered output. Component compositions
  * keep it so their fixed children can project through its shadow slots.
  * Preview mode retains page-owned children separately from generated markup.
  */
 export function expandCompositions(
     root: ParentNode,
     definitions: readonly CompositionDefinition[],
-    mode: CompositionExpansionMode = "delivery",
+    mode: CompositionExpansionMode = "render",
 ): void {
     const templates = new Map<string, Template>(
         definitions.flatMap((definition) => {
@@ -92,7 +92,7 @@ function expandHost(host: Element, definition: Template, mode: CompositionExpans
             );
         }
         unwrapCmsHost(host, template.content);
-        if (mode === "delivery") {
+        if (mode === "render") {
             host.replaceChildren(...Array.from(template.content.childNodes));
             return;
         }
@@ -107,7 +107,7 @@ function expandHost(host: Element, definition: Template, mode: CompositionExpans
         return;
     }
 
-    if (mode === "delivery") {
+    if (mode === "render") {
         propagateHostSlot(host, template.content);
         host.replaceWith(...Array.from(template.content.childNodes));
         return;

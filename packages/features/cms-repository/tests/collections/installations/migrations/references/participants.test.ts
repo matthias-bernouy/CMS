@@ -16,12 +16,12 @@ test("blocks removal of a collection Page used by an external feature", async ()
     fixture.service.addParticipant({
         id: "external-pages",
         async collectReferences() {
-            return [{ kind: "page", collectionId: "atlas", id: "legacy", location: "Control page" }];
+            return [{ kind: "page", collectionId: "atlas", id: "legacy", location: "Administration Page" }];
         },
     });
 
     const plan = await fixture.service.plan("site", [{ digest: next.digest }], 1);
-    expect(plan.blockedReasons).toContain("Control page still references removed collection page atlas:legacy.");
+    expect(plan.blockedReasons).toContain("Administration Page still references removed collection page atlas:legacy.");
 });
 
 test("blocks every externally referenced collection resource kind", async () => {
@@ -59,7 +59,7 @@ test("digests participant resource identities independently from diagnostic labe
     };
     const fixture = await referenceFixture(patch);
     const next = await fixture.collections.importRelease({ ...release("1.1.0", "atlas-card"), ...patch });
-    let location = "Control page one";
+    let location = "Administration Page one";
     fixture.service.addParticipant({
         id: "control-pages",
         async collectReferences() {
@@ -67,7 +67,7 @@ test("digests participant resource identities independently from diagnostic labe
         },
     });
     const first = await fixture.service.plan("site", [{ digest: next.digest }], 1);
-    location = "Renamed Control page";
+    location = "Renamed administration Page";
     const second = await fixture.service.plan("site", [{ digest: next.digest }], 1);
 
     expect(first.planDigest).toBe(second.planDigest);
@@ -163,7 +163,6 @@ function externalReferences() {
 function controlPage(id: string, html: string) {
     return {
         id,
-        surface: "control",
         defaultPath: id === "overview" ? "/admin" : `/admin/${id}`,
         name: "view.name",
         document: { html },

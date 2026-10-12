@@ -1,0 +1,67 @@
+import { expect, test } from "bun:test";
+import { renderPage } from "cms-kernel/core/html/renderPage";
+import type { RenderContext } from "cms-kernel/core/html/RenderContext";
+import type { TPage, ContentReader } from "@bernouy/cms-content/rendering";
+
+const ctx: RenderContext = {
+    repository: {
+        getRenderingSettings: async () => ({
+            site: { name: "Test", language: "en", favicon: "", host: "", theme: "", visible: true },
+            security: { connectExtras: [], mediaExtras: [] },
+        }),
+        getRenderableBlocs: async () => [],
+    } as unknown as ContentReader,
+    resolveAssets: async () => ({
+        componentUrl: "/component.js",
+        bindingCoreUrl: "/binding.js",
+        styleUrl: "/style.css",
+        blocUrls: [],
+        scriptUrls: [],
+    }),
+    resolveContributedAssets: async (input) =>
+        input.replace("{{ cms.asset.test.hero.svg }}", "/.cms/collections/test/assets/hero.svg?v=digest"),
+    faviconUrl: "/favicon.ico",
+    headInjectors: [],
+    collectionTexts: [
+        {
+            collection: {
+                collectionId: "test",
+                locale: "en",
+                texts: [
+                    {
+                        id: "title",
+                        label: "text.label.title",
+                        category: "text.category.content",
+                        group: "text.group.general",
+                        values: { en: "Order", fr: "Commande" },
+                    },
+                ],
+            },
+        },
+    ],
+};
+const page = {
+    path: "/example",
+    title: "Test",
+    description: "",
+    tags: [],
+    visible: true,
+    content: '<h2>{{ cms.i18n.test.title }}</h2><img src="{{ cms.asset.test.hero.svg }}"><p>{{ order.total }}</p>',
+} as unknown as TPage;
+
+test("Kernel sends translated HTML for the route language before any browser code runs", async () => {
+    const [fr, en] = await Promise.all([
+        renderPage(page, ctx, { language: "fr" }),
+        renderPage(page, ctx, { language: "en" }),
+    ]);
+    const french = new TextDecoder().decode(fr.raw);
+    expect(french).toContain("<h2>Commande</h2>");
+    expect(french).toContain("{{ order.total }}");
+    expect(french).not.toContain("cms.i18n");
+    expect(french).toContain('src="/.cms/collections/test/assets/hero.svg?v=digest"');
+    expect(new TextDecoder().decode(en.raw)).toContain("<h2>Order</h2>");
+});
+
+test("Kernel refuses unresolved catalogue references", async () => {
+    await expect(renderPage(page, { ...ctx, collectionTexts: [] })).rejects.toThrow("Unknown content text");
+});

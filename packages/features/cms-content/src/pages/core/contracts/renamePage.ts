@@ -51,7 +51,6 @@ function pageItem(page: TPage): CmsPageListItem {
     return {
         id: page.id,
         revision: page.revision,
-        surface: page.surface,
         path: page.path,
         title: page.title,
         visible: page.visible,

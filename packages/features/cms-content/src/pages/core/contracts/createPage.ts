@@ -2,13 +2,11 @@ import type { CmsRepository } from "cms-content/application/interfaces/CmsReposi
 import { cmsPageDetails, type CmsPageDetails } from "cms-content/pages/core/contracts/pageDetails";
 import { CmsPageNotFoundError } from "cms-content/pages/core/contracts/renamePage";
 import { validatePagePath, validatePageTitle } from "cms-content/pages/core/validation/page";
-import type { PageSurface } from "cms-content/pages/interfaces/document";
 
 export interface CmsPageCreateInput {
     readonly path: string;
     readonly title: string;
     readonly content?: string;
-    readonly surface?: PageSurface;
 }
 
 export async function createCmsPage(
@@ -17,14 +15,10 @@ export async function createCmsPage(
 ): Promise<CmsPageDetails> {
     const path = validatePagePath(input.path);
     const title = validatePageTitle(input.title);
-    const surface = input.surface ?? "delivery";
-    if (surface !== "control" && surface !== "delivery") {
-        throw new TypeError("Invalid Page surface.");
-    }
     if (input.content !== undefined && typeof input.content !== "string") {
         throw new TypeError("Invalid Page content.");
     }
-    await repository.insertPage(path, title, input.content, { surface });
+    await repository.insertPage(path, title, input.content);
     const created = await repository.getPage(path);
     if (!created) {
         throw new CmsPageNotFoundError(path);

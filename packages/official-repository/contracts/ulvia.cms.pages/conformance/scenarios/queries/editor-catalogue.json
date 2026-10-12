@@ -2,14 +2,12 @@
     "id": "editor-catalogue",
     "calls": [
         {
-            "id": "delivery-blocs",
+            "id": "page-blocs",
             "capabilityId": "editor-catalogue",
             "actor": {
                 "kind": "admin"
             },
-            "input": {
-                "surface": "delivery"
-            },
+            "input": {},
             "expect": {
                 "kind": "success",
                 "checks": [

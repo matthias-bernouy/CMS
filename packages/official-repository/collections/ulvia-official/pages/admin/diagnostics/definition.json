@@ -1,0 +1,8 @@
+{
+    "id": "diagnostics",
+    "defaultPath": "/admin/diagnostics",
+    "name": "page.diagnostics.name",
+    "icon": "health",
+    "description": "page.diagnostics.description",
+    "requires": []
+}

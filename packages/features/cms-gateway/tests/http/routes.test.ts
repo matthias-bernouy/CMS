@@ -106,8 +106,8 @@ test("fresh observation renewal does not make a completed command uncertain", as
             siteId: "site-a",
             contractId: "catalog",
             capabilityId: "item.list",
-            actor: { kind: "anonymous" },
-            origin: "delivery",
+            actor: { kind: "system", serviceId: "route-test" },
+            origin: "system",
             input: { term: "one" },
         }),
     ).resolves.toMatchObject({ kind: "success", output: { items: ["saved"] } });

@@ -121,7 +121,7 @@ function trustedHeaders(): Record<string, string> {
         "x-ulvia-request-id": "00000000-0000-4000-8000-000000000001",
         "x-ulvia-site-id": "default",
         "x-ulvia-installation-id": "local-core",
-        "x-ulvia-origin": "control",
+        "x-ulvia-origin": "page",
         "x-ulvia-actor-kind": "administrator",
     };
 }

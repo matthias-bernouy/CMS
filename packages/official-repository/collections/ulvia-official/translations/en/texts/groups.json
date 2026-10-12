@@ -3,10 +3,10 @@
     "text.group.components.forms": "Form components",
     "text.group.components.layout": "Layout components",
     "text.group.components.navigation": "Navigation components",
-    "text.group.control.access": "Access",
-    "text.group.control.diagnostics": "Diagnostics",
-    "text.group.control.files": "Files",
-    "text.group.control.pages": "Pages",
-    "text.group.control.workspaces": "Workspaces",
+    "text.group.admin.access": "Access",
+    "text.group.admin.diagnostics": "Diagnostics",
+    "text.group.admin.files": "Files",
+    "text.group.admin.pages": "Pages",
+    "text.group.admin.workspaces": "Workspaces",
     "text.group.shared": "Shared copy"
 }

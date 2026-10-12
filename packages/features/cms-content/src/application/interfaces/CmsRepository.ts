@@ -10,12 +10,12 @@ import type { PageCreateOptions, PageRoute, TPage } from "cms-content/pages/inte
 import type { PageReference } from "cms-content/pages/interfaces/routing";
 import type { PageContentReference } from "cms-content/pages/core/queries/contentReferences";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
-import type { PageDocument, PageSurface } from "cms-content/pages/interfaces/document";
+import type { PageDocument } from "cms-content/pages/interfaces/document";
 import type { ContentTextSource } from "cms-content/pages/core/rendering/contentTexts";
 
 export type ContentContributionSnapshot = {
     readonly revision: number;
-    readonly pages: readonly { readonly surface: PageSurface; readonly document: PageDocument }[];
+    readonly pages: readonly { readonly document: PageDocument }[];
     readonly texts: readonly ContentTextSource[];
 };
 
@@ -32,7 +32,6 @@ export type BlocListItemResponse = {
     slots?: TBloc["slots"];
     settings?: TBloc["settings"];
     internal?: boolean;
-    surfaces?: TBloc["surfaces"];
     uses?: TBloc["uses"];
     nativeElement?: TBloc["nativeElement"];
     ownership: TBloc["ownership"];
@@ -47,7 +46,6 @@ export type PageLink = {
     page: Extract<PageReference, { kind: "site" }>;
     path: string;
     title: string;
-    surface: TPage["surface"];
 };
 
 export type PageMeta = {

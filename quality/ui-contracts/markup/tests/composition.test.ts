@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { inspectMarkup } from "../index";
 
-const path = "packages/surfaces/cms-control/src/components/admin/WidgetList.ts";
+const path = "packages/surfaces/cms-kernel/src/components/admin/WidgetList.ts";
 const inspect = (content: string) => inspectMarkup({ path, content, kind: "script", browser: true });
 
 test("accepts component-owned light-DOM bindings without a private core or stylesheet", () => {

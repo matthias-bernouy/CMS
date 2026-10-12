@@ -1,13 +1,12 @@
 import { isSafeNavigationalUrl } from "cms-content/blocs/core/markup/security/safeUrl";
-import { PageLinkSurfaceError, PageRouteNotFoundError } from "cms-content/pages/core/routing/errors";
+import { PageRouteNotFoundError } from "cms-content/pages/core/routing/errors";
 import type {
     PageLinkTarget,
     PageReference,
     PageRouteReader,
     ResolvedPageLink,
-    SurfacePageRouteRegistry,
+    PageRouteRegistry,
 } from "cms-content/pages/interfaces/routing";
-import type { PageSurface } from "cms-content/pages/interfaces/document";
 import { parseHTML } from "linkedom";
 import { validatePageReference } from "cms-content/pages/core/routing/values";
 
@@ -16,39 +15,31 @@ const MAX_PAGE_REFERENCE_LENGTH = 1024;
 
 export async function resolvePageLinkTarget(
     routes: PageRouteReader,
-    sourceSurface: PageSurface,
     target: PageLinkTarget,
 ): Promise<ResolvedPageLink> {
     if (target.kind === "url") {
         if (!isSafeNavigationalUrl(target.url)) {
             throw new TypeError("The external Page link URL is unsafe.");
         }
-        return { href: target.url, surface: "external" };
+        return { href: target.url, external: true };
     }
     const route = await routes.get(target.page);
     if (!route) {
         throw new PageRouteNotFoundError(target.page);
     }
-    if (sourceSurface === "delivery" && route.surface === "control") {
-        throw new PageLinkSurfaceError();
-    }
-    return { href: route.path, surface: route.surface };
+    return { href: route.path, external: false };
 }
 
-export function createPageRouteReader(routes: Pick<SurfacePageRouteRegistry, "get">, siteId: string): PageRouteReader {
+export function createPageRouteReader(routes: Pick<PageRouteRegistry, "get">, siteId: string): PageRouteReader {
     return {
         get: (reference: PageReference) => routes.get(siteId, reference),
     };
 }
 
-/** Rejects broken and cross-surface references before editable Page content is persisted. */
-export async function assertPageContentLinks(
-    routes: PageRouteReader,
-    sourceSurface: PageSurface,
-    content: string,
-): Promise<void> {
+/** Rejects broken references before editable Page content is persisted. */
+export async function assertPageContentLinks(routes: PageRouteReader, content: string): Promise<void> {
     for (const reference of pageContentReferences(content)) {
-        await resolvePageLinkTarget(routes, sourceSurface, { kind: "page", page: reference });
+        await resolvePageLinkTarget(routes, { kind: "page", page: reference });
     }
 }
 

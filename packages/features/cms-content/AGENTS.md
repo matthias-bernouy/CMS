@@ -15,7 +15,7 @@ bindings, validation, and read models.
 - `@bernouy/cms-content/browser` exposes the browser-only `Component` base and
   live declarative binding runtime used by rendered Pages and contributed Blocs.
 - `@bernouy/cms-content/browser/dom` exposes inert network-binding preparation
-  for Control and Delivery renderers.
+  for the Kernel renderer.
 - `@bernouy/cms-content/theme` exposes browser-safe theme value resolution.
 - `@bernouy/cms-content/mongo` exposes `MongoCmsRepository` for composition
   roots.
@@ -23,7 +23,7 @@ bindings, validation, and read models.
   Bloc document grammar shared by site content and external contributions.
 - File data belongs to providers implementing `ulvia.cms.files`. Content stores
   only provider-neutral file references.
-- Do not import surfaces, runtimes, Control internals, or persistence adapters
+- Do not import surfaces, runtimes, Kernel internals, or persistence adapters
   into `core/` or `interfaces/`.
 
 ## Source Layout
@@ -33,8 +33,8 @@ bindings, validation, and read models.
 - Site-owned Bloc source serialization belongs to Bloc publication in this
   package. Collection Bloc compilation belongs to
   `@bernouy/cms-repository/collections/build`.
-- `pages/` owns the surface route registry and the single internal Page-link
-  model. Control and Delivery routes share identities but never a path namespace.
+- `pages/` owns the site Page route registry and the single internal Page-link
+  model. Every Page route shares one site namespace.
   External Page identities use generic contribution coordinates; this package
   must not know collection, repository-source or provider contracts.
 - Each domain contains only its needed `interfaces/`, `core/`, `http/` or
@@ -53,7 +53,7 @@ bindings, validation, and read models.
   fields explicitly and do not return shared mutable authoring objects.
 - Keep route migration checks and rereads; do not claim snapshot consistency.
 - Rendering settings must not contain initialization state or SMTP settings.
-- Control owns authenticated draft preview. Never add a preview mode to the
+- The Kernel owns authenticated draft preview. Never add a preview mode to the
   public reader.
 - Static contributed text and immutable asset substitution run on the server
   through `/rendering`, after composition expansion. Browser binding has no

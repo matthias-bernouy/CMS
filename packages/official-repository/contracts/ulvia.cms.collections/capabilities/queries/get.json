@@ -121,18 +121,6 @@
                         },
                         "internal": {
                             "type": "boolean"
-                        },
-                        "surfaces": {
-                            "type": "array",
-                            "maxItems": 2,
-                            "items": {
-                                "type": "string",
-                                "enum": [
-                                    "control",
-                                    "delivery"
-                                ],
-                                "maxLength": 8
-                            }
                         }
                     },
                     "required": [
@@ -140,8 +128,7 @@
                         "label",
                         "description",
                         "generation",
-                        "internal",
-                        "surfaces"
+                        "internal"
                     ]
                 }
             }

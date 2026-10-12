@@ -101,7 +101,6 @@ export function validateDeclaredPageReferences(
                 if (!target) {
                     invalid(`references unknown Page ${reference.pageId}`, `$.pages.${page.id}.document.html`);
                 }
-                assertCompatibleSurface(page.surface, target.surface, release.collectionId, page.id, reference.pageId);
                 continue;
             }
             const dependency = release.dependencies?.find(
@@ -159,19 +158,4 @@ export function pageReferences(html: string): readonly StablePageReference[] {
         pending.push(...node.children);
     }
     return references;
-}
-
-export function assertCompatibleSurface(
-    source: "control" | "delivery",
-    target: "control" | "delivery",
-    collectionId: string,
-    pageId: string,
-    targetId: string,
-): void {
-    if (source === "delivery" && target === "control") {
-        invalid(
-            `Delivery Page ${collectionId}.${pageId} cannot link to Control Page ${targetId}`,
-            `$.pages.${pageId}.document.html`,
-        );
-    }
 }

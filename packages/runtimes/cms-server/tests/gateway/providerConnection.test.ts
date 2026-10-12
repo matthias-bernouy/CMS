@@ -17,8 +17,8 @@ test("provider connection previews accept a pinned remote HTTPS endpoint", async
             origin: "https://api.provider.example",
             pathAndQuery: "/ulvia/report",
             method: "GET",
-            invocationOrigin: "control",
-            actorKind: "administrator",
+            invocationOrigin: "system",
+            actorKind: "system",
         },
     ]);
 });

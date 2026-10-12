@@ -1,4 +1,5 @@
 import type { ManagedNativeElement, ManagedNativeElementTag } from "cms-content/pages/interfaces/document";
+import { isCmsBindingAttribute } from "cms-content/blocs/core/validation/nativeBindings";
 
 export const MANAGED_NATIVE_ELEMENT_TAGS = [
     "h1",
@@ -33,6 +34,7 @@ const NATIVE_ATTRIBUTES: Readonly<Record<string, ReadonlySet<string>>> = {
         "readonly",
         "autocomplete",
         "placeholder",
+        "maxlength",
         "min",
         "max",
         "step",
@@ -67,7 +69,12 @@ export function managedNativeAttributesIssue(
     if (tag && !options.allowUnknown) {
         const allowed = NATIVE_ATTRIBUTES[tag] ?? new Set<string>();
         for (const name of Object.keys(attributes)) {
-            if (!allowed.has(name) && !Object.hasOwn(contract.attributes ?? {}, name)) {
+            if (
+                name !== "id" &&
+                !allowed.has(name) &&
+                !isCmsBindingAttribute(name) &&
+                !Object.hasOwn(contract.attributes ?? {}, name)
+            ) {
                 return `native attribute ${JSON.stringify(name)} is not allowed on <${tag}>`;
             }
         }

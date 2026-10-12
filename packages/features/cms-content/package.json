@@ -14,6 +14,7 @@
         "./theme": "./src/exports/theme.ts",
         "./page-path": "./src/exports/page-path.ts",
         "./page-document": "./src/exports/page-document.ts",
+        "./kernel": "./src/exports/kernel.ts",
         "./mongo": "./src/exports/mongo.ts"
     },
     "devDependencies": {

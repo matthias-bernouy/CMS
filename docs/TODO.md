@@ -8,7 +8,7 @@ implemented behavior.
 
 **Status:** deferred while every installable collection is official,
 first-party and reviewed with the CmsCore release. Collection JavaScript is
-currently trusted and may execute in the Control or Delivery document. Shadow
+currently trusted and may execute in the Kernel document. Shadow
 DOM and collection namespaces provide encapsulation, not a security boundary.
 
 Revisit this before admitting any third-party, remotely published or otherwise
@@ -38,7 +38,7 @@ validated with prototypes before it becomes a collection protocol contract.
 Exit conditions:
 
 - two unrelated collections cannot read or mutate each other's state or DOM;
-- a collection cannot access the surrounding Control or Delivery document;
+- a collection cannot access the surrounding Kernel document;
 - a collection cannot bypass the capability gateway for external effects;
 - many instances of one collection share one bounded runtime;
 - mixed-collection slots, native forms, focus, accessibility and container

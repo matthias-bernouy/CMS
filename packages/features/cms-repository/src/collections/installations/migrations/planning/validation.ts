@@ -6,7 +6,6 @@ import {
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import type { CmsRepository } from "@bernouy/cms-content";
 import { assertContentRefsExist } from "@bernouy/cms-content/page-document";
-import { assertContentSupportsSurface } from "@bernouy/cms-content/page-document";
 import { composeCollectionThemes } from "../../../integration/content/theme";
 import type { CollectionMigrationResourceChange } from "../interfaces";
 import { referencesThemeToken } from "../transforms/themeTokenReferences";
@@ -33,7 +32,7 @@ export async function validateTargetPages(
     repository: CmsRepository,
     installed: readonly { release: CollectionRelease }[],
     targets: readonly { artifact: { release: CollectionRelease } }[],
-    pages: readonly { page: { path: string; surface: "control" | "delivery" }; content: string }[],
+    pages: readonly { page: { path: string }; content: string }[],
     blocked: string[],
 ): Promise<void> {
     const targetIds = new Set(targets.map(({ artifact }) => artifact.release.collectionId));
@@ -47,7 +46,6 @@ export async function validateTargetPages(
         artifact.release.blocs.map((bloc) => ({
             id: bloc.id,
             slots: bloc.slots,
-            surfaces: bloc.surfaces,
             uses: bloc.uses,
             ...(bloc.kind === "composition" ? { compositionHTML: bloc.lightdom } : {}),
             ...(bloc.kind === "component" && bloc.lightdom ? { componentHTML: bloc.lightdom } : {}),
@@ -64,7 +62,6 @@ export async function validateTargetPages(
                 getBlocViewJS: (tag: string) => repository.getBlocViewJS(tag),
             };
             await assertContentRefsExist(targetRepository, content);
-            await assertContentSupportsSurface(targetRepository, content, page.surface);
             assertTextReferences(content, texts);
             assertAssetReferences(content, finalReleases(installed, targets));
         } catch (error) {

@@ -17,14 +17,14 @@ bun run ulvia -- dev stop
 ```
 
 The CLI manages a persistent local CMS stack with MongoDB. `ULVIA_DATA_DIR`
-overrides its data directory; `ULVIA_DEV_CONTROL_PORT`,
-`ULVIA_DEV_DELIVERY_PORT`, `ULVIA_DEV_MONGO_PORT`, and
+overrides its data directory; `ULVIA_DEV_KERNEL_PORT`,
+`ULVIA_DEV_MONGO_PORT`, and
 `ULVIA_DEV_REPOSITORY_PORT` override the local ports. `release` validates an
 authored collection, contract, or provider manifest into the local immutable
 repository. `push` and `pull` transfer exact coordinates to and from a compatible
 HTTPS repository; `yank` and `restore` manage reversible catalogue availability.
 `dev credentials` prints the local repository write token. Site installation is
-performed through Control rather than the CLI.
+performed through the Kernel administration Pages rather than the CLI.
 
 ## Local KEK Rotation
 
@@ -59,9 +59,9 @@ automatically.
 | `bun run check:style` | Read-only Biome check. |
 | `bun run format` | Apply Biome formatting and configured safe/unsafe fixes; inspect the diff. |
 | `bun run typecheck` | TypeScript project-reference check/build. |
-| `bun run build` | Build components, TypeScript references, then the Control browser bundle. |
+| `bun run build` | Build components, TypeScript references, then the Kernel administration browser bundle. |
 | `bun test` | Run the test suite. |
-| `bun run test:control-smoke` | Exercise a fresh local Control installation, representative mutations and restart through Chromium. |
+| `bun run test:kernel-smoke` | Exercise a fresh local Kernel installation, representative mutations and restart through Chromium. |
 | `bun run clean` | Clean TypeScript build outputs through `tsc --build --clean`. |
 
 `check:all` is an aggregate static check; it does not execute the application
@@ -69,7 +69,7 @@ test suite or browser scenarios. Run focused tests for behavior changes and the
 build when generated browser assets are affected. Browser/network integration
 tests require an environment that permits Chromium and local listeners.
 
-The fresh-install Control smoke test additionally requires Docker Compose. It is
+The fresh-install Kernel smoke test additionally requires Docker Compose. It is
 opt-in locally and runs every night, or on demand, through the dedicated GitHub
 Actions workflow.
 

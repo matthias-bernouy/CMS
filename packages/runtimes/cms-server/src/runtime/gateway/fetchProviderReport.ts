@@ -16,8 +16,8 @@ export async function fetchProviderReport(endpoint: string, token: string, netwo
         siteId: "provider-connection-preview",
         installationId: "provider-connection-preview",
         providerTokenRef: "${PENDING_PROVIDER_TOKEN}",
-        invocationOrigin: "control",
-        actorKind: "administrator",
+        invocationOrigin: "system",
+        actorKind: "system",
         accept: "application/json",
         signal,
     });

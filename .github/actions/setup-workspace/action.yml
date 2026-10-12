@@ -15,4 +15,4 @@ runs:
 
     - name: Bootstrap browser assets
       shell: bash
-      run: bun run --cwd packages/surfaces/cms-control src/prebuildControl.ts
+      run: bun run --cwd packages/surfaces/cms-kernel src/tooling/prebuildAdmin.ts

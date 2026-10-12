@@ -1,5 +1,5 @@
 import type { SitePageReference } from "cms-content/pages/interfaces/routing";
-import type { PageDocument, PageSurface } from "cms-content/pages/interfaces/document";
+import type { PageDocument } from "cms-content/pages/interfaces/document";
 
 export type PageIndexingConfiguration = {
     /** Whether search engines may index this page or its discovered entity URLs. */
@@ -38,8 +38,6 @@ export type TPage = {
     id: string;
     /** Monotonic persistence revision used for optimistic concurrency and migration rollback safety. */
     revision: number;
-    /** Immutable execution and routing boundary. */
-    surface: PageSurface;
     /** Informational provenance for a site-owned copy; never live inheritance. */
     origin?: PageContributionOrigin;
     /** Primary public path used by delivery and route lookups. */
@@ -67,7 +65,6 @@ export type PageContributionOrigin = {
 };
 
 export type PageCreateOptions = {
-    readonly surface?: PageSurface;
     readonly origin?: PageContributionOrigin;
 };
 

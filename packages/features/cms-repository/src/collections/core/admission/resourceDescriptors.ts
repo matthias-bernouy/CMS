@@ -42,7 +42,6 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
             generation: bloc.generation ?? 1,
             kind: bloc.kind,
             internal: bloc.internal ?? false,
-            surfaces: bloc.surfaces,
             uses: bloc.uses,
             requires: bloc.requires,
             slots: bloc.slots,
@@ -112,7 +111,6 @@ function resourceProjections(release: CollectionRelease): ResourceProjection[] {
             contract: {
                 id: page.id,
                 generation: page.generation ?? 1,
-                surface: page.surface,
                 uses: page.uses,
                 requires: page.requires,
             },

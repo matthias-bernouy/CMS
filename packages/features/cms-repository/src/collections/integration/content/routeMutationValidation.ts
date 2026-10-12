@@ -35,9 +35,6 @@ export async function validateCollectionMutationPageLinks(
                     status: 409,
                 });
             }
-            if (page.surface === "delivery" && target.surface === "control") {
-                throw Object.assign(new Error("A Delivery Page cannot reference a Control Page"), { status: 409 });
-            }
         }
     }
     for (const installation of candidate.collections) {
@@ -52,9 +49,6 @@ export async function validateCollectionMutationPageLinks(
                     throw Object.assign(new Error("A collection Page references an unavailable site Page"), {
                         status: 409,
                     });
-                }
-                if (page.surface === "delivery" && target.surface === "control") {
-                    throw Object.assign(new Error("A Delivery Page cannot reference a Control Page"), { status: 409 });
                 }
             }
         }

@@ -35,8 +35,7 @@ describe("production runtime stores", () => {
 
     test("rejects an invalid Mongo connection string before initializing stores", async () => {
         const env = readRuntimeEnv({
-            CONTROL_PUBLIC_URL: "https://admin.example.test",
-            DELIVERY_PUBLIC_URL: "https://www.example.test",
+            KERNEL_PUBLIC_URL: "https://www.example.test",
             CMS_SESSION_SECRET: "session-secret",
             CMS_KEK_HEX: "00".repeat(32),
             CMS_ADMIN_EMAIL: "admin@example.test",

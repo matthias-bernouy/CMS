@@ -7,7 +7,7 @@ const context: CoreCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
     siteId: "default",
     installationId: "official",
-    origin: "control",
+    origin: "page",
     actorKind: "administrator",
     providerSubjectId: "00000000-0000-4000-8000-000000000002",
     idempotencyKey: "migration-1",

@@ -1,0 +1,17 @@
+import { describe, expect, test } from "bun:test";
+import { generateBindingCoreJsEntry } from "cms-kernel/core/assets/buildBindingCore";
+
+describe("kernel system runtime asset", () => {
+    test("bundles only the technical binding runtime", async () => {
+        const entry = await generateBindingCoreJsEntry();
+        const source = new TextDecoder().decode(entry.raw);
+
+        expect(source).toContain("cms-binding-core");
+        expect(source).toContain("setSourceContext");
+        expect(source).toContain("sourceFormRequest");
+        expect(source).not.toContain("cms-signup-legal-consent");
+        expect(source).not.toContain("cms-login-methods");
+        expect(source).not.toContain("node:crypto");
+        expect(source).not.toContain("mongodb");
+    });
+});

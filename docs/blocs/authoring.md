@@ -1,7 +1,7 @@
 # Create A Collection Bloc
 
-Blocs are authored inside an immutable collection release. The current Control
-surface does not mount a private `/api/bloc` importer and no visual editor is
+Blocs are authored inside an immutable collection release. The Kernel does not
+mount a private `/api/bloc` importer and no visual editor is
 present. `ulvia release` is the supported compilation path; site-owned Bloc
 persistence remains a feature API for a future editor, not a second public
 authoring format.
@@ -72,10 +72,10 @@ stored-data changes.
 
 ## Runtime Rules
 
-Bloc code is a browser bundle shared by Control and Delivery according to its
-declared `surfaces`. It imports browser-safe public entries such as
+Bloc code is a browser bundle shared by every Page that uses it. It imports
+browser-safe public entries such as
 `@bernouy/cms-content/browser`; it must not import Node, Bun, databases,
-secrets, runtimes or surface internals.
+secrets, runtimes or Kernel internals.
 
 Keep element lifecycle explicit and release listeners when disconnected.
 Prefer semantic HTML and Page references over direct browser navigation. The

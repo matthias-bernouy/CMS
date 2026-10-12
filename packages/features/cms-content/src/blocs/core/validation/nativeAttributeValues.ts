@@ -49,6 +49,9 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
         isContributedAssetSource(value) &&
         ((normalizedTag === "a" && normalizedAttribute === "href") ||
             (normalizedTag === "img" && normalizedAttribute === "src"));
+    if (DYNAMIC_TOKEN.test(value) && isRuntimeBoundNativeAttribute(normalizedTag, normalizedAttribute)) {
+        return null;
+    }
     if ((DYNAMIC_TOKEN.test(value) && !contributedAssetUrl) || CONTROL_CHARACTER.test(value)) {
         return `attribute "${attribute}" must be a static value without control characters`;
     }
@@ -102,6 +105,14 @@ export function nativeAttributeValueIssue(tag: string, attribute: string, value:
         return svgAttributeIssue(normalizedAttribute, value);
     }
     return null;
+}
+
+function isRuntimeBoundNativeAttribute(tag: string, attribute: string): boolean {
+    return (
+        attribute === "id" ||
+        (tag === "label" && attribute === "for") ||
+        (["input", "option", "output", "select", "textarea"].includes(tag) && attribute === "value")
+    );
 }
 
 export function nativeAttributeSetIssue(tag: string, attributes: Readonly<Record<string, string>>): string | null {

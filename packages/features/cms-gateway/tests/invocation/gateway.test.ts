@@ -50,14 +50,30 @@ function harness(route: GatewayRoute, identities = new ProviderIdentityAliases(n
     };
 }
 
-function invocation(actor: GatewayActor = { kind: "anonymous" }, input: unknown = { term: "one" }) {
+function invocation(
+    actor: GatewayActor = { kind: "system", serviceId: "gateway-test" },
+    input: unknown = { term: "one" },
+) {
     return {
         siteId: "site-a",
         contractId: "catalog",
         capabilityId: "item.list",
-        origin: "delivery" as const,
+        origin: "system" as const,
         actor,
         input,
+    };
+}
+
+function pageInvocation(route: GatewayRoute, actor: GatewayActor, input: unknown = { term: "one" }) {
+    return {
+        ...invocation(actor, input),
+        origin: "page" as const,
+        execution: {
+            planDigest: `sha256:${"a".repeat(64)}` as const,
+            version: route.selection.version,
+            digest: route.selection.digest,
+            installationId: route.selection.installationId,
+        },
     };
 }
 
@@ -77,7 +93,7 @@ describe("capability gateway", () => {
         expect(scope.sent[0]).toMatchObject({
             endpoint: "https://provider.example.com",
             providerTokenRef: "${PROVIDER_TOKEN}",
-            actorKind: "anonymous",
+            actorKind: "system",
             input: { term: "one" },
         });
     });
@@ -120,8 +136,10 @@ describe("capability gateway", () => {
     test("uses provider identity and hides CMS subject IDs from transport", async () => {
         const route = await gatewayRoute({ access: "authenticated" });
         const scope = harness(route);
-        await expect(scope.gateway.invoke(invocation())).rejects.toMatchObject({ code: "not_authorized" });
-        await scope.gateway.invoke(invocation({ kind: "user", subjectId: "cms-user-1" }));
+        await expect(scope.gateway.invoke(pageInvocation(route, { kind: "anonymous" }))).rejects.toMatchObject({
+            code: "not_authorized",
+        });
+        await scope.gateway.invoke(pageInvocation(route, { kind: "user", subjectId: "cms-user-1" }));
         const alias = scope.sent[0]?.providerSubjectId;
         expect(alias).toMatch(/^[0-9a-f-]{36}$/);
         expect(JSON.stringify(scope.sent[0])).not.toContain("cms-user-1");
@@ -140,15 +158,19 @@ describe("capability gateway", () => {
             scope.identities,
         );
         await otherInstallation.gateway.invoke({
-            ...invocation({ kind: "user", subjectId: "cms-user-1" }),
+            ...pageInvocation(
+                { ...route, selection: { ...route.selection, siteId: "site-b", installationId: "install-b" } },
+                { kind: "user", subjectId: "cms-user-1" },
+            ),
             siteId: "site-b",
         });
         expect(otherInstallation.sent[0]?.providerSubjectId).toBe(alias);
     });
 
     test("propagates an opaque subject alias for administrator capabilities", async () => {
-        const scope = harness(await gatewayRoute({ access: "admin" }));
-        await scope.gateway.invoke(invocation({ kind: "administrator", subjectId: "cms-admin-1" }));
+        const route = await gatewayRoute({ access: "admin" });
+        const scope = harness(route);
+        await scope.gateway.invoke(pageInvocation(route, { kind: "administrator", subjectId: "cms-admin-1" }));
 
         const alias = scope.sent[0]?.providerSubjectId;
         expect(alias).toMatch(/^[0-9a-f-]{36}$/);
@@ -158,14 +180,19 @@ describe("capability gateway", () => {
 
     test("checks access without invoking the provider or creating an identity alias", async () => {
         const identities = new InMemoryIdentityService();
-        const scope = harness(await gatewayRoute({ access: "authenticated" }), new ProviderIdentityAliases(identities));
-        const call = invocation({ kind: "user", subjectId: "cms-user-1" });
+        const route = await gatewayRoute({ access: "authenticated" });
+        const scope = harness(route, new ProviderIdentityAliases(identities));
+        const call = pageInvocation(route, { kind: "user", subjectId: "cms-user-1" });
         await scope.gateway.assertAuthorized(call);
         expect(scope.sent).toHaveLength(0);
         expect(
             await identities.resolve({ authority: "cms", kind: "user", value: "cms-user-1" }, "ulvia.example"),
         ).toBeNull();
-        await expect(scope.gateway.assertAuthorized(invocation())).rejects.toMatchObject({ code: "not_authorized" });
+        await expect(
+            scope.gateway.assertAuthorized(pageInvocation(route, { kind: "anonymous" })),
+        ).rejects.toMatchObject({
+            code: "not_authorized",
+        });
     });
 
     test("returns provider binary output as a neutral stream", async () => {
@@ -400,9 +427,9 @@ describe("capability gateway", () => {
             },
             now: () => NOW,
         });
-        await expect(gateway.invoke({ ...invocation(), origin: "control" })).rejects.toMatchObject({
+        await expect(gateway.invoke(invocation())).rejects.toMatchObject({
             code: "stale_route",
         });
-        expect(seen).toEqual(["control"]);
+        expect(seen).toEqual(["system"]);
     });
 });

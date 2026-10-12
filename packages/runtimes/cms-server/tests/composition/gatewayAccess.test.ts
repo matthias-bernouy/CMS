@@ -4,7 +4,7 @@ import type { CapabilityGatewayOptions } from "@bernouy/cms-gateway";
 import type { Db } from "mongodb";
 import { createProductionGatewayAccess } from "../../src/runtime/gateway/access";
 
-test("production gateway grants Delivery, scoped collection Pages and bootstrap-admin Control calls", async () => {
+test("production gateway derives Page access from capability access", async () => {
     const credentials = {
         getByEmail: async () => ({ sub: "bootstrap-1" }),
     } as unknown as LocalCredentialStore;
@@ -47,23 +47,20 @@ test("production gateway grants Delivery, scoped collection Pages and bootstrap-
 
     const publicCapability = { access: "public" } as Parameters<CapabilityGatewayOptions["authorize"]>[1];
     const privateCapability = { access: "authenticated" } as Parameters<CapabilityGatewayOptions["authorize"]>[1];
+    const adminCapability = { access: "admin" } as Parameters<CapabilityGatewayOptions["authorize"]>[1];
     const route = {} as Parameters<CapabilityGatewayOptions["authorize"]>[2];
-    expect(await access.authorize({ kind: "anonymous" }, publicCapability, route, "delivery")).toBe(true);
-    expect(await access.authorize({ kind: "user", subjectId: "user-1" }, privateCapability, route, "delivery")).toBe(
-        true,
-    );
-    expect(await access.authorize({ kind: "anonymous" }, privateCapability, route, "delivery")).toBe(false);
+    expect(await access.authorize({ kind: "anonymous" }, publicCapability, route, "page")).toBe(true);
+    expect(await access.authorize({ kind: "user", subjectId: "user-1" }, privateCapability, route, "page")).toBe(true);
+    expect(await access.authorize({ kind: "anonymous" }, privateCapability, route, "page")).toBe(false);
     expect(
         await access.authorize(
             { kind: "administrator", subjectId: "local:bootstrap-1" },
-            privateCapability,
+            adminCapability,
             route,
-            "control",
+            "page",
         ),
     ).toBe(true);
-    expect(await access.authorize({ kind: "user", subjectId: "user-1" }, publicCapability, route, "control")).toBe(
-        false,
-    );
     expect(await access.authorize({ kind: "user", subjectId: "user-1" }, publicCapability, route, "page")).toBe(true);
     expect(await access.authorize({ kind: "user", subjectId: "user-1" }, privateCapability, route, "page")).toBe(true);
+    expect(await access.authorize({ kind: "user", subjectId: "user-1" }, adminCapability, route, "page")).toBe(false);
 });

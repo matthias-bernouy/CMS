@@ -1,5 +1,5 @@
 import { createProductionAuth } from "./runtime/auth";
-import { mountProductionSurfaces } from "./runtime/mountSurfaces";
+import { mountProductionKernel } from "./runtime/mountKernel";
 import { createCoreStores } from "./runtime/stores/core";
 import { createFeatureStores } from "./runtime/stores/features";
 import { createProductionGateway } from "./runtime/gateway/createProductionGateway";
@@ -58,9 +58,9 @@ if (gateway && env.CMS_REPOSITORY_URL && env.CORE_PUBLIC_URL && env.CMS_CORE_PRO
         throw error;
     }
 }
-let surfaces;
+let kernel;
 try {
-    surfaces = await mountProductionSurfaces({
+    kernel = await mountProductionKernel({
         env,
         core,
         authentication,
@@ -80,7 +80,7 @@ const shutdown = async (signal: string) => {
     stopping = true;
     console.log(`\n→ Stopping (${signal})...`);
     try {
-        await surfaces.stop();
+        await kernel.stop();
         await localCoreProvider?.stop();
     } finally {
         await core.close();

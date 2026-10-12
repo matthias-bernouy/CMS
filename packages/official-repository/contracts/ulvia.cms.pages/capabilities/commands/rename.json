@@ -44,14 +44,6 @@
                 "minimum": 1,
                 "maximum": 9007199254740991
             },
-            "surface": {
-                "type": "string",
-                "enum": [
-                    "control",
-                    "delivery"
-                ],
-                "maxLength": 8
-            },
             "path": {
                 "type": "string",
                 "maxLength": 2048
@@ -68,7 +60,6 @@
         "required": [
             "id",
             "revision",
-            "surface",
             "path",
             "title",
             "visible"

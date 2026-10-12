@@ -20,17 +20,10 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   the administrator's golden path and its executable completion gate.
 - [Deferred platform work](TODO.md): explicit trust assumptions and work that
   must be completed before those assumptions change.
-- [Control Pages and provider-managed CMS instances](todo/control-pages-and-provider-managed-cms-instances.md):
-  design for replacing the removed static admin and collection View models with
-  surface-specific Pages, with local, cloud or third-party instance providers;
-  provider-owned local discovery, immutable collection Pages, site-owned
-  surface routes, mounted shared rendering and the autonomous bundled Docker
-  bootstrap are implemented. Provider lifecycle provisioning and complete
-  Control parity remain planned.
 - [Local provider and CMS initialization](todo/local-provider-initialization.md):
-  offline first-run, bootstrap collection, Control Page, restart and recovery
+  offline first-run, bootstrap collection, administration Page, restart and recovery
   flow for the official local provider; durable local discovery and the bundled
-  Docker repository/Core/Control bootstrap are implemented, while provider-owned
+  Docker repository/Core/Kernel bootstrap are implemented, while provider-owned
   instance lifecycle mutations remain planned.
 
 ## Providers And Collections
@@ -39,7 +32,7 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   state, live invocation, identities and remaining integration gaps.
 - [Bloc authoring](blocs/README.md): collection Blocs, site-owned content
   contracts, bindings and themes.
-- [Collection API and admission](blocs/collections.md): the current Control
+- [Collection API and admission](blocs/collections.md): the current administration
   workspace and the separate `ulvia-collection/v1` authored bundle format.
 - [Site health](providers/README.md): provider observations, selected sources,
   and collection versions in the admin Health page.
@@ -48,15 +41,15 @@ Use the [repository audit](AUDIT.md), the architecture guides and the referenced
 source code to establish current behavior. Deliberately deferred activation
 gates remain recorded in [Deferred platform work](TODO.md).
 
-## HTTP Surfaces
+## HTTP Applications
 
-- [Control API routing](surfaces/control-api.md).
-- [Control kernel routing](surfaces/control-kernel.md).
+- [Kernel routing](surfaces/kernel.md): the unified Page, administration,
+  authentication, capability and asset application.
 - [Page languages and routes](surfaces/page-routes.md): localized URLs,
   redirects, deletion and recovery.
 - [Dynamic page indexing](surfaces/page-indexing.md): metadata projection and
   sitemap discovery through selected gateway capabilities.
-- [Public authentication](surfaces/public-auth.md): Delivery's CMS-owned auth routes.
+- [Public authentication](surfaces/public-auth.md): the Kernel's CMS-owned auth routes.
 
 ## Images And UI Quality
 

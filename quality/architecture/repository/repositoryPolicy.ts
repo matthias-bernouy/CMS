@@ -1,7 +1,7 @@
 import type { WorkspaceCheckOptions } from "../core/checkWorkspace";
 
-const CONTROL_COMPONENT_ENTRY = "packages/surfaces/cms-control/src/browser/runtime.ts";
-const CONTROL_RUNTIME_ASSET = "packages/surfaces/cms-control/src/browser/control-runtime.js";
+const ADMIN_COMPONENT_ENTRY = "packages/surfaces/cms-kernel/src/browser/runtime.ts";
+const ADMIN_RUNTIME_ASSET = "packages/surfaces/cms-kernel/src/browser/admin-runtime.js";
 
 /** Existing reads are frozen here until runtime configuration is injected into their owners. */
 export const ENVIRONMENT_READ_BASELINE = {
@@ -11,16 +11,16 @@ export const ENVIRONMENT_READ_BASELINE = {
     "packages/foundation/http-runner/src/default-implementation/InMemoryCache.ts": {
         "process.env.MODE": 1,
     },
-    "packages/surfaces/cms-delivery/src/core/assets/buildBindingCore.ts": {
+    "packages/surfaces/cms-kernel/src/core/assets/buildBindingCore.ts": {
         "process.env.MODE": 1,
     },
-    "packages/surfaces/cms-delivery/src/core/assets/buildComponent.ts": {
+    "packages/surfaces/cms-kernel/src/core/assets/buildComponent.ts": {
         "process.env.MODE": 1,
     },
-    "packages/surfaces/cms-delivery/src/core/head/buildMetaCsp.ts": {
+    "packages/surfaces/cms-kernel/src/core/head/buildMetaCsp.ts": {
         "process.env.MODE": 1,
     },
-    "packages/surfaces/cms-delivery/src/runtime/DeliveryCmsContext.ts": {
+    "packages/surfaces/cms-kernel/src/runtime/KernelCmsContext.ts": {
         "process.env.MODE": 1,
     },
 } as const;
@@ -28,9 +28,9 @@ export const ENVIRONMENT_READ_BASELINE = {
 export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOptions {
     return {
         rootDir,
-        ignoredPaths: [CONTROL_RUNTIME_ASSET],
+        ignoredPaths: [ADMIN_RUNTIME_ASSET],
         browserEntryPaths: [
-            CONTROL_COMPONENT_ENTRY,
+            ADMIN_COMPONENT_ENTRY,
             "packages/features/cms-content/src/browser/index.ts",
             "packages/features/cms-content/src/browser/dom.ts",
             "packages/features/cms-content/src/exports/bindings.ts",
@@ -38,7 +38,7 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
             "packages/features/cms-content/src/exports/page-path.ts",
         ],
         packageImportAllowlist: {
-            "@bernouy/cms-delivery": {
+            "@bernouy/cms-kernel": {
                 "@bernouy/cms-content": [
                     "./rendering",
                     "./bindings",
@@ -46,6 +46,7 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
                     "./browser/dom",
                     "./theme",
                     "./page-path",
+                    "./kernel",
                 ],
             },
         },

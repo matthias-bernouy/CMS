@@ -1,16 +1,14 @@
 import type { CollectionCapabilityRequirement, CollectionTranslationKey } from "./CollectionRelease";
-import type { PageDocument, PageSurface } from "@bernouy/cms-content/page-document";
+import type { PageDocument } from "@bernouy/cms-content/page-document";
 
-export type { PageDocument, PageSurface } from "@bernouy/cms-content/page-document";
+export type { PageDocument } from "@bernouy/cms-content/page-document";
 
-export type CollectionPageSurface = PageSurface;
 export type CollectionPageDocument = PageDocument;
 
-/** One collection-owned document for exactly one rendering surface. */
+/** One immutable collection-owned Page document. */
 export interface CollectionPage {
     readonly id: string;
     readonly generation?: number;
-    readonly surface: CollectionPageSurface;
     /** Collection-provided route used only until the site chooses an override. */
     readonly defaultPath: string;
     readonly name: CollectionTranslationKey;

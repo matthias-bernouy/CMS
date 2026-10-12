@@ -22,7 +22,7 @@ export class Bloc extends Component {
 
     override connectedCallback(): void {
         this.rangeInput = this.querySelector<HTMLInputElement>('input[type="range"]');
-        this.manualInput = this.querySelector<HTMLInputElement>("[data-range-manual]");
+        this.manualInput = this.querySelector<HTMLInputElement>('ulvia-official-input[slot="manual-input"] input');
         this.manualComponent = this.querySelector<HTMLElement>('ulvia-official-input[slot="manual-input"]');
         this.manualLabel = this.querySelector<HTMLElement>("[data-range-label]");
         this.rangeElement = this.querySelector<HTMLElement>("ulvia-official-range");

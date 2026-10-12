@@ -1,5 +1,3 @@
-import type { PageSurface } from "cms-content/pages/interfaces/document";
-
 export type SitePageReference = { readonly kind: "site"; readonly pageId: string };
 
 export type PageReference =
@@ -15,46 +13,44 @@ export type PageLinkTarget =
     | { readonly kind: "page"; readonly page: PageReference }
     | { readonly kind: "url"; readonly url: string };
 
-export interface SurfacePageRoute {
+export interface RegisteredPageRoute {
     readonly page: PageReference;
-    readonly surface: PageSurface;
     readonly defaultPath: string;
     readonly overridePath?: string;
     readonly path: string;
     readonly revision: number;
 }
 
-export interface SurfacePageRouteRegistration {
+export interface PageRouteRegistration {
     readonly page: PageReference;
-    readonly surface: PageSurface;
     readonly defaultPath: string;
 }
 
-export interface SurfacePageRouteRegistry {
-    register(siteId: string, input: SurfacePageRouteRegistration): Promise<SurfacePageRoute>;
-    list(siteId: string): Promise<readonly SurfacePageRoute[]>;
-    get(siteId: string, page: PageReference): Promise<SurfacePageRoute | null>;
-    resolve(siteId: string, surface: PageSurface, path: string): Promise<SurfacePageRoute | null>;
+export interface PageRouteRegistry {
+    register(siteId: string, input: PageRouteRegistration): Promise<RegisteredPageRoute>;
+    list(siteId: string): Promise<readonly RegisteredPageRoute[]>;
+    get(siteId: string, page: PageReference): Promise<RegisteredPageRoute | null>;
+    resolve(siteId: string, path: string): Promise<RegisteredPageRoute | null>;
     updateDefault(
         siteId: string,
         page: PageReference,
         defaultPath: string,
         expectedRevision: number,
-    ): Promise<SurfacePageRoute>;
+    ): Promise<RegisteredPageRoute>;
     setOverride(
         siteId: string,
         page: PageReference,
         overridePath: string | null,
         expectedRevision: number,
-    ): Promise<SurfacePageRoute>;
+    ): Promise<RegisteredPageRoute>;
     remove(siteId: string, page: PageReference, expectedRevision: number): Promise<void>;
 }
 
 export interface PageRouteReader {
-    get(page: PageReference): Promise<SurfacePageRoute | null>;
+    get(page: PageReference): Promise<RegisteredPageRoute | null>;
 }
 
 export interface ResolvedPageLink {
     readonly href: string;
-    readonly surface: PageSurface | "external";
+    readonly external: boolean;
 }

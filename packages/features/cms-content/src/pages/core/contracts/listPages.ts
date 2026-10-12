@@ -8,7 +8,6 @@ export interface CmsPagesListInput {
 export interface CmsPageListItem {
     readonly id: string;
     readonly revision: number;
-    readonly surface: "control" | "delivery";
     readonly path: string;
     readonly title: string;
     readonly visible: boolean;
@@ -34,10 +33,9 @@ export async function listCmsPages(
     }
     const page = await repository.scanPages(cursor, limit);
     return {
-        items: page.pages.map(({ id, revision, surface, path, title, visible }) => ({
+        items: page.pages.map(({ id, revision, path, title, visible }) => ({
             id,
             revision,
-            surface,
             path,
             title,
             visible,

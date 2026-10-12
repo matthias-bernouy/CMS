@@ -1,8 +1,8 @@
 # Bind Data And Sources
 
-Use declarative bindings for CMS and provider data. They let Control keep
-authoring markup inert, let Delivery preflight gateway capability access, and give both
-surfaces the same loading, error, repetition, and interpolation behavior.
+Use declarative bindings for CMS and provider data. They let the administration
+UI keep authoring markup inert, let the Kernel preflight gateway capability access, and give every Page
+Pages the same loading, error, repetition, and interpolation behavior.
 
 Do not replace this contract with an ad-hoc `fetch()` when a binding expresses
 the same read or form-submission lifecycle.
@@ -179,7 +179,7 @@ their existing serialization.
 
 ## Applying an action result to a source
 
-Control may already have the complete resource returned by a successful action.
+The administration UI may already have the complete resource returned by a successful action.
 `setSourceData(sourceElement, value)` from `@bernouy/cms-content/browser`
 supplies that value to the existing source renderer. It cancels an older
 pending read and applies normal interpolation,

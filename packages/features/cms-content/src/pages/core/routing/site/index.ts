@@ -1,6 +1,6 @@
 import type { CmsRepository } from "cms-content/application/interfaces/CmsRepository";
 import type { TPage } from "cms-content/pages/interfaces/pages";
-import type { SurfacePageRouteRegistry } from "cms-content/pages/interfaces/routing";
+import type { PageRouteRegistry } from "cms-content/pages/interfaces/routing";
 import {
     assertPageContentLinks,
     createPageRouteReader,
@@ -23,7 +23,7 @@ const PAGE_ROUTE_MUTATIONS = new Set([
 /** Reconciles editable Page routes after every canonical Page mutation. */
 export function withSitePageRoutes(
     repository: CmsRepository,
-    routes: SurfacePageRouteRegistry,
+    routes: PageRouteRegistry,
     siteId: string,
     coordinator = new PageRouteMutationCoordinator(),
 ): CmsRepository {
@@ -51,7 +51,7 @@ export function withSitePageRoutes(
 
 async function validateMutationLinks(
     repository: CmsRepository,
-    routes: SurfacePageRouteRegistry,
+    routes: PageRouteRegistry,
     siteId: string,
     method: string,
     args: readonly unknown[],
@@ -59,10 +59,8 @@ async function validateMutationLinks(
     const reader = createPageRouteReader(routes, siteId);
     if (method === "insertPage") {
         const content = typeof args[2] === "string" ? args[2] : "";
-        const options = args[3] as { surface?: TPage["surface"] } | undefined;
-        const surface = options?.surface ?? "delivery";
-        await assertRouteAvailable(routes, siteId, surface, String(args[0]));
-        await assertPageContentLinks(reader, surface, content);
+        await assertRouteAvailable(routes, siteId, String(args[0]));
+        await assertPageContentLinks(reader, content);
         return;
     }
     if (method === "updatePage") {
@@ -73,9 +71,9 @@ async function validateMutationLinks(
         const current = await repository.getPageById(patch.id);
         if (current) {
             if (patch.path && patch.path !== current.path) {
-                await assertRouteAvailable(routes, siteId, current.surface, patch.path, current.id);
+                await assertRouteAvailable(routes, siteId, patch.path, current.id);
             }
-            await assertPageContentLinks(reader, current.surface, patch.content ?? current.content);
+            await assertPageContentLinks(reader, patch.content ?? current.content);
         }
         return;
     }
@@ -86,7 +84,7 @@ async function validateMutationLinks(
                 (args[2] as Awaited<ReturnType<CmsRepository["getSystem"]>> | undefined) ??
                 (await repository.getSystem());
             const primaryPath = planPagePaths(args[1] as Record<string, string>, system).primaryPath;
-            await assertRouteAvailable(routes, siteId, current.surface, primaryPath, current.id);
+            await assertRouteAvailable(routes, siteId, primaryPath, current.id);
         }
         return;
     }
@@ -114,27 +112,25 @@ async function validateMutationLinks(
 }
 
 async function assertRouteAvailable(
-    routes: SurfacePageRouteRegistry,
+    routes: PageRouteRegistry,
     siteId: string,
-    surface: TPage["surface"],
     path: string,
     ownerPageId?: string,
 ): Promise<void> {
-    const occupied = await routes.resolve(siteId, surface, path);
+    const occupied = await routes.resolve(siteId, path);
     if (occupied && (occupied.page.kind !== "site" || occupied.page.pageId !== ownerPageId)) {
         throw new PageRouteCollisionError(path);
     }
 }
 
-/** Idempotently rebuilds the site-owned part of the shared surface route registry. */
+/** Idempotently rebuilds the site-owned part of the shared Page route registry. */
 export async function synchronizeSitePageRoutes(
-    routes: SurfacePageRouteRegistry,
+    routes: PageRouteRegistry,
     siteId: string,
     pages: readonly TPage[],
 ): Promise<void> {
     const desired = pages.map((page) => ({
         page: { kind: "site" as const, pageId: page.id },
-        surface: page.surface,
         defaultPath: page.path,
     }));
     await synchronizePageRouteRegistrations(routes, siteId, desired, (route) => route.page.kind === "site");
@@ -142,15 +138,15 @@ export async function synchronizeSitePageRoutes(
 
 export async function validatePageLinks(
     repository: CmsRepository,
-    routes: SurfacePageRouteRegistry,
+    routes: PageRouteRegistry,
     siteId: string,
 ): Promise<void> {
     const reader = createPageRouteReader(routes, siteId);
     for (const page of await repository.getAllPages()) {
-        await assertPageContentLinks(reader, page.surface, page.content);
+        await assertPageContentLinks(reader, page.content);
     }
     const contributions = await repository.getContentContributions?.();
     for (const page of contributions?.pages ?? []) {
-        await assertPageContentLinks(reader, page.surface, page.document.html);
+        await assertPageContentLinks(reader, page.document.html);
     }
 }

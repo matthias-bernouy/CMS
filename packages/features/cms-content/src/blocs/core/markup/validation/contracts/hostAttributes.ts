@@ -1,4 +1,7 @@
 import type { BlocSettingItem, BlocSettings } from "cms-content/pages/interfaces/document";
+import { COMPOSITION_CONTROLLER_ATTRIBUTE } from "cms-content/blocs/core/composition/expandCompositions";
+import { implementationAccessibilityAttributeIssue } from "cms-content/blocs/core/markup/validation/contracts/accessibilityAttributes";
+import { isCmsBindingAttribute } from "cms-content/blocs/core/validation/nativeBindings";
 
 const JSON_NUMBER = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/u;
 const SLOT_NAME = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
@@ -13,10 +16,18 @@ export function pageBlocHostAttributesIssue(
     attributes: Readonly<Record<string, string>>,
     contract: PageBlocHostContract,
     nested: boolean,
+    allowDynamicSettings = false,
+    allowImplementationAttributes = false,
 ): string | null {
     const settings = contract.settings ?? [];
     const settingIds = new Set(settings.map((item) => item.id));
     for (const [name, value] of Object.entries(attributes)) {
+        if (allowImplementationAttributes && name === COMPOSITION_CONTROLLER_ATTRIBUTE) {
+            if (value !== "") {
+                return `${COMPOSITION_CONTROLLER_ATTRIBUTE} must use an empty HTML attribute`;
+            }
+            continue;
+        }
         if (name === "slot") {
             if (!nested) {
                 return `Page root Bloc <${contract.id}> cannot target a slot`;
@@ -26,18 +37,50 @@ export function pageBlocHostAttributesIssue(
             }
             continue;
         }
+        if (allowImplementationAttributes && isCmsBindingAttribute(name)) {
+            continue;
+        }
+        if (allowImplementationAttributes && isImplementationAttribute(name, value)) {
+            continue;
+        }
+        const accessibilityIssue = allowImplementationAttributes
+            ? implementationAccessibilityAttributeIssue(name, value)
+            : undefined;
+        if (accessibilityIssue !== undefined) {
+            if (accessibilityIssue) {
+                return accessibilityIssue;
+            }
+            continue;
+        }
         if (!settingIds.has(name)) {
             return `Bloc <${contract.id}> attribute ${JSON.stringify(name)} is not a declared setting`;
         }
     }
     try {
         for (const setting of settings) {
-            validateSettingValue(setting, attributes[setting.id]);
+            const value = attributes[setting.id];
+            if (allowDynamicSettings && value !== undefined && /(?:\{\{|#\{|@\{)/u.test(value)) {
+                continue;
+            }
+            validateSettingValue(setting, value);
         }
         return null;
     } catch (error) {
         return `Bloc <${contract.id}> settings are invalid: ${error instanceof Error ? error.message : "constraint mismatch"}`;
     }
+}
+
+function isImplementationAttribute(name: string, value: string): boolean {
+    if (name === "id") {
+        return /^[A-Za-z][A-Za-z0-9_.:-]{0,127}$/u.test(value);
+    }
+    if (name === "hidden") {
+        return value === "";
+    }
+    if (name === "tabindex") {
+        return value === "-1" || value === "0";
+    }
+    return false;
 }
 
 function validateSettingValue(setting: BlocSettingItem, attribute: string | undefined): void {

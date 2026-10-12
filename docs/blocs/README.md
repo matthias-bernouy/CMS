@@ -9,10 +9,11 @@ CmsCore Blocs separate four concerns:
 | Authoring contract | Collection | Settings, slots, defaults and native-element policy. |
 | Theme | Site and collection | Shared tokens plus deliberate component extension points. |
 
-One Page document and one rendering pipeline serve both surfaces. A Page owns
-exactly one surface (`control` or `delivery`); a Bloc may support one or both.
-There is no collection View or Dashboard renderer. Control exposes the active
-installed Bloc catalogue through the visual Page editor.
+One Page document and one rendering pipeline serve every Page. Pages and Blocs
+do not declare a surface. The Kernel derives Page access from the capabilities
+used by the Page and its transitive Blocs. There is no collection View or
+Dashboard renderer. Administration Pages expose the active installed Bloc
+catalogue through the visual Page editor.
 
 ## Guides
 
@@ -35,12 +36,12 @@ authored collection sources
   -> strict admission + immutable digest
   -> repository publication
   -> site installation and exact execution plans
-  -> shared Control/Delivery Page renderer
+  -> shared Kernel Page renderer
 ```
 
-Collection components and compositions are fully renderable. Control Pages are
-mounted from installed collections and call official CMS contracts through
-`/.cms/call`; Delivery uses the same Bloc artifacts for public Pages. The
+Collection components and compositions are fully renderable. Administration
+Pages are mounted from installed collections and call official CMS contracts
+through `/.cms/call`; public Pages use the same Bloc artifacts. The
 browser host remains presentation-free and visual components live in
 collections.
 

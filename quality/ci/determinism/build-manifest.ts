@@ -15,7 +15,7 @@ export type BuildManifest = {
     files: BuildManifestEntry[];
 };
 
-const CONTROL_ASSET = "packages/surfaces/cms-control/src/browser/control-runtime.js";
+const KERNEL_ASSET = "packages/surfaces/cms-kernel/src/browser/admin-runtime.js";
 const SKIPPED_DIRECTORIES = new Set([".git", "node_modules"]);
 
 function normalizePath(path: string): string {
@@ -95,7 +95,7 @@ async function discoverBuildOutputs(rootDir: string): Promise<string[]> {
     }
 
     await visit(packagesRoot);
-    outputs.add(join(rootDir, CONTROL_ASSET));
+    outputs.add(join(rootDir, KERNEL_ASSET));
     return [...outputs].sort((left, right) => normalizePath(left).localeCompare(normalizePath(right)));
 }
 

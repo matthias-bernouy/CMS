@@ -1,4 +1,4 @@
-# CMS image — single Bun process for Control + Delivery.
+# CMS image — single Bun process for the unified Kernel.
 # Build context is the repo root (the workspace must be fully available).
 
 FROM oven/bun:1.4.2-alpine@sha256:d888c0ae6c86d7866ff10c5aafdd9077b36aee6455b33dd270fb93c0dd5cef6f AS build
@@ -24,7 +24,7 @@ ARG IMAGE_VERSION=dev
 ARG VCS_REF=unknown
 
 LABEL org.opencontainers.image.title="@bernouy/cms-server" \
-      org.opencontainers.image.description="CmsCore Control and Delivery runtime" \
+      org.opencontainers.image.description="CmsCore Kernel runtime" \
       org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.opencontainers.image.revision="${VCS_REF}"
 
@@ -46,9 +46,9 @@ RUN bun install --frozen-lockfile --production \
 ENV NODE_ENV=production \
     MODE=PROD
 
-EXPOSE 3000 3001
+EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD ["bun", "-e", "const port = process.env.CONTROL_PORT || '3000'; const response = await fetch(`http://127.0.0.1:${port}/login`, { signal: AbortSignal.timeout(4000) }); if (!response.ok) process.exit(1); await response.body?.cancel();"]
+    CMD ["bun", "-e", "const port = process.env.KERNEL_PORT || '3000'; const response = await fetch(`http://127.0.0.1:${port}/login`, { signal: AbortSignal.timeout(4000) }); if (!response.ok) process.exit(1); await response.body?.cancel();"]
 
 CMD ["bun", "run", "packages/runtimes/cms-server/src/index.ts"]

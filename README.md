@@ -40,8 +40,7 @@ CmsCore/
 |   |   `-- cms-repository/    @bernouy/cms-repository (including collection build tooling)
 |   |-- surfaces/
 |   |   |-- cms-core/          @bernouy/cms-core
-|   |   |-- cms-control/       @bernouy/cms-control
-|   |   `-- cms-delivery/      @bernouy/cms-delivery
+|   |   `-- cms-kernel/        @bernouy/cms-kernel
 |   |-- runtimes/
 |   |   |-- ulvia-cli/         @bernouy/ulvia-cli
 |   |   |-- cms-server/        @bernouy/cms-server
@@ -78,18 +77,18 @@ CmsCore/
 
 ```bash
 bun install                 # links every workspace package + installs externals
-bun run build               # orchestrated: tsc --build -> cms-control browser bundle
+bun run build               # orchestrated: tsc --build -> cms-kernel browser bundle
 bun run typecheck           # tsc --build only (project references)
 bun run clean               # tsc --build --clean (drops per-package dist + tsbuildinfo)
 bun test                    # workspace test runner
 ```
 
-`build.ts` first runs `tsc --build`, then builds the Control host asset from the
+`build.ts` first runs `tsc --build`, then builds the Kernel Admin asset from the
 live `@bernouy/cms-content/browser` entry. There is no separate visual-component
 package or generated component distribution.
 
 Packages ship **source** through their `exports` fields; consumers resolve
-straight to `src/` outside the explicit Control browser bundle.
+straight to `src/` outside the explicit Kernel browser bundle.
 
 ## Deployment
 
@@ -99,8 +98,8 @@ straight to `src/` outside the explicit Control browser bundle.
 **many instances on one server** sharing the TLS proxy and one authenticated
 MongoDB server. Every instance selects a dedicated database and owns its file
 directory; the current shared application credential is not a database-level
-security boundary. Domains are routed via `VIRTUAL_HOST_MULTIPORTS` (`DOMAIN`
-for Delivery, `admin.DOMAIN` for Control).
+security boundary. One domain routes both published and administrative Pages to
+the Kernel.
 See [`infra/images/cms/README.md`](./infra/images/cms/README.md) for the
 quick start.
 

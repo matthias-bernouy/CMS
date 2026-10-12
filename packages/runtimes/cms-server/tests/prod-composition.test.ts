@@ -1,24 +1,19 @@
 import { describe, expect, test } from "bun:test";
 
 describe("production CMS composition", () => {
-    test("waits for Control readiness before listening", async () => {
-        const source = await Bun.file(new URL("../src/runtime/mountSurfaces.ts", import.meta.url)).text();
-        const ready = source.search(/await\s+controlCms\.ready/);
-        const listen = source.slice(ready).search(/controlRunner\.start\s*\(/);
+    test("waits for Kernel readiness before listening", async () => {
+        const source = await Bun.file(new URL("../src/runtime/mountKernel.ts", import.meta.url)).text();
+        const ready = source.search(/await\s+kernel\.ready/);
+        const listen = source.slice(ready).search(/runner\.start\s*\(/);
 
         expect(ready).toBeGreaterThan(-1);
         expect(listen).toBeGreaterThan(-1);
     });
 
-    test("passes configured hosts to both listeners", async () => {
-        const source = await Bun.file(new URL("../src/runtime/mountSurfaces.ts", import.meta.url)).text();
+    test("passes the configured host to the single listener", async () => {
+        const source = await Bun.file(new URL("../src/runtime/mountKernel.ts", import.meta.url)).text();
 
-        expect(source).toMatch(
-            /controlRunner\.start\(\{\s*port:\s*env\.CONTROL_PORT,\s*hostname:\s*env\.CONTROL_HOST\s*\}\)/,
-        );
-        expect(source).toMatch(
-            /deliveryRunner\.start\(\{\s*port:\s*env\.DELIVERY_PORT,\s*hostname:\s*env\.DELIVERY_HOST\s*\}\)/,
-        );
+        expect(source).toMatch(/runner\.start\(\{\s*port:\s*env\.KERNEL_PORT,\s*hostname:\s*env\.KERNEL_HOST\s*\}\)/);
     });
 
     test("wires the encrypted secret store into gateway transport", async () => {
@@ -29,11 +24,11 @@ describe("production CMS composition", () => {
         expect(gateway).toMatch(/resolveToken:\s*async\s*\(reference\)/);
     });
 
-    test("closes MongoDB only after every HTTP surface has drained", async () => {
+    test("closes MongoDB only after the HTTP kernel has drained", async () => {
         const source = await Bun.file(new URL("../src/index.ts", import.meta.url)).text();
         const shutdown = source.search(/const\s+shutdown\s*=/);
         const shutdownSource = source.slice(shutdown);
-        const stop = shutdownSource.search(/await\s+surfaces\.stop\s*\(\s*\)/);
+        const stop = shutdownSource.search(/await\s+kernel\.stop\s*\(\s*\)/);
         const stopCoreProvider = shutdownSource.search(/await\s+localCoreProvider\?\.stop\s*\(\s*\)/);
         const close = shutdownSource.search(/await\s+core\.close\s*\(\s*\)/);
 

@@ -4,7 +4,6 @@ import { collectionDocument, textDefinition } from "../fixtures";
 
 const page = {
     id: "overview",
-    surface: "control",
     defaultPath: "/admin",
     name: "page.overview.name",
     icon: "star",
@@ -13,17 +12,15 @@ const page = {
     },
 } as const;
 
-test("collection Pages keep one bounded document on exactly one surface", () => {
+test("collection Pages keep one bounded document in the global route namespace", () => {
     const source = collectionDocument({ "page.overview.name": "Overview" });
     const release = parseCollectionRelease({ ...source, pages: [page] });
     expect(release.pages?.[0]?.document.html).toBe(page.document.html);
     expect(release.pages?.[0]?.uses).toEqual(["atlas-panel"]);
-    expect(release.pages?.[0]?.surface).toBe("control");
 
     for (const invalid of [
-        { ...page, surface: "control", defaultPath: "/catalog" },
-        { ...page, surface: "delivery", defaultPath: "/admin/catalog" },
-        { ...page, surface: "delivery", defaultPath: "/.cms/catalog" },
+        { ...page, defaultPath: "/.cms/catalog" },
+        { ...page, defaultPath: "/catalog?preview=true" },
     ]) {
         expect(() => parseCollectionRelease({ ...source, pages: [invalid] })).toThrow();
     }
@@ -35,7 +32,7 @@ test("collection Page hosts reject undeclared capability and resource attributes
         ...page,
         requires: [{ contractId: "catalog.items", capabilityId: "item.list", versionRange: "^1.0.0" }],
         document: {
-            html: '<atlas-panel cms-source="/.cms/call/catalog.items/item.list as catalog" cms-source-method="POST" cms-source-body="{}"></atlas-panel>',
+            html: '<atlas-panel cms-source="/.cms/call/catalog.items/item.list as catalog" cms-source-method="POST"></atlas-panel>',
         },
     };
     expect(() => parseCollectionRelease({ ...source, pages: [bound] })).toThrow(/not a declared setting/);
@@ -100,7 +97,7 @@ test("collection Pages admit typed capability forms owned by a composition", () 
     }
 });
 
-test("Control Pages reject removed kernel file transports", () => {
+test("Pages reject removed kernel file transports", () => {
     const source = collectionDocument({ "page.overview.name": "Overview" });
     const html = `<section>
         <form cms-source="/.cms/call/ulvia.cms.files/uploads" cms-source-method="POST" cms-source-trigger="submit">
@@ -130,14 +127,6 @@ test("collection Pages admit stable Page links without authored routes", () => {
     expect(() => parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }] })).toThrow(
         /unknown Page details/,
     );
-    const delivery = {
-        ...page,
-        id: "public",
-        surface: "delivery",
-        defaultPath: "/public",
-        document: { html },
-    };
-    expect(() => parseCollectionRelease({ ...source, pages: [delivery, details] })).toThrow(/cannot link to Control/);
     for (const invalidHtml of [
         `<div data-cms-page-ref='${reference}'></div>`,
         `<a data-cms-page-ref='${reference}' data-cms-page-suffix="/admin/pages"></a>`,
@@ -180,11 +169,4 @@ test("collection Pages reject executable or unbounded markup", () => {
     ]) {
         expect(() => parseCollectionRelease({ ...source, pages: [{ ...page, document: { html } }] })).toThrow();
     }
-});
-
-test("Pages cannot use local Blocs outside their surface", () => {
-    const source = collectionDocument({ "page.overview.name": "Overview" });
-    const blocs = source.blocs as Record<string, unknown>[];
-    blocs.find(({ id }) => id === "atlas-panel")!.surfaces = ["delivery"];
-    expect(() => parseCollectionRelease({ ...source, pages: [page] })).toThrow(/outside the control surface/);
 });

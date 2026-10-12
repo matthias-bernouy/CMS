@@ -5,8 +5,7 @@ import type { UlviaPaths } from "./paths";
 import { spawnCommand } from "./process";
 
 export type DevPorts = Readonly<{
-    control: number;
-    delivery: number;
+    kernel: number;
     mongo: number;
     repository: number;
     core: number;
@@ -25,8 +24,7 @@ export async function startLocalCms(
     }> = {},
 ): Promise<CmsProcess> {
     const entrypoint = fileURLToPath(import.meta.resolve("@bernouy/cms-server"));
-    const controlUrl = `http://127.0.0.1:${ports.control}`;
-    const deliveryUrl = `http://127.0.0.1:${ports.delivery}`;
+    const kernelUrl = `http://127.0.0.1:${ports.kernel}`;
     const inheritOutput = options.inheritOutput ?? true;
     const cms = spawnCommand([process.execPath, entrypoint], {
         inherit: inheritOutput,
@@ -34,10 +32,8 @@ export async function startLocalCms(
         env: {
             ...process.env,
             MODE: "DEV",
-            CONTROL_PORT: String(ports.control),
-            DELIVERY_PORT: String(ports.delivery),
-            CONTROL_PUBLIC_URL: controlUrl,
-            DELIVERY_PUBLIC_URL: deliveryUrl,
+            KERNEL_PORT: String(ports.kernel),
+            KERNEL_PUBLIC_URL: kernelUrl,
             CMS_SESSION_SECRET: config.sessionSecret,
             CMS_KEK_HEX: config.kekHex,
             CMS_ADMIN_EMAIL: config.adminEmail,
@@ -60,7 +56,7 @@ export async function startLocalCms(
     });
     try {
         await Promise.race([
-            waitForHttp(controlUrl),
+            waitForHttp(kernelUrl),
             cms.exited.then((exitCode) => {
                 throw new Error(`Local CMS exited before becoming ready (exit ${exitCode})`);
             }),

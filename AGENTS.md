@@ -35,8 +35,8 @@ databases or choose adapters.
 `@bernouy/cms-core` is the provider-facing surface for the official
 `ulvia.cms.*` contracts. It receives admitted releases and a capability
 dispatcher from a runtime; it must not choose persistence or read environment
-configuration. The local CLI launches `cms-server`, which mounts this surface
-alongside Control and Delivery.
+configuration. The local CLI launches `cms-server`, which mounts this provider
+surface alongside the unified CMS Kernel.
 
 Never introduce dependencies against the direction above. Feature-to-feature
 dependencies are allowed only through the published package exports.
@@ -58,7 +58,7 @@ storage and image transforms belong to Foundation. See the
 - Import workspace packages through their package name or declared subpath:
   `@bernouy/cms-content`, `@bernouy/cms-content/mongo`, etc.
 - Inside a package, prefer the local path aliases already configured for that
-  package (`cms-control/...`, `cms-content/...`, `http-runner/...`, and so on)
+  package (`cms-kernel/...`, `cms-content/...`, `http-runner/...`, and so on)
   over deep relative paths.
 - Do not import another package through `packages/.../src/...`.
 - Network and persistence adapters are composition-root imports. Keep them out
@@ -128,7 +128,7 @@ bun run clean
 ```
 
 `bun run build` emits TypeScript project references, then builds the
-`@bernouy/cms-control` browser host runtime from `@bernouy/cms-content/browser`.
+`@bernouy/cms-kernel` Admin browser runtime from `@bernouy/cms-content/browser`.
 
 ## Agent Validation Loop
 
