@@ -1,11 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { gunzipSync } from "bun";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
+import { defaultSystem, type ContentReader, type TPage } from "@bernouy/cms-content";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
-import { mountPublicPages, publicPage } from "../publicPage.fixture";
-import { PRODUCT_PAGE } from "./fixtures";
+import { executeIndexingCapability } from "@bernouy/cms-seo";
+import { PRODUCT_PAGE } from "../indexing/fixtures";
+import { sitemapPage, sitemapRuntime } from "./fixture";
 
-describe("Kernel dynamic indexing sitemap", () => {
+describe("dynamic indexing sitemap", () => {
     test("publishes discovery from an anonymous gateway capability as immutable chunks", async () => {
         const sitemapStore = new MemoryBlobStore();
         const calls: unknown[] = [];
@@ -30,19 +32,27 @@ describe("Kernel dynamic indexing sitemap", () => {
                 };
             },
         };
-        const mounted = mountPublicPages({
-            sitemapStore,
-            gateway,
-            storedPages: [
-                publicPage("static", "/static"),
-                { ...publicPage("private", "/private"), indexing: { enabled: false } },
-                PRODUCT_PAGE,
-            ],
+        const content = contentWith([
+            sitemapPage("static", "/static"),
+            { ...sitemapPage("private", "/private"), indexing: { enabled: false } },
+            PRODUCT_PAGE,
+        ]);
+        const mounted = sitemapRuntime({
+            store: sitemapStore,
+            content,
+            execute: (contractId, capabilityId, input) =>
+                executeIndexingCapability(
+                    { siteId: "site-test", invoker: gateway },
+                    { kind: "anonymous" },
+                    contractId,
+                    capabilityId,
+                    input,
+                ),
         });
         const fallback = await mounted.sitemap(new Request("https://example.test/sitemap.xml"));
         expect(await fallback.text()).toContain("<loc>https://example.test/static</loc>");
         expect(calls).toHaveLength(0);
-        const materialized = await mounted.sitemapService!.materialize();
+        const materialized = await mounted.service.materialize();
         expect(materialized.status).toBe("published");
         expect(calls).toMatchObject([
             {
@@ -60,7 +70,7 @@ describe("Kernel dynamic indexing sitemap", () => {
         ]);
         const response = await mounted.sitemap(new Request("https://example.test/sitemap.xml"));
         const chunkUrl = (await response.text()).match(/<loc>([^<]+\.xml\.gz)<\/loc>/u)?.[1];
-        const chunk = await mounted.get(new Request(chunkUrl!));
+        const chunk = await mounted.chunk(new Request(chunkUrl!));
         const xml = new TextDecoder().decode(gunzipSync(await chunk.arrayBuffer()));
         expect(xml).toContain("<loc>https://example.test/static</loc>");
         expect(xml).not.toContain("<loc>https://example.test/private</loc>");
@@ -79,11 +89,35 @@ describe("Kernel dynamic indexing sitemap", () => {
                 output: { items: [{ slug: "kept" }], total: 1 },
             }),
         };
-        const mounted = mountPublicPages({ sitemapStore, gateway, storedPages: [PRODUCT_PAGE] });
-        const first = await mounted.sitemapService!.materialize();
+        const mounted = sitemapRuntime({
+            store: sitemapStore,
+            content: contentWith([PRODUCT_PAGE]),
+            execute: (contractId, capabilityId, input) =>
+                executeIndexingCapability(
+                    { siteId: "site-test", invoker: gateway },
+                    { kind: "anonymous" },
+                    contractId,
+                    capabilityId,
+                    input,
+                ),
+        });
+        const first = await mounted.service.materialize();
         fail = true;
-        await expect(mounted.sitemapService!.materialize()).rejects.toThrow();
+        await expect(mounted.service.materialize()).rejects.toThrow();
         const response = await mounted.sitemap(new Request("https://example.test/sitemap.xml"));
         expect(await response.text()).toContain(first.snapshot.id);
     });
 });
+
+function contentWith(
+    pages: readonly TPage[],
+): Pick<ContentReader, "getRenderingSettings" | "getPublishedPages" | "resolvePublishedRoute"> {
+    const settings = defaultSystem();
+    settings.site.host = "https://example.test";
+    settings.site.language = "en";
+    return {
+        getRenderingSettings: async () => settings,
+        getPublishedPages: async () => pages,
+        resolvePublishedRoute: async () => null,
+    };
+}

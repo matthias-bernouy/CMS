@@ -6,7 +6,6 @@ import { componentRuntimeCacheKey } from "@bernouy/cms-content/runtime-assets";
 import { collectionBlocsetCacheKey, resolvePageAssets } from "@bernouy/cms-content/rendering";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
 import { resolveInstalledCollectionAssets } from "@bernouy/cms-repository/collections/assets";
-import type KernelCms from "cms-kernel/KernelCms";
 
 test("resolves collection asset expressions inside immutable Bloc JavaScript", async () => {
     const bytes = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
@@ -32,19 +31,19 @@ test("resolves collection asset expressions inside immutable Bloc JavaScript", a
     const content = repositoryWith(
         'style.textContent = `.card { background-image: url("{{ cms.asset.design-system.mark.svg }}"); }`;',
     );
-    const kernel = kernelWith(content, { siteId: "site", store });
+    const runtime = runtimeWith(content, { siteId: "site", store });
 
     const assets = await resolvePageAssets(
         {
-            content: kernel.content,
-            cache: kernel.cache,
-            cmsPathPrefix: kernel.cmsPathPrefix,
+            content: runtime.content,
+            cache: runtime.cache,
+            cmsPathPrefix: runtime.cmsPathPrefix,
             resolveContributedAssets: (input) =>
-                resolveInstalledCollectionAssets(input, kernel.collectionAssets, kernel.basePath),
+                resolveInstalledCollectionAssets(input, runtime.collectionAssets, runtime.basePath),
         },
         ["site-card"],
     );
-    const entry = kernel.cache.get(collectionBlocsetCacheKey(["site-card"], 1));
+    const entry = runtime.cache.get(collectionBlocsetCacheKey(["site-card"], 1));
     const js = new TextDecoder().decode(entry!.raw);
 
     expect(assets.blocUrls[0]).toContain("r=1");
@@ -53,12 +52,12 @@ test("resolves collection asset expressions inside immutable Bloc JavaScript", a
     expect(js).not.toContain("cms.asset.design-system.mark.svg");
 });
 
-function kernelWith(content: ContentReader, collectionAssets: KernelCms["collectionAssets"]): KernelCms {
+function runtimeWith(content: ContentReader, collectionAssets: Parameters<typeof resolveInstalledCollectionAssets>[1]) {
     const cache = new InMemoryCache();
     cache.set(componentRuntimeCacheKey("/.cms/assets/component.js"), compress("component", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.STYLE, compress("body{}", "text/css"));
-    return { basePath: "", cmsPathPrefix: "/.cms", cache, content, collectionAssets } as unknown as KernelCms;
+    return { basePath: "", cmsPathPrefix: "/.cms", cache, content, collectionAssets };
 }
 
 function repositoryWith(viewJS: string): ContentReader {

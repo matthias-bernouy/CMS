@@ -11,7 +11,7 @@ import {
 import { MongoCollectionMigrationStorage } from "@bernouy/cms-repository/collections/mongo";
 import { dependencyIssues } from "cms-repository/collections/installations/migrations/planning/evolution";
 import type { Db } from "mongodb";
-import { FakeContentDb } from "../../../../../cms-content/tests/application/mongo/contentMongoFixture";
+import { FakeContentDb } from "../../../../../../cms-content/tests/application/mongo/contentMongoFixture";
 
 test("migrates a renamed bloc under maintenance and rolls it back without rewinding page revisions", async () => {
     const fixture = await migrationFixture();

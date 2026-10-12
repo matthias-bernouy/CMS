@@ -13,7 +13,7 @@ function getCoop(headers: Headers): string | null {
     return headers.get("Cross-Origin-Opener-Policy") ?? headers.get("Cross-Origin-Opener-Policy-Report-Only");
 }
 
-describe("security headers on every compressed response", () => {
+describe("security headers on compressed responses", () => {
     const cases: { enc: string; accept: string }[] = [
         { enc: "br", accept: "br" },
         { enc: "gzip", accept: "gzip" },

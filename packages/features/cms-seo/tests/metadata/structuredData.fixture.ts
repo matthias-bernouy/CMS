@@ -1,7 +1,6 @@
-import { defaultSystem, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
-import { renderPage } from "cms-kernel/html/renderPage";
-import type { RenderContext } from "cms-kernel/html/RenderContext";
-import type { PageRenderMetadata } from "@bernouy/cms-seo";
+import { defaultSystem, type TPage, type TSystem } from "@bernouy/cms-content";
+import { definePageStructuredData, resolvePageMetadata, type PageRenderMetadata } from "@bernouy/cms-seo";
+import { parseHTML } from "linkedom";
 
 export function completeSettings(): TSystem {
     const settings = defaultSystem();
@@ -40,20 +39,7 @@ export function homePage(): TPage {
 }
 
 export async function renderedHtml(page: TPage, settings: TSystem, metadata: PageRenderMetadata = {}): Promise<string> {
-    const context: RenderContext = {
-        content: {
-            getRenderingSettings: async () => settings,
-            getRenderableBlocs: async () => [],
-        } as ContentReader,
-        resolveAssets: async () => ({
-            componentUrl: "/.cms/assets/component.js",
-            bindingCoreUrl: "/.cms/assets/binding.js",
-            styleUrl: "/.cms/style",
-            blocUrls: [],
-            scriptUrls: ["/.cms/assets/component.js"],
-        }),
-        faviconUrl: "/favicon.ico",
-    };
-    const entry = await renderPage(page, context, metadata);
-    return new TextDecoder().decode(entry.raw);
+    const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
+    definePageStructuredData(document, document.head, settings, resolvePageMetadata(page, settings, metadata));
+    return document.toString();
 }

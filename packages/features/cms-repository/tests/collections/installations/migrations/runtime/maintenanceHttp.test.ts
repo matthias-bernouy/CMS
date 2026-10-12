@@ -1,18 +1,14 @@
 import { describe, expect, test } from "bun:test";
-import type KernelCms from "cms-kernel/KernelCms";
 import { createCollectionMaintenanceGuard } from "@bernouy/cms-repository/collections/http";
 
-const kernel = {
+const guard = createCollectionMaintenanceGuard({
     basePath: "/cms",
-    collections: {
-        siteId: "site",
-        migrations: { getActive: async () => ({ id: "migration", status: "migrating" }) },
-    },
-} as unknown as KernelCms;
-const guard = createCollectionMaintenanceGuard({ ...kernel.collections!, basePath: kernel.basePath });
+    siteId: "site",
+    migrations: { getActive: async () => ({ id: "migration", status: "migrating" }) },
+});
 const next = async () => new Response("available");
 
-describe("Kernel collection maintenance", () => {
+describe("collection migration maintenance HTTP guard", () => {
     test("returns an uncached service-unavailable response for Pages", async () => {
         const response = await guard(new Request("https://site.test/cms/page"), next);
 

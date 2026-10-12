@@ -7,14 +7,14 @@ import { type TPage, type TSystem } from "@bernouy/cms-content";
 
 const BINDING_CORE_URL = "/.cms/assets/cms-binding-core.js?v=core";
 
-function makeCtx(): RenderContext {
+function makeCtx(siteHost = ""): RenderContext {
     const system: TSystem = {
         initializationStep: 1,
         site: {
             name: "Site",
             favicon: "",
             visible: true,
-            host: "",
+            host: siteHost,
             language: "",
             theme: "",
             notFound: null,
@@ -49,14 +49,14 @@ const page = {
     tags: [],
 } as unknown as TPage;
 
-async function htmlOf(): Promise<string> {
-    const entry = await renderPage(page, makeCtx());
+async function htmlOf(context = makeCtx()): Promise<string> {
+    const entry = await renderPage(page, context);
     return new TextDecoder().decode(entry.raw);
 }
 
 describe("renderPage — binding core wrapper", () => {
     test("wraps content in <cms-binding-core> and injects the system-bloc script", async () => {
-        const html = await htmlOf();
+        const html = await htmlOf(makeCtx("https://example.test"));
         expect(html).toContain("HELLO_BODY");
         expect(html).toContain("<cms-binding-core");
         expect(html).toContain(`<link href="${BINDING_CORE_URL}" as="script" rel="preload">`);
@@ -65,6 +65,7 @@ describe("renderPage — binding core wrapper", () => {
         expect(html).not.toContain("body{visibility:hidden}");
         expect(html).toContain(BINDING_CORE_URL);
         const { document } = parseHTML(html);
+        expect(document.querySelector('script[type="application/ld+json"]')).not.toBeNull();
         expect(Array.from(document.querySelectorAll("script[src]"), (script) => script.getAttribute("src"))).toEqual([
             "/.cms/assets/component.js?v=c",
             BINDING_CORE_URL,

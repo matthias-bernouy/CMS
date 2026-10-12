@@ -15,6 +15,9 @@
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/http-runner": "workspace:*"
     },
+    "devDependencies": {
+        "linkedom": "^0.18.13"
+    },
     "peerDependencies": {
         "typescript": "^7.0.2"
     }

@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { defaultSystem } from "@bernouy/cms-content";
 import { parseHTML } from "linkedom";
-import { completeSettings, homePage, renderedHtml } from "./fixture";
+import { completeSettings, homePage, renderedHtml } from "./structuredData.fixture";
 
-describe("Site structured data", () => {
+describe("page structured data", () => {
     test("renders the organization, website, and webpage graph on the indexable homepage", async () => {
         const settings = completeSettings();
         const { document } = parseHTML(await renderedHtml(homePage(), settings));

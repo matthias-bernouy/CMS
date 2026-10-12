@@ -1,10 +1,10 @@
 import { gunzipSync } from "bun";
 import { expect, test } from "bun:test";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
-import { InMemoryCmsRepository, validateSettingsPatch } from "@bernouy/cms-content";
+import { createContentReader, InMemoryCmsRepository, validateSettingsPatch } from "@bernouy/cms-content";
 import { readSitemapManifest, sitemapChunkPath } from "@bernouy/cms-seo";
-import { mountPublicPages } from "../publicPage.fixture";
 import { PRODUCT_PAGE } from "../indexing/fixtures";
+import { sitemapRuntime } from "./fixture";
 
 test("sitemap snapshots separate languages and common URLs while retaining reciprocal links", async () => {
     const repository = new InMemoryCmsRepository();
@@ -29,20 +29,13 @@ test("sitemap snapshots separate languages and common URLs while retaining recip
         indexing: PRODUCT_PAGE.indexing,
     });
     await repository.setPagePaths(product.id, { fr: "/produits/fiche", en: "/products/detail" });
-    const mounted = mountPublicPages({
-        repository,
-        gateway: {
-            invoke: async () => ({
-                kind: "success",
-                requestId: "request-1",
-                status: 200,
-                output: { items: [{ slug: "oak & chair" }], total: 1 },
-            }),
-        },
-        sitemapStore: new MemoryBlobStore(),
+    const mounted = sitemapRuntime({
+        store: new MemoryBlobStore(),
+        content: createContentReader(repository),
+        execute: async () => Response.json({ items: [{ slug: "oak & chair" }], total: 1 }),
     });
 
-    const result = await mounted.sitemapService!.materialize();
+    const result = await mounted.service.materialize();
     expect(result.snapshot.chunks.map(({ language, urlCount }) => [language, urlCount])).toEqual([
         ["fr", 2],
         ["en", 2],
@@ -53,11 +46,11 @@ test("sitemap snapshots separate languages and common URLs while retaining recip
     for (const chunk of result.snapshot.chunks) {
         const path = sitemapChunkPath(result.snapshot.id, chunk.index, chunk.language);
         expect(indexXml).toContain(`<loc>https://example.test${path}</loc>`);
-        const response = await mounted.get(new Request(`https://example.test${path}`));
+        const response = await mounted.chunk(new Request(`https://example.test${path}`));
         expect(response.status).toBe(200);
         xmlByLanguage.set(chunk.language ?? null, new TextDecoder().decode(gunzipSync(await response.arrayBuffer())));
     }
-    const wrongGroup = await mounted.get(
+    const wrongGroup = await mounted.chunk(
         new Request(`https://example.test/sitemap-lang-en.${result.snapshot.id}.1.xml.gz`),
     );
     expect(wrongGroup.status).toBe(404);
@@ -77,7 +70,7 @@ test("sitemap snapshots separate languages and common URLs while retaining recip
     }
 
     await repository.updateSystem({ site: { activeLanguages: [] } as never });
-    const updated = await mounted.sitemapService!.materialize();
+    const updated = await mounted.service.materialize();
     expect(updated.snapshot.chunks.map(({ language }) => language)).toEqual(["fr"]);
 });
 
@@ -101,9 +94,9 @@ test("sitemap snapshots can be read for a valid long language tag", async () => 
     await repository.updatePage({ id: page.id, visible: true });
     await repository.setPagePaths(page.id, { fr: "/about", [language]: "/about" });
     const store = new MemoryBlobStore();
-    const mounted = mountPublicPages({ repository, sitemapStore: store });
+    const mounted = sitemapRuntime({ store, content: createContentReader(repository) });
 
-    const generated = await mounted.sitemapService!.materialize();
+    const generated = await mounted.service.materialize();
     const snapshot = (await readSitemapManifest(store))?.snapshots[0];
     expect(snapshot?.chunks.some((chunk) => chunk.language === language)).toBe(true);
     const chunk = generated.snapshot.chunks.find((entry) => entry.language === language)!;
@@ -111,5 +104,5 @@ test("sitemap snapshots can be read for a valid long language tag", async () => 
     const index = await mounted.sitemap(new Request("https://example.test/sitemap.xml"));
     expect(index.status).toBe(200);
     expect(await index.text()).toContain(`https://example.test${path}`);
-    expect((await mounted.get(new Request(`https://example.test${path}`))).status).toBe(200);
+    expect((await mounted.chunk(new Request(`https://example.test${path}`))).status).toBe(200);
 });
