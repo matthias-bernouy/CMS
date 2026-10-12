@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { OFFICIAL_INSTANCE_PROFILE } from "./officialProfile";
 import type { OfficialInstanceProvisioner, ProviderInstanceAdministrator } from "./provisioning";
 import type { ProviderInstanceRegistry } from "./registry";
@@ -25,16 +25,19 @@ export class ProviderInstanceLifecycle {
         private readonly instances: ProviderInstanceRegistry,
         private readonly credentials: ProviderInstanceCredentials,
         private readonly provisioner: OfficialInstanceProvisioner,
+        private readonly idempotencySecret: string,
     ) {}
 
     async create(idempotencyKey: string, input: CreateProviderInstance): Promise<CreatedProviderInstance> {
         validateCreateInput(idempotencyKey, input);
+        const idempotencyFingerprint = fingerprintCreateInput(input, this.idempotencySecret);
         let instance = await this.instances.getByIdempotencyKey(idempotencyKey);
         if (!instance) {
             const uuid = randomUUID();
             instance = await this.instances.create({
                 id: `instance:${uuid}`,
                 idempotencyKey,
+                idempotencyFingerprint,
                 storageKey: `instance-${uuid}`,
                 kernelUrl: input.kernelUrl,
                 label: input.label.trim(),
@@ -42,6 +45,7 @@ export class ProviderInstanceLifecycle {
                 profile: { id: OFFICIAL_INSTANCE_PROFILE.id, version: OFFICIAL_INSTANCE_PROFILE.version },
             });
         }
+        assertMatchingFingerprint(instance.idempotencyFingerprint, idempotencyFingerprint);
         const token = await this.credentials.ensure(instance);
         const provisioned = await this.provisioner.provision(instance.id, input.administrator);
         return { instance: provisioned, token };
@@ -65,6 +69,26 @@ export class ProviderInstanceLifecycle {
         }
         await this.credentials.disable(instanceId);
         return this.instances.update(instanceId, instance.revision, { status: "disabled", failure: null });
+    }
+}
+
+function fingerprintCreateInput(input: CreateProviderInstance, secret: string): string {
+    return createHmac("sha256", secret)
+        .update(
+            JSON.stringify({
+                label: input.label.trim(),
+                kernelUrl: new URL(input.kernelUrl).toString(),
+                administrator: input.administrator,
+            }),
+        )
+        .digest("base64url");
+}
+
+function assertMatchingFingerprint(expected: string, actual: string): void {
+    const expectedBytes = Buffer.from(expected);
+    const actualBytes = Buffer.from(actual);
+    if (expectedBytes.length !== actualBytes.length || !timingSafeEqual(expectedBytes, actualBytes)) {
+        throw new TypeError("Idempotency key was already used with a different request");
     }
 }
 

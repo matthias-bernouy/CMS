@@ -79,11 +79,23 @@ export class MongoProviderInstanceRegistry implements ProviderInstanceRegistry {
 }
 
 function serialize(document: ProviderInstanceDocument): ProviderInstanceRecord {
-    const { id, idempotencyKey, storageKey, kernelUrl, label, status, profile, completedSteps, failure, revision } =
-        document;
+    const {
+        id,
+        idempotencyKey,
+        idempotencyFingerprint,
+        storageKey,
+        kernelUrl,
+        label,
+        status,
+        profile,
+        completedSteps,
+        failure,
+        revision,
+    } = document;
     return {
         id,
         idempotencyKey,
+        idempotencyFingerprint,
         storageKey,
         kernelUrl,
         label,

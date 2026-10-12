@@ -73,6 +73,7 @@ function instance(): ProviderInstanceRecord {
     return {
         id: "instance:one",
         idempotencyKey: "create-one",
+        idempotencyFingerprint: "fingerprint",
         storageKey: "one",
         kernelUrl: "http://127.0.0.1:5100",
         label: "One",

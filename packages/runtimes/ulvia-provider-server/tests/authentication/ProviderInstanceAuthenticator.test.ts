@@ -58,6 +58,7 @@ function readyInstance(): ProviderInstanceRecord {
     return {
         id: INSTANCE_ID,
         idempotencyKey: "create-alpha",
+        idempotencyFingerprint: "fingerprint",
         storageKey: "alpha",
         kernelUrl: "http://127.0.0.1:5100",
         label: "Alpha",

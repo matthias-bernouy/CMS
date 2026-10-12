@@ -40,7 +40,7 @@ try {
         new HttpProviderRepository("ulvia-provider-runtime", env.CMS_REPOSITORY_URL),
     );
     const provisioner = new OfficialInstanceProvisioner(instances, (instance) => host.target(instance));
-    const lifecycle = new ProviderInstanceLifecycle(instances, credentials, provisioner);
+    const lifecycle = new ProviderInstanceLifecycle(instances, credentials, provisioner, env.CMS_SESSION_SECRET);
     const authenticator = new ProviderInstanceAuthenticator(instances, credentialStore, secrets);
     provider = mountUlviaProvider({ env, contracts, authenticator, host, lifecycle });
 } catch (error) {

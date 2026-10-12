@@ -10,6 +10,7 @@ export type ProviderInstanceProfile = Readonly<{
 export type ProviderInstanceRecord = Readonly<{
     id: string;
     idempotencyKey: string;
+    idempotencyFingerprint: string;
     storageKey: string;
     kernelUrl: string;
     label: string;
