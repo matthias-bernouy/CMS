@@ -1,0 +1,65 @@
+import { expect, test } from "bun:test";
+import { BunRunner } from "@bernouy/http-runner";
+import { serveForTest } from "@bernouy/http-runner/testing";
+import type { ProviderInstanceLifecycle, ProviderInstanceRecord } from "../../src";
+import { ProviderOperatorApi } from "../../src";
+
+const OPERATOR_TOKEN = "operator-token-that-is-long-enough";
+
+test("the operator API protects and exposes instance lifecycle operations", async () => {
+    const instance = readyInstance();
+    const creates: unknown[] = [];
+    const lifecycle = {
+        list: async () => [instance],
+        get: async (id: string) => (id === instance.id ? instance : null),
+        create: async (key: string, input: unknown) => {
+            creates.push({ key, input });
+            return { instance, token: "new-instance-token" };
+        },
+        disable: async (id: string) => (id === instance.id ? { ...instance, status: "disabled" } : null),
+    } as unknown as ProviderInstanceLifecycle;
+    const runner = new BunRunner();
+    new ProviderOperatorApi(runner, OPERATOR_TOKEN, lifecycle);
+    const server = serveForTest(runner);
+    const authorization = { Authorization: `Bearer ${OPERATOR_TOKEN}` };
+    try {
+        expect((await server.request("GET", "/ulvia/operator/instances")).status).toBe(401);
+        const listing = await server.request("GET", "/ulvia/operator/instances", { headers: authorization });
+        expect((await listing.json()).instances).toHaveLength(1);
+
+        const created = await server.request("POST", "/ulvia/operator/instances", {
+            headers: { ...authorization, "content-type": "application/json", "idempotency-key": "create-one" },
+            body: JSON.stringify({
+                label: "One",
+                administrator: { email: "admin@example.test", password: "long-enough-password" },
+            }),
+        });
+        expect(created.status).toBe(201);
+        expect((await created.json()).token).toBe("new-instance-token");
+        expect(creates).toHaveLength(1);
+
+        const disabled = await server.request(
+            "POST",
+            `/ulvia/operator/instances/${encodeURIComponent(instance.id)}/disable`,
+            { headers: authorization },
+        );
+        expect((await disabled.json()).status).toBe("disabled");
+    } finally {
+        server.stop();
+    }
+});
+
+function readyInstance(): ProviderInstanceRecord {
+    return {
+        id: "instance:one",
+        idempotencyKey: "create-one",
+        storageKey: "one",
+        label: "One",
+        status: "ready",
+        profile: { id: "ulvia.official", version: "1.0.0" },
+        completedSteps: ["manifest", "provider", "contracts", "collection", "administrator"],
+        revision: 6,
+        createdAt: new Date(0).toISOString(),
+        updatedAt: new Date(0).toISOString(),
+    };
+}

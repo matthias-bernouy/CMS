@@ -97,6 +97,7 @@ function credentialStore(credential: InstanceCredential): InstanceCredentialStor
     return {
         init: async () => undefined,
         put: async () => credential,
+        getByInstanceId: async (instanceId) => (instanceId === credential.instanceId ? credential : null),
         getByKeyId: async (keyId) => (keyId === credential.keyId ? credential : null),
         getByTokenHash: async (hash) => (hash === credential.tokenHash ? credential : null),
         disable: async () => undefined,

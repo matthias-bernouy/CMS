@@ -34,6 +34,10 @@ export class MongoInstanceCredentialStore implements InstanceCredentialStore {
         return serializeNullable(await this.#credentials.findOne({ keyId, enabled: true }));
     }
 
+    async getByInstanceId(instanceId: string): Promise<InstanceCredential | null> {
+        return serializeNullable(await this.#credentials.findOne({ instanceId }));
+    }
+
     async getByTokenHash(tokenHash: string): Promise<InstanceCredential | null> {
         return serializeNullable(await this.#credentials.findOne({ tokenHash, enabled: true }));
     }

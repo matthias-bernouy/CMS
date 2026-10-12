@@ -12,6 +12,7 @@ export type InstanceCredential = Readonly<{
 export interface InstanceCredentialStore {
     init(): Promise<void>;
     put(credential: Omit<InstanceCredential, "revision" | "createdAt" | "updatedAt">): Promise<InstanceCredential>;
+    getByInstanceId(instanceId: string): Promise<InstanceCredential | null>;
     getByKeyId(keyId: string): Promise<InstanceCredential | null>;
     getByTokenHash(tokenHash: string): Promise<InstanceCredential | null>;
     disable(instanceId: string, expectedRevision: number): Promise<void>;

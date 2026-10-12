@@ -50,3 +50,10 @@ export {
     type OfficialInstanceProvisioningTarget,
     type ProviderInstanceAdministrator,
 } from "./instances/provisioning";
+export {
+    ProviderInstanceLifecycle,
+    type CreateProviderInstance,
+    type CreatedProviderInstance,
+    type ProviderInstanceCredentials,
+} from "./instances/lifecycle";
+export { ProviderOperatorApi } from "./operator/ProviderOperatorApi";
