@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LocalArtifactFiles, LocalCollectionRepository } from "@bernouy/cms-repository/repository/filesystem";
@@ -36,6 +36,37 @@ describe("Ulvia CLI", () => {
 
     test("disables retryable writes for the standalone local MongoDB", () => {
         expect(localMongoUrl(27_019)).toBe("mongodb://127.0.0.1:27019/ulvia_dev?retryWrites=false");
+    });
+
+    test("does not print technical tokens with development credentials", async () => {
+        const root = await mkdtemp(join(tmpdir(), "ulvia-credentials-"));
+        const token = "a".repeat(43);
+        try {
+            await runCli(["dev", "credentials"], {
+                environment: { ULVIA_DATA_DIR: root },
+                log: () => undefined,
+            });
+            await writeFile(
+                join(root, "dev", "instance.json"),
+                JSON.stringify({
+                    schema: "ulvia.local-instance.v1",
+                    instanceId: "instance:00000000-0000-4000-8000-000000000001",
+                    storageKey: "instance-00000000-0000-4000-8000-000000000001",
+                    token,
+                }),
+            );
+            const output: string[] = [];
+            await runCli(["dev", "credentials"], {
+                environment: { ULVIA_DATA_DIR: root },
+                log: (line) => output.push(line),
+            });
+
+            expect(output.join("\n")).not.toContain(token);
+            expect(output.join("\n")).not.toContain("Instance token:");
+            expect(output.join("\n")).toContain(join(root, "dev"));
+        } finally {
+            await rm(root, { recursive: true, force: true });
+        }
     });
 
     test("admits all bundled resources needed by a fresh local stack", async () => {

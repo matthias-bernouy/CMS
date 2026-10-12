@@ -3,7 +3,6 @@ import {
     loadOrCreateDevRuntimeConfig,
     loadOrCreateProviderOperatorToken,
     loadOrCreateRepositoryToken,
-    readLocalInstanceConnection,
     saveLocalInstanceConnection,
 } from "../runtime/config";
 import {
@@ -47,9 +46,7 @@ export async function devCommand(
         const config = await loadOrCreateDevRuntimeConfig(paths.dev);
         log(`Email: ${config.adminEmail}`);
         log(`Password: ${config.adminPassword}`);
-        const instance = await readLocalInstanceConnection(paths.dev);
-        log(`Instance token: ${instance?.token ?? "not provisioned"}`);
-        log(`Repository token: ${await loadOrCreateRepositoryToken(paths.dev)}`);
+        log(`Technical tokens remain in the private runtime directory: ${paths.dev}`);
         return;
     }
     if (action === "stop") {
