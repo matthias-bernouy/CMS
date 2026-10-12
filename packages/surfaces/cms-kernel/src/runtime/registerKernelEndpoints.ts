@@ -34,8 +34,8 @@ import { COLLECTION_ASSETS_ROUTE } from "cms-kernel/core/assets/collectionAssets
  *
  * Pages are served through the runner's default GET endpoint: any path that
  * doesn't match a specific route falls through to `handlePageRequest`, which
- * does a single DB lookup and either renders or 404s. No boot-time hydration,
- * no registry to keep in sync with page CRUD.
+ * resolves projected content and either renders or 404s. No boot-time
+ * hydration or mutable in-process route registry is involved.
  */
 export function registerKernelEndpoints(kernel: KernelCms) {
     const runner = kernel.runner;

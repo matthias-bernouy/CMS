@@ -27,8 +27,8 @@ This slice supports:
   exposes validation and fallback resolution; see
   [collection texts](../../../../../docs/blocs/texts.md).
 - Optional theme categories with typed light/dark token defaults.
-- Optional Pages: bounded collection-owned documents, each fixed to the
-  `control` or `delivery` surface and carrying a collection default path.
+- Optional Pages: bounded collection-owned documents carrying a collection
+  default path and capability requirements that determine their access policy.
 - Assets declared by stable ID, concrete MIME type, byte length and SHA-256.
 - Component blocs with a static `shadowdom` shell and optional fixed `lightdom`,
   `style` source and declarative setting items. Optional translated `category`
@@ -202,12 +202,10 @@ tags. It derives the exact `uses` set from the HTML. Canonical
 `/.cms/call/<contract>/<capability>` sources require a matching versioned
 capability requirement; admission verifies those witnesses alongside transitive
 local Bloc requirements. Scripts, links, inline handlers and inline styles reject.
-Every Page declares exactly one surface; every local and imported Bloc in its
-transitive closure must support that surface. Page exports and imports pin exact
-resource generations. The Kernel projects installed Pages into the
-site-scoped surface route registry and render them through the shared Page
-document pipeline. Stable Page references resolve independently from route
-overrides.
+Page exports and imports pin exact resource generations. The repository
+projects installed Pages into the generic content read model and the Kernel
+renders them through the shared Page document pipeline. Stable Page references
+resolve independently from route overrides.
 
 ## Publication and installation
 

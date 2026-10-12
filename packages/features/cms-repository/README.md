@@ -125,7 +125,7 @@ and transport profiles, and conformance dependencies. The
 and the proposed connection protocol. [Provider workflows](src/providers/workflows.md)
 details implemented transitions, upgrade boundaries and remaining runtime work.
 The [collections guide](src/collections/README.md) documents admitted themes,
-texts, surface-specific Pages, assets and resource requirements. The installed
+texts, Pages, assets and resource requirements. The installed
 collection path accepts verified assets and capability requirements. The CLI
 runtime composes the reference filesystem registry and loopback listener, while
 this package owns authenticated remote publication, exact `push`/`pull`, and
