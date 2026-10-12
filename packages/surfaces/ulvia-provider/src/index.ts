@@ -1,4 +1,8 @@
-export { UlviaProvider, type UlviaProviderOptions } from "./UlviaProvider";
+export {
+    UlviaProvider,
+    type UlviaProviderInstanceRuntime,
+    type UlviaProviderOptions,
+} from "./UlviaProvider";
 export { registerOfficialProviderCapabilities } from "./capabilities";
 export { CollectionSources } from "./capabilities/collections/sources";
 export type {

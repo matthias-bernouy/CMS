@@ -8,9 +8,8 @@ import {
     contractRelease,
     forgedAuthorityHeaders,
     invocationHeaders,
-    providerReport,
+    providerOptions,
     PROVIDER_INSTANCE_ID,
-    PROVIDER_TOKEN,
     reportAuthorization,
     requestUuidFor,
 } from "./ulviaProviderFixture";
@@ -25,13 +24,7 @@ describe("UlviaProvider", () => {
             return { id: input.id, value: input.value };
         });
         const runner = new BunRunner();
-        new UlviaProvider(runner, {
-            token: PROVIDER_TOKEN,
-            siteId: "site-a",
-            contracts: [contract.release],
-            dispatcher,
-            report: providerReport(contract),
-        });
+        new UlviaProvider(runner, providerOptions([contract], dispatcher));
         const server = serveForTest(runner);
         try {
             expect((await server.request("GET", "/ulvia/report")).status).toBe(401);
@@ -100,13 +93,7 @@ describe("UlviaProvider", () => {
         const dispatcher = new DefaultProviderCapabilityDispatcher();
         dispatcher.register("ulvia.cms.fixture", "echo", async (input) => input);
         const runner = new BunRunner();
-        new UlviaProvider(runner, {
-            token: PROVIDER_TOKEN,
-            siteId: "site-a",
-            contracts: [contract.release],
-            dispatcher,
-            report: providerReport(contract),
-        });
+        new UlviaProvider(runner, providerOptions([contract], dispatcher));
         const server = serveForTest(runner);
         try {
             expect(
@@ -126,13 +113,7 @@ describe("UlviaProvider", () => {
         const dispatcher = new DefaultProviderCapabilityDispatcher();
         dispatcher.register("ulvia.cms.fixture", "echo", async (input) => input);
         const runner = new BunRunner();
-        new UlviaProvider(runner, {
-            token: PROVIDER_TOKEN,
-            siteId: "site-b",
-            contracts: [contract.release],
-            dispatcher,
-            report: { ...providerReport(contract), instanceId: "instance:fixture-b" },
-        });
+        new UlviaProvider(runner, providerOptions([contract], dispatcher, "instance:fixture-b"));
         const server = serveForTest(runner);
         try {
             const response = await server.request("POST", "/v1/provider/echo/record-1", {
@@ -158,13 +139,7 @@ describe("UlviaProvider", () => {
             return input;
         });
         const runner = new BunRunner();
-        new UlviaProvider(runner, {
-            token: PROVIDER_TOKEN,
-            siteId: "site-a",
-            contracts: [first.release, second.release],
-            dispatcher,
-            report: providerReport(first, second),
-        });
+        new UlviaProvider(runner, providerOptions([first, second], dispatcher));
         const server = serveForTest(runner);
         try {
             const response = await server.request("POST", "/v1/provider/echo/record-2", {

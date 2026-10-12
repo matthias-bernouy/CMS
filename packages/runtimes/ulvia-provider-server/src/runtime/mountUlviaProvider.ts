@@ -11,6 +11,7 @@ import { BunRunner } from "@bernouy/http-runner";
 import { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
 import type { ProviderManagement } from "@bernouy/cms-repository/providers/management";
+import { verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import type { ProviderRuntimeEnv } from "../runtimeEnv";
 import type { ProviderGateway } from "./gateway/createProviderGateway";
 import type { ProviderStores } from "./stores/providerStores";
@@ -82,12 +83,18 @@ export async function mountUlviaProvider(options: {
         })),
     };
     const runner = new BunRunner({ hostname: env.ULVIA_PROVIDER_HOST });
+    const runtime = { siteId: gateway.siteId, report, dispatcher };
     new UlviaProvider(runner, {
-        token: env.ULVIA_PROVIDER_TOKEN,
-        siteId: gateway.siteId,
-        report,
         contracts,
-        dispatcher,
+        authenticateControlToken: async (token) => (token === env.ULVIA_PROVIDER_TOKEN ? runtime : null),
+        authenticateInvocationToken: async (token) => {
+            try {
+                const claims = verifyProviderInvocationToken(token, env.ULVIA_PROVIDER_TOKEN);
+                return claims.instanceId === report.instanceId ? { runtime, claims } : null;
+            } catch {
+                return null;
+            }
+        },
     });
     runner.start(env.ULVIA_PROVIDER_PORT);
     return {

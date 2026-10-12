@@ -11,7 +11,7 @@ import {
 } from "@bernouy/ulvia-provider";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import type { ProviderManifestDigest } from "@bernouy/cms-repository/providers";
-import { signProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
+import { signProviderInvocationToken, verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
 import { UlviaProvider } from "../src";
@@ -41,12 +41,18 @@ test("mounts and dispatches every official CMS contract release", async () => {
     }
     expect(contracts.reduce((total, { release }) => total + release.capabilities.length, 0)).toBe(61);
     const runner = new BunRunner();
+    const runtime = { siteId: "site-a", dispatcher, report: report(contracts) };
     new UlviaProvider(runner, {
-        token: TOKEN,
-        siteId: "site-a",
         contracts: contracts.map(({ release }) => release),
-        dispatcher,
-        report: report(contracts),
+        authenticateControlToken: async (token) => (token === TOKEN ? runtime : null),
+        authenticateInvocationToken: async (token) => {
+            try {
+                const claims = verifyProviderInvocationToken(token, TOKEN);
+                return claims.instanceId === runtime.report.instanceId ? { runtime, claims } : null;
+            } catch {
+                return null;
+            }
+        },
     });
     const server = serveForTest(runner);
     try {

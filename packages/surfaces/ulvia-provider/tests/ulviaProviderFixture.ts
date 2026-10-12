@@ -1,12 +1,41 @@
-import { signProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
+import { signProviderInvocationToken, verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import type { ProviderManifestDigest } from "@bernouy/cms-repository/providers";
+import type {
+    DefaultProviderCapabilityDispatcher,
+    UlviaProviderInstanceRuntime,
+    UlviaProviderOptions,
+} from "@bernouy/ulvia-provider";
 
 export const PROVIDER_TOKEN = "ulvia-provider-token-that-is-long-enough";
 export const PROVIDER_INSTANCE_ID = "instance:fixture-a";
 
 export function reportAuthorization(): Record<string, string> {
     return { Authorization: `Bearer ${PROVIDER_TOKEN}` };
+}
+
+export function providerOptions(
+    contracts: readonly Awaited<ReturnType<typeof contractRelease>>[],
+    dispatcher: DefaultProviderCapabilityDispatcher,
+    instanceId = PROVIDER_INSTANCE_ID,
+): UlviaProviderOptions {
+    const runtime: UlviaProviderInstanceRuntime = {
+        siteId: "default",
+        report: { ...providerReport(...contracts), instanceId },
+        dispatcher,
+    };
+    return {
+        contracts: contracts.map(({ release }) => release),
+        authenticateControlToken: async (token) => (token === PROVIDER_TOKEN ? runtime : null),
+        authenticateInvocationToken: async (token) => {
+            try {
+                const claims = verifyProviderInvocationToken(token, PROVIDER_TOKEN);
+                return claims.instanceId === instanceId ? { runtime, claims } : null;
+            } catch {
+                return null;
+            }
+        },
+    };
 }
 
 export function invocationHeaders(

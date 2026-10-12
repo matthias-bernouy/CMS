@@ -1,41 +1,37 @@
 import type { Runner } from "@bernouy/http-runner";
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
 import type { ProviderRuntimeReport } from "@bernouy/cms-repository/providers/installations";
-import { assertProviderInvocationSecret, verifyProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
+import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import type { ProviderCapabilityRegistry } from "./dispatch/registry";
-import { providerAuthorized } from "./transport/authentication";
 import { createProviderContractRelay } from "./transport/relay";
 import { compileProviderRoutes } from "./transport/routes";
 
-export type UlviaProviderOptions = Readonly<{
-    token: string;
+export type UlviaProviderInstanceRuntime = Readonly<{
     siteId: string;
     report: ProviderRuntimeReport;
-    contracts: readonly ContractRelease[];
     dispatcher: ProviderCapabilityRegistry;
+}>;
+
+export type UlviaProviderOptions = Readonly<{
+    contracts: readonly ContractRelease[];
+    authenticateControlToken(token: string): Promise<UlviaProviderInstanceRuntime | null>;
+    authenticateInvocationToken(
+        token: string,
+    ): Promise<Readonly<{ runtime: UlviaProviderInstanceRuntime; claims: ProviderInvocationClaims }> | null>;
 }>;
 
 /** Mounts the provider-facing official CMS contract surface on a dedicated runner. */
 export class UlviaProvider {
     constructor(runner: Runner, options: UlviaProviderOptions) {
-        assertProviderInvocationSecret(options.token);
-        options.dispatcher.seal(options.contracts);
         const routes = compileProviderRoutes(options.contracts);
-        const relay = createProviderContractRelay(routes, options.dispatcher, {
-            siteId: options.siteId,
-            providerId: options.report.providerId,
+        const relays = new WeakMap<ProviderCapabilityRegistry, ReturnType<typeof createProviderContractRelay>>();
+        runner.get("/ulvia/report", async (request) => {
+            const token = bearerToken(request);
+            const runtime = token ? await options.authenticateControlToken(token) : null;
+            return runtime
+                ? Response.json(runtime.report, { headers: { "Cache-Control": "no-store" } })
+                : unauthorized();
         });
-        const controlAuthorized =
-            (handler: (request: Request) => Promise<Response> | Response) => async (request: Request) => {
-                if (!providerAuthorized(request.headers.get("authorization"), options.token)) {
-                    return new Response(null, { status: 401, headers: { "WWW-Authenticate": "Bearer" } });
-                }
-                return handler(request);
-            };
-        runner.get(
-            "/ulvia/report",
-            controlAuthorized(() => Response.json(options.report, { headers: { "Cache-Control": "no-store" } })),
-        );
         const methods = new Set(routes.map(({ capability }) => capability.binding.method));
         if (
             routes.some(({ capability }) => capability.binding.method === "GET" && capability.output.type === "binary")
@@ -44,9 +40,20 @@ export class UlviaProvider {
         }
         for (const method of methods) {
             runner.setDefaultEndpoint(method, async (request) => {
-                const claims = invocationClaims(request, options.token, options.report.instanceId);
-                if (!claims) {
-                    return new Response(null, { status: 401, headers: { "WWW-Authenticate": "Bearer" } });
+                const token = bearerToken(request);
+                const authentication = token ? await options.authenticateInvocationToken(token) : null;
+                if (!authentication) {
+                    return unauthorized();
+                }
+                const { runtime, claims } = authentication;
+                let relay = relays.get(runtime.dispatcher);
+                if (!relay) {
+                    runtime.dispatcher.seal(options.contracts);
+                    relay = createProviderContractRelay(routes, runtime.dispatcher, {
+                        siteId: runtime.siteId,
+                        providerId: runtime.report.providerId,
+                    });
+                    relays.set(runtime.dispatcher, relay);
                 }
                 return (await relay(request, claims)) ?? new Response(null, { status: 404 });
             });
@@ -54,15 +61,14 @@ export class UlviaProvider {
     }
 }
 
-function invocationClaims(request: Request, secret: string, instanceId: string) {
+function bearerToken(request: Request): string | null {
     const authorization = request.headers.get("authorization");
     if (!authorization?.startsWith("Bearer ")) {
         return null;
     }
-    try {
-        const claims = verifyProviderInvocationToken(authorization.slice(7), secret);
-        return claims.instanceId === instanceId ? claims : null;
-    } catch {
-        return null;
-    }
+    return authorization.slice(7);
+}
+
+function unauthorized(): Response {
+    return new Response(null, { status: 401, headers: { "WWW-Authenticate": "Bearer" } });
 }
