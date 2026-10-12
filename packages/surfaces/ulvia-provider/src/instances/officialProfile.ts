@@ -3,8 +3,8 @@ export const OFFICIAL_INSTANCE_PROFILE = Object.freeze({
     version: "1.0.0",
     manifest: {
         providerId: "ulvia.official",
-        version: "0.2.0",
-        digest: "sha256:d70659dda8e1b857e0f7aebad65918def2a587f950125eb72ed646d52c79f5a5",
+        version: "0.3.0",
+        digest: "sha256:d4d760e89b605c9f8731d63e5622b1d605ebaa3165c72f65660ac63d6c6d09bf",
     },
     contracts: [
         ["ulvia.cms.access", "1.0.0", "sha256:c42172edc03e7ef9cc8af7012cde2448b6655481100d5891f37641ae75371491"],

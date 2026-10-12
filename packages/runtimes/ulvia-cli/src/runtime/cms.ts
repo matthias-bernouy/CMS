@@ -63,7 +63,6 @@ export async function startLocalProvider(
 
 export async function startLocalKernel(
     paths: UlviaPaths,
-    config: DevRuntimeConfig,
     mongo: LocalMongo,
     ports: DevPorts,
     instance: LocalInstanceConnection,

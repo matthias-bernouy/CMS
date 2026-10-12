@@ -1,8 +1,14 @@
 import { expect, test } from "bun:test";
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
-import type { ProviderInstanceLifecycle, ProviderInstanceRecord } from "../../src";
-import { ProviderOperatorApi } from "../../src";
+import type {
+    CreateProviderInstanceRecord,
+    OfficialInstanceProvisioner,
+    ProviderInstanceRecord,
+    ProviderInstanceRegistry,
+    UpdateProviderInstanceRecord,
+} from "../../src";
+import { ProviderInstanceLifecycle, ProviderOperatorApi } from "../../src";
 
 const OPERATOR_TOKEN = "operator-token-that-is-long-enough";
 
@@ -53,6 +59,34 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
     }
 });
 
+test("an idempotency key can only replay the exact instance request", async () => {
+    const registry = new MemoryRegistry();
+    const lifecycle = new ProviderInstanceLifecycle(
+        registry,
+        {
+            ensure: async () => ({ token: "instance-token", sessionSecret: "session-secret", kekHex: "kek" }),
+            read: async () => null,
+            disable: async () => undefined,
+        },
+        { provision: async (id: string) => required(await registry.get(id)) } as unknown as OfficialInstanceProvisioner,
+        "idempotency-secret",
+    );
+    const input = {
+        label: "One",
+        kernelUrl: "http://127.0.0.1:5100",
+        administrator: { email: "admin@example.test", password: "long-enough-password" },
+    };
+
+    const created = await lifecycle.create("create-one", input);
+    expect((await lifecycle.create("create-one", input)).instance.id).toBe(created.instance.id);
+    await expect(
+        lifecycle.create("create-one", {
+            ...input,
+            administrator: { ...input.administrator, password: "different-password" },
+        }),
+    ).rejects.toThrow("different request");
+});
+
 function readyInstance(): ProviderInstanceRecord {
     return {
         id: "instance:one",
@@ -68,4 +102,38 @@ function readyInstance(): ProviderInstanceRecord {
         createdAt: new Date(0).toISOString(),
         updatedAt: new Date(0).toISOString(),
     };
+}
+
+function required(instance: ProviderInstanceRecord | null): ProviderInstanceRecord {
+    if (!instance) {
+        throw new Error("Missing test instance");
+    }
+    return instance;
+}
+
+class MemoryRegistry implements ProviderInstanceRegistry {
+    #record: ProviderInstanceRecord | null = null;
+
+    async init(): Promise<void> {}
+    async create(record: CreateProviderInstanceRecord): Promise<ProviderInstanceRecord> {
+        const now = new Date(0).toISOString();
+        this.#record = { ...record, completedSteps: [], revision: 1, createdAt: now, updatedAt: now };
+        return this.#record;
+    }
+    async get(instanceId: string): Promise<ProviderInstanceRecord | null> {
+        return this.#record?.id === instanceId ? this.#record : null;
+    }
+    async getByIdempotencyKey(idempotencyKey: string): Promise<ProviderInstanceRecord | null> {
+        return this.#record?.idempotencyKey === idempotencyKey ? this.#record : null;
+    }
+    async list(): Promise<readonly ProviderInstanceRecord[]> {
+        return this.#record ? [this.#record] : [];
+    }
+    async update(
+        _instanceId: string,
+        _expectedRevision: number,
+        _changes: UpdateProviderInstanceRecord,
+    ): Promise<ProviderInstanceRecord> {
+        throw new Error("Unexpected update");
+    }
 }

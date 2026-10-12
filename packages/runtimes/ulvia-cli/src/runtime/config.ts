@@ -75,32 +75,6 @@ export async function saveLocalInstanceConnection(devRoot: string, value: Omit<L
     return connection;
 }
 
-export async function readLocalInstanceConnection(devRoot: string): Promise<LocalInstanceConnection | null> {
-    const path = join(devRoot, "instance.json");
-    const source = await readFile(path, "utf8").catch((error: NodeJS.ErrnoException) => {
-        if (error.code === "ENOENT") {
-            return null;
-        }
-        throw error;
-    });
-    if (source === null) {
-        return null;
-    }
-    await chmod(path, 0o600);
-    const value = JSON.parse(source) as Partial<LocalInstanceConnection>;
-    if (
-        value.schema !== INSTANCE_SCHEMA ||
-        !/^instance:[0-9a-f-]{36}$/u.test(value.instanceId ?? "") ||
-        !/^instance-[0-9a-f-]{36}$/u.test(value.storageKey ?? "") ||
-        !/^[A-Za-z0-9_-]{43}$/u.test(value.token ?? "") ||
-        !secret(value.sessionSecret) ||
-        !/^[a-f0-9]{64}$/u.test(value.kekHex ?? "")
-    ) {
-        throw new Error("Local Ulvia instance connection is invalid");
-    }
-    return value as LocalInstanceConnection;
-}
-
 async function loadOrCreateToken(path: string, label: string): Promise<string> {
     const existing = await readSecret(path);
     if (existing) {

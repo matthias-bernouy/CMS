@@ -31,6 +31,20 @@ describe("provider manifest parsing", () => {
                 }),
             ),
         ).toThrow("HTTPS origin or loopback HTTP origin");
+        expect(
+            parseProviderManifest(
+                manifestDocument([implementation("domain.example", "1.0.0", digest)], {
+                    endpoint: { allowedOrigins: ["http://ulvia-provider:5103"] },
+                }),
+            ).endpoint.allowedOrigins,
+        ).toEqual(["http://ulvia-provider:5103"]);
+        expect(() =>
+            parseProviderManifest(
+                manifestDocument([implementation("domain.example", "1.0.0", digest)], {
+                    endpoint: { allowedOrigins: ["http://ulvia-provider:5104"] },
+                }),
+            ),
+        ).toThrow("HTTPS origin or loopback HTTP origin");
     });
 
     test("keeps secret values out of credential declarations", () => {

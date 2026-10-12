@@ -4,7 +4,7 @@
     "schemaDialect": "ulvia-schema/v1",
     "providerId": "ulvia.official",
     "name": "Ulvia Provider",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "provenance": {
         "publisherId": "ulvia.official",
         "publishedAt": "2026-10-01T00:00:00Z"
@@ -12,7 +12,8 @@
     "buildVersionRange": ">=0.1.0 <1.0.0",
     "endpoint": {
         "allowedOrigins": [
-            "http://127.0.0.1:5103"
+            "http://127.0.0.1:5103",
+            "http://ulvia-provider:5103"
         ],
         "defaultOrigin": "http://127.0.0.1:5103"
     },

@@ -32,7 +32,12 @@ function parseOrigin(value: unknown, path: string): string {
     } catch {
         throw new ProviderManifestValidationError("invalid_manifest", "must be an absolute origin", path);
     }
-    if (url.origin !== origin || url.username || url.password || (url.protocol !== "https:" && !isLoopbackHttp(url))) {
+    if (
+        url.origin !== origin ||
+        url.username ||
+        url.password ||
+        (url.protocol !== "https:" && !isLoopbackHttp(url) && !isBundledProviderNetworkOrigin(url))
+    ) {
         throw new ProviderManifestValidationError(
             "invalid_manifest",
             "must be a canonical HTTPS origin or loopback HTTP origin",
@@ -40,6 +45,13 @@ function parseOrigin(value: unknown, path: string): string {
         );
     }
     return origin;
+}
+
+function isBundledProviderNetworkOrigin(url: URL): boolean {
+    // This exact Docker DNS origin exists only on the isolated production
+    // network created by the bundled deployment. All other non-loopback HTTP
+    // origins remain forbidden.
+    return url.protocol === "http:" && url.hostname === "ulvia-provider" && url.port === "5103";
 }
 
 function isLoopbackHttp(url: URL): boolean {

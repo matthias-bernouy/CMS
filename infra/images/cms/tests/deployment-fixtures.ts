@@ -33,6 +33,10 @@ export const infrastructureComposeSource = readFileSync(infrastructureComposeFil
 export const instanceEnvExampleSource = readFileSync(resolve(cmsDirectory, ".env.example"), "utf8");
 export const dockerfileSource = readFileSync(resolve(cmsDirectory, "Dockerfile"), "utf8");
 export const mongoBootstrapSource = readFileSync(resolve(cmsDirectory, "infra/mongo/01-validate-root-user.js"), "utf8");
+export const mongoProviderBootstrapSource = readFileSync(
+    resolve(cmsDirectory, "infra/mongo/02-create-provider-user.js"),
+    "utf8",
+);
 export const mongoSiteProvisionSource = readFileSync(
     resolve(cmsDirectory, "infra/mongo/provision-site-user.js"),
     "utf8",
@@ -47,10 +51,21 @@ export const requiredCmsEnvironment = {
     CMS_IMAGE: "registry.example.test/bernouy/cms:2026.07.15",
     CMS_SESSION_SECRET: "c".repeat(64),
     CMS_KEK_HEX: "d".repeat(64),
-    ULVIA_PROVIDER_MONGO_URL: "mongodb://provider:password@mongo:27017/ulvia_provider_control?authSource=admin",
-    ULVIA_PROVIDER_OPERATOR_TOKEN: "e".repeat(48),
+    MONGO_URL: `mongodb://cms_client:${"b".repeat(64)}@mongo:27017/ulvia_instance?authSource=ulvia_instance`,
     ULVIA_INSTANCE_TOKEN: "g".repeat(48),
     ULVIA_INSTANCE_STORAGE_KEY: "instance-00000000-0000-4000-8000-000000000001",
+};
+
+export const requiredInfrastructureEnvironment = {
+    LETSENCRYPT_EMAIL: "ops@example.test",
+    CMS_IMAGE: "registry.example.test/bernouy/cms:2026.10.12",
+    MONGO_ROOT_USERNAME: "cms_root",
+    MONGO_ROOT_PASSWORD: "a".repeat(64),
+    MONGO_PROVIDER_USERNAME: "ulvia_provider",
+    MONGO_PROVIDER_PASSWORD: "b".repeat(64),
+    ULVIA_PROVIDER_OPERATOR_TOKEN: "e".repeat(48),
+    ULVIA_PROVIDER_SESSION_SECRET: "c".repeat(64),
+    ULVIA_PROVIDER_KEK_HEX: "d".repeat(64),
     ULVIA_REPOSITORY_TOKEN: "f".repeat(48),
 };
 

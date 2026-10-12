@@ -8,21 +8,24 @@ import {
     infrastructureComposeSource,
     instanceComposeSource,
     mongoBootstrapSource,
+    mongoProviderBootstrapSource,
     mongoPreflightSource,
     mongoSiteProvisionSource,
     renderCompose,
+    requiredInfrastructureEnvironment,
 } from "./deployment-fixtures.ts";
 
 describe("shared infrastructure Compose rendering", () => {
     composeTest("contains pinned proxy and authenticated MongoDB services", () => {
-        const rootPassword = "a".repeat(64);
-        const config = renderCompose(infrastructureComposeFile, {
-            LETSENCRYPT_EMAIL: "ops@example.test",
-            MONGO_ROOT_USERNAME: "cms_root",
-            MONGO_ROOT_PASSWORD: rootPassword,
-        });
+        const config = renderCompose(infrastructureComposeFile, requiredInfrastructureEnvironment);
 
-        expect(Object.keys(config.services).sort()).toEqual(["acme-companion", "mongo", "nginx-proxy"]);
+        expect(Object.keys(config.services).sort()).toEqual([
+            "acme-companion",
+            "mongo",
+            "nginx-proxy",
+            "provider",
+            "repository",
+        ]);
 
         const pinnedImage = /:\d+(?:\.\d+){1,2}(?:-[a-z0-9.-]+)?@sha256:[a-f0-9]{64}$/i;
         for (const serviceName of ["nginx-proxy", "acme-companion", "mongo"]) {
@@ -37,16 +40,23 @@ describe("shared infrastructure Compose rendering", () => {
         expect(config.networks?.cms_mongo).toMatchObject({ name: "cms_mongo", internal: true });
         expect(mongo.environment).toMatchObject({
             MONGO_INITDB_ROOT_USERNAME: "cms_root",
-            MONGO_INITDB_ROOT_PASSWORD: rootPassword,
+            MONGO_INITDB_ROOT_PASSWORD: requiredInfrastructureEnvironment.MONGO_ROOT_PASSWORD,
         });
+        expect(config.services.provider.environment).toMatchObject({
+            ULVIA_PROVIDER_HOST: "0.0.0.0",
+            ULVIA_PROVIDER_PUBLIC_URL: "http://ulvia-provider:5103",
+            CMS_REPOSITORY_URL: "http://repository:3100",
+        });
+        expect(config.networks?.cms_provider).toMatchObject({ name: "cms_provider", internal: true });
     });
 });
 
 describe("deployment definition safeguards", () => {
-    test("keeps root infrastructure-only and provisions one readWrite role per site", () => {
+    test("keeps root infrastructure-only and separates Provider and Kernel Mongo roles", () => {
         expect(mongoBootstrapSource).toContain('roles[0].role !== "root"');
         expect(mongoSiteProvisionSource).toContain('roles: [{ role: "readWrite", db: database }]');
-        expect(`${mongoBootstrapSource}\n${mongoSiteProvisionSource}`).not.toContain("readWriteAnyDatabase");
+        expect(mongoProviderBootstrapSource).toContain('role: "readWriteAnyDatabase"');
+        expect(mongoProviderBootstrapSource).not.toContain('role: "root"');
         expect(mongoSiteProvisionSource).toContain("db.getSiblingDB(database)");
         expect(mongoSiteProvisionSource).toContain("roles[0].db !== database");
     });
@@ -94,7 +104,7 @@ describe("deployment definition safeguards", () => {
 
     test("prepares the writable file mount for the runtime identity", () => {
         expect(dockerfileSource).toContain("/var/lib/cms/files");
-        expect(instanceComposeSource).toContain("- ./files:/var/lib/cms/files");
+        expect(instanceComposeSource).toContain("- cms_files:/var/lib/cms/files");
     });
 
     test("installs both runtime entrypoint dependency closures", () => {

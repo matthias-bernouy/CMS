@@ -1,5 +1,5 @@
-# Shared CMS infrastructure — run ONCE per server, before bringing up any
-# CMS instance. Provides:
+# Shared CMS infrastructure — run once per server. It also runs the official
+# repository and the single multi-instance Ulvia Provider.
 #
 #   - nginx-proxy:     dynamic reverse proxy. Watches the Docker socket;
 #                      every container that publishes `VIRTUAL_HOST` (and
@@ -10,21 +10,13 @@
 #                      a background loop, hooks `nginx -s reload` on cert
 #                      change. Email comes from `DEFAULT_EMAIL` (set via
 #                      `.env`).
-#   - mongo:           one authenticated MongoDB server shared by all CMS
-#                      instances. Each CMS uses a separately provisioned user
-#                      restricted to its own database.
+#   - mongo:           authenticated shared persistence;
+#   - repository:      the central immutable official catalogue;
+#   - provider:        the central multi-instance official Provider.
 #
-# Usage:
-#   cd infra/images/cms/infra
-#   cat > .env <<'EOF'
-#   LETSENCRYPT_EMAIL=ops@yourdomain.com
-#   MONGO_ROOT_USERNAME=cms_root
-#   MONGO_ROOT_PASSWORD=<64-character-hex-secret>
-#   EOF
-#   docker compose up -d
-#
-# The `cms_proxy` and `cms_mongo` networks have stable names so per-instance
-# compose files (see ../compose.yml) can join them with `external: true`.
+# Copy `.env.example`, fill every value, then run `docker compose up -d --wait`.
+# The stable `cms_proxy`, `cms_mongo`, and `cms_provider` networks and the
+# `cms_files` volume are consumed by per-instance Kernel projects.
 
 services:
     nginx-proxy:
@@ -81,10 +73,13 @@ services:
         environment:
             MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:?MONGO_ROOT_USERNAME must be set}
             MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?MONGO_ROOT_PASSWORD must be a 64-character hexadecimal secret}
+            MONGO_PROVIDER_USERNAME: ${MONGO_PROVIDER_USERNAME:?MONGO_PROVIDER_USERNAME must be set}
+            MONGO_PROVIDER_PASSWORD: ${MONGO_PROVIDER_PASSWORD:?MONGO_PROVIDER_PASSWORD must be set}
         volumes:
             - mongo_data:/data/db
             - ./mongo/validate-env.sh:/opt/cms-mongo/validate-env.sh:ro
             - ./mongo/01-validate-root-user.js:/docker-entrypoint-initdb.d/01-validate-root-user.js:ro
+            - ./mongo/02-create-provider-user.js:/docker-entrypoint-initdb.d/02-create-provider-user.js:ro
             - ./mongo/provision-site-user.js:/opt/cms-mongo/provision-site-user.js:ro
         networks:
             cms_mongo:
@@ -105,11 +100,90 @@ services:
             start_period: 30s
         stop_grace_period: 30s
 
+    repository:
+        image: ${CMS_IMAGE:?CMS_IMAGE must be an immutable version tag or digest}
+        restart: unless-stopped
+        init: true
+        command: ["bun", "run", "packages/runtimes/official-repository-server/src/index.ts"]
+        environment:
+            NODE_ENV: production
+            ULVIA_REPOSITORY_DIR: /var/lib/ulvia-repository/current
+            ULVIA_REPOSITORY_SEED_DIR: /opt/ulvia-repository-seed
+            ULVIA_REPOSITORY_TOKEN: ${ULVIA_REPOSITORY_TOKEN:?ULVIA_REPOSITORY_TOKEN must be set}
+            REPOSITORY_HOST: 0.0.0.0
+            REPOSITORY_PORT: "3100"
+        volumes:
+            - repository_data:/var/lib/ulvia-repository
+        read_only: true
+        tmpfs:
+            - /tmp:rw,nosuid,nodev,noexec,size=64m
+        cap_drop:
+            - ALL
+        security_opt:
+            - no-new-privileges:true
+        networks:
+            - cms_provider
+        healthcheck:
+            test: ["CMD", "bun", "-e", "const r=await fetch('http://127.0.0.1:3100/readyz'); if(!r.ok) process.exit(1); await r.body?.cancel()"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
+
+    provider:
+        image: ${CMS_IMAGE:?CMS_IMAGE must be an immutable version tag or digest}
+        restart: unless-stopped
+        init: true
+        command: ["bun", "run", "packages/runtimes/ulvia-provider-server/src/index.ts"]
+        environment:
+            MODE: PROD
+            NODE_ENV: production
+            CMS_FILES_DIR: /var/lib/cms/files
+            CMS_REPOSITORY_URL: http://repository:3100
+            CMS_SESSION_SECRET: ${ULVIA_PROVIDER_SESSION_SECRET:?ULVIA_PROVIDER_SESSION_SECRET must be set}
+            CMS_KEK_HEX: ${ULVIA_PROVIDER_KEK_HEX:?ULVIA_PROVIDER_KEK_HEX must be set}
+            MONGO_URL: mongodb://${MONGO_PROVIDER_USERNAME}:${MONGO_PROVIDER_PASSWORD}@mongo:27017/ulvia_provider_control?authSource=admin
+            ULVIA_PROVIDER_PORT: "5103"
+            ULVIA_PROVIDER_HOST: 0.0.0.0
+            ULVIA_PROVIDER_PUBLIC_URL: http://ulvia-provider:5103
+            ULVIA_PROVIDER_OPERATOR_TOKEN: ${ULVIA_PROVIDER_OPERATOR_TOKEN:?ULVIA_PROVIDER_OPERATOR_TOKEN must be set}
+        volumes:
+            - cms_files:/var/lib/cms/files
+        depends_on:
+            mongo:
+                condition: service_healthy
+            repository:
+                condition: service_healthy
+        read_only: true
+        tmpfs:
+            - /tmp:rw,nosuid,nodev,noexec,size=256m
+        cap_drop:
+            - ALL
+        security_opt:
+            - no-new-privileges:true
+        networks:
+            cms_proxy:
+                gw_priority: 1
+            cms_mongo: {}
+            cms_provider:
+                aliases:
+                    - ulvia-provider
+        healthcheck:
+            test: ["CMD", "bun", "-e", "const r=await fetch('http://127.0.0.1:5103/ulvia/operator/instances',{headers:{authorization:'Bearer '+process.env.ULVIA_PROVIDER_OPERATOR_TOKEN}}); if(!r.ok) process.exit(1); await r.body?.cancel()"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 60s
+        stop_grace_period: 30s
+
 networks:
     cms_proxy:
         name: cms_proxy
     cms_mongo:
         name: cms_mongo
+        internal: true
+    cms_provider:
+        name: cms_provider
         internal: true
 
 volumes:
@@ -119,3 +193,6 @@ volumes:
     nginx_acme:
     nginx_cache:
     mongo_data:
+    repository_data:
+    cms_files:
+        name: cms_files

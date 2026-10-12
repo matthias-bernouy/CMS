@@ -41,5 +41,7 @@ root_username="${MONGO_INITDB_ROOT_USERNAME:-}"
 root_password="${MONGO_INITDB_ROOT_PASSWORD:-}"
 validate_username MONGO_INITDB_ROOT_USERNAME "$root_username"
 validate_hex_secret MONGO_INITDB_ROOT_PASSWORD "$root_password"
+validate_username MONGO_PROVIDER_USERNAME "${MONGO_PROVIDER_USERNAME:-}"
+validate_hex_secret MONGO_PROVIDER_PASSWORD "${MONGO_PROVIDER_PASSWORD:-}"
 
 exec /usr/local/bin/docker-entrypoint.sh "$@"

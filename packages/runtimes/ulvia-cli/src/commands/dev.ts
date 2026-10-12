@@ -86,7 +86,7 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
             `http://127.0.0.1:${ports.kernel}`,
         );
         const instance = await saveLocalInstanceConnection(paths.dev, provisioned);
-        kernel = await startLocalKernel(paths, config, mongo, ports, instance);
+        kernel = await startLocalKernel(paths, mongo, ports, instance);
     } catch (error) {
         await stopLocalServer(provider);
         repository.stop();
