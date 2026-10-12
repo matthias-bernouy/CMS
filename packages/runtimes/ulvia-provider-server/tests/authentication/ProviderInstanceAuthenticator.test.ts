@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { InMemorySecretStore } from "@bernouy/secret-store";
 import { providerInvocationKeyId, signProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import type { ProviderInstanceRecord, ProviderInstanceRegistry } from "@bernouy/ulvia-provider";
 import {
@@ -10,20 +9,19 @@ import type {
     InstanceCredential,
     InstanceCredentialStore,
 } from "../../src/runtime/authentication/InstanceCredentialStore";
+import type { EncryptedInstanceCredentials } from "../../src/runtime/authentication/EncryptedInstanceCredentials";
 
 const TOKEN = "opaque-instance-token-that-is-long-enough";
 const INSTANCE_ID = "instance:alpha";
 
 describe("ProviderInstanceAuthenticator", () => {
     test("resolves raw control and signed invocation credentials to one ready instance", async () => {
-        const secrets = new InMemorySecretStore();
-        await secrets.set("ULVIA_INSTANCE_ALPHA", TOKEN);
         const instance = readyInstance();
         const credential = instanceCredential();
         const authenticator = new ProviderInstanceAuthenticator(
             registry(instance),
             credentialStore(credential),
-            secrets,
+            encryptedCredentials(),
         );
 
         expect((await authenticator.authenticateControlToken(TOKEN))?.id).toBe(INSTANCE_ID);
@@ -42,13 +40,11 @@ describe("ProviderInstanceAuthenticator", () => {
     });
 
     test("rejects disabled instances and credentials from another instance", async () => {
-        const secrets = new InMemorySecretStore();
-        await secrets.set("ULVIA_INSTANCE_ALPHA", TOKEN);
         const disabled = { ...readyInstance(), status: "disabled" as const };
         const authenticator = new ProviderInstanceAuthenticator(
             registry(disabled),
             credentialStore(instanceCredential()),
-            secrets,
+            encryptedCredentials(),
         );
         expect(await authenticator.authenticateControlToken(TOKEN)).toBeNull();
     });
@@ -69,6 +65,12 @@ function readyInstance(): ProviderInstanceRecord {
         createdAt: new Date(0).toISOString(),
         updatedAt: new Date(0).toISOString(),
     };
+}
+
+function encryptedCredentials(): EncryptedInstanceCredentials {
+    return {
+        readSecret: async () => ({ token: TOKEN, sessionSecret: "s".repeat(64), kekHex: "0".repeat(64) }),
+    } as EncryptedInstanceCredentials;
 }
 
 function instanceCredential(): InstanceCredential {

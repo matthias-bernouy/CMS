@@ -32,7 +32,7 @@ const instances = new MongoProviderInstanceRegistry(controlDb);
 const credentialStore = new MongoInstanceCredentialStore(controlDb);
 await Promise.all([instances.init(), credentialStore.init()]);
 const credentials = new EncryptedInstanceCredentials(credentialStore, secrets);
-const host = new ProviderInstanceHost(env, credentialStore, secrets);
+const host = new ProviderInstanceHost(env, credentials);
 
 let provider;
 try {
@@ -41,7 +41,7 @@ try {
     );
     const provisioner = new OfficialInstanceProvisioner(instances, (instance) => host.target(instance));
     const lifecycle = new ProviderInstanceLifecycle(instances, credentials, provisioner, env.CMS_SESSION_SECRET);
-    const authenticator = new ProviderInstanceAuthenticator(instances, credentialStore, secrets);
+    const authenticator = new ProviderInstanceAuthenticator(instances, credentialStore, credentials);
     provider = mountUlviaProvider({ env, contracts, authenticator, host, lifecycle });
 } catch (error) {
     await Promise.allSettled([host.close(), mongo.close()]);

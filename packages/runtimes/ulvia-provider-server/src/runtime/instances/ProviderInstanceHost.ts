@@ -17,8 +17,7 @@ import {
     type UlviaProviderInstanceRuntime,
 } from "@bernouy/ulvia-provider";
 import type { ProviderRuntimeEnv } from "../../runtimeEnv";
-import type { InstanceCredentialStore } from "../authentication/InstanceCredentialStore";
-import type { SecretStore } from "@bernouy/secret-store";
+import type { EncryptedInstanceCredentials } from "../authentication/EncryptedInstanceCredentials";
 import { createProviderGateway } from "../gateway/createProviderGateway";
 import { MongoProviderOperationStore } from "../provider-operations/MongoProviderOperationStore";
 import { createProviderStores, type ProviderStores } from "../stores/providerStores";
@@ -42,8 +41,7 @@ export class ProviderInstanceHost {
 
     constructor(
         private readonly env: ProviderRuntimeEnv,
-        private readonly credentials: InstanceCredentialStore,
-        private readonly secrets: SecretStore,
+        private readonly credentials: EncryptedInstanceCredentials,
     ) {
         this.#providerSource = new HttpProviderRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL);
         this.#collectionSource = new HttpCollectionRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL);
@@ -69,7 +67,6 @@ export class ProviderInstanceHost {
                 composition: lease.resource,
                 env: this.env,
                 credentials: this.credentials,
-                secrets: this.secrets,
                 providerSource: this.#providerSource,
                 collectionSource: this.#collectionSource,
             }),
@@ -91,10 +88,20 @@ export class ProviderInstanceHost {
     }
 
     private async createComposition(instance: ProviderInstanceRecord): Promise<InstanceComposition> {
+        const credentials = await this.credentials.read(instance.id);
+        if (!credentials) {
+            throw new Error(`Provider instance credentials are unavailable: ${instance.id}`);
+        }
         const filesDirectory = join(this.env.CMS_FILES_DIR, instance.storageKey);
         await mkdir(filesDirectory, { recursive: true, mode: 0o700 });
         const stores = await createProviderStores({
-            ...this.env,
+            CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: this.env.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION,
+            CMS_SESSION_SECRET: credentials.sessionSecret,
+            CMS_KEK: {
+                activeKeyId: "instance",
+                keysHex: { instance: credentials.kekHex },
+                rotateOnStart: false,
+            },
             MONGO_URL: instanceMongoUrl(this.env.MONGO_URL, instance.storageKey),
             CMS_FILES_DIR: filesDirectory,
             KERNEL_PUBLIC_URL: instance.kernelUrl,

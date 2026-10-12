@@ -5,9 +5,16 @@ import type { ProviderInstanceRegistry } from "./registry";
 import type { ProviderInstanceRecord } from "./types";
 
 export interface ProviderInstanceCredentials {
-    ensure(instance: ProviderInstanceRecord): Promise<string>;
+    ensure(instance: ProviderInstanceRecord): Promise<ProviderInstanceRuntimeCredentials>;
+    read(instanceId: string): Promise<ProviderInstanceRuntimeCredentials | null>;
     disable(instanceId: string): Promise<void>;
 }
+
+export type ProviderInstanceRuntimeCredentials = Readonly<{
+    token: string;
+    sessionSecret: string;
+    kekHex: string;
+}>;
 
 export type CreateProviderInstance = Readonly<{
     label: string;
@@ -17,7 +24,7 @@ export type CreateProviderInstance = Readonly<{
 
 export type CreatedProviderInstance = Readonly<{
     instance: ProviderInstanceRecord;
-    token: string;
+    credentials: ProviderInstanceRuntimeCredentials;
 }>;
 
 export class ProviderInstanceLifecycle {
@@ -46,9 +53,9 @@ export class ProviderInstanceLifecycle {
             });
         }
         assertMatchingFingerprint(instance.idempotencyFingerprint, idempotencyFingerprint);
-        const token = await this.credentials.ensure(instance);
+        const credentials = await this.credentials.ensure(instance);
         const provisioned = await this.provisioner.provision(instance.id, input.administrator);
-        return { instance: provisioned, token };
+        return { instance: provisioned, credentials };
     }
 
     get(instanceId: string): Promise<ProviderInstanceRecord | null> {

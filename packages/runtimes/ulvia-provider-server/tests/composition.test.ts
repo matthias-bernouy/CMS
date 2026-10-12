@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { OFFICIAL_INSTANCE_PROFILE, type ProviderInstanceRecord } from "@bernouy/ulvia-provider";
 import type { ProviderRuntimeEnv } from "../src/runtimeEnv";
-import type { InstanceCredentialStore } from "../src/runtime/authentication/InstanceCredentialStore";
 import type { InstanceComposition } from "../src/runtime/instances/ProviderInstanceHost";
 import { createInstanceProvisioningTarget } from "../src/runtime/instances/instanceProvisioning";
 
@@ -59,9 +58,8 @@ function connectionTarget(management: Record<string, unknown>) {
         composition: { management } as unknown as InstanceComposition,
         env: { ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103" } as ProviderRuntimeEnv,
         credentials: {
-            getByInstanceId: async () => ({ secretKey: "INSTANCE_TOKEN" }),
-        } as unknown as InstanceCredentialStore,
-        secrets: { get: async () => "instance-token" },
+            read: async () => ({ token: "instance-token", sessionSecret: "session-secret", kekHex: "0".repeat(64) }),
+        },
         providerSource: {} as never,
         collectionSource: {} as never,
     });

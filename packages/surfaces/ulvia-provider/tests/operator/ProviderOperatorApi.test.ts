@@ -14,7 +14,10 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
         get: async (id: string) => (id === instance.id ? instance : null),
         create: async (key: string, input: unknown) => {
             creates.push({ key, input });
-            return { instance, token: "new-instance-token" };
+            return {
+                instance,
+                credentials: { token: "new-instance-token", sessionSecret: "session-secret", kekHex: "kek" },
+            };
         },
         disable: async (id: string) => (id === instance.id ? { ...instance, status: "disabled" } : null),
     } as unknown as ProviderInstanceLifecycle;
@@ -36,7 +39,7 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
             }),
         });
         expect(created.status).toBe(201);
-        expect((await created.json()).token).toBe("new-instance-token");
+        expect((await created.json()).credentials.token).toBe("new-instance-token");
         expect(creates).toHaveLength(1);
 
         const disabled = await server.request(

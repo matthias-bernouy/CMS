@@ -63,6 +63,8 @@ export type LocalInstanceConnection = Readonly<{
     instanceId: string;
     storageKey: string;
     token: string;
+    sessionSecret: string;
+    kekHex: string;
 }>;
 
 export async function saveLocalInstanceConnection(devRoot: string, value: Omit<LocalInstanceConnection, "schema">) {
@@ -90,7 +92,9 @@ export async function readLocalInstanceConnection(devRoot: string): Promise<Loca
         value.schema !== INSTANCE_SCHEMA ||
         !/^instance:[0-9a-f-]{36}$/u.test(value.instanceId ?? "") ||
         !/^instance-[0-9a-f-]{36}$/u.test(value.storageKey ?? "") ||
-        !/^[A-Za-z0-9_-]{43}$/u.test(value.token ?? "")
+        !/^[A-Za-z0-9_-]{43}$/u.test(value.token ?? "") ||
+        !secret(value.sessionSecret) ||
+        !/^[a-f0-9]{64}$/u.test(value.kekHex ?? "")
     ) {
         throw new Error("Local Ulvia instance connection is invalid");
     }

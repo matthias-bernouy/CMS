@@ -56,5 +56,6 @@ export {
     type CreateProviderInstance,
     type CreatedProviderInstance,
     type ProviderInstanceCredentials,
+    type ProviderInstanceRuntimeCredentials,
 } from "./instances/lifecycle";
 export { ProviderOperatorApi } from "./transport/ProviderOperatorApi";

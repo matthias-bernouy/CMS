@@ -12,7 +12,11 @@ test("local provisioning sends administrator input only to the protected operato
                 storageKey: "instance-00000000-0000-4000-8000-000000000001",
                 status: "ready",
             },
-            token: "a".repeat(43),
+            credentials: {
+                token: "a".repeat(43),
+                sessionSecret: "s".repeat(64),
+                kekHex: "0".repeat(64),
+            },
         });
     }) as typeof fetch;
     try {

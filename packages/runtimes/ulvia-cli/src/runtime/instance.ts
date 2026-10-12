@@ -23,16 +23,24 @@ export async function provisionLocalInstance(
         throw new Error(`Local instance provisioning failed (${response.status})`);
     }
     const value = (await response.json()) as {
-        token?: unknown;
+        credentials?: { token?: unknown; sessionSecret?: unknown; kekHex?: unknown };
         instance?: { id?: unknown; storageKey?: unknown; status?: unknown };
     };
     if (
-        typeof value.token !== "string" ||
+        typeof value.credentials?.token !== "string" ||
+        typeof value.credentials.sessionSecret !== "string" ||
+        typeof value.credentials.kekHex !== "string" ||
         typeof value.instance?.id !== "string" ||
         typeof value.instance.storageKey !== "string" ||
         value.instance.status !== "ready"
     ) {
         throw new Error("Local instance provisioning returned an invalid response");
     }
-    return { instanceId: value.instance.id, storageKey: value.instance.storageKey, token: value.token };
+    return {
+        instanceId: value.instance.id,
+        storageKey: value.instance.storageKey,
+        token: value.credentials.token,
+        sessionSecret: value.credentials.sessionSecret,
+        kekHex: value.credentials.kekHex,
+    };
 }

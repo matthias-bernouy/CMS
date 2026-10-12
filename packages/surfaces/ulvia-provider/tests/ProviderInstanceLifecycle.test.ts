@@ -19,7 +19,11 @@ test("an idempotency key can only replay the exact instance request", async () =
     const registry = new MemoryRegistry();
     const lifecycle = new ProviderInstanceLifecycle(
         registry,
-        { ensure: async () => "instance-token", disable: async () => undefined },
+        {
+            ensure: async () => ({ token: "instance-token", sessionSecret: "session-secret", kekHex: "kek" }),
+            read: async () => null,
+            disable: async () => undefined,
+        },
         { provision: async (id: string) => required(await registry.get(id)) } as unknown as OfficialInstanceProvisioner,
         "idempotency-secret",
     );

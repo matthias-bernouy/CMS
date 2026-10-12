@@ -1,15 +1,14 @@
 import { createLocalUser } from "@bernouy/cms-auth/management";
 import type { HttpCollectionRepository } from "@bernouy/cms-repository/collections/http";
 import type { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
-import type { SecretStore } from "@bernouy/secret-store";
 import type {
     OfficialInstanceProfile,
     OfficialInstanceProvisioningTarget,
     ProviderInstanceAdministrator,
     ProviderInstanceRecord,
+    ProviderInstanceCredentials,
 } from "@bernouy/ulvia-provider";
 import type { ProviderRuntimeEnv } from "../../runtimeEnv";
-import type { InstanceCredentialStore } from "../authentication/InstanceCredentialStore";
 import type { InstanceComposition } from "./ProviderInstanceHost";
 import { loadOfficialManifest } from "./officialArtifacts";
 
@@ -20,8 +19,7 @@ type TargetOptions = Readonly<{
     instance: ProviderInstanceRecord;
     composition: InstanceComposition;
     env: ProviderRuntimeEnv;
-    credentials: InstanceCredentialStore;
-    secrets: SecretStore;
+    credentials: Pick<ProviderInstanceCredentials, "read">;
     providerSource: HttpProviderRepository;
     collectionSource: HttpCollectionRepository;
 }>;
@@ -46,9 +44,8 @@ async function connectProvider(options: TargetOptions, profile: OfficialInstance
     if (installation && connectionIsReady(installation, options, profile)) {
         return;
     }
-    const credential = await options.credentials.getByInstanceId(options.instance.id);
-    const token = credential ? await options.secrets.get(credential.secretKey) : null;
-    if (!token) {
+    const credentials = await options.credentials.read(options.instance.id);
+    if (!credentials) {
         throw new Error(`Provider instance token is unavailable: ${options.instance.id}`);
     }
     const preview = await options.composition.management.preview(
@@ -56,7 +53,7 @@ async function connectProvider(options: TargetOptions, profile: OfficialInstance
             providerId: profile.manifest.providerId,
             version: profile.manifest.version,
             endpoint: options.env.ULVIA_PROVIDER_PUBLIC_URL,
-            token,
+            token: credentials.token,
             ...(installation ? { installationId: installation.id, revision: installation.revision } : {}),
         },
         BOOTSTRAP_ACTOR,

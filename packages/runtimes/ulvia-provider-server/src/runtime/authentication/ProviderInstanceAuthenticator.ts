@@ -4,9 +4,9 @@ import {
     verifyProviderInvocationToken,
     type ProviderInvocationClaims,
 } from "@bernouy/cms-gateway/protocol";
-import type { SecretReader } from "@bernouy/secret-store";
 import type { ProviderInstanceRecord, ProviderInstanceRegistry } from "@bernouy/ulvia-provider";
 import type { InstanceCredential, InstanceCredentialStore } from "./InstanceCredentialStore";
+import type { EncryptedInstanceCredentials } from "./EncryptedInstanceCredentials";
 
 export type AuthenticatedInvocation = Readonly<{
     instance: ProviderInstanceRecord;
@@ -17,7 +17,7 @@ export class ProviderInstanceAuthenticator {
     constructor(
         private readonly instances: ProviderInstanceRegistry,
         private readonly credentials: InstanceCredentialStore,
-        private readonly secrets: SecretReader,
+        private readonly encryptedCredentials: EncryptedInstanceCredentials,
     ) {}
 
     async authenticateControlToken(token: string): Promise<ProviderInstanceRecord | null> {
@@ -63,7 +63,7 @@ export class ProviderInstanceAuthenticator {
         if (!credential.enabled) {
             return null;
         }
-        return this.secrets.get(credential.secretKey);
+        return (await this.encryptedCredentials.readSecret(credential.secretKey))?.token ?? null;
     }
 
     private async readReadyInstance(instanceId: string): Promise<ProviderInstanceRecord | null> {
