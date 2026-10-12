@@ -24,7 +24,7 @@ ARG IMAGE_VERSION=dev
 ARG VCS_REF=unknown
 
 LABEL org.opencontainers.image.title="@bernouy/cms-server" \
-      org.opencontainers.image.description="CmsCore Kernel runtime" \
+      org.opencontainers.image.description="CmsCore runtime" \
       org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.opencontainers.image.revision="${VCS_REF}"
 

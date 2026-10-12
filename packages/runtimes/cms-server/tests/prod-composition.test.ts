@@ -29,13 +29,13 @@ describe("production CMS composition", () => {
         const shutdown = source.search(/const\s+shutdown\s*=/);
         const shutdownSource = source.slice(shutdown);
         const stop = shutdownSource.search(/await\s+kernel\.stop\s*\(\s*\)/);
-        const stopCoreProvider = shutdownSource.search(/await\s+localCoreProvider\?\.stop\s*\(\s*\)/);
+        const stopUlviaProvider = shutdownSource.search(/await\s+localUlviaProvider\?\.stop\s*\(\s*\)/);
         const close = shutdownSource.search(/await\s+core\.close\s*\(\s*\)/);
 
         expect(shutdown).toBeGreaterThan(-1);
         expect(stop).toBeGreaterThan(-1);
-        expect(stopCoreProvider).toBeGreaterThan(stop);
-        expect(close).toBeGreaterThan(stopCoreProvider);
+        expect(stopUlviaProvider).toBeGreaterThan(stop);
+        expect(close).toBeGreaterThan(stopUlviaProvider);
         expect(source).not.toContain("process.exit(0)");
     });
 });

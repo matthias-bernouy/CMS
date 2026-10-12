@@ -443,40 +443,40 @@
                 "total": 697
             }
         },
-        "@bernouy/cms-core": {
-            "path": "packages/surfaces/cms-core",
+        "@bernouy/ulvia-provider": {
+            "path": "packages/surfaces/ulvia-provider",
             "coveredSourceFiles": [
-                "packages/surfaces/cms-core/src/CmsCore.ts",
-                "packages/surfaces/cms-core/src/capabilities/access/configuration.ts",
-                "packages/surfaces/cms-core/src/capabilities/access/index.ts",
-                "packages/surfaces/cms-core/src/capabilities/access/support.ts",
-                "packages/surfaces/cms-core/src/capabilities/collections/index.ts",
-                "packages/surfaces/cms-core/src/capabilities/collections/projection.ts",
-                "packages/surfaces/cms-core/src/capabilities/collections/sources.ts",
-                "packages/surfaces/cms-core/src/capabilities/collections/support.ts",
-                "packages/surfaces/cms-core/src/capabilities/files.ts",
-                "packages/surfaces/cms-core/src/capabilities/index.ts",
-                "packages/surfaces/cms-core/src/capabilities/jobs.ts",
-                "packages/surfaces/cms-core/src/capabilities/pages/index.ts",
-                "packages/surfaces/cms-core/src/capabilities/providers.ts",
-                "packages/surfaces/cms-core/src/capabilities/site-configuration/localization.ts",
-                "packages/surfaces/cms-core/src/capabilities/site-configuration/projection.ts",
-                "packages/surfaces/cms-core/src/capabilities/site-configuration/support.ts",
-                "packages/surfaces/cms-core/src/capabilities/site-configuration/theme.ts",
-                "packages/surfaces/cms-core/src/dispatch/registry.ts",
-                "packages/surfaces/cms-core/src/index.ts",
-                "packages/surfaces/cms-core/src/operations/CoreOperationExecutor.ts",
-                "packages/surfaces/cms-core/src/operations/MemoryCoreOperationStore.ts",
-                "packages/surfaces/cms-core/src/operations/lease.ts",
-                "packages/surfaces/cms-core/src/transport/authentication.ts",
-                "packages/surfaces/cms-core/src/transport/context.ts",
-                "packages/surfaces/cms-core/src/transport/input.ts",
-                "packages/surfaces/cms-core/src/transport/relay.ts",
-                "packages/surfaces/cms-core/src/transport/routes.ts"
+                "packages/surfaces/ulvia-provider/src/UlviaProvider.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/access/configuration.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/access/index.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/access/support.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/collections/index.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/collections/projection.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/collections/sources.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/collections/support.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/files.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/index.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/jobs.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/pages/index.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/providers.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/site-configuration/localization.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/site-configuration/projection.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/site-configuration/support.ts",
+                "packages/surfaces/ulvia-provider/src/capabilities/site-configuration/theme.ts",
+                "packages/surfaces/ulvia-provider/src/dispatch/registry.ts",
+                "packages/surfaces/ulvia-provider/src/index.ts",
+                "packages/surfaces/ulvia-provider/src/operations/ProviderOperationExecutor.ts",
+                "packages/surfaces/ulvia-provider/src/operations/MemoryProviderOperationStore.ts",
+                "packages/surfaces/ulvia-provider/src/operations/lease.ts",
+                "packages/surfaces/ulvia-provider/src/transport/authentication.ts",
+                "packages/surfaces/ulvia-provider/src/transport/context.ts",
+                "packages/surfaces/ulvia-provider/src/transport/input.ts",
+                "packages/surfaces/ulvia-provider/src/transport/relay.ts",
+                "packages/surfaces/ulvia-provider/src/transport/routes.ts"
             ],
             "uncoveredSourceFiles": [
-                "packages/surfaces/cms-core/src/operations/types.ts",
-                "packages/surfaces/cms-core/src/ports/index.ts"
+                "packages/surfaces/ulvia-provider/src/operations/types.ts",
+                "packages/surfaces/ulvia-provider/src/ports/index.ts"
             ],
             "files": {
                 "covered": 27,
@@ -984,7 +984,7 @@
         "@bernouy/cms-server": {
             "path": "packages/runtimes/cms-server",
             "coveredSourceFiles": [
-                "packages/runtimes/cms-server/src/runtime/core-operations/MongoCoreOperationStore.ts",
+                "packages/runtimes/cms-server/src/runtime/provider-operations/MongoProviderOperationStore.ts",
                 "packages/runtimes/cms-server/src/runtime/gateway/ProviderObservationRefresher.ts",
                 "packages/runtimes/cms-server/src/runtime/gateway/access.ts",
                 "packages/runtimes/cms-server/src/runtime/gateway/bootstrapLocalOfficialResources.ts",
@@ -1004,7 +1004,7 @@
                 "packages/runtimes/cms-server/src/index.ts",
                 "packages/runtimes/cms-server/src/runtime/auth.ts",
                 "packages/runtimes/cms-server/src/runtime/gateway/createProductionGateway.ts",
-                "packages/runtimes/cms-server/src/runtime/localCoreProvider.ts"
+                "packages/runtimes/cms-server/src/runtime/localUlviaProvider.ts"
             ],
             "files": {
                 "covered": 15,

@@ -1,0 +1,88 @@
+import type {
+    IdentityProviderRepository,
+    LocalCredentialStore,
+    PatRepository,
+    UsersRepository,
+} from "@bernouy/cms-auth";
+import type { CmsRepository } from "@bernouy/cms-content";
+import type { CollectionMigrationService } from "@bernouy/cms-repository/collections/installations";
+import type { ProviderIdentityService } from "@bernouy/cms-gateway/identity";
+import type { CollectionStore } from "@bernouy/cms-repository/collections/installations";
+import type {
+    ProviderInstallationStatus,
+    ProviderInstallationStore,
+} from "@bernouy/cms-repository/providers/installations";
+import type { ContractSelection, ContractSelectionStore } from "@bernouy/cms-repository/providers/selections";
+
+export interface CmsPageDependencies {
+    readonly repo: CmsRepository;
+}
+
+export interface CmsCollectionDependencies {
+    readonly collections: CollectionStore;
+    readonly collectionMigrations: CollectionMigrationService;
+}
+
+export interface CmsThemeDependencies {
+    readonly repo: CmsRepository;
+    readonly collections: CollectionStore;
+}
+
+export interface CmsLocalizationDependencies {
+    readonly repo: CmsRepository;
+    readonly collections: CollectionStore;
+}
+
+export interface CmsAccessDependencies {
+    readonly repo: CmsRepository;
+    readonly users: UsersRepository;
+    readonly identityProviders: IdentityProviderRepository;
+    readonly credentials: LocalCredentialStore;
+    readonly pats: PatRepository;
+}
+
+export type UlviaProviderDependencies = CmsPageDependencies &
+    CmsCollectionDependencies &
+    CmsThemeDependencies &
+    CmsLocalizationDependencies &
+    CmsAccessDependencies;
+
+type UlviaProviderAdministratorState = Readonly<{
+    sub: string;
+    enabled: boolean;
+    revision: number;
+    bootstrap: boolean;
+}>;
+
+interface UlviaProviderAdministratorStore {
+    canRevoke(sub: string): Promise<boolean>;
+    get(sub: string): Promise<UlviaProviderAdministratorState>;
+    list(): Promise<readonly string[]>;
+    set(sub: string, enabled: boolean, expectedRevision?: number): Promise<UlviaProviderAdministratorState>;
+}
+
+export interface UlviaProviderGateway {
+    readonly siteId: string;
+    readonly installations: ProviderInstallationStore;
+    readonly selections: ContractSelectionStore;
+    readonly administrators: UlviaProviderAdministratorStore;
+    readonly identities: ProviderIdentityService;
+}
+
+export interface UlviaProviderManagement {
+    replaceSelections(input: {
+        expectedRevision: number;
+        selections: readonly {
+            installationId: string;
+            contractId: string;
+            version: string;
+            digest: string;
+        }[];
+    }): Promise<{ revision: number; selected: readonly ContractSelection[] }>;
+    setStatus(input: { installationId: string; revision: number; action: "enable" | "disable" | "revoke" }): Promise<{
+        installationId: string;
+        status: ProviderInstallationStatus;
+        revision: number;
+        credentialsDeleted: boolean;
+    }>;
+}

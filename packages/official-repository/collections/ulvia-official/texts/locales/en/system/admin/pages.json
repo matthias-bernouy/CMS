@@ -3,7 +3,7 @@
     "ui-about-us": "About us",
     "ui-back-to-pages": "Back to Pages",
     "ui-create-a-page": "Create a Page",
-    "ui-create-and-manage-site-pages-through-the-selected-local-core-provider": "Create and manage site Pages through the selected local Core provider.",
+    "ui-create-and-manage-site-pages-through-the-selected-ulvia-provider": "Create and manage site Pages through the selected Ulvia Provider.",
     "ui-create-page": "Create Page",
     "ui-create-the-first-page-to-start-building-the-site": "Create the first Page to start building the site.",
     "ui-danger-zone": "Danger zone",
@@ -43,8 +43,8 @@
     "ui-search-description": "Search description",
     "ui-search-metadata": "Search metadata",
     "ui-search-title": "Search title",
-    "ui-the-latest-page-catalogue-is-being-read-from-the-core": "The latest Page catalogue is being read from the Core.",
-    "ui-the-latest-revision-is-being-read-from-the-core": "The latest revision is being read from the Core.",
+    "ui-the-latest-page-catalogue-is-being-read-from-the-provider": "The latest Page catalogue is being read from the provider.",
+    "ui-the-latest-revision-is-being-read-from-the-provider": "The latest revision is being read from the provider.",
     "ui-the-page-could-not-be-created-check-that-its-path-is-unique-and-valid": "The Page could not be created. Check that its path is unique and valid.",
     "ui-the-page-is-created-as-a-draft-open-it-afterwards-to-edit-its-document-and-publish-it": "The Page is created as a draft. Open it afterwards to edit its document and publish it.",
     "ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable": "The Page may have been removed, or the provider is currently unavailable.",
@@ -52,6 +52,6 @@
     "ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying": "The revision changed or the Page is invalid. Reload before retrying.",
     "ui-the-same-page-document-is-used-throughout-the-kernel-the-isolated-preview-never-ex-d971177f": "The same Page document is used throughout the Kernel. The isolated preview never executes document scripts.",
     "ui-title": "Title",
-    "ui-update-the-shared-page-document-through-revision-checked-core-capabilities": "Update the shared Page document through revision-checked Core capabilities.",
+    "ui-update-the-shared-page-document-through-revision-checked-provider-capabilities": "Update the shared Page document through revision-checked provider capabilities.",
     "ui-use-a-path-such-as-about-reserved-cms-paths-are-rejected": "Use a path such as /about. Reserved CMS paths are rejected."
 }

@@ -1,6 +1,6 @@
 <ulvia-official-admin-workspace>
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-pages-9046da16 }}</h1>
-    <p slot="description">{{ cms.i18n.ulvia-official.ui-create-and-manage-site-pages-through-the-selected-local-core-provider }}</p>
+    <p slot="description">{{ cms.i18n.ulvia-official.ui-create-and-manage-site-pages-through-the-selected-ulvia-provider }}</p>
         <ulvia-official-surface slot="content" appearance="elevated" padding="lg">
             <h2 slot="content">{{ cms.i18n.ulvia-official.ui-create-a-page }}</h2>
             <p slot="content">{{ cms.i18n.ulvia-official.ui-the-page-is-created-as-a-draft-open-it-afterwards-to-edit-its-document-and-publish-it }}</p>
@@ -30,7 +30,7 @@
         <section id="pages-list" slot="content" cms-source="/.cms/call/ulvia.cms.pages/list as pages" cms-source-method="POST" cms-source-body="{&quot;limit&quot;:{&quot;from&quot;:&quot;raw&quot;,&quot;value&quot;:100}}">
             <div role="status" aria-live="polite" cms-condition="$source.loading">
                 <h2>{{ cms.i18n.ulvia-official.ui-loading-pages }}</h2>
-                <p>{{ cms.i18n.ulvia-official.ui-the-latest-page-catalogue-is-being-read-from-the-core }}</p>
+                <p>{{ cms.i18n.ulvia-official.ui-the-latest-page-catalogue-is-being-read-from-the-provider }}</p>
             </div>
             <div role="alert" cms-condition="$source.error">
                 <h2>{{ cms.i18n.ulvia-official.ui-pages-unavailable }}</h2>

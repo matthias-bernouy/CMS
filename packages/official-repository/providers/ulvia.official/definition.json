@@ -3,7 +3,7 @@
     "protocol": "ulvia-provider/v1",
     "schemaDialect": "ulvia-schema/v1",
     "providerId": "ulvia.official",
-    "name": "Ulvia CMS Core",
+    "name": "Ulvia Provider",
     "version": "0.2.0",
     "provenance": {
         "publisherId": "ulvia.official",

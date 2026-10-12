@@ -44,7 +44,7 @@
             "path": "packages/surfaces/cms-kernel"
         },
         {
-            "path": "packages/surfaces/cms-core"
+            "path": "packages/surfaces/ulvia-provider"
         },
         {
             "path": "packages/runtimes/ulvia-cli"

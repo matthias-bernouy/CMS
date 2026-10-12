@@ -65,8 +65,8 @@ services:
             CMS_FILES_DIR:        /var/lib/cms/files
             CMS_GATEWAY_SITE_ID:  ${CMS_GATEWAY_SITE_ID:-default}
             CMS_REPOSITORY_URL:   http://repository:3100
-            CORE_PORT:            "5103"
-            CORE_PUBLIC_URL:      http://127.0.0.1:5103
+            ULVIA_PROVIDER_PORT:            "5103"
+            ULVIA_PROVIDER_PUBLIC_URL:      http://127.0.0.1:5103
 
             # Application secrets are injected from `.env`; no secret value is
             # stored in this file or included in the image.
@@ -74,7 +74,7 @@ services:
             CMS_KEK_HEX:          ${CMS_KEK_HEX:?CMS_KEK_HEX must be set (32 bytes hex = 64 chars; openssl rand -hex 32)}
             CMS_ADMIN_EMAIL:      ${CMS_ADMIN_EMAIL:-admin@${DOMAIN}}
             CMS_ADMIN_PASSWORD:   ${CMS_ADMIN_PASSWORD:?CMS_ADMIN_PASSWORD must be set}
-            CMS_CORE_PROVIDER_TOKEN: ${CMS_CORE_PROVIDER_TOKEN:?CMS_CORE_PROVIDER_TOKEN must be set}
+            ULVIA_PROVIDER_TOKEN: ${ULVIA_PROVIDER_TOKEN:?ULVIA_PROVIDER_TOKEN must be set}
             # Required for both the server-wide MongoDB service and an external
             # cluster. Both the database path and credential are dedicated to
             # this instance; the runtime must never receive the root account.

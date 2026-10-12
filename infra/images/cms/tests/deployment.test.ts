@@ -46,7 +46,7 @@ describe("per-instance Compose rendering", () => {
             CMS_FILES_DIR: "/var/lib/cms/files",
             CMS_GATEWAY_SITE_ID: "default",
             CMS_REPOSITORY_URL: "http://repository:3100",
-            CORE_PUBLIC_URL: "http://127.0.0.1:5103",
+            ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
         });
         expect(cms.volumes?.map(({ target }) => target)).toEqual(["/var/lib/cms/files"]);
         expect(cms.volumes?.map(({ source }) => source)).toEqual([`${cmsDirectory}/files`]);

@@ -227,7 +227,7 @@ configuration such as a background or poster; it is not a Page slot contract.
 The Kernel uses the shared capability transport for collection administration:
 `ulvia.cms.collections/catalogue` lists configured sources and immutable release
 metadata, while `install`, `upgrade` and `update-configuration` perform
-revision-checked mutations. The Core fetches releases server-side, validates
+revision-checked mutations. The Ulvia Provider fetches releases server-side, validates
 their exact identity and digest, then installs or upgrades them. Immutable
 release bytes and mutable per-site state are stored separately. An upgrade
 retains site text overrides and checks revision and compatible resource IDs.

@@ -8,7 +8,7 @@ import { readRuntimeEnv } from "./runtimeEnv";
 import { ProviderManagement } from "@bernouy/cms-repository/providers/management";
 import { bootstrapLocalOfficialResources } from "./runtime/gateway/bootstrapLocalOfficialResources";
 import { HttpProviderRepository } from "@bernouy/cms-repository/providers/http";
-import { startLocalCoreProvider, type LocalCoreProviderHandle } from "./runtime/localCoreProvider";
+import { startLocalUlviaProvider, type LocalUlviaProviderHandle } from "./runtime/localUlviaProvider";
 import { fetchProviderReport } from "./runtime/gateway/fetchProviderReport";
 
 const env = readRuntimeEnv(process.env);
@@ -27,8 +27,8 @@ const gateway = env.CMS_GATEWAY_SITE_ID
           env.CMS_ADMIN_EMAIL,
       )
     : undefined;
-let localCoreProvider: LocalCoreProviderHandle | undefined;
-if (gateway && env.CMS_REPOSITORY_URL && env.CORE_PUBLIC_URL && env.CMS_CORE_PROVIDER_TOKEN) {
+let localUlviaProvider: LocalUlviaProviderHandle | undefined;
+if (gateway && env.CMS_REPOSITORY_URL && env.ULVIA_PROVIDER_PUBLIC_URL && env.ULVIA_PROVIDER_TOKEN) {
     const providerSource = new HttpProviderRepository("local-bootstrap", env.CMS_REPOSITORY_URL);
     const management = new ProviderManagement(gateway, core.secrets, {
         sources: [providerSource],
@@ -39,13 +39,13 @@ if (gateway && env.CMS_REPOSITORY_URL && env.CORE_PUBLIC_URL && env.CMS_CORE_PRO
             management,
             collections: core.collections,
             repositoryUrl: env.CMS_REPOSITORY_URL,
-            providerEndpoint: env.CORE_PUBLIC_URL,
-            providerToken: env.CMS_CORE_PROVIDER_TOKEN,
+            providerEndpoint: env.ULVIA_PROVIDER_PUBLIC_URL,
+            providerToken: env.ULVIA_PROVIDER_TOKEN,
             providerSource,
             onManifestImported: async ({ version }) => {
-                localCoreProvider = await startLocalCoreProvider({
+                localUlviaProvider = await startLocalUlviaProvider({
                     env,
-                    core,
+                    stores: core,
                     gateway,
                     management,
                     manifestVersion: version,
@@ -53,7 +53,7 @@ if (gateway && env.CMS_REPOSITORY_URL && env.CORE_PUBLIC_URL && env.CMS_CORE_PRO
             },
         });
     } catch (error) {
-        await localCoreProvider?.stop();
+        await localUlviaProvider?.stop();
         await core.close();
         throw error;
     }
@@ -67,7 +67,7 @@ try {
         ...(gateway ? { gateway } : {}),
     });
 } catch (error) {
-    await localCoreProvider?.stop();
+    await localUlviaProvider?.stop();
     await core.close();
     throw error;
 }
@@ -81,7 +81,7 @@ const shutdown = async (signal: string) => {
     console.log(`\n→ Stopping (${signal})...`);
     try {
         await kernel.stop();
-        await localCoreProvider?.stop();
+        await localUlviaProvider?.stop();
     } finally {
         await core.close();
     }

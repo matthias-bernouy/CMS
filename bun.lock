@@ -3,13 +3,12 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "@bernouy/cms-core",
+      "name": "@bernouy/cms-workspace",
       "devDependencies": {
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-core": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-kernel": "workspace:*",
@@ -21,6 +20,7 @@
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "@bernouy/ulvia-cli": "workspace:*",
+        "@bernouy/ulvia-provider": "workspace:*",
         "@biomejs/biome": "2.5.14",
         "@types/bun": "1.4.2",
         "@typescript/typescript6": "6.0.2",
@@ -120,6 +120,9 @@
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
       },
+      "devDependencies": {
+        "linkedom": "^0.18.13",
+      },
       "peerDependencies": {
         "typescript": "^7.0.2",
       },
@@ -187,7 +190,6 @@
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-core": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-kernel": "workspace:*",
@@ -198,6 +200,7 @@
         "@bernouy/image-processing": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
+        "@bernouy/ulvia-provider": "workspace:*",
         "mongodb": "^7.6.0",
       },
       "peerDependencies": {
@@ -227,21 +230,6 @@
         "typescript": "^7.0.2",
       },
     },
-    "packages/surfaces/cms-core": {
-      "name": "@bernouy/cms-core",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-content": "workspace:*",
-        "@bernouy/cms-files": "workspace:*",
-        "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-repository": "workspace:*",
-        "@bernouy/http-runner": "workspace:*",
-      },
-      "peerDependencies": {
-        "typescript": "^7.0.2",
-      },
-    },
     "packages/surfaces/cms-kernel": {
       "name": "@bernouy/cms-kernel",
       "version": "0.1.0",
@@ -263,6 +251,21 @@
         "typescript": "^7.0.2",
       },
     },
+    "packages/surfaces/ulvia-provider": {
+      "name": "@bernouy/ulvia-provider",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/cms-auth": "workspace:*",
+        "@bernouy/cms-content": "workspace:*",
+        "@bernouy/cms-files": "workspace:*",
+        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-repository": "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
+      },
+      "peerDependencies": {
+        "typescript": "^7.0.2",
+      },
+    },
   },
   "packages": {
     "@bernouy/binary-media": ["@bernouy/binary-media@workspace:packages/foundation/binary-media"],
@@ -272,8 +275,6 @@
     "@bernouy/cms-auth": ["@bernouy/cms-auth@workspace:packages/features/cms-auth"],
 
     "@bernouy/cms-content": ["@bernouy/cms-content@workspace:packages/features/cms-content"],
-
-    "@bernouy/cms-core": ["@bernouy/cms-core@workspace:packages/surfaces/cms-core"],
 
     "@bernouy/cms-files": ["@bernouy/cms-files@workspace:packages/features/cms-files"],
 
@@ -300,6 +301,8 @@
     "@bernouy/secret-store": ["@bernouy/secret-store@workspace:packages/foundation/secret-store"],
 
     "@bernouy/ulvia-cli": ["@bernouy/ulvia-cli@workspace:packages/runtimes/ulvia-cli"],
+
+    "@bernouy/ulvia-provider": ["@bernouy/ulvia-provider@workspace:packages/surfaces/ulvia-provider"],
 
     "@biomejs/biome": ["@biomejs/biome@2.5.14", "", { "optionalDependencies": { "@biomejs/cli-darwin-arm64": "2.5.14", "@biomejs/cli-darwin-x64": "2.5.14", "@biomejs/cli-linux-arm64": "2.5.14", "@biomejs/cli-linux-arm64-musl": "2.5.14", "@biomejs/cli-linux-x64": "2.5.14", "@biomejs/cli-linux-x64-musl": "2.5.14", "@biomejs/cli-win32-arm64": "2.5.14", "@biomejs/cli-win32-x64": "2.5.14" }, "bin": { "biome": "bin/biome" } }, "sha512-0FabLIjd4M/dm8VFI86RMaLLdgepzbdfiAL2R8cr7V81OYYrP1w7Z73KfAwPK5h9SrEBXTzNG2y+mBwPo9xRnw=="],
 

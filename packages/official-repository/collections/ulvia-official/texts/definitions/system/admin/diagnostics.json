@@ -30,8 +30,8 @@
         "group": "text.group.admin.diagnostics"
     },
     {
-        "id": "ui-live-operational-signals-from-the-selected-cms-core-contracts",
-        "label": "text.ui-live-operational-signals-from-the-selected-cms-core-contracts.label",
+        "id": "ui-live-operational-signals-from-the-selected-cms-contracts",
+        "label": "text.ui-live-operational-signals-from-the-selected-cms-contracts.label",
         "category": "text.category.admin",
         "group": "text.group.admin.diagnostics"
     },

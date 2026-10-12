@@ -23,7 +23,7 @@ work is identified explicitly; a domain API does not imply a mounted product flo
 - [Local provider and CMS initialization](todo/local-provider-initialization.md):
   offline first-run, bootstrap collection, administration Page, restart and recovery
   flow for the official local provider; durable local discovery and the bundled
-  Docker repository/Core/Kernel bootstrap are implemented, while provider-owned
+  Docker repository/Ulvia Provider/Kernel bootstrap are implemented, while provider-owned
   instance lifecycle mutations remain planned.
 
 ## Providers And Collections

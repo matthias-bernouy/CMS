@@ -1,6 +1,6 @@
 <ulvia-official-admin-workspace>
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-diagnostics }}</h1>
-    <p slot="description">{{ cms.i18n.ulvia-official.ui-live-operational-signals-from-the-selected-cms-core-contracts }}</p>
+    <p slot="description">{{ cms.i18n.ulvia-official.ui-live-operational-signals-from-the-selected-cms-contracts }}</p>
     <ulvia-official-stack slot="content" gap="lg">
         <section slot="items" aria-labelledby="migration-health" cms-source="/.cms/call/ulvia.cms.collections/migration-status as migrations" cms-source-method="POST" cms-source-body='{"limit":{"from":"raw","value":20}}'>
             <ulvia-official-surface appearance="elevated" padding="lg">

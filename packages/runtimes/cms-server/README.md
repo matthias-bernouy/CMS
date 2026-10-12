@@ -4,7 +4,7 @@ Private production composition root for the CMS application.
 
 It reads and validates environment configuration, initializes infrastructure,
 selects Mongo, blob, crypto, image, mail, and rate-limit adapters, then mounts
-the provider-facing CMS Core and the site Kernel on Bun runners. Features and
+Ulvia Provider and the site Kernel on Bun runners. Features and
 surfaces receive their dependencies from this runtime.
 
 Run it from the workspace root with:

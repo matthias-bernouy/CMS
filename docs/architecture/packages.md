@@ -59,7 +59,7 @@ The `cms-source` HTML attribute remains the active binding API.
 ## Official Products
 
 `packages/official-repository` contains the authored official contract releases,
-the `ulvia.official` CMS Core provider manifest and official collections. It has
+the `ulvia.official` provider manifest and official collections. It has
 no runtime adapters or routes. `@bernouy/official-repository-server` publishes
 and serves admitted copies from a separate persistent volume.
 
@@ -67,9 +67,9 @@ and serves admitted copies from a separate persistent volume.
 
 | Package | Responsibility |
 | --- | --- |
-| `@bernouy/cms-core` | Authenticated provider report, binding-derived HTTP transport, cross-domain official capability adapters and durable asynchronous job execution for admitted `ulvia.cms.*` contracts. |
+| `@bernouy/ulvia-provider` | Authenticated provider report, binding-derived HTTP transport, cross-domain official capability adapters and durable asynchronous job execution for admitted `ulvia.cms.*` contracts. |
 | `@bernouy/cms-kernel` | HTTP mounting and Page presentation for site and contributed Pages, authentication and injected feature handlers. |
-| `@bernouy/cms-server` | Production adapter composition, Mongo Core-job persistence and CMS Core/Kernel startup. |
+| `@bernouy/cms-server` | Production adapter composition, Mongo provider-operation persistence and Ulvia Provider/Kernel startup. |
 | `@bernouy/official-repository-server` | Production official repository startup with persistent staged publication and immutable reads. |
 | `@bernouy/ulvia-cli` | Persistent local CMS development stack backed by MongoDB. |
 

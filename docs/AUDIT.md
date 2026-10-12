@@ -7,8 +7,8 @@ that every production failure mode has been exercised.
 ## Executive Assessment
 
 CmsCore now has a coherent platform core. The dependency direction is enforced,
-immutable contracts and collection releases have strict admission rules, CMS
-Core capabilities are sealed at startup, collection migrations are recoverable,
+immutable contracts and collection releases have strict admission rules, Ulvia
+Provider capabilities are sealed at startup, collection migrations are recoverable,
 and administration is rendered from collection-owned Pages rather than a second static
 application model.
 
@@ -24,17 +24,17 @@ The workspace contains 18 packages:
 
 - seven Foundation packages;
 - five feature packages: authentication, content, files, gateway and repository;
-- two HTTP applications: provider-facing CMS Core and the site Kernel;
+- two HTTP applications: Ulvia Provider and the site Kernel;
 - three executable runtimes: CMS server, official repository server and CLI.
 
 The official repository currently contains:
 
-- eight `ulvia.cms.*` Core contracts with 43 capabilities;
-- one future provider-only CMS-instance contract that the local Core provider
+- eight `ulvia.cms.*` contracts with 43 capabilities;
+- one future provider-only CMS-instance contract that the local Ulvia Provider
   does not claim;
 - the `ulvia.official` provider manifest;
 - the `ulvia-official` collection with 141 Bloc definitions, 119 theme tokens
-  and seven administration Pages covering the eight Core domains.
+  and seven administration Pages covering the eight CMS domains.
 
 The supported package dependency direction is:
 
@@ -76,7 +76,7 @@ advisory audit because it requires current registry access.
   `cms-repository` owns immutable contracts, providers and collections.
   `cms-gateway` owns live provider invocation and identities; Files providers
   own file and image semantics.
-- The official CMS provider behavior is a normal `cms-core` surface. The future
+- The official CMS provider behavior is the `ulvia-provider` surface. The future
   `ulvia.provider.cms-instances` control plane remains a separate provider
   product concern.
 
@@ -88,7 +88,7 @@ advisory audit because it requires current registry access.
 - Immutable digests are based on canonical resources rather than source paths.
 - Provider manifests approve exact contract releases and requirements. Runtime
   observations cannot silently grant new dependencies.
-- CMS Core seals its handler matrix at startup: every admitted official
+- Ulvia Provider seals its handler matrix at startup: every admitted official
   capability has exactly one implementation and unexpected handlers fail
   composition.
 - Execution plans pin the consumer, provider installation, contract release,
@@ -210,9 +210,9 @@ penetration testing, dependency monitoring or deployment review.
    environment provisioning, approval policy and operator-visible evidence
    history remain incomplete; suites are embedded in evidence rather than
    catalogued independently.
-4. Generic CMS-instance creation, backup, restore and Core upgrades belong to a
+4. Generic CMS-instance creation, backup, restore and runtime upgrades belong to a
    future provider such as the official local provider or Ulvia Cloud. They are
-   not CMS Core data-plane capabilities.
+   not `ulvia.cms.*` data-plane capabilities.
 5. Package licensing metadata is not yet fully reconciled between the workspace
    and direct products.
 

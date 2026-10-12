@@ -11,7 +11,7 @@ const PROVIDER_ID = "ulvia.official";
 const OFFICIAL_COLLECTION_ID = "ulvia-official";
 const OFFICIAL_COLLECTION_VERSION = "1.0.0";
 const BOOTSTRAP_ACTOR = "system:local-bootstrap";
-const CORE_CONTRACT_IDS = [
+const OFFICIAL_CMS_CONTRACT_IDS = [
     "ulvia.cms.access",
     "ulvia.cms.collections",
     "ulvia.cms.files",
@@ -58,7 +58,7 @@ export async function bootstrapLocalOfficialResources(options: {
         !installation ||
         installation.endpoint !== options.providerEndpoint ||
         installation.manifestVersion !== manifestEntry.version ||
-        CORE_CONTRACT_IDS.some(
+        OFFICIAL_CMS_CONTRACT_IDS.some(
             (contractId) =>
                 !installation?.contracts.some(
                     (contract) => contract.contractId === contractId && contract.status === "ready",

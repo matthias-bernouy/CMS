@@ -47,7 +47,7 @@ export const requiredCmsEnvironment = {
     CMS_SESSION_SECRET: "c".repeat(64),
     CMS_KEK_HEX: "d".repeat(64),
     CMS_ADMIN_PASSWORD: "deployment-test-password",
-    CMS_CORE_PROVIDER_TOKEN: "e".repeat(48),
+    ULVIA_PROVIDER_TOKEN: "e".repeat(48),
     ULVIA_REPOSITORY_TOKEN: "f".repeat(48),
 };
 

@@ -1,11 +1,11 @@
 <ulvia-official-admin-workspace>
     <h1 slot="title">{{ cms.i18n.ulvia-official.ui-page-details }}</h1>
-    <p slot="description">{{ cms.i18n.ulvia-official.ui-update-the-shared-page-document-through-revision-checked-core-capabilities }}</p>
+    <p slot="description">{{ cms.i18n.ulvia-official.ui-update-the-shared-page-document-through-revision-checked-provider-capabilities }}</p>
         <ulvia-official-action slot="actions" variant="outline" tone="secondary"><a data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"ulvia-official","pageId":"overview"}'>{{ cms.i18n.ulvia-official.ui-back-to-pages }}</a></ulvia-official-action>
         <section id="page-detail" slot="content" cms-source="/.cms/call/ulvia.cms.pages/get as selected" cms-source-method="POST" cms-source-body='{"id":{"from":"queryParam","name":"id"}}'>
             <div role="status" aria-live="polite" cms-condition="$source.loading">
                 <h2>{{ cms.i18n.ulvia-official.ui-loading-page }}</h2>
-                <p>{{ cms.i18n.ulvia-official.ui-the-latest-revision-is-being-read-from-the-core }}</p>
+                <p>{{ cms.i18n.ulvia-official.ui-the-latest-revision-is-being-read-from-the-provider }}</p>
             </div>
             <div role="alert" cms-condition="$source.error">
                 <h2>{{ cms.i18n.ulvia-official.ui-page-unavailable }}</h2>

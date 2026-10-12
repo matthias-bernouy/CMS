@@ -3,7 +3,7 @@
     "text.ui-about-us.label": "About us",
     "text.ui-back-to-pages.label": "Back to Pages",
     "text.ui-create-a-page.label": "Create a Page",
-    "text.ui-create-and-manage-site-pages-through-the-selected-local-core-provider.label": "Create and manage site Pages through the selected local Core provider.",
+    "text.ui-create-and-manage-site-pages-through-the-selected-ulvia-provider.label": "Create and manage site Pages through the selected Ulvia Provider.",
     "text.ui-create-page.label": "Create Page",
     "text.ui-create-the-first-page-to-start-building-the-site.label": "Create the first Page to start building the site.",
     "text.ui-danger-zone.label": "Danger zone",
@@ -43,8 +43,8 @@
     "text.ui-search-description.label": "Search description",
     "text.ui-search-metadata.label": "Search metadata",
     "text.ui-search-title.label": "Search title",
-    "text.ui-the-latest-page-catalogue-is-being-read-from-the-core.label": "The latest Page catalogue is being read from the Core.",
-    "text.ui-the-latest-revision-is-being-read-from-the-core.label": "The latest revision is being read from the Core.",
+    "text.ui-the-latest-page-catalogue-is-being-read-from-the-provider.label": "The latest Page catalogue is being read from the provider.",
+    "text.ui-the-latest-revision-is-being-read-from-the-provider.label": "The latest revision is being read from the provider.",
     "text.ui-the-page-could-not-be-created-check-that-its-path-is-unique-and-valid.label": "The Page could not be created. Check that its path is unique and valid.",
     "text.ui-the-page-is-created-as-a-draft-open-it-afterwards-to-edit-its-document-and-publish-it.label": "The Page is created as a draft. Open it afterwards to edit its document and publish it.",
     "text.ui-the-page-may-have-been-removed-or-the-provider-is-currently-unavailable.label": "The Page may have been removed, or the provider is currently unavailable.",
@@ -52,6 +52,6 @@
     "text.ui-the-revision-changed-or-the-page-is-invalid-reload-before-retrying.label": "The revision changed or the Page is invalid. Reload before retrying.",
     "text.ui-the-same-page-document-is-used-throughout-the-kernel-the-isolated-preview-never-ex-d971177f.label": "The same Page document is used throughout the Kernel. The isolated preview never executes document scripts.",
     "text.ui-title.label": "Title",
-    "text.ui-update-the-shared-page-document-through-revision-checked-core-capabilities.label": "Update the shared Page document through revision-checked Core capabilities.",
+    "text.ui-update-the-shared-page-document-through-revision-checked-provider-capabilities.label": "Update the shared Page document through revision-checked provider capabilities.",
     "text.ui-use-a-path-such-as-about-reserved-cms-paths-are-rejected.label": "Use a path such as /about. Reserved CMS paths are rejected."
 }

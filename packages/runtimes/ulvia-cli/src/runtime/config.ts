@@ -44,8 +44,8 @@ export async function loadOrCreateRepositoryToken(devRoot: string): Promise<stri
     return loadOrCreateToken(join(devRoot, "repository-token"), "Repository");
 }
 
-export async function loadOrCreateCoreProviderToken(devRoot: string): Promise<string> {
-    return loadOrCreateToken(join(devRoot, "core-provider-token"), "CMS Core provider");
+export async function loadOrCreateUlviaProviderToken(devRoot: string): Promise<string> {
+    return loadOrCreateToken(join(devRoot, "ulvia-provider-token"), "Ulvia Provider");
 }
 
 async function loadOrCreateToken(path: string, label: string): Promise<string> {

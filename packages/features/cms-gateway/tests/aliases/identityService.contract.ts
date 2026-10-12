@@ -10,7 +10,7 @@ type IdentityServiceFactory = () => IdentityService | Promise<IdentityService>;
 
 export function identityServiceContract(name: string, createService: IdentityServiceFactory): void {
     describe(`${name} identity service contract`, () => {
-        test("resolves opaque aliases through their CmsCore subject", async () => {
+        test("resolves opaque aliases through their CMS subject", async () => {
             const identities = await createService();
             await identities.bind("subject-1", { authority: "commerce", kind: "user", value: 184 });
             await identities.bind("subject-1", {

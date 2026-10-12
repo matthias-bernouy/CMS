@@ -24,8 +24,8 @@
         "group": "text.group.admin.pages"
     },
     {
-        "id": "ui-create-and-manage-site-pages-through-the-selected-local-core-provider",
-        "label": "text.ui-create-and-manage-site-pages-through-the-selected-local-core-provider.label",
+        "id": "ui-create-and-manage-site-pages-through-the-selected-ulvia-provider",
+        "label": "text.ui-create-and-manage-site-pages-through-the-selected-ulvia-provider.label",
         "category": "text.category.admin",
         "group": "text.group.admin.pages"
     },
@@ -264,14 +264,14 @@
         "group": "text.group.admin.pages"
     },
     {
-        "id": "ui-the-latest-page-catalogue-is-being-read-from-the-core",
-        "label": "text.ui-the-latest-page-catalogue-is-being-read-from-the-core.label",
+        "id": "ui-the-latest-page-catalogue-is-being-read-from-the-provider",
+        "label": "text.ui-the-latest-page-catalogue-is-being-read-from-the-provider.label",
         "category": "text.category.admin",
         "group": "text.group.admin.pages"
     },
     {
-        "id": "ui-the-latest-revision-is-being-read-from-the-core",
-        "label": "text.ui-the-latest-revision-is-being-read-from-the-core.label",
+        "id": "ui-the-latest-revision-is-being-read-from-the-provider",
+        "label": "text.ui-the-latest-revision-is-being-read-from-the-provider.label",
         "category": "text.category.admin",
         "group": "text.group.admin.pages"
     },
@@ -318,8 +318,8 @@
         "group": "text.group.admin.pages"
     },
     {
-        "id": "ui-update-the-shared-page-document-through-revision-checked-core-capabilities",
-        "label": "text.ui-update-the-shared-page-document-through-revision-checked-core-capabilities.label",
+        "id": "ui-update-the-shared-page-document-through-revision-checked-provider-capabilities",
+        "label": "text.ui-update-the-shared-page-document-through-revision-checked-provider-capabilities.label",
         "category": "text.category.admin",
         "group": "text.group.admin.pages"
     },

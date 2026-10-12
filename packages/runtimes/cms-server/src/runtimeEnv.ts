@@ -16,16 +16,16 @@ export type RuntimeEnv = {
     MODE: "DEV" | "PROD";
     KERNEL_PORT: number;
     KERNEL_HOST: string;
-    CORE_PORT?: number;
+    ULVIA_PROVIDER_PORT?: number;
     KERNEL_PUBLIC_URL: string;
-    CORE_PUBLIC_URL?: string;
+    ULVIA_PROVIDER_PUBLIC_URL?: string;
     CMS_SESSION_SECRET: string;
     CMS_KEK_HEX?: string;
     CMS_KEK: RuntimeKekConfig;
     CMS_ADMIN_EMAIL: string;
     CMS_ADMIN_PASSWORD: string;
     CMS_GATEWAY_SITE_ID?: string;
-    CMS_CORE_PROVIDER_TOKEN?: string;
+    ULVIA_PROVIDER_TOKEN?: string;
     CMS_REPOSITORY_URL?: string;
     CMS_FILES_DIR: string;
     MONGO_URL: string;
@@ -52,13 +52,13 @@ export function readRuntimeEnv(source: RuntimeEnvSource): RuntimeEnv {
     if (migrationRetention > 10_000) {
         throw new Error("CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION must be at most 10000");
     }
-    const coreConfiguration = parseCoreProviderConfig(source, KERNEL_PORT);
+    const providerConfiguration = parseUlviaProviderConfig(source, KERNEL_PORT);
 
     return {
         MODE,
         KERNEL_PORT,
         KERNEL_HOST: parseListenerHost(source.KERNEL_HOST, "KERNEL_HOST"),
-        ...coreConfiguration,
+        ...providerConfiguration,
         KERNEL_PUBLIC_URL,
         CMS_SESSION_SECRET: requiredEnv(source, "CMS_SESSION_SECRET"),
         ...(kek.keysHex.legacy ? { CMS_KEK_HEX: kek.keysHex.legacy } : {}),
@@ -117,34 +117,36 @@ function parseListenerHost(raw: string | undefined, name: string): string {
     return value;
 }
 
-function parseCoreProviderConfig(
+function parseUlviaProviderConfig(
     source: RuntimeEnvSource,
     kernelPort: number,
-): Pick<RuntimeEnv, "CORE_PORT" | "CORE_PUBLIC_URL" | "CMS_CORE_PROVIDER_TOKEN"> {
-    const configured = [source.CORE_PORT, source.CORE_PUBLIC_URL, source.CMS_CORE_PROVIDER_TOKEN].map((value) =>
-        Boolean(value?.trim()),
+): Pick<RuntimeEnv, "ULVIA_PROVIDER_PORT" | "ULVIA_PROVIDER_PUBLIC_URL" | "ULVIA_PROVIDER_TOKEN"> {
+    const configured = [source.ULVIA_PROVIDER_PORT, source.ULVIA_PROVIDER_PUBLIC_URL, source.ULVIA_PROVIDER_TOKEN].map(
+        (value) => Boolean(value?.trim()),
     );
     if (configured.some(Boolean) && !configured.every(Boolean)) {
-        throw new Error("CORE_PORT, CORE_PUBLIC_URL and CMS_CORE_PROVIDER_TOKEN must be configured together");
+        throw new Error(
+            "ULVIA_PROVIDER_PORT, ULVIA_PROVIDER_PUBLIC_URL and ULVIA_PROVIDER_TOKEN must be configured together",
+        );
     }
     if (!configured[0]) {
         return {};
     }
     if (!source.CMS_REPOSITORY_URL?.trim() || !source.CMS_GATEWAY_SITE_ID?.trim()) {
-        throw new Error("CMS Core provider bootstrap requires CMS_REPOSITORY_URL and CMS_GATEWAY_SITE_ID");
+        throw new Error("Ulvia Provider bootstrap requires CMS_REPOSITORY_URL and CMS_GATEWAY_SITE_ID");
     }
-    const CORE_PORT = parsePort(source.CORE_PORT, "CORE_PORT", 5103);
-    if (CORE_PORT === kernelPort) {
-        throw new Error("CORE_PORT and KERNEL_PORT must be distinct");
+    const ULVIA_PROVIDER_PORT = parsePort(source.ULVIA_PROVIDER_PORT, "ULVIA_PROVIDER_PORT", 5103);
+    if (ULVIA_PROVIDER_PORT === kernelPort) {
+        throw new Error("ULVIA_PROVIDER_PORT and KERNEL_PORT must be distinct");
     }
-    const token = source.CMS_CORE_PROVIDER_TOKEN!.trim();
+    const token = source.ULVIA_PROVIDER_TOKEN!.trim();
     if (token.length < 24 || token.length > 512 || /[\r\n]/u.test(token)) {
-        throw new Error("CMS_CORE_PROVIDER_TOKEN is invalid");
+        throw new Error("ULVIA_PROVIDER_TOKEN is invalid");
     }
     return {
-        CORE_PORT,
-        CORE_PUBLIC_URL: parseHttpUrl(source.CORE_PUBLIC_URL!, "CORE_PUBLIC_URL"),
-        CMS_CORE_PROVIDER_TOKEN: token,
+        ULVIA_PROVIDER_PORT,
+        ULVIA_PROVIDER_PUBLIC_URL: parseHttpUrl(source.ULVIA_PROVIDER_PUBLIC_URL!, "ULVIA_PROVIDER_PUBLIC_URL"),
+        ULVIA_PROVIDER_TOKEN: token,
     };
 }
 

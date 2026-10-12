@@ -6,7 +6,7 @@ describe("coverage package discovery", () => {
         const packages = await discoverPackages();
         const paths = packages.map((entry) => entry.path);
 
-        expect(paths).toContain("packages/surfaces/cms-core");
+        expect(paths).toContain("packages/surfaces/ulvia-provider");
         expect(paths).toContain("packages/runtimes/official-repository-server");
         expect(paths.some((path) => path.startsWith("packages/official-repository/"))).toBe(false);
     });

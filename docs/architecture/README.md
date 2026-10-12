@@ -20,7 +20,7 @@ package exports. See the [package map](packages.md) and [import rules](imports.m
 Products that are not CMS layers can live directly below `packages/`.
 `official-repository` contains the versioned catalogue of official contracts,
 provider manifests and collections; it is authored publication data, not an
-executable dependency layer. The `cms-core` surface exposes admitted official
+executable dependency layer. The `ulvia-provider` surface exposes admitted official
 CMS contracts through the same provider protocol used by every other provider.
 
 ## Domain Organization
@@ -101,18 +101,18 @@ implemented by `cms-seo`; Kernel mounts its robots and sitemap handlers while
 the runtime starts periodic materialization.
 Whether a Page is public, authenticated or administrative is derived from the
 capabilities in its execution plan; there is no Page surface field or separate
-admin/public route namespace. CMS Core mounts the provider report and the
+admin/public route namespace. Ulvia Provider mounts the provider report and the
 declared HTTP bindings of `ulvia.cms.*`. Neither surface chooses production
 databases or storage roots.
 
-The CMS Core surface also owns the thin cross-domain adapters that register the
+The Ulvia Provider surface also owns the thin cross-domain adapters that register the
 official capabilities, project their wire responses and map feature failures.
 Actual page, file, collection, migration, authentication, provider and theme
 operations remain in their feature packages. `cms-server` injects those ports
 and retains only concrete adapters such as Mongo durable-job persistence.
 
 `cms-server` reads environment configuration, wires concrete dependencies,
-mounts CMS Core and the Kernel, then starts their listeners. `ulvia-cli` manages the persistent
+mounts Ulvia Provider and the Kernel, then starts their listeners. `ulvia-cli` manages the persistent
 local development stack. `official-repository-server` mounts the public immutable
 repository and its signed publication protocol over one persistent production
 volume; authored official releases remain separate publication inputs. New

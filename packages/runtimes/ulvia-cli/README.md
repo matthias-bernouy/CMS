@@ -20,7 +20,7 @@ bun run ulvia -- prune
 The CLI stores local releases in `ULVIA_DATA_DIR/repository`, or under
 `$XDG_DATA_HOME/ulvia/repository` / `~/.local/share/ulvia/repository` by default.
 The separate `dev/` directory holds credentials, CMS files, and MongoDB data.
-`dev` mounts the authenticated CMS Core provider surface on loopback port 5103.
+`dev` mounts the authenticated Ulvia Provider surface on loopback port 5103.
 `dev credentials` prints its bearer token alongside the CMS administrator
 credentials.
 `release <resource-directory>` reads `definition.json` and routes by `kind`:
@@ -114,9 +114,9 @@ ID, and discovery stops there so `settings/definition.json` is never mistaken
 for a nested Bloc. Intermediate grouping directories contain only directories
 and do not affect release identity.
 
-The bundled bootstrap already admits the official CMS Core contracts, manifest
+The bundled bootstrap already admits the official CMS contracts, provider manifest
 and administration collection before starting the local stack. To publish the same
-resources manually, release the Core contracts before the manifest:
+resources manually, release the CMS contracts before the manifest:
 
 ```bash
 bun run ulvia -- release packages/official-repository/contracts/ulvia.cms.access

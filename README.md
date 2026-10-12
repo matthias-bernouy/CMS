@@ -40,7 +40,7 @@ CmsCore/
 |   |   |-- cms-repository/    @bernouy/cms-repository (including collection build tooling)
 |   |   `-- cms-seo/           @bernouy/cms-seo
 |   |-- surfaces/
-|   |   |-- cms-core/          @bernouy/cms-core
+|   |   |-- ulvia-provider/    @bernouy/ulvia-provider
 |   |   `-- cms-kernel/        @bernouy/cms-kernel
 |   |-- runtimes/
 |   |   |-- ulvia-cli/         @bernouy/ulvia-cli

@@ -137,16 +137,16 @@ describe("runtime env validation", () => {
         expect(() => readRuntimeEnv({ ...validEnv(), CMS_GATEWAY_SITE_ID: "bad site" })).toThrow();
     });
 
-    test("requires a complete CMS Core provider bootstrap tuple", () => {
-        expect(() => readRuntimeEnv({ ...validEnv(), CORE_PUBLIC_URL: "http://127.0.0.1:5103" })).toThrow(
+    test("requires a complete Ulvia Provider provider bootstrap tuple", () => {
+        expect(() => readRuntimeEnv({ ...validEnv(), ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103" })).toThrow(
             /configured together/,
         );
         expect(() =>
             readRuntimeEnv({
                 ...validEnv(),
-                CORE_PORT: "5103",
-                CORE_PUBLIC_URL: "http://127.0.0.1:5103",
-                CMS_CORE_PROVIDER_TOKEN: "opaque-core-provider-token",
+                ULVIA_PROVIDER_PORT: "5103",
+                ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
+                ULVIA_PROVIDER_TOKEN: "opaque-ulvia-provider-token",
             }),
         ).toThrow(/requires CMS_REPOSITORY_URL/);
         expect(
@@ -154,14 +154,14 @@ describe("runtime env validation", () => {
                 ...validEnv(),
                 CMS_GATEWAY_SITE_ID: "default",
                 CMS_REPOSITORY_URL: "http://127.0.0.1:5102",
-                CORE_PORT: "5103",
-                CORE_PUBLIC_URL: "http://127.0.0.1:5103",
-                CMS_CORE_PROVIDER_TOKEN: "opaque-core-provider-token",
+                ULVIA_PROVIDER_PORT: "5103",
+                ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
+                ULVIA_PROVIDER_TOKEN: "opaque-ulvia-provider-token",
             }),
         ).toMatchObject({
-            CORE_PORT: 5103,
-            CORE_PUBLIC_URL: "http://127.0.0.1:5103",
-            CMS_CORE_PROVIDER_TOKEN: "opaque-core-provider-token",
+            ULVIA_PROVIDER_PORT: 5103,
+            ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
+            ULVIA_PROVIDER_TOKEN: "opaque-ulvia-provider-token",
         });
         expect(() =>
             readRuntimeEnv({
@@ -169,9 +169,9 @@ describe("runtime env validation", () => {
                 KERNEL_PORT: "5103",
                 CMS_GATEWAY_SITE_ID: "default",
                 CMS_REPOSITORY_URL: "http://127.0.0.1:5102",
-                CORE_PORT: "5103",
-                CORE_PUBLIC_URL: "http://127.0.0.1:5103",
-                CMS_CORE_PROVIDER_TOKEN: "opaque-core-provider-token",
+                ULVIA_PROVIDER_PORT: "5103",
+                ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
+                ULVIA_PROVIDER_TOKEN: "opaque-ulvia-provider-token",
             }),
         ).toThrow(/must be distinct/);
     });

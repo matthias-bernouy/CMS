@@ -238,7 +238,7 @@ MONGO_SITE_PASSWORD="$(openssl rand -hex 32)"
 
 umask 077
 CMS_ADMIN_PASSWORD="$(openssl rand -hex 24)"
-CMS_CORE_PROVIDER_TOKEN="$(openssl rand -hex 32)"
+ULVIA_PROVIDER_TOKEN="$(openssl rand -hex 32)"
 ULVIA_REPOSITORY_TOKEN="$(openssl rand -hex 32)"
 {
     printf 'DOMAIN=%s\n' "${DOMAIN}"
@@ -249,12 +249,12 @@ ULVIA_REPOSITORY_TOKEN="$(openssl rand -hex 32)"
     printf 'CMS_KEK_HEX=%s\n' "$(openssl rand -hex 32)"
     printf 'CMS_ADMIN_EMAIL=%s\n' "admin@${DOMAIN}"
     printf 'CMS_ADMIN_PASSWORD=%s\n' "${CMS_ADMIN_PASSWORD}"
-    printf 'CMS_CORE_PROVIDER_TOKEN=%s\n' "${CMS_CORE_PROVIDER_TOKEN}"
+    printf 'ULVIA_PROVIDER_TOKEN=%s\n' "${ULVIA_PROVIDER_TOKEN}"
     printf 'ULVIA_REPOSITORY_TOKEN=%s\n' "${ULVIA_REPOSITORY_TOKEN}"
 } > .env
 
 chmod 600 .env
-unset MONGO_SITE_PASSWORD CMS_ADMIN_PASSWORD CMS_CORE_PROVIDER_TOKEN ULVIA_REPOSITORY_TOKEN
+unset MONGO_SITE_PASSWORD CMS_ADMIN_PASSWORD ULVIA_PROVIDER_TOKEN ULVIA_REPOSITORY_TOKEN
 
 sudo install -d -o 1000 -g 1000 -m 0750 files
 
@@ -313,7 +313,7 @@ environment file.
 | `CMS_SESSION_SECRET` | Session-cookie signing secret; use at least 32 random bytes. |
 | `CMS_KEK_HEX` | Exactly 32 random bytes encoded as 64 hexadecimal characters. |
 | `CMS_ADMIN_PASSWORD` | Initial local admin password; only used if the credential does not yet exist. |
-| `CMS_CORE_PROVIDER_TOKEN` | Private credential used to connect the bundled CMS Core provider. |
+| `ULVIA_PROVIDER_TOKEN` | Private credential used to connect the bundled Ulvia Provider. |
 | `ULVIA_REPOSITORY_TOKEN` | Mutation-signing secret for this instance's private official repository. |
 
 ### Optional CMS and authentication settings
@@ -321,14 +321,14 @@ environment file.
 | Variable | Default or purpose |
 | --- | --- |
 | `CMS_ADMIN_EMAIL` | Defaults to `admin@${DOMAIN}`. |
-| `CMS_GATEWAY_SITE_ID` | Stable opaque site ID; defaults to `default`. It scopes the bundled Core provider, collection installation and gateway selections. |
+| `CMS_GATEWAY_SITE_ID` | Stable opaque site ID; defaults to `default`. It scopes the bundled Ulvia Provider, collection installation and gateway selections. |
 | `CMS_AUTH_SITE_NAME` | Public authentication site name; defaults to `CMS`. |
 | `CMS_AUTH_EMAIL_COOLDOWN_SECONDS` | Email throttle interval; defaults to 300 seconds. |
 | `CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION` | Full rollback journals retained per site; defaults to 100. Purged journals keep a lightweight audit summary. |
 | `CMS_AUTH_EMAIL_VERIFICATION_URL` | Kernel email-verification URL. |
 | `CMS_AUTH_PASSWORD_RESET_URL` | Kernel password-reset URL. |
 
-Treat the MongoDB URL, session secret, KEK, Core provider token, repository
+Treat the MongoDB URL, session secret, KEK, Ulvia Provider token, repository
 token and any configured SMTP credentials as server-side secrets. Never expose
 them to browser code or commit them to the repository.
 

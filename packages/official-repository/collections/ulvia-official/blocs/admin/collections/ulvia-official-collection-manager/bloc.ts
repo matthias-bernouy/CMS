@@ -240,7 +240,9 @@ export class Bloc extends Component {
         renderInstalled(this.required("[data-installed]"), this.catalogue.installed, "");
         renderReleases(this.required("[data-releases]"), this.catalogue, "");
         renderActivity(this.required("[data-activity]"), this.jobs);
-        this.required("[data-maintenance]").textContent = this.status.maintenance ? "Maintenance active" : "Core ready";
+        this.required("[data-maintenance]").textContent = this.status.maintenance
+            ? "Maintenance active"
+            : "Provider ready";
     }
 
     private renderMigration(plan: MigrationPlan): void {

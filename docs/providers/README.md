@@ -53,10 +53,10 @@ return an opaque `nextCursor`. Repository clients consume all pages with global
 duplicate, loop and memory bounds. Exact-coordinate reads are independent of
 the metadata-only catalogue index.
 
-The official repository publishes the `ulvia.cms.*` Core contracts, the
+The official repository publishes the `ulvia.cms.*` CMS contracts, the
 provider-only `ulvia.provider.cms-instances` contract reserved for future
-instance providers, and the `ulvia.official` CMS Core manifest. The local
-runtime implements only the Core contracts. The former `catalog.items`,
+instance providers, and the `ulvia.official` provider manifest. The local
+runtime implements only the CMS contracts. The former `catalog.items`,
 `forms.submissions` and `media.assets` demonstration contracts are not official
 resources.
 The [CLI guide](../../packages/runtimes/ulvia-cli/README.md) gives the local
@@ -98,13 +98,13 @@ to the capabilities required by their exact document and transitive Blocs. The
 Kernel activates the revisioned plan from the same-origin referring Page before each
 call and sends only its immutable execution pin to the gateway.
 
-The local CMS Core transport is contract-neutral: `@bernouy/cms-core` derives
+The local Ulvia Provider transport is contract-neutral: `@bernouy/ulvia-provider` derives
 its HTTP routes from admitted contract bindings. The same package contains thin
 official capability adapters that coordinate injected feature ports; it does
 not select stores or persistence adapters. The Kernel uses its normal
-`/.cms/call` gateway transport; there is no direct Core shortcut or
+`/.cms/call` gateway transport; there is no direct provider shortcut or
 internal relay hop. The shared bounded JSON budget applies at the gateway and
-Core surface.
+provider surface.
 
 | Application | Routes relative to its base path |
 | --- | --- |

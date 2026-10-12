@@ -1,6 +1,6 @@
 import { startLocalRepository } from "../runtime/repository";
 import {
-    loadOrCreateCoreProviderToken,
+    loadOrCreateUlviaProviderToken,
     loadOrCreateDevRuntimeConfig,
     loadOrCreateRepositoryToken,
 } from "../runtime/config";
@@ -13,7 +13,7 @@ const DEFAULT_PORTS: DevPorts = Object.freeze({
     kernel: 5100,
     mongo: 27019,
     repository: 5102,
-    core: 5103,
+    provider: 5103,
 });
 
 export async function devCommand(
@@ -38,7 +38,7 @@ export async function devCommand(
         const config = await loadOrCreateDevRuntimeConfig(paths.dev);
         log(`Email: ${config.adminEmail}`);
         log(`Password: ${config.adminPassword}`);
-        log(`CMS Core provider token: ${await loadOrCreateCoreProviderToken(paths.dev)}`);
+        log(`Ulvia Provider token: ${await loadOrCreateUlviaProviderToken(paths.dev)}`);
         log(`Repository token: ${await loadOrCreateRepositoryToken(paths.dev)}`);
         return;
     }
@@ -64,7 +64,7 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
     let cms: Awaited<ReturnType<typeof startLocalCms>>;
     try {
         cms = await startLocalCms(paths, config, mongo, ports, {
-            coreProviderToken: await loadOrCreateCoreProviderToken(paths.dev),
+            ulviaProviderToken: await loadOrCreateUlviaProviderToken(paths.dev),
         });
     } catch (error) {
         repository.stop();
@@ -72,7 +72,7 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
     }
     log("");
     log(`Resource repository: ${repository.url}`);
-    log(`CMS Core provider: http://127.0.0.1:${ports.core}`);
+    log(`Ulvia Provider: http://127.0.0.1:${ports.provider}`);
     log(`CMS Kernel: http://127.0.0.1:${ports.kernel}`);
     log("Credentials: bun run ulvia -- dev credentials");
     try {
@@ -87,7 +87,7 @@ export function resolveDevPorts(environment: Record<string, string | undefined>)
         kernel: readPort(environment, "ULVIA_DEV_KERNEL_PORT", DEFAULT_PORTS.kernel),
         mongo: readPort(environment, "ULVIA_DEV_MONGO_PORT", DEFAULT_PORTS.mongo),
         repository: readPort(environment, "ULVIA_DEV_REPOSITORY_PORT", DEFAULT_PORTS.repository),
-        core: DEFAULT_PORTS.core,
+        provider: readPort(environment, "ULVIA_DEV_PROVIDER_PORT", DEFAULT_PORTS.provider),
     };
     if (new Set(Object.values(ports)).size !== Object.values(ports).length) {
         throw new Error("Ulvia dev ports must be distinct");
