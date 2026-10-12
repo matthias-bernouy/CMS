@@ -1,17 +1,10 @@
 import type { Subject } from "@bernouy/cms-auth";
 import type { CapabilityGatewayOptions } from "@bernouy/cms-gateway";
+import { MongoAdministratorGrantStore } from "@bernouy/cms-gateway/execution/mongo";
 import type { Db } from "mongodb";
 import { satisfiesVersionRange } from "@bernouy/cms-repository/providers";
 import type { ProviderInstallationStore } from "@bernouy/cms-repository/providers/installations";
 import type { ProviderManifestCatalogue } from "@bernouy/cms-repository/providers/catalogue";
-
-type AdministratorGrant = {
-    sub: string;
-    enabled?: boolean;
-    revision?: number;
-    createdAt?: Date;
-    updatedAt?: Date;
-};
 
 type ProviderCapabilityGrant = {
     sourceInstallationId: string;
@@ -30,7 +23,7 @@ export function createProductionGatewayAccess(
     installations?: ProviderInstallationStore,
     manifests?: ProviderManifestCatalogue,
 ) {
-    const grants = db.collection<AdministratorGrant>("cms_administrator_grants");
+    const administrators = new MongoAdministratorGrantStore(db);
     const providerGrants = db.collection<ProviderCapabilityGrant>("cms_provider_capability_grants");
     const providerUsage = db.collection<{ _id: string; count: number; expiresAt: Date }>(
         "cms_provider_capability_usage",
@@ -91,7 +84,7 @@ export function createProductionGatewayAccess(
     };
 
     const isAdministratorId = async (subjectId: string): Promise<boolean> => {
-        return Boolean(await grants.findOne({ sub: subjectId, enabled: { $ne: false } }));
+        return (await administrators.get(subjectId)).enabled;
     };
     const isAdministrator = async (subject: Subject): Promise<boolean> => isAdministratorId(subject.identifier);
     const authorize: CapabilityGatewayOptions["authorize"] = async (actor, capability, route, origin) =>
@@ -110,58 +103,6 @@ export function createProductionGatewayAccess(
                 (capability.access === "admin" &&
                     actor.kind === "administrator" &&
                     (await isAdministratorId(actor.subjectId)))));
-
-    const administrators = {
-        async canRevoke(sub: string): Promise<boolean> {
-            return Boolean(sub);
-        },
-        async get(sub: string) {
-            const row = await grants.findOne({ sub });
-            return {
-                sub,
-                enabled: row ? row.enabled !== false : false,
-                revision: row?.revision ?? (row ? 1 : 0),
-                bootstrap: false as const,
-            };
-        },
-        async list(): Promise<string[]> {
-            const rows = await grants.find({ enabled: { $ne: false } }, { projection: { sub: 1 } }).toArray();
-            return [...new Set(rows.map((row) => row.sub))];
-        },
-        async set(sub: string, enabled: boolean, expectedRevision?: number) {
-            const current = await this.get(sub);
-            if (expectedRevision !== undefined && current.revision !== expectedRevision) {
-                throw revisionConflict();
-            }
-            if (current.enabled === enabled) {
-                return current;
-            }
-            const now = new Date();
-            if (current.revision === 0) {
-                if (!enabled) {
-                    return current;
-                }
-                try {
-                    await grants.insertOne({ sub, enabled: true, revision: 1, createdAt: now, updatedAt: now });
-                } catch (error) {
-                    if (isDuplicateKey(error)) {
-                        throw revisionConflict();
-                    }
-                    throw error;
-                }
-                return { sub, enabled: true, revision: 1, bootstrap: false };
-            }
-            const result = await grants.findOneAndUpdate(
-                grantRevisionFilter(sub, current.revision),
-                { $set: { enabled, revision: current.revision + 1, updatedAt: now } },
-                { returnDocument: "after" },
-            );
-            if (!result) {
-                throw revisionConflict();
-            }
-            return { sub, enabled, revision: result.revision!, bootstrap: false };
-        },
-    };
 
     return {
         authorize,
@@ -185,16 +126,4 @@ export function createProductionGatewayAccess(
             },
         },
     };
-}
-
-function grantRevisionFilter(sub: string, revision: number) {
-    return revision === 1 ? { sub, $or: [{ revision: 1 }, { revision: { $exists: false } }] } : { sub, revision };
-}
-
-function revisionConflict(): Error & { status: number } {
-    return Object.assign(new Error("administrator grant revision conflict"), { status: 409 });
-}
-
-function isDuplicateKey(error: unknown): boolean {
-    return Boolean(error && typeof error === "object" && (error as { code?: number }).code === 11000);
 }
