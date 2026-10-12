@@ -32,6 +32,7 @@ describe("repository public entry points", () => {
             "./collections/build",
             "./collections/installations",
             "./collections/content",
+            "./collections/assets",
             "./collections/mongo",
             "./collections/texts",
             "./collections/sources",

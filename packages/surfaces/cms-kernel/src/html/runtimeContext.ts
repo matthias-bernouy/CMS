@@ -2,7 +2,7 @@ import type KernelCms from "cms-kernel/KernelCms";
 import { resolvePageAssets } from "@bernouy/cms-content/rendering";
 import { FAVICON_ROUTE } from "cms-kernel/http/assets/favicon";
 import type { RenderContext } from "cms-kernel/html/RenderContext";
-import { resolveInstalledCollectionAssets } from "@bernouy/cms-repository/collections/http";
+import { resolveInstalledCollectionAssets } from "@bernouy/cms-repository/collections/assets";
 import { resolvePageLinks } from "cms-kernel/http/pages/pageLinks";
 
 /**

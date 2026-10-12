@@ -11,7 +11,7 @@ test("rendering entrypoints omit authoring mutations and concrete stores", () =>
 
 test("browser-safe content entrypoints bundle without persistence or image adapters", async () => {
     const result = await Bun.build({
-        entrypoints: ["bindings.ts", "theme.ts", "page-path.ts"].map((entry) =>
+        entrypoints: ["bindings.ts", "theme.ts", "pages/path.ts"].map((entry) =>
             resolve(import.meta.dir, "../../src/exports", entry),
         ),
         target: "browser",

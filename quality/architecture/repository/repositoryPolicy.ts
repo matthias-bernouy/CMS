@@ -16,11 +16,11 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
         browserEntryPaths: [
             "packages/features/cms-content/src/browser/entries/component.entry.ts",
             "packages/features/cms-content/src/browser/entries/bindingCore.entry.ts",
-            "packages/features/cms-content/src/browser/index.ts",
-            "packages/features/cms-content/src/browser/dom.ts",
+            "packages/features/cms-content/src/exports/runtime/browser.ts",
+            "packages/features/cms-content/src/exports/runtime/browser-dom.ts",
             "packages/features/cms-content/src/exports/bindings.ts",
             "packages/features/cms-content/src/exports/theme.ts",
-            "packages/features/cms-content/src/exports/page-path.ts",
+            "packages/features/cms-content/src/exports/pages/path.ts",
         ],
         packageImportAllowlist: {
             "@bernouy/cms-kernel": {

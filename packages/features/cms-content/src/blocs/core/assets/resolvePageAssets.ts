@@ -7,7 +7,7 @@ import {
     componentRuntimeCacheKey,
     loadBindingCoreRuntimeEntry,
     loadComponentRuntimeEntry,
-} from "cms-content/application/runtime-assets/runtimeAssets";
+} from "cms-content/runtime-assets/runtimeAssets";
 import { CMS_CACHE_KEYS } from "cms-content/application/core/cacheKeys";
 
 /**

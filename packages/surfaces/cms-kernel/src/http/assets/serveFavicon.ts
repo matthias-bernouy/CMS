@@ -1,15 +1,12 @@
-import type KernelCms from "cms-kernel/KernelCms";
 import { sendCompressed } from "@bernouy/http-runner";
 import { generateFaviconEntry } from "cms-kernel/http/assets/favicon";
 
 const FAVICON_CACHE_CONTROL = "no-cache, must-revalidate";
 
 /**
- * Stable Kernel favicon. A configured CMS file is resolved server-side so
- * its opaque storage id never leaks into rendered page metadata. The default
- * SVG remains available when settings or file storage cannot resolve it.
+ * Stable default favicon used when Page settings do not provide one.
  */
-export default function FaviconServer(req: Request, _kernel: KernelCms): Response {
+export default function serveFavicon(req: Request): Response {
     const resolved = sendCompressed(req, generateFaviconEntry(), FAVICON_CACHE_CONTROL);
     return req.method === "HEAD" ? withoutBody(resolved) : resolved;
 }

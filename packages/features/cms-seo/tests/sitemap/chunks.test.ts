@@ -1,31 +1,28 @@
-import { describe, expect, test } from "bun:test";
 import { gunzipSync } from "bun";
+import { describe, expect, test } from "bun:test";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
-import { mountPublicPages, publicPage } from "../publicPage.fixture";
+import { createSitemapChunkHandler } from "@bernouy/cms-seo/http";
+import { sitemapPage, sitemapService } from "./fixture";
 
-describe("Kernel sitemap chunks", () => {
+describe("sitemap chunks", () => {
     test("splits more than 50,000 locations into independently served gzip files", async () => {
-        const sitemapStore = new MemoryBlobStore();
+        const store = new MemoryBlobStore();
         const pages = Array.from({ length: 50_001 }, (_, index) => {
             const path = `/catalog/${index}`;
-            return { ...publicPage(`page-${index}`, path), paths: { en: path } };
+            return { ...sitemapPage(`page-${index}`, path), paths: { en: path } };
         });
-        const mounted = mountPublicPages({ sitemapStore, storedPages: pages });
-
-        const result = await mounted.sitemapService!.materialize();
+        const service = sitemapService({ store, pages });
+        const result = await service.materialize();
 
         expect(result.snapshot.chunks.map(({ urlCount }) => urlCount)).toEqual([50_000, 1]);
         expect(result.snapshot.chunks.map(({ language }) => language)).toEqual(["en", "en"]);
         const secondUrl = `https://example.test/sitemap-lang-en.${result.snapshot.id}.2.xml.gz`;
-        const response = await mounted.get(new Request(secondUrl));
+        const handler = createSitemapChunkHandler({ store, basePath: "" });
+        const response = await handler(new Request(secondUrl));
         const xml = new TextDecoder().decode(gunzipSync(await response.arrayBuffer()));
+
         expect(response.status).toBe(200);
         expect(xml).toContain("<loc>https://example.test/catalog/50000</loc>");
         expect(xml.match(/<url>/gu)).toHaveLength(1);
-        const mountedResponse = await mounted.get(new Request(secondUrl));
-        expect(mountedResponse.status).toBe(200);
-        const head = await mounted.head(new Request(secondUrl, { method: "HEAD" }));
-        expect(head.status).toBe(200);
-        expect(await head.text()).toBe("");
     });
 });

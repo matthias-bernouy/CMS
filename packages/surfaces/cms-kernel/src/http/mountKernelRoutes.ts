@@ -14,10 +14,9 @@ import { handlePageRequest } from "cms-kernel/http/pages/handlePageRequest";
 import { FAVICON_ROUTE } from "cms-kernel/http/assets/favicon";
 import { matchRootSitemapChunkPath } from "@bernouy/cms-seo";
 import { createRobotsHandler, createSitemapChunkHandler, createSitemapHandler } from "@bernouy/cms-seo/http";
+import { COLLECTION_ASSETS_ROUTE, resolveInstalledCollectionAssets } from "@bernouy/cms-repository/collections/assets";
 import {
-    COLLECTION_ASSETS_ROUTE,
     createCollectionMaintenanceGuard,
-    resolveInstalledCollectionAssets,
     serveInstalledCollectionAsset,
 } from "@bernouy/cms-repository/collections/http";
 import { resolveRequestActor } from "cms-kernel/http/pages/access/resolveRequestActor";
@@ -81,7 +80,6 @@ export function mountKernelRoutes(kernel: KernelCms) {
     runner.addEndpoint("GET", "/.cms/assets/cms-binding-core.js", (request) =>
         serveBindingCoreRuntime(request, kernel.cache),
     );
-    runner.addEndpoint("GET", "/.cms/assets/favicon", (request) => serveFavicon(request, kernel));
     if (kernel.collectionAssets) {
         runner.group(COLLECTION_ASSETS_ROUTE, (assetsRunner) => {
             assetsRunner.setDefaultEndpoint("GET", (request) =>
@@ -96,8 +94,8 @@ export function mountKernelRoutes(kernel: KernelCms) {
 
     runner.addEndpoint("GET", "/robots.txt", robotsHandler);
     runner.addEndpoint("GET", "/sitemap.xml", sitemapHandler);
-    runner.addEndpoint("GET", FAVICON_ROUTE, (request) => serveFavicon(request, kernel));
-    runner.addEndpoint("HEAD", FAVICON_ROUTE, (request) => serveFavicon(request, kernel));
+    runner.addEndpoint("GET", FAVICON_ROUTE, serveFavicon);
+    runner.addEndpoint("HEAD", FAVICON_ROUTE, serveFavicon);
 
     // `generateStyleEntry` is the same producer `resolveAssets` uses for the
     // `?v=<hash>` link, so served bytes match. Source secrets stay unwired

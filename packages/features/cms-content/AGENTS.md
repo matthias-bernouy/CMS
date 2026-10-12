@@ -32,8 +32,12 @@ bindings, validation, and read models.
 
 ## Source Layout
 
-- `pages/`, `blocs/`, `bindings/`, `settings/` and `theme/` are sibling
-  domains. Theme owns tokens, modes, values and CSS independently of settings.
+- `pages/`, `blocs/`, `settings/` and `theme/` are sibling domains. Theme owns
+  tokens, modes, values and CSS independently of settings. Declarative binding
+  grammar belongs to Bloc markup; its live implementation belongs to `browser/`.
+- `runtime-assets/` owns the generated technical browser bundles, their build
+  entrypoint and the HTTP handlers that serve them. It is infrastructure for
+  Content's browser runtime, not part of the cross-domain application layer.
 - Site-owned Bloc source serialization belongs to Bloc publication in this
   package. Collection Bloc compilation belongs to
   `@bernouy/cms-repository/collections/build`.

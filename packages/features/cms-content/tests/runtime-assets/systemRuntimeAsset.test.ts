@@ -6,6 +6,21 @@ import { loadBindingCoreRuntimeEntry, loadComponentRuntimeEntry } from "@bernouy
 import { buildContentBrowserAssets } from "@bernouy/cms-content/runtime-assets/build";
 
 describe("content browser runtime assets", () => {
+    test("exposes the generic component base through the public runtime bundle", async () => {
+        const entry = await loadComponentRuntimeEntry();
+        const source = new TextDecoder().decode(entry.raw);
+
+        expect(entry.contentType).toBe("text/javascript");
+        expect(source).toMatch(/window\.cmsRuntime\s*=\s*\{[\s\S]*\bComponent\b/);
+        expect(source).not.toContain("syncProviderMediaImage");
+
+        (window as any).cmsRuntime = {};
+        window.eval(source);
+        expect(typeof (window as any).cmsRuntime.Component).toBe("function");
+        expect((window as any).cmsRuntime.Composition).toBeUndefined();
+        expect((window as any).cmsRuntime.PROVIDER_IMAGE_WIDTHS).toBeUndefined();
+    });
+
     test("bundles only the technical binding runtime", async () => {
         const entry = await loadBindingCoreRuntimeEntry();
         const source = new TextDecoder().decode(entry.raw);

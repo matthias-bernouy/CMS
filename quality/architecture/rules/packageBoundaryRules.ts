@@ -8,7 +8,7 @@ import {
 } from "../core/architectureTypes";
 import { layerRank } from "./dependencyRules";
 import { resolvePackageAliasImports } from "../core/resolution/moduleResolution";
-import { isDeclaredExport, parseWorkspaceSpecifier } from "../core/resolution/packageExports";
+import { allExportTargets, isDeclaredExport, parseWorkspaceSpecifier } from "../core/resolution/packageExports";
 import { isPathInside, toRelativePath } from "../core/pathUtils";
 
 export function checkPackageImportAllowlist(
@@ -43,22 +43,26 @@ export function checkExportFilesDeclared(
     violations: ArchitectureViolation[],
 ): void {
     for (const pkg of packages) {
+        const declaredTargets = new Set(
+            allExportTargets(pkg.manifest.exports).map((target) => normalize(target.replace(/^\.\//u, ""))),
+        );
         for (const file of pkg.sourceFiles) {
             const exportFile = toRelativePath(join(pkg.root, "src", "exports"), file);
             const extension = extname(exportFile);
             if (exportFile.startsWith("../") || !CODE_EXTENSIONS.has(extension)) {
                 continue;
             }
+            const packageTarget = normalize(join("src", "exports", exportFile));
+            if (declaredTargets.has(packageTarget)) {
+                continue;
+            }
             const name = exportFile.slice(0, -extension.length);
             const subpath =
                 name === "index" ? "." : name.endsWith("/index") ? `./${name.slice(0, -"/index".length)}` : `./${name}`;
-            if (isDeclaredExport(pkg.manifest.exports, subpath)) {
-                continue;
-            }
             violations.push({
                 kind: "undeclared-subpath",
                 file: `${pkg.relativeRoot}/src/exports/${exportFile}`,
-                message: `${pkg.name} export file is not declared as ${subpath} in package.json`,
+                message: `${pkg.name} export file is not targeted by any package.json export (conventional subpath: ${subpath})`,
             });
         }
     }

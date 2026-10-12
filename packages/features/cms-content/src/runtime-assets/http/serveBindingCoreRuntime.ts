@@ -1,5 +1,5 @@
 import { cachedResponseAsync, publicAssetCacheControl, type Cache } from "@bernouy/http-runner";
-import { loadBindingCoreRuntimeEntry } from "cms-content/application/runtime-assets/runtimeAssets";
+import { loadBindingCoreRuntimeEntry } from "cms-content/runtime-assets/runtimeAssets";
 import { CMS_CACHE_KEYS } from "cms-content/application/core/cacheKeys";
 
 /**

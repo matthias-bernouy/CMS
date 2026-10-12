@@ -54,7 +54,7 @@ const governedExtensions = new Set([
 
 const exactExceptions = new Map([
     [
-        "packages/features/cms-content/src/application/runtime-assets/generated/binding-core.js",
+        "packages/features/cms-content/src/runtime-assets/generated/binding-core.js",
         "generated content binding browser runtime",
     ],
     ["quality/ci/coverage/baseline.json", "generated per-package coverage snapshot"],

@@ -6,7 +6,7 @@ import type { ContentReader } from "@bernouy/cms-content/rendering";
 import {
     collectionAssetRepresentationVersion,
     resolveInstalledCollectionAssets,
-} from "@bernouy/cms-repository/collections/http";
+} from "@bernouy/cms-repository/collections/assets";
 import KernelCms from "cms-kernel/KernelCms";
 import { TtlCache } from "@bernouy/http-runner";
 import { CaptureRunner } from "../gateway/support/CaptureRunner";

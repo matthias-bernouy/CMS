@@ -64,6 +64,9 @@ models and validation for CMS-owned installations and site selections.
 - `./collections/content` projects admitted and installed collections into the
   generic Page, Bloc, text and theme contribution contracts owned by
   `@bernouy/cms-content`.
+- `./collections/assets` resolves installed immutable asset references into
+  public representation URLs. HTTP request parsing, ranges and response headers
+  remain in `./collections/http`.
 - `./collections/installations` also exposes collection migration planning,
   execution, journals and the memory adapter. The Mongo journal adapter is
   exported from `./collections/mongo`.

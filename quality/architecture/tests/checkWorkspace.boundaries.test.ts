@@ -88,4 +88,24 @@ describe("workspace package boundaries", () => {
         expect(ofKind(violations, "undeclared-subpath")).toHaveLength(1);
         expect(ofKind(violations, "undeclared-subpath")[0]!.message).toContain("./admin");
     });
+
+    test("accepts an export facade targeted by a differently named public subpath", async () => {
+        const root = await createWorkspace({
+            "packages/features/domain/package.json": manifest("@fixture/domain", {
+                exports: {
+                    ".": "./src/exports/index.ts",
+                    "./browser": {
+                        browser: "./src/exports/runtime/browser.ts",
+                        default: "./src/exports/runtime/server.ts",
+                    },
+                },
+            }),
+            "packages/features/domain/src/exports/index.ts": "export const publicValue = true;\n",
+            "packages/features/domain/src/exports/runtime/browser.ts": "export const browserValue = true;\n",
+            "packages/features/domain/src/exports/runtime/server.ts": "export const serverValue = true;\n",
+        });
+
+        const violations = await checkWorkspaceArchitecture({ rootDir: root });
+        expect(ofKind(violations, "undeclared-subpath")).toHaveLength(0);
+    });
 });

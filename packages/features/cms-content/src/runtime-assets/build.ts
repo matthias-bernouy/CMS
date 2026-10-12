@@ -3,8 +3,8 @@ import { join } from "node:path";
 
 const OUTPUT_DIRECTORY = join(import.meta.dir, "generated");
 const ENTRIES = [
-    { source: "../../browser/entries/component.entry.ts", output: "component.js" },
-    { source: "../../browser/entries/bindingCore.entry.ts", output: "binding-core.js" },
+    { source: "../browser/entries/component.entry.ts", output: "component.js" },
+    { source: "../browser/entries/bindingCore.entry.ts", output: "binding-core.js" },
 ] as const;
 
 export async function buildContentBrowserAssets(outputDirectory = OUTPUT_DIRECTORY): Promise<void> {

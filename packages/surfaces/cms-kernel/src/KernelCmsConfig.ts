@@ -7,7 +7,8 @@ import type {
 } from "@bernouy/cms-auth";
 import type { OidcAuthHandlers, PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
-import type { CollectionMigrationService, CollectionStore } from "@bernouy/cms-repository/collections/installations";
+import type { CollectionMigrationService } from "@bernouy/cms-repository/collections/installations";
+import type { InstalledCollectionAssetSource } from "@bernouy/cms-repository/collections/assets";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import type { PageExecutionService } from "@bernouy/cms-gateway/execution";
 import type { Cache, Runner } from "@bernouy/http-runner";
@@ -26,13 +27,7 @@ export type KernelCmsConfig = {
         siteId: string;
         migrations: CollectionMigrationService;
     };
-    collectionAssets?: {
-        siteId: string;
-        store: Pick<
-            CollectionStore,
-            "getInstalledAssetMetadata" | "getInstalledAssetMetadataBatch" | "getReleaseAsset"
-        >;
-    };
+    collectionAssets?: InstalledCollectionAssetSource;
     cache: Cache;
     enforcePageCsp?: boolean;
     capabilityGateway?: {

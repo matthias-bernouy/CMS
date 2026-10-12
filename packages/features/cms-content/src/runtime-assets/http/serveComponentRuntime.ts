@@ -1,8 +1,5 @@
 import { getOrGenerateEntryAsync, sendCompressed, type Cache } from "@bernouy/http-runner";
-import {
-    componentRuntimeCacheKey,
-    loadComponentRuntimeEntry,
-} from "cms-content/application/runtime-assets/runtimeAssets";
+import { componentRuntimeCacheKey, loadComponentRuntimeEntry } from "cms-content/runtime-assets/runtimeAssets";
 
 const IMMUTABLE_ASSET_CACHE_CONTROL = "public, max-age=31536000, immutable";
 const REVALIDATED_ASSET_CACHE_CONTROL = "no-cache, must-revalidate";

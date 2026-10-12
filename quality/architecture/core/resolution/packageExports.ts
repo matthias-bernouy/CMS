@@ -17,6 +17,17 @@ export function exportTargets(value: unknown): string[] {
     return Object.values(object).flatMap(exportTargets);
 }
 
+/** Every concrete target declared by an exports map, across all conditions. */
+export function allExportTargets(value: unknown): string[] {
+    if (typeof value === "string") {
+        return [value];
+    }
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return [];
+    }
+    return Object.values(value as Record<string, unknown>).flatMap(allExportTargets);
+}
+
 export function declaredExportTargets(exportsValue: unknown, subpath: string): string[] {
     if (typeof exportsValue === "string") {
         return subpath === "." ? [exportsValue] : [];

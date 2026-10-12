@@ -1,17 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { CanonicalSiteHostNotConfiguredError } from "@bernouy/cms-seo";
-import { mountPublicPages, publicPage } from "../publicPage.fixture";
+import { sitemapPage, sitemapService } from "./fixture";
 
-describe("Kernel sitemap refresh", () => {
+describe("sitemap refresh", () => {
     test("runs immediately, coalesces refreshes, and stops without starting more work", async () => {
-        const mounted = mountPublicPages({
-            sitemapStore: new MemoryBlobStore(),
-            storedPages: [publicPage("home", "/")],
-        });
-        const runner = mounted.sitemapService!.start({
-            intervalMs: 60_000,
-        });
+        const service = sitemapService({ store: new MemoryBlobStore(), pages: [sitemapPage("home", "/")] });
+        const runner = service.start({ intervalMs: 60_000 });
 
         expect((await runner.ready)?.status).toBe("published");
         const first = runner.refresh();
@@ -25,18 +20,15 @@ describe("Kernel sitemap refresh", () => {
 
     test("stays idle before the canonical site host is configured", async () => {
         let siteHost = "";
-        const mounted = mountPublicPages({
-            get siteHost() {
-                return siteHost;
-            },
-            sitemapStore: new MemoryBlobStore(),
-            storedPages: [publicPage("home", "/")],
+        const service = sitemapService({
+            store: new MemoryBlobStore(),
+            pages: [sitemapPage("home", "/")],
+            siteHost: () => siteHost,
         });
         const reported: unknown[] = [];
 
-        await expect(mounted.sitemapService!.materialize()).rejects.toBeInstanceOf(CanonicalSiteHostNotConfiguredError);
-
-        const runner = mounted.sitemapService!.start({
+        await expect(service.materialize()).rejects.toBeInstanceOf(CanonicalSiteHostNotConfiguredError);
+        const runner = service.start({
             intervalMs: 60_000,
             retryIntervalMs: 60_000,
             reportError: (error) => reported.push(error),
@@ -51,12 +43,9 @@ describe("Kernel sitemap refresh", () => {
     });
 
     test("still reports an invalid canonical site host", async () => {
-        const mounted = mountPublicPages({
-            siteHost: "not-a-url",
-            sitemapStore: new MemoryBlobStore(),
-        });
+        const service = sitemapService({ store: new MemoryBlobStore(), siteHost: () => "not-a-url" });
         const reported: unknown[] = [];
-        const runner = mounted.sitemapService!.start({
+        const runner = service.start({
             intervalMs: 60_000,
             retryIntervalMs: 60_000,
             reportError: (error) => reported.push(error),
