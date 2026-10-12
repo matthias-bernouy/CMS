@@ -10,6 +10,7 @@ import {
 } from "cms-content/blocs/core/validation/nativeAttributeValues";
 import { isPlatformNativeAttributeAllowed } from "cms-content/blocs/core/validation/nativeHtml";
 import { accessibleSvgIssue, componentImageIssue } from "cms-content/blocs/core/markup/validation/nativeMediaPolicy";
+import { implementationAccessibilityAttributeIssue } from "cms-content/blocs/core/markup/validation/contracts/accessibilityAttributes";
 
 export type NativePolicyElement = {
     readonly localName: string;
@@ -134,8 +135,17 @@ function nativeAttributesIssue(
         if (name.startsWith("cms-")) {
             return `attribute "${name}" is not a declared CMS binding`;
         }
-        if (allowImplementationAttributes && isImplementationAttribute(name, value)) {
-            continue;
+        if (allowImplementationAttributes) {
+            const accessibilityIssue = implementationAccessibilityAttributeIssue(name, value);
+            if (accessibilityIssue !== undefined) {
+                if (accessibilityIssue) {
+                    return accessibilityIssue;
+                }
+                continue;
+            }
+            if (isImplementationAttribute(name, value)) {
+                continue;
+            }
         }
         if (
             allowTextAttributes &&
@@ -183,12 +193,6 @@ function isImplementationAttribute(name: string, value: string): boolean {
     }
     if (name === "tabindex") {
         return value === "-1" || value === "0";
-    }
-    if (name === "role") {
-        return /^[a-z][a-z0-9-]*$/u.test(value);
-    }
-    if (name.startsWith("aria-")) {
-        return value.trim().length > 0;
     }
     return /^data-(?!cms-)[a-z][a-z0-9-]*$/u.test(name);
 }

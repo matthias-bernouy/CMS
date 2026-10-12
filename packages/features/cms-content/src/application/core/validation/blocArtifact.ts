@@ -3,14 +3,16 @@ import { validateBlocDocument } from "cms-content/blocs/core/markup/validation/d
 import type { PageDocumentBlocContract } from "cms-content/blocs/core/markup/validation/documents/pageDocument";
 import type { TBloc, TBlocWrite } from "cms-content/blocs/interfaces/blocs";
 import { validateBlocWrite } from "cms-content/blocs/core/validation";
+import { assertAcyclicBlocDependencies } from "cms-content/blocs/core/markup/validation/documents/blocDependencyGraph";
 
 type BlocCatalogueReader = Pick<CmsRepository, "getBlocsList">;
 
 export async function validateBlocArtifact(repository: BlocCatalogueReader, value: TBlocWrite): Promise<TBloc> {
     const bloc = validateBlocWrite(value);
-    const catalogue = (await repository.getBlocsList({ includeInactive: true }))
-        .filter(({ id }) => id !== bloc.id)
-        .map(pageDocumentContract);
+    const catalogueBlocs = (await repository.getBlocsList({ includeInactive: true })).filter(
+        ({ id }) => id !== bloc.id,
+    );
+    const catalogue = catalogueBlocs.map(pageDocumentContract);
     const contract = pageDocumentContract(bloc);
     const validated = validateBlocDocument(
         {
@@ -22,7 +24,7 @@ export async function validateBlocArtifact(repository: BlocCatalogueReader, valu
         },
         catalogue,
     );
-    return {
+    const artifact: TBloc = {
         ...bloc,
         ...(validated.fixedContent === undefined
             ? {}
@@ -31,6 +33,8 @@ export async function validateBlocArtifact(repository: BlocCatalogueReader, valu
               : { compositionHTML: validated.fixedContent }),
         ...(validated.defaultContent === undefined ? {} : { defaultContent: validated.defaultContent }),
     };
+    assertAcyclicBlocDependencies([...catalogueBlocs, artifact]);
+    return artifact;
 }
 
 function pageDocumentContract(

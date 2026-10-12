@@ -5,6 +5,11 @@ import { hardenStoredHtml } from "cms-content/blocs/core/markup/security/hardenS
 import { isValidCustomElementTag } from "cms-content/application/core/validation/predicates";
 import { storedMarkupSecurityIssue } from "cms-content/blocs/core/markup/security/storedMarkupIssue";
 import { parseSource } from "cms-content/blocs/core/markup/bindings";
+import {
+    assertBlocBindingSourceBudget,
+    assertBlocDomBudget,
+    assertBlocMarkupLength,
+} from "cms-content/blocs/core/markup/validation/documents/blocBudgets";
 
 export type BlocContentMarkupResult = {
     readonly html: string;
@@ -30,7 +35,7 @@ export function validatePageContentMarkup(value: string): string {
 }
 
 export function validateSiteBlocDefaultContent(value: string, ownerTag?: string): string {
-    return validateNativeMarkup(value, "draft.defaultContent", ownerTag);
+    return validateNativeMarkup(value, "draft.defaultContent", ownerTag, {}, true);
 }
 
 /** Canonical fixed/default Bloc-document grammar shared by every Bloc producer. */
@@ -38,19 +43,25 @@ export function validateBlocContentMarkup(
     value: string,
     options: { readonly field: string; readonly kind: "default" | "fixed"; readonly ownerTag?: string },
 ): BlocContentMarkupResult {
-    const html = validateNativeMarkup(value, options.field, options.kind === "default" ? options.ownerTag : undefined, {
-        allowIncompleteMedia: options.kind === "default",
-        rootIsComponentChild: options.kind === "default",
-        allowTextAttributes: true,
-        ...(options.kind === "fixed"
-            ? {
-                  allowImplementationAttributes: true,
-                  allowTemplateSlots: true,
-                  rootIsComponentChild: true,
-                  skipRootPlacement: true,
-              }
-            : {}),
-    });
+    const html = validateNativeMarkup(
+        value,
+        options.field,
+        options.kind === "default" ? options.ownerTag : undefined,
+        {
+            allowIncompleteMedia: options.kind === "default",
+            rootIsComponentChild: options.kind === "default",
+            allowTextAttributes: true,
+            ...(options.kind === "fixed"
+                ? {
+                      allowImplementationAttributes: true,
+                      allowTemplateSlots: true,
+                      rootIsComponentChild: true,
+                      skipRootPlacement: true,
+                  }
+                : {}),
+        },
+        true,
+    );
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = html;
     const sources = Array.from(document.querySelectorAll("[cms-source]"), (element) => {
@@ -64,6 +75,7 @@ export function validateBlocContentMarkup(
               }
             : null;
     }).filter((source): source is NonNullable<typeof source> => source !== null);
+    assertBlocBindingSourceBudget(options.field, sources.length);
     return { html, sources };
 }
 
@@ -72,7 +84,11 @@ function validateNativeMarkup(
     field: string,
     rootParentTag?: string,
     options: Parameters<typeof nativeDomTreeIssue>[1] = {},
+    enforceBlocBudgets = false,
 ): string {
+    if (enforceBlocBudgets) {
+        assertBlocMarkupLength(field, value);
+    }
     const securityIssue = storedMarkupSecurityIssue(value);
     if (securityIssue) {
         throw new ContentValidationError(field, securityIssue);
@@ -80,6 +96,9 @@ function validateNativeMarkup(
     const hardened = hardenStoredHtml(value);
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = hardened;
+    if (enforceBlocBudgets) {
+        assertBlocDomBudget(field, document.body);
+    }
     if (containsComment(document.body)) {
         throw new ContentValidationError(field, "HTML comments are not part of the persisted Page grammar");
     }

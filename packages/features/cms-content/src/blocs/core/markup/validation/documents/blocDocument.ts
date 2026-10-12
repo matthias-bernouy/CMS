@@ -43,7 +43,7 @@ export function validateBlocDocument(
             kind: "fixed",
             ownerTag: bloc.id,
         });
-        validateFragment(fixed.html, known, unresolved, true);
+        validateFragment(fixed.html, bloc.id, known, unresolved, true);
     }
     if (bloc.defaultContent !== undefined) {
         const validated = validateBlocContentMarkup(bloc.defaultContent, {
@@ -63,13 +63,14 @@ export function validateBlocDocument(
 
 function validateFragment(
     html: string,
+    ownerTag: string,
     known: ReadonlyMap<string, PageDocumentBlocContract>,
     unresolved: ReadonlySet<string>,
     allowCmsHost: boolean,
 ): void {
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = html;
-    validateReferences(html, document, known, unresolved, allowCmsHost);
+    validateReferences(html, document, ownerTag, known, unresolved, allowCmsHost);
     validateHostAttributes(document, known, unresolved, true);
     validateManagedNative(html, known);
     for (const host of Array.from(document.body.querySelectorAll("*"))) {
@@ -92,7 +93,7 @@ function validateDefaultContent(
 ): void {
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = `<${owner.id}>${html}</${owner.id}>`;
-    validateReferences(html, document, known, unresolved, false);
+    validateReferences(html, document, owner.id, known, unresolved, false);
     validateHostAttributes(document, known, unresolved, false);
     validateManagedNative(document.body.innerHTML, known);
     const host = document.body.firstElementChild!;
@@ -105,11 +106,15 @@ function validateDefaultContent(
 function validateReferences(
     html: string,
     document: Document,
+    ownerTag: string,
     known: ReadonlyMap<string, PageDocumentBlocContract>,
     unresolved: ReadonlySet<string>,
     allowCmsHost: boolean,
 ): void {
     for (const tag of extractRefs(html).blocs) {
+        if (tag === ownerTag) {
+            throw new ContentValidationError("uses", `bloc ${ownerTag} cannot reference itself`);
+        }
         if (!known.has(tag) && !unresolved.has(tag)) {
             throw new ContentValidationError("uses", `unknown local bloc ${tag}`);
         }

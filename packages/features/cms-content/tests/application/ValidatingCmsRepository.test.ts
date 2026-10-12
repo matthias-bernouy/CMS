@@ -252,6 +252,39 @@ describe("ValidatingCmsRepository — pass-through", () => {
 });
 
 describe("ValidatingCmsRepository — blocs", () => {
+    test("rejects cycles across persisted Bloc dependencies", async () => {
+        const repo = new ValidatingCmsRepository(new InMemoryCmsRepository());
+        const composition = (id: string, compositionHTML: string) => ({
+            id,
+            name: id,
+            group: "",
+            description: "",
+            viewJS: "",
+            ownership: { kind: "code-managed" as const },
+            compositionHTML,
+        });
+        await repo.createBloc(composition("fixture-child", "<slot></slot>"));
+        await repo.createBloc(composition("fixture-parent", "<fixture-child></fixture-child>"));
+
+        await expect(
+            repo.replaceBloc(composition("fixture-child", "<fixture-parent></fixture-parent>")),
+        ).rejects.toThrow("fixture-child -> fixture-parent -> fixture-child");
+
+        const component = (id: string, uses: readonly string[]) => ({
+            id,
+            name: id,
+            group: "",
+            description: "",
+            viewJS: "export {}",
+            ownership: { kind: "code-managed" as const },
+            uses,
+        });
+        await repo.createBloc(component("fixture-declared-a", ["fixture-declared-b"]));
+        await expect(repo.createBloc(component("fixture-declared-b", ["fixture-declared-a"]))).rejects.toThrow(
+            "fixture-declared-a -> fixture-declared-b -> fixture-declared-a",
+        );
+    });
+
     test("validates published Bloc documents against the same catalogue contracts as Pages", async () => {
         const repo = new ValidatingCmsRepository(new InMemoryCmsRepository());
         await repo.createBloc({

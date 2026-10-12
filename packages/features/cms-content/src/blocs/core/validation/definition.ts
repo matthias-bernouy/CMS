@@ -5,6 +5,7 @@ import { isValidCustomElementTag } from "cms-content/application/core/validation
 import { isPlatformManagedNativeElementTag } from "cms-content/blocs/core/validation/nativeHtml";
 import { parsePresentationImage } from "cms-content/blocs/core/presentationImage";
 import { validateBlocContentMarkup } from "cms-content/blocs/core/markup/validation/nativeContent";
+import { assertBlocArtifactBudgets } from "cms-content/blocs/core/markup/validation/documents/blocBudgets";
 import type { BlocOwnership, SiteBlocDefinition, TBloc, TBlocWrite } from "cms-content/blocs/interfaces/blocs";
 
 export function validateBlocWrite(value: TBlocWrite): TBloc {
@@ -15,6 +16,7 @@ export function validateBlocWrite(value: TBlocWrite): TBloc {
         validateOwnership(value.ownership);
     }
     const bloc = normalizeBlocWrite(value);
+    assertBlocArtifactBudgets(bloc.viewJS, bloc.source);
     if (bloc.thumbnail !== undefined) {
         bloc.thumbnail = parsePresentationImage(bloc.thumbnail);
     }
