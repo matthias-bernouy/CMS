@@ -1,12 +1,10 @@
-import { canonicalSiteBaseUrl, type TPage } from "@bernouy/cms-content/rendering";
+import { canonicalSiteBaseUrl, type ContentReader, type TPage } from "@bernouy/cms-content/rendering";
 import type { BlobStore as SitemapStore } from "@bernouy/blob-store";
-import type KernelCms from "cms-kernel/KernelCms";
-import { collectPublicPageProviderPaths } from "cms-kernel/core/pages/publicPagePaths";
 import {
     iteratePageIndexingLocations,
     type PageIndexingLocation,
-} from "cms-kernel/core/seo/indexing/discoverPageIndexingLocations";
-import { executeIndexingCapability } from "cms-kernel/core/seo/indexing/executeIndexingCapability";
+} from "cms-seo/indexing/discoverPageIndexingLocations";
+import type { IndexingDiscoveryExecutor } from "cms-seo/indexing/discoverIndexingEntityItems";
 import {
     readSitemapManifest,
     SITEMAP_MANIFEST_KEY,
@@ -32,12 +30,20 @@ export class CanonicalSiteHostNotConfiguredError extends TypeError {
     }
 }
 
+export type SitemapMaterializationContext = {
+    readonly store: SitemapStore;
+    readonly content: Pick<ContentReader, "getRenderingSettings" | "getPublishedPages" | "resolvePublishedRoute">;
+    readonly listAdditionalPaths: () => Promise<readonly string[]>;
+    readonly isReservedPath: (path: string) => boolean;
+    readonly execute: IndexingDiscoveryExecutor;
+};
+
 export async function materializeSitemapSnapshot(
-    kernel: KernelCms,
+    context: SitemapMaterializationContext,
     signal?: AbortSignal,
 ): Promise<SitemapMaterializationResult> {
-    const store = kernel.sitemapStore;
-    const settings = await kernel.repository.getRenderingSettings();
+    const { store } = context;
+    const settings = await context.content.getRenderingSettings();
     const baseUrl = canonicalSiteBaseUrl(settings.site.host);
     if (!baseUrl) {
         if (typeof settings.site.host === "string" && settings.site.host.trim()) {
@@ -45,22 +51,22 @@ export async function materializeSitemapSnapshot(
         }
         throw new CanonicalSiteHostNotConfiguredError();
     }
-    const request = new Request(`${baseUrl}/sitemap.xml`, {
-        headers: { accept: "application/json" },
-        signal,
-    });
-    const published = await kernel.repository.getPublishedPages();
+    const published = await context.content.getPublishedPages();
     const pages = localizedSitemapPages(published, settings);
     const alternates = localizedSitemapAlternates(published, settings);
     const writer = new SitemapChunkWriter(store, baseUrl, signal);
     try {
-        for (const entry of await storedSitemapLocations(kernel, pages, alternates)) {
-            await writer.append(entry, kernel.cmsPathPrefix);
-        }
-        for await (const entry of iteratePageIndexingLocations(pages, (contractId, capabilityId, input) =>
-            executeIndexingCapability(kernel, request, contractId, capabilityId, input, true),
+        const additionalPaths = await context.listAdditionalPaths();
+        for (const entry of await storedSitemapLocations(
+            pages,
+            additionalPaths,
+            (path) => context.content.resolvePublishedRoute(path),
+            alternates,
         )) {
-            await writer.append(withSitemapAlternates(entry, alternates), kernel.cmsPathPrefix);
+            await writer.append(entry, context.isReservedPath);
+        }
+        for await (const entry of iteratePageIndexingLocations(pages, context.execute)) {
+            await writer.append(withSitemapAlternates(entry, alternates), context.isReservedPath);
         }
         const snapshot = await writer.finish();
         return publishSnapshot(store, snapshot);
@@ -71,11 +77,11 @@ export async function materializeSitemapSnapshot(
 }
 
 export async function storedSitemapLocations(
-    kernel: KernelCms,
     pages: readonly TPage[],
+    additionalPaths: readonly string[],
+    resolvePublishedRoute: ContentReader["resolvePublishedRoute"],
     alternates?: ReturnType<typeof localizedSitemapAlternates>,
 ): Promise<PageIndexingLocation[]> {
-    const providerPaths = await collectPublicPageProviderPaths(kernel.publicPageProviders, kernel.cmsPathPrefix);
     const blocked = new Set<string>();
     const locations: PageIndexingLocation[] = [];
     for (const page of pages) {
@@ -86,8 +92,8 @@ export async function storedSitemapLocations(
             locations.push(alternates ? withSitemapAlternates(entry, alternates) : entry);
         }
     }
-    for (const path of providerPaths) {
-        if (!blocked.has(path) && !(await kernel.repository.resolvePublishedRoute(path))) {
+    for (const path of additionalPaths) {
+        if (!blocked.has(path) && !(await resolvePublishedRoute(path))) {
             locations.push({ location: path });
         }
     }

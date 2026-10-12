@@ -48,6 +48,7 @@ expand that baseline to bypass dependency injection.
 `cms-repository` owns contract/provider artifacts, site installation/selection
 models, collection admission and the explicit collection build toolchain.
 `cms-gateway` owns provider-neutral live invocation and provider-wide identities.
+`cms-seo` owns metadata, structured data, dynamic indexing and sitemap snapshots.
 `cms-files` owns namespaces, file credentials, uploads, immutable generations,
 access signatures, storage metadata and image representations. Generic secret
 storage and image transforms belong to Foundation. See the

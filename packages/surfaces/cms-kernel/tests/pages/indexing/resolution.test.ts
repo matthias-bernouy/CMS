@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { resolvePageIndexingMetadata } from "cms-kernel/core/seo/indexing/resolvePageIndexingMetadata";
+import { resolvePageIndexingMetadata } from "@bernouy/cms-seo";
 import { PRODUCT_PAGE } from "./fixtures";
 
 describe("resolvePageIndexingMetadata", () => {

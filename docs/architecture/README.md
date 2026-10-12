@@ -74,7 +74,7 @@ Files providers use generic transforms from `@bernouy/image-processing`.
 
 The production runtime constructs Mongo catalogues and site stores, secret
 resolution, network adapters, identity storage and observation refresh. The
-Kernel receives invocation, access checks and selected catalogue reads.
+Kernel receives provider-neutral invocation and a Page execution service.
 It exposes collection-backed provider and collection administration Pages;
 provider connection approval, credential rotation and exact contract selection
 are application workflows owned by `cms-repository`. Repository publication is
@@ -96,6 +96,8 @@ is generic infrastructure in `@bernouy/secret-store` under Foundation.
 
 The Kernel mounts every site Page, authentication, administration, files,
 gateway routes, Bloc assets, sitemaps and robots on one supplied `Runner`.
+SEO metadata, structured data, dynamic indexing and sitemap materialization are
+implemented by `cms-seo`; the Kernel supplies its HTTP and runtime adapters.
 Whether a Page is public, authenticated or administrative is derived from the
 capabilities in its execution plan; there is no Page surface field or separate
 admin/public route namespace. CMS Core mounts the provider report and the

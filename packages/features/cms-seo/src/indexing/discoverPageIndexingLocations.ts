@@ -3,7 +3,7 @@ import {
     type IndexingDiscoveryExecutor,
     iterateIndexingEntityItems,
     PageIndexingDiscoveryError,
-} from "cms-kernel/core/seo/indexing/discoverIndexingEntityItems";
+} from "cms-seo/indexing/discoverIndexingEntityItems";
 
 const MAX_SITEMAP_LOCATION_LENGTH = 2_048;
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/u;
@@ -15,8 +15,6 @@ export type PageIndexingLocation = {
     language?: string;
     alternates?: readonly { language: string; location: string }[];
 };
-
-export { PageIndexingDiscoveryError };
 
 /** Discover canonical locations for every enabled entity-backed page. */
 export async function discoverPageIndexingLocations(

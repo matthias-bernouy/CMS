@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { parseHTML } from "linkedom";
 import type { TPage, TSystem } from "@bernouy/cms-content";
-import { defineMetaTags } from "cms-kernel/core/seo/defineMetaTags";
+import { defineMetaTags } from "@bernouy/cms-seo";
 
 const page = { title: "Home", description: "d", path: "/" } as TPage;
 const settings = (favicon?: string) => ({ site: { favicon, host: "" } }) as TSystem;

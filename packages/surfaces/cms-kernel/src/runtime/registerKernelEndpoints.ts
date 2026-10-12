@@ -18,7 +18,7 @@ import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runn
 import { CMS_CAPABILITY_CALL_ROUTE } from "@bernouy/cms-gateway/http/handlers";
 import { handlePageRequest } from "cms-kernel/core/pages/handlePageRequest";
 import { FAVICON_ROUTE } from "cms-kernel/core/assets/defaultFavicon";
-import { matchRootSitemapChunkPath } from "cms-kernel/core/seo/sitemap/manifest";
+import { matchRootSitemapChunkPath } from "@bernouy/cms-seo";
 import { createKernelMaintenanceGuard } from "cms-kernel/core/maintenance";
 import CollectionAssetServer from "cms-kernel/endpoints/assets/collectionAsset.server";
 import { COLLECTION_ASSETS_ROUTE } from "cms-kernel/core/assets/collectionAssets";

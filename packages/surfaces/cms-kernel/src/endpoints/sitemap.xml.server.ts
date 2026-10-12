@@ -2,10 +2,15 @@ import type KernelCms from "cms-kernel/KernelCms";
 import { canonicalSiteBaseUrl } from "@bernouy/cms-content/rendering";
 import { compress, sendCompressed } from "@bernouy/http-runner";
 import { isKernelReservedPath } from "cms-kernel/core/pages/publicPagePaths";
-import { storedSitemapLocations } from "cms-kernel/core/seo/sitemap/materialize";
-import { readSitemapManifest } from "cms-kernel/core/seo/sitemap/manifest";
-import { MAX_SITEMAP_URLS_PER_CHUNK, sitemapIndexXml, staticSitemapXml } from "cms-kernel/core/seo/sitemap/xml";
-import { localizedSitemapAlternates, localizedSitemapPages } from "cms-kernel/core/seo/sitemap/localizedPages";
+import {
+    localizedSitemapAlternates,
+    localizedSitemapPages,
+    MAX_SITEMAP_URLS_PER_CHUNK,
+    readSitemapManifest,
+    sitemapIndexXml,
+    staticSitemapXml,
+} from "@bernouy/cms-seo";
+import { storedSitemapLocations } from "cms-kernel/seo/sitemap";
 
 export default async function SitemapServer(request: Request, kernel: KernelCms): Promise<Response> {
     try {

@@ -1,29 +1,24 @@
-import { GatewayError, type GatewayActor } from "@bernouy/cms-gateway";
-import type KernelCms from "cms-kernel/KernelCms";
+import { GatewayError, type GatewayActor, type GatewayInvoker } from "@bernouy/cms-gateway";
+
+export type IndexingCapabilityRuntime = {
+    readonly siteId: string;
+    readonly invoker: Pick<GatewayInvoker, "invoke">;
+};
 
 /** Invokes the selected release directly; no public HTTP route or Source proxy is involved. */
 export async function executeIndexingCapability(
-    kernel: KernelCms,
-    request: Request,
+    runtime: IndexingCapabilityRuntime | null | undefined,
+    actor: GatewayActor,
     contractId: string,
     capabilityId: string,
     input: Readonly<Record<string, string | number>>,
-    anonymous = false,
 ): Promise<Response> {
-    const gateway = kernel.capabilityGateway;
-    if (!gateway) {
+    if (!runtime) {
         return new Response(null, { status: 503 });
     }
-    let actor: GatewayActor = { kind: "anonymous" };
-    if (!anonymous) {
-        const subject = await kernel.authentication.getSubject(request).catch(() => null);
-        if (subject) {
-            actor = { kind: "user", subjectId: subject.identifier };
-        }
-    }
     try {
-        const result = await gateway.invoker.invoke({
-            siteId: gateway.siteId,
+        const result = await runtime.invoker.invoke({
+            siteId: runtime.siteId,
             contractId,
             capabilityId,
             input,

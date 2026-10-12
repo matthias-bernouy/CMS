@@ -1,10 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
-import {
-    CanonicalSiteHostNotConfiguredError,
-    materializeSitemapSnapshot,
-    startSitemapSnapshotRefresh,
-} from "@bernouy/cms-kernel";
+import { CanonicalSiteHostNotConfiguredError } from "@bernouy/cms-seo";
+import { materializeSitemapSnapshot, startSitemapSnapshotRefresh } from "cms-kernel/seo/sitemap";
 import { mountPublicPages, publicPage } from "../publicPage.fixture";
 
 describe("Kernel sitemap refresh", () => {

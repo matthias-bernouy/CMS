@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-    discoverPageIndexingLocations,
-    PageIndexingDiscoveryError,
-} from "cms-kernel/core/seo/indexing/discoverPageIndexingLocations";
+import { discoverPageIndexingLocations, PageIndexingDiscoveryError } from "@bernouy/cms-seo";
 import { PRODUCT_PAGE } from "./fixtures";
 
 const cursorPage = {

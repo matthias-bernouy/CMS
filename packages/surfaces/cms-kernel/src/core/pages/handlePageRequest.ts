@@ -9,8 +9,8 @@ import { preflightPageGatewayAccess } from "cms-kernel/core/pages/access/preflig
 import type { PageAccess } from "cms-kernel/core/pages/access/preflightPageGatewayAccess";
 import { publicPageCacheKey, resolvePublicPage } from "cms-kernel/core/pages/resolvePublicPage";
 import { InvalidPublicPageRequestError } from "cms-kernel/core/pages/publicPageRequest";
-import type { PageRenderMetadata } from "cms-kernel/core/seo/pageMetadata";
-import { resolveRuntimePageIndexingMetadata } from "cms-kernel/core/seo/indexing/resolveRuntimePageIndexingMetadata";
+import type { PageRenderMetadata } from "@bernouy/cms-seo";
+import { resolveRuntimePageIndexingMetadata } from "cms-kernel/seo/runtimeIndexing";
 
 /**
  * Shared entry point for every public page GET registered by Kernel.

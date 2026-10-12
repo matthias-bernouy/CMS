@@ -38,6 +38,9 @@
             "path": "packages/features/cms-gateway"
         },
         {
+            "path": "packages/features/cms-seo"
+        },
+        {
             "path": "packages/surfaces/cms-kernel"
         },
         {

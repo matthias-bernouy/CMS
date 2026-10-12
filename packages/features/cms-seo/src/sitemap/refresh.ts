@@ -1,9 +1,4 @@
-import type KernelCms from "cms-kernel/KernelCms";
-import {
-    CanonicalSiteHostNotConfiguredError,
-    materializeSitemapSnapshot,
-    type SitemapMaterializationResult,
-} from "./materialize";
+import { CanonicalSiteHostNotConfiguredError, type SitemapMaterializationResult } from "./materialize";
 
 export const DEFAULT_SITEMAP_REFRESH_INTERVAL_MS = 60 * 60 * 1_000;
 export const DEFAULT_SITEMAP_RETRY_INTERVAL_MS = 5 * 60 * 1_000;
@@ -15,7 +10,7 @@ export type SitemapRefreshRunner = {
 };
 
 export function startSitemapSnapshotRefresh(
-    kernel: KernelCms,
+    materialize: (signal: AbortSignal) => Promise<SitemapMaterializationResult>,
     options: {
         intervalMs?: number;
         retryIntervalMs?: number;
@@ -53,7 +48,7 @@ export function startSitemapSnapshotRefresh(
             return running;
         }
         controller = new AbortController();
-        running = materializeSitemapSnapshot(kernel, controller.signal)
+        running = materialize(controller.signal)
             .catch((error) => {
                 if (!(error instanceof CanonicalSiteHostNotConfiguredError) && !controller?.signal.aborted) {
                     options.reportError?.(error);

@@ -1,4 +1,4 @@
-import type { PageIndexingLocation } from "cms-kernel/core/seo/indexing/discoverPageIndexingLocations";
+import type { PageIndexingLocation } from "cms-seo/indexing/discoverPageIndexingLocations";
 import { sitemapChunkPath, type SitemapSnapshotDescriptor } from "./manifest";
 
 export const MAX_SITEMAP_URLS_PER_CHUNK = 50_000;

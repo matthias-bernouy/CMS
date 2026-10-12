@@ -1,7 +1,6 @@
 import { CryptoHasher, gzipSync } from "bun";
 import type { BlobStore as SitemapStore } from "@bernouy/blob-store";
-import { isKernelReservedPath } from "cms-kernel/core/pages/publicPagePaths";
-import type { PageIndexingLocation } from "cms-kernel/core/seo/indexing/discoverPageIndexingLocations";
+import type { PageIndexingLocation } from "cms-seo/indexing/discoverPageIndexingLocations";
 import { sitemapChunkKey, type SitemapChunkDescriptor, type SitemapSnapshotDescriptor } from "./manifest";
 import {
     MAX_SITEMAP_UNCOMPRESSED_BYTES,
@@ -29,10 +28,10 @@ export class SitemapChunkWriter {
         private readonly signal?: AbortSignal,
     ) {}
 
-    async append(entry: PageIndexingLocation, cmsPathPrefix: string): Promise<void> {
+    async append(entry: PageIndexingLocation, isReservedPath: (path: string) => boolean): Promise<void> {
         this.signal?.throwIfAborted();
         const pathname = entry.location.split("?", 1)[0]!;
-        if (this.seen.has(entry.location) || isKernelReservedPath(pathname, cmsPathPrefix)) {
+        if (this.seen.has(entry.location) || isReservedPath(pathname)) {
             return;
         }
         const language = entry.language ?? null;

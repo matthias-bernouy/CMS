@@ -1,7 +1,8 @@
 # @bernouy/cms-kernel
 
 Unified HTTP kernel for Pages, administration, authentication, Bloc assets,
-theme CSS, browser runtime, gateway capabilities, sitemap and robots.
+theme CSS, browser runtime, gateway capabilities, sitemap and robots. SEO
+domain logic is provided by `@bernouy/cms-seo`; this package mounts it.
 
 The root entrypoint exposes `KernelCms` and its injected configuration types.
 Persistence, authentication, caching, collection state and gateway transports

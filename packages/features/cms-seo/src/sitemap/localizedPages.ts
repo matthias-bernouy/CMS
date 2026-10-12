@@ -1,5 +1,5 @@
 import { publicPagePath, type RenderingSettings, type TPage } from "@bernouy/cms-content/rendering";
-import type { PageIndexingLocation } from "cms-kernel/core/seo/indexing/discoverPageIndexingLocations";
+import type { PageIndexingLocation } from "cms-seo/indexing/discoverPageIndexingLocations";
 
 type SitemapPathInfo = {
     language: string;

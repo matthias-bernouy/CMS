@@ -1,0 +1,19 @@
+{
+    "name": "@bernouy/cms-seo",
+    "version": "0.1.0",
+    "description": "CMS page metadata, structured data, dynamic indexing, and sitemap materialization.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts"
+    },
+    "dependencies": {
+        "@bernouy/blob-store": "workspace:*",
+        "@bernouy/cms-content": "workspace:*",
+        "@bernouy/cms-gateway": "workspace:*"
+    },
+    "peerDependencies": {
+        "typescript": "^7.0.2"
+    }
+}

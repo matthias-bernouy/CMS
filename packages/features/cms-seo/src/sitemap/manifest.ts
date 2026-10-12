@@ -1,5 +1,6 @@
 import type { BlobReader } from "@bernouy/blob-store";
 
+/** Stable key of the small mutable pointer to immutable sitemap chunks. */
 export const SITEMAP_MANIFEST_KEY = "manifest.json";
 export const SITEMAP_RETAINED_SNAPSHOTS = 5;
 

@@ -1,6 +1,6 @@
 import type { PublicPageProvider } from "cms-kernel/interfaces/PublicPageProvider";
 import { FAVICON_ROUTE } from "cms-kernel/core/assets/defaultFavicon";
-import { matchRootSitemapChunkPath } from "cms-kernel/core/seo/sitemap/manifest";
+import { matchRootSitemapChunkPath } from "@bernouy/cms-seo";
 
 const MAX_PUBLIC_PAGE_PATH_LENGTH = 2048;
 const MAX_PUBLIC_SITEMAP_PATHS = 10_000;

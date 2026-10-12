@@ -1,5 +1,5 @@
 import type KernelCms from "cms-kernel/KernelCms";
-import { matchRootSitemapChunkPath, readSitemapManifest, sitemapChunkKey } from "cms-kernel/core/seo/sitemap/manifest";
+import { matchRootSitemapChunkPath, readSitemapManifest, sitemapChunkKey } from "@bernouy/cms-seo";
 
 const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable";
 

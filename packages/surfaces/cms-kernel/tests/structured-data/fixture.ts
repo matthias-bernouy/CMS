@@ -1,7 +1,7 @@
 import { defaultSystem, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
 import { renderPage } from "cms-kernel/core/html/renderPage";
 import type { RenderContext } from "cms-kernel/core/html/RenderContext";
-import type { PageRenderMetadata } from "cms-kernel/core/seo/pageMetadata";
+import type { PageRenderMetadata } from "@bernouy/cms-seo";
 
 export function completeSettings(): TSystem {
     const settings = defaultSystem();

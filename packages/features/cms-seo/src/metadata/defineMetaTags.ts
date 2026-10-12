@@ -13,7 +13,7 @@ export type PageMetaTagOverrides = {
 };
 
 /**
- * Emit the head tags carrying SEO / browser-metadata weight: title,
+ * Emit the head tags carrying SEO and browser-metadata weight: title,
  * description, favicon, canonical. Charset / viewport / language are HTML
  * basics and live in `buildHtmlBasics`.
  */

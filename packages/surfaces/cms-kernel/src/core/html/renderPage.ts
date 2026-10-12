@@ -14,10 +14,9 @@ import {
     buildStylesheetLink,
 } from "cms-kernel/core/head/buildAssets";
 import { buildScriptTags } from "cms-kernel/core/head/buildScriptTags";
-import { defineMetaTags } from "cms-kernel/core/seo/defineMetaTags";
-import { definePageStructuredData } from "cms-kernel/core/seo/pageStructuredData";
+import { defineMetaTags, definePageStructuredData } from "@bernouy/cms-seo";
 import type { RenderContext } from "cms-kernel/core/html/RenderContext";
-import { resolvePageMetadata, type PageRenderMetadata } from "cms-kernel/core/seo/pageMetadata";
+import { resolvePageMetadata, type PageRenderMetadata } from "@bernouy/cms-seo";
 
 /**
  * Render a page to a compressed CacheEntry. Thin orchestrator — every piece

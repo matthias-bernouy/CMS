@@ -15,6 +15,7 @@ export type IndexingDiscoveryExecutor = (
 
 type Entity = NonNullable<PageIndexingConfiguration["entity"]>;
 
+/** A bounded or invalid dynamic indexing discovery result. */
 export class PageIndexingDiscoveryError extends Error {
     override name = "PageIndexingDiscoveryError";
 }

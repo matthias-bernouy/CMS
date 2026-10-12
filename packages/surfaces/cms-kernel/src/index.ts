@@ -10,18 +10,7 @@
 
 export { default as KernelCms } from "cms-kernel/KernelCms";
 export type { KernelCmsConfig } from "cms-kernel/interfaces/KernelCmsConfig";
-export type { ResolvedPageMetadata } from "cms-kernel/core/seo/pageMetadata";
-export {
-    DEFAULT_SITEMAP_REFRESH_INTERVAL_MS,
-    DEFAULT_SITEMAP_RETRY_INTERVAL_MS,
-    startSitemapSnapshotRefresh,
-    type SitemapRefreshRunner,
-} from "cms-kernel/core/seo/sitemap/refresh";
-export {
-    CanonicalSiteHostNotConfiguredError,
-    materializeSitemapSnapshot,
-    type SitemapMaterializationResult,
-} from "cms-kernel/core/seo/sitemap/materialize";
+export { startSitemapSnapshotRefresh } from "cms-kernel/seo/sitemap";
 export type {
     PublicPageProvider,
     PublicPageRequestContext,

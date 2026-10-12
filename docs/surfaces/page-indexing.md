@@ -12,9 +12,10 @@ bound input. Saving additionally checks scalar input/identity types and the
 configured projection paths. The UI suggests a candidate when exactly one is
 present and requires a choice when several are present.
 
-The Kernel resolves SEO metadata through a separate server-side call directly to
-the gateway. It does not fetch its own public `/.cms/call` route or render the
-browser binding's result into page content.
+`cms-seo` resolves metadata through a separate server-side call to the injected
+gateway runtime. The Kernel supplies the authenticated actor adapter; it does
+not fetch its own public `/.cms/call` route or render the browser binding's
+result into page content.
 
 Page settings store `indexing.enabled` and an optional `indexing.entity`:
 
@@ -84,5 +85,6 @@ identity projection does not widen that picker detection. The metadata result
 and the browser request have separate execution/error paths.
 
 See [candidate detection](../../packages/features/cms-content/src/pages/core/indexing/detection.ts),
-[Kernel resolution](../../packages/surfaces/cms-kernel/src/core/seo/indexing/resolvePageIndexingMetadata.ts)
-and [gateway execution](../../packages/surfaces/cms-kernel/src/core/seo/indexing/executeIndexingCapability.ts).
+[SEO resolution](../../packages/features/cms-seo/src/indexing/resolvePageIndexingMetadata.ts),
+[gateway execution](../../packages/features/cms-seo/src/indexing/executeIndexingCapability.ts),
+and the [Kernel adapter](../../packages/surfaces/cms-kernel/src/seo/runtimeIndexing.ts).

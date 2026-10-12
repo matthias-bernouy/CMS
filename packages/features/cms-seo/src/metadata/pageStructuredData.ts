@@ -3,7 +3,7 @@ import {
     projectPublicSiteOrganization,
     type RenderingSettings,
 } from "@bernouy/cms-content/rendering";
-import type { ResolvedPageMetadata } from "cms-kernel/core/seo/pageMetadata";
+import type { ResolvedPageMetadata } from "cms-seo/metadata/pageMetadata";
 
 type JsonValue = string | number | boolean | JsonObject | JsonValue[];
 type JsonObject = { [key: string]: JsonValue };

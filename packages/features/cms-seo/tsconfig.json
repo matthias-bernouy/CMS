@@ -1,0 +1,16 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "paths": {
+            "cms-seo/*": ["./src/*"]
+        }
+    },
+    "include": ["src/**/*.ts"],
+    "references": [
+        { "path": "../../foundation/blob-store" },
+        { "path": "../cms-content" },
+        { "path": "../cms-gateway" }
+    ]
+}

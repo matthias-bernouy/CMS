@@ -37,7 +37,8 @@ CmsCore/
 |   |   |-- cms-auth/          @bernouy/cms-auth
 |   |   |-- cms-files/         @bernouy/cms-files
 |   |   |-- cms-gateway/       @bernouy/cms-gateway
-|   |   `-- cms-repository/    @bernouy/cms-repository (including collection build tooling)
+|   |   |-- cms-repository/    @bernouy/cms-repository (including collection build tooling)
+|   |   `-- cms-seo/           @bernouy/cms-seo
 |   |-- surfaces/
 |   |   |-- cms-core/          @bernouy/cms-core
 |   |   `-- cms-kernel/        @bernouy/cms-kernel

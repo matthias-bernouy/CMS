@@ -1,5 +1,5 @@
 import { projectResolvedIndexingEntity, type TPage } from "@bernouy/cms-content/rendering";
-import type { PageRenderMetadata } from "cms-kernel/core/seo/pageMetadata";
+import type { PageRenderMetadata } from "cms-seo/metadata/pageMetadata";
 
 export type IndexingEndpointExecutor = (
     contractId: string,
