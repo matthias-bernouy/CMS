@@ -4,9 +4,18 @@ import {
     type CollectionRelease,
     type CollectionSettingControl,
     type CollectionSettingItem,
+    pageRequirements,
     resolveCollectionTranslation,
 } from "@bernouy/cms-repository/collections";
-import { presentationImageContentType, type BlocRecord, type CmsRepository, type TBloc } from "@bernouy/cms-content";
+import {
+    presentationImageContentType,
+    type BlocRecord,
+    type CmsRepository,
+    createBlocUsageResolver,
+    type PageRouteRegistry,
+    type RenderablePage,
+    type TBloc,
+} from "@bernouy/cms-content";
 import { compileCollectionComponent } from "./compiledComponent";
 import { createInstalledSnapshotReader } from "./installedSnapshot";
 import { composeCollectionThemes } from "./theme";
@@ -17,6 +26,7 @@ export function withInstalledCollections(
     repository: CmsRepository,
     store: CollectionStore,
     siteId: string,
+    routes?: PageRouteRegistry,
 ): CmsRepository {
     type InstalledState = {
         revision: number;
@@ -133,15 +143,87 @@ export function withInstalledCollections(
             ),
         getContentContributions: async () => {
             const snapshot = await installedSnapshot();
-            return {
-                revision: snapshot.revision,
-                pages: snapshot.collections.flatMap(({ release }) =>
-                    (release.pages ?? []).map((page) => ({ document: page.document })),
+            const registered = routes ? await routes.list(siteId) : [];
+            const paths = new Map(
+                registered.flatMap((route) =>
+                    route.page.kind === "contribution"
+                        ? [
+                              [
+                                  `${route.page.sourceId}\0${route.page.contributionId}\0${route.page.pageId}`,
+                                  route.path,
+                              ] as const,
+                          ]
+                        : [],
                 ),
+            );
+            const releases = snapshot.collections.map(({ release }) => release);
+            const pages: RenderablePage[] = snapshot.collections.flatMap(
+                ({ collectionId, digest, release }) =>
+                    release.pages?.map((page) => {
+                        const reference = {
+                            kind: "contribution" as const,
+                            sourceId: release.publisherId,
+                            contributionId: collectionId,
+                            pageId: page.id,
+                        };
+                        const path =
+                            paths.get(`${release.publisherId}\0${collectionId}\0${page.id}`) ?? page.defaultPath;
+                        const language = release.locale;
+                        const generation = page.generation ?? 1;
+                        return {
+                            reference,
+                            source: {
+                                ...reference,
+                                version: release.version,
+                                digest,
+                                generation,
+                            },
+                            language,
+                            requirements: pageRequirements(releases, page),
+                            page: {
+                                id: page.id,
+                                revision: generation,
+                                path,
+                                content: page.document.html,
+                                title: resolveCollectionTranslation(release, page.name, language),
+                                description: page.description
+                                    ? resolveCollectionTranslation(release, page.description, language)
+                                    : "",
+                                visible: true,
+                                tags: [],
+                                indexing: { enabled: false },
+                            },
+                        };
+                    }) ?? [],
+            );
+            const routeRevision = registered
+                .map(({ page, path, revision }) => `${JSON.stringify(page)}:${path}:${revision}`)
+                .sort()
+                .join("|");
+            return {
+                revision: routeRevision ? `${snapshot.revision}:${routeRevision}` : snapshot.revision,
+                pages,
                 texts: snapshot.collections.map(({ release, textOverrides }) =>
                     projectCollectionTextSource({ collection: release, overrides: textOverrides }),
                 ),
             };
+        },
+        getPageRequirements: async (page) => {
+            const [local, installed] = await Promise.all([
+                repository.getBlocsList({ includeInactive: true }),
+                installedState(),
+            ]);
+            const resources = installed.records.map((record) => structuredClone(record.artifact!));
+            const uses = await createBlocUsageResolver([...local, ...resources], {
+                getBlocViewJS: async (tag) => {
+                    const record = installed.byTag.get(tag);
+                    return record ? (record.artifact?.viewJS ?? null) : repository.getBlocViewJS(tag);
+                },
+            })(page.content);
+            return pageRequirements(
+                installed.collections.map(({ release }) => release),
+                { uses, requires: [] },
+            );
         },
         getBlocRecords: records,
         getBlocRecord: read,

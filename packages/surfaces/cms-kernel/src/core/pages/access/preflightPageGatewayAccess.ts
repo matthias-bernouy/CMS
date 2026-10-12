@@ -1,5 +1,4 @@
-import type { TPage } from "@bernouy/cms-content/rendering";
-import type { CollectionCapabilityRequirement } from "@bernouy/cms-repository/collections";
+import type { PageCapabilityRequirement, TPage } from "@bernouy/cms-content/rendering";
 import type { GatewayActor } from "@bernouy/cms-gateway";
 import type KernelCms from "cms-kernel/KernelCms";
 import { resolvePageCapabilityRequirements } from "cms-kernel/core/pages/access/pageCapabilityRequirements";
@@ -13,7 +12,7 @@ export async function preflightPageGatewayAccess(
     request: Request,
     page: TPage,
     kernel: KernelCms,
-    declaredRequirements?: readonly CollectionCapabilityRequirement[],
+    declaredRequirements?: readonly PageCapabilityRequirement[],
 ): Promise<PageAccessDecision> {
     const requirements = await resolvePageCapabilityRequirements(
         page.content,

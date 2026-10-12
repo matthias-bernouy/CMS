@@ -36,9 +36,7 @@ export async function mountProductionKernel(
         authBackends: { local: authentication.auth },
         identityProviders: core.identityProviders,
         collections: {
-            store: core.collections,
             siteId: "default",
-            routes: core.pageRoutes,
             migrations: core.collectionMigrations,
         },
         cache: core.cache,

@@ -109,6 +109,6 @@ export async function resolveRuntimeAssets(kernel: KernelCms, usedTags: string[]
     return { componentUrl, bindingCoreUrl, styleUrl, blocUrls, scriptUrls };
 }
 
-export function collectionBlocsetCacheKey(tags: string[], collectionRevision: number): string {
+export function collectionBlocsetCacheKey(tags: string[], collectionRevision: number | string): string {
     return `${CMS_CACHE_KEYS.blocset(tags)}:collections:${collectionRevision}`;
 }

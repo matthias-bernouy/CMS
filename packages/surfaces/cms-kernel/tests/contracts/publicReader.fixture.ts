@@ -9,6 +9,10 @@ declare const repository: CmsRepository;
 declare const authentication: Authentication;
 
 const reader: ContentReader = {
+    getRenderablePage: async () => null,
+    getRenderablePages: async () => [],
+    resolvePageReference: async () => null,
+    resolveRenderableRoute: async () => null,
     getPublishedPage: async () => null,
     getPublishedPageById: async () => null,
     getPublishedPages: async () => [],

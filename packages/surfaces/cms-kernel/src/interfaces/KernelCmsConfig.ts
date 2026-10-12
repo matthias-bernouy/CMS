@@ -6,7 +6,7 @@ import type {
     Subject,
 } from "@bernouy/cms-auth";
 import type { OidcAuthHandlers, PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
-import type { CmsRepository, PageRouteRegistry } from "@bernouy/cms-content/kernel";
+import type { CmsRepository } from "@bernouy/cms-content/kernel";
 import type { CollectionMigrationService, CollectionStore } from "@bernouy/cms-repository/collections/installations";
 import type { GatewayCapabilityCatalogue, GatewayInvoker } from "@bernouy/cms-gateway";
 import type { PageExecutionAuthority } from "@bernouy/cms-gateway/execution";
@@ -24,9 +24,7 @@ export type KernelCmsConfig = {
     };
     identityProviders?: IdentityProviderRepository;
     collections?: {
-        store: CollectionStore;
         siteId: string;
-        routes: PageRouteRegistry;
         migrations: CollectionMigrationService;
     };
     collectionAssets?: {

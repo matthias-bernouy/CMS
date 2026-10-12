@@ -126,8 +126,12 @@ export { wrapBindingCore } from "cms-content/blocs/core/markup/bindingRoot";
 // ── Repository seam ────────────────────────────────────────────────────
 export type {
     ContentReader,
+    PageCapabilityRequirement,
     PublishedRouteResolution,
     RenderableBloc,
+    RenderablePage,
+    RenderablePageSource,
+    RenderableRouteResolution,
 } from "cms-content/application/interfaces/ContentReader";
 export { createContentReader } from "cms-content/application/core/createContentReader";
 export { resolvePublishedRoute } from "cms-content/pages/core/queries/resolvePublishedRoute";

@@ -10,12 +10,12 @@ import type { PageCreateOptions, PageRoute, TPage } from "cms-content/pages/inte
 import type { PageReference } from "cms-content/pages/interfaces/routing";
 import type { PageContentReference } from "cms-content/pages/core/queries/contentReferences";
 import type { TSystem } from "cms-content/settings/interfaces/settings";
-import type { PageDocument } from "cms-content/pages/interfaces/document";
 import type { ContentTextSource } from "cms-content/pages/core/rendering/contentTexts";
+import type { PageCapabilityRequirement, RenderablePage } from "./ContentReader";
 
 export type ContentContributionSnapshot = {
-    readonly revision: number;
-    readonly pages: readonly { readonly document: PageDocument }[];
+    readonly revision: number | string;
+    readonly pages: readonly RenderablePage[];
     readonly texts: readonly ContentTextSource[];
 };
 
@@ -93,6 +93,7 @@ export type PageScan = {
 export interface CmsRepository {
     /** Runtime projections supplied by package/extension adapters. */
     getContentContributions?(): Promise<ContentContributionSnapshot>;
+    getPageRequirements?(page: TPage): Promise<readonly PageCapabilityRequirement[]>;
     getSiteBlocGroups(): Promise<SiteBlocGroup[]>;
     updateSiteBlocGroup(id: string, input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup>;
     createSiteBlocGroup(input: Omit<SiteBlocGroup, "id">): Promise<SiteBlocGroup>;

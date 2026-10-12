@@ -95,7 +95,7 @@ async function validateMutationLinks(
         const contributions = await repository.getContentContributions?.();
         const documents = [
             ...sitePages.filter((page) => page.id !== pageId).map((page) => page.content),
-            ...(contributions?.pages.map((page) => page.document.html) ?? []),
+            ...(contributions?.pages.map(({ page }) => page.content) ?? []),
         ];
         if (
             documents.some((content) =>
@@ -147,6 +147,6 @@ export async function validatePageLinks(
     }
     const contributions = await repository.getContentContributions?.();
     for (const page of contributions?.pages ?? []) {
-        await assertPageContentLinks(reader, page.document.html);
+        await assertPageContentLinks(reader, page.page.content);
     }
 }

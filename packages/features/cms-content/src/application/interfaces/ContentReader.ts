@@ -1,6 +1,7 @@
 import type { ContentTextSource } from "cms-content/pages/core/rendering/contentTexts";
 import type { TBloc } from "cms-content/blocs/interfaces/blocs";
 import type { TPage } from "cms-content/pages/interfaces/pages";
+import type { PageReference } from "cms-content/pages/interfaces/routing";
 import type { RenderingSettings } from "cms-content/settings/interfaces/settings";
 
 export type RenderableBloc = {
@@ -10,6 +11,40 @@ export type RenderableBloc = {
     uses?: readonly string[];
     nativeElement?: TBloc["nativeElement"];
 };
+
+export type PageCapabilityRequirement = {
+    readonly contractId: string;
+    readonly capabilityId: string;
+    readonly versionRange: string;
+};
+
+export type RenderablePageSource =
+    | {
+          readonly kind: "site";
+          readonly pageId: string;
+          readonly revision: number;
+      }
+    | {
+          readonly kind: "contribution";
+          readonly sourceId: string;
+          readonly contributionId: string;
+          readonly version: string;
+          readonly digest: string;
+          readonly pageId: string;
+          readonly generation: number;
+      };
+
+export type RenderablePage = {
+    readonly reference: PageReference;
+    readonly page: TPage;
+    readonly language?: string;
+    readonly source: RenderablePageSource;
+    readonly requirements: readonly PageCapabilityRequirement[];
+};
+
+export type RenderableRouteResolution =
+    | { kind: "current"; page: RenderablePage; language: string }
+    | Exclude<PublishedRouteResolution, { kind: "current" }>;
 
 export type PublishedRouteResolution =
     | { kind: "current"; page: TPage; language: string }
@@ -32,7 +67,11 @@ export type PublishedRouteResolution =
  */
 export interface ContentReader {
     getContentTexts?(): Promise<ContentTextSource[]>;
-    getContentRevision?(): Promise<number>;
+    getContentRevision?(): Promise<number | string>;
+    getRenderablePage(path: string): Promise<RenderablePage | null>;
+    getRenderablePages(): Promise<RenderablePage[]>;
+    resolvePageReference(reference: PageReference): Promise<string | null>;
+    resolveRenderableRoute(path: string): Promise<RenderableRouteResolution | null>;
     // PAGE
     getPublishedPage(path: string): Promise<TPage | null>;
     getPublishedPageById(id: string): Promise<TPage | null>;

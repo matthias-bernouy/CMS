@@ -1,6 +1,4 @@
-import { createBlocUsageResolver } from "@bernouy/cms-content/kernel";
-import { collectCmsSourceBindings } from "@bernouy/cms-content/rendering";
-import { pageRequirements, type CollectionCapabilityRequirement } from "@bernouy/cms-repository/collections";
+import { collectCmsSourceBindings, type PageCapabilityRequirement } from "@bernouy/cms-content/rendering";
 import type KernelCms from "cms-kernel/KernelCms";
 
 /** Resolves the complete direct and transitive capability grammar of one Page. */
@@ -8,21 +6,10 @@ export async function resolvePageCapabilityRequirements(
     content: string,
     kernel: KernelCms,
     pageUrl: URL,
-    declaredRequirements?: readonly CollectionCapabilityRequirement[],
-): Promise<readonly CollectionCapabilityRequirement[] | null> {
-    const requirements = new Map<string, CollectionCapabilityRequirement>();
-    const snapshot = kernel.collections ? await kernel.collections.store.snapshot(kernel.collections.siteId) : null;
-    const releases = snapshot?.collections.map(({ release }) => release) ?? [];
-    const transitive =
-        declaredRequirements ??
-        pageRequirements(releases, {
-            uses: await createBlocUsageResolver(
-                await kernel.cmsRepository.getBlocsList({ includeInactive: true }),
-                kernel.cmsRepository,
-            )(content),
-            requires: [],
-        });
-    for (const requirement of transitive) {
+    declaredRequirements: readonly PageCapabilityRequirement[] = [],
+): Promise<readonly PageCapabilityRequirement[] | null> {
+    const requirements = new Map<string, PageCapabilityRequirement>();
+    for (const requirement of declaredRequirements) {
         requirements.set(requirementKey(requirement), requirement);
     }
 
@@ -76,6 +63,6 @@ function sourceRoute(rawUrl: string, pageUrl: URL, prefix: string): { contractId
     }
 }
 
-function requirementKey(requirement: Pick<CollectionCapabilityRequirement, "contractId" | "capabilityId">): string {
+function requirementKey(requirement: Pick<PageCapabilityRequirement, "contractId" | "capabilityId">): string {
     return `${requirement.contractId}\0${requirement.capabilityId}`;
 }

@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test";
 import { InMemoryCmsRepository, InMemoryPageRouteRegistry, synchronizeSitePageRoutes } from "@bernouy/cms-content";
-import { synchronizeCollectionPageRoutes } from "@bernouy/cms-repository/collections/content";
-import { collectionPageReference, pageSnapshot } from "cms-kernel/core/pages/pageRegistry";
+import { synchronizeCollectionPageRoutes, withInstalledCollections } from "@bernouy/cms-repository/collections/content";
 import { mountPublicPages } from "../../../pages/publicPage.fixture";
 
 test("collection Admin Pages render through site routes while preserving path overrides", async () => {
@@ -43,11 +42,18 @@ test("collection Admin Pages render through site routes while preserving path ov
     const collections = {
         siteId: "site-a",
         routes,
-        store: { snapshot: async () => ({ revision: 4, collections: [installation] }) },
+        store: {
+            revision: async () => 4,
+            snapshot: async () => ({ revision: 4, collections: [installation] }),
+        },
         migrations: { getActive: async () => null },
     };
     await synchronizeCollectionPageRoutes(routes, "site-a", (await collections.store.snapshot()) as never);
-    const mounted = mountPublicPages({ repository, collections: collections as never });
+    const projected = withInstalledCollections(repository, collections.store as never, "site-a", routes);
+    const mounted = mountPublicPages({
+        repository: projected,
+        collections: { siteId: "site-a", migrations: collections.migrations as never },
+    });
 
     const response = await mounted.get(new Request("http://admin.test/admin"));
     expect(response.status).toBe(200);
@@ -57,16 +63,21 @@ test("collection Admin Pages render through site routes while preserving path ov
     expect(html).not.toContain("data-cms-page-ref");
     expect(html).toContain("default-src 'self'");
 
-    const first = await pageSnapshot(mounted.kernel.state);
-    const reference = collectionPageReference(installation as never, page);
-    const detailsReference = collectionPageReference(installation as never, details);
+    const reference = {
+        kind: "contribution" as const,
+        sourceId: "ulvia.official",
+        contributionId: "official",
+        pageId: "pages",
+    };
+    const detailsReference = { ...reference, pageId: "details" };
     const detailsRoute = await routes.get("site-a", detailsReference);
     await routes.setOverride("site-a", detailsReference, "/admin/content", detailsRoute!.revision);
-    await routes.setOverride("site-a", reference, "/admin/custom", first!.pages[0]!.route.revision);
+    const firstRoute = await routes.get("site-a", reference);
+    await routes.setOverride("site-a", reference, "/admin/custom", firstRoute!.revision);
     page.defaultPath = "/admin/new";
     await synchronizeCollectionPageRoutes(routes, "site-a", (await collections.store.snapshot()) as never);
-    const reconciled = await pageSnapshot(mounted.kernel.state);
-    expect(reconciled!.pages.find(({ page: item }) => item.id === "pages")!.route).toMatchObject({
+    const reconciled = await routes.get("site-a", reference);
+    expect(reconciled).toMatchObject({
         defaultPath: "/admin/new",
         overridePath: "/admin/custom",
         path: "/admin/custom",
@@ -93,5 +104,5 @@ test("site-owned Admin Pages use the same renderer and shared route registry", a
     const response = await mounted.get(new Request("http://admin.test/admin/custom"));
     expect(response.status).toBe(200);
     expect(await response.text()).toContain("Custom administration");
-    expect((await pageSnapshot(mounted.kernel.state))?.pages[0]?.kind).toBe("site");
+    expect((await mounted.kernel.repository.getRenderablePage("/admin/custom"))?.source.kind).toBe("site");
 });

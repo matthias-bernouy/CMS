@@ -1,6 +1,5 @@
 import type KernelCms from "cms-kernel/KernelCms";
 import type { TPage } from "@bernouy/cms-content/rendering";
-import { pageRequirements, resolveCollectionTranslation } from "@bernouy/cms-repository/collections";
 import { cachedResponseAsync, sendCompressed } from "@bernouy/http-runner";
 import { renderPage } from "cms-kernel/core/html/renderPage";
 import { makeRuntimeRenderContext } from "cms-kernel/core/html/runtimeContext";
@@ -8,7 +7,6 @@ import { renderRef } from "cms-kernel/core/pages/renderRef";
 import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
 import { preflightPageGatewayAccess } from "cms-kernel/core/pages/access/preflightPageGatewayAccess";
 import type { PageAccess } from "cms-kernel/core/pages/access/preflightPageGatewayAccess";
-import { findPage, pageSnapshot } from "cms-kernel/core/pages/pageRegistry";
 import { publicPageCacheKey, resolvePublicPage } from "cms-kernel/core/pages/resolvePublicPage";
 import { InvalidPublicPageRequestError } from "cms-kernel/core/pages/publicPageRequest";
 import type { PageRenderMetadata } from "cms-kernel/core/seo/pageMetadata";
@@ -39,7 +37,7 @@ export async function handlePageRequest(req: Request, kernel: KernelCms): Promis
         return new Response("Not Found", { status: 404 });
     }
 
-    const storedRoute = await kernel.repository.resolvePublishedRoute(pathname);
+    const storedRoute = await kernel.repository.resolveRenderableRoute(pathname);
     if (storedRoute?.kind === "updating") {
         return new Response("Service unavailable", {
             status: 503,
@@ -58,43 +56,23 @@ export async function handlePageRequest(req: Request, kernel: KernelCms): Promis
             headers: { Location: `${storedRoute.path}${url.search}`, "Cache-Control": "no-store" },
         });
     }
-    const page =
-        storedRoute?.kind === "current" ? storedRoute.page : await kernel.repository.getPublishedPage(pathname);
-    if (page) {
-        const sourceAccess = await preflightPageGatewayAccess(req, page, kernel);
+    const renderable = storedRoute?.kind === "current" ? storedRoute.page : null;
+    if (renderable) {
+        const sourceAccess = await preflightPageGatewayAccess(req, renderable.page, kernel, renderable.requirements);
         if (sourceAccess.response) {
             return sourceAccess.response;
         }
 
-        return renderIndexedPage(req, page, pathname, kernel, null, 200, sourceAccess.access, storedRoute?.language);
-    }
-
-    const snapshot = await pageSnapshot(kernel.state);
-    const contributed = snapshot ? findPage(snapshot, pathname) : null;
-    if (snapshot && contributed?.kind === "collection") {
-        const language = contributed.installation.release.locale;
-        const page: TPage = {
-            id: contributed.page.id,
-            revision: contributed.page.generation ?? snapshot.revision,
-            path: contributed.route.path,
-            content: contributed.page.document.html,
-            title: resolveCollectionTranslation(contributed.installation.release, contributed.page.name, language),
-            description: contributed.page.description
-                ? resolveCollectionTranslation(contributed.installation.release, contributed.page.description, language)
-                : "",
-            visible: true,
-            tags: [],
-            indexing: { enabled: false },
-        };
-        const requirements = pageRequirements(
-            snapshot.collections.map(({ release }) => release),
-            contributed.page,
+        return renderIndexedPage(
+            req,
+            renderable.page,
+            pathname,
+            kernel,
+            null,
+            200,
+            sourceAccess.access,
+            storedRoute?.language ?? renderable.language,
         );
-        const access = await preflightPageGatewayAccess(req, page, kernel, requirements);
-        if (access.response) {
-            return access.response;
-        }
-        return renderIndexedPage(req, page, pathname, kernel, null, 200, access.access, language);
     }
 
     let dynamicPage;

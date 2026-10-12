@@ -68,7 +68,7 @@ export async function createCoreStores(env: RuntimeEnv) {
         getSitePages: () => innerRepo.getAllPages(),
     });
     const validatedRepo = new ValidatingCmsRepository(
-        withInstalledCollections(innerRepo, migrationCollections, SCOPE_ID),
+        withInstalledCollections(innerRepo, migrationCollections, SCOPE_ID, pageRoutes),
     );
     await validatePageLinks(validatedRepo, pageRoutes, SCOPE_ID);
     const migrationRepo = withSitePageRoutes(validatedRepo, pageRoutes, SCOPE_ID, pageRouteMutations);

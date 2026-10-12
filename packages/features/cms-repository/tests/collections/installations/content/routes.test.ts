@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { InMemorySurfacePageRouteRegistry } from "@bernouy/cms-content";
+import { InMemoryPageRouteRegistry } from "@bernouy/cms-content";
 import { synchronizeCollectionPageRoutes, withCollectionPageRoutes } from "@bernouy/cms-repository/collections/content";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
 
@@ -38,7 +38,7 @@ function snapshot(pages = [page]) {
 }
 
 test("synchronizes collection routes outside reads and preserves overrides", async () => {
-    const routes = new InMemorySurfacePageRouteRegistry();
+    const routes = new InMemoryPageRouteRegistry();
     await synchronizeCollectionPageRoutes(routes, "site-a", snapshot());
     const initial = (await routes.list("site-a"))[0]!;
     const customized = await routes.setOverride("site-a", initial.page, "/admin/custom", initial.revision);
@@ -56,7 +56,7 @@ test("synchronizes collection routes outside reads and preserves overrides", asy
 });
 
 test("a partially failed reconciliation is idempotent and recoverable", async () => {
-    const inner = new InMemorySurfacePageRouteRegistry();
+    const inner = new InMemoryPageRouteRegistry();
     let registrations = 0;
     const routes = new Proxy(inner, {
         get(target, property, receiver) {
@@ -84,7 +84,7 @@ test("a partially failed reconciliation is idempotent and recoverable", async ()
 test("the routed collection facade preserves non-mutating class methods", async () => {
     const store = withCollectionPageRoutes(
         new CollectionStore(new MemoryCollectionStorage()),
-        new InMemorySurfacePageRouteRegistry(),
+        new InMemoryPageRouteRegistry(),
     );
 
     expect(await store.revision("site-a")).toBe(0);
@@ -96,7 +96,7 @@ test("collection activation rejects a missing site Page target", async () => {
     const artifact = await raw.importRelease(
         collectionRelease(`<a data-cms-page-ref='{"kind":"site","pageId":"missing"}'>{{ page.title }}</a>`),
     );
-    const store = withCollectionPageRoutes(raw, new InMemorySurfacePageRouteRegistry(), {
+    const store = withCollectionPageRoutes(raw, new InMemoryPageRouteRegistry(), {
         getSitePages: async () => [],
     });
 
@@ -112,7 +112,7 @@ test("collection removal cannot orphan an editable Page reference", async () => 
         path: "/admin/site-page",
         content: `<a data-cms-page-ref='{"kind":"contribution","sourceId":"ulvia.official","contributionId":"official","pageId":"overview"}'>Overview</a>`,
     } as never;
-    const store = withCollectionPageRoutes(raw, new InMemorySurfacePageRouteRegistry(), {
+    const store = withCollectionPageRoutes(raw, new InMemoryPageRouteRegistry(), {
         getSitePages: async () => [sitePage],
     });
     await store.install("site-a", artifact.digest, 0);

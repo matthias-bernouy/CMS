@@ -19,6 +19,7 @@ import { CaptureRunner } from "../gateway/support/CaptureRunner";
 export function publicPage(id: string, path: string, content = `<p>${id}</p>`): TPage {
     return {
         id,
+        revision: 1,
         path,
         content,
         title: id,
@@ -58,6 +59,15 @@ export function mountPublicPages(options: HarnessOptions = {}) {
                   storedLookups.push(path);
                   return storedPages.find((page) => page.path === path) ?? null;
               },
+              getRenderablePage: async (path) => {
+                  storedLookups.push(path);
+                  const page = storedPages.find((item) => item.path === path);
+                  return page ? renderable(page) : null;
+              },
+              getRenderablePages: async () => storedPages.map(renderable),
+              resolvePageReference: async (reference) =>
+                  storedPages.find((page) => reference.kind === "site" && page.id === reference.pageId)?.path ?? null,
+              resolveRenderableRoute: async () => null,
               getPublishedPageById: async (id) => storedPages.find((page) => page.id === id) ?? null,
               getPublishedPages: async () => storedPages,
               resolvePublishedRoute: async () => null,
@@ -105,6 +115,15 @@ export function mountPublicPages(options: HarnessOptions = {}) {
         get: runner.defaultHandler("GET", "/"),
         head: runner.defaultHandler("HEAD", "/"),
         storedLookups,
+    };
+}
+
+function renderable(page: TPage) {
+    return {
+        reference: { kind: "site" as const, pageId: page.id },
+        page,
+        source: { kind: "site" as const, pageId: page.id, revision: page.revision },
+        requirements: [],
     };
 }
 

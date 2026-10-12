@@ -1,9 +1,4 @@
-import {
-    createPageRouteReader,
-    resolvePageLinkTarget,
-    validatePageReference,
-    type PageReference,
-} from "@bernouy/cms-content/kernel";
+import { validatePageReference, type PageReference } from "@bernouy/cms-content/kernel";
 import type KernelCms from "cms-kernel/KernelCms";
 
 const MAX_PAGE_LINKS = 256;
@@ -21,11 +16,6 @@ export async function resolvePageLinks(root: Element, kernel: KernelCms): Promis
     if (elements.length > MAX_PAGE_LINKS) {
         throw new Error("A Page contains too many stable Page references");
     }
-    const configured = kernel.collections;
-    if (!configured?.routes) {
-        throw new Error("Page routes are unavailable");
-    }
-    const reader = createPageRouteReader(configured.routes, configured.siteId);
     for (const element of elements) {
         const success = element.hasAttribute("data-cms-success-page-ref");
         const referenceAttribute = success ? "data-cms-success-page-ref" : "data-cms-page-ref";
@@ -34,12 +24,15 @@ export async function resolvePageLinks(root: Element, kernel: KernelCms): Promis
             throw new Error("Stable Page references must target anchors or successful form redirects");
         }
         const reference = parseReference(element.getAttribute(referenceAttribute));
-        const resolved = await resolvePageLinkTarget(reader, { kind: "page", page: reference });
+        const resolved = await kernel.repository.resolvePageReference(reference);
+        if (!resolved) {
+            throw new Error("Page reference is unavailable");
+        }
         const suffix = element.getAttribute("data-cms-page-suffix") ?? "";
         if (suffix && !suffix.startsWith("?") && !suffix.startsWith("#")) {
             throw new Error("A stable Page link may only declare a query or fragment suffix");
         }
-        element.setAttribute(targetAttribute, `${kernel.basePath}${resolved.href}${suffix}`);
+        element.setAttribute(targetAttribute, `${kernel.basePath}${resolved}${suffix}`);
         element.removeAttribute(referenceAttribute);
         element.removeAttribute("data-cms-page-suffix");
     }

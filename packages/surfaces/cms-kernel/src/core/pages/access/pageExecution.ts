@@ -1,9 +1,8 @@
-import { pageRequirements } from "@bernouy/cms-repository/collections";
+import type { RenderablePage } from "@bernouy/cms-content/rendering";
 import { GatewayError } from "@bernouy/cms-gateway";
 import type { GatewayExecutionPin } from "@bernouy/cms-gateway/execution";
 import type KernelCms from "cms-kernel/KernelCms";
 import { resolvePageCapabilityRequirements } from "cms-kernel/core/pages/access/pageCapabilityRequirements";
-import { findPage, pageSnapshot, type InstalledPage } from "cms-kernel/core/pages/pageRegistry";
 
 /** Resolves one browser call to the exact installed Page plan selected by its same-origin referrer. */
 export async function authorizePageCall(
@@ -14,20 +13,16 @@ export async function authorizePageCall(
 ): Promise<GatewayExecutionPin> {
     const authority = kernel.capabilityGateway?.pageExecutions;
     const referred = referringPagePath(request, kernel.runner.basePath);
-    const snapshot = await pageSnapshot(kernel.state);
-    const selected = referred && snapshot ? findPage(snapshot, referred) : null;
-    if (!authority || !snapshot || !selected) {
+    const selected = referred ? await kernel.repository.getRenderablePage(referred) : null;
+    if (!authority || !selected) {
         throw new GatewayError("not_authorized", "A current Page execution plan is required");
     }
-    const releases = snapshot.collections.map(({ release }) => release);
     const consumer = executionConsumer(kernel, selected);
-    const declared = selected.kind === "collection" ? pageRequirements(releases, selected.page) : undefined;
-    const content = selected.kind === "collection" ? selected.page.document.html : selected.page.content;
     const requirements = await resolvePageCapabilityRequirements(
-        content,
+        selected.page.content,
         kernel,
         new URL(request.headers.get("referer") ?? request.url),
-        declared,
+        selected.requirements,
     );
     if (!requirements) {
         throw new GatewayError("not_selected", "A Page capability route could not be resolved");
@@ -36,26 +31,26 @@ export async function authorizePageCall(
     return authority.authorize({ ...consumer, contractId, capabilityId });
 }
 
-function executionConsumer(kernel: KernelCms, selected: InstalledPage) {
+function executionConsumer(kernel: KernelCms, selected: RenderablePage) {
     const configured = kernel.capabilityGateway!;
-    if (selected.kind === "site") {
+    if (selected.source.kind === "site") {
         return {
             kind: "site" as const,
             siteId: configured.siteId,
-            pageId: selected.page.id,
-            pageRevision: selected.page.revision,
+            pageId: selected.source.pageId,
+            pageRevision: selected.source.revision,
         };
     }
-    const { installation, page } = selected;
+    const source = selected.source;
     return {
         kind: "collection" as const,
         siteId: configured.siteId,
-        publisherId: installation.release.publisherId,
-        collectionId: installation.collectionId,
-        collectionVersion: installation.release.version,
-        collectionDigest: installation.digest,
-        pageId: page.id,
-        pageGeneration: page.generation ?? 1,
+        publisherId: source.sourceId,
+        collectionId: source.contributionId,
+        collectionVersion: source.version,
+        collectionDigest: source.digest,
+        pageId: source.pageId,
+        pageGeneration: source.generation,
     } as const;
 }
 

@@ -4,8 +4,12 @@ export { pageDocument } from "cms-content/pages/interfaces/pages";
 export type { PageMetadataContext, PageMetadataScope } from "cms-content/pages/core/rendering/pageMetadata";
 export type {
     ContentReader,
+    PageCapabilityRequirement,
     PublishedRouteResolution,
     RenderableBloc,
+    RenderablePage,
+    RenderablePageSource,
+    RenderableRouteResolution,
 } from "cms-content/application/interfaces/ContentReader";
 export type { RenderingSettings, RenderingSiteSettings } from "cms-content/settings/interfaces/settings";
 export { createContentReader } from "cms-content/application/core/createContentReader";
