@@ -23,8 +23,11 @@ import { createProviderGateway } from "../gateway/createProviderGateway";
 import { MongoProviderOperationStore } from "../provider-operations/MongoProviderOperationStore";
 import { createProviderStores, type ProviderStores } from "../stores/providerStores";
 import { createInstanceProvisioningTarget } from "./instanceProvisioning";
+import { InstanceResourcePool, type ResourceLease } from "./InstanceResourcePool";
 
 const SITE_ID = "default";
+const MAX_OPEN_INSTANCES = 32;
+const INSTANCE_IDLE_MS = 60_000;
 
 export type InstanceComposition = Readonly<{
     stores: ProviderStores;
@@ -33,7 +36,7 @@ export type InstanceComposition = Readonly<{
 }>;
 
 export class ProviderInstanceHost {
-    readonly #instances = new Map<string, Promise<InstanceComposition>>();
+    readonly #instances: InstanceResourcePool<InstanceComposition>;
     readonly #providerSource: HttpProviderRepository;
     readonly #collectionSource: HttpCollectionRepository;
 
@@ -44,43 +47,47 @@ export class ProviderInstanceHost {
     ) {
         this.#providerSource = new HttpProviderRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL);
         this.#collectionSource = new HttpCollectionRepository("ulvia-provider-bootstrap", env.CMS_REPOSITORY_URL);
-    }
-
-    async runtime(instance: ProviderInstanceRecord): Promise<UlviaProviderInstanceRuntime> {
-        return (await this.open(instance)).runtime;
-    }
-
-    async target(instance: ProviderInstanceRecord): Promise<OfficialInstanceProvisioningTarget> {
-        const composition = await this.open(instance);
-        return createInstanceProvisioningTarget({
-            instance,
-            composition,
-            env: this.env,
-            credentials: this.credentials,
-            secrets: this.secrets,
-            providerSource: this.#providerSource,
-            collectionSource: this.#collectionSource,
-        });
-    }
-
-    async close(): Promise<void> {
-        const instances = await Promise.allSettled(this.#instances.values());
-        await Promise.all(
-            instances.flatMap((result) => (result.status === "fulfilled" ? [result.value.stores.close()] : [])),
+        this.#instances = new InstanceResourcePool(
+            (instanceId) => this.createComposition(this.#records.get(instanceId)!),
+            (composition) => composition.stores.close(),
+            { maxEntries: MAX_OPEN_INSTANCES, idleMs: INSTANCE_IDLE_MS },
         );
     }
 
-    private open(instance: ProviderInstanceRecord): Promise<InstanceComposition> {
-        const existing = this.#instances.get(instance.id);
-        if (existing) {
-            return existing;
+    readonly #records = new Map<string, ProviderInstanceRecord>();
+
+    async runtime(instance: ProviderInstanceRecord): Promise<ResourceLease<UlviaProviderInstanceRuntime>> {
+        const lease = await this.open(instance);
+        return { resource: lease.resource.runtime, release: lease.release };
+    }
+
+    async target(instance: ProviderInstanceRecord): Promise<OfficialInstanceProvisioningTarget> {
+        const lease = await this.open(instance);
+        return {
+            ...createInstanceProvisioningTarget({
+                instance,
+                composition: lease.resource,
+                env: this.env,
+                credentials: this.credentials,
+                secrets: this.secrets,
+                providerSource: this.#providerSource,
+                collectionSource: this.#collectionSource,
+            }),
+            release: lease.release,
+        };
+    }
+
+    async close(): Promise<void> {
+        await this.#instances.close();
+    }
+
+    private async open(instance: ProviderInstanceRecord): Promise<ResourceLease<InstanceComposition>> {
+        this.#records.set(instance.id, instance);
+        try {
+            return await this.#instances.acquire(instance.id);
+        } finally {
+            this.#records.delete(instance.id);
         }
-        const created = this.createComposition(instance).catch((error) => {
-            this.#instances.delete(instance.id);
-            throw error;
-        });
-        this.#instances.set(instance.id, created);
-        return created;
     }
 
     private async createComposition(instance: ProviderInstanceRecord): Promise<InstanceComposition> {

@@ -31,7 +31,7 @@ export function mountUlviaProvider(options: {
             if (!authentication) {
                 return null;
             }
-            return { runtime: await host.runtime(authentication.instance), claims: authentication.claims };
+            return { lease: await host.runtime(authentication.instance), claims: authentication.claims };
         },
     });
     runner.start(env.ULVIA_PROVIDER_PORT);

@@ -1,5 +1,6 @@
 export {
     UlviaProvider,
+    type UlviaProviderInstanceLease,
     type UlviaProviderInstanceRuntime,
     type UlviaProviderOptions,
 } from "./UlviaProvider";

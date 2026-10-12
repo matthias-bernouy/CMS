@@ -13,6 +13,7 @@ export interface OfficialInstanceProvisioningTarget {
     selectContracts(profile: OfficialInstanceProfile): Promise<void>;
     installCollection(profile: OfficialInstanceProfile): Promise<void>;
     initializeAdministrator(administrator: ProviderInstanceAdministrator): Promise<void>;
+    release?(): void;
 }
 
 export class OfficialInstanceProvisioner {
@@ -55,6 +56,8 @@ export class OfficialInstanceProvisioner {
             const message = error instanceof Error ? error.message.slice(0, 512) : "Provisioning failed";
             await this.instances.update(instance.id, instance.revision, { status: "failed", failure: message });
             throw error;
+        } finally {
+            target.release?.();
         }
     }
 }

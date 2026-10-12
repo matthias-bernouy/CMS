@@ -44,11 +44,14 @@ test("mounts and dispatches every official CMS contract release", async () => {
     const runtime = { siteId: "site-a", dispatcher, report: report(contracts) };
     new UlviaProvider(runner, {
         contracts: contracts.map(({ release }) => release),
-        authenticateControlToken: async (token) => (token === TOKEN ? runtime : null),
+        authenticateControlToken: async (token) =>
+            token === TOKEN ? { resource: runtime, release: () => undefined } : null,
         authenticateInvocationToken: async (token) => {
             try {
                 const claims = verifyProviderInvocationToken(token, TOKEN);
-                return claims.instanceId === runtime.report.instanceId ? { runtime, claims } : null;
+                return claims.instanceId === runtime.report.instanceId
+                    ? { lease: { resource: runtime, release: () => undefined }, claims }
+                    : null;
             } catch {
                 return null;
             }

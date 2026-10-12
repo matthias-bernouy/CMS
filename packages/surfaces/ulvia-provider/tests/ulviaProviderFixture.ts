@@ -26,11 +26,14 @@ export function providerOptions(
     };
     return {
         contracts: contracts.map(({ release }) => release),
-        authenticateControlToken: async (token) => (token === PROVIDER_TOKEN ? runtime : null),
+        authenticateControlToken: async (token) =>
+            token === PROVIDER_TOKEN ? { resource: runtime, release: () => undefined } : null,
         authenticateInvocationToken: async (token) => {
             try {
                 const claims = verifyProviderInvocationToken(token, PROVIDER_TOKEN);
-                return claims.instanceId === instanceId ? { runtime, claims } : null;
+                return claims.instanceId === instanceId
+                    ? { lease: { resource: runtime, release: () => undefined }, claims }
+                    : null;
             } catch {
                 return null;
             }

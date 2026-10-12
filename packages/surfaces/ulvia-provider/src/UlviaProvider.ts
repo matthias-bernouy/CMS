@@ -12,12 +12,17 @@ export type UlviaProviderInstanceRuntime = Readonly<{
     dispatcher: ProviderCapabilityRegistry;
 }>;
 
+export type UlviaProviderInstanceLease = Readonly<{
+    resource: UlviaProviderInstanceRuntime;
+    release(): void;
+}>;
+
 export type UlviaProviderOptions = Readonly<{
     contracts: readonly ContractRelease[];
-    authenticateControlToken(token: string): Promise<UlviaProviderInstanceRuntime | null>;
+    authenticateControlToken(token: string): Promise<UlviaProviderInstanceLease | null>;
     authenticateInvocationToken(
         token: string,
-    ): Promise<Readonly<{ runtime: UlviaProviderInstanceRuntime; claims: ProviderInvocationClaims }> | null>;
+    ): Promise<Readonly<{ lease: UlviaProviderInstanceLease; claims: ProviderInvocationClaims }> | null>;
 }>;
 
 /** Mounts the provider-facing official CMS contract surface on a dedicated runner. */
@@ -27,10 +32,15 @@ export class UlviaProvider {
         const relays = new WeakMap<ProviderCapabilityRegistry, ReturnType<typeof createProviderContractRelay>>();
         runner.get("/ulvia/report", async (request) => {
             const token = bearerToken(request);
-            const runtime = token ? await options.authenticateControlToken(token) : null;
-            return runtime
-                ? Response.json(runtime.report, { headers: { "Cache-Control": "no-store" } })
-                : unauthorized();
+            const lease = token ? await options.authenticateControlToken(token) : null;
+            if (!lease) {
+                return unauthorized();
+            }
+            try {
+                return Response.json(lease.resource.report, { headers: { "Cache-Control": "no-store" } });
+            } finally {
+                lease.release();
+            }
         });
         const methods = new Set(routes.map(({ capability }) => capability.binding.method));
         if (
@@ -45,17 +55,22 @@ export class UlviaProvider {
                 if (!authentication) {
                     return unauthorized();
                 }
-                const { runtime, claims } = authentication;
-                let relay = relays.get(runtime.dispatcher);
-                if (!relay) {
-                    runtime.dispatcher.seal(options.contracts);
-                    relay = createProviderContractRelay(routes, runtime.dispatcher, {
-                        siteId: runtime.siteId,
-                        providerId: runtime.report.providerId,
-                    });
-                    relays.set(runtime.dispatcher, relay);
+                const { lease, claims } = authentication;
+                try {
+                    const runtime = lease.resource;
+                    let relay = relays.get(runtime.dispatcher);
+                    if (!relay) {
+                        runtime.dispatcher.seal(options.contracts);
+                        relay = createProviderContractRelay(routes, runtime.dispatcher, {
+                            siteId: runtime.siteId,
+                            providerId: runtime.report.providerId,
+                        });
+                        relays.set(runtime.dispatcher, relay);
+                    }
+                    return (await relay(request, claims)) ?? new Response(null, { status: 404 });
+                } finally {
+                    lease.release();
                 }
-                return (await relay(request, claims)) ?? new Response(null, { status: 404 });
             });
         }
     }
