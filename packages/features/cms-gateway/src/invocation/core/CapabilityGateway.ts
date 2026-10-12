@@ -44,6 +44,7 @@ export interface CapabilityGatewayOptions {
 
 type AuthorizedRoute = {
     route: GatewayRoute;
+    instanceId: string;
     release: ContractRelease;
     capability: CapabilityDefinition;
     binding: CompiledHttpBinding;
@@ -90,9 +91,9 @@ export class CapabilityGateway implements GatewayAccessProbe {
 
     async invoke(value: GatewayInvocation): Promise<GatewayResult> {
         const invocation = snapshotInvocation(value);
-        const { route, release, capability, binding } = await this.#authorizedRoute(invocation);
+        const { route, instanceId, release, capability, binding } = await this.#authorizedRoute(invocation);
         const input = snapshotInput(invocation.input, capability);
-        const providerSubjectId = await this.#providerSubjectId(invocation.actor, capability, route);
+        const subjectId = await this.#providerSubjectId(invocation.actor, capability, route);
         if (!(await this.#options.routes.isCurrent(route))) {
             throw new GatewayError("stale_route", "installation changed while resolving actor identity");
         }
@@ -109,8 +110,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
         try {
             const response = await this.#options.transport.send({
                 requestId,
-                siteId: invocation.siteId,
-                installationId: route.installation.installation.id,
+                instanceId,
                 endpoint: route.installation.installation.endpoint,
                 providerTokenRef: route.installation.installation.providerTokenRef,
                 release,
@@ -118,12 +118,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
                 binding,
                 input,
                 ...(invocation.binaryBody ? { binaryBody: invocation.binaryBody } : {}),
-                invocationOrigin: invocation.origin,
-                actorKind: invocation.actor.kind,
-                ...(invocation.actor.kind === "provider"
-                    ? { providerInstallationId: invocation.actor.installationId }
-                    : {}),
-                ...(providerSubjectId ? { providerSubjectId } : {}),
+                ...(subjectId ? { subjectId } : {}),
                 ...(invocation.idempotencyKey ? { idempotencyKey: invocation.idempotencyKey } : {}),
             });
             if (!(await this.#options.routes.isCurrent(route))) {
@@ -222,6 +217,10 @@ export class CapabilityGateway implements GatewayAccessProbe {
             (this.#options.now ?? (() => new Date().toISOString()))(),
             this.#options.maxObservationAgeMs ?? 60_000,
         );
+        const instanceId = route.installation.observation?.report.instanceId;
+        if (!instanceId) {
+            throw new GatewayError("invalid_route", "provider observation has no invocation audience");
+        }
         const capability = release.capabilities.find((item) => item.id === value.capabilityId);
         const admittedBinding = route.release.admission.bindings.find(
             (item) => item.capabilityId === value.capabilityId,
@@ -246,7 +245,7 @@ export class CapabilityGateway implements GatewayAccessProbe {
         if (!(await this.#options.routes.isCurrent(route))) {
             throw new GatewayError("stale_route", "selection or installation changed during access check");
         }
-        return { route, release, capability, binding };
+        return { route, instanceId, release, capability, binding };
     }
 
     async #providerSubjectId(

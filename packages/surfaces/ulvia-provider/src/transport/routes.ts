@@ -3,6 +3,7 @@ import type { CapabilityDefinition, ContractRelease } from "@bernouy/cms-reposit
 
 export type ProviderRoute = {
     readonly contractId: string;
+    readonly contractVersion: string;
     readonly capability: CapabilityDefinition;
     readonly match: (method: string, path: string) => Readonly<Record<string, string>> | null;
 };
@@ -12,13 +13,13 @@ export function compileProviderRoutes(releases: readonly ContractRelease[]): rea
         throw new TypeError("Ulvia Provider only accepts ulvia.cms.* contract releases.");
     }
     const routes = releases.flatMap((release) =>
-        release.capabilities.map((capability) => compileRoute(release.contractId, capability)),
+        release.capabilities.map((capability) => compileRoute(release.contractId, release.version, capability)),
     );
     assertRoutesDoNotOverlap(routes);
     return Object.freeze(routes);
 }
 
-function compileRoute(contractId: string, capability: CapabilityDefinition): ProviderRoute {
+function compileRoute(contractId: string, contractVersion: string, capability: CapabilityDefinition): ProviderRoute {
     const names: string[] = [];
     const escaped = capability.binding.path.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
     const pattern = escaped.replace(/\\\{([A-Za-z][A-Za-z0-9_-]*)\\\}/gu, (_match, name: string) => {
@@ -28,6 +29,7 @@ function compileRoute(contractId: string, capability: CapabilityDefinition): Pro
     const expression = new RegExp(`^${pattern}$`, "u");
     return {
         contractId,
+        contractVersion,
         capability,
         match(method, path) {
             const automaticHead =
@@ -48,6 +50,7 @@ function assertRoutesDoNotOverlap(routes: readonly ProviderRoute[]): void {
             const right = routes[rightIndex]!;
             if (
                 left.contractId === right.contractId &&
+                left.contractVersion === right.contractVersion &&
                 left.capability.binding.method === right.capability.binding.method &&
                 pathTemplatesOverlap(left.capability.binding.path, right.capability.binding.path)
             ) {

@@ -1,10 +1,14 @@
-import { parseProviderRuntimeReportJson } from "@bernouy/cms-repository/providers/installations";
+import {
+    assertProviderConnectionToken,
+    parseProviderRuntimeReportJson,
+} from "@bernouy/cms-repository/providers/installations";
 import type { GatewayHttpNetwork } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { randomUUID } from "node:crypto";
 
 /** A bounded, credential-safe report probe using the gateway's pinned public-or-loopback network policy. */
 export async function fetchProviderReport(endpoint: string, token: string, network?: GatewayHttpNetwork) {
+    assertProviderConnectionToken(token);
     const signal = AbortSignal.timeout(5_000);
     const transport = network ?? new NodeGatewayHttpNetwork({ resolveToken: async () => token });
     const response = await transport.exchange({
@@ -13,11 +17,8 @@ export async function fetchProviderReport(endpoint: string, token: string, netwo
         method: "GET",
         headers: {},
         requestId: randomUUID(),
-        siteId: "provider-connection-preview",
-        installationId: "provider-connection-preview",
         providerTokenRef: "${PENDING_PROVIDER_TOKEN}",
-        invocationOrigin: "system",
-        actorKind: "system",
+        authentication: { kind: "provider-control" },
         accept: "application/json",
         signal,
     });

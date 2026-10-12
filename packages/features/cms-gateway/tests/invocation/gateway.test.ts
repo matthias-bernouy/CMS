@@ -91,9 +91,9 @@ describe("capability gateway", () => {
         expect(result.requestId).toMatch(/^[0-9a-f-]{36}$/);
         expect(scope.sent).toHaveLength(1);
         expect(scope.sent[0]).toMatchObject({
+            instanceId: "instance:account-a",
             endpoint: "https://provider.example.com",
             providerTokenRef: "${PROVIDER_TOKEN}",
-            actorKind: "system",
             input: { term: "one" },
         });
     });
@@ -140,7 +140,7 @@ describe("capability gateway", () => {
             code: "not_authorized",
         });
         await scope.gateway.invoke(pageInvocation(route, { kind: "user", subjectId: "cms-user-1" }));
-        const alias = scope.sent[0]?.providerSubjectId;
+        const alias = scope.sent[0]?.subjectId;
         expect(alias).toMatch(/^[0-9a-f-]{36}$/);
         expect(JSON.stringify(scope.sent[0])).not.toContain("cms-user-1");
         expect(await scope.identities.resolve({ providerId: "ulvia.example" }, alias!)).toBe("cms-user-1");
@@ -164,7 +164,7 @@ describe("capability gateway", () => {
             ),
             siteId: "site-b",
         });
-        expect(otherInstallation.sent[0]?.providerSubjectId).toBe(alias);
+        expect(otherInstallation.sent[0]?.subjectId).toBe(alias);
     });
 
     test("propagates an opaque subject alias for administrator capabilities", async () => {
@@ -172,7 +172,7 @@ describe("capability gateway", () => {
         const scope = harness(route);
         await scope.gateway.invoke(pageInvocation(route, { kind: "administrator", subjectId: "cms-admin-1" }));
 
-        const alias = scope.sent[0]?.providerSubjectId;
+        const alias = scope.sent[0]?.subjectId;
         expect(alias).toMatch(/^[0-9a-f-]{36}$/);
         expect(JSON.stringify(scope.sent[0])).not.toContain("cms-admin-1");
         expect(await scope.identities.resolve({ providerId: "ulvia.example" }, alias!)).toBe("cms-admin-1");
@@ -362,7 +362,7 @@ describe("capability gateway", () => {
         ).resolves.toMatchObject({ kind: "success" });
     });
 
-    test("authorizes provider calls from their verified installation identity", async () => {
+    test("authorizes provider calls without forwarding gateway authority context", async () => {
         const scope = harness(await gatewayRoute());
         const actor = { kind: "provider" as const, installationId: "caller-installation" };
         await scope.gateway.invoke({
@@ -370,11 +370,9 @@ describe("capability gateway", () => {
             origin: "provider",
         });
         expect(scope.sent).toHaveLength(1);
-        expect(scope.sent[0]).toMatchObject({
-            invocationOrigin: "provider",
-            actorKind: "provider",
-            providerInstallationId: "caller-installation",
-        });
+        expect(scope.sent[0]).not.toHaveProperty("invocationOrigin");
+        expect(scope.sent[0]).not.toHaveProperty("actorKind");
+        expect(scope.sent[0]).not.toHaveProperty("providerInstallationId");
     });
 
     test("requires an exact execution pin for Page calls", async () => {

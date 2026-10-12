@@ -142,6 +142,7 @@ export async function gatewayRoute(
                 report: {
                     protocol: "ulvia-provider/v1",
                     providerId: "ulvia.example",
+                    instanceId: "instance:account-a",
                     account: { id: "account-a", label: "Account A" },
                     buildVersion: "1.0.0",
                     manifest: { version: "1.0.0", digest: admittedManifest.digest },

@@ -1,12 +1,11 @@
 import type { ProviderInstallationPreparation } from "cms-repository/providers/installations/interfaces/ProviderInstallationPreparation";
 import type { ProviderRuntimeReport } from "cms-repository/providers/installations/interfaces/ProviderRuntimeReport";
+import { assertProviderConnectionToken } from "cms-repository/providers/installations/core/protocol";
 import { secretRefToKey } from "@bernouy/secret-store";
 import type { ProviderConnectionPreview, ProviderConnectionPreviewInput } from "./connectionTypes";
 
 export function validatePreviewInput(input: ProviderConnectionPreviewInput): void {
-    if (!input.token || input.token.length > 512 || /[\r\n]/u.test(input.token)) {
-        throw new TypeError("Invalid provider token");
-    }
+    assertProviderConnectionToken(input.token);
     if (Boolean(input.installationId) !== (input.revision !== undefined)) {
         throw new TypeError("Installation ID and revision must be provided together");
     }

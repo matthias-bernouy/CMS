@@ -6,11 +6,10 @@ import { InMemoryIdentityProviderRepository, InMemoryUsersRepository } from "@be
 
 const context: ProviderCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
+    contractVersion: "1.0.0",
     siteId: "default",
-    installationId: "official",
-    origin: "page",
-    actorKind: "administrator",
-    providerSubjectId: "provider-admin",
+    providerId: "ulvia.official",
+    subjectId: "provider-admin",
 };
 
 test("access capabilities protect the caller and cleanly remove another member", async () => {
@@ -42,9 +41,6 @@ test("access capabilities protect the caller and cleanly remove another member",
     };
     const gateway = {
         siteId: "default",
-        installations: {
-            get: async () => ({ installation: { providerId: "ulvia.official" } }),
-        },
         identities: { resolve: async () => "local:admin" },
         administrators,
     };

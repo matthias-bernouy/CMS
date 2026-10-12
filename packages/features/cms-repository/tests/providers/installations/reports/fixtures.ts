@@ -8,6 +8,7 @@ export function reportDocument() {
     return {
         protocol: "ulvia-provider/v1",
         providerId: "ulvia.example",
+        instanceId: "instance:SHOP_42.prod",
         account: { id: "account:SHOP_42.prod", label: "Main shop — production" },
         buildVersion: "1.4.2",
         manifest: { version: "1.0.0", digest },

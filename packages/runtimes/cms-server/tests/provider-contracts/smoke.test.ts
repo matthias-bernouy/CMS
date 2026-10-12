@@ -105,10 +105,9 @@ test("all eight administration domains dispatch outputs matching their official 
         const capability = release.capabilities.find(({ id }) => id === capabilityId)!;
         const output = await dispatcher.invoke(contractId, capabilityId, input, {
             requestId: "00000000-0000-4000-8000-000000000001",
+            contractVersion: release.version,
             siteId: "default",
-            installationId: "official",
-            origin: "page",
-            actorKind: "administrator",
+            providerId: "ulvia.official",
         });
         expect(() => validateSchemaValue(capability.output, output)).not.toThrow();
     }

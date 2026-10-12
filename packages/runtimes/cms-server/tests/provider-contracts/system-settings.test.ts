@@ -9,10 +9,9 @@ import {
 
 const context = {
     requestId: "00000000-0000-4000-8000-000000000001",
+    contractVersion: "1.0.0",
     siteId: "default",
-    installationId: "official",
-    origin: "page" as const,
-    actorKind: "administrator" as const,
+    providerId: "ulvia.official",
 };
 
 test("access overview retries until settings and revision belong to one snapshot", async () => {

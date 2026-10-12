@@ -52,7 +52,13 @@ The connection flow then asks for an allowed API origin and a dedicated token.
 Host orchestration probes the runtime report, prepares the installation, and
 stores the token in a secret store only after explicit approval. Persisted
 installation state contains only its secret reference. Authentication uses
-Bearer, not a collection of interchangeable connection protocols.
+Bearer, not a collection of interchangeable connection protocols. The report
+probe sends that durable Bearer directly. Live capability invocation is owned
+by `cms-gateway`, which uses the same secret to sign a bounded, short-lived
+Bearer granting one exact contract capability instead of forwarding authority
+headers or the durable credential. The runtime report supplies the provider-owned
+opaque instance audience; live tokens bind that audience and the selected exact
+contract version.
 
 The chosen origin belongs to installation state. A provider manifest does not
 classify a provider as local or remote. Optional `dataPolicy.residency` values

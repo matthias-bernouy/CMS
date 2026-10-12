@@ -17,7 +17,8 @@
         "./http/node": "./src/exports/http/node.ts",
         "./identity": "./src/exports/identity/index.ts",
         "./identity/mongo": "./src/exports/identity/mongo.ts",
-        "./identity/request-scope": "./src/exports/identity/request-scope.ts"
+        "./identity/request-scope": "./src/exports/identity/request-scope.ts",
+        "./protocol": "./src/exports/protocol/index.ts"
     },
     "dependencies": {
         "@bernouy/cms-content": "workspace:*",

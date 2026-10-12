@@ -125,6 +125,7 @@ function providerReport() {
     return {
         protocol: "ulvia-provider/v1" as const,
         providerId: "ulvia.official",
+        instanceId: "instance:local-dev",
         account: { id: "local-dev", label: "Local development" },
         buildVersion: "0.1.1",
         manifest: { version: "0.1.1", digest: `sha256:${"a".repeat(64)}` as const },

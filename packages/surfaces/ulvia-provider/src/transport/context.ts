@@ -1,33 +1,22 @@
 import type { ProviderCapabilityInvocationContext } from "../dispatch/registry";
+import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 
-export function providerInvocationContext(request: Request): ProviderCapabilityInvocationContext {
+export function providerInvocationContext(
+    request: Request,
+    claims: ProviderInvocationClaims,
+    scope: { readonly siteId: string; readonly providerId: string },
+): ProviderCapabilityInvocationContext {
     const requestId = requiredHeader(request, "x-ulvia-request-id", /^[0-9a-f-]{36}$/u);
-    const siteId = requiredHeader(request, "x-ulvia-site-id", /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u);
-    const installationId = requiredHeader(request, "x-ulvia-installation-id", /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u);
-    const origin = requiredHeader(request, "x-ulvia-origin", /^(delivery|page|control|provider|system|conformance)$/u);
-    const actorKind = requiredHeader(
-        request,
-        "x-ulvia-actor-kind",
-        /^(anonymous|user|administrator|provider|system)$/u,
-    );
-    const providerInstallationId = optionalHeader(
-        request,
-        "x-ulvia-provider-installation-id",
-        /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u,
-    );
-    if ((actorKind === "provider") !== Boolean(providerInstallationId)) {
-        throw new TypeError("Trusted provider identity does not match the actor kind.");
+    if (requestId !== claims.requestId) {
+        throw new TypeError("Invocation request ID does not match its signed claim.");
     }
-    const providerSubjectId = optionalHeader(request, "x-ulvia-subject-id", /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u);
     const idempotencyKey = optionalHeader(request, "idempotency-key", /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u);
     return {
         requestId,
-        siteId,
-        installationId,
-        origin: origin as ProviderCapabilityInvocationContext["origin"],
-        actorKind: actorKind as ProviderCapabilityInvocationContext["actorKind"],
-        ...(providerInstallationId ? { providerInstallationId } : {}),
-        ...(providerSubjectId ? { providerSubjectId } : {}),
+        contractVersion: claims.contractVersion,
+        siteId: scope.siteId,
+        providerId: scope.providerId,
+        ...(claims.subjectId ? { subjectId: claims.subjectId } : {}),
         ...(idempotencyKey ? { idempotencyKey } : {}),
     };
 }

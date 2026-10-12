@@ -22,7 +22,10 @@ export {
     DEFAULT_PROVIDER_INSTALLATION_LIMITS,
     type ProviderInstallationLimits,
 } from "cms-repository/providers/installations/core/limits";
-export { PROVIDER_CONNECTION_PROTOCOL } from "cms-repository/providers/installations/core/protocol";
+export {
+    assertProviderConnectionToken,
+    PROVIDER_CONNECTION_PROTOCOL,
+} from "cms-repository/providers/installations/core/protocol";
 export {
     parseProviderConnectionTarget,
     parseProviderConnectionTargetJson,

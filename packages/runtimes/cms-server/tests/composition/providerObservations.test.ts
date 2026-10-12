@@ -29,7 +29,7 @@ test("provider observation refresh uses the pinned network and records a validat
             pathAndQuery: "/ulvia/report",
             method: "GET",
             providerTokenRef: fixture.installation.providerTokenRef,
-            invocationOrigin: "system",
+            authentication: { kind: "provider-control" },
         },
     ]);
     expect(observations).toMatchObject([
@@ -153,6 +153,7 @@ function installationFixture() {
     const report = {
         protocol: "ulvia-provider/v1",
         providerId: "ulvia.example",
+        instanceId: "instance:account-a",
         account: { id: "account-a", label: "Account A" },
         buildVersion: "1.0.0",
         manifest: { version: "1.0.0", digest: `sha256:${"a".repeat(64)}` },

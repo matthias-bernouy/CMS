@@ -17,16 +17,21 @@ test("provider connection previews accept a pinned remote HTTPS endpoint", async
             origin: "https://api.provider.example",
             pathAndQuery: "/ulvia/report",
             method: "GET",
-            invocationOrigin: "system",
-            actorKind: "system",
+            authentication: { kind: "provider-control" },
         },
     ]);
+    await expect(
+        fetchProviderReport("https://api.provider.example", "invalid", {
+            exchange: async () => Response.json(report),
+        }),
+    ).rejects.toThrow("Invalid provider token");
 });
 
 function providerReport() {
     return {
         protocol: "ulvia-provider/v1",
         providerId: "ulvia.example",
+        instanceId: "instance:account-a",
         account: { id: "account-a", label: "Account A" },
         buildVersion: "1.0.0",
         manifest: { version: "1.0.0", digest: `sha256:${"a".repeat(64)}` },

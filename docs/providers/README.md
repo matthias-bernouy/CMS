@@ -79,8 +79,17 @@ credential. The host then checks that the source manifest declares the exact
 contract capability and compatible target version, that an exact source/target
 grant is enabled, and that its quota allows the call. Cycles and paths longer
 than eight contracts are rejected when the site selection graph is validated;
-live calls forward the verified source installation identity and the request ID
-used for correlation.
+the source installation identity remains inside the gateway policy and audit.
+
+For a live capability call, the gateway derives a short-lived HMAC Bearer from
+the installation's provider credential. Its closed claims contain only the
+request ID, provider-owned opaque instance audience, exact contract version and
+capability, timestamps, and the provider-scoped opaque subject when the
+capability requires an authenticated identity. Site, installation, origin and
+actor-role metadata are never forwarded. The provider checks the audience,
+selects the exact release route from the verified claims and receives its local
+site/provider scope from runtime configuration. The durable credential itself
+is sent only to the authenticated `/ulvia/report` control endpoint.
 
 The current execution slice supports synchronous JSON queries, synchronous
 commands with `none` or `natural` idempotency, and bounded file reads. Keyed

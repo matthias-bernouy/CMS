@@ -59,9 +59,12 @@ describe("provider runtime report parsing", () => {
         }
     });
 
-    test("requires a bounded opaque account ID and a nonempty label", () => {
+    test("requires bounded opaque instance and account IDs and a nonempty label", () => {
         const document = reportDocument();
         for (const id of ["", "a b", "a/b", "é", "a".repeat(129)]) {
+            expect(() => parseProviderRuntimeReport({ ...document, instanceId: id })).toThrow(
+                ProviderInstallationValidationError,
+            );
             expect(() => parseProviderRuntimeReport({ ...document, account: { ...document.account, id } })).toThrow(
                 ProviderInstallationValidationError,
             );

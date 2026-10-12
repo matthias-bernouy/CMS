@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+    assertProviderConnectionToken,
     parseProviderConnectionTarget,
     parseProviderConnectionTargetJson,
     parseProviderGatewayRegistrationRequest,
@@ -11,6 +12,19 @@ import {
 import { registrationDocument } from "./fixtures";
 
 describe("provider connection protocol", () => {
+    test("uses one exact bearer-secret syntax at every provider boundary", () => {
+        expect(() => assertProviderConnectionToken("provider-token-that-is-valid")).not.toThrow();
+        for (const token of [
+            "too-short",
+            " provider-token-that-is-valid",
+            "provider-token-that-is-valid ",
+            "clé-secrète-provider-suffisante",
+            1 as never,
+        ]) {
+            expect(() => assertProviderConnectionToken(token)).toThrow("Invalid provider token");
+        }
+    });
+
     test("keeps a server-owned endpoint and reference, without a raw API key", () => {
         const target = { endpoint: "https://provider.example.com", providerTokenRef: "${PROVIDER_TOKEN}" };
         expect(parseProviderConnectionTargetJson(JSON.stringify(target))).toEqual(target);

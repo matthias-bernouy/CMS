@@ -1,96 +1,9 @@
 import { expect, test } from "bun:test";
 import type { IncomingMessage } from "node:http";
 import { Readable } from "node:stream";
-import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
 import { NodeGatewayHttpNetwork } from "@bernouy/cms-gateway/http/node";
 import { selectGatewayAddress } from "cms-gateway/invocation/node-http/addressPolicy";
 import { toResponse } from "cms-gateway/invocation/node-http/nodeHttpRequest";
-import { gatewayRoute } from "../fixtures";
-
-test("node transport pins the target and injects trusted context", async () => {
-    const sent: Array<{ url: string; address: string; headers: Readonly<Record<string, string>> }> = [];
-    const fixture = await gatewayRoute();
-    const transport = new HttpGatewayTransport({
-        network: new NodeGatewayHttpNetwork({
-            resolveAddresses: async () => [{ address: "127.0.0.1", family: 4 }],
-            resolveToken: async () => "secret-token",
-            sendPinned: async (request) => {
-                sent.push({ url: request.url.href, address: request.address.address, headers: request.headers });
-                return Response.json({ items: ["one"] });
-            },
-        }),
-    });
-    const result = await transport.send({
-        requestId: "request-1",
-        siteId: "site-a",
-        installationId: "install-a",
-        endpoint: "http://127.0.0.1:8080",
-        providerTokenRef: "token-ref",
-        release: fixture.release.admission.release,
-        capability: fixture.release.admission.release.capabilities[0]!,
-        binding: fixture.release.admission.bindings[0]!.binding,
-        input: { term: "one" },
-        invocationOrigin: "provider",
-        actorKind: "provider",
-        providerInstallationId: "caller-installation",
-    });
-    expect(result).toMatchObject({ status: 200, output: { items: ["one"] } });
-    expect(sent).toEqual([
-        {
-            url: "http://127.0.0.1:8080/v1/items?term=one",
-            address: "127.0.0.1",
-            headers: {
-                accept: "application/json",
-                authorization: "Bearer secret-token",
-                "x-ulvia-request-id": "request-1",
-                "x-ulvia-contract-id": "catalog",
-                "x-ulvia-site-id": "site-a",
-                "x-ulvia-installation-id": "install-a",
-                "x-ulvia-origin": "provider",
-                "x-ulvia-actor-kind": "provider",
-                "x-ulvia-provider-installation-id": "caller-installation",
-            },
-        },
-    ]);
-});
-
-test("provider credentials remain opaque while their secret value is forwarded byte-for-byte", async () => {
-    const resolvedReferences: string[] = [];
-    const sentAuthorizations: string[] = [];
-    const opaqueReference = "provider-secret/account-a/installation-private-ref";
-    const opaqueCredential = "account=a;cms-instance=private-42;route=provider-owned";
-    const fixture = await gatewayRoute();
-    const transport = new HttpGatewayTransport({
-        network: new NodeGatewayHttpNetwork({
-            resolveAddresses: async () => [{ address: "8.8.8.8", family: 4 }],
-            resolveToken: async (reference) => {
-                resolvedReferences.push(reference);
-                return opaqueCredential;
-            },
-            sendPinned: async (request) => {
-                sentAuthorizations.push(request.headers.authorization ?? "");
-                return Response.json({ items: [] });
-            },
-        }),
-    });
-
-    await transport.send({
-        requestId: "request-opaque",
-        siteId: "site-a",
-        installationId: "install-a",
-        endpoint: "https://provider.example.com",
-        providerTokenRef: opaqueReference,
-        release: fixture.release.admission.release,
-        capability: fixture.release.admission.release.capabilities[0]!,
-        binding: fixture.release.admission.bindings[0]!.binding,
-        input: { term: "opaque" },
-        invocationOrigin: "system",
-        actorKind: "user",
-    });
-
-    expect(resolvedReferences).toEqual([opaqueReference]);
-    expect(sentAuthorizations).toEqual([`Bearer ${opaqueCredential}`]);
-});
 
 test("node transport rejects mixed public and private DNS answers before reading secrets", async () => {
     let secretsRead = 0;
@@ -107,14 +20,12 @@ test("node transport rejects mixed public and private DNS answers before reading
     await expect(
         network.exchange({
             origin: "https://provider.example.com",
-            pathAndQuery: "/v1/items",
+            pathAndQuery: "/ulvia/report",
             method: "GET",
             headers: {},
             requestId: "request-1",
-            installationId: "install-a",
             providerTokenRef: "token-ref",
-            invocationOrigin: "system",
-            actorKind: "anonymous",
+            authentication: { kind: "provider-control" },
             signal: new AbortController().signal,
         }),
     ).rejects.toThrow("non-public");
@@ -133,14 +44,12 @@ test("node transport rejects a forged literal address and reserved headers", asy
     });
     const request = {
         origin: "https://127.0.0.1",
-        pathAndQuery: "/v1/items",
+        pathAndQuery: "/ulvia/report",
         method: "GET",
         headers: {},
         requestId: "request-1",
-        installationId: "install-a",
         providerTokenRef: "token-ref",
-        invocationOrigin: "system" as const,
-        actorKind: "anonymous" as const,
+        authentication: { kind: "provider-control" as const },
         signal: new AbortController().signal,
     };
     await expect(network.exchange(request)).rejects.toThrow("literal provider origin");
@@ -166,14 +75,12 @@ test("node transport aborts DNS and secret lookups that outlast the request dead
             network
                 .exchange({
                     origin: "https://provider.example.com",
-                    pathAndQuery: "/v1/items",
+                    pathAndQuery: "/ulvia/report",
                     method: "GET",
                     headers: {},
                     requestId: "request-1",
-                    installationId: "install-a",
                     providerTokenRef: "token-ref",
-                    invocationOrigin: "system",
-                    actorKind: "anonymous",
+                    authentication: { kind: "provider-control" },
                     signal: AbortSignal.timeout(5),
                 })
                 .then(

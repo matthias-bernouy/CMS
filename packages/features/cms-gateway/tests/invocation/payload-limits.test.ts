@@ -35,17 +35,14 @@ test("the default provider response budget includes a contract-sized Page docume
         network: { exchange: async () => Response.json({ content: CONTRACT_SIZED_TEXT }) },
     });
     const response = await transport.send({
-        requestId: "request-1",
-        siteId: "default",
-        installationId: "official-local",
+        requestId: "00000000-0000-4000-8000-000000000001",
+        instanceId: "instance:account-a",
         endpoint: "https://provider.example.com",
         providerTokenRef: "${PROVIDER_TOKEN}",
         release: route.release.admission.release,
         capability: route.release.admission.release.capabilities[0]!,
         binding: route.release.admission.bindings[0]!.binding,
         input: { term: "page" },
-        invocationOrigin: "system",
-        actorKind: "administrator",
     });
     expect(response).toMatchObject({ output: { content: CONTRACT_SIZED_TEXT } });
 });

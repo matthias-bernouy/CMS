@@ -10,6 +10,7 @@ export class MemoryProviderOperationStore implements ProviderOperationStore {
             (record) =>
                 record.siteId === candidate.siteId &&
                 record.contractId === candidate.contractId &&
+                record.context.contractVersion === candidate.context.contractVersion &&
                 record.capabilityId === candidate.capabilityId &&
                 record.idempotencyKey === candidate.idempotencyKey,
         );

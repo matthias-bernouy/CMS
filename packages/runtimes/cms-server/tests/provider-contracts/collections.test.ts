@@ -13,10 +13,9 @@ const reference = {
 const entry = { ...reference, name: "Sample", description: "Fixture", blocCount: 1, hasTheme: false };
 const context = {
     requestId: "00000000-0000-4000-8000-000000000001",
+    contractVersion: "1.0.0",
     siteId: "default",
-    installationId: "official",
-    origin: "page" as const,
-    actorKind: "administrator" as const,
+    providerId: "ulvia.official",
 };
 
 test("collection catalogue stages only the exact repository release", async () => {

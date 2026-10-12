@@ -56,6 +56,9 @@ separate. See the [implemented domain workflows](../../../../src/providers/workf
 - `providerId` identifies the provider; `account.id` is its stable, bounded,
   opaque business-space identifier for the presented credentials. Rotating a
   key must not unexpectedly change this identity. Labels are display-only.
+- `instanceId` is the provider-owned opaque audience for live invocation tokens.
+  It must identify the exact runtime instance and remain stable across token
+  rotation; it is neither a CMS site ID nor an installation ID.
 - Two sites can share `account.id`. They still have distinct installation IDs
   and token references, and may have distinct gateway grants.
 - A report declares exact contract versions and digests with `ready`,

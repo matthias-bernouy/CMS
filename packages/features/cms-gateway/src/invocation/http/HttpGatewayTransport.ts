@@ -12,15 +12,18 @@ import { readBounded } from "cms-gateway/invocation/http/readBounded";
 import { withAbort } from "cms-gateway/invocation/http/withAbort";
 
 export interface GatewayHttpExchange extends PreparedHttpInvocation {
-    readonly contractId?: string;
     readonly requestId: string;
-    readonly installationId: string;
     readonly providerTokenRef: string;
-    readonly invocationOrigin: GatewayTransportRequest["invocationOrigin"];
-    readonly actorKind: GatewayTransportRequest["actorKind"];
-    readonly providerInstallationId?: string;
-    readonly providerSubjectId?: string;
-    readonly siteId: string;
+    readonly authentication:
+        | { readonly kind: "provider-control" }
+        | {
+              readonly kind: "capability";
+              readonly instanceId: string;
+              readonly contractId: string;
+              readonly contractVersion: string;
+              readonly capabilityId: string;
+              readonly subjectId?: string;
+          };
     readonly idempotencyKey?: string;
     readonly signal: AbortSignal;
     readonly accept?: string;
@@ -72,15 +75,16 @@ export class HttpGatewayTransport implements GatewayTransport {
         );
         const exchange: GatewayHttpExchange = {
             ...prepared,
-            contractId: request.release.contractId,
             requestId: request.requestId,
-            installationId: request.installationId,
             providerTokenRef: request.providerTokenRef,
-            invocationOrigin: request.invocationOrigin,
-            actorKind: request.actorKind,
-            siteId: request.siteId,
-            ...(request.providerInstallationId ? { providerInstallationId: request.providerInstallationId } : {}),
-            ...(request.providerSubjectId ? { providerSubjectId: request.providerSubjectId } : {}),
+            authentication: {
+                kind: "capability",
+                instanceId: request.instanceId,
+                contractId: request.release.contractId,
+                contractVersion: request.release.version,
+                capabilityId: request.capability.id,
+                ...(request.subjectId ? { subjectId: request.subjectId } : {}),
+            },
             ...(request.idempotencyKey ? { idempotencyKey: request.idempotencyKey } : {}),
             accept:
                 request.binding.response.kind === "operation-handle"

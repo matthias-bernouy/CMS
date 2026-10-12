@@ -163,6 +163,22 @@ describe("runtime env validation", () => {
             ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
             ULVIA_PROVIDER_TOKEN: "opaque-ulvia-provider-token",
         });
+        for (const token of [
+            " opaque-ulvia-provider-token",
+            "opaque-ulvia-provider-token ",
+            "opaque-ulvia-provider-tokén",
+        ]) {
+            expect(() =>
+                readRuntimeEnv({
+                    ...validEnv(),
+                    CMS_GATEWAY_SITE_ID: "default",
+                    CMS_REPOSITORY_URL: "http://127.0.0.1:5102",
+                    ULVIA_PROVIDER_PORT: "5103",
+                    ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
+                    ULVIA_PROVIDER_TOKEN: token,
+                }),
+            ).toThrow("ULVIA_PROVIDER_TOKEN is invalid");
+        }
         expect(() =>
             readRuntimeEnv({
                 ...validEnv(),

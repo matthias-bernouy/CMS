@@ -53,8 +53,7 @@ export interface GatewayRouteResolver {
 
 export interface GatewayTransportRequest {
     readonly requestId: string;
-    readonly siteId: string;
-    readonly installationId: string;
+    readonly instanceId: string;
     readonly endpoint: string;
     readonly providerTokenRef: string;
     readonly release: ContractRelease;
@@ -62,11 +61,8 @@ export interface GatewayTransportRequest {
     readonly binding: CompiledHttpBinding;
     readonly input: Readonly<Record<string, unknown>>;
     readonly binaryBody?: GatewayBinaryBody;
-    readonly invocationOrigin: GatewayOrigin;
-    readonly actorKind: GatewayActor["kind"];
-    /** Verified source installation for provider-origin calls. */
-    readonly providerInstallationId?: string;
-    readonly providerSubjectId?: string;
+    /** Provider-scoped opaque user identity, included only when the capability requires one. */
+    readonly subjectId?: string;
     readonly idempotencyKey?: string;
 }
 

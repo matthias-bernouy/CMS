@@ -52,20 +52,10 @@ export async function actorSubject(
     gateway: UlviaProviderGateway,
     context: ProviderCapabilityInvocationContext,
 ): Promise<string> {
-    if (!context.providerSubjectId) {
+    if (!context.subjectId) {
         throw new ProviderCapabilityDispatchError("ACTOR_UNAVAILABLE", 403);
     }
-    const installation = await gateway.installations.get({
-        siteId: gateway.siteId,
-        installationId: context.installationId,
-    });
-    if (!installation) {
-        throw new ProviderCapabilityDispatchError("ACTOR_UNAVAILABLE", 403);
-    }
-    const sub = await gateway.identities.resolve(
-        { providerId: installation.installation.providerId },
-        context.providerSubjectId,
-    );
+    const sub = await gateway.identities.resolve({ providerId: context.providerId }, context.subjectId);
     if (!sub) {
         throw new ProviderCapabilityDispatchError("ACTOR_UNAVAILABLE", 403);
     }

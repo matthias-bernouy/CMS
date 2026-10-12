@@ -63,4 +63,7 @@ test("production gateway derives Page access from capability access", async () =
     expect(await access.authorize({ kind: "user", subjectId: "user-1" }, publicCapability, route, "page")).toBe(true);
     expect(await access.authorize({ kind: "user", subjectId: "user-1" }, privateCapability, route, "page")).toBe(true);
     expect(await access.authorize({ kind: "user", subjectId: "user-1" }, adminCapability, route, "page")).toBe(false);
+    expect(
+        await access.authorize({ kind: "administrator", subjectId: "oidc:member-1" }, adminCapability, route, "page"),
+    ).toBe(false);
 });

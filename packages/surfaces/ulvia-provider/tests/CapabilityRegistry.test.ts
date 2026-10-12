@@ -4,10 +4,9 @@ import { DefaultProviderCapabilityDispatcher } from "../src";
 
 const context = {
     requestId: "00000000-0000-4000-8000-000000000001",
+    contractVersion: "1.0.0",
     siteId: "site-a",
-    installationId: "install-a",
-    origin: "page" as const,
-    actorKind: "administrator" as const,
+    providerId: "ulvia.official",
 };
 
 test("the provider dispatcher seals an exact capability matrix", async () => {

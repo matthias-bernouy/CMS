@@ -8,6 +8,7 @@ import {
     type RuntimeEnvSource,
 } from "./runtimeEnvParsing";
 import { parseSelectionSiteId } from "@bernouy/cms-repository/providers/selections";
+import { assertProviderConnectionToken } from "@bernouy/cms-repository/providers/installations";
 import { parseRuntimeKekConfig, type RuntimeKekConfig } from "./runtimeEnvKek";
 
 export { parsePort } from "./runtimeEnvParsing";
@@ -139,8 +140,10 @@ function parseUlviaProviderConfig(
     if (ULVIA_PROVIDER_PORT === kernelPort) {
         throw new Error("ULVIA_PROVIDER_PORT and KERNEL_PORT must be distinct");
     }
-    const token = source.ULVIA_PROVIDER_TOKEN!.trim();
-    if (token.length < 24 || token.length > 512 || /[\r\n]/u.test(token)) {
+    const token = source.ULVIA_PROVIDER_TOKEN!;
+    try {
+        assertProviderConnectionToken(token);
+    } catch {
         throw new Error("ULVIA_PROVIDER_TOKEN is invalid");
     }
     return {

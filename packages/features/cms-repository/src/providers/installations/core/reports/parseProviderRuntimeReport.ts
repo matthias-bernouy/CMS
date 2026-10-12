@@ -23,7 +23,7 @@ export function parseProviderRuntimeReport(
     return parseInstallationDocument(value, limits, (record) => {
         rejectUnknownKeys(
             record,
-            ["protocol", "providerId", "account", "buildVersion", "manifest", "implementations"],
+            ["protocol", "providerId", "instanceId", "account", "buildVersion", "manifest", "implementations"],
             "$",
         );
         if (record.protocol !== "ulvia-provider/v1") {
@@ -47,6 +47,7 @@ export function parseProviderRuntimeReport(
         return {
             protocol: "ulvia-provider/v1",
             providerId: parseIdentifier(record.providerId, "$.providerId", 96),
+            instanceId: parseOpaqueId(record.instanceId, "$.instanceId"),
             account: {
                 id: parseOpaqueId(account.id, "$.account.id"),
                 label: expectString(account.label, "$.account.label", 128),

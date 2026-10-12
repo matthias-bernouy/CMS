@@ -1,6 +1,7 @@
 {
     "protocol": "ulvia-provider/v1",
     "providerId": "ulvia.example",
+    "instanceId": "instance:SHOP_42.prod",
     "account": { "id": "account:SHOP_42.prod", "label": "Main shop" },
     "buildVersion": "1.4.2",
     "manifest": {

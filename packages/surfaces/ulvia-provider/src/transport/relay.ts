@@ -1,6 +1,7 @@
 import { validateSchemaValue } from "@bernouy/cms-repository/contracts/schema";
 import { parseCapabilityOperationHandle } from "@bernouy/cms-repository/contracts/protocol";
 import type { CapabilityDefinition } from "@bernouy/cms-repository/contracts";
+import type { ProviderInvocationClaims } from "@bernouy/cms-gateway/protocol";
 import { RequestBodyTooLargeError } from "@bernouy/http-runner";
 import {
     ProviderCapabilityDispatchError,
@@ -15,12 +16,17 @@ import type { ProviderRoute } from "./routes";
 export function createProviderContractRelay(
     routes: readonly ProviderRoute[],
     dispatcher: ProviderCapabilityDispatcher,
-): (request: Request) => Promise<Response | null> {
-    return async (request) => {
+    scope: { readonly siteId: string; readonly providerId: string },
+): (request: Request, claims: ProviderInvocationClaims) => Promise<Response | null> {
+    return async (request, claims) => {
         const url = new URL(request.url);
-        const requestedContract = request.headers.get("x-ulvia-contract-id");
         const selected = routes
-            .filter((route) => route.contractId === requestedContract)
+            .filter(
+                (route) =>
+                    route.contractId === claims.contractId &&
+                    route.contractVersion === claims.contractVersion &&
+                    route.capability.id === claims.capabilityId,
+            )
             .map((route) => ({ route, parameters: route.match(request.method, url.pathname) }))
             .find(({ parameters }) => parameters !== null);
         if (!selected?.parameters) {
@@ -34,7 +40,7 @@ export function createProviderContractRelay(
             input = decoded.input;
             validateProviderInput(capability, input, Boolean(decoded.binaryBody));
             context = {
-                ...providerInvocationContext(request),
+                ...providerInvocationContext(request, claims, scope),
                 ...(decoded.binaryBody ? { binaryBody: decoded.binaryBody } : {}),
             };
             validateIdempotencyContext(capability, context);

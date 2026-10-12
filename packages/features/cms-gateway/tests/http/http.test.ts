@@ -146,17 +146,14 @@ test("HTTP target construction never exposes provider credential references", as
     const capability = route.release.admission.release.capabilities[0]!;
     const binding = route.release.admission.bindings[0]!.binding;
     const prepared = buildHttpInvocation({
-        requestId: "request-1",
-        siteId: "site-a",
-        installationId: "install-a",
+        requestId: "00000000-0000-4000-8000-000000000001",
+        instanceId: "instance:account-a",
         endpoint: "https://provider.example.com",
         providerTokenRef: "${PROVIDER_TOKEN}",
         release: route.release.admission.release,
         capability,
         binding,
         input: { term: "a b" },
-        invocationOrigin: "system",
-        actorKind: "anonymous",
     });
     expect(prepared.pathAndQuery).toBe("/v1/items?term=a%20b");
     expect(JSON.stringify(prepared)).not.toContain("PROVIDER_TOKEN");

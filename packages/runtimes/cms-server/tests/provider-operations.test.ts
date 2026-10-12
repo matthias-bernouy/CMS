@@ -5,11 +5,10 @@ import { registerJobCapabilities } from "@bernouy/ulvia-provider/capabilities";
 
 const context: ProviderCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
+    contractVersion: "1.0.0",
     siteId: "default",
-    installationId: "official",
-    origin: "page",
-    actorKind: "administrator",
-    providerSubjectId: "00000000-0000-4000-8000-000000000002",
+    providerId: "ulvia.official",
+    subjectId: "00000000-0000-4000-8000-000000000002",
     idempotencyKey: "migration-1",
 };
 
@@ -31,6 +30,16 @@ test("Provider operations deduplicate the same input and reject a changed replay
     await expect(
         executor.enqueue("ulvia.cms.collections", "apply", { target: "3.0.0" }, context),
     ).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT", status: 409 });
+
+    const nextRelease = await executor.enqueue(
+        "ulvia.cms.collections",
+        "apply",
+        { target: "3.0.0" },
+        { ...context, contractVersion: "2.0.0" },
+    );
+    expect(nextRelease).not.toEqual(first);
+    await expectTerminal(store, nextRelease.operationId, "succeeded");
+    expect(calls).toBe(2);
 });
 
 test("Provider operation recovery reclaims an expired lease and records failures", async () => {

@@ -41,21 +41,6 @@ export function createProductionGatewayAccess(
         const credential = await credentials.getByEmail(administratorEmail);
         return credential ? `local:${credential.sub}` : null;
     };
-    const authorize: CapabilityGatewayOptions["authorize"] = async (actor, capability, route, origin) =>
-        (origin === "provider" &&
-            actor.kind === "provider" &&
-            (await providerMayCall(
-                actor.installationId,
-                route.selection.version,
-                capability.id,
-                route.selection.contractId,
-                route.installation.installation.id,
-            ))) ||
-        (origin === "page" &&
-            (capability.access === "public" ||
-                (capability.access === "authenticated" && (actor.kind === "user" || actor.kind === "administrator")) ||
-                (capability.access === "admin" && actor.kind === "administrator")));
-
     const providerMayCall = async (
         installationId: string,
         targetVersion: string,
@@ -108,12 +93,29 @@ export function createProductionGatewayAccess(
         return Number(usage?.count) <= grant.maxCallsPerMinute;
     };
 
-    const isAdministrator = async (subject: Subject): Promise<boolean> => {
+    const isAdministratorId = async (subjectId: string): Promise<boolean> => {
         return (
-            subject.identifier === (await bootstrap()) ||
-            Boolean(await grants.findOne({ sub: subject.identifier, enabled: { $ne: false } }))
+            subjectId === (await bootstrap()) ||
+            Boolean(await grants.findOne({ sub: subjectId, enabled: { $ne: false } }))
         );
     };
+    const isAdministrator = async (subject: Subject): Promise<boolean> => isAdministratorId(subject.identifier);
+    const authorize: CapabilityGatewayOptions["authorize"] = async (actor, capability, route, origin) =>
+        (origin === "provider" &&
+            actor.kind === "provider" &&
+            (await providerMayCall(
+                actor.installationId,
+                route.selection.version,
+                capability.id,
+                route.selection.contractId,
+                route.installation.installation.id,
+            ))) ||
+        (origin === "page" &&
+            (capability.access === "public" ||
+                (capability.access === "authenticated" && (actor.kind === "user" || actor.kind === "administrator")) ||
+                (capability.access === "admin" &&
+                    actor.kind === "administrator" &&
+                    (await isAdministratorId(actor.subjectId)))));
 
     const administrators = {
         async canRevoke(sub: string): Promise<boolean> {

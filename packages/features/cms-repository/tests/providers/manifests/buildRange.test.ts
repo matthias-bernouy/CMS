@@ -59,6 +59,7 @@ describe("provider build range admission", () => {
             {
                 protocol: "ulvia-provider/v1",
                 providerId: admission.manifest.providerId,
+                instanceId: "instance:shop",
                 account: { id: "shop", label: "Shop" },
                 buildVersion,
                 manifest: { version: admission.manifest.version, digest: admission.digest },

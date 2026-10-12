@@ -13,12 +13,19 @@ export class MongoProviderOperationStore implements ProviderOperationStore {
     async init(): Promise<void> {
         await Promise.all([
             this.#records.createIndex(
-                { siteId: 1, contractId: 1, capabilityId: 1, idempotencyKey: 1 },
-                { unique: true, name: "provider_operation_idempotency" },
+                { siteId: 1, contractId: 1, "context.contractVersion": 1, capabilityId: 1, idempotencyKey: 1 },
+                { unique: true, name: "provider_operation_release_idempotency" },
             ),
             this.#records.createIndex({ status: 1, "lease.expiresAt": 1 }, { name: "provider_operation_recovery" }),
             this.#records.createIndex({ siteId: 1, _id: -1 }, { name: "provider_operation_site_history" }),
         ]);
+        try {
+            await this.#records.dropIndex("provider_operation_idempotency");
+        } catch (error) {
+            if ((error as { code?: number }).code !== 27) {
+                throw error;
+            }
+        }
     }
 
     async createOrGet(record: ProviderOperationRecord): Promise<{ record: ProviderOperationRecord; created: boolean }> {
@@ -33,6 +40,7 @@ export class MongoProviderOperationStore implements ProviderOperationStore {
             const existing = await this.#records.findOne({
                 siteId: record.siteId,
                 contractId: record.contractId,
+                "context.contractVersion": record.context.contractVersion,
                 capabilityId: record.capabilityId,
                 idempotencyKey: record.idempotencyKey,
             });

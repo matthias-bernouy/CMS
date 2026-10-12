@@ -1,17 +1,12 @@
 import type { ContractRelease } from "@bernouy/cms-repository/contracts";
 
-type ProviderCapabilityActorKind = "anonymous" | "user" | "administrator" | "provider" | "system";
-type ProviderCapabilityOrigin = "page" | "provider" | "system" | "conformance";
-
-/** Trusted transport metadata. It is never populated from authored capability input. */
+/** Verified invocation metadata. Site and provider identity are injected by the runtime. */
 export interface ProviderCapabilityInvocationContext {
     readonly requestId: string;
+    readonly contractVersion: string;
     readonly siteId: string;
-    readonly installationId: string;
-    readonly origin: ProviderCapabilityOrigin;
-    readonly actorKind: ProviderCapabilityActorKind;
-    readonly providerInstallationId?: string;
-    readonly providerSubjectId?: string;
+    readonly providerId: string;
+    readonly subjectId?: string;
     readonly idempotencyKey?: string;
     readonly binaryBody?: {
         readonly stream: ReadableStream<Uint8Array>;

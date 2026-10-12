@@ -106,11 +106,8 @@ export class ProviderObservationRefresher {
             method: PROVIDER_CONNECTION_PROTOCOL.report.method,
             headers: {},
             requestId: crypto.randomUUID(),
-            siteId: this.siteId,
-            installationId: installation.id,
             providerTokenRef: installation.providerTokenRef,
-            invocationOrigin: "system",
-            actorKind: "system",
+            authentication: { kind: "provider-control" },
             signal: AbortSignal.timeout(REPORT_TIMEOUT_MS),
             accept: "application/json",
         });

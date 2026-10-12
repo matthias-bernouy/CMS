@@ -16,10 +16,12 @@ its own credentials. Ulvia Provider implements the official `ulvia.cms.*`
 capabilities by adapting feature-owned operations. The site Kernel owns Page rendering,
 authentication, administration, assets and capability transport.
 
-Provider credentials remain opaque to CmsCore. A provider may associate a
-Bearer token with an account or instance by any private mechanism. CmsCore does
-not standardize those token claims or copy the provider's private instance
-registry into collection inputs or execution plans.
+Provider credentials remain opaque durable secrets to CmsCore. A provider may
+associate one with an account or instance by any private mechanism. For live
+calls, the gateway derives a standard short-lived HMAC Bearer granting one exact
+contract release capability for the opaque `instanceId` declared by the runtime
+report. CmsCore does not copy provider-private routing data into collection
+inputs or execution plans.
 
 ## Current Composition
 

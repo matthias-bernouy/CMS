@@ -14,6 +14,8 @@ export interface ProviderRuntimeImplementation {
 export interface ProviderRuntimeReport {
     readonly protocol: "ulvia-provider/v1";
     readonly providerId: string;
+    /** Provider-owned opaque audience identifying this exact runtime instance. */
+    readonly instanceId: string;
     readonly account: {
         readonly id: string;
         readonly label: string;

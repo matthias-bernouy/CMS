@@ -11,6 +11,7 @@ import {
 } from "@bernouy/ulvia-provider";
 import { admitContractReleaseJson } from "@bernouy/cms-repository/contracts";
 import type { ProviderManifestDigest } from "@bernouy/cms-repository/providers";
+import { signProviderInvocationToken } from "@bernouy/cms-gateway/protocol";
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest } from "@bernouy/http-runner/testing";
 import { UlviaProvider } from "../src";
@@ -42,17 +43,18 @@ test("mounts and dispatches every official CMS contract release", async () => {
     const runner = new BunRunner();
     new UlviaProvider(runner, {
         token: TOKEN,
+        siteId: "site-a",
         contracts: contracts.map(({ release }) => release),
         dispatcher,
         report: report(contracts),
     });
     const server = serveForTest(runner);
     try {
-        for (const [contractId, capabilityId, method, path, body] of ROUTES) {
+        for (const [index, [contractId, capabilityId, method, path, body]] of ROUTES.entries()) {
+            const requestId = `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`;
             const response = await server.request(method, path, {
                 headers: {
-                    ...requestHeaders(),
-                    "x-ulvia-contract-id": contractId,
+                    ...requestHeaders(requestId, contractId, capabilityId),
                     "content-type": "application/json",
                 },
                 body: JSON.stringify(body),
@@ -86,6 +88,7 @@ function report(contracts: Awaited<ReturnType<typeof loadOfficialContract>>[]) {
     return {
         protocol: "ulvia-provider/v1" as const,
         providerId: "ulvia.official",
+        instanceId: "instance:contract-matrix",
         account: { id: "contract-matrix", label: "Official contract matrix" },
         buildVersion: "0.1.0",
         manifest: { version: "0.1.0", digest: digest("a") },
@@ -106,14 +109,21 @@ async function loadOfficialContract(contractId: string) {
     return admitContractReleaseJson(await readFile(path));
 }
 
-function requestHeaders(): Record<string, string> {
+function requestHeaders(requestId: string, contractId: string, capabilityId: string): Record<string, string> {
+    const issuedAt = Math.floor(Date.now() / 1_000);
+    const invocation = signProviderInvocationToken(TOKEN, {
+        version: 1,
+        requestId,
+        instanceId: "instance:contract-matrix",
+        contractId,
+        contractVersion: "1.0.0",
+        capabilityId,
+        issuedAt,
+        expiresAt: issuedAt + 30,
+    });
     return {
-        Authorization: `Bearer ${TOKEN}`,
-        "x-ulvia-request-id": "00000000-0000-4000-8000-000000000001",
-        "x-ulvia-site-id": "default",
-        "x-ulvia-installation-id": "local-ulvia-provider",
-        "x-ulvia-origin": "page",
-        "x-ulvia-actor-kind": "administrator",
+        Authorization: `Bearer ${invocation}`,
+        "x-ulvia-request-id": requestId,
     };
 }
 

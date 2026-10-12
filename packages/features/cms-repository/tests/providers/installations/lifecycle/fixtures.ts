@@ -40,6 +40,7 @@ export async function installationWorkflow(options: ProviderInstallationWorkflow
     const report = {
         protocol: "ulvia-provider/v1",
         providerId: candidate.providerId,
+        instanceId: "instance:shared",
         account: { id: candidate.accountId, label: "Shared account" },
         buildVersion: "1.4.0",
         manifest: { version: admission.manifest.version, digest: admission.digest },

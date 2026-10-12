@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
     UlviaProvider,
     CollectionSources,
@@ -82,6 +83,7 @@ export async function startLocalUlviaProvider(options: {
     const report: ProviderRuntimeReport = {
         protocol: "ulvia-provider/v1",
         providerId: published.admission.manifest.providerId,
+        instanceId: localProviderInstanceId(gateway.siteId),
         account: { id: "local-dev", label: "Local Ulvia Provider" },
         buildVersion: published.admission.manifest.version,
         manifest: { version: published.admission.manifest.version, digest: published.admission.digest },
@@ -94,7 +96,13 @@ export async function startLocalUlviaProvider(options: {
     };
     const hostname = endpoint.hostname === "[::1]" ? "::1" : endpoint.hostname;
     const runner = new BunRunner({ hostname });
-    new UlviaProvider(runner, { token: env.ULVIA_PROVIDER_TOKEN, report, contracts, dispatcher });
+    new UlviaProvider(runner, {
+        token: env.ULVIA_PROVIDER_TOKEN,
+        siteId: gateway.siteId,
+        report,
+        contracts,
+        dispatcher,
+    });
     runner.start(env.ULVIA_PROVIDER_PORT);
     return {
         async stop() {
@@ -105,4 +113,9 @@ export async function startLocalUlviaProvider(options: {
 
 function defaultPort(protocol: string): string {
     return protocol === "https:" ? "443" : "80";
+}
+
+function localProviderInstanceId(siteId: string): string {
+    const digest = createHash("sha256").update(`ulvia-local-provider-instance-v1\0${siteId}`).digest("base64url");
+    return `local:${digest}`;
 }

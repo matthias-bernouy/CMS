@@ -1,5 +1,9 @@
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
+import {
+    assertProviderInvocationSecret,
+    signProviderInvocationToken,
+} from "cms-gateway/protocol/ProviderInvocationToken";
 import type { GatewayHttpExchange, GatewayHttpNetwork } from "cms-gateway/invocation/http/HttpGatewayTransport";
 import { withAbort } from "cms-gateway/invocation/http/withAbort";
 import {
@@ -35,6 +39,12 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
         if (!request.pathAndQuery.startsWith("/") || url.origin !== origin.origin || url.hash) {
             throw new TypeError("provider request path is invalid");
         }
+        if (
+            request.authentication.kind === "provider-control" &&
+            (request.method !== "GET" || request.pathAndQuery !== "/ulvia/report")
+        ) {
+            throw new TypeError("provider control credential is restricted to the runtime report");
+        }
         assertSafeApplicationHeaders(request);
         const hostname = origin.hostname.replace(/^\[|\]$/g, "");
         const addresses = await withAbort(
@@ -43,14 +53,31 @@ export class NodeGatewayHttpNetwork implements GatewayHttpNetwork {
         );
         const address = selectGatewayAddress(origin, addresses);
         const token = await withAbort(() => this.#options.resolveToken(request.providerTokenRef), request.signal);
-        if (!/^[\x21-\x7e]{1,4096}$/.test(token)) {
+        try {
+            assertProviderInvocationSecret(token);
+        } catch {
             throw new TypeError("provider credential is unavailable");
         }
+        const nowSeconds = Math.floor(Date.now() / 1_000);
+        const authorization =
+            request.authentication.kind === "provider-control"
+                ? token
+                : signProviderInvocationToken(token, {
+                      version: 1,
+                      requestId: request.requestId,
+                      instanceId: request.authentication.instanceId,
+                      contractId: request.authentication.contractId,
+                      contractVersion: request.authentication.contractVersion,
+                      capabilityId: request.authentication.capabilityId,
+                      ...(request.authentication.subjectId ? { subjectId: request.authentication.subjectId } : {}),
+                      issuedAt: nowSeconds,
+                      expiresAt: nowSeconds + 30,
+                  });
         return (this.#options.sendPinned ?? sendPinnedHttpRequest)({
             url,
             address,
             method: request.method,
-            headers: trustedHeaders(request, token),
+            headers: trustedHeaders(request, authorization),
             ...(request.body === undefined ? {} : { body: request.body }),
             signal: request.signal,
         });
@@ -66,21 +93,12 @@ async function defaultResolveAddresses(hostname: string): Promise<readonly Resol
     return resolved.filter((entry): entry is ResolvedAddress => entry.family === 4 || entry.family === 6);
 }
 
-function trustedHeaders(request: GatewayHttpExchange, token: string): Record<string, string> {
+function trustedHeaders(request: GatewayHttpExchange, authorization: string): Record<string, string> {
     return {
         ...request.headers,
         accept: request.accept ?? "application/json",
-        authorization: `Bearer ${token}`,
+        authorization: `Bearer ${authorization}`,
         "x-ulvia-request-id": request.requestId,
-        ...(request.contractId ? { "x-ulvia-contract-id": request.contractId } : {}),
-        "x-ulvia-origin": request.invocationOrigin,
-        "x-ulvia-actor-kind": request.actorKind,
-        "x-ulvia-site-id": request.siteId,
-        "x-ulvia-installation-id": request.installationId,
-        ...(request.providerInstallationId
-            ? { "x-ulvia-provider-installation-id": request.providerInstallationId }
-            : {}),
-        ...(request.providerSubjectId ? { "x-ulvia-subject-id": request.providerSubjectId } : {}),
         ...(request.idempotencyKey ? { "idempotency-key": request.idempotencyKey } : {}),
         ...(request.contentLength === undefined ? {} : { "content-length": String(request.contentLength) }),
     };

@@ -84,6 +84,7 @@ export function report(admission: AdmittedProviderManifest) {
     return {
         protocol: "ulvia-provider/v1",
         providerId: admission.manifest.providerId,
+        instanceId: "instance:shared-shop",
         account: { id: accountId, label: "Shared shop" },
         buildVersion: "1.0.0",
         manifest: { version: admission.manifest.version, digest: admission.digest },

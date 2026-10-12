@@ -7,11 +7,9 @@ import { registerFileCapabilities } from "@bernouy/ulvia-provider/capabilities";
 
 const context: ProviderCapabilityInvocationContext = {
     requestId: "00000000-0000-4000-8000-000000000001",
+    contractVersion: "1.0.0",
     siteId: "site-a",
-    installationId: "install-a",
-    origin: "provider",
-    actorKind: "provider",
-    providerInstallationId: "provider-a",
+    providerId: "ulvia.official",
 };
 
 test("file capabilities expose the namespace, upload and immutable file lifecycle", async () => {
@@ -27,7 +25,7 @@ test("file capabilities expose the namespace, upload and immutable file lifecycl
         namespaceId: namespace.namespaceId,
         namespaceKey: namespace.namespaceKey,
     });
-    expect(details.createdBy).toEqual({ kind: "provider", id: "provider-a" });
+    expect(details.createdBy).toEqual({ kind: "system", id: "cms-gateway" });
 
     const secondary = await invoke<{ keyId: string; namespaceKey: string }>(dispatcher, "namespace.keys.create", {
         namespaceId: namespace.namespaceId,

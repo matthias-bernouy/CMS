@@ -8,13 +8,8 @@ export function registerFileCapabilities(dispatcher: ProviderCapabilityRegistry,
                 name: requiredText(input.name),
                 defaultVisibility: input.defaultVisibility === "public" ? "public" : "private",
                 createdBy: {
-                    kind:
-                        context.actorKind === "provider"
-                            ? "provider"
-                            : context.actorKind === "system"
-                              ? "system"
-                              : "administrator",
-                    id: context.providerInstallationId ?? context.providerSubjectId ?? "cms-host",
+                    kind: context.subjectId ? "administrator" : "system",
+                    id: context.subjectId ?? "cms-gateway",
                 },
             }),
         ),

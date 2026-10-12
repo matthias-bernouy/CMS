@@ -8,3 +8,10 @@ export const PROVIDER_CONNECTION_PROTOCOL = deepFreeze({
     registration: { method: "PUT", path: "/ulvia/connections/{installationId}" },
     disconnect: { method: "DELETE", path: "/ulvia/connections/{installationId}" },
 } as const);
+
+/** Shared bearer-secret syntax for provider control and signed capability invocations. */
+export function assertProviderConnectionToken(token: string): void {
+    if (typeof token !== "string" || !/^[\x21-\x7e]{24,512}$/u.test(token)) {
+        throw new TypeError("Invalid provider token");
+    }
+}
