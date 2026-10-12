@@ -44,3 +44,9 @@ export type {
     UpdateProviderInstanceRecord,
 } from "./instances/types";
 export { PROVIDER_INSTANCE_STATUSES } from "./instances/types";
+export { OFFICIAL_INSTANCE_PROFILE, type OfficialInstanceProfile } from "./instances/officialProfile";
+export {
+    OfficialInstanceProvisioner,
+    type OfficialInstanceProvisioningTarget,
+    type ProviderInstanceAdministrator,
+} from "./instances/provisioning";
