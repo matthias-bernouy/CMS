@@ -3,7 +3,7 @@ import type { CmsRepository } from "@bernouy/cms-content/kernel";
 import type { Runner } from "@bernouy/http-runner";
 import type { KernelCmsConfig } from "cms-kernel/interfaces/KernelCmsConfig";
 
-type KernelCmsOptions = Pick<KernelCmsConfig, "publicAuth" | "collections" | "capabilityGateway">;
+type KernelCmsOptions = Pick<KernelCmsConfig, "publicAuth" | "collections">;
 
 export type AdminAuthBackends = NonNullable<KernelCmsConfig["authBackends"]>;
 

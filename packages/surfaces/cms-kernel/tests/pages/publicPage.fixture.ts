@@ -10,6 +10,7 @@ import { InMemoryAuthentication } from "@bernouy/cms-auth";
 import type { PublicPageProvider } from "@bernouy/cms-kernel";
 import type { BlobStore } from "@bernouy/blob-store";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
+import { PageExecutionService, type PageExecutionAuthority } from "@bernouy/cms-gateway/execution";
 import { type CacheEntry, TtlCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
 import type { KernelCmsConfig } from "cms-kernel/interfaces/KernelCmsConfig";
@@ -88,6 +89,15 @@ export function mountPublicPages(options: HarnessOptions = {}) {
               ...options.gateway,
           } as GatewayInvoker)
         : undefined;
+    const pageExecution = invoker
+        ? new PageExecutionService({
+              siteId: "site-test",
+              content: repository,
+              invoker,
+              authority: unusedAuthority,
+              resolveCapability: async () => ({ access: "public", version: "1.0.0" }),
+          })
+        : undefined;
     const kernel = new KernelCms({
         runner,
         repository:
@@ -103,9 +113,9 @@ export function mountPublicPages(options: HarnessOptions = {}) {
                   capabilityGateway: {
                       siteId: "site-test",
                       invoker,
-                      resolveCapabilityAccess: async () => "public" as const,
                       isAdministrator: async () => false,
                   },
+                  pageExecution,
               }
             : {}),
         sitemapStore: options.sitemapStore,
@@ -117,6 +127,15 @@ export function mountPublicPages(options: HarnessOptions = {}) {
         storedLookups,
     };
 }
+
+const unusedAuthority: PageExecutionAuthority = {
+    activate: async () => {
+        throw new Error("not used by the public Page fixture");
+    },
+    authorize: async () => {
+        throw new Error("not used by the public Page fixture");
+    },
+};
 
 function renderable(page: TPage) {
     return {

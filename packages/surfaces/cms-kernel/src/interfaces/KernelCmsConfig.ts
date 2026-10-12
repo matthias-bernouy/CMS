@@ -8,8 +8,8 @@ import type {
 import type { OidcAuthHandlers, PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
 import type { CmsRepository } from "@bernouy/cms-content/kernel";
 import type { CollectionMigrationService, CollectionStore } from "@bernouy/cms-repository/collections/installations";
-import type { GatewayCapabilityCatalogue, GatewayInvoker } from "@bernouy/cms-gateway";
-import type { PageExecutionAuthority } from "@bernouy/cms-gateway/execution";
+import type { GatewayInvoker } from "@bernouy/cms-gateway";
+import type { PageExecutionService } from "@bernouy/cms-gateway/execution";
 import type { Cache, Runner } from "@bernouy/http-runner";
 import type { PublicPageProvider } from "./PublicPageProvider";
 
@@ -39,14 +39,9 @@ export type KernelCmsConfig = {
     capabilityGateway?: {
         readonly siteId: string;
         readonly invoker: GatewayInvoker;
-        readonly resolveCapabilityAccess?: (
-            contractId: string,
-            capabilityId: string,
-        ) => Promise<"public" | "authenticated" | "admin" | null>;
-        readonly catalogue?: GatewayCapabilityCatalogue;
-        readonly pageExecutions?: PageExecutionAuthority;
         readonly isAdministrator: (subject: Subject) => Promise<boolean>;
         readonly authenticateProvider?: (token: string) => Promise<string | null>;
     };
+    pageExecution?: PageExecutionService;
     sitemapStore?: BlobStore;
 };

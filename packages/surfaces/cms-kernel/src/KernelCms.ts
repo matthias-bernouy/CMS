@@ -21,7 +21,6 @@ export default class KernelCms extends KernelCmsContext {
                 configuration: {
                     publicAuth: this.publicAuth,
                     collections: this.collections,
-                    capabilityGateway: this.capabilityGateway,
                 },
                 identityProviders: this.identityProviders,
             },

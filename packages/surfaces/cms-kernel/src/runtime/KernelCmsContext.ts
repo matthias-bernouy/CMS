@@ -2,6 +2,7 @@ import type { BlobStore } from "@bernouy/blob-store";
 import type { Authentication } from "@bernouy/cms-auth";
 import type { CmsRepository } from "@bernouy/cms-content/kernel";
 import { createContentReader, type ContentReader } from "@bernouy/cms-content/rendering";
+import type { PageExecutionService } from "@bernouy/cms-gateway/execution";
 import { BunRunner, type Cache, type Runner, TtlCache } from "@bernouy/http-runner";
 import type { KernelCmsConfig } from "cms-kernel/interfaces/KernelCmsConfig";
 import type { PublicPageProvider } from "cms-kernel/interfaces/PublicPageProvider";
@@ -49,6 +50,10 @@ export class KernelCmsContext {
 
     get capabilityGateway(): KernelCmsConfig["capabilityGateway"] {
         return this.config.capabilityGateway;
+    }
+
+    get pageExecution(): PageExecutionService | undefined {
+        return this.config.pageExecution;
     }
 
     get authentication(): Authentication {

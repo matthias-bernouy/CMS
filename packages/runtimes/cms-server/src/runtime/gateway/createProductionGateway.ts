@@ -1,5 +1,5 @@
 import type { LocalCredentialStore } from "@bernouy/cms-auth";
-import { CapabilityGateway, CatalogueGatewayRouteResolver, SelectedGatewayCatalogue } from "@bernouy/cms-gateway";
+import { CapabilityGateway, CatalogueGatewayRouteResolver } from "@bernouy/cms-gateway";
 import { MongoGatewayCommandAuditStore } from "@bernouy/cms-gateway/audit/mongo";
 import { ProviderIdentityAliases } from "@bernouy/cms-gateway/identity";
 import { HttpGatewayTransport } from "@bernouy/cms-gateway/http";
@@ -43,7 +43,6 @@ export async function createProductionGateway(
     const selections = new MongoContractSelectionStore(db, dependencies);
     const routes = new CatalogueGatewayRouteResolver({ selections, installations, releases, manifests });
     const pageExecutions = new DefaultPageExecutionAuthority(selections, routes, new MongoPageExecutionGrantStore(db));
-    const catalogue = new SelectedGatewayCatalogue(selections, routes);
     const resolveSecret = createSecretResolver(secrets);
     const network = new NodeGatewayHttpNetwork({
         resolveToken: async (reference) => {
@@ -83,9 +82,12 @@ export async function createProductionGateway(
         }
         return null;
     };
-    const resolveCapabilityAccess = async (contractId: string, capabilityId: string) => {
+    const resolvePageCapability = async (contractId: string, capabilityId: string) => {
         const route = await routes.resolve(siteId, contractId);
-        return route?.release.admission.release.capabilities.find(({ id }) => id === capabilityId)?.access ?? null;
+        const capability = route?.release.admission.release.capabilities.find(({ id }) => id === capabilityId);
+        return route && capability
+            ? { access: capability.access, version: route.release.admission.release.version }
+            : null;
     };
     return {
         siteId,
@@ -95,12 +97,11 @@ export async function createProductionGateway(
         selections,
         invoker,
         access: invoker,
-        catalogue,
         pageExecutions,
         commandAudit,
         observations,
         authenticateProvider,
-        resolveCapabilityAccess,
+        resolvePageCapability,
         identities,
         isAdministrator: access.isAdministrator,
         administrators: access.administrators,

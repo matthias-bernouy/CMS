@@ -1,4 +1,6 @@
 import type { RuntimeEnv } from "../runtimeEnv";
+import { createContentReader } from "@bernouy/cms-content/rendering";
+import { PageExecutionService } from "@bernouy/cms-gateway/execution";
 import type { ProductionAuthentication } from "./auth";
 import type { ProductionGateway } from "./gateway/createProductionGateway";
 import { PRODUCTION_KERNEL_RUNTIME, type ProductionKernelRuntime } from "./kernelRuntime";
@@ -28,6 +30,15 @@ export async function mountProductionKernel(
         passwordResetUrl: env.CMS_AUTH_PASSWORD_RESET_URL,
         allowSignup: false,
     });
+    const pageExecution = gateway
+        ? new PageExecutionService({
+              siteId: gateway.siteId,
+              content: createContentReader(core.repo),
+              invoker: gateway.invoker,
+              authority: gateway.pageExecutions,
+              resolveCapability: gateway.resolvePageCapability,
+          })
+        : undefined;
     const kernel = new runtime.Kernel({
         runner,
         repository: core.repo,
@@ -46,12 +57,10 @@ export async function mountProductionKernel(
                   capabilityGateway: {
                       siteId: gateway.siteId,
                       invoker: gateway.invoker,
-                      catalogue: gateway.catalogue,
-                      pageExecutions: gateway.pageExecutions,
                       isAdministrator: gateway.isAdministrator,
                       authenticateProvider: gateway.authenticateProvider,
-                      resolveCapabilityAccess: gateway.resolveCapabilityAccess,
                   },
+                  pageExecution,
               }
             : {}),
         sitemapStore: core.sitemapStore,

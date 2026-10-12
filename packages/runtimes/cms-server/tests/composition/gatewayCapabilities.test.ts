@@ -22,19 +22,26 @@ test("production composition supplies one generic capability gateway", async () 
     } as unknown as ProductionKernelRuntime;
     const gateway = {
         siteId: "site:main",
-        invoker: { invoke: async () => ({ kind: "success" }) },
+        invoker: {
+            resolveHttp: async () => ({ capability: { id: "read" }, binding: {}, pathValues: {} }),
+            invoke: async () => ({ kind: "success" }),
+        },
         access: {},
-        catalogue: {},
-        pageExecutions: {},
+        pageExecutions: {
+            activate: async () => ({}),
+            authorize: async () => ({}),
+        },
         isAdministrator: async () => true,
-        resolveCapabilityAccess: async () => "public" as const,
+        resolvePageCapability: async () => ({ access: "public" as const, version: "1.0.0" }),
     };
 
     const mounted = await mountProductionKernel({ ...kernelMountFixtures(), gateway } as never, runtime);
     try {
         const configured = captured?.capabilityGateway as Record<string, unknown>;
         expect(configured.invoker).toBe(gateway.invoker);
-        expect(configured.pageExecutions).toBe(gateway.pageExecutions);
+        expect(captured?.pageExecution).toBeDefined();
+        expect(configured).not.toHaveProperty("pageExecutions");
+        expect(configured).not.toHaveProperty("resolveCapabilityAccess");
         expect(configured).not.toHaveProperty("images");
     } finally {
         await mounted.stop();

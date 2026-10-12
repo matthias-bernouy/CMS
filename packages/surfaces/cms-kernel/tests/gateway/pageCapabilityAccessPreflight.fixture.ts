@@ -1,7 +1,14 @@
 import KernelCms from "cms-kernel/KernelCms";
 import type { Authentication } from "@bernouy/cms-auth";
-import { CMS_CACHE_KEYS, type CmsRepository, type TPage, type TSystem } from "@bernouy/cms-content";
+import {
+    createContentReader,
+    CMS_CACHE_KEYS,
+    type CmsRepository,
+    type TPage,
+    type TSystem,
+} from "@bernouy/cms-content";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
+import { PageExecutionService, type PageExecutionAuthority } from "@bernouy/cms-gateway/execution";
 import { compress, InMemoryCache, type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
 
 const system: TSystem = {
@@ -82,31 +89,48 @@ export async function mountPage(options: {
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/component.js"), compress("component", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.STYLE, compress("body{}", "text/css"));
+    const repository = pageRepository(options.content, options.systemPages);
+    const pageExecution = new PageExecutionService({
+        siteId: "site-a",
+        content: createContentReader(repository),
+        invoker: shopInvoker,
+        authority: unusedAuthority,
+        resolveCapability: async (contractId, capabilityId) => {
+            if (contractId !== "shop") {
+                return null;
+            }
+            if (capabilityId === "restricted") {
+                return { access: "admin", version: "1.0.0" };
+            }
+            if (capabilityId === "myProducts" || capabilityId === "createOrder") {
+                return { access: "authenticated", version: "1.0.0" };
+            }
+            return capabilityId === "listProducts" ? { access: "public", version: "1.0.0" } : null;
+        },
+    });
     new KernelCms({
         runner,
-        repository: pageRepository(options.content, options.systemPages),
+        repository,
         cache,
         capabilityGateway: {
             siteId: "site-a",
             invoker: shopInvoker,
-            resolveCapabilityAccess: async (contractId, capabilityId) => {
-                if (contractId !== "shop") {
-                    return null;
-                }
-                if (capabilityId === "restricted") {
-                    return "admin";
-                }
-                if (capabilityId === "myProducts" || capabilityId === "createOrder") {
-                    return "authenticated";
-                }
-                return capabilityId === "listProducts" ? "public" : null;
-            },
             isAdministrator: async () => false,
         },
+        pageExecution,
         authentication: options.auth ?? authSubject(null),
     });
     return { handler: runner.defaultHandler("GET", "/") };
 }
+
+const unusedAuthority: PageExecutionAuthority = {
+    activate: async () => {
+        throw new Error("not used by the Page access fixture");
+    },
+    authorize: async () => {
+        throw new Error("not used by the Page access fixture");
+    },
+};
 
 const shopInvoker: GatewayInvoker = {
     resolveHttp: async ({ path }) => ({

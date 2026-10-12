@@ -1,7 +1,7 @@
 import type { PageCapabilityRequirement, TPage } from "@bernouy/cms-content/rendering";
 import type { GatewayActor } from "@bernouy/cms-gateway";
+import { pageRequiresCapabilityExecution } from "@bernouy/cms-gateway/execution";
 import type KernelCms from "cms-kernel/KernelCms";
-import { resolvePageCapabilityRequirements } from "cms-kernel/core/pages/access/pageCapabilityRequirements";
 import { renderRef } from "cms-kernel/core/pages/renderRef";
 
 export type PageAccess = "public" | "authenticated" | "admin";
@@ -14,14 +14,11 @@ export async function preflightPageGatewayAccess(
     kernel: KernelCms,
     declaredRequirements?: readonly PageCapabilityRequirement[],
 ): Promise<PageAccessDecision> {
-    const requirements = await resolvePageCapabilityRequirements(
-        page.content,
-        kernel,
-        new URL(request.url),
-        declaredRequirements,
-    );
-    const gateway = kernel.capabilityGateway;
-    if (!requirements || (requirements.length > 0 && !gateway?.resolveCapabilityAccess)) {
+    const execution = kernel.pageExecution;
+    if (!execution) {
+        if (!pageRequiresCapabilityExecution({ page, requirements: declaredRequirements ?? [] })) {
+            return { access: "public" };
+        }
         return {
             access: "public",
             response: new Response("Service unavailable", {
@@ -30,27 +27,21 @@ export async function preflightPageGatewayAccess(
             }),
         };
     }
-    const resolveCapabilityAccess = gateway?.resolveCapabilityAccess;
-    if (!resolveCapabilityAccess) {
-        return { access: "public" };
-    }
-    let required: "public" | "authenticated" | "admin" = "public";
-    for (const target of requirements) {
-        const access = await resolveCapabilityAccess(target.contractId, target.capabilityId).catch(() => null);
-        if (!access) {
-            return {
-                access: "public",
-                response: new Response("Service unavailable", {
-                    status: 503,
-                    headers: { "cache-control": "no-store" },
-                }),
-            };
-        }
-        if (access === "admin") {
-            required = "admin";
-        } else if (access === "authenticated" && required === "public") {
-            required = "authenticated";
-        }
+    const required = await execution
+        .requiredAccess(
+            { page, requirements: declaredRequirements ?? [] },
+            new URL(request.url),
+            `${kernel.cmsPathPrefix}/call/`,
+        )
+        .catch(() => null);
+    if (!required) {
+        return {
+            access: "public",
+            response: new Response("Service unavailable", {
+                status: 503,
+                headers: { "cache-control": "no-store" },
+            }),
+        };
     }
     if (required === "public") {
         return { access: required };

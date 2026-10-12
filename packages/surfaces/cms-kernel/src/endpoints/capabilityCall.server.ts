@@ -5,7 +5,6 @@ import {
     handleGatewayHttpCall,
 } from "@bernouy/cms-gateway/http/handlers";
 import type KernelCms from "cms-kernel/KernelCms";
-import { authorizePageCall } from "cms-kernel/core/pages/access/pageExecution";
 
 export async function handleCapabilityCall(request: Request, kernel: KernelCms): Promise<Response> {
     const configured = kernel.capabilityGateway;
@@ -27,7 +26,15 @@ export async function handleCapabilityCall(request: Request, kernel: KernelCms):
     let execution;
     try {
         const identifiers = await capabilityIdentifiers(request, kernel);
-        execution = await authorizePageCall(request, kernel, identifiers.contractId, identifiers.capabilityId);
+        if (!kernel.pageExecution) {
+            throw new GatewayError("not_authorized", "Page execution is unavailable");
+        }
+        execution = await kernel.pageExecution.authorizeCall(
+            request,
+            kernel.runner.basePath,
+            identifiers.contractId,
+            identifiers.capabilityId,
+        );
     } catch (error) {
         const code = error instanceof GatewayError ? error.code : "internal_error";
         const status = code === "not_authorized" ? 403 : code === "not_selected" ? 404 : 503;
