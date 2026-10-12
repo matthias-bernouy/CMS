@@ -23,10 +23,10 @@ export async function serveBlocSet(
 ) {
     const url = new URL(req.url);
     const tagsParam = url.searchParams.get("tags");
-    const revision = Number(url.searchParams.get("r") ?? "0");
+    const revision = url.searchParams.get("r");
 
-    if (!tagsParam || !Number.isSafeInteger(revision) || revision < 0) {
-        return Response.error();
+    if (!tagsParam || !validRevision(revision)) {
+        return new Response(null, { status: 400 });
     }
 
     const tags = tagsParam
@@ -34,7 +34,7 @@ export async function serveBlocSet(
         .map((t) => t.trim())
         .filter(Boolean);
     if (tags.length === 0) {
-        return Response.error();
+        return new Response(null, { status: 400 });
     }
 
     return cachedResponseAsync(
@@ -49,5 +49,9 @@ export async function serveBlocSet(
                 },
             }),
         publicAssetCacheControl(req),
-    ).catch(() => Response.error());
+    ).catch(() => new Response(null, { status: 500 }));
+}
+
+function validRevision(value: string | null): value is string {
+    return value !== null && value.length > 0 && value.length <= 8_192 && !/[\x00-\x1f\x7f]/u.test(value);
 }

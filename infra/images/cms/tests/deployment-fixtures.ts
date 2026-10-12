@@ -47,8 +47,10 @@ export const requiredCmsEnvironment = {
     CMS_IMAGE: "registry.example.test/bernouy/cms:2026.07.15",
     CMS_SESSION_SECRET: "c".repeat(64),
     CMS_KEK_HEX: "d".repeat(64),
-    CMS_ADMIN_PASSWORD: "deployment-test-password",
-    ULVIA_PROVIDER_TOKEN: "e".repeat(48),
+    ULVIA_PROVIDER_MONGO_URL: "mongodb://provider:password@mongo:27017/ulvia_provider_control?authSource=admin",
+    ULVIA_PROVIDER_OPERATOR_TOKEN: "e".repeat(48),
+    ULVIA_INSTANCE_TOKEN: "g".repeat(48),
+    ULVIA_INSTANCE_STORAGE_KEY: "instance-00000000-0000-4000-8000-000000000001",
     ULVIA_REPOSITORY_TOKEN: "f".repeat(48),
 };
 

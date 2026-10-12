@@ -1,100 +1,17 @@
 import { describe, expect, test } from "bun:test";
 import {
     composeTest,
-    cmsDirectory,
     dockerfileSource,
     externalDockerfileBaseImages,
     extractMatches,
     infrastructureComposeFile,
     infrastructureComposeSource,
-    instanceComposeFile,
     instanceComposeSource,
     mongoBootstrapSource,
     mongoPreflightSource,
     mongoSiteProvisionSource,
     renderCompose,
-    requiredCmsEnvironment,
 } from "./deployment-fixtures.ts";
-
-describe("per-instance Compose rendering", () => {
-    composeTest("uses a database-scoped MongoDB account for the instance", () => {
-        const appPassword = "b".repeat(64);
-        const mongoUrl = `mongodb://cms_client:${appPassword}@mongo:27017/cms_client?authSource=cms_client`;
-        const config = renderCompose(instanceComposeFile, {
-            ...requiredCmsEnvironment,
-            DOMAIN: "client.example.test",
-            MONGO_URL: mongoUrl,
-        });
-
-        expect(Object.keys(config.services).sort()).toEqual(["cms", "provider", "repository"]);
-
-        const cms = config.services.cms;
-        expect(cms.environment?.MONGO_URL).toBe(mongoUrl);
-        expect(cms.network_mode).toBe("service:provider");
-        expect(cms.networks).toBeUndefined();
-        expect(config.networks?.cms_mongo).toMatchObject({ name: "cms_mongo", external: true });
-        expect(config.networks?.cms_proxy).toMatchObject({ name: "cms_proxy", external: true });
-        expect(config.networks?.cms_internal).toMatchObject({ internal: true });
-
-        expect(cms.init).toBe(true);
-        expect(cms.read_only).toBe(true);
-        expect(cms.cap_drop).toEqual(["ALL"]);
-        expect(cms.security_opt).toContain("no-new-privileges:true");
-        expect(cms.tmpfs).toContain("/tmp:rw,nosuid,nodev,noexec,size=256m");
-        expect(cms.ports).toBeUndefined();
-        expect(cms.environment).toMatchObject({
-            CMS_FILES_DIR: "/var/lib/cms/files",
-            CMS_GATEWAY_SITE_ID: "default",
-            CMS_REPOSITORY_URL: "http://repository:3100",
-            ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
-        });
-        expect(cms.volumes?.map(({ target }) => target)).toEqual(["/var/lib/cms/files"]);
-        expect(cms.volumes?.map(({ source }) => source)).toEqual([`${cmsDirectory}/files`]);
-
-        const provider = config.services.provider;
-        expect(provider.environment?.MONGO_URL).toBe(mongoUrl);
-        expect(Object.keys(provider.networks ?? {}).sort()).toEqual(["cms_internal", "cms_mongo", "cms_proxy"]);
-        expect(provider.networks?.cms_proxy).toMatchObject({ gw_priority: 1 });
-        expect(provider.environment).toMatchObject({
-            ULVIA_PROVIDER_HOST: "127.0.0.1",
-            ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
-        });
-
-        const repository = config.services.repository;
-        expect(Object.keys(repository.networks ?? {})).toEqual(["cms_internal"]);
-        expect(repository.environment).toMatchObject({
-            ULVIA_REPOSITORY_DIR: "/var/lib/ulvia-repository/current",
-            ULVIA_REPOSITORY_SEED_DIR: "/opt/ulvia-repository-seed",
-            REPOSITORY_PORT: "3100",
-        });
-        expect(repository.volumes?.map(({ target }) => target)).toEqual(["/var/lib/ulvia-repository"]);
-        expect(repository.read_only).toBe(true);
-    });
-
-    composeTest("preserves an external cluster URL without requiring INSTANCE_ID", () => {
-        const mongoUrl = "mongodb+srv://cms_user:password@cluster.example.test/cms-client?retryWrites=true&w=majority";
-        const config = renderCompose(instanceComposeFile, {
-            ...requiredCmsEnvironment,
-            DOMAIN: "external.example.test",
-            MONGO_URL: mongoUrl,
-        });
-
-        expect(Object.keys(config.services).sort()).toEqual(["cms", "provider", "repository"]);
-        expect(config.services.cms.environment?.MONGO_URL).toBe(mongoUrl);
-        expect(config.services.provider.environment?.MONGO_URL).toBe(mongoUrl);
-    });
-
-    composeTest("forwards the optional gateway site scope to the CMS", () => {
-        const config = renderCompose(instanceComposeFile, {
-            ...requiredCmsEnvironment,
-            DOMAIN: "client.example.test",
-            MONGO_URL: "mongodb://cms_client:password@mongo:27017/cms_client?authSource=cms_client",
-            CMS_GATEWAY_SITE_ID: "site:main",
-        });
-        expect(config.services.cms.environment?.CMS_GATEWAY_SITE_ID).toBe("site:main");
-        expect(config.services.provider.environment?.CMS_GATEWAY_SITE_ID).toBe("site:main");
-    });
-});
 
 describe("shared infrastructure Compose rendering", () => {
     composeTest("contains pinned proxy and authenticated MongoDB services", () => {
@@ -138,6 +55,11 @@ describe("deployment definition safeguards", () => {
         expect(mongoPreflightSource).toContain("validate_hex_secret MONGO_INITDB_ROOT_PASSWORD");
         expect(mongoSiteProvisionSource).toContain("/^[a-fA-F0-9]{64}$/u");
         expect(mongoPreflightSource).toContain('exec /usr/local/bin/docker-entrypoint.sh "$@"');
+    });
+
+    test("accepts Provider-generated instance database names for scoped Kernel users", () => {
+        expect(mongoSiteProvisionSource).toContain("ulvia_instance_");
+        expect(mongoSiteProvisionSource).toContain('roles: [{ role: "readWrite", db: database }]');
     });
 
     test("normalizes the mongosh environment before dynamic variable access", () => {

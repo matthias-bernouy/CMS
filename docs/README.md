@@ -20,11 +20,9 @@ work is identified explicitly; a domain API does not imply a mounted product flo
   the administrator's golden path and its executable completion gate.
 - [Deferred platform work](TODO.md): explicit trust assumptions and work that
   must be completed before those assumptions change.
-- [Local provider and CMS initialization](todo/local-provider-initialization.md):
-  offline first-run, bootstrap collection, administration Page, restart and recovery
-  flow for the official local provider; durable local discovery and the bundled
-  Docker repository/Ulvia Provider/Kernel bootstrap are implemented, while provider-owned
-  instance lifecycle mutations remain planned.
+- [Provider instance initialization](todo/local-provider-initialization.md):
+  operator API, exact official profile, isolated instance connection, local
+  first run, restart and production composition boundaries.
 
 ## Providers And Collections
 

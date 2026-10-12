@@ -98,14 +98,16 @@ dispatched command whose response cannot be accepted can return an unknown
 outcome with a request ID; consumers must reconcile it before retrying.
 Keyed commands still require durable idempotency before activation.
 
-When `CMS_GATEWAY_SITE_ID` is configured, the private instance runtime constructs Mongo release,
-manifest, installation and selection stores, a selected catalogue, network and
-secret adapters and observation refresh. The current host policy
-allows public, authenticated or administrator access as declared by each
-capability. Page execution plans restrict collection-owned and site-owned Pages
-to the capabilities required by their exact document and transitive Blocs. The
-Kernel activates the revisioned plan from the same-origin referring Page before each
-call and sends only its immutable execution pin to the gateway.
+Ulvia Provider resolves every opaque instance Bearer against its durable
+registry before opening that instance's stores and gateway. The Kernel receives
+only its Provider URL and instance token; it does not receive the Provider
+operator secret or select an instance through a caller-supplied site header.
+The current host policy allows public, authenticated or administrator access as
+declared by each capability. Page execution plans restrict collection-owned and
+site-owned Pages to the capabilities required by their exact document and
+transitive Blocs. The Kernel activates the revisioned plan from the same-origin
+referring Page before each call and sends only its immutable execution pin to
+the gateway.
 
 The local Ulvia Provider transport is contract-neutral: `@bernouy/ulvia-provider` derives
 its HTTP routes from admitted contract bindings. The same package contains thin

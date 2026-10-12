@@ -20,14 +20,16 @@ Run the root `compose.yml` once per CMS instance. Each instance has:
 - one private official-repository container seeded by the same immutable image;
 - one persistent official-repository volume;
 - one local `./files` directory for original files and generated variants;
-- one MongoDB database named by convention `cms_<instance>`.
+- one Provider-generated MongoDB database and a database-scoped Kernel account
+  per instance.
 
-Each local CMS instance connects with a distinct user created inside its own
-database and granted only `readWrite` on that database. The root account stays
-in the infrastructure environment and is never passed to instance containers. A
-compromised CMS credential therefore cannot authenticate to another site's
-database, although every site still shares the MongoDB process and its
-availability boundary.
+Each Kernel connects with a distinct user created inside its own database and
+granted only `readWrite` on that database. The Provider separately holds its
+control-plane credential because it owns instance provisioning. The root
+account stays in the infrastructure environment and is never passed to either
+runtime. A compromised Kernel credential therefore cannot authenticate to
+another site's database, although every site still shares the MongoDB process
+and its availability boundary.
 
 Two stable Docker networks connect the stacks:
 
@@ -199,12 +201,22 @@ networks required by each instance Compose project.
 
 ## Start a CMS instance
 
-Use a lowercase, stable instance slug and keep its database name exactly
-`cms_<instance>`. Never reuse one database for two sites.
+Instance startup has two phases. First start only the repository and Provider,
+then create the instance through the authenticated operator API. The response
+contains the opaque Kernel token and generated storage key. Provision a
+database-scoped Kernel account for the derived
+`ulvia_<storageKey-with-underscores>` database, write those three values to the
+protected `.env`, and only then start the Kernel.
 
-The following example creates `/opt/cms-sites/client`. It reads the shared
-MongoDB password without echoing it and writes all generated secrets directly
-to a mode-0600 `.env`; it does not put passwords in the shell command history.
+`ULVIA_PROVIDER_MONGO_URL` belongs to a dedicated Provider control-plane
+account able to read and write the Provider registry and its isolated instance
+databases. It is never passed to the Kernel. How that account is created is an
+infrastructure concern: use the database operator or managed-service control
+plane. Never substitute the MongoDB root account.
+
+The following first-phase configuration is sufficient to start the repository
+and Provider. Keep the administrator password outside `.env`; it is sent once
+in the operator request.
 
 ```bash
 sudo install -d -m 0750 /opt/cms-sites/client
@@ -215,64 +227,62 @@ cp /opt/cms-deploy/compose.yml ./compose.yml
 cp /opt/cms-deploy/.env.example ./.env.example
 
 DOMAIN=client.example.com
-INSTANCE=client
-DATABASE="cms_${INSTANCE}"
 CMS_IMAGE=bernouy/cms:2026.07.15-1
-MONGO_SITE_USERNAME=cms_client
-MONGO_SITE_PASSWORD="$(openssl rand -hex 32)"
-
-# Provision or validate the bounded account while authenticating as root. The
-# password is passed through the exec environment, not interpolated into JS.
-(
-    set -a
-    . /opt/cms-deploy/infra/.env
-    set +a
-    export MONGO_SITE_DATABASE="${DATABASE}" MONGO_SITE_USERNAME MONGO_SITE_PASSWORD
-    cd /opt/cms-deploy/infra
-    docker compose exec -T \
-        -e MONGO_SITE_DATABASE -e MONGO_SITE_USERNAME -e MONGO_SITE_PASSWORD \
-        mongo mongosh --quiet \
-        --username "${MONGO_ROOT_USERNAME}" \
-        --password "${MONGO_ROOT_PASSWORD}" \
-        --authenticationDatabase admin \
-        /opt/cms-mongo/provision-site-user.js
-)
 
 umask 077
 CMS_ADMIN_PASSWORD="$(openssl rand -hex 24)"
-ULVIA_PROVIDER_TOKEN="$(openssl rand -hex 32)"
+ULVIA_PROVIDER_OPERATOR_TOKEN="$(openssl rand -hex 32)"
 ULVIA_REPOSITORY_TOKEN="$(openssl rand -hex 32)"
 {
     printf 'DOMAIN=%s\n' "${DOMAIN}"
     printf 'CMS_IMAGE=%s\n' "${CMS_IMAGE}"
-    printf 'MONGO_URL=mongodb://%s:%s@mongo:27017/%s?authSource=%s\n' \
-        "${MONGO_SITE_USERNAME}" "${MONGO_SITE_PASSWORD}" "${DATABASE}" "${DATABASE}"
+    printf 'ULVIA_PROVIDER_MONGO_URL=%s\n' 'REPLACE_WITH_PROVIDER_CONTROL_URL'
     printf 'CMS_SESSION_SECRET=%s\n' "$(openssl rand -hex 32)"
     printf 'CMS_KEK_HEX=%s\n' "$(openssl rand -hex 32)"
-    printf 'CMS_ADMIN_EMAIL=%s\n' "admin@${DOMAIN}"
-    printf 'CMS_ADMIN_PASSWORD=%s\n' "${CMS_ADMIN_PASSWORD}"
-    printf 'ULVIA_PROVIDER_TOKEN=%s\n' "${ULVIA_PROVIDER_TOKEN}"
+    printf 'ULVIA_PROVIDER_OPERATOR_TOKEN=%s\n' "${ULVIA_PROVIDER_OPERATOR_TOKEN}"
     printf 'ULVIA_REPOSITORY_TOKEN=%s\n' "${ULVIA_REPOSITORY_TOKEN}"
 } > .env
 
 chmod 600 .env
-unset MONGO_SITE_PASSWORD CMS_ADMIN_PASSWORD ULVIA_PROVIDER_TOKEN ULVIA_REPOSITORY_TOKEN
 
 sudo install -d -o 1000 -g 1000 -m 0750 files
 
 docker compose config --quiet
-docker compose up -d --wait
+docker compose up -d --wait repository provider
+```
+
+Call `POST /ulvia/operator/instances` with the operator Bearer, an
+`Idempotency-Key`, the public Kernel URL and the initial administrator email and
+password. The endpoint is intentionally private; when using this Compose file,
+invoke it from the Provider container's network namespace. Save the returned
+`token` and `instance.storageKey` in the deployment secret manager.
+
+Next, derive the database name by replacing hyphens in the storage key with
+underscores and prefixing it with `ulvia_`. Provision the Kernel account with
+`infra/mongo/provision-site-user.js`, then add these values to `.env`:
+
+```dotenv
+MONGO_URL=mongodb://cms_client:REPLACE_WITH_SITE_PASSWORD@mongo:27017/ulvia_instance_...?authSource=ulvia_instance_...
+ULVIA_INSTANCE_TOKEN=REPLACE_WITH_OPERATOR_RESPONSE_TOKEN
+ULVIA_INSTANCE_STORAGE_KEY=instance-REPLACE_WITH_OPERATOR_RESPONSE_KEY
+```
+
+Finally start the Kernel:
+
+```bash
+docker compose config --quiet
+docker compose up -d --wait cms
 docker compose ps
 ```
 
 The image runs with UID/GID 1000. The bind-mounted `files` directory must be
-writable by that identity. Keep the generated initial admin password
-in a password manager before removing it from any operator workflow; it remains
-in the protected `.env` because Compose requires the variable on every start,
-but the runtime uses it only when bootstrapping a missing local credential.
+writable by that identity. Store the initial administrator password in a
+password manager and remove it from the shell after the operator request. The
+Kernel never reads administrator bootstrap credentials from its environment.
 
-Check both public URLs and an authenticated file upload after deployment. TLS
-issuance may take a short time after a domain is first attached.
+Check public Pages, administration sign-in and an authenticated file upload
+after deployment. TLS issuance may take a short time after a domain is first
+attached.
 
 ### External MongoDB
 
@@ -314,25 +324,26 @@ environment file.
 | `MONGO_URL` | Authenticated URL whose path selects this instance's database. |
 | `CMS_SESSION_SECRET` | Session-cookie signing secret; use at least 32 random bytes. |
 | `CMS_KEK_HEX` | Exactly 32 random bytes encoded as 64 hexadecimal characters. |
-| `CMS_ADMIN_PASSWORD` | Initial local admin password; only used if the credential does not yet exist. |
-| `ULVIA_PROVIDER_TOKEN` | Private credential used to connect the bundled Ulvia Provider. |
+| `ULVIA_PROVIDER_MONGO_URL` | Provider control-plane MongoDB URL; never passed to the Kernel. |
+| `ULVIA_PROVIDER_OPERATOR_TOKEN` | Private Bearer accepted only by the Provider operator API. |
+| `ULVIA_INSTANCE_TOKEN` | Opaque instance connection returned by the operator API. |
+| `ULVIA_INSTANCE_STORAGE_KEY` | Isolated storage key returned by the operator API. |
 | `ULVIA_REPOSITORY_TOKEN` | Mutation-signing secret for this instance's private official repository. |
 
 ### Optional CMS and authentication settings
 
 | Variable | Default or purpose |
 | --- | --- |
-| `CMS_ADMIN_EMAIL` | Defaults to `admin@${DOMAIN}`. |
-| `CMS_GATEWAY_SITE_ID` | Stable opaque site ID; defaults to `default`. It scopes the bundled Ulvia Provider, collection installation and gateway selections. |
 | `CMS_AUTH_SITE_NAME` | Public authentication site name; defaults to `CMS`. |
 | `CMS_AUTH_EMAIL_COOLDOWN_SECONDS` | Email throttle interval; defaults to 300 seconds. |
 | `CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION` | Full rollback journals retained per site; defaults to 100. Purged journals keep a lightweight audit summary. |
 | `CMS_AUTH_EMAIL_VERIFICATION_URL` | Kernel email-verification URL. |
 | `CMS_AUTH_PASSWORD_RESET_URL` | Kernel password-reset URL. |
 
-Treat the MongoDB URL, session secret, KEK, Ulvia Provider token, repository
-token and any configured SMTP credentials as server-side secrets. Never expose
-them to browser code or commit them to the repository.
+Treat both MongoDB URLs, the session secret, KEK, Provider operator token,
+instance token, repository token and any configured SMTP credentials as
+server-side secrets. Never expose them to browser code or commit them to the
+repository.
 
 ## Backups
 
@@ -479,8 +490,8 @@ Other instance secrets have different semantics:
   existing sessions out.
 - Do not replace `CMS_KEK_HEX` directly. Existing DEKs must be re-wrapped first,
   or encrypted secrets and protected fields become unreadable.
-- Changing `CMS_ADMIN_PASSWORD` does not reset an existing admin credential; it
-  is bootstrap-only.
+- Administrator credentials are operator-request input, not runtime
+  environment. Changing a deployment `.env` cannot reset them.
 
 ## Migrate a legacy unauthenticated shared MongoDB volume
 

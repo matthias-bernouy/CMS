@@ -70,10 +70,10 @@ and serves admitted copies from a separate persistent volume.
 | --- | --- |
 | `@bernouy/ulvia-provider` | Authenticated provider report, binding-derived HTTP transport, cross-domain official capability adapters and durable asynchronous job execution for admitted `ulvia.cms.*` contracts. |
 | `@bernouy/cms-kernel` | HTTP mounting and Page presentation for site and contributed Pages, authentication and injected feature handlers. |
-| `@bernouy/cms-kernel-server` | Kernel environment, official-resource bootstrap and CMS Kernel listener. |
-| `@bernouy/ulvia-provider-server` | Official manifest admission, Provider adapter composition and Ulvia Provider listener. |
+| `@bernouy/cms-kernel-server` | One pre-provisioned instance's Kernel environment, persistence adapters and CMS Kernel listener. |
+| `@bernouy/ulvia-provider-server` | Durable instance registry and credentials, exact official-profile provisioning, Provider adapter composition, operator API and Ulvia Provider listener. |
 | `@bernouy/official-repository-server` | Production official repository startup with persistent staged publication and immutable reads. |
-| `@bernouy/ulvia-cli` | Persistent local CMS development stack backed by MongoDB. |
+| `@bernouy/ulvia-cli` | Persistent local repository/Provider/Kernel development stack, including idempotent instance provisioning. |
 
 See [workspace architecture](README.md) for dependency direction and
 [repository and gateway flows](../providers/README.md) for runtime wiring.

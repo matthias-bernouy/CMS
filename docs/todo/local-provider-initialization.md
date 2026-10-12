@@ -1,84 +1,88 @@
-# Local Provider And CMS Initialization
+# Provider Instance Initialization
 
-**Status (2026-10-12): local and Docker bootstrap operational.**
+**Status (2026-10-12): implemented for the local CLI and Provider API.**
 
-The development CLI seeds its persistent repository with the official
-contracts, provider manifest and collection. The production image carries the
-same pre-admitted snapshot. The CMS runtime then connects Ulvia Provider and
-installs or upgrades the official collection before the site Kernel starts.
-Provider-owned creation, update, stop, backup and restore operations remain
-future lifecycle work.
+Ulvia Provider owns instance creation and the exact official system profile.
+The Kernel no longer installs contracts, connects a provider, imports a
+collection or creates an administrator. It starts only after an instance is
+ready and receives that instance's opaque connection token.
 
 ## Responsibility Boundary
 
-An instance provider owns CMS instance lifecycle, private instance routing and
-its own credentials. Ulvia Provider implements the official `ulvia.cms.*`
-capabilities by adapting feature-owned operations. The site Kernel owns Page rendering,
-authentication, administration, assets and capability transport.
+Ulvia Provider owns:
 
-Provider credentials remain opaque durable secrets to CmsCore. A provider may
-associate one with an account or instance by any private mechanism. For live
-calls, the gateway derives a standard short-lived HMAC Bearer granting one exact
-contract release capability for the opaque `instanceId` declared by the runtime
-report. CmsCore does not copy provider-private routing data into collection
-inputs or execution plans.
+- its durable instance registry and encrypted instance credentials;
+- the exact official manifest, contracts and collection assigned to a new
+  instance;
+- idempotent provisioning and the initial administrator grant;
+- resolution of an instance token to the isolated instance context used by
+  provider calls.
 
-## Current Composition
+One Kernel serves one already-provisioned instance. It owns that instance's
+Page rendering, authentication, administration UI, assets and gateway
+transport. It knows neither the Provider operator secret nor another
+instance's identity or credentials.
 
-The local stack contains:
+## Local Flow
 
-```text
-official repository
-  -> exact contracts, provider manifest and collection release
-Ulvia Provider
-  -> provider-facing ulvia.cms.* capability implementation
-site Kernel
-  -> all local and collection Pages on one route registry
-persistent MongoDB, files and encrypted secrets
-```
+The development CLI performs this sequence:
 
-The CLI starts the repository, Ulvia Provider and Kernel as separate local HTTP applications.
-The production Compose stack uses separate Kernel and Provider processes plus
-one private repository service from the same immutable image. This proves offline bootstrap; it is not
-yet a general provider implementation capable of provisioning arbitrary CMS
-instances.
+1. Start the private official repository.
+2. Start Ulvia Provider with its durable control-plane database, files root,
+   encryption key and operator secret.
+3. Call `POST /ulvia/operator/instances` with the operator Bearer, a stable
+   idempotency key, Kernel URL and initial administrator credentials.
+4. Let the Provider create the instance record, generate its opaque token and
+   isolated storage key, then install the exact official profile.
+5. Persist the returned instance connection in the private local runtime
+   directory.
+6. Start the Kernel with only its instance database, files directory, Provider
+   URL and `ULVIA_INSTANCE_TOKEN`.
+7. Report readiness after the Kernel can authenticate and serve the installed
+   official administration Pages.
 
-## Fresh Installation Flow
+Repeating the command reuses the same idempotent instance. A restart reopens
+the persisted connection and durable stores without reinstalling a second
+instance.
 
-1. Start the private repository and make the verified bootstrap artifacts
-   readable.
-2. Initialize durable CMS stores and run adjacent data migrations.
-3. Start Ulvia Provider and expose its admitted contract bindings.
-4. Connect and select the official provider using the injected runtime
-   credential.
-5. Install or upgrade the official collection through the collection service.
-6. Reconcile every collection and site Page in the single site route registry.
-7. Mount the Kernel and derive each Page's access from its exact transitive
-   capability plan.
-8. Report readiness only after stores, routes, collection state, provider
-   selection and both HTTP applications are consistent.
+## Operator API
 
-The repository contains admitted immutable artifacts; runtime startup never
-reads the authored source folders. Repeating the sequence is idempotent.
+All endpoints require `Authorization: Bearer <ULVIA_PROVIDER_OPERATOR_TOKEN>`:
 
-## Administration Bootstrap
+- `GET /ulvia/operator/instances` lists instances;
+- `POST /ulvia/operator/instances` creates or resumes one instance and
+  requires an `Idempotency-Key` header;
+- `GET /ulvia/operator/instances/:instanceId` returns its lifecycle state;
+- `POST /ulvia/operator/instances/:instanceId/disable` disables its connection.
 
-Provider administration and CMS administration are separate authorities. The
-local composition creates the first CMS administrator from explicit deployment
-configuration. Rich CMS administration is then delivered by ordinary
-collection Pages. Those Pages use the same renderer and `/.cms/call` transport
-as every other Page and become administrative because their required
-capabilities require administrator access.
+Creation returns the instance record and the raw instance token. The registry
+stores only the token hash used for incoming connection authentication and an
+encrypted signing secret used for outgoing capability calls. The raw token is
+not a contract token and carries no claims; the Provider resolves it to the
+instance server-side.
 
-There is no `control` Page surface, separate administration route registry or
-second renderer. Login and fatal recovery documents remain Kernel-owned because
-they must work before an authored Page can be authorized and rendered.
+## Production Composition
 
-## Recovery
+The production image contains separate repository, Provider and Kernel
+processes. Deployment automation must provision in two phases:
 
-Restart reopens the durable stores, resumes interrupted collection migrations,
-reconciles Page routes and reactivates exact execution plans before readiness.
-An incompatible collection or unavailable required provider keeps affected
-writes unavailable instead of serving a mixed state. Provider lifecycle
-recovery for creating, restoring or replacing whole CMS instances is still
-outside the current `ulvia.cms.*` contracts.
+1. start the repository and Provider, then create the instance through the
+   operator API;
+2. use the returned storage key to provision a MongoDB account limited to the
+   instance database, then start the Kernel with that scoped `MONGO_URL`, the
+   storage key and the returned instance token.
+
+Ulvia Provider needs a control-plane MongoDB account capable of opening its
+registry and the isolated instance databases. That credential is never passed
+to the Kernel. The Provider does not currently create MongoDB users; external
+deployment automation must create the scoped Kernel account.
+
+## Recovery And Limits
+
+Provisioning records each completed step (`manifest`, `provider`, `contracts`,
+`collection`, `administrator`) so an idempotent retry can resume safely. A
+disabled instance rejects both report and contract traffic.
+
+Backup, restore, deletion, instance-token rotation and automatic MongoDB user
+provisioning remain explicit lifecycle work. They are not hidden inside Kernel
+startup.

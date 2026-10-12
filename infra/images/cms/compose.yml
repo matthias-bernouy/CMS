@@ -13,10 +13,15 @@
 # Required `.env` values (never commit that file):
 #   DOMAIN=client.example.com
 #   CMS_IMAGE=bernouy/cms:<immutable-version>
-#   MONGO_URL=mongodb://cms_client:<site-password>@mongo:27017/cms_client?authSource=cms_client
+#   ULVIA_PROVIDER_MONGO_URL=mongodb://provider_control:<password>@mongo:27017/ulvia_provider_control?authSource=admin
 #   CMS_SESSION_SECRET=$(openssl rand -hex 32)
 #   CMS_KEK_HEX=$(openssl rand -hex 32)
-#   CMS_ADMIN_PASSWORD=$(openssl rand -base64 18)
+#   ULVIA_PROVIDER_OPERATOR_TOKEN=$(openssl rand -hex 32)
+#
+# Add these after POST /ulvia/operator/instances and before starting `cms`:
+#   MONGO_URL=mongodb://cms_client:<site-password>@mongo:27017/ulvia_instance_<id>?authSource=ulvia_instance_<id>
+#   ULVIA_INSTANCE_TOKEN=<returned token>
+#   ULVIA_INSTANCE_STORAGE_KEY=<returned storageKey>
 #
 # `MONGO_URL` may instead target an external cluster. It remains explicit so
 # local shared-Mongo and managed-cluster deployments follow the same contract.
@@ -61,9 +66,7 @@ services:
         environment:
             MODE:                 PROD
             NODE_ENV:             production
-            KERNEL_PUBLIC_URL:    "https://${DOMAIN:?DOMAIN must be set}"
             CMS_FILES_DIR:        /var/lib/cms/files
-            CMS_GATEWAY_SITE_ID:  ${CMS_GATEWAY_SITE_ID:-default}
             CMS_REPOSITORY_URL:   http://repository:3100
             ULVIA_PROVIDER_PORT:            "5103"
             ULVIA_PROVIDER_HOST:            127.0.0.1
@@ -73,12 +76,10 @@ services:
             # stored in this file or included in the image.
             CMS_SESSION_SECRET:   ${CMS_SESSION_SECRET:?CMS_SESSION_SECRET must be set (32+ chars; openssl rand -hex 32)}
             CMS_KEK_HEX:          ${CMS_KEK_HEX:?CMS_KEK_HEX must be set (32 bytes hex = 64 chars; openssl rand -hex 32)}
-            CMS_ADMIN_EMAIL:      ${CMS_ADMIN_EMAIL:-admin@${DOMAIN}}
-            ULVIA_PROVIDER_TOKEN: ${ULVIA_PROVIDER_TOKEN:?ULVIA_PROVIDER_TOKEN must be set}
-            # Required for both the server-wide MongoDB service and an external
-            # cluster. Both the database path and credential are dedicated to
-            # this instance; the runtime must never receive the root account.
-            MONGO_URL: ${MONGO_URL:?MONGO_URL must be set to this instance's authenticated MongoDB database}
+            ULVIA_PROVIDER_OPERATOR_TOKEN: ${ULVIA_PROVIDER_OPERATOR_TOKEN:?ULVIA_PROVIDER_OPERATOR_TOKEN must be set}
+            # Control-plane account: it creates and opens isolated instance databases.
+            # The Kernel never receives this credential.
+            MONGO_URL: ${ULVIA_PROVIDER_MONGO_URL:?ULVIA_PROVIDER_MONGO_URL must be set}
 
             CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: "${CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION:-100}"
 
@@ -121,7 +122,7 @@ services:
                 - bun
                 - -e
                 - >-
-                    const response = await fetch("http://127.0.0.1:5103/ulvia/report", { headers: { authorization: "Bearer " + process.env.ULVIA_PROVIDER_TOKEN } });
+                    const response = await fetch("http://127.0.0.1:5103/ulvia/operator/instances", { headers: { authorization: "Bearer " + process.env.ULVIA_PROVIDER_OPERATOR_TOKEN } });
                     if (!response.ok) process.exit(1);
                     await response.body?.cancel();
             interval: 30s
@@ -142,17 +143,13 @@ services:
             KERNEL_PORT:          "3000"
             KERNEL_HOST:          0.0.0.0
             KERNEL_PUBLIC_URL:    "https://${DOMAIN:?DOMAIN must be set}"
-            CMS_FILES_DIR:        /var/lib/cms/files
-            CMS_GATEWAY_SITE_ID:  ${CMS_GATEWAY_SITE_ID:-default}
-            CMS_REPOSITORY_URL:   http://repository:3100
-            ULVIA_PROVIDER_PUBLIC_URL: http://127.0.0.1:5103
+            CMS_FILES_DIR:        /var/lib/cms/files/${ULVIA_INSTANCE_STORAGE_KEY:-unprovisioned}
+            ULVIA_PROVIDER_URL:   http://127.0.0.1:5103
 
             CMS_SESSION_SECRET:   ${CMS_SESSION_SECRET:?CMS_SESSION_SECRET must be set (32+ chars; openssl rand -hex 32)}
             CMS_KEK_HEX:          ${CMS_KEK_HEX:?CMS_KEK_HEX must be set (32 bytes hex = 64 chars; openssl rand -hex 32)}
-            CMS_ADMIN_EMAIL:      ${CMS_ADMIN_EMAIL:-admin@${DOMAIN}}
-            CMS_ADMIN_PASSWORD:   ${CMS_ADMIN_PASSWORD:?CMS_ADMIN_PASSWORD must be set}
-            ULVIA_PROVIDER_TOKEN: ${ULVIA_PROVIDER_TOKEN:?ULVIA_PROVIDER_TOKEN must be set}
-            MONGO_URL: ${MONGO_URL:?MONGO_URL must be set to this instance's authenticated MongoDB database}
+            ULVIA_INSTANCE_TOKEN: ${ULVIA_INSTANCE_TOKEN:-unprovisioned-instance-token-not-valid}
+            MONGO_URL: ${MONGO_URL:-mongodb://unprovisioned.invalid/unprovisioned}
 
             CMS_AUTH_SITE_NAME:                      ${CMS_AUTH_SITE_NAME:-CMS}
             CMS_AUTH_EMAIL_COOLDOWN_SECONDS:         "${CMS_AUTH_EMAIL_COOLDOWN_SECONDS:-300}"

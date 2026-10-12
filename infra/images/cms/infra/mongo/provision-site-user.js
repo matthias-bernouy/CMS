@@ -15,7 +15,11 @@ function requiredEnv(name, expression, description) {
     return value;
 }
 
-const database = requiredEnv("MONGO_SITE_DATABASE", /^cms_[a-z0-9_-]+$/u, "a cms_<instance> database name");
+const database = requiredEnv(
+    "MONGO_SITE_DATABASE",
+    /^(?:cms_[a-z0-9_-]+|ulvia_instance_[a-f0-9_]+)$/u,
+    "a legacy cms_<instance> or Provider-generated ulvia_instance_<uuid> database name",
+);
 const username = requiredEnv("MONGO_SITE_USERNAME", /^[A-Za-z0-9_-]+$/u, "a simple username");
 const password = requiredEnv("MONGO_SITE_PASSWORD", /^[a-fA-F0-9]{64}$/u, "a 64-character hexadecimal secret");
 const siteDb = db.getSiblingDB(database);
