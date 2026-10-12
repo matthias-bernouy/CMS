@@ -10,7 +10,8 @@ are supplied by a runtime. Page access is derived from the capabilities used by
 each Page and its transitive Blocs.
 
 Rendering is performed on demand, and file bytes are served through selected
-provider capabilities.
+provider capabilities. The package build emits and ships the Component and
+binding browser runtimes; HTTP requests only read and cache those artifacts.
 
 See the [workspace package map](../../../docs/architecture/packages.md). Licensed
 under the repository [MIT License](../../../LICENSE).

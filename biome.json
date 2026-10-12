@@ -15,7 +15,8 @@
             "**/*.cjs",
             "**/*.mts",
             "**/*.cts",
-            "!!packages/surfaces/cms-kernel/src/browser/admin-runtime.js"
+            "!!packages/surfaces/cms-kernel/src/browser/admin-runtime.js",
+            "!!packages/surfaces/cms-kernel/assets/browser/*.js"
         ]
     },
     "formatter": {

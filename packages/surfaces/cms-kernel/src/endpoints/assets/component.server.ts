@@ -1,21 +1,21 @@
 import type KernelCms from "cms-kernel/KernelCms";
 import { getOrGenerateEntryAsync, sendCompressed } from "@bernouy/http-runner";
-import { componentJsCacheKey, generateComponentJsEntry } from "cms-kernel/core/assets/buildComponent";
+import { componentRuntimeCacheKey, loadComponentRuntimeEntry } from "cms-kernel/core/assets/browserRuntimeAssets";
 
 const IMMUTABLE_ASSET_CACHE_CONTROL = "public, max-age=31536000, immutable";
 const REVALIDATED_ASSET_CACHE_CONTROL = "no-cache, must-revalidate";
 
 /**
- * Serves the component runtime bundle at `<cmsPathPrefix>/assets/component.js`.
+ * Serves the prebuilt component runtime at `<cmsPathPrefix>/assets/component.js`.
  * Unknown hashes fail closed instead of poisoning an immutable URL.
  */
 export default async function ComponentServer(req: Request, kernel: KernelCms) {
     const url = new URL(req.url);
     const requestedVersions = url.searchParams.getAll("v");
     const currentEntry = await getOrGenerateEntryAsync(
-        componentJsCacheKey(url.pathname),
+        componentRuntimeCacheKey(url.pathname),
         kernel.cache,
-        generateComponentJsEntry,
+        loadComponentRuntimeEntry,
     );
     if (requestedVersions.length === 0) {
         return sendCompressed(req, currentEntry, REVALIDATED_ASSET_CACHE_CONTROL);

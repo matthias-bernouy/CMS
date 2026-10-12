@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { compress, InMemoryCache } from "@bernouy/http-runner";
 import { CMS_CACHE_KEYS, defaultSystem, type ContentReader, type TPage } from "@bernouy/cms-content";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
-import { componentJsCacheKey, generateComponentJsEntry } from "cms-kernel/core/assets/buildComponent";
+import { componentRuntimeCacheKey, loadComponentRuntimeEntry } from "cms-kernel/core/assets/browserRuntimeAssets";
 import { collectionBlocsetCacheKey, resolveRuntimeAssets } from "cms-kernel/core/assets/resolveAssets";
 import ComponentServer from "cms-kernel/endpoints/assets/component.server";
 import type KernelCms from "cms-kernel/KernelCms";
@@ -14,7 +14,7 @@ system.site.name = "Site";
 
 function kernelWith(repository: ContentReader, collectionAssets?: KernelCms["collectionAssets"]): KernelCms {
     const cache = new InMemoryCache();
-    cache.set(componentJsCacheKey("/.cms/assets/component.js"), compress("component", "text/javascript"));
+    cache.set(componentRuntimeCacheKey("/.cms/assets/component.js"), compress("component", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), compress("binding", "text/javascript"));
     cache.set(CMS_CACHE_KEYS.STYLE, compress("body{}", "text/css"));
 
@@ -58,7 +58,7 @@ function repositoryWith(options: {
 
 describe("resolveRuntimeAssets", () => {
     test("exposes the generic component base through the public runtime bundle", async () => {
-        const entry = await generateComponentJsEntry();
+        const entry = await loadComponentRuntimeEntry();
         const js = new TextDecoder().decode(entry.raw);
 
         expect(entry.contentType).toBe("text/javascript");
@@ -75,7 +75,7 @@ describe("resolveRuntimeAssets", () => {
     test("serves the component bundle with a stable hashed URL", async () => {
         const kernel = { cache: new InMemoryCache() } as unknown as KernelCms;
         const current = await ComponentServer(new Request("http://localhost/.cms/assets/component.js"), kernel);
-        const entry = await generateComponentJsEntry();
+        const entry = await loadComponentRuntimeEntry();
         const immutable = await ComponentServer(
             new Request(`http://localhost/.cms/assets/component.js?v=${entry.hash}`),
             kernel,

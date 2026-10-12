@@ -14,7 +14,7 @@ import { PageExecutionService, type PageExecutionAuthority } from "@bernouy/cms-
 import { type CacheEntry, TtlCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
 import type { KernelCmsConfig } from "cms-kernel/interfaces/KernelCmsConfig";
-import { componentJsCacheKey } from "cms-kernel/core/assets/buildComponent";
+import { componentRuntimeCacheKey } from "cms-kernel/core/assets/browserRuntimeAssets";
 import { CaptureRunner } from "../gateway/support/CaptureRunner";
 
 export function publicPage(id: string, path: string, content = `<p>${id}</p>`): TPage {
@@ -43,10 +43,7 @@ type HarnessOptions = Readonly<{
 export function mountPublicPages(options: HarnessOptions = {}) {
     const runner = new CaptureRunner();
     const cache = new TtlCache();
-    cache.set(
-        componentJsCacheKey("/.cms/assets/component.js", { public: false, private: false }),
-        cacheEntry("text/javascript"),
-    );
+    cache.set(componentRuntimeCacheKey("/.cms/assets/component.js"), cacheEntry("text/javascript"));
     cache.set(CMS_CACHE_KEYS.js("/.cms/assets/cms-binding-core.js"), cacheEntry("text/javascript"));
     cache.set(CMS_CACHE_KEYS.STYLE, cacheEntry("text/css"));
     const storedPages = [...(options.storedPages ?? [])];

@@ -1,4 +1,5 @@
 import { rmSync } from "node:fs";
+import { buildKernelBrowserAssets } from "./browserAssets";
 
 // Build to dist/: emit type declarations via tsc
 rmSync("dist", { recursive: true, force: true });
@@ -12,3 +13,5 @@ const exitCode = await tsc.exited;
 if (exitCode !== 0) {
     throw new Error(`tsc exited with code ${exitCode}`);
 }
+
+await buildKernelBrowserAssets();

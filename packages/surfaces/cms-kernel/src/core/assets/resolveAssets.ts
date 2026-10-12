@@ -2,8 +2,11 @@ import type KernelCms from "cms-kernel/KernelCms";
 import { getOrGenerateEntryAsync } from "@bernouy/http-runner";
 import { getBlocGroupManifest } from "cms-kernel/core/blocs/blocGroupManifest";
 import { generateBlocSetEntry, generateStyleEntry } from "@bernouy/cms-content/rendering";
-import { componentJsCacheKey, generateComponentJsEntry } from "cms-kernel/core/assets/buildComponent";
-import { generateBindingCoreJsEntry } from "cms-kernel/core/assets/buildBindingCore";
+import {
+    componentRuntimeCacheKey,
+    loadBindingCoreRuntimeEntry,
+    loadComponentRuntimeEntry,
+} from "cms-kernel/core/assets/browserRuntimeAssets";
 import { CMS_CACHE_KEYS } from "@bernouy/cms-content/rendering";
 import { resolveCollectionAssetExpressions } from "cms-kernel/core/assets/collectionAssets";
 
@@ -29,7 +32,8 @@ export type AssetsManifest = {
 };
 
 /**
- * Runtime asset resolution: warms the kernel cache on miss and produces
+ * Runtime asset resolution: loads prebuilt browser runtimes, warms the kernel
+ * cache on miss and produces
  * hashed URLs under `<cmsPathPrefix>/`. Used by the live serving path; the
  * build pipeline has its own resolver that uploads to the CDN instead.
  *
@@ -50,7 +54,7 @@ export type AssetsManifest = {
 export async function resolveRuntimeAssets(kernel: KernelCms, usedTags: string[]): Promise<AssetsManifest> {
     const prefix = kernel.cmsPathPrefix;
     const componentJsUrl = `${prefix}/assets/component.js`;
-    const componentCacheKey = componentJsCacheKey(componentJsUrl);
+    const componentCacheKey = componentRuntimeCacheKey(componentJsUrl);
     const bindingCoreJsUrl = `${prefix}/assets/cms-binding-core.js`;
     const bindingCoreJsCacheKey = CMS_CACHE_KEYS.js(bindingCoreJsUrl);
     const collectionRevision = (await kernel.repository.getContentRevision?.()) ?? 0;
@@ -84,8 +88,8 @@ export async function resolveRuntimeAssets(kernel: KernelCms, usedTags: string[]
     ];
 
     const [componentEntry, bindingCoreEntry, styleEntry, ...bundleEntries] = await Promise.all([
-        getOrGenerateEntryAsync(componentCacheKey, kernel.cache, generateComponentJsEntry),
-        getOrGenerateEntryAsync(bindingCoreJsCacheKey, kernel.cache, generateBindingCoreJsEntry),
+        getOrGenerateEntryAsync(componentCacheKey, kernel.cache, loadComponentRuntimeEntry),
+        getOrGenerateEntryAsync(bindingCoreJsCacheKey, kernel.cache, loadBindingCoreRuntimeEntry),
         getOrGenerateEntryAsync(CMS_CACHE_KEYS.STYLE, kernel.cache, () => generateStyleEntry(kernel.repository)),
         ...bundles.map((tags) =>
             getOrGenerateEntryAsync(collectionBlocsetCacheKey(tags, collectionRevision), kernel.cache, () =>
