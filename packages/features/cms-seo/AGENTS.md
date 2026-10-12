@@ -2,9 +2,10 @@
 
 This package owns page metadata, structured data, dynamic indexing discovery,
 and sitemap snapshots. It consumes projected content and injected capability
-execution; it does not mount HTTP routes or depend on a CMS surface.
+execution. Its `./http` subpath exposes mountable robots and sitemap handlers;
+the package never chooses or creates the HTTP runner that mounts them.
 
-- Keep request routing, authentication lookup, and public provider adapters in
-  the mounting surface.
+- Keep route registration, authentication lookup, and public provider adapters
+  in the mounting surface or runtime.
 - Keep sitemap persistence and capability invocation injected.
 - Never make indexing failures expose provider response bodies.

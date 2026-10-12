@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 import { describe, expect, test } from "bun:test";
+import { InMemoryAuthentication } from "@bernouy/cms-auth";
+import { TtlCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
 import { CaptureRunner } from "./CaptureRunner";
 import {
@@ -24,7 +26,12 @@ const published: TPage = {
 describe("published page snapshot", () => {
     test("is mounted on the public Kernel surface", async () => {
         const runner = new CaptureRunner();
-        new KernelCms({ runner, repository: repositoryWith(published) });
+        new KernelCms({
+            runner,
+            cache: new TtlCache(),
+            content: repositoryWith(published),
+            authentication: new InMemoryAuthentication(),
+        });
         const handler = runner.endpointHandler("GET", PUBLISHED_PAGE_SNAPSHOT_ROUTE);
         const response = await handler(snapshotRequest(published.id), {} as never);
         expect(response.status).toBe(200);

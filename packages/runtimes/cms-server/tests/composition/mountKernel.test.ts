@@ -1,16 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { mountProductionKernel, type ProductionKernelRuntime } from "../../src/runtime/mountKernel";
-import { kernelMountFixtures, waitFor } from "./kernelMountFixtures";
+import { kernelMountFixtures } from "./kernelMountFixtures";
 
 describe("production Kernel mounting", () => {
     test("mounts and stops one runtime", async () => {
         const events: string[] = [];
         const logs: string[] = [];
         let kernelConfig: Record<string, unknown> | undefined;
-        let releaseReady!: () => void;
-        const ready = new Promise<void>((resolve) => {
-            releaseReady = resolve;
-        });
         let refreshStopped = false;
         let observationStarted = false;
         let observationStopped = false;
@@ -29,7 +25,6 @@ describe("production Kernel mounting", () => {
         }
 
         class FakeKernel {
-            readonly ready = ready;
             constructor(config: Record<string, unknown>) {
                 kernelConfig = config;
                 events.push("kernel");
@@ -58,14 +53,11 @@ describe("production Kernel mounting", () => {
             },
         };
 
-        const mounting = mountProductionKernel({ ...options, gateway } as never, runtime);
-        await waitFor(() => events.includes("kernel"));
-        expect(events).toEqual(["runner", "kernel"]);
-        releaseReady();
-        const mounted = await mounting;
+        const mounted = await mountProductionKernel({ ...options, gateway } as never, runtime);
+        expect(events.slice(0, 3)).toEqual(["runner", "kernel", 'start:{"port":3100,"hostname":"127.0.0.1"}']);
 
         expect(kernelConfig).toMatchObject({
-            repository: options.core.repo,
+            content: expect.any(Object),
             runner: expect.any(FakeRunner),
             publicAuth: {
                 marker: "public-auth",

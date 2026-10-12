@@ -11,9 +11,9 @@ import {
     SignedCookieCodec,
     SubjectResolver,
 } from "@bernouy/cms-auth";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { createContentReader, InMemoryCmsRepository } from "@bernouy/cms-content";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth/http";
-import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
+import { InMemoryCache, type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
 
 class CaptureRunner implements Runner {
     readonly endpoints = new Set<string>();
@@ -143,7 +143,8 @@ function authConfig(): PublicAuthRoutesConfig {
 function kernelConfig(runner: Runner, publicAuth?: PublicAuthRoutesConfig) {
     return {
         runner,
-        repository: new InMemoryCmsRepository(),
+        cache: new InMemoryCache(),
+        content: createContentReader(new InMemoryCmsRepository()),
         authentication: new InMemoryAuthentication(),
         publicAuth,
     };

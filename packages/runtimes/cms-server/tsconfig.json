@@ -17,6 +17,7 @@
         { "path": "../../features/cms-files" },
         { "path": "../../features/cms-repository" },
         { "path": "../../features/cms-gateway" },
+        { "path": "../../features/cms-seo" },
         { "path": "../../surfaces/cms-core" },
         { "path": "../../surfaces/cms-kernel" }
     ]

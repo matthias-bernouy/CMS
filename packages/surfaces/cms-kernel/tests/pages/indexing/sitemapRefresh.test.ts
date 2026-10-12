@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import { CanonicalSiteHostNotConfiguredError } from "@bernouy/cms-seo";
-import { materializeSitemapSnapshot, startSitemapSnapshotRefresh } from "cms-kernel/site/seo/sitemap";
 import { mountPublicPages, publicPage } from "../publicPage.fixture";
 
 describe("Kernel sitemap refresh", () => {
@@ -10,7 +9,7 @@ describe("Kernel sitemap refresh", () => {
             sitemapStore: new MemoryBlobStore(),
             storedPages: [publicPage("home", "/")],
         });
-        const runner = startSitemapSnapshotRefresh(mounted.kernel, {
+        const runner = mounted.sitemapService!.start({
             intervalMs: 60_000,
         });
 
@@ -35,11 +34,9 @@ describe("Kernel sitemap refresh", () => {
         });
         const reported: unknown[] = [];
 
-        await expect(materializeSitemapSnapshot(mounted.kernel)).rejects.toBeInstanceOf(
-            CanonicalSiteHostNotConfiguredError,
-        );
+        await expect(mounted.sitemapService!.materialize()).rejects.toBeInstanceOf(CanonicalSiteHostNotConfiguredError);
 
-        const runner = startSitemapSnapshotRefresh(mounted.kernel, {
+        const runner = mounted.sitemapService!.start({
             intervalMs: 60_000,
             retryIntervalMs: 60_000,
             reportError: (error) => reported.push(error),
@@ -59,7 +56,7 @@ describe("Kernel sitemap refresh", () => {
             sitemapStore: new MemoryBlobStore(),
         });
         const reported: unknown[] = [];
-        const runner = startSitemapSnapshotRefresh(mounted.kernel, {
+        const runner = mounted.sitemapService!.start({
             intervalMs: 60_000,
             retryIntervalMs: 60_000,
             reportError: (error) => reported.push(error),

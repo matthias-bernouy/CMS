@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-kernel",
     "version": "0.1.0",
-    "description": "CMS HTTP kernel for page rendering, administration, authentication, assets and capability calls.",
+    "description": "CMS HTTP surface for Page rendering, authentication and injected feature handlers.",
     "license": "MIT",
     "type": "module",
     "main": "./src/index.ts",
@@ -9,7 +9,6 @@
         ".": "./src/index.ts"
     },
     "scripts": {
-        "build": "bun run src/tooling/build.ts",
         "typecheck": "bun x tsc --noEmit",
         "test": "bun test"
     },

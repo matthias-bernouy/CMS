@@ -14,8 +14,12 @@ bindings, validation, and read models.
   syntax and runtime metadata.
 - `@bernouy/cms-content/browser` exposes the browser-only `Component` base and
   live declarative binding runtime used by rendered Pages and contributed Blocs.
+- `@bernouy/cms-content/runtime-assets` exposes the generated system runtime
+  entries to server composition; its build subpath owns their generation.
 - `@bernouy/cms-content/browser/dom` exposes inert network-binding preparation
   for the Kernel renderer.
+- `@bernouy/cms-content/http` exposes mountable handlers for the generated
+  browser runtimes, Bloc sets and published Page snapshots.
 - `@bernouy/cms-content/theme` exposes browser-safe theme value resolution.
 - `@bernouy/cms-content/mongo` exposes `MongoCmsRepository` for composition
   roots.
@@ -33,6 +37,9 @@ bindings, validation, and read models.
 - Site-owned Bloc source serialization belongs to Bloc publication in this
   package. Collection Bloc compilation belongs to
   `@bernouy/cms-repository/collections/build`.
+- Effective Bloc grouping, Bloc asset manifests and generic Page asset
+  resolution belong to the Bloc domain because they are derived from content,
+  not from an HTTP surface.
 - `pages/` owns the site Page route registry and the single internal Page-link
   model. Every Page route shares one site namespace.
   External Page identities use generic contribution coordinates; this package

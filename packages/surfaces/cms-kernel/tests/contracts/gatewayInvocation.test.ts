@@ -1,9 +1,10 @@
 import { expect, test } from "bun:test";
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { createContentReader, InMemoryCmsRepository } from "@bernouy/cms-content";
 import { GatewayError, type GatewayInvocation } from "@bernouy/cms-gateway";
+import { createCapabilityHttpHandler } from "@bernouy/cms-gateway/http/handlers";
+import { TtlCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
-import { handleCapabilityCall } from "cms-kernel/endpoints/capabilityCall.server";
 import { CaptureRunner } from "../gateway/support/CaptureRunner";
 
 test("Kernel mounts every gateway binding method and supplies trusted actor state", async () => {
@@ -11,7 +12,8 @@ test("Kernel mounts every gateway binding method and supplies trusted actor stat
     const runner = new CaptureRunner();
     new KernelCms({
         runner,
-        repository: new InMemoryCmsRepository(),
+        cache: new TtlCache(),
+        content: createContentReader(new InMemoryCmsRepository()),
         authentication: new InMemoryAuthentication(),
         capabilityGateway: {
             siteId: "site-a",
@@ -46,16 +48,14 @@ test("Kernel mounts every gateway binding method and supplies trusted actor stat
 
 test("Kernel authenticates provider machine calls independently from users", async () => {
     const calls: GatewayInvocation[] = [];
-    const kernel = {
-        runner: { basePath: "/" },
-        capabilityGateway: {
-            siteId: "site-a",
-            authenticateProvider: async (token: string) =>
-                token === "provider-secret-token" ? "install-caller" : null,
-            invoker: invoker(calls),
-        },
-    } as unknown as KernelCms;
-    const response = await handleCapabilityCall(
+    const handler = createCapabilityHttpHandler({
+        basePath: "",
+        siteId: "site-a",
+        authenticateProvider: async (token: string) => (token === "provider-secret-token" ? "install-caller" : null),
+        invoker: invoker(calls),
+        resolveActor: async () => ({ kind: "anonymous" }),
+    });
+    const response = await handler(
         new Request("http://site/.cms/call/catalog/v1/items", {
             method: "POST",
             headers: {
@@ -64,7 +64,6 @@ test("Kernel authenticates provider machine calls independently from users", asy
             },
             body: '{"term":"one"}',
         }),
-        kernel,
     );
     expect(response.status).toBe(200);
     expect(calls[0]).toMatchObject({
@@ -74,26 +73,24 @@ test("Kernel authenticates provider machine calls independently from users", asy
 });
 
 test("Kernel projects gateway authorization failures", async () => {
-    const kernel = {
-        runner: { basePath: "/" },
-        capabilityGateway: {
-            siteId: "site-a",
-            authenticateProvider: async () => "install-caller",
-            invoker: {
-                ...invoker([]),
-                invoke: async () => {
-                    throw new GatewayError("not_authorized", "denied");
-                },
+    const handler = createCapabilityHttpHandler({
+        basePath: "",
+        siteId: "site-a",
+        authenticateProvider: async () => "install-caller",
+        invoker: {
+            ...invoker([]),
+            invoke: async () => {
+                throw new GatewayError("not_authorized", "denied");
             },
         },
-    } as unknown as KernelCms;
-    const denied = await handleCapabilityCall(
+        resolveActor: async () => ({ kind: "anonymous" }),
+    });
+    const denied = await handler(
         new Request("http://site/.cms/call/catalog/v1/items", {
             method: "POST",
             headers: { authorization: "Bearer provider-token", "content-type": "application/json" },
             body: "{}",
         }),
-        kernel,
     );
     expect(denied.status).toBe(403);
     expect(await denied.json()).toEqual({ error: { code: "not_authorized" } });

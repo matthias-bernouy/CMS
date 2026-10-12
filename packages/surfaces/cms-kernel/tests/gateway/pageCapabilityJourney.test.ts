@@ -47,7 +47,7 @@ test("a published Page renders and invokes only its exact capability plan", asyn
     const runner = new CaptureRunner();
     new KernelCms({
         runner,
-        repository,
+        content: createContentReader(repository),
         authentication: new InMemoryAuthentication(),
         cache: new InMemoryCache(),
         capabilityGateway: { siteId: "site-a", invoker, isAdministrator: async () => false },

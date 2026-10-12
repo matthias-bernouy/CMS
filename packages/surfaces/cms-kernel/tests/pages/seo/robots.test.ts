@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { createContentReader, InMemoryCmsRepository } from "@bernouy/cms-content";
+import { InMemoryCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
 import { CaptureRunner } from "../../gateway/support/CaptureRunner";
 
@@ -14,7 +15,8 @@ describe("Kernel robots", () => {
         });
         new KernelCms({
             runner,
-            repository,
+            cache: new InMemoryCache(),
+            content: createContentReader(repository),
             authentication: new InMemoryAuthentication(),
             capabilityGateway: {
                 siteId: "site-a",
@@ -51,7 +53,8 @@ describe("Kernel robots", () => {
         const repository = new InMemoryCmsRepository();
         new KernelCms({
             runner,
-            repository,
+            cache: new InMemoryCache(),
+            content: createContentReader(repository),
             authentication: new InMemoryAuthentication(),
         });
 

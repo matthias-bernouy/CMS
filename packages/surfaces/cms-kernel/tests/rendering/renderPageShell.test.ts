@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { parseHTML } from "linkedom";
-import { renderPage } from "cms-kernel/site/rendering/renderPage";
-import type { RenderContext } from "cms-kernel/site/rendering/RenderContext";
+import { renderPage } from "cms-kernel/html/renderPage";
+import type { RenderContext } from "cms-kernel/html/RenderContext";
 import type { ContentReader } from "@bernouy/cms-content";
 import { type TPage, type TSystem } from "@bernouy/cms-content";
 
@@ -25,7 +25,7 @@ function makeCtx(): RenderContext {
         security: { connectExtras: [], mediaExtras: [] },
     };
     return {
-        repository: {
+        content: {
             getRenderingSettings: async () => system,
             getRenderableBlocs: async () => [],
         } as unknown as ContentReader,
@@ -74,7 +74,7 @@ describe("renderPage — binding core wrapper", () => {
 
     test("passes transitive composition dependencies to asset resolution", async () => {
         const ctx = makeCtx();
-        const repository = ctx.repository as unknown as {
+        const repository = ctx.content as unknown as {
             getRenderableBlocs: () => Promise<{ id: string }[]>;
             getBlocViewJS: (tag: string) => Promise<string | null>;
         };

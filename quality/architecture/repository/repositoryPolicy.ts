@@ -14,8 +14,8 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
     return {
         rootDir,
         browserEntryPaths: [
-            "packages/surfaces/cms-kernel/src/endpoints/assets/component.client.ts",
-            "packages/surfaces/cms-kernel/src/endpoints/assets/bindingCore.client.ts",
+            "packages/features/cms-content/src/browser/entries/component.entry.ts",
+            "packages/features/cms-content/src/browser/entries/bindingCore.entry.ts",
             "packages/features/cms-content/src/browser/index.ts",
             "packages/features/cms-content/src/browser/dom.ts",
             "packages/features/cms-content/src/exports/bindings.ts",
@@ -29,6 +29,7 @@ export function repositoryArchitectureOptions(rootDir: string): WorkspaceCheckOp
                     "./bindings",
                     "./browser",
                     "./browser/dom",
+                    "./http",
                     "./theme",
                     "./page-path",
                     "./kernel",

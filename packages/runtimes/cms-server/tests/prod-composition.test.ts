@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 
 describe("production CMS composition", () => {
-    test("waits for Kernel readiness before listening", async () => {
+    test("constructs Kernel before listening", async () => {
         const source = await Bun.file(new URL("../src/runtime/mountKernel.ts", import.meta.url)).text();
-        const ready = source.search(/await\s+kernel\.ready/);
-        const listen = source.slice(ready).search(/runner\.start\s*\(/);
+        const kernel = source.search(/new\s+runtime\.Kernel\s*\(/);
+        const listen = source.search(/runner\.start\s*\(/);
 
-        expect(ready).toBeGreaterThan(-1);
-        expect(listen).toBeGreaterThan(-1);
+        expect(kernel).toBeGreaterThan(-1);
+        expect(listen).toBeGreaterThan(kernel);
     });
 
     test("passes the configured host to the single listener", async () => {

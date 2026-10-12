@@ -7,14 +7,14 @@ import {
     type TSystem,
 } from "@bernouy/cms-content";
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
-import type { PublicPageProvider } from "@bernouy/cms-kernel";
 import type { BlobStore } from "@bernouy/blob-store";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
 import { PageExecutionService, type PageExecutionAuthority } from "@bernouy/cms-gateway/execution";
+import { createSitemapService, executeIndexingCapability } from "@bernouy/cms-seo";
 import { type CacheEntry, TtlCache } from "@bernouy/http-runner";
 import KernelCms from "cms-kernel/KernelCms";
-import type { KernelCmsConfig } from "cms-kernel/interfaces/KernelCmsConfig";
-import { componentRuntimeCacheKey } from "cms-kernel/site/assets/browserRuntimeAssets";
+import type { KernelCmsConfig } from "cms-kernel/KernelCmsConfig";
+import { componentRuntimeCacheKey } from "@bernouy/cms-content/runtime-assets";
 import { CaptureRunner } from "../gateway/support/CaptureRunner";
 
 export function publicPage(id: string, path: string, content = `<p>${id}</p>`): TPage {
@@ -31,7 +31,6 @@ export function publicPage(id: string, path: string, content = `<p>${id}</p>`): 
 }
 
 type HarnessOptions = Readonly<{
-    providers?: readonly PublicPageProvider[];
     storedPages?: readonly TPage[];
     gateway?: GatewayInvoker;
     sitemapStore?: BlobStore;
@@ -65,7 +64,16 @@ export function mountPublicPages(options: HarnessOptions = {}) {
               getRenderablePages: async () => storedPages.map(renderable),
               resolvePageReference: async (reference) =>
                   storedPages.find((page) => reference.kind === "site" && page.id === reference.pageId)?.path ?? null,
-              resolveRenderableRoute: async () => null,
+              resolveRenderableRoute: async (path) => {
+                  const page = storedPages.find((item) => item.path === path);
+                  return page
+                      ? {
+                            kind: "current",
+                            page: renderable(page),
+                            language: page.language ?? SYSTEM.site.language,
+                        }
+                      : null;
+              },
               getPublishedPageById: async (id) => storedPages.find((page) => page.id === id) ?? null,
               getPublishedPages: async () => storedPages,
               resolvePublishedRoute: async () => null,
@@ -97,13 +105,9 @@ export function mountPublicPages(options: HarnessOptions = {}) {
         : undefined;
     const kernel = new KernelCms({
         runner,
-        repository:
-            options.repository && "getSystem" in options.repository
-                ? options.repository
-                : writableRepository(repository),
+        content: repository,
         authentication: new InMemoryAuthentication(),
         cache,
-        publicPageProviders: options.providers,
         collections: options.collections,
         ...(invoker
             ? {
@@ -117,10 +121,33 @@ export function mountPublicPages(options: HarnessOptions = {}) {
             : {}),
         sitemapStore: options.sitemapStore,
     });
+    const sitemapService = options.sitemapStore
+        ? createSitemapService({
+              store: options.sitemapStore,
+              content: repository,
+              listAdditionalPaths: async () => [],
+              isReservedPath: (path) =>
+                  path === "/robots.txt" ||
+                  path === "/sitemap.xml" ||
+                  path === "/favicon.ico" ||
+                  path === "/.cms" ||
+                  path.startsWith("/.cms/"),
+              execute: (contractId, capabilityId, input) =>
+                  executeIndexingCapability(
+                      kernel.capabilityGateway,
+                      { kind: "anonymous" },
+                      contractId,
+                      capabilityId,
+                      input,
+                  ),
+          })
+        : null;
     return {
         kernel,
+        sitemapService,
         get: runner.defaultHandler("GET", "/"),
         head: runner.defaultHandler("HEAD", "/"),
+        sitemap: runner.endpointHandler("GET", "/sitemap.xml"),
         storedLookups,
     };
 }
@@ -141,15 +168,6 @@ function renderable(page: TPage) {
         source: { kind: "site" as const, pageId: page.id, revision: page.revision },
         requirements: [],
     };
-}
-
-function writableRepository(reader: ContentReader): CmsRepository {
-    return {
-        ...reader,
-        getSystem: reader.getRenderingSettings,
-        getPageRoute: async () => null,
-        getBlocsList: reader.getRenderableBlocs,
-    } as unknown as CmsRepository;
 }
 
 function cacheEntry(contentType: string): CacheEntry {

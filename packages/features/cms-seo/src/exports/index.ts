@@ -53,6 +53,11 @@ export {
     type SitemapRefreshRunner,
 } from "cms-seo/sitemap/refresh";
 export {
+    createSitemapService,
+    type SitemapRefreshOptions,
+    type SitemapService,
+} from "cms-seo/sitemap/service";
+export {
     MAX_SITEMAP_UNCOMPRESSED_BYTES,
     MAX_SITEMAP_URLS_PER_CHUNK,
     sitemapIndexXml,

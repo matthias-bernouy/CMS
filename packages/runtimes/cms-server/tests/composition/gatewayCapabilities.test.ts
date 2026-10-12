@@ -12,7 +12,6 @@ test("production composition supplies one generic capability gateway", async () 
     const runtime = {
         Runner: FakeRunner,
         Kernel: class {
-            readonly ready = Promise.resolve();
             constructor(config: Record<string, unknown>) {
                 captured = config;
             }
@@ -43,7 +42,7 @@ test("production composition supplies one generic capability gateway", async () 
         expect(configured).not.toHaveProperty("pageExecutions");
         expect(configured).not.toHaveProperty("resolveCapabilityAccess");
         expect(configured).not.toHaveProperty("images");
-        expect(captured?.bypassCache).toBe(false);
+        expect(captured).not.toHaveProperty("bypassCache");
         expect(captured?.enforcePageCsp).toBe(true);
     } finally {
         await mounted.stop();

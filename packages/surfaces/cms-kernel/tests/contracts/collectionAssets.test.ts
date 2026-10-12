@@ -1,9 +1,14 @@
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
+import { InMemoryAuthentication } from "@bernouy/cms-auth";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
 import type { ContentReader } from "@bernouy/cms-content/rendering";
+import {
+    collectionAssetRepresentationVersion,
+    resolveInstalledCollectionAssets,
+} from "@bernouy/cms-repository/collections/http";
 import KernelCms from "cms-kernel/KernelCms";
-import { collectionAssetVersion, resolveCollectionAssetExpressions } from "cms-kernel/site/assets/collectionAssets";
+import { TtlCache } from "@bernouy/http-runner";
 import { CaptureRunner } from "../gateway/support/CaptureRunner";
 
 test("serves installed collection assets publicly through immutable digest URLs", async () => {
@@ -34,7 +39,9 @@ test("serves installed collection assets publicly through immutable digest URLs"
     let byteReads = 0;
     const kernel = new KernelCms({
         runner,
-        repository: {} as ContentReader,
+        cache: new TtlCache(),
+        content: {} as ContentReader,
+        authentication: new InMemoryAuthentication(),
         collectionAssets: {
             siteId: "site",
             store: {
@@ -49,12 +56,15 @@ test("serves installed collection assets publicly through immutable digest URLs"
             },
         },
     });
-    const rendered = await resolveCollectionAssetExpressions(
+    const rendered = await resolveInstalledCollectionAssets(
         '<img src="{{ cms.asset.design-system.mark.svg }}">',
-        kernel,
+        kernel.collectionAssets,
+        kernel.basePath,
     );
-    const version = await collectionAssetVersion(asset);
-    expect(version).not.toBe(await collectionAssetVersion({ ...asset, mediaType: "application/octet-stream" }));
+    const version = await collectionAssetRepresentationVersion(asset);
+    expect(version).not.toBe(
+        await collectionAssetRepresentationVersion({ ...asset, mediaType: "application/octet-stream" }),
+    );
     expect(rendered).toContain(`/site/.cms/collections/design-system/assets/mark.svg?v=${version}`);
 
     const get = runner.defaultHandler("GET", "/site/.cms/collections");

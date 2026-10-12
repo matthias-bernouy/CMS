@@ -44,16 +44,16 @@ every package must reproduce.
 `application` and `exports`. Its `CmsRepository` is the content
 persistence facade; it is distinct from the `@bernouy/cms-repository` package.
 
-The Kernel receives a writable `CmsRepository` and creates a read-only
-`ContentReader` from `@bernouy/cms-content/rendering` for its rendering path:
-published Pages/routes, projected settings and renderable Bloc artifacts.
+The runtime projects the writable `CmsRepository` into the read-only
+`ContentReader` from `@bernouy/cms-content/rendering` before constructing
+Kernel. Kernel sees only published Pages/routes, projected settings and
+renderable Bloc artifacts.
 File references are resolved through the selected `ulvia.cms.files` provider.
 Sitemap storage is an independent runtime dependency.
 
 Every page has a monotonic concurrency revision used by authoring and collection
 migrations. This is not user-facing page history. Page publication is
 `visible === true`; user-facing Page history is not implemented.
-Editorial preview belongs to the Kernel's authenticated administration Pages.
 File visibility and temporary private
 access are enforced by the selected Files provider.
 
@@ -85,8 +85,8 @@ served independently by `official-repository-server`. See
 
 `cms-auth` groups accounts, providers, sessions, tokens, email and application
 composition. Runtimes build `PublicAuthActions` from credential, user, token
-and email dependencies. The Kernel receives the public operations and the
-administrative stores. Auth UI components remain in the Kernel.
+and email dependencies. The Kernel receives the public operations and injected
+authentication ports. Its small sign-in document is HTTP presentation only.
 
 HTTP handlers use `@bernouy/cms-auth/http`; Mongo and SMTP adapters are explicit
 runtime imports. `@bernouy/cms-auth/browser` stays browser-safe. Secret storage
@@ -94,10 +94,11 @@ is generic infrastructure in `@bernouy/secret-store` under Foundation.
 
 ## Surface And Runtime Composition
 
-The Kernel mounts every site Page, authentication, administration, files,
-gateway routes, Bloc assets, sitemaps and robots on one supplied `Runner`.
+The Kernel mounts every site or contributed Page, authentication and
+feature-owned HTTP handlers on one supplied `Runner`.
 SEO metadata, structured data, dynamic indexing and sitemap materialization are
-implemented by `cms-seo`; the Kernel supplies its HTTP and runtime adapters.
+implemented by `cms-seo`; Kernel mounts its robots and sitemap handlers while
+the runtime starts periodic materialization.
 Whether a Page is public, authenticated or administrative is derived from the
 capabilities in its execution plan; there is no Page surface field or separate
 admin/public route namespace. CMS Core mounts the provider report and the

@@ -3,9 +3,10 @@ import { createHash } from "node:crypto";
 import { compress, InMemoryCache } from "@bernouy/http-runner";
 import { CMS_CACHE_KEYS, defaultSystem, type ContentReader, type TPage } from "@bernouy/cms-content";
 import { CollectionStore, MemoryCollectionStorage } from "@bernouy/cms-repository/collections/installations";
-import { componentRuntimeCacheKey, loadComponentRuntimeEntry } from "cms-kernel/site/assets/browserRuntimeAssets";
-import { collectionBlocsetCacheKey, resolveRuntimeAssets } from "cms-kernel/site/assets/resolveAssets";
-import ComponentServer from "cms-kernel/endpoints/assets/component.server";
+import { resolveInstalledCollectionAssets } from "@bernouy/cms-repository/collections/http";
+import { componentRuntimeCacheKey, loadComponentRuntimeEntry } from "@bernouy/cms-content/runtime-assets";
+import { collectionBlocsetCacheKey, resolvePageAssets } from "@bernouy/cms-content/rendering";
+import { serveComponentRuntime } from "@bernouy/cms-content/http";
 import type KernelCms from "cms-kernel/KernelCms";
 
 const system = defaultSystem();
@@ -22,9 +23,22 @@ function kernelWith(repository: ContentReader, collectionAssets?: KernelCms["col
         basePath: "",
         cmsPathPrefix: "/.cms",
         cache,
-        repository,
+        content: repository,
         collectionAssets,
     } as unknown as KernelCms;
+}
+
+function resolveAssets(kernel: KernelCms, tags: string[]) {
+    return resolvePageAssets(
+        {
+            content: kernel.content,
+            cache: kernel.cache,
+            cmsPathPrefix: kernel.cmsPathPrefix,
+            resolveContributedAssets: (input) =>
+                resolveInstalledCollectionAssets(input, kernel.collectionAssets, kernel.basePath),
+        },
+        tags,
+    );
 }
 
 function repositoryWith(options: {
@@ -56,7 +70,7 @@ function repositoryWith(options: {
     };
 }
 
-describe("resolveRuntimeAssets", () => {
+describe("resolvePageAssets", () => {
     test("exposes the generic component base through the public runtime bundle", async () => {
         const entry = await loadComponentRuntimeEntry();
         const js = new TextDecoder().decode(entry.raw);
@@ -74,11 +88,14 @@ describe("resolveRuntimeAssets", () => {
 
     test("serves the component bundle with a stable hashed URL", async () => {
         const kernel = { cache: new InMemoryCache() } as unknown as KernelCms;
-        const current = await ComponentServer(new Request("http://localhost/.cms/assets/component.js"), kernel);
+        const current = await serveComponentRuntime(
+            new Request("http://localhost/.cms/assets/component.js"),
+            kernel.cache,
+        );
         const entry = await loadComponentRuntimeEntry();
-        const immutable = await ComponentServer(
+        const immutable = await serveComponentRuntime(
             new Request(`http://localhost/.cms/assets/component.js?v=${entry.hash}`),
-            kernel,
+            kernel.cache,
         );
         expect(current.status).toBe(200);
         expect(immutable.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
@@ -86,16 +103,16 @@ describe("resolveRuntimeAssets", () => {
         window.eval(await immutable.text());
         expect(typeof (window as any).cmsRuntime.Component).toBe("function");
 
-        const unknown = await ComponentServer(
+        const unknown = await serveComponentRuntime(
             new Request("http://localhost/.cms/assets/component.js?v=unknown"),
-            kernel,
+            kernel.cache,
         );
         expect(unknown.status).toBe(404);
         expect(unknown.headers.get("cache-control")).toBe("no-store");
     });
 
     test("does not emit a blocset script for native-only blocs without viewJS", async () => {
-        const assets = await resolveRuntimeAssets(
+        const assets = await resolveAssets(
             kernelWith(
                 repositoryWith({
                     pageContent: "<p>Hello</p><form><label>Email</label><input></form>",
@@ -110,7 +127,7 @@ describe("resolveRuntimeAssets", () => {
     });
 
     test("keeps a blocset script when at least one referenced bloc has viewJS", async () => {
-        const assets = await resolveRuntimeAssets(
+        const assets = await resolveAssets(
             kernelWith(
                 repositoryWith({
                     pageContent: "<p>Hello</p><site-card></site-card>",
@@ -158,7 +175,7 @@ describe("resolveRuntimeAssets", () => {
         });
         const kernel = kernelWith(repository, { siteId: "site", store });
 
-        const assets = await resolveRuntimeAssets(kernel, ["site-card"]);
+        const assets = await resolveAssets(kernel, ["site-card"]);
         const entry = kernel.cache.get(collectionBlocsetCacheKey(["site-card"], 1));
         const js = new TextDecoder().decode(entry!.raw);
 

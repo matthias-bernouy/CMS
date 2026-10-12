@@ -2,10 +2,10 @@ import { describe, expect, test } from "bun:test";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadBindingCoreRuntimeEntry } from "cms-kernel/site/assets/browserRuntimeAssets";
-import { buildKernelBrowserAssets } from "cms-kernel/tooling/browserAssets";
+import { loadBindingCoreRuntimeEntry, loadComponentRuntimeEntry } from "@bernouy/cms-content/runtime-assets";
+import { buildContentBrowserAssets } from "@bernouy/cms-content/runtime-assets/build";
 
-describe("kernel system runtime asset", () => {
+describe("content browser runtime assets", () => {
     test("bundles only the technical binding runtime", async () => {
         const entry = await loadBindingCoreRuntimeEntry();
         const source = new TextDecoder().decode(entry.raw);
@@ -22,13 +22,17 @@ describe("kernel system runtime asset", () => {
     test("ships browser assets generated from the current entries", async () => {
         const directory = await mkdtemp(join(tmpdir(), "cms-kernel-assets-"));
         try {
-            await buildKernelBrowserAssets(directory);
-            for (const filename of ["component.js", "binding-core.js"]) {
-                const [generated, shipped] = await Promise.all([
+            await buildContentBrowserAssets(directory);
+            const shippedEntries = {
+                "component.js": await loadComponentRuntimeEntry(),
+                "binding-core.js": await loadBindingCoreRuntimeEntry(),
+            };
+            for (const filename of ["component.js", "binding-core.js"] as const) {
+                const [generated, shippedBytes] = await Promise.all([
                     readFile(join(directory, filename)),
-                    readFile(join(import.meta.dir, `../../../src/site/assets/generated/${filename}`)),
+                    Promise.resolve(shippedEntries[filename].raw),
                 ]);
-                expect(generated).toEqual(shipped);
+                expect(generated).toEqual(shippedBytes);
             }
         } finally {
             await rm(directory, { recursive: true, force: true });

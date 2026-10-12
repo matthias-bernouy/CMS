@@ -9,13 +9,19 @@
         ".": "./src/exports/index.ts",
         "./bindings": "./src/exports/bindings.ts",
         "./browser": "./src/browser/index.ts",
+        "./runtime-assets": "./src/application/runtime-assets/runtimeAssets.ts",
+        "./runtime-assets/build": "./src/application/runtime-assets/build.ts",
         "./browser/dom": "./src/browser/dom.ts",
         "./rendering": "./src/exports/rendering.ts",
+        "./http": "./src/application/http.ts",
         "./theme": "./src/exports/theme.ts",
         "./page-path": "./src/exports/page-path.ts",
         "./page-document": "./src/exports/page-document.ts",
         "./kernel": "./src/exports/kernel.ts",
         "./mongo": "./src/exports/mongo.ts"
+    },
+    "scripts": {
+        "build:browser": "bun run src/application/runtime-assets/build.ts"
     },
     "devDependencies": {
         "@happy-dom/global-registrator": "^20.14.5",

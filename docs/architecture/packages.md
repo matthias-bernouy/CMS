@@ -34,11 +34,11 @@ already been published to a registry.
 
 | Package | Responsibility |
 | --- | --- |
-| `@bernouy/cms-content` | Provider-neutral Pages, routes, Blocs, settings, themes, closed document grammar, browser Component/binding runtime and generic contribution inputs. |
+| `@bernouy/cms-content` | Provider-neutral Pages, routes, Blocs, settings, themes, closed document grammar, browser Component/binding runtimes, render asset derivation and generic contribution inputs. |
 | `@bernouy/cms-files` | Official provider implementation for namespaces, credentials, uploads, immutable files, private signatures and image representations. |
 | `@bernouy/cms-repository` | Contract releases, provider manifests, site installations/selections, catalogues, authored collection admission, content projections, migrations and the explicit collection build toolchain. |
 | `@bernouy/cms-gateway` | Authorized provider-neutral capability invocation, identities and streaming binary transport. |
-| `@bernouy/cms-seo` | Page metadata, structured data, dynamic entity indexing and persisted sitemap snapshots. |
+| `@bernouy/cms-seo` | Page metadata, structured data, dynamic entity indexing, persisted sitemap snapshots and their mountable HTTP handlers. |
 | `@bernouy/cms-auth` | Accounts, local/OIDC providers, PATs, signed sessions, public auth operations and email composition. |
 
 Collection Pages are admitted resources. The Kernel mounts their shared route
@@ -68,7 +68,7 @@ and serves admitted copies from a separate persistent volume.
 | Package | Responsibility |
 | --- | --- |
 | `@bernouy/cms-core` | Authenticated provider report, binding-derived HTTP transport, cross-domain official capability adapters and durable asynchronous job execution for admitted `ulvia.cms.*` contracts. |
-| `@bernouy/cms-kernel` | HTTP mounting for Site Pages, administration, Bloc assets, authentication, gateway calls, robots and the injected SEO feature. |
+| `@bernouy/cms-kernel` | HTTP mounting and Page presentation for site and contributed Pages, authentication and injected feature handlers. |
 | `@bernouy/cms-server` | Production adapter composition, Mongo Core-job persistence and CMS Core/Kernel startup. |
 | `@bernouy/official-repository-server` | Production official repository startup with persistent staged publication and immutable reads. |
 | `@bernouy/ulvia-cli` | Persistent local CMS development stack backed by MongoDB. |

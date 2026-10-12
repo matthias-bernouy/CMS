@@ -38,6 +38,7 @@
         "@bernouy/binary-media": "workspace:*",
         "@bernouy/blob-store": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
         "@bernouy/secret-store": "workspace:*",
         "canonicalize": "^3.0.0",
         "htmlparser2": "^10.1.0",

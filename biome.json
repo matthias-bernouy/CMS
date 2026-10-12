@@ -15,7 +15,7 @@
             "**/*.cjs",
             "**/*.mts",
             "**/*.cts",
-            "!!packages/surfaces/cms-kernel/src/site/assets/generated/*.js"
+            "!!packages/features/cms-content/src/application/runtime-assets/generated/*.js"
         ]
     },
     "formatter": {

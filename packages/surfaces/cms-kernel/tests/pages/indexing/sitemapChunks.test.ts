@@ -1,8 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { gunzipSync } from "bun";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
-import { materializeSitemapSnapshot } from "cms-kernel/site/seo/sitemap";
-import SitemapChunkServer from "cms-kernel/endpoints/sitemap-chunk.server";
 import { mountPublicPages, publicPage } from "../publicPage.fixture";
 
 describe("Kernel sitemap chunks", () => {
@@ -14,12 +12,12 @@ describe("Kernel sitemap chunks", () => {
         });
         const mounted = mountPublicPages({ sitemapStore, storedPages: pages });
 
-        const result = await materializeSitemapSnapshot(mounted.kernel);
+        const result = await mounted.sitemapService!.materialize();
 
         expect(result.snapshot.chunks.map(({ urlCount }) => urlCount)).toEqual([50_000, 1]);
         expect(result.snapshot.chunks.map(({ language }) => language)).toEqual(["en", "en"]);
         const secondUrl = `https://example.test/sitemap-lang-en.${result.snapshot.id}.2.xml.gz`;
-        const response = await SitemapChunkServer(new Request(secondUrl), mounted.kernel);
+        const response = await mounted.get(new Request(secondUrl));
         const xml = new TextDecoder().decode(gunzipSync(await response.arrayBuffer()));
         expect(response.status).toBe(200);
         expect(xml).toContain("<loc>https://example.test/catalog/50000</loc>");

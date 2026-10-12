@@ -59,7 +59,7 @@ automatically.
 | `bun run check:style` | Read-only Biome check. |
 | `bun run format` | Apply Biome formatting and configured safe/unsafe fixes; inspect the diff. |
 | `bun run typecheck` | TypeScript project-reference check/build. |
-| `bun run build` | Build components, TypeScript references, then the Kernel administration browser bundle. |
+| `bun run build` | Build TypeScript references and the browser runtimes owned by `cms-content`. |
 | `bun test` | Run the test suite. |
 | `bun run test:kernel-smoke` | Exercise a fresh local Kernel installation, representative mutations and restart through Chromium. |
 | `bun run clean` | Clean TypeScript build outputs through `tsc --build --clean`. |

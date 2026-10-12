@@ -2,9 +2,6 @@ import { describe, expect, test } from "bun:test";
 import { gunzipSync } from "bun";
 import { MemoryBlobStore } from "@bernouy/blob-store/memory";
 import type { GatewayInvoker } from "@bernouy/cms-gateway";
-import { materializeSitemapSnapshot } from "cms-kernel/site/seo/sitemap";
-import SitemapChunkServer from "cms-kernel/endpoints/sitemap-chunk.server";
-import SitemapServer from "cms-kernel/endpoints/sitemap.xml.server";
 import { mountPublicPages, publicPage } from "../publicPage.fixture";
 import { PRODUCT_PAGE } from "./fixtures";
 
@@ -42,10 +39,10 @@ describe("Kernel dynamic indexing sitemap", () => {
                 PRODUCT_PAGE,
             ],
         });
-        const fallback = await SitemapServer(new Request("https://example.test/sitemap.xml"), mounted.kernel);
+        const fallback = await mounted.sitemap(new Request("https://example.test/sitemap.xml"));
         expect(await fallback.text()).toContain("<loc>https://example.test/static</loc>");
         expect(calls).toHaveLength(0);
-        const materialized = await materializeSitemapSnapshot(mounted.kernel);
+        const materialized = await mounted.sitemapService!.materialize();
         expect(materialized.status).toBe("published");
         expect(calls).toMatchObject([
             {
@@ -61,9 +58,9 @@ describe("Kernel dynamic indexing sitemap", () => {
                 actor: { kind: "anonymous" },
             },
         ]);
-        const response = await SitemapServer(new Request("https://example.test/sitemap.xml"), mounted.kernel);
+        const response = await mounted.sitemap(new Request("https://example.test/sitemap.xml"));
         const chunkUrl = (await response.text()).match(/<loc>([^<]+\.xml\.gz)<\/loc>/u)?.[1];
-        const chunk = await SitemapChunkServer(new Request(chunkUrl!), mounted.kernel);
+        const chunk = await mounted.get(new Request(chunkUrl!));
         const xml = new TextDecoder().decode(gunzipSync(await chunk.arrayBuffer()));
         expect(xml).toContain("<loc>https://example.test/static</loc>");
         expect(xml).not.toContain("<loc>https://example.test/private</loc>");
@@ -83,10 +80,10 @@ describe("Kernel dynamic indexing sitemap", () => {
             }),
         };
         const mounted = mountPublicPages({ sitemapStore, gateway, storedPages: [PRODUCT_PAGE] });
-        const first = await materializeSitemapSnapshot(mounted.kernel);
+        const first = await mounted.sitemapService!.materialize();
         fail = true;
-        await expect(materializeSitemapSnapshot(mounted.kernel)).rejects.toThrow();
-        const response = await SitemapServer(new Request("https://example.test/sitemap.xml"), mounted.kernel);
+        await expect(mounted.sitemapService!.materialize()).rejects.toThrow();
+        const response = await mounted.sitemap(new Request("https://example.test/sitemap.xml"));
         expect(await response.text()).toContain(first.snapshot.id);
     });
 });

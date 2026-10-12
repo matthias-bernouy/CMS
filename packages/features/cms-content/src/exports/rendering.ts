@@ -19,6 +19,17 @@ export { pageSeoForLanguage } from "cms-content/pages/core/lifecycle/pageSeo";
 export { wrapBindingCore } from "cms-content/blocs/core/markup/bindingRoot";
 export { projectPublicSiteOrganization } from "cms-content/settings/core/publicOrganization";
 export { createBlocUsageResolver } from "cms-content/blocs/core/usage/resolveUsedBlocTags";
+export { getBlocGroupManifest } from "cms-content/blocs/core/assets/blocGroupManifest";
+export {
+    groupBlocsBySignature,
+    type BlocGroups,
+} from "cms-content/blocs/core/assets/groupBlocsBySignature";
+export {
+    collectionBlocsetCacheKey,
+    resolvePageAssets,
+    type AssetsManifest,
+    type PageAssetContext,
+} from "cms-content/blocs/core/assets/resolvePageAssets";
 export { buildBlocFoucShellCss } from "cms-content/blocs/core/composition/buildBlocFoucShellCss";
 export { expandCompositions } from "cms-content/blocs/core/composition/expandCompositions";
 export { generateBlocEntry, generateBlocSetEntry } from "cms-content/blocs/core/composition/buildBlocEntries";

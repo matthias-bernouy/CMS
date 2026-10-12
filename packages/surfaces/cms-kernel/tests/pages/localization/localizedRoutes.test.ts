@@ -1,8 +1,6 @@
 import { expect, test } from "bun:test";
 import { InMemoryCmsRepository, type TSystem } from "@bernouy/cms-content";
-import type { PublicPageProvider } from "@bernouy/cms-kernel";
 import { parseHTML } from "linkedom";
-import SitemapServer from "cms-kernel/endpoints/sitemap.xml.server";
 import { mountPublicPages } from "../publicPage.fixture";
 
 test("retired paths redirect while localized variants share one page", async () => {
@@ -51,7 +49,7 @@ test("retired paths redirect while localized variants share one page", async () 
         expect(document.body.textContent).toContain("Shared content");
     }
 
-    const sitemap = await SitemapServer(new Request("https://example.test/sitemap.xml"), mounted.kernel);
+    const sitemap = await mounted.sitemap(new Request("https://example.test/sitemap.xml"));
     const xml = await sitemap.text();
     expect(xml).toContain('xmlns:xhtml="http://www.w3.org/1999/xhtml"');
     expect(xml).toContain("<loc>https://example.test/a-propos</loc>");
@@ -70,7 +68,7 @@ test("retired paths redirect while localized variants share one page", async () 
     const removedLanguage = await mounted.get(new Request("https://example.test/en/about"));
     expect(removedLanguage.status).toBe(301);
     expect(removedLanguage.headers.get("location")).toBe("/a-propos");
-    const inactiveSitemap = await SitemapServer(new Request("https://example.test/sitemap.xml"), mounted.kernel);
+    const inactiveSitemap = await mounted.sitemap(new Request("https://example.test/sitemap.xml"));
     const inactiveXml = await inactiveSitemap.text();
     expect(inactiveXml).not.toContain("/en/company");
     expect(inactiveXml).not.toContain("hreflang=");
@@ -122,7 +120,7 @@ test("public routes pause while the default language routes are changing", async
     expect((await mounted.get(new Request("https://example.test/english"))).status).toBe(200);
 });
 
-test("deleted paths return 410 and cannot fall through to a public provider", async () => {
+test("deleted localized paths return 410 and stay out of the sitemap", async () => {
     const repository = new InMemoryCmsRepository();
     await repository.updateSystem({
         site: {
@@ -137,15 +135,7 @@ test("deleted paths return 410 and cannot fall through to a public provider", as
     await repository.updatePage({ id: page.id, visible: true });
     await repository.setPagePaths(page.id, { fr: "/old", en: "/old" });
     await repository.deletePage(page.id);
-    let providerCalled = false;
-    const provider: PublicPageProvider = {
-        resolvePage: async () => {
-            providerCalled = true;
-            return null;
-        },
-        listSitemapPaths: async () => ["/old", "/en/old"],
-    };
-    const mounted = mountPublicPages({ repository, providers: [provider] });
+    const mounted = mountPublicPages({ repository });
     for (const path of ["/old", "/en/old"]) {
         const response = await mounted.get(new Request(`https://example.test${path}`));
         expect(response.status).toBe(410);
@@ -153,8 +143,7 @@ test("deleted paths return 410 and cannot fall through to a public provider", as
     const goneHead = await mounted.head(new Request("https://example.test/old", { method: "HEAD" }));
     expect(goneHead.status).toBe(410);
     expect(await goneHead.text()).toBe("");
-    expect(providerCalled).toBe(false);
-    const sitemap = await SitemapServer(new Request("https://example.test/sitemap.xml"), mounted.kernel);
+    const sitemap = await mounted.sitemap(new Request("https://example.test/sitemap.xml"));
     expect(sitemap.status).toBe(200);
     expect(await sitemap.text()).not.toContain("/old");
 });

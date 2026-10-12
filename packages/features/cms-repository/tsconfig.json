@@ -12,6 +12,7 @@
         { "path": "../../foundation/binary-media" },
         { "path": "../../foundation/blob-store" },
         { "path": "../../features/cms-content" },
+        { "path": "../../foundation/http-runner" },
         { "path": "../../foundation/secret-store" }
     ]
 }

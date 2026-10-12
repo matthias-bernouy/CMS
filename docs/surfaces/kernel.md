@@ -5,20 +5,19 @@ collection Pages through the same registry and document pipeline. Pages carry
 no `surface` field: their required access level is derived from every capability
 in their exact execution plan, including transitive Bloc requirements.
 
-The Kernel owns:
+The Kernel owns route composition and Page HTTP presentation for:
 
 - `/login` and the configured authentication routes;
-- `/.cms/assets/component.js` and `/.cms/assets/cms-binding-core.js`, prebuilt
-  browser runtimes shared by all rendered Pages;
-- generic capability calls;
+- feature-owned handlers for the prebuilt `cms-content` browser runtimes;
+- generic capability calls implemented by `cms-gateway`;
 - every Page path, resolved from the shared site route registry;
-- `/.cms/call/*`, `/.cms/blocset` and the immutable asset routes used by Page
-  capabilities and rendering;
-- sitemap and robots endpoints.
+- `/.cms/call/*`, `/.cms/blocset` and immutable collection asset routes, whose
+  behavior remains in their owning feature packages;
+- sitemap and robots handlers implemented by `cms-seo`.
 
 The two browser assets are mounted explicitly. Adding a file below
-`src/browser/` never creates a route. Authentication documents live below
-`src/auth/` because they belong to the bootstrap kernel,
+`cms-content/src/browser/` never creates a route. Authentication documents live
+below `src/http/auth/` because they belong to the bootstrap kernel,
 not to an authored administration Page.
 
 New administration screens are ordinary collection Pages. Navigation, shells

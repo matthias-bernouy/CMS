@@ -4,6 +4,13 @@ import { parseWorkspaceSpecifier } from "../core/resolution/packageExports";
 import { toRelativePath } from "../core/pathUtils";
 
 const NODE_BUILTINS = new Set(builtinModules.map((module) => module.replace(/^node:/, "")));
+const MOUNTABLE_FEATURE_HANDLERS = new Set([
+    "@bernouy/cms-auth/http",
+    "@bernouy/cms-content/http",
+    "@bernouy/cms-gateway/http/handlers",
+    "@bernouy/cms-repository/collections/http",
+    "@bernouy/cms-seo/http",
+]);
 
 export function checkSurfaceAdapters(
     file: string,
@@ -36,7 +43,7 @@ export function isRuntimeAdapter(
 ): boolean {
     // These subpaths expose framework-neutral handlers mounted by surfaces.
     // Browser graphs still reject their server-side HTTP dependencies.
-    if (!browser && (specifier === "@bernouy/cms-auth/http" || specifier === "@bernouy/cms-gateway/http/handlers")) {
+    if (!browser && MOUNTABLE_FEATURE_HANDLERS.has(specifier)) {
         return false;
     }
     const normalizedBuiltin = specifier.replace(/^node:/, "");

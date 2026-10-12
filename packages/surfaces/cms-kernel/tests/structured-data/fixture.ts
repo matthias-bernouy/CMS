@@ -1,6 +1,6 @@
 import { defaultSystem, type ContentReader, type TPage, type TSystem } from "@bernouy/cms-content";
-import { renderPage } from "cms-kernel/site/rendering/renderPage";
-import type { RenderContext } from "cms-kernel/site/rendering/RenderContext";
+import { renderPage } from "cms-kernel/html/renderPage";
+import type { RenderContext } from "cms-kernel/html/RenderContext";
 import type { PageRenderMetadata } from "@bernouy/cms-seo";
 
 export function completeSettings(): TSystem {
@@ -41,7 +41,7 @@ export function homePage(): TPage {
 
 export async function renderedHtml(page: TPage, settings: TSystem, metadata: PageRenderMetadata = {}): Promise<string> {
     const context: RenderContext = {
-        repository: {
+        content: {
             getRenderingSettings: async () => settings,
             getRenderableBlocs: async () => [],
         } as ContentReader,

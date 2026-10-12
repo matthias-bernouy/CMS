@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 
-test("Kernel requires one writable repository while public rendering stays read-only", () => {
+test("Kernel accepts only the projected public content reader", () => {
     const result = Bun.spawnSync({
         cmd: ["bun", "run", "tsc", "--project", resolve(import.meta.dir, "tsconfig.json")],
         cwd: resolve(import.meta.dir, "../../../../.."),

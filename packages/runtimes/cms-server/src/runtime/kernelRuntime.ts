@@ -1,4 +1,5 @@
-import { KernelCms, startSitemapSnapshotRefresh } from "@bernouy/cms-kernel";
+import { KernelCms } from "@bernouy/cms-kernel";
+import { startSitemapSnapshotRefresh } from "@bernouy/cms-seo";
 import { BunRunner } from "@bernouy/http-runner";
 
 export type ProductionKernelRuntime = {

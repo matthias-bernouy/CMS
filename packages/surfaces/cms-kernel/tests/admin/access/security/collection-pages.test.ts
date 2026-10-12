@@ -104,5 +104,5 @@ test("site-owned Admin Pages use the same renderer and shared route registry", a
     const response = await mounted.get(new Request("http://admin.test/admin/custom"));
     expect(response.status).toBe(200);
     expect(await response.text()).toContain("Custom administration");
-    expect((await mounted.kernel.repository.getRenderablePage("/admin/custom"))?.source.kind).toBe("site");
+    expect((await mounted.kernel.content.getRenderablePage("/admin/custom"))?.source.kind).toBe("site");
 });

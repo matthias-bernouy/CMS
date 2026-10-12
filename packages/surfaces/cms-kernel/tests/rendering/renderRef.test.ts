@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { renderRef } from "cms-kernel/site/pages/renderRef";
+import { renderRef } from "cms-kernel/http/pages/renderRef";
 
 function kernelWithDraftFallback(field: "notFound" | "forbidden" | "serverError") {
     const calls: string[] = [];
     return {
         calls,
-        repository: {
+        content: {
             getRenderingSettings: async () => ({
                 site: {
                     name: "Site",

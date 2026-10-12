@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test";
-import { renderPage } from "cms-kernel/site/rendering/renderPage";
-import type { RenderContext } from "cms-kernel/site/rendering/RenderContext";
+import { renderPage } from "cms-kernel/html/renderPage";
+import type { RenderContext } from "cms-kernel/html/RenderContext";
 import type { TPage, ContentReader } from "@bernouy/cms-content/rendering";
 
 const ctx: RenderContext = {
-    repository: {
+    content: {
         getRenderingSettings: async () => ({
             site: { name: "Test", language: "en", favicon: "", host: "", theme: "", visible: true },
             security: { connectExtras: [], mediaExtras: [] },
@@ -54,7 +54,7 @@ test("Kernel refuses unresolved catalogue references", async () => {
     await expect(
         renderPage(page, {
             ...ctx,
-            repository: { ...ctx.repository, getContentTexts: async () => [] },
+            content: { ...ctx.content, getContentTexts: async () => [] },
         }),
     ).rejects.toThrow("Unknown content text");
 });

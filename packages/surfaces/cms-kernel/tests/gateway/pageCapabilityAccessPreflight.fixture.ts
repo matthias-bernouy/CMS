@@ -110,7 +110,7 @@ export async function mountPage(options: {
     });
     new KernelCms({
         runner,
-        repository,
+        content: createContentReader(repository),
         cache,
         capabilityGateway: {
             siteId: "site-a",

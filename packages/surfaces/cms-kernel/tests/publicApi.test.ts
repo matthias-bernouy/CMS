@@ -13,12 +13,14 @@ describe("cms-kernel public API", () => {
                 `
                     const { KernelCms } = await import("@bernouy/cms-kernel");
                     const { InMemoryAuthentication } = await import("@bernouy/cms-auth");
-                    const { InMemoryCmsRepository } = await import("@bernouy/cms-content");
+                    const { createContentReader, InMemoryCmsRepository } = await import("@bernouy/cms-content");
+                    const { TtlCache } = await import("@bernouy/http-runner");
                     const { CaptureRunner } = await import(${JSON.stringify(captureRunnerUrl)});
                     const runner = new CaptureRunner();
                     const kernel = new KernelCms({
                         runner,
-                        repository: new InMemoryCmsRepository(),
+                        cache: new TtlCache(),
+                        content: createContentReader(new InMemoryCmsRepository()),
                         authentication: new InMemoryAuthentication(),
                     });
                     if (!(kernel instanceof KernelCms) || typeof runner.defaultHandler("GET", "/") !== "function") {

@@ -25,9 +25,11 @@ Production runtime composition root.
   surfaces.
 - Changes here usually need an integration-style test or a clear manual
   verification path.
-- Give the Kernel one writable `CmsRepository`. The Kernel derives its
-  read-only rendering facade internally so rendering and administration share
-  one content identity without exposing mutations to renderer code.
+- Project the writable `CmsRepository` to a `ContentReader` in this runtime and
+  inject only that read boundary into Kernel. Keep authoring and installation
+  mutations behind their owning feature services and CMS Core capabilities.
+- Compose sitemap materialization and refresh from `cms-seo`; Kernel receives
+  only the store required by the mounted read handlers.
 - Compose the official `@bernouy/cms-files` provider here with its Mongo metadata
   store, BlobStore and image derivative adapter. Keep original bytes unchanged
   when generating or cleaning reconstructible derivatives.

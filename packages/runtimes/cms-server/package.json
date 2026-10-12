@@ -21,6 +21,7 @@
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-repository": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-seo": "workspace:*",
         "@bernouy/cms-core": "workspace:*",
         "@bernouy/cms-kernel": "workspace:*",
         "mongodb": "^7.6.0"

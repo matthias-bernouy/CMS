@@ -1,6 +1,8 @@
 import type { RuntimeEnv } from "../runtimeEnv";
 import { createContentReader } from "@bernouy/cms-content/rendering";
 import { PageExecutionService } from "@bernouy/cms-gateway/execution";
+import { isKernelReservedPath } from "@bernouy/cms-kernel";
+import { createSitemapService, executeIndexingCapability } from "@bernouy/cms-seo";
 import type { ProductionAuthentication } from "./auth";
 import type { ProductionGateway } from "./gateway/createProductionGateway";
 import { PRODUCTION_KERNEL_RUNTIME, type ProductionKernelRuntime } from "./kernelRuntime";
@@ -30,18 +32,27 @@ export async function mountProductionKernel(
         passwordResetUrl: env.CMS_AUTH_PASSWORD_RESET_URL,
         allowSignup: false,
     });
+    const content = createContentReader(core.repo);
+    const capabilityGateway = gateway
+        ? {
+              siteId: gateway.siteId,
+              invoker: gateway.invoker,
+              isAdministrator: gateway.isAdministrator,
+              authenticateProvider: gateway.authenticateProvider,
+          }
+        : undefined;
     const pageExecution = gateway
         ? new PageExecutionService({
               siteId: gateway.siteId,
-              content: createContentReader(core.repo),
+              content,
               invoker: gateway.invoker,
               authority: gateway.pageExecutions,
               resolveCapability: gateway.resolvePageCapability,
           })
         : undefined;
-    const kernel = new runtime.Kernel({
+    new runtime.Kernel({
         runner,
-        repository: core.repo,
+        content,
         authentication: authentication.auth,
         publicAuth,
         authBackends: { local: authentication.auth },
@@ -51,31 +62,31 @@ export async function mountProductionKernel(
             migrations: core.collectionMigrations,
         },
         cache: core.cache,
-        bypassCache: env.MODE === "DEV",
         enforcePageCsp: env.MODE !== "DEV",
         collectionAssets: { siteId: "default", store: core.collections },
         ...(gateway
             ? {
-                  capabilityGateway: {
-                      siteId: gateway.siteId,
-                      invoker: gateway.invoker,
-                      isAdministrator: gateway.isAdministrator,
-                      authenticateProvider: gateway.authenticateProvider,
-                  },
+                  capabilityGateway: capabilityGateway!,
                   pageExecution,
               }
             : {}),
         sitemapStore: core.sitemapStore,
     });
-    await kernel.ready;
-
     runner.start({ port: env.KERNEL_PORT, hostname: env.KERNEL_HOST });
-    const sitemapRefresh = runtime.startSitemapRefresh?.(kernel, {
+    const basePath = runner.basePath === "/" ? "" : runner.basePath;
+    const sitemap = createSitemapService({
+        store: core.sitemapStore,
+        content,
+        listAdditionalPaths: async () => [],
+        isReservedPath: (path) => isKernelReservedPath(path, `${basePath}/.cms`),
+        execute: (contractId, capabilityId, input) =>
+            executeIndexingCapability(capabilityGateway, { kind: "anonymous" }, contractId, capabilityId, input),
+    });
+    const sitemapRefresh = runtime.startSitemapRefresh?.((signal) => sitemap.materialize(signal), {
         reportError: (error: unknown) => runtime.reportError("Sitemap refresh failed", error),
     });
     gateway?.observations?.start((error) => runtime.reportError("Provider observation refresh failed", error));
     runtime.log("🚀 CMS listening");
-    runtime.log(`   admin:        ${env.KERNEL_PUBLIC_URL}/admin`);
     runtime.log(`   sign in:      ${env.KERNEL_PUBLIC_URL}/login`);
     runtime.log(`   site:         ${env.KERNEL_PUBLIC_URL}/`);
     runtime.log(`   storage:      mongo=${core.db.databaseName}, files=${env.CMS_FILES_DIR}`);

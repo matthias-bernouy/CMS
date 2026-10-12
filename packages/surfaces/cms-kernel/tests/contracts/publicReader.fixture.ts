@@ -1,12 +1,13 @@
 import type { Authentication } from "@bernouy/cms-auth";
-import type { CmsRepository } from "@bernouy/cms-content";
 import type { ContentReader, RenderingSettings } from "@bernouy/cms-content/rendering";
 import type { BlobReader, BlobStore as SitemapStore } from "@bernouy/blob-store";
 import type { KernelCmsConfig } from "@bernouy/cms-kernel";
+import type { Cache, Runner } from "@bernouy/http-runner";
 
 declare const settings: RenderingSettings;
-declare const repository: CmsRepository;
 declare const authentication: Authentication;
+declare const runner: Runner;
+declare const cache: Cache;
 
 const reader: ContentReader = {
     getRenderablePage: async () => null,
@@ -30,14 +31,16 @@ const sitemaps: SitemapStore = {
 };
 
 export const config: KernelCmsConfig = {
-    repository,
+    content: reader,
     authentication,
+    runner,
+    cache,
     sitemapStore: sitemaps,
 };
 
-// @ts-expect-error The unified Kernel requires the writable repository contract.
-const invalidReadOnlyConfig: KernelCmsConfig = { repository: reader, authentication };
-void invalidReadOnlyConfig;
+// @ts-expect-error The HTTP surface no longer accepts the writable repository property.
+const invalidRepositoryConfig: KernelCmsConfig = { repository: reader, authentication, runner, cache };
+void invalidRepositoryConfig;
 
 // This fixture is compiled, never executed. These failures are part of the API contract.
 // @ts-expect-error Editorial page lookup is not a public capability.

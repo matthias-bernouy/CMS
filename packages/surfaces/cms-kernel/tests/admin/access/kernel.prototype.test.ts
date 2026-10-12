@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { InMemoryAuthentication } from "@bernouy/cms-auth";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { createContentReader, InMemoryCmsRepository } from "@bernouy/cms-content";
 import KernelCms from "cms-kernel/KernelCms";
+import { TtlCache } from "@bernouy/http-runner";
 import { CaptureRunner } from "./authPublicSupport";
 
 describe("KernelCms application", () => {
@@ -9,12 +10,14 @@ describe("KernelCms application", () => {
         expect(Object.getOwnPropertyDescriptor(KernelCms.prototype, "filesMetadata")).toBeUndefined();
     });
 
-    test("mounts from one explicit configuration object", async () => {
-        const cms = new KernelCms({
-            runner: new CaptureRunner(),
-            repository: new InMemoryCmsRepository(),
-            authentication: new InMemoryAuthentication(),
-        });
-        await expect(cms.ready).resolves.toBeUndefined();
+    test("mounts from one explicit configuration object", () => {
+        expect(
+            new KernelCms({
+                runner: new CaptureRunner(),
+                cache: new TtlCache(),
+                content: createContentReader(new InMemoryCmsRepository()),
+                authentication: new InMemoryAuthentication(),
+            }),
+        ).toBeInstanceOf(KernelCms);
     });
 });

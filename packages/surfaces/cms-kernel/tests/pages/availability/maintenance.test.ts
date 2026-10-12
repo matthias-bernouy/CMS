@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type KernelCms from "cms-kernel/KernelCms";
-import { createKernelMaintenanceGuard } from "cms-kernel/runtime/maintenance";
+import { createCollectionMaintenanceGuard } from "@bernouy/cms-repository/collections/http";
 
 const kernel = {
     basePath: "/cms",
@@ -9,7 +9,7 @@ const kernel = {
         migrations: { getActive: async () => ({ id: "migration", status: "migrating" }) },
     },
 } as unknown as KernelCms;
-const guard = createKernelMaintenanceGuard(kernel);
+const guard = createCollectionMaintenanceGuard({ ...kernel.collections!, basePath: kernel.basePath });
 const next = async () => new Response("available");
 
 describe("Kernel collection maintenance", () => {
@@ -33,7 +33,6 @@ describe("Kernel collection maintenance", () => {
             "/.cms/public-auth/me",
             "/.cms/assets/component.js",
             "/.cms/collections/official/assets/logo",
-            "/.cms/bloc",
             "/.cms/blocset",
             "/.cms/style",
             "/favicon.ico",

@@ -5,8 +5,14 @@ import { createWorkspaceFixture, manifest, ofKind } from "./checkWorkspace.fixtu
 const { createWorkspace } = createWorkspaceFixture();
 
 describe("browser adapter boundaries", () => {
-    test("allows gateway handlers in surfaces while keeping transport adapters in runtimes", async () => {
+    test("allows feature handlers in surfaces while keeping transport adapters in runtimes", async () => {
         const root = await createWorkspace({
+            "packages/features/content/package.json": manifest("@bernouy/cms-content", {
+                exports: { "./http": "./src/http.ts" },
+            }),
+            "packages/features/seo/package.json": manifest("@bernouy/cms-seo", {
+                exports: { "./http": "./src/http.ts" },
+            }),
             "packages/features/gateway/package.json": manifest("@bernouy/cms-gateway", {
                 exports: {
                     ".": "./src/index.ts",
@@ -20,13 +26,19 @@ describe("browser adapter boundaries", () => {
             "packages/features/gateway/src/handlers.ts": "export const handlers = true;",
             "packages/features/gateway/src/node.ts": "export const network = true;",
             "packages/surfaces/web/package.json": manifest("@fixture/web", {
-                dependencies: { "@bernouy/cms-gateway": "workspace:*" },
+                dependencies: {
+                    "@bernouy/cms-content": "workspace:*",
+                    "@bernouy/cms-gateway": "workspace:*",
+                    "@bernouy/cms-seo": "workspace:*",
+                },
                 exports: { ".": "./src/index.ts", "./browser": "./src/browser.ts" },
             }),
             "packages/surfaces/web/src/index.ts": [
                 "import '@bernouy/cms-gateway/http/handlers';",
                 "import '@bernouy/cms-gateway/http';",
                 "import '@bernouy/cms-gateway/http/node';",
+                "import '@bernouy/cms-content/http';",
+                "import '@bernouy/cms-seo/http';",
             ].join("\n"),
             "packages/surfaces/web/src/browser.ts": "export const browser = true;",
         });

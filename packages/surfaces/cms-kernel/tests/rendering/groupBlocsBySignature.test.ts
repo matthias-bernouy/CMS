@@ -1,7 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { groupBlocsBySignature } from "cms-kernel/site/blocs/groupBlocsBySignature";
-import { getBlocGroupManifest } from "cms-kernel/site/blocs/blocGroupManifest";
-import type KernelCms from "cms-kernel/KernelCms";
+import { getBlocGroupManifest, groupBlocsBySignature, type ContentReader } from "@bernouy/cms-content/rendering";
 
 describe("groupBlocsBySignature", () => {
     test("blocs used on the same set of pages land in one group", () => {
@@ -81,18 +79,16 @@ describe("getBlocGroupManifest", () => {
             "site-header": "const t = `<base-nav></base-nav>`;",
             "base-nav": "NAV();",
         };
-        const kernel = {
-            repository: {
-                getPublishedPages: async () => [
-                    { content: "<site-header></site-header>" },
-                    { content: "<site-header></site-header>" },
-                ],
-                getRenderableBlocs: async () => Object.keys(views).map((id) => ({ id })),
-                getBlocViewJS: async (tag: string) => views[tag] ?? null,
-            },
-        } as unknown as KernelCms;
+        const content = {
+            getPublishedPages: async () => [
+                { content: "<site-header></site-header>" },
+                { content: "<site-header></site-header>" },
+            ],
+            getRenderableBlocs: async () => Object.keys(views).map((id) => ({ id })),
+            getBlocViewJS: async (tag: string) => views[tag] ?? null,
+        } as unknown as ContentReader;
 
-        const { groups, tagToGroup } = await getBlocGroupManifest(kernel);
+        const { groups, tagToGroup } = await getBlocGroupManifest(content);
         const group = tagToGroup.get("site-header");
         expect(group).toBeDefined();
         expect(tagToGroup.get("base-nav")).toBe(group);
@@ -104,31 +100,27 @@ describe("getBlocGroupManifest", () => {
             "site-header": "const t = `<base-nav></base-nav>`;",
             "base-nav": "NAV();",
         };
-        const kernel = {
-            repository: {
-                getPublishedPages: async () => [
-                    { content: "<site-header></site-header>" },
-                    { content: "<base-nav></base-nav>" },
-                ],
-                getRenderableBlocs: async () => Object.keys(views).map((id) => ({ id })),
-                getBlocViewJS: async (tag: string) => views[tag] ?? null,
-            },
-        } as unknown as KernelCms;
+        const content = {
+            getPublishedPages: async () => [
+                { content: "<site-header></site-header>" },
+                { content: "<base-nav></base-nav>" },
+            ],
+            getRenderableBlocs: async () => Object.keys(views).map((id) => ({ id })),
+            getBlocViewJS: async (tag: string) => views[tag] ?? null,
+        } as unknown as ContentReader;
 
-        const { tagToGroup } = await getBlocGroupManifest(kernel);
+        const { tagToGroup } = await getBlocGroupManifest(content);
         expect(tagToGroup.get("site-header")).not.toBe(tagToGroup.get("base-nav"));
     });
 
     test("does not include bloc usage found only in drafts", async () => {
-        const kernel = {
-            repository: {
-                getPublishedPages: async () => [{ content: "<published-card></published-card>" }],
-                getRenderableBlocs: async () => [{ id: "published-card" }, { id: "draft-only-card" }],
-                getBlocViewJS: async () => null,
-            },
-        } as unknown as KernelCms;
+        const content = {
+            getPublishedPages: async () => [{ content: "<published-card></published-card>" }],
+            getRenderableBlocs: async () => [{ id: "published-card" }, { id: "draft-only-card" }],
+            getBlocViewJS: async () => null,
+        } as unknown as ContentReader;
 
-        const { tagToGroup } = await getBlocGroupManifest(kernel);
+        const { tagToGroup } = await getBlocGroupManifest(content);
         expect(tagToGroup.has("published-card")).toBe(true);
         expect(tagToGroup.has("draft-only-card")).toBe(false);
     });

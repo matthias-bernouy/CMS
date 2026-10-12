@@ -12,5 +12,6 @@
         { "path": "../../foundation/blob-store" },
         { "path": "../cms-content" },
         { "path": "../cms-gateway" }
+        ,{ "path": "../../foundation/http-runner" }
     ]
 }
