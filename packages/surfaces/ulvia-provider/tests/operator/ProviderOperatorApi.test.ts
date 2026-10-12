@@ -31,6 +31,7 @@ test("the operator API protects and exposes instance lifecycle operations", asyn
             headers: { ...authorization, "content-type": "application/json", "idempotency-key": "create-one" },
             body: JSON.stringify({
                 label: "One",
+                kernelUrl: "http://127.0.0.1:5100",
                 administrator: { email: "admin@example.test", password: "long-enough-password" },
             }),
         });
@@ -54,6 +55,7 @@ function readyInstance(): ProviderInstanceRecord {
         id: "instance:one",
         idempotencyKey: "create-one",
         storageKey: "one",
+        kernelUrl: "http://127.0.0.1:5100",
         label: "One",
         status: "ready",
         profile: { id: "ulvia.official", version: "1.0.0" },

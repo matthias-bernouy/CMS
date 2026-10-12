@@ -74,6 +74,7 @@ function instance(): ProviderInstanceRecord {
         id: "instance:one",
         idempotencyKey: "create-one",
         storageKey: "one",
+        kernelUrl: "http://127.0.0.1:5100",
         label: "One",
         status: "provisioning",
         profile: { id: OFFICIAL_INSTANCE_PROFILE.id, version: OFFICIAL_INSTANCE_PROFILE.version },

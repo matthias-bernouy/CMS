@@ -59,8 +59,9 @@ async function parseCreateInput(request: Request): Promise<CreateProviderInstanc
     const input = value as Record<string, unknown>;
     const administrator = input.administrator;
     if (
-        Object.keys(input).sort().join(",") !== "administrator,label" ||
+        Object.keys(input).sort().join(",") !== "administrator,kernelUrl,label" ||
         typeof input.label !== "string" ||
+        typeof input.kernelUrl !== "string" ||
         !administrator ||
         typeof administrator !== "object" ||
         Array.isArray(administrator)
@@ -75,7 +76,11 @@ async function parseCreateInput(request: Request): Promise<CreateProviderInstanc
     ) {
         throw new TypeError("Request body is invalid");
     }
-    return { label: input.label, administrator: { email: admin.email, password: admin.password } };
+    return {
+        label: input.label,
+        kernelUrl: input.kernelUrl,
+        administrator: { email: admin.email, password: admin.password },
+    };
 }
 
 function instanceIdFrom(request: Request, suffix: string): string {

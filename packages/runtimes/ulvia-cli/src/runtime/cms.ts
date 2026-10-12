@@ -1,5 +1,7 @@
 import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import type { DevRuntimeConfig } from "./config";
+import type { LocalInstanceConnection } from "./config";
 import type { LocalMongo } from "./mongo";
 import type { UlviaPaths } from "./paths";
 import { spawnCommand } from "./process";
@@ -13,9 +15,9 @@ export type DevPorts = Readonly<{
 
 export type CmsServerProcess = ReturnType<typeof Bun.spawn>;
 
-type LocalServerOptions = Readonly<{
+type ProviderServerOptions = Readonly<{
     inheritOutput?: boolean;
-    ulviaProviderToken: string;
+    operatorToken: string;
 }>;
 
 export async function startLocalProvider(
@@ -23,7 +25,7 @@ export async function startLocalProvider(
     config: DevRuntimeConfig,
     mongo: LocalMongo,
     ports: DevPorts,
-    options: LocalServerOptions,
+    options: ProviderServerOptions,
 ): Promise<CmsServerProcess> {
     const entrypoint = fileURLToPath(import.meta.resolve("@bernouy/ulvia-provider-server"));
     const providerUrl = `http://127.0.0.1:${ports.provider}`;
@@ -32,16 +34,22 @@ export async function startLocalProvider(
         inherit: inheritOutput,
         ignore: !inheritOutput,
         env: {
-            ...sharedInstanceEnv(paths, config, mongo, ports),
+            ...process.env,
+            MODE: "DEV",
+            MONGO_URL: mongoDatabaseUrl(mongo.url, "ulvia_provider_control"),
+            CMS_FILES_DIR: paths.cmsFiles,
+            CMS_SESSION_SECRET: config.sessionSecret,
+            CMS_KEK_HEX: config.kekHex,
+            CMS_REPOSITORY_URL: `http://127.0.0.1:${ports.repository}`,
             ULVIA_PROVIDER_PORT: String(ports.provider),
             ULVIA_PROVIDER_HOST: "127.0.0.1",
             ULVIA_PROVIDER_PUBLIC_URL: providerUrl,
-            ULVIA_PROVIDER_TOKEN: options.ulviaProviderToken,
+            ULVIA_PROVIDER_OPERATOR_TOKEN: options.operatorToken,
         },
     });
     try {
         await Promise.race([
-            waitForProvider(providerUrl, options.ulviaProviderToken),
+            waitForProvider(providerUrl, options.operatorToken),
             provider.exited.then((exitCode) => {
                 throw new Error(`Local Ulvia Provider exited before becoming ready (exit ${exitCode})`);
             }),
@@ -58,7 +66,8 @@ export async function startLocalKernel(
     config: DevRuntimeConfig,
     mongo: LocalMongo,
     ports: DevPorts,
-    options: LocalServerOptions,
+    instance: LocalInstanceConnection,
+    options: Readonly<{ inheritOutput?: boolean }> = {},
 ): Promise<CmsServerProcess> {
     const entrypoint = fileURLToPath(import.meta.resolve("@bernouy/cms-kernel-server"));
     const kernelUrl = `http://127.0.0.1:${ports.kernel}`;
@@ -67,11 +76,17 @@ export async function startLocalKernel(
         inherit: inheritOutput,
         ignore: !inheritOutput,
         env: {
-            ...sharedInstanceEnv(paths, config, mongo, ports),
+            ...process.env,
+            MODE: "DEV",
             KERNEL_PORT: String(ports.kernel),
             KERNEL_HOST: "127.0.0.1",
-            ULVIA_PROVIDER_PUBLIC_URL: `http://127.0.0.1:${ports.provider}`,
-            ULVIA_PROVIDER_TOKEN: options.ulviaProviderToken,
+            KERNEL_PUBLIC_URL: kernelUrl,
+            ULVIA_PROVIDER_URL: `http://127.0.0.1:${ports.provider}`,
+            ULVIA_INSTANCE_TOKEN: instance.token,
+            CMS_SESSION_SECRET: config.sessionSecret,
+            CMS_KEK_HEX: config.kekHex,
+            CMS_FILES_DIR: join(paths.cmsFiles, instance.storageKey),
+            MONGO_URL: mongoDatabaseUrl(mongo.url, `ulvia_${instance.storageKey.replaceAll("-", "_")}`),
             CMS_AUTH_SITE_NAME: "Ulvia local CMS",
             CMS_AUTH_EMAIL_COOLDOWN_SECONDS: "0",
             CMS_HTTP_CLIENT_ADDRESS_MODE: "disabled",
@@ -106,28 +121,21 @@ export async function stopLocalServer(server: CmsServerProcess): Promise<void> {
     ]);
 }
 
-function sharedInstanceEnv(paths: UlviaPaths, config: DevRuntimeConfig, mongo: LocalMongo, ports: DevPorts) {
-    return {
-        ...process.env,
-        MODE: "DEV",
-        KERNEL_PUBLIC_URL: `http://127.0.0.1:${ports.kernel}`,
-        CMS_SESSION_SECRET: config.sessionSecret,
-        CMS_KEK_HEX: config.kekHex,
-        CMS_ADMIN_EMAIL: config.adminEmail,
-        CMS_ADMIN_PASSWORD: config.adminPassword,
-        CMS_FILES_DIR: paths.cmsFiles,
-        MONGO_URL: mongo.url,
-        CMS_REPOSITORY_URL: `http://127.0.0.1:${ports.repository}`,
-        CMS_GATEWAY_SITE_ID: "default",
-    };
-}
-
 async function waitForProvider(url: string, token: string): Promise<void> {
     await waitForHttp(
-        `${url}/ulvia/report`,
+        `${url}/ulvia/operator/instances`,
         { headers: { authorization: `Bearer ${token}` } },
         (response) => response.ok,
     );
+}
+
+function mongoDatabaseUrl(base: string, databaseName: string): string {
+    if (!/^[a-z0-9_]{1,100}$/u.test(databaseName)) {
+        throw new TypeError("Mongo database name is invalid");
+    }
+    const url = new URL(base);
+    url.pathname = `/${databaseName}`;
+    return url.toString();
 }
 
 async function waitForHttp(

@@ -6,15 +6,12 @@ function validEnv(): Record<string, string> {
         ULVIA_PROVIDER_PORT: "5103",
         ULVIA_PROVIDER_HOST: "127.0.0.1",
         ULVIA_PROVIDER_PUBLIC_URL: "http://127.0.0.1:5103",
-        ULVIA_PROVIDER_TOKEN: "opaque-ulvia-provider-token",
+        ULVIA_PROVIDER_OPERATOR_TOKEN: "opaque-ulvia-operator-token",
         CMS_REPOSITORY_URL: "http://127.0.0.1:5102",
-        CMS_GATEWAY_SITE_ID: "default",
         MONGO_URL: "mongodb://127.0.0.1:27017/cms",
         CMS_FILES_DIR: "/tmp/cms-files",
         CMS_SESSION_SECRET: "session-secret",
         CMS_KEK_HEX: "00".repeat(32),
-        CMS_ADMIN_EMAIL: "admin@example.test",
-        KERNEL_PUBLIC_URL: "http://127.0.0.1:5101",
     };
 }
 
@@ -23,7 +20,7 @@ describe("Ulvia Provider server environment", () => {
         expect(readProviderRuntimeEnv(validEnv())).toMatchObject({
             ULVIA_PROVIDER_PORT: 5103,
             ULVIA_PROVIDER_HOST: "127.0.0.1",
-            CMS_GATEWAY_SITE_ID: "default",
+            ULVIA_PROVIDER_OPERATOR_TOKEN: "opaque-ulvia-operator-token",
         });
     });
 

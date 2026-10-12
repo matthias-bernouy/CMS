@@ -11,6 +11,7 @@ export interface ProviderInstanceCredentials {
 
 export type CreateProviderInstance = Readonly<{
     label: string;
+    kernelUrl: string;
     administrator: ProviderInstanceAdministrator;
 }>;
 
@@ -35,6 +36,7 @@ export class ProviderInstanceLifecycle {
                 id: `instance:${uuid}`,
                 idempotencyKey,
                 storageKey: `instance-${uuid}`,
+                kernelUrl: input.kernelUrl,
                 label: input.label.trim(),
                 status: "provisioning",
                 profile: { id: OFFICIAL_INSTANCE_PROFILE.id, version: OFFICIAL_INSTANCE_PROFILE.version },
@@ -73,6 +75,20 @@ function validateCreateInput(idempotencyKey: string, input: CreateProviderInstan
     const label = input.label.trim();
     if (!label || label.length > 80 || /[\x00-\x1f\x7f]/u.test(label)) {
         throw new TypeError("Instance label is invalid");
+    }
+    let kernelUrl: URL;
+    try {
+        kernelUrl = new URL(input.kernelUrl);
+    } catch {
+        throw new TypeError("Kernel URL is invalid");
+    }
+    if (
+        !/^https?:$/u.test(kernelUrl.protocol) ||
+        kernelUrl.username ||
+        kernelUrl.password ||
+        kernelUrl.pathname !== "/"
+    ) {
+        throw new TypeError("Kernel URL is invalid");
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(input.administrator.email) || input.administrator.email.length > 254) {
         throw new TypeError("Administrator email is invalid");

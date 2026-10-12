@@ -1,8 +1,10 @@
 import { startLocalRepository } from "../runtime/repository";
 import {
-    loadOrCreateUlviaProviderToken,
     loadOrCreateDevRuntimeConfig,
+    loadOrCreateProviderOperatorToken,
     loadOrCreateRepositoryToken,
+    readLocalInstanceConnection,
+    saveLocalInstanceConnection,
 } from "../runtime/config";
 import {
     startLocalKernel,
@@ -11,6 +13,7 @@ import {
     type CmsServerProcess,
     type DevPorts,
 } from "../runtime/cms";
+import { provisionLocalInstance } from "../runtime/instance";
 import { localMongoStatus, startLocalMongo, stopLocalMongo } from "../runtime/mongo";
 import type { UlviaPaths } from "../runtime/paths";
 import { bootstrapOfficialRepository } from "./bootstrap";
@@ -44,7 +47,8 @@ export async function devCommand(
         const config = await loadOrCreateDevRuntimeConfig(paths.dev);
         log(`Email: ${config.adminEmail}`);
         log(`Password: ${config.adminPassword}`);
-        log(`Ulvia Provider token: ${await loadOrCreateUlviaProviderToken(paths.dev)}`);
+        const instance = await readLocalInstanceConnection(paths.dev);
+        log(`Instance token: ${instance?.token ?? "not provisioned"}`);
         log(`Repository token: ${await loadOrCreateRepositoryToken(paths.dev)}`);
         return;
     }
@@ -67,17 +71,25 @@ async function runDev(paths: UlviaPaths, log: (message: string) => void, ports: 
         paths.repository,
         await loadOrCreateRepositoryToken(paths.dev),
     );
-    const ulviaProviderToken = await loadOrCreateUlviaProviderToken(paths.dev);
+    const operatorToken = await loadOrCreateProviderOperatorToken(paths.dev);
     let provider: CmsServerProcess;
     try {
-        provider = await startLocalProvider(paths, config, mongo, ports, { ulviaProviderToken });
+        provider = await startLocalProvider(paths, config, mongo, ports, { operatorToken });
     } catch (error) {
         repository.stop();
         throw error;
     }
     let kernel: CmsServerProcess;
     try {
-        kernel = await startLocalKernel(paths, config, mongo, ports, { ulviaProviderToken });
+        log("Provisioning the local CMS instance...");
+        const provisioned = await provisionLocalInstance(
+            `http://127.0.0.1:${ports.provider}`,
+            operatorToken,
+            config,
+            `http://127.0.0.1:${ports.kernel}`,
+        );
+        const instance = await saveLocalInstanceConnection(paths.dev, provisioned);
+        kernel = await startLocalKernel(paths, config, mongo, ports, instance);
     } catch (error) {
         await stopLocalServer(provider);
         repository.stop();

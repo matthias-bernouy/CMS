@@ -1,4 +1,3 @@
-import type { LocalCredentialStore } from "@bernouy/cms-auth";
 import type { Db } from "mongodb";
 
 type AdministratorGrant = {
@@ -9,42 +8,28 @@ type AdministratorGrant = {
     updatedAt?: Date;
 };
 
-export function createProviderAdministrators(credentials: LocalCredentialStore, administratorEmail: string, db: Db) {
+export function createProviderAdministrators(db: Db) {
     const grants = db.collection<AdministratorGrant>("cms_administrator_grants");
-    const bootstrap = async () => {
-        const credential = await credentials.getByEmail(administratorEmail);
-        return credential ? `local:${credential.sub}` : null;
-    };
 
     return {
-        async canRevoke(sub: string): Promise<boolean> {
-            return sub !== (await bootstrap());
+        async canRevoke(): Promise<boolean> {
+            return true;
         },
         async get(sub: string) {
-            if (sub === (await bootstrap())) {
-                return { sub, enabled: true, revision: 1, bootstrap: true };
-            }
             const row = await grants.findOne({ sub });
             return {
                 sub,
                 enabled: row ? row.enabled !== false : false,
                 revision: row?.revision ?? (row ? 1 : 0),
-                bootstrap: false,
+                bootstrap: false as const,
             };
         },
         async list(): Promise<string[]> {
             const rows = await grants.find({ enabled: { $ne: false } }, { projection: { sub: 1 } }).toArray();
-            return [
-                ...new Set(
-                    [...rows.map((row) => row.sub), await bootstrap()].filter((id): id is string => Boolean(id)),
-                ),
-            ];
+            return [...new Set(rows.map((row) => row.sub))];
         },
         async set(sub: string, enabled: boolean, expectedRevision?: number) {
             const current = await this.get(sub);
-            if (current.bootstrap && !enabled) {
-                throw Object.assign(new Error("Bootstrap administrator cannot be removed"), { status: 409 });
-            }
             if (expectedRevision !== undefined && current.revision !== expectedRevision) {
                 throw revisionConflict();
             }

@@ -7,22 +7,18 @@ import {
 } from "./runtimeEnvParsing";
 import { parseRuntimeKekConfig, type RuntimeKekConfig } from "./runtimeEnvKek";
 import { assertProviderConnectionToken } from "@bernouy/cms-repository/providers/installations";
-import { parseSelectionSiteId } from "@bernouy/cms-repository/providers/selections";
 
 export type ProviderRuntimeEnv = Readonly<{
     ULVIA_PROVIDER_PORT: number;
     ULVIA_PROVIDER_HOST: string;
     ULVIA_PROVIDER_PUBLIC_URL: string;
-    ULVIA_PROVIDER_TOKEN: string;
+    ULVIA_PROVIDER_OPERATOR_TOKEN: string;
     CMS_REPOSITORY_URL: string;
-    CMS_GATEWAY_SITE_ID: string;
     MONGO_URL: string;
     CMS_FILES_DIR: string;
     CMS_SESSION_SECRET: string;
     CMS_KEK: RuntimeKekConfig;
     CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: number;
-    CMS_ADMIN_EMAIL: string;
-    KERNEL_PUBLIC_URL: string;
 }>;
 
 export function readProviderRuntimeEnv(source: RuntimeEnvSource): ProviderRuntimeEnv {
@@ -32,11 +28,15 @@ export function readProviderRuntimeEnv(source: RuntimeEnvSource): ProviderRuntim
         "ULVIA_PROVIDER_PUBLIC_URL",
     );
     assertProviderOrigin(ULVIA_PROVIDER_PUBLIC_URL, ULVIA_PROVIDER_PORT);
-    const token = requiredEnv(source, "ULVIA_PROVIDER_TOKEN");
+    const token = source.ULVIA_PROVIDER_OPERATOR_TOKEN;
+    requiredEnv(source, "ULVIA_PROVIDER_OPERATOR_TOKEN");
     try {
-        assertProviderConnectionToken(token);
+        if (token !== token?.trim()) {
+            throw new TypeError("token whitespace");
+        }
+        assertProviderConnectionToken(token!);
     } catch {
-        throw new Error("ULVIA_PROVIDER_TOKEN is invalid");
+        throw new Error("ULVIA_PROVIDER_OPERATOR_TOKEN is invalid");
     }
     const migrationRetention = parseNonNegativeInteger(
         source.CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION,
@@ -50,16 +50,13 @@ export function readProviderRuntimeEnv(source: RuntimeEnvSource): ProviderRuntim
         ULVIA_PROVIDER_PORT,
         ULVIA_PROVIDER_HOST: parseListenerHost(source.ULVIA_PROVIDER_HOST),
         ULVIA_PROVIDER_PUBLIC_URL,
-        ULVIA_PROVIDER_TOKEN: token,
+        ULVIA_PROVIDER_OPERATOR_TOKEN: token!,
         CMS_REPOSITORY_URL: parseHttpUrl(requiredEnv(source, "CMS_REPOSITORY_URL"), "CMS_REPOSITORY_URL"),
-        CMS_GATEWAY_SITE_ID: parseSelectionSiteId(requiredEnv(source, "CMS_GATEWAY_SITE_ID")),
         MONGO_URL: requiredEnv(source, "MONGO_URL"),
         CMS_FILES_DIR: requiredEnv(source, "CMS_FILES_DIR"),
         CMS_SESSION_SECRET: requiredEnv(source, "CMS_SESSION_SECRET"),
         CMS_KEK: parseRuntimeKekConfig(source),
         CMS_COLLECTION_MIGRATION_ROLLBACK_RETENTION: migrationRetention,
-        CMS_ADMIN_EMAIL: requiredEnv(source, "CMS_ADMIN_EMAIL"),
-        KERNEL_PUBLIC_URL: parseHttpUrl(requiredEnv(source, "KERNEL_PUBLIC_URL"), "KERNEL_PUBLIC_URL"),
     };
 }
 

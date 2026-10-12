@@ -9,7 +9,7 @@ import { CatalogueSelectionDependencies } from "@bernouy/cms-repository/provider
 import type { ProviderStores } from "../stores/providerStores";
 import { createProviderAdministrators } from "./createProviderAdministrators";
 
-export async function createProviderGateway(stores: ProviderStores, siteId: string, administratorEmail: string) {
+export async function createProviderGateway(stores: ProviderStores, siteId: string) {
     const { db } = stores;
     const releases = new MongoReleaseCatalogue(db);
     await db.collection("cms_administrator_grants").createIndex({ sub: 1 }, { unique: true });
@@ -27,9 +27,7 @@ export async function createProviderGateway(stores: ProviderStores, siteId: stri
         manifests,
         installations,
         selections,
-        administrators: createProviderAdministrators(stores.credentials, administratorEmail, db),
+        administrators: createProviderAdministrators(db),
         identities: new ProviderIdentityAliases(stores.identities),
     };
 }
-
-export type ProviderGateway = Awaited<ReturnType<typeof createProviderGateway>>;
